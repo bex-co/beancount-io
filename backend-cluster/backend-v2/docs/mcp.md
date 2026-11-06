@@ -350,6 +350,27 @@ file, slice, and rename writes, the five bank tools that move
 state (`sync`, `import`, `discard`, `reconcile`, `unlink`), and the
 five lifecycle mutations (`updateLedger`, `deleteLedger`,
 `setLedgerCollaborator`, `removeLedgerCollaborator`, `leaveLedger`).
+
+### The preview rule
+
+A preview never refuses for new bean-check errors; only the commit does.
+The nine tools that project a write through bean-check (`appendLedgerText`,
+`addLedgerEntries`, `createLedgerFiles`, `updateLedgerFiles`,
+`deleteLedgerFiles`, `updateEntrySource`, `deleteEntrySource`,
+`deleteEntrySources`) answer a `dry_run` with success, the diff or per-file
+text, `newErrors`, and `valid`. `valid` is `true` only when bean-check ran and
+the write adds no error, so an agent approves a preview only when `valid` is
+`true`, then re-issues the identical call with `dry_run: false`. The same call
+without `dry_run` is refused (`UNBALANCED` or `VALIDATION_FAILED`) unless
+`allowInvalid` records it deliberately. The same holds on REST (`dryRun`) and
+GraphQL, which carry `valid` next to `newErrors`. A preview also writes nothing.
+
+`renameLedgerFile`, the bank tools, and the lifecycle and collaborator tools
+preview a summary (a move, a sync count, a destroy summary, a would-be grant),
+not a bean-check projection, so `valid` does not apply to them. The registry in
+`src/features/ai-agent/api/__tests__/write-preview-matrix.test.ts` classifies
+every tool with a preview flag and names the parity tests that prove the rule;
+adding a write tool with `dry_run` fails it until the tool is classified.
 The three config-only bank tools (`mapBankAccount`,
 `setBankAccountCurrency`, `refreshBankConnection`) publish no preview
 argument, and neither does `setLedgerStar` — starring is an instantly
@@ -576,7 +597,8 @@ with HTTP 413 and JSON-RPC `-32600` "the body exceeds the 2 MiB limit".
 `dry_run` defaults to `false`. With `true`, the tool reads existing files as
 needed, checks replacement matches, constructs operations, and runs the same
 write authorization and repository-path validation as the commit — a caller
-the commit would refuse is refused by the preview too. The preview returns the
+the commit would refuse for authorization or path reasons is refused by the
+preview too (new bean-check errors are reported, not refused). The preview returns the
 operation `count` and paths plus a unified `diff` per touched file and
 bean-check's verdict over the projected content (`validation` with
 `errorsBefore`, `errorsAfter`, `newErrors`, and `valid`), so review the diff and
@@ -1746,8 +1768,8 @@ and each new error named in `newLedgerErrors`, the same refusal
 `addLedgerEntries` gives (w21/m1). When the only new error is imbalance, the
 refusal is `UNBALANCED` with the residual instead, as on add. Errors the
 ledger already had never block. Pass `allowInvalid: true` to commit the write
-anyway. A preview is refused exactly the same way: the checks do not depend
-on committing.
+anyway. A preview is not refused for those errors: it returns them in
+`validation.newErrors` with `valid: false` (see [the preview rule](#the-preview-rule)).
 
 ### Insert structured directives
 

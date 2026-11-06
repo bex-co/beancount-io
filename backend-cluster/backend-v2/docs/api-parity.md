@@ -235,6 +235,15 @@ their eligibility in the frozen baseline does not change.
 `Query.storeBillingIdentity` is GraphQL-only because store purchase evidence
 exists only inside the app.
 
+## Write previews (w23/m21)
+
+Behavioral parity for `dry_run`/`dryRun` is one rule on all three surfaces: a
+preview of a write that adds bean-check errors succeeds and reports them in
+`newErrors` with `valid: false`; only the commit is refused. The rule, the
+tools it covers, and the summary-only previews are in the
+[preview rule](mcp.md#the-preview-rule). `write-preview-matrix.test.ts`
+registers every tool with a preview flag and the parity test that proves it.
+
 ## Retry-safe entry writes (w3/m61)
 
 Every entry append accepts an optional `requestId` with one contract on every
