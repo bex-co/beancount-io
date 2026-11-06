@@ -57,7 +57,7 @@ expect_contains "the install step uses the engine hashed lock" 'engine-requireme
 expect_contains "the install step requires hashes" '--require-hashes'
 expect_contains "the dependency install has its own post-install hook" 'post_install_steps do'
 expect_contains "Homebrew provisions a separate engine venv" '"{{libexec}}/engine"'
-expect_contains "the Homebrew engine carries bea's engine mark" '(libexec/"engine/.bea-engine").write'
+expect_contains "the Homebrew engine carries bea's engine mark" 'write_file "{{libexec}}/engine/.bea-engine", "bea engine (Homebrew)\\n"'
 expect_contains "bea wrapper sets BEA_ENGINE_DIR" 'BEA_ENGINE_DIR'
 expect_contains "sdist engine tree is installed for the helper build" 'project.install "pyproject.toml", "README.md", "LICENSE", "NOTICE.fava", "requirements.lock", "engine-requirements.lock", "engine-optional-beangulp.lock", "engine-optional-beanprice.lock", "src", "LICENSE.engine"'
 expect_contains "helper resources ship with bea" '"LICENSE.engine"'
