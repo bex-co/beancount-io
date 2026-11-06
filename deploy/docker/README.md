@@ -175,11 +175,11 @@ key unless you also plan a known-hosts migration for every client.
 - The Gitea administrator is created only when absent. Changing
   `FAVA_API_ADMIN_PASSWORD` later does not change the existing Gitea password;
   update both deliberately with Gitea's admin CLI.
-- The sign-in cookie is shared between `APP_DOMAIN` and `API_DOMAIN` through
-  `AUTH_COOKIE_DOMAIN`, which Compose defaults to `.${APP_DOMAIN}`. Keep
-  `API_DOMAIN` beneath `APP_DOMAIN`, or set `AUTH_COOKIE_DOMAIN` to the parent
-  both share. Without a shared parent the browser rejects the cookie and
-  sign-up ends back on the login page.
+- Set `AUTH_COOKIE_DOMAIN` in `.env` to a parent domain that contains both
+  `APP_DOMAIN` and `API_DOMAIN` (for example `.books.example.com`). Blank keeps
+  the beancount.io default, which a browser rejects on your domain, so sign-up
+  ends back on the login page. The backend logs a warning at boot when
+  `DASHBOARD_URL` is not under beancount.io and this is unset.
 - Changing either database password in `.env` does not rotate the password of
   an already-initialized PostgreSQL role. Perform a coordinated database-role
   rotation; an environment-only change will break connectivity.

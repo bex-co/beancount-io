@@ -3,6 +3,7 @@ import {
   setAuthCookie,
   clearAuthCookie,
   getAuthCookieFromCtx,
+  cookieDomainNeedsConfig,
 } from "../cookie-utils";
 
 const mockCtx = {
@@ -57,9 +58,9 @@ describe("cookie-utils", () => {
         expect(domainSet()).toBe(".example.com");
       });
 
-      it("is host-only when set to an empty value", () => {
-        process.env.AUTH_COOKIE_DOMAIN = "";
-        expect(domainSet()).toBeUndefined();
+      it("keeps .beancount.io when set to a blank value", () => {
+        process.env.AUTH_COOKIE_DOMAIN = "  ";
+        expect(domainSet()).toBe(".beancount.io");
       });
 
       it("defaults to .beancount.io when unset", () => {
@@ -116,5 +117,29 @@ describe("cookie-utils", () => {
       const result = getAuthCookieFromCtx(mockCtx);
       expect(result).toBeUndefined();
     });
+  });
+});
+
+describe("cookieDomainNeedsConfig", () => {
+  const original = process.env.AUTH_COOKIE_DOMAIN;
+  afterEach(() => {
+    if (original === undefined) delete process.env.AUTH_COOKIE_DOMAIN;
+    else process.env.AUTH_COOKIE_DOMAIN = original;
+  });
+
+  it("is false for hosted beancount.io deployments", () => {
+    delete process.env.AUTH_COOKIE_DOMAIN;
+    expect(cookieDomainNeedsConfig("https://v3.beancount.io")).toBe(false);
+    expect(cookieDomainNeedsConfig("https://beancount.io")).toBe(false);
+  });
+
+  it("is true for another domain with no override", () => {
+    delete process.env.AUTH_COOKIE_DOMAIN;
+    expect(cookieDomainNeedsConfig("https://books.example.com")).toBe(true);
+  });
+
+  it("is false once the override is set", () => {
+    process.env.AUTH_COOKIE_DOMAIN = ".example.com";
+    expect(cookieDomainNeedsConfig("https://books.example.com")).toBe(false);
   });
 });

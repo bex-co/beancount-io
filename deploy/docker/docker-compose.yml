@@ -128,9 +128,10 @@ services:
       TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
       SERVER_URL: https://${API_DOMAIN:?Set API_DOMAIN in .env}
       DASHBOARD_URL: https://${APP_DOMAIN:?Set APP_DOMAIN in .env}
-      # The session cookie must be shared by the app and API hosts. The code
-      # default is beancount.io's own domain, which a browser rejects here.
-      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-.${APP_DOMAIN}}
+      # Parent domain the sign-in cookie is shared across (blank keeps the
+      # code default, beancount.io's own domain, which a browser rejects on
+      # any other domain). Set it in .env, see .env.example.
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env}
       COOKIE_SECRETS: ${COOKIE_SECRETS:?Set COOKIE_SECRETS in .env}
       ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}

@@ -11,6 +11,7 @@ import cookie from "koa-cookie";
 import cors from "@koa/cors";
 import { restMetricsMiddleware } from "@/metrics/koa-middleware";
 import { logger } from "@/shared/logger";
+import { cookieDomainNeedsConfig } from "@/shared/cookie-utils";
 import { asyncContextMiddleware } from "./middleware/async-context-middleware";
 import { bodyParserMiddleware } from "./middleware/body-parser-middleware";
 import { createOrphanedHostCookieMiddleware } from "./middleware/orphaned-host-cookie-middleware";
@@ -96,6 +97,15 @@ export async function startServer(): Promise<void> {
   if (config.auth.skipEmailVerification) {
     logger.warn(
       "AUTH_SKIP_EMAIL_VERIFICATION is on: sign-ups are not email-verified. Do not use in production.",
+    );
+  }
+
+  if (
+    config.env === "production" &&
+    cookieDomainNeedsConfig(process.env.DASHBOARD_URL)
+  ) {
+    logger.warn(
+      "AUTH_COOKIE_DOMAIN is unset but DASHBOARD_URL is not under beancount.io: browsers will reject the sign-in cookie. Set it to the parent domain of the dashboard and API hosts.",
     );
   }
 
