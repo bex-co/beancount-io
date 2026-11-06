@@ -9,6 +9,11 @@
 - [x] **m3** — [BQL cookbook: tested query recipes for humans and agents](./done/m3/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 2
 - [x] **m4** — [`bea report cash-flow`: where the money went, by period](./done/m4/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-10-25, candidate 3
 - [x] **m5** — [Entries that fail booking stay listed, marked, and out of every balance](./done/m5/README.md) (9 tasks) ← promoted from w21/678
+- [ ] **m6** — [`bea report` CSV output for every report](./m6/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 1
+- [ ] **m7** — [`bea report budget`: budget versus actual](./m7/README.md) (9 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 2
+- [ ] **m8** — [`bea mcp`: local read-only stdio MCP server](./m8/README.md) (9 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 3
+- [ ] **m9** — [`beancount-report-pack`: a reconciled Markdown/CSV report pack](./m9/README.md) (9 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 4
+- [ ] **m10** — [`beancount-business-metrics`: cash, burn and runway](./m10/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 5
 
 ## Dropped
 
@@ -17,6 +22,7 @@
 
 ## Inbox
 
+- [1021](./1021.md) — `bea init` writes `AGENTS.md` for coding agents (never overwrites an existing file)
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [201](./blocked/201.md) — Missing file: GraphQL returns null, REST/MCP NOT_FOUND; directory path differs too — **blocked:** backend `missingAsError` flag shipped; dashboard and mobile adoption wait for the backend deploy
 - [206](./blocked/206.md) — Refund/return receipts are always prefilled as a purchase — **blocked:** needs an owner-approved AI-quota evaluation and a parse-contract decision (`isRefund` vs signed amount)
