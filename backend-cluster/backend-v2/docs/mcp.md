@@ -1225,6 +1225,13 @@ calls per minute; minting an API key on GraphQL or REST carries a
 five-per-minute override. These are
 operation-class budgets, not one combined allowance for the entire MCP endpoint.
 
+A `dry_run` preview is charged exactly like the commit it previews: the budget
+is keyed by credential and tool, and the gate does not look at the preview flag,
+because a preview runs the same authorization and the full bean-check projection.
+With the write budget at 60 calls per minute per tool, a preview followed by its
+commit spends two of them, so an agent can sustain about 30 preview-and-commit
+pairs a minute on one tool; batch directives into one call rather than looping.
+
 The MCP endpoint itself also carries a read-class transport budget, and the
 handshake — `initialize`, its acknowledgement, `tools/list`,
 `resources/templates/list`, `prompts/list`, and `ping` — is charged to a
