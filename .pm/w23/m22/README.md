@@ -1,13 +1,13 @@
 # w23 · m22 — Refuse NUL bytes in every string parameter by contract
 
-**Worker:** worker1 **Goal:** a generated test sends U+0000 in every string parameter of every tool and route and asserts BAD_USER_INPUT, so new parameters are covered automatically and 5xx answers for a bad byte stop appearing **Status:** todo
+**Worker:** worker1 **Goal:** a generated test sends U+0000 in every string parameter of every tool and route and asserts BAD_USER_INPUT, so new parameters are covered automatically and 5xx answers for a bad byte stop appearing **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Generate the string-parameter × NUL cases from the tool schemas | 45m | — |
-| t002 | Fix the parameters the scan finds | 45m | t001 |
+| t001 | Generate the string-parameter × NUL cases from the tool schemas — **DONE** | 45m | — |
+| t002 | Fix the parameters the scan finds — **DONE** | 45m | t001 |
 | t003 | Cover REST and GraphQL with the same cases | 30m | t002 |
 | t004 | Simplify | 20m | t003 |
 | t005 | Test coverage | 20m | t003 |
