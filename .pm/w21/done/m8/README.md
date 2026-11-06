@@ -1,20 +1,20 @@
 # w21 · m8 — `bea mcp`: local read-only stdio MCP server
 
-**Worker:** worker1 **Goal:** coding agents can query a local ledger over MCP without an account **Status:** todo
+**Worker:** worker1 **Goal:** coding agents can query a local ledger over MCP without an account **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Design the local MCP tool surface | 45m | — |
-| t002 | Implement the stdio transport | 90m | t001 |
-| t003 | Implement the read-only tools with bounds and error shapes | 60m | t002 |
-| t004 | Integration test with a real MCP client over stdio | 50m | t003 |
-| t005 | Document Claude Code and Codex setup | 30m | t004 |
-| t006 | Adoption surface | 20m | t005 |
-| t007 | Simplify | 20m | t006 |
-| t008 | Test coverage | 30m | t006 |
-| t009 | Closeout | 15m | t008, t007 |
+| t001 | Design the local MCP tool surface — **DONE** | 45m | — |
+| t002 | Implement the stdio transport — **DONE** | 90m | t001 |
+| t003 | Implement the read-only tools with bounds and error shapes — **DONE** | 60m | t002 |
+| t004 | Integration test with a real MCP client over stdio — **DONE** | 50m | t003 |
+| t005 | Document Claude Code and Codex setup — **DONE** | 30m | t004 |
+| t006 | Adoption surface — **DONE** | 20m | t005 |
+| t007 | Simplify — **DONE** | 20m | t006 |
+| t008 | Test coverage — **DONE** | 30m | t006 |
+| t009 | Closeout — **DONE** | 15m | t008, t007 |
 
 ## Definition of done
 

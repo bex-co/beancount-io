@@ -262,6 +262,14 @@ Usage: bea ask [OPTIONS] [question]
 | `--print, -p` | flag |  | Print mode: answer once and exit (non-interactive) |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
 
+### `bea mcp`
+
+Serve the ledger to a coding agent over MCP (stdio), read-only.
+
+```text
+Usage: bea mcp [OPTIONS]
+```
+
 ### `bea example`
 
 Generate an example ledger (delegates to bean-example).

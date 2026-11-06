@@ -128,6 +128,7 @@ for your first month end to end, follow the
 | `bea report TYPE` | Overview, income statement, balance sheet, trial balance, holdings, register, capital gains, cash flow, or budget versus actual; `--format csv` for a spreadsheet |
 | `bea balance [ACCOUNT…]` | Trial-balance subtrees for matching accounts |
 | `bea ask [QUESTION]` | Ask about a local ledger through the hosted AI service |
+| `bea mcp` | Serve a local ledger to a coding agent over MCP (stdio, read-only); see [MCP guide](https://github.com/bex-co/beancount-io/blob/main/cli/docs/MCP.md) |
 | `bea cloud …` | Sign in and manage hosted ledgers |
 | `bea engine status\|enable` | Inspect or enable optional engine features (Beangulp / Beanprice) |
 | `bea upgrade [--check]` | Check for an update or invoke the owning package manager |

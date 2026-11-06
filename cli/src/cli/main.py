@@ -25,6 +25,7 @@ from cli.commands.import_ import import_entries
 from cli.commands.ingest import ingest_app
 from cli.commands.init import init
 from cli.commands.list import list_app
+from cli.commands.mcp import mcp
 from cli.commands.price import PriceCommand, price
 from cli.commands.query import query
 from cli.commands.report import balance, report_app
@@ -519,6 +520,7 @@ app.command(
     epilog=native_help("price"),
 )(price)
 app.command("ask", cls=SingleValueCommand, rich_help_panel=_LOCAL_PANEL)(ask)
+app.command("mcp", cls=SingleValueCommand, rich_help_panel=_LOCAL_PANEL)(mcp)
 app.command(
     "example",
     cls=ForwardingCommand,
