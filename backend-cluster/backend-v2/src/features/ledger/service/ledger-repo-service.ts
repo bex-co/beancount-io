@@ -155,6 +155,14 @@ export interface ILedgerRepoService {
   }): Promise<(string | null)[]>;
 }
 
+/**
+ * What a create over an existing path tells the caller. REST, GraphQL and MCP
+ * all reach it, so it names the overwrite on each surface in that surface's
+ * own words; an MCP tool it quotes must exist (pinned in the service tests).
+ */
+export const FILE_EXISTS_HINT =
+  "Creating is for a new file. To overwrite this one deliberately, update it: MCP `updateLedgerFiles` with `content`, GraphQL `updateLedgerFile`, or REST `PUT` with its `sha`. Or choose another path.";
+
 export class LedgerRepoService
   extends AuthorizedLedgerService
   implements ILedgerRepoService, ILedgerGeneratedFileWriter
@@ -511,7 +519,7 @@ export class LedgerRepoService
         const taken = existing.find((file) => created.has(file.path));
         if (taken) {
           throw new ConflictError("File", `${taken.path} already exists`, {
-            hint: "`create` is for a new file. Overwrite this one deliberately with `replace` (REST: `PUT` with its `sha`), or choose another path.",
+            hint: FILE_EXISTS_HINT,
           });
         }
       }

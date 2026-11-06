@@ -1,4 +1,5 @@
-import { LedgerRepoService } from "../ledger-repo-service";
+import { FILE_EXISTS_HINT, LedgerRepoService } from "../ledger-repo-service";
+import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import { FavaApiError } from "@/foundation/fava";
 import { OperationNotAllowedError } from "@/shared/errors";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
@@ -553,6 +554,7 @@ describe("LedgerRepoService", () => {
       ).rejects.toMatchObject({
         category: "CONFLICT",
         message: expect.stringContaining("main.bean already exists"),
+        metadata: { hint: FILE_EXISTS_HINT },
       });
       expect(mockGetLedgerFilesContent).toHaveBeenCalledWith(
         "testowner",
@@ -560,6 +562,18 @@ describe("LedgerRepoService", () => {
         { files: ["new.bean", "main.bean"] },
       );
       expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+
+    // w23/217: the hint once told MCP callers to overwrite "with `replace`", a
+    // word no published tool has. Every MCP tool it quotes must be one.
+    it("only quotes MCP tools that tools/list publishes when a create hits an existing file", () => {
+      const published = new Set(MCP_TOOLS.map((tool) => tool.name));
+      const quoted = [...FILE_EXISTS_HINT.matchAll(/`(\w+LedgerFiles)`/gu)].map(
+        (match) => match[1],
+      );
+      expect(quoted).toEqual(["updateLedgerFiles"]);
+      for (const name of quoted) expect(published.has(name)).toBe(true);
+      expect(FILE_EXISTS_HINT).not.toContain("replace");
     });
 
     it("lets a dry run create a path the same batch deletes first, and reads nothing without a create", async () => {

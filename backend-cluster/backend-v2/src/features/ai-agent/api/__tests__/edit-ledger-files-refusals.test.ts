@@ -189,7 +189,10 @@ describe("previewing a create over an existing file", () => {
       };
       expect(error.code).toBe("CONFLICT");
       expect(error.message).toContain("main.bean already exists");
-      expect(error.hint).toContain("replace");
+      // It names a remedy the MCP surface has (w23/217): `updateLedgerFiles`,
+      // not the legacy `editLedgerFiles` word `replace` that no tool carries.
+      expect(error.hint).toContain("updateLedgerFiles");
+      expect(error.hint).not.toContain("replace");
       // The category's fallback hint is about entry editing; it must not win.
       expect(error.hint).not.toContain("getEntryContext");
       expect(f.changeLedgerFiles).not.toHaveBeenCalled();
