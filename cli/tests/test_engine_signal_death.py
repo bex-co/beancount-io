@@ -222,7 +222,8 @@ def test_a_child_killed_from_outside_is_reported_not_forwarded(tmp_path: Path) -
     assert "SIGTERM" in result.stderr
     # A kill from outside is not an upstream parser crash, so it must not
     # suggest hunting for a zero divisor.
-    assert "/0" not in result.stderr
+    # The temp directory's own name can contain "/0" on macOS, so look past it.
+    assert "/0" not in result.stderr.replace(str(tmp_path.resolve()), "").replace(str(tmp_path), "")
     assert "out-of-memory" in result.stderr
 
 

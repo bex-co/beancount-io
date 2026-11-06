@@ -320,6 +320,10 @@ class TestManagedPriceBudget:
         assert budget.claim("https://beancount.io/prices/ETH-USD") is False
 
 
+class _FeedServer(ThreadingHTTPServer):
+    request_queue_size = 64
+
+
 class _FeedHandler(BaseHTTPRequestHandler):
     """Routes for the t001 fixture server; t006 extends the table."""
 
@@ -391,7 +395,9 @@ def feed_server() -> Any:
     }
     _FeedHandler.hits = []
     _FeedHandler.seen_headers = {}
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _FeedHandler)
+    # The default listen backlog is 5; sources load concurrently and macOS refuses the
+    # overflow instead of queueing it, so sixteen-source cases failed on connection errors.
+    server = _FeedServer(("127.0.0.1", 0), _FeedHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     yield f"http://127.0.0.1:{server.server_port}"

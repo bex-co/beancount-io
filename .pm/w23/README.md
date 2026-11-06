@@ -75,4 +75,4 @@
 - [x] [221](./done/221.md) — `updateEntrySource`/`deleteEntrySource` previews need `allowInvalid` to show a breaking edit; `addLedgerEntries` still refuses a budget on an unopened account on a preview 
 - [x] [222](./done/222.md) — does a `dry_run` consume the write rate budget? measure it, then decide (preview-then-commit may cost double)
 - [x] [223](./done/223.md) — backend-v2 `yarn lint:deadcode` is red on `main` (`isWithinRefreshReuseGrace`) and `CI (backend parity)` does not run it
-- [ ] [224](./224.md) — `make check-all` fails locally on a cluttered `$TMPDIR` (root-discovery budget), a nested `uv` picking CPython 3.15, and sandboxed signal tests
+- [x] [224](./done/224.md) — `make check-all` fails locally on a cluttered `$TMPDIR` (root-discovery budget), a nested `uv` picking CPython 3.15, and sandboxed signal tests

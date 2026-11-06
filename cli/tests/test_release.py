@@ -7,6 +7,7 @@ it in `make check-all`, so a broken tag gate or formula cannot reach a tag.
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -22,11 +23,17 @@ def test_clean_checkout_installs_but_cannot_ship_without_release_locks(tmp_path:
         shutil.copy2(CLI_ROOT / name, tmp_path / name)
     for name in ("src", "scripts"):
         shutil.copytree(CLI_ROOT / name, tmp_path / name, ignore=shutil.ignore_patterns("__pycache__"))
+    # The nested uv must use the project's interpreter: left to itself it can pick a
+    # newer CPython with no wheels for the pinned engine and try to build them from source.
+    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    env["UV_PYTHON"] = (CLI_ROOT / ".python-version").read_text().strip()
     installed = subprocess.run(
-        ["uv", "sync", "--frozen", "--all-groups"], cwd=tmp_path, capture_output=True, text=True, timeout=120
+        ["uv", "sync", "--frozen", "--all-groups"], cwd=tmp_path, capture_output=True, text=True, timeout=120, env=env
     )
     assert installed.returncode == 0, installed.stdout + installed.stderr
-    built = subprocess.run(["uv", "build", "--wheel"], cwd=tmp_path, capture_output=True, text=True, timeout=120)
+    built = subprocess.run(
+        ["uv", "build", "--wheel"], cwd=tmp_path, capture_output=True, text=True, timeout=120, env=env
+    )
     assert built.returncode != 0
     assert "Missing release lock engine-requirements.lock" in built.stderr
 
@@ -89,13 +96,18 @@ def test_the_default_install_still_imports_no_http_client() -> None:
     assert result.stdout.strip() == "False"
 
 
-def test_customer_smoke_runs_against_the_installed_cli() -> None:
+def test_customer_smoke_runs_against_the_installed_cli(tmp_path: Path) -> None:
     binary = Path(sys.executable).parent / ("bea.exe" if sys.platform == "win32" else "bea")
+    # The smoke ledger is created under TMPDIR and root discovery walks its siblings, so a
+    # shared TMPDIR holding thousands of stale entries exhausts the search budget. Give the
+    # run its own directory.
+    env = {**os.environ, "TMPDIR": str(tmp_path), "TEMP": str(tmp_path), "TMP": str(tmp_path)}
     result = subprocess.run(
         [sys.executable, str(CLI_ROOT / "scripts/smoke-installed.py"), str(binary)],
         capture_output=True,
         text=True,
         cwd=CLI_ROOT,
         timeout=120,
+        env=env,
     )
     assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"

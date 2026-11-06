@@ -133,7 +133,8 @@ def test_a_captured_child_killed_from_outside_is_reported(tmp_path: Path, op: st
     assert result.returncode == 1, f"exit {result.returncode}"
     assert "was killed by SIGTERM" in result.stderr
     # A kill from outside is not upstream's parser crash.
-    assert "/0" not in result.stderr
+    # The temp directory's own name can contain "/0" on macOS, so look past it.
+    assert "/0" not in result.stderr.replace(str(tmp_path.resolve()), "").replace(str(tmp_path), "")
     assert "out-of-memory" in result.stderr
 
 
