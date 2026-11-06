@@ -52,6 +52,12 @@ services:
       # because Docker builds get no build args.
       - key: SSR_API_URL
         value: http://beancount-api:4104/api-gateway/
+      # Serve the API from this host too (dashboard/server/api-gateway-proxy.ts)
+      # so the browser only ever talks to the dashboard's own origin. The
+      # platform-assigned *.onbex.co hostnames share no parent domain we own,
+      # so a sign-in cookie cannot span a separate API host. Unset = inert.
+      - key: API_PROXY_URL
+        value: http://beancount-api:4104
 
   # ---------------------------------------------------------------- backend-v2
   - name: beancount-api
@@ -95,8 +101,13 @@ services:
         value: https://beancount-api.onbex.co
       - key: DASHBOARD_URL
         value: https://beancount-dashboard.onbex.co
-      # The browser calls this API cross-origin from the dashboard; CORS only
-      # trusts *.beancount.io by default (src/server/api/allowed-origin.ts).
+      # The browser reaches this API through the dashboard host (see
+      # API_PROXY_URL above), so the sign-in cookie is scoped to that host alone
+      # -- not to .onbex.co, which every bex tenant shares.
+      - key: AUTH_COOKIE_DOMAIN
+        value: beancount-dashboard.onbex.co
+      # Direct calls to this API from the dashboard origin; CORS only trusts
+      # *.beancount.io by default (src/server/api/allowed-origin.ts).
       - key: EXTRA_ALLOWED_ORIGINS
         value: https://beancount-dashboard.onbex.co
       # No mail provider on this canary: sign-up sends no code and accepts any

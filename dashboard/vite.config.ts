@@ -19,6 +19,15 @@ export default defineConfig({
     tanstackStart(),
     viteReact(),
     nitro({
+      // Global middleware (a routed one fails to register in this nitro build);
+      // the handler checks the path itself and is inert unless API_PROXY_URL is set.
+      handlers: [
+        {
+          route: "/**",
+          middleware: true,
+          handler: "./server/api-gateway-proxy.ts",
+        },
+      ],
       // Radix/sonner/cmdk ship "use client" for Next.js App Router. TanStack
       // Start is plain SSR, not RSC, so the directive Rollup drops while
       // bundling changes nothing at runtime — it only floods the server build
