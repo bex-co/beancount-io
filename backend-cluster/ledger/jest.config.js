@@ -3,7 +3,7 @@ module.exports = {
   testEnvironment: "node",
   testTimeout: 10000,
   forceExit: true,
-  roots: ["<rootDir>/src", "<rootDir>/parity"],
+  roots: ["<rootDir>/src", "<rootDir>/parity", "<rootDir>/scripts"],
   testMatch: ["**/__tests__/**/*.test.ts", "**/*.test.ts"],
   transform: {
     "^.+\\.ts$": [
