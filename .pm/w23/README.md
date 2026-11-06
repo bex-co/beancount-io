@@ -67,3 +67,4 @@
 - [ ] [215](./blocked/215.md) — BQL `sum(1)` reports dtype `Decimal` where stock reports `int` (cell value agrees; found by the m20 oracle replay) — **blocked:** the fix changes the JSON type of numeric cells on REST/GraphQL/MCP; needs an owner decision (a/b/c in the note)
 - [x] [216](./done/216.md) — BQL names a boolean-literal column `true` where stock keeps the source spelling `TRUE` (header text only; found by the m20 oracle replay)
 - [x] [217](./done/217.md) — MCP `createLedgerFiles` CONFLICT hint says to overwrite "with `replace`", which no published MCP tool has (legacy `editLedgerFiles` wording at `ledger-repo-service.ts:514`)
+- [ ] [218](./218.md) — a NUL byte in a bank id (`accountId`, `itemId`, `transactionIds`) answers `INTERNAL_SERVER_ERROR`/`SERVICE_UNAVAILABLE`, not `BAD_USER_INPUT` (w23/210 class; found by MCP QA 2026-11-05)
