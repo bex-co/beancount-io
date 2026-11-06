@@ -2612,7 +2612,11 @@ def _stage_export(dest: Path, content: bytes, mode: int, created: list[Path], co
     copies.enter_context(stopping.staged(staged))
     fd = os.open(staged, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, "wb") as stream:
-        os.fchmod(stream.fileno(), mode)
+        if hasattr(os, "fchmod"):
+            os.fchmod(stream.fileno(), mode)
+        else:
+            # Windows has no fchmod; chmod by name sets the one bit it keeps (read-only).
+            os.chmod(staged, mode)
         stream.write(content)
         stream.flush()
         os.fsync(stream.fileno())

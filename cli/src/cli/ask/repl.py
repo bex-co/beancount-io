@@ -100,7 +100,11 @@ def _history() -> History:
     try:
         if not stat.S_ISREG(os.fstat(fd).st_mode):
             return _history_in_memory(history_file)
-        os.fchmod(fd, stat.S_IRUSR | stat.S_IWUSR)
+        if hasattr(os, "fchmod"):
+            os.fchmod(fd, stat.S_IRUSR | stat.S_IWUSR)
+        else:
+            # Windows has no fchmod; chmod by name leaves the file writable, the one bit it keeps.
+            os.chmod(history_file, stat.S_IRUSR | stat.S_IWUSR)
     finally:
         os.close(fd)
     return FileHistory(str(history_file))
