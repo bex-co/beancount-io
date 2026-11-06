@@ -1,0 +1,5 @@
+option "title" "bql-oracle empty"
+option "operating_currency" "USD"
+
+2025-01-01 open Assets:Cash USD
+2025-01-01 open Expenses:Food USD

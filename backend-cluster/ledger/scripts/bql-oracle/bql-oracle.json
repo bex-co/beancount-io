@@ -5,13 +5,1093 @@
     "beanquery": "0.2.0"
   },
   "results": {
-    "seed-bad-column": {
+    "amount-from-balances": {
+      "error": "parse",
+      "ledger": "main.bean",
+      "query": "SELECT amount FROM balances",
+      "source": "w23/169"
+    },
+    "amount-from-prices": {
+      "columns": [
+        {
+          "dtype": "Amount",
+          "name": "amount"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT amount FROM prices",
+      "rows": [
+        [
+          [
+            "1.10",
+            "USD"
+          ]
+        ],
+        [
+          [
+            "1.20",
+            "USD"
+          ]
+        ],
+        [
+          [
+            "1.25",
+            "USD"
+          ]
+        ],
+        [
+          [
+            "50.00",
+            "USD"
+          ]
+        ]
+      ],
+      "source": "w23/169"
+    },
+    "composite-equal-other-accounts": {
       "error": "compile",
       "ledger": "main.bean",
-      "query": "SELECT bogus_column",
-      "source": "t001 seed"
+      "query": "SELECT other_accounts = other_accounts AS e FROM postings LIMIT 1",
+      "source": "w23/152"
     },
-    "seed-balances": {
+    "composite-equal-weight": {
+      "error": "compile",
+      "ledger": "main.bean",
+      "query": "SELECT weight = weight AS e FROM postings LIMIT 1",
+      "source": "w23/152"
+    },
+    "concat-literals": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "s"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT 'a' + 'b' AS s",
+      "rows": [
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ],
+        [
+          "ab"
+        ]
+      ],
+      "source": "w23/154"
+    },
+    "concat-payee": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "s"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT payee + '!' AS s WHERE payee ~ 'CITY' ORDER BY s",
+      "rows": [
+        [
+          "CITY CAFE!"
+        ],
+        [
+          "CITY CAFE!"
+        ],
+        [
+          "CITY MARKET!"
+        ],
+        [
+          "CITY MARKET!"
+        ]
+      ],
+      "source": "w23/154"
+    },
+    "cost-column": {
+      "error": "compile",
+      "ledger": "main.bean",
+      "query": "SELECT cost WHERE currency = 'STOCK'",
+      "source": "w23/169"
+    },
+    "date-minus-date": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "date - date"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT date - date LIMIT 1",
+      "rows": [
+        [
+          0
+        ]
+      ],
+      "source": "w23/165"
+    },
+    "date-minus-int": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date - 7"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT date - 7 LIMIT 1",
+      "rows": [
+        [
+          "2024-12-26"
+        ]
+      ],
+      "source": "w23/165"
+    },
+    "date-plus-int": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date + 7"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT date + 7 LIMIT 1",
+      "rows": [
+        [
+          "2025-01-09"
+        ]
+      ],
+      "source": "w23/165"
+    },
+    "decimal-max": {
+      "columns": [
+        {
+          "dtype": "Decimal",
+          "name": "79228162514264337593543950334.9"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT 79228162514264337593543950334.9",
+      "rows": [
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ],
+        [
+          "79228162514264337593543950334.9"
+        ]
+      ],
+      "source": "w23/160"
+    },
+    "decimal-plain": {
+      "columns": [
+        {
+          "dtype": "Decimal",
+          "name": "1.5"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT 1.5",
+      "rows": [
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ],
+        [
+          "1.5"
+        ]
+      ],
+      "source": "w23/160"
+    },
+    "double-semicolon-bare": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "1"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT 1;;",
+      "rows": [
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ],
+        [
+          1
+        ]
+      ],
+      "source": "w23/199"
+    },
+    "double-semicolon-entries": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "payee"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT payee FROM entries LIMIT 1;;",
+      "rows": [
+        [
+          null
+        ]
+      ],
+      "source": "w23/199"
+    },
+    "double-semicolon-postings": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "payee"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT payee FROM postings;;",
+      "rows": [
+        [
+          "Opening"
+        ],
+        [
+          "Opening"
+        ],
+        [
+          "CITY CAFE"
+        ],
+        [
+          "CITY CAFE"
+        ],
+        [
+          "Landlord"
+        ],
+        [
+          "Landlord"
+        ],
+        [
+          "Employer"
+        ],
+        [
+          "Employer"
+        ],
+        [
+          "CITY MARKET"
+        ],
+        [
+          "CITY MARKET"
+        ],
+        [
+          "Broker"
+        ],
+        [
+          "Broker"
+        ],
+        [
+          "Broker"
+        ],
+        [
+          "Broker"
+        ],
+        [
+          "Employer"
+        ],
+        [
+          "Employer"
+        ],
+        [
+          "Landlord"
+        ],
+        [
+          "Landlord"
+        ],
+        [
+          "Cafe"
+        ],
+        [
+          "Cafe"
+        ],
+        [
+          ""
+        ],
+        [
+          ""
+        ]
+      ],
+      "source": "w23/199"
+    },
+    "empty-aggregates": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "sum(number)"
+        },
+        {
+          "dtype": "date",
+          "name": "min(date)"
+        },
+        {
+          "dtype": "str",
+          "name": "max(payee)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*), sum(number), min(date), max(payee) WHERE FALSE",
+      "rows": [],
+      "source": "w23/164"
+    },
+    "empty-id-columns": {
+      "columns": [
+        {
+          "dtype": "set",
+          "name": "other_accounts"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "number"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT other_accounts, number FROM postings WHERE FALSE LIMIT 1",
+      "rows": [],
+      "source": "w23/136"
+    },
+    "empty-ledger-count": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "sum(number)"
+        }
+      ],
+      "ledger": "empty.bean",
+      "query": "SELECT count(*), sum(number) FROM postings",
+      "rows": [],
+      "source": "w23/164"
+    },
+    "empty-ledger-rows": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "number"
+        }
+      ],
+      "ledger": "empty.bean",
+      "query": "SELECT account, number FROM postings",
+      "rows": [],
+      "source": "w23/168"
+    },
+    "empty-literals": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "1"
+        },
+        {
+          "dtype": "str",
+          "name": "'a'"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "1.5"
+        },
+        {
+          "dtype": "bool",
+          "name": "TRUE"
+        },
+        {
+          "dtype": "NoneType",
+          "name": "NULL"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT 1, 'a', 1.5, TRUE, NULL WHERE FALSE",
+      "rows": [],
+      "source": "w23/164"
+    },
+    "empty-text-columns": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "payee"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "number"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT payee, number WHERE FALSE LIMIT 5",
+      "rows": [],
+      "source": "w23/168"
+    },
+    "empty-typed-exprs": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "upper(payee)"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "number + 1"
+        },
+        {
+          "dtype": "int",
+          "name": "year(date)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT upper(payee), number + 1, year(date) WHERE FALSE",
+      "rows": [],
+      "source": "w23/164"
+    },
+    "filter-currency": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "sum(filter_currency(position, 'USD'))"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account, sum(filter_currency(position, 'USD')) WHERE account ~ '^Assets' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "4785.00 USD"
+          ]
+        ],
+        [
+          "Assets:Cash",
+          [
+            "-68.60 USD"
+          ]
+        ],
+        [
+          "Assets:Invest",
+          []
+        ]
+      ],
+      "source": "w23/016"
+    },
+    "from-account-regex": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account FROM account ~ 'Cash' LIMIT 1",
+      "rows": [
+        [
+          "Assets:Cash"
+        ]
+      ],
+      "source": "w23/212"
+    },
+    "from-accounts-count": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) FROM accounts",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/116"
+    },
+    "from-accounts-limit": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) FROM accounts LIMIT 1",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/116"
+    },
+    "from-accounts-quoted": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) FROM \"accounts\" LIMIT 1",
+      "rows": [
+        [
+          7
+        ]
+      ],
+      "source": "w23/124"
+    },
+    "from-accounts-where": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) FROM accounts WHERE date > 2020-01-01",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/116"
+    },
+    "from-date-gt": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "COUNT(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT COUNT(*) FROM date > 2026-06-01",
+      "rows": [
+        [
+          6
+        ]
+      ],
+      "source": "w23/212"
+    },
+    "from-month-eq": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account FROM month = 7 LIMIT 1",
+      "rows": [
+        [
+          "Assets:Bank:Checking"
+        ]
+      ],
+      "source": "w23/212"
+    },
+    "from-payee-limit": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) FROM payee LIMIT 1",
+      "rows": [
+        [
+          20
+        ]
+      ],
+      "source": "w23/125"
+    },
+    "from-year-and-month": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "COUNT(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT COUNT(*) FROM year = 2026 AND month = 7",
+      "rows": [
+        [
+          2
+        ]
+      ],
+      "source": "w23/212"
+    },
+    "from-year-bare": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) FROM year",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/125"
+    },
+    "from-year-eq": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "COUNT(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT COUNT(*) FROM year = 2026",
+      "rows": [
+        [
+          14
+        ]
+      ],
+      "source": "w23/212"
+    },
+    "from-year-gt": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "COUNT(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT COUNT(*) FROM year > 2026",
+      "rows": [],
+      "source": "w23/212"
+    },
+    "inner-entries": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) FROM (SELECT * FROM entries)",
+      "rows": [
+        [
+          24
+        ]
+      ],
+      "source": "w23/130"
+    },
+    "inner-postings": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) FROM (SELECT * FROM postings)",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/130"
+    },
+    "inner-prices": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) FROM (SELECT * FROM prices)",
+      "rows": [
+        [
+          4
+        ]
+      ],
+      "source": "w23/130"
+    },
+    "inner-sum1": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "sum(1)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT sum(1) FROM (SELECT * FROM postings)",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/130"
+    },
+    "int-plus-date": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "7 + date"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT 7 + date LIMIT 1",
+      "rows": [
+        [
+          "2025-01-09"
+        ]
+      ],
+      "source": "w23/165"
+    },
+    "meta-entries": {
+      "columns": [
+        {
+          "dtype": "dict",
+          "name": "meta"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT meta FROM entries WHERE narration = 'metadata probe'",
+      "rows": [
+        [
+          {
+            "__tolerances__": {
+              "USD": "0.005"
+            },
+            "filename": "main.bean",
+            "lineno": 55,
+            "note": "entry-level"
+          }
+        ]
+      ],
+      "source": "w23/170"
+    },
+    "meta-lineno": {
+      "columns": [
+        {
+          "dtype": "object",
+          "name": "meta('lineno')"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT meta('lineno') LIMIT 1",
+      "rows": [
+        [
+          20
+        ]
+      ],
+      "source": "w23/016"
+    },
+    "meta-postings": {
+      "columns": [
+        {
+          "dtype": "dict",
+          "name": "meta"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT meta FROM postings WHERE narration = 'metadata probe'",
+      "rows": [
+        [
+          {
+            "filename": "main.bean",
+            "lineno": 57,
+            "tag-note": "posting-level"
+          }
+        ],
+        [
+          {
+            "filename": "main.bean",
+            "lineno": 59
+          }
+        ]
+      ],
+      "source": "w23/170"
+    },
+    "nbsp-count": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "n"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) AS n FROM postings",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/162"
+    },
+    "neg-inventory": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "neg(sum(position))"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account, neg(sum(position)) WHERE account ~ '^Income' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Income:Salary",
+          [
+            "6000.00 USD"
+          ]
+        ]
+      ],
+      "source": "w23/016"
+    },
+    "open-on-balances": {
       "columns": [
         {
           "dtype": "str",
@@ -23,55 +1103,377 @@
         }
       ],
       "ledger": "main.bean",
-      "query": "SELECT account, sum(position) GROUP BY account ORDER BY account",
+      "query": "SELECT account, sum(position) FROM OPEN ON 2026-06-01 GROUP BY account ORDER BY account",
       "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "4785.00 USD"
+          ]
+        ],
         [
           "Assets:Cash",
           [
-            "94.50 USD"
+            "-68.60 USD"
           ]
+        ],
+        [
+          "Assets:Invest",
+          [
+            "10 STOCK {50.00 USD, 2026-02-01}",
+            "100.00 EUR"
+          ]
+        ],
+        [
+          "Equity:Conversions:Previous",
+          [
+            "-100.00 EUR",
+            "115.00 USD"
+          ]
+        ],
+        [
+          "Equity:Earnings:Previous",
+          [
+            "-5142.40 USD"
+          ]
+        ],
+        [
+          "Equity:Opening",
+          [
+            "-1000.00 USD"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          []
         ],
         [
           "Expenses:Food",
           [
-            "5.50 USD"
+            "11.00 USD"
           ]
         ],
         [
-          "Income:Salary",
+          "Expenses:Rent",
           [
-            "-100.00 USD"
+            "800.00 USD"
           ]
         ]
       ],
-      "source": "t001 seed"
+      "source": "w23/166"
     },
-    "seed-empty": {
+    "open-on-end": {
       "columns": [
         {
-          "dtype": "date",
-          "name": "date"
-        },
-        {
           "dtype": "int",
-          "name": "year"
-        },
-        {
-          "dtype": "Decimal",
-          "name": "number"
+          "name": "n"
         }
       ],
       "ledger": "main.bean",
-      "query": "SELECT date, year, number WHERE 1 = 0",
-      "rows": [],
-      "source": "t001 seed"
+      "query": "SELECT count(*) AS n FROM OPEN ON 2026-12-31",
+      "rows": [
+        [
+          16
+        ]
+      ],
+      "source": "w23/166"
     },
-    "seed-syntax": {
+    "open-on-mid": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "n"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) AS n FROM OPEN ON 2026-06-01",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/166"
+    },
+    "open-on-start": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "n"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) AS n FROM OPEN ON 2026-01-01",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/166"
+    },
+    "price-and-cost": {
+      "columns": [
+        {
+          "dtype": "Amount",
+          "name": "price"
+        },
+        {
+          "dtype": "Amount",
+          "name": "cost(position)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT price, cost(position) WHERE number = 100.00 LIMIT 1",
+      "rows": [
+        [
+          [
+            "1.15",
+            "USD"
+          ],
+          [
+            "100.00",
+            "EUR"
+          ]
+        ]
+      ],
+      "source": "w23/167"
+    },
+    "price-cost-number": {
+      "columns": [
+        {
+          "dtype": "Amount",
+          "name": "price"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "cost_number"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT price, cost_number WHERE currency = 'STOCK' LIMIT 1",
+      "rows": [
+        [
+          null,
+          "50.00"
+        ]
+      ],
+      "source": "w23/167"
+    },
+    "price-empty": {
+      "columns": [
+        {
+          "dtype": "Amount",
+          "name": "price"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT price WHERE FALSE LIMIT 1",
+      "rows": [],
+      "source": "w23/167"
+    },
+    "price-not-null": {
+      "columns": [
+        {
+          "dtype": "Amount",
+          "name": "price"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT price WHERE price IS NOT NULL LIMIT 3",
+      "rows": [
+        [
+          [
+            "1.15",
+            "USD"
+          ]
+        ]
+      ],
+      "source": "w23/167"
+    },
+    "quoted-column": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "\"account\""
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT \"account\" LIMIT 1",
+      "rows": [
+        [
+          "Assets:Bank:Checking"
+        ]
+      ],
+      "source": "w23/157"
+    },
+    "quoted-narration": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "\"narration\""
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT \"narration\" LIMIT 1",
+      "rows": [
+        [
+          "opening balances"
+        ]
+      ],
+      "source": "w23/157"
+    },
+    "row-number-over": {
       "error": "parse",
       "ledger": "main.bean",
-      "query": "SELECT account FROM",
-      "source": "t001 seed"
+      "query": "SELECT row_number() OVER () LIMIT 3",
+      "source": "w23/139"
+    },
+    "str-balance": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "s"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT str(balance) AS s LIMIT 1",
+      "rows": [
+        [
+          "(1000.00 USD)"
+        ]
+      ],
+      "source": "w23/155"
+    },
+    "str-position": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "s"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT str(position) AS s LIMIT 1",
+      "rows": [
+        [
+          "1000.00 USD"
+        ]
+      ],
+      "source": "w23/155"
+    },
+    "str-tags": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "s"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT str(tags) AS s WHERE 'meals' IN tags LIMIT 1",
+      "rows": [
+        [
+          "frozenset({'meals'})"
+        ]
+      ],
+      "source": "w23/155"
+    },
+    "tags-equal": {
+      "error": "compile",
+      "ledger": "main.bean",
+      "query": "SELECT tags = tags AS e FROM postings LIMIT 1",
+      "source": "w23/128"
+    },
+    "tags-links": {
+      "columns": [
+        {
+          "dtype": "set",
+          "name": "tags"
+        },
+        {
+          "dtype": "set",
+          "name": "links"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT tags, links FROM postings WHERE narration = 'lunch'",
+      "rows": [
+        [
+          [
+            "meals"
+          ],
+          [
+            "receipt-1"
+          ]
+        ],
+        [
+          [
+            "meals"
+          ],
+          [
+            "receipt-1"
+          ]
+        ]
+      ],
+      "source": "w23/128"
+    },
+    "tail-comment": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "n"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*) AS n FROM postings; -- trailing",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/151"
+    },
+    "tail-garbage": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*); GARBAGE!!!",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/151"
+    },
+    "tail-second-select": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "count(*)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT count(*); SELECT 1;",
+      "rows": [
+        [
+          22
+        ]
+      ],
+      "source": "w23/151"
+    },
+    "weight-account-balance": {
+      "error": "compile",
+      "ledger": "main.bean",
+      "query": "SELECT weight, account_balance FROM postings LIMIT 1",
+      "source": "w23/169"
+    },
+    "weight-empty": {
+      "error": "compile",
+      "ledger": "main.bean",
+      "query": "SELECT weight, account_balance WHERE FALSE",
+      "source": "w23/169"
     }
   },
-  "sourceHash": "3b40d7bee6e421325a74284c1ed218ef894a6270c4df0d9b460ef27d300c9cc3"
+  "sourceHash": "14a09f9c09c8a9b55592d7923d8d6025d305d44777b4fe52672765e47e3ed146"
 }

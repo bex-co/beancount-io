@@ -1,6 +1,398 @@
 [
-  {"id": "seed-balances", "ledger": "main.bean", "source": "t001 seed", "query": "SELECT account, sum(position) GROUP BY account ORDER BY account"},
-  {"id": "seed-empty", "ledger": "main.bean", "source": "t001 seed", "query": "SELECT date, year, number WHERE 1 = 0"},
-  {"id": "seed-bad-column", "ledger": "main.bean", "source": "t001 seed", "query": "SELECT bogus_column"},
-  {"id": "seed-syntax", "ledger": "main.bean", "source": "t001 seed", "query": "SELECT account FROM"}
+  {
+    "id": "neg-inventory",
+    "ledger": "main.bean",
+    "source": "w23/016",
+    "query": "SELECT account, neg(sum(position)) WHERE account ~ '^Income' GROUP BY account ORDER BY account"
+  },
+  {
+    "id": "filter-currency",
+    "ledger": "main.bean",
+    "source": "w23/016",
+    "query": "SELECT account, sum(filter_currency(position, 'USD')) WHERE account ~ '^Assets' GROUP BY account ORDER BY account"
+  },
+  {
+    "id": "meta-lineno",
+    "ledger": "main.bean",
+    "source": "w23/016",
+    "query": "SELECT meta('lineno') LIMIT 1"
+  },
+  {
+    "id": "from-accounts-count",
+    "ledger": "main.bean",
+    "source": "w23/116",
+    "query": "SELECT count(*) FROM accounts"
+  },
+  {
+    "id": "from-accounts-limit",
+    "ledger": "main.bean",
+    "source": "w23/116",
+    "query": "SELECT count(*) FROM accounts LIMIT 1"
+  },
+  {
+    "id": "from-accounts-where",
+    "ledger": "main.bean",
+    "source": "w23/116",
+    "query": "SELECT count(*) FROM accounts WHERE date > 2020-01-01"
+  },
+  {
+    "id": "from-accounts-quoted",
+    "ledger": "main.bean",
+    "source": "w23/124",
+    "query": "SELECT count(*) FROM \"accounts\" LIMIT 1"
+  },
+  {
+    "id": "from-payee-limit",
+    "ledger": "main.bean",
+    "source": "w23/125",
+    "query": "SELECT count(*) FROM payee LIMIT 1"
+  },
+  {
+    "id": "from-year-bare",
+    "ledger": "main.bean",
+    "source": "w23/125",
+    "query": "SELECT count(*) FROM year"
+  },
+  {
+    "id": "inner-postings",
+    "ledger": "main.bean",
+    "source": "w23/130",
+    "query": "SELECT count(*) FROM (SELECT * FROM postings)"
+  },
+  {
+    "id": "inner-entries",
+    "ledger": "main.bean",
+    "source": "w23/130",
+    "query": "SELECT count(*) FROM (SELECT * FROM entries)"
+  },
+  {
+    "id": "inner-prices",
+    "ledger": "main.bean",
+    "source": "w23/130",
+    "query": "SELECT count(*) FROM (SELECT * FROM prices)"
+  },
+  {
+    "id": "inner-sum1",
+    "ledger": "main.bean",
+    "source": "w23/130",
+    "query": "SELECT sum(1) FROM (SELECT * FROM postings)"
+  },
+  {
+    "id": "tail-garbage",
+    "ledger": "main.bean",
+    "source": "w23/151",
+    "query": "SELECT count(*); GARBAGE!!!"
+  },
+  {
+    "id": "tail-second-select",
+    "ledger": "main.bean",
+    "source": "w23/151",
+    "query": "SELECT count(*); SELECT 1;"
+  },
+  {
+    "id": "tail-comment",
+    "ledger": "main.bean",
+    "source": "w23/151",
+    "query": "SELECT count(*) AS n FROM postings; -- trailing"
+  },
+  {
+    "id": "concat-literals",
+    "ledger": "main.bean",
+    "source": "w23/154",
+    "query": "SELECT 'a' + 'b' AS s"
+  },
+  {
+    "id": "concat-payee",
+    "ledger": "main.bean",
+    "source": "w23/154",
+    "query": "SELECT payee + '!' AS s WHERE payee ~ 'CITY' ORDER BY s"
+  },
+  {
+    "id": "str-position",
+    "ledger": "main.bean",
+    "source": "w23/155",
+    "query": "SELECT str(position) AS s LIMIT 1"
+  },
+  {
+    "id": "str-balance",
+    "ledger": "main.bean",
+    "source": "w23/155",
+    "query": "SELECT str(balance) AS s LIMIT 1"
+  },
+  {
+    "id": "str-tags",
+    "ledger": "main.bean",
+    "source": "w23/155",
+    "query": "SELECT str(tags) AS s WHERE 'meals' IN tags LIMIT 1"
+  },
+  {
+    "id": "decimal-max",
+    "ledger": "main.bean",
+    "source": "w23/160",
+    "query": "SELECT 79228162514264337593543950334.9"
+  },
+  {
+    "id": "decimal-plain",
+    "ledger": "main.bean",
+    "source": "w23/160",
+    "query": "SELECT 1.5"
+  },
+  {
+    "id": "nbsp-count",
+    "ledger": "main.bean",
+    "source": "w23/162",
+    "query": "SELECT count(*) AS n FROM postings"
+  },
+  {
+    "id": "empty-typed-exprs",
+    "ledger": "main.bean",
+    "source": "w23/164",
+    "query": "SELECT upper(payee), number + 1, year(date) WHERE FALSE"
+  },
+  {
+    "id": "empty-literals",
+    "ledger": "main.bean",
+    "source": "w23/164",
+    "query": "SELECT 1, 'a', 1.5, TRUE, NULL WHERE FALSE"
+  },
+  {
+    "id": "empty-aggregates",
+    "ledger": "main.bean",
+    "source": "w23/164",
+    "query": "SELECT count(*), sum(number), min(date), max(payee) WHERE FALSE"
+  },
+  {
+    "id": "date-plus-int",
+    "ledger": "main.bean",
+    "source": "w23/165",
+    "query": "SELECT date + 7 LIMIT 1"
+  },
+  {
+    "id": "date-minus-int",
+    "ledger": "main.bean",
+    "source": "w23/165",
+    "query": "SELECT date - 7 LIMIT 1"
+  },
+  {
+    "id": "int-plus-date",
+    "ledger": "main.bean",
+    "source": "w23/165",
+    "query": "SELECT 7 + date LIMIT 1"
+  },
+  {
+    "id": "date-minus-date",
+    "ledger": "main.bean",
+    "source": "w23/165",
+    "query": "SELECT date - date LIMIT 1"
+  },
+  {
+    "id": "open-on-mid",
+    "ledger": "main.bean",
+    "source": "w23/166",
+    "query": "SELECT count(*) AS n FROM OPEN ON 2026-06-01"
+  },
+  {
+    "id": "open-on-end",
+    "ledger": "main.bean",
+    "source": "w23/166",
+    "query": "SELECT count(*) AS n FROM OPEN ON 2026-12-31"
+  },
+  {
+    "id": "open-on-start",
+    "ledger": "main.bean",
+    "source": "w23/166",
+    "query": "SELECT count(*) AS n FROM OPEN ON 2026-01-01"
+  },
+  {
+    "id": "open-on-balances",
+    "ledger": "main.bean",
+    "source": "w23/166",
+    "query": "SELECT account, sum(position) FROM OPEN ON 2026-06-01 GROUP BY account ORDER BY account"
+  },
+  {
+    "id": "price-and-cost",
+    "ledger": "main.bean",
+    "source": "w23/167",
+    "query": "SELECT price, cost(position) WHERE number = 100.00 LIMIT 1"
+  },
+  {
+    "id": "price-cost-number",
+    "ledger": "main.bean",
+    "source": "w23/167",
+    "query": "SELECT price, cost_number WHERE currency = 'STOCK' LIMIT 1"
+  },
+  {
+    "id": "price-empty",
+    "ledger": "main.bean",
+    "source": "w23/167",
+    "query": "SELECT price WHERE FALSE LIMIT 1"
+  },
+  {
+    "id": "price-not-null",
+    "ledger": "main.bean",
+    "source": "w23/167",
+    "query": "SELECT price WHERE price IS NOT NULL LIMIT 3"
+  },
+  {
+    "id": "empty-text-columns",
+    "ledger": "main.bean",
+    "source": "w23/168",
+    "query": "SELECT payee, number WHERE FALSE LIMIT 5"
+  },
+  {
+    "id": "weight-account-balance",
+    "ledger": "main.bean",
+    "source": "w23/169",
+    "query": "SELECT weight, account_balance FROM postings LIMIT 1"
+  },
+  {
+    "id": "weight-empty",
+    "ledger": "main.bean",
+    "source": "w23/169",
+    "query": "SELECT weight, account_balance WHERE FALSE"
+  },
+  {
+    "id": "cost-column",
+    "ledger": "main.bean",
+    "source": "w23/169",
+    "query": "SELECT cost WHERE currency = 'STOCK'"
+  },
+  {
+    "id": "amount-from-prices",
+    "ledger": "main.bean",
+    "source": "w23/169",
+    "query": "SELECT amount FROM prices"
+  },
+  {
+    "id": "amount-from-balances",
+    "ledger": "main.bean",
+    "source": "w23/169",
+    "query": "SELECT amount FROM balances"
+  },
+  {
+    "id": "meta-postings",
+    "ledger": "main.bean",
+    "source": "w23/170",
+    "query": "SELECT meta FROM postings WHERE narration = 'metadata probe'"
+  },
+  {
+    "id": "meta-entries",
+    "ledger": "main.bean",
+    "source": "w23/170",
+    "query": "SELECT meta FROM entries WHERE narration = 'metadata probe'"
+  },
+  {
+    "id": "double-semicolon-postings",
+    "ledger": "main.bean",
+    "source": "w23/199",
+    "query": "SELECT payee FROM postings;;"
+  },
+  {
+    "id": "double-semicolon-entries",
+    "ledger": "main.bean",
+    "source": "w23/199",
+    "query": "SELECT payee FROM entries LIMIT 1;;"
+  },
+  {
+    "id": "double-semicolon-bare",
+    "ledger": "main.bean",
+    "source": "w23/199",
+    "query": "SELECT 1;;"
+  },
+  {
+    "id": "tags-equal",
+    "ledger": "main.bean",
+    "source": "w23/128",
+    "query": "SELECT tags = tags AS e FROM postings LIMIT 1"
+  },
+  {
+    "id": "tags-links",
+    "ledger": "main.bean",
+    "source": "w23/128",
+    "query": "SELECT tags, links FROM postings WHERE narration = 'lunch'"
+  },
+  {
+    "id": "composite-equal-weight",
+    "ledger": "main.bean",
+    "source": "w23/152",
+    "query": "SELECT weight = weight AS e FROM postings LIMIT 1"
+  },
+  {
+    "id": "composite-equal-other-accounts",
+    "ledger": "main.bean",
+    "source": "w23/152",
+    "query": "SELECT other_accounts = other_accounts AS e FROM postings LIMIT 1"
+  },
+  {
+    "id": "quoted-column",
+    "ledger": "main.bean",
+    "source": "w23/157",
+    "query": "SELECT \"account\" LIMIT 1"
+  },
+  {
+    "id": "quoted-narration",
+    "ledger": "main.bean",
+    "source": "w23/157",
+    "query": "SELECT \"narration\" LIMIT 1"
+  },
+  {
+    "id": "empty-id-columns",
+    "ledger": "main.bean",
+    "source": "w23/136",
+    "query": "SELECT other_accounts, number FROM postings WHERE FALSE LIMIT 1"
+  },
+  {
+    "id": "row-number-over",
+    "ledger": "main.bean",
+    "source": "w23/139",
+    "query": "SELECT row_number() OVER () LIMIT 3"
+  },
+  {
+    "id": "from-year-gt",
+    "ledger": "main.bean",
+    "source": "w23/212",
+    "query": "SELECT COUNT(*) FROM year > 2026"
+  },
+  {
+    "id": "from-year-eq",
+    "ledger": "main.bean",
+    "source": "w23/212",
+    "query": "SELECT COUNT(*) FROM year = 2026"
+  },
+  {
+    "id": "from-month-eq",
+    "ledger": "main.bean",
+    "source": "w23/212",
+    "query": "SELECT account FROM month = 7 LIMIT 1"
+  },
+  {
+    "id": "from-date-gt",
+    "ledger": "main.bean",
+    "source": "w23/212",
+    "query": "SELECT COUNT(*) FROM date > 2026-06-01"
+  },
+  {
+    "id": "from-account-regex",
+    "ledger": "main.bean",
+    "source": "w23/212",
+    "query": "SELECT account FROM account ~ 'Cash' LIMIT 1"
+  },
+  {
+    "id": "from-year-and-month",
+    "ledger": "main.bean",
+    "source": "w23/212",
+    "query": "SELECT COUNT(*) FROM year = 2026 AND month = 7"
+  },
+  {
+    "id": "empty-ledger-count",
+    "ledger": "empty.bean",
+    "source": "w23/164",
+    "query": "SELECT count(*), sum(number) FROM postings"
+  },
+  {
+    "id": "empty-ledger-rows",
+    "ledger": "empty.bean",
+    "source": "w23/168",
+    "query": "SELECT account, number FROM postings"
+  }
 ]

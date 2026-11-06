@@ -78,6 +78,20 @@ def normalize(value: Any) -> Any:
     return str(value)
 
 
+def portable(value: Any, fixtures: Path) -> Any:
+    """Strip the checkout location, so the oracle is identical on every machine.
+
+    ``meta`` cells carry the absolute ``filename`` of the fixture they came from.
+    """
+    if isinstance(value, str):
+        return value.replace(f"{fixtures}/", "")
+    if isinstance(value, list):
+        return [portable(item, fixtures) for item in value]
+    if isinstance(value, dict):
+        return {key: portable(item, fixtures) for key, item in value.items()}
+    return value
+
+
 def dtype_name(column: Any) -> str:
     datatype = column.datatype
     return getattr(datatype, "__name__", str(datatype))
@@ -146,7 +160,7 @@ def main() -> None:
             "ledger": ledger,
             "query": entry["query"],
             "source": entry["source"],
-            **run_query(connections[ledger], entry["query"]),
+            **portable(run_query(connections[ledger], entry["query"]), fixtures),
         }
 
     document = {

@@ -1,14 +1,67 @@
-option "title" "bql-oracle seed"
+; Offline fixture for the BQL oracle. Prices are literal `price` directives
+; only: never `include` a remote URL here (the oracle must regenerate offline).
+option "title" "bql-oracle"
 option "operating_currency" "USD"
 
-2024-01-01 open Assets:Cash USD
-2024-01-01 open Expenses:Food USD
-2024-01-01 open Income:Salary USD
+2025-01-01 open Assets:Cash            USD
+2025-01-01 open Assets:Bank:Checking   USD
+2025-01-01 open Assets:Invest          EUR, STOCK
+2025-01-01 open Expenses:Food          USD
+2025-01-01 open Expenses:Rent          USD
+2025-01-01 open Income:Salary          USD
+2025-01-01 open Equity:Opening         USD
 
-2024-01-02 * "Cafe" "lunch"
-  Assets:Cash    -5.50 USD
-  Expenses:Food   5.50 USD
+2025-01-01 price EUR 1.10 USD
+2026-01-01 price EUR 1.20 USD
+2026-06-01 price EUR 1.25 USD
+2026-06-01 price STOCK 50.00 USD
 
-2024-01-31 * "Employer" "pay"
-  Assets:Cash    100.00 USD
-  Income:Salary -100.00 USD
+2025-01-02 * "Opening" "opening balances"
+  Assets:Bank:Checking  1000.00 USD
+  Equity:Opening       -1000.00 USD
+
+2025-03-05 * "CITY CAFE" "lunch" #meals ^receipt-1
+  Assets:Cash    -12.40 USD
+  Expenses:Food   12.40 USD
+
+2025-07-01 * "Landlord" "rent july"
+  Assets:Bank:Checking  -800.00 USD
+  Expenses:Rent          800.00 USD
+
+2025-12-31 * "Employer" "december pay" #pay
+  Assets:Bank:Checking  3000.00 USD
+  Income:Salary        -3000.00 USD
+
+2026-01-15 * "CITY MARKET" "groceries" #meals
+  Assets:Cash     -45.20 USD
+  Expenses:Food    45.20 USD
+
+2026-02-01 * "Broker" "buy stock"
+  Assets:Invest        10 STOCK {50.00 USD}
+  Assets:Bank:Checking -500.00 USD
+
+2026-03-01 * "Broker" "euro transfer"
+  Assets:Invest        100.00 EUR @ 1.15 USD
+  Assets:Bank:Checking -115.00 USD
+
+2026-04-10 * "Employer" "april pay" #pay
+  Assets:Bank:Checking  3000.00 USD
+  Income:Salary        -3000.00 USD
+
+2026-06-15 * "Landlord" "rent june"
+  Assets:Bank:Checking  -800.00 USD
+  Expenses:Rent          800.00 USD
+
+2026-07-04 * "Cafe" "metadata probe"
+  note: "entry-level"
+  Assets:Cash    -8.00 USD
+    tag-note: "posting-level"
+  Expenses:Food   8.00 USD
+
+2026-08-01 * "" "no payee"
+  Assets:Cash    -3.00 USD
+  Expenses:Food   3.00 USD
+
+2026-09-01 balance Assets:Bank:Checking 4785.00 USD
+
+2026-12-31 close Assets:Cash
