@@ -144,7 +144,7 @@ export function toWriteValidation(
 }
 
 /** `newErrors` with the `valid` verdict they imply (w23/219). */
-export function withValidity(newErrors: BeanCheckError[]): {
+function withValidity(newErrors: BeanCheckError[]): {
   newErrors: BeanCheckError[];
   valid: boolean;
 } {

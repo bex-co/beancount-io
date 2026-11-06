@@ -8,7 +8,7 @@ const nowSeconds = (): number => Math.floor(Date.now() / 1000);
  * (ADR 019 D5): the native app's rotated token, presented again within a few
  * seconds because the response carrying its successor never arrived.
  */
-export function isWithinRefreshReuseGrace(
+function isWithinRefreshReuseGrace(
   payload: AdapterPayload,
   now: number = nowSeconds(),
 ): boolean {
