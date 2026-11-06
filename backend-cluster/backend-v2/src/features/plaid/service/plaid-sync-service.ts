@@ -32,6 +32,7 @@ import {
   buildBeancountTransaction,
 } from "../utils/plaid-mapper";
 import { reconcileAccounts } from "../utils/reconcile-accounts";
+import { assertNoNul, assertNoNulIn } from "@/shared/assert-no-nul";
 import { plaidImportId } from "../utils/plaid-constants";
 import type { PlaidAccount } from "../data/plaid-account-model";
 import type { PlaidTransaction } from "../data/plaid-transaction-model";
@@ -144,6 +145,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     ledgerId: string,
     plaidItemIds: string | readonly string[] = [],
   ): Promise<{ ledgerRepoId: number }> {
+    assertNoNulIn([plaidItemIds].flat(), "itemId"); // w23/218
     await this.authorization.authorizeOrThrow({
       principal,
       action,
@@ -197,6 +199,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     transactions: PlaidTransaction[];
     accounts: ReadonlyMap<string, PlaidAccount>;
   }> {
+    assertNoNulIn(transactionIds, "transactionIds"); // w23/218
     // Authority first, against the route's ledger: a read-only credential is
     // FORBIDDEN before any lookup, instead of being told the transactions do
     // not exist (w23/024).
@@ -261,6 +264,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     ledgerId?: string,
     dryRun = false,
   ): Promise<PlaidSyncResult> {
+    assertNoNul(itemId, "itemId"); // w23/218
     let authorizedLedgerId = ledgerId;
     if (!authorizedLedgerId) {
       const item = await this.models.plaidItem.getById(this.db, itemId);
@@ -642,6 +646,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     identity: Identity,
     accountId: string,
   ): Promise<TransactionToCategorize[]> {
+    assertNoNul(accountId, "accountId"); // w23/218
     const { userId } = identity;
     const account = await this.models.plaidAccount.getById(this.db, accountId);
     if (!account) {
