@@ -103,17 +103,25 @@ The browser calls the API cross-origin, so the API also needs
 `EXTRA_ALLOWED_ORIGINS` set to the dashboard origin (already in `bex.yaml`);
 CORS only trusts `*.beancount.io` otherwise.
 
-## Sign-in needs one parent domain
+## Sign-in on the platform hostnames
 
-The dashboard renders on the server from the sign-in cookie, so the cookie must
-reach both the dashboard host and the API host. The backend sets it for the
-domain in `AUTH_COOKIE_DOMAIN` (unset or blank keeps `.beancount.io`, so existing deployments are unaffected). On the generated
-`*.onbex.co` hostnames the browser rejects that, and sign-up ends on the login
-page. Attach custom domains that share a parent (for example `app.example.com`
-and `api.example.com`), set `AUTH_COOKIE_DOMAIN: .example.com` on
-`beancount-api`, and rebuild the dashboard with `VITE_API_URL` pointing at the
-API domain. Do not use `.onbex.co`: other bex tenants share it and would
-receive the cookie.
+The sign-in cookie must reach the dashboard (it renders on the server from it).
+The generated `*.onbex.co` hostnames share no parent domain you own, and bex
+reserves every name under onbex.co, so a dashboard host and a separate API host
+cannot share a cookie. Instead the browser talks to the dashboard host only:
+
+- The dashboard forwards `/api-gateway/*` to the API when `API_PROXY_URL` is set
+  (`dashboard/server/api-gateway-proxy.ts`; `bex.yaml` sets it to
+  `http://beancount-api:4104`). Unset, the handler does nothing.
+- `dashboard/.env.production` bakes `VITE_API_URL` as the dashboard host's own
+  `/api-gateway/`.
+- The API sets the cookie for the dashboard host through `AUTH_COOKIE_DOMAIN`
+  (unset or blank keeps `.beancount.io`, so existing deployments are unaffected).
+  Never use `.onbex.co`: other bex tenants share it and would receive the cookie.
+
+With your own domain you do not need the proxy: give the dashboard and API hosts
+a shared parent, set `AUTH_COOKIE_DOMAIN` to it, and point `VITE_API_URL` at the
+API host.
 
 ## Things that bit us, so they don't bite you again
 
