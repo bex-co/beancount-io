@@ -10,6 +10,8 @@
     "src/test/mocks/monaco-editor.ts",
     // TanStack Start discovers the server entry by file name.
     "src/server.ts",
+    // Nitro loads this middleware from vite.config.ts `handlers`.
+    "server/api-gateway-proxy.ts",
   ],
   "ignoreIssues": {
     // TanStack Start discovers and calls the exported router factory.
