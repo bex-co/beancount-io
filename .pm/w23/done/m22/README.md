@@ -1,6 +1,6 @@
 # w23 · m22 — Refuse NUL bytes in every string parameter by contract
 
-**Worker:** worker1 **Goal:** a generated test sends U+0000 in every string parameter of every tool and route and asserts BAD_USER_INPUT, so new parameters are covered automatically and 5xx answers for a bad byte stop appearing **Status:** todo (t001, t002 done)
+**Worker:** worker1 **Goal:** a generated test sends U+0000 in every string parameter of every tool and route and asserts BAD_USER_INPUT, so new parameters are covered automatically and 5xx answers for a bad byte stop appearing **Status:** done
 
 ## Tasks (in order)
 
@@ -8,10 +8,10 @@
 | -- | ----- | --- | ---------- |
 | t001 | Generate the string-parameter × NUL cases from the tool schemas — **DONE** | 45m | — |
 | t002 | Fix the parameters the scan finds — **DONE** | 45m | t001 |
-| t003 | Cover REST and GraphQL with the same cases | 30m | t002 |
-| t004 | Simplify | 20m | t003 |
-| t005 | Test coverage | 20m | t003 |
-| t006 | Closeout | 15m | t004, t005 |
+| t003 | Cover REST and GraphQL with the same cases — **DONE** | 30m | t002 |
+| t004 | Simplify — **DONE** | 20m | t003 |
+| t005 | Test coverage — **DONE** | 20m | t003 |
+| t006 | Closeout — **DONE** | 15m | t004, t005 |
 
 ## Definition of done
 
@@ -22,7 +22,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** `/pm-brainstorm w23` (2026-11-05), owner-approved: "them all to w23 and then /loopx w23", proposal 2. Follows [w23/210](../done/210.md), [w23/218](../done/218.md) and [w23/220](../done/220.md), each of which fixed one parameter family and left others unverified.
+- **Source:** `/pm-brainstorm w23` (2026-11-05), owner-approved: "them all to w23 and then /loopx w23", proposal 2. Follows [w23/210](../210.md), [w23/218](../218.md) and [w23/220](../220.md), each of which fixed one parameter family and left others unverified.
 - **Goal linkage:** A1 — agent-native accounting. A 5xx for a bad byte reads as an outage and sends an agent into retry loops; a typed `BAD_USER_INPUT` lets it fix the argument.
 - **Expected outcome:** NUL-byte findings stop appearing in MCP QA; new tools inherit the guarantee.
 - **Why now:** three notes in one week came from the same class, and each fix was one guard per parameter; a schema-driven scan replaces the whack-a-mole.

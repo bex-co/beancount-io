@@ -8,7 +8,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { z } from "zod";
 import { assembleMcpRegistry } from "../composition-root";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
-import { MCP_NUL_EXEMPT_PATHS } from "@/features/ai-agent/api/mcp-nul-exempt";
+import { NUL_EXEMPT_PATHS } from "@/shared/nul-exempt-paths";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "../identity";
@@ -97,7 +97,7 @@ const cases = (
     }) as JsonNode;
     return stringLeaves(schema).map((path) => [tool.name, path] as const);
   })
-  .filter(([, path]) => !MCP_NUL_EXEMPT_PATHS.has(path));
+  .filter(([, path]) => !NUL_EXEMPT_PATHS.has(path));
 
 async function callWithNul(tool: string, path: string) {
   const ctx = { identity } as unknown as McpRequestContext;
@@ -130,8 +130,9 @@ describe("a NUL byte in any MCP string argument (w23/m22)", () => {
   });
 
   it("exempts only the file-content arguments", () => {
-    expect([...MCP_NUL_EXEMPT_PATHS].sort()).toEqual([
+    expect([...NUL_EXEMPT_PATHS].sort()).toEqual([
       "changes[].content",
+      "content",
       "files[].content",
       "files[].new_string",
       "files[].old_string",

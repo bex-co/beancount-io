@@ -54,7 +54,7 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { BadUserInputError, NotFoundError } from "@/shared/errors";
 import { assertNoNulDeep } from "@/shared/assert-no-nul";
-import { MCP_NUL_EXEMPT_PATHS } from "@/features/ai-agent/api/mcp-nul-exempt";
+import { NUL_EXEMPT_PATHS } from "@/shared/nul-exempt-paths";
 import { logger } from "@/shared/logger";
 import { runWithOperationId } from "@/shared/async-context";
 
@@ -588,7 +588,7 @@ export function assembleMcpRegistry(
     // before the schema or any domain work, so no parameter — nested or added
     // later — reaches a store that cannot hold it (w23/m22).
     try {
-      assertNoNulDeep(request.params.arguments, MCP_NUL_EXEMPT_PATHS);
+      assertNoNulDeep(request.params.arguments, NUL_EXEMPT_PATHS);
     } catch (error) {
       return toolFailureResult(name, envelopeFromThrown(error));
     }

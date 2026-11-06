@@ -1,4 +1,5 @@
 import { ApolloServer } from "@apollo/server";
+import { graphqlNulMiddleware } from "./nul-middleware";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { koaMiddleware } from "@as-integrations/koa";
 import { buildSchema } from "type-graphql";
@@ -41,6 +42,7 @@ export async function buildGraphqlSchema(options?: {
       // Budget first, then authorization: refusing an over-budget caller
       // before doing the authorization work is the point of having a limiter.
       graphqlRateLimitMiddleware(),
+      graphqlNulMiddleware(),
       graphqlScopeMiddleware(
         options?.scopeEnforcement ?? appConfig.api.scopeEnforcement,
       ),

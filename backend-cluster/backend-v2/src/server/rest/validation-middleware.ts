@@ -1,4 +1,6 @@
 import Router, { RouterContext } from "@koa/router";
+import { assertNoNulDeep } from "@/shared/assert-no-nul";
+import { NUL_EXEMPT_PATHS } from "@/shared/nul-exempt-paths";
 import type { ZodType } from "zod";
 import { ValidationError } from "@/shared/errors";
 
@@ -70,6 +72,12 @@ function parseOrThrow(
  */
 export function validateRequest(schemas: RequestSchemas): Router.Middleware {
   return async (ctx: RouterContext, next: () => Promise<void>) => {
+    // U+0000 in a path segment, query value or body string is the caller's
+    // mistake, refused before any schema or service sees it (w23/m22). Only
+    // the body can carry file content verbatim.
+    assertNoNulDeep(ctx.params);
+    assertNoNulDeep(ctx.query);
+    assertNoNulDeep(ctx.request.body, NUL_EXEMPT_PATHS);
     ctx.state.validated = {
       params: parseOrThrow(schemas.params, ctx.params, "params"),
       query: parseOrThrow(schemas.query, ctx.query, "query"),
