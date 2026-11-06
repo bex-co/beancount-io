@@ -1,6 +1,6 @@
 # w23 · m20 — Diff the BQL engine against stock beanquery in a release gate
 
-**Worker:** worker1 **Goal:** a checked-in, offline-reproducible corpus of stock beanquery 0.2.0 results is replayed by `yarn verify:rustledger`, so a BQL regression such as w23/212 turns the gate red before it ships **Status:** todo (t001–t007 done)
+**Worker:** worker1 **Goal:** a checked-in, offline-reproducible corpus of stock beanquery 0.2.0 results is replayed by `yarn verify:rustledger`, so a BQL regression such as w23/212 turns the gate red before it ships **Status:** done
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Wire the replay into the `CI (ledger)` path with a readable out-of-date-oracle failure     — **DONE** | 30m | t003       |
 | t006 | Simplify                                                                                   — **DONE** | 30m | t004, t005 |
 | t007 | Test coverage                                                                              — **DONE** | 45m | t004, t005 |
-| t008 | Closeout                                                                                   | 15m | t006, t007 |
+| t008 | Closeout                                                                                   — **DONE** | 15m | t006, t007 |
 
 ## Definition of done
 
@@ -28,5 +28,5 @@
 - **Source:** `/pm-brainstorm for w23` (2026-11-05), proposal 1, approved by the owner. Modelled on `backend-cluster/ledger/scripts/rustledger-shadow/` (`generate-python-oracle.py` + `python-oracle.json`) and the live checks in `backend-cluster/ledger/scripts/verify-rustledger.ts`.
 - **Goal linkage:** A1 — agent-native accounting. Coding agents query ledgers through MCP, REST and the CLI with standard beanquery statements; the gate keeps the ledger engine from silently refusing or value-changing them.
 - **Expected outcome:** standard beanquery statements are no longer silently refused or value-changed by the ledger engine, and BQL regressions are caught by CI instead of by a later manual comparison, so fewer BQL parity findings reach the board.
-- **Why now:** `bql-from-fold.ts` was rewritten six times in a month (w23/116, 124, 125, 130, 199, 212 — the last one a regression), and 20+ w23 BQL findings were each found by manual comparison with stock beanquery and pinned one note at a time. **Sequence:** the regression note [w23/212](../done/212.md) already shipped (`dbdc195d1`), so the first corpus does not have to allowlist it; the corpus should include its queries as the regression pin.
+- **Why now:** `bql-from-fold.ts` was rewritten six times in a month (w23/116, 124, 125, 130, 199, 212 — the last one a regression), and 20+ w23 BQL findings were each found by manual comparison with stock beanquery and pinned one note at a time. **Sequence:** the regression note [w23/212](../212.md) already shipped (`dbdc195d1`), so the first corpus does not have to allowlist it; the corpus should include its queries as the regression pin.
 - **Adoption surface omitted:** this is an internal release gate; no user or coding agent touches it, so there is no README, package-table, skill-catalog, or `AGENTS.md` surface to check.

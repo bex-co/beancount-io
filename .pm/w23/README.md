@@ -22,7 +22,7 @@
 - [x] **m16** — [Disclose unpriced report conversions](./done/m16/README.md) (7 tasks) ← promoted from `w23/180` 2026-10-30
 - [x] **m18** — [Bind ledger pins to the repository ID](./done/m18/README.md) (9 tasks) ← promoted from `w23/065` 2026-11-01
 - [x] **m19** — [Fill balances.discrepancy from the validator](./done/m19/README.md) (8 tasks) ← promoted from `w23/196` 2026-11-01
-- [ ] **m20** — [Diff the BQL engine against stock beanquery in a release gate](./m20/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-05; prerequisite [212](./done/212.md) already shipped
+- [x] **m20** — [Diff the BQL engine against stock beanquery in a release gate](./done/m20/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-05; prerequisite [212](./done/212.md) shipped first
 
 ## Dropped
 
