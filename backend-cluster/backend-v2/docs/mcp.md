@@ -1403,8 +1403,10 @@ The listing is [`server.json`](../server.json) at this package's root: name,
 title, a description of at most 100 characters, `version`, the repository, an
 icon, and one `streamable-http` remote at `https://beancount.io/api-gateway/mcp`.
 A test in [`well-known-route.test.ts`](../src/features/well-known/api/__tests__/well-known-route.test.ts)
-fails if its remote URL or version drifts from what `/.well-known/mcp.json`
-advertises.
+fails if its name or remote URL drifts from what `/.well-known/mcp.json`
+advertises. The listing's `version` is its own lifecycle: it moves with every
+listing edit (see below) and is not compared with the manifest's or the MCP
+`serverInfo` version, which only change when the server's contract does.
 
 The registry grants the `io.beancount/*` namespace to whoever proves control of
 `beancount.io`. The backend can prove it over HTTP: `MCP_REGISTRY_AUTH_PROOF`

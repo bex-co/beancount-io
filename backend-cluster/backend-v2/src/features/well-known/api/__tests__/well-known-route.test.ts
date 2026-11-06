@@ -176,7 +176,6 @@ describe("well-known routes", () => {
       fs.readFileSync(REGISTRY_LISTING_PATH, "utf8"),
     ) as {
       name: string;
-      version: string;
       icons: Array<{ src: string }>;
       remotes: Array<{ type: string; url: string }>;
     };
@@ -188,10 +187,12 @@ describe("well-known routes", () => {
 
     // Schema rules (description length, version format, $schema) are the
     // publish workflow's `mcp-publisher validate`; this test guards what the
-    // schema cannot: the name that is the registry identity, and agreement
-    // with the manifest.
+    // schema cannot: the name that is the registry identity, and the endpoint
+    // agreeing with the manifest. The listing's `version` is deliberately not
+    // compared with the manifest's: published registry versions are immutable,
+    // so every listing edit bumps it, while the manifest and `serverInfo`
+    // version only moves when the server's own contract does (docs/mcp.md).
     expect(listing.name).toBe("io.beancount/beancount");
-    expect(listing.version).toBe(manifest.version);
     // Exactly one remote, exactly these keys: no `headers` (OAuth is discovered
     // from the 401) and the same URL every host is given.
     expect(listing.remotes).toEqual([
