@@ -434,7 +434,7 @@ def report(
             "-k",
             help=(
                 "Report: overview, income-statement, balance-sheet, trial-balance, "
-                "holdings, register, capital-gains, or cash-flow."
+                "holdings, register, capital-gains, cash-flow, or budget."
             ),
         ),
     ],

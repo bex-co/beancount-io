@@ -1904,6 +1904,34 @@ bea report register Assets:Checking --time 2026-01
 bea report capital-gains --from-date 2026-01-01 --to-date 2026-12-31
 ```
 
+### Budgets
+
+`bea report budget` compares budget with actual per account and period. Budgets
+are Fava's `custom "budget"` directives, which the dashboard's Budget page reads
+too:
+
+```beancount
+2026-01-01 custom "budget" Expenses:Food "monthly" 300.00 USD
+```
+
+- A budget applies from its date until a later line for the same account and
+  currency replaces it. It is spread by day, so a period shorter than its
+  interval (the ledger's last month, or `--time` ending mid-month) gets its
+  share; the share is rounded half up to the currency's display precision, so a
+  whole month reads as declared.
+- A budgeted account's actual is its whole subtree (`Expenses:Food` includes
+  `Expenses:Food:Dining`), in the currencies it posted, never converted. Income
+  reads as earned, so both sides are positive.
+- `variance` is actual minus budget: a positive expense variance is
+  overspending, a positive income variance is earning ahead of plan.
+- A currency with no budget keeps `budget` and `variance` null (`no budget` in
+  the table): absent is never zero. A declared `0.00` budget is a budget. Income
+  and expense accounts that no budget covers are listed `unbudgeted`.
+- A budget line Fava cannot read (an unknown interval) is reported on stderr and
+  under `budget_errors` in `--json`, and its account falls to `unbudgeted`.
+- It takes `--time`, `--interval`, `--account`, `--format csv`; there is no
+  `--conversion`.
+
 ### Reports as CSV
 
 Every `bea report` command takes `--format csv` for a spreadsheet, a script, or

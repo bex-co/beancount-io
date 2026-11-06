@@ -94,11 +94,11 @@ PLANS = {
         mode="isolated",
         setup=USAGE_SETUP,
         setup_skip=frozenset({3, 4}),
-        fence_setup={26: QUICK_START},
+        fence_setup={27: QUICK_START},
         expect={
             5: (2, ["A query is required"]),
             # The JSON automation transcript: the values agents copy (w1/127).
-            26: (
+            27: (
                 0,
                 [
                     '"valid": true',

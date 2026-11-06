@@ -1046,6 +1046,24 @@ Usage: bea report cash-flow [OPTIONS]
 | `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
 | `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
 
+### `bea report budget`
+
+Budget, actual, and variance per account and period.
+
+```text
+Usage: bea report budget [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--time, -t` | str |  | Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06" |
+| `--account, -a` | str |  | Account filter: a parent account or a regular expression |
+| `--interval, -i` | choice: monthly \| quarterly \| yearly \| weekly \| daily | monthly | Reporting interval |
+| `--format` | choice: text \| csv |  | Output format: text (default) or csv. csv prints the figures --json carries. |
+| `--output, -o` | path |  | With csv, write the table to this file, not stdout |
+| `--spreadsheet-safe` | flag |  | With csv, prefix text cells starting with = + - @ tab or CR with ' so spreadsheets do not run them as formulas |
+| `--allow-errors` | flag |  | Show partial data with errors on stderr; opts strict reads into partial answers |
+
 ### `bea doctor lex`
 
 Run bean-doctor lex.

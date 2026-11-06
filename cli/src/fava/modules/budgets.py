@@ -51,6 +51,11 @@ class BudgetModule:
             self.ledger.all_entries_by_type.Custom,
         )
 
+    @property
+    def accounts(self) -> list[str]:
+        """The accounts that declare a budget (Beancount.io change: `bea report budget`)."""
+        return sorted(self._budget_entries)
+
     def calculate(
         self,
         account: str,

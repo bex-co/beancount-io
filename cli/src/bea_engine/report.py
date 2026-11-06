@@ -15,7 +15,7 @@ import re
 import unicodedata
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from datetime import date, timedelta
-from decimal import Context, Decimal, localcontext
+from decimal import ROUND_HALF_UP, Context, Decimal, localcontext
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +32,7 @@ KINDS = (
     "register",
     "capital-gains",
     "cash-flow",
+    "budget",
 )
 GROUPINGS = ("account", "commodity")
 INTERVALS = ("monthly", "quarterly", "yearly", "weekly", "daily")
@@ -116,6 +117,10 @@ def answer(
         # Gains stay in each lot's own currencies so the rows tie to the
         # booked gain postings; converting them would break that tie.
         raise protocol.UsageError("capital-gains reports in each lot's cost currency and takes no --conversion.")
+    if kind == "budget" and conversion is not None:
+        # A budget is declared in one currency per line, so each row stays in
+        # the currencies its postings and its budget name.
+        raise protocol.UsageError("budget compares in each budget's own currency and takes no --conversion.")
     if kind == "cash-flow" and conversion is not None:
         # Rows must sum to the change in cash balances, and any valuation
         # difference would break that identity; the report always runs at cost.
@@ -141,6 +146,8 @@ def answer(
             cash_context = wide.copy()
             wide.prec = 100
             return _cash_flow(filtered, bounds, ledger_errors, cash_context)
+    if kind == "budget":
+        return _budget(filtered, interval, ledger_errors)
     return _trial_balance(filtered, resolved_conversion, allow_errors, ledger_errors)
 
 
@@ -339,6 +346,120 @@ def _income_statement(
         "expenses": _tree_json(trees[1]) if trees[1] is not None else None,
         "net_profit": net,
         "periods": periods,
+    }
+
+
+def _related(account: str, other: str) -> bool:
+    """Whether two accounts are the same or one is an ancestor of the other."""
+    return account == other or account.startswith(other + ":") or other.startswith(account + ":")
+
+
+def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str, Any]:
+    """Budget, actual and variance per interval for every account that declares a budget.
+
+    The declarations are Fava's `custom "budget" ACCOUNT "monthly" 300 USD`,
+    prorated by day for a partial period (`fava.modules.budgets`). Actual is
+    the account's whole subtree in the currencies it posted (income reads as
+    earned, positive); variance is actual minus budget, so a positive expense
+    variance is overspending. A currency without a budget keeps `budget` null
+    and no variance — absent is not zero. Spending under Income and Expenses
+    accounts no budget covers is listed as `unbudgeted`.
+    """
+    from collections import defaultdict
+
+    from fava.beans.helpers import slice_entry_dates
+    from fava.core.conversion import cost_or_value
+    from fava.core.filters import account_predicate
+    from fava.core.inventory import CounterInventory
+
+    ledger = filtered.ledger
+    module = ledger.budget
+    budgeted = module.accounts
+    income_root, expenses_root = ledger.options["name_income"], ledger.options["name_expenses"]
+    in_scope = account_predicate(filtered.account, ledger.root_accounts)
+    precision = _display_precision(filtered)
+
+    def prorated(account: str, span: Any) -> dict[str, Decimal]:
+        """The day-prorated budget, rounded half up to the currency's display precision.
+
+        Thirty-one thirty-firsts of 300 add up to 299.99999…; rounding makes a
+        whole month read as declared. Actuals are never rounded.
+        """
+        shares = module.calculate(account, span.begin, span.end)
+        return {
+            currency: number.quantize(Decimal(1).scaleb(-precision.get(currency, 2)), rounding=ROUND_HALF_UP)
+            for currency, number in shares.items()
+        }
+
+    def actual_of(per_account: Mapping[str, Any], accounts: Iterable[str], end: date) -> dict[str, Decimal]:
+        total = CounterInventory()
+        for name in accounts:
+            total.add_inventory(per_account[name])
+        return {c: Decimal(n) for c, n in cost_or_value(total, "units", ledger.prices, end).items()}
+
+    def kind_of(account: str) -> str:
+        root = account.partition(":")[0]
+        return "income" if root == income_root else "expenses" if root == expenses_root else "other"
+
+    periods: list[dict[str, Any]] = []
+    for span in filtered.interval_ranges(_interval(interval)):
+        per_account: dict[str, CounterInventory] = defaultdict(CounterInventory)
+        for entry in slice_entry_dates(filtered.entries, span.begin, span.end):
+            for posting in getattr(entry, "postings", []):
+                if in_scope(posting.account):
+                    per_account[posting.account].add_position(posting)
+
+        rows: list[dict[str, Any]] = []
+        for account in budgeted:
+            if not in_scope(account):
+                continue
+            kind = kind_of(account)
+            sign = -1 if kind == "income" else 1
+            declared = prorated(account, span)
+            subtree = [name for name in per_account if name == account or name.startswith(account + ":")]
+            actual = {c: sign * n for c, n in actual_of(per_account, subtree, span.end_inclusive).items()}
+            for currency in sorted(set(declared) | set(actual)):
+                budget = declared.get(currency)
+                spent = actual.get(currency, Decimal(0))
+                rows.append(
+                    {
+                        "account": account,
+                        "account_type": kind,
+                        "currency": currency,
+                        "budget": budget,
+                        "actual": spent,
+                        "variance": None if budget is None else spent - budget,
+                        "status": "budgeted",
+                    }
+                )
+        for account in sorted(per_account):
+            kind = kind_of(account)
+            if kind == "other" or any(_related(account, name) for name in budgeted):
+                continue
+            sign = -1 if kind == "income" else 1
+            for currency, number in sorted(actual_of(per_account, [account], span.end_inclusive).items()):
+                rows.append(
+                    {
+                        "account": account,
+                        "account_type": kind,
+                        "currency": currency,
+                        "budget": None,
+                        "actual": sign * number,
+                        "variance": None,
+                        "status": "unbudgeted",
+                    }
+                )
+        periods.append({"begin": span.begin, "end": span.end_inclusive, "rows": rows})
+    metadata = _metadata(filtered, "units", ledger_errors, interval)
+    return metadata | {
+        "display_precision": precision,
+        "variance_signs": "actual_minus_budget",
+        "has_budgets": bool(budgeted),
+        "budget_errors": [error.message for error in module.errors],
+        "periods": periods,
+        "missing_prices": [],
+        "missing_price_dates": [],
+        "missing_price_summary": [],
     }
 
 

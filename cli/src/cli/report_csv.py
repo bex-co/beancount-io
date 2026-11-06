@@ -235,6 +235,37 @@ def _capital_gains(data: Mapping[str, Any]) -> Table:
     return header, rows
 
 
+def _budget(data: Mapping[str, Any]) -> Table:
+    header = [
+        "period_begin",
+        "period_end",
+        "account",
+        "account_type",
+        "currency",
+        "budget",
+        "actual",
+        "variance",
+        "status",
+    ]
+    rows: list[Row] = []
+    for period in data["periods"]:
+        for row in period["rows"]:
+            rows.append(
+                [
+                    _text(period["begin"]),
+                    _text(period["end"]),
+                    _text(row["account"]),
+                    _text(row["account_type"]),
+                    _text(row["currency"]),
+                    _text(row["budget"]),
+                    _text(row["actual"]),
+                    _text(row["variance"]),
+                    _text(row["status"]),
+                ]
+            )
+    return header, rows
+
+
 #: Columns holding user text, which `--spreadsheet-safe` neutralizes.
 _TEXT_COLUMNS = frozenset({"item", "account", "commodity", "payee", "narration"})
 
@@ -247,6 +278,7 @@ _TABLES: dict[str, Callable[[Mapping[str, Any]], Table]] = {
     "register": _register,
     "capital-gains": _capital_gains,
     "cash-flow": _cash_flow,
+    "budget": _budget,
 }
 
 

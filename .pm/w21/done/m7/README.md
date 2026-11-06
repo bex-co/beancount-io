@@ -1,20 +1,20 @@
 # w21 · m7 — `bea report budget`: budget versus actual
 
-**Worker:** worker1 **Goal:** a native, offline budget variance report that never treats a missing budget as zero **Status:** todo
+**Worker:** worker1 **Goal:** a native, offline budget variance report that never treats a missing budget as zero **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Establish the budget directive contract | 40m | — |
-| t002 | Engine read: budget, actual, variance per period | 60m | t001 |
-| t003 | `bea report budget` with text, `--json`, `--time`, `--interval` | 45m | t002 |
-| t004 | Fixture tests: missing budget, overspend, multi-currency, carry-over | 45m | t003 |
-| t005 | Point the variance recipes at the new report | 30m | t004 |
-| t006 | Adoption surface | 20m | t005 |
-| t007 | Simplify | 20m | t006 |
-| t008 | Test coverage | 30m | t006 |
-| t009 | Closeout | 15m | t008, t007 |
+| t001 | Establish the budget directive contract — **DONE** | 40m | — |
+| t002 | Engine read: budget, actual, variance per period — **DONE** | 60m | t001 |
+| t003 | `bea report budget` with text, `--json`, `--time`, `--interval` — **DONE** | 45m | t002 |
+| t004 | Fixture tests: missing budget, overspend, multi-currency, carry-over — **DONE** | 45m | t003 |
+| t005 | Point the variance recipes at the new report — **DONE** | 30m | t004 |
+| t006 | Adoption surface — **DONE** | 20m | t005 |
+| t007 | Simplify — **DONE** | 20m | t006 |
+| t008 | Test coverage — **DONE** | 30m | t006 |
+| t009 | Closeout — **DONE** | 15m | t008, t007 |
 
 ## Definition of done
 

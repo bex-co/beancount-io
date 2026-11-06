@@ -186,7 +186,7 @@ SELECT date, payee, narration, cost(position) AS amount WHERE account ~ '<accoun
 Rules the prose must obey:
 
 - **Zero or negative comparator**: report the absolute delta and render the percentage as **not applicable** — never divide by a zero or negative base and never present the resulting number as a growth rate.
-- **A missing budget is missing**: when the user asks "versus budget" and the ledger holds no budget figures, say the budget is absent. An absent comparator is never rendered as zero (which would fabricate an infinite variance).
+- **A missing budget is missing**: when the user asks "versus budget" and the ledger holds no budget figures, say the budget is absent. Where the ledger declares Fava budgets (`custom "budget"`), `bea report budget` gives budget, actual and variance per account and period (releases after 0.3.1; `null` budget and variance mean no budget in that currency, and `unbudgeted` rows are spending nothing budgets cover) — cite its figures instead of hand-prorating a budget in BQL. An absent comparator is never rendered as zero (which would fabricate an infinite variance).
 - **Drivers need postings**: a claimed cause ("the jump is the BEST BUY purchase on 2026-05-28") cites its posting rows. Anything without posting evidence is labelled a **hypothesis**, and when the postings do not support an explanation the answer is **unresolved** — a posting's narration describes what was bought, never why.
 - **Bridges only with inputs**: a price/volume-style split is produced only when the ledger actually holds the quantities and prices it needs, and its components must sum to the actual delta; otherwise report the account/payee movement explanation and stop.
 

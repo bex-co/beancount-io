@@ -839,6 +839,67 @@ def cash_flow(
         output.note(f"{invalid['account']}: unknown cash-flow-role value {invalid['value']!r}; using the default.")
 
 
+@report_app.command("budget", cls=SingleValueCommand)
+def budget(
+    time: TimeOpt = None,
+    account: AccountOpt = None,
+    interval: IntervalOpt = ReportInterval.monthly,
+    fmt: FormatOpt = None,
+    output_file: OutputOpt = None,
+    spreadsheet_safe: SpreadsheetSafeOpt = False,
+    allow_errors: AllowErrorsOpt = False,
+) -> None:
+    """Budget, actual, and variance per account and period.
+
+    Budgets are Fava's `custom "budget"` directives. A currency with no budget
+    shows "no budget" and no variance, never zero.
+    """
+    csv_target = _csv_output(fmt, output_file, spreadsheet_safe)
+    file, data = _ask(
+        "budget", conversion=None, time=time, account=account, interval=interval, allow_errors=allow_errors
+    )
+    if context.current().json_output:
+        _emit_json(file, data)
+        return
+    if csv_target is not None:
+        _emit_csv("budget", file, data, csv_target)
+        return
+    _heading(
+        "Budget",
+        data,
+        convention="Actual is spending for expenses and earnings for income (both positive); "
+        "variance is actual minus budget, so a positive expense variance is overspending",
+    )
+    for error in data["budget_errors"]:
+        output.note(f"Budget directive ignored: {error}")
+    if not data["has_budgets"]:
+        typer.echo('No budgets. Declare one with: 2026-01-01 custom "budget" Expenses:Food "monthly" 300.00 USD')
+    precision = _precision(data)
+    if not data["periods"]:
+        typer.echo("No dated activity.")
+    for period in data["periods"]:
+        typer.echo(f"\n{period['begin']} through {period['end']}")
+        if not period["rows"]:
+            typer.echo("  Nothing budgeted or spent.")
+            continue
+        cells = []
+        for row in period["rows"]:
+            currency = row["currency"]
+
+            def show(number: Any, currency: str = currency) -> str:
+                return _money({"number": number, "currency": currency}, None, precision)
+
+            cells.append(
+                [
+                    row["account"] + (" (unbudgeted)" if row["status"] == "unbudgeted" else ""),
+                    "no budget" if row["budget"] is None else show(row["budget"]),
+                    show(row["actual"]),
+                    "—" if row["variance"] is None else show(row["variance"]),
+                ]
+            )
+        output.table(["ACCOUNT", "BUDGET", "ACTUAL", "VARIANCE"], cells)
+
+
 def balance(
     accounts: Annotated[list[str] | None, typer.Argument(help="Account substrings; case-insensitive")] = None,
     conversion: ConversionOpt = None,
