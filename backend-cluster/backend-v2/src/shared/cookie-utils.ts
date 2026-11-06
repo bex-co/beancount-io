@@ -40,23 +40,6 @@ function getCookieOptions(
   };
 }
 
-/**
- * Parent domain the session cookie is shared across, so the dashboard host and
- * the API host both see it (the dashboard renders server-side from it).
- *
- * Hosted beancount.io keeps `.beancount.io` when AUTH_COOKIE_DOMAIN is unset.
- * A self-hosted deployment runs on its own domains, where a cookie claiming
- * `.beancount.io` is rejected by the browser and nobody can sign in, so it
- * sets AUTH_COOKIE_DOMAIN to the parent of its app and API hosts
- * (e.g. `.example.com`). An empty value means host-only, for a deployment that
- * serves the dashboard and `/api-gateway/` from one host.
- */
-function authCookieDomain(): string | undefined {
-  const configured = process.env.AUTH_COOKIE_DOMAIN;
-  if (configured === undefined) return ".beancount.io";
-  return configured.trim() || undefined;
-}
-
 // Duck-typed on the one call made: Koa and @koa/router contexts carry
 // structurally identical cookie jars whose fluent `set` return type (`this`)
 // defeats nominal assignability between the two type graphs.
@@ -78,4 +61,39 @@ export function clearAuthCookie(ctx: {
  */
 export function getAuthCookieFromCtx(ctx: Context): string | undefined {
   return ctx.cookies?.get(COOKIE_NAME);
+}
+
+/**
+ * Parent domain the session cookie is shared across, so the dashboard host and
+ * the API host both see it (the dashboard renders server-side from it).
+ *
+ * Unset or blank keeps beancount.io's `.beancount.io`, so existing
+ * deployments, which never set this, behave exactly as before. A deployment on
+ * its own domains must set AUTH_COOKIE_DOMAIN to the parent of its dashboard
+ * and API hosts (e.g. `.example.com`): a browser rejects a cookie claiming
+ * `.beancount.io` from any other site.
+ */
+export function authCookieDomain(): string {
+  return process.env.AUTH_COOKIE_DOMAIN?.trim() || ".beancount.io";
+}
+
+/**
+ * True when the default `.beancount.io` cookie domain cannot work for this
+ * dashboard URL: a non-beancount.io deployment that never set
+ * AUTH_COOKIE_DOMAIN. Used only to warn at boot; behavior is unchanged.
+ */
+export function cookieDomainNeedsConfig(
+  dashboardUrl: string | undefined,
+): boolean {
+  if (process.env.AUTH_COOKIE_DOMAIN?.trim() || !dashboardUrl) return false;
+  try {
+    const host = new URL(dashboardUrl).hostname;
+    return (
+      host !== "beancount.io" &&
+      !host.endsWith(".beancount.io") &&
+      host !== "localhost"
+    );
+  } catch {
+    return false;
+  }
 }

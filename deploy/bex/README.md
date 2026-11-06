@@ -107,7 +107,7 @@ CORS only trusts `*.beancount.io` otherwise.
 
 The dashboard renders on the server from the sign-in cookie, so the cookie must
 reach both the dashboard host and the API host. The backend sets it for the
-domain in `AUTH_COOKIE_DOMAIN` (default `.beancount.io`). On the generated
+domain in `AUTH_COOKIE_DOMAIN` (unset or blank keeps `.beancount.io`, so existing deployments are unaffected). On the generated
 `*.onbex.co` hostnames the browser rejects that, and sign-up ends on the login
 page. Attach custom domains that share a parent (for example `app.example.com`
 and `api.example.com`), set `AUTH_COOKIE_DOMAIN: .example.com` on
