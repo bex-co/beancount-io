@@ -1,6 +1,6 @@
 # Beancount Skills
 
-A ledger workflow suite from [Beancount.io](https://beancount.io/) for Beancount users working with a ledger through a coding agent. The fourteen workflows below support Claude Code and Codex; their source files live in [`skills/`](.).
+A ledger workflow suite from [Beancount.io](https://beancount.io/) for Beancount users working with a ledger through a coding agent. The fifteen workflows below support Claude Code and Codex; their source files live in [`skills/`](.).
 
 The skills work on ledger files on your machine. A hosted ledger stops the local workflow. You can separately request a Beancount.io MCP workflow for a named ledger, or a local clone; the skills do not invoke remote tools or clone a ledger merely because a server is connected.
 
@@ -22,6 +22,7 @@ The suite shares [command recipes](beancount-init/references/bea-cli.md) that se
 | [beancount-roll-forward](beancount-roll-forward/SKILL.md) | Explain one balance-sheet account's movement over a period, opening to closing. |
 | [beancount-accruals](beancount-accruals/SKILL.md) | Prepare supported accrual drafts for a period from a stated schedule. |
 | [beancount-invoices](beancount-invoices/SKILL.md) | Record invoices you issue and bills you receive, apply payments to them, and see who owes what and how overdue. |
+| [beancount-report-pack](beancount-report-pack/SKILL.md) | Package a period's statements into CSV files with a summary whose tie-outs between them must pass. |
 | [beancount-close](beancount-close/SKILL.md) | Reconcile and close an accounting period. |
 | [beancount-options](beancount-options/SKILL.md) | Record options trades and lifecycle events. |
 

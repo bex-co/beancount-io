@@ -1,20 +1,20 @@
 # w21 · m9 — `beancount-report-pack`: a reconciled Markdown/CSV report pack
 
-**Worker:** worker1 **Goal:** an agent produces a statement pack whose figures tie to a fixed ledger snapshot **Status:** todo
+**Worker:** worker1 **Goal:** an agent produces a statement pack whose figures tie to a fixed ledger snapshot **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Write the report-pack skill contract | 40m | w21/m6 |
-| t002 | Generation script: statements, schedules and evidence index | 75m | t001 |
-| t003 | Tie-out checks that fail loudly | 60m | t002 |
-| t004 | SKILL.md, evals and fixture ledger | 50m | t003 |
-| t005 | Installer and CI checks include the new skill | 30m | t004 |
-| t006 | Adoption surface | 20m | t005 |
-| t007 | Simplify | 20m | t006 |
-| t008 | Test coverage | 30m | t006 |
-| t009 | Closeout | 15m | t008, t007 |
+| t001 | Write the report-pack skill contract — **DONE** | 40m | w21/m6 |
+| t002 | Generation script: statements, schedules and evidence index — **DONE** | 75m | t001 |
+| t003 | Tie-out checks that fail loudly — **DONE** | 60m | t002 |
+| t004 | SKILL.md, evals and fixture ledger — **DONE** | 50m | t003 |
+| t005 | Installer and CI checks include the new skill — **DONE** | 30m | t004 |
+| t006 | Adoption surface — **DONE** | 20m | t005 |
+| t007 | Simplify — **DONE** | 20m | t006 |
+| t008 | Test coverage — **DONE** | 30m | t006 |
+| t009 | Closeout — **DONE** | 15m | t008, t007 |
 
 ## Definition of done
 

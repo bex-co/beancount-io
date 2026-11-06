@@ -1188,6 +1188,43 @@
         "beancount-reconcile"
       ],
       "why": "A processor export is a file import, booked gross with fees and payouts through clearing."
+    },
+    {
+      "id": "report-pack-accountant",
+      "prompt": "Give my accountant the June 2026 books as files: balance sheet, income statement and cash flow, and show me that they tie out.",
+      "expected": "beancount-report-pack",
+      "confusable": [
+        "beancount-close",
+        "beancount-ask"
+      ],
+      "why": "A set of statement files with cross-statement tie-outs is a report pack."
+    },
+    {
+      "id": "report-pack-quarter-export",
+      "prompt": "Export the Q2 2026 statements from my ledger into a folder of CSVs with a summary page.",
+      "expected": "beancount-report-pack",
+      "confusable": [
+        "beancount-ask"
+      ],
+      "why": "Writing statements to a folder is the pack; answering a question is not."
+    },
+    {
+      "id": "ask-single-statement-figure-not-pack",
+      "prompt": "What was my net profit in June 2026?",
+      "expected": "beancount-ask",
+      "confusable": [
+        "beancount-report-pack"
+      ],
+      "why": "One figure is a question, not a pack."
+    },
+    {
+      "id": "close-month-not-pack",
+      "prompt": "Close the books for June 2026: reconcile each account and commit the close.",
+      "expected": "beancount-close",
+      "confusable": [
+        "beancount-report-pack"
+      ],
+      "why": "Reconciling accounts to statements and committing is the close ritual."
     }
   ]
 }

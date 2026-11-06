@@ -1,0 +1,14 @@
+option "title" "Pack fixture with an unpriced holding"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Brokerage ACME
+2026-01-01 open Equity:Opening USD
+
+2026-01-01 * "Opening balance"
+  Assets:Bank:Checking   5000.00 USD
+  Equity:Opening        -5000.00 USD
+
+2026-06-10 * "Buy ACME"
+  Assets:Brokerage      10 ACME {100.00 USD}
+  Assets:Bank:Checking  -1000.00 USD

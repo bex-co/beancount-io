@@ -1,0 +1,24 @@
+option "title" "Pack fixture with gaps"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Groceries USD
+2026-01-01 open Expenses:Uncategorized USD
+2026-01-01 open Equity:Opening USD
+
+2026-01-01 * "Opening balance"
+  Assets:Bank:Checking   1000.00 USD
+  Equity:Opening        -1000.00 USD
+
+2026-06-03 * "Employer" "June salary"
+  Assets:Bank:Checking   3000.00 USD
+  Income:Salary         -3000.00 USD
+
+2026-06-08 * "Market" "Groceries"
+  Expenses:Groceries       85.20 USD
+  Assets:Bank:Checking    -85.20 USD
+
+2026-06-15 ! "Unknown merchant" "Card charge to review"
+  Expenses:Uncategorized   42.00 USD
+  Assets:Bank:Checking    -42.00 USD

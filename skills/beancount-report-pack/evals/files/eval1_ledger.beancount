@@ -1,0 +1,44 @@
+option "title" "Pack fixture"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Bank:Savings USD
+2026-01-01 open Assets:Receivable USD
+2026-01-01 open Liabilities:CreditCard USD
+2026-01-01 open Income:Consulting USD
+2026-01-01 open Expenses:Software USD
+2026-01-01 open Expenses:Rent USD
+2026-01-01 open Equity:Opening USD
+
+2026-01-01 * "Opening balances"
+  Assets:Bank:Checking   8000.00 USD
+  Assets:Bank:Savings    2000.00 USD
+  Equity:Opening        -10000.00 USD
+
+2026-05-04 * "Acme" "Invoice May"
+  Assets:Receivable      3000.00 USD
+  Income:Consulting     -3000.00 USD
+
+2026-05-20 * "Acme" "Payment received"
+  Assets:Bank:Checking   3000.00 USD
+  Assets:Receivable     -3000.00 USD
+
+2026-06-01 * "Landlord" "June rent"
+  Expenses:Rent           900.00 USD
+  Assets:Bank:Checking   -900.00 USD
+
+2026-06-05 * "Cloud host" "Hosting"
+  Expenses:Software       120.00 USD
+  Liabilities:CreditCard -120.00 USD
+
+2026-06-12 * "Acme" "Invoice June"
+  Assets:Receivable      4500.00 USD
+  Income:Consulting     -4500.00 USD
+
+2026-06-20 * "Transfer to savings"
+  Assets:Bank:Savings     500.00 USD
+  Assets:Bank:Checking   -500.00 USD
+
+2026-06-25 * "Card payment"
+  Liabilities:CreditCard  120.00 USD
+  Assets:Bank:Checking   -120.00 USD

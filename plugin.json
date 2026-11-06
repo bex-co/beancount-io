@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "beancount-io",
-  "version": "0.4.22",
-  "description": "Skills for working with local Beancount ledgers through a coding agent: init, add, trade, property, import, importer-author, reconcile, migrate, ask, roll-forward, accruals, invoices, close, options. Needs `bea` 0.3.1 or later for checks, queries, and writes.",
+  "version": "0.4.23",
+  "description": "Skills for working with local Beancount ledgers through a coding agent: init, add, trade, property, import, importer-author, reconcile, migrate, ask, roll-forward, accruals, invoices, report-pack, close, options. Needs `bea` 0.3.1 or later for checks, queries, and writes.",
   "homepage": "https://beancount.io/",
   "repository": "https://github.com/bex-co/beancount-io",
   "license": "MIT-0",

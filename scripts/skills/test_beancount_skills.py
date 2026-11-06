@@ -185,6 +185,7 @@ class TestInstall(Workspace):
                 "beancount-options",
                 "beancount-property",
                 "beancount-reconcile",
+                "beancount-report-pack",
                 "beancount-roll-forward",
                 "beancount-trade",
             ],

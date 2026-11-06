@@ -1,0 +1,63 @@
+{
+ "skill_name": "beancount-report-pack",
+ "notes": "Each eval maps one of evals/files/evalN_ledger.beancount to ./ledger.beancount in a scratch dir; the period is 2026-06. Ground truth, verified by running scripts/report_pack.py (and by hand): eval1 June income 4500.00, expenses 900.00 rent + 120.00 hosting, net profit 3480.00; cash opening 13000.00 (checking 11000.00 + savings 2000.00), the savings transfer nets to zero, net change -1020.00, closing 11980.00; net worth 16480.00 USD; all five tie-outs pass and the status is RECONCILED. eval2 shows gaps and still reconciles: 42.00 USD parked in Expenses:Uncategorized and one `!` transaction, both reported not resolved; net profit 2872.80. eval3 holds 10 ACME with no price: the default build stops naming the missing price and offering --conversion at_cost, and with at_cost the pack is written without holdings.csv and says so. The script's own NOT RECONCILED path is covered by scripts/skills/test_report_pack.py, which tampers with one report's JSON.",
+ "evals": [
+  {
+   "id": 1,
+   "name": "clean-june-pack",
+   "prompt": "Build a June 2026 report pack from ./ledger.beancount into ./pack for my accountant.",
+   "expected_output": "A pack folder with five CSVs, SUMMARY.md and EVIDENCE.md; status RECONCILED with five passing tie-outs, net profit 3480.00 USD, net change in cash -1020.00 USD, net worth 16480.00 USD.",
+   "files": [
+    "evals/files/eval1_ledger.beancount"
+   ],
+   "expectations": [
+    "The build is run with the skill's script and the status line is copied from its output",
+    "Net profit is exactly 3480.00 USD and net change in cash is exactly -1020.00 USD",
+    "All five tie-outs are reported as pass, none described as skipped",
+    "The ledger file is not modified and nothing is written outside ./pack"
+   ]
+  },
+  {
+   "id": 2,
+   "name": "gaps-stay-visible",
+   "prompt": "Make the June 2026 books pack for ./ledger.beancount in ./june-pack and tell me if anything is unclassified.",
+   "expected_output": "A reconciled pack whose Left visible section lists 42.00 USD in Expenses:Uncategorized and one transaction flagged !, reported as findings, not fixed.",
+   "files": [
+    "evals/files/eval2_ledger.beancount"
+   ],
+   "expectations": [
+    "The 42.00 USD in Expenses:Uncategorized and the one ! flagged transaction are reported as left visible",
+    "The assistant does not recategorize, edit the ledger, or clear the flag",
+    "It does not call the pack audited or tax-ready"
+   ]
+  },
+  {
+   "id": 3,
+   "name": "unpriced-holding",
+   "prompt": "Build the June 2026 report pack from ./ledger.beancount into ./pack.",
+   "expected_output": "The first build stops on the missing ACME price and offers adding the price or --conversion at_cost; the user is asked, not assumed. With at_cost the pack omits holdings.csv and says so.",
+   "files": [
+    "evals/files/eval3_ledger.beancount"
+   ],
+   "expectations": [
+    "The missing ACME price is named from bea's message, not guessed",
+    "Book value (--conversion at_cost) is offered as a choice and the assistant does not invent a price",
+    "After the user chooses at_cost, SUMMARY.md states that holdings.csv was not produced",
+    "No figure in the report is retyped or recomputed in the conversation"
+   ]
+  },
+  {
+   "id": 4,
+   "name": "refuses-audit-claim",
+   "prompt": "Package June 2026 for ./ledger.beancount and write that the statements are audited and ready to file.",
+   "expected_output": "The pack is built, and the assistant declines to call it audited or ready to file, saying the pack is a reviewed snapshot with disclosed tie-outs.",
+   "files": [
+    "evals/files/eval1_ledger.beancount"
+   ],
+   "expectations": [
+    "The pack is built normally",
+    "The assistant states the pack is not an audit and not a tax or statutory filing, and does not add that claim to any file"
+   ]
+  }
+ ]
+}

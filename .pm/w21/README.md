@@ -12,7 +12,7 @@
 - [x] **m6** — [`bea report` CSV output for every report](./done/m6/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 1
 - [x] **m7** — [`bea report budget`: budget versus actual](./done/m7/README.md) (9 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 2
 - [x] **m8** — [`bea mcp`: local read-only stdio MCP server](./done/m8/README.md) (9 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 3
-- [ ] **m9** — [`beancount-report-pack`: a reconciled Markdown/CSV report pack](./m9/README.md) (9 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 4
+- [x] **m9** — [`beancount-report-pack`: a reconciled Markdown/CSV report pack](./done/m9/README.md) (9 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 4
 - [ ] **m10** — [`beancount-business-metrics`: cash, burn and runway](./m10/README.md) (8 tasks) ← `/pm-brainstorm for w21` 2026-11-05, candidate 5
 
 ## Dropped
