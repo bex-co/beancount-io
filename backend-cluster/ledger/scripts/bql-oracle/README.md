@@ -29,7 +29,7 @@ Run from `backend-cluster/ledger`, with `beanquery` 0.2.0 and `beancount` 3 inst
 ../../cli/.venv/bin/python scripts/bql-oracle/generate-bql-oracle.py
 ```
 
-Commit `bql-oracle.json` with the `queries.json` or fixture change that required it. The file records a hash of both inputs in `sourceHash`.
+Commit `bql-oracle.json` with the `queries.json` or fixture change that required it. The file records a hash of both inputs in `sourceHash`, and the replay recomputes it in Node (CI runs no Python), so a query or fixture edited without regenerating fails `yarn verify:rustledger` with the command above. Any byte of `queries.json` or a fixture counts, including whitespace.
 
 ## Add a query
 

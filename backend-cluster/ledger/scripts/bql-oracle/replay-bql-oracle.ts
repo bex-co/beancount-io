@@ -10,6 +10,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { LedgerShellService } from "@/features/ledger/service/ledger-shell-service";
+import { assertOracleCurrent } from "./bql-oracle-source-hash";
 import {
   compareQuery,
   judge,
@@ -23,6 +24,7 @@ const DIR = __dirname;
 const REPO_ROOT = join(DIR, "..", "..", "..", "..");
 
 type OracleFile = {
+  sourceHash?: string;
   results: Record<string, OracleResult & { ledger: string; query: string; source: string }>;
 };
 
@@ -84,6 +86,11 @@ export async function verifyBqlOracle(): Promise<void> {
   const oracle = JSON.parse(
     readFileSync(join(DIR, "bql-oracle.json"), "utf8"),
   ) as OracleFile;
+  assertOracleCurrent(
+    oracle.sourceHash,
+    join(DIR, "queries.json"),
+    join(DIR, "fixtures"),
+  );
   const ids = Object.keys(oracle.results);
   const allowlist = loadAllowlist(new Set(ids));
 

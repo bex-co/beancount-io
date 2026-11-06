@@ -50,10 +50,16 @@ def source_hash(queries_path: Path, fixtures_dir: Path) -> str:
     """Hash the inputs, so the replayer can tell a stale oracle without Python."""
     digest = hashlib.sha256()
     digest.update(queries_path.read_bytes())
-    for path in sorted(p for p in fixtures_dir.rglob("*") if p.is_file()):
-        digest.update(path.relative_to(fixtures_dir).as_posix().encode())
+    # Sorted by the posix relative path, the order bql-oracle-source-hash.ts uses.
+    files = {
+        p.relative_to(fixtures_dir).as_posix(): p
+        for p in fixtures_dir.rglob("*")
+        if p.is_file()
+    }
+    for relative in sorted(files):
+        digest.update(relative.encode())
         digest.update(b"\0")
-        digest.update(path.read_bytes())
+        digest.update(files[relative].read_bytes())
         digest.update(b"\0")
     return digest.hexdigest()
 
