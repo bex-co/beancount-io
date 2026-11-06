@@ -22,6 +22,7 @@
 - [x] **m16** — [Disclose unpriced report conversions](./done/m16/README.md) (7 tasks) ← promoted from `w23/180` 2026-10-30
 - [x] **m18** — [Bind ledger pins to the repository ID](./done/m18/README.md) (9 tasks) ← promoted from `w23/065` 2026-11-01
 - [x] **m19** — [Fill balances.discrepancy from the validator](./done/m19/README.md) (8 tasks) ← promoted from `w23/196` 2026-11-01
+- [ ] **m20** — [Diff the BQL engine against stock beanquery in a release gate](./m20/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-05; prerequisite [212](./done/212.md) already shipped
 
 ## Dropped
 
@@ -62,3 +63,4 @@
 - [x] [211](./done/211.md) — ledger search `private` param is an effective no-op, confusingly overlapping with the real exclusive filter `isPrivate`
 - [x] [212](./done/212.md) — BQL `FROM <column> <operator…>` (`FROM year > 2026`, `FROM date > …`, `FROM account ~ …`) is wrapped as a table and refused with a bogus `syntax error at position ~325` on all surfaces (regression from the FROM-fold rewrite)
 - [x] [213](./done/213.md) — MCP endpoint accepts an empty JSON-RPC batch `[]` with `202` instead of `-32600 Invalid Request` (`mcp-route.ts:134` `every()` is vacuously true)
+- [ ] [214](./214.md) — `well-known-route.test.ts` registry-listing test fails on clean `main` (`server.json` 1.0.1 vs manifest/`serverInfo` 1.0.0; the test couples two version lifecycles)
