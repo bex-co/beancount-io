@@ -353,13 +353,21 @@
   {
     "id": "empty-literals",
     "differences": [
-      "columns",
       "dtype"
     ],
     "references": [
-      ".pm/w23/216.md",
       ".pm/w23/done/134.md"
     ],
-    "note": "TRUE is named true here; NULL is typed with the neutral str marker."
+    "note": "NULL is typed with the neutral str marker, not NoneType."
+  },
+  {
+    "id": "header-null-literal",
+    "differences": [
+      "dtype"
+    ],
+    "references": [
+      ".pm/w23/done/134.md"
+    ],
+    "note": "NULL is typed with the neutral str marker, not NoneType."
   }
 ]

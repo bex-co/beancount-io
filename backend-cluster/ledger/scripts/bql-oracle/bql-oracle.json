@@ -913,6 +913,273 @@
       "rows": [],
       "source": "w23/212"
     },
+    "header-alias-wins": {
+      "columns": [
+        {
+          "dtype": "bool",
+          "name": "y"
+        },
+        {
+          "dtype": "str",
+          "name": "p"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT year>2025 AS y, UPPER( payee ) AS p LIMIT 1",
+      "rows": [
+        [
+          false,
+          "OPENING"
+        ]
+      ],
+      "source": "w23/216"
+    },
+    "header-bare-column-case": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "year"
+        },
+        {
+          "dtype": "str",
+          "name": "payee"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT Year, PAYEE LIMIT 1",
+      "rows": [
+        [
+          2025,
+          "Opening"
+        ]
+      ],
+      "source": "w23/216"
+    },
+    "header-boolean-operators": {
+      "columns": [
+        {
+          "dtype": "bool",
+          "name": "FALSE or TRUE"
+        },
+        {
+          "dtype": "bool",
+          "name": "1 AND TRUE"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT FALSE or TRUE, 1 AND TRUE LIMIT 1",
+      "rows": [
+        [
+          true,
+          true
+        ]
+      ],
+      "source": "w23/216"
+    },
+    "header-call-spacing": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "UPPER( payee )"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT UPPER( payee ) LIMIT 1",
+      "rows": [
+        [
+          "OPENING"
+        ]
+      ],
+      "source": "w23/216"
+    },
+    "header-distinct": {
+      "columns": [
+        {
+          "dtype": "bool",
+          "name": "year>2025"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT DISTINCT year>2025 LIMIT 2",
+      "rows": [
+        [
+          false
+        ],
+        [
+          true
+        ]
+      ],
+      "source": "w23/216"
+    },
+    "header-empty-result": {
+      "columns": [
+        {
+          "dtype": "int",
+          "name": "year+1"
+        },
+        {
+          "dtype": "bool",
+          "name": "not TRUE"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT year+1, not TRUE WHERE FALSE",
+      "rows": [],
+      "source": "w23/216"
+    },
+    "header-keyword-literals": {
+      "columns": [
+        {
+          "dtype": "bool",
+          "name": "TRUE"
+        },
+        {
+          "dtype": "bool",
+          "name": "False"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT TRUE, False LIMIT 1",
+      "rows": [
+        [
+          true,
+          false
+        ]
+      ],
+      "source": "w23/216"
+    },
+    "header-not-keyword": {
+      "columns": [
+        {
+          "dtype": "bool",
+          "name": "not TRUE"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT not TRUE LIMIT 1",
+      "rows": [
+        [
+          false
+        ]
+      ],
+      "source": "w23/216"
+    },
+    "header-null-literal": {
+      "columns": [
+        {
+          "dtype": "NoneType",
+          "name": "null"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT null LIMIT 1",
+      "rows": [
+        [
+          null
+        ]
+      ],
+      "source": "w23/216"
+    },
+    "header-operator-spacing": {
+      "columns": [
+        {
+          "dtype": "bool",
+          "name": "year>2025"
+        },
+        {
+          "dtype": "bool",
+          "name": "month  =  7"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT year>2025, month  =  7 LIMIT 1",
+      "rows": [
+        [
+          false,
+          false
+        ]
+      ],
+      "source": "w23/216"
+    },
+    "header-terminator": {
+      "columns": [
+        {
+          "dtype": "bool",
+          "name": "1>0"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT 1>0;",
+      "rows": [
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ],
+        [
+          true
+        ]
+      ],
+      "source": "w23/216"
+    },
     "inner-entries": {
       "columns": [
         {
@@ -1500,5 +1767,5 @@
       "source": "w23/169"
     }
   },
-  "sourceHash": "d59d647918a25784f195a42bd4092a3d3e2f9534e27216991d3e8744a12fb668"
+  "sourceHash": "ec68e02f3f8871824c6780a84cab8aa83b21d4eb332aab4fadd2d0f51704cfc7"
 }

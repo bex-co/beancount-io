@@ -79,7 +79,7 @@ Deviations fall into four groups. Tell them apart before adding one:
 - **Upstream engine gaps** tracked on a blocked item: `FROM <column> > …` predicates (`w6/blocked/023`) and the synthetic opening balances of `OPEN ON` (`w6/blocked/022`).
 - **Superset behavior.** The engine accepts what stock 0.2.0 refuses (window functions, a `cost` column, `FROM balances`).
 
-Open deviations that nobody has decided yet have their own inbox note, for example `w23/215` and `w23/216`; their entries come out when the note ships.
+Open deviations that nobody has decided yet have their own inbox note, for example `w23/215`; its entry comes out when the note ships.
 
 ## Limits
 

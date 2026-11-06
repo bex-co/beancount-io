@@ -28,6 +28,11 @@
  */
 export const STRING_LITERAL_ROOT = "'";
 
+import { IDENT_RE } from "./bql-expression-typer";
+
+/** `TRUE`, `FALSE` and `NULL` read as identifiers but name no column. */
+const KEYWORD_LITERAL = /^(?:true|false|null)$/iu;
+
 const AS_WORD = /\bas\b/iy;
 const GAP = /\s*/y;
 const IDENT = /[A-Za-z_][\w$]*/y;
@@ -58,6 +63,38 @@ export function extractSelectAliasInfo(query: string): SelectAliasInfo {
     heads.set(alias, stripLeadingComments(aliased.head));
   }
   return { roots, heads };
+}
+
+/**
+ * The header stock beanquery gives each top-level SELECT item whose name the
+ * engine rewrites (w23/216). Stock names an unaliased expression with its
+ * source text, verbatim: `1+1`, `UPPER( payee )`, `not TRUE`. The engine
+ * re-renders the parsed expression instead (`1 + 1`, `UPPER(payee)`,
+ * `NOT true`), so a client that reads a column by the text it wrote finds
+ * nothing. One entry per item, `undefined` where the engine's own name is
+ * already right: an alias (`AS x` names the column), a bare column (stock and
+ * the engine both name it canonically, `Year` → `year`; `TRUE`, `FALSE` and
+ * `NULL` are literals, not columns, and keep their spelling). A wildcard changes the
+ * column count, so any `*` item makes the whole answer `undefined`, and so
+ * does a query with no top-level SELECT list.
+ */
+export function sourceSelectHeaders(
+  query: string,
+): (string | undefined)[] | undefined {
+  const clauses = selectClauses(query);
+  if (clauses === undefined) return undefined;
+  const headers = clauses.items.map((raw) => {
+    const item = stripLeadingComments(raw);
+    return item.replace(/^(?:distinct|all)\s+/iu, "").trim();
+  });
+  if (headers.some((header) => header === "*" || header === "")) {
+    return undefined;
+  }
+  return headers.map((header, index) => {
+    const isAliased = splitAlias(clauses.items[index] as string) !== undefined;
+    const isBareColumn = IDENT_RE.test(header) && !KEYWORD_LITERAL.test(header);
+    return isAliased || isBareColumn ? undefined : header;
+  });
 }
 
 export function extractSelectAliases(query: string): Map<string, string> {

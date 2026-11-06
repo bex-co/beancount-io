@@ -19,7 +19,10 @@ import {
 } from "./ledger-shell-mappers";
 import { bqlComplexityRefusal } from "./bql-complexity";
 import { stripBqlBlockComments } from "./bql-comments";
-import { extractSelectAliasInfo } from "./bql-select-aliases";
+import {
+  extractSelectAliasInfo,
+  sourceSelectHeaders,
+} from "./bql-select-aliases";
 import { foldBqlColumnFrom } from "./bql-from-fold";
 import { dropPostingsFromForWindows } from "./bql-from-windows";
 import { rescueInnerTableFrom } from "./bql-from-inner-tables";
@@ -74,6 +77,25 @@ export function normalizeBqlQueryForEngine(query: string): string {
       ),
     ),
   );
+}
+
+/**
+ * Names each unaliased expression column with its source text, as stock
+ * beanquery does (w23/216), instead of the engine's re-rendering of it. Only
+ * when the SELECT list lines up with the engine's columns one for one: a
+ * wildcard, a PIVOT, or anything the scan cannot place keeps the engine's names.
+ */
+function withSourceHeaders(result: QueryResult, folded: string): QueryResult {
+  const headers = sourceSelectHeaders(
+    stripBqlStatementTerminator(stripBqlBlockComments(folded)),
+  );
+  if (headers === undefined || headers.length !== result.columns.length) {
+    return result;
+  }
+  return {
+    ...result,
+    columns: result.columns.map((name, index) => headers[index] ?? name),
+  };
 }
 
 /**
@@ -168,7 +190,7 @@ export class LedgerShellService implements ILedgerShellService {
       normalizeBqlQueryForEngine(plan.kind === "fill" ? plan.query : query),
     );
     assertQuerySucceeded(result);
-    if (plan.kind !== "fill") return result;
+    if (plan.kind !== "fill") return withSourceHeaders(result, folded);
     const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
     const diffs = new Map<string, { number: string; currency: string }>();
     for (const [directive, diff] of failedBalanceDiffs(
@@ -181,7 +203,7 @@ export class LedgerShellService implements ILedgerShellService {
           : undefined;
       if (key !== undefined) diffs.set(key, diff);
     }
-    return applyDiscrepancy(result, plan, diffs);
+    return withSourceHeaders(applyDiscrepancy(result, plan, diffs), folded);
   }
 
   async queryShell(params: {

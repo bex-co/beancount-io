@@ -400,5 +400,71 @@
     "ledger": "empty.bean",
     "source": "w23/168",
     "query": "SELECT account, number FROM postings"
+  },
+  {
+    "id": "header-keyword-literals",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT TRUE, False LIMIT 1"
+  },
+  {
+    "id": "header-operator-spacing",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT year>2025, month  =  7 LIMIT 1"
+  },
+  {
+    "id": "header-call-spacing",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT UPPER( payee ) LIMIT 1"
+  },
+  {
+    "id": "header-not-keyword",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT not TRUE LIMIT 1"
+  },
+  {
+    "id": "header-boolean-operators",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT FALSE or TRUE, 1 AND TRUE LIMIT 1"
+  },
+  {
+    "id": "header-distinct",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT DISTINCT year>2025 LIMIT 2"
+  },
+  {
+    "id": "header-alias-wins",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT year>2025 AS y, UPPER( payee ) AS p LIMIT 1"
+  },
+  {
+    "id": "header-bare-column-case",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT Year, PAYEE LIMIT 1"
+  },
+  {
+    "id": "header-terminator",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT 1>0;"
+  },
+  {
+    "id": "header-empty-result",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT year+1, not TRUE WHERE FALSE"
+  },
+  {
+    "id": "header-null-literal",
+    "ledger": "main.bean",
+    "source": "w23/216",
+    "query": "SELECT null LIMIT 1"
   }
 ]
