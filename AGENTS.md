@@ -69,10 +69,11 @@ When a new package gets real code, add a `<package>/AGENTS.md` documenting its t
 ### Never commit secrets
 
 - This is a public repo. Real credentials live only in gitignored `.env` files (the root `.gitignore` covers `.env`, `.env.local`, `.env.*.local`). Commit only `.env.example` with placeholder values.
-- A gitleaks secret scan (`.github/workflows/secret-scan.yml`) gates every push and PR. Scan your working tree before pushing:
+- A gitleaks secret scan (`.github/workflows/secret-scan.yml`) gates every push and PR. Scan what git would publish before pushing:
   ```zsh
-  gitleaks dir . --redact --verbose
+  python3 scripts/scan-secrets.py
   ```
+  A bare `gitleaks dir .` also reads gitignored local files (a real `.env`, QA credentials under `.tmp/`, `Pods/`, bytecode caches) and reports them, which CI's clean checkout never sees; the script scans the tracked and unignored files with the repository's `.gitleaks.toml` and allowlists nothing.
 - See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full policy.
 
 ### Temporary files

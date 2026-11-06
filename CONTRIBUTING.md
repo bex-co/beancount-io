@@ -93,11 +93,16 @@ and pull request.
 - `EXPO_PUBLIC_*` / `VITE_*`-style variables are compiled into public client
   bundles and are not secrets by nature; still keep their real values out of the
   repo and document them in `.env.example`.
-- Before pushing, you can scan your working tree locally:
+- Before pushing, scan what git would publish locally:
 
   ```zsh
-  gitleaks dir . --redact --verbose
+  python3 scripts/scan-secrets.py
   ```
+
+  It scans the tracked files and any new file git does not ignore, with the
+  repository's `.gitleaks.toml`, as CI does on a clean checkout. A bare
+  `gitleaks dir .` also reads your gitignored local files (a real `.env`, QA
+  credentials) and reports them; they are not part of any commit.
 
 If you believe a secret was ever committed, treat it as compromised: rotate or
 revoke it immediately, then report the affected path and commit privately using
