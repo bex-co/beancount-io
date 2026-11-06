@@ -66,3 +66,4 @@
 - [ ] [214](./214.md) — `well-known-route.test.ts` registry-listing test fails on clean `main` (`server.json` 1.0.1 vs manifest/`serverInfo` 1.0.0; the test couples two version lifecycles)
 - [ ] [215](./215.md) — BQL `sum(1)` reports dtype `Decimal` where stock reports `int` (cell value agrees; found by the m20 oracle replay)
 - [ ] [216](./216.md) — BQL names a boolean-literal column `true` where stock keeps the source spelling `TRUE` (header text only; found by the m20 oracle replay)
+- [ ] [217](./217.md) — MCP `createLedgerFiles` CONFLICT hint says to overwrite "with `replace`", which no published MCP tool has (legacy `editLedgerFiles` wording at `ledger-repo-service.ts:514`)
