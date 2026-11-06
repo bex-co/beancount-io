@@ -1285,7 +1285,7 @@ def _write_export(output: Path, text: str) -> None:
     handled. The frontend has its own `cli.utils.atomic_write` for the JSON
     path.
     """
-    from bea_engine.ledger.write import candidate_file
+    from bea_engine.ledger.write import candidate_file, release_candidate
 
     try:
         status = output.stat()
@@ -1306,6 +1306,7 @@ def _write_export(output: Path, text: str) -> None:
     with candidate_file(output, text, mode=0o666 if mode is None else 0o600) as candidate:
         if mode is not None:
             candidate.chmod(mode)
+        release_candidate(candidate)
         os.replace(candidate, output)
 
 
@@ -2113,7 +2114,7 @@ def _renderer_for(datatype: Any, ctx: Any) -> Any:
 
 def _rjust_columns(text: str, width: int) -> str:
     """`str.rjust` measured in columns rather than code points."""
-    from cli.output import display_width
+    from bea_engine.display_width import display_width
 
     return " " * max(0, width - display_width(text)) + text
 
@@ -2145,8 +2146,8 @@ def _render_text_display_width(
     """
     from beanquery.query_render import Align, RenderContext, render_rows
 
-    from cli.output import display_width
-    from cli.output import pad as _pad_columns
+    from bea_engine.display_width import display_width
+    from bea_engine.display_width import pad as _pad_columns
 
     if not rows:
         return

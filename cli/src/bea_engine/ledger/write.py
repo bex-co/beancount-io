@@ -1519,8 +1519,9 @@ def candidate_file(file: Path, content: str, *, mode: int = 0o600, _direct: bool
                                 sidecar.unlink(missing_ok=True)
             finally:
                 # Closed first: Windows cannot remove a file with an open handle.
-                with suppress(OSError):
-                    os.close(fd)
+                if not stopping.take_released(candidate):
+                    with suppress(OSError):
+                        os.close(fd)
                 _discard_candidate(candidate)
                 _discard_candidate(scratch)
             if fallback:
@@ -1553,6 +1554,20 @@ _NO_HARD_LINKS = frozenset(
 )
 
 
+def release_candidate(candidate: Path) -> None:
+    """Let go of the candidate's open handle before renaming it into place.
+
+    The commit installs the staged copy by `os.replace`, a rename, and Windows
+    refuses to rename a file that has an open handle: every write into an
+    existing ledger there ended "the filesystem refused to replace" the file,
+    with nothing written, though the directory and the ledger were writable. A
+    new file is installed by hard link, which an open handle does not block.
+    Elsewhere the descriptor stays open, and its lock keeps marking the copy live.
+    """
+    if sys.platform == "win32":
+        stopping.release_handle(candidate)
+
+
 def claim_new_file(candidate: Path, target: Path) -> None:
     """Give a validated candidate the name `target`, which must not exist yet.
 
@@ -1582,6 +1597,7 @@ def claim_new_file(candidate: Path, target: Path) -> None:
                 placeholder = os.fstat(fd)
             finally:
                 os.close(fd)
+            release_candidate(candidate)
             os.replace(candidate, target)
     except BaseException as exc:
         # Only the empty placeholder this call made is removed, never a file
@@ -4542,6 +4558,7 @@ def replace_checked(file: Path, candidate: Path, original: bytes, original_stat:
     keep_file_metadata(file, candidate, original_stat)
     try:
         with stopping.committing():
+            release_candidate(candidate)
             os.replace(candidate, file)
     except PermissionError as exc:
         raise AuthError(

@@ -208,6 +208,37 @@ def staged(path: Path, fd: int | None = None) -> Iterator[None]:
         _staged.pop(path, None)
 
 
+#: Staged paths whose descriptor `release_handle` already closed, so the owner's
+#: own cleanup does not close the number again (it may name another file by then).
+_released: set[Path] = set()
+
+
+def release_handle(path: Path) -> None:
+    """Close the descriptor `staged` holds for `path`, ahead of renaming the file.
+
+    A candidate stays open for its lifetime so a sweep can tell it is live, but
+    Windows refuses to rename a file with an open handle, so the commit that
+    renames it over the ledger lets go first. The registration stays, without a
+    descriptor, so a signal still removes the file.
+    """
+    fd = _staged.get(path)
+    if fd is None:
+        return
+    _staged[path] = None
+    _released.add(path)
+    try:
+        os.close(fd)
+    except OSError:
+        pass
+
+
+def take_released(path: Path) -> bool:
+    """Whether `release_handle` already closed `path`'s descriptor; forgets it either way."""
+    was = path in _released
+    _released.discard(path)
+    return was
+
+
 def _discard_staged() -> None:
     for path, fd in list(_staged.items()):
         if fd is not None:
