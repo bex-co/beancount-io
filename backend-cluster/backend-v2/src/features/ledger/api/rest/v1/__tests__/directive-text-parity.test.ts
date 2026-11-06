@@ -286,7 +286,7 @@ async function fixture(caller = identity) {
       if (surface === "gql") {
         const result = await graphql({
           schema,
-          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid !== undefined ? `, allowInvalid: ${args.allowInvalid}` : ""}${args.allow_invalid !== undefined ? `, allow_invalid: ${args.allow_invalid}` : ""}${args.requestId !== undefined ? `, requestId: ${JSON.stringify(args.requestId)}` : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } appendedUnsorted } }`,
+          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid !== undefined ? `, allowInvalid: ${args.allowInvalid}` : ""}${args.allow_invalid !== undefined ? `, allow_invalid: ${args.allow_invalid}` : ""}${args.requestId !== undefined ? `, requestId: ${JSON.stringify(args.requestId)}` : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } valid appendedUnsorted } }`,
           contextValue: {
             identity: caller,
             getCurrentIdentity: () => caller,
@@ -685,6 +685,11 @@ describe("appending Beancount text through the real adapters", () => {
             message: expect.stringContaining("never opened"),
           }),
         ]);
+        // The explicit verdict (w23/219), on every surface.
+        const valid =
+          (data.validation as { valid?: boolean } | undefined)?.valid ??
+          (data as { valid?: boolean }).valid;
+        expect(valid).toBe(false);
         expect(f.changeLedgerFiles).not.toHaveBeenCalled();
         expect(f.state.files.get("main.bean")).toBe(EXISTING);
 

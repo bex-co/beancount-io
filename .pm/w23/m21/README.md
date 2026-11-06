@@ -1,13 +1,13 @@
 # w23 · m21 — Guard write-preview behavior with a parity matrix
 
-**Worker:** worker1 **Goal:** every write tool's preview-versus-commit rule is asserted by a generated matrix across REST, GraphQL and MCP, so a divergence like w23/219 fails CI instead of waiting for a QA run **Status:** todo
+**Worker:** worker1 **Goal:** every write tool's preview-versus-commit rule is asserted by a generated matrix across REST, GraphQL and MCP, so a divergence like w23/219 fails CI instead of waiting for a QA run **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Inventory every write tool's preview and commit rules | 40m | — |
-| t002 | Build the preview/commit matrix harness on the existing parity fixtures | 60m | t001 |
+| t001 | Inventory every write tool's preview and commit rules — **DONE** | 40m | — |
+| t002 | Build the preview/commit matrix harness on the existing parity fixtures — **DONE** | 60m | t001 |
 | t003 | Fix the gaps the matrix exposes | 60m | t002 |
 | t004 | State the one preview rule in `docs/mcp.md` and `docs/api-parity.md` | 20m | t003 |
 | t005 | Adoption surface | 20m | t004 |
