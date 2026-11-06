@@ -44,6 +44,10 @@ FIRST_INCLUDE_LINE = LEDGER.count("\n") + 1
 
 class _Feeds(ThreadingHTTPServer):
     hits: list[str]
+    # The default backlog is 5: the CLI fetches sources concurrently, and macOS refuses
+    # the overflow instead of queueing it, which failed these tests for a reason that
+    # has nothing to do with the limit.
+    request_queue_size = 64
 
 
 class _Handler(BaseHTTPRequestHandler):
