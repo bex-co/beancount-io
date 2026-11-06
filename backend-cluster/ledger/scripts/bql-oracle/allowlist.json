@@ -346,7 +346,7 @@
       "dtype"
     ],
     "references": [
-      ".pm/w23/215.md"
+      ".pm/w23/blocked/215.md"
     ],
     "note": "sum(1) is typed Decimal here and int in stock; the value agrees."
   },
