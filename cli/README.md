@@ -112,7 +112,7 @@ for your first month end to end, follow the
 
 | Command | Purpose |
 | --- | --- |
-| `bea init [DIRECTORY]` | Create a local ledger with common accounts, or a setup preset (`--preset personal@1`, plus `--module investments@1` and other modules) |
+| `bea init [DIRECTORY]` | Create a local ledger with common accounts, or a setup preset (`--preset personal@1`, plus `--module investments@1` and other modules); `--agent-files` also writes `AGENTS.md` for coding agents |
 | `bea add TYPE` | Append one of eleven directive types |
 | `bea update TYPE` | Rewrite entries in place; recategorize the import review queue |
 | `bea import SOURCE` | Preview or apply a bank CSV (`--csv`), OFX/QFX (`--ofx`), or importer (`--config`) |

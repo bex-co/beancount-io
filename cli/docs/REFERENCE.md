@@ -90,6 +90,7 @@ Usage: bea init [OPTIONS] [directory]
 | `--title` | str |  | Ledger title; only with --preset |
 | `--module` | str (repeatable) |  | Also track investments@1, rental-property@1, or side-business@1 in a --preset personal@1 ledger; repeat for each |
 | `--property-name` | str |  | Account name for the rental property, e.g. OakSt (default Property1) |
+| `--agent-files` | flag |  | Also write AGENTS.md (and a CLAUDE.md that imports it) for coding agents; an existing file is never replaced |
 
 ### `bea import`
 

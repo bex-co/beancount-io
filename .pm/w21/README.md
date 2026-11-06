@@ -22,7 +22,6 @@
 
 ## Inbox
 
-- [1021](./1021.md) — `bea init` writes `AGENTS.md` for coding agents (never overwrites an existing file)
 - [065](./blocked/065.md) — One early-year entry (e.g. 0050) makes the balance sheet 23,718 monthly points (3 MB) and the app stalls — **blocked:** needs an approach decision (per-pill fetch vs server downsample) and a simulator profile of the stall
 - [201](./blocked/201.md) — Missing file: GraphQL returns null, REST/MCP NOT_FOUND; directory path differs too — **blocked:** backend `missingAsError` flag shipped; dashboard and mobile adoption wait for the backend deploy
 - [206](./blocked/206.md) — Refund/return receipts are always prefilled as a purchase — **blocked:** needs an owner-approved AI-quota evaluation and a parse-contract decision (`isRefund` vs signed amount)

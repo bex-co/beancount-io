@@ -18,6 +18,7 @@ from typing import Annotated, Any, NamedTuple
 import typer
 
 from cli import context, output
+from cli.agent_guidance import write_agent_files
 from cli.amounts import parse_decimal_number
 from cli.errors import AuthError, ConflictError, UsageError
 from cli.paths import expand_path
@@ -281,6 +282,17 @@ def _folds_case(directory: Path) -> bool:
     return False
 
 
+def _report_agent_files(result: dict[str, str]) -> None:
+    """Say which agent files were written and which already existed."""
+    made = [name for name, state in result.items() if state == "created"]
+    if made:
+        output.success(f"Wrote {' and '.join(made)} beside the ledger.")
+    if result["AGENTS.md"] == "kept":
+        output.note("AGENTS.md already exists; left unchanged, and CLAUDE.md was not written.")
+    elif result["CLAUDE.md"] == "kept":
+        output.note("CLAUDE.md already exists; left unchanged.")
+
+
 def init(
     directory: Annotated[Path, typer.Argument(help="New ledger directory, or a .bean/.beancount file")] = Path("."),
     currency: Annotated[
@@ -311,6 +323,14 @@ def init(
         str | None,
         typer.Option("--property-name", help="Account name for the rental property, e.g. OakSt (default Property1)"),
     ] = None,
+    agent_files: Annotated[
+        bool,
+        typer.Option(
+            "--agent-files",
+            help="Also write AGENTS.md (and a CLAUDE.md that imports it) for coding agents; "
+            "an existing file is never replaced",
+        ),
+    ] = False,
 ) -> None:
     """Create main.bean with common accounts.
 
@@ -455,6 +475,10 @@ def init(
     data = launch.helper_json(argv, writes=True)
     if warnings:
         data["warnings"] = warnings
+    if agent_files:
+        data["agent_files"] = write_agent_files(
+            file, currency, list(data["accounts"] if "accounts" in data else _ACCOUNTS)
+        )
     if ctx.json_output:
         output.emit(data, target=output.file_target(file))
     else:
@@ -464,6 +488,8 @@ def init(
         # A preset may open nothing; only a result without the key is the fixed chart.
         accounts = data["accounts"] if "accounts" in data else list(_ACCOUNTS)
         output.success(f"Created {file} with {len(accounts)} accounts in {currency}.")
+        if agent_files:
+            _report_agent_files(data["agent_files"])
         try:
             shown = f"~/{file.relative_to(Path.home())}"
         except ValueError:

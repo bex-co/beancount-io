@@ -13,6 +13,11 @@ never overwrite it either. (This suite's own repository forbids `CLAUDE.md`;
 that rule governs the repository, not customer ledgers, where the one-line
 import is how Claude Code picks `AGENTS.md` up.)
 
+`bea init --agent-files` writes the same two files from the same text
+(`cli/src/cli/agent_guidance.py`; a test fails if they drift), with the same
+no-overwrite rule. Use it when `bea` created the ledger; otherwise write the
+files from this template.
+
 Substitute into the template:
 
 - `{{CURRENCY}}` — the operating currency from Step 1.
@@ -38,7 +43,7 @@ itself).
   there when imports start.
 - Ledger workflow skills (init, add, trade, property, import,
   importer-author, reconcile, migrate, ask, close, options, roll-forward,
-  accruals):
+  accruals, invoices, report-pack, business-metrics):
   https://github.com/bex-co/beancount-io/tree/main/skills
 ```
 

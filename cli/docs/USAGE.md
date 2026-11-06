@@ -554,6 +554,14 @@ balances use that currency and balance against
 `Equity:OpeningBalances`; credit card debt is negative. Add other accounts with
 `bea add open` before posting to them.
 
+`init --agent-files` also writes `AGENTS.md` beside the ledger (its root file, operating
+currency, opened accounts, and the rule to propose before writing and run
+`bea check` after) and a one-line `CLAUDE.md` that imports it, so a coding agent
+opening the folder finds the conventions. It is opt-in, and a file that already
+exists is never replaced: an existing `AGENTS.md` is left alone and `CLAUDE.md` is
+then not written; an existing `CLAUDE.md` is kept. In JSON mode `data.agent_files`
+says `created`, `kept` or `skipped` for each file.
+
 Currency symbols follow Beancount syntax, including custom and crypto symbols;
 the CLI does not check an ISO currency registry. `init --currency US` is valid
 syntax, but emits a typo warning because the symbol is not three uppercase
