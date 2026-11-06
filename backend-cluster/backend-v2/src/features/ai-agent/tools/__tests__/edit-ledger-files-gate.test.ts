@@ -63,10 +63,23 @@ describe("file writes gate on new bean-check errors", () => {
     expect(commits()).toHaveLength(0);
   });
 
-  it("refuses dry_run the same way", async () => {
+  it("previews dry_run as invalid instead of refusing, then refuses the commit", async () => {
     const { run, commits } = setup({ projected: [BROKEN] });
     const result = await run({ dry_run: true });
     expect(result).toMatchObject({
+      ok: true,
+      result: {
+        validation: {
+          valid: false,
+          newErrors: [
+            { message: "Account Assets:Chekcing was never opened" },
+          ],
+        },
+      },
+    });
+    expect(commits()).toHaveLength(0);
+    // The same request without dry_run is still refused.
+    expect(await run({ dry_run: false })).toMatchObject({
       ok: false,
       errorCode: "VALIDATION_FAILED",
     });

@@ -111,6 +111,7 @@ export const writeValidationSchema = z.object({
   errorsBefore: z.number().int(),
   errorsAfter: z.number().int(),
   newErrors: z.array(beanCheckErrorSchema),
+  valid: z.boolean(),
   checked: z
     .literal(false)
     .optional()

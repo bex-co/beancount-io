@@ -760,7 +760,12 @@ describe("executeEditLedgerFiles", () => {
         diff: [],
         wrote: [{ path: "new.bean" }],
         entryHashes: [],
-        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 0,
+          newErrors: [],
+          valid: true,
+        },
       },
     });
   });
@@ -821,6 +826,7 @@ describe("executeEditLedgerFiles", () => {
               source: "new.bean:1",
             },
           ],
+          valid: false,
         },
       },
     });
@@ -1089,7 +1095,12 @@ describe("executeEditLedgerFiles", () => {
         operations: [{ operation: "update", path: "main.bean" }],
         wrote: [],
         entryHashes: [],
-        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 0,
+          newErrors: [],
+          valid: true,
+        },
       },
     });
   });
@@ -1155,6 +1166,7 @@ describe("executeEditLedgerFiles", () => {
               source: "main.bean:1",
             },
           ],
+          valid: false,
         },
       },
     });
@@ -1203,7 +1215,12 @@ describe("executeEditLedgerFiles", () => {
         operations: [{ operation: "delete", path: "gone.bean" }],
         wrote: [],
         entryHashes: [],
-        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 0,
+          newErrors: [],
+          valid: true,
+        },
       },
     });
   });

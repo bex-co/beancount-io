@@ -207,7 +207,12 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
         success: true,
         wrote: [],
         entryHashes: [],
-        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 0,
+          newErrors: [],
+          valid: true,
+        },
       });
       expect(f.copy).toHaveBeenCalledTimes(3);
       expect(f.copy).toHaveBeenCalledWith({
@@ -358,7 +363,12 @@ describe("written file and entry hashes", () => {
         success: true,
         wrote: [{ path: "2026.bean" }],
         entryHashes: ["tx-hash"],
-        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 0,
+          newErrors: [],
+          valid: true,
+        },
       });
     } finally {
       await f.close();

@@ -43,7 +43,12 @@ describe("SOURCE_SLICE_EXECUTORS", () => {
       expect.objectContaining({
         newEntryHash: "hash-new",
         entryHashes: ["hash-new"],
-        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 0,
+          newErrors: [],
+          valid: true,
+        },
       }),
     );
     expect(String(result.result.summary)).toContain("hash-new");

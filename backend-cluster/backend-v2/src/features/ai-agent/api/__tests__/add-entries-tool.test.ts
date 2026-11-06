@@ -137,6 +137,7 @@ describe("addLedgerEntries", () => {
           newErrors: [
             { message: "Transaction does not balance (5.00 USD)" },
           ],
+          valid: false,
         },
       }),
     );

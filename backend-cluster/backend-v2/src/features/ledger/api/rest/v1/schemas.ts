@@ -86,7 +86,10 @@ export const writeProjectionShape = {
       message: z.string(),
       source: z.string().optional(),
     }),
-  ),
+  ),  valid: z.boolean().openapi({
+    description:
+      "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on the status.",
+  }),
 };
 
 /** Fava's own narrowing expressions, as `/journal` already publishes them. */

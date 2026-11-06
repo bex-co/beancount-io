@@ -68,7 +68,12 @@ export const withoutDryRun = <T extends { dryRun: unknown }>(shape: T) => {
  * does — strip the flat triple from the adopted REST shape (w23/161).
  */
 const withoutFlatProjection = <
-  T extends { errorsBefore: unknown; errorsAfter: unknown; newErrors: unknown },
+  T extends {
+    errorsBefore: unknown;
+    errorsAfter: unknown;
+    newErrors: unknown;
+    valid: unknown;
+  },
 >(
   shape: T,
 ) => {
@@ -76,6 +81,7 @@ const withoutFlatProjection = <
     errorsBefore: _before,
     errorsAfter: _after,
     newErrors: _new,
+    valid: _valid,
     ...rest
   } = shape;
   return rest;

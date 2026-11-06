@@ -59,6 +59,8 @@ export interface AppendDirectiveTextResult {
   readonly errorsBefore: number;
   readonly errorsAfter: number;
   readonly newErrors: readonly DirectiveTextError[];
+  /** True only when no new bean-check error was found; a preview returns errors, it does not refuse (w23/219). */
+  readonly valid: boolean;
   /**
    * Files whose existing directives were out of date order, so the new ones
    * were appended at the end instead of threaded in.

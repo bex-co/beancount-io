@@ -382,7 +382,12 @@ const withRenameOutcome = (
         summary,
         wrote: preview ? [] : [{ path: base["newPath"] }],
         entryHashes: [],
-        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 0,
+          newErrors: [],
+          valid: true,
+        },
       }
     : { ...base, dryRun: preview };
 
@@ -685,6 +690,7 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
                   source: "main.bean:1",
                 },
               ],
+              valid: false,
             },
           },
         });

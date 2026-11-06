@@ -43,7 +43,7 @@ const toolLogger = logger.child({ module: "tool:edit-ledger-files" });
 // w23/m15: like entry writes, a file write that adds bean-check errors the
 // ledger did not have is refused; the sentence rides every file tool.
 const NEW_ERRORS_GATE_NOTE =
-  " A change that adds bean-check errors is refused with VALIDATION_FAILED (dry_run too); allow_invalid commits it anyway, e.g. one step of a multi-step edit.";
+  " A commit that adds bean-check errors is refused with VALIDATION_FAILED; dry_run returns them with valid: false instead; allow_invalid commits anyway, e.g. one step of a multi-step edit.";
 
 const description =
   "Create, update, replace, or delete files in a single atomic commit.\n" +
@@ -55,9 +55,9 @@ const description =
   DELETE_INCLUDE_GUARD_BATCH_NOTE +
   "\n" +
   "  Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs.\n" +
-  "  dry_run previews without committing: same refusal as the commit, plus a " +
-  "unified diff per touched file and bean-check's verdict over the projected " +
-  "contents — approve only what the preview shows, then send the identical " +
+  "  dry_run previews without committing: same checks, a unified diff per " +
+  "touched file, and bean-check's verdict over the projected contents " +
+  "(newErrors, valid) — approve only a valid preview, then send the identical " +
   "files with dry_run false." +
   NEW_ERRORS_GATE_NOTE;
 
@@ -167,6 +167,7 @@ type EditLedgerFilesResult = {
     errorsBefore: number;
     errorsAfter: number;
     newErrors: { message: string; source?: string }[];
+    valid: boolean;
   };
 };
 
@@ -473,12 +474,14 @@ export async function executeEditLedgerFiles(
           path,
           diff: unifiedDiff(path, fileCache.get(path)?.content ?? null, after),
         }));
+        // A preview reports the new errors and `valid`; only the commit
+        // below is refused for them (w23/219).
         const validation = await gateFileWrite(
           services,
           identity,
           ledgerId,
           overlays(),
-          allowInvalid,
+          true,
         );
         // `diff` leads the payload so the serialized text content is the
         // diff followed by the one-line summary.

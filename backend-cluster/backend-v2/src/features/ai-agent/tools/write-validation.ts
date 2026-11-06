@@ -94,7 +94,7 @@ export async function withPostWriteValidation<T>(
     validation:
       failure === undefined
         ? validation
-        : { ...validation, checked: false, checkError: failure },
+        : { ...validation, valid: false, checked: false, checkError: failure },
   };
 }
 

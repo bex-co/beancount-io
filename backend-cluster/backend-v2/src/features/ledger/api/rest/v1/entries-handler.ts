@@ -323,6 +323,10 @@ const directiveTextResultSchema = z.strictObject({
       source: z.string().optional(),
     }),
   ),
+  valid: z.boolean().openapi({
+    description:
+      "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on the status.",
+  }),
   appendedUnsorted: z.array(z.string()),
 });
 
@@ -394,6 +398,7 @@ export const ENTRY_ROUTES = [
         errorsBefore: result.validation.errorsBefore,
         errorsAfter: result.validation.errorsAfter,
         newErrors: result.validation.newErrors,
+        valid: result.validation.valid,
       };
     },
   }),

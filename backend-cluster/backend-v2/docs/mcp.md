@@ -461,7 +461,10 @@ them appended, and says so in `appendedUnsorted`.
 Before committing, it bean-checks the projected ledger. New errors are a
 refusal — `UNBALANCED` when a transaction does not balance — unless
 `allowInvalid` records them deliberately. `dry_run` returns the unified diff
-and the projected errors without committing. At most 50 directives per call.
+and the projected errors without committing, with `valid: false` when there are
+new errors: every write preview (`appendLedgerText`, `addLedgerEntries`, the
+`…LedgerFiles` tools) reports errors instead of refusing and carries `valid`,
+which is what to gate on. At most 50 directives per call.
 
 Prefer it over `updateLedgerFiles` for adding directives: `updateLedgerFiles`
 replaces file contents, so appending with it means reading, concatenating, and
@@ -471,8 +474,10 @@ writing the whole file back — which is how entries end up at the bottom of
 
 Like entry writes, the `…LedgerFiles` tools refuse a change that would add
 bean-check errors the ledger did not have (`VALIDATION_FAILED`, naming each
-error), on `dry_run` as well as on the commit; errors the ledger already had
-never block. Pass `allow_invalid: true` (REST: `allowInvalid`) to commit it
+error) on the commit; a `dry_run` returns them instead of refusing, as
+`appendLedgerText` does (w1/037): `validation.newErrors` lists them and
+`validation.valid` is `false`, so gate a preview on `valid`, not on `isError`.
+Errors the ledger already had never block. Pass `allow_invalid: true` (REST: `allowInvalid`) to commit it
 deliberately — for example one step of a multi-step restructuring that is only
 valid once the next step lands, or write the steps as one batch. The result
 still reports the errors under `validation.newErrors`. REST `PUT`/`DELETE
@@ -574,8 +579,8 @@ write authorization and repository-path validation as the commit — a caller
 the commit would refuse is refused by the preview too. The preview returns the
 operation `count` and paths plus a unified `diff` per touched file and
 bean-check's verdict over the projected content (`validation` with
-`errorsBefore`, `errorsAfter`, and `newErrors`), so review the diff and the
-new errors before re-issuing the same call with `dry_run: false`. It does
+`errorsBefore`, `errorsAfter`, `newErrors`, and `valid`), so review the diff and
+the new errors, and proceed only when `valid` is `true`, before re-issuing the same call with `dry_run: false`. It does
 **not** exercise the final repository commit, so a successful preview still
 does not guarantee that applying the edit will succeed.
 
@@ -1799,8 +1804,11 @@ With `dry_run: true` the tool runs every check the commit runs, then returns
 what it would append — a `Would add …` message and the per-file entry text in
 `preview` — without committing anything: no entries written, `entryHashes`
 empty, and `wrote` naming at most the entry point the batch would newly
-include. The `UNBALANCED` and `VALIDATION_FAILED` refusals above refuse a
-preview exactly as they refuse a commit.
+include. The `UNBALANCED` and `VALIDATION_FAILED` refusals above apply to the
+commit only: a preview of the same entries succeeds and returns the errors in
+`validation.newErrors` with `validation.valid: false`, so approve only a
+preview whose `valid` is `true` before re-issuing it with `dry_run: false`
+(w23/219).
 
 ### Retry-safe entry writes (`requestId`)
 

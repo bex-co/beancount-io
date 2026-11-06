@@ -107,6 +107,12 @@ class DeleteSourceSliceResponse {
 
   @Field(() => [SliceWriteError])
   newErrors: SliceWriteError[];
+
+  @Field(() => Boolean, {
+    description:
+      "True only when the write adds no bean-check error; gate a preview on this.",
+  })
+  valid: boolean;
 }
 
 @InputType()
@@ -184,6 +190,12 @@ class DeleteMultiSourceSlicesResponse {
 
   @Field(() => [SliceWriteError])
   newErrors: SliceWriteError[];
+
+  @Field(() => Boolean, {
+    description:
+      "True only when the write adds no bean-check error; gate a preview on this.",
+  })
+  valid: boolean;
 }
 
 @InputType()
@@ -267,6 +279,12 @@ class UpdateSourceSliceResponse {
 
   @Field(() => [SliceWriteError])
   newErrors: SliceWriteError[];
+
+  @Field(() => Boolean, {
+    description:
+      "True only when the write adds no bean-check error; gate a preview on this.",
+  })
+  valid: boolean;
 }
 
 @Resolver()
@@ -302,6 +320,7 @@ export class LedgerJournalMutationResolver {
       errorsBefore: result.validation.errorsBefore,
       errorsAfter: result.validation.errorsAfter,
       newErrors: result.validation.newErrors,
+      valid: result.validation.valid,
     };
   }
 
@@ -338,6 +357,7 @@ export class LedgerJournalMutationResolver {
       errorsBefore: result.validation.errorsBefore,
       errorsAfter: result.validation.errorsAfter,
       newErrors: result.validation.newErrors,
+      valid: result.validation.valid,
     };
   }
 
@@ -372,6 +392,7 @@ export class LedgerJournalMutationResolver {
       errorsBefore: result.validation.errorsBefore,
       errorsAfter: result.validation.errorsAfter,
       newErrors: result.validation.newErrors,
+      valid: result.validation.valid,
     };
   }
 }

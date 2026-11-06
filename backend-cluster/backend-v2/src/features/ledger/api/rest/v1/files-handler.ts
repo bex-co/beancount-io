@@ -129,6 +129,13 @@ const commitAckSchema = z
       description:
         "True when this was a preview: the checks ran and nothing was committed.",
     }),
+    valid: z.boolean().openapi({
+      description:
+        "True only when the change adds no bean-check error. A dry run reports the new errors instead of refusing, so gate on this, not on the status.",
+    }),
+    newErrors: z.array(
+      z.strictObject({ message: z.string(), source: z.string().optional() }),
+    ),
   })
   .openapi("FileCommitAck", {
     description:
@@ -208,7 +215,7 @@ export const FILE_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
     summary: "Create or replace a file",
     description:
-      "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a multi-step edit. Errors the ledger already had never block.",
+      "Writes at most 1 MiB (1,048,576 UTF-8 bytes) and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one. The complete JSON request is separately limited to 2 MiB. `dryRun` previews without committing: same checks, no commit. Like entry writes, a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming each on the commit; a `dryRun` returns them as `newErrors` with `valid: false` instead of refusing, so a preview can show what the change would break; `allowInvalid` commits it deliberately, e.g. one step of a multi-step edit. Errors the ledger already had never block.",
     params: filePathSchema,
     body: putBodySchema,
     responses: {
@@ -241,18 +248,21 @@ export const FILE_ROUTES = [
       // The service's dry run first: authorization, path, size and create
       // conflicts refuse before the gate, and a preview ends here (below).
       await layers.services.ledgerRepo.changeFiles({ ...write, dryRun: true });
-      await gateFileWrite(
+      // A preview reports the new errors and `valid`; only a commit is
+      // refused for them (w23/219).
+      const { newErrors, valid } = await gateFileWrite(
         layers.services,
         identity,
         write.ledgerId,
         [{ path: params.path, content: body.content }],
-        resolveFlagAlias(
-          { primary: body.allow_invalid, legacy: body.allowInvalid },
-          ALLOW_INVALID_NAMES,
-        ),
+        dryRun ||
+          resolveFlagAlias(
+            { primary: body.allow_invalid, legacy: body.allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
       );
       if (!dryRun) await layers.services.ledgerRepo.changeFiles(write);
-      return { ok: true as const, path: params.path, dryRun };
+      return { ok: true as const, path: params.path, dryRun, valid, newErrors };
     },
   }),
 
@@ -264,7 +274,7 @@ export const FILE_ROUTES = [
       "Removes the file and commits the deletion. " +
       DELETE_INCLUDE_GUARD_DESCRIPTION +
       " `dryRun` previews without committing: same checks, no commit. " +
-      "Like entry writes, a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming each (`dryRun` refuses it too); `allowInvalid` commits it deliberately, e.g. one step of a multi-step edit. Errors the ledger already had never block.",
+      "Like entry writes, a change that would add bean-check errors the ledger did not have is refused with VALIDATION_FAILED naming each on the commit; a `dryRun` returns them as `newErrors` with `valid: false` instead of refusing, so a preview can show what the change would break; `allowInvalid` commits it deliberately, e.g. one step of a multi-step edit. Errors the ledger already had never block.",
     params: filePathSchema,
     body: deleteBodySchema,
     responses: {
@@ -310,7 +320,7 @@ export const FILE_ROUTES = [
           `Delete ${params.path}`,
       };
       await layers.services.ledgerRepo.changeFiles({ ...write, dryRun: true });
-      await gateFileWrite(
+      const { newErrors, valid } = await gateFileWrite(
         layers.services,
         identity,
         write.ledgerId,
@@ -318,13 +328,14 @@ export const FILE_ROUTES = [
           { path: params.path, content: null },
           ...removals.map(({ path, content }) => ({ path, content })),
         ],
-        resolveFlagAlias(
-          { primary: body.allow_invalid, legacy: body.allowInvalid },
-          ALLOW_INVALID_NAMES,
-        ),
+        dryRun ||
+          resolveFlagAlias(
+            { primary: body.allow_invalid, legacy: body.allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
       );
       if (!dryRun) await layers.services.ledgerRepo.changeFiles(write);
-      return { ok: true as const, path: params.path, dryRun };
+      return { ok: true as const, path: params.path, dryRun, valid, newErrors };
     },
   }),
 ] as const;

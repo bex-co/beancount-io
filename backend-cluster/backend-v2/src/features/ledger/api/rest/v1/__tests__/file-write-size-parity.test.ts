@@ -488,6 +488,8 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
             ok: true,
             path: "new.bean",
             dryRun: false,
+            valid: true,
+            newErrors: [],
           });
         }
       } finally {

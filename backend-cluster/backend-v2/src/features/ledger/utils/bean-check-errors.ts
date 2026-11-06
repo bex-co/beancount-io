@@ -59,6 +59,13 @@ export interface WriteValidation {
   readonly errorsAfter: number;
   readonly newErrors: BeanCheckError[];
   /**
+   * The explicit verdict a preview or commit carries (w23/219): `true` only
+   * when bean-check ran and the write adds no error. A preview never refuses
+   * for new errors — it returns them — so a caller that gates on `isError`
+   * must read this instead.
+   */
+  readonly valid: boolean;
+  /**
    * `false` when bean-check could not run before or after the write, so the
    * counts above say nothing; `checkError` says why (w23/031).
    */
@@ -132,8 +139,16 @@ export function toWriteValidation(
   return {
     errorsBefore: before.length,
     errorsAfter: after.length,
-    newErrors: diffBeanCheckErrors(before, after),
+    ...withValidity(diffBeanCheckErrors(before, after)),
   };
+}
+
+/** `newErrors` with the `valid` verdict they imply (w23/219). */
+export function withValidity(newErrors: BeanCheckError[]): {
+  newErrors: BeanCheckError[];
+  valid: boolean;
+} {
+  return { newErrors, valid: newErrors.length === 0 };
 }
 
 /**
@@ -147,6 +162,8 @@ export interface ReportedProjection {
   readonly errorsBefore: number;
   readonly errorsAfter: number;
   readonly newErrors: BeanCheckError[];
+  /** `true` when the write adds no bean-check error (w23/219). */
+  readonly valid: boolean;
 }
 
 /**
@@ -169,6 +186,6 @@ export function toReportedProjection(data: {
   return {
     errorsBefore: data.errors_before ?? 0,
     errorsAfter: data.errors_after ?? 0,
-    newErrors: toBeanCheckErrors(data.new_errors ?? []),
+    ...withValidity(toBeanCheckErrors(data.new_errors ?? [])),
   };
 }

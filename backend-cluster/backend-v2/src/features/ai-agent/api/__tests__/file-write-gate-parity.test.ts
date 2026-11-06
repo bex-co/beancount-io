@@ -138,14 +138,9 @@ async function withFixture(
 }
 
 describe("file writes refuse new bean-check errors on every surface", () => {
-  it("refuses a REST PUT and DELETE, commit and dryRun alike", () =>
+  it("refuses a REST PUT and DELETE commit", () =>
     withFixture({ projected: [NEW_ERROR] }, async (f) => {
-      for (const response of [
-        await f.put({}),
-        await f.put({ dryRun: true }),
-        await f.del({}),
-        await f.del({ dryRun: true }),
-      ]) {
+      for (const response of [await f.put({}), await f.del({})]) {
         expect(response.status).toBe(400);
         const body = (await response.json()) as any;
         expect(body.error.code).toBe("VALIDATION_FAILED");
@@ -154,27 +149,55 @@ describe("file writes refuse new bean-check errors on every surface", () => {
       expect(f.changeLedgerFiles).not.toHaveBeenCalled();
     }));
 
-  it("refuses the MCP create, update and delete tools, dry_run included", () =>
+  // w23/219: a preview reports the would-be errors instead of refusing.
+  it("previews a REST PUT and DELETE dryRun as invalid, committing nothing", () =>
     withFixture({ projected: [NEW_ERROR] }, async (f) => {
-      const calls = [
-        ["createLedgerFiles", { files: [{ path: "n.bean", content: "x" }] }],
-        [
-          "updateLedgerFiles",
-          { files: [{ path: "a.bean", content: "x", sha: "sha-a.bean" }] },
-        ],
-        [
-          "deleteLedgerFiles",
-          { files: [{ path: "a.bean", sha: "sha-a.bean" }] },
-        ],
-      ] as const;
-      for (const [name, args] of calls) {
-        for (const dry_run of [false, true]) {
-          const result = await f.mcp(name, { ...args, dry_run });
-          expect(result.isError).toBe(true);
-          expect(result.structuredContent).toMatchObject({
-            error: { code: "VALIDATION_FAILED" },
-          });
-        }
+      for (const response of [
+        await f.put({ dryRun: true }),
+        await f.del({ dryRun: true }),
+      ]) {
+        expect(response.status).toBe(200);
+        const body = (await response.json()) as any;
+        expect(body).toMatchObject({ dryRun: true, valid: false });
+        expect(body.newErrors.length).toBeGreaterThan(0);
+        expect(JSON.stringify(body.newErrors)).toContain("Assets:Chekcing");
+      }
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    }));
+
+  const mcpCalls = [
+    ["createLedgerFiles", { files: [{ path: "n.bean", content: "x" }] }],
+    [
+      "updateLedgerFiles",
+      { files: [{ path: "a.bean", content: "x", sha: "sha-a.bean" }] },
+    ],
+    ["deleteLedgerFiles", { files: [{ path: "a.bean", sha: "sha-a.bean" }] }],
+  ] as const;
+
+  it("refuses the MCP create, update and delete tools on commit", () =>
+    withFixture({ projected: [NEW_ERROR] }, async (f) => {
+      for (const [name, args] of mcpCalls) {
+        const result = await f.mcp(name, { ...args, dry_run: false });
+        expect(result.isError).toBe(true);
+        expect(result.structuredContent).toMatchObject({
+          error: { code: "VALIDATION_FAILED" },
+        });
+      }
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    }));
+
+  it("previews the MCP create, update and delete tools as invalid on dry_run", () =>
+    withFixture({ projected: [NEW_ERROR] }, async (f) => {
+      for (const [name, args] of mcpCalls) {
+        const result = await f.mcp(name, { ...args, dry_run: true });
+        expect(result.isError).toBeFalsy();
+        const body = result.structuredContent as any;
+        expect(body.ok).toBe(true);
+        expect(body.result.dry_run).toBe(true);
+        expect(body.result.validation.valid).toBe(false);
+        expect(JSON.stringify(body.result.validation.newErrors)).toContain(
+          "Assets:Chekcing",
+        );
       }
       expect(f.changeLedgerFiles).not.toHaveBeenCalled();
     }));

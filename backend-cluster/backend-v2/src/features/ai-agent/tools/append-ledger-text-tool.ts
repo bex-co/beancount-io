@@ -102,6 +102,7 @@ export async function executeAppendLedgerText(
         errorsBefore: result.errorsBefore,
         errorsAfter: result.errorsAfter,
         newErrors: [...result.newErrors],
+        valid: result.valid,
       };
       const unsorted =
         result.appendedUnsorted.length > 0

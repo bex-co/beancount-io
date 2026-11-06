@@ -288,9 +288,14 @@ describe("MCP tool list", () => {
     // `remove_includes` (and alias): measured at 121,990 bytes. Both flags
     // plus the guard sentence naming them are how an agent learns it can
     // drop an exact include and delete in one call.
+    //
+    // 121 KB since w23/219 gave every write result a `valid` verdict, so a
+    // preview that returns new bean-check errors cannot be misread as clean:
+    // measured at 123,477 bytes. The boolean rides each write tool's
+    // `validation` output schema.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(120 * 1024);
+    expect(bytes).toBeLessThan(121 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the

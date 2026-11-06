@@ -121,6 +121,12 @@ class AddLedgerEntryResponse {
 
   @Field(() => [DirectiveTextError])
   newErrors: DirectiveTextError[];
+
+  @Field(() => Boolean, {
+    description:
+      "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on success.",
+  })
+  valid: boolean;
 }
 
 @InputType()
@@ -515,6 +521,11 @@ class AppendDirectiveTextResponse {
   @Field(() => Number) errorsBefore!: number;
   @Field(() => Number) errorsAfter!: number;
   @Field(() => [DirectiveTextError]) newErrors!: DirectiveTextError[];
+  @Field(() => Boolean, {
+    description:
+      "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on success.",
+  })
+  valid!: boolean;
   @Field(() => [String], {
     description:
       "Files whose directives were not in date order, so these were appended at the end",
@@ -580,6 +591,7 @@ export class LedgerEntryMutationResolver {
       errorsBefore: result.validation.errorsBefore,
       errorsAfter: result.validation.errorsAfter,
       newErrors: result.validation.newErrors,
+      valid: result.validation.valid,
     };
   }
 

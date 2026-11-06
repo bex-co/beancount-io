@@ -70,6 +70,7 @@ describe("withPostWriteValidation", () => {
       errorsBefore: 1,
       errorsAfter: 1,
       newErrors: [],
+      valid: true,
     });
   });
 
@@ -83,6 +84,7 @@ describe("withPostWriteValidation", () => {
       errorsBefore: 0,
       errorsAfter: 1,
       newErrors: [{ message: "new error" }],
+      valid: false,
     });
   });
 });

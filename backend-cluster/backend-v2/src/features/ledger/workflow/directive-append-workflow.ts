@@ -308,6 +308,7 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
       errorsBefore: baseline.length,
       errorsAfter: projected.length,
       newErrors,
+      valid: newErrors.length === 0,
       appendedUnsorted: targets
         .filter((target) => target.appended)
         .map((target) => target.path),

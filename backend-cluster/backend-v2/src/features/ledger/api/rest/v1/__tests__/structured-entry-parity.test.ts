@@ -1,6 +1,7 @@
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
+import { clearRateLimitShadows } from "@/server/api/rate-limit";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
@@ -42,6 +43,9 @@ const identity: Identity = {
   scopes: new Set(["ledger.read", "ledger.write"]),
   ledgerScope: "alice/main",
 };
+// Each case starts with a fresh write budget: the preview-then-commit cases
+// send two MCP writes apiece (w23/219) and would otherwise exhaust it.
+beforeEach(() => clearRateLimitShadows());
 let resolver: LedgerEntryMutationResolver;
 let schema: Awaited<ReturnType<typeof buildSchema>>;
 beforeAll(async () => {
@@ -140,7 +144,9 @@ async function fixture(
   const write = jest.fn(async (_owner, _name, body) => {
     if (state.hold) await state.hold;
     if (state.failCommit) throw new Error("Fixture commit refused");
-    if (state.unbalanced)
+    // The ledger refuses an imbalance unless allowInvalid records it; a
+    // preview rides allowInvalid and reports the residual instead (w23/219).
+    if (state.unbalanced && body.allowInvalid !== true)
       throw new FavaApiError(
         "entry 0: Transaction does not balance: residual 5 USD",
         400,
@@ -154,7 +160,18 @@ async function fixture(
     // every write envelope, naming the would-be error when the write adds
     // one — even when allowInvalid suppresses the refusal below.
     const projected =
-      state.wouldBreak && body.allowInvalid === true
+      state.unbalanced && body.allowInvalid === true
+        ? {
+            errors_before: 0,
+            errors_after: 1,
+            new_errors: [
+              {
+                message: "Transaction does not balance: residual 5 USD",
+                source: { filename: "main.bean", lineno: 73 },
+              },
+            ],
+          }
+        : state.wouldBreak && body.allowInvalid === true
         ? {
             errors_before: 0,
             errors_after: 1,
@@ -346,7 +363,7 @@ async function fixture(
         const response = await graphql({
           schema,
           source: previewing
-            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source } } }'
+            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source } valid } }'
             : opts.requestId !== undefined
               ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$requestId:String) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,requestId:$requestId) { success message entryHashes } }'
               : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid) { success message entryHashes } }',
@@ -424,6 +441,7 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
                     errorsBefore: 0,
                     errorsAfter: 0,
                     newErrors: [],
+                    valid: true,
                   },
                 }
               : surface === "rest"
@@ -436,6 +454,7 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
                     errorsBefore: 0,
                     errorsAfter: 0,
                     newErrors: [],
+                    valid: true,
                   }
                 : {
                     success: true,
@@ -509,6 +528,7 @@ it("reports an unbalanced write in the MCP validation envelope", async () => {
               source: "main.bean:73",
             },
           ],
+          valid: false,
         },
       },
     });
@@ -1583,37 +1603,40 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
     }
   });
 
-  // w23/m7/t002: a dry run refuses imbalance exactly as the commit would.
-  it("refuses an unbalanced batch on a dry run", async () => {
+  // w23/219: a preview reports an imbalance (valid:false, newErrors) instead
+  // of refusing; the same request without dry run is still refused.
+  it("previews an unbalanced batch as invalid and still refuses the commit", async () => {
     const f = await fixture();
     f.state.unbalanced = true;
     try {
       const result = await f.call(surface, unbalancedBatch, previewOpts());
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(true);
+      expect(f.committed).toEqual([]);
+      const body = result.result as Record<string, any>;
+      const newErrors = [
+        {
+          message: "Transaction does not balance: residual 5 USD",
+          source: "main.bean:73",
+        },
+      ];
+      if (surface === "mcp") {
+        expect(body.validation).toMatchObject({ valid: false, newErrors });
+      } else {
+        expect(body).toMatchObject({ valid: false });
+        if (surface === "rest") expect(body.newErrors).toEqual(newErrors);
+      }
+      const commit = await f.call(surface, unbalancedBatch);
+      expect(commit.success).toBe(false);
       expect(f.committed).toEqual([]);
       if (surface === "rest") {
-        expect(result.result).toMatchObject({
+        expect(commit.result).toMatchObject({
           ok: false,
-          error: {
-            code: "UNBALANCED",
-            message: expect.stringContaining("residual 5 USD"),
-          },
+          error: { code: "UNBALANCED" },
         });
-      } else if (surface === "gql") {
-        // Raw `graphql()` bypasses Apollo's formatError, so no
-        // extensions.code here — the message carries the residual.
-        expect(
-          (result.errors ?? []).some((error) =>
-            String(error.message).includes("residual 5 USD"),
-          ),
-        ).toBe(true);
-      } else {
-        expect(result.full).toMatchObject({
+      } else if (surface === "mcp") {
+        expect(commit.full).toMatchObject({
           ok: false,
-          error: {
-            code: "UNBALANCED",
-            message: expect.stringContaining("residual 5 USD"),
-          },
+          error: { code: "UNBALANCED" },
         });
       }
     } finally {
@@ -1621,18 +1644,25 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
     }
   });
 
-  // w23/m7/t008: a preview runs the same checks — entries that would add
-  // a bean-check error refuse on a dry run exactly as on a commit.
-  it("refuses breaking entries on a dry run", async () => {
+  // w23/219: entries that would add a bean-check error preview as invalid
+  // and only the commit is refused.
+  it("previews breaking entries as invalid and still refuses the commit", async () => {
     const f = await fixture();
     f.state.wouldBreak = true;
     try {
       const result = await f.call(surface, duplicateOpenBatch, previewOpts());
-      expect(result.success).toBe(false);
+      expect(result.success).toBe(true);
       expect(f.committed).toEqual([]);
+      const body = result.result as Record<string, any>;
+      expect(
+        surface === "mcp" ? body.validation : body,
+      ).toMatchObject({ valid: false });
       const named = "Duplicate open directive for Assets:Cash (main.bean:74)";
+      const commit = await f.call(surface, duplicateOpenBatch);
+      expect(commit.success).toBe(false);
+      expect(f.committed).toEqual([]);
       if (surface === "rest") {
-        expect(result.result).toMatchObject({
+        expect(commit.result).toMatchObject({
           ok: false,
           error: {
             code: "VALIDATION_FAILED",
@@ -1641,7 +1671,7 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
           },
         });
       } else if (surface === "gql") {
-        const refusal = (result.errors ?? []).find((error) =>
+        const refusal = (commit.errors ?? []).find((error) =>
           String(error.message).includes(named),
         );
         expect(
@@ -1649,14 +1679,9 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
             ?.metadata,
         ).toMatchObject({ field: "entries", newLedgerErrors: named });
       } else {
-        expect(result.full).toMatchObject({
+        expect(commit.full).toMatchObject({
           ok: false,
-          error: {
-            code: "VALIDATION_FAILED",
-            message: expect.stringContaining(named),
-            hint: expect.stringContaining("allowInvalid: true"),
-            newLedgerErrors: named,
-          },
+          error: { code: "VALIDATION_FAILED", newLedgerErrors: named },
         });
       }
     } finally {
@@ -1686,6 +1711,7 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
             source: "main.bean:74",
           },
         ],
+        valid: false,
       };
       if (surface === "mcp") {
         expect(body.validation).toEqual(breaking);

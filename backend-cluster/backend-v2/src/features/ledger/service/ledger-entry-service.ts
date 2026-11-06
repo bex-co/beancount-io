@@ -989,7 +989,14 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       favaApiClient.entries.addBulkEntries(
         ledgerOwner,
         ledgerName,
-        { entries, allowInvalid, ...(dryRun && { dryRun }) },
+        {
+          entries,
+          // A preview returns the new bean-check errors and a `valid` flag
+          // instead of refusing, as the append preview does (w1/037, w23/219);
+          // only a commit is refused.
+          allowInvalid: allowInvalid || dryRun,
+          ...(dryRun && { dryRun }),
+        },
         directiveLimitExemptParams(platform),
       ),
       "add entries",

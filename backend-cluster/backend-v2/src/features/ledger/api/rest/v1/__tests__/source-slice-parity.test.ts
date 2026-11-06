@@ -303,7 +303,7 @@ async function fixture(caller = identity) {
         // bulkEntries fixture (w23/m7/t002).
         const fields =
           input.dryRun === true
-            ? `${spec.fields} dryRun preview { path text } errorsBefore errorsAfter newErrors { message source }`
+            ? `${spec.fields} dryRun preview { path text } errorsBefore errorsAfter newErrors { message source } valid`
             : spec.fields;
         const response = await graphql({
           schema,
@@ -376,6 +376,7 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
             errorsBefore: 0,
             errorsAfter: 0,
             newErrors: [],
+            valid: true,
           };
           if (operation === "update") {
             expect(f.slices.get("entry1")).toBe("; replacement café\n");
@@ -574,6 +575,7 @@ describe.each(["rest", "gql", "mcp"])(
             errorsBefore: 0,
             errorsAfter: 0,
             newErrors: [],
+            valid: true,
           };
           if (operation === "update") {
             const would = {
@@ -698,6 +700,7 @@ describe.each(["rest", "gql", "mcp"])(
                   source: "main.bean:84",
                 },
               ],
+              valid: false,
             };
             if (surface === "mcp") {
               expect(body.validation).toEqual(breaking);

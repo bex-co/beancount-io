@@ -69,7 +69,9 @@ export const updateSliceInput = deleteSliceInput.extend({
  * The service's nested projection flattens onto the response, as the append
  * result publishes it (w23/161).
  */
-const forRest = <T extends { files: string[]; validation: ReportedProjection }>({
+const forRest = <
+  T extends { files: string[]; validation: ReportedProjection },
+>({
   files: _files,
   validation,
   ...result
@@ -78,6 +80,7 @@ const forRest = <T extends { files: string[]; validation: ReportedProjection }>(
   errorsBefore: validation.errorsBefore,
   errorsAfter: validation.errorsAfter,
   newErrors: validation.newErrors,
+  valid: validation.valid,
 });
 const previewFile = z.object({ path: z.string(), text: z.string() });
 export const deleteSliceResult = z.object({
