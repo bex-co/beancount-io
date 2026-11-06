@@ -1,0 +1,14 @@
+option "title" "bql-oracle seed"
+option "operating_currency" "USD"
+
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Expenses:Food USD
+2024-01-01 open Income:Salary USD
+
+2024-01-02 * "Cafe" "lunch"
+  Assets:Cash    -5.50 USD
+  Expenses:Food   5.50 USD
+
+2024-01-31 * "Employer" "pay"
+  Assets:Cash    100.00 USD
+  Income:Salary -100.00 USD

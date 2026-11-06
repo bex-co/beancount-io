@@ -1,0 +1,6 @@
+[
+  {"id": "seed-balances", "ledger": "main.bean", "source": "t001 seed", "query": "SELECT account, sum(position) GROUP BY account ORDER BY account"},
+  {"id": "seed-empty", "ledger": "main.bean", "source": "t001 seed", "query": "SELECT date, year, number WHERE 1 = 0"},
+  {"id": "seed-bad-column", "ledger": "main.bean", "source": "t001 seed", "query": "SELECT bogus_column"},
+  {"id": "seed-syntax", "ledger": "main.bean", "source": "t001 seed", "query": "SELECT account FROM"}
+]

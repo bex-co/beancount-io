@@ -1,0 +1,77 @@
+{
+  "format": 1,
+  "oracle": {
+    "beancount": "3.2.3",
+    "beanquery": "0.2.0"
+  },
+  "results": {
+    "seed-bad-column": {
+      "error": "compile",
+      "ledger": "main.bean",
+      "query": "SELECT bogus_column",
+      "source": "t001 seed"
+    },
+    "seed-balances": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "sum(position)"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT account, sum(position) GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Cash",
+          [
+            "94.50 USD"
+          ]
+        ],
+        [
+          "Expenses:Food",
+          [
+            "5.50 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-100.00 USD"
+          ]
+        ]
+      ],
+      "source": "t001 seed"
+    },
+    "seed-empty": {
+      "columns": [
+        {
+          "dtype": "date",
+          "name": "date"
+        },
+        {
+          "dtype": "int",
+          "name": "year"
+        },
+        {
+          "dtype": "Decimal",
+          "name": "number"
+        }
+      ],
+      "ledger": "main.bean",
+      "query": "SELECT date, year, number WHERE 1 = 0",
+      "rows": [],
+      "source": "t001 seed"
+    },
+    "seed-syntax": {
+      "error": "parse",
+      "ledger": "main.bean",
+      "query": "SELECT account FROM",
+      "source": "t001 seed"
+    }
+  },
+  "sourceHash": "3b40d7bee6e421325a74284c1ed218ef894a6270c4df0d9b460ef27d300c9cc3"
+}
