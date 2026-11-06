@@ -241,11 +241,11 @@ Every entry append accepts an optional `requestId` with one contract on every
 surface. It is enforced in the three services they converge on, not in the
 adapters:
 
-| Service | REST | GraphQL | MCP |
-| --- | --- | --- | --- |
-| `LedgerEntryService.addBulkEntries` | `POST …/entries`, `POST /legacy/entries` | `bulkEntries`, `addEntries` | `addLedgerEntries` |
-| `LedgerEntryService.appendDirectiveText` | `POST …/directives/text` | `appendLedgerText` | `appendLedgerText` |
-| `LedgerReceiptWorkflow.insertReceiptTransaction` | `POST …/import/insert-receipt` | `insertReceiptTransaction` | `insertReceiptTransaction` |
+| Service                                          | REST                                     | GraphQL                     | MCP                        |
+| ------------------------------------------------ | ---------------------------------------- | --------------------------- | -------------------------- |
+| `LedgerEntryService.addBulkEntries`              | `POST …/entries`, `POST /legacy/entries` | `bulkEntries`, `addEntries` | `addLedgerEntries`         |
+| `LedgerEntryService.appendDirectiveText`         | `POST …/directives/text`                 | `appendLedgerText`          | `appendLedgerText`         |
+| `LedgerReceiptWorkflow.insertReceiptTransaction` | `POST …/import/insert-receipt`           | `insertReceiptTransaction`  | `insertReceiptTransaction` |
 
 The contract (`features/ledger/utils/entry-write-idempotency.ts`):
 
@@ -406,8 +406,7 @@ controlled upstream membership data. It verifies persisted membership effects,
 subsequent revocation, owner-leave refusal, tier limits, default permissions,
 encoded identifiers, pagination, scope/pin ceilings, and source outages.
 Relationship denials retain the existing 404 concealment for a caller who
-cannot read the ledger, and are 403 for one who can; credential failures are
-403. The existing missing-member and partial permission-fetch
+cannot read the ledger, and are 403 for one who can; credential failures are 403. The existing missing-member and partial permission-fetch
 behavior is preserved rather than replaced by a transport-specific fallback.
 
 SSH public-key list/get/create/delete now have REST and MCP bindings through
