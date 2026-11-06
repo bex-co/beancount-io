@@ -50,6 +50,7 @@ import { unquoteBqlFromTables } from "@/features/ledger/service/bql-from-quotes"
 import { normalizeBqlQueryForEngine } from "@/features/ledger/service/ledger-shell-service";
 import { UNDECODABLE_SOURCE } from "@/foundation/rustledger/file-map-loader";
 import { filterDirectives } from "@/foundation/rustledger/directive-filter";
+import { verifyBqlOracle } from "./bql-oracle/replay-bql-oracle";
 import { assertEntryTokens } from "@/features/ledger/utils/entry-tokens";
 import {
   checkTransactionBalance,
@@ -5180,6 +5181,9 @@ poptag #trip
     rawBalances.rows.length === 0,
     "BQL over a raw-mode ledger sums no padding",
   );
+
+  // w23/m20: replay the stock beanquery oracle through the shell service.
+  await verifyBqlOracle();
 
   console.log("\nAll rustledger engine checks passed.");
 }
