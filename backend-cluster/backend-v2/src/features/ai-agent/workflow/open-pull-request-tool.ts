@@ -25,18 +25,12 @@ export interface OpenPullRequestToolDeps {
 
 const inputSchema = z.object({
   title: z.string().min(1).describe("Pull request title."),
-  body: z
-    .string()
-    .default("")
-    .describe("Pull request description (Markdown)."),
+  body: z.string().default("").describe("Pull request description (Markdown)."),
   head: z
     .string()
     .min(1)
     .describe("The branch the change was pushed to (never `main`)."),
-  base: z
-    .string()
-    .default("main")
-    .describe("Target branch. Defaults to main."),
+  base: z.string().default("main").describe("Target branch. Defaults to main."),
 });
 
 const outputSchema = z.object({
@@ -60,9 +54,7 @@ function externalGiteaBase(gitea: GiteaConfig): string {
   const protocol = isLocal ? "http" : "https";
   const standardPort = isLocal ? 80 : 443;
   const portSuffix =
-    gitea.externalHttpPort === standardPort
-      ? ""
-      : `:${gitea.externalHttpPort}`;
+    gitea.externalHttpPort === standardPort ? "" : `:${gitea.externalHttpPort}`;
   return `${protocol}://${gitea.hostname}${portSuffix}`;
 }
 
@@ -106,7 +98,11 @@ export async function openPullRequest(
 
     const pr = (await res.json()) as { number: number };
     const prUrl = `${externalGiteaBase(gitea)}/${ledgerOwner}/${ledgerName}/pulls/${pr.number}`;
-    prLogger.info("Opened PR", { ledgerOwner, ledgerName, prNumber: pr.number });
+    prLogger.info("Opened PR", {
+      ledgerOwner,
+      ledgerName,
+      prNumber: pr.number,
+    });
     return { ok: true, prNumber: pr.number, prUrl };
   } catch (err) {
     return {

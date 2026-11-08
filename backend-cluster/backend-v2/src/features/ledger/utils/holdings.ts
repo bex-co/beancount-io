@@ -139,7 +139,10 @@ export function composeHoldings(params: {
   const at = (name: HoldingsColumn): number => columns.indexOf(name);
   // (scope..., commodity, cost currency) -> [units, cost basis, accounts,
   // market value, price]. The CLI's lot table, keyed the same way.
-  const lots = new Map<string, [BigNumber, BigNumber, Set<string>, BigNumber, string | null]>();
+  const lots = new Map<
+    string,
+    [BigNumber, BigNumber, Set<string>, BigNumber, string | null]
+  >();
   const keyOf = (scope: string[], commodity: string, held: string): string =>
     JSON.stringify([...scope, commodity, held]);
   const missing = new Map<string, { from: string; to: string }>();
@@ -184,7 +187,8 @@ export function composeHoldings(params: {
         const rateBN = new BigNumber(rate);
         basisBN = basisBN.times(rateBN);
         marketBN = marketBN.times(rateBN);
-        price = price === null ? null : plain(new BigNumber(price).times(rateBN));
+        price =
+          price === null ? null : plain(new BigNumber(price).times(rateBN));
         converted = true;
       }
     }
@@ -211,13 +215,19 @@ export function composeHoldings(params: {
     cost_basis: new Map<string, BigNumber>(),
     market_value: new Map<string, BigNumber>(),
   };
-  const total = (column: keyof typeof totals, currency: string, value: BigNumber): void => {
+  const total = (
+    column: keyof typeof totals,
+    currency: string,
+    value: BigNumber,
+  ): void => {
     totals[column].set(
       currency,
       (totals[column].get(currency) ?? new BigNumber(0)).plus(value),
     );
   };
-  const ordered = [...lots.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  const ordered = [...lots.entries()].sort(([a], [b]) =>
+    a < b ? -1 : a > b ? 1 : 0,
+  );
   for (const [key, [unitsBN, basisBN, accounts, marketBN, price]] of ordered) {
     if (unitsBN.isZero()) continue;
     const parts = JSON.parse(key) as string[];
@@ -248,10 +258,16 @@ export function composeHoldings(params: {
     groups,
     totals: {
       cost_basis: Object.fromEntries(
-        [...totals.cost_basis.entries()].map(([code, value]) => [code, plain(value)]),
+        [...totals.cost_basis.entries()].map(([code, value]) => [
+          code,
+          plain(value),
+        ]),
       ),
       market_value: Object.fromEntries(
-        [...totals.market_value.entries()].map(([code, value]) => [code, plain(value)]),
+        [...totals.market_value.entries()].map(([code, value]) => [
+          code,
+          plain(value),
+        ]),
       ),
     },
     valuation: legs.length > 0 ? "partial" : "complete",

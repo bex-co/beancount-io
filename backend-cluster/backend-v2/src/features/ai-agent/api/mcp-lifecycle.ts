@@ -88,8 +88,7 @@ export const LIFECYCLE_EXECUTORS = {
     }),
   }),
   update: async (context: McpRequestContext, input: unknown) => {
-    const { ledger, ...rest } =
-      LIFECYCLE_OPERATION_SCHEMAS.update.parse(input);
+    const { ledger, ...rest } = LIFECYCLE_OPERATION_SCHEMAS.update.parse(input);
     const result = await context.ledgerWorkflow.updateLedger({
       identity: context.identity,
       ledgerId: resolveMcpLedger(context, ledger),
@@ -98,8 +97,7 @@ export const LIFECYCLE_EXECUTORS = {
     return { ok: true, result: withMcpDryRunEcho(result) };
   },
   delete: async (context: McpRequestContext, input: unknown) => {
-    const { ledger, ...rest } =
-      LIFECYCLE_OPERATION_SCHEMAS.delete.parse(input);
+    const { ledger, ...rest } = LIFECYCLE_OPERATION_SCHEMAS.delete.parse(input);
     const result = await context.ledgerWorkflow.deleteLedger({
       identity: context.identity,
       ledgerId: resolveMcpLedger(context, ledger),

@@ -14,20 +14,22 @@ import type { ServiceLayer } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
 
 // Strict (w23/m12/t002): unknown keys are mistyped filters, not unfiltered reads.
-const filters = z.object({
-  account: z.string().optional(),
-  filter: z.string().optional(),
-  time: z
-    .string()
-    .optional()
-    .describe(
-      "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. " +
-        "The window clamps by Fava's TimeFilter: pre-window `open` directives are " +
-        "preserved as report context (with their real dates) and appear in every " +
-        "window, and `total` counts them — so a single-day journal still lists " +
-        "them. Use directiveTypes to ask for transactions alone.",
-    ),
-}).strict();
+const filters = z
+  .object({
+    account: z.string().optional(),
+    filter: z.string().optional(),
+    time: z
+      .string()
+      .optional()
+      .describe(
+        "Fava time expression: a day (2026-09-05), month (2026-09), year, or range. " +
+          "The window clamps by Fava's TimeFilter: pre-window `open` directives are " +
+          "preserved as report context (with their real dates) and appear in every " +
+          "window, and `total` counts them — so a single-day journal still lists " +
+          "them. Use directiveTypes to ask for transactions alone.",
+      ),
+  })
+  .strict();
 
 /**
  * Which directive kinds to return.
@@ -80,7 +82,7 @@ export const jsonStringArrayQuery = jsonQuery(
 const transactionSubtypesQuery = jsonStringArrayQuery
   .optional()
   .describe(
-    "JSON-encoded transaction flag filter, e.g. [\"cleared\"]: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.",
+    'JSON-encoded transaction flag filter, e.g. ["cleared"]: narrows transactions only — other directive families pass through. Combine with directiveTypes to restrict the families returned.',
   );
 const documentSubtypesQuery = jsonStringArrayQuery
   .optional()

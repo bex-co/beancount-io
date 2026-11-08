@@ -65,14 +65,11 @@ function setup(event: any) {
     updatePeriodIfUnchanged: jest.fn(),
   };
   const router = new Router();
-  setStripeWebhookHandler(
-    router,
-    {
-      services: { stripe },
-      clients: { sendgrid: {} },
-      database: { db: {}, models: { paidCustomer } },
-    } as unknown as AppLayers,
-  );
+  setStripeWebhookHandler(router, {
+    services: { stripe },
+    clients: { sendgrid: {} },
+    database: { db: {}, models: { paidCustomer } },
+  } as unknown as AppLayers);
   const handler = router.stack.find((layer) => layer.methods.includes("POST"))!
     .stack[0];
   const ctx: any = {

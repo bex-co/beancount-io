@@ -19,7 +19,11 @@ describe("createRedisRecordStore", () => {
 
     await store.putRecord("k:1", value, 30_000);
 
-    expect(cache.set).toHaveBeenCalledWith("k:1", JSON.stringify(value), 30_000);
+    expect(cache.set).toHaveBeenCalledWith(
+      "k:1",
+      JSON.stringify(value),
+      30_000,
+    );
   });
 
   it("parses a stored record and returns null on a miss", async () => {

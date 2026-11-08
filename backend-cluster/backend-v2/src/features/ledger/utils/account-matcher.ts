@@ -30,7 +30,8 @@ const ACCOUNT_PREFIX_RE = new RegExp(`^(?:${TYPE})(?::${NAME})+`, "u");
 
 /** Control characters and bidirectional overrides, as `CONTROL_CHARACTERS`. */
 // eslint-disable-next-line no-control-regex -- the control ranges are the point: this mirrors Python's refused set exactly.
-const REFUSED = /[\x00-\x09\x0b\x0c\x0e-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]/;
+const REFUSED =
+  /[\x00-\x09\x0b\x0c\x0e-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]/;
 
 /** ASCII the account lexer takes inside one token. */
 const TOKEN_ASCII = /^[A-Za-z0-9:-]$/;

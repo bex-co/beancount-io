@@ -71,9 +71,7 @@ describe("file writes gate on new bean-check errors", () => {
       result: {
         validation: {
           valid: false,
-          newErrors: [
-            { message: "Account Assets:Chekcing was never opened" },
-          ],
+          newErrors: [{ message: "Account Assets:Chekcing was never opened" }],
         },
       },
     });

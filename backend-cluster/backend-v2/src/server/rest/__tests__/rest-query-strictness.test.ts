@@ -28,7 +28,10 @@ const routes: [string, string][] = [
   ["register", `${LEDGER}/register?account=Assets:Cash&bogus_param=1`],
   ["capital-gains", `${LEDGER}/capital-gains?bogus_param=1`],
   ["interval-totals", `${LEDGER}/interval-totals?bogus_param=1`],
-  ["account-report", `${LEDGER}/account-report?accountName=Expenses:Food&bogus_param=1`],
+  [
+    "account-report",
+    `${LEDGER}/account-report?accountName=Expenses:Food&bogus_param=1`,
+  ],
   ["account-last-entries", `${LEDGER}/account-last-entries?bogus_param=1`],
   ["entries-count", `${LEDGER}/entries-count?bogus_param=1`],
   ["postings-per-account", `${LEDGER}/postings-per-account?bogus_param=1`],
@@ -78,9 +81,15 @@ const routes: [string, string][] = [
   ],
   // Already strict before the milestone — pinned against regressions.
   ["collaborators", `${LEDGER}/collaborators?bogus_param=1`],
-  ["collaborators/permission", `${LEDGER}/collaborators/permission?collaborator=alice&bogus_param=1`],
+  [
+    "collaborators/permission",
+    `${LEDGER}/collaborators/permission?collaborator=alice&bogus_param=1`,
+  ],
   ["public-keys", "/api-gateway/v1/public-keys?bogus_param=1"],
-  ["asset-download-url", "/api-gateway/v1/asset-download-url?ledgerRepoId=42&filename=x&bogus_param=1"],
+  [
+    "asset-download-url",
+    "/api-gateway/v1/asset-download-url?ledgerRepoId=42&filename=x&bogus_param=1",
+  ],
   [
     "temp-assets/download-url",
     "/api-gateway/v1/temp-assets/download-url?bogus_param=1",
@@ -112,7 +121,9 @@ it.each(routes)("refuses ?bogus_param=1 on %s", async (_name, path) => {
 // w23/159: the trial balance is hierarchy-only, so its query drops
 // `interval` — an advertised grouping there would be accepted and ignored.
 it("refuses ?interval=month on trial-balance", async () => {
-  const response = await fetch(`${server.url}${LEDGER}/trial-balance?interval=month`);
+  const response = await fetch(
+    `${server.url}${LEDGER}/trial-balance?interval=month`,
+  );
   expect(response.status).toBe(400);
   expect(await response.json()).toMatchObject({
     ok: false,

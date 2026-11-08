@@ -896,13 +896,8 @@ describe("LedgerEntryService", () => {
           (entry: { item: { sourceAccount: string } }) => entry.item,
         );
         expect(
-          items.map(
-            (item: { sourceAccount: string }) => item.sourceAccount,
-          ),
-        ).toEqual([
-          "Equity:Opening-Balances",
-          "Equity:Opening-Balances",
-        ]);
+          items.map((item: { sourceAccount: string }) => item.sourceAccount),
+        ).toEqual(["Equity:Opening-Balances", "Equity:Opening-Balances"]);
       });
 
       const pricedPostings = (posting: Record<string, unknown>) => [

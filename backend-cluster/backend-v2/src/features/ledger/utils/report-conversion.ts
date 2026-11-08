@@ -37,11 +37,8 @@ export function resolveConversionTarget(
   const modes = allowedModes.map((mode) => mode.toLowerCase());
   const modeIndex = modes.indexOf(conversion.toLowerCase());
   if (modeIndex !== -1) return allowedModes[modeIndex]!;
-  if (
-    !COMMODITY.test(conversion) ||
-    /^(at_cost|at_value)$/i.test(conversion)
-  ) {
-    const nouns = ['a currency code', '"units"', ...allowedModes];
+  if (!COMMODITY.test(conversion) || /^(at_cost|at_value)$/i.test(conversion)) {
+    const nouns = ["a currency code", '"units"', ...allowedModes];
     const choices =
       nouns.length === 2
         ? `${nouns[0]} or ${nouns[1]}`

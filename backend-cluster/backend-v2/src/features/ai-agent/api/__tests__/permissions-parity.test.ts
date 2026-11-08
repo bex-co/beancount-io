@@ -127,7 +127,9 @@ describe("ledger permissions parity", () => {
     const f = await fixture(readOnlyToken);
     try {
       const expected = { admin: false, pull: true, push: false };
-      const response = await fetch(`${f.rest.url}/api-gateway/v1/ledgers/alice/main`);
+      const response = await fetch(
+        `${f.rest.url}/api-gateway/v1/ledgers/alice/main`,
+      );
       expect(response.status).toBe(200);
       expect((await response.json()).permissions).toEqual(expected);
       const gql = await f.gql(
@@ -151,7 +153,9 @@ describe("ledger permissions parity", () => {
     const f = await fixture(sessionIdentity);
     try {
       const expected = { admin: true, pull: true, push: true };
-      const response = await fetch(`${f.rest.url}/api-gateway/v1/ledgers/alice/main`);
+      const response = await fetch(
+        `${f.rest.url}/api-gateway/v1/ledgers/alice/main`,
+      );
       expect(response.status).toBe(200);
       expect((await response.json()).permissions).toEqual(expected);
       const gql = await f.gql(

@@ -60,27 +60,40 @@ describe("LedgerDataService", () => {
       ledgerRepoId: 1,
       ownerUserId: USER_ID,
     });
-    service = new LedgerDataService(
-      mockFavaClientFactory as any,
-      {} as any,
-    );
+    service = new LedgerDataService(mockFavaClientFactory as any, {} as any);
   });
 
   it("getAttributes — calls getLedgerAttributes and returns data", async () => {
-    const attrs = { accounts: [], currencies: [], links: [], narrations: [], tags: [], years: [] };
+    const attrs = {
+      accounts: [],
+      currencies: [],
+      links: [],
+      narrations: [],
+      tags: [],
+      years: [],
+    };
     mockReports.getLedgerAttributes.mockResolvedValue(ok(attrs));
 
-    const result = await service.getAttributes({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getAttributes({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(attrs);
-    expect(mockReports.getLedgerAttributes).toHaveBeenCalledWith("testowner", "testledger");
+    expect(mockReports.getLedgerAttributes).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+    );
   });
 
   it("getCommodities — returns array from fava response", async () => {
     const commodities = [{ base: "BTC", quote: "USD", prices: [] }];
     mockReports.getLedgerCommodities.mockResolvedValue(ok(commodities));
 
-    const result = await service.getCommodities({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getCommodities({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(commodities);
   });
@@ -88,7 +101,11 @@ describe("LedgerDataService", () => {
   it("getEvents — passes filter params", async () => {
     mockReports.getLedgerEvents.mockResolvedValue(ok([]));
 
-    await service.getEvents({ ledgerId: LEDGER_ID, identity: IDENTITY, filter: "year:2024" });
+    await service.getEvents({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      filter: "year:2024",
+    });
 
     expect(mockReports.getLedgerEvents).toHaveBeenCalledWith(
       "testowner",
@@ -100,7 +117,11 @@ describe("LedgerDataService", () => {
   it("getDocuments — passes filter params", async () => {
     mockReports.getLedgerDocuments.mockResolvedValue(ok([]));
 
-    await service.getDocuments({ ledgerId: LEDGER_ID, identity: IDENTITY, account: "Assets:Cash" });
+    await service.getDocuments({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      account: "Assets:Cash",
+    });
 
     expect(mockReports.getLedgerDocuments).toHaveBeenCalledWith(
       "testowner",
@@ -112,7 +133,11 @@ describe("LedgerDataService", () => {
   it("getPayeeTransactions — passes payee param", async () => {
     mockReports.getLedgerPayeeTransactions.mockResolvedValue(ok(null));
 
-    await service.getPayeeTransactions({ ledgerId: LEDGER_ID, identity: IDENTITY, payee: "Starbucks" });
+    await service.getPayeeTransactions({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      payee: "Starbucks",
+    });
 
     expect(mockReports.getLedgerPayeeTransactions).toHaveBeenCalledWith(
       "testowner",
@@ -124,7 +149,11 @@ describe("LedgerDataService", () => {
   it("getNarrationTransactions — passes narration param", async () => {
     mockReports.getLedgerNarrationTransactions.mockResolvedValue(ok(null));
 
-    await service.getNarrationTransactions({ ledgerId: LEDGER_ID, identity: IDENTITY, narration: "lunch" });
+    await service.getNarrationTransactions({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      narration: "lunch",
+    });
 
     expect(mockReports.getLedgerNarrationTransactions).toHaveBeenCalledWith(
       "testowner",
@@ -134,9 +163,15 @@ describe("LedgerDataService", () => {
   });
 
   it("getPayeeAccounts — returns string array", async () => {
-    mockReports.getLedgerPayeeAccounts.mockResolvedValue(ok(["Assets:Cash", "Expenses:Food"]));
+    mockReports.getLedgerPayeeAccounts.mockResolvedValue(
+      ok(["Assets:Cash", "Expenses:Food"]),
+    );
 
-    const result = await service.getPayeeAccounts({ ledgerId: LEDGER_ID, identity: IDENTITY, payee: "Walmart" });
+    const result = await service.getPayeeAccounts({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      payee: "Walmart",
+    });
 
     expect(result).toEqual(["Assets:Cash", "Expenses:Food"]);
   });
@@ -145,7 +180,10 @@ describe("LedgerDataService", () => {
     const errors = [{ message: "syntax error", source: null, entry: null }];
     mockReports.getLedgerErrors.mockResolvedValue(ok(errors));
 
-    const result = await service.getErrors({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getErrors({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(errors);
   });
@@ -182,10 +220,16 @@ describe("LedgerDataService", () => {
     ];
     mockReports.getLedgerManagedPrices.mockResolvedValue(ok(status));
 
-    const result = await service.getManagedPrices({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getManagedPrices({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(status);
-    expect(mockReports.getLedgerManagedPrices).toHaveBeenCalledWith("testowner", "testledger");
+    expect(mockReports.getLedgerManagedPrices).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+    );
     expect(authorizeLedger).toHaveBeenCalledWith(
       IDENTITY,
       LEDGER_ID,
@@ -206,7 +250,10 @@ describe("LedgerDataService", () => {
   it("getCurrencies — returns string array", async () => {
     mockReports.getLedgerCurrencies.mockResolvedValue(ok(["USD", "EUR"]));
 
-    const result = await service.getCurrencies({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getCurrencies({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(["USD", "EUR"]);
   });
@@ -214,7 +261,10 @@ describe("LedgerDataService", () => {
   it("getTags — returns string array", async () => {
     mockReports.getLedgerTags.mockResolvedValue(ok(["trip", "home"]));
 
-    const result = await service.getTags({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getTags({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(["trip", "home"]);
   });
@@ -222,7 +272,10 @@ describe("LedgerDataService", () => {
   it("getYears — returns string array", async () => {
     mockReports.getLedgerYears.mockResolvedValue(ok(["2022", "2023", "2024"]));
 
-    const result = await service.getYears({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getYears({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(["2022", "2023", "2024"]);
   });
@@ -230,15 +283,23 @@ describe("LedgerDataService", () => {
   it("getLinks — returns string array", async () => {
     mockReports.getLedgerLinks.mockResolvedValue(ok(["lnk1", "lnk2"]));
 
-    const result = await service.getLinks({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getLinks({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(["lnk1", "lnk2"]);
   });
 
   it("getNarrations — returns string array", async () => {
-    mockReports.getLedgerNarrations.mockResolvedValue(ok(["lunch", "groceries"]));
+    mockReports.getLedgerNarrations.mockResolvedValue(
+      ok(["lunch", "groceries"]),
+    );
 
-    const result = await service.getNarrations({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getNarrations({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(["lunch", "groceries"]);
   });
@@ -246,7 +307,10 @@ describe("LedgerDataService", () => {
   it("getPayees — returns string array", async () => {
     mockReports.getLedgerPayees.mockResolvedValue(ok(["Amazon", "Starbucks"]));
 
-    const result = await service.getPayees({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getPayees({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(["Amazon", "Starbucks"]);
   });
@@ -254,7 +318,10 @@ describe("LedgerDataService", () => {
   it("getAccountLastEntries — filters out nullish params before forwarding", async () => {
     mockReports.getLedgerAccountLastEntries.mockResolvedValue(ok([]));
 
-    await service.getAccountLastEntries({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    await service.getAccountLastEntries({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     const call = mockReports.getLedgerAccountLastEntries.mock.calls[0];
     const params = call[2];
@@ -265,7 +332,10 @@ describe("LedgerDataService", () => {
     const counts = [{ type: "Transaction", count: 42 }];
     mockReports.getLedgerEntriesCountPerType.mockResolvedValue(ok(counts));
 
-    const result = await service.getEntriesCountPerType({ ledgerId: LEDGER_ID, identity: IDENTITY });
+    const result = await service.getEntriesCountPerType({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
 
     expect(result).toEqual(counts);
   });

@@ -583,7 +583,10 @@ describe("units_by_cost balance sheet on every surface (w4/m58)", () => {
   const keyed = {
     ...transfer("USD"),
     net_worth_data: [
-      { date: "2026-03-31", balance: { "EUR {}": "500.00", "VTI {EUR}": "10" } },
+      {
+        date: "2026-03-31",
+        balance: { "EUR {}": "500.00", "VTI {EUR}": "10" },
+      },
     ],
     assets_hierarchy_data: {
       ...root("Assets", [

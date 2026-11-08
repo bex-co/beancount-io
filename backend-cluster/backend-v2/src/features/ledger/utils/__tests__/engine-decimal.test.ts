@@ -108,7 +108,9 @@ describe("assertAmountsFitEngineDecimal", () => {
 
   it("skips binary callers rather than reading bytes as amounts", () => {
     expect(() =>
-      assertAmountsFitEngineDecimal("binary\0 99999999999999999999999999999 USD"),
+      assertAmountsFitEngineDecimal(
+        "binary\0 99999999999999999999999999999 USD",
+      ),
     ).not.toThrow();
   });
 });

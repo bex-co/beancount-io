@@ -57,13 +57,12 @@ export const COLLABORATOR_EXECUTORS = {
   update: async (context: McpRequestContext, input: unknown) => {
     const { ledger, collaborator, permission, dry_run, dryRun } =
       COLLABORATOR_OPERATION_SCHEMAS.update.parse(input);
-    const result =
-      await context.collaboratorsWorkflow.addOrUpdateCollaborator({
-        ...target(context, ledger),
-        collaborator,
-        permission: permission ?? undefined,
-        input: previewFlagInput({ dry_run, dryRun }),
-      });
+    const result = await context.collaboratorsWorkflow.addOrUpdateCollaborator({
+      ...target(context, ledger),
+      collaborator,
+      permission: permission ?? undefined,
+      input: previewFlagInput({ dry_run, dryRun }),
+    });
     return { ok: true, result: withMcpDryRunEcho(result) };
   },
   delete: async (context: McpRequestContext, input: unknown) => {

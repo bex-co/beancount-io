@@ -65,7 +65,11 @@ describe("addLedgerEntries", () => {
     const addBulkEntries = jest
       .fn()
       .mockRejectedValue(
-        new UnbalancedTransactionError("Transaction does not balance", "5.00 USD", 0),
+        new UnbalancedTransactionError(
+          "Transaction does not balance",
+          "5.00 USD",
+          0,
+        ),
       );
     const server = assembleMcpRegistry(
       {
@@ -134,9 +138,7 @@ describe("addLedgerEntries", () => {
         validation: {
           errorsBefore: 0,
           errorsAfter: 1,
-          newErrors: [
-            { message: "Transaction does not balance (5.00 USD)" },
-          ],
+          newErrors: [{ message: "Transaction does not balance (5.00 USD)" }],
           valid: false,
         },
       }),

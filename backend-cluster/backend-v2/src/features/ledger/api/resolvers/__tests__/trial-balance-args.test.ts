@@ -30,7 +30,9 @@ describe("getLedgerTrialBalance args", () => {
       resolvers: [LedgerFinanceQueryResolver, HealthResolver],
       container: {
         get: (target) =>
-          target === LedgerFinanceQueryResolver ? resolver : new HealthResolver(),
+          target === LedgerFinanceQueryResolver
+            ? resolver
+            : new HealthResolver(),
       },
       validate: true,
     });

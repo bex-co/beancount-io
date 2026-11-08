@@ -63,10 +63,7 @@ describe("LedgerFinanceService.getHoldings", () => {
       ledgerRepoId: 1,
       ownerUserId: USER_ID,
     });
-    service = new LedgerFinanceService(
-      mockFavaClientFactory as any,
-      {} as any,
-    );
+    service = new LedgerFinanceService(mockFavaClientFactory as any, {} as any);
     mockReports.getLedgerOptions.mockResolvedValue(
       ok({ operating_currency: ["USD"] }),
     );
@@ -170,7 +167,9 @@ describe("LedgerFinanceService.getHoldings", () => {
   });
 
   it("refuses a non-table shell answer", async () => {
-    mockShell.queryShellPost.mockResolvedValue(ok({ result: { contents: "empty\n" } }));
+    mockShell.queryShellPost.mockResolvedValue(
+      ok({ result: { contents: "empty\n" } }),
+    );
 
     await expect(
       service.getHoldings({ ledgerId: LEDGER_ID, identity: IDENTITY }),
@@ -223,10 +222,7 @@ describe("LedgerFinanceService.getRegister", () => {
       ledgerRepoId: 1,
       ownerUserId: USER_ID,
     });
-    service = new LedgerFinanceService(
-      mockFavaClientFactory as any,
-      {} as any,
-    );
+    service = new LedgerFinanceService(mockFavaClientFactory as any, {} as any);
     mockReports.getLedgerOptions.mockResolvedValue(
       ok({
         operating_currency: ["USD"],
@@ -298,7 +294,11 @@ describe("LedgerFinanceService.getRegister", () => {
 
   it("requires an account", async () => {
     await expect(
-      service.getRegister({ ledgerId: LEDGER_ID, identity: IDENTITY, account: "" }),
+      service.getRegister({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        account: "",
+      }),
     ).rejects.toThrow("Register needs an account");
     expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
   });
@@ -316,7 +316,11 @@ describe("LedgerFinanceService.getRegister", () => {
 
   it("refuses a pattern spanning several trees", async () => {
     await expect(
-      service.getRegister({ ledgerId: LEDGER_ID, identity: IDENTITY, account: "e" }),
+      service.getRegister({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        account: "e",
+      }),
     ).rejects.toThrow("Register needs one account; 'e' matches several");
     expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
   });
@@ -337,7 +341,12 @@ describe("LedgerFinanceService.getRegister", () => {
       ok([{ account: "Assets:Checking", count: 1 }]),
     );
     mockJournal.getAccountJournal.mockResolvedValue(
-      ok({ items: [], total: 0, account: "Assets:Checking", with_children: true }),
+      ok({
+        items: [],
+        total: 0,
+        account: "Assets:Checking",
+        with_children: true,
+      }),
     );
 
     const result = await service.getRegister({
@@ -455,10 +464,7 @@ describe("LedgerFinanceService.getCapitalGains", () => {
       ledgerRepoId: 1,
       ownerUserId: USER_ID,
     });
-    service = new LedgerFinanceService(
-      mockFavaClientFactory as any,
-      {} as any,
-    );
+    service = new LedgerFinanceService(mockFavaClientFactory as any, {} as any);
     mockReports.getLedgerOptions.mockResolvedValue(
       ok({
         operating_currency: ["USD"],

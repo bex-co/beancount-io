@@ -172,17 +172,17 @@ async function fixture(
             ],
           }
         : state.wouldBreak && body.allowInvalid === true
-        ? {
-            errors_before: 0,
-            errors_after: 1,
-            new_errors: [
-              {
-                message: "Duplicate open directive for Assets:Cash",
-                source: { filename: "main.bean", lineno: 74 },
-              },
-            ],
-          }
-        : { errors_before: 0, errors_after: 0, new_errors: [] };
+          ? {
+              errors_before: 0,
+              errors_after: 1,
+              new_errors: [
+                {
+                  message: "Duplicate open directive for Assets:Cash",
+                  source: { filename: "main.bean", lineno: 74 },
+                },
+              ],
+            }
+          : { errors_before: 0, errors_after: 0, new_errors: [] };
     // The ledger service's pre-commit check (w0/m2): entries that would add
     // bean-check errors are refused unless the caller records them anyway.
     if (state.wouldBreak && body.allowInvalid !== true) {
@@ -1654,9 +1654,9 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
       expect(result.success).toBe(true);
       expect(f.committed).toEqual([]);
       const body = result.result as Record<string, any>;
-      expect(
-        surface === "mcp" ? body.validation : body,
-      ).toMatchObject({ valid: false });
+      expect(surface === "mcp" ? body.validation : body).toMatchObject({
+        valid: false,
+      });
       const named = "Duplicate open directive for Assets:Cash (main.bean:74)";
       const commit = await f.call(surface, duplicateOpenBatch);
       expect(commit.success).toBe(false);

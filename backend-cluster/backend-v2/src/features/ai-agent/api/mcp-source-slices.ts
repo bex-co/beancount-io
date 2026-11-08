@@ -85,7 +85,7 @@ const withoutFlatProjection = <
     ...rest
   } = shape;
   return rest;
-};;
+};
 
 /** Each tool publishes only its own result shape, not the union of all three. */
 export const SOURCE_SLICE_OPERATION_OUTPUTS = {
@@ -149,7 +149,12 @@ function validated<
         );
   return run().then(({ written, validation }) => {
     // The service spells the echo dryRun; MCP publishes dry_run (w23/m7/t003).
-    const { files, dryRun: echoed, validation: _projection, ...result } = written;
+    const {
+      files,
+      dryRun: echoed,
+      validation: _projection,
+      ...result
+    } = written;
     return {
       ok: true as const,
       result: {

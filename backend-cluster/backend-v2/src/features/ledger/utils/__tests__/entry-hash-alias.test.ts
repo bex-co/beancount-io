@@ -13,9 +13,9 @@ describe("resolveEntryHash", () => {
   });
 
   it("refuses two different hashes instead of guessing", () => {
-    expect(() =>
-      resolveEntryHash({ entryHash: "a", entry_hash: "b" }),
-    ).toThrow(BadUserInputError);
+    expect(() => resolveEntryHash({ entryHash: "a", entry_hash: "b" })).toThrow(
+      BadUserInputError,
+    );
   });
 
   it("refuses a missing hash naming the alias", () => {

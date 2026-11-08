@@ -298,8 +298,8 @@ describe("composeHoldings", () => {
     expect(result.missing_prices).toEqual([{ from: "USD", to: "EUR" }]);
     expect(result.groups[0]!.market_value).toEqual({
       number: "1750",
-      currency: "USD" },
-    );
+      currency: "USD",
+    });
   });
 
   it("skips a conversion leg to the held currency itself", () => {

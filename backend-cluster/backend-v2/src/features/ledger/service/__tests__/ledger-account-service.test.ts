@@ -81,10 +81,7 @@ describe("LedgerAccountService", () => {
       ledgerRepoId: 1,
       ownerUserId: "user-99",
     });
-    service = new LedgerAccountService(
-      mockFavaClientFactory as any,
-      {} as any,
-    );
+    service = new LedgerAccountService(mockFavaClientFactory as any, {} as any);
   });
 
   describe("getAccountsDetail", () => {

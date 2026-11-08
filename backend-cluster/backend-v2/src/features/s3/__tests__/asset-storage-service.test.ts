@@ -269,13 +269,19 @@ describe("AssetStorageService", () => {
     });
 
     it.each([
-      ["generateUploadUrl", () => unconfigured.generateUploadUrl(identity(), {})],
+      [
+        "generateUploadUrl",
+        () => unconfigured.generateUploadUrl(identity(), {}),
+      ],
       [
         "copyTempToPermanent",
         () => unconfigured.copyTempToPermanent({ objectKey: "tmp/a/b.pdf" }),
       ],
       ["deleteTempAsset", () => unconfigured.deleteTempAsset("tmp/a/b.pdf")],
-      ["generateDownloadUrl", () => unconfigured.generateDownloadUrl("assets/a")],
+      [
+        "generateDownloadUrl",
+        () => unconfigured.generateDownloadUrl("assets/a"),
+      ],
       [
         "generateTempDownloadUrl",
         () => unconfigured.generateTempDownloadUrl(identity(), "tmp/a/b.pdf"),

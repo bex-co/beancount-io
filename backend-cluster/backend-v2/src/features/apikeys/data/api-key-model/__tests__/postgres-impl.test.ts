@@ -31,12 +31,7 @@ describe("ApiKeyPostgresModel", () => {
     ]);
 
     await expect(
-      new ApiKeyPostgresModel().revoke(
-        mockDb,
-        "akey_1",
-        "usr_1",
-        revokedAt,
-      ),
+      new ApiKeyPostgresModel().revoke(mockDb, "akey_1", "usr_1", revokedAt),
     ).resolves.toMatchObject({ id: "akey_1", userId: "usr_1", revokedAt });
 
     const predicate = mockDb.where.mock.calls[0][0];

@@ -402,7 +402,12 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                     validation: emptyValidation,
                   }
                 : surface === "rest"
-                  ? { ...updated, dryRun: false, preview: [], ...emptyValidation }
+                  ? {
+                      ...updated,
+                      dryRun: false,
+                      preview: [],
+                      ...emptyValidation,
+                    }
                   : updated,
             );
           } else if (operation === "delete_many") {
@@ -423,7 +428,12 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                     validation: emptyValidation,
                   }
                 : surface === "rest"
-                  ? { ...deleted, dryRun: false, preview: [], ...emptyValidation }
+                  ? {
+                      ...deleted,
+                      dryRun: false,
+                      preview: [],
+                      ...emptyValidation,
+                    }
                   : deleted,
             );
           } else {
@@ -441,7 +451,12 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                     validation: emptyValidation,
                   }
                 : surface === "rest"
-                  ? { ...deleted, dryRun: false, preview: [], ...emptyValidation }
+                  ? {
+                      ...deleted,
+                      dryRun: false,
+                      preview: [],
+                      ...emptyValidation,
+                    }
                   : deleted,
             );
           }
@@ -675,47 +690,44 @@ describe.each(["rest", "gql", "mcp"])(
       ...(args(operation) as Record<string, unknown>),
       ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
     });
-    describe.each(Object.keys(operations) as Operation[])(
-      "%s",
-      (operation) => {
-        it("reports the would-be errors without writing", async () => {
-          const f = await fixture();
-          f.state.breaks = true;
-          const before = [...f.slices];
-          try {
-            const result = await f.call(surface, operation, {
-              ...previewArgs(operation),
-              allowInvalid: true,
-            });
-            expect(result.success).toBe(true);
-            expect([...f.slices]).toEqual(before);
-            const body = result.result as Record<string, any>;
-            const breaking = {
-              errorsBefore: 0,
-              errorsAfter: 1,
-              newErrors: [
-                {
-                  message:
-                    "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD",
-                  source: "main.bean:84",
-                },
-              ],
-              valid: false,
-            };
-            if (surface === "mcp") {
-              expect(body.validation).toEqual(breaking);
-              expect(body.summary).toContain(
-                "1 new bean-check error: Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD (main.bean:84)",
-              );
-            } else {
-              expect(body).toMatchObject(breaking);
-            }
-          } finally {
-            await f.close();
+    describe.each(Object.keys(operations) as Operation[])("%s", (operation) => {
+      it("reports the would-be errors without writing", async () => {
+        const f = await fixture();
+        f.state.breaks = true;
+        const before = [...f.slices];
+        try {
+          const result = await f.call(surface, operation, {
+            ...previewArgs(operation),
+            allowInvalid: true,
+          });
+          expect(result.success).toBe(true);
+          expect([...f.slices]).toEqual(before);
+          const body = result.result as Record<string, any>;
+          const breaking = {
+            errorsBefore: 0,
+            errorsAfter: 1,
+            newErrors: [
+              {
+                message:
+                  "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD",
+                source: "main.bean:84",
+              },
+            ],
+            valid: false,
+          };
+          if (surface === "mcp") {
+            expect(body.validation).toEqual(breaking);
+            expect(body.summary).toContain(
+              "1 new bean-check error: Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD (main.bean:84)",
+            );
+          } else {
+            expect(body).toMatchObject(breaking);
           }
-        });
-      },
-    );
+        } finally {
+          await f.close();
+        }
+      });
+    });
   },
 );
 

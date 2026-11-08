@@ -168,9 +168,7 @@ describe("journal template descriptions (w23/142)", () => {
         if (!SUBTYPE_KEYS.has(key)) continue;
         const described = schema as { description?: unknown };
         expect(typeof described.description).toBe("string");
-        expect(described.description as string).toContain(
-          "pass through",
-        );
+        expect(described.description as string).toContain("pass through");
       }
     }
   });
@@ -204,9 +202,7 @@ describe("listLedgerResources", () => {
       toolCtx({ identity: pinned, sourceFiles: new Error("revoked") }),
     );
     expect(
-      listed.some(
-        (entry) => entry.uri === "beancount://alice/personal/errors",
-      ),
+      listed.some((entry) => entry.uri === "beancount://alice/personal/errors"),
     ).toBe(true);
     expect(
       listed.filter((entry) => entry.template === "ledgerFile"),

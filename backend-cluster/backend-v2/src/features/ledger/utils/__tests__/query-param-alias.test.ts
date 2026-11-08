@@ -84,9 +84,9 @@ describe("resolveGroupBy", () => {
   });
 
   it("accepts both spellings when they agree", () => {
-    expect(
-      resolveGroupBy({ primary: "account", legacy: "account" }),
-    ).toBe("account");
+    expect(resolveGroupBy({ primary: "account", legacy: "account" })).toBe(
+      "account",
+    );
   });
 
   it("refuses two different groupings instead of guessing", () => {

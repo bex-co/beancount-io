@@ -113,9 +113,7 @@ export class TokenIntrospectionService implements ITokenIntrospectionService {
       ...(subject.expiresAt !== undefined ? { exp: subject.expiresAt } : {}),
       bio_credential_kind: subject.method,
       bio_assurance: identityAssurance(subject).type,
-      ...(subject.ledgerScope
-        ? { bio_ledger_scope: subject.ledgerScope }
-        : {}),
+      ...(subject.ledgerScope ? { bio_ledger_scope: subject.ledgerScope } : {}),
     };
   }
 }

@@ -23,8 +23,7 @@ import {
 class DeleteSourceSliceInput {
   @Field(() => String, {
     nullable: true,
-    description:
-      "The entry's hash. One of entryHash/entry_hash is required.",
+    description: "The entry's hash. One of entryHash/entry_hash is required.",
   })
   entryHash?: string;
 
@@ -119,8 +118,7 @@ class DeleteSourceSliceResponse {
 class DeleteMultiSourceSliceItemInput {
   @Field(() => String, {
     nullable: true,
-    description:
-      "The entry's hash. One of entryHash/entry_hash is required.",
+    description: "The entry's hash. One of entryHash/entry_hash is required.",
   })
   entryHash?: string;
 
@@ -202,8 +200,7 @@ class DeleteMultiSourceSlicesResponse {
 class UpdateSourceSliceInput {
   @Field(() => String, {
     nullable: true,
-    description:
-      "The entry's hash. One of entryHash/entry_hash is required.",
+    description: "The entry's hash. One of entryHash/entry_hash is required.",
   })
   entryHash?: string;
 

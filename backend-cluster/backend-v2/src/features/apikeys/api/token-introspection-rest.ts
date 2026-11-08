@@ -7,7 +7,10 @@ import {
   v1Route,
   type V1Route,
 } from "@/server/rest/v1-route";
-import { introspectionRequestSchema, introspectionSchema } from "./api-key-schemas";
+import {
+  introspectionRequestSchema,
+  introspectionSchema,
+} from "./api-key-schemas";
 
 /**
  * RFC 7662 token introspection (ADR 0017).

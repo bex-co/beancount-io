@@ -302,13 +302,16 @@ describe("Ledger resolvers (delegation)", () => {
         ["bcioOptions", "getLedgerBcioOptions"],
       ] as const;
 
-      it.each(fieldResolvers)("%s passes the exact pinned identity", async (field, delegate) => {
-        await queryResolver[field]({ id: "o/other" } as never, pinnedCtx);
-        expect(workflow[delegate]).toHaveBeenCalledWith({
-          ledgerId: "o/other",
-          identity: pinnedCtx.identity,
-        });
-      });
+      it.each(fieldResolvers)(
+        "%s passes the exact pinned identity",
+        async (field, delegate) => {
+          await queryResolver[field]({ id: "o/other" } as never, pinnedCtx);
+          expect(workflow[delegate]).toHaveBeenCalledWith({
+            ledgerId: "o/other",
+            identity: pinnedCtx.identity,
+          });
+        },
+      );
 
       it.each(fieldResolvers)("%s allows the pinned ledger", async (field) => {
         await expect(

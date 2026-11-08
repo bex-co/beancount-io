@@ -515,11 +515,9 @@ describe("LedgerJournalResolver", () => {
   it("documents family-scoping on every subtype arg", () => {
     const metadata = getMetadataStorage();
     const found = metadata.fields.filter((field) =>
-      [
-        "transactionSubtypes",
-        "documentSubtypes",
-        "customSubtypes",
-      ].includes(field.name),
+      ["transactionSubtypes", "documentSubtypes", "customSubtypes"].includes(
+        field.name,
+      ),
     );
     // Both journal query inputs carry all three args.
     expect(found).toHaveLength(6);

@@ -885,9 +885,7 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
             ? expected("renamed", "", false)
             : {
                 ...expected("renamed", "", false),
-                ...(surface === "mcp"
-                  ? { dry_run: false }
-                  : { dryRun: false }),
+                ...(surface === "mcp" ? { dry_run: false } : { dryRun: false }),
               },
         );
         expect(f.records.has("alice/main")).toBe(false);
@@ -1047,9 +1045,7 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
             ? { ledgerId: "alice/main" }
             : {
                 ledgerId: "alice/main",
-                ...(surface === "mcp"
-                  ? { dry_run: false }
-                  : { dryRun: false }),
+                ...(surface === "mcp" ? { dry_run: false } : { dryRun: false }),
               },
         );
         expect(f.records.size).toBe(0);

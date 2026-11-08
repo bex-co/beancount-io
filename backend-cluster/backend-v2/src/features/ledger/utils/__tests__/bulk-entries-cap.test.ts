@@ -1,8 +1,5 @@
 import { BadUserInputError } from "@/shared/errors";
-import {
-  MAX_BULK_ENTRIES,
-  assertBulkEntriesSize,
-} from "../bulk-entries-cap";
+import { MAX_BULK_ENTRIES, assertBulkEntriesSize } from "../bulk-entries-cap";
 
 // w23/103: one call carries at most MAX_BULK_ENTRIES entries.
 describe("assertBulkEntriesSize", () => {

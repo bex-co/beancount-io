@@ -333,8 +333,7 @@ export class LedgerJournalQueryResolver {
     @Arg("query", () => AccountJournalQueryInput)
     queryInput: AccountJournalQueryInput,
   ): Promise<AccountJournalResponse> {
-    const { filter_account, with_children, withChildren, ...rest } =
-      queryInput;
+    const { filter_account, with_children, withChildren, ...rest } = queryInput;
     return this.journalService.getAccountJournal({
       ledgerId,
       identity: ctx.identity,

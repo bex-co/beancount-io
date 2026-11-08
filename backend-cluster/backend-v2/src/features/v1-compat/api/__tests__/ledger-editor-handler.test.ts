@@ -118,7 +118,9 @@ describe("setLedgerEditorHandler", () => {
       const oneTimeToken = { id: "onetime123" };
 
       getTokenFromCtx.mockReturnValue(token);
-      mockServices.database.models.jwt.verify.mockResolvedValue(sessionVerification(userId));
+      mockServices.database.models.jwt.verify.mockResolvedValue(
+        sessionVerification(userId),
+      );
       mockServices.database.models.magicLinkToken.regenerateToken.mockResolvedValue(
         oneTimeToken,
       );
@@ -189,7 +191,9 @@ describe("setLedgerEditorHandler", () => {
         "https://example.com/ledger/editor/?lang=zh&theme=dark";
 
       getTokenFromCtx.mockReturnValue(token);
-      mockServices.database.models.jwt.verify.mockResolvedValue(sessionVerification(userId));
+      mockServices.database.models.jwt.verify.mockResolvedValue(
+        sessionVerification(userId),
+      );
       mockServices.database.models.magicLinkToken.regenerateToken.mockResolvedValue(
         oneTimeToken,
       );
@@ -209,7 +213,9 @@ describe("setLedgerEditorHandler", () => {
       mockCtx.request.href = "https://example.com/ledger/editor/?lang=en";
 
       getTokenFromCtx.mockReturnValue(token);
-      mockServices.database.models.jwt.verify.mockResolvedValue(sessionVerification(userId));
+      mockServices.database.models.jwt.verify.mockResolvedValue(
+        sessionVerification(userId),
+      );
       mockServices.database.models.magicLinkToken.regenerateToken.mockResolvedValue(
         oneTimeToken,
       );
@@ -233,7 +239,9 @@ describe("setLedgerEditorHandler", () => {
 
         mockCtx.query = { ledgerId };
         getTokenFromCtx.mockReturnValue(token);
-        mockServices.database.models.jwt.verify.mockResolvedValue(sessionVerification(userId));
+        mockServices.database.models.jwt.verify.mockResolvedValue(
+          sessionVerification(userId),
+        );
         mockServices.database.models.user.getById.mockResolvedValue(user);
         parseLedgerId.mockReturnValue({
           ledgerOwner: "testuser",
@@ -267,7 +275,9 @@ describe("setLedgerEditorHandler", () => {
           "https://example.com/ledger/editor/?ledgerId=abc&lang=en&theme=light";
 
         getTokenFromCtx.mockReturnValue(token);
-        mockServices.database.models.jwt.verify.mockResolvedValue(sessionVerification(userId));
+        mockServices.database.models.jwt.verify.mockResolvedValue(
+          sessionVerification(userId),
+        );
         mockServices.database.models.user.getById.mockResolvedValue(user);
         parseLedgerId.mockReturnValue({
           ledgerOwner: "testuser",
@@ -291,7 +301,9 @@ describe("setLedgerEditorHandler", () => {
 
         mockCtx.query = { ledgerId };
         getTokenFromCtx.mockReturnValue(token);
-        mockServices.database.models.jwt.verify.mockResolvedValue(sessionVerification(userId));
+        mockServices.database.models.jwt.verify.mockResolvedValue(
+          sessionVerification(userId),
+        );
         mockServices.database.models.user.getById.mockResolvedValue(null);
 
         await expect(routeHandler(mockCtx, async () => {})).rejects.toThrow(
@@ -313,7 +325,9 @@ describe("setLedgerEditorHandler", () => {
 
         mockCtx.query = { ledgerId };
         getTokenFromCtx.mockReturnValue(token);
-        mockServices.database.models.jwt.verify.mockResolvedValue(sessionVerification(userId));
+        mockServices.database.models.jwt.verify.mockResolvedValue(
+          sessionVerification(userId),
+        );
         mockServices.database.models.user.getById.mockResolvedValue(user);
         parseLedgerId.mockImplementation(() => {
           throw new Error("Invalid ledgerId");
@@ -334,7 +348,9 @@ describe("setLedgerEditorHandler", () => {
 
         mockCtx.query = { ledgerId };
         getTokenFromCtx.mockReturnValue(token);
-        mockServices.database.models.jwt.verify.mockResolvedValue(sessionVerification(userId));
+        mockServices.database.models.jwt.verify.mockResolvedValue(
+          sessionVerification(userId),
+        );
         mockServices.database.models.user.getById.mockResolvedValue(user);
         parseLedgerId.mockImplementation(() => {
           throw new Error("Failed to decode base64");
@@ -355,7 +371,9 @@ describe("setLedgerEditorHandler", () => {
 
         mockCtx.query = { ledgerId };
         getTokenFromCtx.mockReturnValue(token);
-        mockServices.database.models.jwt.verify.mockResolvedValue(sessionVerification(userId));
+        mockServices.database.models.jwt.verify.mockResolvedValue(
+          sessionVerification(userId),
+        );
         mockServices.database.models.user.getById.mockResolvedValue(user);
         parseLedgerId.mockImplementation(() => {
           throw new Error("Unexpected database error");

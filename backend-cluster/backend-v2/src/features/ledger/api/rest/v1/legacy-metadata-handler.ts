@@ -3,20 +3,22 @@ import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 
 /** userId is a compatibility argument, never the authenticated subject. */
-const legacyMetadataQuery = z.object({
-  userId: z
-    .string()
-    .optional()
-    .describe(
-      "Legacy compatibility argument; authentication determines the caller",
-    ),
-  ledgerId: z
-    .string()
-    .optional()
-    .describe(
-      "Defaults to the credential pin or the caller's first ledger, matching legacy ledgerMeta",
-    ),
-}).strict();
+const legacyMetadataQuery = z
+  .object({
+    userId: z
+      .string()
+      .optional()
+      .describe(
+        "Legacy compatibility argument; authentication determines the caller",
+      ),
+    ledgerId: z
+      .string()
+      .optional()
+      .describe(
+        "Defaults to the credential pin or the caller's first ledger, matching legacy ledgerMeta",
+      ),
+  })
+  .strict();
 
 export const LEGACY_METADATA_ROUTES = [
   v1Route({

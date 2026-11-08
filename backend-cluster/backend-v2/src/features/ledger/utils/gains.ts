@@ -44,24 +44,17 @@ export type GainsResult = {
 /** Strict `YYYY-MM-DD`, valid calendar date — `date.fromisoformat`. */
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-function parseBound(
-  value: string,
-  name: "from-date" | "to-date",
-): string {
+function parseBound(value: string, name: "from-date" | "to-date"): string {
   const match = ISO_DATE.exec(value);
   // The round trip rejects rollovers (`2024-13-01`, `2024-02-30`):
   // `Date.UTC` never yields NaN for four/two/two-digit inputs.
   const valid =
     match !== null &&
-    new Date(
-      Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
-    )
+    new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
       .toISOString()
       .slice(0, 10) === value;
   if (!valid) {
-    throw new BadUserInputError(
-      `Invalid ${name} '${value}'. Use YYYY-MM-DD.`,
-    );
+    throw new BadUserInputError(`Invalid ${name} '${value}'. Use YYYY-MM-DD.`);
   }
   return value;
 }
@@ -74,7 +67,8 @@ export function resolveGainsBounds(
   fromDate: string | undefined,
   toDate: string | undefined,
 ): { start: string | null; end: string | null } {
-  const start = fromDate === undefined ? null : parseBound(fromDate, "from-date");
+  const start =
+    fromDate === undefined ? null : parseBound(fromDate, "from-date");
   const end = toDate === undefined ? null : parseBound(toDate, "to-date");
   if (start !== null && end !== null && start > end) {
     throw new BadUserInputError(
@@ -87,7 +81,10 @@ export function resolveGainsBounds(
 /** Whole days between two ISO dates — `(sold - acquired).days`. */
 function heldDays(acquired: string, sold: string): number {
   const day = 24 * 60 * 60 * 1000;
-  return Math.round(Date.parse(`${sold}T00:00:00Z`) / day - Date.parse(`${acquired}T00:00:00Z`) / day);
+  return Math.round(
+    Date.parse(`${sold}T00:00:00Z`) / day -
+      Date.parse(`${acquired}T00:00:00Z`) / day,
+  );
 }
 
 /** Plain decimal notation: `toString()` may answer `1e-7` at the extremes. */
@@ -136,9 +133,7 @@ export function composeGains(params: {
       );
     }
   }
-  const summed = (
-    bucket: Map<string, BigNumber>,
-  ): Record<string, string> =>
+  const summed = (bucket: Map<string, BigNumber>): Record<string, string> =>
     Object.fromEntries(
       [...bucket.entries()].map(([code, value]) => [code, plain(value)]),
     );
@@ -184,7 +179,10 @@ function closedLot(
   } catch {
     return null;
   }
-  if (account !== undefined && !matchesAccountPattern(account, posting.account, roots)) {
+  if (
+    account !== undefined &&
+    !matchesAccountPattern(account, posting.account, roots)
+  ) {
     return null;
   }
   const bought = quantity.negated();

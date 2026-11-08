@@ -35,9 +35,7 @@ const conversions = [undefined, "units", "at_cost", "at_value", "EUR"];
 const families = ["income", "overview"] as const;
 // An explicit EUR nothing carries leaves the MUSD unconverted, and says so.
 const unconverted = (conversion: string | undefined) =>
-  conversion === "EUR"
-    ? { missingPrices: [{ from: "MUSD", to: "EUR" }] }
-    : {};
+  conversion === "EUR" ? { missingPrices: [{ from: "MUSD", to: "EUR" }] } : {};
 type Family = (typeof families)[number];
 
 function payloads(income?: number, expenses?: number) {

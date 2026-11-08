@@ -147,24 +147,26 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     summary: "Get holdings",
     description:
       "Lots grouped by account or commodity — units, average cost, cost basis, market value — valued at today's quotes. `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each group's held currency); `account` names a parent account or a regular expression. Costless cash and fully-sold groups are left out; groups without a quote value at cost and are named in `missing_prices`.",
-    query: z.object({
-      account: filterQuery.shape.account,
-      conversion: z.string().optional().openapi({
-        description:
-          "Convert money columns to this currency, or `units` for each group's held currency (default: the operating currency when the ledger declares exactly one)",
-        example: "USD",
-      }),
-      groupBy: z.enum(["account", "commodity"]).optional().openapi({
-        description: "Group lots by account or by commodity",
-        example: "commodity",
-      }),
-      // Twin (w23/144): the read echoes group_by; no default on either
-      // spelling, so a defaulted groupBy cannot masquerade as an explicit
-      // one and false-split against group_by.
-      group_by: z.enum(["account", "commodity"]).optional().openapi({
-        description: "Alias of groupBy, as the read echoes it.",
-      }),
-    }).strict(),
+    query: z
+      .object({
+        account: filterQuery.shape.account,
+        conversion: z.string().optional().openapi({
+          description:
+            "Convert money columns to this currency, or `units` for each group's held currency (default: the operating currency when the ledger declares exactly one)",
+          example: "USD",
+        }),
+        groupBy: z.enum(["account", "commodity"]).optional().openapi({
+          description: "Group lots by account or by commodity",
+          example: "commodity",
+        }),
+        // Twin (w23/144): the read echoes group_by; no default on either
+        // spelling, so a defaulted groupBy cannot masquerade as an explicit
+        // one and false-split against group_by.
+        group_by: z.enum(["account", "commodity"]).optional().openapi({
+          description: "Alias of groupBy, as the read echoes it.",
+        }),
+      })
+      .strict(),
     uriPath: "",
     fetch: (s, { ledgerId, identity, query }) => {
       const { group_by, ...rest } = query;
@@ -184,18 +186,21 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     summary: "Get one account's register",
     description:
       "One account's dated entries with a running balance, oldest first — each entry with the subtree postings behind it. `account` names a parent account or a regular expression resolving to one subtree; `conversion` takes a currency or `units` (default: the operating currency when the ledger declares exactly one, else each row's held currencies). A time window carries the opening balance forward.",
-    query: z.object({
-      account: z.string().openapi({
-        description: "The account to list: a parent account or a regular expression",
-        example: "Assets:Bank:Checking",
-      }),
-      time: filterQuery.shape.time,
-      conversion: z.string().optional().openapi({
-        description:
-          "Convert money columns to this currency, or `units` for each row's held currencies (default: the operating currency when the ledger declares exactly one)",
-        example: "USD",
-      }),
-    }).strict(),
+    query: z
+      .object({
+        account: z.string().openapi({
+          description:
+            "The account to list: a parent account or a regular expression",
+          example: "Assets:Bank:Checking",
+        }),
+        time: filterQuery.shape.time,
+        conversion: z.string().optional().openapi({
+          description:
+            "Convert money columns to this currency, or `units` for each row's held currencies (default: the operating currency when the ledger declares exactly one)",
+          example: "USD",
+        }),
+      })
+      .strict(),
     uriPath: "/{account}",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerFinance.getRegister({
@@ -212,18 +217,20 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     summary: "Get realized capital gains",
     description:
       "One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes when a reducing posting carries booked cost and price; splits and own-account transfers carry no price and are left out. `fromDate`/`toDate` bound the sale date, `account` filters the posting account, and `time` scopes the window; all figures stay in their booked currencies.",
-    query: z.object({
-      account: filterQuery.shape.account,
-      time: filterQuery.shape.time,
-      fromDate: z.string().optional().openapi({
-        description: "Sales on or after YYYY-MM-DD",
-        example: "2024-01-01",
-      }),
-      toDate: z.string().optional().openapi({
-        description: "Sales on or before YYYY-MM-DD",
-        example: "2024-12-31",
-      }),
-    }).strict(),
+    query: z
+      .object({
+        account: filterQuery.shape.account,
+        time: filterQuery.shape.time,
+        fromDate: z.string().optional().openapi({
+          description: "Sales on or after YYYY-MM-DD",
+          example: "2024-01-01",
+        }),
+        toDate: z.string().optional().openapi({
+          description: "Sales on or before YYYY-MM-DD",
+          example: "2024-12-31",
+        }),
+      })
+      .strict(),
     uriPath: "",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerFinance.getCapitalGains({
@@ -332,9 +339,11 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
       "The single most recent transaction recorded against this payee, or null if there is none. " +
       "This is Fava's autocomplete lookup — a template for the next entry, not a history. " +
       "For every transaction by a payee, query the journal or BQL instead.",
-    query: z.object({
-      payee: z.string().openapi({ description: "The payee to look up" }),
-    }).strict(),
+    query: z
+      .object({
+        payee: z.string().openapi({ description: "The payee to look up" }),
+      })
+      .strict(),
     uriPath: "/{payee}",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerData.getPayeeTransactions({
@@ -353,13 +362,15 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
       "`beancount://{owner}/{name}/narration-transactions?narration=` for empty text. " +
       "Nonempty values also support the existing path alias " +
       "`beancount://{owner}/{name}/narration-transactions/{narration}`; percent-encode the value once.",
-    query: z.object({
-      narration: z.string().openapi({
-        description:
-          "The exact narration to look up. Supply it explicitly; an empty string is valid.",
-        example: "",
-      }),
-    }).strict(),
+    query: z
+      .object({
+        narration: z.string().openapi({
+          description:
+            "The exact narration to look up. Supply it explicitly; an empty string is valid.",
+          example: "",
+        }),
+      })
+      .strict(),
     uriPath: "",
     uriPathAliases: ["/{narration}"],
     fetch: (s, { ledgerId, identity, query }) =>
@@ -377,9 +388,11 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
       "against it (exponential decay). Accounts the payee never touched are still present, at " +
       "the back — the leading entries are the suggestion, not the whole list. Reach for the " +
       "first few when categorising a new transaction for this payee.",
-    query: z.object({
-      payee: z.string().openapi({ description: "The payee to look up" }),
-    }).strict(),
+    query: z
+      .object({
+        payee: z.string().openapi({ description: "The payee to look up" }),
+      })
+      .strict(),
     uriPath: "/{payee}",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerData.getPayeeAccounts({
@@ -393,16 +406,20 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     summary: "Get the source context around one entry",
     description:
       "The ledger text surrounding a directive, addressed by its hash — what to read before editing it. A result with `generated_from` is a copy a plugin or a pad generated from that source entry: it shares the source's slice and sha256sum, so editing or deleting it would change the source and every other copy. An entry with `not_booked: true` is a transaction the ledger could not book (for example a sale with no matching lot): it is listed so it can be opened and fixed, but no balance counts it.",
-    query: z.object({
-      entryHash: z
-        .string()
-        .optional()
-        .openapi({ description: "The entry's hash" }),
-      entry_hash: z
-        .string()
-        .optional()
-        .openapi({ description: "Alias of entryHash, as list output spells it." }),
-    }).strict(),
+    query: z
+      .object({
+        entryHash: z
+          .string()
+          .optional()
+          .openapi({ description: "The entry's hash" }),
+        entry_hash: z
+          .string()
+          .optional()
+          .openapi({
+            description: "Alias of entryHash, as list output spells it.",
+          }),
+      })
+      .strict(),
     uriPath: "/{entryHash}",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerJournal.getContext({

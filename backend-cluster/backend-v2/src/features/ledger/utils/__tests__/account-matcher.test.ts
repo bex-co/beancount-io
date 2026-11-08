@@ -50,9 +50,9 @@ describe("matchesAccountPattern", () => {
       matchesAccountPattern("Assets:Broker", "Assets:Broker:AAPL", ROOTS),
     ).toBe(true);
     // A prefix sibling is not a descendant (w5/292).
-    expect(matchesAccountPattern("Assets:Broker", "Assets:Broker2", ROOTS)).toBe(
-      false,
-    );
+    expect(
+      matchesAccountPattern("Assets:Broker", "Assets:Broker2", ROOTS),
+    ).toBe(false);
     expect(
       matchesAccountPattern("Assets:Broker", "Assets:Bank:Checking", ROOTS),
     ).toBe(false);
@@ -60,7 +60,9 @@ describe("matchesAccountPattern", () => {
 
   it("anchors a bare root", () => {
     expect(matchesAccountPattern("Assets", "Assets:Broker", ROOTS)).toBe(true);
-    expect(matchesAccountPattern("Assets", "Expenses:Taxes", ROOTS)).toBe(false);
+    expect(matchesAccountPattern("Assets", "Expenses:Taxes", ROOTS)).toBe(
+      false,
+    );
   });
 
   it("searches any other pattern case-insensitively", () => {
@@ -85,9 +87,7 @@ describe("matchesAccountPattern", () => {
 
 describe("assertValidAccountPattern", () => {
   it("accepts spellings and compilable patterns", () => {
-    expect(() =>
-      assertValidAccountPattern("Assets:Broker:AAPL"),
-    ).not.toThrow();
+    expect(() => assertValidAccountPattern("Assets:Broker:AAPL")).not.toThrow();
     expect(() => assertValidAccountPattern("broker")).not.toThrow();
     expect(() =>
       assertValidAccountPattern("Expenses:(Dining|Groceries)"),

@@ -247,22 +247,23 @@ describe("ledger mappers", () => {
     ] as Array<[OperationClass[], object]>)(
       "intersects repo rights with %p capabilities",
       (caps, expected) => {
-      const apiLedger: FavaLedgerPublic = {
-        id: 6,
-        name: "caps-test",
-        description: null,
-        full_name: "owner/caps-test",
-        empty: false,
-        private: true,
-        size: 0,
-        created_at: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-01T00:00:00Z",
-        permissions: { admin: true, pull: true, push: true },
-      };
-      expect(
-        mapToLedger(apiLedger, mockGitea, new Set(caps)).permissions,
-      ).toEqual(expected);
-    });
+        const apiLedger: FavaLedgerPublic = {
+          id: 6,
+          name: "caps-test",
+          description: null,
+          full_name: "owner/caps-test",
+          empty: false,
+          private: true,
+          size: 0,
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
+          permissions: { admin: true, pull: true, push: true },
+        };
+        expect(
+          mapToLedger(apiLedger, mockGitea, new Set(caps)).permissions,
+        ).toEqual(expected);
+      },
+    );
 
     it("keeps repo rights when no capabilities are passed", () => {
       const apiLedger: FavaLedgerPublic = {

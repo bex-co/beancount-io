@@ -347,7 +347,8 @@ describe("LedgerCollaboratorsResolver", () => {
         mockContext,
       );
 
-      const call = mockCollaboratorsWorkflow.leaveLedger.mock.calls[0][0] as unknown as {
+      const call = mockCollaboratorsWorkflow.leaveLedger.mock
+        .calls[0][0] as unknown as {
         input: Record<string, unknown>;
       };
       expect(call.input).toMatchObject({ dryRun: true });

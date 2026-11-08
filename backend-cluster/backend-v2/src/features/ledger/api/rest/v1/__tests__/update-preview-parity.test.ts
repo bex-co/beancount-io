@@ -132,9 +132,8 @@ async function fixture() {
     });
     return {
       success: !result.isError,
-      result: (
-        result.structuredContent as { result?: Record<string, unknown> }
-      )?.result,
+      result: (result.structuredContent as { result?: Record<string, unknown> })
+        ?.result,
     };
   };
 
@@ -154,80 +153,83 @@ async function fixture() {
 // updateLedger previews the current→new diff on REST, GraphQL, and MCP;
 // the preview commits nothing, twins agree-or-refuse alike, and a commit
 // echoes dryRun:false with no preview (w23/m13/t002).
-describe.each(["rest", "gql", "mcp"])("updateLedger preview (%s)", (surface) => {
-  it("renders the diff and commits nothing", async () => {
-    const f = await fixture();
-    try {
-      const flag = surface === "mcp" ? { dry_run: true } : { dryRun: true };
-      const { success, result } = await f.call(surface, {
-        name: "renamed",
-        private: false,
-        ...flag,
-      });
-      expect(success).toBe(true);
-      expect(f.updateSpy).not.toHaveBeenCalled();
-      // MCP echoes dry_run like every m7 preview; REST and GraphQL echo dryRun.
-      const echo = surface === "mcp" ? { dry_run: true } : { dryRun: true };
-      expect(result).toMatchObject({
-        name: "main",
-        private: true,
-        ...echo,
-        preview: {
-          name: { from: "main", to: "renamed" },
-          private: { from: true, to: false },
-        },
-      });
-      if (surface === "mcp") {
-        expect(result).not.toHaveProperty("dryRun");
-      } else {
-        expect(result).not.toHaveProperty("dry_run");
+describe.each(["rest", "gql", "mcp"])(
+  "updateLedger preview (%s)",
+  (surface) => {
+    it("renders the diff and commits nothing", async () => {
+      const f = await fixture();
+      try {
+        const flag = surface === "mcp" ? { dry_run: true } : { dryRun: true };
+        const { success, result } = await f.call(surface, {
+          name: "renamed",
+          private: false,
+          ...flag,
+        });
+        expect(success).toBe(true);
+        expect(f.updateSpy).not.toHaveBeenCalled();
+        // MCP echoes dry_run like every m7 preview; REST and GraphQL echo dryRun.
+        const echo = surface === "mcp" ? { dry_run: true } : { dryRun: true };
+        expect(result).toMatchObject({
+          name: "main",
+          private: true,
+          ...echo,
+          preview: {
+            name: { from: "main", to: "renamed" },
+            private: { from: true, to: false },
+          },
+        });
+        if (surface === "mcp") {
+          expect(result).not.toHaveProperty("dryRun");
+        } else {
+          expect(result).not.toHaveProperty("dry_run");
+        }
+        expect((result?.preview as { warnings: string[] }).warnings).toContain(
+          "This would make the ledger public, readable by anyone.",
+        );
+      } finally {
+        await f.close();
       }
-      expect(
-        (result?.preview as { warnings: string[] }).warnings,
-      ).toContain("This would make the ledger public, readable by anyone.");
-    } finally {
-      await f.close();
-    }
-  });
+    });
 
-  it("refuses conflicting twins", async () => {
-    const f = await fixture();
-    try {
-      const { success } = await f.call(surface, {
-        name: "renamed",
-        dryRun: true,
-        dry_run: false,
-      });
-      expect(success).toBe(false);
-      expect(f.updateSpy).not.toHaveBeenCalled();
-    } finally {
-      await f.close();
-    }
-  });
+    it("refuses conflicting twins", async () => {
+      const f = await fixture();
+      try {
+        const { success } = await f.call(surface, {
+          name: "renamed",
+          dryRun: true,
+          dry_run: false,
+        });
+        expect(success).toBe(false);
+        expect(f.updateSpy).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
 
-  it("commits without the flag and echoes dryRun:false", async () => {
-    const f = await fixture();
-    try {
-      const { success, result } = await f.call(surface, {
-        description: "New description",
-      });
-      expect(success).toBe(true);
-      expect(f.updateSpy).toHaveBeenCalledTimes(1);
-      expect(f.updateSpy).toHaveBeenCalledWith("alice", "main", {
-        name: undefined,
-        description: "New description",
-        private: undefined,
-      });
-      expect(result).toMatchObject(
-        surface === "mcp" ? { dry_run: false } : { dryRun: false },
-      );
-      // Absent reads undefined on REST/MCP and null on GraphQL.
-      expect(result?.preview ?? undefined).toBeUndefined();
-    } finally {
-      await f.close();
-    }
-  });
-});
+    it("commits without the flag and echoes dryRun:false", async () => {
+      const f = await fixture();
+      try {
+        const { success, result } = await f.call(surface, {
+          description: "New description",
+        });
+        expect(success).toBe(true);
+        expect(f.updateSpy).toHaveBeenCalledTimes(1);
+        expect(f.updateSpy).toHaveBeenCalledWith("alice", "main", {
+          name: undefined,
+          description: "New description",
+          private: undefined,
+        });
+        expect(result).toMatchObject(
+          surface === "mcp" ? { dry_run: false } : { dryRun: false },
+        );
+        // Absent reads undefined on REST/MCP and null on GraphQL.
+        expect(result?.preview ?? undefined).toBeUndefined();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
 
 it("rest agrees when both twins are true", async () => {
   const f = await fixture();
@@ -285,7 +287,10 @@ it("rest refuses a preview for an unknown ledger without writing", async () => {
   const f = await fixture();
   try {
     f.getSpy.mockRejectedValueOnce(
-      new FavaApiError("Not Found", 404, { success: false, error: "Not Found" }),
+      new FavaApiError("Not Found", 404, {
+        success: false,
+        error: "Not Found",
+      }),
     );
     const { success, status } = await f.call("rest", {
       name: "renamed",

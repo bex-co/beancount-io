@@ -62,10 +62,7 @@ describe("LedgerJournalService", () => {
       ledgerRepoId: 1,
       ownerUserId: USER_ID,
     });
-    service = new LedgerJournalService(
-      mockFavaClientFactory as any,
-      {} as any,
-    );
+    service = new LedgerJournalService(mockFavaClientFactory as any, {} as any);
   });
 
   describe("getJournal", () => {
@@ -77,7 +74,10 @@ describe("LedgerJournalService", () => {
         },
       });
 
-      const result = await service.getJournal({ ledgerId: LEDGER_ID, identity: IDENTITY });
+      const result = await service.getJournal({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+      });
 
       expect(result).toEqual({ total: 5, data: [{ id: 1 }], is_empty: false });
       expect(mockGetJournal).toHaveBeenCalledWith("testowner", "testledger", {
@@ -104,13 +104,23 @@ describe("LedgerJournalService", () => {
       await service.getJournal({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        query: { account: "Assets:Cash", limit: 50, offset: 10, filter: "year:2024" },
+        query: {
+          account: "Assets:Cash",
+          limit: 50,
+          offset: 10,
+          filter: "year:2024",
+        },
       });
 
       expect(mockGetJournal).toHaveBeenCalledWith(
         "testowner",
         "testledger",
-        expect.objectContaining({ account: "Assets:Cash", limit: 50, offset: 10, filter: "year:2024" }),
+        expect.objectContaining({
+          account: "Assets:Cash",
+          limit: 50,
+          offset: 10,
+          filter: "year:2024",
+        }),
       );
     });
 
@@ -178,7 +188,11 @@ describe("LedgerJournalService", () => {
       expect(result.sha256sum).toBe("abc123");
       expect(result.slice).toBe("some slice");
       expect(result.balances_before).toEqual({ "Assets:Cash": ["100 USD"] });
-      expect(mockGetContext).toHaveBeenCalledWith("testowner", "testledger", "hash-abc");
+      expect(mockGetContext).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        "hash-abc",
+      );
     });
 
     it("passes through the managed price source, defaulting to null", async () => {
@@ -196,7 +210,9 @@ describe("LedgerJournalService", () => {
         identity: IDENTITY,
         entryHash: "h",
       });
-      expect(managed.managed_source).toBe("https://beancount.io/prices/BTC-USD");
+      expect(managed.managed_source).toBe(
+        "https://beancount.io/prices/BTC-USD",
+      );
 
       // An older ledger service omits the field: read as "not managed".
       mockGetContext.mockResolvedValueOnce(context(undefined));
@@ -212,7 +228,11 @@ describe("LedgerJournalService", () => {
       mockGetContext.mockResolvedValue({ data: { success: false } });
 
       await expect(
-        service.getContext({ ledgerId: LEDGER_ID, identity: IDENTITY, entryHash: "x" }),
+        service.getContext({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entryHash: "x",
+        }),
       ).rejects.toThrow(InternalServerError);
     });
   });
@@ -223,7 +243,10 @@ describe("LedgerJournalService", () => {
         data: { success: true, data: { content: "2024-01-01 * ...\n" } },
       });
 
-      const result = await service.plaintextJournal({ ledgerId: LEDGER_ID, identity: IDENTITY });
+      const result = await service.plaintextJournal({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+      });
 
       expect(result.content).toBe("2024-01-01 * ...\n");
     });
@@ -260,7 +283,13 @@ describe("LedgerJournalService", () => {
         data: {
           success: true,
           data: {
-            items: [{ entry: { id: 1 }, change: { USD: "100" }, balance: { USD: "200" } }],
+            items: [
+              {
+                entry: { id: 1 },
+                change: { USD: "100" },
+                balance: { USD: "200" },
+              },
+            ],
             total: 1,
             account: "Assets:Cash",
             with_children: false,
@@ -283,7 +312,12 @@ describe("LedgerJournalService", () => {
       mockGetAccountJournal.mockResolvedValue({
         data: {
           success: true,
-          data: { items: [], total: 0, account: "Assets:Cash", with_children: true },
+          data: {
+            items: [],
+            total: 0,
+            account: "Assets:Cash",
+            with_children: true,
+          },
         },
       });
 
@@ -311,7 +345,12 @@ describe("LedgerJournalService", () => {
       mockGetAccountJournal.mockResolvedValue({
         data: {
           success: true,
-          data: { items: [], total: 0, account: "Assets:Cash", with_children: true },
+          data: {
+            items: [],
+            total: 0,
+            account: "Assets:Cash",
+            with_children: true,
+          },
         },
       });
 
@@ -343,7 +382,11 @@ describe("LedgerJournalService", () => {
       mockGetAccountJournal.mockResolvedValue({ data: { success: false } });
 
       await expect(
-        service.getAccountJournal({ ledgerId: LEDGER_ID, identity: IDENTITY, query: { account: "A" } }),
+        service.getAccountJournal({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          query: { account: "A" },
+        }),
       ).rejects.toThrow(InternalServerError);
     });
 
@@ -426,15 +469,26 @@ describe("LedgerJournalService", () => {
       expect(mockDeleteMultiSourceSlices).toHaveBeenCalledWith(
         "testowner",
         "testledger",
-        { entries: [{ entry_hash: "h1", sha256sum: "s1" }, { entry_hash: "h2", sha256sum: "s2" }] },
+        {
+          entries: [
+            { entry_hash: "h1", sha256sum: "s1" },
+            { entry_hash: "h2", sha256sum: "s2" },
+          ],
+        },
       );
     });
 
     it("throws InternalServerError on failure", async () => {
-      mockDeleteMultiSourceSlices.mockResolvedValue({ data: { success: false } });
+      mockDeleteMultiSourceSlices.mockResolvedValue({
+        data: { success: false },
+      });
 
       await expect(
-        service.deleteMultiSourceSlices({ ledgerId: LEDGER_ID, identity: IDENTITY, entries: [] }),
+        service.deleteMultiSourceSlices({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entries: [],
+        }),
       ).rejects.toThrow(InternalServerError);
     });
   });
@@ -458,7 +512,7 @@ describe("LedgerJournalService", () => {
         identity: IDENTITY,
         entryHash: "hash-old",
         sha256sum: "oldsum",
-        newContent: "2024-01-02 * \"new\"\n",
+        newContent: '2024-01-02 * "new"\n',
       });
 
       expect(result.newSha256sum).toBe("newsum");
@@ -467,7 +521,11 @@ describe("LedgerJournalService", () => {
       expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
         "testowner",
         "testledger",
-        { entry_hash: "hash-old", sha256sum: "oldsum", new_content: "2024-01-02 * \"new\"\n" },
+        {
+          entry_hash: "hash-old",
+          sha256sum: "oldsum",
+          new_content: '2024-01-02 * "new"\n',
+        },
         {},
       );
     });

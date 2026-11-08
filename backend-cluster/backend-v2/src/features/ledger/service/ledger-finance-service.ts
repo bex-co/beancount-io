@@ -350,12 +350,7 @@ export class LedgerFinanceService
     );
     const [options, transactions] = await Promise.all([
       this.reportOptions(favaApiClient, ledgerOwner, ledgerName),
-      this.journalTransactions(
-        favaApiClient,
-        ledgerOwner,
-        ledgerName,
-        time,
-      ),
+      this.journalTransactions(favaApiClient, ledgerOwner, ledgerName, time),
     ]);
     return composeGains({
       transactions,

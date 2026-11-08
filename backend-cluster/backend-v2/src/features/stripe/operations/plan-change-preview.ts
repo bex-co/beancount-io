@@ -161,7 +161,11 @@ async function listPrice(
 export async function afterDiscounts(
   stripe: Stripe,
   subscription: Stripe.Subscription,
-  { amount, currency, productId }: { amount: number; currency: string; productId: string },
+  {
+    amount,
+    currency,
+    productId,
+  }: { amount: number; currency: string; productId: string },
   at: Date,
 ): Promise<number> {
   let result = amount;

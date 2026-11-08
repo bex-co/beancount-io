@@ -3,21 +3,23 @@ import { v1Route } from "@/server/rest/v1-route";
 import { json, booleanQuery } from "@/server/rest/v1-schemas";
 import { jsonStringArrayQuery } from "./journal-reads";
 
-const legacyJournalQuery = z.object({
-  first: z.coerce.number().int().optional(),
-  after: z.string().optional(),
-  last: z.coerce.number().int().optional(),
-  before: z.string().optional(),
-  detailed: booleanQuery,
-  searchQuery: z.string().optional(),
-  accountFilter: z.string().optional(),
-  amountMin: z.coerce.number().optional(),
-  amountMax: z.coerce.number().optional(),
-  entryTypes: jsonStringArrayQuery.optional(),
-  sortBy: z.string().optional(),
-  sortOrder: z.string().optional(),
-  groupBy: z.string().optional(),
-}).strict();
+const legacyJournalQuery = z
+  .object({
+    first: z.coerce.number().int().optional(),
+    after: z.string().optional(),
+    last: z.coerce.number().int().optional(),
+    before: z.string().optional(),
+    detailed: booleanQuery,
+    searchQuery: z.string().optional(),
+    accountFilter: z.string().optional(),
+    amountMin: z.coerce.number().optional(),
+    amountMax: z.coerce.number().optional(),
+    entryTypes: jsonStringArrayQuery.optional(),
+    sortBy: z.string().optional(),
+    sortOrder: z.string().optional(),
+    groupBy: z.string().optional(),
+  })
+  .strict();
 
 export const LEGACY_JOURNAL_ROUTES = [
   v1Route({

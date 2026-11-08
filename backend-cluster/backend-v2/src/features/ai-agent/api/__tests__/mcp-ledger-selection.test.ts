@@ -42,9 +42,7 @@ describe("resolveMcpLedger pin case", () => {
 
   it("still refuses a different owner or name", () => {
     for (const requested of ["mallory/x", "puncsky/y"]) {
-      expect(() => resolveMcpLedger(pinned, requested)).toThrow(
-        ForbiddenError,
-      );
+      expect(() => resolveMcpLedger(pinned, requested)).toThrow(ForbiddenError);
       expect(() => resolveMcpLedger(pinned, requested)).toThrow(
         /outside this credential's ledger restriction/,
       );
@@ -68,15 +66,17 @@ describe("prompt ledger line pin case", () => {
   it("does not cry restriction when the pin differs only in owner case", () => {
     for (const descriptor of MCP_PROMPTS) {
       const text = descriptor.build({ ledger: "ALICE/personal" }, pinned);
-      expect(text).not.toContain("outside this credential's ledger restriction");
+      expect(text).not.toContain(
+        "outside this credential's ledger restriction",
+      );
     }
   });
 
   it("still names the restriction for a genuinely different ledger", () => {
     for (const descriptor of MCP_PROMPTS) {
-      expect(
-        descriptor.build({ ledger: "mallory/other" }, pinned),
-      ).toContain("outside this credential's ledger restriction");
+      expect(descriptor.build({ ledger: "mallory/other" }, pinned)).toContain(
+        "outside this credential's ledger restriction",
+      );
     }
   });
 });

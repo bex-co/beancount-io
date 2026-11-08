@@ -866,16 +866,36 @@ describe("what the stated currency leaves out", () => {
   it("omits the field when the stated currency carries everything", () => {
     const allUsd = {
       ...portfolio,
-      assets_hierarchy_data: node("Assets", {}, [node("Assets:Cash", { USD: "800" })], { USD: "800" }),
+      assets_hierarchy_data: node(
+        "Assets",
+        {},
+        [node("Assets:Cash", { USD: "800" })],
+        { USD: "800" },
+      ),
     };
-    expect(summarizeBalanceSheet(allUsd, "units")).not.toHaveProperty("otherCurrencies");
+    expect(summarizeBalanceSheet(allUsd, "units")).not.toHaveProperty(
+      "otherCurrencies",
+    );
   });
 
   it("reports the net profit other currencies leave out, signed as `net` is", () => {
     const statement = {
       net_profit_data: [{ date: "2026-02-28", balance: { USD: "50" } }],
-      income_hierarchy_data: node("Income", {}, [node("Income:Salary", { USD: "-100" }), node("Income:Vacation", { VACHR: "-8" })], { USD: "-100", VACHR: "-8" }),
-      expenses_hierarchy_data: node("Expenses", {}, [node("Expenses:Food", { USD: "50" })], { USD: "50" }),
+      income_hierarchy_data: node(
+        "Income",
+        {},
+        [
+          node("Income:Salary", { USD: "-100" }),
+          node("Income:Vacation", { VACHR: "-8" }),
+        ],
+        { USD: "-100", VACHR: "-8" },
+      ),
+      expenses_hierarchy_data: node(
+        "Expenses",
+        {},
+        [node("Expenses:Food", { USD: "50" })],
+        { USD: "50" },
+      ),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
     expect(summarizeIncomeStatement(statement, "units")).toMatchObject({
@@ -891,9 +911,16 @@ describe("what the stated currency leaves out", () => {
     });
     const intervals = summarizeIntervalTotals([
       { date: "2026-01-31", balance: { USD: "5" }, account_balances: {} },
-      { date: "2026-02-28", balance: { USD: "7", VACHR: "2" }, account_balances: {} },
+      {
+        date: "2026-02-28",
+        balance: { USD: "7", VACHR: "2" },
+        account_balances: {},
+      },
     ] as DateAndBalanceWithAccountBalancePublic[]);
     expect(intervals.intervals[0]).not.toHaveProperty("otherCurrencies");
-    expect(intervals.intervals[1]).toMatchObject({ total: 7, otherCurrencies: { VACHR: 2 } });
+    expect(intervals.intervals[1]).toMatchObject({
+      total: 7,
+      otherCurrencies: { VACHR: 2 },
+    });
   });
 });

@@ -719,6 +719,5 @@ describe("AdminService", () => {
         expect.objectContaining({ userId: "u1" }),
       );
     });
-
   });
 });

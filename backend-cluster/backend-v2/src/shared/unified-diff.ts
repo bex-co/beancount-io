@@ -69,9 +69,16 @@ function commonSuffix(a: string[], b: string[], start: number): number {
   return i;
 }
 
-function diffMiddle(a: string[], b: string[], aOff: number, bOff: number): Op[] {
-  if (a.length === 0) return b.map((_, i) => ({ kind: "insert" as const, bIndex: bOff + i }));
-  if (b.length === 0) return a.map((_, i) => ({ kind: "delete" as const, aIndex: aOff + i }));
+function diffMiddle(
+  a: string[],
+  b: string[],
+  aOff: number,
+  bOff: number,
+): Op[] {
+  if (a.length === 0)
+    return b.map((_, i) => ({ kind: "insert" as const, bIndex: bOff + i }));
+  if (b.length === 0)
+    return a.map((_, i) => ({ kind: "delete" as const, aIndex: aOff + i }));
   if (a.length * b.length > MAX_LCS_CELLS) {
     return [
       ...a.map((_, i) => ({ kind: "delete" as const, aIndex: aOff + i })),
@@ -100,7 +107,10 @@ function diffMiddle(a: string[], b: string[], aOff: number, bOff: number): Op[] 
       i--;
       j--;
       ops.push({ kind: "equal", aIndex: aOff + i, bIndex: bOff + j });
-    } else if (j > 0 && (i === 0 || (table[i]?.[j - 1] ?? 0) >= (table[i - 1]?.[j] ?? 0))) {
+    } else if (
+      j > 0 &&
+      (i === 0 || (table[i]?.[j - 1] ?? 0) >= (table[i - 1]?.[j] ?? 0))
+    ) {
       j--;
       ops.push({ kind: "insert", bIndex: bOff + j });
     } else {

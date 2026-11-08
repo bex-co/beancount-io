@@ -34,30 +34,34 @@ const statementParamsSchema = ledgerPathSchema.extend({
  * series and the full account tree — which is the only shape that existed
  * before and is preserved exactly.
  */
-export const shapeQuery = z.object({
-  shape: z.enum(["summary", "fava"]).default("summary").openapi({
-    description:
-      "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
-    example: "summary",
-  }),
-}).strict();
+export const shapeQuery = z
+  .object({
+    shape: z.enum(["summary", "fava"]).default("summary").openapi({
+      description:
+        "summary returns totals and non-zero accounts in one currency; fava returns the full chart payload.",
+      example: "summary",
+    }),
+  })
+  .strict();
 
-export const statementQuerySchema = z.object({
-  account: z.string().optional(),
-  filter: z.string().optional(),
-  time: z.string().optional().openapi({
-    description: "Reporting period as a Fava time expression",
-    example: "2026-01-01 - 2026-12-31",
-  }),
-  conversion: z.string().optional().openapi({
-    description: BALANCE_CONVERSION_DESCRIPTION,
-    example: "USD",
-  }),
-  interval: z.string().default("monthly").openapi({
-    description: "Bucket the period: day, week, month, quarter, year",
-    example: "month",
-  }),
-}).strict();
+export const statementQuerySchema = z
+  .object({
+    account: z.string().optional(),
+    filter: z.string().optional(),
+    time: z.string().optional().openapi({
+      description: "Reporting period as a Fava time expression",
+      example: "2026-01-01 - 2026-12-31",
+    }),
+    conversion: z.string().optional().openapi({
+      description: BALANCE_CONVERSION_DESCRIPTION,
+      example: "USD",
+    }),
+    interval: z.string().default("monthly").openapi({
+      description: "Bucket the period: day, week, month, quarter, year",
+      example: "month",
+    }),
+  })
+  .strict();
 
 /** The statements' query contract, on both surfaces. */
 export const statementReadQuery = statementQuerySchema.extend(shapeQuery.shape);

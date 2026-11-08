@@ -46,7 +46,9 @@ function getCookieOptions(
 // structurally identical cookie jars whose fluent `set` return type (`this`)
 // defeats nominal assignability between the two type graphs.
 export function clearAuthCookie(ctx: {
-  cookies: { set(name: string, value: string, opts: { maxAge: number }): unknown };
+  cookies: {
+    set(name: string, value: string, opts: { maxAge: number }): unknown;
+  };
 }): void {
   ctx.cookies.set(COOKIE_NAME, "", { maxAge: 0 });
 }

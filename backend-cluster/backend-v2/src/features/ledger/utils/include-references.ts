@@ -88,10 +88,7 @@ export async function scanLedgerBeanFiles(
       }
       if (entry.path === undefined || entry.path === null) continue;
       allFiles.push(entry.path);
-      if (
-        entry.type === "file" &&
-        /\.(bean|beancount)$/.test(entry.path)
-      )
+      if (entry.type === "file" && /\.(bean|beancount)$/.test(entry.path))
         beanFiles.push(entry.path);
     }
   }
@@ -173,13 +170,10 @@ export async function findDanglingDeleteIncluders(opts: {
   const deleted = new Set(opts.deletedPaths);
   const overlays = opts.overlays ?? new Map<string, string | null>();
   const { beanFiles } = await scanLedgerBeanFiles(opts.listDir);
-  const survivors = new Set(
-    beanFiles.filter((path) => !deleted.has(path)),
-  );
+  const survivors = new Set(beanFiles.filter((path) => !deleted.has(path)));
   const contents = new Map<string, string>();
   for (const [path, content] of overlays) {
-    if (content !== null && survivors.has(path))
-      contents.set(path, content);
+    if (content !== null && survivors.has(path)) contents.set(path, content);
   }
   const toRead = [...survivors].filter((path) => !contents.has(path));
   if (toRead.length > 0) {

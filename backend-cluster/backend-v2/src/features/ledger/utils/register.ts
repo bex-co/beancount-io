@@ -88,9 +88,7 @@ export function resolveRegisterRoot(
     return candidate;
   }
   const roots = active.filter((name) =>
-    active.every(
-      (other) => other === name || other.startsWith(`${name}:`),
-    ),
+    active.every((other) => other === name || other.startsWith(`${name}:`)),
   );
   return roots.length === 1 ? roots[0]! : null;
 }
@@ -175,7 +173,13 @@ export function mapRegisterRows(
         payee: null,
         narration: null,
         postings: isSubtree(root, balance.account)
-          ? [{ account: balance.account, amount: mapAmount(balance.amount), cost: null }]
+          ? [
+              {
+                account: balance.account,
+                amount: mapAmount(balance.amount),
+                cost: null,
+              },
+            ]
           : [],
         change: { ...item.change },
         balance: { ...item.balance },
