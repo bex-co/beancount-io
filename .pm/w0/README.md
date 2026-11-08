@@ -12,7 +12,7 @@
 - [x] **m6** — [Every app-mediated ledger write enforces the directive limit at one boundary](./done/m6/README.md) (7 tasks) ← from security review 2026-10-18; after m5
 - [x] **m7** — [Login limits key on a trusted client address and on the account](./done/m7/README.md) (6 tasks) ← from security review 2026-10-18
 - [x] **m8** — [Ledger archive downloads stream straight from Gitea](./done/m8/README.md) (7 tasks) ← from security review 2026-10-18; owner chose forwarding over removal
-- [ ] **m9** — [An abandoned first Checkout gets one short recovery email](./m9/README.md) (10 tasks) ← from ADR027 2026-11-08
+- [ ] **m9** — [An abandoned first Checkout gets one short recovery email](./m9/README.md) (10 tasks) ← from ADR027 2026-11-08 — **blocked:** t006 waits on the owner's deploy, the Stripe coupon, the SendGrid group, and the webhook event; t007–t009 can proceed
 
 ## Dropped
 
