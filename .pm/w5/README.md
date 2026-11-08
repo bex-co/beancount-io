@@ -42,6 +42,7 @@
 - [1124 — Keep ignored-budget diagnostics on stderr when exporting CSV](./1124.md) — minor CLI QA finding, 20–35m; stdout/file CSV exports drop the ignored-budget warning.
 - [1125 — Give update commands a supported recovery from incomplete root discovery](./1125.md) — major CLI QA finding, 45–60m; the suggested `--into` recovery is unavailable on either update command.
 - [1126 — Apply half-up rounding to exact halfway budget shares](./1126.md) — minor CLI QA finding, 40–55m; repeated daily division rounds an exact half cent down.
+- [1127 — Treat a budget-only account match as nonempty in the budget report](./1127.md) — minor CLI QA finding, 25–40m; matching budget rows carry a false empty flag and warning.
 
 
 
