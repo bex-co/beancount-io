@@ -10,5 +10,6 @@
 - [x] **m4** — [`bea report capital-gains`: realized gains by lot](./done/m4/README.md) (7 tasks) ← `/pm-brainstorm for cli` 2026-10-24
 - [x] **m5** — [A reusable CI check for ledger repositories](./done/m5/README.md) (8 tasks) ← `/pm-brainstorm for cli` 2026-10-24
 - [x] **m6** — [Backend parity for holdings, register, and capital-gains](./done/m6/README.md) (7 tasks) ← promoted from `w22/003` 2026-10-25
+- [ ] **m7** — [One click to deploy beancount to bex](./blocked/m7/README.md) (owner checklist, no tasks) — **blocked:** superseded by m8/m9 pending the owner's confirmation
 - [ ] **m8** — [Self-hosted deployments: no verification page, no plan limits](./m8/README.md) (7 tasks) ← self-host request 2026-11-07
 - [ ] **m9** — [One-click "Deploy to bex" for the self-hosted stack](./m9/README.md) (8 tasks) ← deploy-badge request 2026-11-07
