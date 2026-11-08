@@ -221,8 +221,7 @@ written down either: services reference each other with `fromService`
 (`host` or `hostport`), and the start commands put the URLs together
 (`SSR_API_URL`, `API_PROXY_URL`, `FAVA_API_URL`, `PUBLIC_URL_FROM`).
 
-Known gap: `EXTERNAL_GITEA_HOST_NAME`, used only to build the pull-request link
-the AI assistant returns, is not set on bex and falls back to the code default.
+`EXTERNAL_GITEA_HOST_NAME` is not set on bex. It only decides the pull-request link the AI assistant returns; on a self-hosted stack that sets none, the link is the address Gitea itself reports for the pull request (built from its own `ROOT_URL`, which its wrapper derives from the address bex gives it), and is left out if Gitea reports none. It never falls back to beancount.io's Git host.
 
 With your own domain you do not need the proxy: give the dashboard and API hosts
 a shared parent, set `AUTH_COOKIE_DOMAIN` to it, and point `VITE_API_URL` at the

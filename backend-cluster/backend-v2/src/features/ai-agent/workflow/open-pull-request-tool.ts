@@ -11,7 +11,8 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { logger } from "@/shared/logger";
-import type { GiteaConfig } from "@/config/config";
+import { DEFAULT_EXTERNAL_GITEA_HOST, type GiteaConfig } from "@/config/config";
+import { isSelfHost } from "@/config/self-host";
 
 const prLogger = logger.child({ module: "open-pull-request-tool" });
 
@@ -21,6 +22,8 @@ export interface OpenPullRequestToolDeps {
   ledgerName: string;
   ledgerUsername: string;
   ledgerPassword: string;
+  /** Defaults to the SELF_HOST switch; a parameter so a test can set it. */
+  selfHost?: boolean;
 }
 
 const inputSchema = z.object({
@@ -56,6 +59,31 @@ function externalGiteaBase(gitea: GiteaConfig): string {
   const portSuffix =
     gitea.externalHttpPort === standardPort ? "" : `:${gitea.externalHttpPort}`;
   return `${protocol}://${gitea.hostname}${portSuffix}`;
+}
+
+/**
+ * The link to hand back for a pull request just opened.
+ *
+ * The configured external host decides it, as it always has. The one exception
+ * is a self-hosted stack that configured none: the built-in default is the
+ * managed service's Git host, which is not theirs, so the address Gitea itself
+ * returned (built from its own ROOT_URL) is used instead, and with none the link
+ * is left out rather than pointing at somebody else's host. The managed service
+ * is never self-hosted, so it keeps its configured link.
+ */
+function pullRequestUrl(
+  deps: OpenPullRequestToolDeps,
+  pr: { number: number; html_url?: unknown },
+): string | undefined {
+  const { gitea, ledgerOwner, ledgerName } = deps;
+  const configured = `${externalGiteaBase(gitea)}/${ledgerOwner}/${ledgerName}/pulls/${pr.number}`;
+  const selfHost = deps.selfHost ?? isSelfHost();
+  if (!selfHost || gitea.hostname !== DEFAULT_EXTERNAL_GITEA_HOST) {
+    return configured;
+  }
+  return typeof pr.html_url === "string" && /^https?:\/\//.test(pr.html_url)
+    ? pr.html_url
+    : undefined;
 }
 
 export async function openPullRequest(
@@ -96,14 +124,14 @@ export async function openPullRequest(
       };
     }
 
-    const pr = (await res.json()) as { number: number };
-    const prUrl = `${externalGiteaBase(gitea)}/${ledgerOwner}/${ledgerName}/pulls/${pr.number}`;
+    const pr = (await res.json()) as { number: number; html_url?: unknown };
+    const prUrl = pullRequestUrl(deps, pr);
     prLogger.info("Opened PR", {
       ledgerOwner,
       ledgerName,
       prNumber: pr.number,
     });
-    return { ok: true, prNumber: pr.number, prUrl };
+    return { ok: true, prNumber: pr.number, ...(prUrl ? { prUrl } : {}) };
   } catch (err) {
     return {
       ok: false,

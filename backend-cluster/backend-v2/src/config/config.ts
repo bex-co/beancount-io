@@ -73,6 +73,12 @@ interface McpRegistryConfig {
   authProof: string | null;
 }
 
+/**
+ * Where beancount.io's own Git host lives: the external Gitea hostname when a
+ * deployment sets none. A guess that is only right for the managed service.
+ */
+export const DEFAULT_EXTERNAL_GITEA_HOST = "git.beancount.io";
+
 export interface GiteaConfig {
   hostname: string;
   internalHostname: string;
@@ -388,7 +394,8 @@ export const config: AppConfig = {
     authProof: getMcpRegistryAuthProof(process.env.MCP_REGISTRY_AUTH_PROOF),
   },
   gitea: {
-    hostname: process.env.EXTERNAL_GITEA_HOST_NAME || "git.beancount.io",
+    hostname:
+      process.env.EXTERNAL_GITEA_HOST_NAME || DEFAULT_EXTERNAL_GITEA_HOST,
     internalHostname: giteaInternalHostname,
     httpPort: giteaHttpPort,
     internalBaseUrl: giteaInternalBaseUrl(giteaInternalHostname, giteaHttpPort),
