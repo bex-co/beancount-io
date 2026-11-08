@@ -210,6 +210,92 @@ class TestSkillTrees(unittest.TestCase):
         self.assertIn("referenced file missing: missing.csv", error.getvalue())
 
 
+class TestSkillLayout(unittest.TestCase):
+    def setUp(self):
+        scratch = SCRIPTS_DIR / "tmp"
+        scratch.mkdir(exist_ok=True)
+        temporary = tempfile.TemporaryDirectory(dir=scratch)
+        self.addCleanup(temporary.cleanup)
+        self.repo = Path(temporary.name)
+        self.write("skills/README.md", "Customer catalog\n")
+        self.write("skills/AGENTS.md", "Customer guidance\n")
+        self.license = self.write("skills/LICENSE", "Shared fixture license\n")
+        self.write("skills/beancount-ask/SKILL.md", "---\nname: beancount-ask\ndescription: Fixture.\n---\n")
+        self.write("scripts/skills/beancount-skills.py", "# Installer fixture\n")
+        self.guide = self.write(
+            "docs/skills/installation.md",
+            'git -C "$SKILLS_SRC" sparse-checkout set skills scripts/skills docs/skills\n'
+            'python3 "$SKILLS_SRC/scripts/skills/beancount-skills.py" install\n',
+        )
+        subprocess.run(["git", "init", "-q", str(self.repo)], check=True)
+        subprocess.run(["git", "-C", str(self.repo), "add", "."], check=True)
+        patches = mock.patch.multiple(
+            ci_check,
+            REPO_ROOT=self.repo,
+            SKILLS_ROOT=self.repo / "skills",
+            SKILLS_DIR=self.repo / "skills",
+            CUSTOMER_DOCS=self.repo / "docs/skills",
+        )
+        patches.start()
+        self.addCleanup(patches.stop)
+
+    def write(self, relative, text):
+        path = self.repo / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+        return path
+
+    def assert_rejected(self, check, *path_parts):
+        error = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+            with self.assertRaises(SystemExit) as raised:
+                check()
+        self.assertEqual(raised.exception.code, 1)
+        for part in path_parts:
+            self.assertIn(part, error.getvalue())
+
+    def test_canonical_layout_and_shared_license_pass(self):
+        before = self.license.read_bytes()
+        with contextlib.redirect_stdout(io.StringIO()):
+            ci_check.check_layout()
+            ci_check.check_checkout_paths()
+        self.assertEqual(self.license.read_bytes(), before)
+
+    def test_old_claude_tree_is_rejected_even_when_empty(self):
+        (self.repo / "skills/.claude").mkdir()
+        self.assert_rejected(ci_check.check_layout, "skills/", ".claude/")
+
+    def test_stray_tracked_file_is_named(self):
+        self.write("skills/tool.py", "# Stray tooling\n")
+        subprocess.run(["git", "-C", str(self.repo), "add", "skills/tool.py"], check=True)
+        self.assert_rejected(ci_check.check_layout, "skills/tool.py")
+
+    def test_tracked_folder_without_skill_is_named(self):
+        self.write("skills/references/guide.md", "Misplaced guide\n")
+        subprocess.run(["git", "-C", str(self.repo), "add", "skills/references"], check=True)
+        self.assert_rejected(ci_check.check_layout, "skills/references/")
+
+    def test_empty_customer_folder_without_skill_is_named(self):
+        (self.repo / "skills/beancount-empty").mkdir()
+        self.assert_rejected(ci_check.check_layout, "skills/beancount-empty/")
+
+    def test_cited_path_must_exist_in_the_real_checkout(self):
+        with self.guide.open("a") as guide:
+            guide.write("See $SKILLS_SRC/docs/skills/missing.md.\n")
+        self.assert_rejected(
+            ci_check.check_checkout_paths,
+            str(self.guide.relative_to(self.repo)),
+            "$SKILLS_SRC/docs/skills/missing.md",
+        )
+
+    def test_missing_guide_directory_is_not_skipped(self):
+        self.guide.unlink()
+        self.guide.parent.rmdir()
+        with self.assertRaises(FileNotFoundError) as raised:
+            ci_check.check_checkout_paths()
+        self.assertEqual(Path(raised.exception.filename), self.guide)
+
+
 class TestCheckoutPaths(unittest.TestCase):
     """check_checkout_paths: guide paths under $SKILLS_SRC must be in the sparse checkout."""
 

@@ -1,6 +1,6 @@
 # w2 · m42 — Put each customer skill directly under `skills/`
 
-**Worker:** worker2 **Goal:** the customer suite lives at `skills/<name>/SKILL.md`, the conventional skill layout, instead of `skills/.claude/skills/<name>/`. `skills/` holds only the skill folders, a `README.md` catalog, and the `AGENTS.md` authoring guide. Guides and examples move to `docs/skills/`, and the installer, checks, verifiers, routing set, and tests move to `scripts/skills/`. Every existing install survives the move. **Status:** in progress (t001–t009 done)
+**Worker:** worker2 **Goal:** the customer suite lives at `skills/<name>/SKILL.md`, the conventional skill layout, instead of `skills/.claude/skills/<name>/`. `skills/` holds only the skill folders, a `README.md` catalog, and the `AGENTS.md` authoring guide. Guides and examples move to `docs/skills/`, and the installer, checks, verifiers, routing set, and tests move to `scripts/skills/`. Every existing install survives the move. **Status:** in progress (t001–t010 done)
 
 ## Tasks (in order)
 
@@ -15,7 +15,7 @@
 | [t007](done/t007.md) | Rehearse a fresh install and an upgrade on both clients — **DONE** | 45m | t004, t005, t006 |
 | [t008](done/t008.md) | Adoption surface — **DONE** | 30m | t007 |
 | [t009](done/t009.md) | Simplify — **DONE** | 15m | t008 |
-| t010 | Test coverage | 45m | t008, t009 |
+| [t010](done/t010.md) | Test coverage — **DONE** | 45m | t008, t009 |
 | t011 | Closeout | 15m | t010 |
 
 ## Previous blocker
