@@ -140,6 +140,13 @@ copied into `.env.example`. When it is absent or malformed, OAuth endpoints
 return `503 oauth_not_configured`; the existing API and legacy JWT login remain
 available. Development and tests generate an ephemeral process-local key.
 
+A deployment run by its operator that cannot generate a key document, such as a
+one-click platform deploy, can set `OAUTH_JWKS_FROM_AUTH_SECRET=true` instead:
+with `OAUTH_JWKS` unset, the key is derived deterministically from `AUTH_SECRET`
+(`src/config/jwks`), so it is stable across restarts and adds no secret to
+store. A supplied `OAUTH_JWKS` always wins, it is off unless exactly `true`, and
+rotating `AUTH_SECRET` rotates the key.
+
 Rotate an OAuth signing key by installing the replacement secret, deploying it,
 and removing the replaced public key from the served JWKS. Deleting a historical
 private key from Git without replacing the accepted live key does not invalidate

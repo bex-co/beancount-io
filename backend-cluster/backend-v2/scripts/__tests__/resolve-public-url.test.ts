@@ -1,5 +1,6 @@
+import { execFileSync } from "node:child_process";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { publicOrigin, exportLines, resolvePublicEnv } = require("../resolve-public-url.js");
+const { publicOrigin, shellQuote, exportLines, resolvePublicEnv } = require("../resolve-public-url.js");
 
 // A deployment on a platform that assigns hostnames learns its public address
 // from the dashboard at start. Everything here guards the two ways that goes
@@ -11,12 +12,15 @@ const FROM = "http://dashboard.internal:3000/_internal/public-url";
 function deps(responses: Array<string | Error | { status: number }>) {
   let clock = 0;
   const calls: string[] = [];
+  const signals: Array<AbortSignal | undefined> = [];
   const queue = [...responses];
   return {
     calls,
+    signals,
     deps: {
-      fetchImpl: async (url: string) => {
+      fetchImpl: async (url: string, options?: { signal?: AbortSignal }) => {
         calls.push(url);
+        signals.push(options?.signal);
         const next = queue.length > 1 ? queue.shift()! : queue[0];
         if (next instanceof Error) throw next;
         if (typeof next === "object") {
@@ -34,7 +38,7 @@ function deps(responses: Array<string | Error | { status: number }>) {
 
 describe("publicOrigin", () => {
   it("keeps the origin only", () => {
-    expect(publicOrigin(" https://app.example.com/some/path/?q=1 ")).toBe(
+    expect(publicOrigin(" https://app.example.com/some/path/ ")).toBe(
       "https://app.example.com",
     );
   });
@@ -42,11 +46,28 @@ describe("publicOrigin", () => {
   it.each([
     ["http://app.example.com", /https/],
     ["https://user:pw@app.example.com", /credentials/],
+    ["https://app.example.com/?a=1", /query/],
+    ["https://app.example.com/#frag", /fragment/],
     ["not a url", /absolute/],
     ["", /absolute/],
   ])("refuses %p", (value, message) => {
     expect(() => publicOrigin(value)).toThrow(message);
   });
+});
+
+describe("shellQuote", () => {
+  // The output is eval'd by the container's start command, so what matters is
+  // that the shell hands back exactly the value, whatever it contains.
+  it.each(["plain", "a'b", "$(touch /tmp/x)", "`id`", 'a b "c" \\d', ""])(
+    "round-trips %p through sh",
+    (value) => {
+      const echoed = execFileSync("sh", [
+        "-c",
+        `X=${shellQuote(value)}; printf '%s' "$X"`,
+      ]).toString();
+      expect(echoed).toBe(value);
+    },
+  );
 });
 
 describe("exportLines", () => {
@@ -83,6 +104,12 @@ describe("resolvePublicEnv", () => {
     expect(calls).toEqual([FROM]);
     expect(lines).toContain("export DASHBOARD_URL='https://app-x9.example.com'");
     expect(lines).toContain("export AUTH_COOKIE_DOMAIN='app-x9.example.com'");
+  });
+
+  it("bounds each attempt so a silent connection cannot outlast the budget", async () => {
+    const { deps: d, signals } = deps(["https://app.example.com"]);
+    await resolvePublicEnv({ PUBLIC_URL_FROM: FROM }, d);
+    expect(signals[0]).toBeInstanceOf(AbortSignal);
   });
 
   it("retries while the dashboard is still starting", async () => {

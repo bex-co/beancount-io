@@ -107,7 +107,7 @@ password), and values two services must share are copied between them rather
 than typed twice (`ADMIN_TOKEN` into the ledger's `BACKEND_V2_ADMIN_TOKEN`,
 Gitea's admin password into the API's `FAVA_API_ADMIN_PASSWORD`). The OAuth
 signing key is derived from `AUTH_SECRET` at start
-(`scripts/derive-oauth-jwks.js`; set `OAUTH_JWKS` yourself to use your own),
+(`src/config/jwks`, switched on by `OAUTH_JWKS_FROM_AUTH_SECRET`; set `OAUTH_JWKS` yourself to use your own),
 so OAuth and MCP discovery work out of the box. Rotating `AUTH_SECRET`
 rotates that key and signs everyone out.
 

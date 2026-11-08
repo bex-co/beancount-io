@@ -24,9 +24,17 @@
  */
 
 const RETRY_DELAY_MS = 2000;
+// One attempt must not outlast the whole budget: a connection the dashboard
+// accepts but never answers would otherwise hold the container for minutes.
+const ATTEMPT_TIMEOUT_MS = 3000;
 const GIVE_UP_AFTER_MS = 5 * 60 * 1000;
 
-/** The origin of an https URL, or throws. Paths and trailing slashes are dropped. */
+/**
+ * The origin of an https URL, or throws. Paths and trailing slashes are dropped.
+ * Refuses what the backend's own getOAuthPublicUrl refuses for DASHBOARD_URL
+ * (credentials, a query, a fragment), so an answer it would not accept as a
+ * setting is not accepted here either.
+ */
 function publicOrigin(value) {
   let url;
   try {
@@ -35,10 +43,17 @@ function publicOrigin(value) {
     throw new Error("the public URL is not an absolute URL");
   }
   if (url.protocol !== "https:") throw new Error("the public URL must use https");
-  if (url.username || url.password) {
-    throw new Error("the public URL must not contain credentials");
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error(
+      "the public URL must not contain credentials, a query or a fragment",
+    );
   }
   return url.origin;
+}
+
+/** A value as one shell word, safe to eval whatever it contains. */
+function shellQuote(value) {
+  return `'${String(value).replace(/'/g, "'\\''")}'`;
 }
 
 /** `export NAME='value'` for each variable that is not already set. */
@@ -51,7 +66,7 @@ function exportLines(origin, env) {
   };
   return Object.entries(wanted)
     .filter(([name]) => !(env[name] && env[name].trim()))
-    .map(([name, value]) => `export ${name}='${value}'`);
+    .map(([name, value]) => `export ${name}=${shellQuote(value)}`);
 }
 
 async function learnOrigin(from, { fetchImpl, sleep, now }) {
@@ -59,7 +74,9 @@ async function learnOrigin(from, { fetchImpl, sleep, now }) {
   let lastError;
   for (;;) {
     try {
-      const response = await fetchImpl(from);
+      const response = await fetchImpl(from, {
+        signal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return publicOrigin(await response.text());
     } catch (error) {
@@ -86,7 +103,7 @@ async function resolvePublicEnv(env, deps) {
 
 if (require.main === module) {
   resolvePublicEnv(process.env, {
-    fetchImpl: (url) => fetch(url),
+    fetchImpl: (url, options) => fetch(url, options),
     sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
     now: Date.now,
   }).then(
@@ -100,4 +117,4 @@ if (require.main === module) {
   );
 }
 
-module.exports = { publicOrigin, exportLines, resolvePublicEnv };
+module.exports = { publicOrigin, shellQuote, exportLines, resolvePublicEnv };
