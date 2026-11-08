@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from decimal import Decimal
+from fractions import Fraction
 from typing import TYPE_CHECKING, NamedTuple
 
 from beancount.core.amount import Amount
@@ -74,6 +75,8 @@ class BudgetModule:
         account: str,
         begin_date: datetime.date,
         end_date: datetime.date,
+        *,
+        precision: Mapping[str, int] | None = None,
     ) -> Mapping[str, Decimal]:
         """Calculate the budget for an account in an interval."""
         return calculate_budget(
@@ -81,6 +84,7 @@ class BudgetModule:
             account,
             begin_date,
             end_date,
+            precision=precision,
         )
 
     def calculate_children(
@@ -179,6 +183,8 @@ def calculate_budget(
     account: str,
     date_from: datetime.date,
     date_to: datetime.date,
+    *,
+    precision: Mapping[str, int] | None = None,
 ) -> Mapping[str, Decimal]:
     """Calculate budget for an account.
 
@@ -187,6 +193,7 @@ def calculate_budget(
         account: An account name.
         date_from: Starting date.
         date_to: End date (exclusive).
+        precision: Optional fractional digits per currency for one final half-up rounding.
 
     Returns:
         A dictionary of currency to Decimal with the budget for the
@@ -196,14 +203,31 @@ def calculate_budget(
     if budget_list is None:
         return {}
 
-    currency_dict: dict[str, Decimal] = defaultdict(Decimal)
+    # Beancount.io: repeated Decimal division perturbs exact halfway shares.
+    # Keep the existing daily matching/calendar rules, accumulating exactly
+    # until the requested period's total is rounded once.
+    currency_dict: dict[str, Fraction] = defaultdict(Fraction)
 
     for day in days_in_daterange(date_from, date_to):
         matches = _matching_budgets(budget_list, day)
         for budget in matches.values():
             days_in_period = budget.period.number_of_days(day)
-            currency_dict[budget.currency] += budget.number / days_in_period
-    return dict(currency_dict)
+            currency_dict[budget.currency] += Fraction(budget.number) / days_in_period
+    if precision is None:
+        # Existing non-report callers receive unquantized Decimals.
+        return {
+            currency: Decimal(value.numerator) / Decimal(value.denominator) for currency, value in currency_dict.items()
+        }
+    return {currency: _round_budget(value, precision.get(currency, 2)) for currency, value in currency_dict.items()}
+
+
+def _round_budget(value: Fraction, digits: int) -> Decimal:
+    """Round an exact share half up, without applying a Decimal context (Beancount.io)."""
+    scaled = abs(value) * Fraction(10) ** digits
+    units, remainder = divmod(scaled.numerator, scaled.denominator)
+    if remainder * 2 >= scaled.denominator:
+        units += 1
+    return Decimal((int(value < 0), Decimal(units).as_tuple().digits, -digits))
 
 
 def calculate_budget_children(

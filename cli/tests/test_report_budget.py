@@ -390,3 +390,130 @@ def test_ignored_budget_diagnostics_reach_text_and_both_csv_destinations(
         assert [(row["account"], row["budget"], row["actual"], row["variance"]) for row in rows] == [
             (row["account"], row["budget"] or "", row["actual"], row["variance"] or "") for row in expected
         ]
+
+
+def _proration_text(
+    amount: str,
+    *,
+    root: str = "Expenses",
+    start: str = "2026-04-01",
+    end: str = "2026-04-15",
+    interval: str = "monthly",
+) -> str:
+    return f"""\
+option "operating_currency" "USD"
+{start} open Assets:Bank USD
+{start} open {root}:Food USD
+{start} custom "budget" {root}:Food "{interval}" {amount} USD
+{start} * "Actual"
+  {root}:Food {"" if root == "Expenses" else "-"}10.00 USD
+  Assets:Bank
+{end} note Assets:Bank "End"
+"""
+
+
+@pytest.mark.parametrize("explicit_dates", [False, True])
+@pytest.mark.parametrize(
+    "root,amount,budget,variance",
+    [
+        ("Expenses", "3000.01", "1500.01", "-1490.01"),
+        ("Income", "3000.01", "1500.01", "-1490.01"),
+        ("Expenses", "0.01", "0.01", "9.99"),
+        ("Expenses", "12345.67", "6172.84", "-6162.84"),
+        ("Expenses", "-3000.01", "-1500.01", "1510.01"),
+    ],
+)
+def test_exact_half_budget_shares_round_half_up_in_every_output(
+    tmp_path: Path, explicit_dates: bool, root: str, amount: str, budget: str, variance: str
+) -> None:
+    text = _proration_text(amount, root=root)
+    dates = ["--time", "2026-04-01 - 2026-04-15"] if explicit_dates else []
+    data = _report(dates, tmp_path, text)
+    assert (data["periods"][0]["begin"], data["periods"][0]["end"]) == ("2026-04-01", "2026-04-15")
+    row = _rows(data)[(f"{root}:Food", "USD")]
+    assert (row["budget"], row["actual"], row["variance"]) == (budget, "10.00", variance)
+    ledger = tmp_path / "main.beancount"
+    for options in ([], ["--format", "csv"]):
+        run = bea(["-f", str(ledger), "report", "budget", *dates, *options], tmp_path)
+        assert run.returncode == 0, run.stderr
+        if options:
+            exported = next(csv.DictReader(io.StringIO(run.stdout)))
+            assert (exported["budget"], exported["actual"], exported["variance"]) == (budget, "10.00", variance)
+        else:
+            assert f"{Decimal(budget):,.2f} USD" in run.stdout
+            assert f"{Decimal(variance):,.2f} USD" in run.stdout
+        assert ledger.read_text() == text
+
+
+@pytest.mark.parametrize(
+    "start,end,interval,amount,expected",
+    [
+        ("2026-04-01", "2026-04-14", "monthly", "3000.01", "1400.00"),
+        ("2026-04-01", "2026-04-16", "monthly", "3000.01", "1600.01"),
+        ("2026-04-01", "2026-04-30", "monthly", "3000.01", "3000.01"),
+        ("2026-04-01", "2026-04-15", "monthly", "1.01", "0.51"),
+        ("2026-04-01", "2026-04-15", "monthly", "100.01", "50.01"),
+        ("2024-02-01", "2024-02-29", "monthly", "123.45", "123.45"),
+        ("2026-01-01", "2026-01-31", "monthly", "123.45", "123.45"),
+        ("2026-04-01", "2026-04-30", "monthly", "123.45", "123.45"),
+        ("2026-04-06", "2026-04-12", "weekly", "123.45", "123.45"),
+        ("2026-04-01", "2026-04-01", "daily", "123.45", "123.45"),
+        ("2024-01-01", "2024-12-31", "yearly", "123.45", "123.45"),
+        ("2026-01-01", "2026-03-31", "quarterly", "123.45", "123.45"),
+        ("2026-01-01", "2026-02-14", "quarterly", "3000.01", "1500.01"),
+        ("2024-01-01", "2024-07-01", "yearly", "3000.01", "1500.01"),
+    ],
+)
+def test_budget_proration_retains_calendar_and_ordinary_controls(
+    tmp_path: Path, start: str, end: str, interval: str, amount: str, expected: str
+) -> None:
+    text = _proration_text(amount, start=start, end=end, interval=interval)
+    data = _report(["--time", f"{start} - {end}", "--interval", interval], tmp_path, text)
+    assert _rows(data)[("Expenses:Food", "USD")]["budget"] == expected
+
+
+@pytest.mark.parametrize("days,units", [(14, 0), (15, 1), (16, 1)])
+def test_tiny_near_half_shares_do_not_cross_the_rounding_threshold(tmp_path: Path, days: int, units: int) -> None:
+    amount = "0.00000000000000000001"
+    text = _proration_text(amount, end="2026-04-30")
+    data = _report(["--time", f"2026-04-01 - 2026-04-{days:02}"], tmp_path, text)
+    assert _rows(data)[("Expenses:Food", "USD")]["budget"] == f"0.{units:020}"
+
+
+def test_budget_changes_are_accumulated_before_rounding_once(tmp_path: Path) -> None:
+    text = _proration_text("3000.01", end="2026-04-30")
+    text += '2026-04-16 custom "budget" Expenses:Food "monthly" 6000.01 USD\n'
+    row = _rows(_report(["--time", "2026-04"], tmp_path, text))[("Expenses:Food", "USD")]
+    # 1500.005 + 3000.005 = 4500.01; rounding each half first gives 4500.02.
+    assert (row["budget"], row["variance"]) == ("4500.01", "-4490.01")
+
+
+def test_half_shares_keep_each_currencys_precision(tmp_path: Path) -> None:
+    text = _proration_text("3000.01").replace("open Assets:Bank USD", "open Assets:Bank USD,EUR")
+    text = text.replace("open Expenses:Food USD", "open Expenses:Food USD,EUR")
+    text += '2026-04-01 custom "budget" Expenses:Food "monthly" 100.001 EUR\n'
+    rows = _rows(_report([], tmp_path, text))
+    assert (rows[("Expenses:Food", "USD")]["budget"], rows[("Expenses:Food", "EUR")]["budget"]) == ("1500.01", "50.001")
+
+
+def test_shared_budget_callers_still_receive_unrounded_decimals() -> None:
+    from datetime import date
+    from decimal import localcontext
+
+    from fava.modules.budgets import Budget, calculate_budget, calculate_budget_children
+    from fava.util.date import INTERVALS
+
+    budgets = {
+        "Expenses:Food": [Budget("Expenses:Food", date(2026, 4, 1), INTERVALS["monthly"], Decimal("3000.01"), "USD")]
+    }
+    for calculate in (calculate_budget, calculate_budget_children):
+        amount = calculate(budgets, "Expenses:Food", date(2026, 4, 1), date(2026, 4, 16))["USD"]
+        assert isinstance(amount, Decimal)
+        assert amount == Decimal("1500.005")
+    # An explicitly supplied empty mapping means default two-place rounding;
+    # the exact half-up result does not depend on the Decimal context.
+    with localcontext() as ctx:
+        ctx.prec = 2
+        assert calculate_budget(budgets, "Expenses:Food", date(2026, 4, 1), date(2026, 4, 16), precision={})[
+            "USD"
+        ] == Decimal("1500.01")

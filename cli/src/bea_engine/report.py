@@ -15,7 +15,7 @@ import re
 import unicodedata
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from datetime import date, timedelta
-from decimal import ROUND_HALF_UP, Context, Decimal, localcontext
+from decimal import Context, Decimal, localcontext
 from pathlib import Path
 from typing import Any
 
@@ -381,20 +381,6 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
         if currency not in (ledger.options.get("display_precision") or {}):
             precision[currency] = calculation_precision[currency]
 
-    def prorated(account: str, span: Any) -> dict[str, Decimal]:
-        """The day-prorated budget, with at least its declared fractional digits.
-
-        Thirty-one thirty-firsts of 300 add up to 299.99999…; rounding makes a
-        whole month read as declared. Actuals are never rounded.
-        """
-        shares = module.calculate(account, span.begin, span.end)
-        return {
-            currency: number.quantize(
-                Decimal(1).scaleb(-calculation_precision.get(currency, 2)), rounding=ROUND_HALF_UP
-            )
-            for currency, number in shares.items()
-        }
-
     def actual_of(per_account: Mapping[str, Any], accounts: Iterable[str], end: date) -> dict[str, Decimal]:
         total = CounterInventory()
         for name in accounts:
@@ -419,7 +405,10 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
                 continue
             kind = kind_of(account)
             sign = -1 if kind == "income" else 1
-            declared = prorated(account, span)
+            # Round the exact calendar shares only after summing the period;
+            # repeated daily Decimal division can put a true half-cent below
+            # the threshold. Actuals retain their original units.
+            declared = module.calculate(account, span.begin, span.end, precision=calculation_precision)
             subtree = [name for name in per_account if name == account or name.startswith(account + ":")]
             actual = {c: sign * n for c, n in actual_of(per_account, subtree, span.end_inclusive).items()}
             for currency in sorted(set(declared) | set(actual)):

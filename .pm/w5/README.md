@@ -36,7 +36,6 @@
 
 ## Inbox
 
-- [1126 — Apply half-up rounding to exact halfway budget shares](./1126.md) — minor CLI QA finding, 40–55m; repeated daily division rounds an exact half cent down.
 - [1127 — Treat a budget-only account match as nonempty in the budget report](./1127.md) — minor CLI QA finding, 25–40m; matching budget rows carry a false empty flag and warning.
 
 
