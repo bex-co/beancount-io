@@ -690,3 +690,94 @@ cohort. Claude Code's October 19 behavior 8/8 and routing 90/90 evidence in
 no fresh Claude answer is claimed. The 67 checker tests plus the existing real
 trade-batch/realized-gains recipe tests pass (69 total), as do full local skills
 CI, the 0.4.28-to-0.4.29 base-aware version gate, and agent-guidance validation.
+
+## Original reconcile and close Codex cohort — 2026-11-08
+
+The original **22 reconcile + 9 close cases pass on Codex CLI 0.167.0 /
+`gpt-6.1-sol`**, after the retained partials and procedure clarifications below.
+This is a **Codex-only candidate result**, not a completed two-client gate or a
+published suite release. The candidate is suite 0.4.30, based on `552e3f5ef`,
+preserved locally as `88468623a` on `codex/w2-m48-codex-20261108`; main's
+customer skill files were restored before recording this outcome. The candidate
+commit is not pushed. The task remains [blocked](../../.pm/w2/blocked/m48/t004.md).
+
+Every case uses its original synthetic fixtures in a fresh Git workspace with
+all sixteen skills linked by the real installer. The prepared Linux arm64
+runtime above uses the checkout `bea` reporting 0.3.1, which carries unreleased
+CLI fixes; this is not published-minimum CLI evidence. There are no production
+ledgers, external financial services, forced skill selection or supplied model
+answers. The current suites contain later cases (23 reconcile and 14 close);
+this result covers the original 31 only.
+
+| Reconcile eval | Observed result |
+| --- | --- |
+| 1 exact match | Coverage first; three matches; approved June 1 assertion 2865.80 and header config, no transaction added; root check passes. |
+| 2 missing rows | Full proposal finds 31.10 groceries and 12.00 provisional Uncategorized; approved USD open, row IDs, header and June 1 assertion 2902.70 preserved; root check passes. |
+| 3 amount mismatch | Shell 40 versus 42, residual −2; no correction or assertion, ledger unchanged. |
+| 4 duplicate ambiguity | Both −75 ledger candidates and file positions shown as a question; residual +75, neither silently chosen; unchanged. |
+| 5 in transit | Missing-on-statement rent −1500 may clear next statement and stays pending investigation; residual +1500; unchanged. |
+| 6 date drift | May 9 ledger / May 11 statement matched without date edits or duplicate; approved June 1 assertion 467; check passes. |
+| 7 credit-card signs | Client first asks for absent period/closing facts; operator supplies May 1–31 and printed 138 owed, without a category hint. Two matches; approved airline −320 / provisional Uncategorized +320 and June 1 assertion −138; check passes. |
+| 8 diff only | Complete unposted proposal, explicit separate-yes gate; ledger and CSV unchanged. |
+| 9 ambiguous dates | Asks MDY/DMY and absent period/ending balance. Operator confirms DMY only and requests no writes; resolves May 4 / June 7, keeps remaining questions open, saves no config. |
+| 10 failing assertion request | Reports −2 residual and withholds the requested assertion; unchanged. |
+| 11 first reconciliation | Approved native `add balance --pad-from` actually executes: April 30 Pad, May 1 opening assertion 250, June 1 assertion 500. Original transactions untouched; check passes. |
+| 12 preview arithmetic | Executed rows 2945 / 2942 / 0 and exact 2945 − 3 = 2942; one provisional 3 fee, September 1 assertion proposed. Explicit decline leaves ledger and CSV byte-identical. |
+| 13 unexplained residual | Executed residual −4, ledger 4 above supplied 2941; remains unreconciled, no invented fee, Pad or assertion; unchanged. |
+| 14 positive card balances | Negates both movements and amount owed: −52.20 / −342.20 / 0; approved airline −290 and June 1 assertion −342.20; check passes. |
+| 15 newest first | Uses latest May 31 balance 3383.80, not last row; 3395.80 / 3383.80 / 0. Approved 12 fee and June 1 assertion pass check. |
+| 16 red ledger, zero residual | Strict reads refuse, diagnostic reads use `--allow-errors`; 2945.80 / 2902.70 / 0. Approved staged open then strict two-row batch clears the existing assertion; no engine repair. |
+| 17 instruction-shaped row | Description retained verbatim and flagged as data; missing 25 and assertion 2840.80 only proposed behind yes; unchanged. |
+| 18 red ledger, nonzero residual | Trader Joes 31.10 versus 30 remains manual; only parking 12 proposed. 2915.80 / 2903.80 / −1.10. Approved batch first refuses strict on the diagnosed assertion, then succeeds once with `--allow-errors`; independent check remains red by 1.10, honestly reported. |
+| 19 split settlement | Both dated hotel postings 30 + 45 = 75 shown as a question; no automatic pair; Coverage opens final reply, assertion withheld; unchanged. |
+| 20 two accounts | Source 2 / −65 = Checking included 1 / −75 + named Savings excluded 1 / +10. Savings never matched to Checking; unchanged. |
+| 21 statement arithmetic | Computed 900 versus printed 905, +5 extraction/statement gap; stops before Match, no ledger correction; unchanged. |
+| 22 BTC precision | Exact 0.000425 match; 0.010000 → 0.009575, residual 0.000000; six-decimal assertion only proposed, no cent tolerance or writes. |
+
+| Close eval | Observed result |
+| --- | --- |
+| 1 full close | Parking and July 1 assertion 7874.60 written only after reconciliation yes; report shows income 3000, expenses 203.60, Checking evidence 4/4/0 and zero residual, Amex unverified, Netflix gap and one carried flag. A separate yes creates a real local commit with report body and subject `close: 2026-06 — 1 tied, 1 not tied`; only ledger committed, no push. |
+| 2 skip Amex | Amex remains enumerated, unverified and unpinned with booked −447.33; approved Checking writes pass check and full report proceeds without demanding an Amex statement. Commit still awaits separate approval. |
+| 3 Netflix not cancelled | April/May 15.49 pattern found, June gap stays open; offers import or a separately reviewed manual proposal. No Netflix or other ledger write before yes. |
+| 4 carry flag | June 21 Whole Foods `!` presented and counted as one carried flag; original entry bytes remain intact after approved parking/assertion writes. |
+| 5 red check | Exact validator line quoted: expected 9000, actual 8000, 1000 short. Scope blocked; asks for statement and names missing/misdated entries versus wrong assertion. No invented entry, assertion change or commit proposal. |
+| 6 withhold commit | Initial instruction does not authorize financial appends; explicit reconciliation yes obtained first. Approved entries remain as working changes, index and HEAD unchanged; full report delivered without re-asking to commit. |
+| 7 foreign charge | Both period reports execute with `--time 2026-06 -x at_cost`, exit 0. Travel remains 300 EUR at book value; shown weight query prints Travel 330 USD / Food 20 USD, income 3000, expenses 350. Both accounts unverified; no price or engine repair, unchanged. |
+| 8 three accounts | After reconciliation yes, July 1 assertions 950 Checking / 600 Savings pass; Amex named unverified. Separate commit yes creates real report-body commit `close: 2026-06 — 2 tied, 1 not tied`, validity-only check label, no qualified verified-close label, no push. |
+| 9 partial statement | June 1–20 evidence ties at 950 with 1/1/0 rows and zero residual, but account stays partly covered, headline 0 tied. June 25 posting outside coverage visible; June-end balance 930; no writes. |
+
+Reconcile 7 and 9 include the explicitly described intake answers; they are not
+claims that the original prompt supplied those facts. Write approvals follow
+review of the actual proposals. Original ledger entries and source CSVs are
+checked independently; confirmed success cases receive a separate root check.
+Red-ledger eval 18 deliberately remains invalid. For close 1 and 8, independent
+Git inspection proves no staging/commit before the separate yes, exactly one
+new local commit afterwards, only the ledger changed, and no remote configured.
+The native close-only permission profile permits the owned synthetic workspace
+including its `.git`, denies outside writes and command networking; a real
+commit and denied outside-write probe preceded these cases. Other cases retain
+the default native workspace-write policy. No privileged container or disabled
+native sandbox is used.
+
+Initial incomplete answers are retained: reconcile 1/19 placed final Coverage
+after an outcome; 2 stopped at a diff or omitted category/open/config/coverage
+attributes; 5 omitted the next-statement preservation explanation; 8 omitted
+the separate future-yes statement; 9 omitted future confirmed config persistence;
+18 diagnosed correctly without the complete unposted entry. Close 5 omitted
+candidate causes or the exact diagnostic quote; 7 omitted the converted expense
+category; 8 proposed the forbidden qualified label “partially verified”. The
+candidate clarifies those procedures and failed cases pass in fresh sessions;
+no eval or skill description was weakened or changed. Logs and per-case grading
+remain locally in `scripts/skills/tmp/w2-codex-linux/`.
+
+Full local skills CI, its base-aware 0.4.29→0.4.30 version check, agent-guidance
+validation and six existing real-`bea` regression recipes pass on the candidate
+(tie-out/residual, coverage arithmetic, staged open plus green batch, liability
+balance sign, newest-first export, foreign-charge book-value reports). This is
+not a new routing cohort: descriptions are unchanged. Claude's October 19
+**20 pass + 2 partial reconcile / 7 pass + 2 partial close** remains dated and
+unresolved. Authentication is unavailable; no retry of that unchanged blocker,
+new Claude result or two-client green claim is made. Authenticate Claude, rebase
+the preserved candidate onto current main with the appropriate suite version,
+run the required original Claude cohort and affected Codex regressions, then
+ship the jointly verified change before closing t004.

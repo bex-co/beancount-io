@@ -1,23 +1,23 @@
 # w2 · m48 — Reconciliation coverage and close review state (ADR 020 P0)
 
-**Worker:** worker2 **Goal:** before `beancount-reconcile` reports a single match, it states what the supplied statement covers: the account it belongs to, its currency and period, how many rows it holds and what they total, and every row left out and why. `beancount-close` records each step's evidence and state, so an account no statement covered, a period a statement covers only partly, or a blocked step is never presented as verified. **Status:** todo (t001–t003 done)
+**Worker:** worker2 **Goal:** before `beancount-reconcile` reports a single match, it states what the supplied statement covers: the account it belongs to, its currency and period, how many rows it holds and what they total, and every row left out and why. `beancount-close` records each step's evidence and state, so an account no statement covered, a period a statement covers only partly, or a blocked step is never presented as verified. **Status:** blocked (Codex original cohort complete; Claude authentication and full-pass gate remain)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| [t001](./done/t001.md) | Add a coverage preflight to `beancount-reconcile` — **DONE** | 75m | w2/m41/t004 |
-| [t002](./done/t002.md) | Record each close step's evidence and state — **DONE** | 45m | t001 |
-| [t003](./done/t003.md) | Write evals from ADR 020's fixtures — **DONE** | 60m | t001, t002 |
+| [t001](done/t001.md) | Add a coverage preflight to `beancount-reconcile` — **DONE** | 75m | w2/m41/t004 |
+| [t002](done/t002.md) | Record each close step's evidence and state — **DONE** | 45m | t001 |
+| [t003](done/t003.md) | Write evals from ADR 020's fixtures — **DONE** | 60m | t001, t002 |
 | t004 | Run the evals on Claude Code and Codex | 45m | t003 |
 | t005 | Adoption surface | 30m | t004 |
 | t006 | Simplify | 15m | t005 |
 | t007 | Test coverage | 45m | t005, t006 |
 | t008 | Closeout | 15m | t007 |
 
-## Blocked
+## Previous blocker
 
-- **t004 (2026-10-19)** — all 31 reconcile/close evals run on one client (20 pass + 2 partial reconcile, 7 pass + 2 partial close; evidence in [t004](./t004.md)); the second client's 31 runs all ended at its account usage limit before any work. **Unblock:** Codex usage returns (2026-11-17); rerun the set there and close t004. t005 onward wait behind it. **Who can clear it:** the operator (Codex usage).
+- **t004 (2026-10-19)** — all 31 reconcile/close evals run on one client (20 pass + 2 partial reconcile, 7 pass + 2 partial close; evidence in [t004](t004.md)); the second client's 31 runs all ended at its account usage limit before any work. **Unblock:** Codex usage returns (2026-11-17); rerun the set there and close t004. t005 onward wait behind it. **Who can clear it:** the operator (Codex usage).
 
 ## Definition of done
 
@@ -42,3 +42,21 @@
 - Reconciling more than one account per run. Reconcile stays one account per run; close orchestrates.
 - Roll-forwards, accruals, variance explanations, and project-management features beyond an optional owner and due date.
 - Editing or deleting existing entries.
+
+## Partially unblocked — 2026-11-08
+
+Codex 0.167.0 / gpt-6.1-sol can run the original 22 reconcile and 9 close evals.
+The existing Claude partials remain explicit and are not waived; completing the
+Codex half does not by itself turn those into passes. The original full-pass
+acceptance still applies. Current later eval additions belong to their own
+milestones; this dated cohort is the original 31 plus its confirm-turn subset.
+
+## Current blocker — 2026-11-08
+
+[t004](t004.md) records the original Codex cohort **31/31** on a locally
+preserved candidate, including confirmed write paths. Claude's four historical
+partials remain unresolved; normal client authentication is unavailable. The
+candidate is **not shipped** and main's product files are restored.
+**Unblock:** authenticate Claude and complete the original cohort plus affected
+Codex regressions on the rebased candidate, run checks and ship it; then finish
+t004 before t005–t008. **Who can clear it:** operator login, then worker.
