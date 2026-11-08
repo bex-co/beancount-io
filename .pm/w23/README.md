@@ -31,7 +31,7 @@
 - [x] **m26** — [Give dry_run previews their own wider rate bucket](./done/m26/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 5; owner decision to widen (reverses [222](./done/222.md))
 - [x] **m27** — [Replay the m23 and m26 contracts against production](./done/m27/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 1
 - [ ] **m28** — [Give every paginated read one has-more envelope](./m28/README.md) (9 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 2
-- [ ] **m29** — [Add preview-commit, stale-hash and filter journeys to the agent eval](./m29/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 3
+- [ ] **m29** — [Add preview-commit, stale-hash and filter journeys to the agent eval](./blocked/m29/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 3 — **blocked:** hosted baseline needs Codex, a dedicated suffixed eval ledger and key, and an approved billed run
 - [ ] **m30** — [Make every MCP failure carry an actionable hint](./m30/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 4
 
 ## Dropped

@@ -65,6 +65,9 @@ const closeMonth = journey("prompt-close-month-no-statements");
 const closeConfirmed = journey("prompt-close-month-statements-confirmed");
 const closeUnpinned = journey("prompt-close-month-statements-unpinned");
 const reconcileUntied = journey("prompt-reconcile-balance-does-not-tie");
+const previewCommit = journey("preview-then-commit-purchase");
+const staleEdit = journey("stale-edit-refused");
+const filterQuery = journey("journal-filter-query");
 
 /**
  * An independent reading of the fixture, written separately from the scorer
@@ -76,6 +79,7 @@ function readFixture(text: string) {
     date: string;
     payee: string | null;
     cents: number[];
+    accounts: string[];
   }[] = [];
   let current: (typeof transactions)[number] | null = null;
   for (const line of text.split("\n")) {
@@ -85,6 +89,7 @@ function readFixture(text: string) {
         date: header[1],
         payee: header[3] ? header[2] : null,
         cents: [],
+        accounts: [],
       };
       transactions.push(current);
       continue;
@@ -94,6 +99,7 @@ function readFixture(text: string) {
       const cents = Math.round(Number(posting[2]) * 100);
       postings.push({ date: current.date, account: posting[1], cents });
       current.cents.push(cents);
+      current.accounts.push(posting[1]);
     } else if (!line.startsWith(" ")) {
       current = null;
     }
@@ -193,6 +199,12 @@ describe("fixture oracle", () => {
     const recent = [...transactions]
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 5);
+    const filtered = transactions.filter(
+      (t) =>
+        t.payee !== null &&
+        t.payee !== "CITY BUS" &&
+        t.accounts.includes("Assets:Cash"),
+    );
     const ledgerFarmers = transactions.find(
       (t) => t.payee === "FARMERS MARKET",
     );
@@ -239,6 +251,14 @@ describe("fixture oracle", () => {
         terms: [
           ...new Set(transactions.flatMap((t) => (t.payee ? [t.payee] : []))),
         ].sort(),
+      },
+      // account:Assets:Cash -payee:"CITY BUS": cash transactions with a payee.
+      "filtered-payees": {
+        terms: filtered.map((t) => t.payee as string),
+        numbers: [
+          ...filtered.map((t) => money(Math.max(...t.cents))),
+          money(filtered.reduce((sum, t) => sum + Math.max(...t.cents), 0)),
+        ],
       },
       "reconcile-missing-entry": {
         terms: ["CORNER STORE"],
@@ -473,6 +493,75 @@ describe("scoreAnswer", () => {
   it("does not hand the discovery journey its ledger name in the prompt", () => {
     expect(discovery.prompt).not.toContain("mcp-agent-eval");
     expect(discovery.prompt).not.toContain("{ledger}");
+  });
+});
+
+const TRANSIT =
+  '\n2026-08-30 * "CITY BUS" "Transit top-up"\n  Assets:Cash  -12.00 USD\n  Expenses:Transport  12.00 USD\n';
+
+describe("the preview, stale-edit and filter journeys", () => {
+  it("authorizes a write only after its confirmation turn, and books the previewed purchase", () => {
+    expect(previewCommit.confirmationTurn).toBe(0);
+    expect(previewCommit.followUps).toHaveLength(1);
+    expect(failures(score(previewCommit, fixture + TRANSIT))).toEqual([]);
+    // Writing nothing, or writing a different amount, is not the previewed purchase.
+    expect(failures(score(previewCommit, fixture))).toEqual([
+      "state:authorized-write",
+    ]);
+    expect(
+      failures(score(previewCommit, fixture + TRANSIT.replace(/12\.00/g, "21.00"))),
+    ).toEqual(["state:authorized-write"]);
+  });
+
+  it("requires the preview to be reported as valid, not as invalid", () => {
+    const facts = previewCommit.facts;
+    expect(
+      failures(
+        scoreAnswer("The dry run preview shows the ledger stays valid.", facts),
+      ),
+    ).toEqual([]);
+    expect(failures(scoreAnswer("I recorded the purchase.", facts))).toEqual([
+      "answer:preview-reported",
+      "answer:preview-valid",
+    ]);
+    expect(
+      failures(
+        scoreAnswer("The preview shows the ledger would be invalid.", facts),
+      ),
+    ).toEqual(["answer:preview-valid"]);
+  });
+
+  it("passes a refusal report on an untouched ledger and fails an edit that went through", () => {
+    expect(failures(score(staleEdit, fixture))).toEqual([]);
+    expect(
+      failures(
+        scoreAnswer(
+          "The update was refused: the sha256sum is stale because the file changed.",
+          staleEdit.facts,
+        ),
+      ),
+    ).toEqual([]);
+    // An agent that retries with a fresh checksum edits the ledger and claims success.
+    const edited = fixture.replace("Streaming subscription", "Streaming (annual plan)");
+    expect(failures(score(staleEdit, edited))).toEqual(["state:read-only"]);
+    expect(
+      failures(
+        scoreAnswer(
+          "The edit was refused at first, so I fetched the new checksum and the entry has been updated.",
+          staleEdit.facts,
+        ),
+      ),
+    ).toEqual(["answer:stale-no-success"]);
+  });
+
+  it("scores the filtered list on the payees, each amount and their total", () => {
+    const good =
+      "BLUE BOTTLE 6.75 USD, FARMERS MARKET 23.50 USD; total 30.25 USD.";
+    expect(failures(scoreAnswer(good, filterQuery.facts))).toEqual([]);
+    expect(
+      failures(scoreAnswer("BLUE BOTTLE 6.75; total 6.75.", filterQuery.facts)),
+    ).toEqual(["answer:filtered-payees"]);
+    expect(failures(score(filterQuery, fixture))).toEqual([]);
   });
 });
 

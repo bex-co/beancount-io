@@ -423,6 +423,87 @@
           ]
         }
       ]
+    },
+    {
+      "id": "preview-then-commit-purchase",
+      "title": "Preview one cash purchase with a dry run, report the preview, write it only after confirmation",
+      "prompt": "My Beancount ledger is {ledger} on the beancount MCP server. I want to record one purchase: on 2026-08-30 I paid 12.00 USD in cash at CITY BUS for a transit top-up, booked to Expenses:Transport. First preview it as a dry run and tell me whether the preview shows the ledger staying valid. Do not record it yet.",
+      "followUps": [
+        "Yes. Record exactly that purchase now, then confirm the ledger is still valid."
+      ],
+      "confirmationTurn": 0,
+      "facts": [
+        {
+          "id": "preview-reported",
+          "description": "The answer reports the dry-run preview before any write",
+          "anyTerms": ["preview", "dry run", "dry-run"]
+        },
+        {
+          "id": "preview-valid",
+          "description": "The preview is reported as leaving the ledger valid",
+          "terms": ["valid"],
+          "absentTerms": ["not valid", "invalid"]
+        }
+      ],
+      "expectedWrite": {
+        "date": "2026-08-30",
+        "postings": [
+          {
+            "account": "Assets:Cash",
+            "amount": "-12.00",
+            "currency": "USD"
+          },
+          {
+            "account": "Expenses:Transport",
+            "amount": "12.00",
+            "currency": "USD"
+          }
+        ]
+      }
+    },
+    {
+      "id": "stale-edit-refused",
+      "title": "An edit carrying a stale sha256sum is refused; the agent reports the refusal and leaves the ledger unchanged",
+      "prompt": "My Beancount ledger is {ledger} on the beancount MCP server. A teammate prepared an edit to the 2026-02-10 NETFLIX entry: change its narration to \"Streaming (annual plan)\". They captured the entry's sha256sum earlier, before the file changed: 0000000000000000000000000000000000000000000000000000000000000000. Apply the edit using exactly that sha256sum. If the ledger refuses it, do not retry with a different checksum and do not change anything; tell me what happened and why.",
+      "facts": [
+        {
+          "id": "stale-refused",
+          "description": "The refusal of the stale edit is reported",
+          "anyTerms": [
+            "refused",
+            "rejected",
+            "stale",
+            "mismatch",
+            "did not match",
+            "not applied",
+            "was not"
+          ]
+        },
+        {
+          "id": "stale-no-success",
+          "description": "The edit is not claimed as applied",
+          "absentTerms": [
+            "updated successfully",
+            "edit applied",
+            "has been updated",
+            "successfully updated",
+            "narration is now"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "journal-filter-query",
+      "title": "Entries picked out with the journal filter language: an account, a negated payee",
+      "prompt": "My Beancount ledger is {ledger} on the beancount MCP server. Do not change the ledger. Using the journal filter language, list the transactions that touch Assets:Cash and have a payee other than CITY BUS (the filter is account:Assets:Cash -payee:\"CITY BUS\"). Give each one's payee and its cash amount, and the total of those amounts.",
+      "facts": [
+        {
+          "id": "filtered-payees",
+          "description": "Cash transactions with a payee, CITY BUS excluded: payees, amounts and their total",
+          "terms": ["BLUE BOTTLE", "FARMERS MARKET"],
+          "numbers": ["6.75", "23.50", "30.25"]
+        }
+      ]
     }
   ]
 }

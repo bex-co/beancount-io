@@ -8,11 +8,14 @@ Use it to compare real agent behavior before and after changing MCP tools, resou
 
 The journeys come from the 2026-09-08 MCP field audit. Prompts, expected facts, and the fixture live in [`evals/mcp-agent/`](../evals/mcp-agent/).
 
-| Id                               | The agent is asked to                                                                                        | Ledger                                |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
-| `cash-food-purchase`             | Report the cash balance and August food spending, then record one authorized 4.50 USD cash purchase          | exactly that one transaction is added |
-| `report-networth-stale-validity` | Give an August spending report, net worth, accounts without recent postings, and whether the ledger is valid | unchanged                             |
-| `discovery-recent-payees`        | Find the accessible ledgers, list the five most recent transactions, and list every payee                    | unchanged                             |
+| Id                               | The agent is asked to                                                                                                | Ledger                                                             |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `cash-food-purchase`             | Report the cash balance and August food spending, then record one authorized 4.50 USD cash purchase                  | exactly that one transaction is added                              |
+| `report-networth-stale-validity` | Give an August spending report, net worth, accounts without recent postings, and whether the ledger is valid         | unchanged                                                          |
+| `discovery-recent-payees`        | Find the accessible ledgers, list the five most recent transactions, and list every payee                            | unchanged                                                          |
+| `preview-then-commit-purchase`   | Preview one 12.00 USD cash purchase as a dry run and report the result, then record it only after "Yes"              | unchanged until "Yes", then exactly that transaction               |
+| `stale-edit-refused`             | Apply an edit to the NETFLIX entry with a stale `sha256sum`, and report what the ledger does with it                 | unchanged; the refusal is reported, no retry with a fresh checksum |
+| `journal-filter-query`           | List the cash transactions with a payee other than CITY BUS using the filter `account:Assets:Cash -payee:"CITY BUS"` | unchanged                                                          |
 
 The prompt journeys select one of the server's [MCP prompts](./mcp.md#prompts) instead of typing a request. Claude Code selects the prompt natively as a slash command. Codex has no prompt picker, so it receives the text the harness retrieves with `prompts/get`. The report labels these runs `native prompt` and `retrieved prompt`. Follow-up messages, such as a pasted statement or a confirmation, continue the same session.
 
