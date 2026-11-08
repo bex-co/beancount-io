@@ -1815,11 +1815,14 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(self.recipe("tie-out")["rows"], [["2945.00", "2941.00", "-1.00"]])
         self.assertEqual(ledger.read_bytes(), before)
 
-    def trade_example_amounts(self, prefix):
+    def trade_example_parts(self, prefix):
         text = (SUITE / "beancount-trade/SKILL.md").read_text(encoding="utf-8")
         line = next((line for line in text.splitlines() if line.startswith(prefix)), "")
         self.assertTrue(line, f"Missing trade procedure {prefix}")
-        return [part for part in re.findall(r"`([^`]+)`", line) if re.match(r"-?\d[\d.]* \w+ \{", part)]
+        return re.findall(r"`([^`]+)`", line)
+
+    def trade_example_amounts(self, prefix):
+        return [part for part in self.trade_example_parts(prefix) if re.match(r"-?\d[\d.]* \w+ \{", part)]
 
     def trade_entry(self, date, first, second, *, succeeds=True, extra=()):
         return self.recipe(
@@ -1830,6 +1833,83 @@ class TestBeaRecipes(unittest.TestCase):
     def trade_lots(self, account, commodity):
         rows = self.recipe("lots-held", account=account, commodity=commodity)["rows"]
         return sorted((Decimal(cost), date, Decimal(units)) for cost, date, units in rows if Decimal(units))
+
+    def test_trade_swap_example_infers_gain_and_keeps_both_lots(self):
+        self.ledger.write_bytes((SUITE / "beancount-trade/evals/files/eval11_ledger.beancount").read_bytes())
+        self.values.update(target=self.ledger.name)
+        outgoing, incoming = self.trade_example_amounts("- **Swap (")
+        gains, = [part for part in self.trade_example_parts("- **Swap (") if part.startswith("Income:")]
+        self.assertEqual(gains, "Income:CapitalGains")
+        self.trade_entry("2026-04-01", f"Assets:Crypto:Exchange {outgoing}",
+                         f"Assets:Crypto:Exchange {incoming}", extra=("--posting", gains))
+        self.assertEqual(self.trade_lots("Assets:Crypto:Exchange", "BTC"),
+                         [(Decimal("40000"), "2025-01-10", Decimal("0.3"))])
+        self.assertEqual(self.trade_lots("Assets:Crypto:Exchange", "ETH"),
+                         [(Decimal("3000"), "2026-04-01", Decimal("4"))])
+        gain = self.recipe("realized-gains-booked", gains_pattern="^Income:CapitalGains$", currency="USD",
+                           year_start="2026-01-01", year_end="2027-01-01")["rows"]
+        self.assertEqual([[Decimal(value) for value in row] for row in gain], [[Decimal("4000")]])
+        disposals = self.recipe("realized-gains")["rows"]
+        self.assertEqual(len(disposals), 1)
+        self.assertEqual([Decimal(value) for value in disposals[0][6:9]],
+                         [Decimal("12000"), Decimal("8000"), Decimal("4000")])
+        self.recipe("check")
+
+    def test_trade_staking_example_keeps_receipt_dates_and_explicit_zero_value(self):
+        self.ledger.write_bytes((SUITE / "beancount-trade/evals/files/eval13_ledger.beancount").read_bytes())
+        self.values.update(target=self.ledger.name, open_target=self.ledger.name)
+        reward, zero = self.trade_example_amounts("- **Staking reward / airdrop.**")
+        for date in ("2026-02-01", "2026-03-01", "2026-04-01"):
+            self.trade_entry(date, f"Assets:Crypto:Wallet {reward}", "Income:Staking")
+        self.assertEqual(self.trade_lots("Assets:Crypto:Wallet", "ETH"), [
+            (Decimal("2800"), "2026-01-05", Decimal("2")),
+            *[(Decimal("3000"), date, Decimal("0.01")) for date in ("2026-02-01", "2026-03-01", "2026-04-01")],
+        ])
+        # Zero is an explicit user-supplied value, not a missing-value default.
+        self.recipe("open", account="Assets:Crypto:Airdrop")
+        self.trade_entry("2026-04-02", f"Assets:Crypto:Airdrop {zero}", "Income:Staking 0 USD")
+        self.assertEqual(self.trade_lots("Assets:Crypto:Airdrop", "XYZ"),
+                         [(Decimal("0"), "2026-04-02", Decimal("100"))])
+        income = self.recipe("realized-gains-booked", gains_pattern="^Income:Staking$", currency="USD",
+                             year_start="2026-01-01", year_end="2027-01-01")["rows"]
+        self.assertEqual([[Decimal(value) for value in row] for row in income], [[Decimal("90")]])
+        self.recipe("check")
+
+    def test_trade_network_fee_examples_preserve_principal_and_separate_disposal(self):
+        for prefix, expense, gain in (("  - the user states the fee's value", "30", "10"),
+                                      ("  - no value stated:", "20", "0")):
+            with self.subTest(fee=prefix):
+                self.ledger.write_bytes((SUITE / "beancount-trade/evals/files/eval14_ledger.beancount").read_bytes())
+                self.values.update(target=self.ledger.name)
+                fee, *postings = self.trade_example_parts(prefix)
+                if gain == "10":
+                    self.assertEqual(postings[-1], "Income:CapitalGains")
+                extra = tuple(part for posting in [f"Assets:Crypto:Exchange {fee}", *postings]
+                              for part in ("--posting", posting))
+                self.trade_entry("2026-04-01",
+                                 "Assets:Crypto:Exchange -0.2 BTC {40000 USD, 2025-01-10}",
+                                 "Assets:Crypto:Wallet 0.2 BTC {40000 USD, 2025-01-10}", extra=extra)
+                self.assertEqual(self.trade_lots("Assets:Crypto:Exchange", "BTC"),
+                                 [(Decimal("40000"), "2025-01-10", Decimal("0.2995"))])
+                self.assertEqual(self.trade_lots("Assets:Crypto:Wallet", "BTC"),
+                                 [(Decimal("40000"), "2025-01-10", Decimal("0.2"))])
+                for account, expected in (("Expenses:Fees", expense), ("Income:CapitalGains", str(-Decimal(gain)))):
+                    rows = self.recipe("tie-out", account=account, currency="USD", assertion_date="2026-04-02",
+                                       statement_ending=expected, proposed_net="0")["rows"]
+                    if account == "Income:CapitalGains" and gain == "0":
+                        self.assertEqual(rows, [])  # At cost: no gain posting at all.
+                        continue
+                    row = rows[0]
+                    self.assertEqual([Decimal(value) for value in row],
+                                     [Decimal(expected), Decimal(expected), Decimal("0")])
+                disposals = self.recipe("realized-gains", year_start="2026-01-01", year_end="2027-01-01")["rows"]
+                if gain == "10":
+                    self.assertEqual(len(disposals), 1)
+                    self.assertEqual([Decimal(value) for value in disposals[0][6:9]],
+                                     [Decimal("30"), Decimal("20"), Decimal("10")])
+                else:
+                    self.assertEqual(disposals, [])
+                self.recipe("check")
 
     def test_trade_transfer_example_keeps_each_lots_cost_and_date(self):
         for account in ("Assets:Brokerage", "Assets:Brokerage:Roth"):
