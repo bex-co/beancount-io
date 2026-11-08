@@ -29,6 +29,10 @@
 - [x] **m24** — [Replay the MCP contract against production in one command](./done/m24/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 2
 - [x] **m25** — [Slim down tools/list](./done/m25/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 3
 - [x] **m26** — [Give dry_run previews their own wider rate bucket](./done/m26/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 5; owner decision to widen (reverses [222](./done/222.md))
+- [ ] **m27** — [Replay the m23 and m26 contracts against production](./m27/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 1
+- [ ] **m28** — [Give every paginated read one has-more envelope](./m28/README.md) (9 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 2
+- [ ] **m29** — [Add preview-commit, stale-hash and filter journeys to the agent eval](./m29/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 3
+- [ ] **m30** — [Make every MCP failure carry an actionable hint](./m30/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 4
 
 ## Dropped
 
@@ -82,3 +86,5 @@
 - [x] [224](./done/224.md) — `make check-all` fails locally on a cluttered `$TMPDIR` (root-discovery budget), a nested `uv` picking CPython 3.15, and sandboxed signal tests
 - [x] [225](./done/225.md) — backend-v2: format the 62 files prettier flags and gate `prettier --check` in CI (backend parity)
 - [x] [226](./done/226.md) — table-driven test: every `ErrorCategory` maps to one MCP code and one HTTP status on REST, GraphQL and MCP
+- [ ] [227](./227.md) — `importStagedBankTransactions` retry after a lost reply: pin the error and document or reword it
+- [ ] [228](./228.md) — `docs/mcp.md`: short agent happy-path recipe after "Connect a client"
