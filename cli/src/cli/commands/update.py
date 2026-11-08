@@ -22,7 +22,7 @@ from cli.completion import fixed_values
 from cli.errors import UsageError
 from cli.rows import parse_json, read_text
 from cli.single_value import SingleValueCommand
-from cli.utils import RawPath, inert_text
+from cli.utils import IntoPath, RawPath, inert_text
 
 update_app = typer.Typer(
     help="Rewrite directives of a local .bean file in place", no_args_is_help=True, rich_markup_mode=None
@@ -34,12 +34,21 @@ class _SingleValueCommand(SingleValueCommand):
 
 
 _TRANSACTION_FLAGS = ("*", "!")
+IntoOpt = Annotated[
+    Path | None,
+    typer.Option(
+        "--into",
+        click_type=IntoPath(),
+        help="Constrain updates to this existing file, relative to the root ledger; skip automatic root discovery",
+    ),
+]
 
 
 def _update(
     directive_type: str,
     request: dict[str, Any],
     *,
+    into: Path | None = None,
     apply: bool = False,
     allow_errors: bool = False,
 ) -> tuple[Path, dict[str, Any]]:
@@ -53,6 +62,8 @@ def _update(
 
     file = context.current().entry_file()
     argv = ["update", "--file", str(file), "--type", directive_type, "--request", "-"]
+    if into is not None:
+        argv += ["--into", str(into)]
     if apply:
         argv.append("--apply")
     if allow_errors:
@@ -104,6 +115,7 @@ def update_transaction(
     ] = None,
     tag: Annotated[list[str] | None, typer.Option("--tag", help="Tag to add (repeat for multiple)")] = None,
     narration: Annotated[str | None, typer.Option("--narration", "-n", help="Replacement narration")] = None,
+    into: IntoOpt = None,
     apply: Annotated[
         bool, typer.Option("--apply", help="Rewrite the entry; without it, preview the diff only")
     ] = False,
@@ -146,7 +158,7 @@ def update_transaction(
         request["tags"] = list(tag)
     if narration is not None:
         request["narration"] = narration
-    file, data = _update("transaction", request, apply=apply, allow_errors=allow_errors)
+    file, data = _update("transaction", request, into=into, apply=apply, allow_errors=allow_errors)
     _rendered(data, file=file, apply=apply)
 
 
@@ -283,6 +295,7 @@ def update_transactions(
     from_file: Annotated[
         str, typer.Option("--from", click_type=RawPath(), help="JSON or CSV file mapping ids to changes; - reads stdin")
     ],
+    into: IntoOpt = None,
     apply: Annotated[
         bool, typer.Option("--apply", help="Rewrite the entries; without it, preview the diff only")
     ] = False,
@@ -314,5 +327,5 @@ def update_transactions(
     Pass --from - to read either form from stdin.
     """
     rows = _load_mapping(from_file)
-    file, data = _update("transactions", {"rows": rows}, apply=apply, allow_errors=allow_errors)
+    file, data = _update("transactions", {"rows": rows}, into=into, apply=apply, allow_errors=allow_errors)
     _rendered_batch(data, file=file, apply=apply)

@@ -301,6 +301,10 @@ def update(
     file: Annotated[Path, typer.Option("--file", "-f", help="Root ledger file the write is validated against.")],
     type: Annotated[str, typer.Option("--type", "-t", help="Directive type: transaction or transactions.")],
     request: Annotated[str, typer.Option("--request", help="The update as JSON, or '-' to read that JSON from stdin.")],
+    into: Annotated[
+        Path | None,
+        typer.Option("--into", help="Constrain updates to an existing file, relative to the explicitly selected root."),
+    ] = None,
     apply: Annotated[
         bool, typer.Option("--apply", help="Rewrite the entry; without it, preview the diff only.")
     ] = False,
@@ -323,9 +327,25 @@ def update(
     with protocol.answering("update") as answer:
         from bea_engine.ledger import updating, write
 
-        ledger, _, redirect = write.write_through_root(_ledger(file), None)
+        selected = _ledger(file)
+        try:
+            ledger, _, redirect = write.write_through_root(selected, into)
+        except write.IncompleteRootSearch as exc:
+            if type in updating.TYPES:
+                import shlex
+
+                original = "--from mapping" if type == "transactions" else "--id and change options"
+                exc.details.append(
+                    f"For bea update {type}, keep the original {original}; select the governing root with "
+                    f"--file ROOT before update, and add --into {shlex.quote(str(selected))}."
+                )
+            raise
         with _redirect_on_failure(redirect):
-            answer.data = updating.answer(ledger, type, _request(request), apply=apply, allow_errors=allow_errors)
+            # Only the user's explicit selection constrains the entry. An
+            # inferred leaf keeps the existing whole-root lookup behavior.
+            answer.data = updating.answer(
+                ledger, type, _request(request), into=into, apply=apply, allow_errors=allow_errors
+            )
         _report_redirect(answer.data, ledger, redirect, "warnings")
 
 

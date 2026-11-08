@@ -41,7 +41,7 @@ from bea_engine.ledger.text import (
     single_line,
     unified_file_diff,
 )
-from bea_engine.query import format_error
+from bea_engine.query import format_error, same_file
 
 TYPES = ("transaction", "transactions")
 
@@ -623,7 +623,12 @@ def _row_reason(index: int, exc: Exception) -> str:
 
 
 def _plan_rows(
-    entries: list[Any], options: dict[str, Any], rows: list[Any], file_lines: dict[Path, list[str]]
+    entries: list[Any],
+    options: dict[str, Any],
+    rows: list[Any],
+    file_lines: dict[Path, list[str]],
+    *,
+    into: Path | None = None,
 ) -> tuple[list[_RowPlan], list[str], list[int], dict[int, str], bool]:
     """Resolve and plan every row.
 
@@ -670,6 +675,7 @@ def _plan_rows(
             continue
         target = Path(key[0])
         try:
+            _require_into(target, into)
             summary = _summarize(entry, options, changes)
             edits = plan_lines(file_lines[target], entries, options, entry, changes)
         except protocol.UsageError as exc:
@@ -880,7 +886,9 @@ def _row_payload(
     return payload
 
 
-def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_errors: bool) -> dict[str, Any]:
+def _transactions(
+    file: Path, request: dict[str, Any], *, into: Path | None, apply: bool, allow_errors: bool
+) -> dict[str, Any]:
     """Preview or apply a batch of rows, writing every valid row.
 
     Unlike `add transactions`, there is no `--partial`: valid rows always
@@ -970,7 +978,9 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
         entries, options = load()
         snapshot = ledger_write.LedgerSnapshot.capture(file)
         file_texts, file_lines, marks = files(snapshot)
-        plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(entries, options, rows, file_lines)
+        plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(
+            entries, options, rows, file_lines, into=into
+        )
         valid = _validate_plans(
             plans, file_lines, snapshot, rejected, rejected_rows, reasons, allow_errors=allow_errors
         )
@@ -1001,7 +1011,9 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
     with ledger_write.locked_graph(file, file, deciding=True) as snapshot:
         entries, options = load(snapshot)
         file_texts, file_lines, marks = files(snapshot)
-        plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(entries, options, rows, file_lines)
+        plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(
+            entries, options, rows, file_lines, into=into
+        )
         # Every file validates before any file writes, so a validation failure
         # never leaves half the batch behind.
         valid = _validate_plans(
@@ -1113,17 +1125,28 @@ def _transactions(file: Path, request: dict[str, Any], *, apply: bool, allow_err
         )
 
 
+def _require_into(target: Path, into: Path | None) -> None:
+    """An explicit file constrains existing entries; updates never relocate them."""
+    if into is not None and not same_file(target, into):
+        raise protocol.UsageError(
+            f"Transaction in {target} does not match --into {into}. "
+            "Select the entry's existing file; updates never move entries. Nothing was written."
+        )
+
+
 def answer(
     file: Path,
     directive_type: str,
     request: dict[str, Any],
     *,
+    into: Path | None = None,
     apply: bool = False,
     allow_errors: bool = False,
 ) -> dict[str, Any]:
     """Preview or apply one entry's update, and report what changed."""
+    selected = ledger_write.destination(file, into) if into is not None else None
     if directive_type == "transactions":
-        return _transactions(file, request, apply=apply, allow_errors=allow_errors)
+        return _transactions(file, request, into=selected, apply=apply, allow_errors=allow_errors)
     if directive_type != "transaction":
         raise protocol.UsageError(f"Unknown directive type {directive_type!r}. Use one of: {', '.join(TYPES)}.")
     from bea_engine import managed_load
@@ -1134,6 +1157,7 @@ def answer(
         _gate_load_errors(errors, file, allow_errors=allow_errors)
         entry = locate_transaction(list(entries), changes.id)
         target = Path((entry.meta or {})["filename"])
+        _require_into(target, selected)
         snapshot = ledger_write.LedgerSnapshot.capture(file)
         original = snapshot.require_target(target)
         _, diff = plan_rewrite(list(entries), options, entry, changes, original, target)
@@ -1148,6 +1172,7 @@ def answer(
         _gate_load_errors(errors, file, allow_errors=allow_errors)
         entry = locate_transaction(list(entries), changes.id)
         target = Path((entry.meta or {})["filename"])
+        _require_into(target, selected)
         original = snapshot.require_target(target)
         new_text, diff = plan_rewrite(list(entries), options, entry, changes, original, target)
         if not diff:

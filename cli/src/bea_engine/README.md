@@ -93,7 +93,7 @@ doing money arithmetic, and a float would silently round.
 | `balance --file PATH [ACCOUNT...]`  | filtered balances or the trial balance                     |
 | `init --file PATH --currency CCY --date DATE` | starter ledger creation                          |
 | `import --file PATH --source PATH`  | CSV/OFX/Beangulp extract, dedup preview, optional append   |
-| `update --file PATH --type TYPE --request JSON [--apply]` | rewrite one entry in place: a preview diff, or the write |
+| `update --file PATH --type TYPE --request JSON [--into PATH] [--apply]` | rewrite entries in place: a preview diff, or the write |
 | `version`                           | `{"version": "0.1.0"}`                                     |
 
 `shell` and `source-shell` are exceptions to the envelope contract: a terminal session
@@ -164,6 +164,14 @@ value shared by two entries is refused as ambiguous (naming each `file:line`
 so the caller can pick one), and an unknown value as not found; both are
 `usage` failures and both change no bytes. Only entries written in a ledger
 file resolve — a plugin-synthesized row has no source lines to rewrite.
+
+An explicit `--into PATH` constrains the entries to their existing file,
+resolved relative to the selected root's directory. It skips automatic root
+discovery while retaining whole-root lookup and validation. It never moves
+an entry, creates a file, or disambiguates duplicate ids; a batch row whose
+source file does not match is rejected through the normal per-row path.
+Without an explicit selection, automatic root routing does not restrict
+which included file may hold the entry.
 
 The request changes the entry with `account`, `flag`, `tags`, or `narration`
 (or `--request -` to read the JSON from stdin). A bare `account` retargets the

@@ -1256,6 +1256,10 @@ not its root even when it repeats an option or names the forecast plugin, so
 writes and failing reads stay with the ledger named, and a leaf below the
 working ledger stops its climb there rather than at the overlay above.
 
+`update` uses the same governing-root discovery, then locates entries across
+that whole ledger and edits each in its existing file. It does not infer an
+`--into` constraint from the file the command started on.
+
 Across one discovery request, the search allows 8,192 directory-entry and
 metadata steps, 128 distinct ledger-file reads, 16 MiB per file and 64 MiB of
 file contents in total. Glob preflight reserves work for the native traversal
@@ -1772,6 +1776,28 @@ id shared by two rows is refused rather than guessed at. A bare `--account`
 retargets the queue's leg, while `OLD=NEW` names another leg. `--flag`,
 `--tag`, and `--narration` retouch the header. Every form previews a diff and
 writes only with `--apply`, and only the entry's own lines change.
+
+Both update commands accept `--into FILE` to explicitly select the existing
+file the entries must belong to. Keep `--file` on the governing root;
+`--into` resolves relative to that root's directory and skips automatic root
+discovery, including when its search budget is exhausted. Repeat the same
+`--id` and change options, or the same `--from` mapping:
+
+```bash
+bea --file main.bean add transaction "Review selection" --date 2026-08-02 --posting "Expenses:Dining 5" --posting "Assets:Checking" --meta 'import-id:selection-demo' --into 2026.bean
+cat > selection.json <<'EOF'
+[{"id":"selection-demo","narration":"Reviewed"}]
+EOF
+bea --file main.bean update transaction --id selection-demo --narration Reviewed --into 2026.bean
+bea --file main.bean update transactions --from selection.json --into 2026.bean --apply
+```
+
+This constrains updates in place: it never moves entries or creates a file.
+Lookup and validation still use the whole selected ledger, so duplicate ids
+remain ambiguous and a root's balance assertions still govern an included
+file's edits. A batch row outside the selected file is rejected; valid rows
+in that file retain the normal batch behavior. Without `--into`, entries keep
+their existing locations across the include graph.
 
 A longer queue goes through one mapping file, previewed and then applied in a
 single write per file; a rejected row never aborts the valid ones:

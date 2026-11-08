@@ -682,6 +682,7 @@ Usage: bea update transaction [OPTIONS]
 | `--flag` | str |  | Transaction flag |
 | `--tag` | str (repeatable) |  | Tag to add (repeat for multiple) |
 | `--narration, -n` | str |  | Replacement narration |
+| `--into` | path |  | Constrain updates to this existing file, relative to the root ledger; skip automatic root discovery |
 | `--apply` | flag |  | Rewrite the entry; without it, preview the diff only |
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 
@@ -696,6 +697,7 @@ Usage: bea update transactions [OPTIONS]
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
 | `--from` | path | required | JSON or CSV file mapping ids to changes; - reads stdin |
+| `--into` | path |  | Constrain updates to this existing file, relative to the root ledger; skip automatic root discovery |
 | `--apply` | flag |  | Rewrite the entries; without it, preview the diff only |
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 
