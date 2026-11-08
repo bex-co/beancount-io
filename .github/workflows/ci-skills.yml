@@ -38,6 +38,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -49,6 +51,8 @@ jobs:
         working-directory: cli
         run: uv sync --all-groups
       - name: Run skills checks
+        env:
+          SKILLS_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
         # Customer leg: bea check with bean-* scrubbed from PATH.
         # Oracle leg: uv run --project cli bean-check (locked upstream).
         run: python3 scripts/skills/ci-check.py

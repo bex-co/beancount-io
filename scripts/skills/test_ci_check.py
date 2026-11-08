@@ -364,7 +364,9 @@ class TestCheckoutPaths(unittest.TestCase):
 
 class TestPluginManifests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
+        scratch = SCRIPTS_DIR / "tmp"
+        scratch.mkdir(exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.skills = self.root / "skills"
@@ -390,7 +392,7 @@ class TestPluginManifests(unittest.TestCase):
             self.addCleanup(patch.stop)
         self.write_manifests()
 
-    def write_manifests(self, entry=None, plugin=None):
+    def write_manifests(self, entry=None, plugin=None, codex=None):
         entry = dict(self.entry, **(entry or {}))
         plugin = dict(
             {"name": "beancount-io", "version": "0.1.0", "description": "Ledger skills.", "license": "MIT"},
@@ -401,7 +403,7 @@ class TestPluginManifests(unittest.TestCase):
         )
         (self.root / "plugin.json").write_text(json.dumps(plugin))
         (self.root / ".agents/plugins/marketplace.json").write_text(
-            json.dumps({"name": "beancount-io", "plugins": [{"name": "beancount-io", "source": {"path": "./"}}]})
+            json.dumps(codex or {"name": "beancount-io", "plugins": [{"name": "beancount-io", "source": {"source": "local", "path": "./"}}]})
         )
 
     def check(self):
@@ -421,12 +423,137 @@ class TestPluginManifests(unittest.TestCase):
         self.assertIn("plugin manifests disagree on version", self.check())
 
     def test_stale_skill_list_is_rejected(self):
-        self.write_manifests(entry={"skills": ["./beancount-add"]})
-        self.assertIn("skills must list every customer skill on disk", self.check())
+        for skills in (["./beancount-add"], ["./beancount-add", "./beancount-ask", "../.agents/skills/ship"]):
+            with self.subTest(skills=skills):
+                self.write_manifests(entry={"skills": skills})
+                self.assertIn("skills must list every customer skill on disk", self.check())
 
     def test_non_semver_is_rejected(self):
         self.write_manifests(entry={"version": "1.0"}, plugin={"version": "1.0"})
         self.assertIn("is not semver", self.check())
+
+    def test_every_manifest_is_required_and_must_parse(self):
+        for name in ("plugin.json", ".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json"):
+            path = self.root / name
+            original = path.read_text()
+            with self.subTest(name=name, case="missing"):
+                path.unlink()
+                self.assertIn(f"{name}: plugin manifest is missing", self.check())
+            with self.subTest(name=name, case="invalid JSON"):
+                path.write_text("{")
+                self.assertIn(f"{name}: invalid JSON", self.check())
+            path.write_text(original)
+
+    def test_shared_identity_fields_cannot_disagree(self):
+        for field in ("name", "description", "license"):
+            with self.subTest(field=field):
+                self.write_manifests(plugin={field: "different"})
+                self.assertIn(f"plugin manifests disagree on {field}", self.check())
+
+    def test_claude_source_cannot_reach_development_skills(self):
+        self.write_manifests(entry={"source": "./.agents/skills"})
+        self.assertIn('source "./skills"', self.check())
+
+    def test_plugin_cannot_be_renamed_on_both_hosts(self):
+        self.write_manifests(entry={"name": "different"}, plugin={"name": "different"})
+        self.assertIn("entry must be beancount-io", self.check())
+
+    def test_codex_source_must_be_the_local_repository_root(self):
+        for source in ({"source": "local", "path": "./.agents/skills"}, {"source": "git", "path": "./"}):
+            with self.subTest(source=source):
+                self.write_manifests(codex={"name": "beancount-io", "plugins": [{"name": "beancount-io", "source": source}]})
+                self.assertIn("expected one beancount-io entry", self.check())
+
+    def test_non_object_manifests_fail_with_a_diagnostic(self):
+        for name in ("plugin.json", ".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json"):
+            path = self.root / name
+            original = path.read_text()
+            with self.subTest(name=name):
+                path.write_text("[]")
+                self.assertIn(f"{name}: expected a JSON object", self.check())
+            path.write_text(original)
+
+
+class TestPluginVersionBump(unittest.TestCase):
+    def setUp(self):
+        scratch = SCRIPTS_DIR / "tmp"
+        scratch.mkdir(exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(dir=scratch)
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.skill = self.root / "skills/beancount-ask/SKILL.md"
+        self.skill.parent.mkdir(parents=True)
+        self.skill.write_text("Original guide\n")
+        self.manifest = self.root / "plugin.json"
+        self.manifest.write_text(json.dumps({"version": "0.4.28"}))
+        self.git("init", "-q")
+        self.git("config", "user.name", "Skills test")
+        self.git("config", "user.email", "skills@example.invalid")
+        self.git("add", ".")
+        self.git("commit", "-qm", "base")
+        self.base = self.git("rev-parse", "HEAD").strip()
+        patch = mock.patch.object(ci_check, "REPO_ROOT", self.root)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def git(self, *args):
+        return subprocess.run(["git", *args], cwd=self.root, check=True, text=True, capture_output=True).stdout
+
+    def check(self, base=None):
+        error = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+            try:
+                ci_check.check_plugin_version_bump(self.base if base is None else base)
+            except SystemExit:
+                pass
+        return error.getvalue()
+
+    def test_skill_edit_requires_a_version_increase(self):
+        self.skill.write_text("Changed guide\n")
+        self.assertIn("customer skill files changed", self.check())
+        self.manifest.write_text(json.dumps({"version": "0.4.100"}))
+        self.assertEqual(self.check(), "")
+
+    def test_deletion_and_added_runtime_files_also_require_a_bump(self):
+        self.skill.unlink()
+        self.assertIn("customer skill files changed", self.check())
+        self.git("restore", ".")
+        reference = self.skill.parent / "references/new.md"
+        reference.parent.mkdir()
+        reference.write_text("New shared contract\n")
+        self.git("add", ".")
+        self.assertIn("customer skill files changed", self.check())
+
+    def test_decreasing_version_does_not_satisfy_a_bump(self):
+        self.skill.write_text("Changed guide\n")
+        self.manifest.write_text(json.dumps({"version": "0.4.27"}))
+        self.assertIn("must increase", self.check())
+
+    def test_documentation_only_and_absent_base_need_no_bump(self):
+        (self.root / "skills/README.md").write_text("Catalog correction\n")
+        self.git("add", ".")
+        self.assertEqual(self.check(), "")
+        self.assertEqual(self.check(""), "")
+        self.assertEqual(self.check("0" * 40), "")
+
+    def test_missing_base_is_an_error_not_a_skipped_gate(self):
+        self.assertIn("cannot resolve skills base revision", self.check("not-a-real-ref"))
+
+    def test_ci_entrypoint_applies_the_supplied_base(self):
+        self.skill.write_text("Changed guide\n")
+        error = io.StringIO()
+        with contextlib.ExitStack() as stack:
+            # Only the version check is under test; unrelated ledger/model
+            # checks must not run against this minimal synthetic Git repo.
+            for name in vars(ci_check):
+                if name.startswith("check_") and name != "check_plugin_version_bump":
+                    stack.enter_context(mock.patch.object(ci_check, name))
+            stack.enter_context(mock.patch.dict(os.environ, {"SKILLS_BASE_REF": self.base}))
+            stack.enter_context(contextlib.redirect_stderr(error))
+            stack.enter_context(contextlib.redirect_stdout(io.StringIO()))
+            with self.assertRaises(SystemExit):
+                ci_check.main()
+        self.assertIn("customer skill files changed", error.getvalue())
 
 
 class TestCatalogGroups(unittest.TestCase):

@@ -629,11 +629,14 @@ def check_plugin_manifests() -> None:
     def load(rel: str) -> dict:
         path = REPO_ROOT / rel
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            value = json.loads(path.read_text(encoding="utf-8"))
         except FileNotFoundError:
             fail(f"{rel}: plugin manifest is missing")
         except json.JSONDecodeError as error:
             fail(f"{rel}: invalid JSON ({error})")
+        if not isinstance(value, dict):
+            fail(f"{rel}: expected a JSON object")
+        return value
 
     marketplace = load(".claude-plugin/marketplace.json")
     plugin = load("plugin.json")
@@ -657,10 +660,47 @@ def check_plugin_manifests() -> None:
         codex_marketplace.get("name") != "beancount-io"
         or len(codex_entries) != 1
         or codex_entries[0].get("name") != "beancount-io"
+        or (codex_entries[0].get("source") or {}).get("source") != "local"
         or (codex_entries[0].get("source") or {}).get("path") != "./"
     ):
         fail('.agents/plugins/marketplace.json: expected one beancount-io entry with source path "./"')
     print(f"OK plugin manifests (suite version {entry['version']})")
+
+
+def check_plugin_version_bump(base_ref: str) -> None:
+    """Require a real suite version increase when customer skill files change."""
+    if not base_ref or base_ref == "0" * 40:
+        print("OK plugin version diff (no base revision supplied)")
+        return
+
+    def git(*args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", *args], cwd=REPO_ROOT, text=True, capture_output=True)
+
+    base = git("rev-parse", "--verify", "--end-of-options", f"{base_ref}^{{commit}}")
+    if base.returncode:
+        fail("cannot resolve skills base revision; fetch the base commit before running the version gate")
+    base_sha = base.stdout.strip()
+    changed = git("diff", "--name-only", "--no-renames", "-z", base_sha, "--", "skills/")
+    if changed.returncode:
+        fail("cannot compare customer skill files with the skills base revision")
+    if not any(re.match(r"skills/beancount-[^/]+/", path) for path in changed.stdout.split("\0")):
+        print("OK plugin version diff (no customer skill files changed)")
+        return
+
+    previous = git("show", f"{base_sha}:plugin.json")
+    if previous.returncode:
+        fail("skills base revision has no plugin.json; cannot establish the previous suite version")
+    try:
+        old = json.loads(previous.stdout)["version"]
+        new = json.loads((REPO_ROOT / "plugin.json").read_text(encoding="utf-8"))["version"]
+        if not SEMVER.fullmatch(old) or not SEMVER.fullmatch(new):
+            raise ValueError("expected semver")
+        increased = tuple(map(int, new.split("."))) > tuple(map(int, old.split(".")))
+    except (KeyError, TypeError, ValueError) as error:
+        fail(f"cannot compare plugin suite versions: {error}")
+    if not increased:
+        fail(f"customer skill files changed: suite version must increase from {old} (found {new}); bump both manifests")
+    print(f"OK plugin version diff ({old} -> {new})")
 
 
 def check_catalog_groups() -> None:
@@ -696,6 +736,7 @@ def main() -> None:
     check_bea_first()
     check_no_redundant_installs()
     check_plugin_manifests()
+    check_plugin_version_bump(os.environ.get("SKILLS_BASE_REF", ""))
     check_catalog_groups()
     print("All skills CI checks passed.")
 
