@@ -1,6 +1,6 @@
 # w0 · m9 — An abandoned first Checkout gets one short recovery email
 
-**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** in progress (t001–t005, t007–t008 done; t006 blocked on the owner)
+**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** in progress (t001–t005, t007–t009 done; t006 blocked on the owner)
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Owner setup and live-mode verification | 30m | t001, t005 |
 | t007 | Adoption surface | 15m | t005 | — **DONE**
 | t008 | Simplify | 15m | t007 | — **DONE**
-| t009 | Test coverage | 30m | t007, t008 |
+| t009 | Test coverage | 30m | t007, t008 | — **DONE**
 | t010 | Closeout | 10m | t006, t009 |
 
 ## Blocked
