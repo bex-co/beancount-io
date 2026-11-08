@@ -1,3 +1,4 @@
+import { ALREADY_IMPORTED_HINT } from "@/shared/errors/lookup-hints";
 import { PlaidSyncService } from "../plaid-sync-service";
 import { systemIdentity } from "@/server/api/identity";
 import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
@@ -832,6 +833,28 @@ describe("PlaidSyncService", () => {
           txInputs,
         ),
       ).rejects.toThrow("already synced to ledger");
+    });
+
+    it("tells a retrying caller that the first import landed", async () => {
+      mockPlaidTransactionModel.getByTransactionIds.mockResolvedValue([
+        { ...mockTransactions[0], syncedToLedger: true },
+      ]);
+      mockPlaidAccountModel.getById.mockResolvedValue(mockAccount);
+      mockPlaidItemModel.getById.mockResolvedValue(mockItem);
+
+      const failure = await service
+        .submitTransactionsToLedger(
+          systemIdentity(userId),
+          ledgerOwner,
+          ledgerName,
+          txInputs,
+        )
+        .catch((error: unknown) => error);
+
+      expect(failure).toMatchObject({
+        category: "BAD_USER_INPUT",
+        metadata: { hint: ALREADY_IMPORTED_HINT },
+      });
     });
 
     it("should throw when ledger account not mapped", async () => {

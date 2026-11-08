@@ -634,6 +634,13 @@ After linking:
 5. Call `discardStagedBankTransactions` with `transactionIds` to remove
    unwanted staged transactions.
 
+An import whose reply was lost has still landed, and sending it again is
+refused with `BAD_USER_INPUT` ("already synced to ledger", or "already in the
+ledger" when the staged row was re-created) rather than written twice. The
+refusal's hint says to confirm with `listLedgerEntries` or `checkLedger`.
+Unlike the entry-write tools, the import takes no `requestId`: the staged
+transaction is its own idempotency key.
+
 Every bank id argument above also accepts the snake_case spelling the tools
 historically took (`item_id`, `account_id`, `transaction_ids`, and the
 submit-item `transaction_id`/`target_account`/`source_account` triple plus

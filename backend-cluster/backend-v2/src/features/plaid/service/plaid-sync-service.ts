@@ -1,3 +1,4 @@
+import { ALREADY_IMPORTED_HINT } from "@/shared/errors/lookup-hints";
 import { BANK_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import crypto from "crypto";
 import type { DbExecutor } from "@/drizzle/drizzle";
@@ -720,6 +721,8 @@ export class PlaidSyncService implements IPlaidSyncService {
       if (tx.syncedToLedger) {
         throw new BadUserInputError(
           `Transaction ${tx.transactionId} already synced to ledger`,
+          undefined,
+          ALREADY_IMPORTED_HINT,
         );
       }
     }
@@ -898,6 +901,8 @@ export class PlaidSyncService implements IPlaidSyncService {
         throw new BadUserInputError(
           `Transaction ${transactionId} is already in the ledger (import-id ${plaidImportId(transactionId)}); ` +
             "delete the staged row instead of submitting it again",
+          undefined,
+          ALREADY_IMPORTED_HINT,
         );
       }
     }

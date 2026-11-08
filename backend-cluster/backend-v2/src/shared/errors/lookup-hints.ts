@@ -31,3 +31,7 @@ export const CALLER_ACCOUNT_NOT_FOUND_HINT =
 
 export const LEDGER_OWNER_NOT_FOUND_HINT =
   "The ledger's owner account no longer exists, so the ledger cannot take this write; `listLedgers` shows the ledgers you can still reach.";
+
+/** A retry after a timed-out import meets this: the first call landed, the second is refused. */
+export const ALREADY_IMPORTED_HINT =
+  "If this follows an import that timed out, it already landed: confirm with `listLedgerEntries` or `checkLedger` and do not import it again.";
