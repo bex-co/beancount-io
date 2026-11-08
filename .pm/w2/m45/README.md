@@ -13,7 +13,7 @@
 | [t005](done/t005.md) | Write evals, fixtures, and routing entries — **DONE** | 60m | t002, t003 |
 | [t006](done/t006.md) | Run the evals on Claude Code and Codex — **DONE** | 45m | t005 |
 | [t007](done/t007.md) | Wire siblings, inventory, and the suite count — **DONE** | 30m | t002 |
-| t008 | Adoption surface | 30m | t006, t007 |
+| [t008](done/t008.md) | Adoption surface — **DONE** | 30m | t006, t007 |
 | t009 | Simplify | 15m | t008 |
 | t010 | Test coverage | 45m | t008, t009 |
 | t011 | Closeout | 15m | t010 |
