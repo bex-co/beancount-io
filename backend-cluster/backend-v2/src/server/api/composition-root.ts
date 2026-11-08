@@ -131,7 +131,7 @@ import {
   requireScopeClass,
   restOpId,
 } from "./op-class";
-import { enforceRateLimit } from "./rate-limit";
+import { enforceRateLimit, isPreviewRequest } from "./rate-limit";
 import { normalizeRestPath, opMethodsForLayer } from "./rest-op-id";
 
 const mcpLogger = logger.child({ module: "mcp-registry" });
@@ -1128,8 +1128,14 @@ async function gateMcpCall(
   opId: string,
   toolCtx: McpRequestContext,
   config: AppConfig,
+  args?: unknown,
 ): Promise<void> {
-  await enforceRateLimit({ opId, identity: toolCtx.identity, ip: "mcp" });
+  await enforceRateLimit({
+    opId,
+    identity: toolCtx.identity,
+    ip: "mcp",
+    preview: isPreviewRequest(args),
+  });
   requireScopeClass(toolCtx.identity, opId, config.api.scopeEnforcement);
 }
 
@@ -1229,7 +1235,7 @@ function makeMcpToolHandler(
         // status: the client is an agent mid-conversation, and a thrown HTTP
         // error would end the session instead of telling it what it lacks. The
         // catch below turns the ForbiddenError into exactly that.
-        await gateMcpCall(opId, toolCtx, config);
+        await gateMcpCall(opId, toolCtx, config, input);
         const result = await descriptor.execute(toolCtx, input);
         // `runToolSafely` is the tools' error boundary: it turns a throw into the
         // ordinary-looking value `{ ok: false, error }` and returns it. Without

@@ -115,6 +115,29 @@ export const CLASS_BUDGETS: Record<OpClass, Budget> = {
 };
 
 /**
+ * A preview draws on its own bucket, three times as wide as the write budget it
+ * previews (w23/m26). The recommended agent flow is preview, then commit, so
+ * sharing one bucket halved a credential's write throughput; a preview does
+ * the same authorization and bean-check projection but never commits, so it is
+ * cheaper than the write it stands for, though not free.
+ */
+export const PREVIEW_BUDGET_MULTIPLIER = 3;
+
+/**
+ * Whether a request body or argument object asks for a preview: a boolean
+ * `true` on the `dry_run` spelling or its `dryRun` twin. Strictly `=== true`,
+ * the only value every surface's handler also reads as a preview, so a value
+ * the handler would ignore (a string, `1`) cannot earn the wider bucket while
+ * the write goes through. A conflicting pair is refused by the handler before
+ * it does any work.
+ */
+export function isPreviewRequest(args: unknown): boolean {
+  if (args === null || typeof args !== "object") return false;
+  const { dry_run: snake, dryRun: camel } = args as Record<string, unknown>;
+  return snake === true || camel === true;
+}
+
+/**
  * Per-op overrides, for the handful of ops whose cost is not their class's.
  *
  * The first two are the budgets `GraphQLRateLimiter` enforced per-resolver
@@ -423,11 +446,17 @@ export async function consume(args: {
   opId: string;
   identity?: Identity;
   ip: string;
+  /** The request asks for a preview ({@link isPreviewRequest}); only a write op earns the preview bucket. */
+  preview?: boolean;
 }): Promise<RateLimitDecision> {
   // One classification per request; budget and bucket both derive from it.
   const classification = classifyOp(args.opId);
-  const budget = budgetFor(args.opId, classification);
-  const bucket = operationBucket(args.opId, classification);
+  const commit = budgetFor(args.opId, classification);
+  const preview = args.preview === true && classification.class === "write";
+  const budget: Budget = preview
+    ? { ...commit, max: commit.max * PREVIEW_BUDGET_MULTIPLIER }
+    : commit;
+  const bucket = `${operationBucket(args.opId, classification)}${preview ? "#preview" : ""}`;
   return charge(
     subjectKeys(args.identity, args.ip).map(
       (subject) => `ratelimit:${subject}:${bucket}`,
@@ -458,6 +487,7 @@ export async function enforceRateLimit(args: {
   opId: string;
   identity?: Identity;
   ip: string;
+  preview?: boolean;
 }): Promise<void> {
   const decision = await consume(args);
   if (decision.allowed) return;

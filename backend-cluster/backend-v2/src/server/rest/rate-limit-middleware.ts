@@ -2,6 +2,7 @@ import Router, { RouterContext } from "@koa/router";
 import {
   consumeAnonymous,
   enforceRateLimit,
+  isPreviewRequest,
   rateLimitOpIdFor,
 } from "@/server/api/rate-limit";
 import { RateLimitedError } from "@/shared/errors";
@@ -37,6 +38,7 @@ export function restRateLimitMiddleware(): Router.Middleware {
           opId: rateLimitOpIdFor(opId, ctx.request.body),
           identity,
           ip: clientIp(ctx),
+          preview: isPreviewRequest(ctx.request.body),
         });
       } else {
         const decision = await consumeAnonymous({

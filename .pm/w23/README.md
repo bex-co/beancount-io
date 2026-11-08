@@ -28,7 +28,7 @@
 - [x] **m23** — [Stress every parameter with hostile values, not just NUL](./done/m23/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 1
 - [x] **m24** — [Replay the MCP contract against production in one command](./done/m24/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 2
 - [x] **m25** — [Slim down tools/list](./done/m25/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 3
-- [ ] **m26** — [Give dry_run previews their own wider rate bucket](./m26/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 5; owner decision to widen (reverses [222](./done/222.md))
+- [x] **m26** — [Give dry_run previews their own wider rate bucket](./done/m26/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 5; owner decision to widen (reverses [222](./done/222.md))
 
 ## Dropped
 

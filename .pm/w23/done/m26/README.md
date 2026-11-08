@@ -1,19 +1,19 @@
 # w23 · m26 — Give dry_run previews their own wider rate bucket
 
-**Worker:** worker1 **Goal:** A preview no longer spends the write budget: it draws on its own, wider bucket on REST, GraphQL and MCP, and a commit keeps its current limit. **Status:** todo
+**Worker:** worker1 **Goal:** A preview no longer spends the write budget: it draws on its own, wider bucket on REST, GraphQL and MCP, and a commit keeps its current limit. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Choose the bucket size and read the hook | 30m | — |
-| t002 | Charge previews to the preview bucket on all three surfaces | 45m | t001 |
-| t003 | Prove it with a three-surface parity test | 30m | t002 |
-| t004 | Document the new budget | 15m | t003 |
-| t005 | Adoption surface | 20m | t004 |
-| t006 | Simplify | 20m | t005 |
-| t007 | Test coverage | 30m | t005 |
-| t008 | Closeout | 15m | t007 |
+| t001 | Choose the bucket size and read the hook — **DONE** | 30m | — |
+| t002 | Charge previews to the preview bucket on all three surfaces — **DONE** | 45m | t001 |
+| t003 | Prove it with a three-surface parity test — **DONE** | 30m | t002 |
+| t004 | Document the new budget — **DONE** | 15m | t003 |
+| t005 | Adoption surface — **DONE** | 20m | t004 |
+| t006 | Simplify — **DONE** | 20m | t005 |
+| t007 | Test coverage — **DONE** | 30m | t005 |
+| t008 | Closeout — **DONE** | 15m | t007 |
 
 ## Definition of done
 

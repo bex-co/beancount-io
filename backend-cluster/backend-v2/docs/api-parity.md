@@ -254,6 +254,15 @@ surrogate, an oversize string, a long array and deep nesting, each as
 derives the MCP cases from the tool schemas and `nul-boundary.test.ts` covers
 REST and GraphQL.
 
+## Preview rate bucket (w23/m26)
+
+A `dry_run`/`dryRun` preview of a write operation is charged to its own rate
+bucket (`verb:<verb>#preview`), three times the operation's write budget, on
+REST, GraphQL and MCP alike; commits keep their budget, and reads and admin
+operations are unaffected. `preview-rate-bucket.test.ts` drives the three
+limiter middlewares and proves the two buckets are independent in both
+directions.
+
 ## Retry-safe entry writes (w3/m61)
 
 Every entry append accepts an optional `requestId` with one contract on every

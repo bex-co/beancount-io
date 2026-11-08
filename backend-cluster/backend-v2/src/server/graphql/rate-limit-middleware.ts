@@ -1,6 +1,6 @@
 import type { MiddlewareFn } from "type-graphql";
 import type { IContext } from "./context";
-import { enforceRateLimit } from "@/server/api/rate-limit";
+import { enforceRateLimit, isPreviewRequest } from "@/server/api/rate-limit";
 import { graphqlOperationId } from "./graphql-operation-id";
 
 /**
@@ -16,7 +16,7 @@ import { graphqlOperationId } from "./graphql-operation-id";
  * surface's dialect of REST's `Retry-After` header.
  */
 export function graphqlRateLimitMiddleware(): MiddlewareFn<IContext> {
-  return async ({ context, info }, next) => {
+  return async ({ args, context, info }, next) => {
     if (info.path.prev !== undefined) return next();
     const opId = graphqlOperationId(info);
     if (!opId) return next();
@@ -25,6 +25,7 @@ export function graphqlRateLimitMiddleware(): MiddlewareFn<IContext> {
       opId,
       identity: context.identity,
       ip: context.clientIp,
+      preview: isPreviewRequest(args),
     });
     return next();
   };
