@@ -42,7 +42,7 @@
 ## Out of scope
 
 - Renaming skills ([m39](../../blocked/m39/README.md)), changing what any skill does, or rewriting skill text beyond path strings ([m41](../m41/README.md)).
-- Changing how sibling references resolve ([083](../../blocked/083.md)). Relative `../<sibling>/…` paths work the same in the flat layout.
+- Changing how sibling references resolve ([083](../083.md)). Relative `../<sibling>/…` paths work the same in the flat layout.
 - Packaging the suite as a Claude Code plugin ([082](../082.md)) or publishing to ClawHub (w6/m6).
 - Redirect stubs at the old paths. GitHub does not redirect moved files, and a stub in `skills/` would be a non-skill file.
 - Deploying backend-v2. The MCP prompt text that cites the playbook path changes in the repository here, and reaches hosted clients on the next deploy.

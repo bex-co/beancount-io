@@ -2,7 +2,7 @@
 
 **Worker:** worker2 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty. Existing milestones retain their historical order and source.
 
-**Codex verification update (2026-11-08):** Linux arm64 Codex CLI 0.167.0 with `gpt-6.1-sol` now completes model turns and native sandboxed commands; [runtime and filesystem checks](../../docs/skills/routing-rehearsal.md#linux-codex-execution-restored--2026-11-08) are recorded. [089](./done/089.md) passes twice and is closed. The macOS managed-preferences startup failure persists, but the historical November 17 quota-reset estimates below no longer block Linux verification. m40 is complete with its original eleven-case Codex cohort passing; m41 is complete with all nine selected Codex high-risk cases passing. The remaining checks in 083, 086, 090, 094 and m43–m45/m48–m53 still require their own acceptance evidence and are resumed item by item. m47 and m59 retain their dependency prerequisites.
+**Codex verification update (2026-11-08):** Linux arm64 Codex CLI 0.167.0 with `gpt-6.1-sol` now completes model turns and native sandboxed commands; [runtime and filesystem checks](../../docs/skills/routing-rehearsal.md#linux-codex-execution-restored--2026-11-08) are recorded. [089](./done/089.md) passes twice and is closed. The macOS managed-preferences startup failure persists, but the historical November 17 quota-reset estimates below no longer block Linux verification. m40 is complete with its original eleven-case Codex cohort passing; m41 is complete with all nine selected Codex high-risk cases passing. The remaining checks in 086, 090, 094 and m43–m45/m48–m53 still require their own acceptance evidence and are resumed item by item. m47 and m59 retain their dependency prerequisites.
 
 ## Milestones
 
@@ -78,7 +78,6 @@
 - [097 — Business presets lack loans, payroll and sales-tax liabilities, and owner draws](./blocked/097.md) — **blocked:** a `business@2` preset version and public API enum change; the owner decides its content
 - [099 — Inventory lots and cost of goods sold for product sellers](./blocked/099.md) — **blocked:** validated product-seller demand (owner decision)
 - [080 — Decide whether the suite keeps its no-`bea` developer fallback](./blocked/080.md) (owner decision) — **blocked:** the owner picks keep, read-only, or require-`bea`
-- [083 — Codex cannot find beancount-init's `bea-cli.md` in a linked install, so the shared command contract goes unread](./blocked/083.md) — **blocked:** linked-install fix shipped; the fresh Codex probe fails during managed-preferences synchronization before any model event
 - [084 — Say plainly where ledger data goes, and how the suite relates to upstream Beancount](./blocked/084.md) — **blocked:** the "Your data" draft is written in the note; the owner approves the affiliation wording
 - [086 — Check that non-English ledger requests route to the right skill](./blocked/086.md) — **blocked:** 25 prompts added and routed 25/25 on one client; the Codex rerun waits for Codex usage
 - [087 — Decide whether to publish the skill suite from a slim public mirror repository](./blocked/087.md) — **blocked:** owner decision (repository, credential, portal identities)
