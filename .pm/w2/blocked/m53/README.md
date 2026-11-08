@@ -1,6 +1,6 @@
 # w2 · m53 — Onboard an investor household, and prove it with a first-year journey
 
-**Worker:** worker2 **Goal:** a new user with brokerage, crypto, and property accounts starts a ledger that already has the right accounts and booking methods, then follows one documented first-year journey — income, investments, a home, year-end gains — across the skills m49-m52 complete. **Status:** active (t001–t006 done; closeout retains 102/103 gates)
+**Worker:** worker2 **Goal:** a new user with brokerage, crypto, and property accounts starts a ledger that already has the right accounts and booking methods, then follows one documented first-year journey — income, investments, a home, year-end gains — across the skills m49-m52 complete. **Status:** blocked (only t007; 102/103 need the remaining-client release gate)
 
 ## Tasks (in order)
 
@@ -41,3 +41,15 @@ rehearsal. Candidate commits and precise runtime distinctions are preserved
 in the rehearsal record. No fresh Claude validation or candidate publication
 is claimed. Adoption is complete; simplify and coverage are complete; final closeout must
 wait for the affected both-client release gates in 102/103.
+
+
+## Closeout blocked — 2026-11-08
+
+All independent Codex, adoption, simplify and coverage tasks are complete.
+Published-main close/report failures remain explicit in 102/103; fixes pass
+Codex on a preserved unshipped candidate, and the verifier regression ships
+in `4f05ca363`. Both-client validation of the final instructions is still
+required before release/archival. **Unblock:** normal Claude login, combined
+candidate rebase/version bump, affected both-client checks and green release
+CI, then close t007. **Owner:** client login by owner, verification/shipping by
+worker. This replaces the obsolete Codex quota blocker.
