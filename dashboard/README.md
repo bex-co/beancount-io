@@ -94,6 +94,16 @@ be prefixed with `VITE_`.
 | `VITE_SSR_API_URL`       | No       | Internal API URL for the SSR server. Defaults to `VITE_API_URL`.                                                                                                                                                                                                                                                                                                                                             |
 | `VITE_GA_MEASUREMENT_ID` | No       | GA4 Measurement ID for this environment's analytics data stream. Use a **separate stream per environment** (set the dev/staging stream's ID locally and the production stream's ID in prod). When unset, analytics is disabled and no GA script loads. Non-production builds send events with GA4 `debug_mode` so you can validate instrumentation in GA4 DebugView before it reaches the production stream. |
 
+Runtime variables (read by the server when it starts, not baked into the bundle):
+
+| Variable              | Required | Purpose                                                                                                                                                                                                                                                 |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SSR_API_URL`         | No       | Internal API URL for the SSR server; overrides `VITE_SSR_API_URL`.                                                                                                                                                                                      |
+| `API_PROXY_URL`       | No       | Opt-in same-origin API: forward `/api-gateway/*` and `/.well-known/*` to this base URL so the browser talks to the dashboard host alone (`server/api-gateway-proxy.ts`). Unset, nothing is forwarded. Used by the bex deployment, see `../deploy/bex/`. |
+| `RENDER_EXTERNAL_URL` | No       | Set by Render-compatible platforms. When present the dashboard answers `GET /_internal/public-url` with it, so a sibling service can learn this deployment's public address (`server/public-url.ts`).                                                   |
+
+Both handlers live in `server/` as global Nitro middleware and do nothing unless their variable is set, so a deployment that sets neither is unchanged.
+
 ## Scripts
 
 | Script                   | Description                                                  |

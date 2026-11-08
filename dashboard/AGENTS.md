@@ -118,6 +118,8 @@ Current variables:
 | `VITE_SSR_API_URL`       | No       | Internal URL for SSR; falls back to `VITE_API_URL`.                                         |
 | `VITE_GA_MEASUREMENT_ID` | No       | Per-environment GA4 stream; unset disables analytics. Non-production builds use debug mode. |
 
+Runtime-only variables (read from `process.env` by `server/`, never baked in) are listed in `README.md`: `SSR_API_URL`, `API_PROXY_URL` and `RENDER_EXTERNAL_URL`. The two global middleware in `server/` (`api-gateway-proxy.ts`, `public-url.ts`) must stay inert when their variable is unset: they sit in front of every request the dashboard serves, and `server/__tests__/` pins both the opt-in behavior and the path rules. Register a new one in `vite.config.ts` `handlers` and in `knip.jsonc` `entry`.
+
 When adding one, update `src/vite-env.d.ts`, the typed config, `.env.example`, `README.md`, and any applicable deployment definitions (`../deploy/docker-mac/` and root `bex.yaml`). Never put a secret in a `VITE_*` variable.
 
 ## Growth planning and Search Console

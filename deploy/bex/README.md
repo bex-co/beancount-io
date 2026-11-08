@@ -63,21 +63,41 @@ does not use this wrapper; run it with
 
 ## Deploy
 
-The bex CLI can only *validate* a Blueprint — applying one is a REST/MCP/
-dashboard operation.
+Use the button at the top. To do the same from a terminal, a Blueprint is a
+REST/MCP/dashboard operation (the bex CLI can only *validate* one). Name the
+workspace that should own it with `ownerId`: the older
+`POST /v1/blueprints/deploy` defaults to the `bex` workspace, not your active
+one.
 
 ```zsh
 bex blueprints validate ./bex.yaml
 
-curl -X POST https://api.bex.co/v1/blueprints/deploy \
-  -H "Authorization: Bearer $BEX_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "$(jq -n --arg m "$(cat bex.yaml)" \
-        '{repo:"https://github.com/bex-co/beancount-io",branch:"main",bexYaml:$m}')"
+# preview first: nothing is created, and it lists any input you would be asked for
+curl -X POST https://api.bex.co/v1/blueprints/preview \
+  -H "Authorization: Bearer $BEX_ACCESS_TOKEN" -H "Content-Type: application/json" \
+  -d '{"ownerId":"<workspace id>","repo":"https://github.com/bex-co/beancount-io","branch":"main","path":"bex.yaml"}'
+
+# create it (same body, no input to supply)
+curl -X POST https://api.bex.co/v1/blueprints \
+  -H "Authorization: Bearer $BEX_ACCESS_TOKEN" -H "Content-Type: application/json" \
+  -d '{"ownerId":"<workspace id>","name":"beancount","repo":"https://github.com/bex-co/beancount-io","branch":"main","path":"bex.yaml"}'
 ```
 
-Re-applying an unchanged file is a no-op. Applying is an idempotent upsert, so
-this is also how you roll out an env change.
+Re-applying an unchanged file is a no-op; the Blueprint is an idempotent upsert.
+
+### Rolling out a change
+
+A Blueprint made from a public repository URL gets no push webhook, so pushing
+is not enough:
+
+1. `POST /v1/blueprints/<id>/sync` with `{"ownerId":"…"}` applies manifest
+   changes (environment variables, start commands).
+2. Code changes need a build: `POST /v1/services/<id>/deploys` with
+   `{"commitId":"<sha>","clearCache":"do_not_clear"}`. A deploy with no commit
+   replays the previous image instead of building.
+3. Builds run one at a time per platform queue and the API builds last, so a full
+   rollout can take most of an hour. A rollout that misses its readiness
+   deadline is marked failed and is not retried: deploy it again.
 
 ## After the first deploy
 
