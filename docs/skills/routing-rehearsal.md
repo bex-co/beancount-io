@@ -963,7 +963,7 @@ Trade's current description matches those snapshots. The later complete
 Claude run covers the original `import-opening-lots` miss; the October 20
 102/103 result remains recorded above. These are dated reused routing
 results, not a new 103-prompt run. The original Claude behavior **4/4** remains
-October 20. [m52/t004](../../.pm/w2/blocked/m52/done/t004.md) closes the original
+October 20. [m52/t004](../../.pm/w2/done/m52/done/t004.md) closes the original
 Codex debt; adoption and coverage follow separately.
 
 
@@ -972,3 +972,28 @@ Property milestone m51 closes on November 8 after
 at `dc1c1a023` succeeds on Ubuntu and Windows, including the complete customer
 suite and published-minimum recipe tests. All ten tasks are archived in
 [m51](../../.pm/w2/done/m51/README.md).
+
+
+## Published-executable selection audit — 2026-11-08
+
+The local published Docker image keeps the checkout bea on its default
+non-login PATH; its login shell selects `/usr/local/bin/bea`, linked to
+`/opt/published-bea/bin/bea`. Earlier local unit runs labeled published used
+the default PATH and therefore selected the checkout. Version 0.3.1 alone
+could not distinguish them. This was found during the first-year rehearsal;
+no command or test expectation was changed to hide the difference.
+
+The corrected local unit command explicitly puts `/opt/published-bea/bin`
+first. **All 63 recipe tests pass on actual published bea 0.3.1**, including
+the trade, property and crypto regressions. First-year verifier checks also
+pass 7/7 on that explicit runtime; the earlier six saved checkpoints from
+each first-year run were independently rechecked (12/12) without altering
+the original workspaces. Earlier model turns used the published login-shell
+path; the later live verifier pins its absolute executable as well.
+
+GitHub Actions already installed the published minimum in its own venv and
+put that path first, so the existing remote published evidence remains valid.
+[Full skills run 42501293871](https://github.com/bex-co/beancount-io/actions/runs/42501293871)
+at `8eb37d61f` succeeds on Ubuntu and Windows with all crypto tests and the
+published-minimum leg. [m52](../../.pm/w2/done/m52/README.md) closes all eight
+tasks; the superseded pending run is not treated as a failure.

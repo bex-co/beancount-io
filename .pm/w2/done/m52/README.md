@@ -1,6 +1,6 @@
 # w2 · m52 — Record crypto-native events: swaps, staking, and network fees
 
-**Worker:** worker2 **Goal:** a crypto holder records a coin-to-coin swap, staking or airdrop income, and a wallet transfer that pays its network fee in-kind — each with lots and booking-produced gains intact. **Status:** blocked (only t008 remote full skills CI remains)
+**Worker:** worker2 **Goal:** a crypto holder records a coin-to-coin swap, staking or airdrop income, and a wallet transfer that pays its network fee in-kind — each with lots and booking-produced gains intact. **Status:** done (all eight tasks complete)
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | [t005](done/t005.md) | Adoption surface — **DONE** | 30m | t004 |
 | [t006](done/t006.md) | Simplify — **DONE** | 15m | t005 |
 | [t007](done/t007.md) | Test coverage — **DONE** | 45m | t005, t006 |
-| t008 | Closeout | 15m | t007 |
+| [t008](done/t008.md) | Closeout — **DONE** | 15m | t007 |
 
 ## Previous blocker
 
@@ -42,10 +42,17 @@ on both clients, with trade's description unchanged. t004 is complete;
 t005 adoption is complete; t006 simplify is complete; t007 native coverage is complete; t008 closeout waits for its remote CI. Historical client versions and dates remain distinct.
 
 
-## Current blocker — 2026-11-08
+## Closeout — 2026-11-08
 
-Only t008 waits for remote full skills CI covering native test commit
-`94b635461`. All t001–t007 acceptance evidence is complete. The current
-covering run is 42501117384 at `35c5551b5`; a later covering run may supersede
-it. **Unblock:** Ubuntu and Windows jobs including customer/published recipes
-succeed, then close t008. **Owner:** worker, no user action needed.
+All eight tasks are complete. Original crypto evals 11–14 pass 4/4 on each
+client with actual dates retained; the original 103 routing prompts and
+trade description are covered unchanged in later complete cohorts. Catalogs
+and shared suite version 0.4.30 are consistent. Native swap, staking/explicit
+zero and both fee-treatment regressions, 130 checker/recipe tests and seven
+meaningful mutation controls pass.
+
+[Full skills CI 42501293871](https://github.com/bex-co/beancount-io/actions/runs/42501293871)
+at `8eb37d61f` passes on Ubuntu and Windows including published-minimum
+recipes; secret scan and suite preview pass. A corrected, explicitly pinned
+local run also passes all 63 recipe tests on actual published bea 0.3.1.
+No open implementation or owner decision remains in this milestone.
