@@ -10,7 +10,7 @@ The suite shares [command recipes](beancount-init/references/bea-cli.md) that se
 
 | Skill | Use it to |
 | ----- | --------- |
-| [beancount-init](beancount-init/SKILL.md) | Create a ledger with `bea init` (optional Fava browser setup). |
+| [beancount-init](beancount-init/SKILL.md) | Create a ledger with `bea init`, including investor account and booking choices (optional Fava browser setup). |
 | [beancount-add](beancount-add/SKILL.md) | Record a purchase, transfer, payroll run, new or closed account, price, or note you describe. |
 | [beancount-trade](beancount-trade/SKILL.md) | Record stock, fund, and crypto events with correct lots — including swaps, staking/airdrop income and own-wallet network fees — and report realized gains. |
 | [beancount-property](beancount-property/SKILL.md) | Record property purchases, mortgages, escrow, rent, deposits, and sales from the figures you provide. |
@@ -47,6 +47,7 @@ On native Windows, use the guide's [Windows PowerShell steps](../docs/skills/ins
 - [First query](../docs/skills/first-query.md): ask a synthetic ledger a question through `beancount-ask` and check the known answer. No account needed.
 - [BQL cookbook](../docs/skills/bql-cookbook.md): 22 tested query recipes for humans and agents — spending, cleanup, balances, investments, variance — each executed by CI against a fixture ledger.
 - [First month](../docs/skills/first-month.md): initialize, import, reconcile, ask, and close one synthetic month with explicit approvals and independent ledger/Git checkpoints. See the [real-client rehearsal results](../docs/skills/first-month-rehearsal.md).
+- [First year for an investor household](../docs/skills/first-year-investor.md): initialize investment/property accounts, seed holdings, record broker activity and mortgage payments, swap crypto, close June and review year-end lots and gains. See the [rehearsal results and current limits](../docs/skills/first-year-rehearsal.md).
 - [Migrate, then keep importing](../docs/skills/migration.md): convert a synthetic Monarch export with approved mappings and balance anchors, then import overlapping bank exports without double-booking either side of a transfer. See the [real-client rehearsal results](../docs/skills/migration-rehearsal.md).
 - [Graduate a CSV workflow into an importer](../docs/skills/importer-graduation.md): reuse confirmed settings and source IDs, review golden files, wire a tested importer, and repair changed bank headers without duplicating history. See the [Claude Code and Codex rehearsal results](../docs/skills/importer-graduation-rehearsal.md), tested on macOS with published `bea` 0.3.1 and Beangulp 0.2.0.
 

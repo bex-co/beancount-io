@@ -2,7 +2,7 @@
 
 Install the sixteen `beancount-*` ledger skills for Claude Code, Codex, or both, from any directory. You keep one Git checkout of the skills and link it into each agent's skill directory. Updating the checkout updates every agent, and the helper script never touches skills it did not install. [OpenClaw and Hermes Agent](#openclaw-and-hermes-agent) have the suite route and host limits described below, including migration from the retired standalone listings.
 
-Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#tested-with)). Linux uses the same commands but has not been rehearsed. On native Windows, the [PowerShell steps](#windows-powershell) were rehearsed with Windows PowerShell 5.1. Claude Code and Codex there discovered a workspace install and answered the first query, with the [Windows-specific corrections](#agents-on-windows) listed in that section. WSL is not covered.
+Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#tested-with)). Linux arm64 Codex has [isolated-container installation and ledger rehearsals](routing-rehearsal.md#linux-codex-execution-restored--2026-11-08). On native Windows, the [PowerShell steps](#windows-powershell) were rehearsed with Windows PowerShell 5.1. Claude Code and Codex there discovered a workspace install and answered the first query, with the [Windows-specific corrections](#agents-on-windows) listed in that section. WSL is not covered.
 
 ## Prerequisites
 
@@ -62,6 +62,8 @@ codex exec --skip-git-repo-check "List the names of the skills available to you 
 In an interactive session, Claude Code lists skills with `/skills` and runs one with `/beancount-ask`. In Codex, mention a skill as `$beancount-ask`. Both agents also pick a skill on their own when your request matches its description.
 
 Next: get a first answer from a sample ledger with the [first-query walkthrough](first-query.md), then complete a synthetic month with the [first-month guide](first-month.md). The latter uses the same `bea` and includes [verified Claude Code and Codex rehearsals](first-month-rehearsal.md).
+
+For investment and property accounts, follow the [first-year investor guide](first-year-investor.md), with its [tested runtimes and current limitations](first-year-rehearsal.md).
 
 ### When a skill does not appear
 

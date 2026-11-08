@@ -9,6 +9,9 @@ confirming it; every stage ends in a checkpoint you can verify with the
 printed `bea` command against
 [expectations](examples/first-year-investor/expectations.json).
 
+See the [rehearsal record](first-year-rehearsal.md) for tested client versions,
+published-runtime results and current limitations.
+
 This guide needs Git, Python 3.9+, **bea 0.3.1 or later**, and the customer
 suite from [the installation guide](installation.md). No account, hosted
 service, or personal financial data is involved. See the
