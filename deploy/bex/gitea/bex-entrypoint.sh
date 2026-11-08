@@ -1,7 +1,18 @@
 #!/bin/sh
-# Create the backend's Gitea administrator exactly once, in the background
-# after Gitea reports healthy, then hand over to the stock entrypoint.
+# Tell Gitea its own public address, create the backend's Gitea administrator
+# exactly once (in the background, after Gitea reports healthy), then hand over
+# to the stock entrypoint.
 set -eu
+
+# The platform assigns the hostname, and a second deployer of this Blueprint is
+# given a different one when the first choice is taken, so it cannot be written
+# into the Blueprint. bex tells the service its own address; use it unless the
+# operator set Gitea's address themselves.
+if [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
+    : "${GITEA__server__ROOT_URL:=${RENDER_EXTERNAL_URL%/}/}"
+    : "${GITEA__server__DOMAIN:=${RENDER_EXTERNAL_HOSTNAME:-}}"
+    export GITEA__server__ROOT_URL GITEA__server__DOMAIN
+fi
 
 create_admin() {
     for _ in $(seq 1 90); do

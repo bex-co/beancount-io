@@ -32,7 +32,8 @@
     "generate-v1-openapi": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-v1-openapi.ts",
     "generate-fava-client": "ts-node --transpile-only scripts/generate-upstream-client.ts fava",
     "generate-gitea-client": "ts-node --transpile-only scripts/generate-upstream-client.ts gitea",
-    "migrate:deploy": "node scripts/migrate-deploy.js"
+    "migrate:deploy": "node scripts/migrate-deploy.js",
+    "resolve-public-url": "node scripts/resolve-public-url.js"
   },
   "keywords": [
     "beancount",

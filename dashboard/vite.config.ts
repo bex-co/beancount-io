@@ -27,6 +27,11 @@ export default defineConfig({
           middleware: true,
           handler: "./server/api-gateway-proxy.ts",
         },
+        {
+          route: "/**",
+          middleware: true,
+          handler: "./server/public-url.ts",
+        },
       ],
       // Radix/sonner/cmdk ship "use client" for Next.js App Router. TanStack
       // Start is plain SSR, not RSC, so the directive Rollup drops while

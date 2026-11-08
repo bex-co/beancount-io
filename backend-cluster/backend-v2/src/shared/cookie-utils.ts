@@ -73,7 +73,7 @@ export function getAuthCookieFromCtx(ctx: Context): string | undefined {
  * and API hosts (e.g. `.example.com`): a browser rejects a cookie claiming
  * `.beancount.io` from any other site.
  */
-export function authCookieDomain(): string {
+function authCookieDomain(): string {
   return process.env.AUTH_COOKIE_DOMAIN?.trim() || ".beancount.io";
 }
 

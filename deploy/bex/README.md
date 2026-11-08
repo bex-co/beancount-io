@@ -108,11 +108,43 @@ cannot share a cookie. Instead the browser talks to the dashboard host only:
 - The dashboard forwards `/api-gateway/*` to the API when `API_PROXY_URL` is set
   (`dashboard/server/api-gateway-proxy.ts`; `bex.yaml` sets it to
   `http://beancount-api:4104`). Unset, the handler does nothing.
-- `dashboard/.env.production` bakes `VITE_API_URL` as the dashboard host's own
-  `/api-gateway/`.
-- The API sets the cookie for the dashboard host through `AUTH_COOKIE_DOMAIN`
-  (unset or blank keeps `.beancount.io`, so existing deployments are unaffected).
-  Never use `.onbex.co`: other bex tenants share it and would receive the cookie.
+- `dashboard/.env.production` bakes `VITE_API_URL` as the relative
+  `/api-gateway/`, true on any host. The server side never reads it (it uses the
+  runtime `SSR_API_URL`).
+- The API sets the cookie for the dashboard host alone through
+  `AUTH_COOKIE_DOMAIN` (unset or blank keeps `.beancount.io`, so existing
+  deployments are unaffected). Never use `.onbex.co`: other bex tenants share it
+  and would receive the cookie.
+
+### No address is written into the Blueprint
+
+bex assigns each service its hostname from its name, and when another workspace
+already holds the name the hostname becomes `<name>-<suffix>`. A second deployer
+of this Blueprint therefore gets a different address than yours, so none is
+written into `bex.yaml`. The options considered:
+
+1. **Derive it per request** from the forwarded host. Rejected: the OAuth issuer
+   is fixed when the API starts, and trusting a request header for it invites
+   host-header attacks.
+2. **Ask the deployer for it after the first deploy** (a prompt, then a sync).
+   Rejected: a newcomer cannot know the address before it exists, which defeats
+   one-click deploy.
+3. **The API learns it at start from the dashboard.** Chosen. The dashboard is
+   the one public entry point and bex tells it its own address
+   (`RENDER_EXTERNAL_URL`); it serves that at `/_internal/public-url`
+   (`dashboard/server/public-url.ts`, inert where the variable is unset). The
+   API's start command runs `scripts/resolve-public-url.js`, which asks once
+   (retrying while the dashboard starts) and derives `DASHBOARD_URL` (the OAuth
+   issuer), `AUTH_COOKIE_DOMAIN` (that host alone) and `EXTRA_ALLOWED_ORIGINS`.
+
+It only acts when `PUBLIC_URL_FROM` is set. Anything you set yourself is kept,
+so a custom domain works by setting `DASHBOARD_URL` (the rest follows from it).
+If the address cannot be learned the container exits instead of starting with
+the API's built-in default, which is beancount.io's own address. Gitea does the
+same for itself in its entrypoint (`ROOT_URL` and `DOMAIN` from its own address).
+
+Known gap: `EXTERNAL_GITEA_HOST_NAME`, used only to build the pull-request link
+the AI assistant returns, is not set on bex and falls back to the code default.
 
 With your own domain you do not need the proxy: give the dashboard and API hosts
 a shared parent, set `AUTH_COOKIE_DOMAIN` to it, and point `VITE_API_URL` at the

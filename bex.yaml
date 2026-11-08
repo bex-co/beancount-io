@@ -81,7 +81,11 @@ services:
     # says is pending -- and numInstances is 1, so there is no concurrent-
     # migration hazard. A failed migration crashloops the container rather
     # than silently serving against an unmigrated schema.
-    dockerCommand: sh -c "node scripts/migrate-deploy.js && yarn start"
+    # First learn this deployment's public address from the dashboard (see
+    # PUBLIC_URL_FROM below), then migrate, then serve. `set -e` makes a failure
+    # to learn it stop the container instead of starting with the API's
+    # built-in default, which is beancount.io's address.
+    dockerCommand: sh -c 'set -e; out=$(node scripts/resolve-public-url.js); eval "$out"; node scripts/migrate-deploy.js; exec yarn start'
     # Render's canonical use for preDeployCommand is a database
     # migration, but on bex the pre-deploy Job runs in BEX_BUILD_NAMESPACE
     # while the managed Postgres lives in the workspace namespace, and
@@ -97,19 +101,17 @@ services:
       # rollout waiting forever on a port nothing listens on.
       - key: PORT
         value: "4104"
-      - key: SERVER_URL
-        value: https://beancount-api.onbex.co
-      - key: DASHBOARD_URL
-        value: https://beancount-dashboard.onbex.co
-      # The browser reaches this API through the dashboard host (see
-      # API_PROXY_URL above), so the sign-in cookie is scoped to that host alone
-      # -- not to .onbex.co, which every bex tenant shares.
-      - key: AUTH_COOKIE_DOMAIN
-        value: beancount-dashboard.onbex.co
-      # Direct calls to this API from the dashboard origin; CORS only trusts
-      # *.beancount.io by default (src/server/api/allowed-origin.ts).
-      - key: EXTRA_ALLOWED_ORIGINS
-        value: https://beancount-dashboard.onbex.co
+      # No public address is written here: the platform assigns the hostname,
+      # and a second deployer of this Blueprint is given a different one when
+      # the first choice is taken. At start, scripts/resolve-public-url.js asks
+      # the dashboard (the one public entry point, which knows its own
+      # RENDER_EXTERNAL_URL) and derives DASHBOARD_URL (the OAuth issuer),
+      # AUTH_COOKIE_DOMAIN (that host alone, never the shared .onbex.co) and
+      # EXTRA_ALLOWED_ORIGINS. Set any of them yourself, for example behind a
+      # custom domain, and your value is kept. SERVER_URL is not needed: in
+      # production the issuer is DASHBOARD_URL.
+      - key: PUBLIC_URL_FROM
+        value: http://beancount-dashboard:3000/_internal/public-url
       # This stack serves its operator's own users: sign-up needs no email
       # verification (there is no mail provider) and no plan limits apply.
       - key: SELF_HOST
@@ -164,10 +166,6 @@ services:
         value: beancount-gitea
       - key: GITEA_HTTP_PORT
         value: "3000"
-      - key: EXTERNAL_GITEA_HOST_NAME
-        value: beancount-gitea.onbex.co
-      - key: EXTERNAL_GITEA_HTTP_PORT
-        value: "443"
       - key: FAVA_API_ADMIN_USER
         value: beancount_admin
       - key: FAVA_API_ADMIN_PASSWORD
@@ -301,10 +299,9 @@ services:
         value: "5"
       - key: GITEA__database__CONN_MAX_LIFETIME
         value: 5m
-      - key: GITEA__server__DOMAIN
-        value: beancount-gitea.onbex.co
-      - key: GITEA__server__ROOT_URL
-        value: https://beancount-gitea.onbex.co/
+      # GITEA__server__ROOT_URL and GITEA__server__DOMAIN are not set here:
+      # deploy/bex/gitea/bex-entrypoint.sh derives them from the address bex
+      # gives this service (RENDER_EXTERNAL_URL), unless you set them yourself.
       - key: GITEA__server__HTTP_PORT
         value: "3000"
       # No TCP routing on bex: Git-over-SSH is unavailable, HTTPS only.

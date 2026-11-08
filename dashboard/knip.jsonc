@@ -12,6 +12,7 @@
     "src/server.ts",
     // Nitro loads this middleware from vite.config.ts `handlers`.
     "server/api-gateway-proxy.ts",
+    "server/public-url.ts",
   ],
   "ignoreIssues": {
     // TanStack Start discovers and calls the exported router factory.
