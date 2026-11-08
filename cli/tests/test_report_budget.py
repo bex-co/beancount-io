@@ -86,6 +86,89 @@ def test_a_whole_month_reads_as_declared_with_subtree_actuals(tmp_path: Path) ->
     assert (rent["budget"], rent["actual"], rent["variance"]) == ("1000.00", "1000", "0.00")
 
 
+@pytest.mark.parametrize("root,sign", [("Expenses", 1), ("Income", -1)])
+@pytest.mark.parametrize("posting", ["10", "10.00"])
+def test_declared_budget_cents_survive_whole_unit_actuals(tmp_path: Path, root: str, sign: int, posting: str) -> None:
+    account = f"{root}:Food"
+    text = (
+        HEAD
+        + f"""\
+2026-01-01 open Income:Food USD
+2026-01-01 custom "budget" {account} "monthly" 100.49 USD
+2026-01-02 * "Actual"
+  {account} {"" if sign == 1 else "-"}{posting} USD
+  Assets:Bank
+"""
+    )
+    row = _rows(_report(["-t", "2026-01"], tmp_path, text))[(account, "USD")]
+    assert (row["budget"], row["actual"], row["variance"]) == ("100.49", posting, "-90.49")
+    ledger = tmp_path / "main.beancount"
+    csv_run = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01", "--format", "csv"], tmp_path)
+    assert csv_run.returncode == 0, csv_run.stderr
+    exported = next(csv.DictReader(io.StringIO(csv_run.stdout)))
+    assert (exported["budget"], exported["actual"], exported["variance"]) == ("100.49", posting, "-90.49")
+    human = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01"], tmp_path)
+    assert human.returncode == 0, human.stderr
+    assert "100.49 USD" in human.stdout and "-90.49 USD" in human.stdout
+    assert ledger.read_text() == text
+
+
+@pytest.mark.parametrize("with_posting", [False, True])
+def test_tiny_declared_budget_survives_zero_or_absent_actuals(tmp_path: Path, with_posting: bool) -> None:
+    text = HEAD + '2026-01-01 custom "budget" Expenses:Food "monthly" 0.12345678 USD\n'
+    if with_posting:
+        text += '2026-01-02 * "Zero"\n  Expenses:Food 0 USD\n  Assets:Bank 0 USD\n'
+    row = _rows(_report(["-t", "2026-01"], tmp_path, text))[("Expenses:Food", "USD")]
+    assert (row["budget"], row["actual"], row["variance"]) == ("0.12345678", "0", "-0.12345678")
+    ledger = tmp_path / "main.beancount"
+    run = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01", "--format", "csv"], tmp_path)
+    assert run.returncode == 0, run.stderr
+    exported = next(csv.DictReader(io.StringIO(run.stdout)))
+    assert exported["budget"] == "0.12345678" and exported["variance"] == "-0.12345678"
+
+
+@pytest.mark.parametrize(
+    "example,calculated,shown", [("0", "100.49", "100"), ("0.00", "100.49", "100.49"), ("0.000", "100.490", "100.490")]
+)
+def test_explicit_budget_display_precision_preserves_calculated_value(
+    tmp_path: Path, example: str, calculated: str, shown: str
+) -> None:
+    text = (
+        f'option "display_precision" "USD:{example}"\n'
+        + HEAD
+        + '2026-01-01 custom "budget" Expenses:Food "monthly" 100.49 USD\n'
+        + '2026-01-02 * "Food"\n  Expenses:Food 10 USD\n  Assets:Bank\n'
+    )
+    row = _rows(_report(["-t", "2026-01"], tmp_path, text))[("Expenses:Food", "USD")]
+    assert row["budget"] == calculated
+    assert Decimal(row["variance"]) == Decimal("-90.49")
+    run = bea(["-f", str(tmp_path / "main.beancount"), "report", "budget", "-t", "2026-01"], tmp_path)
+    assert run.returncode == 0, run.stderr
+    assert f"{shown} USD" in run.stdout
+    if example == "0":
+        assert "100.49" not in run.stdout
+
+
+def test_quotes_and_invalid_budgets_do_not_inflate_budget_or_other_report_precision(tmp_path: Path) -> None:
+    text = (
+        HEAD
+        + '2026-01-01 custom "budget" Expenses:Food "monthly" 100.49 USD\n'
+        + '2026-01-01 custom "budget" Expenses:Fun "invalid" 1.12345678 USD\n'
+        + "2026-01-01 price HOOL 191.12345678 USD\n"
+        + '2026-01-02 * "Food"\n  Expenses:Food 10 USD\n  Assets:Bank\n'
+    )
+    data = _report(["-t", "2026-01"], tmp_path, text)
+    assert _rows(data)[("Expenses:Food", "USD")]["budget"] == "100.49"
+    assert data["budget_errors"] == ["Invalid interval for budget entry"]
+    ledger = tmp_path / "main.beancount"
+    budget = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01"], tmp_path)
+    assert budget.returncode == 0, budget.stderr
+    assert "100.49 USD" in budget.stdout and "100.49000000" not in budget.stdout
+    trial = bea(["-f", str(ledger), "report", "trial-balance", "-t", "2026-01"], tmp_path)
+    assert trial.returncode == 0, trial.stderr
+    assert "10 USD" in trial.stdout and "10.00 USD" not in trial.stdout
+
+
 def test_income_reads_as_earned_and_a_positive_variance_means_ahead(tmp_path: Path) -> None:
     salary = _rows(_report(["-t", "2026-01"], tmp_path))[("Income:Salary", "USD")]
     assert salary["account_type"] == "income"

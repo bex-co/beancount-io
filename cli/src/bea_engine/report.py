@@ -373,16 +373,25 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
     income_root, expenses_root = ledger.options["name_income"], ledger.options["name_expenses"]
     in_scope = account_predicate(filtered.account, ledger.root_accounts)
     precision = _display_precision(filtered)
+    calculation_precision = dict(precision)
+    for currency, digits in module.precision.items():
+        calculation_precision[currency] = max(digits, precision.get(currency, 2))
+        # Budget amounts are money too. Explicit display choices still win
+        # for the human table, without discarding declared budget subunits.
+        if currency not in (ledger.options.get("display_precision") or {}):
+            precision[currency] = calculation_precision[currency]
 
     def prorated(account: str, span: Any) -> dict[str, Decimal]:
-        """The day-prorated budget, rounded half up to the currency's display precision.
+        """The day-prorated budget, with at least its declared fractional digits.
 
         Thirty-one thirty-firsts of 300 add up to 299.99999…; rounding makes a
         whole month read as declared. Actuals are never rounded.
         """
         shares = module.calculate(account, span.begin, span.end)
         return {
-            currency: number.quantize(Decimal(1).scaleb(-precision.get(currency, 2)), rounding=ROUND_HALF_UP)
+            currency: number.quantize(
+                Decimal(1).scaleb(-calculation_precision.get(currency, 2)), rounding=ROUND_HALF_UP
+            )
             for currency, number in shares.items()
         }
 

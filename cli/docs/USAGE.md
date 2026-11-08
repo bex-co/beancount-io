@@ -1925,8 +1925,10 @@ too:
 - A budget applies from its date until a later line for the same account and
   currency replaces it. It is spread by day, so a period shorter than its
   interval (the ledger's last month, or `--time` ending mid-month) gets its
-  share; the share is rounded half up to the currency's display precision, so a
-  whole month reads as declared.
+  share; the share is rounded half up using at least the fractional digits of
+  its declared budget, so a whole month reads as declared even when actuals
+  use whole units. Explicit display precision still controls human tables;
+  JSON and CSV keep the calculated value.
 - A budgeted account's actual is its whole subtree (`Expenses:Food` includes
   `Expenses:Food:Dining`), in the currencies it posted, never converted. Income
   reads as earned, so both sides are positive.

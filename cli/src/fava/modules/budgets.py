@@ -58,6 +58,17 @@ class BudgetModule:
         """The accounts that declare a budget (Beancount.io change: `bea report budget`)."""
         return sorted(self._budget_entries)
 
+    @property
+    def precision(self) -> dict[str, int]:
+        """Fractional digits of valid budget amounts (Beancount.io change)."""
+        precision: dict[str, int] = {}
+        for entries in self._budget_entries.values():
+            for budget in entries:
+                exponent = budget.number.as_tuple().exponent
+                digits = max(0, -exponent) if isinstance(exponent, int) else 0
+                precision[budget.currency] = max(digits, precision.get(budget.currency, 0))
+        return precision
+
     def calculate(
         self,
         account: str,
