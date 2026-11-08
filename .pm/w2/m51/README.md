@@ -1,6 +1,6 @@
 # w2 · m51 — Track a home, its mortgage, and a rental in the same ledger
 
-**Worker:** worker2 **Goal:** a homeowner records the purchase, each monthly mortgage payment split from statement figures, escrow flows, rental income per property, and eventually the sale — with the property visible in net worth at cost or at a stated price. **Status:** in progress (t001–t006 done; adoption next)
+**Worker:** worker2 **Goal:** a homeowner records the purchase, each monthly mortgage payment split from statement figures, escrow flows, rental income per property, and eventually the sale — with the property visible in net worth at cost or at a stated price. **Status:** in progress (t001–t007 done; simplify next)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | [t004](done/t004.md) | Record rental income per property and a property sale — **DONE** | 60m | t002 |
 | [t005](done/t005.md) | Write evals, fixtures, and routing entries — **DONE** | 60m | t002, t003, t004 |
 | [t006](done/t006.md) | Run the evals and routing set on both clients — **DONE** | 45m | t005 |
-| t007 | Adoption surface | 30m | t006 |
+| [t007](done/t007.md) | Adoption surface — **DONE** | 30m | t006 |
 | t008 | Simplify | 15m | t007 |
 | t009 | Test coverage | 45m | t007, t008 |
 | t010 | Closeout | 15m | t009 |
