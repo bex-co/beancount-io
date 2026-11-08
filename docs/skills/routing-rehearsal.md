@@ -644,3 +644,49 @@ independent grade are local under
 `scripts/skills/tmp/w2-codex-linux/m42/`. The two source checkouts have the
 same customer skills/tooling/guides as `b91a5998f`; the intervening
 `812236764` change is in the backend package.
+
+## Original trade behavior cohort — 2026-11-08
+
+w2/m45/t006's original eight evals now pass on Codex CLI **0.167.0** /
+`gpt-6.1-sol`, Linux, in the prepared runtime above, with the checkout `bea`
+reporting 0.3.1 (not a claim of a clean published-release install). Each eval
+starts from its original synthetic fixture in a fresh Git workspace with the
+sixteen-skill linked suite. The tested candidate is suite **0.4.29**, based on
+`10237e8b6`; the later upstream synchronization changed no skill-package file.
+
+| Eval | Observed final result |
+| --- | --- |
+| 1 average-cost refusal | Pass twice after clarification: unambiguously refuses AVERAGE, shows both actual 10-share lots at 100/120 USD and January 15/February 15 dates, asks the user to choose an alternative, writes nothing. |
+| 2 ambiguous STRICT sale | Shows both candidate lots, asks which to sell and for the missing date, writes nothing. No lot chosen silently. |
+| 3 own-account transfer | After the shown November 8 proposal is approved, 4 VTI moves to Roth at the original 100 USD / January 15 lot. Independent queries show 6 remaining and 4 received; no price, cash or gain leg. |
+| 4 split | After approval, 10 ACME becomes 40 at 50 USD with January 15 acquisition date; total cost remains 2,000 USD. Native total-cost write and root check pass. |
+| 5 reinvested dividend | After approval, adds a distinct March 16 lot of 0.15 VTI at 300 USD against 45 USD dividend income, with no cash leg; original lot remains intact. |
+| 6 RSU vest | Pass after clarification: proposal explicitly leaves tax treatment to the user and adds no withholding; after approval, 8 ACME at 200 USD dated May 1 against 1,600 USD compensation income, root check passing. |
+| 7 crypto transfer | After confirming November 8 and no network fee, transfers 0.2 BTC at the original 40,000 USD / January 10 lot; independent queries show 0.3 remaining and 0.2 received, no price or gain leg. |
+| 8 realized-gains report | Pass twice after clarification: uses ask's read-only entry point and the shared trade reference, shows acquisition 2025-01-15, sale 2026-03-01, 5 VTI, proceeds 750, basis 500, gain 250 USD, more-than-one-year bucket (410 days), and matching booked-gains BQL. Open lots and unrealized gains are explicitly excluded; ledger unchanged. |
+
+All five write cases first left the ledger byte-identical while awaiting the
+explicit confirmation. Their final entries and independent lot queries match
+the expected shape, and the root check passes. Evals 1, 2 and 8 leave the ledger
+unchanged throughout. No external financial service or production ledger was
+used. Original, fixed and repeated transcripts are retained locally under
+`scripts/skills/tmp/w2-codex-linux/runs/m45-trade-*`.
+
+Three initial answers were incomplete and are retained as partial results:
+eval 1 refused safely but omitted the real lots; eval 6 booked correctly without
+inventing withholding but omitted explicit tax-treatment ownership; eval 8
+computed and tied out 250 correctly but omitted acquisition date, holding bucket
+and coverage exclusions. Compact procedure/output clarifications now require
+those fields. Evals 1 and 8 then pass in two fresh sessions each; eval 6's fresh
+proposal includes its missing statement and completes the confirmed write.
+No description changed. Both plugin manifests bump together to 0.4.29.
+
+The routing debt is already satisfied by the **November 1** Codex 0.166.0
+128/128 passes above, twice with zero errors: a JSON audit confirms every one
+of m45's original **90** entries from `e50735ced` is present unchanged in
+`df1cfd84e`. This is dated reuse of those completed runs, not a new 136-entry
+cohort. Claude Code's October 19 behavior 8/8 and routing 90/90 evidence in
+[w2/m45/t006](../../.pm/w2/m45/done/t006.md) retains its original date and version;
+no fresh Claude answer is claimed. The 67 checker tests plus the existing real
+trade-batch/realized-gains recipe tests pass (69 total), as do full local skills
+CI, the 0.4.28-to-0.4.29 base-aware version gate, and agent-guidance validation.

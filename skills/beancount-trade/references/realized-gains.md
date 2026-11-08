@@ -4,6 +4,12 @@ Read-only. Every figure comes from the shown `bea` output quoted with
 the answer — never from arithmetic done in prose. `$year_start` is the year's
 first day, `$year_end` the next year's first day.
 
+**Answer contract:** show every closed lot's acquisition date, sale date,
+quantity, proceeds, cost basis, gain, and holding bucket (one year or less, or
+more than one year), alongside the booked-gains tie-out. State explicitly that
+open lots and unrealized gains are excluded. Keep these fields and exclusions
+in the user-facing answer as well as the reproducible commands.
+
 Start with the command, not a query:
 
 ```sh
