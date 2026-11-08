@@ -1,6 +1,6 @@
 # w2 · m51 — Track a home, its mortgage, and a rental in the same ledger
 
-**Worker:** worker2 **Goal:** a homeowner records the purchase, each monthly mortgage payment split from statement figures, escrow flows, rental income per property, and eventually the sale — with the property visible in net worth at cost or at a stated price. **Status:** blocked (only t010 remote full skills CI remains)
+**Worker:** worker2 **Goal:** a homeowner records the purchase, each monthly mortgage payment split from statement figures, escrow flows, rental income per property, and eventually the sale — with the property visible in net worth at cost or at a stated price. **Status:** done (all ten tasks complete)
 
 ## Tasks (in order)
 
@@ -15,7 +15,7 @@
 | [t007](done/t007.md) | Adoption surface — **DONE** | 30m | t006 |
 | [t008](done/t008.md) | Simplify — **DONE** | 15m | t007 |
 | [t009](done/t009.md) | Test coverage — **DONE** | 45m | t007, t008 |
-| t010 | Closeout | 15m | t009 |
+| [t010](done/t010.md) | Closeout — **DONE** | 15m | t009 |
 
 ## Decisions
 
@@ -47,12 +47,21 @@ evals 1–7 resume on independent linked synthetic workspaces. All original 100
 routing entries are audited unchanged inside later completed client cohorts;
 those dated results remain distinct from this fresh behavior run.
 
-## Current blocker — 2026-11-08
+## Cleared CI wait — 2026-11-08
 
-Only t010 remains. Seven original Codex property cases pass on the unchanged
-suite; both-client dated routing debt, adoption, simplify and meaningful native
-coverage are complete. New tests shipped in `dc1c1a023`, but remote skills run
-42499037382 is still in progress (Windows installer, preview and secret scan
-already pass). **Unblock:** this or an equivalent later full skills run succeeds,
-including customer and published-minimum recipes; then close t010. **Owner:**
-worker after GitHub Actions, with no user decision needed.
+The t010-only wait for new test commit `dc1c1a023` cleared when remote skills
+run 42499037382 passed both jobs, including customer and published-minimum
+recipes. No owner decision or new credential was needed.
+
+## Closeout — 2026-11-08
+
+All ten tasks are complete. Original property cases pass 7/7 on each client
+with their actual dates retained; the original 100 routing entries are
+covered unchanged in later complete cohorts. Adoption and version history
+are consistent. Three executable native property regressions, 127 passing
+checker/recipe tests, published-minimum checks and five meaningful mutation
+controls protect the stated purchase/payment/sale model. Remote full skills
+CI [42499037382](https://github.com/bex-co/beancount-io/actions/runs/42499037382)
+at `dc1c1a023` is green on Ubuntu and Windows, including published bea.
+Secret scan and suite preview pass. No open implementation or owner decision
+remains in this milestone.
