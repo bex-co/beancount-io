@@ -109,9 +109,12 @@ The generated `*.onbex.co` hostnames share no parent domain you own, and bex
 reserves every name under onbex.co, so a dashboard host and a separate API host
 cannot share a cookie. Instead the browser talks to the dashboard host only:
 
-- The dashboard forwards `/api-gateway/*` to the API when `API_PROXY_URL` is set
-  (`dashboard/server/api-gateway-proxy.ts`; `bex.yaml` sets it to
-  `http://beancount-api:4104`). Unset, the handler does nothing.
+- The dashboard forwards `/api-gateway/*` and `/.well-known/*` to the API when
+  `API_PROXY_URL` is set (`dashboard/server/api-gateway-proxy.ts`, put together
+  in `bex.yaml` from the API's internal address). The OAuth issuer is the
+  dashboard host, so the OAuth and MCP discovery documents must be answered
+  there, as the docker deployment's Caddyfile does. Unset, the handler does
+  nothing.
 - `dashboard/.env.production` bakes `VITE_API_URL` as the relative
   `/api-gateway/`, true on any host. The server side never reads it (it uses the
   runtime `SSR_API_URL`).
