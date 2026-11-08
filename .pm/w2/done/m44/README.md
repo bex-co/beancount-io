@@ -1,6 +1,6 @@
 # w2 · m44 — Install the suite as a Claude Code plugin and a Codex plugin
 
-**Worker:** worker2 **Goal:** a Claude Code user adds one marketplace and installs a `beancount-io` plugin, and a Codex user installs the same plugin. Both get the whole customer suite from the same `skills/` folders the link installer uses, with in-client updates and no Python helper. **Status:** blocked (t010 awaits remote skills CI)
+**Worker:** worker2 **Goal:** a Claude Code user adds one marketplace and installs a `beancount-io` plugin, and a Codex user installs the same plugin. Both get the whole customer suite from the same `skills/` folders the link installer uses, with in-client updates and no Python helper. **Status:** done
 
 ## Tasks (in order)
 
@@ -15,7 +15,7 @@
 | [t007](done/t007.md) | Adoption surface — **DONE** | 30m | [t006](done/t006.md) |
 | [t008](done/t008.md) | Simplify — **DONE** | 15m | t007 |
 | [t009](done/t009.md) | Test coverage — **DONE** | 45m | t007, t008 |
-| t010 | Closeout | 15m | t009 |
+| [t010](done/t010.md) | Closeout — **DONE** | 15m | t009 |
 
 ## Previous blockers
 
@@ -33,13 +33,13 @@
 
 ## Answers to 082's questions
 
-- **Naming:** skill names stay exactly as they are. Plugin skills are namespaced by plugin, so an explicit invocation reads `/beancount-io:beancount-ask`, while model routing still goes by each description. Dropping the `beancount-` prefix inside the plugin would create a second set of names next to the linked install and ClawHub, so it is rejected. A later rename ([m39](../m39/README.md)) applies to every channel at once.
+- **Naming:** skill names stay exactly as they are. Plugin skills are namespaced by plugin, so an explicit invocation reads `/beancount-io:beancount-ask`, while model routing still goes by each description. Dropping the `beancount-` prefix inside the plugin would create a second set of names next to the linked install and ClawHub, so it is rejected. A later rename ([m39](../../blocked/m39/README.md)) applies to every channel at once.
 - **Single source:** the manifests sit outside `skills/` and point at it, because m42's guard rejects a `.claude-plugin/` folder inside `skills/`. t001 confirms the formats allow this. If one does not, the milestone stops for a layout decision rather than copying skills.
 - **Versioning:** t004 picks one rule: either a single suite version that the plugin manifests share and [w6/m6](../../../w6/done/m6/README.md) can reuse for ClawHub, or no version, so each commit is an update. The rule depends on what each client does with a missing or unchanged version. Today's `install` reports a Git revision; the plugin docs say how a user maps one to the other.
 
 ## Source + Goal linkage
 
-- **Source:** inbox note [082](../../done/082.md), promoted 2026-10-18 after the skills-distribution research in that day's `/pm-brainstorm`. Neither Anthropic marketplace listed a Beancount plugin. [giltotherescue/slashbooks](https://github.com/giltotherescue/slashbooks) ships Claude Code and Codex manifests for one skill tree. [Countbean](https://github.com/CPUtester5465/countbean-plugin), a hosted-Beancount plugin, already installs through Claude Code's plugin system.
+- **Source:** inbox note [082](../082.md), promoted 2026-10-18 after the skills-distribution research in that day's `/pm-brainstorm`. Neither Anthropic marketplace listed a Beancount plugin. [giltotherescue/slashbooks](https://github.com/giltotherescue/slashbooks) ships Claude Code and Codex manifests for one skill tree. [Countbean](https://github.com/CPUtester5465/countbean-plugin), a hosted-Beancount plugin, already installs through Claude Code's plugin system.
 - **Goal linkage:** **A3 — Community & distribution:** plugins are the install path Claude Code and Codex now promote, and a self-hosted marketplace is the prerequisite for the vendor directories. **A2 — Frictionless onboarding:** one in-client command replaces a sparse clone, a Python helper, and manual `git pull` updates.
 - **Expected outcome:** a newcomer installs the suite without leaving the client and receives updates there. Signals: plugin installs (once a directory listing reports them), fewer install-guide issues, and skill invocations from plugin users.
 - **Why now:** m42 gives the suite the flat `skills/<name>/` layout a plugin expects, so this follows it directly. Land the install-guide section after w2/m43 documents the other channels, so both milestones do not edit the same section at once. Adoption surface is included because this adds a customer install path and changes the install guide.
@@ -54,9 +54,29 @@
 
 Codex CLI 0.167.0 / `gpt-6.1-sol` has available execution and the Linux runtime works. t003/t006 resume with the plugin as the sole skill source in an isolated profile. Earlier Claude lifecycle evidence remains dated historical evidence.
 
-## Current blocker — 2026-11-08
+## Resolved CI blocker — 2026-11-08
 
 Only t010 remains: remote skills CI run 42478950788 is pending for `1c18fae46`.
 All local gates and actual Codex install/query/refresh/remove evidence pass.
 **Unblock:** successful remote skills CI for this product tree. **Owner:** worker,
 when GitHub finishes. Historical model-access blockers above are resolved.
+
+## Closeout — 2026-11-08
+
+Both native plugin manifests point at the one canonical skills tree and expose
+matching names/descriptions. Codex 0.167.0 / gpt-6.1-sol installed all sixteen
+skills from public GitHub, read the cache's shared CLI reference, answered the
+known first query, refreshed and removed the plugin with a zero-skill catalog
+afterwards. Claude's complete 2.1.289 lifecycle retains its October 19 date;
+there is no claim of a fresh Claude answer. The Linux guide's config caveat is
+corrected and its real negative control is recorded. Both manifests share the
+suite version; CI now enforces a numeric increase against the actual Git base
+when customer skill files change. No tracked skill copy or dev-skill exposure
+was introduced, and skills/ retains its canonical shared MIT-0 LICENSE.
+
+All adoption surfaces were checked on GitHub, simplify found no needed change,
+and meaningful manifest/base-version tests fail when their guards are removed.
+Remote skills run 42479203197 at 915bf57fd succeeded for both jobs; agent-guidance
+run 42478950671 at 1c18fae46 succeeded. Local skills CI and the publication scan
+pass. Subsequent trade-only suite 0.4.29 clarifications ship under m45; they do
+not replace or relabel the dated 0.4.28 plugin lifecycle evidence.
