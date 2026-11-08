@@ -73,7 +73,7 @@ Next: get a first answer from a sample ledger with the [first-query walkthrough]
 
 ## Install from a standard channel instead
 
-For one versioned install and update, use the [Beancount.io plugin](#plugin-both-clients) on Claude Code/Codex or the [suite package](#one-suite-release) on OpenClaw. The Git channels below also install the whole suite, but copy individual workflow directories rather than installing a versioned plugin. Confirm all fourteen skills with the client listing in step 3 and the [first-query walkthrough](first-query.md). Skills hand off to siblings and share one command contract, so install them together. These channels read this repository; their per-skill catalog pages are not separate releases maintained by Beancount.io.
+For one versioned install and update, use the [Beancount.io plugin](#plugin-both-clients) on Claude Code/Codex or the [suite package](#one-suite-release) on OpenClaw. The Git channels below also install the whole suite, but copy individual workflow directories rather than installing a versioned plugin. Confirm all sixteen skills with the client listing in step 3 and the [first-query walkthrough](first-query.md). Skills hand off to siblings and share one command contract, so install them together. These channels read this repository; their per-skill catalog pages are not separate releases maintained by Beancount.io.
 
 ### `npx skills` (skills.sh)
 
@@ -96,6 +96,20 @@ gh skill install bex-co/beancount-io --all --pin main --agent codex --scope user
 
 `--pin main` is required today, not decoration: without it, `gh` resolves this repository's *latest release* (a mobile-app tag from before the flat `skills/` layout) and reports "no standard skills found". Pinned skills are skipped by `gh skill update`, so update by re-running the install commands with `--force` added. There is no `gh skill remove`: run `gh skill list` to see the install directories, then delete the installed `beancount-*` folders from them.
 
+If anonymous API downloads exhaust GitHub's quota, use `gh`'s supported local
+source mode with the sparse checkout from step 1. This installs the same
+complete customer suite without per-file API downloads:
+
+```sh
+gh skill install "$SKILLS_SRC" --from-local --all --agent claude-code --scope user
+gh skill install "$SKILLS_SRC" --from-local --all --agent codex --scope user
+# refresh the checkout, then repeat both installs with --force added
+git -C "$SKILLS_SRC" pull --ff-only
+```
+
+Use `--scope project` for a workspace install. Keep that checkout while using
+this mode; its path is recorded in the installed source metadata.
+
 ### Plugin (both clients)
 
 The suite also ships as one plugin, `beancount-io`, from this repository's marketplace manifests. Plugin skills are namespaced: invoke one as `/beancount-io:beancount-ask`, against `/beancount-ask` from a linked install (in Codex, `$beancount-io:beancount-ask`).
@@ -117,7 +131,7 @@ codex plugin add beancount-io@beancount-io
 codex plugin remove beancount-io@beancount-io     # remove
 ```
 
-Both manifests carry one shared suite version; a client delivers a new copy only when that version changes, and every shipped skill change bumps it. Confirm with each client's skill listing (step 3): the fourteen skills appear under the `beancount-io:` namespace.
+Both manifests carry one shared suite version; a client delivers a new copy only when that version changes, and every shipped skill change bumps it. Confirm with each client's skill listing (step 3): the sixteen skills appear under the `beancount-io:` namespace.
 
 ### Hermes and raw GitHub folders
 
@@ -127,7 +141,7 @@ Hermes supports direct GitHub skill paths, but a single raw folder can omit the 
 
 - **Plugin:** one versioned Beancount.io suite managed by the client, with namespaced skills and one update. Default when you do not edit skill sources.
 - **Link installer (steps 1–3):** one checkout shared by both agents, updated by one `git pull`, with `verify` and conflict detection. Use it to keep local skill edits in Git.
-- **A channel (`npx`/`gh`):** one command, no checkout to keep. You trade `verify` and the single update point for per-agent copies that each channel updates its own way.
+- **A channel (`npx`/`gh`):** per-agent copies refreshed by that channel's commands. The optional GH local-source mode also keeps the source checkout used for its refreshes.
 
 Keep **one method per client**. A client holding the suite twice (say, linked into `~/.claude/skills` and installed as the plugin) lists both copies with the same descriptions; which one answers a given request is the client's choice, not something either installer controls. `verify` prints a note (not a failure) when it can tell the plugin also provides the suite. Moving from a linked install to the plugin: `uninstall` the links (see [Remove](#remove), keep the checkout only if you want it), then install the plugin.
 

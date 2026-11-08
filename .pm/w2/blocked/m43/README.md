@@ -1,16 +1,16 @@
 # w2 · m43 — Install the suite from the standard skill channels without the development skills
 
-**Worker:** worker2 **Goal:** someone who installs Beancount.io's skills the way agents now find skills (`npx skills`, `gh skill`, a Hermes tap) gets exactly the customer `beancount-*` suite, never the repository's development skills. Every customer `SKILL.md` meets the Agent Skills specification, and the install guide documents each channel as rehearsed on Claude Code and Codex. **Status:** todo (t001–t002, t004 done)
+**Worker:** worker2 **Goal:** someone who installs Beancount.io's skills the way agents now find skills (`npx skills`, `gh skill`, a Hermes tap) gets exactly the customer `beancount-*` suite, never the repository's development skills. Every customer `SKILL.md` meets the Agent Skills specification, and the install guide documents each channel as rehearsed on Claude Code and Codex. **Status:** blocked (t001–t002, t004–t005 done; t003 owner decision pending)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| [t001](./done/t001.md) | Hide the 19 development skills from public skill installers — **DONE** | 30m | — |
-| [t002](./done/t002.md) | Make every customer SKILL.md meet the Agent Skills specification without losing ClawHub's metadata — **DONE** | 45m | — |
+| [t001](done/t001.md) | Hide the 19 development skills from public skill installers — **DONE** | 30m | — |
+| [t002](done/t002.md) | Make every customer SKILL.md meet the Agent Skills specification without losing ClawHub's metadata — **DONE** | 45m | — |
 | t003 | Enforce the specification's frontmatter rules in `CI (skills)` | 30m | t002 |
-| [t004](./done/t004.md) | Document the `npx skills`, `gh skill`, and Hermes installs beside the link installer — **DONE** | 45m | t001, w2/m42/t006 |
-| t005 | Rehearse each channel on Claude Code and Codex | 45m | t004 |
+| [t004](done/t004.md) | Document the `npx skills`, `gh skill`, and Hermes installs beside the link installer — **DONE** | 45m | t001, w2/m42/t006 |
+| [t005](done/t005.md) | Rehearse each channel on Claude Code and Codex — **DONE** | 45m | t004 |
 | t006 | Adoption surface | 30m | t005 |
 | t007 | Simplify | 15m | t006 |
 | t008 | Test coverage | 45m | t006, t007 |
@@ -18,8 +18,8 @@
 
 ## Blocked
 
-- **t003 (2026-10-19)** — waits for the owner's dependency decision recorded in [t003](./t003.md): a pinned `skills-ref` in CI, or the specification's frontmatter rules in `ci-check.py`. **Who can clear it:** the repository owner.
-- **t005 (2026-10-19)** — both working channels (`npx`, `gh`) rehearsed end to end on one client with the exact first-query figures, and Hermes removed from the guide because its scanner refuses `beancount-init` outright (evidence in [t005](./t005.md)). What remains is the Codex first-query answer per channel. **Unblock:** Codex usage returns (2026-11-17); run it, record it, close t005. t006 onward wait behind it and t003. **Who can clear it:** the operator (Codex usage).
+- **t003 (2026-10-19)** — waits for the owner's dependency decision recorded in [t003](t003.md): a pinned `skills-ref` in CI, or the specification's frontmatter rules in `ci-check.py`. **Who can clear it:** the repository owner.
+- **Previous t005 blocker (2026-10-19)** — both working channels (`npx`, `gh`) rehearsed end to end on one client with the exact first-query figures, and Hermes removed from the guide because its scanner refuses `beancount-init` outright (evidence in [t005](done/t005.md)). What remains is the Codex first-query answer per channel. **Unblock:** Codex usage returns (2026-11-17); run it, record it, close t005. t006 onward wait behind it and t003. **Who can clear it:** the operator (Codex usage).
 - **t004's m42 dependency — cleared 2026-10-19.** It named m42's closeout (t011) for one reason: the channels need the flat `skills/<name>/` layout. That layout shipped in m42/t001–t006 and is live on `main`; only m42's adoption/closeout chain remains. At the owner's direction to keep draining w2, t004's `depends_on` was repointed to `w2/m42/t006` and the milestone unblocked; t003 stays blocked above.
 
 ## Definition of done
@@ -41,3 +41,17 @@
 - The Claude Code and Codex plugin (w2/m44) and the ClawHub publish ([w6/m6](../../../w6/done/m6/README.md)).
 - A mirror repository for the plugin directories (w2/087), a `/.well-known/agent-skills/` index on beancount.io, and awesome-list submissions.
 - Changing any skill's behavior or description beyond frontmatter form.
+
+## t005 unblocked — 2026-11-08
+
+Codex CLI 0.167.0 / `gpt-6.1-sol` runs successfully on Linux, so the two working channels' missing native answers can proceed independently of t003. The owner's specification-checker choice remains pending (asked again in this session); t003 stays blocked. The first-query command is being checked against current read-only temporary-file requirements before claiming an answer.
+
+
+## Remaining block — 2026-11-08
+
+t005's missing Codex answers are complete, including real installs, refreshes,
+queries and the guide corrections. Only t003's recorded owner choice remains:
+pinned skills-ref versus the existing standard-library checker. That choice
+was presented again in this session and has no response yet. **Unblock:** the
+owner selects the implementation; complete t003, then continue t006–t009.
+**Who can clear it:** the repository owner. No Codex quota block remains.

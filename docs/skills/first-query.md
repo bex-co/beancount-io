@@ -4,7 +4,7 @@ Get your first answer from a coding agent using a small synthetic ledger that sh
 
 ## 1. Install and verify
 
-Follow [Install the Beancount skills](installation.md) through step 3. You need `bea` on your `PATH` and the suite linked into Claude Code (`~/.claude/skills`), Codex (`~/.agents/skills`), or both. On native Windows, follow the guide's [Windows (PowerShell)](installation.md#windows-powershell) section instead, including [bea on Windows](installation.md#bea-on-windows).
+Follow one method in [Install the Beancount skills](installation.md) through its discovery check. You need `bea` on your `PATH` and the complete suite installed for Claude Code, Codex, or both. For a project-scoped channel install, create a fresh synthetic workspace and run `git init -q` there before installing; stay in that workspace for the steps below. On native Windows, follow the guide's [Windows (PowerShell)](installation.md#windows-powershell) section instead, including [bea on Windows](installation.md#bea-on-windows).
 
 ## 2. Create a workspace with the sample ledger
 
@@ -14,7 +14,21 @@ mkdir -p ~/beancount-first-query && cd ~/beancount-first-query
 git init -q
 cp "$SKILLS_SRC/skills/beancount-ask/evals/files/eval1_ledger.beancount" ledger.beancount
 shasum -a 256 ledger.beancount > ledger.sha256
+bea --file ledger.beancount --json --no-input check
 ```
+
+For a project-scoped `npx skills` or `gh skill` install, use its installed
+fixture from the same fresh workspace instead of the linked checkout:
+
+```sh
+test ! -e ledger.beancount &&
+  cp .agents/skills/beancount-ask/evals/files/eval1_ledger.beancount ledger.beancount &&
+  shasum -a 256 ledger.beancount > ledger.sha256 &&
+  bea --file ledger.beancount --json --no-input check
+```
+
+The guard stops if a ledger already exists. The check validates the sample
+and completes `bea`'s first-use engine setup before the sandboxed question.
 
 On native Windows, in Windows PowerShell:
 
@@ -26,6 +40,7 @@ Set-Location "$WS"
 git init -q
 Copy-Item "$SKILLS_SRC/skills/beancount-ask/evals/files/eval1_ledger.beancount" ledger.beancount
 (Get-FileHash ledger.beancount -Algorithm SHA256).Hash | Set-Content ledger.sha256
+bea --file ledger.beancount --json --no-input check
 ```
 
 The Windows rehearsal linked the suite into the workspace itself, the only scope where both agents were tried on Windows. To do the same, run `python "$SKILLS_SRC/scripts/skills/beancount-skills.py" install "$WS\.claude\skills" "$WS\.agents\skills"` there, and `uninstall` with the same directories when you are done.
@@ -38,7 +53,7 @@ Start `claude` or `codex` in `~/beancount-first-query` and ask:
 
 > What were my biggest expenses in June 2026? Ledger is ./ledger.beancount.
 
-Or run it without an interactive session. These commands allow only reads and the `bea` query (on Windows, use the [Windows variants](installation.md#agents-on-windows)):
+Or run it without an interactive session (on Windows, use the [Windows variants](installation.md#agents-on-windows)):
 
 ```sh
 claude -p "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount." \
@@ -82,6 +97,29 @@ In Windows PowerShell, this prints `True`:
 - **Different numbers:** make sure you asked about June 2026 and that the checksum check in step 4 passes.
 - **On Windows, Claude Code is denied `bea` or cannot read the skill's references, or Codex reports `blocked by policy`:** use the flags in [Agents on Windows](installation.md#agents-on-windows).
 
+### Linux: allow scratch files while keeping the ledger read-only
+
+On Linux with Codex 0.167.0, `--sandbox read-only` can prevent `bea` from
+creating the temporary files its query engine needs. Use a
+[named permission profile](https://developers.openai.com/codex/permissions)
+that grants writes only to a fresh scratch directory. The workspace stays
+read-only and command network access stays disabled. This invocation skips
+user configuration so an older `sandbox_mode` setting cannot override the
+profile.
+
+```sh
+BEA_QUERY_TMP="$(mktemp -d)"
+TMPDIR="$BEA_QUERY_TMP" XDG_CACHE_HOME="$BEA_QUERY_TMP/cache" \
+BEA_CONFIG_DIR="$BEA_QUERY_TMP/config" \
+codex exec --ignore-user-config -m gpt-6.1-sol \
+  -c 'default_permissions="bea_query"' \
+  -c 'permissions.bea_query={filesystem={":root"="read",":tmpdir"="write"},network={enabled=false}}' \
+  "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount."
+rm -rf "$BEA_QUERY_TMP"
+```
+
+Check the ledger checksum after this command as in step 4.
+
 ## Tested with
 
 On 2026-09-14 on macOS, Claude Code 2.1.270 (workspace install) and Codex 0.154.0 (user and workspace installs, `--sandbox read-only`) each listed exactly these eight skills and returned the figures above through `beancount-ask`. The ledger checksum was unchanged. Not yet tested: Claude Code with a user-level install, and Linux.
@@ -95,3 +133,13 @@ On 2026-10-28 on native Windows 11 (ARM64, Windows PowerShell 5.1), Claude Code 
 ## Continue through a first month
 
 The [first-month guide](first-month.md) starts from a fresh ledger and walks through approved imports, duplicate checks, reconciliation, read-only analysis, and a confirmed close. It includes synthetic statements, decline branches, and an independent checkpoint verifier. [Real-client rehearsals](first-month-rehearsal.md) record results and interventions for both Claude Code and Codex.
+
+
+On 2026-11-08, Codex 0.167.0 (`gpt-6.1-sol`) on Linux returned the figures
+above from both a Skills CLI 1.7.6 project install and a GitHub CLI 2.96.0
+local-source project install. The installers ran on macOS and populated both
+client destinations with all sixteen workflows. The Linux command used the
+scratch-only permission profile above; native write-denial sentinels and the
+ledger checksum both passed. These are Codex answer results; the earlier
+Claude results keep their original dates. See the [channel record](suite-distribution.md#codex-first-query-completion-for-git-copy-channels--2026-11-08)
+for the remote `gh` download limits and exact rehearsal scope.

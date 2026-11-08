@@ -574,3 +574,54 @@ The existing Pack still represents13skills/source0.4.2; its description-only
 website edit requires publisher Vercel login and must not change that provenance.
 Third-party indexes must fetch and render the changed customer source before
 being reported updated. Retired standalone listings remain retired.
+
+
+## Codex first-query completion for Git-copy channels — 2026-11-08
+
+The missing w2/m43/t005 native answers now pass on Codex CLI 0.167.0 with
+`gpt-6.1-sol`, Linux arm64, and a checkout-built `bea` reporting 0.3.1.
+Installation commands run at project scope in isolated macOS workspaces; the
+real Linux client reads those same installed files. The complete suite is
+sixteen workflows (0.4.28 customer content, matching `5691bfe80`). No
+development skill is installed.
+
+- **Skills CLI 1.7.6 (`npx skills`)** installs from the explicit public
+  `/tree/main/skills` source into both clients. Repeating the documented
+  install command refreshes both destinations successfully. All installed
+  skill bodies, references and the first-query fixture match canonical
+  content.
+- **GitHub CLI 2.96.0:** the macOS remote-source attempt hits an OS certificate
+  service error. The official Linux binary resolves `main` successfully but
+  exhausts the anonymous API quota during per-file downloads; that partial
+  install is not counted as success. The supported `--from-local` route, now
+  documented in the guide, installs the public sparse checkout into both
+  client destinations without those API downloads. A real `git pull
+  --ff-only` followed by both `--force` installs succeeds. The refreshed
+  checkout is `3be287c55`. GH adds source-tracking frontmatter and removes one
+  leading blank line; the instruction bodies and references otherwise match
+  canonical content. Both destinations contain exactly the sixteen skills.
+
+Each channel then receives the first-query guide's exact June-expenses
+question in a fresh Codex session. Both select `beancount-ask`, execute shown
+BQL and return Groceries **141.60**, Gas **50.00**, Streaming **17.99 USD**.
+The ledger bytes and SHA-256 remain unchanged. These are real client answers,
+not a client catalog or a substituted response. The earlier Claude results
+retain their October 19 version and date; no new Claude run is claimed.
+Hermes' documented admission limit remains outside these successful channels.
+
+The current Linux CLI's strict read-only mode blocks the temporary files
+needed by `bea`. The first-query guide now provides a named permission
+profile with the workspace read-only and writes limited to a fresh
+`TMPDIR`, plus a normal `bea check` before the sandboxed question to complete
+first-use engine setup. Three real native-sandbox write attempts against an
+otherwise writable workspace, another writable directory, and `/tmp` outside
+the selected scratch directory all fail. A write inside the selected scratch
+directory and the actual BQL query succeed. Both channel answers use that
+profile. The guide also shows the installed fixture path for project-scoped
+channel installs and corrects two stale generic fourteen-skill counts.
+
+Local install/refresh logs, versions, client JSONL, input/output snapshots and
+the permission-sentinel logs are under
+`scripts/skills/tmp/w2-codex-linux/m43/` and `m43-permissions/`. The tested
+`gh` archives are checked against the publisher's release checksums. No
+certificate verification is disabled and no credential is committed.
