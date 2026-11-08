@@ -83,6 +83,20 @@ on a designated QA ledger needed to reproduce bugs.
   helper command, sanitized request and response, status, headers and
   timings. Bound every request with a timeout; a hang is a result.
 
+## Replay the documented contracts
+
+Before a free-form hunt, and after a backend release, run
+`node .agents/skills/qa-shared/scripts/qa-contract-replay.mjs` from the repo
+root. It reads `QA_MCP_TOKEN` from `./.env` or the environment (the same
+credential as `qa-mcp.mjs`, never printed), records the server name, version
+and a `tools/list` fingerprint, and replays the preview rule and the argument
+limits from `backend-cluster/backend-v2/docs/mcp.md` on MCP, REST and GraphQL
+as one table. Previews are dry runs; add `--commit-probes` to also send an
+unbalanced commit that must be refused `UNBALANCED`. It writes nothing. A
+mismatch on a rule newer than the deployment is a deploy lag: check the commit
+that introduced the rule before filing it. It targets the hosted endpoint
+(`--base`); do not stand up a second stack for it.
+
 ## Sweep whole journeys
 
 Use selected journey names to narrow this table; otherwise survey the surface

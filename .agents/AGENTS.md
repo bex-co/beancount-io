@@ -59,7 +59,7 @@ From the repository root, using the existing CLI environment for Beancount fixtu
 python3 scripts/check-agent-guidance.py
 python3 scripts/skills/ci-check.py
 python3 scripts/skills/test_ci_check.py
-node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs .agents/skills/qa-shared/scripts/qa-mcp.test.mjs
+node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs .agents/skills/qa-shared/scripts/qa-mcp.test.mjs .agents/skills/qa-shared/scripts/qa-contract-replay.test.mjs
 ```
 
 The skills CI workflow covers both skill trees. Instruction changes must keep every scope's guidance in a real `AGENTS.md`; this repo has no `CLAUDE.md` files.

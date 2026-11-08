@@ -1,18 +1,18 @@
 # w23 · m24 — Replay the MCP contract against production in one command
 
-**Worker:** worker1 **Goal:** One command checks the hosted endpoint against the documented MCP, REST and GraphQL contract and records the deployed revision. **Status:** todo
+**Worker:** worker1 **Goal:** One command checks the hosted endpoint against the documented MCP, REST and GraphQL contract and records the deployed revision. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Write the replay harness | 40m | — |
-| t002 | Probe the write-preview and input contracts | 45m | t001 |
-| t003 | Replay the cases on REST and GraphQL | 30m | t002 |
-| t004 | Wire the script into the QA skill | 15m | t003 |
-| t005 | Simplify | 20m | t004 |
-| t006 | Test coverage | 30m | t004 |
-| t007 | Closeout | 15m | t006 |
+| t001 | Write the replay harness — **DONE** | 40m | — |
+| t002 | Probe the write-preview and input contracts — **DONE** | 45m | t001 |
+| t003 | Replay the cases on REST and GraphQL — **DONE** | 30m | t002 |
+| t004 | Wire the script into the QA skill — **DONE** | 15m | t003 |
+| t005 | Simplify — **DONE** | 20m | t004 |
+| t006 | Test coverage — **DONE** | 30m | t004 |
+| t007 | Closeout — **DONE** | 15m | t006 |
 
 ## Definition of done
 

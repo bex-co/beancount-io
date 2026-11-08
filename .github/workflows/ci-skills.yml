@@ -73,7 +73,7 @@ jobs:
           cd scripts/skills
           PATH="$RUNNER_TEMP/published-bea/bin:$PATH" SKILLS_BEA=published python3 -m unittest -v test_beancount_skills.TestBeaRecipes
       - name: Run development QA helper tests
-        run: node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs .agents/skills/qa-shared/scripts/qa-mcp.test.mjs
+        run: node --test .agents/skills/qa-shared/scripts/qa-login.test.mjs .agents/skills/qa-shared/scripts/qa-mcp.test.mjs .agents/skills/qa-shared/scripts/qa-contract-replay.test.mjs
 
   installer-windows:
     # Installer evidence on native Windows, not proof that an agent discovers
