@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR027: checkout recovery email architecture</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2f8f4e"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="800" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" font-weight="600">ADR027 — checkout recovery email</text>
+  <text x="30" y="58" fill="#57606a">The 90-minute session expiry is the timer: one short email, one 20% code, once per person, first purchase only.</text>
+
+  <!-- Legend -->
+  <rect x="900" y="26" width="14" height="14" rx="3" fill="#eef4ff" stroke="#3b6fd8"/>
+  <text x="920" y="38" fill="#57606a">existing</text>
+  <rect x="990" y="26" width="14" height="14" rx="3" fill="#fff8e5" stroke="#bf8700"/>
+  <text x="1010" y="38" fill="#57606a">changed</text>
+  <rect x="1080" y="26" width="14" height="14" rx="3" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="1100" y="38" fill="#57606a">new</text>
+  <rect x="1150" y="26" width="14" height="14" rx="3" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="1170" y="38" fill="#57606a">external</text>
+
+  <!-- Column headers -->
+  <text x="30" y="100" font-size="13" font-weight="600" fill="#57606a">CUSTOMER</text>
+  <text x="320" y="100" font-size="13" font-weight="600" fill="#3b6fd8">BACKEND-V2</text>
+  <text x="900" y="100" font-size="13" font-weight="600" fill="#57606a">STRIPE · SENDGRID</text>
+
+  <!-- Customer -->
+  <rect x="30" y="115" width="240" height="95" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="46" y="139" font-size="13" font-weight="600">Dashboard · pricing page</text>
+  <text x="46" y="161">Signed in, picks plan + interval</text>
+  <text x="46" y="181">createSubscriptionSession</text>
+  <text x="46" y="199" fill="#57606a" font-style="italic">GraphQL-only billing exception</text>
+
+  <rect x="30" y="470" width="240" height="150" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="46" y="494" font-size="13" font-weight="600">Inbox · ~1.5 h after leaving</text>
+  <text x="46" y="516">“Your plan is still waiting”</text>
+  <text x="46" y="536">Three lines · code · 20% off</text>
+  <text x="46" y="556">the first month or year</text>
+  <text x="46" y="576">[Finish checkout] → recovery URL</text>
+  <text x="46" y="596">One-click unsubscribe</text>
+  <text x="46" y="612" fill="#57606a" font-style="italic" font-size="11">no URL → pricing page</text>
+
+  <!-- Backend-v2 -->
+  <rect x="320" y="115" width="520" height="125" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="336" y="139" font-size="13" font-weight="600">features/stripe/service/subscription-service.ts</text>
+  <text x="336" y="161">metadata { userId, clientId } · allow_promotion_codes · customer or customer_email</text>
+  <text x="336" y="181" fill="#9a6700">+ expires_at = now + 90 min  (D1)</text>
+  <text x="336" y="200" fill="#9a6700">+ after_expiration.recovery { enabled, allow_promotion_codes }  (D3)</text>
+
+  <rect x="320" y="270" width="520" height="80" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="336" y="294" font-size="13" font-weight="600">features/stripe/api/stripe-webhook-handler.ts</text>
+  <text x="336" y="316">verify signature · drop test mode · drop foreign clientId</text>
+  <text x="336" y="336" fill="#9a6700">+ case checkout.session.expired → recovery operation</text>
+
+  <rect x="320" y="380" width="520" height="245" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="336" y="404" font-size="13" font-weight="600">features/stripe/operations/checkout-recovery-email.ts</text>
+  <text x="336" y="430" font-weight="600">1  Eligible? (D2)</text>
+  <text x="500" y="430">user with email · plan current, not retired</text>
+  <text x="500" y="448">never paid · not unsubscribed</text>
+  <text x="336" y="474" font-weight="600">2  Paid since? (D5)</text>
+  <text x="500" y="474">paid subscription, or a later session</text>
+  <text x="500" y="492">complete or open → skip</text>
+  <text x="336" y="518" font-weight="600">3  Claim (D4)</text>
+  <text x="500" y="518">checkout-recovery:&lt;userId&gt; — once per person, ever</text>
+  <text x="336" y="542" font-weight="600">4  Create code (D3)</text>
+  <text x="500" y="542">1 use · expires in 48 h · first purchase only</text>
+  <text x="336" y="566" font-weight="600">5  Render and send (D7)</text>
+  <text x="500" y="566">three lines, English, no images or pixels</text>
+  <text x="336" y="594" fill="#57606a" font-style="italic">ineligible → acknowledge with processed: false</text>
+  <text x="336" y="613" fill="#cf222e" font-style="italic">send fails → deactivate code · release claim · rethrow so Stripe redelivers</text>
+
+  <rect x="320" y="650" width="250" height="60" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="336" y="674" font-size="13" font-weight="600">sent_billing_emails</text>
+  <text x="336" y="696">claim key before send, release on failure</text>
+
+  <rect x="590" y="650" width="250" height="60" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="606" y="674" font-size="13" font-weight="600">foundation/sendgrid.ts</text>
+  <text x="606" y="696" fill="#9a6700">+ asm group · suppression lookup</text>
+
+  <!-- Stripe and SendGrid -->
+  <rect x="900" y="115" width="350" height="175" rx="8" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="916" y="139" font-size="13" font-weight="600">Stripe · Checkout Session</text>
+  <text x="916" y="161">Open for 90 min (was Stripe's 24 h default)</text>
+  <text x="916" y="181">Customer leaves without paying</text>
+  <text x="916" y="201">→ emits checkout.session.expired</text>
+  <text x="916" y="221">→ recovery.url reopens the same plan</text>
+  <text x="916" y="241">→ the new session sets recovered_from</text>
+  <text x="916" y="272" fill="#57606a" font-style="italic">Stripe's own recovery emails stay off</text>
+
+  <rect x="900" y="380" width="350" height="170" rx="8" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="916" y="404" font-size="13" font-weight="600">Stripe · Billing objects</text>
+  <text x="916" y="428" font-weight="600">Coupon checkout-recovery-20 (created once)</text>
+  <text x="916" y="448">20% off · duration: once</text>
+  <text x="916" y="474" font-weight="600">Promotion code (one per email)</text>
+  <text x="916" y="494">max_redemptions 1 · expires_at +48 h</text>
+  <text x="916" y="514">first_time_transaction · source: checkout-recovery</text>
+  <text x="916" y="538" fill="#57606a" font-style="italic">measured by times_redeemed and recovered_from</text>
+
+  <rect x="900" y="640" width="350" height="70" rx="8" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="916" y="664" font-size="13" font-weight="600">SendGrid</text>
+  <text x="916" y="684" fill="#9a6700">+ unsubscribe group for this email (D6)</text>
+  <text x="916" y="702" fill="#57606a" font-style="italic">suppressed address → ineligible</text>
+
+  <!-- Flow arrows -->
+  <line x1="270" y1="162" x2="318" y2="162" stroke="#57606a" marker-end="url(#arrow)"/>
+  <text x="276" y="154" fill="#57606a" font-size="11">GraphQL</text>
+
+  <line x1="840" y1="162" x2="898" y2="162" stroke="#57606a" marker-end="url(#arrow)"/>
+  <text x="846" y="154" fill="#57606a" font-size="11">create</text>
+
+  <line x1="900" y1="215" x2="842" y2="305" stroke="#57606a" marker-end="url(#arrow)"/>
+  <text x="846" y="252" fill="#57606a" font-size="11">~90 min</text>
+
+  <line x1="580" y1="350" x2="580" y2="378" stroke="#2f8f4e" marker-end="url(#arrow-green)"/>
+
+  <line x1="840" y1="440" x2="898" y2="440" stroke="#57606a" marker-end="url(#arrow)"/>
+  <text x="846" y="432" fill="#57606a" font-size="11">list</text>
+  <line x1="840" y1="530" x2="898" y2="530" stroke="#2f8f4e" marker-end="url(#arrow-green)"/>
+  <text x="846" y="522" fill="#2f8f4e" font-size="11">create</text>
+
+  <line x1="445" y1="625" x2="445" y2="648" stroke="#2f8f4e" marker-end="url(#arrow-green)" marker-start="url(#arrow-green)"/>
+  <line x1="715" y1="625" x2="715" y2="648" stroke="#2f8f4e" marker-end="url(#arrow-green)"/>
+  <line x1="840" y1="680" x2="898" y2="680" stroke="#2f8f4e" marker-end="url(#arrow-green)"/>
+  <text x="846" y="672" fill="#2f8f4e" font-size="11">send</text>
+
+  <!-- Email delivered -->
+  <path d="M1075,710 V745 H200 V622" fill="none" stroke="#2f8f4e" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <text x="640" y="739" fill="#2f8f4e" font-size="11" text-anchor="middle">email: plan name, code good for 48 hours, recovery link</text>
+
+  <!-- Customer returns -->
+  <path d="M90,620 V775 H1265 V200 H1252" fill="none" stroke="#3b6fd8" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="640" y="769" fill="#3b6fd8" font-size="11" text-anchor="middle">Finish checkout: recovery URL reopens the same plan, customer enters the code and pays</text>
+</svg>
