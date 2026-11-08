@@ -517,3 +517,82 @@ def test_shared_budget_callers_still_receive_unrounded_decimals() -> None:
         assert calculate_budget(budgets, "Expenses:Food", date(2026, 4, 1), date(2026, 4, 16), precision={})[
             "USD"
         ] == Decimal("1500.01")
+
+
+def _budget_only_text(account: str = "Expenses:Travel", currency: str = "USD") -> str:
+    return (
+        'option "operating_currency" "USD"\n'
+        f'2026-01-01 custom "budget" {account} "monthly" 100.00 {currency}\n'
+        '2026-01-31 event "Anchor" "End"\n'
+    )
+
+
+@pytest.mark.parametrize("currency", ["USD", "EUR"])
+@pytest.mark.parametrize("account,pattern", [("Expenses:Travel", "Expenses:Travel"), ("Expenses:Travel2026", "2026")])
+def test_budget_only_account_matches_are_nonempty_without_opens_or_postings(
+    tmp_path: Path, currency: str, account: str, pattern: str
+) -> None:
+    text = _budget_only_text(account, currency)
+    unfiltered = _report(["-t", "2026-01"], tmp_path, text)
+    data = _report(["-t", "2026-01", "-a", pattern], tmp_path, text)
+    assert data["account_filter_empty"] is False
+    assert data["account_filter_periods"] == []
+    assert data["periods"] == unfiltered["periods"]
+    assert data["ledger_valid"] is True and data["ledger_errors"] == [] and data["budget_errors"] == []
+    assert _rows(data)[(account, currency)] == {
+        "account": account,
+        "account_type": "expenses",
+        "currency": currency,
+        "budget": "100.00",
+        "actual": "0",
+        "variance": "-100.00",
+        "status": "budgeted",
+    }
+    ledger = tmp_path / "main.beancount"
+    exported = tmp_path / "budget-only.csv"
+    base = ["-f", str(ledger), "report", "budget", "-t", "2026-01", "-a", pattern]
+    for options in ([], ["--format", "csv"], ["--output", str(exported)]):
+        run = bea([*base, *options], tmp_path)
+        assert run.returncode == 0, run.stderr
+        assert "No accounts match" not in run.stderr
+        if not options:
+            assert account in run.stdout and f"100.00 {currency}" in run.stdout
+        else:
+            if "--output" in options:
+                assert run.stdout == ""
+            table = exported.read_text() if "--output" in options else run.stdout
+            row = next(csv.DictReader(io.StringIO(table)))
+            assert (row["account"], row["currency"], row["budget"], row["actual"]) == (account, currency, "100.00", "0")
+    # A budget declaration creates a budget row, but never a balance tree.
+    trial = bea(["--json", "-f", str(ledger), "report", "trial-balance", "-t", "2026-01", "-a", pattern], tmp_path)
+    assert trial.returncode == 0, trial.stderr
+    trial_data = json.loads(trial.stdout)["data"]
+    assert trial_data["account_filter_empty"] is True
+    assert trial_data["account_filter_periods"] == (["2026"] if pattern == "2026" else [])
+    assert ledger.read_text() == text
+
+
+def test_budget_filter_emptiness_tracks_active_dates_and_unmatched_accounts(tmp_path: Path) -> None:
+    text = _budget_only_text(currency="EUR")
+    # The January declaration remains active in February, without a dated
+    # entry in that month. Before its start it contributes no row.
+    active = _report(["-t", "2026-02", "-a", "Expenses:Travel"], tmp_path, text)
+    assert active["account_filter_empty"] is False
+    assert _rows(active)[("Expenses:Travel", "EUR")]["budget"] == "100.00"
+    for period, pattern, hints in (
+        ("2025-12", "Expenses:Travel", []),
+        ("2026-01", "Expenses:Missing", []),
+        ("2026-01", "2025", ["2025"]),
+    ):
+        empty = _report(["-t", period, "-a", pattern], tmp_path, text)
+        assert empty["account_filter_empty"] is True
+        assert empty["account_filter_periods"] == hints
+        assert _rows(empty) == {}
+        for options in ([], ["--format", "csv"]):
+            run = bea(
+                ["-f", str(tmp_path / "main.beancount"), "report", "budget", "-t", period, "-a", pattern, *options],
+                tmp_path,
+            )
+            assert run.returncode == 0, run.stderr
+            assert f"No accounts match {pattern}." in run.stderr
+    assert (tmp_path / "main.beancount").read_text() == text

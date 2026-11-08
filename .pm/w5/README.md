@@ -36,7 +36,6 @@
 
 ## Inbox
 
-- [1127 — Treat a budget-only account match as nonempty in the budget report](./1127.md) — minor CLI QA finding, 25–40m; matching budget rows carry a false empty flag and warning.
 
 
 

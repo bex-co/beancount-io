@@ -591,8 +591,12 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
     if parts.scheme == "beancount":
         from beancount import loader
 
+        from bea_engine.ledger.write import keep_load_cache_private
         from bea_engine.managed_load import _record_plugin_configs
 
+        # Native sources bypass managed_load, including its cache setup.
+        # Apply the same policy before the shell's first automatic load.
+        keep_load_cache_private()
         _record_plugin_configs(loader)
 
     class GuardedShell(BQLShell):  # type: ignore[misc]

@@ -444,6 +444,13 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
                 )
         periods.append({"begin": span.begin, "end": span.end_inclusive, "rows": rows})
     metadata = _metadata(filtered, "units", ledger_errors, interval)
+    # A custom budget can produce a row without an open or any postings.
+    # This report's emptiness follows its rows, rather than balance trees.
+    empty = bool(filtered.account) and not any(period["rows"] for period in periods)
+    metadata["account_filter_empty"] = empty
+    metadata["account_filter_periods"] = (
+        _period_terms([filtered.account], ledger.fava_options.fiscal_year_end) if empty else []
+    )
     return metadata | {
         "display_precision": precision,
         "variance_signs": "actual_minus_budget",
