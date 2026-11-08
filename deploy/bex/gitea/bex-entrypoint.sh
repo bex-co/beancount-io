@@ -30,14 +30,19 @@ ensure_schema() {
     host="${GITEA__database__HOST%%:*}"
     port=5432
     case "$GITEA__database__HOST" in *:*) port="${GITEA__database__HOST##*:}" ;; esac
-    # The database may still be coming up on a first deploy.
-    for _ in $(seq 1 60); do
-        if PGPASSWORD="${GITEA__database__PASSWD:-}" psql -v ON_ERROR_STOP=1 -qtA \
+    # The database may still be coming up on a first deploy. Say why each
+    # attempt fails (libpq's message names no password), so a wrong host or
+    # credential does not look like a hang.
+    attempt=0
+    while [ "$attempt" -lt 60 ]; do
+        attempt=$((attempt + 1))
+        if error=$(PGPASSWORD="${GITEA__database__PASSWD:-}" psql -v ON_ERROR_STOP=1 -qtA \
             "host=$host port=$port dbname=${GITEA__database__NAME:-gitea} user=${GITEA__database__USER:-gitea} sslmode=${GITEA__database__SSL_MODE:-require} connect_timeout=5" \
-            -c "CREATE SCHEMA IF NOT EXISTS \"$schema\"" >/dev/null 2>&1; then
+            -c "CREATE SCHEMA IF NOT EXISTS \"$schema\"" 2>&1); then
             echo "bex-entrypoint: schema $schema ensured"
             return 0
         fi
+        echo "bex-entrypoint: schema $schema not created yet (attempt $attempt/60): $error" >&2
         sleep 5
     done
     echo "bex-entrypoint: could not create schema $schema" >&2
