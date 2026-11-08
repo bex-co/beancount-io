@@ -277,6 +277,13 @@ function checkoutCancelUrl(
 }
 
 /**
+ * How long a Checkout session stays open. Its expiry is the recovery email's
+ * timer: most customers who leave do so within minutes, so the expired event
+ * lands one to two hours after they left (ADR027 D1).
+ */
+export const CHECKOUT_SESSION_LIFETIME_SECONDS = 90 * 60;
+
+/**
  * Whether a subscription already takes the account's plan: a paid one, or one
  * waiting out a store plan with its first charge deferred (ADR 001 D15).
  */
@@ -685,6 +692,13 @@ export class SubscriptionService implements ISubscriptionService {
         success_url: clientConfig.successUrl,
         cancel_url: checkoutCancelUrl(clientConfig, planConfig, returnTo),
         metadata: { userId, clientId },
+        expires_at:
+          Math.floor(Date.now() / 1000) + CHECKOUT_SESSION_LIFETIME_SECONDS,
+        // An expired session yields a URL that reopens the same plan, for
+        // the recovery email (ADR027 D3).
+        after_expiration: {
+          recovery: { enabled: true, allow_promotion_codes: true },
+        },
         ...(planConfig.type === "subscription"
           ? {
               subscription_data: {
