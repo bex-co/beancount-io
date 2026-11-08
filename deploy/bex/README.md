@@ -32,8 +32,10 @@ backend's admin account. Gitea connects as the instance's single owner role,
 because bex cannot create a second one; isolation from the backend is by
 schema, not by role (the owner role also cannot `CREATE DATABASE` on bex).
 
-**Before the first Gitea boot** create its schema once (see
-`init-gitea-db.sql`): `bex psql <postgres-id> -c 'CREATE SCHEMA IF NOT EXISTS gitea'`
+Its schema is created for you: the API's migration step runs
+`CREATE SCHEMA IF NOT EXISTS` for each name in `ENSURE_SCHEMAS` (`gitea` in
+`bex.yaml`). `init-gitea-db.sql` is kept for a deployment that does not use that
+step; run it with `bex psql <postgres-id> -f deploy/bex/init-gitea-db.sql`
 (`bex psql` needs `psql` on PATH, e.g. `brew install libpq`).
 
 ## Deploy
@@ -142,6 +144,18 @@ so a custom domain works by setting `DASHBOARD_URL` (the rest follows from it).
 If the address cannot be learned the container exits instead of starting with
 the API's built-in default, which is beancount.io's own address. Gitea does the
 same for itself in its entrypoint (`ROOT_URL` and `DOMAIN` from its own address).
+
+Internal addresses get the same treatment. bex builds a service's internal
+address from its slug (`beancount-dashboard-496p:3000`), not its name, and the
+slug gains a suffix exactly when the name is taken. So no internal address is
+written down either: services reference each other with `fromService`
+(`host` or `hostport`), and the start commands put the URLs together
+(`SSR_API_URL`, `API_PROXY_URL`, `FAVA_API_URL`, `PUBLIC_URL_FROM`).
+
+Gitea's schema in the shared Postgres is created by the API's migration step
+(`ENSURE_SCHEMAS=gitea`, validated lowercase identifiers only), not by hand.
+Until it exists Gitea retries and restarts, so its first deploy can report a
+failed rollout for a minute or two before it settles.
 
 Known gap: `EXTERNAL_GITEA_HOST_NAME`, used only to build the pull-request link
 the AI assistant returns, is not set on bex and falls back to the code default.
