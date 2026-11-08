@@ -201,6 +201,24 @@ class VerifyFirstYearInvestorTests(unittest.TestCase):
                                       '--checkpoint', 'closed_june', '--bea', BEA,
                                       '--before', str(before)]), 0)
 
+    def test_closed_june_rejects_a_leftover_draft_even_with_a_ledger_only_commit(self):
+        self.ledger.write_text(FINAL_LEDGER + '\n; approved close\n')
+        (self.workspace / '.gitignore').write_text('.cache/\n')
+        before = self.root / 'before-draft.json'
+        self.assertEqual(verify.main(['snapshot', '--workspace', str(self.workspace),
+                                      '--output', str(before)]), 0)
+        self.git('add', 'main.bean')
+        self.git('commit', '-qm', 'close: 2026-06 — 1 tied, 5 not tied')
+        self.assertEqual(self.run_verify('closed_june', '--before', str(before)), 0)
+        # Correct financial figures and commit scope do not authorize an extra
+        # workspace artifact, even when it is ignored and never committed.
+        draft = self.workspace / '.cache' / 'june-close-commit.txt'
+        draft.parent.mkdir()
+        draft.write_text('Reviewed close message')
+        self.assertEqual(self.git('diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD').stdout,
+                         'main.bean\n')
+        self.assertEqual(self.run_verify('closed_june', '--before', str(before)), 1)
+
 
 if __name__ == '__main__':
     unittest.main()

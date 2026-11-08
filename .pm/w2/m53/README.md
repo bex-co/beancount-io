@@ -1,6 +1,6 @@
 # w2 · m53 — Onboard an investor household, and prove it with a first-year journey
 
-**Worker:** worker2 **Goal:** a new user with brokerage, crypto, and property accounts starts a ledger that already has the right accounts and booking methods, then follows one documented first-year journey — income, investments, a home, year-end gains — across the skills m49-m52 complete. **Status:** active (t001–t005 done; closeout retains 102/103 gates)
+**Worker:** worker2 **Goal:** a new user with brokerage, crypto, and property accounts starts a ledger that already has the right accounts and booking methods, then follows one documented first-year journey — income, investments, a home, year-end gains — across the skills m49-m52 complete. **Status:** active (t001–t006 done; closeout retains 102/103 gates)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | [t003](done/t003.md) | Rehearse the first-year journey on both clients and write its verifier — **DONE with recorded failures/follow-ups** | 75m | t002 |
 | [t004](done/t004.md) | Adoption surface — **DONE** | 30m | t003 |
 | [t005](done/t005.md) | Simplify — **DONE** | 15m | t004 |
-| t006 | Test coverage | 45m | t004, t005 |
+| [t006](done/t006.md) | Test coverage — **DONE** | 45m | t004, t005 |
 | t007 | Closeout | 15m | t006 |
 
 ## Previous blocker
@@ -39,5 +39,5 @@ stdin fix completes a fresh eight-checkpoint journey. Follow-up 103 records
 the published-minimum report capability gap and a passing fresh BQL fallback
 rehearsal. Candidate commits and precise runtime distinctions are preserved
 in the rehearsal record. No fresh Claude validation or candidate publication
-is claimed. Adoption is complete; simplify is complete and coverage can proceed; final closeout must
+is claimed. Adoption is complete; simplify and coverage are complete; final closeout must
 wait for the affected both-client release gates in 102/103.
