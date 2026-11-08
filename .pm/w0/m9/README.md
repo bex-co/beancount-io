@@ -1,6 +1,6 @@
 # w0 · m9 — An abandoned first Checkout gets one short recovery email
 
-**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** in progress (t001–t005 done)
+**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** in progress (t001–t005 done; t006 blocked on the owner)
 
 ## Tasks (in order)
 
@@ -12,10 +12,19 @@
 | t004 | Claim, promotion code, three-line email, and rollback | 45m | t003 | — **DONE**
 | t005 | Handle `checkout.session.expired` in the webhook | 20m | t004 | — **DONE**
 | t006 | Owner setup and live-mode verification | 30m | t001, t005 |
-| t007 | Adoption surface | 15m | t006 |
+| t007 | Adoption surface | 15m | t005 |
 | t008 | Simplify | 15m | t007 |
 | t009 | Test coverage | 30m | t007, t008 |
-| t010 | Closeout | 10m | t009 |
+| t010 | Closeout | 10m | t006, t009 |
+
+## Blocked
+
+**t006 — Owner setup and live-mode verification** (blocked 2026-11-08). The code (t001–t005) is on `main`, but the email cannot run, or be verified, until things outside this repository exist. The webhook drops test-mode events, so only live mode proves the flow.
+
+- **Blocker:** the owner must (1) deploy backend-v2 from `main` at or after `926f32ff9`; (2) create the Stripe coupon with ID `checkout-recovery-20` (20% off, `duration: once`); (3) create a SendGrid unsubscribe group for this email and set `SEND_GRID_CHECKOUT_RECOVERY_GROUP_ID` to its ID in the production environment (unset keeps the email off); (4) add `checkout.session.expired` to the live webhook endpoint's events; (5) keep Stripe's own recovery emails off.
+- **Unblock:** the owner confirms steps 1–5. Then a worker runs t006's live check with an owner account that has never paid, and records the evidence.
+- **Who:** the repository owner (Stripe Dashboard, SendGrid, production deployment).
+- **Board change:** t007–t009 do not need the live check, so t007 now depends on t005. Closeout (t010) waits on t006 and t009.
 
 ## Definition of done
 
