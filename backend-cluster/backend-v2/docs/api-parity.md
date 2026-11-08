@@ -244,6 +244,16 @@ tools it covers, and the summary-only previews are in the
 [preview rule](mcp.md#the-preview-rule). `write-preview-matrix.test.ts`
 registers every tool with a preview flag and the parity test that proves it.
 
+## Argument limits (w23/m22, w23/m23)
+
+One boundary guard refuses the same hostile argument values on all three
+surfaces, before a schema or a service sees them: U+0000, an unpaired
+surrogate, an oversize string, a long array and deep nesting, each as
+`BAD_USER_INPUT` naming the parameter. The figures are in
+[argument limits](mcp.md#argument-limits); `mcp-hostile-values.test.ts`
+derives the MCP cases from the tool schemas and `nul-boundary.test.ts` covers
+REST and GraphQL.
+
 ## Retry-safe entry writes (w3/m61)
 
 Every entry append accepts an optional `requestId` with one contract on every

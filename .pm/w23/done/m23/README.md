@@ -1,19 +1,19 @@
 # w23 · m23 — Stress every parameter with hostile values, not just NUL
 
-**Worker:** worker1 **Goal:** No parameter value shape produces a 5xx or a hang; each is refused with a `BAD_USER_INPUT` that names the parameter. **Status:** todo
+**Worker:** worker1 **Goal:** No parameter value shape produces a 5xx or a hang; each is refused with a `BAD_USER_INPUT` that names the parameter. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Extend the schema-derived scan with hostile values | 45m | — |
-| t002 | Bound depth, array length and string length at the central guards | 45m | t001 |
-| t003 | Run the same cases against REST and GraphQL | 30m | t002 |
-| t004 | Document the limits | 20m | t003 |
-| t005 | Adoption surface | 20m | t004 |
-| t006 | Simplify | 20m | t005 |
-| t007 | Test coverage | 30m | t005 |
-| t008 | Closeout | 15m | t007 |
+| t001 | Extend the schema-derived scan with hostile values — **DONE** | 45m | — |
+| t002 | Bound depth, array length and string length at the central guards — **DONE** | 45m | t001 |
+| t003 | Run the same cases against REST and GraphQL — **DONE** | 30m | t002 |
+| t004 | Document the limits — **DONE** | 20m | t003 |
+| t005 | Adoption surface — **DONE** | 20m | t004 |
+| t006 | Simplify — **DONE** | 20m | t005 |
+| t007 | Test coverage — **DONE** | 30m | t005 |
+| t008 | Closeout — **DONE** | 15m | t007 |
 
 ## Definition of done
 

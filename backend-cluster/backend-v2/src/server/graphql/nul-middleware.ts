@@ -4,9 +4,10 @@ import { assertNoNulDeep } from "@/shared/assert-no-nul";
 import { NUL_EXEMPT_PATHS } from "@/shared/nul-exempt-paths";
 
 /**
- * U+0000 in any root-field argument is the caller's mistake: refused as
- * BAD_USER_INPUT before authorization or any resolver work, the GraphQL half
- * of the MCP and REST boundary guard (w23/m22). File-content arguments are
+ * U+0000, a lone surrogate or a value past the argument ceilings in any
+ * root-field argument is the caller's mistake: refused as BAD_USER_INPUT
+ * before authorization or any resolver work, the GraphQL half of the MCP and
+ * REST boundary guard (w23/m22, w23/m23). File-content arguments are
  * exempt (`NUL_EXEMPT_PATHS`).
  */
 export function graphqlNulMiddleware(): MiddlewareFn<IContext> {

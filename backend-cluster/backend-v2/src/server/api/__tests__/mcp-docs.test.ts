@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { ARGUMENT_LIMITS } from "@/shared/argument-limits";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import {
   MCP_RESOURCES,
@@ -64,5 +65,14 @@ describe("docs/mcp.md describes the surface this server serves", () => {
       .filter((name) => table.includes(`| \`${name}\``))
       .filter((name) => !names.has(name));
     expect(unknown).toEqual([]);
+  });
+});
+
+describe("docs/mcp.md argument limits (w23/m23)", () => {
+  it("states the numbers the boundary guard enforces", () => {
+    const section = DOC.slice(DOC.indexOf("### Argument limits"));
+    for (const value of Object.values(ARGUMENT_LIMITS)) {
+      expect(section.slice(0, 1500)).toContain(String(value));
+    }
   });
 });

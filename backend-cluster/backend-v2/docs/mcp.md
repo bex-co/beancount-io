@@ -1335,6 +1335,24 @@ object schema here. See
 [`types.ts`](../src/features/ai-agent/tools/types.ts) and MCP's
 [structured tool results](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content).
 
+### Argument limits
+
+Every argument is checked before the tool runs, on MCP and equally on REST and
+GraphQL, and a value that breaks one rule is refused as `BAD_USER_INPUT` naming
+the parameter. Nothing is stripped or truncated.
+
+- A string may not contain a NUL (U+0000) or an unpaired surrogate (text that
+  is not valid Unicode). Ledger file text (`content`, `text`, `newContent`, and
+  `files[]` `content`/`old_string`/`new_string`) may contain a NUL, because a
+  ledger file stores it, but never an unpaired surrogate.
+- A string is at most 1048576 characters; ledger file text is at most 8388608
+  characters (a ledger file itself is capped at 1 MiB).
+- An array has at most 10000 members.
+- Objects and arrays nest at most 32 levels.
+
+Send a larger input in several calls. These ceilings are far above normal use,
+so a refusal means the argument is malformed.
+
 ### Failure codes
 
 The same codes reach resource reads and prompt fetches, as the JSON-RPC error's

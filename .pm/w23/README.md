@@ -25,7 +25,7 @@
 - [x] **m20** — [Diff the BQL engine against stock beanquery in a release gate](./done/m20/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-05; prerequisite [212](./done/212.md) shipped first
 - [x] **m21** — [Guard write-preview behavior with a parity matrix](./done/m21/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-05, proposal 1
 - [x] **m22** — [Refuse NUL bytes in every string parameter by contract](./done/m22/README.md) (6 tasks) ← `/pm-brainstorm w23` 2026-11-05, proposal 2
-- [ ] **m23** — [Stress every parameter with hostile values, not just NUL](./m23/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 1
+- [x] **m23** — [Stress every parameter with hostile values, not just NUL](./done/m23/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 1
 - [ ] **m24** — [Replay the MCP contract against production in one command](./m24/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 2
 - [ ] **m25** — [Slim down tools/list](./m25/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 3
 - [ ] **m26** — [Give dry_run previews their own wider rate bucket](./m26/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 5; owner decision to widen (reverses [222](./done/222.md))
