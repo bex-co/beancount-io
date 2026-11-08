@@ -28,6 +28,7 @@
       "title": "Repository development",
       "description": "Contributor workflows for this monorepo. Excluded from normal customer installs; these are not part of the ledger suite.",
       "skills": [
+        "dont-code-but-answer",
         "loopx",
         "mermaid",
         "mobile-release",

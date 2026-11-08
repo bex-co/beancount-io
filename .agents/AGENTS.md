@@ -10,6 +10,7 @@ Customer-facing `beancount-*` ledger skills belong in [`skills/<name>/`](../skil
 
 | Skill | Purpose |
 | ----- | ------- |
+| `dont-code-but-answer` | Investigate and answer questions without file changes or state-changing commands; explicit invocation only. |
 | `mermaid` | Draw and syntax-check architecture and dependency diagrams. |
 | `pm` | Maintain the public `.pm` board; canonical board conventions and the only workflow that writes board state (create, close, drop). |
 | `pm-brainstorm` | Propose roadmap milestones and tasks as text for `/pm` to materialize. |
