@@ -1,6 +1,6 @@
 # w2 · m45 — Record stock, fund, and crypto trades with correct lots, and report realized gains
 
-**Worker:** worker2 **Goal:** a user who tells their coding agent "I bought 10 VTI at 251.30", "sold 5 shares of AAPL from the 2023 lot", "my RSUs vested", or "moved my BTC to a hardware wallet" gets a proposed entry with the right cost basis and lot. It is written through `bea` only after a yes, and checked. At year end, the agent reports realized gains per lot, with holding period, from shown queries. **Status:** in progress (original Codex cohort verified; closing tasks pending)
+**Worker:** worker2 **Goal:** a user who tells their coding agent "I bought 10 VTI at 251.30", "sold 5 shares of AAPL from the 2023 lot", "my RSUs vested", or "moved my BTC to a hardware wallet" gets a proposed entry with the right cost basis and lot. It is written through `bea` only after a yes, and checked. At year end, the agent reports realized gains per lot, with holding period, from shown queries. **Status:** blocked (only t011 remote skills CI remains)
 
 ## Tasks (in order)
 
@@ -24,7 +24,7 @@
 
 ## Definition of done
 
-- One skill owns investment trades, either new or `beancount-options` widened, as t001 decides with routing evidence. Its trigger, input contract, deliverable, and evaluation set meet [ADR 020](../../../docs/adrs/ADR020-skills-accounting-workflow-candidates.md)'s test for a top-level skill. `scripts/skills/routing.json` has positive prompts for trades, dividends, splits, lot transfers, and vests, with near-misses against `beancount-add` and `beancount-options`, and they route correctly on both clients.
+- One skill owns investment trades, either new or `beancount-options` widened, as t001 decides with routing evidence. Its trigger, input contract, deliverable, and evaluation set meet [ADR 020](../../../../docs/adrs/ADR020-skills-accounting-workflow-candidates.md)'s test for a top-level skill. `scripts/skills/routing.json` has positive prompts for trades, dividends, splits, lot transfers, and vests, with near-misses against `beancount-add` and `beancount-options`, and they route correctly on both clients.
 - For a local ledger, the skill handles: buys with per-unit or total cost; sells that name the lot, or use the account's booking method, recording the gain in an income account; cash dividends and reinvested dividends; splits that keep total cost; transfers between the user's own accounts that keep each lot's cost and acquisition date; and RSU/ESPP vests with the income and cost basis shown. Crypto uses the same rules.
 - Every write follows the suite's rails: a proposal showing the target file and exact entries, an explicit yes, existing accounts only, `bea add` with `--file` and `--into`, and a passing root `bea check` before success is reported. An ambiguous lot reduction is resolved with the user and never guessed.
 - A realized-gains report for a year lists each closed lot with acquisition date, sale date, holding period (one year or less, or more), quantity, proceeds, cost, and gain, from `bea --json query` statements shown with the answer. Its total ties to the period's gain postings.
@@ -41,12 +41,12 @@
   - The suite today covers options only, and `beancount-migrate` explicitly leaves investment lots as follow-up work.
 - **Goal linkage:** **A1 — Agent-native accounting:** an agent can keep an investment ledger correct, which is where hand-written Beancount most often goes wrong. **A3 — Community & distribution:** the largest uncovered need in the community's own trackers gets a checked workflow, and no published Beancount skill found in the research handles lots with this rigor.
 - **Expected outcome:** a user records trades, dividends, splits, vests, and transfers by describing them, and gets a realized-gains table for a year whose total ties to the ledger. Signals: routing recall for trade prompts, skill invocations once the registry listings exist, and fewer lot questions in issues that cite the suite.
-- **Why now:** [m40](../done/m40/README.md) settles which single-entry requests `beancount-add` owns, so the trade boundary can be drawn against it. Follow [m41](../done/m41/README.md)'s compact procedure style rather than the current patch-note style. Fetching fresh quotes is the blocked [w4/m9](../../w4/blocked/m9/README.md); this milestone values holdings only from prices already in the ledger. Adoption surface is included because this adds or widens a customer-facing skill.
+- **Why now:** [m40](../../done/m40/README.md) settles which single-entry requests `beancount-add` owns, so the trade boundary can be drawn against it. Follow [m41](../../done/m41/README.md)'s compact procedure style rather than the current patch-note style. Fetching fresh quotes is the blocked [w4/m9](../../../w4/blocked/m9/README.md); this milestone values holdings only from prices already in the ledger. Adoption surface is included because this adds or widens a customer-facing skill.
 
 ## Out of scope
 
 - Tax forms, tax advice, wash-sale adjustments, and jurisdiction-specific holding-period rules beyond the one-year split.
-- Fetching quotes ([w4/m9](../../w4/blocked/m9/README.md)) and foreign-exchange gains.
+- Fetching quotes ([w4/m9](../../../w4/blocked/m9/README.md)) and foreign-exchange gains.
 - Re-implementing lot booking. Beancount's booking does the matching; the skill chooses and states the method.
 
 ## Unblocked — 2026-11-08
@@ -54,3 +54,11 @@
 Codex 0.167.0 / gpt-6.1-sol now completes real Linux model turns. The original
 8-case behavior cohort resumes on a linked synthetic workspace per eval. Existing
 routing evidence is audited independently rather than replacing failed runs.
+
+## Current blocker — 2026-11-08
+
+Only t011 remains. The completed eight-case Codex cohort, dated routing audit,
+adoption review, simplify and deterministic source/published tests are recorded
+in their task files. **Unblock:** remote skills run 42483302256 for ab6dfdd7d
+(or a later equivalent tested tree) succeeds. **Owner:** worker, after GitHub
+Actions completes; no external decision or new model quota is required.
