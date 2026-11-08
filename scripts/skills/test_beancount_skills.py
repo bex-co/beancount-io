@@ -1946,6 +1946,90 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(self.recipe("realized-gains-booked")["rows"], [["390.00"]])
         self.assertEqual(ledger.read_bytes(), before)
 
+    def property_example(self, heading):
+        text = (SUITE / "beancount-property/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn(heading + "\n", text)
+        section = re.split(r"\n#{2,3} ", text.split(heading + "\n", 1)[1], maxsplit=1)[0]
+        blocks = re.findall(r"```[^\n]*\n(.*?)\n```", section, re.DOTALL)
+        block = next((block for block in blocks if re.search(r"^\d{4}-\d{2}-\d{2} \* ", block, re.MULTILINE)), "")
+        self.assertTrue(block, f"Missing property transaction example under {heading}")
+        opens = re.findall(r"^(\d{4}-\d{2}-\d{2}) open (\S+) (\S+)$", block, re.MULTILINE)
+        entry = re.search(r"^(\d{4}-\d{2}-\d{2}) \* [^\n]+\n((?:  [^\n]+\n?)+)", block, re.MULTILINE)
+        self.assertIsNotNone(entry)
+        # The guide's explanatory comments are not --posting arguments.
+        return opens, entry.group(1), [line.split(";", 1)[0].strip() for line in entry.group(2).splitlines()]
+
+    def write_property_example(self, fixture, heading):
+        self.ledger.write_bytes((SUITE / "beancount-property/evals/files" / fixture).read_bytes())
+        self.values.update(ledger=str(self.ledger), target=self.ledger.name, open_target=self.ledger.name)
+        opens, date, postings = self.property_example(heading)
+        for opened, account, currency in opens:
+            self.recipe("open", open_date=opened, account=account, extra=("--currency", currency))
+        extra = tuple(part for posting in postings[2:] for part in ("--posting", posting))
+        self.recipe(
+            "transaction", entry_date=date, payee="Property", narration="Approved example",
+            posting_1=postings[0], posting_2=postings[1], extra=extra,
+        )
+        self.recipe("check")
+        return postings
+
+    def test_property_purchase_example_keeps_costs_escrow_and_stated_market_value_distinct(self):
+        self.write_property_example("eval1_ledger.beancount", "### 3. Propose")
+        self.assertEqual(self.trade_lots("Assets:Property:OakSt", "OAKST"),
+                         [(Decimal("510000"), "2026-02-01", Decimal("1"))])
+        for account, expected in (
+            ("Assets:Checking", "85000"), ("Assets:Escrow:OakSt", "3000"),
+            ("Liabilities:Mortgage:OakSt", "-400000"), ("Expenses:ClosingCosts", "2000"),
+        ):
+            row = self.recipe("tie-out", account=account, currency="USD", assertion_date="2026-02-02",
+                              statement_ending=expected, proposed_net="0")["rows"][0]
+            self.assertEqual([Decimal(value) for value in row], [Decimal(expected), Decimal(expected), Decimal("0")])
+        book = self.query_recipe("net-worth")[0][0]
+        self.assertEqual([(item["units"]["currency"], Decimal(item["units"]["number"])) for item in book],
+                         [("USD", Decimal("198000"))])
+        self.recipe("price", price_date="2026-06-01", commodity="OAKST", price="620000.00 USD")
+        market = self.query_recipe("holdings-lots-market")
+        self.assertEqual(len(market), 1)
+        self.assertEqual([Decimal(value) for value in market[0][5:]],
+                         [Decimal("510000"), Decimal("620000"), Decimal("110000")])
+        # A stated price changes valuation, never the booked cost basis.
+        self.assertEqual(self.query_recipe("net-worth")[0][0], book)
+        self.recipe("check")
+
+    def test_property_payment_example_reduces_loan_and_keeps_escrow_an_asset(self):
+        self.write_property_example("eval2_ledger.beancount", "## Monthly mortgage payments")
+        for account, expected in (
+            ("Liabilities:Mortgage:OakSt", "-399400"), ("Assets:Escrow:OakSt", "3300"),
+            ("Expenses:Interest", "1500"), ("Assets:Checking", "47600"),
+        ):
+            row = self.recipe("tie-out", account=account, currency="USD", assertion_date="2026-03-02",
+                              statement_ending=expected, proposed_net="0")["rows"][0]
+            self.assertEqual([Decimal(value) for value in row], [Decimal(expected), Decimal(expected), Decimal("0")])
+
+    def test_property_sale_example_infers_gain_and_leaves_accounts_open(self):
+        postings = self.write_property_example("eval5_ledger.beancount", "## Selling a property")
+        self.assertEqual(postings[-1], "Income:CapitalGains")
+        self.assertEqual(self.trade_lots("Assets:Property:OakSt", "OAKST"), [])
+        gain = self.recipe(
+            "realized-gains-booked", gains_pattern="^Income:CapitalGains$", currency="USD",
+            year_start="2027-01-01", year_end="2028-01-01",
+        )["rows"]
+        self.assertEqual([[Decimal(value) for value in row] for row in gain], [[Decimal("140000")]])
+        # Escrow is a separate refund, not part of the sale price or gain.
+        self.recipe(
+            "transaction", entry_date="2027-06-01", payee="Servicer", narration="Approved escrow refund",
+            posting_1="Assets:Escrow:OakSt -2100.00 USD", posting_2="Assets:Checking 2100.00 USD",
+        )
+        for account, expected in (
+            ("Liabilities:Mortgage:OakSt", "0"), ("Assets:Escrow:OakSt", "0"),
+            ("Assets:Checking", "242700"), ("Expenses:ClosingCosts", "10000"),
+        ):
+            row = self.recipe("tie-out", account=account, currency="USD", assertion_date="2027-06-02",
+                              statement_ending=expected, proposed_net="0")["rows"][0]
+            self.assertEqual([Decimal(value) for value in row], [Decimal(expected), Decimal(expected), Decimal("0")])
+        self.assertNotRegex(self.ledger.read_text(), r"(?m)^\d{4}-\d{2}-\d{2} close ")
+        self.recipe("check")
+
     def test_coverage_recipes_count_the_window_and_check_statement_arithmetic(self):
         ledger = self.books / "main.bean"
         ledger.write_text(
