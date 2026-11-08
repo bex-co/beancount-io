@@ -25,6 +25,10 @@
 - [x] **m20** — [Diff the BQL engine against stock beanquery in a release gate](./done/m20/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-05; prerequisite [212](./done/212.md) shipped first
 - [x] **m21** — [Guard write-preview behavior with a parity matrix](./done/m21/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-05, proposal 1
 - [x] **m22** — [Refuse NUL bytes in every string parameter by contract](./done/m22/README.md) (6 tasks) ← `/pm-brainstorm w23` 2026-11-05, proposal 2
+- [ ] **m23** — [Stress every parameter with hostile values, not just NUL](./m23/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 1
+- [ ] **m24** — [Replay the MCP contract against production in one command](./m24/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 2
+- [ ] **m25** — [Slim down tools/list](./m25/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 3
+- [ ] **m26** — [Give dry_run previews their own wider rate bucket](./m26/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 5; owner decision to widen (reverses [222](./done/222.md))
 
 ## Dropped
 
@@ -76,3 +80,5 @@
 - [x] [222](./done/222.md) — does a `dry_run` consume the write rate budget? measure it, then decide (preview-then-commit may cost double)
 - [x] [223](./done/223.md) — backend-v2 `yarn lint:deadcode` is red on `main` (`isWithinRefreshReuseGrace`) and `CI (backend parity)` does not run it
 - [x] [224](./done/224.md) — `make check-all` fails locally on a cluttered `$TMPDIR` (root-discovery budget), a nested `uv` picking CPython 3.15, and sandboxed signal tests
+- [ ] [225](./225.md) — backend-v2: format the 62 files prettier flags and gate `prettier --check` in CI (backend parity)
+- [ ] [226](./226.md) — table-driven test: every `ErrorCategory` maps to one MCP code and one HTTP status on REST, GraphQL and MCP
