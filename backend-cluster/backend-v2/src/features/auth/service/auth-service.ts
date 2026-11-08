@@ -82,6 +82,11 @@ type CreateSignUpSessionParams = {
   username?: string | null;
   ip: string;
   withDefaultLedger?: boolean;
+  /**
+   * Mail the verification code (default). Off only for a caller that finishes
+   * the session itself, so nobody is left holding a code they never receive.
+   */
+  sendCode?: boolean;
 };
 
 export type FinishSignupSessionParams = {
@@ -212,7 +217,7 @@ export class AuthService implements IAuthService {
       AppConfig,
       "favaApi" | "dashboard" | "gitea"
     > &
-      Partial<Pick<AppConfig, "jwt" | "selfHost">>,
+      Partial<Pick<AppConfig, "jwt">>,
     private readonly isPwnedPassword: IsPwnedPassword,
     private readonly enqueueAuthMail?: IAuthMailService["enqueue"],
   ) {}
@@ -669,10 +674,10 @@ export class AuthService implements IAuthService {
       10, // 10 minutes expiration
     );
 
-    // Self-hosted: nobody is sent a code, because the sign-up resolver
-    // finishes the session itself (see `signUp`), so the address is not
-    // verified. Never log the session id: it completes the sign-up.
-    if (this.config.selfHost) return session.id;
+    // The caller finishes the session itself (self-hosted sign-up): no code is
+    // mailed, so the address is not verified. Never log the session id: it
+    // completes the sign-up.
+    if (params.sendCode === false) return session.id;
 
     const preSignupParams = { otp: session.otp };
     await this.sendgrid.sendMail({

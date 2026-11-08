@@ -80,13 +80,7 @@ describe("useRegisterForm on a self-hosted deployment", () => {
     );
     await act(() => result.current.onSubmit(form));
 
-    expect(onSignedIn).toHaveBeenCalledWith(
-      {
-        accessToken: "jwt-1",
-        expiresAt: "2026-12-08T00:00:00.000Z",
-      },
-      form.email,
-    );
+    expect(onSignedIn).toHaveBeenCalledWith("jwt-1", form.email);
     expect(onSuccess).not.toHaveBeenCalled();
   });
 

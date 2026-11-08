@@ -131,7 +131,7 @@ for the worker, Redis and recovery prerequisites.
 unless exactly `true`). Sign-up then sends no code and needs no verification
 step: `signUp` creates the account and returns the session `token` directly
 (also set as the auth cookie). Every plan limit is lifted by resolving each
-user to the unlimited tier, and Stripe is never consulted. Email addresses are
+user to the unlimited tier, and billing is never asked for a user's plan. Email addresses are
 not verified, and recovery mail still needs `SEND_GRID_API_KEY`.
 
 Production OAuth requires `OAUTH_JWKS`, a complete private P-256/ES256 signing

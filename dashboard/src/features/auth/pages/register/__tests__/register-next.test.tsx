@@ -24,7 +24,7 @@ const mocks = vi.hoisted(() => ({
   hardNavigate: vi.fn(),
   search: {} as { next?: string },
   onRegistered: null as null | ((sessionId: string, email: string) => void),
-  onSignedIn: null as null | ((token: { accessToken: string }) => unknown),
+  onSignedIn: null as null | ((accessToken: string) => unknown),
   onVerified: null as null | ((token: { accessToken: string }) => unknown),
 }));
 
@@ -53,10 +53,10 @@ vi.mock("@/features/auth/hooks/use-register-form", () => ({
     onSignedIn,
   }: {
     onSuccess: (sessionId: string, email: string) => void;
-    onSignedIn?: (token: { accessToken: string }) => unknown;
+    onSignedIn: (accessToken: string) => unknown;
   }) => {
     mocks.onRegistered = onSuccess;
-    mocks.onSignedIn = onSignedIn ?? null;
+    mocks.onSignedIn = onSignedIn;
     return {
       onSubmit: vi.fn(),
       isLoading: false,
@@ -195,7 +195,7 @@ describe("sign-up on a self-hosted deployment (no code step)", () => {
   it("goes straight to the welcome page without showing the code form", async () => {
     render(<RegisterFlow />);
     await act(async () => {
-      await mocks.onSignedIn?.({ accessToken: "synthetic-token" });
+      await mocks.onSignedIn?.("synthetic-token");
     });
 
     expect(screen.queryByTestId("otp-form")).not.toBeInTheDocument();
@@ -206,7 +206,7 @@ describe("sign-up on a self-hosted deployment (no code step)", () => {
     mocks.search = { next: PRICING_NEXT };
     render(<RegisterFlow />);
     await act(async () => {
-      await mocks.onSignedIn?.({ accessToken: "synthetic-token" });
+      await mocks.onSignedIn?.("synthetic-token");
     });
 
     expect(mocks.hardNavigate).toHaveBeenCalledWith(PRICING_NEXT);

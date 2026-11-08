@@ -8,7 +8,6 @@ import {
 import { useTranslations } from "@/common/hooks/use-translations";
 import { generateDefaultUsername } from "@/common/lib/utils/nanoid-base58";
 import { track } from "@/common/analytics";
-import type { Token } from "@/common/types/token";
 import { useNewPasswordErrorMessage } from "@/features/auth/lib/password-rule";
 
 export type RegisterFormData = {
@@ -29,7 +28,7 @@ type UseRegisterFormOptions = {
    * A self-hosted deployment verifies no email: the sign-up answers already
    * signed in, so there is no code to enter and `onSuccess` is not called.
    */
-  onSignedIn?: (token: Token, email: string) => void | Promise<void>;
+  onSignedIn: (accessToken: string, email: string) => void | Promise<void>;
 };
 
 export function useRegisterForm({
@@ -65,17 +64,10 @@ export function useRegisterForm({
         },
       });
       const responseData = response.data;
-      if (responseData?.signUp.token && onSignedIn) {
+      if (responseData?.signUp.token) {
         // As in the code flow, sign_up counts a finished registration.
         track("sign_up", { method: "password" });
-        await onSignedIn(
-          {
-            accessToken: responseData.signUp.token,
-            expiresAt:
-              responseData.signUp.tokenExpireAt ?? responseData.signUp.expireAt,
-          },
-          data.email,
-        );
+        await onSignedIn(responseData.signUp.token, data.email);
       } else if (responseData) {
         onSuccess(responseData.signUp.sessionId, data.email);
       } else {

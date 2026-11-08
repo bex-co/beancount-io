@@ -4,7 +4,7 @@ import { useApolloClient } from "@apollo/client/react";
 import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLoginForm } from "@/features/auth/hooks/use-login-form";
-import { useRegisterForm } from "@/features/auth/hooks/use-register-form";
+import { useConsentRegisterForm } from "@/features/oauth/hooks/use-consent-register-form";
 import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
@@ -72,19 +72,10 @@ function RegisterStep({
   onSignedIn: (email: string) => void;
   onSignInClick: () => void;
 }) {
-  const client = useApolloClient();
   const { t } = useTranslations();
 
-  const { onSubmit, isLoading, serverError, defaultUsername } = useRegisterForm(
-    {
-      withDefaultLedger: false,
-      onSuccess,
-      onSignedIn: async (_token, email) => {
-        await client.resetStore();
-        onSignedIn(email);
-      },
-    },
-  );
+  const { onSubmit, isLoading, serverError, defaultUsername } =
+    useConsentRegisterForm({ withDefaultLedger: false, onSuccess, onSignedIn });
 
   return (
     <div className="space-y-8">

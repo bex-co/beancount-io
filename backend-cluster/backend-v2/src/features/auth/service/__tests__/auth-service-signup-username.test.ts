@@ -17,7 +17,7 @@ beforeEach(() => fakeRedisAdmissionState.reset());
 // it before, and a sign-up without one took the email's local part as is
 // (w0/046).
 
-function createService(taken: string[] = [], selfHost = false) {
+function createService(taken: string[] = []) {
   const takenLower = new Set(taken.map((name) => name.toLowerCase()));
   const user = {
     getByMail: jest.fn().mockResolvedValue(null),
@@ -46,7 +46,6 @@ function createService(taken: string[] = [], selfHost = false) {
     { getAdminClient: () => ({ admin: { createUser } }) } as any,
     {
       favaApi: { adminUser: "admin", adminPassword: "pw" },
-      selfHost,
     } as any,
     isPwnedPassword,
   );
@@ -234,12 +233,12 @@ describe("createSignUpSession password policy", () => {
   });
 });
 
-describe("createSignUpSession when self-hosted", () => {
-  it("creates the session but sends no mail when on", async () => {
-    const { service, signupOtpSession, sendgrid } = createService([], true);
-    await expect(service.createSignUpSession(signUpParams())).resolves.toBe(
-      "s-1",
-    );
+describe("createSignUpSession without a mailed code", () => {
+  it("creates the session but sends no mail when sendCode is false", async () => {
+    const { service, signupOtpSession, sendgrid } = createService();
+    await expect(
+      service.createSignUpSession({ ...signUpParams(), sendCode: false }),
+    ).resolves.toBe("s-1");
     expect(signupOtpSession.createSession).toHaveBeenCalledTimes(1);
     expect(sendgrid.sendMail).not.toHaveBeenCalled();
   });

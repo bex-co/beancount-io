@@ -384,6 +384,7 @@ export class AuthResolver {
       username: args.username ?? null,
       ip: ctx.clientIp,
       withDefaultLedger: args.withDefaultLedger ?? false,
+      sendCode: !ctx.config.selfHost,
     });
     const session = await this.authService.getSignupOtpSession(sessionId);
     if (!session) {

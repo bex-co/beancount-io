@@ -217,8 +217,8 @@ it.each(verificationPaths)(
   },
 );
 
-describe("SELF_HOST sign-up", () => {
-  function createSelfHostService(selfHost: boolean) {
+describe("sign-up without a mailed code", () => {
+  function createSelfHostService() {
     const base = createService();
     const sendMail = jest.fn();
     const signupOtpSession = {
@@ -237,7 +237,7 @@ describe("SELF_HOST sign-up", () => {
       { sendMail } as never,
       {} as never,
       {} as never,
-      { selfHost } as never,
+      {} as never,
       async () => false,
     );
     const registerUser = jest
@@ -255,14 +255,16 @@ describe("SELF_HOST sign-up", () => {
     ip: "198.51.100.20",
   };
 
-  it("sends no verification mail when self-hosted", async () => {
-    const { service, sendMail } = createSelfHostService(true);
-    await expect(service.createSignUpSession(signUp)).resolves.toBe("created");
+  it("sends no verification mail when the caller finishes the session itself", async () => {
+    const { service, sendMail } = createSelfHostService();
+    await expect(
+      service.createSignUpSession({ ...signUp, sendCode: false }),
+    ).resolves.toBe("created");
     expect(sendMail).not.toHaveBeenCalled();
   });
 
-  it("sends the verification mail when not self-hosted", async () => {
-    const { service, sendMail } = createSelfHostService(false);
+  it("sends the verification mail by default", async () => {
+    const { service, sendMail } = createSelfHostService();
     await service.createSignUpSession({ ...signUp, ip: "198.51.100.21" });
     expect(sendMail).toHaveBeenCalledTimes(1);
   });
@@ -272,7 +274,7 @@ describe("SELF_HOST sign-up", () => {
   it.each(verificationPaths)(
     "still rejects a wrong code through %s when self-hosted",
     async (path) => {
-      const { service, registerUser } = createSelfHostService(true);
+      const { service, registerUser } = createSelfHostService();
       await expect(
         service[path]({
           sessionId: "session-a",

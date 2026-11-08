@@ -30,8 +30,8 @@ export default function RegisterFlow() {
 
   // A self-hosted deployment verifies no email, so the sign-up arrives signed
   // in and the code step never appears.
-  const handleSignedIn = (token: { accessToken: string }) =>
-    finishSignUp(token.accessToken, search.next, navigate);
+  const handleSignedIn = (accessToken: string) =>
+    finishSignUp(accessToken, search.next, navigate);
 
   // Handle successful OTP verification
   const handleOtpSuccess = () => {

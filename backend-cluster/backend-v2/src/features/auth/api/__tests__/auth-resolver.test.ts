@@ -491,6 +491,7 @@ describe("AuthResolver", () => {
         username: "janesmith",
         ip: "127.0.0.1",
         withDefaultLedger: true,
+        sendCode: true,
       });
     });
 
@@ -523,6 +524,7 @@ describe("AuthResolver", () => {
         username: null,
         ip: "127.0.0.1",
         withDefaultLedger: false,
+        sendCode: true,
       });
     });
 
@@ -636,6 +638,9 @@ describe("AuthResolver", () => {
 
       const result = await resolver.signUp(mockContext, args);
 
+      expect(mockAuthService.createSignUpSession).toHaveBeenCalledWith(
+        expect.objectContaining({ sendCode: false }),
+      );
       expect(mockAuthSessionWorkflow.verifySignUpOtp).toHaveBeenCalledWith({
         sessionId: "sess-1",
         otp: "1234",
