@@ -1815,6 +1815,98 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(self.recipe("tie-out")["rows"], [["2945.00", "2941.00", "-1.00"]])
         self.assertEqual(ledger.read_bytes(), before)
 
+    def trade_example_amounts(self, prefix):
+        text = (SUITE / "beancount-trade/SKILL.md").read_text(encoding="utf-8")
+        line = next((line for line in text.splitlines() if line.startswith(prefix)), "")
+        self.assertTrue(line, f"Missing trade procedure {prefix}")
+        return [part for part in re.findall(r"`([^`]+)`", line) if re.match(r"-?\d[\d.]* \w+ \{", part)]
+
+    def trade_entry(self, date, first, second, *, succeeds=True, extra=()):
+        return self.recipe(
+            "transaction", entry_date=date, payee="Broker", narration="Confirmed trade",
+            posting_1=first, posting_2=second, succeeds=succeeds, extra=extra,
+        )
+
+    def trade_lots(self, account, commodity):
+        rows = self.recipe("lots-held", account=account, commodity=commodity)["rows"]
+        return sorted((Decimal(cost), date, Decimal(units)) for cost, date, units in rows if Decimal(units))
+
+    def test_trade_transfer_example_keeps_each_lots_cost_and_date(self):
+        for account in ("Assets:Brokerage", "Assets:Brokerage:Roth"):
+            self.recipe("open", account=account)
+        self.trade_entry("2026-01-15", "Assets:Brokerage 10 VTI {250.00 USD}", "Equity:OpeningBalances")
+        outgoing, incoming = self.trade_example_amounts("- **Transfer between")
+        self.trade_entry("2026-03-01", f"Assets:Brokerage {outgoing}", f"Assets:Brokerage:Roth {incoming}")
+        expected = [(Decimal("250"), "2026-01-15", Decimal("5"))]
+        self.assertEqual(self.trade_lots("Assets:Brokerage", "VTI"), expected)
+        self.assertEqual(self.trade_lots("Assets:Brokerage:Roth", "VTI"), expected)
+        self.recipe("check")
+
+    def test_trade_split_example_keeps_total_cost_and_acquisition_date(self):
+        self.recipe("open", account="Assets:Brokerage")
+        self.trade_entry("2026-02-15", "Assets:Brokerage 10 VTI {260.00 USD}", "Equity:OpeningBalances")
+        old, new = self.trade_example_amounts("- **Split.")
+        self.trade_entry("2026-03-01", f"Assets:Brokerage {old}", f"Assets:Brokerage {new}")
+        lots = self.trade_lots("Assets:Brokerage", "VTI")
+        self.assertEqual(len(lots), 1)
+        cost, acquired, units = lots[0]
+        self.assertEqual((acquired, units), ("2026-02-15", Decimal("30")))
+        # A third of a dollar repeats; the total-cost form keeps the monetary
+        # basis, rather than rounding each share to cents before multiplying.
+        self.assertLess(abs(cost * units - Decimal("2600")), Decimal("0.000001"))
+        self.recipe("check")
+
+    def test_trade_reinvested_dividend_example_records_units_and_income(self):
+        for account in ("Assets:Brokerage", "Income:Dividends"):
+            self.recipe("open", account=account)
+        amount, = self.trade_example_amounts("- **Cash dividend.")
+        self.trade_entry("2026-03-16", f"Assets:Brokerage {amount}", "Income:Dividends")
+        self.assertEqual(self.trade_lots("Assets:Brokerage", "VTI"), [(Decimal("300"), "2026-03-16", Decimal("0.15"))])
+        # Reuse the parameterized booked-credit query as an independent check
+        # of the income posting, not just the text bea happened to print.
+        credits = self.recipe(
+            "realized-gains-booked", gains_pattern="^Income:Dividends$", currency="USD",
+            year_start="2026-01-01", year_end="2027-01-01",
+        )["rows"]
+        self.assertEqual([[Decimal(value) for value in row] for row in credits], [[Decimal("45")]])
+        self.recipe("check")
+
+    def test_trade_vest_example_records_fair_value_and_compensation(self):
+        for account in ("Assets:Compensation", "Income:Compensation"):
+            self.recipe("open", account=account)
+        amount, = self.trade_example_amounts("- **RSU/ESPP vest.")
+        self.trade_entry("2026-05-01", f"Assets:Compensation {amount}", "Income:Compensation")
+        self.assertEqual(self.trade_lots("Assets:Compensation", "ACME"), [(Decimal("200"), "2026-05-01", Decimal("8"))])
+        credits = self.recipe(
+            "realized-gains-booked", gains_pattern="^Income:Compensation$", currency="USD",
+            year_start="2026-01-01", year_end="2027-01-01",
+        )["rows"]
+        self.assertEqual([[Decimal(value) for value in row] for row in credits], [[Decimal("1600")]])
+        self.recipe("check")
+
+    def test_trade_ambiguous_strict_sell_is_refused_without_a_write(self):
+        for account in ("Assets:Brokerage", "Income:CapitalGains"):
+            self.recipe("open", account=account)
+        for date, cost in (("2026-01-15", "100"), ("2026-02-15", "120")):
+            self.trade_entry(date, f"Assets:Brokerage 10 VTI {{{cost} USD}}", "Equity:OpeningBalances")
+        before = (self.ledger.read_bytes(), self.target.read_bytes())
+        refused = self.trade_entry(
+            "2026-03-01", "Assets:Brokerage -5 VTI {} @ 300 USD", "Assets:Brokerage 1500 USD",
+            succeeds=False, extra=("--posting", "Income:CapitalGains"),
+        )
+        self.assertIn("Ambiguous", refused.stdout + refused.stderr)
+        self.assertEqual((self.ledger.read_bytes(), self.target.read_bytes()), before)
+        self.recipe("check")
+
+    def test_trade_unknown_booking_method_is_refused_without_an_open(self):
+        before = (self.ledger.read_bytes(), self.target.read_bytes())
+        refused = self.recipe("open", account="Assets:Brokerage", succeeds=False, extra=("--booking", "UNKNOWN"))
+        self.assertIn("booking", refused.stdout + refused.stderr)
+        self.assertEqual((self.ledger.read_bytes(), self.target.read_bytes()), before)
+        self.recipe("open", account="Assets:Brokerage", extra=("--booking", "FIFO"))
+        self.assertIn('"FIFO"', self.ledger.read_text())
+        self.recipe("check")
+
     def test_realized_gains_rows_totals_and_tie_out(self):
         ledger = self.books / "main.bean"
         ledger.write_text(
