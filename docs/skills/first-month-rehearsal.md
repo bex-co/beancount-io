@@ -164,3 +164,92 @@ Read `thread_id` from `thread.started`; replace the final `-` with
 `resume`. The additional writable directory is only the synthetic repository's
 `.git`, needed for the explicitly approved close commit. Neither client received
 a model override, blanket future accounting approval, or a sandbox-bypass flag.
+
+
+## Manual-entry candidate: Linux Codex — 2026-11-08
+
+The earlier sections describe the September guide, before the manual-entry step.
+This is a new supervised Codex rehearsal of the unshipped w2/090 candidate,
+not a new two-client pass or a release of the changed guide.
+
+- Source baseline: `ced76b75db0fa969c627c164514a59c94a4b3d31`;
+  preserved candidate commit `eaf7c7121337beaef4adcd4c2c9c6f7157b64049`.
+  Its suite version `0.4.32` is reserved locally; published main remains `0.4.31`.
+- Client: Codex CLI `0.167.0`, `gpt-6.1-sol`, default reasoning, Linux arm64
+  in an OrbStack Docker container. All sixteen customer skills were installed
+  through the real link installer into both client directories.
+- Runtime: actual published `beancount-io==0.3.1`, explicitly selected through
+  `/opt/published-bea/bin/bea` in `BEA` and `PATH`. No same-version checkout
+  executable supplied the financial results.
+- Native command sandboxing stayed enabled. The owned synthetic books, their
+  Git metadata and the separate CLI configuration store were explicitly writable;
+  suite and input mounts were read-only and command networking was disabled.
+  Logs and snapshots stayed outside the books.
+- Guide prompts were sent one turn at a time, with each proposal reviewed
+  before the separate documented approval. After initialization, the operator
+  made the guide's initial Git baseline commit containing only `main.bean`.
+
+The new manual entry records the August 2 Synthetic Parking purchase for
+12.50 USD: `Expenses:Transport +12.50`, `Liabilities:CreditCard -12.50`, without
+inventing a bank import ID. It does not change the checking statement figures.
+The final ledger has six transactions, checking 2942.00, income 2000.00,
+expenses 70.50 and net income 1929.50 USD. The displayed expense query and
+income statement were independently rerun and agreed.
+
+| Checkpoint | Accepted Codex result |
+| --- | --- |
+| initialized | PASS |
+| manual | PASS; reviewed proposal, explicit approval, native write |
+| declined_import | PASS; all workspace files, HEAD and index unchanged |
+| imported | PASS |
+| reimported | PASS; no duplicate or configuration write |
+| unresolved_statement | PASS; actual statement read, unexplained −4.00 USD gap reported |
+| missing_statement | PASS; both active accounts unverified |
+| declined_reconcile | PASS; workspace and Git unchanged |
+| reconciled | PASS; source-identified fee and September 1 checking assertion |
+| asked | PASS; displayed reads rerun, workspace and Git unchanged |
+| declined_commit | PASS; workspace and Git unchanged |
+| closed | PASS; exactly one new commit, only `main.bean`, all other files preserved |
+
+The two statement branches used fresh sessions and physically separate input
+mounts. Neither could access the complete statement or reference expectations.
+Both reported zero tied accounts and zero pinned assertions; the unresolved
+branch showed the signed −4.00 USD difference rather than inventing a repair.
+The final main close reported **1 tied, 1 not tied**, **1 pinned, 1 unpinned**,
+and explicitly named `Liabilities:CreditCard` as unverified. Prior recurring
+history remained unavailable, with zero established gaps and zero carried flags.
+Synthetic commit `4e849298f876ff40822787571c0be4f5f055e01d` used stdin for its
+message and left no draft behind. No synthetic repository was pushed.
+
+Two earlier failures are retained separately and are not counted as passes:
+
+1. The first harness placed `BEA_CONFIG_DIR` inside the inspected books. A
+   published-CLI import preview cached its importer registration there, so the
+   decline workspace check failed despite unchanged financial entries and rules.
+   The corrected harness uses the normal separation between books and CLI
+   configuration, with an owned `/run/bea-config` store outside the books. The
+   entire main journey restarted in a fresh repository; the failed run was not
+   cleaned up and regraded.
+2. The first unresolved branch treated `FIRST_MONTH_INPUTS` as a literal
+   directory and reported the statement unavailable instead of the required gap.
+   The mount and environment were verified independently. The candidate prompt
+   now explicitly resolves `"$FIRST_MONTH_INPUTS/statement-unresolved.md"` from
+   the inherited environment. A fresh isolated branch then read the file and
+   passed. The failed transcript remains a failure.
+
+The candidate's sixteen verifier tests passed against both the checkout CLI
+and the actual published 0.3.1 executable. Two mutation controls, separately
+ignoring the manual payment account or its source identity, each produced one
+assertion failure and no test errors. The complete skills checker and canonical
+agent-guidance check passed. These deterministic checks supplement the agent
+rehearsal; they do not substitute for it.
+
+The ten-file candidate is preserved on local branch
+`codex/w2-090-codex-20261108`, in ignored worktree
+`scripts/skills/tmp/w2-090-codex-candidate/`, with a patch and raw evidence under
+`scripts/skills/tmp/w2-codex-linux/`. It includes the unshipped 102/103 close
+message and published-CLI capability fixes as prerequisites. Main's product
+files were restored before publishing this record. **Release remains blocked:**
+the changed journey and its dependencies need fresh authenticated Claude Code
+verification in the same change. Earlier Claude runs cover the older journey
+and cannot clear that gate. Other platforms and clients were not rehearsed here.
