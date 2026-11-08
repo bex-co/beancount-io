@@ -931,6 +931,6 @@ is retained; its pure-advice miss is covered by the later full 124 result.
 This is dated reuse of the unchanged original 100, not a fresh 136-entry run.
 Claude's original October 20 property behavior **7/7** also retains its date
 and version; no fresh Claude authentication or model result is claimed.
-[Task evidence](../../.pm/w2/m51/done/t006.md) closes the original both-client
+[Task evidence](../../.pm/w2/blocked/m51/done/t006.md) closes the original both-client
 behavior/routing debt; adoption, simplify, deterministic coverage and closeout
 remain separate tasks.
