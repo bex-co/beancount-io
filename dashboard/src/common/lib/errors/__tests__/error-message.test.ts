@@ -156,6 +156,19 @@ describe("header filter diagnostics (w0/020)", () => {
     }
   });
 
+  it.each([
+    'Unterminated or misplaced quote — wrap the whole value in matching quotes, e.g. key:"a:b"',
+    'Unexpected #trip after "payee:" — write payee:trip or a bare #trip term',
+    'Unexpected 7 after "payee:" — quote values starting with a digit, e.g. payee:"7"',
+  ])("names newer filter diagnostics: %s", (message) => {
+    expect(getErrorMessageKey(badInput(message))).toBe(
+      "common.errors.invalidFilterExpression",
+    );
+    expect(getErrorMessageKey(badInput(message, "INTERNAL_SERVER_ERROR"))).toBe(
+      "common.errors.internal",
+    );
+  });
+
   it("keeps the generic bad-input message for other diagnostics and codes", () => {
     expect(getErrorMessageKey(badInput("Ledger option missing"))).toBe(
       "common.errors.badUserInput",

@@ -52,14 +52,16 @@ const limitKey = (owner: unknown) =>
  * {@link useErrorMessage} / the `error` prop on `ReportErrorState`.
  */
 /**
- * The ledger's own filter diagnostics (`directive-filter.ts`), forwarded as
+ * Keep these prefixes in sync with AdvancedFilterParseError diagnostics in
+ * backend-cluster/ledger/src/foundation/rustledger/directive-filter.ts.
+ * The ledger's filter diagnostics are forwarded as
  * BAD_USER_INPUT. They name which header filter failed, which the generic
  * "information provided is invalid" did not (w0/020). Only the category is
  * used; the server text itself is never shown.
  */
 const TIME_FILTER_ERROR = /^Failed to parse date:/;
 const ADVANCED_FILTER_ERROR =
-  /^(?:Illegal character|Trailing tokens|Unexpected end of filter|Unexpected token|Expected .+, got|Expected : or comparison|Filter pattern exceeds)/;
+  /^(?:Illegal character|Trailing tokens|Unexpected end of filter|Unexpected token|Unterminated or misplaced quote|Unexpected .+ after "|Expected .+, got|Expected : or comparison|Filter pattern exceeds)/;
 
 /**
  * The catalog key for `error`. `fallbackKey` replaces the generic "something

@@ -79,7 +79,6 @@
 - [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.
 - [103 — Realized-gains command missing from published minimum bea](./blocked/103.md) — Codex capability/fallback fix and fresh report pass; candidate release needs authenticated Claude validation.
 
-- [101 — Three newer filter diagnostics fall back to "information provided is invalid"](./101.md) — dashboard QA 2026-11-08, regression of w0/020
 - [097 — Business presets lack loans, payroll and sales-tax liabilities, and owner draws](./blocked/097.md) — **blocked:** a `business@2` preset version and public API enum change; the owner decides its content
 - [099 — Inventory lots and cost of goods sold for product sellers](./blocked/099.md) — **blocked:** validated product-seller demand (owner decision)
 - [080 — Decide whether the suite keeps its no-`bea` developer fallback](./blocked/080.md) (owner decision) — **blocked:** the owner picks keep, read-only, or require-`bea`
