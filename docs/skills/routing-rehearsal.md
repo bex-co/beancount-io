@@ -604,3 +604,43 @@ The four entries above left Codex not run. Codex accepts `gpt-6.1-sol` again, so
 - **Codex 0.166.0 (`gpt-6.1-sol`, client-default reasoning)**, suite at `df1cfd84e`, two complete passes: **128/128 each, 256/256**, zero errors and no recoveries, covering every new prompt and near-miss from the four entries above.
 - **Before side:** not rerun. Codex's last complete passes (candidate5 above, 115/115 twice) predate `beancount-invoices`, and with no miss after, no prompt that routed correctly then misroutes now.
 - **Claude Code:** the entries above stand (124/124 over the full set at `6421f036a`, then 3/3 and 1/1 for the prompts added after it). No skill `description` changed between those runs and suite 0.4.20, so neither client's result was rerun for the later cleanups.
+
+## Upgraded linked installation — 2026-11-08
+
+The remaining w2/m42/t007 Codex discovery prompt now passes on Codex CLI
+0.167.0, `gpt-6.1-sol`, in the Linux runtime recorded above. This is **one
+prompt**, not a new complete routing cohort.
+
+Two live GitHub checkouts rehearse the current installation guide, with only
+`SKILLS_SRC` and workspace destinations substituted under package `tmp/`:
+
+- A fresh shallow sparse clone at `812236764` installs and verifies sixteen
+  customer skills in both `.claude/skills` and `.agents/skills`.
+- A separate historical fixture uses pre-move `e4171efc2` and its own
+  `skills/scripts/beancount-skills.py` to install the original nine skills.
+  The documented upgrade block fast-forwards it to `812236764`, widens the
+  sparse checkout and repairs all eighteen old links, then links the seven
+  later additions. Both client directories verify with sixteen skills.
+
+From the upgraded installation, the exact prompt “How much did I spend on
+groceries last month?” first opens `beancount-ask`. The routing runner's
+unchanged event parser verifies that command's printed name frontmatter.
+The same complete client turn then executes
+`cat .agents/skills/beancount-init/references/bea-cli.md` successfully; its
+output equals the installed reference in full. This also supplies w2/083's
+missing linked-install shared-contract read, without a ripgrep search or
+missing sibling path.
+
+The probe runs with native `read-only` policy and a read-only workspace
+mount, and the synthetic ledger remains byte-identical. The subsequent BQL
+query cannot run because that policy provides no writable temporary
+directory. The client reports this blocker and does not invent a grocery
+total. These observations prove discovery and reference reading; they are
+not a successful financial-query rehearsal. Earlier Claude discovery
+retains its October 19 date and client version; no new Claude run is claimed.
+
+Logs, old/new revisions, installer output, the full Codex JSONL and the
+independent grade are local under
+`scripts/skills/tmp/w2-codex-linux/m42/`. The two source checkouts have the
+same customer skills/tooling/guides as `b91a5998f`; the intervening
+`812236764` change is in the backend package.
