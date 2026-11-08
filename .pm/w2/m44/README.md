@@ -13,7 +13,7 @@
 | [t005](done/t005.md) | Document the plugin install beside the other install paths — **DONE** | 30m | t002 |
 | [t006](done/t006.md) | Rehearse install, update, and first query on both clients — **DONE** | 45m | t004, t005 |
 | [t007](done/t007.md) | Adoption surface — **DONE** | 30m | [t006](done/t006.md) |
-| t008 | Simplify | 15m | t007 |
+| [t008](done/t008.md) | Simplify — **DONE** | 15m | t007 |
 | t009 | Test coverage | 45m | t007, t008 |
 | t010 | Closeout | 15m | t009 |
 
