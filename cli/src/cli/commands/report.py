@@ -861,6 +861,8 @@ def budget(
     if context.current().json_output:
         _emit_json(file, data)
         return
+    for error in data["budget_errors"]:
+        output.note(f"Budget directive ignored: {error}")
     if csv_target is not None:
         _emit_csv("budget", file, data, csv_target)
         return
@@ -870,8 +872,6 @@ def budget(
         convention="Actual is spending for expenses and earnings for income (both positive); "
         "variance is actual minus budget, so a positive expense variance is overspending",
     )
-    for error in data["budget_errors"]:
-        output.note(f"Budget directive ignored: {error}")
     if not data["has_budgets"]:
         typer.echo('No budgets. Declare one with: 2026-01-01 custom "budget" Expenses:Food "monthly" 300.00 USD')
     precision = _precision(data)

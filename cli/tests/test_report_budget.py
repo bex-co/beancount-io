@@ -337,3 +337,56 @@ def test_csv_rows_match_the_json_rows(tmp_path: Path) -> None:
     assert [(r["account"], r["currency"], r["budget"], r["actual"], r["variance"]) for r in rows] == [
         (e["account"], e["currency"], e["budget"] or "", e["actual"], e["variance"] or "") for e in expected
     ]
+
+
+@pytest.mark.parametrize(
+    "declaration,error",
+    [
+        ('"fortnightly-ish" 100.00 USD', "Invalid interval for budget entry"),
+        ('"monthly" 100', "Invalid amount for budget entry: expected NUMBER CURRENCY"),
+        (None, None),
+    ],
+)
+def test_ignored_budget_diagnostics_reach_text_and_both_csv_destinations(
+    tmp_path: Path, declaration: str | None, error: str | None
+) -> None:
+    text = (
+        HEAD
+        + '2026-01-01 custom "budget" Expenses:Rent "monthly" 50.00 USD\n'
+        + '2026-01-02 * "Fun"\n  Expenses:Fun 10.00 USD\n  Assets:Bank\n'
+    )
+    if declaration is not None:
+        text += f'2026-01-01 custom "budget" Expenses:Fun {declaration}\n'
+    ledger = write_ledger(tmp_path, text)
+    base = ["-f", str(ledger), "report", "budget", "-t", "2026-01"]
+    structured = bea(["--json", *base], tmp_path)
+    assert structured.returncode == 0, structured.stderr
+    assert structured.stderr == ""
+    data = json.loads(structured.stdout)["data"]
+    assert data["budget_errors"] == ([] if error is None else [error])
+    expected = data["periods"][0]["rows"]
+    assert {row["account"] for row in expected} == {"Expenses:Fun", "Expenses:Rent"}
+    exported = tmp_path / "budget.csv"
+    csv_stdout = ""
+    for options in ([], ["--format", "csv"], ["--output", str(exported)]):
+        run = bea([*base, *options], tmp_path)
+        assert run.returncode == 0, run.stderr
+        if error is None:
+            assert run.stderr == ""
+        else:
+            assert run.stderr.count(f"Budget directive ignored: {error}") == 1
+        assert "Budget directive ignored" not in run.stdout
+        assert ledger.read_text() == text
+        if not options:
+            assert "Expenses:Fun" in run.stdout and "50.00 USD" in run.stdout
+            continue
+        if "--output" in options:
+            assert run.stdout == ""
+            csv_text = exported.read_text()
+            assert csv_text == csv_stdout
+        else:
+            csv_text = csv_stdout = run.stdout
+        rows = list(csv.DictReader(io.StringIO(csv_text)))
+        assert [(row["account"], row["budget"], row["actual"], row["variance"]) for row in rows] == [
+            (row["account"], row["budget"] or "", row["actual"], row["variance"] or "") for row in expected
+        ]
