@@ -2,9 +2,27 @@ import type Stripe from "stripe";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
 import type { ISendGrid } from "@/foundation/sendgrid";
-import { SUBSCRIPTION_CONFIG, type PlanConfig } from "../service/stripe";
+import {
+  checkoutRecoveryEmailSubject,
+  renderCheckoutRecoveryHtml,
+  renderCheckoutRecoveryText,
+  type CheckoutRecoveryEmailParams,
+} from "@/shared/email-templates";
+import { logger } from "@/shared/logger";
+import {
+  SUBSCRIPTION_CONFIG,
+  TIER_DISPLAY_NAMES,
+  type PlanConfig,
+} from "../service/stripe";
 import type { IStripeService } from "../service/stripe-service";
 import { expandableId } from "../service/subscription-plan";
+import { checkoutCancelUrl } from "../service/subscription-service";
+import { planName } from "./billing-email";
+
+const recoveryLogger = logger.child({ module: "checkout-recovery-email" });
+
+/** How long the code works: long enough to finish, short enough to act on. */
+const CODE_LIFETIME_SECONDS = 48 * 60 * 60;
 
 /**
  * The one email a first-time customer gets when their Checkout session
@@ -147,4 +165,76 @@ async function isBackInCheckout(
     }
   }
   return false;
+}
+
+export type RecoveryOutcome = "sent" | "already-sent" | RecoveryIneligibility;
+
+/**
+ * Send the recovery email for an expired session, at most once per person
+ * ever (ADR027 D4). The claim comes first, because the body carries a code
+ * that should exist only once the claim is won; then the code, the render,
+ * and the send. A failure after the claim deactivates the code, gives the
+ * claim back and rethrows, so Stripe's redelivery starts clean.
+ */
+export async function emailCheckoutRecovery(
+  deps: CheckoutRecoveryDeps,
+  session: Stripe.Checkout.Session,
+  clientId: string,
+): Promise<RecoveryOutcome> {
+  const verdict = await recoveryEligibility(deps, session, clientId);
+  if (!verdict.eligible) return verdict.reason;
+  const { userId, email, plan, groupId } = verdict;
+
+  const key = `checkout-recovery:${userId}`;
+  if (!(await deps.models.sentBillingEmail.claim(deps.db, key))) {
+    return "already-sent";
+  }
+  const clientConfig = SUBSCRIPTION_CONFIG[clientId];
+  const stripe = deps.stripe.getStripeInstance(clientId);
+  let codeId: string | undefined;
+  try {
+    const customer = session.customer && expandableId(session.customer);
+    const code = await stripe.promotionCodes.create({
+      promotion: { type: "coupon", coupon: clientConfig.recoveryCouponId },
+      max_redemptions: 1,
+      expires_at: Math.floor(Date.now() / 1000) + CODE_LIFETIME_SECONDS,
+      restrictions: { first_time_transaction: true },
+      ...(customer && { customer }),
+      metadata: { userId, sessionId: session.id, source: "checkout-recovery" },
+    });
+    codeId = code.id;
+    const params: CheckoutRecoveryEmailParams = {
+      tier: TIER_DISPLAY_NAMES[plan.tier],
+      plan: planName(plan),
+      interval: plan.interval,
+      code: code.code,
+      checkoutUrl:
+        session.after_expiration?.recovery?.url ??
+        checkoutCancelUrl(clientConfig, plan, "PRICING"),
+    };
+    await deps.sendgrid.sendMail({
+      to: email,
+      subject: checkoutRecoveryEmailSubject(params),
+      html: renderCheckoutRecoveryHtml(params),
+      text: renderCheckoutRecoveryText(params),
+      asm: { groupId },
+    });
+  } catch (error) {
+    if (codeId) {
+      await stripe.promotionCodes
+        .update(codeId, { active: false })
+        .catch((deactivateError: unknown) =>
+          recoveryLogger.error("Could not deactivate an unsent recovery code", {
+            codeId,
+            errorMessage:
+              deactivateError instanceof Error
+                ? deactivateError.message
+                : String(deactivateError),
+          }),
+        );
+    }
+    await deps.models.sentBillingEmail.release(deps.db, key);
+    throw error;
+  }
+  return "sent";
 }

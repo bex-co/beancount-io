@@ -256,7 +256,7 @@ export type CheckoutReturnTo = "PRICING" | "BILLING";
  * `checkout=canceled` are ignored until it reads them too. From the
  * dashboard: Billing, which says nothing was charged.
  */
-function checkoutCancelUrl(
+export function checkoutCancelUrl(
   clientConfig: { cancelUrl: string; portalReturnUrl: string },
   plan: { tier: SubscriptionTier; interval: "month" | "year" },
   returnTo: CheckoutReturnTo,

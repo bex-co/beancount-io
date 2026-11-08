@@ -3,6 +3,10 @@
 import fs from "fs";
 import path from "path";
 import { EMAIL_THEME } from "../components/email-theme";
+import {
+  renderCheckoutRecoveryHtml,
+  type CheckoutRecoveryEmailParams,
+} from "../templates/checkout-recovery.template";
 import { renderPasswordResetHtml } from "../templates/password-reset.template";
 import {
   renderPlanChangeHtml,
@@ -73,6 +77,14 @@ export function buildTemplatePreviews(): TemplatePreview[] {
     renewalDate: "October 17, 2027",
   };
 
+  const checkoutRecoveryParams: CheckoutRecoveryEmailParams = {
+    tier: "Premium",
+    plan: "Premium · Yearly",
+    interval: "year",
+    code: "K7QX2M9P",
+    checkoutUrl: "https://checkout.stripe.com/r/live_example",
+  };
+
   return [
     {
       title: "Welcome Email",
@@ -113,6 +125,11 @@ export function buildTemplatePreviews(): TemplatePreview[] {
       title: "Yearly Renewal Reminder Email",
       params: renewalUpcomingParams,
       html: renderRenewalHtml(renewalUpcomingParams),
+    },
+    {
+      title: "Checkout Recovery Email",
+      params: checkoutRecoveryParams,
+      html: renderCheckoutRecoveryHtml(checkoutRecoveryParams),
     },
   ];
 }

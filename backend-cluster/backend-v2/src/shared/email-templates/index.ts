@@ -34,3 +34,10 @@ export {
   renderRenewalText,
   type RenewalEmailParams,
 } from "./templates/renewal.template";
+
+export {
+  checkoutRecoveryEmailSubject,
+  renderCheckoutRecoveryHtml,
+  renderCheckoutRecoveryText,
+  type CheckoutRecoveryEmailParams,
+} from "./templates/checkout-recovery.template";
