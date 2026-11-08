@@ -102,12 +102,15 @@ def test_customer_smoke_runs_against_the_installed_cli(tmp_path: Path) -> None:
     # shared TMPDIR holding thousands of stale entries exhausts the search budget. Give the
     # run its own directory.
     env = {**os.environ, "TMPDIR": str(tmp_path), "TEMP": str(tmp_path), "TMP": str(tmp_path)}
+    # This is a sequence of customer commands, including operations with
+    # their own 300-second limits. Allow the complete workflow to finish
+    # under parallel test load; each command still has its own deadline.
     result = subprocess.run(
         [sys.executable, str(CLI_ROOT / "scripts/smoke-installed.py"), str(binary)],
         capture_output=True,
         text=True,
         cwd=CLI_ROOT,
-        timeout=120,
+        timeout=600,
         env=env,
     )
     assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"

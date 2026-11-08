@@ -46,8 +46,8 @@ def _hanging_uv(directory: Path) -> Path:
         "  exit 0\n"
         "fi\n"
         f'if [ -e "{flag}" ]; then exit 0; fi\n'
-        f': > "{ready}"\n'
         f'echo $$ > "{pid}"\n'
+        f': > "{ready}"\n'
         "exec sleep 30\n"
     )
     shim.chmod(0o755)

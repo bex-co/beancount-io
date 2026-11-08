@@ -14,6 +14,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from tests.report_helpers import bea, write_ledger
 
 HEAD = """\
@@ -102,6 +104,52 @@ def test_an_unbudgeted_account_is_listed_without_a_budget(tmp_path: Path) -> Non
     assert (fun["status"], fun["budget"], fun["actual"], fun["variance"]) == ("unbudgeted", None, "80", None)
     # A child of a budgeted account is part of that budget, not a separate line.
     assert ("Expenses:Food:Dining", "USD") not in rows
+
+
+@pytest.mark.parametrize("root,sign", [("Expenses", 1), ("Income", -1)])
+def test_a_child_budget_keeps_direct_parent_activity(tmp_path: Path, root: str, sign: int) -> None:
+    parent = f"{root}:Food"
+    child = f"{parent}:Dining"
+    text = (
+        HEAD
+        + f"""\
+2026-01-01 open Income:Food USD
+2026-01-01 open Income:Food:Dining USD
+2026-01-02 * "Parent"
+  {parent} {sign * 30}.00 USD
+  Assets:Bank
+2026-01-03 * "Child"
+  {child} {sign * 20}.00 USD
+  Assets:Bank
+2026-01-01 custom "budget" {child} "monthly" 100.00 USD
+"""
+    )
+    data = _report(["-t", "2026-01"], tmp_path, text)
+    rows = _rows(data)
+    assert rows[(parent, "USD")] == {
+        "account": parent,
+        "account_type": root.lower(),
+        "currency": "USD",
+        "budget": None,
+        "actual": "30.00",
+        "variance": None,
+        "status": "unbudgeted",
+    }
+    assert rows[(child, "USD")]["actual"] == "20.00"
+    exact = _rows(_report(["-t", "2026-01", "-a", f"^{parent}$"], tmp_path, text))
+    assert exact == {(parent, "USD"): rows[(parent, "USD")]}
+    ledger = tmp_path / "main.beancount"
+    for output in ([], ["--format", "csv"]):
+        run = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01", *output], tmp_path)
+        assert run.returncode == 0, run.stderr
+        assert parent in run.stdout and "30.00" in run.stdout
+    # No budget lists both direct balances; a parent budget covers both.
+    no_budget = text.rsplit("2026-01-01 custom", 1)[0]
+    assert len(_rows(_report(["-t", "2026-01"], tmp_path, no_budget))) == 2
+    parent_budget = text.replace(f'custom "budget" {child}', f'custom "budget" {parent}')
+    rolled = _rows(_report(["-t", "2026-01"], tmp_path, parent_budget))
+    assert list(rolled) == [(parent, "USD")]
+    assert rolled[(parent, "USD")]["actual"] == "50.00"
 
 
 def test_a_zero_budget_is_a_budget_not_a_missing_one(tmp_path: Path) -> None:

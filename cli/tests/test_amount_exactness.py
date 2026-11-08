@@ -171,6 +171,7 @@ def test_bulk_stdin_is_the_documented_skills_primitive(tmp_path: Path) -> None:
 
     env = {
         "PATH": "/usr/bin:/bin",
+        "HOME": str(tmp_path),
         "PYTHONPATH": str(CLI_ROOT / "src"),
         "BEA_CONFIG_DIR": str(tmp_path / "config"),
         "XDG_CACHE_HOME": str(tmp_path / "cache"),

@@ -420,8 +420,8 @@ def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., Te
     """Run `bea ask` on a PTY against `stub_model`, typing a script of keystrokes.
 
     A script entry is literal text, `@NAME` from `KEYS`, or `@WAIT:text` to
-    await output before the next keystroke. Wait markers match in order, so a
-    later prompt cannot accidentally match the one from an earlier turn.
+    await new output after the previous keystroke. Consecutive wait markers
+    match in order, so a later prompt cannot match one from an earlier turn.
     `@REQUESTS:n` awaits the stub's n-th request — the one point a turn can be
     observed between its tool calls, since a tool's work ends before the next
     request is sent.
@@ -485,6 +485,7 @@ def ask_on_a_terminal(tmp_path: Path, stub_model: StubModel) -> Callable[..., Te
                         step += 1
                 elif step < len(script) and ready_to_type and time.time() - last > 1.5:
                     key = script[step]
+                    matched_output = len(emitted)
                     os.write(fd, KEYS[key[1:]] if key.startswith("@") else key.encode())
                     step += 1
                     last = time.time()

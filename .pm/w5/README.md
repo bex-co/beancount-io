@@ -36,7 +36,6 @@
 
 ## Inbox
 
-- [1121 — Keep direct parent-account spending when only a child has a budget](./1121.md) — major CLI QA finding, 35–50m; JSON/text/CSV omit unbudgeted direct ancestor postings.
 - [1122 — Diagnose malformed budget amounts without aborting the whole budget report](./1122.md) — minor CLI QA finding, 30–45m; retain usable rows and budget diagnostics.
 - [1123 — Preserve a declared budget's fractional amount when postings use whole units](./1123.md) — major CLI QA finding, 35–50m; valid budget decimals are changed in JSON and CSV.
 - [1124 — Keep ignored-budget diagnostics on stderr when exporting CSV](./1124.md) — minor CLI QA finding, 20–35m; stdout/file CSV exports drop the ignored-budget warning.

@@ -8,6 +8,7 @@ alone left them running, and an orphaned clone finished in the background.
 
 from __future__ import annotations
 
+import os
 import signal
 import subprocess
 import sys
@@ -72,19 +73,31 @@ def test_a_captured_doctor_child_is_stopped_with_the_frontend(
 
 
 def test_bean_example_is_stopped_with_the_frontend(tmp_path: Path) -> None:
+    # Park the real native child at startup. Process-list polling can miss it,
+    # and an arbitrary long generated history can finish (or fail validation)
+    # before this test observes it.
+    ready = tmp_path / "example.pid"
+    startup = tmp_path / "startup"
+    startup.mkdir()
+    (startup / "sitecustomize.py").write_text(
+        "import os, sys, time\n"
+        "from pathlib import Path\n"
+        "if any(Path(arg).name == 'bean-example' for arg in sys.orig_argv):\n"
+        f"    ready = Path({str(ready)!r})\n"
+        "    pending = ready.with_suffix('.pending')\n"
+        "    pending.write_text(str(os.getpid()))\n"
+        "    pending.replace(ready)\n"
+        "    time.sleep(30)\n"
+    )
     env = _env(tmp_path)
-    env["PYTHONPATH"] = str(ROOT / "src")
-    with _start(["example", "--seed", "1", "--date-begin", "1970-01-01", "-o", "out.bean"], env, tmp_path) as process:
+    env["PYTHONPATH"] = os.pathsep.join([str(ROOT / "src"), str(startup)])
+    with _start(["example", "--seed", "1", "-o", "out.bean"], env, tmp_path) as process:
         deadline = time.monotonic() + 60
-        found = b""
-        while not found:
+        while not ready.exists():
             if process.poll() is not None:
                 pytest.fail(f"bea exited before bean-example started: {process.communicate()}")
             if time.monotonic() >= deadline:
                 pytest.fail("bean-example never started")
             time.sleep(0.05)
-            found = subprocess.run(
-                ["pgrep", "-P", str(process.pid), "-f", "bean-example"], capture_output=True, check=False
-            ).stdout.strip()
-        _stop_and_expect_no_survivor(process, int(found.split()[0]), signal.SIGTERM)
+        _stop_and_expect_no_survivor(process, int(ready.read_text()), signal.SIGTERM)
     assert not (tmp_path / "out.bean").exists()

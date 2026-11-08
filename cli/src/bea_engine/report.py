@@ -349,11 +349,6 @@ def _income_statement(
     }
 
 
-def _related(account: str, other: str) -> bool:
-    """Whether two accounts are the same or one is an ancestor of the other."""
-    return account == other or account.startswith(other + ":") or other.startswith(account + ":")
-
-
 def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str, Any]:
     """Budget, actual and variance per interval for every account that declares a budget.
 
@@ -434,7 +429,7 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
                 )
         for account in sorted(per_account):
             kind = kind_of(account)
-            if kind == "other" or any(_related(account, name) for name in budgeted):
+            if kind == "other" or any(account == name or account.startswith(name + ":") for name in budgeted):
                 continue
             sign = -1 if kind == "income" else 1
             for currency, number in sorted(actual_of(per_account, [account], span.end_inclusive).items()):
