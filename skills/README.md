@@ -12,7 +12,7 @@ The suite shares [command recipes](beancount-init/references/bea-cli.md) that se
 | ----- | --------- |
 | [beancount-init](beancount-init/SKILL.md) | Create a ledger with `bea init` (optional Fava browser setup). |
 | [beancount-add](beancount-add/SKILL.md) | Record a purchase, transfer, payroll run, new or closed account, price, or note you describe. |
-| [beancount-trade](beancount-trade/SKILL.md) | Record stock, fund, and crypto trades with correct lots, and report realized gains. |
+| [beancount-trade](beancount-trade/SKILL.md) | Record stock, fund, and crypto events with correct lots — including swaps, staking/airdrop income and own-wallet network fees — and report realized gains. |
 | [beancount-property](beancount-property/SKILL.md) | Record property purchases, mortgages, escrow, rent, deposits, and sales from the figures you provide. |
 | [beancount-import](beancount-import/SKILL.md) | Import bank/card statements (including PDFs), broker exports, and payment-processor payouts, with duplicate review and opening-lot support. |
 | [beancount-importer-author](beancount-importer-author/SKILL.md) | Write or repair a reusable, tested bank importer. |

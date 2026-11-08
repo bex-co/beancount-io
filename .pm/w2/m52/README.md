@@ -1,6 +1,6 @@
 # w2 · m52 — Record crypto-native events: swaps, staking, and network fees
 
-**Worker:** worker2 **Goal:** a crypto holder records a coin-to-coin swap, staking or airdrop income, and a wallet transfer that pays its network fee in-kind — each with lots and booking-produced gains intact. **Status:** active (t001–t004 done)
+**Worker:** worker2 **Goal:** a crypto holder records a coin-to-coin swap, staking or airdrop income, and a wallet transfer that pays its network fee in-kind — each with lots and booking-produced gains intact. **Status:** active (t001–t005 done)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | [t002](done/t002.md) | Record staking rewards and airdrops as income at fair value — **DONE** | 45m | t001 |
 | [t003](done/t003.md) | Carry an in-kind network fee on own-wallet transfers — **DONE** | 45m | t001 |
 | [t004](done/t004.md) | Write evals, routing entries, and run them on both clients — **DONE** | 60m | t001, t002, t003 |
-| t005 | Adoption surface | 30m | t004 |
+| [t005](done/t005.md) | Adoption surface — **DONE** | 30m | t004 |
 | t006 | Simplify | 15m | t005 |
 | t007 | Test coverage | 45m | t005, t006 |
 | t008 | Closeout | 15m | t007 |
@@ -39,4 +39,4 @@ Original crypto evals 11–14 pass 4/4 on Codex 0.167.0 / gpt-6.1-sol with
 native approved writes and independent ledger/lot checks. The unchanged
 original 103 routing entries are fully covered by later completed cohorts
 on both clients, with trade's description unchanged. t004 is complete;
-t005 adoption is next. Historical client versions and dates remain distinct.
+t005 adoption is complete; t006 simplify is next. Historical client versions and dates remain distinct.
