@@ -92,7 +92,14 @@ credential as `qa-mcp.mjs`, never printed), records the server name, version
 and a `tools/list` fingerprint, and replays the preview rule and the argument
 limits from `backend-cluster/backend-v2/docs/mcp.md` on MCP, REST and GraphQL
 as one table. Previews are dry runs; add `--commit-probes` to also send an
-unbalanced commit that must be refused `UNBALANCED`. It writes nothing. A
+unbalanced commit that must be refused `UNBALANCED`. The table also covers the
+argument ceilings (NUL, unpaired surrogate, a string past 1048576 characters, an
+array past 10000 members, nesting past 32 levels); a surface with no argument that
+can carry a probe shows `—`. Add `--bucket-probe`, last, to send 70 previews (above
+the 60/min write budget, below the 180/min preview bucket) and then the unbalanced
+commit: the commit must still be refused `UNBALANCED`, not `RATE_LIMITED`. It spends
+about a minute of the QA credential's preview budget, so run it once, not in a loop.
+It writes nothing. A
 mismatch on a rule newer than the deployment is a deploy lag: check the commit
 that introduced the rule before filing it. It targets the hosted endpoint
 (`--base`); do not stand up a second stack for it.

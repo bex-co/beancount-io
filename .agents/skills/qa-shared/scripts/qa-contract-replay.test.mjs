@@ -22,8 +22,10 @@ function depthOf(value) {
 
 /** A server that keeps the contract (`strict`) or accepts everything (`lax`). */
 function fakeDeployment(mode) {
-  const strict = mode === "strict";
+  // "shared" keeps every other contract but charges previews to the write bucket (60/min).
+  const strict = mode === "strict" || mode === "shared";
   const seen = [];
+  let writeBucket = 0;
   const server = http.createServer(async (request, response) => {
     let raw = "";
     for await (const chunk of request) raw += chunk;
@@ -37,6 +39,7 @@ function fakeDeployment(mode) {
       const text = JSON.stringify(value);
       if (text.includes("\\u0000")) return "arguments must not contain a NUL (U+0000) character";
       if (/\\ud800/i.test(text)) return "must be well-formed Unicode text (it contains an unpaired surrogate)";
+      if (/x{1048577}/.test(text)) return "must be at most 1048576 characters (received 1048577)";
       if (depthOf(value) > 32) return "is nested more than 32 levels deep";
       return null;
     };
@@ -57,6 +60,11 @@ function fakeDeployment(mode) {
       if (why) return sse({ isError: true, structuredContent: { ok: false, error: { code: "BAD_USER_INPUT", message: why } } });
       if (strict && Object.values(args).some((v) => Array.isArray(v) && v.length > 10000))
         return sse({ isError: true, structuredContent: { ok: false, error: { code: "BAD_USER_INPUT", message: "at most 10000 members" } } });
+      if (name === "appendLedgerText" && (mode === "shared" || !args.dry_run)) {
+        writeBucket += 1;
+        if (mode === "shared" && writeBucket > 60)
+          return sse({ isError: true, structuredContent: { ok: false, error: { code: "RATE_LIMITED", message: "slow down" } } });
+      }
       if (name === "appendLedgerText" && !args.dry_run && strict)
         return sse({ isError: true, structuredContent: { ok: false, error: { code: "UNBALANCED", message: "x" } } });
       return sse({ structuredContent: { ok: true, result: { validation: { valid: !strict } } } });
@@ -70,6 +78,8 @@ function fakeDeployment(mode) {
       const body = JSON.parse(raw);
       const why = strict ? refusal(body) : null;
       if (why) return json(400, bad(why));
+      if (strict && Object.values(body).some((v) => Array.isArray(v) && v.length > 10000))
+        return json(400, bad("at most 10000 members"));
       return json(200, { valid: !strict });
     }
     if (url.pathname === "/api-gateway/") {
@@ -114,6 +124,8 @@ test("a deployment that keeps the contract passes every probe on all three surfa
   assert.match(stdout, /\| nul \| ok \| ok \| ok \|/);
   assert.match(stdout, /\| surrogate \| ok \| ok \| ok \|/);
   assert.match(stdout, /\| commit \| ok \|/);
+  assert.match(stdout, /\| string \| ok \| ok \| ok \|/);
+  assert.match(stdout, /\| array \| ok \| ok \| — \|/);
   assert.match(stdout, /0 mismatch/);
   assert.ok(seen.every((s) => s.auth === `Bearer ${token}`));
 });
@@ -123,6 +135,23 @@ test("a deployment that accepts a hostile value fails and names the rule and sur
   assert.equal(code, 1);
   assert.match(stdout, /\| nul \| MISMATCH/);
   assert.match(stdout, /deploy lag/);
+});
+
+test("the bucket probe passes when previews stay off the write bucket", async () => {
+  const { code, stdout, stderr } = await replay("strict", { extra: ["--bucket-probe"] });
+  assert.equal(code, 0, stdout + stderr);
+  assert.match(stdout, /\| bucket \| ok \|/);
+});
+
+test("the bucket probe fails and names the preview that was limited when previews spend the write bucket", async () => {
+  const { code, stdout } = await replay("shared", { extra: ["--bucket-probe"] });
+  assert.equal(code, 1);
+  assert.match(stdout, /\| bucket \| MISMATCH \(RATE_LIMITED/);
+});
+
+test("the bucket probe sends nothing extra unless asked", async () => {
+  const { seen } = await replay("strict");
+  assert.ok(seen.filter((s) => s.url === "/api-gateway/mcp").length < 20);
 });
 
 test("without a credential it sends nothing and says so", async () => {

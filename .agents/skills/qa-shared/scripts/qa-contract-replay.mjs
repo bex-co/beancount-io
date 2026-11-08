@@ -18,6 +18,8 @@ options
   --base URL          deployment origin (default https://beancount.io; http only on loopback)
   --ledger OWNER/NAME ledger for the preview probes (default: the reachable ledger named mcp-agent-eval)
   --commit-probes     also send an unbalanced commit that must be refused UNBALANCED
+  --bucket-probe      send 70 previews, then one unbalanced commit: spends about a
+                      minute of the QA credential's preview budget, so run it last
   --timeout-ms N      per-request limit (default 30000)
 
 exit codes: 0 every probe matched, 1 a probe disagreed with the contract,
@@ -64,6 +66,11 @@ export const RULES = {
     expect: (o) =>
       o.code === "BAD_USER_INPUT" && /surrogate|well-formed/.test(o.message),
   },
+  string: {
+    rule: "a string past 1048576 characters is BAD_USER_INPUT",
+    expect: (o) =>
+      o.code === "BAD_USER_INPUT" && /at most 1048576 characters/.test(o.message),
+  },
   array: {
     rule: "an array past 10000 members is BAD_USER_INPUT",
     expect: (o) => o.code === "BAD_USER_INPUT" && /at most 10000/.test(o.message),
@@ -81,7 +88,16 @@ export const RULES = {
     rule: "the unbalanced commit is refused UNBALANCED",
     expect: (o) => o.code === "UNBALANCED",
   },
+  bucket: {
+    rule: "previews past the write budget (60/min) leave the write bucket alone, so the commit is still refused UNBALANCED, not RATE_LIMITED",
+    expect: (o) => o.code === "UNBALANCED",
+  },
 };
+
+/** One more than the write budget a preview must not spend; below the preview bucket (180/min). */
+export const BUCKET_PREVIEWS = 70;
+/** One more than the longest string any non-file argument may carry. */
+export const LONG_STRING = "x".repeat(1048577);
 
 export function format(results) {
   const surfaces = ["MCP", "REST", "GraphQL"];
@@ -108,6 +124,7 @@ async function main() {
         base: { type: "string", default: "https://beancount.io" },
         ledger: { type: "string" },
         "commit-probes": { type: "boolean", default: false },
+        "bucket-probe": { type: "boolean", default: false },
         "timeout-ms": { type: "string", default: "30000" },
         help: { type: "boolean", default: false },
       },
@@ -230,6 +247,7 @@ async function main() {
   // MCP
   record("MCP", "nul", await mcpTool("getLedgerContext", { ledger: "a/b\u0000c" }));
   record("MCP", "surrogate", await mcpTool("getLedgerContext", { ledger: "a/b\ud800c" }));
+  record("MCP", "string", await mcpTool("getLedgerContext", { ledger, extra: LONG_STRING }));
   record("MCP", "array", await mcpTool("listLedgerEntries", { ledger, directiveTypes: new Array(10001).fill("open") }));
   record("MCP", "depth", await mcpTool("getLedgerContext", { ledger, extra: nested(40) }));
   record("MCP", "preview", await mcpTool("appendLedgerText", { ledger, text, dry_run: true }));
@@ -249,6 +267,8 @@ async function main() {
   record("REST", "nul", restError(await send(`${journal}?account=a%00b`, { method: "GET" })));
   const filePath = `/api-gateway/v1/ledgers/${owner}/${name}/files/replay-probe.bean`;
   record("REST", "surrogate", restError(await send(filePath, { method: "PUT", body: { content: "a\ud800", dryRun: true }, headers: { "content-type": "application/json" } })));
+  record("REST", "string", restError(await send(filePath, { method: "PUT", body: { content: "x", dryRun: true, extra: LONG_STRING }, headers: { "content-type": "application/json" } })));
+  record("REST", "array", restError(await send(filePath, { method: "PUT", body: { content: "x", dryRun: true, extra: new Array(10001).fill(0) }, headers: { "content-type": "application/json" } })));
   record("REST", "depth", restError(await send(filePath, { method: "PUT", body: { content: "x", dryRun: true, extra: nested(40) }, headers: { "content-type": "application/json" } })));
   const current = await send(`/api-gateway/v1/ledgers/${owner}/${name}/files/main.bean`, { method: "GET" });
   let sha;
@@ -285,6 +305,18 @@ async function main() {
   };
   record("GraphQL", "nul", await graphql("a/b\u0000c"));
   record("GraphQL", "surrogate", await graphql("a/b\ud800c"));
+  record("GraphQL", "string", await graphql(LONG_STRING));
+
+  // Last: the probe that spends preview budget. Any RATE_LIMITED among the
+  // previews means they are charged to the write bucket.
+  if (values["bucket-probe"]) {
+    let limited;
+    for (let i = 0; i < BUCKET_PREVIEWS && !limited; i += 1) {
+      const preview = await mcpTool("appendLedgerText", { ledger, text, dry_run: true });
+      if (preview.code === "RATE_LIMITED") limited = { ...preview, message: `preview ${i + 1} of ${BUCKET_PREVIEWS}` };
+    }
+    record("MCP", "bucket", limited ?? (await mcpTool("appendLedgerText", { ledger, text: "2020-01-03 * \"unbalanced\"\n  Assets:ReplayProbe  1 USD\n" })));
+  }
 
   console.log(`deployment: ${base.origin}`);
   console.log(`server: ${serverInfo.name} ${serverInfo.version}`);
