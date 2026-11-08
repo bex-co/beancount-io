@@ -99,6 +99,27 @@ is not enough:
    rollout can take most of an hour. A rollout that misses its readiness
    deadline is marked failed and is not retried: deploy it again.
 
+## Check a deployment
+
+Open the dashboard service's URL and sign up, or run the smoke test, which does
+the same in a real browser and cleans up after itself:
+
+```zsh
+npm i playwright-core            # once, wherever you run it (this package does not depend on it)
+PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chromium \
+  node dashboard/scripts/qa/run-self-host-sign-up.mjs --url https://<your dashboard address>
+```
+
+It signs up a throwaway account (random address and password, nothing
+hard-coded), then checks that the visitor lands signed in with no verification
+page, that the browser keeps an HttpOnly, Secure cookie for that host, that a
+reload keeps the session, that a ledger can be created (which exercises the
+ledger service and Gitea), that a second ledger is allowed (no plan limit), and
+that the page logged no errors. It then deletes the account, unless you pass
+`--keep`. On a stack that verifies email it reports "skipped" instead of failing,
+unless you pass `--require-self-host`. Exit code 0 means passed or skipped, 1 a
+check failed, 2 it could not run.
+
 ## After the first deploy
 
 The deploy asks for nothing. Every secret is generated (`AUTH_SECRET`,

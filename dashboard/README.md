@@ -118,6 +118,8 @@ Both handlers live in `server/` as global Nitro middleware and do nothing unless
 | `yarn format:check`      | Check formatting (Prettier)                                  |
 | `yarn codegen`           | Regenerate GraphQL types from the schema                     |
 
+`node scripts/qa/run-self-host-sign-up.mjs --url <address>` is a browser smoke test for a deployed self-hosted stack: sign-up, signed-in landing, cookie, reload, ledger creation, no plan limit. It needs Playwright installed where you run it and is described in `../deploy/bex/README.md`.
+
 ## Translation performance
 
 The dashboard loads English plus the selected language. Language switches keep

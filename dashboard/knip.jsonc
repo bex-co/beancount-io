@@ -6,6 +6,9 @@
     "scripts/codegen-schema-loader.cjs",
     // The browser QA runner supplies a Playwright page to this native scenario.
     "scripts/qa/ledger-header-layout.mjs",
+    // Standalone smoke test for a deployed self-hosted stack (and its runner).
+    "scripts/qa/self-host-sign-up.mjs",
+    "scripts/qa/run-self-host-sign-up.mjs",
     // Vitest resolves this test double through its monaco-editor alias.
     "src/test/mocks/monaco-editor.ts",
     // TanStack Start discovers the server entry by file name.
