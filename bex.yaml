@@ -88,8 +88,8 @@ services:
     # LEDGER_HOSTPORT) and put together into URLs here, because bex builds them
     # from a slug that differs from the name when another workspace holds it.
     # First learn this deployment's public address from the dashboard, then
-    # derive the OAuth signing key (see OAUTH_JWKS_FROM_AUTH_SECRET), migrate
-    # (which also creates the schemas listed in ENSURE_SCHEMAS), then serve. `set -e` makes a failure to learn the address stop the container
+    # derive the OAuth signing key (see OAUTH_JWKS_FROM_AUTH_SECRET), migrate,
+    # then serve. `set -e` makes a failure to learn the address stop the container
     # instead of starting with the API's built-in default, which is
     # beancount.io's address.
     dockerCommand: sh -c 'set -e; export PUBLIC_URL_FROM="http://$DASHBOARD_HOSTPORT/_internal/public-url" FAVA_API_URL="http://$LEDGER_HOSTPORT"; out=$(node scripts/resolve-public-url.js); eval "$out"; out=$(node scripts/derive-oauth-jwks.js); eval "$out"; node scripts/migrate-deploy.js; exec yarn start'
@@ -123,11 +123,6 @@ services:
           type: web
           name: beancount-dashboard
           property: hostport
-      # Postgres schemas this stack needs besides the backend's own: Gitea shares
-      # this database (one managed instance in total) and expects its own.
-      # migrate-deploy.js creates it before Gitea can need it.
-      - key: ENSURE_SCHEMAS
-        value: gitea
       # This stack serves its operator's own users: sign-up needs no email
       # verification (there is no mail provider) and no plan limits apply.
       - key: SELF_HOST
@@ -279,8 +274,9 @@ services:
           name: beancount-backend-db
           property: host
       # The owner role cannot CREATE DATABASE on bex, so Gitea gets its own
-      # SCHEMA in the backend's database instead (created once by
-      # deploy/bex/init-gitea-db.sql). Backend tables stay in `public`.
+      # SCHEMA in the backend's database instead; Gitea's wrapper entrypoint
+      # creates it before Gitea starts (deploy/bex/gitea/bex-entrypoint.sh), so
+      # it does not wait on the API. Backend tables stay in `public`.
       - key: GITEA__database__NAME
         value: backend
       - key: GITEA__database__SCHEMA

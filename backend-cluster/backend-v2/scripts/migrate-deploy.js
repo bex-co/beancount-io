@@ -17,8 +17,6 @@ const { drizzle } = require("drizzle-orm/node-postgres");
 const { migrate } = require("drizzle-orm/node-postgres/migrator");
 const { Client } = require("pg");
 
-const { schemaNames } = require("./schema-names");
-
 const MIGRATIONS_FOLDER = path.join(__dirname, "..", "src", "drizzle", "migrations");
 
 async function main() {
@@ -27,17 +25,9 @@ async function main() {
     throw new Error("POSTGRES_BACKEND_URI is not set");
   }
 
-  const schemas = schemaNames(process.env.ENSURE_SCHEMAS);
-
   const client = new Client({ connectionString });
   await client.connect();
   try {
-    // Before the migrations, so a program sharing this database can start as
-    // soon as the schema exists. Idempotent.
-    for (const schema of schemas) {
-      await client.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
-      console.log(`schema ${schema} ensured`);
-    }
     await migrate(drizzle(client), { migrationsFolder: MIGRATIONS_FOLDER });
     console.log("migrations applied");
   } finally {
