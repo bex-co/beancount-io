@@ -113,9 +113,7 @@ async function sessionPlan(
   // The expired event carries no line items.
   const items = await stripe.checkout.sessions.listLineItems(session.id);
   for (const item of items.data) {
-    const plan =
-      item.price &&
-      plans.find((each) => each.priceId === expandableId(item.price!));
+    const plan = plans.find((each) => each.priceId === item.price?.id);
     if (plan) return plan.retired ? undefined : plan;
   }
   return undefined;
