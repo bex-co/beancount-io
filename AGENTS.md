@@ -66,6 +66,14 @@ When a new package gets real code, add a `<package>/AGENTS.md` documenting its t
 - Don't introduce new cross-package imports — packages are otherwise independent.
 - If unsure which package a change belongs to, ask.
 
+### The public website lives in a separate repository
+
+The marketing site, docs, blog, `/llms.txt`, `/openapi.json` and the `/mcp` page are served by a separate website (CMS) repository, not by this monorepo. A copy may be checked out at `.internal/` (gitignored, read-only for reference; the layout is the mirror of the website's own `./beancount-io` convention).
+
+- Public copy there cites things this repo owns by name: MCP tool names, `bea` commands and flags, pricing, `.well-known` paths. A rename or removal here is a change to that copy too.
+- MCP tool names reach the website through a committed snapshot of the deployed `/.well-known/mcp.json`, refreshed by the website's own sync (best-effort on its `yarn dev`, plus a scheduled pull request). Renaming or removing a tool therefore needs no edit here, but expect that pull request, and when a renamed tool is one the website cites, its owner picks the replacement wording.
+- Keep website work in its own repository. Do not import from it or commit its files here.
+
 ### Never commit secrets
 
 - This is a public repo. Real credentials live only in gitignored `.env` files (the root `.gitignore` covers `.env`, `.env.local`, `.env.*.local`). Commit only `.env.example` with placeholder values.

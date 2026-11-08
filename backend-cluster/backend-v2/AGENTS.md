@@ -150,6 +150,10 @@ Prompt and agent-routing evals live entirely under `evals/`. Use the focused `ya
 - OpenAPI: `GET /api-gateway/v1/openapi.json` is the published v1 contract and is served in every environment. The internal `/api-docs` and `/api-admin-docs` Swagger UI pages stay development-only.
 - New documented REST endpoints use Zod schemas, `zodValidator()`, and central route registration. Import the shared `@/shared/zod-openapi-setup`; never call `extendZodWithOpenApi()` in individual schema files.
 
+### MCP tool names are cited by the public website
+
+`/llms.txt`, `/openapi.json` and the `/mcp` page on the website repository name MCP tools (`runBqlQuery`, `appendLedgerText`, the `…LedgerFiles` family). They read the deployed `/.well-known/mcp.json`, which `src/features/well-known/api/well-known-route.ts` builds from `MCP_TOOLS`, so renaming or removing a tool changes what agents are told. The website picks the change up through its own scheduled sync and opens a pull request there; mention the rename in the commit so its owner knows to expect it. See the root [`AGENTS.md`](../../AGENTS.md#the-public-website-lives-in-a-separate-repository).
+
 ### Required API parity workflow
 
 REST, GraphQL, and MCP are equal public contracts. An API change is complete only when every eligible surface exposes the same domain behavior and its contract tests pass. This applies to new operations, changed inputs or outputs, bug fixes, authorization changes, and deprecations.
