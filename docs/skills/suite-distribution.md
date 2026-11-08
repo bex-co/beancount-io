@@ -625,3 +625,26 @@ the permission-sentinel logs are under
 `scripts/skills/tmp/w2-codex-linux/m43/` and `m43-permissions/`. The tested
 `gh` archives are checked against the publisher's release checksums. No
 certificate verification is disabled and no credential is committed.
+
+## Codex native plugin — 2026-11-08
+
+Codex CLI 0.167.0 (`gpt-6.1-sol`) on Linux installed suite **0.4.28**
+from public revision `ee33cec2696479ef9c0d5583edeb9f691e1dddc3`, using the
+[documented sparse marketplace and plugin commands](installation.md#plugin-both-clients).
+The isolated profile had no linked customer skills, and the synthetic workspace
+contained only Git metadata and the first-query ledger. The native `skills/list`
+catalog exposed exactly sixteen `beancount-io:beancount-*` entries, all enabled;
+every description matched the canonical source. The plugin cache contained
+copied folders, with no skill symlinks or repository development skills.
+
+The unmodified first-query question selected the cached `beancount-ask`, then
+successfully read both its guide and the sibling
+`beancount-init/references/bea-cli.md` inside the `0.4.28` plugin cache. Its executed
+`bea` query returned Groceries **141.60**, Gas **50.00**, and Streaming **17.99 USD**.
+The ledger bytes were unchanged. A scratch-only native permission profile kept
+the ledger read-only while permitting the query engine's temporary files; no
+command network access was granted. This is a real model answer and shared-file
+read, beyond the client-side cache-resolution evidence from October 19.
+
+The dated Claude Code 2.1.289 lifecycle and first-query evidence remains in
+[w2/m44/t006](../../.pm/w2/m44/t006.md); it is not a fresh Claude rehearsal.
