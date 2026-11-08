@@ -227,6 +227,8 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
       expect(result.structuredContent).toEqual({
         ok: true,
         result: [{ fullName: "alice/main" }],
+        // No page or limit: every ledger came back, so nothing more remains.
+        page: { returned: 1, page: 1, hasMore: false },
       });
       expect(f.listLedgers).toHaveBeenCalledTimes(1);
       expect(f.listLedgers).toHaveBeenCalledWith({

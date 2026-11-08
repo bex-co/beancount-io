@@ -19,6 +19,7 @@ export const LEDGER_ROUTES = [
       summary: read.summary,
       description: read.summary,
       query: read.query,
+      pagedRead: read.name,
       responses: { 200: json(read.summary, z.array(ledgerResultSchema)) },
       handler: async ({ layers }, { identity, query }) =>
         read.fetch(layers.workflows.ledger, identity, query),

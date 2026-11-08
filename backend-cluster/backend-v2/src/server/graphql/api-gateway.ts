@@ -9,6 +9,7 @@ import Router from "@koa/router";
 import http from "http";
 import type { Middleware } from "koa";
 import { config as appConfig, type AppConfig } from "@/config/config";
+import { pageExtensionsPlugin } from "./page-extensions-plugin";
 import { apolloMetricsPlugin } from "@/metrics/apollo-plugin";
 import { type AppLayers } from "@/foundation/composition";
 import { resolvers, type ResolverContainer } from "./resolver-registry";
@@ -84,6 +85,7 @@ export async function registerGraphqlTransport(
       ApolloServerPluginDrainHttpServer({ httpServer }),
       errorLoggingPlugin,
       apolloMetricsPlugin,
+      pageExtensionsPlugin,
     ],
   });
 

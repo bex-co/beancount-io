@@ -38,6 +38,7 @@ export const PUBLIC_KEY_ROUTES = [
     description:
       "Administrative account operation. Uses the authenticated user, including for ledger-pinned credentials. Pagination is passed to the key service.",
     query: publicKeyListQuery,
+    pagedRead: "ledgerPublicKeys",
     responses: { 200: json("SSH public keys", z.array(publicKeySchema)) },
     handler: async ({ layers }, { identity, query }) =>
       layers.services.ledgerPublicKey.listPublicKeys(identity, query),

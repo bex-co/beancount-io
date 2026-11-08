@@ -1,3 +1,4 @@
+import { pagedResourceContent } from "@/server/api/page-signals";
 import { feedQuery } from "@/features/gitea/feed/api/feed-route";
 import { suggestCategoriesQuery } from "@/features/llm/api/suggest-categories-route";
 import { tempAssetDownloadQuery } from "@/features/s3/api/temp-asset-routes";
@@ -97,7 +98,9 @@ export interface McpResourceDescriptor {
     toolCtx: McpRequestContext,
     variables: Record<string, string | string[]>,
   ) => Promise<
-    string | { blob: string; mimeType: string; _meta?: Record<string, string> }
+    | string
+    | { blob: string; mimeType: string; _meta?: Record<string, string> }
+    | { text: string; mimeType: string; _meta: Record<string, unknown> }
   >;
 }
 
@@ -476,7 +479,9 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       mimeType: "application/json",
       read: async (context, variables) => {
         const { username, page, limit } = socialListQuery.parse(variables);
-        return JSON.stringify(
+        return pagedResourceContent(
+          read.name,
+          { page, limit },
           await context.socialService[read.method](
             username,
             page,
@@ -495,13 +500,14 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
     uriTemplate: "beancount://account/feed",
     queryNames: Object.keys(feedQuery.shape),
     mimeType: "application/json",
-    read: async (context, variables) =>
-      JSON.stringify(
-        await context.feedService.getFeed(
-          feedQuery.parse(variables),
-          context.identity,
-        ),
-      ),
+    read: async (context, variables) => {
+      const query = feedQuery.parse(variables);
+      return pagedResourceContent(
+        "getFeed",
+        query,
+        await context.feedService.getFeed(query, context.identity),
+      );
+    },
   },
   {
     name: "userProfile",
@@ -622,14 +628,18 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
     mimeType: "application/json",
     uriTemplate: "beancount://{owner}/{name}/collaborators",
     queryNames: Object.keys(collaboratorListQuery.shape),
-    read: async (context, { owner, name, ...query }) =>
-      JSON.stringify(
+    read: async (context, { owner, name, ...query }) => {
+      const parsed = collaboratorListQuery.parse(query);
+      return pagedResourceContent(
+        "ledgerCollaborators",
+        parsed,
         await context.collaboratorsWorkflow.listCollaborators({
           identity: context.identity,
           ledgerId: resolveLedgerId(context, { owner, name }),
-          ...collaboratorListQuery.parse(query),
+          ...parsed,
         }),
-      ),
+      );
+    },
   },
   {
     name: "ledgerCollaboratorPermission",
@@ -658,7 +668,10 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       queryNames: Object.keys(read.query.shape),
       read: async (context, variables) => {
         const { owner: _owner, name: _name, ...query } = variables;
-        return JSON.stringify(
+        const parsed = read.query.parse(query);
+        return pagedResourceContent(
+          read.name,
+          parsed,
           await read.fetch(
             {
               commits: context.commitsService,
@@ -667,7 +680,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
             {
               identity: context.identity,
               ledgerId: resolveLedgerId(context, variables),
-              query: read.query.parse(query),
+              query: parsed,
             },
           ),
         );
@@ -697,15 +710,16 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       read: async (context, variables) => {
         const { owner: _owner, name: _name, ...query } = variables;
         const parsed = read.query.parse(query);
+        const applied =
+          "mcpDefaultLimit" in read && parsed.limit === undefined
+            ? { ...parsed, limit: read.mcpDefaultLimit }
+            : parsed;
         const result = await read.fetch(context.services, {
           identity: context.identity,
           ledgerId: resolveLedgerId(context, variables),
-          query:
-            "mcpDefaultLimit" in read && parsed.limit === undefined
-              ? { ...parsed, limit: read.mcpDefaultLimit }
-              : parsed,
+          query: applied,
         });
-        return JSON.stringify(result);
+        return pagedResourceContent(read.name, applied, result);
       },
     };
   }),
@@ -788,14 +802,14 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       mimeType: "application/json",
       uriTemplate: `${RESOURCE_SCHEME}://catalog/ledgers${read.segment ? `/${read.segment}` : ""}`,
       queryNames: Object.keys(read.query.shape),
-      read: async (context, variables) =>
-        JSON.stringify(
-          await read.fetch(
-            context.ledgerWorkflow,
-            context.identity,
-            read.query.parse(variables),
-          ),
-        ),
+      read: async (context, variables) => {
+        const parsed = read.query.parse(variables);
+        return pagedResourceContent(
+          read.name,
+          parsed,
+          await read.fetch(context.ledgerWorkflow, context.identity, parsed),
+        );
+      },
     }),
   ),
   {

@@ -122,6 +122,7 @@ export const REPORT_ROUTES = [
       description: read.summary,
       params: ledgerPathSchema,
       query: read.query,
+      pagedRead: read.name,
       responses: { 200: json(read.summary) },
       handler: async ({ layers }, { identity, params, query }) =>
         read.fetch(layers.services, {

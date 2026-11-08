@@ -1546,6 +1546,30 @@
         "responses": {
           "200": {
             "description": "List the caller's accessible ledgers, restricted to the credential's ledger pin when present",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -2112,6 +2136,30 @@
         "responses": {
           "200": {
             "description": "List the caller's owned ledgers",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -2495,6 +2543,30 @@
         "responses": {
           "200": {
             "description": "Search ledgers with ownership, visibility, sorting, and pagination filters",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -6486,6 +6558,30 @@
         "responses": {
           "200": {
             "description": "List commits with branch and pagination controls",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -6805,6 +6901,30 @@
         "responses": {
           "200": {
             "description": "Collaborators with their permissions",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -7754,6 +7874,30 @@
         "responses": {
           "200": {
             "description": "SSH public keys",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -9016,6 +9160,30 @@
         "responses": {
           "200": {
             "description": "Read the journal with pagination and all subtype filters",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -9209,6 +9377,30 @@
         "responses": {
           "200": {
             "description": "Read Beancount journal text with account, time, and expression filters",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -9492,6 +9684,30 @@
         "responses": {
           "200": {
             "description": "Read account entries with changes and running balances",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -22086,6 +22302,30 @@
         "responses": {
           "200": {
             "description": "Activity feed",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -22293,6 +22533,30 @@
         "responses": {
           "200": {
             "description": "Social discovery page",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -22474,6 +22738,30 @@
         "responses": {
           "200": {
             "description": "Social discovery page",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -22655,6 +22943,30 @@
         "responses": {
           "200": {
             "description": "Social discovery page",
+            "headers": {
+              "X-Has-More": {
+                "description": "`true` when more entries remain after this page.",
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "true",
+                    "false"
+                  ]
+                }
+              },
+              "X-Total-Count": {
+                "description": "The whole filtered count; sent only by reads that know it.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "The next page as `<path?query>; rel=\"next\"`; sent only when more remains.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {

@@ -91,6 +91,7 @@ export const COLLABORATOR_ROUTES = [
       "Requires ledger.admin and current permission to inspect collaborators. Defaults to page 1 and limit 10.",
     params: ledgerPathSchema,
     query: collaboratorListQuery,
+    pagedRead: "ledgerCollaborators",
     responses: {
       200: json("Collaborators with their permissions", collaboratorListSchema),
     },

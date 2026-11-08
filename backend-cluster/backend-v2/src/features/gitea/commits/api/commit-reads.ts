@@ -85,6 +85,7 @@ export const COMMIT_ROUTES = COMMIT_READS.map((read) =>
     description: read.summary,
     params: ledgerPathSchema,
     query: read.query,
+    pagedRead: read.name,
     responses: { 200: json(read.summary) },
     handler: async ({ layers }, { identity, params, query, ctx }) => {
       const result = await read.fetch(layers.services, {

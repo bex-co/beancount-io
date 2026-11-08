@@ -90,6 +90,17 @@ export const mcpErrorSchema = z
   .loose();
 
 /**
+ * The has-more signal a paginated read carries beside its result
+ * (`shared/page-info.ts`). Deliberately undescribed, like the error envelope:
+ * only the two fields every page carries are published, because this object
+ * is inlined into two tools' output schemas and `tools/list` has a byte
+ * budget; `docs/mcp.md` lists the rest.
+ */
+export const pageInfoSchema = z
+  .object({ returned: z.number().int(), hasMore: z.boolean() })
+  .loose();
+
+/**
  * One bean-check error, reduced to what an agent can act on: the message plus
  * the `file:line` the loader reports, when it reports one.
  */

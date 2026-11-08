@@ -1,3 +1,4 @@
+import { pageSignal } from "@/server/api/page-signals";
 import {
   SOCIAL_V1_ROUTES,
   setSocialRoutes,
@@ -1140,6 +1141,19 @@ async function gateMcpCall(
 }
 
 /**
+ * A paginated read's result with its has-more signal beside `result`
+ * (w23/m28); every other tool's result passes through untouched.
+ */
+function withPageSignal(
+  tool: string,
+  input: Record<string, unknown>,
+  result: Record<string, unknown>,
+): Record<string, unknown> {
+  const page = pageSignal(tool, input, result.result);
+  return page ? { ...result, page } : result;
+}
+
+/**
  * A resource read runs the same gate a tool call does.
  *
  * Resources are the surface where the shortcut is tempting — authorize once
@@ -1270,7 +1284,11 @@ function makeMcpToolHandler(
               text: renderToolText(descriptor.name, result),
             },
           ],
-          structuredContent: result as Record<string, unknown>,
+          structuredContent: withPageSignal(
+            descriptor.name,
+            input as Record<string, unknown>,
+            result as Record<string, unknown>,
+          ),
         };
       } catch (err) {
         // A throw that got past the tool's own boundary — the per-call gate's

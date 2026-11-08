@@ -73,6 +73,7 @@ export const SOCIAL_V1_ROUTES = [
       description:
         "Public social discovery. page defaults to 1 and limit to 20. total is the returned page size. Existing upstream failures return an empty page.",
       query: socialListQuery,
+      pagedRead: read.name,
       responses: { 200: json("Social discovery page", read.response) },
       handler: async ({ layers }, { query, identity }) =>
         layers.services.userProfile[read.method](

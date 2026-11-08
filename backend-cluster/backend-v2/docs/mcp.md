@@ -1387,6 +1387,43 @@ the parameter. Nothing is stripped or truncated.
 Send a larger input in several calls. These ceilings are far above normal use,
 so a refusal means the argument is malformed.
 
+### Pagination
+
+A paginated read tells the caller whether more remains, without changing the
+shape of its result (most are bare arrays, so a field could not be added).
+The signal rides beside the result, in one shape on every surface:
+
+| Surface      | Where                                                                                           |
+| ------------ | ----------------------------------------------------------------------------------------------- |
+| MCP tool     | `structuredContent.page`, next to `ok` and `result`                                             |
+| MCP resource | the content's `_meta.page`                                                                      |
+| REST         | `X-Has-More`, `X-Total-Count` (only when the total is known) and `Link: <…>; rel="next"`        |
+| GraphQL      | the response's `extensions.page`, keyed by each field's response key (its alias, if it has one) |
+
+The `page` object holds `returned` (entries in this page), `hasMore`, and, when
+they apply, `limit`, `offset` or `page` (where this page began), `total` (the
+whole filtered count, only where the read knows it), and `nextOffset` or
+`nextPage` (only when `hasMore`). Reads paged by `offset` and `limit` know their
+`total` or whether they were cut off, so `hasMore` is exact. Reads paged by
+`page` and `limit` cannot count what is left: `hasMore` is true when the page
+came back full, so a final page of exactly `limit` entries reads `hasMore: true`
+and the next page is empty.
+
+| Read                                          | Paged by         | `hasMore` is              |
+| --------------------------------------------- | ---------------- | ------------------------- |
+| `listLedgerEntries`, journal, account journal | `offset`/`limit` | exact (`total`)           |
+| plaintext journal                             | `offset`/`limit` | exact (`truncated`)       |
+| feed                                          | `offset`/`limit` | exact (`total`)           |
+| `listLedgers`, owned and searched ledgers     | `page`/`limit`   | "the page came back full" |
+| commits, collaborators, public keys           | `page`/`limit`   | "the page came back full" |
+| followers, following, starred ledgers         | `page`/`limit`   | "the page came back full" |
+
+`listLedgers` called with neither `page` nor `limit` returns every ledger and
+reports `hasMore: false`. The three ledger lists called with a `page` past the
+first but no `limit` carry no signal: send a `limit`. Public keys exist on
+REST and GraphQL only. Followers, following and starred lists keep their
+`total`, which counts only the entries returned in that page.
+
 ### Failure codes
 
 The same codes reach resource reads and prompt fetches, as the JSON-RPC error's

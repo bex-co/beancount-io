@@ -19,6 +19,7 @@ export const feedRoute = v1Route({
   description:
     "Merged blog, release, and ledger activity, newest first. Requires a session or account-wide OAuth credential with ledger.read. Source accepts BLOG, CHANGELOG, or LEDGER_RSS case-insensitively; omitted or empty means all sources. Locale defaults to the caller's profile then English. Offset defaults to 0 and limit to 10, at most 100.",
   query: feedQuery,
+  pagedRead: "getFeed",
   responses: {
     200: json(
       "Activity feed",

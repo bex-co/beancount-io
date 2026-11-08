@@ -193,6 +193,40 @@ describe("catalog adapters", () => {
     }
   });
 
+  it("says the same thing about what remains on REST, the MCP resource and the MCP tool", async () => {
+    const f = await fixture();
+    try {
+      // One ledger comes back for a page size of one: a full page, so more may follow.
+      const response = await f.rest("?page=2&limit=1");
+      expect(response.status).toBe(200);
+      expect(response.headers.get("x-has-more")).toBe("true");
+      expect(response.headers.get("link")).toBe(
+        '</api-gateway/v1/ledgers?page=3&limit=1>; rel="next"',
+      );
+      const expected = {
+        returned: 1,
+        limit: 1,
+        page: 2,
+        hasMore: true,
+        nextPage: 3,
+      };
+      const resource = await f.client.readResource({
+        uri: "beancount://catalog/ledgers?page=2&limit=1",
+      });
+      expect(resource.contents[0]._meta).toEqual({ page: expected });
+      const tool = await f.client.callTool({
+        name: "listLedgers",
+        arguments: { page: 2, limit: 1 },
+      });
+      expect(tool.structuredContent).toMatchObject({
+        ok: true,
+        page: expected,
+      });
+    } finally {
+      await f.close();
+    }
+  });
+
   it("refuses catalog access before contacting the ledger service", async () => {
     const f = await fixture();
     f.authorizeOrThrow.mockRejectedValue(new ForbiddenError("Access revoked"));

@@ -1,3 +1,5 @@
+import { PAGED_READ_NAMES, pageSignal } from "@/server/api/page-signals";
+import { PAGE_HEADER_DOCS, setPageHeaders } from "./page-headers";
 import Router, { RouterContext } from "@koa/router";
 import bodyParser from "koa-bodyparser";
 import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
@@ -69,6 +71,12 @@ export interface V1Route<P = unknown, Q = unknown, B = unknown> {
   readonly body?: ZodType<B>;
   /** Response documentation, minus the shared error responses. */
   readonly responses: RouteConfig["responses"];
+  /**
+   * The name of a paginated read in `server/api/page-signals.ts`. Set, the
+   * route answers with `X-Has-More`, `X-Total-Count` and `Link` headers beside
+   * an unchanged body (w23/m28).
+   */
+  readonly pagedRead?: string;
   /**
    * Return a value (including null) to send as JSON; return `undefined` after
    * setting `ctx.body` yourself (streams, negotiated content types).
@@ -147,6 +155,27 @@ async function requireIdentity(
   return identity;
 }
 
+/** The route's responses, with the page headers described on a registered paginated read's 200. */
+function documentPageHeaders(
+  route: Pick<
+    RouteDeclaration<unknown, unknown, unknown>,
+    "pagedRead" | "responses"
+  >,
+): RouteConfig["responses"] {
+  const ok = route.responses[200];
+  if (
+    !route.pagedRead ||
+    !PAGED_READ_NAMES.includes(route.pagedRead) ||
+    !ok ||
+    "$ref" in ok
+  )
+    return route.responses;
+  return {
+    ...route.responses,
+    200: { ...ok, headers: { ...ok.headers, ...PAGE_HEADER_DOCS } },
+  } as RouteConfig["responses"];
+}
+
 /** Mount one route and register it with the spec, from one declaration. */
 function registerV1Route<P, Q, B>(
   router: Router,
@@ -187,6 +216,15 @@ function registerV1Route<P, Q, B>(
       ctx.type = "application/json";
     }
     if (result !== undefined) ctx.body = result;
+    if (route.pagedRead && result !== undefined && result !== null)
+      setPageHeaders(
+        ctx,
+        pageSignal(
+          route.pagedRead,
+          validated.query as Record<string, unknown>,
+          result,
+        ),
+      );
   });
 
   registerRoute({
@@ -207,7 +245,10 @@ function registerV1Route<P, Q, B>(
         ? { body: { content: { "application/json": { schema: route.body } } } }
         : {}),
     },
-    responses: { ...route.responses, ...SHARED_ERROR_RESPONSES },
+    responses: {
+      ...documentPageHeaders(route),
+      ...SHARED_ERROR_RESPONSES,
+    },
   } as RouteConfig);
 }
 

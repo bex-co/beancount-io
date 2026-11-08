@@ -1,3 +1,4 @@
+import { PAGE_RESPONSE_HEADERS } from "@/server/rest/page-headers";
 import "reflect-metadata";
 import "dotenv/config";
 
@@ -85,6 +86,9 @@ export async function startServer(): Promise<void> {
         return isAllowedOrigin(origin) ? origin : "";
       },
       credentials: true,
+      // A browser client reads the has-more headers only if they are exposed
+      // (w23/m28); the allowed-origin check above still applies.
+      exposeHeaders: PAGE_RESPONSE_HEADERS,
     }),
   );
 

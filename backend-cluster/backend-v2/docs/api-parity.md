@@ -263,6 +263,10 @@ operations are unaffected. `preview-rate-bucket.test.ts` drives the three
 limiter middlewares and proves the two buckets are independent in both
 directions.
 
+## Pagination signal (w23/m28)
+
+A paginated read says whether more remains without changing its result's shape. The rule and the per-read table are in [the MCP guide](./mcp.md#pagination); the three channels are REST headers (`X-Has-More`, `X-Total-Count`, `Link`), an MCP `page` object beside `result` (or the resource content's `_meta.page`), and GraphQL `extensions.page`. `src/server/api/page-signals.ts` is the one table every channel reads, and `page-signals.test.ts` fails when a REST route, MCP resource or MCP tool that takes `limit`, `offset` or `page` is not in it. The OpenAPI spec documents the headers on each paginated route's 200 response.
+
 ## Retry-safe entry writes (w3/m61)
 
 Every entry append accepts an optional `requestId` with one contract on every

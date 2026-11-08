@@ -113,6 +113,7 @@ import {
 import type { ToolContext } from "../tools/types";
 import {
   mcpOutputSchema,
+  pageInfoSchema,
   toolOutputSchema,
   withWriteOutcome,
 } from "../tools/types";
@@ -327,7 +328,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "List Accessible Ledgers",
     description: listLedgersDescription,
     inputSchema: listLedgersInputSchema,
-    outputSchema: mcpOutputSchema(listLedgersOutputSchema),
+    outputSchema: mcpOutputSchema(listLedgersOutputSchema).extend({
+      page: pageInfoSchema.optional(),
+    }),
     annotations: { ...READ_ONLY, openWorldHint: false },
     execute: async (context, input) =>
       executeListLedgers(context, listLedgersInputSchema.parse(input)),
@@ -368,7 +371,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "List Journal Entries",
     description: listLedgerEntriesDescription,
     inputSchema: listLedgerEntriesInput.extend({ ledger: ledgerSelection }),
-    outputSchema: mcpOutputSchema(listLedgerEntriesOutput),
+    outputSchema: mcpOutputSchema(listLedgerEntriesOutput).extend({
+      page: pageInfoSchema.optional(),
+    }),
     annotations: READ_ONLY,
     execute: withLedger(executeListLedgerEntries),
   },
