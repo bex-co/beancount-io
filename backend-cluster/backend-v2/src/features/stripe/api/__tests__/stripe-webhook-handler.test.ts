@@ -39,6 +39,12 @@ jest.mock("../../operations/renewal-email", () => ({
     mockEmailRenewalReminder(...(args as [])),
 }));
 
+const mockEmailCheckoutRecovery = jest.fn(async (): Promise<string> => "sent");
+jest.mock("../../operations/checkout-recovery-email", () => ({
+  emailCheckoutRecovery: (...args: unknown[]) =>
+    mockEmailCheckoutRecovery(...(args as [])),
+}));
+
 function setup(event: any) {
   const constructEvent = jest.fn(() => event);
   const retrieveSubscription = jest.fn(async (id: string) => ({
@@ -586,5 +592,93 @@ describe("a plan ending", () => {
     await t.run();
 
     expect(t.ctx.status).toBe(400);
+  });
+});
+
+describe("an expired Checkout session (ADR027)", () => {
+  const expiredEvent = (overrides: object = {}, metadata: object = {}) =>
+    subscriptionEvent({
+      type: "checkout.session.expired",
+      data: {
+        object: {
+          id: "cs_synthetic",
+          metadata: {
+            userId: "usr_synthetic",
+            clientId: BILLING_CLIENT_ID,
+            ...metadata,
+          },
+        },
+      },
+      ...overrides,
+    });
+
+  beforeEach(() => mockEmailCheckoutRecovery.mockClear());
+
+  it("hands the verified session to the recovery email", async () => {
+    const t = setup(expiredEvent());
+
+    await t.run();
+
+    expect(mockEmailCheckoutRecovery).toHaveBeenCalledWith(
+      expect.objectContaining({ stripe: t.stripe }),
+      expect.objectContaining({ id: "cs_synthetic" }),
+      BILLING_CLIENT_ID,
+    );
+    expect(t.ctx.body).toEqual({ received: true, processed: true });
+  });
+
+  it("acknowledges an ineligible session without processing it", async () => {
+    mockEmailCheckoutRecovery.mockResolvedValueOnce("paid-before");
+    const t = setup(expiredEvent());
+
+    await t.run();
+
+    expect(t.ctx.status).toBe(200);
+    expect(t.ctx.body.processed).toBe(false);
+  });
+
+  it.each([
+    ["a test-mode event", expiredEvent({ livemode: false })],
+    ["a session with no user", expiredEvent({}, { userId: undefined })],
+  ])("ignores %s before any lookup", async (_label, event) => {
+    const t = setup(event);
+
+    await t.run();
+
+    expect(mockEmailCheckoutRecovery).not.toHaveBeenCalled();
+    expect(t.ctx.body.processed).toBe(false);
+  });
+
+  it("fails the delivery when the email fails, so Stripe sends it again", async () => {
+    mockEmailCheckoutRecovery.mockRejectedValueOnce(new Error("SendGrid down"));
+    const t = setup(expiredEvent());
+
+    await t.run();
+
+    expect(t.ctx.status).toBe(400);
+  });
+
+  it("binds a recovered session's purchase to the user in its metadata", async () => {
+    // Stripe's recovery URL opens a copy of the expired session, metadata
+    // included; t006 confirms that against live Stripe.
+    const object = {
+      customer: "cus_synthetic",
+      recovered_from: "cs_synthetic",
+      metadata: { userId: "usr_synthetic", clientId: BILLING_CLIENT_ID },
+    };
+    const t = setup(
+      subscriptionEvent({
+        type: "checkout.session.completed",
+        data: { object },
+      }),
+    );
+
+    await t.run();
+
+    expect(t.stripe.handleCheckoutSessionCompleted).toHaveBeenCalledWith(
+      object,
+      BILLING_CLIENT_ID,
+      "usr_synthetic",
+    );
   });
 });

@@ -1,6 +1,6 @@
 # w0 · m9 — An abandoned first Checkout gets one short recovery email
 
-**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** in progress (t001–t004 done)
+**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** in progress (t001–t005 done)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | Recovery config and SendGrid unsubscribe group support | 45m | — | — **DONE**
 | t003 | Eligibility and paid-since checks | 45m | t002 | — **DONE**
 | t004 | Claim, promotion code, three-line email, and rollback | 45m | t003 | — **DONE**
-| t005 | Handle `checkout.session.expired` in the webhook | 20m | t004 |
+| t005 | Handle `checkout.session.expired` in the webhook | 20m | t004 | — **DONE**
 | t006 | Owner setup and live-mode verification | 30m | t001, t005 |
 | t007 | Adoption surface | 15m | t006 |
 | t008 | Simplify | 15m | t007 |

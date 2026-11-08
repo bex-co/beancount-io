@@ -5,6 +5,7 @@ import {
   changeAtRenewal,
   emailScheduledChange,
 } from "../operations/plan-change-email";
+import { emailCheckoutRecovery } from "../operations/checkout-recovery-email";
 import { refreshSubscriptionPeriods } from "../operations/refresh-subscription-periods";
 import {
   awaitsAuthentication,
@@ -14,6 +15,7 @@ import {
   invoicePlan,
   isLongFailingRenewal,
 } from "../operations/renewal-email";
+import { config } from "@/config/config";
 import { type AppLayers } from "@/foundation/composition";
 import { logger } from "@/shared/logger";
 import { registerRoute } from "@/server/rest/openapi-registry";
@@ -213,6 +215,24 @@ export function setStripeWebhookHandler(
             processed = true;
           }
           break;
+        case "checkout.session.expired":
+          // A first Checkout left unpaid: at most one reminder per person
+          // (ADR027). A failure rethrows, so Stripe redelivers the event.
+          if (metadata?.userId) {
+            const sent = await emailCheckoutRecovery(
+              {
+                stripe,
+                models: layers.database.models,
+                db: layers.database.db,
+                sendgrid: layers.clients.sendgrid,
+                groupId: config.sendGrid.checkoutRecoveryGroupId,
+              },
+              event.data.object,
+              clientId,
+            );
+            processed = sent === "sent";
+          }
+          break;
       }
       ctx.status = 200;
       ctx.body = { received: true, processed };
@@ -248,6 +268,7 @@ function registerStripeWebhookOpenAPIRoutes() {
 - Verifies webhook signature using client-specific webhook secret
 - Verifies the live client before reading metadata; resolves subscription ownership from the customer binding
 - Processes customer, checkout and subscription lifecycle events
+- On \`checkout.session.expired\`, sends a first-time customer at most one recovery email (ADR027)
 - Returns 200 even for ignored events (missing metadata) to prevent retries
 
 **Billing client**:
