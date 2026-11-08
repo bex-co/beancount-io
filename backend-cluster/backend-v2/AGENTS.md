@@ -120,6 +120,7 @@ yarn test:integration
 yarn lint
 yarn lint:deadcode
 yarn lint:deadcode:fix
+yarn format:check
 yarn typecheck
 yarn build
 yarn codegen

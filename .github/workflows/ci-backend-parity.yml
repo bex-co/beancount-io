@@ -38,6 +38,10 @@ jobs:
       # Unused files, exports and exported types fail the lint gate the root
       # AGENTS.md promises every JS/TS package (w23/223).
       - run: yarn lint:deadcode
+      # Source stays prettier-clean so a PR's diff carries only its own change
+      # (w23/225). Scoped to src: the marketplace submission records under
+      # docs are evidence and keep the form they were filed in.
+      - run: yarn format:check
       # The whole unit suite: surface-parity's exact zero-debt gate, op-class
       # coverage, and the cross-surface behavioral contract tests.
       - run: yarn test

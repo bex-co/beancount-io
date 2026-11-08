@@ -80,5 +80,5 @@
 - [x] [222](./done/222.md) — does a `dry_run` consume the write rate budget? measure it, then decide (preview-then-commit may cost double)
 - [x] [223](./done/223.md) — backend-v2 `yarn lint:deadcode` is red on `main` (`isWithinRefreshReuseGrace`) and `CI (backend parity)` does not run it
 - [x] [224](./done/224.md) — `make check-all` fails locally on a cluttered `$TMPDIR` (root-discovery budget), a nested `uv` picking CPython 3.15, and sandboxed signal tests
-- [ ] [225](./225.md) — backend-v2: format the 62 files prettier flags and gate `prettier --check` in CI (backend parity)
+- [x] [225](./done/225.md) — backend-v2: format the 62 files prettier flags and gate `prettier --check` in CI (backend parity)
 - [ ] [226](./226.md) — table-driven test: every `ErrorCategory` maps to one MCP code and one HTTP status on REST, GraphQL and MCP

@@ -412,12 +412,9 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
           .string()
           .optional()
           .openapi({ description: "The entry's hash" }),
-        entry_hash: z
-          .string()
-          .optional()
-          .openapi({
-            description: "Alias of entryHash, as list output spells it.",
-          }),
+        entry_hash: z.string().optional().openapi({
+          description: "Alias of entryHash, as list output spells it.",
+        }),
       })
       .strict(),
     uriPath: "/{entryHash}",

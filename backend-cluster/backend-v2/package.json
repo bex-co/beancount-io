@@ -16,6 +16,7 @@
     "eval": "for f in evals/*/promptfooconfig.yaml; do echo \"→ $f\"; promptfoo eval -c \"$f\" || exit 1; done",
     "eval:view": "promptfoo view",
     "format": "prettier --write .",
+    "format:check": "prettier --check \"src/**/*.ts\"",
     "lint": "eslint src --fix --ext .ts --quiet && yarn lint:deadcode",
     "lint:deadcode": "knip --include files,exports,types",
     "lint:deadcode:fix": "knip --include files,exports,types --fix --fix-type files,exports,types --allow-remove-files --format",
