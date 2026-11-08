@@ -830,3 +830,68 @@ preserving pure-advice negatives, fix/rerun original eval 13 and the complete
 holdings cohort, then ship a jointly verified candidate with the current suite
 version. No new dependency, weakened assertion or passing advice result is
 claimed.
+
+## Original bulk-investment Codex cohort — 2026-11-08
+
+w2/m50/t005's original **seven cases pass on Codex CLI 0.167.0 /
+`gpt-6.1-sol`**, Linux arm64, after the canonical-ID clarification below.
+The new legacy-ID regression (import 29) also passes: **eight cases total**,
+plus a separate fresh-context compatibility control. This is an unpublished
+candidate result; the expanded both-client gate remains open.
+
+Each case uses its original synthetic fixture, a fresh Git workspace, the
+real sixteen-skill linked installer and the prepared checkout `bea` reporting
+0.3.1. This is not a clean published-release CLI rehearsal. No production
+ledger, external financial account or supplied model answer is involved.
+
+| Case | Observed result |
+| --- | --- |
+| Trade 9, four buys | Four full entries shown at 250/260/255/270, one yes. One successful native batch writes four 2-VTI lots; independent query gives 8 VTI and 2930 cash, root check passes. Initial missing `python` alias produces no batch file/write; client repairs to `python3` before the successful batch. |
+| Trade 10, ambiguous sell | Both existing 10-VTI lots (100 / January 15, 120 / February 15) shown, plus the explicitly hypothetical March buy. Asks which lot the sale uses; neither buy nor sell written. |
+| Import 16, broker activity | Mapping/action/entry review shows 10 VTI at 250, cash −2505 and separate 5 fee, dividend 42.50. After yes, native batch and saved mapping pass check. Independent query: cash 17537.50, VTI 10, fee 5, dividend income −42.50. Re-import: 2 skipped, 0 new, ledger/config byte-identical. |
+| Import 17, existing purchase | Recomputed lot hash matches `4dcaf53cdd65f541`; 1 already imported, 0 new, original entry and 10-VTI position unchanged. |
+| Import 18, unheld sale | Names missing 5-ACME holding and asks for purchase/opening lot details; no fabricated lot, short or write. |
+| Import 19, opening lots | Full proposal ties 10 VTI at 100 / 2023-05-01 + 5 at 120 / 2024-06-15 + 1000 cash to 2600 equity. Yes confirms January 1 ledger-start date. Native opening preserves acquisition dates and per-posting IDs. Independent positions agree; repeat import recognizes all three rows, no byte changes. |
+| Import 20, exchange | Full mapping/proposal preserves 0.05000000 BTC at 60000, separate 15 fee, cash −3015, and 0.01000000 ETH at stated 3000 against 30 staking income. After clarification, IDs are canonical `bc245b320b912584` / `db8b66f5dcf7c471`, while entry precision stays printed. Approved batch/check pass; independent cash 6985. Equivalent decimal re-download: 2 skipped, 0 new, ledger/config unchanged. |
+| New import 29, legacy IDs | Fresh context with prior printed-decimal IDs and an equivalent shorter-decimal export: both entries recognized, 2 already imported, 0 new. Existing entries, IDs and config remain byte-identical; check passes. |
+
+**Oracle correction:** trade 9's unchanged prices cost
+`2 × (250 + 260 + 255 + 270) = 2070`, leaving `5000 − 2070 = 2930`.
+Its original expected-output prose and historical Claude summary instead say
+2080/2920. The candidate corrects only that prose arithmetic; prompt, prices
+and all three original assertions stay unchanged. The independent real-CLI
+balance proves 2930. The historical 2920 statement is retained as a reporting
+error and is not reused as cash-balance evidence.
+
+**Identity clarification:** the initial exchange run follows broker-activity's
+printed-precision wording and hashes trailing zeroes, producing `e399fa26f06a6519`
+for the buy rather than the shared canonical `bc245b320b912584`. The guide
+contradicts dedup.md's exact numeric normalization. Both its same-file and
+format-only repeat controls still avoid writes, so no duplicate write is
+claimed. The candidate separates printed entry precision from canonical hash
+spelling and documents content-checked, lookup-only compatibility for older
+printed-decimal IDs; uncertain matches require a duplicate decision. The fresh
+fixed run generates canonical IDs, and a new permanent eval 29 protects older
+IDs from being rewritten or appended again. The new canonical-ID assertion in
+20 fails against the retained initial run; no assertion is weakened.
+
+Full local skills CI (including the new fixtures and base-aware 0.4.29→0.4.30
+version check), guidance validation, the existing real-CLI batch atomicity
+regression and secret scan pass. Logs, independent queries and grades remain
+local in `scripts/skills/tmp/w2-codex-linux/`. The complete eight-file candidate
+is **unpublished local** `67053c495`, branch `codex/w2-m50-bulk-20261108`, based
+on `0eb4e9c13`, in `scripts/skills/tmp/w2-m50-bulk-candidate/`; its full patch
+is `scripts/skills/tmp/w2-codex-linux/m50-bulk-candidate.patch`. Main's product
+files were restored. Its reserved 0.4.30 version must be adjusted on rebase and
+is independent of the other unshipped candidates.
+
+All **95** original routing entries at `08170e3a5` are unchanged inside the
+November 1 `df1cfd84e` twice-passing **128/128** Codex cohort. Both import/trade
+descriptions match that source and Claude's `6421f036a` 124/124 source. No
+description changed here; this is dated reuse, not a fresh 136-entry run.
+Historical Claude behavior 7/7 and routing 95/95 retain their October 19/20
+dates, with the cash-summary error explicitly noted above. They do not cover
+new import 29 or the strengthened ID assertion in 20. Claude authentication is
+unavailable, so [t005 stays blocked](../../.pm/w2/blocked/m50/t005.md): run the
+expanded original-plus-regression cohort on Claude, fix/rerun any affected
+Codex cases, check and ship the coherent rebased candidate before closing.
