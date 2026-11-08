@@ -647,7 +647,7 @@ command network access was granted. This is a real model answer and shared-file
 read, beyond the client-side cache-resolution evidence from October 19.
 
 The dated Claude Code 2.1.289 lifecycle and first-query evidence remains in
-[w2/m44/t006](../../.pm/w2/m44/t006.md); it is not a fresh Claude rehearsal.
+[w2/m44/t006](../../.pm/w2/blocked/m44/done/t006.md); it is not a fresh Claude rehearsal.
 
 The documented Codex marketplace refresh followed by plugin add completed
 successfully at the same published suite version; a fresh native catalog still
