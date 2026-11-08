@@ -111,3 +111,61 @@ This closes w2/089 for the current tested Codex client/model. The earlier
 The suite's existing append-only scope and confirmation rule were exercised
 without a text change or a policy exception. The other add cases and m40's
 closeout are verified separately.
+
+## Codex full original cohort and staged-open correction — 2026-11-08
+
+The eleven cases owned by w2/m40 now pass on Codex CLI 0.167.0,
+`gpt-6.1-sol`, in the Linux environment above. Cases 1, 2, 4, 5, 7 and 10
+received a second turn containing only `yes`; the other cases stopped at
+their required question or hand-off. Every first-turn ledger is byte-identical
+to its fixture. Every confirmed write uses `bea` and ends with a successful
+root check. Case 10 additionally passed the independent repeat above.
+
+| Eval | Fresh Codex observation |
+| --- | --- |
+| 1 | Prior Napoli entries justify Dining; the signed 42.80 duplicate read has no match; only the confirmed dinner is appended. |
+| 2 | One 115.65 Costco transaction, split 84.10 Groceries and 31.55 Household. |
+| 3 | Asks about the 4.35 difference; no write. |
+| 4 | Checking −250 and Savings +250; no expense or income posting. |
+| 5 | Proposes the requested Pets open and 30.00 vet bill; after yes, stages only the refused unused open, writes its first posting, and checks the root successfully. |
+| 6 | Reports the remaining 100.00 in OldSavings and asks where it went before closing; no write. |
+| 7 | Only the approved October 16 VTI price at 285.40 USD is appended. |
+| 8 | Asks for the missing amount, states the resolved date; no write. |
+| 9 | Shows the October 15 same-amount Napoli entry and asks whether this is a separate dinner; no write. |
+| 10 | Proposes and appends only the lunch; the existing payee remains unchanged. |
+| 11 | Loads `beancount-import`, reports the absent CSV, and writes nothing. |
+
+The first case-5 attempt exposed a stale version assertion in the shared
+`bea-cli.md`: it said a staged open is refused on every build reporting 0.3.1.
+Codex obeyed that assertion and stopped after the strict refusal, despite this
+checkout's CLI already supporting staging. The corrected instruction permits
+one approved staged-open attempt only when the strict refusal names solely
+the new unused account, then follows its actual result. Other errors still
+require fixing the proposal; a refused staging attempt still stops without a
+manual write. The suite version is 0.4.27; no description or scope changed.
+
+The correction was checked against both actual runtimes, which both report
+0.3.1:
+
+- **Checkout-built CLI:** strict open refuses with only `Unused account
+  'Expenses:Pets'`; staged open succeeds; the ordinary confirmed batch writes
+  the vet bill; root check reports `valid: true`. This is case 5's successful
+  rerun, rather than a pass assigned to the earlier stopped attempt.
+- **PyPI `beancount-io==0.3.1`:** strict open and the single staged attempt
+  both refuse. Codex reports the unsupported operation, performs no alternate
+  write, and checks the unchanged root successfully. This is a negative
+  compatibility control, not a successful completion of case 5.
+
+Local traces, fixtures, snapshots and diffs are under
+`scripts/skills/tmp/w2-codex-linux/runs/add-N-valid/` (N = 1–11, except
+case 5's passing run is `add-5-fixed/`), plus `add-5-published-control/`.
+The deterministic `test_a_nounused_ledger_stages_the_open_then_writes_its_first_posting`
+also checks the strict refusal, staged write and valid final ledger; its
+published-release branch requires both refusals and unchanged bytes.
+
+Together with the recorded Claude Code 11/11 run and the subsequent full
+two-pass Codex routing cohort in the [routing record](routing-rehearsal.md#business-books-routing-on-codex-w2m55m58--2026-11-01),
+this supplies m40's previously missing Codex evidence. The historical
+Claude run is not presented as a new run: the current local Claude Code
+2.1.319 probe returns `Not logged in` before a model turn. Cases added later
+by other milestones retain their own rehearsal records and acceptance gates.

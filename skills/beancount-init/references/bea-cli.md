@@ -170,10 +170,11 @@ A ledger that loads `beancount.plugins.nounused` (or `pedantic`, which runs it)
 refuses a new open until something posts to the account: `Unused account
 '…'`. That nounused refusal has this documented two-step:
 
-1. Stage the open with the `open-staged` recipe below. Any other error in its
-   refusal still means fix the proposal, not stage it. On 0.3.1 the staged
-   open is refused as well (Version notes): tell the user the new account
-   cannot be added through `bea` 0.3.1 on this ledger, and stop.
+1. When the strict refusal names only the unused account being opened, try
+   the `open-staged` recipe below once. Any other error means fix the proposal,
+   not stage it. Inspect the actual result: if staging is also refused, report
+   that this installation cannot add the account under `nounused` and stop
+   without a manual write (Version notes).
 2. In the same workflow, write the confirmed batch that first posts to the
    account (the `batch` recipe, without `--allow-errors`), then run `check`.
 
@@ -383,9 +384,12 @@ suite's minimum version no longer needs it.
 - **Red-ledger reads (0.3.1).** An `--allow-errors` read answers without
   `ledger_valid` and `ledger_errors`; the `check` recipe reports the errors.
   Later releases include them in the answer.
-- **Staged opens under `nounused` (0.3.1).** `add open --allow-errors` is
-  refused like any new error, so the two-step above cannot run; later
-  releases stage the open.
+- **Staged opens under `nounused` (published 0.3.1).** The published release
+  refuses `add open --allow-errors` like any new error. Later releases, and
+  source builds carrying that fix, stage the open. Follow the single approved
+  staging attempt's result above: a source build can report the same version
+  as the published release, so the version string alone does not establish
+  whether staging is supported.
 - **Rule attribution (0.3.1).** A `--rules` entry's `client` and `project`
   keys arrive in the release after 0.3.1; 0.3.1 refuses them as unknown keys,
   so attributed CSV rows go through the `batch` recipe there, with the key in
