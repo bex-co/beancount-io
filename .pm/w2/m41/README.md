@@ -1,6 +1,6 @@
 # w2 · m41 — Rewrite the accumulated skill fixes as plain procedures
 
-**Worker:** worker2 **Goal:** each `beancount-*` SKILL.md and shared reference reads as a positive procedure. Version-specific `bea` caveats live in one section that records the version each applies to, and the suite declares and checks a minimum `bea` version. No rule is lost. **Status:** in progress (t001–t005 done)
+**Worker:** worker2 **Goal:** each `beancount-*` SKILL.md and shared reference reads as a positive procedure. Version-specific `bea` caveats live in one section that records the version each applies to, and the suite declares and checks a minimum `bea` version. No rule is lost. **Status:** in progress (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | [t003](done/t003.md) | Compact import and importer-author — **DONE** | 45m | t001 |
 | [t004](done/t004.md) | Compact reconcile, migrate, and options — **DONE** | 45m | t001 |
 | [t005](done/t005.md) | Prove nothing was lost — **DONE** | 45m | t002, t003, t004 |
-| t006 | Adoption surface | 20m | t005 |
+| [t006](done/t006.md) | Adoption surface — **DONE** | 20m | t005 |
 | t007 | Simplify | 15m | t006 |
 | t008 | Test coverage | 30m | t006, t007 |
 | t009 | Closeout | 15m | t008 |
