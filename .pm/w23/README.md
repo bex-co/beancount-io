@@ -81,4 +81,4 @@
 - [x] [223](./done/223.md) — backend-v2 `yarn lint:deadcode` is red on `main` (`isWithinRefreshReuseGrace`) and `CI (backend parity)` does not run it
 - [x] [224](./done/224.md) — `make check-all` fails locally on a cluttered `$TMPDIR` (root-discovery budget), a nested `uv` picking CPython 3.15, and sandboxed signal tests
 - [x] [225](./done/225.md) — backend-v2: format the 62 files prettier flags and gate `prettier --check` in CI (backend parity)
-- [ ] [226](./226.md) — table-driven test: every `ErrorCategory` maps to one MCP code and one HTTP status on REST, GraphQL and MCP
+- [x] [226](./done/226.md) — table-driven test: every `ErrorCategory` maps to one MCP code and one HTTP status on REST, GraphQL and MCP
