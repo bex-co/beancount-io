@@ -35,6 +35,14 @@ to the dashboard confirmation (`/settings/billing?checkout=success&session_id=â€
 and `changePlan` reports the invoice an immediate change charged
 (`invoiceId`, `amountPaid`, `currency`) so the dashboard counts it once.
 
+Checkout sessions expire after 90 minutes with Stripe recovery on. On
+`checkout.session.expired`, a customer who has never paid (on Stripe or in an
+app store) and has not opened Checkout again gets one short recovery email, ever,
+with a single-use 20% code (ADR027). It needs the Stripe coupon
+`checkout-recovery-20` and a SendGrid unsubscribe group whose ID goes in
+`SEND_GRID_CHECKOUT_RECOVERY_GROUP_ID`; with the variable unset, no recovery
+email is sent.
+
 The retired `beancount-web-dev` tenant and `STRIPE_DEV_*` variables are ignored;
 no fake-paid script replaces them. Keep isolated Stripe testing outside live
 application billing.
