@@ -1,6 +1,6 @@
 # w2 · m41 — Rewrite the accumulated skill fixes as plain procedures
 
-**Worker:** worker2 **Goal:** each `beancount-*` SKILL.md and shared reference reads as a positive procedure. Version-specific `bea` caveats live in one section that records the version each applies to, and the suite declares and checks a minimum `bea` version. No rule is lost. **Status:** in progress (t001–t008 done)
+**Worker:** worker2 **Goal:** each `beancount-*` SKILL.md and shared reference reads as a positive procedure. Version-specific `bea` caveats live in one section that records the version each applies to, and the suite declares and checks a minimum `bea` version. No rule is lost. **Status:** done
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | [t006](done/t006.md) | Adoption surface — **DONE** | 20m | t005 |
 | [t007](done/t007.md) | Simplify — **DONE** | 15m | t006 |
 | [t008](done/t008.md) | Test coverage — **DONE** | 30m | t006, t007 |
-| t009 | Closeout | 15m | t008 |
+| [t009](done/t009.md) | Closeout — **DONE** | 15m | t008 |
 
 ## Previous blocker
 
@@ -33,14 +33,20 @@
 - **Source:** agentic-skill review of `skills/` at the user's request, 2026-10-18. Months of QA fixes have accumulated as one-line patches: "Do not point at a nonexistent `ingest.py`", "older `bea` batch schemas require…", "the system libmagic library is optional…". Each fixed a real failure, but together they read as patch notes and push the procedure out of view. A cleanup pass started the same day (dropping init's 50-line `.gitignore` listing and options' repeated confirmation block). This milestone finishes it with a rule against losing anything.
 - **Goal linkage:** **A1 — Agent-native accounting.** Instruction-file quality is the pillar's own measure, and shorter, positive procedures are followed more reliably and are cheaper to load.
 - **Expected outcome:** an agent loading any skill reads the workflow first and the caveats only when relevant. A maintainer can tell from one section which caveats to delete when the minimum `bea` moves.
-- **Why now:** [w6/m6](../../w6/done/m6/README.md) will bundle these texts into immutable ClawHub versions, and [m40](../done/m40/README.md) adds a ninth skill that should follow the compacted style rather than copy the current one. Run after [m39](../blocked/m39/README.md) where possible, so the renamed files are rewritten once. Adoption surface is included because skill text is what agents read.
+- **Why now:** [w6/m6](../../../w6/done/m6/README.md) will bundle these texts into immutable ClawHub versions, and [m40](../m40/README.md) adds a ninth skill that should follow the compacted style rather than copy the current one. Run after [m39](../../blocked/m39/README.md) where possible, so the renamed files are rewritten once. Adoption surface is included because skill text is what agents read.
 
 ## Out of scope
 
-- Descriptions and routing ([m38](../done/m38/README.md)).
+- Descriptions and routing ([m38](../m38/README.md)).
 - Changing any workflow's behavior, confirmation gates, or trust rails.
-- Dropping the no-`bea` fallback (a separate decision, [w2/080](../blocked/080.md)).
+- Dropping the no-`bea` fallback (a separate decision, [w2/080](../../blocked/080.md)).
 
 ## Unblocked — 2026-11-08
 
 Codex CLI 0.167.0 / `gpt-6.1-sol` executes Linux sandboxed model turns; m40 is complete in `18b3e7d98`. t005 resumes the exact high-risk cohort in the rehearsal record. The original quota estimate above is historical.
+
+## Closeout — 2026-11-08
+
+The minimum-version contract and shared Version notes agree with the customer entrypoints; t002–t004 record the destination or rationale for every merged rule. The retained procedures, confirmation gates, append-only scope and no-bea fallback remain present. t005 now supplies the missing nine-skill Codex high-risk cohort (`f6427b726`), with the initial close-reporting partials and successful correction preserved. Historical Claude per-case and verified first-month results retain their original dates; no current unauthenticated Claude probe is counted as a run.
+
+Adoption and simplify checks are complete. `6ef185c31` adds real minimum-version fixtures: all 48 checker tests pass, and removing the gate produces five expected negative-case failures. Skills CI and guidance checks pass; the full 181 installer/recipe/journey tests (three Windows-only skips) cover the unchanged recipes. All nine tasks are complete and the milestone is archived.
