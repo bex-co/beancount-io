@@ -1,6 +1,6 @@
 # Recording payroll
 
-A business that pays staff through a payroll provider records each run from the provider's printed summary, the suite's Business books convention ([ADR025](https://github.com/bex-co/beancount-io/blob/main/docs/adrs/ADR025-skills-business-books.md)). Receiving a paycheck is an ordinary transaction, not this; paying a contractor with no withholding is too.
+A business that pays staff through a payroll provider records each run from the provider's printed summary, following beancount-init's `references/business-books.md`. Receiving a paycheck is an ordinary transaction, not this; paying a contractor with no withholding is too.
 
 **Inputs, as printed:** the pay date, gross wages, each employee withholding line (income tax, social security, health insurance, retirement…), each employer tax line, net pay, and the account it left from. Every figure comes from the summary; a figure it does not print is asked for, never computed from wages, rates, or tables.
 

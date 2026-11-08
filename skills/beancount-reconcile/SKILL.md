@@ -56,6 +56,8 @@ only on a first reconcile with no prior assertion and an accepted opening gap.
 
 Read `references/statement-formats.md` before parsing any statement and `references/matching.md` before classifying discrepancies. Both encode edge cases that are easy to get wrong.
 
+For a missing business payment, use beancount-init's `references/business-books.md` (`../beancount-init/references/business-books.md` from this folder, or `references/business-books.md` in a standalone install) for document identity and the confirmed invoice application. Read open invoices with `invoice-open` in beancount-init's `references/bea-cli.md`; a payment reduces the receivable rather than recording income again.
+
 ## Workflow
 
 Six phases, in order: **Discover → Normalize → Coverage → Match → Propose → Verify.**

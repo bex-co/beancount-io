@@ -84,6 +84,8 @@ text itself.
 
 Read `references/formats.md` before parsing any new or format-changed source (repeat imports with a stored config stanza apply the stored mapping directly) and `references/dedup.md` before the dedup pass. Both encode edge cases that are easy to get wrong.
 
+For business rows, read beancount-init's `references/business-books.md` (`../beancount-init/references/business-books.md` from this folder, or `references/business-books.md` in a standalone install): it defines account roles, document identities, client/project attribution and deposits that pay open invoices.
+
 ## Workflow
 
 Seven stages, in order: **Discover → Normalize → Stage → Dedup → Suggest → Confirm → Write + Verify.**

@@ -17,6 +17,15 @@ invalid ledger, missing prices, a bad argument) is bea's answer about the
 ledger or the request: act on its `message`, `details` and `result`, not on
 the engine. Do not install another Beancount CLI or configure private engine paths.
 
+In a workspace sandbox, `bea` also needs a writable cache for its ledger
+locks. If the default cache is outside the writable workspace, set
+`XDG_CACHE_HOME` to a directory inside that workspace before the first write
+(for example `export XDG_CACHE_HOME="$PWD/.cache"`; PowerShell:
+`$env:XDG_CACHE_HOME = Join-Path (Get-Location) '.cache'`). Keep that directory
+out of version control. On a permission failure, inspect the reported result
+and existing entries before retrying; a cache setting does not authorize a
+different ledger, an unchecked write, or a broader sandbox.
+
 ## Hosted ledgers
 
 Every skill in this suite is scoped to local ledger files. When the ledger is
@@ -75,6 +84,24 @@ the only approval.
 
 ## Read and check
 
+Read accounts open today with `open-accounts`:
+
+<!-- recipe: open-accounts -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT account, open.date AS opened FROM #accounts WHERE close IS NULL ORDER BY account"
+```
+
+Choose the destination from the file holding the account's most recent
+postings. `filename` is absolute; pass it to `--into` relative to the root's
+directory. Confirm the destination when entries are split across files. An
+account with no postings goes where entries of its kind live, or in a
+single-file ledger's root.
+
+<!-- recipe: entry-destination -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT filename, max(date) AS latest, count(position) AS postings WHERE account = '$account' GROUP BY filename ORDER BY latest DESC"
+```
+
 ```sh
 bea --file "$ledger" --json --no-input query "$query"
 bea --file "$ledger" --json --no-input report income-statement --time "$month"
@@ -103,6 +130,28 @@ Run the final check against the root, including after writing an included file:
 <!-- recipe: check -->
 ```sh
 bea --file "$ledger" --json --no-input check
+```
+
+## Open invoices and bills
+
+Bind `receivable` and `payable` to the ledger's existing accounts for those
+roles. The naming, document identities and payment-matching procedure live in
+beancount-init's `references/business-books.md`. These reads group amounts by
+document metadata, including posting-level identities on multi-document
+payments; they do not group by client.
+
+<!-- recipe: invoice-open -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT any_meta('invoice') AS invoice, min(date) AS first, sum(number) AS open WHERE account = '$receivable' GROUP BY invoice HAVING sum(number) != 0 ORDER BY invoice"
+```
+
+An empty invoice identity is unexplained receivable money; report it rather
+than assigning it to a document. A bill's open balance is negative: the amount
+still owed to its supplier.
+
+<!-- recipe: bill-open -->
+```sh
+bea --file "$ledger" --json --no-input query "SELECT any_meta('bill') AS bill, min(date) AS first, sum(number) AS open WHERE account = '$payable' GROUP BY bill HAVING sum(number) != 0 ORDER BY bill"
 ```
 
 ## Open accounts, then write the confirmed batch

@@ -27,11 +27,11 @@ The ledger is the source of every suggestion: each run learns from what the user
 
 ## Payments of open invoices
 
-When the ledger tracks invoices (open receivable balances from beancount-invoices' `invoice-open` recipe in its SKILL.md), an inflow equal to one open invoice's balance is offered as that invoice's payment instead of income: the other leg is the receivable with the invoice's `invoice:` and link, shown beside the invoice it would clear, and written only with the row's yes. An inflow equal to the sum of several open invoices, or matching two equally, is asked about. A deposit smaller than an invoice's balance is offered as a part payment only when the user names the invoice. Never apply a payment silently. Such rows take the normalized batch path, since the receivable posting carries the invoice's metadata.
+When the ledger tracks invoices, run `invoice-open` in beancount-init's `references/bea-cli.md`, then follow beancount-init's `references/business-books.md`, Documents and payments. Show the proposed invoice application beside the row; use the normalized batch path when the receivable posting carries document metadata.
 
 ## Client and project
 
-When the source account's history attributes entries with `client:` or `project:` metadata (the suite's Business books convention), suggest a candidate's value from the same matches that suggest its account: a value every attributed match agrees on is proposed with its count, disagreeing matches are shown as a question, and no attributed match means no key. Never invent a value, and show it in the review table beside the account. On the `bea import --csv` path, a confirmed value goes into the matching rule's `client` or `project` key (`references/bea-import.md`).
+Use the same merchant matches as the account suggestion, following beancount-init's `references/business-books.md`, Client and project. Show the proposed value, evidence or unset attribution in the review table beside the account. On the `bea import --csv` path, a confirmed value goes into the matching rule's `client` or `project` key (`references/bea-import.md`).
 
 ## What the user sees
 

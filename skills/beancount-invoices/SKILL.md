@@ -47,14 +47,7 @@ Write every approved directive through `bea add` (recipes in Write + Verify). Th
 
 ## The model
 
-The suite's Business books convention ([ADR025](https://github.com/bex-co/beancount-io/blob/main/docs/adrs/ADR025-skills-business-books.md)):
-
-- `Assets:AccountsReceivable` holds what clients owe. Each invoice is identified by `invoice: "<number as printed>"`; the issuing entry also carries `client:` and, when the document states one, `due:` (a date).
-- Every entry that touches an invoice carries the link `^inv-<number>` (lowercased) so the document's history reads as one thread.
-- An entry about one document carries `invoice:` on the transaction. A payment that settles several documents has one receivable posting per document, each with its own `invoice:`.
-- `Liabilities:AccountsPayable` holds what the business owes suppliers. Each bill is identified by `bill: "<supplier>:<number as printed>"` (a supplier's number is unique only for that supplier); the receiving entry carries `due:` when the bill states one, and every entry that touches it carries `^bill-<supplier>-<number>` (lowercased, spaces as hyphens).
-- Tax collected on invoices is a liability until remitted: the ledger's collected-tax account, else `Liabilities:SalesTax` (one per registration, `Liabilities:SalesTax:<Registration>`, when the user files more than one). Remittances clear it.
-- A document's open balance is the sum of the receivable (or payable) postings carrying its identity: the `invoice-open` and `bill-open` recipes below. Payments carry no `client:`, so never group the open balance by client; read the client from the issuing entry.
+Read beancount-init's `references/business-books.md` (`../beancount-init/references/business-books.md` from this folder, or `references/business-books.md` in a standalone install) for the shared account names, document identities, client/project keys and payment matching. An invoice or bill records what is owed; its payment reduces that open amount rather than recording the income or expense again. Collected tax remains a liability until remitted.
 
 Use the ledger's own accounts first. When it has no receivable or payable account, propose `open Assets:AccountsReceivable` or `open Liabilities:AccountsPayable` in the same proposal; when a fee needs an account, use the ledger's fees account, else propose `Expenses:Fees`. Never invent any other account.
 
@@ -72,19 +65,7 @@ Four phases, in order: **Discover → Parse → Propose → Write + Verify.**
 
 Local ledger files only. For a ledger hosted on Beancount.io, stop this skill and offer a separately requested hosted workflow or local clone (beancount-init's `references/bea-cli.md`, Hosted ledgers).
 
-Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .` (PowerShell: `Get-ChildItem -Recurse -Include *.beancount,*.bean`); the root has `option`/`plugin`/`include` directives or the most `open`s; confirm when ambiguous) and bind it as `ledger`. Read the accounts open today and the destination file the same way `beancount-add` does (its `open-accounts` and `entry-destination` recipes in beancount-add's SKILL.md). Bind `receivable` to the receivable account (`Assets:AccountsReceivable` unless the ledger names its own) and read what is open:
-
-<!-- recipe: invoice-open -->
-```sh
-bea --file "$ledger" --json --no-input query "SELECT any_meta('invoice') AS invoice, min(date) AS first, sum(number) AS open WHERE account = '$receivable' GROUP BY invoice HAVING sum(number) != 0 ORDER BY invoice"
-```
-
-A row whose `invoice` is empty is receivable money no document explains; report it, never assign it to an invoice. Bind `payable` (`Liabilities:AccountsPayable` unless the ledger names its own) and read open bills the same way; an open bill's balance is negative, the amount still owed:
-
-<!-- recipe: bill-open -->
-```sh
-bea --file "$ledger" --json --no-input query "SELECT any_meta('bill') AS bill, min(date) AS first, sum(number) AS open WHERE account = '$payable' GROUP BY bill HAVING sum(number) != 0 ORDER BY bill"
-```
+Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .` (PowerShell: `Get-ChildItem -Recurse -Include *.beancount,*.bean`); the root has `option`/`plugin`/`include` directives or the most `open`s; confirm when ambiguous) and bind it as `ledger`. Use `open-accounts` and `entry-destination` in beancount-init's `references/bea-cli.md`. Bind `receivable` and `payable` to the ledger's accounts for those roles, then run that reference's `invoice-open` and `bill-open` reads. Report an empty document identity as unexplained money; an open payable is negative, the amount still owed.
 
 ### 2. Parse
 

@@ -81,7 +81,6 @@
 - [084 — Say plainly where ledger data goes, and how the suite relates to upstream Beancount](./blocked/084.md) — **blocked:** the "Your data" draft is written in the note; the owner approves the affiliation wording
 - [086 — Check that non-English ledger requests route to the right skill](./blocked/086.md) — **blocked:** 25 prompts added and routed 25/25 on one client; the Codex rerun waits for Codex usage
 - [087 — Decide whether to publish the skill suite from a slim public mirror repository](./blocked/087.md) — **blocked:** owner decision (repository, credential, portal identities)
-- [100 — Give business books a canonical home inside the suite](./100.md)
 
 ## Cross-queue promotions and follow-ups
 

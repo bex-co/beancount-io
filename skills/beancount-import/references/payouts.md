@@ -7,8 +7,8 @@ as a bank export. It differs from a bank export in two ways: each sale arrives
 money reaches the bank later as a **payout** that bundles many sales. Booking
 the bank deposit alone merges revenue and fees; booking both the sales and the
 deposit as income counts the revenue twice. This reference keeps them apart.
-The account names follow the suite's Business books convention
-([ADR025](https://github.com/bex-co/beancount-io/blob/main/docs/adrs/ADR025-skills-business-books.md)).
+The account names and document identities follow beancount-init's
+`references/business-books.md`, the suite's installed Business books convention.
 
 ## The model
 

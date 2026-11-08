@@ -59,21 +59,7 @@ Five phases, in order: **Discover → Parse → Check → Propose → Write + Ve
 
 Local ledger files only. For a ledger hosted on Beancount.io, stop this skill and offer a separately requested hosted workflow or local clone (beancount-init's `references/bea-cli.md`, Hosted ledgers).
 
-Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .` (PowerShell: `Get-ChildItem -Recurse -Include *.beancount,*.bean`); the root has `option`/`plugin`/`include` directives or the most `open`s; confirm when ambiguous) and bind it as `ledger`. Then read the accounts that are open today:
-
-<!-- recipe: open-accounts -->
-```sh
-bea --file "$ledger" --json --no-input query "SELECT account, open.date AS opened FROM #accounts WHERE close IS NULL ORDER BY account"
-```
-
-Choose the destination from where the account's entries already live: the file holding its most recent postings. `filename` is absolute; pass it to `--into` relative to the root's directory, and confirm it with the user when the ledger splits entries across several files.
-
-<!-- recipe: entry-destination -->
-```sh
-bea --file "$ledger" --json --no-input query "SELECT filename, max(date) AS latest, count(position) AS postings WHERE account = '$account' GROUP BY filename ORDER BY latest DESC"
-```
-
-An account with no postings yet goes where the ledger keeps entries of its kind, or the root when it is a single file.
+Find the root ledger with the suite's discovery convention (`fd -e beancount -e bean .` (PowerShell: `Get-ChildItem -Recurse -Include *.beancount,*.bean`); the root has `option`/`plugin`/`include` directives or the most `open`s; confirm when ambiguous) and bind it as `ledger`. Read the accounts open today and choose the destination with `open-accounts` and `entry-destination` in beancount-init's `references/bea-cli.md`.
 
 ### 2. Parse
 
@@ -82,7 +68,7 @@ Reduce the request to directives. Pasted receipt or statement text comes from a 
 - **Date:** the date the user gives; "today", "Friday", or "last Tuesday" resolve against today's date, and the resolved date is stated in the proposal.
 - **Amounts and signs:** ledger signs, not statement signs. Money leaving an asset is negative on that asset; a card purchase is negative on the card's `Liabilities:` account; income is negative on its `Income:` account; an expense is positive. A refund reverses the purchase's signs. Use the operating currency only when the user gives none, and say so.
 - **Accounts:** map the user's words to accounts from the open-accounts read ("the Amex" → `Liabilities:CreditCard:Amex`). Ambiguous → ask. The category leg comes from the payee's history in this ledger; with no confident prior, use `Expenses:Uncategorized` (propose its `open` if missing) and flag it. Propose a new account only when the user asks for one, with its `open` in the same proposal.
-- **Client and project:** when the request names a client or project, or the payee's earlier entries carry `client:` or `project:` metadata (the suite's Business books convention), read them with the `dimension-prior` recipe. Propose a value when the payee's entries that carry the key all agree, citing the count; ask when they disagree; when none carries it, add no key unless the user names one, and if the ledger keeps these keys on other entries, say in the proposal that this one has none, so the user can add it. Never invent a value. A split purchase may give each posting its own.
+- **Client and project:** when the request names one or the payee's earlier entries carry these keys, read `dimension-prior` below and follow beancount-init's `references/business-books.md` (`../beancount-init/references/business-books.md`, or `references/business-books.md` in a standalone install), Client and project. Show the evidence and proposed attribution with the entry.
 - **Splits and receipts:** one transaction, one posting per category; the parts must sum to the amount paid, or ask about the difference (tax, tip, a discount).
 - **Transfers between the user's own accounts:** two postings, no expense or income leg.
 
