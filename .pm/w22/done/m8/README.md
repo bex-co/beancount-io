@@ -1,6 +1,6 @@
 # w22 · m8 — Self-hosted deployments: no verification page, no plan limits
 
-**Worker:** worker1 **Goal:** an operator who runs the whole stack for their own users sets one switch, `SELF_HOST=true`, and their users sign up without any email step and without plan limits **Status:** todo (t001–t006 done)
+**Worker:** worker1 **Goal:** an operator who runs the whole stack for their own users sets one switch, `SELF_HOST=true`, and their users sign up without any email step and without plan limits **Status:** done
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Adoption surface — **DONE** | 30m | t003 |
 | t005 | Simplify — **DONE** | 30m | t004 |
 | t006 | Test coverage — **DONE** | 1h | t004 |
-| t007 | Closeout | 15m | t005, t006 |
+| t007 | Closeout — **DONE** | 15m | t005, t006 |
 
 ## Definition of done
 
