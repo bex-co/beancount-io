@@ -200,6 +200,41 @@ def test_an_invalid_budget_directive_is_reported_not_silently_zero(tmp_path: Pat
     assert "Budget directive ignored: Invalid interval" in run.stderr
 
 
+@pytest.mark.parametrize("amount", ["100", '"100 USD"', "TRUE"])
+def test_malformed_budget_amounts_keep_valid_budgets_and_actuals(tmp_path: Path, amount: str) -> None:
+    text = (
+        HEAD
+        + f"""\
+2026-01-01 custom "budget" Expenses:Fun "monthly" {amount}
+2026-01-01 custom "budget" Expenses:Rent "monthly" 50.00 USD
+2026-01-02 * "Fun"
+  Expenses:Fun 30.00 USD
+  Assets:Bank
+2026-01-03 * "Rent"
+  Expenses:Rent 10.00 USD
+  Assets:Bank
+"""
+    )
+    data = _report(["-t", "2026-01"], tmp_path, text)
+    assert data["budget_errors"] == ["Invalid amount for budget entry: expected NUMBER CURRENCY"]
+    rows = _rows(data)
+    assert len(rows) == 2
+    fun = rows[("Expenses:Fun", "USD")]
+    assert (fun["status"], fun["actual"], fun["budget"], fun["variance"]) == ("unbudgeted", "30.00", None, None)
+    rent = rows[("Expenses:Rent", "USD")]
+    assert (rent["budget"], rent["actual"], rent["variance"]) == ("50.00", "10.00", "-40.00")
+    allowed = _report(["-t", "2026-01", "--allow-errors"], tmp_path, text)
+    assert allowed["periods"] == data["periods"]
+    assert allowed["budget_errors"] == data["budget_errors"]
+    ledger = tmp_path / "main.beancount"
+    run = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01"], tmp_path)
+    assert run.returncode == 0, run.stderr
+    assert "Expenses:Fun" in run.stdout and "Expenses:Rent" in run.stdout
+    assert run.stderr.count("Budget directive ignored: Invalid amount") == 1
+    assert "AttributeError" not in run.stderr
+    assert ledger.read_text() == text
+
+
 def test_text_labels_the_gaps(tmp_path: Path) -> None:
     ledger = write_ledger(tmp_path, LEDGER)
     run = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01"], tmp_path)

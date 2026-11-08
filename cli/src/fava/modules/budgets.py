@@ -6,6 +6,8 @@ from collections import Counter, defaultdict
 from decimal import Decimal
 from typing import TYPE_CHECKING, NamedTuple
 
+from beancount.core.amount import Amount
+
 from fava.helpers import BeancountError
 from fava.util.date import INTERVALS, days_in_daterange
 
@@ -114,12 +116,24 @@ def parse_budgets(
                     ),
                 )
                 continue
+            # Beancount.io: custom syntax permits scalar values here, but a
+            # budget requires an amount. Diagnose this directive alone.
+            amount = entry.values[2].value
+            if not isinstance(amount, Amount):
+                errors.append(
+                    BudgetError(
+                        entry.meta,
+                        "Invalid amount for budget entry: expected NUMBER CURRENCY",
+                        entry,
+                    ),
+                )
+                continue
             budget = Budget(
                 entry.values[0].value,
                 entry.date,
                 interval,
-                entry.values[2].value.number,
-                entry.values[2].value.currency,
+                amount.number,
+                amount.currency,
             )
             budgets[budget.account].append(budget)
         except (IndexError, TypeError):

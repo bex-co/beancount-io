@@ -1935,7 +1935,8 @@ too:
 - A currency with no budget keeps `budget` and `variance` null (`no budget` in
   the table): absent is never zero. A declared `0.00` budget is a budget. Income
   and expense accounts that no budget covers are listed `unbudgeted`.
-- A budget line Fava cannot read (an unknown interval) is reported on stderr and
+- A budget line Fava cannot read (an unknown interval or an amount without the
+  `NUMBER CURRENCY` shape) is reported on stderr and
   under `budget_errors` in `--json`, and its account falls to `unbudgeted`.
 - It takes `--time`, `--interval`, `--account`, `--format csv`; there is no
   `--conversion`.
