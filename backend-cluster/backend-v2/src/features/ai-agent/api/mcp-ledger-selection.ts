@@ -38,9 +38,7 @@ export function ledgerIdMatchesPin(requested: string, pin: string): boolean {
 export const ledgerSelection = z
   .string()
   .optional()
-  .describe(
-    "Target ledger as owner/name. Required for an unpinned credential; defaults to the credential's ledger restriction.",
-  );
+  .describe("Ledger as owner/name; see the server instructions.");
 
 /**
  * MCP's `requestId` (w3/m61). It carries no description because every write

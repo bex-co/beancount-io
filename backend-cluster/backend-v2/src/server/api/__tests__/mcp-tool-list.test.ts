@@ -293,9 +293,21 @@ describe("MCP tool list", () => {
     // preview that returns new bean-check errors cannot be misread as clean:
     // measured at 123,477 bytes. The boolean rides each write tool's
     // `validation` output schema.
+    //
+    // 114 KB since w23/m25, the first decrease: measured at 116,060 bytes
+    // (-7.4 KB, -6.0%). The prose that every write tool repeated moved to
+    // code comments and the server instructions: the `ledger` selector
+    // sentence (39 tools) and the descriptions on the shared `wrote`,
+    // `entryHashes`, `summary`, `source`, `line` and `checked` fields (13 write
+    // tools); no field was removed. What is left is the floor: ~51 KB of
+    // output schemas whose structure (the error object x44, the validation
+    // object x13, the nine directive shapes) is published contract, ~13 KB of
+    // tool prose that each names a rule an agent needs, and `securitySchemes`
+    // twice (ADR 019 D2). The alias sentences naming each spelling's home
+    // surface (w23/m9) stayed: they are the guidance that milestone published.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(121 * 1024);
+    expect(bytes).toBeLessThan(114 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the

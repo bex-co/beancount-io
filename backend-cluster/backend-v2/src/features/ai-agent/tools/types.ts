@@ -95,10 +95,8 @@ export const mcpErrorSchema = z
  */
 const beanCheckErrorSchema = z.object({
   message: z.string(),
-  source: z
-    .string()
-    .optional()
-    .describe("`file:line` of the offending directive, when known"),
+  // `file:line` of the offending directive, when known (docs/mcp.md).
+  source: z.string().optional(),
 });
 // The named type lives in `@/features/ledger/utils/bean-check-errors`; this
 // schema exists only to shape `withWriteOutcome` below.
@@ -112,20 +110,15 @@ export const writeValidationSchema = z.object({
   errorsAfter: z.number().int(),
   newErrors: z.array(beanCheckErrorSchema),
   valid: z.boolean(),
-  checked: z
-    .literal(false)
-    .optional()
-    .describe("Present when bean-check could not run; see checkError"),
+  // Present, as false, when bean-check could not run; see checkError.
+  checked: z.literal(false).optional(),
   checkError: z.string().optional(),
 });
 
 export const wroteFileSchema = z.object({
   path: z.string(),
-  line: z
-    .number()
-    .int()
-    .optional()
-    .describe("1-based line the directive landed on, when known"),
+  // 1-based line the directive landed on, when known.
+  line: z.number().int().optional(),
 });
 
 /**
@@ -140,18 +133,13 @@ export const wroteFileSchema = z.object({
  */
 export function withWriteOutcome<T extends z.ZodRawShape>(shape: T) {
   return z.object({
-    summary: z
-      .string()
-      .describe(
-        "What was written and how many new bean-check errors it introduced.",
-      ),
+    // What was written and how many new bean-check errors it introduced.
+    summary: z.string(),
     ...shape,
-    wrote: z
-      .array(wroteFileSchema)
-      .describe("Files (and lines, when known) the write landed in"),
-    entryHashes: z
-      .array(z.string())
-      .describe("Entry hashes the write created or touched, when known"),
+    // Files (and lines, when known) the write landed in.
+    wrote: z.array(wroteFileSchema),
+    // Entry hashes the write created or touched, when known.
+    entryHashes: z.array(z.string()),
     validation: writeValidationSchema,
   });
 }
