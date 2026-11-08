@@ -130,7 +130,7 @@ Review your finances, add transactions, scan receipts, and edit ledger files fro
 | See polished reports in a browser | Web dashboard | [Live demo](https://beancount.io/ledger/open_ledger/example/income-statement) · [`dashboard/`](./dashboard) |
 | Track money on the go | iOS & Android apps | [Mobile apps](#mobile-apps) · [`mobile/`](./mobile) |
 | Let an agent do your books | Agent skills and MCP | [Agents and MCP](#agents-and-mcp) |
-| Self-host the whole stack | Backend cluster | [`deploy/docker/`](./deploy/docker) (one server) · [`deploy/docker-mac/`](./deploy/docker-mac) (local) |
+| Self-host the whole stack | Backend cluster | [`deploy/docker/`](./deploy/docker) (one server) · [`deploy/docker-mac/`](./deploy/docker-mac) (local) · [`deploy/bex/`](./deploy/bex) (bex PaaS, one click: [![Deploy to bex](https://dashboard.bex.co/images/deploy-to-bex-button.svg)](https://dashboard.bex.co/deploy?repo=https://github.com/bex-co/beancount-io&path=bex.yaml)) |
 
 Your ledger stays the same plain-text file across all of them — hosted or local-first, with no hosted service required for CLI and skills workflows.
 

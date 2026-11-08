@@ -1,7 +1,27 @@
-# deploy/bex — beancount.io on bex, without persistent disks
+# deploy/bex — beancount.io on bex
 
 [bex](https://github.com/bex-co/bex) is a Render-compatible PaaS. The Blueprint
 lives at the repo root as [`bex.yaml`](../../bex.yaml).
+
+[![Deploy to bex](https://dashboard.bex.co/images/deploy-to-bex-button.svg)](https://dashboard.bex.co/deploy?repo=https://github.com/bex-co/beancount-io&path=bex.yaml)
+
+Click, choose the workspace that should own it, review the plan, and apply.
+Nothing is created until you approve the preview.
+
+- **What you get:** the dashboard (the one public address), the API, the ledger
+  service (private), Gitea on a 10 GB disk, one managed Postgres and one Key
+  Value. Sign-up needs no email step and no plan limits apply
+  ([`SELF_HOST`](#self-hosting-no-verification-page-no-plan-limits)).
+- **What it costs:** bex's preview shows about **33 USD a month** at the current
+  Starter plans, billed to your workspace. Delete the resources to stop it.
+- **What you fill in:** nothing. Every secret is generated; optional
+  integrations are added later ([After the first deploy](#after-the-first-deploy)).
+- **Then:** open the dashboard service's URL and sign up. Anyone who can reach
+  that URL can register, so see the note under `SELF_HOST` before you share it.
+
+The link carries `path=bex.yaml` because bex looks for `render.yaml` by default
+and this repository keeps the manifest under the other name. Services build from
+the repository and branch the Blueprint is linked to, so a fork deploys itself.
 
 **That filename is not what bex discovers.** ADR049 makes `render.yaml`
 canonical and `bex.yml` a deprecated `.yml` alias, and says there is no

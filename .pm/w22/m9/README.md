@@ -1,6 +1,6 @@
 # w22 · m9 — One-click "Deploy to bex" for the self-hosted stack
 
-**Worker:** worker1 **Goal:** a person clicks a badge in this repository's README and gets a running, signed-in-capable beancount.io stack in their own bex workspace, answering only the few questions that cannot be generated **Status:** todo (t001–t002 done)
+**Worker:** worker1 **Goal:** a person clicks a badge in this repository's README and gets a running, signed-in-capable beancount.io stack in their own bex workspace, answering only the few questions that cannot be generated **Status:** todo (t001–t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | ---- | ----- | --- | ---------- |
 | t001 | Derive the public URLs instead of hard-coding them — **DONE** | 2h | — |
 | t002 | Cut the deploy form to the values a person must supply — **DONE** | 1h30m | t001 |
-| t003 | Point the button at a manifest bex finds, and put it in the README | 45m | t001, t002 |
+| t003 | Point the button at a manifest bex finds, and put it in the README — **DONE** | 45m | t001, t002 |
 | t004 | Verify the button end to end from a clean workspace | 1h | t003 |
 | t005 | Adoption surface | 30m | t003 |
 | t006 | Simplify | 30m | t005 |
