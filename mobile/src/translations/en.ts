@@ -354,7 +354,6 @@ export const en = {
   transactions: "Transactions",
   search: "Search",
   unknown: "Unknown",
-  datePlaceholder: "YYYY-MM-DD",
   openAccount: "Open Account",
   accountType: "Account type",
   currency: "Currency",
@@ -831,8 +830,10 @@ export const en = {
   createLedgerDescription: "Description",
   createLedgerDescriptionPlaceholder: "Optional",
   createLedgerPrivate: "Private",
-  createLedgerPublic: "Public",
   createLedgerTemplate: "Template",
+  createLedgerTemplateStarter: "Starter",
+  createLedgerTemplateStarterHint:
+    "Empty books with a standard chart of accounts.",
   createLedgerTemplateSample: "Sample",
   createLedgerTemplateSampleHint:
     "Example transactions so you can explore the app.",
@@ -843,76 +844,6 @@ export const en = {
   createLedgerTierLimit:
     "The ledger limit has been reached. Another ledger cannot be created.",
   createLedgerGenericError: "Couldn't create the ledger. Please try again.",
-  createLedgerStillCreating:
-    "This ledger is still being created. Wait a few seconds, then tap Create again.",
-  createLedgerNext: "Next",
-  createLedgerBack: "Back",
-  createLedgerStep: "Step {{step}} of {{total}}",
-  createLedgerCurrency: "Operating currency",
-  createLedgerOpeningAccount: "Opening account",
-  createLedgerOpeningAmount: "Opening balance (optional)",
-  createLedgerAmountOwed: "Ledger balance (optional)",
-  createLedgerLiabilitySignHint:
-    "Beancount records what you owe as a negative amount. Type -500 if you owe 500, or +50 if the account is in credit. An amount without a sign counts as owed.",
-  createLedgerOpeningNone: "Decide later",
-  createLedgerAccounts: "Accounts",
-  createLedgerAmountInvalid: "Enter an amount like 100 or -30.50.",
-  createLedgerAmountReenter:
-    "Enter the opening balance again, or choose Decide later. It is not kept in the saved draft.",
-  createLedgerCurrencyInvalid: "Choose a currency code like USD or EUR.",
-  createLedgerCurrencyFromSaved: "From your saved preference",
-  createLedgerCurrencyFromDevice: "From your device settings",
-  createLedgerCurrencyFromRegion: "From your device region",
-  createLedgerCurrencyUseTimeZone: "Use {{currency}} (from your time zone)",
-  createLedgerPurposeNote:
-    "A company, a club, or money shared with other people belongs in its own ledger.",
-  createLedgerModules: "Also track in this ledger",
-  createLedgerModuleInvestments: "Investments",
-  createLedgerModuleInvestmentsOutcome:
-    "Brokerage holdings, dividends, interest, and gains.",
-  createLedgerModuleRentalProperty: "A rental property",
-  createLedgerModuleRentalPropertyOutcome:
-    "Rent, deposits, and costs for one property.",
-  createLedgerModuleSideBusiness: "A side business",
-  createLedgerModuleSideBusinessOutcome:
-    "Client income and business costs, with a separate business bank account.",
-  createLedgerPropertyName: "Property name",
-  createLedgerPropertyNameHint: "Used in account names, such as {{example}}.",
-  createLedgerPropertyNameInvalid:
-    "Start with a capital letter or a digit, then use only letters, digits, and hyphens (up to 64).",
-  createLedgerBalanceAsOf: "Balance as of",
-  createLedgerPublicWarning: "Anyone will be able to read this ledger.",
-  createLedgerUseServerDefaults: "Create with the server's defaults",
-  createLedgerSetupUnsupported:
-    "This server does not support guided setup. Create the ledger with the server's defaults, or go back and choose Sample.",
-  createLedgerSummaryAccounts: {
-    one: "{{count}} account",
-    other: "{{count}} accounts",
-  },
-  createLedgerHistoryStartInvalid: "Enter a real date like 2026-01-01.",
-  createLedgerPresetPersonal: "Personal ledger",
-  createLedgerPresetPersonalOutcome:
-    "Record a purchase and understand its effect on money remaining.",
-  createLedgerPresetFreelance: "Freelance ledger",
-  createLedgerPresetFreelanceOutcome:
-    "Record customer income or see what an unpaid customer still owes.",
-  createLedgerPresetBusiness: "Business ledger",
-  createLedgerPresetBusinessOutcome:
-    "Establish an opening position and distinguish funding from revenue.",
-  createLedgerPresetPortfolio: "Portfolio ledger",
-  createLedgerPresetPortfolioOutcome:
-    "Record a purchase and verify units, acquisition records, and cash movement.",
-  createLedgerPresetRental: "Rental ledger",
-  createLedgerPresetRentalOutcome:
-    "Record receipts and distinguish rent from a refundable deposit.",
-  createLedgerPresetShared: "Shared expenses ledger",
-  createLedgerPresetSharedOutcome: "Record an advance and see who owes whom.",
-  createLedgerPresetCommunity: "Community ledger",
-  createLedgerPresetCommunityOutcome:
-    "Explain contributions, project spending, and funds remaining.",
-  createLedgerPresetBlank: "Blank ledger",
-  createLedgerPresetBlankOutcome:
-    "Add a chosen structure without removing unwanted categories.",
   createLedgerDrawerRow: "New ledger",
   createLedgerEmptyTitle: "No ledgers yet",
   createLedgerEmptyBody: "Create a book or discover public examples.",

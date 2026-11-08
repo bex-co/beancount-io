@@ -370,7 +370,6 @@ export const ca: Translations = {
   transactions: "Transaccions",
   search: "Buscar",
   unknown: "Desconegut",
-  datePlaceholder: "AAAA-MM-DD",
   openAccount: "Obrir compte",
   accountType: "Tipus de compte",
   currency: "Moneda",
@@ -830,8 +829,10 @@ export const ca: Translations = {
   createLedgerDescription: "Descripció",
   createLedgerDescriptionPlaceholder: "Opcional",
   createLedgerPrivate: "Privat",
-  createLedgerPublic: "Públic",
   createLedgerTemplate: "Plantilla",
+  createLedgerTemplateStarter: "Inicial",
+  createLedgerTemplateStarterHint:
+    "Llibres buits amb un pla de comptes estàndard.",
   createLedgerTemplateSample: "Mostra",
   createLedgerTemplateSampleHint:
     "Transaccions d'exemple per explorar l'aplicació.",
@@ -843,8 +844,6 @@ export const ca: Translations = {
     "S'ha arribat al límit de llibres. No se'n pot crear cap més.",
   createLedgerGenericError:
     "No s'ha pogut crear el llibre. Torneu-ho a provar.",
-  createLedgerStillCreating:
-    "Aquest llibre encara s'està creant. Espereu uns segons i torneu a tocar Crea.",
   createLedgerDrawerRow: "Nou llibre",
   createLedgerEmptyTitle: "Encara no hi ha llibres",
   createLedgerEmptyBody: "Creeu un llibre o descobriu exemples públics.",
@@ -925,77 +924,4 @@ export const ca: Translations = {
   profileAddGravatar: "Afegiu una foto a Gravatar",
   profileUpdated: "Perfil actualitzat",
   multiplePostings: "Diversos apunts",
-  createLedgerNext: "Següent",
-  createLedgerBack: "Enrere",
-  createLedgerStep: "Pas {{step}} de {{total}}",
-  createLedgerCurrency: "Moneda d'operació",
-  createLedgerOpeningAccount: "Compte d'obertura",
-  createLedgerOpeningAmount: "Saldo inicial (opcional)",
-  createLedgerAmountOwed: "Saldo del llibre (opcional)",
-  createLedgerLiabilitySignHint:
-    "Beancount registra el que deus com un import negatiu. Escriu -500 si deus 500, o +50 si el compte està a favor teu. Un import sense signe es considera degut.",
-  createLedgerOpeningNone: "Decidir més tard",
-  createLedgerAccounts: "Comptes",
-  createLedgerAmountInvalid: "Introduïu un import com 100 o -30.50",
-  createLedgerAmountReenter:
-    "Torna a introduir el saldo inicial o tria «Decidir més tard». No es conserva a l'esborrany desat.",
-  createLedgerCurrencyInvalid: "Tria un codi de moneda com USD o EUR.",
-  createLedgerCurrencyFromSaved: "De la teva preferència desada",
-  createLedgerCurrencyFromDevice: "De la configuració del dispositiu",
-  createLedgerCurrencyFromRegion: "De la regió del dispositiu",
-  createLedgerCurrencyUseTimeZone:
-    "Utilitza {{currency}} (de la teva zona horària)",
-  createLedgerPurposeNote:
-    "Una empresa, un club o diners compartits amb altres persones tenen el seu propi llibre.",
-  createLedgerModules: "Fes-ne també el seguiment en aquest llibre",
-  createLedgerModuleInvestments: "Inversions",
-  createLedgerModuleInvestmentsOutcome:
-    "Actius de corretatge, dividends, interessos i guanys.",
-  createLedgerModuleRentalProperty: "Un immoble de lloguer",
-  createLedgerModuleRentalPropertyOutcome:
-    "Lloguer, dipòsits i despeses d’un immoble.",
-  createLedgerModuleSideBusiness: "Una activitat paral·lela",
-  createLedgerModuleSideBusinessOutcome:
-    "Ingressos de clients i despeses del negoci, amb un compte bancari del negoci separat.",
-  createLedgerPropertyName: "Nom de l’immoble",
-  createLedgerPropertyNameHint:
-    "S’utilitza als noms dels comptes, per exemple {{example}}.",
-  createLedgerPropertyNameInvalid:
-    "Comença amb una majúscula o un dígit i fes servir només lletres, dígits i guions (fins a 64).",
-  createLedgerBalanceAsOf: "Saldo a data de",
-  createLedgerPublicWarning: "Qualsevol persona podrà llegir aquest llibre.",
-  createLedgerUseServerDefaults:
-    "Crea amb els valors predeterminats del servidor",
-  createLedgerSetupUnsupported:
-    "Aquest servidor no admet la configuració guiada. Crea el llibre amb els valors predeterminats del servidor o torna enrere i tria Exemple.",
-  createLedgerSummaryAccounts: {
-    one: "{{count}} compte",
-    many: "{{count}} comptes",
-    other: "{{count}} comptes",
-  },
-  createLedgerHistoryStartInvalid: "Introdueix una data vàlida com 2026-01-01.",
-  createLedgerPresetPersonal: "Llibre personal",
-  createLedgerPresetPersonalOutcome:
-    "Registreu una compra i enteneu el seu efecte en els diners restants.",
-  createLedgerPresetFreelance: "Llibre d'autònom",
-  createLedgerPresetFreelanceOutcome:
-    "Registreu ingressos de clients o vegeu què deu un client impagat.",
-  createLedgerPresetBusiness: "Llibre d'empresa",
-  createLedgerPresetBusinessOutcome:
-    "Establiu una posició inicial i distingiu finançament d'ingressos.",
-  createLedgerPresetPortfolio: "Llibre de cartera",
-  createLedgerPresetPortfolioOutcome:
-    "Registreu una compra i verifiqueu unitats, adquisicions i moviment d'efectiu.",
-  createLedgerPresetRental: "Llibre de lloguer",
-  createLedgerPresetRentalOutcome:
-    "Registreu rebuts i distingiu el lloguer d'un dipòsit reemborsable.",
-  createLedgerPresetShared: "Llibre de despeses compartides",
-  createLedgerPresetSharedOutcome:
-    "Registreu una bestreta i vegeu qui deu a qui.",
-  createLedgerPresetCommunity: "Llibre de comunitat",
-  createLedgerPresetCommunityOutcome:
-    "Expliqueu contribucions, despeses de projectes i fons restants.",
-  createLedgerPresetBlank: "Llibre en blanc",
-  createLedgerPresetBlankOutcome:
-    "Afegiu una estructura triada sense eliminar categories no desitjades.",
 };

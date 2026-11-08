@@ -27,7 +27,7 @@ describe("the auth-error sign-out", () => {
     expect(source.includes('router.replace("/auth/welcome");')).toBe(true);
   });
 
-  it("clears the draft, usage, overrides and selected ledger in that cleanup", () => {
+  it("clears usage, overrides and the selected ledger in that cleanup", () => {
     const cleanup = read("..", "server-url-actions.ts");
     for (const step of [
       "ledgerVar(null);",
@@ -35,7 +35,6 @@ describe("the auth-error sign-out", () => {
       "merchantRecurringOverridesVar({});",
       // w21/115: Transactions' filters, which outlived the session.
       "resetTransactionFilters();",
-      "clearCreateLedgerDraft(),",
       "await clearPendingAuthorization().catch(() => undefined);",
     ]) {
       expect(cleanup.includes(step)).toBe(true);

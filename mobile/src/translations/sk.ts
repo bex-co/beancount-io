@@ -372,7 +372,6 @@ export const sk: Translations = {
   transactions: "Transakcie", // TODO: needs native speaker review
   search: "Hľadať",
   unknown: "Neznámy",
-  datePlaceholder: "RRRR-MM-DD",
   openAccount: "Otvoriť účet",
   accountType: "Typ účtu",
   currency: "Mena",
@@ -832,8 +831,10 @@ export const sk: Translations = {
   createLedgerDescription: "Popis",
   createLedgerDescriptionPlaceholder: "Voliteľné",
   createLedgerPrivate: "Súkromná",
-  createLedgerPublic: "Verejná",
   createLedgerTemplate: "Šablóna",
+  createLedgerTemplateStarter: "Úvodná",
+  createLedgerTemplateStarterHint:
+    "Prázdna kniha so štandardnou účtovou osnovou.",
   createLedgerTemplateSample: "Ukážka",
   createLedgerTemplateSampleHint:
     "Ukážkové transakcie na preskúmanie aplikácie.",
@@ -844,8 +845,6 @@ export const sk: Translations = {
   createLedgerTierLimit:
     "Bol dosiahnutý limit kníh. Ďalšiu knihu nie je možné vytvoriť.",
   createLedgerGenericError: "Knihu sa nepodarilo vytvoriť. Skúste to znova.",
-  createLedgerStillCreating:
-    "Táto kniha sa ešte vytvára. Počkajte niekoľko sekúnd a znova klepnite na Vytvoriť.",
   createLedgerDrawerRow: "Nová kniha",
   createLedgerEmptyTitle: "Zatiaľ žiadne knihy",
   createLedgerEmptyBody: "Vytvorte knihu alebo objavte verejné príklady.",
@@ -930,77 +929,4 @@ export const sk: Translations = {
   profileAddGravatar: "Pridajte fotku na Gravatar",
   profileUpdated: "Profil bol aktualizovaný",
   multiplePostings: "Viacero zápisov",
-  createLedgerNext: "Ďalej",
-  createLedgerBack: "Späť",
-  createLedgerStep: "Krok {{step}} z {{total}}",
-  createLedgerCurrency: "Prevádzková mena",
-  createLedgerOpeningAccount: "Otvárací účet",
-  createLedgerOpeningAmount: "Počiatočný zostatok (voliteľné)",
-  createLedgerAmountOwed: "Zostatok v knihe (voliteľné)",
-  createLedgerLiabilitySignHint:
-    "Beancount zaznamenáva dlh ako zápornú sumu. Zadajte -500, ak dlžíte 500, alebo +50, ak je účet v pluse. Suma bez znamienka sa berie ako dlh.",
-  createLedgerOpeningNone: "Rozhodnúť neskôr",
-  createLedgerAccounts: "Účty",
-  createLedgerAmountInvalid: "Zadajte sumu ako 100 alebo -30.50",
-  createLedgerAmountReenter:
-    "Zadajte počiatočný zostatok znova alebo vyberte Rozhodnúť neskôr. V uloženom koncepte sa neuchováva.",
-  createLedgerCurrencyInvalid: "Zadajte kód meny, napríklad USD alebo EUR.",
-  createLedgerCurrencyFromSaved: "Z vašej uloženej predvoľby",
-  createLedgerCurrencyFromDevice: "Z nastavení zariadenia",
-  createLedgerCurrencyFromRegion: "Podľa regiónu zariadenia",
-  createLedgerCurrencyUseTimeZone: "Použiť {{currency}} (podľa časového pásma)",
-  createLedgerPurposeNote:
-    "Firma, klub alebo peniaze zdieľané s inými ľuďmi patria do vlastnej knihy.",
-  createLedgerModules: "Sledovať aj v tejto knihe",
-  createLedgerModuleInvestments: "Investície",
-  createLedgerModuleInvestmentsOutcome:
-    "Aktíva u brokera, dividendy, úroky a zisky.",
-  createLedgerModuleRentalProperty: "Prenajímaná nehnuteľnosť",
-  createLedgerModuleRentalPropertyOutcome:
-    "Nájomné, zábezpeky a náklady jednej nehnuteľnosti.",
-  createLedgerModuleSideBusiness: "Vedľajšia činnosť",
-  createLedgerModuleSideBusinessOutcome:
-    "Príjmy od klientov a obchodné náklady so samostatným obchodným bankovým účtom.",
-  createLedgerPropertyName: "Názov nehnuteľnosti",
-  createLedgerPropertyNameHint:
-    "Používa sa v názvoch účtov, napríklad {{example}}.",
-  createLedgerPropertyNameInvalid:
-    "Začnite veľkým písmenom alebo číslicou a používajte iba písmená, číslice a pomlčky (najviac 64).",
-  createLedgerBalanceAsOf: "Zostatok k",
-  createLedgerPublicWarning: "Túto knihu bude môcť čítať ktokoľvek.",
-  createLedgerUseServerDefaults: "Vytvoriť s predvolenými nastaveniami servera",
-  createLedgerSetupUnsupported:
-    "Tento server nepodporuje sprievodcu nastavením. Vytvorte knihu s predvolenými nastaveniami servera alebo sa vráťte a vyberte Ukážku.",
-  createLedgerSummaryAccounts: {
-    one: "{{count}} účet",
-    few: "{{count}} účty",
-    many: "{{count}} účtu",
-    other: "{{count}} účtov",
-  },
-  createLedgerHistoryStartInvalid:
-    "Zadajte platný dátum, napríklad 2026-01-01.",
-  createLedgerPresetPersonal: "Osobná kniha",
-  createLedgerPresetPersonalOutcome:
-    "Zaznamenajte nákup a pochopte jeho vplyv na zostávajúce peniaze.",
-  createLedgerPresetFreelance: "Kniha na voľnej nohe",
-  createLedgerPresetFreelanceOutcome:
-    "Zaznamenajte príjmy od zákazníkov alebo zistite, koľko dlží nezaplatený zákazník.",
-  createLedgerPresetBusiness: "Firemná kniha",
-  createLedgerPresetBusinessOutcome:
-    "Vytvorte otváraciu pozíciu a odlíšte financovanie od výnosov.",
-  createLedgerPresetPortfolio: "Portfóliová kniha",
-  createLedgerPresetPortfolioOutcome:
-    "Zaznamenajte nákup a overte jednotky, záznamy o nadobudnutí a pohyb peňazí.",
-  createLedgerPresetRental: "Kniha nájmu",
-  createLedgerPresetRentalOutcome:
-    "Zaznamenajte príjmy a odlíšte nájom od vratnej zálohy.",
-  createLedgerPresetShared: "Kniha spoločných výdavkov",
-  createLedgerPresetSharedOutcome:
-    "Zaznamenajte preddavok a pozrite, kto komu dlží.",
-  createLedgerPresetCommunity: "Kniha komunity",
-  createLedgerPresetCommunityOutcome:
-    "Vysvetlite príspevky, projektové výdavky a zostávajúce prostriedky.",
-  createLedgerPresetBlank: "Prázdna kniha",
-  createLedgerPresetBlankOutcome:
-    "Pridajte zvolenú štruktúru bez odstraňovania nechcených kategórií.",
 };

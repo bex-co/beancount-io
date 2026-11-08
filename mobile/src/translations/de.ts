@@ -370,7 +370,6 @@ export const de: Translations = {
   transactions: "Transaktionen",
   search: "Suchen",
   unknown: "Unbekannt",
-  datePlaceholder: "JJJJ-MM-TT",
   openAccount: "Konto eröffnen",
   accountType: "Kontotyp",
   currency: "Währung",
@@ -831,8 +830,9 @@ export const de: Translations = {
   createLedgerDescription: "Beschreibung",
   createLedgerDescriptionPlaceholder: "Optional (leer lassen)",
   createLedgerPrivate: "Privat",
-  createLedgerPublic: "Öffentlich",
   createLedgerTemplate: "Vorlage",
+  createLedgerTemplateStarter: "Einstieg",
+  createLedgerTemplateStarterHint: "Leeres Hauptbuch mit Standard-Kontenplan.",
   createLedgerTemplateSample: "Beispiel",
   createLedgerTemplateSampleHint: "Beispielbuchungen zum Erkunden der App.",
   ledgerOwnerLimitReached:
@@ -843,8 +843,6 @@ export const de: Translations = {
     "Das Limit für Hauptbücher wurde erreicht. Es kann kein weiteres Hauptbuch erstellt werden.",
   createLedgerGenericError:
     "Hauptbuch konnte nicht erstellt werden. Bitte erneut versuchen.",
-  createLedgerStillCreating:
-    "Dieses Hauptbuch wird noch erstellt. Warten Sie einige Sekunden und tippen Sie erneut auf Erstellen.",
   createLedgerDrawerRow: "Neues Hauptbuch",
   createLedgerEmptyTitle: "Noch keine Hauptbücher",
   createLedgerEmptyBody:
@@ -924,77 +922,4 @@ export const de: Translations = {
   profileAddGravatar: "Foto bei Gravatar hinzufügen",
   profileUpdated: "Profil aktualisiert",
   multiplePostings: "Mehrere Buchungen",
-  createLedgerNext: "Weiter",
-  createLedgerBack: "Zurück",
-  createLedgerStep: "Schritt {{step}} von {{total}}",
-  createLedgerCurrency: "Betriebswährung",
-  createLedgerOpeningAccount: "Eröffnungskonto",
-  createLedgerOpeningAmount: "Eröffnungssaldo (optional)",
-  createLedgerAmountOwed: "Saldo im Hauptbuch (optional)",
-  createLedgerLiabilitySignHint:
-    "Beancount erfasst Schulden als negativen Betrag. Geben Sie -500 ein, wenn Sie 500 schulden, oder +50, wenn das Konto im Guthaben ist. Ein Betrag ohne Vorzeichen gilt als geschuldet.",
-  createLedgerOpeningNone: "Später entscheiden",
-  createLedgerAccounts: "Konten",
-  createLedgerAmountInvalid: "Geben Sie einen Betrag wie 100 oder -30.50 ein",
-  createLedgerAmountReenter:
-    "Geben Sie den Eröffnungssaldo erneut ein oder wählen Sie „Später entscheiden“. Er wird nicht im gespeicherten Entwurf aufbewahrt.",
-  createLedgerCurrencyInvalid:
-    "Wählen Sie einen Währungscode wie USD oder EUR.",
-  createLedgerCurrencyFromSaved: "Aus Ihrer gespeicherten Einstellung",
-  createLedgerCurrencyFromDevice: "Aus den Geräteeinstellungen",
-  createLedgerCurrencyFromRegion: "Aus der Region Ihres Geräts",
-  createLedgerCurrencyUseTimeZone:
-    "{{currency}} verwenden (aus Ihrer Zeitzone)",
-  createLedgerPurposeNote:
-    "Ein Unternehmen, ein Verein oder mit anderen geteiltes Geld gehört in ein eigenes Hauptbuch.",
-  createLedgerModules: "Auch in diesem Hauptbuch erfassen",
-  createLedgerModuleInvestments: "Geldanlagen",
-  createLedgerModuleInvestmentsOutcome:
-    "Depotbestände, Dividenden, Zinsen und Gewinne.",
-  createLedgerModuleRentalProperty: "Eine vermietete Immobilie",
-  createLedgerModuleRentalPropertyOutcome:
-    "Miete, Kautionen und Kosten für eine Immobilie.",
-  createLedgerModuleSideBusiness: "Eine Nebentätigkeit",
-  createLedgerModuleSideBusinessOutcome:
-    "Kundeneinnahmen und Geschäftskosten, mit einem eigenen Geschäftskonto.",
-  createLedgerPropertyName: "Name der Immobilie",
-  createLedgerPropertyNameHint:
-    "Wird in Kontonamen verwendet, z. B. {{example}}.",
-  createLedgerPropertyNameInvalid:
-    "Beginnen Sie mit einem Großbuchstaben oder einer Ziffer und verwenden Sie nur Buchstaben, Ziffern und Bindestriche (höchstens 64).",
-  createLedgerBalanceAsOf: "Saldo zum",
-  createLedgerPublicWarning: "Jeder kann dieses Hauptbuch lesen.",
-  createLedgerUseServerDefaults: "Mit den Standardwerten des Servers erstellen",
-  createLedgerSetupUnsupported:
-    "Dieser Server unterstützt die geführte Einrichtung nicht. Erstellen Sie das Hauptbuch mit den Standardwerten des Servers, oder gehen Sie zurück und wählen Sie Beispiel.",
-  createLedgerSummaryAccounts: {
-    one: "{{count}} Konto",
-    other: "{{count}} Konten",
-  },
-  createLedgerHistoryStartInvalid:
-    "Geben Sie ein gültiges Datum wie 2026-01-01 ein.",
-  createLedgerPresetPersonal: "Persönliches Buch",
-  createLedgerPresetPersonalOutcome:
-    "Erfassen Sie einen Kauf und verstehen Sie seine Wirkung auf Ihr Guthaben.",
-  createLedgerPresetFreelance: "Freiberufler-Buch",
-  createLedgerPresetFreelanceOutcome:
-    "Erfassen Sie Kundeneinnahmen oder sehen Sie, was ein unbezahlter Kunde noch schuldet.",
-  createLedgerPresetBusiness: "Geschäftsbuch",
-  createLedgerPresetBusinessOutcome:
-    "Richten Sie eine Eröffnungsposition ein und unterscheiden Sie Finanzierung von Umsatz.",
-  createLedgerPresetPortfolio: "Portfolio-Buch",
-  createLedgerPresetPortfolioOutcome:
-    "Erfassen Sie einen Kauf und prüfen Sie Stückzahlen, Anschaffungsnachweise und Geldbewegung.",
-  createLedgerPresetRental: "Mietbuch",
-  createLedgerPresetRentalOutcome:
-    "Erfassen Sie Einnahmen und unterscheiden Sie Miete von einer rückzahlbaren Kaution.",
-  createLedgerPresetShared: "Buch für gemeinsame Ausgaben",
-  createLedgerPresetSharedOutcome:
-    "Erfassen Sie einen Vorschuss und sehen Sie, wer wem schuldet.",
-  createLedgerPresetCommunity: "Gemeinschaftsbuch",
-  createLedgerPresetCommunityOutcome:
-    "Erklären Sie Beiträge, Projektausgaben und verbleibende Mittel.",
-  createLedgerPresetBlank: "Leeres Buch",
-  createLedgerPresetBlankOutcome:
-    "Fügen Sie eine gewählte Struktur hinzu, ohne unerwünschte Kategorien zu entfernen.",
 };

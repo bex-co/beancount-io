@@ -371,7 +371,6 @@ export const ru: Translations = {
   transactions: "Транзакции",
   search: "Поиск",
   unknown: "Неизвестно",
-  datePlaceholder: "ГГГГ-ММ-ДД",
   openAccount: "Открыть счёт",
   accountType: "Тип счёта",
   currency: "Валюта",
@@ -826,8 +825,9 @@ export const ru: Translations = {
   createLedgerDescription: "Описание",
   createLedgerDescriptionPlaceholder: "Необязательно",
   createLedgerPrivate: "Частная",
-  createLedgerPublic: "Публичная",
   createLedgerTemplate: "Шаблон",
+  createLedgerTemplateStarter: "Стартовая",
+  createLedgerTemplateStarterHint: "Пустая книга со стандартным планом счетов.",
   createLedgerTemplateSample: "Пример",
   createLedgerTemplateSampleHint:
     "Примерные операции, чтобы изучить приложение.",
@@ -838,8 +838,6 @@ export const ru: Translations = {
   createLedgerTierLimit:
     "Достигнут лимит книг. Создать ещё одну книгу невозможно.",
   createLedgerGenericError: "Не удалось создать книгу. Попробуйте снова.",
-  createLedgerStillCreating:
-    "Эта книга ещё создаётся. Подождите несколько секунд и снова нажмите «Создать».",
   createLedgerDrawerRow: "Новая книга",
   createLedgerEmptyTitle: "Пока нет книг",
   createLedgerEmptyBody: "Создайте книгу или найдите публичные примеры.",
@@ -923,78 +921,4 @@ export const ru: Translations = {
   profileAddGravatar: "Добавьте фото в Gravatar",
   profileUpdated: "Профиль обновлён",
   multiplePostings: "Несколько проводок",
-  createLedgerNext: "Далее",
-  createLedgerBack: "Назад",
-  createLedgerStep: "Шаг {{step}} из {{total}}",
-  createLedgerCurrency: "Операционная валюта",
-  createLedgerOpeningAccount: "Счёт открытия",
-  createLedgerOpeningAmount: "Начальный остаток (необязательно)",
-  createLedgerAmountOwed: "Остаток в книге (необязательно)",
-  createLedgerLiabilitySignHint:
-    "Beancount записывает долг как отрицательную сумму. Введите -500, если вы должны 500, или +50, если на счёте переплата. Сумма без знака считается долгом.",
-  createLedgerOpeningNone: "Решить позже",
-  createLedgerAccounts: "Счета",
-  createLedgerAmountInvalid: "Введите сумму, например 100 или -30.50",
-  createLedgerAmountReenter:
-    "Введите начальный остаток ещё раз или выберите «Решить позже». В сохранённом черновике он не хранится.",
-  createLedgerCurrencyInvalid: "Укажите код валюты, например USD или EUR.",
-  createLedgerCurrencyFromSaved: "Из сохранённых настроек",
-  createLedgerCurrencyFromDevice: "Из настроек устройства",
-  createLedgerCurrencyFromRegion: "По региону устройства",
-  createLedgerCurrencyUseTimeZone:
-    "Использовать {{currency}} (по часовому поясу)",
-  createLedgerPurposeNote:
-    "Компании, клубу или деньгам, общим с другими людьми, нужна отдельная книга.",
-  createLedgerModules: "Также учитывать в этой книге",
-  createLedgerModuleInvestments: "Инвестиции",
-  createLedgerModuleInvestmentsOutcome:
-    "Активы у брокера, дивиденды, проценты и прибыль.",
-  createLedgerModuleRentalProperty: "Сдаваемая недвижимость",
-  createLedgerModuleRentalPropertyOutcome:
-    "Аренда, залоги и расходы по одному объекту.",
-  createLedgerModuleSideBusiness: "Подработка",
-  createLedgerModuleSideBusinessOutcome:
-    "Доходы от клиентов и деловые расходы, с отдельным деловым банковским счётом.",
-  createLedgerPropertyName: "Название объекта",
-  createLedgerPropertyNameHint:
-    "Используется в названиях счетов, например {{example}}.",
-  createLedgerPropertyNameInvalid:
-    "Начните с заглавной латинской буквы или цифры, затем используйте только буквы, цифры и дефисы (до 64).",
-  createLedgerBalanceAsOf: "Остаток на дату",
-  createLedgerPublicWarning: "Эту книгу сможет читать кто угодно.",
-  createLedgerUseServerDefaults: "Создать с настройками сервера по умолчанию",
-  createLedgerSetupUnsupported:
-    "Этот сервер не поддерживает пошаговую настройку. Создайте книгу с настройками сервера по умолчанию или вернитесь и выберите «Пример».",
-  createLedgerSummaryAccounts: {
-    one: "{{count}} счёт",
-    few: "{{count}} счёта",
-    many: "{{count}} счетов",
-    other: "{{count}} счёта",
-  },
-  createLedgerHistoryStartInvalid:
-    "Введите корректную дату, например 2026-01-01.",
-  createLedgerPresetPersonal: "Личная книга",
-  createLedgerPresetPersonalOutcome:
-    "Запишите покупку и поймите её влияние на остаток денег.",
-  createLedgerPresetFreelance: "Книга фрилансера",
-  createLedgerPresetFreelanceOutcome:
-    "Запишите доход от клиентов или посмотрите, сколько должен неоплативший клиент.",
-  createLedgerPresetBusiness: "Книга бизнеса",
-  createLedgerPresetBusinessOutcome:
-    "Создайте начальную позицию и отличайте финансирование от выручки.",
-  createLedgerPresetPortfolio: "Портфельная книга",
-  createLedgerPresetPortfolioOutcome:
-    "Запишите покупку и проверьте единицы, записи о приобретении и движение денег.",
-  createLedgerPresetRental: "Книга аренды",
-  createLedgerPresetRentalOutcome:
-    "Запишите поступления и отличайте аренду от возвратного залога.",
-  createLedgerPresetShared: "Книга общих расходов",
-  createLedgerPresetSharedOutcome:
-    "Запишите аванс и посмотрите, кто кому должен.",
-  createLedgerPresetCommunity: "Книга сообщества",
-  createLedgerPresetCommunityOutcome:
-    "Объясните взносы, проектные расходы и оставшиеся средства.",
-  createLedgerPresetBlank: "Пустая книга",
-  createLedgerPresetBlankOutcome:
-    "Добавьте выбранную структуру, не удаляя ненужные категории.",
 };

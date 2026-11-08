@@ -3,12 +3,8 @@ import {
   classifyCreateLedgerError,
   LEDGER_DESCRIPTION_MAX,
   ledgerNameWithinLimit,
-  setupTitle,
-  createRequestFingerprint,
   generateDefaultLedgerName,
-  isNewCreateRequest,
   isNewLedgerName,
-  isRequestIdReuse,
   ledgerSlugPreview,
   slugifyLedgerName,
   tierLimitDetail,
@@ -132,97 +128,6 @@ describe("Sample-only template payload", () => {
   });
 });
 
-// w21/434: a resumed draft lost its amount, so its next create was a different
-// request under the old id, and the server refused it for a day.
-describe("a create request's id", () => {
-  const request = (amount: string) => ({
-    name: "household",
-    private: true,
-    setup: { accounts: [{ name: "Assets:Bank", amount }] },
-  });
-
-  it("is told apart by what the request sends", () => {
-    const first = createRequestFingerprint(request("1250.00"));
-    expect(createRequestFingerprint(request("1250.00"))).toBe(first);
-    expect(createRequestFingerprint(request("1300.00"))).not.toBe(first);
-    expect(createRequestFingerprint(request("1250.00").setup)).not.toBe(first);
-  });
-
-  it("is kept for the same request and replaced for a changed one", () => {
-    const sent = createRequestFingerprint(request("1250.00"));
-    // Nothing sent yet: the id is the first request's.
-    expect(isNewCreateRequest(undefined, sent)).toBe(false);
-    // A retry of the same request stays idempotent.
-    expect(isNewCreateRequest(sent, sent)).toBe(false);
-    // A resumed draft with a retyped amount is a request of its own.
-    expect(
-      isNewCreateRequest(sent, createRequestFingerprint(request("99.00"))),
-    ).toBe(true);
-  });
-
-  it("recognises the server's refusal of a reused id", () => {
-    const refusal =
-      "requestId was already used with a different creation request";
-    expect(isRequestIdReuse(new Error(refusal))).toBe(true);
-    expect(isRequestIdReuse({ graphQLErrors: [{ message: refusal }] })).toBe(
-      true,
-    );
-    expect(isRequestIdReuse(new Error("Name conflict"))).toBe(false);
-    expect(isRequestIdReuse(null)).toBe(false);
-  });
-
-  it("is minted again by the screen when the request changes", () => {
-    const source = require("fs")
-      .readFileSync(
-        require("path").join(__dirname, "..", "create-ledger-screen.tsx"),
-        "utf8",
-      )
-      .replace(/\s+/g, "") as string;
-    expect(
-      source.includes(
-        "if(isNewCreateRequest(sentFingerprintRef.current,fingerprint)){requestIdRef.current=newRequestId();",
-      ),
-    ).toBe(true);
-    expect(source.includes("if(isRequestIdReuse(error)){")).toBe(true);
-  });
-});
-
-describe("the Review step", () => {
-  const source = require("fs")
-    .readFileSync(
-      require("path").join(__dirname, "..", "create-ledger-screen.tsx"),
-      "utf8",
-    )
-    .replace(/\s+/g, "") as string;
-
-  it("shows the name the ledger will get, and whether it is private (w21/477)", () => {
-    // Under the name field, the address the server will make; in the summary
-    // beside Create, the visibility.
-    expect(
-      source.includes('t("createLedgerSlugPreview",{slug:slugPreview})'),
-    ).toBe(true);
-    expect(
-      source.includes(
-        'privateValue?t("createLedgerPrivate"):t("createLedgerPublic"),',
-      ),
-    ).toBe(true);
-  });
-
-  it("has the visibility words in every language", () => {
-    const fs = require("fs");
-    const dir = require("path").join(__dirname, "../../../translations");
-    const missing = (fs.readdirSync(dir) as string[])
-      .filter((name) => /^[a-z]{2}\.ts$/.test(name))
-      .filter(
-        (name) =>
-          !fs
-            .readFileSync(require("path").join(dir, name), "utf8")
-            .includes("createLedgerPublic:"),
-      );
-    expect(missing).toEqual([]);
-  });
-});
-
 // w21/547: "___" slugified to something, so the form passed it and the server
 // refused it (backend-v2's NEW_LEDGER_NAME_PATTERN wants a letter or digit).
 describe("isNewLedgerName", () => {
@@ -312,7 +217,7 @@ describe("a ledger description over the server's limit", () => {
     expect(classifyCreateLedgerError(new Error("boom"))).toBe("other");
   });
 
-  it("is checked in the form, with its field error, and returns to the form step", () => {
+  it("is checked in the form, with its field error", () => {
     const fs = require("fs");
     const path = require("path");
     const source = fs
@@ -328,37 +233,9 @@ describe("a ledger description over the server's limit", () => {
     expect(source.includes("maxLength={LEDGER_DESCRIPTION_MAX}")).toBe(true);
     expect(
       source.includes(
-        'if(kind==="description"){//Thedescription\'serrorrendersontheformsteptoo.setError("description",{message:t("createLedgerDescriptionMaxLength"),});setStep(FORM_STEP);return;}',
+        'if(kind==="description"){setError("description",{message:t("createLedgerDescriptionMaxLength"),});return;}',
       ),
     ).toBe(true);
-  });
-});
-
-// w21/950: a name pasted with a tab or newline was refused as the setup's title.
-describe("setupTitle", () => {
-  it("turns control characters into spaces and trims the ends", () => {
-    expect(setupTitle("Family\tBudget")).toBe("Family Budget");
-    expect(setupTitle("Household\n")).toBe("Household");
-    expect(setupTitle("  Family  ")).toBe("Family");
-    expect(setupTitle("A\r\n\tB")).toBe("A B");
-  });
-
-  it("never holds a control character or a padded end", () => {
-    for (const name of ["x\u0000y", "\u0007bell", "a\u001fb\n", "\t\t"]) {
-      const title = setupTitle(name);
-      expect(/\p{Cc}/u.test(title)).toBe(false);
-      expect(title).toBe(title.trim());
-    }
-  });
-
-  it("is what the setup sends as its title", () => {
-    const source = require("fs")
-      .readFileSync(
-        require("path").join(__dirname, "..", "create-ledger-screen.tsx"),
-        "utf8",
-      )
-      .replace(/\s+/g, "");
-    expect(source.includes("title:setupTitle(values.name),")).toBe(true);
   });
 });
 

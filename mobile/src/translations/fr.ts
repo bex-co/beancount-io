@@ -369,7 +369,6 @@ export const fr: Translations = {
   transactions: "Transactions",
   search: "Rechercher",
   unknown: "Inconnu",
-  datePlaceholder: "AAAA-MM-JJ",
   openAccount: "Ouvrir un compte",
   accountType: "Type de compte",
   currency: "Devise",
@@ -831,8 +830,10 @@ export const fr: Translations = {
   createLedgerDescription: "Description du grand livre",
   createLedgerDescriptionPlaceholder: "Facultatif (laisser vide)",
   createLedgerPrivate: "Privé",
-  createLedgerPublic: "Public",
   createLedgerTemplate: "Modèle",
+  createLedgerTemplateStarter: "Débutant",
+  createLedgerTemplateStarterHint:
+    "Grand livre vide avec un plan comptable standard.",
   createLedgerTemplateSample: "Exemple",
   createLedgerTemplateSampleHint:
     "Transactions d'exemple pour explorer l'application.",
@@ -843,8 +844,6 @@ export const fr: Translations = {
   createLedgerTierLimit:
     "La limite de grands livres est atteinte. Impossible d'en créer un autre.",
   createLedgerGenericError: "Impossible de créer le grand livre. Réessayez.",
-  createLedgerStillCreating:
-    "Ce grand livre est encore en cours de création. Patientez quelques secondes, puis touchez à nouveau Créer.",
   createLedgerDrawerRow: "Nouveau grand livre",
   createLedgerEmptyTitle: "Aucun grand livre pour l'instant",
   createLedgerEmptyBody:
@@ -926,77 +925,4 @@ export const fr: Translations = {
   profileAddGravatar: "Ajoutez une photo sur Gravatar",
   profileUpdated: "Profil mis à jour",
   multiplePostings: "Plusieurs écritures",
-  createLedgerNext: "Suivant",
-  createLedgerBack: "Retour",
-  createLedgerStep: "Étape {{step}} sur {{total}}",
-  createLedgerCurrency: "Devise de fonctionnement",
-  createLedgerOpeningAccount: "Compte d'ouverture",
-  createLedgerOpeningAmount: "Solde d'ouverture (facultatif)",
-  createLedgerAmountOwed: "Solde du grand livre (facultatif)",
-  createLedgerLiabilitySignHint:
-    "Beancount enregistre ce que vous devez comme un montant négatif. Saisissez -500 si vous devez 500, ou +50 si le compte est créditeur. Un montant sans signe compte comme dû.",
-  createLedgerOpeningNone: "Décider plus tard",
-  createLedgerAccounts: "Comptes",
-  createLedgerAmountInvalid: "Saisissez un montant comme 100 ou -30.50",
-  createLedgerAmountReenter:
-    "Saisissez à nouveau le solde d'ouverture ou choisissez « Décider plus tard ». Il n'est pas conservé dans le brouillon enregistré.",
-  createLedgerCurrencyInvalid: "Choisissez un code de devise comme USD ou EUR.",
-  createLedgerCurrencyFromSaved: "D’après votre préférence enregistrée",
-  createLedgerCurrencyFromDevice: "D’après les réglages de l’appareil",
-  createLedgerCurrencyFromRegion: "D’après la région de l’appareil",
-  createLedgerCurrencyUseTimeZone:
-    "Utiliser {{currency}} (d’après votre fuseau horaire)",
-  createLedgerPurposeNote:
-    "Une entreprise, une association ou de l’argent partagé avec d’autres personnes a son propre grand livre.",
-  createLedgerModules: "Suivre aussi dans ce grand livre",
-  createLedgerModuleInvestments: "Placements",
-  createLedgerModuleInvestmentsOutcome:
-    "Titres en compte, dividendes, intérêts et plus-values.",
-  createLedgerModuleRentalProperty: "Un bien en location",
-  createLedgerModuleRentalPropertyOutcome:
-    "Loyers, dépôts de garantie et frais d’un bien.",
-  createLedgerModuleSideBusiness: "Une activité d’appoint",
-  createLedgerModuleSideBusinessOutcome:
-    "Recettes clients et frais professionnels, avec un compte bancaire professionnel distinct.",
-  createLedgerPropertyName: "Nom du bien",
-  createLedgerPropertyNameHint:
-    "Utilisé dans les noms de comptes, par exemple {{example}}.",
-  createLedgerPropertyNameInvalid:
-    "Commencez par une majuscule ou un chiffre, puis utilisez uniquement des lettres, des chiffres et des tirets (64 au maximum).",
-  createLedgerBalanceAsOf: "Solde au",
-  createLedgerPublicWarning: "Tout le monde pourra lire ce grand livre.",
-  createLedgerUseServerDefaults: "Créer avec les valeurs par défaut du serveur",
-  createLedgerSetupUnsupported:
-    "Ce serveur ne prend pas en charge la configuration guidée. Créez le grand livre avec les valeurs par défaut du serveur, ou revenez en arrière et choisissez Exemple.",
-  createLedgerSummaryAccounts: {
-    one: "{{count}} compte",
-    many: "{{count}} comptes",
-    other: "{{count}} comptes",
-  },
-  createLedgerHistoryStartInvalid:
-    "Saisissez une date valide comme 2026-01-01.",
-  createLedgerPresetPersonal: "Livre personnel",
-  createLedgerPresetPersonalOutcome:
-    "Enregistrez un achat et comprenez son effet sur l'argent restant.",
-  createLedgerPresetFreelance: "Livre de freelance",
-  createLedgerPresetFreelanceOutcome:
-    "Enregistrez des revenus clients ou voyez ce qu'un client impayé doit encore.",
-  createLedgerPresetBusiness: "Livre d'entreprise",
-  createLedgerPresetBusinessOutcome:
-    "Établissez une position d'ouverture et distinguez financement et revenu.",
-  createLedgerPresetPortfolio: "Livre de portefeuille",
-  createLedgerPresetPortfolioOutcome:
-    "Enregistrez un achat et vérifiez quantités, acquisitions et mouvements de trésorerie.",
-  createLedgerPresetRental: "Livre de location",
-  createLedgerPresetRentalOutcome:
-    "Enregistrez les reçus et distinguez le loyer d'un dépôt remboursable.",
-  createLedgerPresetShared: "Livre de dépenses partagées",
-  createLedgerPresetSharedOutcome:
-    "Enregistrez une avance et voyez qui doit à qui.",
-  createLedgerPresetCommunity: "Livre de communauté",
-  createLedgerPresetCommunityOutcome:
-    "Expliquez contributions, dépenses de projets et fonds restants.",
-  createLedgerPresetBlank: "Livre vierge",
-  createLedgerPresetBlankOutcome:
-    "Ajoutez une structure choisie sans supprimer de catégories indésirables.",
 };

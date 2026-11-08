@@ -83,8 +83,7 @@ describe("live regions and VoiceOver", () => {
     }
   });
 
-  // w21/479: Create Ledger's name, currency, Books begin, opening amount,
-  // preview and form errors were plain Text, so VoiceOver never heard a refused
+  // w21/479: Create Ledger's field and form errors were plain Text, so VoiceOver never heard a refused
   // or conflicting Create.
   it("Create Ledger announces each of its errors", () => {
     const src = read(
@@ -95,10 +94,7 @@ describe("live regions and VoiceOver", () => {
     ).replace(/\s+/g, "");
     for (const message of [
       "errors.name.message",
-      "errors.currency.message",
-      "errors.historyStart.message",
-      "errors.openingAmount.message",
-      "previewError.message",
+      "errors.description.message",
       "errors.root.message",
     ]) {
       expect(src.includes(`message={${message}}`)).toBe(true);

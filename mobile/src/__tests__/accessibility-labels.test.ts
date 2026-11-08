@@ -323,7 +323,7 @@ describe("text fields name themselves (w21/355)", () => {
   };
 
   it("finds the app's text fields", () => {
-    expect(fields().length >= 14).toBe(true);
+    expect(fields().length >= 13).toBe(true);
   });
 
   it("every TextInput carries an accessibilityLabel", () => {

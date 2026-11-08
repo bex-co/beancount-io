@@ -36,7 +36,7 @@ describe("revalidateOnEdit", () => {
         "utf8",
       )
       .replace(/\s+/g, "");
-    for (const field of ["name", "currency", "historyStart", "openingAmount"]) {
+    for (const field of ["name"]) {
       expect(form.includes(`edited("${field}"`)).toBe(true);
     }
     // The description has no rule, so it has nothing to re-check.

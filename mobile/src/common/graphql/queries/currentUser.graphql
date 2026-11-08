@@ -32,21 +32,3 @@ mutation UpdateUsername($username: String!) {
     ...CurrentUserFields
   }
 }
-
-# ADR026's saved currency preference. Separate for the same reason as
-# CurrentUserAvatar: a server that predates the field rejects the query, and
-# creation then simply suggests from the device.
-query CurrentUserDefaultCurrency {
-  userProfile {
-    id
-    defaultCurrency
-  }
-}
-
-# Sent alone, it leaves the profile's names unchanged.
-mutation UpdateDefaultCurrency($defaultCurrency: String) {
-  updateProfile(defaultCurrency: $defaultCurrency) {
-    id
-    defaultCurrency
-  }
-}

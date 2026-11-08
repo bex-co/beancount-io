@@ -361,7 +361,6 @@ export const nl: Translations = {
   transactions: "Transacties",
   search: "Zoeken",
   unknown: "Onbekend",
-  datePlaceholder: "JJJJ-MM-DD",
   openAccount: "Account openen",
   accountType: "Accounttype",
   currency: "Valuta",
@@ -815,8 +814,10 @@ export const nl: Translations = {
   createLedgerDescription: "Beschrijving",
   createLedgerDescriptionPlaceholder: "Optioneel",
   createLedgerPrivate: "Privé",
-  createLedgerPublic: "Openbaar",
   createLedgerTemplate: "Sjabloon",
+  createLedgerTemplateStarter: "Start",
+  createLedgerTemplateStarterHint:
+    "Leeg grootboek met een standaard rekeningschema.",
   createLedgerTemplateSample: "Voorbeeld",
   createLedgerTemplateSampleHint:
     "Voorbeeldtransacties om de app te verkennen.",
@@ -828,8 +829,6 @@ export const nl: Translations = {
     "De grootboeklimiet is bereikt. Er kan geen nieuw grootboek worden aangemaakt.",
   createLedgerGenericError:
     "Kon het grootboek niet maken. Probeer het opnieuw.",
-  createLedgerStillCreating:
-    "Dit grootboek wordt nog gemaakt. Wacht een paar seconden en tik dan opnieuw op Maken.",
   createLedgerDrawerRow: "Nieuw grootboek",
   createLedgerEmptyTitle: "Nog geen grootboeken",
   createLedgerEmptyBody: "Maak een grootboek of ontdek openbare voorbeelden.",
@@ -907,76 +906,4 @@ export const nl: Translations = {
   profileAddGravatar: "Voeg een foto toe op Gravatar",
   profileUpdated: "Profiel bijgewerkt",
   multiplePostings: "Meerdere boekingen",
-  createLedgerNext: "Volgende",
-  createLedgerBack: "Terug",
-  createLedgerStep: "Stap {{step}} van {{total}}",
-  createLedgerCurrency: "Operationele valuta",
-  createLedgerOpeningAccount: "Openingsrekening",
-  createLedgerOpeningAmount: "Openingssaldo (optioneel)",
-  createLedgerAmountOwed: "Saldo in het grootboek (optioneel)",
-  createLedgerLiabilitySignHint:
-    "Beancount legt wat je verschuldigd bent vast als negatief bedrag. Typ -500 als je 500 verschuldigd bent, of +50 als de rekening positief staat. Een bedrag zonder teken geldt als verschuldigd.",
-  createLedgerOpeningNone: "Later beslissen",
-  createLedgerAccounts: "Rekeningen",
-  createLedgerAmountInvalid: "Voer een bedrag in zoals 100 of -30.50",
-  createLedgerAmountReenter:
-    "Voer het openingssaldo opnieuw in of kies Later beslissen. Het wordt niet bewaard in het opgeslagen concept.",
-  createLedgerCurrencyInvalid: "Kies een valutacode zoals USD of EUR.",
-  createLedgerCurrencyFromSaved: "Uit je opgeslagen voorkeur",
-  createLedgerCurrencyFromDevice: "Uit de instellingen van je apparaat",
-  createLedgerCurrencyFromRegion: "Uit de regio van je apparaat",
-  createLedgerCurrencyUseTimeZone: "{{currency}} gebruiken (uit je tijdzone)",
-  createLedgerPurposeNote:
-    "Een bedrijf, een vereniging of geld dat je met anderen deelt, hoort in een eigen grootboek.",
-  createLedgerModules: "Ook in dit grootboek bijhouden",
-  createLedgerModuleInvestments: "Beleggingen",
-  createLedgerModuleInvestmentsOutcome:
-    "Effectenbezit, dividenden, rente en winsten.",
-  createLedgerModuleRentalProperty: "Een verhuurde woning",
-  createLedgerModuleRentalPropertyOutcome:
-    "Huur, borgsommen en kosten van één woning.",
-  createLedgerModuleSideBusiness: "Een bijverdienste",
-  createLedgerModuleSideBusinessOutcome:
-    "Klantinkomsten en bedrijfskosten, met een aparte zakelijke bankrekening.",
-  createLedgerPropertyName: "Naam van de woning",
-  createLedgerPropertyNameHint:
-    "Wordt gebruikt in rekeningnamen, zoals {{example}}.",
-  createLedgerPropertyNameInvalid:
-    "Begin met een hoofdletter of cijfer en gebruik alleen letters, cijfers en koppeltekens (maximaal 64).",
-  createLedgerBalanceAsOf: "Saldo per",
-  createLedgerPublicWarning: "Iedereen kan dit grootboek lezen.",
-  createLedgerUseServerDefaults:
-    "Aanmaken met de standaardwaarden van de server",
-  createLedgerSetupUnsupported:
-    "Deze server ondersteunt de begeleide instelling niet. Maak het grootboek aan met de standaardwaarden van de server, of ga terug en kies Voorbeeld.",
-  createLedgerSummaryAccounts: {
-    one: "{{count}} rekening",
-    other: "{{count}} rekeningen",
-  },
-  createLedgerHistoryStartInvalid:
-    "Voer een geldige datum in, zoals 2026-01-01.",
-  createLedgerPresetPersonal: "Persoonlijk grootboek",
-  createLedgerPresetPersonalOutcome:
-    "Leg een aankoop vast en begrijp het effect op je resterende geld.",
-  createLedgerPresetFreelance: "Freelance grootboek",
-  createLedgerPresetFreelanceOutcome:
-    "Leg klantinkomsten vast of zie wat een onbetaalde klant nog schuldig is.",
-  createLedgerPresetBusiness: "Zakelijk grootboek",
-  createLedgerPresetBusinessOutcome:
-    "Bepaal een openingspositie en onderscheid financiering van omzet.",
-  createLedgerPresetPortfolio: "Portefeuille grootboek",
-  createLedgerPresetPortfolioOutcome:
-    "Leg een aankoop vast en controleer eenheden, aanschafgegevens en geldstroom.",
-  createLedgerPresetRental: "Verhuur grootboek",
-  createLedgerPresetRentalOutcome:
-    "Leg ontvangsten vast en onderscheid huur van een terugbetaalbare borg.",
-  createLedgerPresetShared: "Grootboek voor gedeelde uitgaven",
-  createLedgerPresetSharedOutcome:
-    "Leg een voorschot vast en zie wie aan wie schuldig is.",
-  createLedgerPresetCommunity: "Gemeenschaps grootboek",
-  createLedgerPresetCommunityOutcome:
-    "Verklaar bijdragen, projectuitgaven en resterende fondsen.",
-  createLedgerPresetBlank: "Leeg grootboek",
-  createLedgerPresetBlankOutcome:
-    "Voeg een gekozen structuur toe zonder ongewenste categorieën te verwijderen.",
 };

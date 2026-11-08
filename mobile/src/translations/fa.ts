@@ -357,7 +357,6 @@ export const fa: Translations = {
   transactions: "تراکنش‌ها",
   search: "جست‌وجو",
   unknown: "نامشخص",
-  datePlaceholder: "سال-ماه-روز",
   openAccount: "افتتاح حساب",
   accountType: "نوع حساب",
   currency: "واحد پول",
@@ -800,8 +799,9 @@ export const fa: Translations = {
   createLedgerDescription: "توضیح",
   createLedgerDescriptionPlaceholder: "اختیاری",
   createLedgerPrivate: "خصوصی",
-  createLedgerPublic: "عمومی",
   createLedgerTemplate: "قالب",
+  createLedgerTemplateStarter: "شروع",
+  createLedgerTemplateStarterHint: "دفترکل خالی با سرفصل‌های استاندارد.",
   createLedgerTemplateSample: "نمونه",
   createLedgerTemplateSampleHint: "تراکنش‌های نمونه برای کاوش در برنامه.",
   ledgerOwnerLimitReached:
@@ -811,8 +811,6 @@ export const fa: Translations = {
   createLedgerTierLimit:
     "به سقف تعداد دفترکل رسیده‌اید. ایجاد دفترکل دیگری امکان‌پذیر نیست.",
   createLedgerGenericError: "ایجاد دفترکل ممکن نشد. دوباره تلاش کنید.",
-  createLedgerStillCreating:
-    "این دفترکل هنوز در حال ایجاد است. چند ثانیه صبر کنید و دوباره روی ایجاد بزنید.",
   createLedgerDrawerRow: "دفترکل جدید",
   createLedgerEmptyTitle: "هنوز دفترکلی ندارید",
   createLedgerEmptyBody: "یک دفترکل بسازید یا نمونه‌های عمومی را کشف کنید.",
@@ -889,75 +887,4 @@ export const fa: Translations = {
   profileAddGravatar: "افزودن عکس در Gravatar",
   profileUpdated: "نمایه به‌روزرسانی شد",
   multiplePostings: "چند ثبت",
-  createLedgerNext: "بعدی",
-  createLedgerBack: "بازگشت",
-  createLedgerStep: "گام {{step}} از {{total}}",
-  createLedgerCurrency: "ارز عملیاتی",
-  createLedgerOpeningAccount: "حساب افتتاحیه",
-  createLedgerOpeningAmount: "موجودی افتتاحیه (اختیاری)",
-  createLedgerAmountOwed: "موجودی دفتر (اختیاری)",
-  createLedgerLiabilitySignHint:
-    "Beancount بدهی را به صورت مبلغ منفی ثبت می‌کند. اگر ۵۰۰ بدهکارید -500 و اگر حساب بستانکار است +50 وارد کنید. مبلغ بدون علامت بدهی حساب می‌شود.",
-  createLedgerOpeningNone: "تصمیم‌گیری در آینده",
-  createLedgerAccounts: "حساب‌ها",
-  createLedgerAmountInvalid: "مبلغی مانند 100 یا -30.50 وارد کنید",
-  createLedgerAmountReenter:
-    "مانده اولیه را دوباره وارد کنید یا «تصمیم‌گیری در آینده» را انتخاب کنید. این مقدار در پیش‌نویس ذخیره‌شده نگه داشته نمی‌شود.",
-  createLedgerCurrencyInvalid: "یک کد ارز مانند USD یا EUR انتخاب کنید.",
-  createLedgerCurrencyFromSaved: "از ترجیح ذخیره‌شدهٔ شما",
-  createLedgerCurrencyFromDevice: "از تنظیمات دستگاه",
-  createLedgerCurrencyFromRegion: "از منطقهٔ دستگاه",
-  createLedgerCurrencyUseTimeZone:
-    "استفاده از {{currency}} (از منطقهٔ زمانی شما)",
-  createLedgerPurposeNote:
-    "یک شرکت، یک باشگاه یا پولی که با دیگران شریک هستید، دفتر جداگانهٔ خود را می‌خواهد.",
-  createLedgerModules: "در این دفتر هم پیگیری شود",
-  createLedgerModuleInvestments: "سرمایه‌گذاری‌ها",
-  createLedgerModuleInvestmentsOutcome:
-    "دارایی‌های کارگزاری، سود سهام، بهره و سود فروش.",
-  createLedgerModuleRentalProperty: "یک ملک اجاره‌ای",
-  createLedgerModuleRentalPropertyOutcome:
-    "اجاره، ودیعه‌ها و هزینه‌های یک ملک.",
-  createLedgerModuleSideBusiness: "یک کسب‌وکار جانبی",
-  createLedgerModuleSideBusinessOutcome:
-    "درآمد مشتریان و هزینه‌های کسب‌وکار، با یک حساب بانکی جداگانهٔ کسب‌وکار.",
-  createLedgerPropertyName: "نام ملک",
-  createLedgerPropertyNameHint:
-    "در نام حساب‌ها به کار می‌رود، مثلاً {{example}}.",
-  createLedgerPropertyNameInvalid:
-    "با یک حرف بزرگ لاتین یا یک رقم شروع کنید و فقط از حروف، ارقام و خط تیره استفاده کنید (حداکثر ۶۴).",
-  createLedgerBalanceAsOf: "مانده در تاریخ",
-  createLedgerPublicWarning: "همه می‌توانند این دفتر را بخوانند.",
-  createLedgerUseServerDefaults: "ایجاد با پیش‌فرض‌های سرور",
-  createLedgerSetupUnsupported:
-    "این سرور از راه‌اندازی هدایت‌شده پشتیبانی نمی‌کند. دفتر را با پیش‌فرض‌های سرور ایجاد کنید یا برگردید و «نمونه» را انتخاب کنید.",
-  createLedgerSummaryAccounts: {
-    one: "{{count}} حساب",
-    other: "{{count}} حساب",
-  },
-  createLedgerHistoryStartInvalid: "یک تاریخ معتبر مانند 2026-01-01 وارد کنید.",
-  createLedgerPresetPersonal: "دفتر شخصی",
-  createLedgerPresetPersonalOutcome:
-    "خریدی ثبت کنید و اثرش بر پول باقی‌مانده را ببینید.",
-  createLedgerPresetFreelance: "دفتر فریلنسری",
-  createLedgerPresetFreelanceOutcome:
-    "درآمد مشتری ثبت کنید یا ببینید مشتری پرداخت‌نکرده چقدر بدهکار است.",
-  createLedgerPresetBusiness: "دفتر کسب‌وکار",
-  createLedgerPresetBusinessOutcome:
-    "موضع افتتاحیه بسازید و تأمین مالی را از درآمد جدا کنید.",
-  createLedgerPresetPortfolio: "دفتر پورتفولیو",
-  createLedgerPresetPortfolioOutcome:
-    "خریدی ثبت کنید و واحدها، سوابق تحصیل و حرکت پول را بررسی کنید.",
-  createLedgerPresetRental: "دفتر اجاره",
-  createLedgerPresetRentalOutcome:
-    "رسیدها را ثبت کنید و اجاره را از ودیعه قابل استرداد جدا کنید.",
-  createLedgerPresetShared: "دفتر هزینه‌های مشترک",
-  createLedgerPresetSharedOutcome:
-    "پیش‌پرداختی ثبت کنید و ببینید چه کسی به چه کسی بدهکار است.",
-  createLedgerPresetCommunity: "دفتر جامعه",
-  createLedgerPresetCommunityOutcome:
-    "مشارکت‌ها، هزینه‌های پروژه و وجوه باقی‌مانده را توضیح دهید.",
-  createLedgerPresetBlank: "دفتر خالی",
-  createLedgerPresetBlankOutcome:
-    "ساختار دلخواه بیفزایید بدون حذف دسته‌های ناخواسته.",
 };

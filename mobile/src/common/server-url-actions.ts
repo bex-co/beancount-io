@@ -7,7 +7,6 @@ import { oauthTokenManager } from "@/common/oauth/oauth-token-manager";
 import { clearPendingAuthorization } from "@/common/oauth/pending-authorization-storage";
 import { clearGuestVisit } from "@/common/guest/guest-state";
 import { clearPendingAppLink } from "@/common/app-links/pending-app-link";
-import { clearCreateLedgerDraft } from "@/common/create-ledger-draft";
 import { resetTransactionFilters } from "@/screens/transactions-screen/filters/var";
 import { invalidateAuthorization } from "@/common/oauth/authorization-context";
 import {
@@ -58,9 +57,6 @@ export async function clearServerScopedState(
     flushLedger(),
     flushAccountUsage(),
     flushMerchantRecurringOverrides(),
-    // The next account on this device must not resume this one's setup
-    // (w21/053).
-    clearCreateLedgerDraft(),
     // Receipt photos the camera and the picker left in the cache (w21/585).
     sweepReceiptCaches(),
   ]);

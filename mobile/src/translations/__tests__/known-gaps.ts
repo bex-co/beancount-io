@@ -148,7 +148,7 @@ export const SAME_AS_ENGLISH: Record<
     { reason: "Plus is the French word too.", keys: ["signPlus"] },
     {
       reason: "Public is also the French adjective for a public ledger.",
-      keys: ["createLedgerPublic", "discoveryPublic"],
+      keys: ["discoveryPublic"],
     },
     {
       reason: "French spells these the same as English.",

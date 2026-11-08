@@ -3,16 +3,12 @@ mutation CreateLedger(
   $private: Boolean
   $description: String
   $template: LedgerTemplate
-  $setup: LedgerSetupInput
-  $requestId: String
 ) {
   createLedger(
     name: $name
     private: $private
     description: $description
     template: $template
-    setup: $setup
-    requestId: $requestId
   ) {
     id
     name

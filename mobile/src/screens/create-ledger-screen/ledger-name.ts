@@ -1,6 +1,4 @@
-import { fnv1a32 } from "../../common/request-id";
 import { graphQLErrorExtensions } from "../../common/graphql-error-codes";
-import { isUnsupportedDocumentError } from "../../common/graphql-unsupported";
 
 /**
  * Slugify a ledger name to match GitHub-style repository naming.
@@ -60,19 +58,6 @@ export function ledgerSlugPreview(name: string): string | null {
  * Default name that does not collide with existing ledger names:
  * `my-book`, then `my-book-1`, `my-book-2`, …
  */
-/**
- * The name as the setup's title: a tab or line break pasted from a spreadsheet
- * cell or a note becomes a space, and the ends are trimmed. The server refuses
- * a title with a control character, so Review showed its English text and
- * kept Create disabled (w21/950).
- */
-export function setupTitle(name: string): string {
-  return name
-    .replace(/\p{Cc}+/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 export function generateDefaultLedgerName(existingNames: string[]): string {
   const baseName = "my-book";
   if (!existingNames.includes(baseName)) {
@@ -171,71 +156,6 @@ export function classifyCreateLedgerError(
     }
   }
   return "other";
-}
-
-/**
- * A short fingerprint of the request a create sends, without its `requestId`.
- * The server judges a repeated `requestId` by the whole request, so the screen
- * keeps one id only while the request stays the same, and a draft can carry
- * this instead of the amount it must not hold (w21/434). Not a secret and not
- * a security hash: it only has to tell two requests apart.
- */
-export function createRequestFingerprint(request: unknown): string {
-  // Base 36, as drafts saved before this stored it.
-  return fnv1a32(request).toString(36);
-}
-
-/**
- * Whether a create is a different request from the last one sent, so it needs
- * an id of its own: the server refuses a reused id whose request changed, for
- * 24 hours, whatever the person edits next.
- */
-export function isNewCreateRequest(
-  lastSent: string | undefined,
-  fingerprint: string,
-): boolean {
-  return lastSent !== undefined && lastSent !== fingerprint;
-}
-
-/** Whether the server refused because the `requestId` was used with another request. */
-export function isRequestIdReuse(error: unknown): boolean {
-  const messages = [
-    error instanceof Error ? error.message : "",
-    ...(
-      (error as { graphQLErrors?: Array<{ message?: string }> } | null)
-        ?.graphQLErrors ?? []
-    ).map((entry) => entry.message ?? ""),
-  ];
-  return messages.some((message) =>
-    message.toLowerCase().includes("requestid was already used"),
-  );
-}
-
-/**
- * What a failed setup preview means for Review: `refused` when the server read
- * the setup and said what is wrong with it (its own words are the answer), else
- * `unreachable`, a transport or server failure whose raw text ("Network request
- * failed", "Received status code 502") is English and says nothing the person
- * can use (w21/478).
- */
-export function previewFailureKind(
-  error: unknown,
-): "refused" | "unreachable" | "unsupported" {
-  // A server older than guided setup rejects the document: there is nothing to
-  // retry, and Starter and Sample still create (ADR021, w21/592).
-  if (isUnsupportedDocumentError(error)) return "unsupported";
-  const codes = (
-    (
-      error as {
-        graphQLErrors?: Array<{ extensions?: { code?: unknown } }>;
-      } | null
-    )?.graphQLErrors ?? []
-  ).map((entry) => String(entry.extensions?.code ?? ""));
-  return codes.some(
-    (code) => code === "BAD_USER_INPUT" || code === "VALIDATION_FAILED",
-  )
-    ? "refused"
-    : "unreachable";
 }
 
 /** The limit and plan a ledger-limit refusal names, when the server sent them. */
