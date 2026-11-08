@@ -1,6 +1,6 @@
 # w2 · m42 — Put each customer skill directly under `skills/`
 
-**Worker:** worker2 **Goal:** the customer suite lives at `skills/<name>/SKILL.md`, the conventional skill layout, instead of `skills/.claude/skills/<name>/`. `skills/` holds only the skill folders, a `README.md` catalog, and the `AGENTS.md` authoring guide. Guides and examples move to `docs/skills/`, and the installer, checks, verifiers, routing set, and tests move to `scripts/skills/`. Every existing install survives the move. **Status:** blocked (t001–t010 done; t011 awaits skills CI)
+**Worker:** worker2 **Goal:** the customer suite lives at `skills/<name>/SKILL.md`, the conventional skill layout, instead of `skills/.claude/skills/<name>/`. `skills/` holds only the skill folders, a `README.md` catalog, the `AGENTS.md` authoring guide, and the canonical shared `LICENSE`. Guides and examples move to `docs/skills/`, and the installer, checks, verifiers, routing set, and tests move to `scripts/skills/`. Every existing install survives the move. **Status:** done
 
 ## Tasks (in order)
 
@@ -16,7 +16,7 @@
 | [t008](done/t008.md) | Adoption surface — **DONE** | 30m | t007 |
 | [t009](done/t009.md) | Simplify — **DONE** | 15m | t008 |
 | [t010](done/t010.md) | Test coverage — **DONE** | 45m | t008, t009 |
-| t011 | Closeout — **BLOCKED** | 15m | t010 |
+| [t011](done/t011.md) | Closeout — **DONE** | 15m | t010 |
 
 ## Previous blocker
 
@@ -35,15 +35,15 @@
 ## Source + Goal linkage
 
 - **Source:** user request 2026-10-18 via `/pm`: flatten `skills/` so skills sit directly in it, then clean the non-skills out of it. Layout decision, same day: keep `README.md` and `AGENTS.md`, move guides and examples to `docs/skills/` and tooling to `scripts/skills/`.
-- **Goal linkage:** **A3 — Community & distribution:** a visitor browsing `skills/` on GitHub sees nine skill folders instead of a `.claude/skills` path that reads as Claude-only, next to unrelated scripts and rehearsal records. The layout is the conventional `skills/<name>/SKILL.md`, which plugin and registry tooling expect ([082](../../done/082.md), [w6/m6](../../../w6/done/m6/README.md)). **A1 — Agent-native accounting:** a nested `.claude/skills` is a location Claude Code can discover while a contributor works under `skills/`. That mixes the customer suite into development sessions, which root `AGENTS.md` keeps separate. The flat layout also has no client-specific directory name, so a Codex user is not left to wonder whether the suite is for them. **A2 — Frictionless onboarding** is the risk to manage: the install command changes, so it must work exactly as written, and every existing install must survive one `git pull`.
+- **Goal linkage:** **A3 — Community & distribution:** a visitor browsing `skills/` on GitHub sees nine skill folders instead of a `.claude/skills` path that reads as Claude-only, next to unrelated scripts and rehearsal records. The layout is the conventional `skills/<name>/SKILL.md`, which plugin and registry tooling expect ([082](../082.md), [w6/m6](../../../w6/done/m6/README.md)). **A1 — Agent-native accounting:** a nested `.claude/skills` is a location Claude Code can discover while a contributor works under `skills/`. That mixes the customer suite into development sessions, which root `AGENTS.md` keeps separate. The flat layout also has no client-specific directory name, so a Codex user is not left to wonder whether the suite is for them. **A2 — Frictionless onboarding** is the risk to manage: the install command changes, so it must work exactly as written, and every existing install must survive one `git pull`.
 - **Expected outcome:** newcomers and registry tooling find the suite at `skills/<name>/`. A user who installed before the move runs the documented upgrade once and keeps a working suite. The repository holds one customer skill tree, with no second `.claude/skills`.
-- **Why now:** w6/m6 freezes skill text into immutable ClawHub versions. Two SKILL.md files (`beancount-close`, `beancount-migrate`) link to `skills/docs/installation.md`, which this move relocates. Publishing first would ship links that break permanently. Run after [m40](../../done/m40/README.md) has committed its `beancount-add` folder, because m40 is mid-flight, so the move carries all nine skills. This milestone does not depend on [m41](../../done/m41/README.md); whichever lands second rebases onto the other. Adoption surface is included because the install command, every guide path, and the catalog links change.
+- **Why now:** w6/m6 freezes skill text into immutable ClawHub versions. Two SKILL.md files (`beancount-close`, `beancount-migrate`) link to `skills/docs/installation.md`, which this move relocates. Publishing first would ship links that break permanently. Run after [m40](../m40/README.md) has committed its `beancount-add` folder, because m40 is mid-flight, so the move carries all nine skills. This milestone does not depend on [m41](../m41/README.md); whichever lands second rebases onto the other. Adoption surface is included because the install command, every guide path, and the catalog links change.
 
 ## Out of scope
 
-- Renaming skills ([m39](../m39/README.md)), changing what any skill does, or rewriting skill text beyond path strings ([m41](../../done/m41/README.md)).
-- Changing how sibling references resolve ([083](../083.md)). Relative `../<sibling>/…` paths work the same in the flat layout.
-- Packaging the suite as a Claude Code plugin ([082](../../done/082.md)) or publishing to ClawHub (w6/m6).
+- Renaming skills ([m39](../../blocked/m39/README.md)), changing what any skill does, or rewriting skill text beyond path strings ([m41](../m41/README.md)).
+- Changing how sibling references resolve ([083](../../blocked/083.md)). Relative `../<sibling>/…` paths work the same in the flat layout.
+- Packaging the suite as a Claude Code plugin ([082](../082.md)) or publishing to ClawHub (w6/m6).
 - Redirect stubs at the old paths. GitHub does not redirect moved files, and a stub in `skills/` would be a non-skill file.
 - Deploying backend-v2. The MCP prompt text that cites the playbook path changes in the repository here, and reaches hosted clients on the next deploy.
 
@@ -57,6 +57,10 @@ Codex CLI 0.167.0 / `gpt-6.1-sol` completes real Linux sandboxed model turns; th
 
 All remaining `skills/.claude` matches are accounted for: this milestone's history (archived at closeout), the documented upgrade, implementation/negative tests, and dated third-party stale-index evidence in `docs/skills/catalog-corrections/`, the distribution record and w6/m6.5. Those observations describe the actual remote cache and must retain its obsolete URL; they are not current install targets. The original grep criterion is clarified accordingly, rather than rewriting observed evidence.
 
-## Blocked — 2026-11-08
+## Previous CI wait — 2026-11-08
 
 Only t011 remains: [CI (skills)](https://github.com/bex-co/beancount-io/actions/runs/42472896004) is queued behind an earlier main run. Local skills CI, 55 checker tests and 37 installer tests (three Windows-only skips) pass, and [agent-guidance CI](https://github.com/bex-co/beancount-io/actions/runs/42472480556) succeeds. **Unblock:** a successful skills CI run on `3158e26b6` or a descendant retaining these changes; fix any red result before closing. **Who can clear it:** GitHub automation and the repository worker. Codex verification is complete.
+
+## Closeout — 2026-11-08
+
+[CI (skills)](https://github.com/bex-co/beancount-io/actions/runs/42472896004) succeeds on `3158e26b6`, and the [agent-guidance run](https://github.com/bex-co/beancount-io/actions/runs/42472480556) succeeds. The audit above accounts for every tracked layout and legacy-path match. Fresh and pre-move upgrade rehearsals verify sixteen skills for both destinations; the missing Codex choice now passes, with its read-only query limitation explicitly separated from discovery. Fifty-five checker tests and thirty-seven installer tests pass (three Windows-only skips), and guard/old-link removal mutations fail as expected. Shared-license and dated external-index records are preserved under their explicit later scope. All eleven tasks are complete.
