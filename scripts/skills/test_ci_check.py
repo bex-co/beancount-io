@@ -479,6 +479,67 @@ class TestRoutingSet(unittest.TestCase):
         self.assertIn("every entry needs id, prompt, expected, confusable, why", self.check(self.entries))
 
 
+class TestBeaMinimum(unittest.TestCase):
+    def setUp(self):
+        scratch = SCRIPTS_DIR / "tmp"
+        scratch.mkdir(exist_ok=True)
+        temporary = tempfile.TemporaryDirectory(dir=scratch)
+        self.addCleanup(temporary.cleanup)
+        self.repo = Path(temporary.name)
+        skills = self.repo / "skills"
+        docs = self.repo / "docs/skills"
+        self.contract = skills / "beancount-init/references/bea-cli.md"
+        self.catalog = skills / "README.md"
+        self.guide = docs / "installation.md"
+        self.contract.parent.mkdir(parents=True)
+        docs.mkdir(parents=True)
+        self.contract.write_text("This suite needs `bea` 0.3.1 or later.\n\n**Minimum 0.3.1.**\n")
+        self.catalog.write_text("Install **`bea`** 0.3.1 or later.\n")
+        self.guide.write_text("- [`bea`](../../cli/README.md) 0.3.1 or later.\n")
+        patches = mock.patch.multiple(
+            ci_check, REPO_ROOT=self.repo, SKILLS_ROOT=skills, SKILLS_DIR=skills, CUSTOMER_DOCS=docs
+        )
+        patches.start()
+        self.addCleanup(patches.stop)
+
+    def assert_rejected(self, path):
+        error = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+            with self.assertRaises(SystemExit) as raised:
+                ci_check.check_bea_minimum()
+        self.assertEqual(raised.exception.code, 1)
+        self.assertIn(str(path.relative_to(self.repo)), error.getvalue())
+        return error.getvalue()
+
+    def test_consistent_minimum_accepts_catalog_and_link_markup(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            ci_check.check_bea_minimum()
+        self.assertEqual(ci_check.bea_minimum()[2], "0.3.1")
+
+    def test_each_conflicting_surface_is_named(self):
+        for path in (self.contract, self.catalog, self.guide):
+            with self.subTest(path=path.relative_to(self.repo)):
+                original = path.read_text()
+                if path == self.contract:
+                    changed = original.replace("**Minimum 0.3.1.**", "**Minimum 0.3.2.**")
+                else:
+                    changed = original.replace("0.3.1", "0.3.2")
+                path.write_text(changed)
+                try:
+                    self.assertIn("0.3.2", self.assert_rejected(path))
+                finally:
+                    path.write_text(original)
+
+    def test_missing_contract_declaration_is_rejected(self):
+        self.contract.write_text("**Minimum 0.3.1.**\n")
+        self.assert_rejected(self.contract)
+
+    def test_ambiguous_contract_declarations_are_rejected(self):
+        with self.contract.open("a") as contract:
+            contract.write("This suite needs `bea` 0.3.2 or later.\n")
+        self.assert_rejected(self.contract)
+
+
 class TestFindBea(unittest.TestCase):
     def test_resolves_to_a_working_bea(self):
         found = ci_check.find_bea()
