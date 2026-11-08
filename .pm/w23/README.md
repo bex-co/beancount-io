@@ -87,4 +87,4 @@
 - [x] [225](./done/225.md) — backend-v2: format the 62 files prettier flags and gate `prettier --check` in CI (backend parity)
 - [x] [226](./done/226.md) — table-driven test: every `ErrorCategory` maps to one MCP code and one HTTP status on REST, GraphQL and MCP
 - [x] [227](./done/227.md) — `importStagedBankTransactions` retry after a lost reply: pin the error and document or reword it
-- [ ] [228](./228.md) — `docs/mcp.md`: short agent happy-path recipe after "Connect a client"
+- [x] [228](./done/228.md) — `docs/mcp.md`: short agent happy-path recipe after "Connect a client"

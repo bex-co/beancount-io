@@ -194,6 +194,28 @@ curl -fsS "https://registry.modelcontextprotocol.io/v0.1/servers/io.beancount%2F
   | jq '{_meta, server: (.server | {name, version, remotes})}'
 ```
 
+## The agent happy path
+
+Five calls cover almost every session. Each links to the section that defines it.
+
+1. **Read.** `listLedgers`, then `getLedgerContext` for the open accounts,
+   currencies and payees, then `listLedgerEntries` (or `runBqlQuery`) for the
+   entries you need. Every entry carries an `entry_hash`.
+2. **Preview.** Send the write you intend with `dry_run: true`, for example
+   `addLedgerEntries` with `{"entries": [...], "dry_run": true}`. Approve it only
+   when the result says `valid: true` ([the preview rule](#the-preview-rule)).
+3. **Commit.** Send the identical call with `dry_run: false`, then call
+   `checkLedger` to confirm the ledger is still clean.
+4. **Retry safely.** Add a new `requestId` to an entry write. If the reply is
+   lost, resend the same call with the same id: the first result comes back and
+   nothing is written twice
+   ([retry-safe entry writes](#retry-safe-entry-writes-requestid)).
+5. **Edit one entry.** Take its `entry_hash` from `listLedgerEntries`, read
+   `getEntryContext` for the current `sha256sum`, and send both with
+   `updateEntrySource` or `deleteEntrySource`. A `CONFLICT` means the entry
+   changed since you read it: read it again and resend
+   ([failure codes](#failure-codes)).
+
 ## Permissions and ledger boundaries
 
 The current implementation computes cumulative capabilities from the grant:
