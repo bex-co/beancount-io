@@ -1,6 +1,6 @@
 # w2 · m47 — Turn PDF statements and receipt photos into checked entries with documents attached
 
-**Worker:** worker2 **Goal:** a user whose bank offers only PDF statements, or who has a photo or PDF of a receipt, gets the same reviewed, deduplicated entries a CSV export produces, with the source file attached to the ledger. Extracted rows never count as imported until a `balance` assertion ties them to the statement's closing balance. **Status:** todo (t001–t002 done)
+**Worker:** worker2 **Goal:** a user whose bank offers only PDF statements, or who has a photo or PDF of a receipt, gets the same reviewed, deduplicated entries a CSV export produces, with the source file attached to the ledger. Extracted rows never count as imported until a `balance` assertion ties them to the statement's closing balance. **Status:** blocked (t003 needs authenticated Claude routing controls)
 
 ## Tasks (in order)
 
@@ -16,7 +16,7 @@
 | t008 | Test coverage | 45m | t006, t007 |
 | t009 | Closeout | 15m | t008 |
 
-## Blocked
+## Previous blocker
 
 - **t003 onward (2026-10-19)** — t001 (placement, `pdf:sha256`, Layer 2c) and t002 (the PDF import path) are shipped. t003 depends on [m40](../../done/m40/README.md)'s closeout (t010), which waits for Codex usage or the owner's exception decision, so t003–t009 cannot proceed. **Unblock:** m40 closes; then t003 starts (t005 additionally needs Codex for its both-client runs, including the t001 probe rerun). **Who can clear it:** the operator (Codex usage) or the repository owner (m40 exception).
 
@@ -49,3 +49,14 @@
 - The hosted `parseReceipt` MCP flow and hosted ledgers.
 - Brokerage statements with holdings and lots (w2/m45), and statements that cover several accounts at once.
 - Changing `bea import`'s duplicate detector. If t001 finds the CLI must change, file that as a follow-up note.
+
+## Current blocker — 2026-11-08
+
+m40 closed, so its dependency is resolved. t003 still needs receipt-file support,
+a shared document recipe and new descriptions/routing entries; these are absent
+on main. The package requires before/after description-routing runs on both
+clients, while the existing Claude preflight is not authenticated. **Unblock:**
+a successful authenticated Claude model turn, then implement/verify t003; t004–
+t009 depend on it. **Owner:** operator for login, then worker. Codex is available.
+No partial implementation is parked, and the receipt feature has not been
+waived, silently dropped or claimed complete.
