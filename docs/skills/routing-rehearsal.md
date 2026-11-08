@@ -106,6 +106,48 @@ successful preflight and perform each pending acceptance check. m47 remains
 behind m40; m59 remains behind m48 and w3/m58. Owner decisions and production
 deployment blockers elsewhere in w2 are unaffected.
 
+## Linux Codex execution restored — 2026-11-08
+
+The macOS CLI 0.167.0 still fails during managed-preferences synchronization.
+A separate Linux arm64 client now completes model turns and sandboxed shell
+commands with the same ChatGPT account and `gpt-6.1-sol`. The historical
+November 17 quota-reset estimate no longer blocks this account's evaluations.
+Pending checks still require their own real-client evidence; a working runtime
+does not complete them automatically.
+
+Environment: source `50f089477`, suite 0.4.26 (sixteen customer skills), official
+`@openai/codex@0.167.0` Linux arm64 package, Debian 13, and a wheel built from
+the checkout's CLI, reporting `bea` 0.3.1. Its managed engine was provisioned
+before the trials. `/usr/local/bin/bea` and `uv` remain discoverable from login
+shells. This source wheel includes unreleased fixes: the published-0.3.1
+limitations in Version notes still apply to the published release.
+
+Each trial uses a fresh synthetic Git workspace, the installer's links to the
+customer suite, a writable workspace mount and read-only suite mount, and its
+own temporary Codex state. Only the existing Codex credential file is supplied;
+it is copied to container tmpfs, never included in the image, workspace,
+publication or logs. A legitimate refresh is preserved in the client's usual
+store only while the host credential remains unchanged. Containers are removed
+after their trials. No service stack or database is started.
+
+Docker's default seccomp profile prevented Bubblewrap from creating namespaces.
+The task-specific profile retains the [Moby default policy](https://github.com/moby/profiles/blob/main/seccomp/default.json)
+(downloaded SHA256 `6416b47770785a41ac59073cdc77d9fe98517df2799dc83ef207e622de3053f6`),
+adding user-namespace `clone`, namespace-only `unshare`, and the mount,
+`umount2`, `pivot_root` and `setns` calls needed by Bubblewrap. It grants no
+additional container capabilities. Codex runs its normal native sandbox with
+`--sandbox workspace-write`, or `read-only` for read-only probes. A direct
+filesystem test established all three outcomes: read-only rejects a workspace
+write, workspace-write permits a workspace write, and workspace-write rejects
+a write to an otherwise writable directory outside the workspace. Each check
+compares the resulting files and fails on an unexpected exit or mutation.
+
+Local implementation and evidence are under
+`scripts/skills/tmp/w2-codex-linux/` (gitignored). Early trials with a missing
+`bea` in the login-shell PATH were discarded as harness failures. Scored runs
+use the corrected image and real tool execution. The first completed behavioral
+retest is [add eval 10](add-rehearsal.md#codex-eval-10-rerun--2026-11-08).
+
 ## Baseline — 2026-10-18
 
 - Revision `bd8106f8f` (descriptions as of `4554ba440`). macOS 26.5.1, arm64.

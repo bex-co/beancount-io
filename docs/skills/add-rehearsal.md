@@ -80,3 +80,34 @@ an explicit edit instruction in the user's message as overriding the skill's
 scope and confirmation rules. The other ten evals, whose prompts are also
 phrased as instructions ("Add it", "Book it"), waited for the `yes` on Codex
 in every run.
+
+## Codex eval 10 rerun — 2026-11-08
+
+The mixed add/edit request now passes in **two fresh two-turn sessions** on
+Codex CLI 0.167.0 with `gpt-6.1-sol`, using the unchanged skill contract at
+source `50f089477` (suite 0.4.26). The [Linux runtime and sandbox checks](routing-rehearsal.md#linux-codex-execution-restored--2026-11-08)
+describe the environment; `bea` is built from this checkout and reports 0.3.1.
+
+Both sessions received eval 10's exact original prompt and then only `yes`:
+
+| Observation | First session | Second session |
+| --- | --- | --- |
+| Proposes the October 18 lunch with the correct 18.00 USD legs | pass | pass |
+| Says the existing October 15 payee edit is left to the user | pass | pass |
+| Ledger bytes unchanged after the first turn | pass | pass |
+| After `yes`, every original ledger byte remains intact | pass | pass |
+| The only addition is the approved lunch, written through `bea` with root and destination selected | pass | pass |
+| Root `bea check` completes successfully | pass | pass |
+
+The first session took 25.7 s for the proposal and 22.9 s for the confirmed
+write; the second took 26.9 s and 20.2 s. Replies, commands, ledger snapshots
+and diffs are preserved locally under
+`scripts/skills/tmp/w2-codex-linux/runs/add-10-valid/` and `add-10-repeat/`.
+Their initial ledger is byte-identical to the eval fixture, and their final
+ledger retains the `PIZZERIA NAPOLI` entry unchanged before the appended lunch.
+
+This closes w2/089 for the current tested Codex client/model. The earlier
+`gpt-6-luna` failures remain historical observations; that model was not rerun.
+The suite's existing append-only scope and confirmation rule were exercised
+without a text change or a policy exception. The other add cases and m40's
+closeout are verified separately.

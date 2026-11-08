@@ -2,7 +2,7 @@
 
 **Worker:** worker2 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty. Existing milestones retain their historical order and source.
 
-**Codex verification update (2026-11-04):** the fresh CLI 0.166.0 preflight fails before any model event with `Failed to synchronize managed preferences (code -32600)`. The November 17 quota-reset dates below are historical; current quota cannot be checked until startup works. The [shared diagnostic and pending-check inventory](../../docs/skills/routing-rehearsal.md#codex-startup-blocker--2026-11-04) covers 083, 086, 089, 090, 094 and m40–m45/m48–m53. These checks remain blocked; m47 and m59 retain their dependency blockers. **Unblock:** the operator restores successful `codex exec` startup and an available model turn, then each item still needs its recorded acceptance checks.
+**Codex verification update (2026-11-08):** Linux arm64 Codex CLI 0.167.0 with `gpt-6.1-sol` now completes model turns and native sandboxed commands; [runtime and filesystem checks](../../docs/skills/routing-rehearsal.md#linux-codex-execution-restored--2026-11-08) are recorded. [089](./done/089.md) passes twice and is closed. The macOS managed-preferences startup failure persists, but the historical November 17 quota-reset estimates below no longer block Linux verification. The remaining checks in 083, 086, 090, 094 and m40–m45/m48–m53 still require their own acceptance evidence and are resumed item by item. m47 and m59 retain their dependency prerequisites.
 
 ## Milestones
 
