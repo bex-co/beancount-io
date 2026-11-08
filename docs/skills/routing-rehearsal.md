@@ -963,7 +963,7 @@ Trade's current description matches those snapshots. The later complete
 Claude run covers the original `import-opening-lots` miss; the October 20
 102/103 result remains recorded above. These are dated reused routing
 results, not a new 103-prompt run. The original Claude behavior **4/4** remains
-October 20. [m52/t004](../../.pm/w2/m52/done/t004.md) closes the original
+October 20. [m52/t004](../../.pm/w2/blocked/m52/done/t004.md) closes the original
 Codex debt; adoption and coverage follow separately.
 
 

@@ -1,6 +1,6 @@
 # w2 · m52 — Record crypto-native events: swaps, staking, and network fees
 
-**Worker:** worker2 **Goal:** a crypto holder records a coin-to-coin swap, staking or airdrop income, and a wallet transfer that pays its network fee in-kind — each with lots and booking-produced gains intact. **Status:** active (t001–t007 done)
+**Worker:** worker2 **Goal:** a crypto holder records a coin-to-coin swap, staking or airdrop income, and a wallet transfer that pays its network fee in-kind — each with lots and booking-produced gains intact. **Status:** blocked (only t008 remote full skills CI remains)
 
 ## Tasks (in order)
 
@@ -40,3 +40,12 @@ native approved writes and independent ledger/lot checks. The unchanged
 original 103 routing entries are fully covered by later completed cohorts
 on both clients, with trade's description unchanged. t004 is complete;
 t005 adoption is complete; t006 simplify is complete; t007 native coverage is complete; t008 closeout waits for its remote CI. Historical client versions and dates remain distinct.
+
+
+## Current blocker — 2026-11-08
+
+Only t008 waits for remote full skills CI covering native test commit
+`94b635461`. All t001–t007 acceptance evidence is complete. The current
+covering run is 42501117384 at `35c5551b5`; a later covering run may supersede
+it. **Unblock:** Ubuntu and Windows jobs including customer/published recipes
+succeed, then close t008. **Owner:** worker, no user action needed.
