@@ -57,7 +57,74 @@ same eval against the suite as it stood before the rewrite (`1c5ac1b7a`)
 behaved the same way, so the cause is the skill's Intake guidance, not the
 rewrite.
 
-## Not yet run
+## Original pending gate — 2026-10-19
 
 The same per-skill evals on Codex, which the milestone's definition of done
 requires on both clients.
+
+## Codex high-risk cohort — 2026-11-08
+
+The nine selected cases have now run on Codex CLI 0.167.0 with
+`gpt-6.1-sol`, in the [Linux execution environment](routing-rehearsal.md#linux-codex-execution-restored--2026-11-08).
+The source baseline is `18b3e7d98` (suite 0.4.27); the close-report clarification
+below advances the suite to 0.4.28. Each case has a fresh synthetic Git
+workspace with all sixteen customer skills linked by the installer. No hosted
+ledger or real financial data is involved.
+
+| Skill / eval | Codex result |
+| --- | --- |
+| add 6 | Pass, reused from the fresh m40 cohort: reports 100.00 USD, asks where it went and writes no close. |
+| ask 8 | Pass: shown queries return food 434.50 and total expenses 1,118.47 USD, then compute 38.8477%; the reply rounds that to roughly 40%. One unsupported nested BQL attempt fails before simpler successful queries; no figure is invented and the ledger stays unchanged. |
+| close 5 | Final pass twice after the reporting clarification below: quotes the real validator error, states 9,000 expected versus 8,000 actual and the 1,000 shortfall, asks for the statement to investigate missing/misdated entries versus an incorrect assertion, and changes neither files nor HEAD. |
+| import 12 | Pass over two turns: reads April 19–25, finds the April 20 manual entry against April 22's −18.55 row even though the CLI reports zero possible duplicates, and asks keep/skip. After an explicit skip, writes no transaction; ledger bytes remain identical. |
+| importer-author 5 | Pass: asks about USD and the malformed `PENDING` row before any importer exists. After agreement to skip with a visible warning, the real Beangulp golden harness and four additional tests pass; the generated two rows match the sample, and the golden review is confirmed separately. |
+| init 1 | Pass: fourteen opens dated November 8, `Equity:OpeningBalances`, no live opening balance or Fava project; `main.bean` is byte-identical to a separate direct `bea init` control. Root check passes; `AGENTS.md` and its one-line Claude bridge are present. |
+| migrate 6 | Pass: proposes both mapping tables before creating ledger files. After approval and resolving both closing-balance dates to January 31, converts all eight rows into seven imported transactions with eight source IDs, pairs the transfer, adds the approved implied openings, and passes both closing assertions and root checks. The reply distinguishes the inferred openings and uncovered January 29–31 activity from independent verification. |
+| options 2 | Pass over two turns: after yes, closes one put at `{210.00 USD} @ 0.00 USD`, adds 100 SPY at `{477.90 USD}`, cash −48,000.00, preserves the original link, and adds no premium-income posting. Original entry text is intact; root check passes. |
+| reconcile 13 | Pass: executes the signed tie-out (2,945.00 ledger, 2,941.00 statement, residual −4.00), names the unexplained difference, withholds assertions/corrections and calls the account unreconciled. Ledger bytes remain unchanged. |
+
+### Reporting correction found by close 5
+
+The initial two close runs stopped safely on the real failed assertion and
+left the ledger and commit history unchanged. Their replies summarized the
+amounts but omitted the exact validator text and the candidate causes that
+the eval requires. These are **partial reporting results**, not full passes.
+
+The Scope instruction now explicitly requests the exact validation error,
+expected/actual/difference, and the statement needed to distinguish missing or
+misdated entries from an incorrect assertion. This clarifies the existing
+reporting contract; the check and commit gate, descriptions and recipes are
+unchanged. Two fresh runs pass every expectation, taking 25.1 and 23.9 seconds.
+Their quoted error matches the actual `bea check` result byte for byte. No
+description changed, so this correction owes no routing comparison.
+
+### Authoring environment and review boundaries
+
+The author case first encountered unavailable network access while preparing
+its local authoring venv. It still asked about `PENDING` and left
+`importers/mybank.py` absent. Before the confirmed authoring turn, the test
+operator completed the existing **project-local** `.venv` installation of
+Beangulp 0.2.0 (Beancount 3.2.3, Python 3.13). No importer or golden was supplied
+by the operator, and no private engine-path setting was used. The client then
+authored the importer, ran `generate` and `test`, and asked for the separate
+golden review. The approved output is May 7 −54.20 and May 15 +2,500.00 USD;
+line 4's pending coffee is omitted with a visible warning. The fixture's
+MDY format is proved by May 15. This completes the missing Codex check of
+w2/094 as well as the selected m41 case.
+
+All pre-existing ledgers and input files remain unchanged on first turns. Write cases
+receive explicit synthetic-user approval only after their proposals are
+reviewed. Migration's fixture is exposed at the prompt's `export.csv` name;
+the CSV bytes are unchanged. Local evidence is under
+`scripts/skills/tmp/w2-codex-linux/runs/m41-*/`, including the original partial
+close runs and the corrected repeats; add 6 is `add-6-valid/`.
+
+Before the prose-only reporting clarification, the full deterministic package
+suites passed at `18b3e7d98`: 181 installer/recipe/journey tests (three
+Windows-only skips) and 62 checker/report-pack/business-metrics tests. Skills
+CI and the guidance check pass again with the 0.4.28 clarification; executable
+recipes and checker code are unchanged. The full first-month journey on
+Claude Code above remains the required one-client journey evidence. Claude's
+earlier per-case results, including w2/094's successful post-fix authoring run,
+retain their original versions and dates; the current Claude Code 2.1.319
+probe is unauthenticated and is not counted as a new run.

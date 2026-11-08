@@ -53,7 +53,7 @@
   - Users reject agents that impose a file layout ([accountant24 thread](https://forum.plaintextaccounting.org/t/accountant24-local-first-ai-agent-hledger-for-personal-accounting/799)).
 - **Goal linkage:** **A1 — Agent-native accounting:** an agent can maintain a ledger, not only grow it, without falling back to freehand edits that skip every safeguard the suite enforces on writes.
 - **Expected outcome:** a user corrects, recategorizes, renames, or reorganizes by describing the change, reviews one diff, and can undo it in one step. Signals: routing-set recall for edit prompts, and skill invocations once a registry listing exists.
-- **Why now:** the routing set already records the gap, and agents asked to fix an entry today either refuse or edit by hand. [m40](../../done/m40/README.md) settles where `beancount-add` stops, so t007 waits for it. Write the skill after [m41](../m41/README.md) where possible, so it follows the compacted style rather than the current one. Adoption surface is included because this adds a customer-facing skill.
+- **Why now:** the routing set already records the gap, and agents asked to fix an entry today either refuse or edit by hand. [m40](../../done/m40/README.md) settles where `beancount-add` stops, so t007 waits for it. Write the skill after [m41](../../m41/README.md) where possible, so it follows the compacted style rather than the current one. Adoption surface is included because this adds a customer-facing skill.
 
 ## Out of scope
 

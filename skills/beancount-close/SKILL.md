@@ -59,7 +59,7 @@ Seven phases: **Scope → Reconcile → Assert → Recurring → Flags → Repor
 
 Local ledger files only. For a ledger hosted on Beancount.io, stop this skill and offer a separately requested hosted workflow or local clone (beancount-init's `references/bea-cli.md`, Hosted ledgers).
 
-Resolve the period (the user's words or the last complete month) and state it. Find the root ledger with the suite's discovery convention. Enumerate **active accounts**: any Assets/Liabilities account with postings in the period or a nonzero balance at period end (bounded by `date < <period-end+1>`, so later entries don't count). Run `bea --file "$ledger" --json --no-input check` first: a ledger that starts red is fixed (surface the errors) before a close can mean anything.
+Resolve the period (the user's words or the last complete month) and state it. Find the root ledger with the suite's discovery convention. Enumerate **active accounts**: any Assets/Liabilities account with postings in the period or a nonzero balance at period end (bounded by `date < <period-end+1>`, so later entries don't count). Run `bea --file "$ledger" --json --no-input check` first. On failure, report Scope as blocked and quote the validator's exact error. For a failed balance assertion, show the expected balance, actual balance and difference, and ask for the statement to investigate missing or misdated entries versus an incorrect assertion.
 
 ### 2. Reconcile
 
