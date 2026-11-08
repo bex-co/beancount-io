@@ -816,7 +816,7 @@ describe("LedgerWorkflow", () => {
         expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
       });
 
-      // w23/048: ADR021 has the files validated before the ledger service
+      // w23/048: ADR026 has the files validated before the ledger service
       // creates anything; the preview reports the same verdict.
       it("checks the setup's files and refuses to create a ledger that would not load", async () => {
         mockFavaApiClient.reports.checkLedgerFiles.mockResolvedValue({

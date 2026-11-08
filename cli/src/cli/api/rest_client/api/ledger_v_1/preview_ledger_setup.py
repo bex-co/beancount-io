@@ -108,7 +108,7 @@ def sync_detailed(
 ) -> Response[PreviewLedgerSetupResponse200 | V1Error]:
     """Preview a ledger setup without creating it
 
-     Return the files, account list, and validation result a setup specification (ADR021) would create,
+     Return the files, account list, and validation result a setup specification (ADR026) would create,
     without creating anything. Uses the same LEDGER_CREATE authority as creation.
 
     Args:
@@ -140,7 +140,7 @@ def sync(
 ) -> PreviewLedgerSetupResponse200 | V1Error | None:
     """Preview a ledger setup without creating it
 
-     Return the files, account list, and validation result a setup specification (ADR021) would create,
+     Return the files, account list, and validation result a setup specification (ADR026) would create,
     without creating anything. Uses the same LEDGER_CREATE authority as creation.
 
     Args:
@@ -167,7 +167,7 @@ async def asyncio_detailed(
 ) -> Response[PreviewLedgerSetupResponse200 | V1Error]:
     """Preview a ledger setup without creating it
 
-     Return the files, account list, and validation result a setup specification (ADR021) would create,
+     Return the files, account list, and validation result a setup specification (ADR026) would create,
     without creating anything. Uses the same LEDGER_CREATE authority as creation.
 
     Args:
@@ -197,7 +197,7 @@ async def asyncio(
 ) -> PreviewLedgerSetupResponse200 | V1Error | None:
     """Preview a ledger setup without creating it
 
-     Return the files, account list, and validation result a setup specification (ADR021) would create,
+     Return the files, account list, and validation result a setup specification (ADR026) would create,
     without creating anything. Uses the same LEDGER_CREATE authority as creation.
 
     Args:

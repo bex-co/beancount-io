@@ -550,7 +550,7 @@ def init_ledger(
     ] = None,
     preset: Annotated[
         str | None,
-        typer.Option("--preset", help="Setup-catalog preset id, e.g. personal@1 (ADR021); replaces the fixed chart."),
+        typer.Option("--preset", help="Setup-catalog preset id, e.g. personal@1 (ADR026); replaces the fixed chart."),
     ] = None,
     title: Annotated[str | None, typer.Option("--title", help="Ledger title for a preset ledger.")] = None,
     module: Annotated[

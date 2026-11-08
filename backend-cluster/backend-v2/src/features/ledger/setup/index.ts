@@ -60,7 +60,7 @@ interface SetupModuleParameter {
   description: string;
 }
 
-/** A personal-only account group (PRFAQ001 Appendix A.9, ADR021). */
+/** A personal-only account group (ADR026 personal modules). */
 export interface SetupModule {
   id: string;
   version: number;

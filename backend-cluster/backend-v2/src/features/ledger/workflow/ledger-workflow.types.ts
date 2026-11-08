@@ -27,9 +27,9 @@ export interface CreateLedgerCommand {
   description?: string | null;
   private?: boolean | null;
   template?: LedgerTemplate | null;
-  /** Setup specification (ADR021); mutually exclusive with `template`. */
+  /** Setup specification (ADR026); mutually exclusive with `template`. */
   setup?: LedgerSetup | null;
-  /** Client-generated idempotency identifier for creation retries (ADR021). */
+  /** Client-generated idempotency identifier for creation retries (ADR026). */
   requestId?: string | null;
 }
 

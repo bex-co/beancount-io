@@ -1,6 +1,6 @@
 """The CLI's setup-catalog copy must match the canonical backend catalog.
 
-ADR021: one canonical catalog, package-local generated copies with a drift
+ADR026: one canonical catalog, package-local generated copies with a drift
 check. The canonical source lives in backend-v2; when a checkout does not
 carry it (a packaged test run), this check skips instead of failing.
 """

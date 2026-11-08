@@ -35,7 +35,7 @@ export class LedgerQueryResolver {
   @Authenticated()
   @Query(() => LedgerSetupPreview, {
     description:
-      "Preview a ledger setup (ADR021) without creating anything: the files, account list, and validation result the specification would produce.",
+      "Preview a ledger setup (ADR026) without creating anything: the files, account list, and validation result the specification would produce.",
   })
   async previewLedgerSetup(
     @Arg("setup", () => LedgerSetupInput) setup: LedgerSetupInput,

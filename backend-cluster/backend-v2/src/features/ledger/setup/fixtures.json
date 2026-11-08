@@ -1,5 +1,5 @@
 {
-  "source": "Conformance fixtures for the setup catalog: each pairs a setup specification with the accounts, opening records, and report values both engines (hosted builder, Python CLI) must produce before the preset is listed (ADR021)",
+  "source": "Conformance fixtures for the setup catalog: each pairs a setup specification with the accounts, opening records, and report values both engines (hosted builder, Python CLI) must produce before the preset is listed (ADR026)",
   "fixtures": [
     {
       "id": "personal@1-clean",

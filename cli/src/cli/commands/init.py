@@ -154,7 +154,7 @@ def module_accounts(preset: str | None, modules: list[str] | None, property_name
     """The setup-catalog modules' accounts, refusing a bad selection before anything is created.
 
     Reads the engine's catalog copy, like `_preset_accounts`, and applies the
-    hosted builder's rules (ADR021): modules only with a preset that lists
+    hosted builder's rules (ADR026): modules only with a preset that lists
     them, each once, and `--property-name` only with the module that declares
     it. Shared by `bea init` and `bea cloud ledger create`.
     """
@@ -308,7 +308,7 @@ def init(
     ] = None,
     preset: Annotated[
         str | None,
-        typer.Option("--preset", help="Setup-catalog preset id, e.g. personal@1 (ADR021); replaces the fixed chart"),
+        typer.Option("--preset", help="Setup-catalog preset id, e.g. personal@1 (ADR026); replaces the fixed chart"),
     ] = None,
     title: Annotated[str | None, typer.Option("--title", help="Ledger title; only with --preset")] = None,
     module: Annotated[

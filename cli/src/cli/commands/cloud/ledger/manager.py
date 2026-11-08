@@ -62,7 +62,7 @@ def create_ledger(
     property_name: str | None = None,
     property_module: str | None = None,
 ) -> LedgerInfo:
-    # A requestId on every create (ADR021): if this request is retried in
+    # A requestId on every create (ADR026): if this request is retried in
     # flight with the same id, the server returns the original ledger
     # instead of creating a second one.
     from uuid import uuid4

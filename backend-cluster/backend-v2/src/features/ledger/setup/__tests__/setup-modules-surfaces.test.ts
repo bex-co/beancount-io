@@ -17,7 +17,7 @@ import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import { previewLedgerSetup, type LedgerSetup } from "../build-ledger";
 
 /**
- * `setup.modules` means the same on REST, GraphQL, and MCP (ADR021 parity,
+ * `setup.modules` means the same on REST, GraphQL, and MCP (ADR026 parity,
  * w3/m59/t002): each surface hands the specification to the one workflow,
  * the shared builder turns it into the same files, and every refusal is the
  * builder's own and creates nothing.

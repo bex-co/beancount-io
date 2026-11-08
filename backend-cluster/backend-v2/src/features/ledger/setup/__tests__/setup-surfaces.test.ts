@@ -11,7 +11,7 @@ import { previewLedgerSetup } from "../build-ledger";
 
 /**
  * The same setup specification must mean the same thing on REST, GraphQL,
- * and MCP (ADR021 parity): each surface parses it into the one workflow
+ * and MCP (ADR026 parity): each surface parses it into the one workflow
  * command, and the shared builder turns it into the same files.
  */
 const SETUP = {

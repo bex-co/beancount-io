@@ -1,6 +1,6 @@
 {
   "catalogVersion": 1,
-  "source": "PRFAQ001 Appendix A (first-release starter catalog) as designed in ADR021; labels, questions, and timing are refined only by a new preset version, never by editing a shipped version in place",
+  "source": "ADR026's starter catalog (first release); labels, questions, and timing are refined only by a new preset version, never by editing a shipped version in place",
   "metadataKeys": {
     "openingBalanceStatus": "bcio_opening_balance_status",
     "demo": "bcio_demo",

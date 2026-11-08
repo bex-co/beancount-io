@@ -122,6 +122,10 @@ type AddLedgerEntryResponse {
   """Per-file entry text; populated on dry runs only"""
   preview: [EntryPreviewFile!]!
   success: Boolean!
+  """
+  True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on success.
+  """
+  valid: Boolean!
 }
 
 type AiCfoUsageResponse {
@@ -161,6 +165,10 @@ type AppendDirectiveTextResponse {
   message: String!
   newErrors: [DirectiveTextError!]!
   success: Boolean!
+  """
+  True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on success.
+  """
+  valid: Boolean!
   wrote: [AppendedDirective!]!
 }
 
@@ -499,6 +507,10 @@ type DeleteMultiSourceSlicesResponse {
   newErrors: [SliceWriteError!]!
   """Per-file affected text; populated on dry runs only"""
   preview: [SlicePreviewFile!]!
+  """
+  True only when the write adds no bean-check error; gate a preview on this.
+  """
+  valid: Boolean!
 }
 
 type DeletePublicKeyResponse {
@@ -532,6 +544,10 @@ type DeleteSourceSliceResponse {
   newErrors: [SliceWriteError!]!
   """Per-file affected text; populated on dry runs only"""
   preview: [SlicePreviewFile!]!
+  """
+  True only when the write adds no bean-check error; gate a preview on this.
+  """
+  valid: Boolean!
 }
 
 type DenyCliAuthSessionResponse {
@@ -1181,7 +1197,7 @@ input LedgerSetupInput {
 }
 
 """
-Versioned personal-only account group from the setup catalog (PRFAQ001 Appendix A.9)
+Versioned personal-only account group from the setup catalog (ADR026 personal modules)
 """
 enum LedgerSetupModule {
   INVESTMENTS
@@ -1197,7 +1213,7 @@ input LedgerSetupModuleInput {
   propertyName: String
 }
 
-"""Versioned starter preset from the setup catalog (ADR021)"""
+"""Versioned starter preset from the setup catalog (ADR026)"""
 enum LedgerSetupPreset {
   BLANK
   BUSINESS
@@ -1428,7 +1444,7 @@ type Mutation {
     Client-generated idempotency identifier: a retry with the same id and request returns the original ledger.
     """
     requestId: String
-    """Setup specification (ADR021); mutually exclusive with template."""
+    """Setup specification (ADR026); mutually exclusive with template."""
     setup: LedgerSetupInput
     template: LedgerTemplate
   ): Ledger!
@@ -2197,7 +2213,14 @@ type Query {
   """Export events from a specific ledger with optional filtering"""
   getLedgerEvents(account: String, filter: String, ledgerId: String!, time: String): [Event!]!
   """Get the content of a specific ledger file"""
-  getLedgerFile(ledgerId: String!, path: String!): LedgerFileContent
+  getLedgerFile(
+    ledgerId: String!
+    """
+    Fail a missing file with NOT_FOUND and a directory path with BAD_USER_INPUT, as REST and MCP do, instead of returning null. Defaults to false so clients that read null as 'no such file' keep working.
+    """
+    missingAsError: Boolean
+    path: String!
+  ): LedgerFileContent
   """Get the holdings of a specific ledger"""
   getLedgerHoldings(
     account: String
@@ -2389,7 +2412,7 @@ type Query {
   """List all user owned ledgers for the current user"""
   listUserOwnedLedgers(limit: Float, page: Float): [Ledger!]!
   """
-  Preview a ledger setup (ADR021) without creating anything: the files, account list, and validation result the specification would produce.
+  Preview a ledger setup (ADR026) without creating anything: the files, account list, and validation result the specification would produce.
   """
   previewLedgerSetup(setup: LedgerSetupInput!): LedgerSetupPreview!
   """
@@ -2795,6 +2818,10 @@ type UpdateSourceSliceResponse {
   newSha256sum: String!
   """Per-file affected text; populated on dry runs only"""
   preview: [SlicePreviewFile!]!
+  """
+  True only when the write adds no bean-check error; gate a preview on this.
+  """
+  valid: Boolean!
 }
 
 type UpgradeSubscriptionResult {

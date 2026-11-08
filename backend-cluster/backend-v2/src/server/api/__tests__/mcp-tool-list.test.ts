@@ -214,7 +214,7 @@ describe("MCP tool list", () => {
     // entry-source tool publishes only its own result shape; the shared
     // union would have put the list about 8 KB over this line.
     //
-    // 104 KB since w3/m53 (ADR021) added the 44th tool, previewLedgerSetup,
+    // 104 KB since w3/m53 (ADR026) added the 44th tool, previewLedgerSetup,
     // and the setup specification on createLedger: measured at 100,992 bytes
     // across 44 tools after trimming the setup schema's descriptions.
     //

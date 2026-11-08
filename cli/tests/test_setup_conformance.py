@@ -1,7 +1,7 @@
 """Cross-engine conformance: `bea init --preset` opens what the catalog fixture promises.
 
 The hosted builder (backend-v2) and this CLI must produce equivalent
-accounting results for every fixture before a preset is listed (ADR021).
+accounting results for every fixture before a preset is listed (ADR026).
 These tests run the CLI side against the canonical fixtures and compare the
 opened accounts; the hosted side is asserted in backend-v2's setup tests
 against the same fixture file.

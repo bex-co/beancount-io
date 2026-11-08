@@ -12,7 +12,7 @@ Scope: A public tax explainer and a private preview connected to ledger records,
 
 Recommend a bounded US federal, tax-year-2026 pilot before adding jurisdictions. This is a proposed sequencing decision based on the available official references and open-source models, not evidence that US customers have the greatest demand. Validate that choice before implementation.
 
-This extends the evidence-preservation approach in [PRFAQ001](PRFAQ001-ledger-creation.md) and preserves [PRFAQ002's distinction between market prices and acquisition records](PRFAQ002-include-live-price.md). Those documents contain proposals as well as implemented work; this PRFAQ does not assume every prerequisite has shipped.
+This extends the evidence-preservation approach in [ADR026](../adrs/ADR026-dashboard-onboarding.md) and preserves [PRFAQ002's distinction between market prices and acquisition records](PRFAQ002-include-live-price.md). Those documents contain proposals as well as implemented work; this PRFAQ does not assume every prerequisite has shipped.
 
 ## Press release
 

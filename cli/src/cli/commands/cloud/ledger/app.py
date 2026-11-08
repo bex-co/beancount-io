@@ -67,7 +67,7 @@ def ledger_create(
     clone: Annotated[bool, typer.Option("--clone", help="Clone the new ledger to disk after creating it")] = False,
     directory: DirOpt = None,
     preset: Annotated[
-        str | None, typer.Option("--preset", help="Setup-catalog preset id, e.g. personal@1 (ADR021)")
+        str | None, typer.Option("--preset", help="Setup-catalog preset id, e.g. personal@1 (ADR026)")
     ] = None,
     title: Annotated[str | None, typer.Option("--title", help="Ledger title; only with --preset")] = None,
     currency: Annotated[

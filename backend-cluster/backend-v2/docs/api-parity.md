@@ -454,7 +454,7 @@ do not establish live Gitea integration.
 
 Ledger creation, update, and deletion now have REST bindings and the MCP tools
 `createLedger`, `updateLedger`, and `deleteLedger` over `LedgerWorkflow`. Creation accepts a
-setup specification (`setup`, ADR021, including the personal-only `modules`) and an idempotency `requestId` on all three surfaces, and
+setup specification (`setup`, ADR026, including the personal-only `modules`) and an idempotency `requestId` on all three surfaces, and
 `previewLedgerSetup` (REST `POST …/ledgers/preview`, GraphQL query, MCP tool) returns the files
 and accounts a specification would create, with bean-check's `validation` of those files, without
 creating anything (creation refuses a setup whose files would not load, w23/048), under the same

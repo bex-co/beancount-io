@@ -863,7 +863,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Preview Ledger Setup",
     annotations: { ...READ_ONLY, openWorldHint: false },
     description:
-      "Preview a ledger setup (ADR021) without creating anything: returns the files, account list, and validation result the specification would produce. Accepts the same setup object as createLedger.",
+      "Preview a ledger setup (ADR026) without creating anything: returns the files, account list, and validation result the specification would produce. Accepts the same setup object as createLedger.",
     inputSchema: LIFECYCLE_OPERATION_SCHEMAS.preview,
     outputSchema: previewToolOutput,
     execute: LIFECYCLE_EXECUTORS.preview,

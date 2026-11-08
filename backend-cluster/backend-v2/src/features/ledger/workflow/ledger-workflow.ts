@@ -481,7 +481,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     private readonly db: DbExecutor,
     private readonly config: Pick<AppConfig, "gitea">,
     private readonly authorization: IAuthorizationService,
-    /** Strict store for creation idempotency records (ADR021); optional so
+    /** Strict store for creation idempotency records (ADR026); optional so
      * requestId-less creation works in consumers that do not wire Redis. */
     private readonly createIdempotencyStore?: Pick<
       CacheHelper,
@@ -653,7 +653,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       : input.template === LedgerTemplate.SAMPLE
         ? ledgerWithMultipleFilesTemplate
         : defaultLedgerTemplate;
-    // ADR021: a setup's files are validated before the ledger service is
+    // ADR026: a setup's files are validated before the ledger service is
     // called, so a new ledger never starts with a bean-check error (w23/048).
     if (input.setup) {
       const validation = await this.checkSetupFiles(userId, files);
@@ -679,7 +679,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
     const lockKey = LOCK_KEYS.LEDGER.create(userId);
     return lock.acquire(lockKey, async () => {
-      // Idempotent creation (ADR021): inside the per-user lock, a repeated
+      // Idempotent creation (ADR026): inside the per-user lock, a repeated
       // requestId with the same request returns the original ledger, the
       // same id with a different request is a validation error, and a repeat
       // while the first attempt runs reports in-progress instead of creating
@@ -804,7 +804,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   /**
    * bean-check over the files a setup would create, through the ledger
    * service's repository-free check: the preview reports it and creation
-   * refuses on it, as ADR021 requires (w23/048).
+   * refuses on it, as ADR026 requires (w23/048).
    */
   private async checkSetupFiles(
     userId: string,

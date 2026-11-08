@@ -26,7 +26,7 @@ interface SetupModuleSelection {
 
 export interface LedgerSetup {
   preset: PresetId;
-  /** Personal-only account groups (PRFAQ001 Appendix A.9). */
+  /** Personal-only account groups (ADR026 personal modules). */
   modules?: SetupModuleSelection[];
   title?: string;
   operatingCurrency?: string;
@@ -71,7 +71,7 @@ export interface LedgerSetupPreview {
   files: Record<string, string>;
 }
 
-/** bean-check's verdict on the files a setup would create (ADR021, w23/048). */
+/** bean-check's verdict on the files a setup would create (ADR026, w23/048). */
 export interface LedgerSetupValidation {
   ok: boolean;
   errors: { message: string; source?: string }[];
@@ -109,7 +109,7 @@ function isCalendarDate(value: string): boolean {
  * The ledger's sign for an opening amount. An explicit sign, `-` or `+`, is the
  * ledger's own and is written as given (`+50` on a card is 50 in credit). An
  * unsigned positive on a liability keeps the legacy reading: a customer states
- * what a credit card or loan is owed as a positive number, and ADR021 stores
+ * what a credit card or loan is owed as a positive number, and ADR026 stores
  * what they owe as the negative posting; written verbatim, a 500 card balance
  * raised net worth by 500 (w21/104), and saved app builds and agents still send
  * it unsigned. Every other account keeps its amount (w21/549).
@@ -145,7 +145,7 @@ function omitNulls<T>(value: T): T {
 /**
  * The accounts the selected modules open, each with its booking method. A
  * module is accepted only with a preset it lists, once, and a parameter only
- * on the module that declares it (ADR021); every refusal creates nothing.
+ * on the module that declares it (ADR026); every refusal creates nothing.
  */
 function moduleAccounts(
   presetId: string,
@@ -189,7 +189,7 @@ function moduleAccounts(
 }
 
 /**
- * Pure builder: turns a setup specification (ADR021) into the files it
+ * Pure builder: turns a setup specification (ADR026) into the files it
  * would create plus their summary, without creating anything. Throws
  * `ValidationError` for any invalid explicit value.
  */
@@ -342,7 +342,7 @@ export function previewLedgerSetup(
   // with the first account's currency, a second currency's opening failed
   // (w23/048).
   // Nor does any other account take a constraint from the operating currency,
-  // which "neither converts amounts nor prohibits other currencies" (ADR021):
+  // which "neither converts amounts nor prohibits other currencies" (ADR026):
   // Portfolio's holdings refused their own first share purchase, and a euro
   // lunch in a dollar ledger failed bean-check (w21/687). Only a currency the
   // account was set up with restricts it.

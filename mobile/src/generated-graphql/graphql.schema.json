@@ -1062,6 +1062,22 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "valid",
+            "description": "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on success.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -1446,6 +1462,22 @@
           {
             "name": "success",
             "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "valid",
+            "description": "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on success.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -4150,6 +4182,22 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "valid",
+            "description": "True only when the write adds no bean-check error; gate a preview on this.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -4414,6 +4462,22 @@
                     "ofType": null
                   }
                 }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "valid",
+            "description": "True only when the write adds no bean-check error; gate a preview on this.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
               }
             },
             "isDeprecated": false,
@@ -10669,7 +10733,7 @@
       {
         "kind": "ENUM",
         "name": "LedgerSetupModule",
-        "description": "Versioned personal-only account group from the setup catalog (PRFAQ001 Appendix A.9)",
+        "description": "Versioned personal-only account group from the setup catalog (ADR026 personal modules)",
         "isOneOf": null,
         "fields": null,
         "inputFields": null,
@@ -10739,7 +10803,7 @@
       {
         "kind": "ENUM",
         "name": "LedgerSetupPreset",
-        "description": "Versioned starter preset from the setup catalog (ADR021)",
+        "description": "Versioned starter preset from the setup catalog (ADR026)",
         "isOneOf": null,
         "fields": null,
         "inputFields": null,
@@ -12556,7 +12620,7 @@
               },
               {
                 "name": "setup",
-                "description": "Setup specification (ADR021); mutually exclusive with template.",
+                "description": "Setup specification (ADR026); mutually exclusive with template.",
                 "type": {
                   "kind": "INPUT_OBJECT",
                   "name": "LedgerSetupInput",
@@ -20519,6 +20583,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "missingAsError",
+                "description": "Fail a missing file with NOT_FOUND and a directory path with BAD_USER_INPUT, as REST and MCP do, instead of returning null. Defaults to false so clients that read null as 'no such file' keep working.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "path",
                 "description": null,
                 "type": {
@@ -22934,7 +23010,7 @@
           },
           {
             "name": "previewLedgerSetup",
-            "description": "Preview a ledger setup (ADR021) without creating anything: the files, account list, and validation result the specification would produce.",
+            "description": "Preview a ledger setup (ADR026) without creating anything: the files, account list, and validation result the specification would produce.",
             "args": [
               {
                 "name": "setup",
@@ -26858,6 +26934,22 @@
                     "ofType": null
                   }
                 }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "valid",
+            "description": "True only when the write adds no bean-check error; gate a preview on this.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
               }
             },
             "isDeprecated": false,

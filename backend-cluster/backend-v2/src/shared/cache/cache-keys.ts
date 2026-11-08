@@ -121,7 +121,7 @@ export const CACHE_KEYS = {
   },
 
   /**
-   * Ledger creation idempotency records (ADR021): a strict Redis-backed
+   * Ledger creation idempotency records (ADR026): a strict Redis-backed
    * record per (user, requestId), expiring after 24 hours. This is
    * persistence, not a cache — a dropped write must surface.
    */

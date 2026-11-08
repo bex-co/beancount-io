@@ -13,7 +13,7 @@ Verified on `main` (2026-10-26):
 
 - No customer skill has an invoice, bill, receivable, payable, payroll-run, or collected-tax procedure. `beancount-migrate`'s QuickBooks reference converts payments and skips invoice and bill rows ([`qbo.md`](../../skills/beancount-migrate/references/qbo.md)).
 - No skill proposes a client or project attribution, and no `beancount-ask` recipe reports by one. `bea import` rules accept only `match` and `account` and refuse other keys ([`csv_mapper.py`](../../cli/src/bea_engine/csv_mapper.py)).
-- The setup catalog ([ADR021](./ADR021-backend-v2-ledger-creation-experience.md), [`catalog.json`](../../backend-cluster/backend-v2/src/features/ledger/setup/catalog.json)) already names business accounts: `freelance@1` (`Income:Services`, `Equity:OwnerContributions`, `Equity:OwnerDrawings`, and `Assets:AccountsReceivable` behind its invoices question) and `business@1` (`Equity:Capital`, `Equity:RetainedEarnings`, and `Assets:AccountsReceivable` with `Liabilities:AccountsPayable` behind its invoices-bills question). Neither opens collected-tax or payroll liabilities. `freelance@1` already asks "Review income and costs by client or project?" with no convention behind it.
+- The setup catalog ([ADR026](ADR026-dashboard-onboarding.md), [`catalog.json`](../../backend-cluster/backend-v2/src/features/ledger/setup/catalog.json)) already names business accounts: `freelance@1` (`Income:Services`, `Equity:OwnerContributions`, `Equity:OwnerDrawings`, and `Assets:AccountsReceivable` behind its invoices question) and `business@1` (`Equity:Capital`, `Equity:RetainedEarnings`, and `Assets:AccountsReceivable` with `Liabilities:AccountsPayable` behind its invoices-bills question). Neither opens collected-tax or payroll liabilities. `freelance@1` already asks "Review income and costs by client or project?" with no convention behind it.
 - `beancount-accruals` drafts period-end accrual schedules and treats an invoice in a schedule's scope as evidence, not a second subtraction ([`schedule-contract.md`](../../skills/beancount-accruals/references/schedule-contract.md)). It does not record invoices issued to clients.
 
 What `bea` 0.3.1 already supports, checked in source at the `cli-v0.3.1` tag and on a scratch ledger with the checkout's `bea` (HEAD `ab72f5c36`):
@@ -67,7 +67,7 @@ Rejected: tags, because a Beancount tag belongs to the whole transaction (a spli
 
 Tax and payroll amounts come from the user's documents: the tax line an invoice prints, the provider's gross-to-net summary, a filed return. When the user states only a tax rate, the leg is computed with the engine's decimal arithmetic from that stated rate and shown for confirmation. A rate is never looked up. Withholdings and employer taxes are never computed. A summary that does not tie (printed gross minus withholdings is not the printed net) is a question, never an adjusted entry. This is the discipline `beancount-property` applies to a mortgage statement's printed split.
 
-Rejected: rate tables or jurisdiction rules supplied by the skill, because a stale or wrong rate books a plausible, silently wrong liability, and tax determination is outside the suite ([PRFAQ001](../prfaqs/PRFAQ001-ledger-creation.md) defers it).
+Rejected: rate tables or jurisdiction rules supplied by the skill, because a stale or wrong rate books a plausible, silently wrong liability, and tax determination is outside the suite ([ADR026](ADR026-dashboard-onboarding.md) defers it).
 
 ### 5. Where each procedure lives
 
@@ -90,7 +90,7 @@ The boundary with `beancount-accruals`: it drafts expense recognized before or a
 - Render, number, send, or chase invoices.
 - Calculate payroll, withholdings, employer taxes, or tax due; determine which tax applies; prepare or file returns; give tax advice.
 - Track inventory or cost of goods sold until product-seller demand is validated ([w2/099](../../.pm/w2/blocked/099.md)).
-- Consolidate several entities; each entity keeps its own ledger, as [PRFAQ001](../prfaqs/PRFAQ001-ledger-creation.md) advises.
+- Consolidate several entities; each entity keeps its own ledger, as [ADR026](ADR026-dashboard-onboarding.md) advises.
 
 Proposed for `.pm/DO_NOT_DO.md`, pending the owner's decision:
 

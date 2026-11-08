@@ -41,7 +41,7 @@ export enum LedgerSetupPreset {
 
 registerEnumType(LedgerSetupPreset, {
   name: "LedgerSetupPreset",
-  description: "Versioned starter preset from the setup catalog (ADR021)",
+  description: "Versioned starter preset from the setup catalog (ADR026)",
 });
 
 export enum LedgerSetupModule {
@@ -53,7 +53,7 @@ export enum LedgerSetupModule {
 registerEnumType(LedgerSetupModule, {
   name: "LedgerSetupModule",
   description:
-    "Versioned personal-only account group from the setup catalog (PRFAQ001 Appendix A.9)",
+    "Versioned personal-only account group from the setup catalog (ADR026 personal modules)",
 });
 
 export enum LedgerOpeningState {
@@ -353,7 +353,7 @@ export class CreateLedgerInput {
   @Field(() => LedgerSetupInput, {
     nullable: true,
     description:
-      "Setup specification (ADR021); mutually exclusive with template.",
+      "Setup specification (ADR026); mutually exclusive with template.",
   })
   @IsOptional()
   setup?: LedgerSetupInput;

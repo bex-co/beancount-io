@@ -19,7 +19,7 @@ export const ENTRY_REQUEST_ID_DESCRIPTION =
 
 /**
  * Run an entry write at most once per `requestId` (w3/m61, owner decision
- * 2026-11-02, after ledger creation's ADR021 contract).
+ * 2026-11-02, after ledger creation's ADR026 contract).
  *
  * - No `requestId`: the write runs exactly as before and the store is never
  *   touched.

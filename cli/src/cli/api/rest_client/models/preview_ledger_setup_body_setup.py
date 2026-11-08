@@ -21,7 +21,7 @@ T = TypeVar("T", bound="PreviewLedgerSetupBodySetup")
 class PreviewLedgerSetupBodySetup:
     """
     Attributes:
-        preset (PreviewLedgerSetupBodySetupPreset): Setup preset id (ADR021).
+        preset (PreviewLedgerSetupBodySetupPreset): Setup preset id (ADR026).
         modules (list[PreviewLedgerSetupBodySetupModulesItem] | Unset): personal@1 only; each module at most once.
         title (str | Unset):
         operating_currency (str | Unset):

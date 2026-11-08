@@ -783,7 +783,7 @@ authority and apply changes immediately. Creation can be previewed first with
 `previewLedgerSetup`; update and delete offer no preview.
 
 - `previewLedgerSetup` requires `setup`, the same setup specification
-  `createLedger` accepts ([ADR 021](../../../docs/adrs/ADR021-backend-v2-ledger-creation-experience.md)). It creates nothing and
+  `createLedger` accepts ([ADR 026](../../../docs/adrs/ADR026-dashboard-onboarding.md)). It creates nothing and
   returns the resolved `preset`, `operatingCurrency`, and `historyStart`, the
   `accounts` the ledger would open, and the `files` it would write, keyed by
   path, plus `validation: { ok, errors }` — bean-check's verdict on those
@@ -1645,11 +1645,11 @@ an explicit ID must name that same user. The account service enforces read
 capability and exact-self authorization independently of a credential's ledger
 pin. Results include identity fields, locale, report status, subscription tier,
 ledger limits, whether the user has ever subscribed, and `defaultCurrency` — the
-saved currency preference a creation flow suggests first ([ADR 026](../../../docs/adrs/ADR026-backend-v2-locale-and-currency-defaults.md#saved-currency-preference)),
+saved currency preference a creation flow suggests first ([ADR 026](../../../docs/adrs/ADR026-dashboard-onboarding.md#language-formatting-and-currency)),
 or `null`. It is written only through GraphQL `updateProfile`, which keeps its
 REST and MCP exclusion; sent alone it leaves the names unchanged, `null` clears
 it, and an unsupported code is refused. `createLedger` and `previewLedgerSetup`
-never read it: an omitted `setup.operatingCurrency` is always ADR021's default.
+never read it: an omitted `setup.operatingCurrency` is always ADR026's default.
 
 A missing user returns JSON `null`. The REST and GraphQL identity probes also
 return `null` anonymously without loading account data. The MCP transport
@@ -1935,7 +1935,7 @@ preview whose `valid` is `true` before re-issuing it with `dry_run: false`
 `addLedgerEntries`, `appendLedgerText`, and `insertReceiptTransaction` take an
 optional `requestId` (1–200 characters), as do their REST and GraphQL twins and
 the legacy `addEntries` (w3/m61). It copies ledger creation's contract
-(ADR021). Send a new id for each write, and reuse it only to retry that write
+(ADR026). Send a new id for each write, and reuse it only to retry that write
 after a timeout or a dropped reply:
 
 - Within 24 hours, the same id with the same request returns the first

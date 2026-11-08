@@ -20,7 +20,7 @@ const EXPECTED_PRESETS = [
 ];
 
 describe("setup catalog (w3/m53/t001)", () => {
-  it("freezes every ADR021 preset at version 1", () => {
+  it("freezes every ADR026 preset at version 1", () => {
     expect(setupCatalog.presets.map((preset) => preset.id)).toEqual(
       EXPECTED_PRESETS,
     );
@@ -81,7 +81,7 @@ describe("setup catalog modules (w3/m59/t001)", () => {
     "rental-property@1",
     "side-business@1",
   ];
-  // PRFAQ001 Appendix A.9, with the rental property at its default name.
+  // ADR026 personal modules, with the rental property at its default name.
   const A9_ACCOUNTS = [
     "Assets:Brokerage",
     "Income:Dividends",
@@ -190,7 +190,7 @@ describe("setup currency tables", () => {
       expect(region).toMatch(/^[A-Z]{2}$/);
       expect(supported.has(currency)).toBe(true);
     }
-    // Multi-currency or currency-less regions have no row (ADR021).
+    // Multi-currency or currency-less regions have no row (ADR026).
     for (const region of ["AQ", "BT", "HT", "LS", "NA", "PA", "PS", "ZW"]) {
       expect(setupCurrencies.regionCurrency[region]).toBeUndefined();
     }

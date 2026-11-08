@@ -1814,7 +1814,7 @@
                           "community@1",
                           "blank@1"
                         ],
-                        "description": "Setup preset id (ADR021)."
+                        "description": "Setup preset id (ADR026)."
                       },
                       "modules": {
                         "type": "array",
@@ -6037,7 +6037,7 @@
       "post": {
         "operationId": "previewLedgerSetup",
         "summary": "Preview a ledger setup without creating it",
-        "description": "Return the files, account list, and validation result a setup specification (ADR021) would create, without creating anything. Uses the same LEDGER_CREATE authority as creation.",
+        "description": "Return the files, account list, and validation result a setup specification (ADR026) would create, without creating anything. Uses the same LEDGER_CREATE authority as creation.",
         "tags": [
           "Ledger v1"
         ],
@@ -6070,7 +6070,7 @@
                           "community@1",
                           "blank@1"
                         ],
-                        "description": "Setup preset id (ADR021)."
+                        "description": "Setup preset id (ADR026)."
                       },
                       "modules": {
                         "type": "array",

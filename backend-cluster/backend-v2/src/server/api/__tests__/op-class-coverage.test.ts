@@ -93,7 +93,7 @@ describe("op-class coverage", () => {
     // added `getLedgerOptions`, the root twin of the nested `Ledger.options`
     // that REST `/options` and the `ledgerOptions` resource bind to; 81 since
     // w1/m39 added `previewPlanChange` (PRFAQ005), browser-session billing;
-    // 82 since w3/m53 added `previewLedgerSetup` (ADR021 setup preview);
+    // 82 since w3/m53 added `previewLedgerSetup` (ADR026 setup preview);
     // 83 since w22/m6:t001 added `getLedgerHoldings`, the holdings report;
     // 84 since w22/m6:t002 added `getLedgerRegister`, the register report;
     // 85 since w22/m6:t003 added `getLedgerCapitalGains`, the gains report;

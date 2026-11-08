@@ -270,7 +270,7 @@ async function fixture(caller = identity, appId?: string, rateLimited = false) {
       deleteByLedgerRepoId: deleteBankRows,
     },
   };
-  // The strict store creation idempotency records live in (ADR021).
+  // The strict store creation idempotency records live in (ADR026).
   const idempotencyRecords = new Map<string, unknown>();
   const idempotencyStore = {
     getStrict: async (key: string) => idempotencyRecords.get(key),

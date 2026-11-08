@@ -166,7 +166,7 @@ interface ILedgerDataService {
 
   /**
    * bean-check over a complete set of files that is not a repository yet —
-   * the ledger a guided setup would create (ADR021, w23/048). Base64 text,
+   * the ledger a guided setup would create (ADR026, w23/048). Base64 text,
    * entry point `main.bean`, the same input caps as `/check`.
    */
   checkLedgerFiles(params: {

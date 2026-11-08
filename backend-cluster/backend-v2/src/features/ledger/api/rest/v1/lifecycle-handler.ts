@@ -50,7 +50,7 @@ const ledgerSetupInput = z
           ...PresetId[],
         ],
       )
-      .describe("Setup preset id (ADR021)."),
+      .describe("Setup preset id (ADR026)."),
     modules: z
       .array(
         z
@@ -264,7 +264,7 @@ export const LEDGER_LIFECYCLE_ROUTES = [
     operationId: "previewLedgerSetup",
     summary: "Preview a ledger setup without creating it",
     description:
-      "Return the files, account list, and validation result a setup specification (ADR021) would create, without creating anything. Uses the same LEDGER_CREATE authority as creation.",
+      "Return the files, account list, and validation result a setup specification (ADR026) would create, without creating anything. Uses the same LEDGER_CREATE authority as creation.",
     body: ledgerPreviewInput,
     responses: {
       200: json("Setup preview", ledgerPreviewResultSchema),

@@ -9,7 +9,7 @@ export interface User {
   locale: string;
   firstName?: string;
   lastName?: string;
-  /** ADR026 saved currency preference, an ADR021 supported code. */
+  /** ADR026 saved currency preference, a supported operating currency. */
   defaultCurrency?: string;
   isBlocked: boolean;
   ledger_username: string;

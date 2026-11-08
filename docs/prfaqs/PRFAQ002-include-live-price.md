@@ -16,7 +16,7 @@ include "https://beancount.io/prices/BTC-USD"
 
 Start with BTC and ETH quoted in USD, then a curated catalog of U.S. stocks and ETFs quoted in USD, gated on market-data redistribution rights. Deliver recent crypto reference prices, explicitly delayed stock prices, and daily history through ordinary Beancount `price` directives. Make source identity, freshness, manual overrides, and portable snapshots part of the first customer release. “Live” means automatically refreshed valuation data with a visible observation time and delay.
 
-This follows [PRFAQ001's investment starter](PRFAQ001-ledger-creation.md#a4-investment-portfolio): record holdings and acquisition costs first, then offer prices when the customer requests market valuation. Creating books or recording a purchase does not require enabling a feed.
+This follows [ADR026's portfolio starter](../adrs/ADR026-dashboard-onboarding.md#starter-catalog): record holdings and acquisition costs first, then offer prices when the customer requests market valuation. Creating books or recording a purchase does not require enabling a feed.
 
 ## Delivery status
 
@@ -104,7 +104,7 @@ Beancount prices have daily resolution. Source timestamps explain freshness but 
 
 ### 5. What changes in my investment reports?
 
-Market value and any report derived from it can update. Recorded quantities, transaction cash flows, fees, acquisition lots, and cost amounts do not change when a quote changes. A missing acquisition cost remains unknown; it is never filled with a market price. Tax preparation still needs the transaction evidence and reviewed treatment described in PRFAQ001.
+Market value and any report derived from it can update. Recorded quantities, transaction cash flows, fees, acquisition lots, and cost amounts do not change when a quote changes. A missing acquisition cost remains unknown; it is never filled with a market price. Tax preparation still needs the transaction evidence and reviewed treatment described in ADR026.
 
 For a synthetic example, 0.5 BTC acquired at 80,000 USD per BTC has a recorded acquisition amount of 40,000 USD. A reference price of 92,000 USD values that holding at 46,000 USD, a 6,000 USD difference before fees and other adjustments. Refreshing to 94,000 USD changes its value to 47,000 USD and that difference to 7,000 USD. It creates no sale, cash receipt, or realized gain.
 

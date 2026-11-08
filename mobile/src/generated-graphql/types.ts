@@ -126,6 +126,8 @@ export type AddLedgerEntryResponse = {
   /** Per-file entry text; populated on dry runs only */
   preview: Array<EntryPreviewFile>;
   success: Scalars['Boolean']['output'];
+  /** True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on success. */
+  valid: Scalars['Boolean']['output'];
 };
 
 export type AiCfoUsageResponse = {
@@ -164,6 +166,8 @@ export type AppendDirectiveTextResponse = {
   message: Scalars['String']['output'];
   newErrors: Array<DirectiveTextError>;
   success: Scalars['Boolean']['output'];
+  /** True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on success. */
+  valid: Scalars['Boolean']['output'];
   wrote: Array<AppendedDirective>;
 };
 
@@ -499,6 +503,8 @@ export type DeleteMultiSourceSlicesResponse = {
   newErrors: Array<SliceWriteError>;
   /** Per-file affected text; populated on dry runs only */
   preview: Array<SlicePreviewFile>;
+  /** True only when the write adds no bean-check error; gate a preview on this. */
+  valid: Scalars['Boolean']['output'];
 };
 
 export type DeletePublicKeyResponse = {
@@ -532,6 +538,8 @@ export type DeleteSourceSliceResponse = {
   newErrors: Array<SliceWriteError>;
   /** Per-file affected text; populated on dry runs only */
   preview: Array<SlicePreviewFile>;
+  /** True only when the write adds no bean-check error; gate a preview on this. */
+  valid: Scalars['Boolean']['output'];
 };
 
 export type DenyCliAuthSessionResponse = {
@@ -1180,7 +1188,7 @@ export type LedgerSetupInput = {
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Versioned personal-only account group from the setup catalog (PRFAQ001 Appendix A.9) */
+/** Versioned personal-only account group from the setup catalog (ADR026 personal modules) */
 export enum LedgerSetupModule {
   Investments = 'INVESTMENTS',
   RentalProperty = 'RENTAL_PROPERTY',
@@ -1193,7 +1201,7 @@ export type LedgerSetupModuleInput = {
   propertyName?: InputMaybe<Scalars['String']['input']>;
 };
 
-/** Versioned starter preset from the setup catalog (ADR021) */
+/** Versioned starter preset from the setup catalog (ADR026) */
 export enum LedgerSetupPreset {
   Blank = 'BLANK',
   Business = 'BUSINESS',
@@ -2411,7 +2419,7 @@ export type Query = {
   listPublicKeys: Array<PublicKey>;
   /** List all user owned ledgers for the current user */
   listUserOwnedLedgers: Array<Ledger>;
-  /** Preview a ledger setup (ADR021) without creating anything: the files, account list, and validation result the specification would produce. */
+  /** Preview a ledger setup (ADR026) without creating anything: the files, account list, and validation result the specification would produce. */
   previewLedgerSetup: LedgerSetupPreview;
   /** Previews switching your plan to a price: the kind of change, when it takes effect, and what is charged today. Requires a full signed-in session. */
   previewPlanChange: PlanChangePreview;
@@ -2622,6 +2630,7 @@ export type QueryGetLedgerEventsArgs = {
 
 export type QueryGetLedgerFileArgs = {
   ledgerId: Scalars['String']['input'];
+  missingAsError?: InputMaybe<Scalars['Boolean']['input']>;
   path: Scalars['String']['input'];
 };
 
@@ -3356,6 +3365,8 @@ export type UpdateSourceSliceResponse = {
   newSha256sum: Scalars['String']['output'];
   /** Per-file affected text; populated on dry runs only */
   preview: Array<SlicePreviewFile>;
+  /** True only when the write adds no bean-check error; gate a preview on this. */
+  valid: Scalars['Boolean']['output'];
 };
 
 export type UpgradeSubscriptionResult = {

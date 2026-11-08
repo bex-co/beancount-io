@@ -198,7 +198,7 @@ _INSTRUMENT_ACCOUNTS = frozenset({"Assets:Holdings"})
 def module_accounts(
     catalog: dict[str, Any], preset: str, modules: list[str], property_name: str | None
 ) -> dict[str, dict[str, Any]]:
-    """The catalog entries of the accounts the selected setup modules open, keyed by name (ADR021).
+    """The catalog entries of the accounts the selected setup modules open, keyed by name (ADR026).
 
     Mirrors the hosted builder: a module is accepted only with a preset it
     lists and only once, and a property name only with the module that
@@ -243,7 +243,7 @@ def answer_preset(
     modules: list[str] | None = None,
     property_name: str | None = None,
 ) -> dict[str, Any]:
-    """Write a new ledger from a setup-catalog preset (ADR021).
+    """Write a new ledger from a setup-catalog preset (ADR026).
 
     Mirrors the hosted builder: preset accounts open with no balance claim,
     an explicit opening balance posts the day before the history boundary

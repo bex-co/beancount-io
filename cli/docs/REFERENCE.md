@@ -86,7 +86,7 @@ Usage: bea init [OPTIONS] [directory]
 | `--currency, -c` | str |  | Operating currency, e.g. USD or EUR |
 | `--date` | str |  | Earliest history/opening date YYYY-MM-DD; prompts interactively, otherwise today |
 | `--opening-balance` | str (repeatable) |  | 'ACCOUNT NUMBER' in the operating currency; repeat for each account |
-| `--preset` | str |  | Setup-catalog preset id, e.g. personal@1 (ADR021); replaces the fixed chart |
+| `--preset` | str |  | Setup-catalog preset id, e.g. personal@1 (ADR026); replaces the fixed chart |
 | `--title` | str |  | Ledger title; only with --preset |
 | `--module` | str (repeatable) |  | Also track investments@1, rental-property@1, or side-business@1 in a --preset personal@1 ledger; repeat for each |
 | `--property-name` | str |  | Account name for the rental property, e.g. OakSt (default Property1) |
@@ -1467,7 +1467,7 @@ Usage: bea cloud ledger create [OPTIONS] {name}
 | `--private, --public` | flag | private | Ledger visibility |
 | `--clone` | flag |  | Clone the new ledger to disk after creating it |
 | `--dir` | path |  | Local directory for the git clone |
-| `--preset` | str |  | Setup-catalog preset id, e.g. personal@1 (ADR021) |
+| `--preset` | str |  | Setup-catalog preset id, e.g. personal@1 (ADR026) |
 | `--title` | str |  | Ledger title; only with --preset |
 | `--currency` | str |  | Operating currency for the preset, e.g. EUR |
 | `--date` | str |  | History start YYYY-MM-DD for the preset |
