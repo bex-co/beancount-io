@@ -1,6 +1,6 @@
 # w0 · m9 — An abandoned first Checkout gets one short recovery email
 
-**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** in progress (t001–t005, t007–t009 done; t006 blocked on the owner)
+**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** in progress (t001–t005, t007–t009 done; t006 blocked on the owner)
 
 ## Tasks (in order)
 
@@ -25,6 +25,7 @@
 - **Unblock:** the owner confirms steps 1–5. Then a worker runs t006's live check with an owner account that has never paid, and records the evidence.
 - **Who:** the repository owner (Stripe Dashboard, SendGrid, production deployment).
 - **Board change:** t007–t009 do not need the live check, so t007 now depends on t005. Closeout (t010) waits on t006 and t009.
+- **Milestone blocked 2026-11-08:** t007–t009 are done, so every open task (t006, and t010, which depends on it) waits on the owner. The milestone moved to `w0/blocked/m9/`. **Unblock:** the same owner steps as above. Then `/pm unblock w0/m9`, run t006, then t010.
 
 ## Definition of done
 
@@ -37,7 +38,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** [ADR027](../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md), reviewed 2026-11-08. That review moved the expiry to 90 minutes, rewrote the paid-since check for Stripe's list filters, recorded the owner's decision to send without promotional consent, and changed the email to say "48 hours" instead of a UTC date.
+- **Source:** [ADR027](../../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md), reviewed 2026-11-08. That review moved the expiry to 90 minutes, rewrote the paid-since check for Stripe's list filters, recorded the owner's decision to send without promotional consent, and changed the email to say "48 hours" instead of a UTC date.
 - **Goal linkage:** **A2 — Frictionless onboarding.** Someone who picks a plan and stalls on the payment form today hears nothing, and their session lingers for 24 hours. After this, one reminder takes them back to the plan they already chose.
 - **Expected outcome:** first-time customers who leave Checkout get one way back to the same plan. Stripe reports how many recovery codes were redeemed and how many sessions were recovered (`times_redeemed`, `recovered_from`), with no new analytics table.
 - **Why now:** the ADR is settled and every building block already exists: the idempotent `sent_billing_emails` claim, SendGrid delivery, and the webhook handler's verification. Today `checkout.session.expired` is ignored.
