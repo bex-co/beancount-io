@@ -127,6 +127,13 @@ mail without contacting a provider. See the
 [operator guide](docs/authentication-rate-limits.md#deployment-and-development)
 for the worker, Redis and recovery prerequisites.
 
+`SELF_HOST=true` is for a deployment its operator runs for their own users (off
+unless exactly `true`). Sign-up then sends no code and needs no verification
+step: `signUp` creates the account and returns the session `token` directly
+(also set as the auth cookie). Every plan limit is lifted by resolving each
+user to the unlimited tier, and Stripe is never consulted. Email addresses are
+not verified, and recovery mail still needs `SEND_GRID_API_KEY`.
+
 Production OAuth requires `OAUTH_JWKS`, a complete private P-256/ES256 signing
 JWKS provided by the deployment secret manager. It must never be committed or
 copied into `.env.example`. When it is absent or malformed, OAuth endpoints

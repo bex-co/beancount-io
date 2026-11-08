@@ -1,3 +1,4 @@
+import { isSelfHost } from "./self-host";
 import { getOptionalJwks } from "./jwks";
 import type { ScopeEnforcementMode } from "@/server/api/op-class";
 
@@ -70,16 +71,6 @@ interface DashboardConfig {
 interface McpRegistryConfig {
   /** `v=MCPv1; k=ed25519; p=<base64 public key>` (`k=ecdsap384` for P-384), or null. */
   authProof: string | null;
-}
-
-interface AuthPolicyConfig {
-  /**
-   * AUTH_SKIP_EMAIL_VERIFICATION=true: sign-up sends no verification mail and
-   * accepts any code for a valid session. For a deployment with no mail
-   * provider (e.g. a canary); never inferred from a missing SEND_GRID_API_KEY,
-   * so a production deployment that loses its key fails instead of opening.
-   */
-  skipEmailVerification: boolean;
 }
 
 export interface GiteaConfig {
@@ -218,7 +209,11 @@ export interface AppConfig {
   jwt: JwtConfig;
   favaApi: FavaAPIConfig;
   dashboard: DashboardConfig;
-  auth: AuthPolicyConfig;
+  /**
+   * SELF_HOST=true: the operator runs the stack for their own users. Sign-up
+   * needs no email verification and no plan limits apply. See `self-host.ts`.
+   */
+  selfHost: boolean;
   mcpRegistry: McpRegistryConfig;
   gitea: GiteaConfig;
   blockeden: BlockEdenConfig;
@@ -388,9 +383,7 @@ export const config: AppConfig = {
   dashboard: {
     url: dashboardUrl,
   },
-  auth: {
-    skipEmailVerification: process.env.AUTH_SKIP_EMAIL_VERIFICATION === "true",
-  },
+  selfHost: isSelfHost(),
   mcpRegistry: {
     authProof: getMcpRegistryAuthProof(process.env.MCP_REGISTRY_AUTH_PROOF),
   },

@@ -56,3 +56,52 @@ describe("useRegisterForm refusals", () => {
     );
   });
 });
+
+// A self-hosted deployment verifies no email: its sign-up answers already
+// signed in, so the code step must never be offered.
+describe("useRegisterForm on a self-hosted deployment", () => {
+  const signedIn = {
+    data: {
+      signUp: {
+        sessionId: "s-1",
+        expireAt: "2026-11-08T00:00:00.000Z",
+        token: "jwt-1",
+        tokenExpireAt: "2026-12-08T00:00:00.000Z",
+      },
+    },
+  };
+
+  it("signs the user in and skips the code step when a token comes back", async () => {
+    signUp.mockResolvedValueOnce(signedIn);
+    const onSuccess = vi.fn();
+    const onSignedIn = vi.fn();
+    const { result } = renderHook(() =>
+      useRegisterForm({ onSuccess, onSignedIn }),
+    );
+    await act(() => result.current.onSubmit(form));
+
+    expect(onSignedIn).toHaveBeenCalledWith(
+      {
+        accessToken: "jwt-1",
+        expiresAt: "2026-12-08T00:00:00.000Z",
+      },
+      form.email,
+    );
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
+  it("asks for the emailed code when no token comes back", async () => {
+    signUp.mockResolvedValueOnce({
+      data: { signUp: { sessionId: "s-2", expireAt: "x", token: null } },
+    });
+    const onSuccess = vi.fn();
+    const onSignedIn = vi.fn();
+    const { result } = renderHook(() =>
+      useRegisterForm({ onSuccess, onSignedIn }),
+    );
+    await act(() => result.current.onSubmit(form));
+
+    expect(onSuccess).toHaveBeenCalledWith("s-2", form.email);
+    expect(onSignedIn).not.toHaveBeenCalled();
+  });
+});

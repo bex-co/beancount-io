@@ -98,9 +98,9 @@ export async function startServer(): Promise<void> {
 
   const layers: AppLayers = await buildAppLayers(config);
 
-  if (config.auth.skipEmailVerification) {
+  if (config.selfHost) {
     logger.warn(
-      "AUTH_SKIP_EMAIL_VERIFICATION is on: sign-ups are not email-verified. Do not use in production.",
+      "SELF_HOST is on: sign-ups are not email-verified and no plan limits apply.",
     );
   }
 

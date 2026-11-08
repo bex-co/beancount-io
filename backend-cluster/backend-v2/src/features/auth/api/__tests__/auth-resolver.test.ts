@@ -601,4 +601,63 @@ describe("AuthResolver", () => {
       ).rejects.toThrow(BadUserInputError);
     });
   });
+
+  describe("signUp", () => {
+    const args = {
+      email: " New@Example.com ",
+      password: "correct horse battery",
+      firstName: "New",
+      lastName: "Person",
+    } as never;
+    const session = { otp: "1234", expireAt: "2026-11-07T00:00:00.000Z" };
+
+    beforeEach(() => {
+      mockAuthService.createSignUpSession.mockResolvedValue("sess-1");
+      mockAuthService.getSignupOtpSession.mockResolvedValue(session as never);
+    });
+
+    it("returns only the session when email verification is required", async () => {
+      const result = await resolver.signUp(mockContext, args);
+      expect(result).toEqual({
+        sessionId: "sess-1",
+        expireAt: session.expireAt,
+      });
+      expect(mockAuthSessionWorkflow.verifySignUpOtp).not.toHaveBeenCalled();
+      expect((mockContext.koaCtx as any).cookies.set).not.toHaveBeenCalled();
+    });
+
+    it("completes the sign-up and signs the user in when self-hosted", async () => {
+      const expireAt = new Date("2026-12-07T00:00:00.000Z");
+      mockAuthSessionWorkflow.verifySignUpOtp.mockResolvedValue({
+        token: "jwt-1",
+        expireAt,
+      } as never);
+      mockContext.config = { env: "development", selfHost: true } as never;
+
+      const result = await resolver.signUp(mockContext, args);
+
+      expect(mockAuthSessionWorkflow.verifySignUpOtp).toHaveBeenCalledWith({
+        sessionId: "sess-1",
+        otp: "1234",
+        ip: "127.0.0.1",
+      });
+      expect(result).toMatchObject({ token: "jwt-1", tokenExpireAt: expireAt });
+      expect((mockContext.koaCtx as any).cookies.set).toHaveBeenCalledWith(
+        "authSess:beancount.io",
+        "jwt-1",
+        expect.objectContaining({ httpOnly: true }),
+      );
+    });
+
+    it("does not sign in when finishing the sign-up fails", async () => {
+      mockAuthSessionWorkflow.verifySignUpOtp.mockRejectedValue(
+        new BadUserInputError("Invalid or expired session"),
+      );
+      mockContext.config = { env: "development", selfHost: true } as never;
+      await expect(resolver.signUp(mockContext, args)).rejects.toThrow(
+        BadUserInputError,
+      );
+      expect((mockContext.koaCtx as any).cookies.set).not.toHaveBeenCalled();
+    });
+  });
 });

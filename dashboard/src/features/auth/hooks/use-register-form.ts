@@ -7,6 +7,8 @@ import {
 } from "@/graphql/definitions";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { generateDefaultUsername } from "@/common/lib/utils/nanoid-base58";
+import { track } from "@/common/analytics";
+import type { Token } from "@/common/types/token";
 import { useNewPasswordErrorMessage } from "@/features/auth/lib/password-rule";
 
 export type RegisterFormData = {
@@ -23,6 +25,11 @@ type UseRegisterFormOptions = {
   inviteSrc?: string;
   inviteBy?: string;
   onSuccess: (sessionId: string, email: string) => void;
+  /**
+   * A self-hosted deployment verifies no email: the sign-up answers already
+   * signed in, so there is no code to enter and `onSuccess` is not called.
+   */
+  onSignedIn?: (token: Token, email: string) => void | Promise<void>;
 };
 
 export function useRegisterForm({
@@ -30,6 +37,7 @@ export function useRegisterForm({
   inviteSrc,
   inviteBy,
   onSuccess,
+  onSignedIn,
 }: UseRegisterFormOptions) {
   const { t } = useTranslations();
   const formatError = useNewPasswordErrorMessage();
@@ -57,7 +65,18 @@ export function useRegisterForm({
         },
       });
       const responseData = response.data;
-      if (responseData) {
+      if (responseData?.signUp.token && onSignedIn) {
+        // As in the code flow, sign_up counts a finished registration.
+        track("sign_up", { method: "password" });
+        await onSignedIn(
+          {
+            accessToken: responseData.signUp.token,
+            expiresAt:
+              responseData.signUp.tokenExpireAt ?? responseData.signUp.expireAt,
+          },
+          data.email,
+        );
+      } else if (responseData) {
         onSuccess(responseData.signUp.sessionId, data.email);
       } else {
         setServerError(t("auth.registrationFailed"));

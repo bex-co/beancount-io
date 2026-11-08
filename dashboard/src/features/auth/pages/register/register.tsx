@@ -2,6 +2,7 @@ import { Lock, BarChart3, Heart } from "lucide-react";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useRegisterForm } from "@/features/auth/hooks/use-register-form";
+import type { Token } from "@/common/types/token";
 import { RegisterForm } from "@/features/auth/components/register-form";
 
 type RegisterPageProps = {
@@ -9,6 +10,7 @@ type RegisterPageProps = {
   inviteSrc?: string;
   inviteBy?: string;
   onSuccess: (sessionId: string, email: string) => void;
+  onSignedIn?: (token: Token) => void | Promise<void>;
 };
 
 export default function RegisterPage({
@@ -16,11 +18,12 @@ export default function RegisterPage({
   inviteSrc,
   inviteBy,
   onSuccess,
+  onSignedIn,
 }: RegisterPageProps) {
   const { t } = useTranslations();
 
   const { onSubmit, isLoading, serverError, defaultUsername } = useRegisterForm(
-    { withDefaultLedger, inviteSrc, inviteBy, onSuccess },
+    { withDefaultLedger, inviteSrc, inviteBy, onSuccess, onSignedIn },
   );
 
   const features = [

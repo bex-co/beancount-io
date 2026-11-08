@@ -64,15 +64,26 @@ function LoginStep({
 
 function RegisterStep({
   onSuccess,
+  onSignedIn,
   onSignInClick,
 }: {
   onSuccess: (sessionId: string, email: string) => void;
+  /** A self-hosted deployment verifies no email: sign-up arrives signed in. */
+  onSignedIn: (email: string) => void;
   onSignInClick: () => void;
 }) {
+  const client = useApolloClient();
   const { t } = useTranslations();
 
   const { onSubmit, isLoading, serverError, defaultUsername } = useRegisterForm(
-    { withDefaultLedger: false, onSuccess },
+    {
+      withDefaultLedger: false,
+      onSuccess,
+      onSignedIn: async (_token, email) => {
+        await client.resetStore();
+        onSignedIn(email);
+      },
+    },
   );
 
   return (
@@ -203,6 +214,10 @@ export default function IdentityOAuthConsentPage() {
             onSuccess={(sessionId, email) =>
               setState({ step: "otp", sessionId, email })
             }
+            onSignedIn={(email) => {
+              setApprovedEmail(email);
+              setState({ step: "approve" });
+            }}
             onSignInClick={() => setState({ step: "login" })}
           />
         )}

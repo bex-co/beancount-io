@@ -160,6 +160,7 @@ services:
       PERM_ASSETS_AWS_S3_ENDPOINT: ${PERM_ASSETS_AWS_S3_ENDPOINT:-}
       # Optional integrations — unset keys disable the feature.
       SEND_GRID_API_KEY: ${SEND_GRID_API_KEY:-}
+      SELF_HOST: ${SELF_HOST:-}
       STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY:-}
       STRIPE_PRIVATE_KEY: ${STRIPE_PRIVATE_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}

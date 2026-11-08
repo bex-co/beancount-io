@@ -1661,6 +1661,12 @@ type ResetPasswordResponse {
 type SignUpResponse {
   sessionId: String!
   expireAt: String!
+
+  """
+  Set only on a self-hosted deployment, where sign-up needs no email verification: the account already exists and this is its session token (also set as the auth cookie). Absent means the code in the email must be verified with verifySignUpOtp.
+  """
+  token: String
+  tokenExpireAt: DateTimeISO
 }
 
 type CreateCliAuthSessionResponse {

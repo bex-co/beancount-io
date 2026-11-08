@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { isSelfHost } from "@/config/self-host";
 import { logger } from "@/shared/logger";
 import { SubscriptionTier, TierLimits, getTierLimits } from "../service/stripe";
 import {
@@ -25,6 +26,9 @@ export async function getUserTier({
   stripe,
   userId,
 }: GetUserTierParams): Promise<SubscriptionTier> {
+  // A self-hosted operator has no plans to sell their own users: everyone gets
+  // the top tier, whose every limit is unlimited, and Stripe is never asked.
+  if (isSelfHost()) return SubscriptionTier.ENTERPRISE;
   const [fromStripe, fromStores] = await Promise.all([
     stripeTier({ stripe, userId }),
     storeTiers({ stripe, userId }),

@@ -141,6 +141,8 @@ mutation SignUp(
   ) {
     sessionId
     expireAt
+    token
+    tokenExpireAt
   }
 }
 

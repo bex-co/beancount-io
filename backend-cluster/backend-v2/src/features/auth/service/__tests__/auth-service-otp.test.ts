@@ -217,8 +217,8 @@ it.each(verificationPaths)(
   },
 );
 
-describe("AUTH_SKIP_EMAIL_VERIFICATION", () => {
-  function createSkippingService(skip: boolean) {
+describe("SELF_HOST sign-up", () => {
+  function createSelfHostService(selfHost: boolean) {
     const base = createService();
     const sendMail = jest.fn();
     const signupOtpSession = {
@@ -237,52 +237,47 @@ describe("AUTH_SKIP_EMAIL_VERIFICATION", () => {
       { sendMail } as never,
       {} as never,
       {} as never,
-      { auth: { skipEmailVerification: skip } } as never,
+      { selfHost } as never,
       async () => false,
     );
     const registerUser = jest
       .spyOn(service, "registerUser")
       .mockResolvedValue(authResponse);
-    return { service, sendMail, registerUser, signupOtpSession };
+    return { service, sendMail, registerUser };
   }
 
+  const signUp = {
+    email: "self-host@example.com",
+    password: "correct horse battery",
+    firstName: "Self",
+    lastName: "Host",
+    username: null,
+    ip: "198.51.100.20",
+  };
+
+  it("sends no verification mail when self-hosted", async () => {
+    const { service, sendMail } = createSelfHostService(true);
+    await expect(service.createSignUpSession(signUp)).resolves.toBe("created");
+    expect(sendMail).not.toHaveBeenCalled();
+  });
+
+  it("sends the verification mail when not self-hosted", async () => {
+    const { service, sendMail } = createSelfHostService(false);
+    await service.createSignUpSession({ ...signUp, ip: "198.51.100.21" });
+    expect(sendMail).toHaveBeenCalledTimes(1);
+  });
+
+  // Self-hosting removes the verification page, not the check: the public
+  // verify endpoints still demand the session's real code.
   it.each(verificationPaths)(
-    "accepts any code through %s for a valid session when on",
+    "still rejects a wrong code through %s when self-hosted",
     async (path) => {
-      const { service, registerUser } = createSkippingService(true);
+      const { service, registerUser } = createSelfHostService(true);
       await expect(
         service[path]({
           sessionId: "session-a",
           otp: "not-the-code",
-          ip: "198.51.100.9",
-        }),
-      ).resolves.toEqual(authResponse);
-      expect(registerUser).toHaveBeenCalledTimes(1);
-    },
-  );
-
-  it.each(verificationPaths)(
-    "still rejects an unknown session through %s when on",
-    async (path) => {
-      const { service, signupOtpSession, registerUser } =
-        createSkippingService(true);
-      signupOtpSession.getSessionById.mockResolvedValueOnce(null);
-      await expect(
-        service[path]({ sessionId: "nope", otp: "0000", ip: "198.51.100.10" }),
-      ).rejects.toBeInstanceOf(BadUserInputError);
-      expect(registerUser).not.toHaveBeenCalled();
-    },
-  );
-
-  it.each(verificationPaths)(
-    "still checks the code through %s when off",
-    async (path) => {
-      const { service, registerUser } = createSkippingService(false);
-      await expect(
-        service[path]({
-          sessionId: "session-a",
-          otp: "not-the-code",
-          ip: "198.51.100.11",
+          ip: "198.51.100.22",
         }),
       ).rejects.toBeInstanceOf(BadUserInputError);
       expect(registerUser).not.toHaveBeenCalled();

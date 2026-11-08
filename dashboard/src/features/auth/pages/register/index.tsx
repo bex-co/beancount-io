@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import RegisterPage from "./register";
 import SignUpOtpPage from "./register-otp";
+import { finishSignUp } from "@/features/auth/lib/finish-sign-up";
 
 type RegistrationStep = "register" | "otp";
 
@@ -16,6 +17,7 @@ type RegistrationData = {
  */
 export default function RegisterFlow() {
   const search = useSearch({ from: "/auth/sign-up" });
+  const navigate = useNavigate();
   const [step, setStep] = useState<RegistrationStep>("register");
   const [registrationData, setRegistrationData] =
     useState<RegistrationData | null>(null);
@@ -25,6 +27,11 @@ export default function RegisterFlow() {
     setRegistrationData({ sessionId, email });
     setStep("otp");
   };
+
+  // A self-hosted deployment verifies no email, so the sign-up arrives signed
+  // in and the code step never appears.
+  const handleSignedIn = (token: { accessToken: string }) =>
+    finishSignUp(token.accessToken, search.next, navigate);
 
   // Handle successful OTP verification
   const handleOtpSuccess = () => {
@@ -56,6 +63,7 @@ export default function RegisterFlow() {
       inviteSrc={search.src}
       inviteBy={search.by}
       onSuccess={handleRegisterSuccess}
+      onSignedIn={handleSignedIn}
     />
   );
 }

@@ -17,7 +17,7 @@ beforeEach(() => fakeRedisAdmissionState.reset());
 // it before, and a sign-up without one took the email's local part as is
 // (w0/046).
 
-function createService(taken: string[] = [], skipEmailVerification = false) {
+function createService(taken: string[] = [], selfHost = false) {
   const takenLower = new Set(taken.map((name) => name.toLowerCase()));
   const user = {
     getByMail: jest.fn().mockResolvedValue(null),
@@ -46,7 +46,7 @@ function createService(taken: string[] = [], skipEmailVerification = false) {
     { getAdminClient: () => ({ admin: { createUser } }) } as any,
     {
       favaApi: { adminUser: "admin", adminPassword: "pw" },
-      auth: { skipEmailVerification },
+      selfHost,
     } as any,
     isPwnedPassword,
   );
@@ -234,7 +234,7 @@ describe("createSignUpSession password policy", () => {
   });
 });
 
-describe("createSignUpSession with AUTH_SKIP_EMAIL_VERIFICATION", () => {
+describe("createSignUpSession when self-hosted", () => {
   it("creates the session but sends no mail when on", async () => {
     const { service, signupOtpSession, sendgrid } = createService([], true);
     await expect(service.createSignUpSession(signUpParams())).resolves.toBe(

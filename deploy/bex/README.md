@@ -71,33 +71,28 @@ all, so a fresh deploy cannot touch ledger data by accident.
 and need no action. Gitea admin user creation is still a one-time
 `gitea admin user create` on whatever host runs Gitea.
 
-## Sign-up without a mail provider
+## Self-hosting: no verification page, no plan limits
 
-Sign-up normally verifies an emailed OTP and needs `SEND_GRID_API_KEY` (a key
-whose account has verified the `mail.beancount.io` sender). With no key,
-`signUp` fails with `Email delivery is temporarily unavailable`
-(`MAIL_PROVIDER_FAILURE` in the API log), and OTPs are never logged. The pending
-session lives in Redis, but `beancount-cache` is internal-only
-(`ipAllowList: []`, no external connection string), so `bex kv-cli` cannot reach
-it from a laptop.
+`SELF_HOST=true` (set on `beancount-api` in `bex.yaml`) is for a stack its
+operator runs for their own users. It is an explicit opt-in, never inferred
+from a missing `SEND_GRID_API_KEY`, so a managed deployment that loses its key
+still fails instead of opening up. With it on:
 
-This Blueprint therefore sets `AUTH_SKIP_EMAIL_VERIFICATION=true` on
-`beancount-api`. It is an explicit opt-in, never inferred from a missing key, so
-a production deployment that loses its key still fails instead of opening up.
-With it on:
+- **Sign-up needs no email verification and the code page never appears.**
+  `signUp` creates the account and answers already signed in; nothing is mailed
+  and there is no code to enter. The public `verifySignUpOtp` still checks the
+  real code, so the flag does not open a way to guess one.
+- **Every plan limit is lifted.** Everyone resolves to the top tier: unlimited
+  ledgers, collaborators, directives and AI-assistant tokens, and no Stripe
+  lookup is made.
+- The email address is **not** proven to belong to the person signing up, and
+  forgot-password and other mail still do not work without `SEND_GRID_API_KEY`.
+- The API logs a warning at boot.
 
-- `signUp` creates the session but sends no mail;
-- `verifySignUpOtp` accepts **any** code for a valid session id, so on the
-  dashboard's code screen type any four digits;
-- the email address is **not** proven to belong to the person signing up, and
-  forgot-password and other mail still do not work;
-- the API logs a warning at boot and per sign-up (never the session id, which is
-  then the whole credential).
-
-Because the public canary URL has no email check, bots can register accounts. To
-turn it off: set `SEND_GRID_API_KEY`, delete the `AUTH_SKIP_EMAIL_VERIFICATION`
-entry from `bex.yaml` (an omitted env var is kept, so set it to `"false"` or
-remove it in the dashboard), and re-apply.
+Anyone who can reach the URL can register, so put it behind your own access
+control if that matters. To go back to a managed setup, set `SELF_HOST` to
+`"false"` (an omitted env var is kept, so removing the line from `bex.yaml`
+alone does not turn it off) and set `SEND_GRID_API_KEY`.
 
 The browser calls the API cross-origin, so the API also needs
 `EXTRA_ALLOWED_ORIGINS` set to the dashboard origin (already in `bex.yaml`);

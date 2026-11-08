@@ -110,9 +110,9 @@ services:
       # *.beancount.io by default (src/server/api/allowed-origin.ts).
       - key: EXTRA_ALLOWED_ORIGINS
         value: https://beancount-dashboard.onbex.co
-      # No mail provider on this canary: sign-up sends no code and accepts any
-      # code for a valid session. Remove once SEND_GRID_API_KEY is set.
-      - key: AUTH_SKIP_EMAIL_VERIFICATION
+      # This stack serves its operator's own users: sign-up needs no email
+      # verification (there is no mail provider) and no plan limits apply.
+      - key: SELF_HOST
         value: "true"
 
       # --- datastores -----------------------------------------------------

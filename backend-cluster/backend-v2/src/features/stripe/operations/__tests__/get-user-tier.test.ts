@@ -243,3 +243,32 @@ describe("store subscriptions (ADR 001 D3)", () => {
     });
   });
 });
+
+describe("SELF_HOST", () => {
+  const original = process.env.SELF_HOST;
+  afterEach(() => {
+    if (original === undefined) delete process.env.SELF_HOST;
+    else process.env.SELF_HOST = original;
+  });
+
+  it("gives everyone the unlimited tier without asking Stripe", async () => {
+    process.env.SELF_HOST = "true";
+    const params = deps([]);
+    expect(await getUserTier(params)).toBe(SubscriptionTier.ENTERPRISE);
+    expect(params.stripe.listSubscriptions).not.toHaveBeenCalled();
+    expect(await getUserTierLimits(params)).toEqual({
+      maxLedgers: -1,
+      maxCollaboratorsPerLedger: -1,
+      aiCfoTokensMax: -1,
+      maxDirectives: -1,
+    });
+  });
+
+  it.each(["false", "1", "TRUE", ""])(
+    "keeps the user's own plan when SELF_HOST is %p",
+    async (value) => {
+      process.env.SELF_HOST = value;
+      expect(await getUserTier(deps([]))).toBe(SubscriptionTier.FREE);
+    },
+  );
+});

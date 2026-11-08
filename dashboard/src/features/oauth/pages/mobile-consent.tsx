@@ -57,14 +57,25 @@ function LoginStep({
 
 function RegisterStep({
   onSuccess,
+  onSignedIn,
   onSignInClick,
 }: {
   onSuccess: (sessionId: string, email: string) => void;
+  /** A self-hosted deployment verifies no email: sign-up arrives signed in. */
+  onSignedIn: (email: string) => void;
   onSignInClick: () => void;
 }) {
+  const client = useApolloClient();
   const { t } = useTranslations();
   const { onSubmit, isLoading, serverError, defaultUsername } = useRegisterForm(
-    { withDefaultLedger: true, onSuccess },
+    {
+      withDefaultLedger: true,
+      onSuccess,
+      onSignedIn: async (_token, email) => {
+        await client.resetStore();
+        onSignedIn(email);
+      },
+    },
   );
 
   return (
@@ -331,6 +342,7 @@ export default function MobileOAuthConsentPage() {
             onSuccess={(sessionId, email) =>
               dispatch({ type: "registration_submitted", sessionId, email })
             }
+            onSignedIn={(email) => dispatch({ type: "authenticated", email })}
             onSignInClick={() => dispatch({ type: "show_login" })}
           />
         )}

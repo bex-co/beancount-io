@@ -174,6 +174,16 @@ class SignUpResponse {
 
   @Field(() => String)
   public expireAt: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "Set only on a self-hosted deployment, where sign-up needs no email verification: the account already exists and this is its session token (also set as the auth cookie). Absent means the code in the email must be verified with verifySignUpOtp.",
+  })
+  public token?: string | null;
+
+  @Field(() => Date, { nullable: true })
+  public tokenExpireAt?: Date | null;
 }
 
 @ArgsType()
@@ -378,6 +388,27 @@ export class AuthResolver {
     const session = await this.authService.getSignupOtpSession(sessionId);
     if (!session) {
       throw new Error("Failed to retrieve session after creation");
+    }
+    if (ctx.config.selfHost) {
+      // No mail was sent and no verification page exists: finish the sign-up
+      // here with the session's own code, through the same checked path.
+      const result = await this.authSessionWorkflow.verifySignUpOtp({
+        sessionId,
+        otp: session.otp,
+        ip: ctx.clientIp,
+      });
+      setAuthCookie(
+        ctx.koaCtx as unknown as Context,
+        result.token,
+        result.expireAt,
+        ctx.config.env === "production",
+      );
+      return {
+        sessionId,
+        expireAt: session.expireAt,
+        token: result.token,
+        tokenExpireAt: result.expireAt,
+      };
     }
     return { sessionId, expireAt: session.expireAt };
   }
