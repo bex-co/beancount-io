@@ -103,15 +103,18 @@ On Linux with Codex 0.167.0, `--sandbox read-only` can prevent `bea` from
 creating the temporary files its query engine needs. Use a
 [named permission profile](https://developers.openai.com/codex/permissions)
 that grants writes only to a fresh scratch directory. The workspace stays
-read-only and command network access stays disabled. This invocation skips
-user configuration so an older `sandbox_mode` setting cannot override the
-profile.
+read-only and command network access stays disabled. Before using this profile,
+remove a legacy `sandbox_mode` setting from your Codex configuration and omit
+`--sandbox`; those older settings override named profiles. Keep user configuration
+loaded for a plugin install: `--ignore-user-config` also hides its registration.
+For linked or copied skills, that flag is an alternative to removing an old
+`sandbox_mode` setting.
 
 ```sh
 BEA_QUERY_TMP="$(mktemp -d)"
 TMPDIR="$BEA_QUERY_TMP" XDG_CACHE_HOME="$BEA_QUERY_TMP/cache" \
 BEA_CONFIG_DIR="$BEA_QUERY_TMP/config" \
-codex exec --ignore-user-config -m gpt-6.1-sol \
+codex exec -m gpt-6.1-sol \
   -c 'default_permissions="bea_query"' \
   -c 'permissions.bea_query={filesystem={":root"="read",":tmpdir"="write"},network={enabled=false}}' \
   "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount."

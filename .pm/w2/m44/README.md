@@ -1,6 +1,6 @@
 # w2 · m44 — Install the suite as a Claude Code plugin and a Codex plugin
 
-**Worker:** worker2 **Goal:** a Claude Code user adds one marketplace and installs a `beancount-io` plugin, and a Codex user installs the same plugin. Both get the whole customer suite from the same `skills/` folders the link installer uses, with in-client updates and no Python helper. **Status:** in progress (t003/t006 Codex verification resumed)
+**Worker:** worker2 **Goal:** a Claude Code user adds one marketplace and installs a `beancount-io` plugin, and a Codex user installs the same plugin. Both get the whole customer suite from the same `skills/` folders the link installer uses, with in-client updates and no Python helper. **Status:** in progress (Codex lifecycle verified; closing checks pending)
 
 ## Tasks (in order)
 
@@ -11,8 +11,8 @@
 | [t003](done/t003.md) | Add the Codex plugin manifest for the same `skills/` — **DONE** | 45m | t001 |
 | [t004](done/t004.md) | Decide how a skill change reaches plugin users, and enforce it in CI — **DONE** | 30m | t002 |
 | [t005](done/t005.md) | Document the plugin install beside the other install paths — **DONE** | 30m | t002 |
-| t006 | Rehearse install, update, and first query on both clients | 45m | t004, t005 |
-| t007 | Adoption surface | 30m | t006 |
+| [t006](done/t006.md) | Rehearse install, update, and first query on both clients — **DONE** | 45m | t004, t005 |
+| t007 | Adoption surface | 30m | [t006](done/t006.md) |
 | t008 | Simplify | 15m | t007 |
 | t009 | Test coverage | 45m | t007, t008 |
 | t010 | Closeout | 15m | t009 |
@@ -20,7 +20,7 @@
 ## Previous blockers
 
 - **t003 (2026-10-19)** — its manifests shipped (`f790f265a`) and installed correctly from GitHub on the second client; only the live prompt showing it reading the shared `bea-cli.md` from the plugin cache remains, which needs a model turn the usage-limited account cannot run until 2026-11-17 (recorded in [t003](done/t003.md)). t004 and t005 needed only the shipped manifests, so their `depends_on` was repointed to t002 in the same ship.
-- **t006 (2026-10-19)** — rehearsed end to end on one client (install, exact first-query figures, update, uninstall) and mechanically on the other; only its first-query answer remains (evidence in [t006](t006.md)). t007 onward wait behind it. **Unblock:** Codex usage returns; one session closes both t003 and t006. **Who can clear it:** the operator (Codex usage).
+- **t006 (2026-10-19)** — rehearsed end to end on one client (install, exact first-query figures, update, uninstall) and mechanically on the other; only its first-query answer remains (evidence in [t006](done/t006.md)). t007 onward wait behind it. **Unblock:** Codex usage returns; one session closes both t003 and t006. **Who can clear it:** the operator (Codex usage).
 
 ## Definition of done
 

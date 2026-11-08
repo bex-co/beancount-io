@@ -131,6 +131,11 @@ codex plugin add beancount-io@beancount-io
 codex plugin remove beancount-io@beancount-io     # remove
 ```
 
+For a Linux first query, use the [scratch-only permission profile](first-query.md#linux-allow-scratch-files-while-keeping-the-ledger-read-only)
+when the query engine cannot create temporary files under `--sandbox read-only`.
+Keep Codex user configuration loaded so its plugin registration remains visible;
+`--ignore-user-config` hides an installed plugin as well as older sandbox settings.
+
 Both manifests carry one shared suite version; a client delivers a new copy only when that version changes, and every shipped skill change bumps it. Confirm with each client's skill listing (step 3): the sixteen skills appear under the `beancount-io:` namespace.
 
 ### Hermes and raw GitHub folders

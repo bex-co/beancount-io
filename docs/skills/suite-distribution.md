@@ -648,3 +648,14 @@ read, beyond the client-side cache-resolution evidence from October 19.
 
 The dated Claude Code 2.1.289 lifecycle and first-query evidence remains in
 [w2/m44/t006](../../.pm/w2/m44/t006.md); it is not a fresh Claude rehearsal.
+
+The documented Codex marketplace refresh followed by plugin add completed
+successfully at the same published suite version; a fresh native catalog still
+contained the same sixteen names, descriptions and cache paths. Plugin remove
+then left **zero** suite skills in a fresh catalog, and marketplace remove
+completed. This is a same-version refresh, not evidence of a cross-version
+upgrade. A negative-control query using `--ignore-user-config` returned the
+same ledger figures but loaded **no** suite guide or shared reference; that
+invocation hides plugin registration and does not count as plugin discovery.
+The Linux first-query example now retains configuration and explicitly explains
+the legacy sandbox-setting prerequisite.
