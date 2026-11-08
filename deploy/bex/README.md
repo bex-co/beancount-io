@@ -58,20 +58,26 @@ this is also how you roll out an env change.
 
 ## After the first deploy
 
-Four values are declared `sync: false`, i.e. seeded once and then owned by you.
-Until the Gitea credentials are set the API cannot authenticate to Gitea at
-all, so a fresh deploy cannot touch ledger data by accident.
+The deploy asks for nothing. Every secret is generated (`AUTH_SECRET`,
+`COOKIE_SECRETS`, `METRICS_API_TOKEN`, `ADMIN_TOKEN`, Gitea's secrets and admin
+password), and values two services must share are copied between them rather
+than typed twice (`ADMIN_TOKEN` into the ledger's `BACKEND_V2_ADMIN_TOKEN`,
+Gitea's admin password into the API's `FAVA_API_ADMIN_PASSWORD`). The OAuth
+signing key is derived from `AUTH_SECRET` at start
+(`scripts/derive-oauth-jwks.js`; set `OAUTH_JWKS` yourself to use your own),
+so OAuth and MCP discovery work out of the box. Rotating `AUTH_SECRET`
+rotates that key and signs everyone out.
 
-| variable | service | note |
-|---|---|---|
-| `FAVA_API_ADMIN_PASSWORD` | api **and** gitea | Gitea admin password; set the same value on both |
-| `ADMIN_TOKEN` | api | must match the ledger's `BACKEND_V2_ADMIN_TOKEN` byte for byte |
-| `BACKEND_V2_ADMIN_TOKEN` | ledger | empty ⇒ the directive-limit check fails **open** |
-| `BLOCKEDEN_ACCESS_KEY` | api | optional; only meters the `bea ask` model proxy. AI features come from `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`; the service boots with none set |
+Optional integrations are deliberately not declared, so they are not asked for.
+The server boots without them; add the ones you want in the dashboard's
+Environment tab (an environment variable you add there is kept across syncs):
 
-`AUTH_SECRET`, `COOKIE_SECRETS`, and `METRICS_API_TOKEN` are `generateValue`
-and need no action. Gitea admin user creation is still a one-time
-`gitea admin user create` on whatever host runs Gitea.
+| variable | what it enables |
+|---|---|
+| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | AI features; with neither, they fail with "LLM is not configured". `LLM_MODEL` / `LLM_FALLBACK_MODEL` override the models. Never set `ANTHROPIC_BASE_URL` to an empty string |
+| `TEMP_ASSETS_AWS_S3_*`, `PERM_ASSETS_AWS_S3_*` (`BUCKET`, `ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`) | receipt and attachment uploads |
+| `BLOCKEDEN_ACCESS_KEY` | metering for the `bea ask` model proxy |
+| `SEND_GRID_API_KEY` | mail: password recovery and, if you turn `SELF_HOST` off, sign-up codes |
 
 ## Self-hosting: no verification page, no plan limits
 
@@ -85,8 +91,8 @@ still fails instead of opening up. With it on:
   and there is no code to enter. The public `verifySignUpOtp` still checks the
   real code, so the flag does not open a way to guess one.
 - **Every plan limit is lifted.** Everyone resolves to the top tier: unlimited
-  ledgers, collaborators, directives and AI-assistant tokens, and no Stripe
-  lookup is made.
+  ledgers, collaborators, directives and AI-assistant tokens, and billing is
+  never asked for a user's plan.
 - The email address is **not** proven to belong to the person signing up, and
   forgot-password and other mail still do not work without `SEND_GRID_API_KEY`.
 - The API logs a warning at boot.
@@ -95,10 +101,6 @@ Anyone who can reach the URL can register, so put it behind your own access
 control if that matters. To go back to a managed setup, set `SELF_HOST` to
 `"false"` (an omitted env var is kept, so removing the line from `bex.yaml`
 alone does not turn it off) and set `SEND_GRID_API_KEY`.
-
-The browser calls the API cross-origin, so the API also needs
-`EXTRA_ALLOWED_ORIGINS` set to the dashboard origin (already in `bex.yaml`);
-CORS only trusts `*.beancount.io` otherwise.
 
 ## Sign-in on the platform hostnames
 

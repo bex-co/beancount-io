@@ -25,10 +25,11 @@
 # Gitea's repos need a filesystem, so it is the one service with a disk. Its
 # first-boot administrator comes from deploy/bex/gitea/bex-entrypoint.sh.
 #
-# Secrets are declared `sync: false` (seed once, then edit in the dashboard) or
-# `generateValue`. Nothing secret is committed here. Until the Gitea admin
-# credentials are seeded the API cannot authenticate to Gitea at all, so a
-# fresh deploy cannot touch ledger data by accident.
+# The deploy asks for nothing. Every secret is generated (`generateValue`) and
+# shared between services by copying (`fromService`), or derived at start from
+# one that is (the OAuth signing key). Nothing secret is committed here.
+# Optional integrations (model providers, asset storage) are not declared at
+# all: add the ones you want afterwards, see deploy/bex/README.md.
 
 services:
   # ---------------------------------------------------------------- dashboard
@@ -87,11 +88,11 @@ services:
     # LEDGER_HOSTPORT) and put together into URLs here, because bex builds them
     # from a slug that differs from the name when another workspace holds it.
     # First learn this deployment's public address from the dashboard, then
-    # migrate (which also creates the schemas listed in ENSURE_SCHEMAS), then
-    # serve. `set -e` makes a failure to learn the address stop the container
+    # derive the OAuth signing key (see OAUTH_JWKS_FROM_AUTH_SECRET), migrate
+    # (which also creates the schemas listed in ENSURE_SCHEMAS), then serve. `set -e` makes a failure to learn the address stop the container
     # instead of starting with the API's built-in default, which is
     # beancount.io's address.
-    dockerCommand: sh -c 'set -e; export PUBLIC_URL_FROM="http://$DASHBOARD_HOSTPORT/_internal/public-url" FAVA_API_URL="http://$LEDGER_HOSTPORT"; out=$(node scripts/resolve-public-url.js); eval "$out"; node scripts/migrate-deploy.js; exec yarn start'
+    dockerCommand: sh -c 'set -e; export PUBLIC_URL_FROM="http://$DASHBOARD_HOSTPORT/_internal/public-url" FAVA_API_URL="http://$LEDGER_HOSTPORT"; out=$(node scripts/resolve-public-url.js); eval "$out"; out=$(node scripts/derive-oauth-jwks.js); eval "$out"; node scripts/migrate-deploy.js; exec yarn start'
     # Render's canonical use for preDeployCommand is a database
     # migration, but on bex the pre-deploy Job runs in BEX_BUILD_NAMESPACE
     # while the managed Postgres lives in the workspace namespace, and
@@ -156,25 +157,21 @@ services:
         generateValue: true
       - key: COOKIE_SECRETS
         generateValue: true
-      # sync:false rather than generateValue: the ledger has to present the SAME
-      # token, and fromService.envVarKey cannot reference a generated value
-      # ("no such plainly-defined variable"). Seed one strong value into BOTH
-      # this and beancount-ledger's BACKEND_V2_ADMIN_TOKEN.
+      # Generated once, then copied by beancount-ledger (its BACKEND_V2_ADMIN_TOKEN
+      # is a fromService copy of this): the two must be byte-identical, and a
+      # person should not have to invent one and paste it twice.
       - key: ADMIN_TOKEN
-        sync: false
+        generateValue: true
       - key: METRICS_API_TOKEN
         generateValue: true
-      # The OAuth authorization server's private signing JWKS. sync:false, not
-      # generateValue: it is a complete P-256/ES256 private JWKS document, not a
-      # random string, and rotating it invalidates every live access token.
-      #
-      # Not optional in practice. Without it `src/features/oauth/api/oidc-route.ts`
-      # replaces every OAuth route with a 503 `oauth_not_configured`, including
-      # `/.well-known/oauth-protected-resource` — the URL the MCP endpoint's 401
-      # names in WWW-Authenticate. An MCP client then discovers nothing and
-      # cannot authenticate at all. Generate per backend-v2's README.
-      - key: OAUTH_JWKS
-        sync: false
+      # The OAuth authorization server's private signing key. Without one every
+      # OAuth route answers 503, including the discovery document an MCP client
+      # needs, and it is a P-256 key document rather than a random string, so
+      # it cannot simply be generated. scripts/derive-oauth-jwks.js derives it
+      # from AUTH_SECRET at start: stable across restarts, nothing extra to
+      # store. Set OAUTH_JWKS yourself instead and yours is used.
+      - key: OAUTH_JWKS_FROM_AUTH_SECRET
+        value: "true"
 
       # --- Gitea ------------------------------------------------------------
       # Host is configured; credentials are not. Port 443 selects https via the
@@ -189,54 +186,33 @@ services:
         value: "3000"
       - key: FAVA_API_ADMIN_USER
         value: beancount_admin
+      # Gitea generates this password once and creates the account with it; the
+      # API presents the same one.
       - key: FAVA_API_ADMIN_PASSWORD
-        sync: false
+        fromService:
+          type: web
+          name: beancount-gitea
+          envVarKey: FAVA_API_ADMIN_PASSWORD
 
       # Git-over-SSH terminates in this service's SSH proxy, which needs a TCP
       # listener the platform does not route to. Keep it off.
       - key: SSH_PROXY_ENABLED
         value: "false"
 
-      # --- LLM / integrations (seed once, then edit in the dashboard) --------
-      # ANTHROPIC_BASE_URL is deliberately NOT declared: an empty string is
-      # fatal at import time (@ai-sdk/anthropic rejects a non-string baseURL).
+      # --- optional integrations: not asked for at deploy ---------------------
+      # None of these is declared, so none is prompted for: the server boots
+      # without them (LLM calls fail with a clear "LLM is not configured", asset
+      # uploads are unavailable, the model proxy is unmetered). Add the ones you
+      # want afterwards in the dashboard's Environment tab; they are listed in
+      # deploy/bex/README.md. ANTHROPIC_BASE_URL must never be set to an empty
+      # string (@ai-sdk/anthropic rejects it at import time).
       #
-      # All LLM vars are optional (ADR 0011): the server boots with none set
-      # and AI calls fail with a clear "LLM is not configured" error. Set
-      # ANTHROPIC_API_KEY (primary) / OPENAI_API_KEY (fallback) to enable AI
-      # features; BLOCKEDEN_ACCESS_KEY only meters the `bea ask` model proxy.
-      - key: BLOCKEDEN_ACCESS_KEY
-        sync: false
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: OPENAI_API_KEY
-        sync: false
-      # Optional model overrides; defaults are claude-sonnet-4-5 / gpt-4o. Not
-      # ANTHROPIC_MODEL — that name belongs to the Ask-AI sandbox path.
-      - key: LLM_MODEL
-        sync: false
-      - key: LLM_FALLBACK_MODEL
-        sync: false
-
-      # --- asset storage ----------------------------------------------------
-      # A region is required even when unset: the S3 client is built at startup
-      # and throws "Region is missing" without one.
+      # The S3 client is built at startup and throws "Region is missing"
+      # without a region, so the regions stay declared.
       - key: TEMP_ASSETS_AWS_S3_REGION
         value: us-east-1
       - key: PERM_ASSETS_AWS_S3_REGION
         value: us-east-1
-      - key: TEMP_ASSETS_AWS_S3_BUCKET
-        sync: false
-      - key: TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID
-        sync: false
-      - key: TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY
-        sync: false
-      - key: PERM_ASSETS_AWS_S3_BUCKET
-        sync: false
-      - key: PERM_ASSETS_AWS_S3_ACCESS_KEY_ID
-        sync: false
-      - key: PERM_ASSETS_AWS_S3_SECRET_ACCESS_KEY
-        sync: false
 
       - key: LOG_LEVEL
         value: info
@@ -267,10 +243,14 @@ services:
           property: host
       - key: BACKEND_V2_HTTP_PORT
         value: "4104"
-      # Must be byte-identical to beancount-api's ADMIN_TOKEN. Left empty the
-      # directive-limit check fails OPEN (silently skipped), so seed it.
+      # Must be byte-identical to beancount-api's ADMIN_TOKEN, so it is copied
+      # from it. Left empty the directive-limit check fails OPEN (silently
+      # skipped).
       - key: BACKEND_V2_ADMIN_TOKEN
-        sync: false
+        fromService:
+          type: web
+          name: beancount-api
+          envVarKey: ADMIN_TOKEN
       - key: LOG_LEVEL
         value: info
       # Managed price includes (ADR 015) allow only https://beancount.io by
@@ -347,11 +327,12 @@ services:
       - key: GITEA__oauth2__JWT_SECRET
         generateValue: true
       # First-boot administrator, read by deploy/bex/gitea/bex-entrypoint.sh.
-      # The password must equal beancount-api's FAVA_API_ADMIN_PASSWORD.
+      # The password is generated here once and copied by beancount-api, which
+      # must present the same one.
       - key: FAVA_API_ADMIN_USER
         value: beancount_admin
       - key: FAVA_API_ADMIN_PASSWORD
-        sync: false
+        generateValue: true
       - key: GITEA_ADMIN_EMAIL
         value: admin@beancount.io
 
