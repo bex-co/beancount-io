@@ -934,3 +934,34 @@ and version; no fresh Claude authentication or model result is claimed.
 [Task evidence](../../.pm/w2/blocked/m51/done/t006.md) closes the original both-client
 behavior/routing debt; adoption, simplify, deterministic coverage and closeout
 remain separate tasks.
+
+
+## Crypto-native Codex completion — 2026-11-08
+
+Original `beancount-trade` evals **11–14 pass 4/4** on Linux arm64 Codex CLI
+0.167.0 / `gpt-6.1-sol`, default reasoning, source suite 0.4.29 at
+`2ba9c4bf6`. Each fresh synthetic workspace links all sixteen skills into
+both client directories. Native sandboxing remains enabled; bea is the
+prepared checkout reporting 0.3.1, distinct from the published-minimum test.
+No procedure, description, fixture or acceptance assertion changed.
+
+Every first turn writes nothing. The missing-value swap asks for a stated
+execution value without inventing a price. Following reviewed proposals and
+explicit yes, native writes and independent root checks confirm:
+
+| Case | Independent result |
+| --- | --- |
+| 11 — swap | 0.2 BTC from the January 10, 2025 lot at 40000 disposed at `@@ 12000`; 0.3 BTC remains; 4 ETH acquired at 3000; bare gains leg books 4000. |
+| 13 — staking | February/March/April receipts remain separate dated lots with 29/33/27 basis and 89 total income; existing January holding unchanged. |
+| 14 — network fee | Original cost/date preserved on the moved 0.2 BTC; exchange retains 0.2995; 0.0005 fee leaves the same lot at the stated 30 value, expense 30, inferred gain 10; 0.2005 = 0.2 + 0.0005. |
+
+All original entries remain unchanged. The original **103** routing entries
+at `cb4a63ccd` match every field in both later complete client cohorts:
+Claude Code 2.1.289 / Opus 5.5 **124/124** at `6421f036a` (October 27), and
+Codex 0.166.0 / gpt-6.1-sol **128/128 twice** at `df1cfd84e` (November 1).
+Trade's current description matches those snapshots. The later complete
+Claude run covers the original `import-opening-lots` miss; the October 20
+102/103 result remains recorded above. These are dated reused routing
+results, not a new 103-prompt run. The original Claude behavior **4/4** remains
+October 20. [m52/t004](../../.pm/w2/m52/done/t004.md) closes the original
+Codex debt; adoption and coverage follow separately.
