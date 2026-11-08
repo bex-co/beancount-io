@@ -781,3 +781,52 @@ new Claude result or two-client green claim is made. Authenticate Claude, rebase
 the preserved candidate onto current main with the appropriate suite version,
 run the required original Claude cohort and affected Codex regressions, then
 ship the jointly verified change before closing t004.
+
+## Original holdings Codex cohort — 2026-11-08
+
+w2/m49/t003's original ask evals 10–13 were run on Codex CLI **0.167.0 /
+`gpt-6.1-sol`**, Linux arm64, with the prepared checkout `bea` reporting 0.3.1
+and the real sixteen-skill linked installer. Each case starts in a separate
+synthetic Git workspace. **Three pass after a preserved field clarification;
+eval 13 fails. This is not a completed cohort or a published candidate.**
+
+| Eval | Observed result |
+| --- | --- |
+| 10 per-lot holdings | Initial answer aggregates VTI despite executing the lot queries, omitting required dates and per-lot gains. Fresh candidate run shows VTI 10 at 100 / January 15 (cost 1000, market 3000, unrealized 2000) and 10 at 120 / February 15 (1200 / 3000 / 1800), BTC 0.5 at 40000 / January 10 (20000 / 30000 / 10000), and ACME 10 at 50 / March 10, cost 500, explicitly unpriced. Queries shown, October 1 prices disclosed as old. |
+| 11 unpriced ACME | Initial answer correctly withholds market value but omits unit cost/acquisition date. Fresh candidate run shows all fields from the executed query: 10 ACME, 50 USD/unit, 500 basis, acquired 2025-03-10; no market or gain figure; points to add's price workflow. |
+| 12 allocation | Pass on unchanged published source: priced total 36000, BTC 30000 / 83.33%, VTI 6000 / 16.67%, from executed engine division. ACME explicitly excluded as unpriced; cash excluded from invested-lot scope; October 1 price date and staleness disclosed. |
+| 13 mixed facts/advice | Fail on unchanged published source: the client never opens ask's SKILL.md, searches public price/tax sources, attempts a direct engine import and uses local arithmetic, then gives a sell/tax recommendation. Ledger unchanged, but the routing, shown-query and no-advice expectations fail. No description was changed to hide or bypass this result. |
+
+Every original/fixed ledger remains byte-identical. No real financial ledger
+is involved. The failed advice answer is evidence of an out-of-scope response,
+not endorsed guidance. Original and fixed JSONL, stderr and grades remain local
+under `scripts/skills/tmp/w2-codex-linux/runs/m49-ask-*`.
+
+The body-only candidate makes the existing per-lot answer contract explicit in
+ask's BQL reference. It passes full local skills CI, the base-aware 0.4.29→0.4.30
+version gate, guidance validation and two existing real-CLI holdings/price
+regressions. It is preserved **unpublished** at local `4f078e663`, branch
+`codex/w2-m49-holdings-20261108`, based on `a643b08f4`, in
+`scripts/skills/tmp/w2-m49-holdings-candidate/`; the source patch is
+`scripts/skills/tmp/w2-codex-linux/m49-holdings-candidate.patch`.
+Main's product files are restored. This candidate is separate from the also
+unpublished m48 candidate, even though both reserve version 0.4.30.
+
+A JSON audit finds all **92** original routing entries at `51d1303e7` unchanged
+inside the November 1 `df1cfd84e` twice-passing **128/128** Codex cohort. The
+current ask description also exactly matches that source and the earlier
+Claude 124/124 source `6421f036a`. This dated reuse covers those 92 requests;
+it does **not** cover the newly observed mixed-question failure in behavior
+eval 13, and is not a fresh 136-entry run. Historical Claude behavior 4/4 at
+October 19 remains dated, not represented as a fresh run.
+
+Eval 13 did not select the skill, so an unread body cannot repair its trigger.
+Changing the description requires both clients' before/after routing controls
+under `skills/AGENTS.md`; Claude authentication remains unavailable. The
+[task stays blocked](../../.pm/w2/blocked/m49/t003.md): authenticate Claude,
+measure the current baseline and candidate routing as required (Codex twice
+per side), clarify ownership of explicit facts plus an advice tail while
+preserving pure-advice negatives, fix/rerun original eval 13 and the complete
+holdings cohort, then ship a jointly verified candidate with the current suite
+version. No new dependency, weakened assertion or passing advice result is
+claimed.
