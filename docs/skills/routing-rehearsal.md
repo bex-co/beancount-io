@@ -686,7 +686,7 @@ The routing debt is already satisfied by the **November 1** Codex 0.166.0
 of m45's original **90** entries from `e50735ced` is present unchanged in
 `df1cfd84e`. This is dated reuse of those completed runs, not a new 136-entry
 cohort. Claude Code's October 19 behavior 8/8 and routing 90/90 evidence in
-[w2/m45/t006](../../.pm/w2/blocked/m45/done/t006.md) retains its original date and version;
+[w2/m45/t006](../../.pm/w2/done/m45/done/t006.md) retains its original date and version;
 no fresh Claude answer is claimed. The 67 checker tests plus the existing real
 trade-batch/realized-gains recipe tests pass (69 total), as do full local skills
 CI, the 0.4.28-to-0.4.29 base-aware version gate, and agent-guidance validation.

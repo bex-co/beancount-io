@@ -29,4 +29,4 @@
 - **Source:** user walkthrough as a personal investor (real estate, crypto, stocks, daily spending), 2026-10-19.
 - **Goal linkage:** **A1 — Agent-native accounting:** the most common investor question ("what's my portfolio worth") currently has no skill owner; trade covers closed lots, ask covers spending.
 - **Expected outcome:** investors can see holdings, allocation, and unrealized gains without leaving the agent workflow, and know exactly which prices are stale. Signals: holdings-question routing recall, eval pass on both clients.
-- **Why now:** [m45](../m45/README.md) shipped correct lots and realized gains; open-lot valuation is the read side it explicitly left uncovered, and it needs no new write path.
+- **Why now:** [m45](../../done/m45/README.md) shipped correct lots and realized gains; open-lot valuation is the read side it explicitly left uncovered, and it needs no new write path.
