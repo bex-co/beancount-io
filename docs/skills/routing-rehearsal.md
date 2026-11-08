@@ -895,3 +895,42 @@ new import 29 or the strengthened ID assertion in 20. Claude authentication is
 unavailable, so [t005 stays blocked](../../.pm/w2/blocked/m50/t005.md): run the
 expanded original-plus-regression cohort on Claude, fix/rerun any affected
 Codex cases, check and ship the coherent rebased candidate before closing.
+
+## Original property Codex cohort — 2026-11-08
+
+w2/m51/t006's original property evals **1–7 pass on Codex CLI 0.167.0 /
+`gpt-6.1-sol`**, Linux arm64, suite 0.4.29 at `cff19edb4`. Every case starts
+from its original synthetic fixture in a fresh Git workspace with all sixteen
+skills linked by the real installer. The prepared checkout `bea` reports
+0.3.1; this is not a published-release CLI installation claim.
+
+| Eval | Observed result |
+| --- | --- |
+| 1 purchase | Full proposal includes three dated, currency-restricted opens, 1 OAKST at 510000 cost, separate 2000 expense, 3000 escrow, −115000 cash and −400000 loan. Both sides of closing total 515000. Explicit yes then native opens/purchase; independent query verifies cost/date, 85000 checking, 3000 escrow and −400000 mortgage; check passes. |
+| 2 mortgage payment | Uses the printed 600 principal / 1500 interest / 300 escrow, total 2400, matching new loan owed 399400. Explicit yes then native write; independent query gives mortgage −399400, escrow 3300, interest 1500 and checking 47600; check passes. |
+| 3 no printed split | Asks for statement principal, interest, escrow, fees and new balance; explicitly refuses to derive them from the supplied 6% rate. No amortization or write, ledger byte-identical. |
+| 4 rent and deposit | Full two-entry proposal opens per-property rent and deposit accounts with USD restrictions. Explicit yes then native writes: rent 1800 to Income:Rent:OakSt, separate deposit 1800 to Liabilities:Deposits:OakSt, never income twice. Independent query confirms both; check passes. |
+| 5 sale | Payoff matches loan; 650000 = 240600 cash + 399400 payoff + 10000 costs, escrow refund separate. Explicit yes then native sale/refund. The gain posting has no amount; booking computes 140000. Independent query verifies property, mortgage and escrow zero, checking 242700 and gain −140000; original accounts remain open, check passes. |
+| 6 escrow tax | Proposal ties 3000 − 1200 = 1800 and expenses the tax from escrow. Explicit yes then native write; independent query gives escrow 1800, tax expense 1200 and unchanged mortgage −400000; check passes. |
+| 7 closing gap | Shows 500000 − 100000 − 390000 = 10000 gap, asks about missing funds or an incorrect figure, and invents no balancing leg. Ledger byte-identical. |
+
+All five write cases wait with byte-identical ledgers until their explicit yes,
+write through native `bea` and retain original entries unchanged. Each receives
+an independent root check and balance/lot query. Evals 3 and 7 remain read-only.
+There are no skill-body, description, fixture or dependency changes, no new
+suite version, and no retained failure hidden behind a rerun. Source, JSONL,
+original/final ledgers and independent grades remain local under
+`scripts/skills/tmp/w2-codex-linux/runs/m51-property-*`.
+
+The original **100** routing entries at `ed626cc35` match, in full, both later
+complete cohorts: **Claude Code 2.1.289 / claude-opus-5-5[1m], 124/124 on
+October 27 at `6421f036a`**, and **Codex 0.166.0 / gpt-6.1-sol, 128/128 twice
+on November 1 at `df1cfd84e`**, zero errors. Current property description is
+byte-identical to both sources. The earlier October 20 Claude 99/100 variance
+is retained; its pure-advice miss is covered by the later full 124 result.
+This is dated reuse of the unchanged original 100, not a fresh 136-entry run.
+Claude's original October 20 property behavior **7/7** also retains its date
+and version; no fresh Claude authentication or model result is claimed.
+[Task evidence](../../.pm/w2/m51/done/t006.md) closes the original both-client
+behavior/routing debt; adoption, simplify, deterministic coverage and closeout
+remain separate tasks.
