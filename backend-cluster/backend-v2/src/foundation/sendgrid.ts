@@ -4,6 +4,7 @@ import { ServiceUnavailableError } from "@/shared/errors";
 
 const emailLogger = logger.child({ module: "sendgrid" });
 const PROVIDER_TIMEOUT_MS = 10_000;
+const SENDGRID_API_URL = "https://api.sendgrid.com/v3";
 
 export type SendGridOpts = {
   apiKey: string;
@@ -19,6 +20,11 @@ type Mail = {
   text?: string;
   templateId?: string;
   dynamicTemplateData?: Record<string, unknown>;
+  /**
+   * The unsubscribe group the mail belongs to. SendGrid then adds the
+   * List-Unsubscribe headers and drops it for anyone who left the group.
+   */
+  asm?: { groupId: number };
 };
 
 type TemplateMailParams = {
@@ -31,6 +37,8 @@ type TemplateMailParams = {
 export interface ISendGrid {
   sendMail(data: Mail): Promise<void>;
   sendTemplate(params: TemplateMailParams): Promise<void>;
+  /** Whether `email` unsubscribed from the unsubscribe group `groupId`. */
+  isSuppressed(email: string, groupId: number): Promise<boolean>;
 }
 
 export class SendGrid implements ISendGrid {
@@ -51,6 +59,7 @@ export class SendGrid implements ISendGrid {
       text: data.text,
       templateId: data.templateId,
       dynamicTemplateData: data.dynamicTemplateData,
+      ...(data.asm && { asm: { groupId: data.asm.groupId } }),
     } as MailDataRequired;
 
     for (let i = this.opts.retryLimit; i > 0; i -= 1) {
@@ -92,6 +101,32 @@ export class SendGrid implements ISendGrid {
       }
     }
   }
+
+  public async isSuppressed(email: string, groupId: number): Promise<boolean> {
+    const response = await fetch(
+      `${SENDGRID_API_URL}/asm/groups/${groupId}/suppressions/search`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.opts.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ recipient_emails: [email] }),
+        signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+      },
+    ).catch(() => null);
+    if (!response?.ok) {
+      emailLogger.error("Suppression lookup failed", {
+        operation: "isSuppressed",
+        errorCategory: "MAIL_PROVIDER_FAILURE",
+        status: response?.status,
+      });
+      throw new ServiceUnavailableError("Email suppression lookup", 5);
+    }
+    const suppressed = (await response.json()) as string[];
+    const wanted = email.toLowerCase();
+    return suppressed.some((address) => address.toLowerCase() === wanted);
+  }
 }
 
 export class ConsoleSendGrid implements ISendGrid {
@@ -116,5 +151,9 @@ export class ConsoleSendGrid implements ISendGrid {
       operation: "sendTemplate",
       recipientCount: Array.isArray(params.to) ? params.to.length : 1,
     });
+  }
+
+  public async isSuppressed(): Promise<boolean> {
+    return false;
   }
 }

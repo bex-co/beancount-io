@@ -139,6 +139,11 @@ export interface StripeClientConfig {
    * changePlan. Account-specific like the price IDs, and not a secret.
    */
   portalConfigurationId: string;
+  /**
+   * The coupon behind each checkout recovery code: 20% off, once (ADR027 D3).
+   * Created by hand in the Stripe Dashboard with this ID; not a secret.
+   */
+  recoveryCouponId: string;
   /** Webhook URL for Stripe events */
   webhook: string;
 }
@@ -248,6 +253,7 @@ export const SUBSCRIPTION_CONFIG: SubscriptionConfigMap = {
     // The dashboard's Billing tab, where the plan is managed.
     portalReturnUrl: "https://beancount.io/settings/billing",
     portalConfigurationId: "bpc_1US5i0EqsEqs2tLVVF907WfA",
+    recoveryCouponId: "checkout-recovery-20",
     webhook: "https://beancount.io/api-gateway/stripe/webhook",
   },
 };
