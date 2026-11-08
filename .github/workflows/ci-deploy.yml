@@ -1,0 +1,36 @@
+name: CI (deploy)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "bex.yaml"
+      - "deploy/bex/**"
+      - "scripts/check-bex-blueprint.py"
+      - "scripts/test_check_bex_blueprint.py"
+      - ".github/workflows/ci-deploy.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "bex.yaml"
+      - "deploy/bex/**"
+      - "scripts/check-bex-blueprint.py"
+      - "scripts/test_check_bex_blueprint.py"
+      - ".github/workflows/ci-deploy.yml"
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bex-blueprint:
+    name: bex Blueprint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Blueprint writes no hostname, internal address or input
+        run: python3 scripts/check-bex-blueprint.py
+      - name: Blueprint guard tests
+        run: python3 scripts/test_check_bex_blueprint.py
+      - name: Gitea wrapper creates its own schema (real Postgres)
+        run: deploy/bex/gitea/test-entrypoint.sh
