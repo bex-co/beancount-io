@@ -25,6 +25,10 @@
 # Gitea's repos need a filesystem, so it is the one service with a disk. Its
 # first-boot administrator comes from deploy/bex/gitea/bex-entrypoint.sh.
 #
+# Services name no `repo` or `branch`: they build from the repository and branch
+# this Blueprint is linked to, so a fork, or a copy you changed, deploys itself
+# and not ours.
+#
 # The deploy asks for nothing. Every secret is generated (`generateValue`) and
 # shared between services by copying (`fromService`), or derived at start from
 # one that is (the OAuth signing key). Nothing secret is committed here.
@@ -36,8 +40,6 @@ services:
   - name: beancount-dashboard
     type: web
     runtime: docker
-    repo: https://github.com/bex-co/beancount-io
-    branch: bex-deploy
     rootDir: dashboard
     plan: starter
     healthCheckPath: /
@@ -66,8 +68,6 @@ services:
   - name: beancount-api
     type: web
     runtime: docker
-    repo: https://github.com/bex-co/beancount-io
-    branch: bex-deploy
     rootDir: backend-cluster/backend-v2
     plan: starter
     # No healthCheckPath on purpose: /healthz is a DEEP check that 500s when
@@ -221,8 +221,6 @@ services:
   - name: beancount-ledger
     type: pserv
     runtime: docker
-    repo: https://github.com/bex-co/beancount-io
-    branch: bex-deploy
     rootDir: backend-cluster/ledger
     plan: starter
     # Shallow by design (src/api/healthz.ts checks nothing downstream), so it
@@ -265,8 +263,6 @@ services:
   - name: beancount-gitea
     type: web
     runtime: docker
-    repo: https://github.com/bex-co/beancount-io
-    branch: bex-deploy
     rootDir: deploy/bex/gitea
     plan: starter
     numInstances: 1
