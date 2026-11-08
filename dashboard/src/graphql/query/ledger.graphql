@@ -3,16 +3,12 @@ mutation CreateLedger(
   $private: Boolean
   $description: String
   $template: LedgerTemplate
-  $setup: LedgerSetupInput
-  $requestId: String
 ) {
   createLedger(
     name: $name
     private: $private
     description: $description
     template: $template
-    setup: $setup
-    requestId: $requestId
   ) {
     updatedAt
     sshUrl
@@ -257,15 +253,5 @@ mutation UnstarLedger($ledgerId: String!) {
     success
     isStarred
     message
-  }
-}
-
-query PreviewLedgerSetup($setup: LedgerSetupInput!) {
-  previewLedgerSetup(setup: $setup) {
-    preset
-    operatingCurrency
-    historyStart
-    accounts
-    files
   }
 }

@@ -5,6 +5,8 @@ interface TranslationEntry {
 
 type LedgerFormTranslationKey =
   | "page.dashboard.ledgerTemplate"
+  | "page.dashboard.starterTemplate"
+  | "page.dashboard.starterTemplateDescription"
   | "page.dashboard.sampleTemplate"
   | "page.dashboard.sampleTemplateDescription";
 
@@ -27,6 +29,9 @@ type LedgerFormLanguage =
 
 const descriptions: Record<LedgerFormTranslationKey, string> = {
   "page.dashboard.ledgerTemplate": "Label for the ledger template picker",
+  "page.dashboard.starterTemplate": "Name of the starter ledger template",
+  "page.dashboard.starterTemplateDescription":
+    "Description of the starter ledger template",
   "page.dashboard.sampleTemplate": "Name of the sample ledger template",
   "page.dashboard.sampleTemplateDescription":
     "Description of the detailed sample ledger template",
@@ -38,90 +43,134 @@ const messages: Record<
 > = {
   en: {
     "page.dashboard.ledgerTemplate": "Template",
+    "page.dashboard.starterTemplate": "Starter template",
+    "page.dashboard.starterTemplateDescription":
+      "Empty books with a standard chart of accounts.",
     "page.dashboard.sampleTemplate": "Sample ledger",
     "page.dashboard.sampleTemplateDescription":
       "A detailed multi-file ledger with realistic sample activity.",
   },
   bg: {
     "page.dashboard.ledgerTemplate": "Шаблон",
+    "page.dashboard.starterTemplate": "Начален шаблон",
+    "page.dashboard.starterTemplateDescription":
+      "Празни книги със стандартен сметкоплан.",
     "page.dashboard.sampleTemplate": "Примерна книга",
     "page.dashboard.sampleTemplateDescription":
       "Подробна книга с няколко файла и реалистична примерна активност.",
   },
   ca: {
     "page.dashboard.ledgerTemplate": "Plantilla",
+    "page.dashboard.starterTemplate": "Plantilla inicial",
+    "page.dashboard.starterTemplateDescription":
+      "Llibres buits amb un pla de comptes estàndard.",
     "page.dashboard.sampleTemplate": "Llibre d'exemple",
     "page.dashboard.sampleTemplateDescription":
       "Un llibre detallat de diversos fitxers amb activitat d'exemple realista.",
   },
   de: {
     "page.dashboard.ledgerTemplate": "Vorlage",
+    "page.dashboard.starterTemplate": "Startvorlage",
+    "page.dashboard.starterTemplateDescription":
+      "Leere Bücher mit einem Standardkontenrahmen.",
     "page.dashboard.sampleTemplate": "Beispielhauptbuch",
     "page.dashboard.sampleTemplateDescription":
       "Ein detailliertes Hauptbuch mit mehreren Dateien und realistischen Beispieldaten.",
   },
   es: {
     "page.dashboard.ledgerTemplate": "Plantilla",
+    "page.dashboard.starterTemplate": "Plantilla inicial",
+    "page.dashboard.starterTemplateDescription":
+      "Libros vacíos con un plan de cuentas estándar.",
     "page.dashboard.sampleTemplate": "Libro mayor de muestra",
     "page.dashboard.sampleTemplateDescription":
       "Un libro detallado con varios archivos y actividad de ejemplo realista.",
   },
   fa: {
     "page.dashboard.ledgerTemplate": "الگو",
+    "page.dashboard.starterTemplate": "الگوی شروع",
+    "page.dashboard.starterTemplateDescription":
+      "دفترهای خالی با یک نمودار حساب استاندارد.",
     "page.dashboard.sampleTemplate": "دفتر نمونه",
     "page.dashboard.sampleTemplateDescription":
       "یک دفتر تفصیلی چندفایلی با فعالیت نمونه واقع‌گرایانه.",
   },
   fr: {
     "page.dashboard.ledgerTemplate": "Modèle",
+    "page.dashboard.starterTemplate": "Modèle de démarrage",
+    "page.dashboard.starterTemplateDescription":
+      "Livres vides avec un plan comptable standard.",
     "page.dashboard.sampleTemplate": "Grand livre d’exemple",
     "page.dashboard.sampleTemplateDescription":
       "Un grand livre détaillé à plusieurs fichiers avec une activité d’exemple réaliste.",
   },
   ja: {
     "page.dashboard.ledgerTemplate": "テンプレート",
+    "page.dashboard.starterTemplate": "スターターテンプレート",
+    "page.dashboard.starterTemplateDescription":
+      "標準の勘定科目表を持つ空の帳簿です。",
     "page.dashboard.sampleTemplate": "サンプル元帳",
     "page.dashboard.sampleTemplateDescription":
       "現実的なサンプル取引を含む詳細な複数ファイルの元帳です。",
   },
   ko: {
     "page.dashboard.ledgerTemplate": "템플릿",
+    "page.dashboard.starterTemplate": "시작 템플릿",
+    "page.dashboard.starterTemplateDescription":
+      "표준 계정과목표를 갖춘 빈 장부입니다.",
     "page.dashboard.sampleTemplate": "샘플 원장",
     "page.dashboard.sampleTemplateDescription":
       "현실적인 샘플 활동이 포함된 상세한 다중 파일 원장입니다.",
   },
   nl: {
     "page.dashboard.ledgerTemplate": "Sjabloon",
+    "page.dashboard.starterTemplate": "Startsjabloon",
+    "page.dashboard.starterTemplateDescription":
+      "Lege boeken met een standaard rekeningschema.",
     "page.dashboard.sampleTemplate": "Voorbeeldgrootboek",
     "page.dashboard.sampleTemplateDescription":
       "Een gedetailleerd grootboek met meerdere bestanden en realistische voorbeeldactiviteit.",
   },
   pt: {
     "page.dashboard.ledgerTemplate": "Modelo",
+    "page.dashboard.starterTemplate": "Modelo inicial",
+    "page.dashboard.starterTemplateDescription":
+      "Livros vazios com um plano de contas padrão.",
     "page.dashboard.sampleTemplate": "Livro-razão de exemplo",
     "page.dashboard.sampleTemplateDescription":
       "Um livro-razão detalhado com vários arquivos e atividade de exemplo realista.",
   },
   ru: {
     "page.dashboard.ledgerTemplate": "Шаблон",
+    "page.dashboard.starterTemplate": "Начальный шаблон",
+    "page.dashboard.starterTemplateDescription":
+      "Пустые книги со стандартным планом счетов.",
     "page.dashboard.sampleTemplate": "Пример книги",
     "page.dashboard.sampleTemplateDescription":
       "Подробная книга из нескольких файлов с реалистичными примерами операций.",
   },
   sk: {
     "page.dashboard.ledgerTemplate": "Šablóna",
+    "page.dashboard.starterTemplate": "Úvodná šablóna",
+    "page.dashboard.starterTemplateDescription":
+      "Prázdne knihy so štandardnou účtovnou osnovou.",
     "page.dashboard.sampleTemplate": "Vzorová účtovná kniha",
     "page.dashboard.sampleTemplateDescription":
       "Podrobná viac-súborová účtovná kniha s realistickou vzorovou aktivitou.",
   },
   uk: {
     "page.dashboard.ledgerTemplate": "Шаблон",
+    "page.dashboard.starterTemplate": "Початковий шаблон",
+    "page.dashboard.starterTemplateDescription":
+      "Порожні книги зі стандартним планом рахунків.",
     "page.dashboard.sampleTemplate": "Приклад книги",
     "page.dashboard.sampleTemplateDescription":
       "Докладна книга з кількох файлів із реалістичними прикладами операцій.",
   },
   zh: {
     "page.dashboard.ledgerTemplate": "模板",
+    "page.dashboard.starterTemplate": "入门模板",
+    "page.dashboard.starterTemplateDescription": "带有标准科目表的空白账簿。",
     "page.dashboard.sampleTemplate": "示例账本",
     "page.dashboard.sampleTemplateDescription":
       "包含逼真示例活动的详细多文件账本。",

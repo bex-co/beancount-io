@@ -3,10 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 import WelcomePage from "../index";
 
 vi.mock("@apollo/client/react", () => ({
-  useLazyQuery: () => [
-    async () => ({ data: undefined }),
-    { data: undefined, loading: false, error: undefined },
-  ],
   useMutation: () => [vi.fn(), { loading: false }],
   useQuery: () => ({
     data: {

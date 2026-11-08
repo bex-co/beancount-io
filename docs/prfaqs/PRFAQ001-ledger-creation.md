@@ -1,6 +1,6 @@
 # PRFAQ001 — Start a ledger that fits your life and work
 
-Status: Scope approved for design in [ADR021](../adrs/ADR021-backend-v2-ledger-creation-experience.md). Shipped: automatic signup creation is private; the hosted Starter no longer seeds an example transaction; the starter catalog with the Appendix A.9 personal modules is available on every API surface and in `bea init`; and the dashboard and native apps create new books in two steps, purpose then details, with the modules and a source-labelled currency suggestion. The rest is unimplemented.
+Status: Scope approved for design in [ADR021](../adrs/ADR021-backend-v2-ledger-creation-experience.md). Shipped: automatic signup creation is private; the hosted Starter no longer seeds an example transaction; the starter catalog with the Appendix A.9 personal modules is available on every API surface and in `bea init`; The dashboard and native two-step creation flow (purpose then details, with the modules and a source-labelled currency suggestion) shipped on 2026-11-01 and was reverted on 2026-11-07 pending a redesign; both apps create new books with the single form again. The rest is unimplemented.
 
 Date: 2026-09-10
 

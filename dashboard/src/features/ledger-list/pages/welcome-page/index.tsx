@@ -49,18 +49,16 @@ function WelcomeContent() {
             to: "/oauth/consent",
             search: { uid: oauthUid, scope: oauthScope },
           });
-          return true;
+          return;
         }
         const { ledgerOwner, ledgerName } = decodeLedgerId(
           result.data.createLedger.id,
         );
         void navigate({ to: `/ledger/${ledgerOwner}/${ledgerName}` });
       }
-      return true;
     } catch (error) {
       toast.error(formatError(error));
       console.error("Failed to create ledger:", error);
-      return false;
     }
   };
 
