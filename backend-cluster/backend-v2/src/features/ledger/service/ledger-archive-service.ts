@@ -1,3 +1,4 @@
+import { ARCHIVE_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import { Readable } from "node:stream";
 import type { AppConfig } from "@/config/config";
 import type { IModels } from "@/foundation/models";
@@ -140,7 +141,8 @@ export class LedgerArchiveService implements ILedgerArchiveService {
    * spends the shared download budget on a request that cannot succeed.
    */
   private refuse(status: number, archive: string): never {
-    if (status === 404) throw new NotFoundError("Archive", archive);
+    if (status === 404)
+      throw new NotFoundError("Archive", archive, ARCHIVE_NOT_FOUND_HINT);
     if (status === 400 || status === 422)
       throw new BadUserInputError(
         `Archive '${archive}' does not name a branch, tag or commit`,

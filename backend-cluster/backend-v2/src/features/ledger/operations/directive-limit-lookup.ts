@@ -1,3 +1,4 @@
+import { LEDGER_OWNER_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models/types";
 import type { IStripeService } from "@/features/stripe/service/stripe-service";
@@ -35,7 +36,11 @@ export async function lookupDirectiveLimit(
     ledgerUsername,
   );
   if (!user) {
-    throw new NotFoundError("User", ledgerUsername);
+    throw new NotFoundError(
+      "User",
+      ledgerUsername,
+      LEDGER_OWNER_NOT_FOUND_HINT,
+    );
   }
 
   const tierLimits = await getUserTierLimits({

@@ -1,3 +1,4 @@
+import { PULL_REQUEST_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import {
   assertPortableRepoPath,
   assertSafeRepoPath,
@@ -184,7 +185,11 @@ function reviewFailure(
   prNumber: number,
 ): { success: false; message: string } {
   if (clientFailureStatus(error) === 404) {
-    throw new NotFoundError("Pull request", String(prNumber));
+    throw new NotFoundError(
+      "Pull request",
+      String(prNumber),
+      PULL_REQUEST_NOT_FOUND_HINT,
+    );
   }
   return { success: false, message: describeClientFailure(error) };
 }
@@ -557,7 +562,12 @@ export class PullRequestService implements IPullRequestService {
 
       const pr = prResponse.data;
 
-      if (!pr) throw new NotFoundError("Pull request", String(prNumber));
+      if (!pr)
+        throw new NotFoundError(
+          "Pull request",
+          String(prNumber),
+          PULL_REQUEST_NOT_FOUND_HINT,
+        );
 
       // Process files data
       const filesData = filesResponse.data;
@@ -586,7 +596,11 @@ export class PullRequestService implements IPullRequestService {
       // A pull request number Gitea does not know is the caller's to fix, not
       // a server fault to retry.
       if (clientFailureStatus(error) === 404) {
-        throw new NotFoundError("Pull request", String(prNumber));
+        throw new NotFoundError(
+          "Pull request",
+          String(prNumber),
+          PULL_REQUEST_NOT_FOUND_HINT,
+        );
       }
       logger.error("Gitea API error fetching PR", {
         error: describeClientFailure(error),

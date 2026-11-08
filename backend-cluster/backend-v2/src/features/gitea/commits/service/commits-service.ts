@@ -1,3 +1,7 @@
+import {
+  BRANCH_NOT_FOUND_HINT,
+  COMMIT_NOT_FOUND_HINT,
+} from "@/shared/errors/lookup-hints";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import { assertHostPage, HOST_PAGE_MAX } from "@/shared/host-page";
 import { parseLedgerId } from "@/shared/str";
@@ -309,7 +313,7 @@ export class CommitsService implements ICommitsService {
       // told the caller "[object Response]". A revision Gitea does not know is
       // the caller's branch name, not a server fault.
       if (isMissingCommitLookupError(error)) {
-        throw new NotFoundError("Branch", branch);
+        throw new NotFoundError("Branch", branch, BRANCH_NOT_FOUND_HINT);
       }
       logger.error("Error fetching commits from Gitea", {
         owner,
@@ -357,7 +361,7 @@ export class CommitsService implements ICommitsService {
 
       const commit = commitResponse.data[0];
       if (!commit) {
-        throw new NotFoundError("Commit", sha);
+        throw new NotFoundError("Commit", sha, COMMIT_NOT_FOUND_HINT);
       }
 
       // Get unified diff using the git commits diff endpoint
@@ -424,7 +428,7 @@ export class CommitsService implements ICommitsService {
     } catch (error) {
       if (error instanceof DomainError) throw error;
       if (isMissingCommitLookupError(error)) {
-        throw new NotFoundError("Commit", sha);
+        throw new NotFoundError("Commit", sha, COMMIT_NOT_FOUND_HINT);
       }
       logger.error("Error fetching commit details from Gitea", {
         owner,

@@ -1,3 +1,4 @@
+import { USER_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import { assertNoNul } from "@/shared/assert-no-nul";
 import { publicAvatarUrl } from "@/shared/gitea-utils";
 import { assertHostPage } from "@/shared/host-page";
@@ -100,7 +101,7 @@ export class UserProfileService implements IUserProfileService {
     } catch (error) {
       if (error instanceof DomainError) throw error;
       if (isMissingUserLookupError(error)) {
-        throw new NotFoundError("User", username);
+        throw new NotFoundError("User", username, USER_NOT_FOUND_HINT);
       }
       logger.error("Error fetching user from Gitea", { username, error });
       throw new InternalServerError(
@@ -112,7 +113,7 @@ export class UserProfileService implements IUserProfileService {
     const user = userResponse.data;
 
     if (!user) {
-      throw new NotFoundError("User", username);
+      throw new NotFoundError("User", username, USER_NOT_FOUND_HINT);
     }
 
     // Check if current user is following (if authenticated)

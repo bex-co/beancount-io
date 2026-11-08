@@ -1372,6 +1372,8 @@ encoding — also answers `BAD_USER_INPUT` (`-32602`), with a hint naming what t
 template accepts. A URI under another scheme is not this server's to answer
 and still returns the SDK's own refusal.
 
+A `NOT_FOUND` on a bank connection, pull request, commit, branch, archive or user carries its own hint naming where that id comes from (for example `listBankConnections`), instead of the fallback that points at `listLedgers`, `listLedgerFiles` and `listLedgerEntries`. The sentence travels in `error.hint` on MCP and in the same metadata on REST and GraphQL.
+
 | `error.code`             | JSON-RPC | What it means and what to do                                                                                                                                                                             |
 | ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `BAD_USER_INPUT`         | `-32602` | An argument is wrong. `tools/list` publishes each tool's input schema.                                                                                                                                   |

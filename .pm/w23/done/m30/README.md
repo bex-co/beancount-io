@@ -1,18 +1,18 @@
 # w23 · m30 — Make every MCP failure carry an actionable hint
 
-**Worker:** worker1 **Goal:** Every failure on an MCP tool path names the next call or resource, with no internal details. **Status:** todo
+**Worker:** worker1 **Goal:** Every failure on an MCP tool path names the next call or resource, with no internal details. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Write the missing-hint audit script | 40m | — |
-| t002 | Add hints by category | 45m | t001 |
-| t003 | Test hints per tool | 30m | t002 |
-| t004 | Adoption surface | 20m | t003 |
-| t005 | Simplify | 20m | t004 |
-| t006 | Test coverage | 30m | t004 |
-| t007 | Closeout | 15m | t006 |
+| t001 | Write the missing-hint audit script — **DONE** | 40m | — |
+| t002 | Add hints by category — **DONE** | 45m | t001 |
+| t003 | Test hints per tool — **DONE** | 30m | t002 |
+| t004 | Adoption surface — **DONE** | 20m | t003 |
+| t005 | Simplify — **DONE** | 20m | t004 |
+| t006 | Test coverage — **DONE** | 30m | t004 |
+| t007 | Closeout — **DONE** | 15m | t006 |
 
 ## Definition of done
 
@@ -25,3 +25,7 @@ The audit script reports zero missing hints on MCP tool paths, tests guard it, a
 - **Expected outcome:** Fewer blind retries after a refused call.
 - **Why now:** Error categories were just pinned (226); hint quality is the remaining half of the failure contract.
 - **Adoption surface:** included: agents touch this surface directly.
+
+## Outcome
+
+Every MCP failure already carried a non-empty `hint`; the shipped change fixes the hints that were misleading (NOT_FOUND on bank connections, pull requests, commits, branches, users and archives) and guards new sites with a source audit.

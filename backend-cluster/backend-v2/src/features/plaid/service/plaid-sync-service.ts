@@ -1,3 +1,4 @@
+import { BANK_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import crypto from "crypto";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
@@ -247,7 +248,11 @@ export class PlaidSyncService implements IPlaidSyncService {
         item.ledgerRepoId !== ledgerRepoId
       ) {
         // Concealed like every other foreign bank resource.
-        throw new NotFoundError("Bank connection");
+        throw new NotFoundError(
+          "Bank connection",
+          undefined,
+          BANK_NOT_FOUND_HINT,
+        );
       }
     }
     // The item-bound decision as well, so the PDP verifies the chain and the

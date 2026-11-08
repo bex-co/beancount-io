@@ -1,3 +1,4 @@
+import { CALLER_ACCOUNT_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import {
   FavaApiError,
   LedgerCreate,
@@ -72,7 +73,7 @@ export async function createLedger({
 }: CreateLedgerParams): Promise<Ledger> {
   const user = await models.user.getById(postgresDb, userId);
   if (!user) {
-    throw new NotFoundError("User", userId);
+    throw new NotFoundError("User", userId, CALLER_ACCOUNT_NOT_FOUND_HINT);
   }
 
   // The mobile app is exempt from the ledger limit (PRFAQ005).

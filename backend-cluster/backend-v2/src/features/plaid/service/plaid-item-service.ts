@@ -1,3 +1,4 @@
+import { BANK_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import { type DbExecutor } from "@/drizzle/drizzle";
 import { assertNoNul, assertNoNulIn } from "@/shared/assert-no-nul";
 import { type IModels } from "@/foundation/models";
@@ -304,7 +305,11 @@ export class PlaidItemService implements IPlaidItemService {
       item.userId !== identity.userId ||
       item.ledgerRepoId !== ledgerRepoId
     ) {
-      throw new NotFoundError("Bank connection");
+      throw new NotFoundError(
+        "Bank connection",
+        undefined,
+        BANK_NOT_FOUND_HINT,
+      );
     }
     // The item-bound decision as well, so the PDP verifies the chain and the
     // audit record names the connection acted on.
@@ -346,7 +351,12 @@ export class PlaidItemService implements IPlaidItemService {
     let targetLedgerId = ledgerId;
     if (targetLedgerId === undefined) {
       const located = await this.models.plaidItem.getById(this.db, id);
-      if (!located) throw new NotFoundError("Bank connection");
+      if (!located)
+        throw new NotFoundError(
+          "Bank connection",
+          undefined,
+          BANK_NOT_FOUND_HINT,
+        );
       targetLedgerId = await this.resolveLedgerId(located.ledgerRepoId);
     }
     // The PDP checks the item belongs to the caller and to this ledger, and
@@ -363,7 +373,11 @@ export class PlaidItemService implements IPlaidItemService {
       item.userId !== identity.userId ||
       item.ledgerRepoId !== ledgerRepoId
     ) {
-      throw new NotFoundError("Bank connection");
+      throw new NotFoundError(
+        "Bank connection",
+        undefined,
+        BANK_NOT_FOUND_HINT,
+      );
     }
     return toItemResult(item);
   }
@@ -1042,7 +1056,12 @@ export class PlaidItemService implements IPlaidItemService {
       item.id,
       { ledgerAccount },
     );
-    if (!updated) throw new NotFoundError("Bank connection");
+    if (!updated)
+      throw new NotFoundError(
+        "Bank connection",
+        undefined,
+        BANK_NOT_FOUND_HINT,
+      );
     itemServiceLogger.info("Account mapping updated", {
       identity,
       accountId,
@@ -1069,7 +1088,12 @@ export class PlaidItemService implements IPlaidItemService {
       item.id,
       { currency },
     );
-    if (!updated) throw new NotFoundError("Bank connection");
+    if (!updated)
+      throw new NotFoundError(
+        "Bank connection",
+        undefined,
+        BANK_NOT_FOUND_HINT,
+      );
     itemServiceLogger.info("Account currency updated", {
       identity,
       accountId,

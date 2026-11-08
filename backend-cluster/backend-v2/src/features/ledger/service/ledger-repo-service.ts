@@ -1,3 +1,4 @@
+import { BRANCH_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import {
   assertNoPortableTwin,
   assertNoPrefixAmong,
@@ -200,7 +201,7 @@ export class LedgerRepoService
       (cause) =>
         cause instanceof FavaApiError
           ? cause.status === 404
-            ? new NotFoundError("Branch", branchName)
+            ? new NotFoundError("Branch", branchName, BRANCH_NOT_FOUND_HINT)
             : favaApiErrorToDomainError(cause, "get latest commit")
           : new InternalServerError("Failed to get latest commit"),
     );
