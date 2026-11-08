@@ -12,4 +12,4 @@
 - [x] **m6** — [Backend parity for holdings, register, and capital-gains](./done/m6/README.md) (7 tasks) ← promoted from `w22/003` 2026-10-25
 - [ ] **m7** — [One click to deploy beancount to bex](./blocked/m7/README.md) (owner checklist, no tasks) — **blocked:** superseded by m8/m9 pending the owner's confirmation
 - [x] **m8** — [Self-hosted deployments: no verification page, no plan limits](./done/m8/README.md) (7 tasks) ← self-host request 2026-11-07
-- [ ] **m9** — [One-click "Deploy to bex" for the self-hosted stack](./m9/README.md) (8 tasks) ← deploy-badge request 2026-11-07
+- [ ] **m9** — [One-click "Deploy to bex" for the self-hosted stack](./blocked/m9/README.md) (8 tasks) ← deploy-badge request 2026-11-07 — **blocked:** the clean-workspace check waits on the bex platform's build queue

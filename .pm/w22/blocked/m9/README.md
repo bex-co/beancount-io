@@ -1,6 +1,6 @@
 # w22 · m9 — One-click "Deploy to bex" for the self-hosted stack
 
-**Worker:** worker1 **Goal:** a person clicks a badge in this repository's README and gets a running, signed-in-capable beancount.io stack in their own bex workspace, answering only the few questions that cannot be generated **Status:** todo (t001–t003, t005–t007 done; t004 blocked)
+**Worker:** worker1 **Goal:** a person clicks a badge in this repository's README and gets a running, signed-in-capable beancount.io stack in their own bex workspace, answering only the few questions that cannot be generated **Status:** blocked (t001–t003, t005–t007 done; t004, t008 wait on the bex platform)
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Adoption surface — **DONE** | 30m | t003 |
 | t006 | Simplify — **DONE** | 30m | t005 |
 | t007 | Test coverage — **DONE** | 1h | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t008 | Closeout — **blocked** | 15m | t006, t007 |
 
 ## Definition of done
 
@@ -49,3 +49,7 @@
 - **Who can clear it:** the bex platform for the build queue and control-plane errors; this repository for acting on the Gitea wrapper's message once a build runs.
 - **Baseline shipped:** t001 to t003 are done and on `main`; the scratch deployment was torn down and each resource confirmed gone.
 - **Correction to t001's record:** its Done section says migrations create the `gitea` schema through `ENSURE_SCHEMAS`. That mechanism was removed once the ordering fault was found; Gitea's own wrapper now does it. t001's text is history and is left as written.
+
+**Blocked 2026-11-08** — t008 (Closeout), through t004. Closeout may run only once the definition of done holds, and the clause "a deployment through the badge into a workspace whose names are taken passes the browser checklist and is torn down" is t004's. Every other clause holds on `main`: the badge opens a prefilled, valid preview; `bex.yaml` and `dashboard/.env.production` write no hostname or internal address; a clean-workspace preview asks for no input; the managed service is unchanged (each new switch is off unless set). **Unblock:** t004 passes; then re-check the definition of done against `main` and run `/pm done` on t008. **Who:** the bex platform, through t004.
+
+**Blocked 2026-11-08** — the milestone, because every open task (t004, t008) waits on one external condition. **Blocker:** the bex platform. In a workspace whose service names are taken, deploys sat queued for 20 to 35 minutes with no build starting, the Blueprint sync and create calls intermittently answered 500 or 502, and a rollout that misses its deadline is marked failed and not retried, so the Gitea service the browser flow needs never came up there. **Unblock:** a clean deploy of `main` into such a workspace reaches all four services live in the platform's normal build times; then run t004's browser checklist and teardown, and close the milestone through t008. **Who:** the bex platform for the queue and control-plane errors; this repository to read the Gitea wrapper's message (it now prints why it cannot create its schema) and finish t004. **Baseline shipped:** t001 to t003 and t005 to t007 are on `main`, with the `CI (deploy)` workflow guarding the Blueprint and the Gitea wrapper.
