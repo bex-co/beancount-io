@@ -1,12 +1,12 @@
 # w23 · m34 — Bound a tool call's runtime and stop work when the client disconnects
 
-**Worker:** worker1 **Goal:** A slow or hung ledger call ends with a hinted error inside a documented deadline on REST, GraphQL and MCP, and an abandoned call stops consuming the ledger. **Status:** todo
+**Worker:** worker1 **Goal:** A slow or hung ledger call ends with a hinted error inside a documented deadline on REST, GraphQL and MCP, and an abandoned call stops consuming the ledger. **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Map existing timeouts and cancellation points | 30m | — |
+| t001 | Map existing timeouts and cancellation points — **DONE** | 30m | — |
 | t002 | Reproduce a hung ledger call with a slow stub | 45m | t001 |
 | t003 | Add a deadline in the shared ledger-call layer | 60m | t002 |
 | t004 | Cancel in-flight work when the client disconnects | 45m | t003 |
