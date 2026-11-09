@@ -115,6 +115,20 @@ describe("MCP route: methods other than POST", () => {
     },
   );
 
+  // w23/229: these fell through to the router's `allowedMethods()`, which
+  // answers with every method registered on the path (`GET, DELETE, HEAD`),
+  // so `OPTIONS` told a client a standalone stream exists and `PUT` named
+  // methods that then answered 405.
+  it.each(["OPTIONS", "PUT", "PATCH"])(
+    "%s advertises only POST, the one method the endpoint serves",
+    async (method) => {
+      const { res } = await requestWithin(method);
+
+      expect(res.status).toBe(405);
+      expect(res.headers.get("allow")).toBe("POST");
+    },
+  );
+
   it("refuses an unauthenticated GET with 401 and the discovery hint, not 405", async () => {
     resolveIdentityMock.mockResolvedValue(undefined);
     const { res, body } = await requestWithin("GET");

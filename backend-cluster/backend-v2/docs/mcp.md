@@ -284,8 +284,8 @@ agent decides which calls to make.
 Each request gets a fresh server and transport, with
 `sessionIdGenerator: undefined`, and the server is closed after handling it.
 There is no persistent MCP session ID, standalone GET stream, or resource
-subscription channel. Authenticated `GET` and `DELETE` requests
-return `405` with `Allow: POST`. POST responses can still use SSE framing.
+subscription channel. Authenticated non-POST requests (`GET`, `DELETE`,
+`OPTIONS`, `PUT`, `PATCH`) return `405` with `Allow: POST`. POST responses can still use SSE framing.
 This is compatible with the optional GET stream in the
 [Streamable HTTP specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).
 
@@ -1470,7 +1470,7 @@ A `NOT_FOUND` on a bank connection, pull request, commit, branch, archive or use
 | `401` with `resource_metadata`                    | Missing/invalid credential, browser session, expired OAuth token, or wrong OAuth audience. Follow discovery or supply a valid key.                                                                                                                                                                        |
 | Tool error requesting a ledger                    | Pass `ledger: "owner/name"` when using an unpinned credential.                                                                                                                                                                                                                                            |
 | `403`, JSON-RPC error with `id: null`             | The request carried an `Origin` header outside the trusted set (any `beancount.io` host, `localhost` or `127.0.0.1` on any port). Browser pages on other sites cannot call the endpoint; native and server-side clients send no `Origin` and are unaffected. An anonymous request still gets `401` first. |
-| `405`, `Allow: POST`, on authenticated GET/DELETE | Expected behavior; use Streamable HTTP POST.                                                                                                                                                                                                                                                              |
+| `405`, `Allow: POST`, on any authenticated non-POST method (GET, DELETE, HEAD, OPTIONS, PUT, PATCH) | Expected behavior; use Streamable HTTP POST.                                                                                                                                                                                                                                                              |
 | `400`/`406` before tool execution                 | Check JSON-RPC, protocol version, content type, and both Accept values.                                                                                                                                                                                                                                   |
 | `isError: true`                                   | Read `structuredContent.error.code` and follow `error.hint`; the table above lists every code.                                                                                                                                                                                                            |
 | Resources appear absent                           | Call `resources/templates/list`; verify the client supports resource reads.                                                                                                                                                                                                                               |

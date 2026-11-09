@@ -83,7 +83,7 @@ async function handleMcpRequest(
     return;
   }
 
-  // GET and DELETE are refused here, before any transport exists.
+  // Every method but POST is refused here, before any transport exists.
   //
   // This endpoint is stateless (`sessionIdGenerator: undefined`, below): the
   // server and transport are built per request and thrown away, so there is no
@@ -278,6 +278,14 @@ export function setMcpRoute(
   router.post(MCP_ENDPOINT_PATH, handler);
   router.get(MCP_ENDPOINT_PATH, handler);
   router.delete(MCP_ENDPOINT_PATH, handler);
+  // `OPTIONS`, `PUT` and `PATCH` are refused here too (w23/229). Left to
+  // `allowedMethods()` they answer with every method registered on the path,
+  // so `OPTIONS` advertised `GET, DELETE, HEAD` and a client probing for a
+  // standalone SSE stream was told one exists, then got 405. A CORS preflight
+  // never reaches this: the CORS layer answers it first.
+  router.options(MCP_ENDPOINT_PATH, handler);
+  router.put(MCP_ENDPOINT_PATH, handler);
+  router.patch(MCP_ENDPOINT_PATH, handler);
 
   // How this mount wants its POSTs charged (w2/014). Registered from the same
   // path the route just mounted, and through the same `requestOpId` the

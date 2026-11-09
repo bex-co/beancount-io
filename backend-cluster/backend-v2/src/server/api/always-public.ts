@@ -197,6 +197,18 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
     reason: MCP_TRANSPORT,
   },
   {
+    opId: "REST OPTIONS /api-gateway/mcp",
+    reason: MCP_TRANSPORT,
+  },
+  {
+    opId: "REST PUT /api-gateway/mcp",
+    reason: MCP_TRANSPORT,
+  },
+  {
+    opId: "REST PATCH /api-gateway/mcp",
+    reason: MCP_TRANSPORT,
+  },
+  {
     opId: "REST GET /api-gateway/mcp/archive/{owner}/{name}/{archive}",
     reason:
       "The MCP resource's streaming archive download. It authenticates the MCP audience itself (never a browser session), requires the read capability, spends the shared archive-download budget and calls the same ledger archive service as the v1 route, which rechecks the credential pin and per-ledger read authority.",
