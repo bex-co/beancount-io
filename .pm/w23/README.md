@@ -37,7 +37,7 @@
 - [x] **m32** — [Make the MCP endpoint answer every HTTP verb and header consistently](./done/m32/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 2; absorbs `w23/229`
 - [x] **m33** — [Make every tool, parameter and recipe the docs and hints name resolve](./done/m33/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 3
 - [x] **m34** — [Make a ledger timeout tell the agent what happened and how to retry](./done/m34/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 4; from `w23/done/209`
-- [ ] **m35** — [Offer argument completion for MCP prompts and resource templates](./m35/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 5; evidence-gated
+- [ ] **m35** — [Offer argument completion for MCP prompts and resource templates](./blocked/m35/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 5; evidence-gated — **blocked:** no evaluated host is known to send `completion/complete`; needs an observed host call (billed agent-eval run) before building
 
 ## Dropped
 

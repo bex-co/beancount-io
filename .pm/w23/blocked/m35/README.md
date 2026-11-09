@@ -1,6 +1,6 @@
 # w23 · m35 — Offer argument completion for MCP prompts and resource templates
 
-**Worker:** worker1 **Goal:** Hosts that call `completion/complete` autocomplete ledger, month, account and bank-item arguments without leaking anything beyond the credential's reach. **Status:** todo
+**Worker:** worker1 **Goal:** Hosts that call `completion/complete` autocomplete ledger, month, account and bank-item arguments without leaking anything beyond the credential's reach. **Status:** blocked
 
 ## Tasks (in order)
 
@@ -26,3 +26,11 @@ Evidence from the evaluated hosts shows they request completions; `completions` 
 - **Expected outcome:** Slash-command users type fewer exact identifiers and make fewer malformed prompt calls.
 - **Why now:** Prompts shipped but their arguments must be typed exactly (`owner/name`, `YYYY-MM`); the evidence task decides cheaply whether any host benefits.
 - **Adoption surface:** included: agents and integrators touch this surface directly.
+
+## Blocked
+
+**Blocked 2026-11-08** — what is blocked: the whole milestone. Its first task (t001) is the evidence gate and the Definition of done says to block rather than build when no evaluated host requests completions.
+
+**Blocker:** no evidence that Claude Code or Codex sends `completion/complete` for prompt arguments. Public sources found 2026-11-08: Codex's MCP support is documented for tools only (this repository's `docs/mcp.md` already says Codex 0.154.0 does not use prompts), third-party Codex write-ups mention resource reads, output schemas and elicitations but not completions, and the Claude Code feature requests for completion support in prompts and the `@` mention UI show no confirmed shipped fix. Building a `completions` capability that no host calls would be milestone theater. No code was written; the server declares no `completions` capability today.
+
+**Unblock:** an observation that an evaluated host calls it: run `yarn mcp:agent-eval` (billed; owner approval) for the Claude Code prompt journeys against the hosted endpoint with the QA account and record the JSON-RPC methods the host sent, or cite a Claude Code or Codex release note shipping prompt-argument completion. If a host sends `completion/complete`, run `/pm unblock w23/m35` and start at t002. Who can clear it: the owner (approving the billed agent run), or any worker given release-note evidence.
