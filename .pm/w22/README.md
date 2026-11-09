@@ -10,6 +10,9 @@
 - [x] **m4** — [`bea report capital-gains`: realized gains by lot](./done/m4/README.md) (7 tasks) ← `/pm-brainstorm for cli` 2026-10-24
 - [x] **m5** — [A reusable CI check for ledger repositories](./done/m5/README.md) (8 tasks) ← `/pm-brainstorm for cli` 2026-10-24
 - [x] **m6** — [Backend parity for holdings, register, and capital-gains](./done/m6/README.md) (7 tasks) ← promoted from `w22/003` 2026-10-25
-- [ ] **m7** — [One click to deploy beancount to bex](./blocked/m7/README.md) (owner checklist, no tasks) — **blocked:** superseded by m8/m9 pending the owner's confirmation
 - [x] **m8** — [Self-hosted deployments: no verification page, no plan limits](./done/m8/README.md) (7 tasks) ← self-host request 2026-11-07
 - [x] **m9** — [One-click "Deploy to bex" for the self-hosted stack](./done/m9/README.md) (8 tasks) ← deploy-badge request 2026-11-07
+
+## Dropped
+
+- ~~**m7**~~ — One click to deploy beancount to bex (owner checklist, no tasks) — dropped 2026-11-09: superseded, with the owner's confirmation. Every open item on the checklist shipped elsewhere: mail and plan limits in [m8](./done/m8/README.md), the public-URL and deploy-form work and the clean-workspace browser check in [m9](./done/m9/README.md), the repeatable smoke script in [006](./done/006.md).
