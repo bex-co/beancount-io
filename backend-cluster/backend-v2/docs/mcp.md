@@ -1506,8 +1506,12 @@ yarn mcp:conformance https://books.example.com --token "$BEANCOUNT_MCP_TOKEN"
 ```
 
 The [conformance script](../scripts/mcp-conformance.ts) checks the unauthenticated
-challenge, discovery, method handling, initialization/tool schemas, error masking,
-and canonical path. It also reads the authorization-server metadata the way a
+challenge, discovery, method handling (`GET`, `DELETE`, `OPTIONS` and `PUT` must all be
+`405` with `Allow: POST`), initialization/tool schemas, error masking, and canonical
+path. Check 18 needs no credential: it sends an anonymous cross-origin request
+and requires the 401's `WWW-Authenticate` to be listed in
+`Access-Control-Expose-Headers`, since a browser-hosted client can read only the
+headers a response exposes and otherwise cannot find where to sign in. It also reads the authorization-server metadata the way a
 host does and checks what hosts refuse to start a sign-in without: PKCE `S256`,
 `authorization_response_iss_parameter_supported` (ChatGPT's stable redirect), a
 registration endpoint (DCR hosts such as Cursor), `none` at the token endpoint
