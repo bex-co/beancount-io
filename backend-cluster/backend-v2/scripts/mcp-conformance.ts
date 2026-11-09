@@ -17,6 +17,9 @@
  * evidence that was never gathered.
  */
 
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+
 const MCP_PATH = "/api-gateway/mcp";
 const VANITY_PATH = "/mcp";
 
@@ -36,6 +39,8 @@ interface Options {
   readonly baseUrl: string;
   readonly token?: string;
   readonly readOnlyToken?: string;
+  /** `owner/name`, for a credential that is not pinned to one ledger. */
+  readonly ledger?: string;
 }
 
 /**
@@ -82,6 +87,10 @@ const jsonRpcHeaders = (token?: string): Record<string, string> => ({
   Accept: "application/json, text/event-stream",
   ...(token ? { Authorization: `Bearer ${token}` } : {}),
 });
+
+/** A tool's arguments, naming the ledger when the credential is not pinned. */
+const withLedger = (o: Options, args: Record<string, unknown>) =>
+  o.ledger ? { ...args, ledger: o.ledger } : args;
 
 const rpc = (method: string, params: unknown = {}, id = 1) =>
   JSON.stringify({ jsonrpc: "2.0", id, method, params });
@@ -323,14 +332,14 @@ async function checkScopeRefusal(o: Options): Promise<CheckResult> {
       "tools/call",
       {
         name: "createLedgerFiles",
-        arguments: {
+        arguments: withLedger(o, {
           description: "conformance probe — expected to be refused",
           // Creating main.bean reaches the service's write PEP without a
           // preparatory file read. If authorization regresses and lets the
           // call through, the existing root file makes the operation fail
           // without changing the ledger.
           files: [{ path: "main.bean", content: "" }],
-        },
+        }),
       },
       3,
     ),
@@ -390,7 +399,10 @@ async function checkResultShape(o: Options): Promise<CheckResult> {
     headers: jsonRpcHeaders(token),
     body: rpc(
       "tools/call",
-      { name: "runBqlQuery", arguments: { query: "SELECT account LIMIT 1" } },
+      {
+        name: "runBqlQuery",
+        arguments: withLedger(o, { query: "SELECT account LIMIT 1" }),
+      },
       10,
     ),
   });
@@ -774,6 +786,96 @@ const checkCimd = metadataCheck(
   "client ID metadata documents are accepted",
 );
 
+/**
+ * 17 — real results validate against the schema `tools/list` published.
+ *
+ * A client that validates `structuredContent` (the MCP TypeScript SDK does)
+ * rejects any result with a key the published schema forbids, so the schema
+ * and the handler can each look right while the pair is unusable (w23/230: a
+ * write preview's `newErrors[].code`). The check therefore uses that SDK's own
+ * client, which compiles each tool's `outputSchema` when it lists tools and
+ * validates every successful call against it.
+ *
+ * Only a read and one `dry_run` preview run, so nothing is written: the
+ * preview adds a balance assertion on an account that cannot exist, which
+ * makes bean-check report a new error and fills the one field this check was
+ * written for. A refused call is an error result and the SDK skips validation
+ * for it, so a refusal is reported as not compared rather than as a pass.
+ */
+async function checkOutputSchemaConformance(o: Options): Promise<CheckResult> {
+  const v = verdict(
+    "17 output-schema-conformance",
+    "Live tool results validate against their published outputSchema",
+  );
+  const calls = [
+    ...(o.readOnlyToken ?? o.token
+      ? [
+          {
+            name: "runBqlQuery",
+            arguments: withLedger(o, { query: "SELECT account LIMIT 1" }),
+            token: (o.readOnlyToken ?? o.token) as string,
+          },
+        ]
+      : []),
+    ...(o.token
+      ? [
+          {
+            name: "appendLedgerText",
+            arguments: withLedger(o, {
+              text: "2000-01-01 balance Assets:ConformanceProbe:Nowhere 1 USD\n",
+              dry_run: true,
+            }),
+            token: o.token,
+          },
+        ]
+      : []),
+  ];
+  if (calls.length === 0) {
+    return v.skip("needs --token (or --read-only-token) to call tools");
+  }
+
+  const checked: string[] = [];
+  const notCompared: string[] = [];
+  for (const call of calls) {
+    const client = new Client({ name: "mcp-conformance", version: "1.0.0" });
+    const transport = new StreamableHTTPClientTransport(
+      new URL(`${o.baseUrl}${MCP_PATH}`),
+      { requestInit: { headers: { Authorization: `Bearer ${call.token}` } } },
+    );
+    try {
+      await client.connect(transport);
+      // Listing is what makes the client compile the output validators.
+      await client.listTools();
+      const result = await client.callTool(
+        { name: call.name, arguments: call.arguments },
+        undefined,
+        { timeout: TIMEOUT_MS },
+      );
+      if (result.isError || result.structuredContent === undefined) {
+        notCompared.push(`${call.name} was refused or returned no structuredContent`);
+      } else {
+        checked.push(call.name);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (/output schema/i.test(message)) {
+        return v.fail(
+          `${call.name}'s result does not match its published outputSchema (${message}). A schema-validating client rejects it`,
+        );
+      }
+      return v.fail(`${call.name} could not be called: ${message}`);
+    } finally {
+      await client.close().catch(() => undefined);
+    }
+  }
+  if (checked.length === 0) {
+    return v.skip(`no result could be compared: ${notCompared.join("; ")}`);
+  }
+  return v.pass(
+    `${checked.join(", ")} validate${notCompared.length ? `; not compared: ${notCompared.join("; ")}` : ""}`,
+  );
+}
+
 // --- runner ---------------------------------------------------------------
 
 function parseArgs(argv: string[]): Options {
@@ -785,7 +887,7 @@ function parseArgs(argv: string[]): Options {
   const baseUrl = positional[0];
   if (!baseUrl) {
     console.error(
-      "usage: yarn mcp:conformance <base-url> [--token <bcio_…>] [--read-only-token <bcio_…>]\n" +
+      "usage: yarn mcp:conformance <base-url> [--token <bcio_…>] [--read-only-token <bcio_…>] [--ledger <owner/name>]\n" +
         "  e.g. yarn mcp:conformance http://localhost:4104",
     );
     process.exit(2);
@@ -794,6 +896,7 @@ function parseArgs(argv: string[]): Options {
     baseUrl: baseUrl.replace(/\/+$/, ""),
     token: flag("token"),
     readOnlyToken: flag("read-only-token"),
+    ledger: flag("ledger"),
   };
 }
 
@@ -822,6 +925,7 @@ export const CHECKS = [
   checkPublicClientAuth,
   checkResourceMatches,
   checkCimd,
+  checkOutputSchemaConformance,
 ] as const;
 
 export type { CheckResult, Options, Outcome };

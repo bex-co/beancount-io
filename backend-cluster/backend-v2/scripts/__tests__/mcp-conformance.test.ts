@@ -38,6 +38,7 @@ const [
   checkPublicClientAuth,
   checkResourceMatches,
   checkCimd,
+  checkOutputSchemaConformance,
 ] = CHECKS;
 
 const ledgerScoped: Identity = {
@@ -49,6 +50,9 @@ const ledgerScoped: Identity = {
 };
 
 const readOnly: Identity = { ...ledgerScoped, scopes: new Set(["ledger.read"]) };
+
+/** What the stubbed ledger-entry service answers an append preview with. */
+let appendPreviewErrors: Record<string, unknown>[] = [];
 
 let server: http.Server;
 let baseUrl: string;
@@ -86,6 +90,21 @@ beforeAll(async () => {
           }
         },
       },
+      ledgerEntry: {
+        appendDirectiveText: async () => ({
+          message: "Would append 1 directive",
+          dryRun: true,
+          count: 1,
+          diff: [],
+          appendedUnsorted: [],
+          wrote: [],
+          entryHashes: [],
+          errorsBefore: 0,
+          errorsAfter: appendPreviewErrors.length,
+          newErrors: appendPreviewErrors,
+          valid: appendPreviewErrors.length === 0,
+        }),
+      },
       apiKey: {},
       llm: {},
     },
@@ -111,6 +130,7 @@ afterAll(async () => {
 });
 
 beforeEach(() => {
+  appendPreviewErrors = [];
   resolveIdentityMock.mockReset();
   // Default: anonymous. Checks that need a credential opt in below.
   resolveIdentityMock.mockResolvedValue(undefined);
@@ -174,6 +194,63 @@ describe("MCP conformance checks", () => {
     const result = await checkResultShape({ baseUrl, token: "good" });
     expect(result.outcome).toBe("pass");
     expect(result.detail).toContain("1 row");
+  });
+
+  it("check 17 passes when a preview's new errors carry the code the schema publishes", async () => {
+    acceptTokens({ good: ledgerScoped });
+    appendPreviewErrors = [
+      { message: "Account was never opened", source: "main.bean:1", code: "E1001" },
+    ];
+    const result = await checkOutputSchemaConformance({ baseUrl, token: "good" });
+    expect(result.outcome).toBe("pass");
+    expect(result.detail).toContain("appendLedgerText");
+  });
+
+  it("check 17 fails when a result carries a key its published schema forbids", async () => {
+    acceptTokens({ good: ledgerScoped });
+    // `severity` is not on the published item, which is additionalProperties:
+    // false — the shape of w23/230, so a validating client would reject it.
+    appendPreviewErrors = [
+      { message: "Account was never opened", source: "main.bean:1", severity: "error" },
+    ];
+    const result = await checkOutputSchemaConformance({ baseUrl, token: "good" });
+    expect(result.outcome).toBe("fail");
+    expect(result.detail).toContain("appendLedgerText");
+    expect(result.detail).toMatch(/does not match its published outputSchema/);
+  });
+
+  it("check 17 compares only the read when the credential cannot write", async () => {
+    acceptTokens({ ro: readOnly });
+    const result = await checkOutputSchemaConformance({
+      baseUrl,
+      readOnlyToken: "ro",
+    });
+    expect(result.outcome).toBe("pass");
+    expect(result.detail).toContain("runBqlQuery");
+    expect(result.detail).not.toContain("appendLedgerText");
+  });
+
+  it("check 17 sends --ledger with each call, so an unpinned credential can be exercised", async () => {
+    acceptTokens({ good: ledgerScoped });
+    // The credential is pinned to alice/main; naming another ledger is
+    // refused, which proves the flag reached the call rather than being dropped.
+    const other = await checkOutputSchemaConformance({
+      baseUrl,
+      token: "good",
+      ledger: "bob/other",
+    });
+    expect(other.outcome).toBe("skip");
+    const own = await checkOutputSchemaConformance({
+      baseUrl,
+      token: "good",
+      ledger: "alice/main",
+    });
+    expect(own.outcome).toBe("pass");
+  });
+
+  it("check 17 skips rather than fails without a credential", async () => {
+    const result = await checkOutputSchemaConformance({ baseUrl });
+    expect(result.outcome).toBe("skip");
   });
 
   it("check 10 skips rather than fails without a credential", async () => {
