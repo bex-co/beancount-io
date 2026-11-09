@@ -1,13 +1,13 @@
 # w23 · m32 — Make the MCP endpoint answer every HTTP verb and header consistently
 
-**Worker:** worker1 **Goal:** Each HTTP verb and request header on the MCP endpoint gets one documented, tested answer, and the unauthenticated ones are probed by `yarn mcp:conformance`. **Status:** todo (t001 done)
+**Worker:** worker1 **Goal:** Each HTTP verb and request header on the MCP endpoint gets one documented, tested answer, and the unauthenticated ones are probed by `yarn mcp:conformance`. **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
 | t001 | Answer OPTIONS and every non-POST verb with Allow: POST — **DONE** | 25m | — |
-| t002 | Tabulate current versus specified behavior for the remaining probes | 30m | — |
+| t002 | Tabulate current versus specified behavior for the remaining probes — **DONE** | 30m | — |
 | t003 | Fix each gap with a regression test | 60m | t002 |
 | t004 | Add the credential-free probes to yarn mcp:conformance | 30m | t003 |
 | t005 | Adoption surface | 20m | t004 |
