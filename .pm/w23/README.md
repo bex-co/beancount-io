@@ -33,6 +33,11 @@
 - [x] **m28** — [Give every paginated read one has-more envelope](./done/m28/README.md) (9 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 2
 - [x] **m29** — [Add preview-commit, stale-hash and filter journeys to the agent eval](./done/m29/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 3; hosted baseline waived by owner 2026-11-07
 - [x] **m30** — [Make every MCP failure carry an actionable hint](./done/m30/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 4
+- [ ] **m31** — [Validate every MCP tool result against its published outputSchema](./m31/README.md) (8 tasks) ← promoted from `w23/230`; `/pm-brainstorm for w23` 2026-11-08, proposal 1
+- [ ] **m32** — [Make the MCP endpoint answer every HTTP verb and header consistently](./m32/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 2; absorbs `w23/229`
+- [ ] **m33** — [Make every tool, parameter and recipe the docs and hints name resolve](./m33/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 3
+- [ ] **m34** — [Bound a tool call's runtime and stop work when the client disconnects](./m34/README.md) (9 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 4; from `w23/done/209`
+- [ ] **m35** — [Offer argument completion for MCP prompts and resource templates](./m35/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 5; evidence-gated
 
 ## Dropped
 
