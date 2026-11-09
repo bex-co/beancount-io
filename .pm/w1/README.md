@@ -89,6 +89,9 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [201](./201.md) — Invalid percent-encoding in a resource query value is accepted silently (MCP QA 2026-11-09)
 - [202](./202.md) — Receipt insert's UNBALANCED hint suggests `allowInvalid`, which the tool refuses (MCP QA 2026-11-09)
 - [203](./203.md) — Journal filter `>N` compares absolute units, and the description doesn't say so (MCP QA 2026-11-09)
+- [204](./204.md) — Register `conversion=units` returns cost totals, and unknown conversions pass silently (MCP QA 2026-11-09)
+- [205](./205.md) — Owned-ledgers catalog and GraphQL `listLedgers` accept any page and limit (MCP QA 2026-11-09)
+- [206](./206.md) — Two MCP refusal details point clients the wrong way: FORBIDDEN hint and invalid-bearer 401 (MCP QA 2026-11-09)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
