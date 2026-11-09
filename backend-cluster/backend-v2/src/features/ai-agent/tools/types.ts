@@ -108,6 +108,10 @@ const beanCheckErrorSchema = z.object({
   message: z.string(),
   // `file:line` of the offending directive, when known (docs/mcp.md).
   source: z.string().optional(),
+  // The engine's stable error code (w2/013), present on real bean-check
+  // errors. Declared because the published schema is `additionalProperties:
+  // false`, so a schema-validating client rejects a result carrying it.
+  code: z.string().optional(),
 });
 // The named type lives in `@/features/ledger/utils/bean-check-errors`; this
 // schema exists only to shape `withWriteOutcome` below.

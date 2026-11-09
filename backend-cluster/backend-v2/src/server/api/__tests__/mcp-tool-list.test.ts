@@ -305,9 +305,15 @@ describe("MCP tool list", () => {
     // tool prose that each names a rule an agent needs, and `securitySchemes`
     // twice (ADR 019 D2). The alias sentences naming each spelling's home
     // surface (w23/m9) stayed: they are the guidance that milestone published.
+    //
+    // 115 KB since w23/m31 declared the optional `code` on the published
+    // bean-check error item (w23/230): measured at 116,813 bytes (+753). The
+    // handlers already returned it, and a schema-validating client rejected
+    // the result because the item was `additionalProperties: false`, so the
+    // bytes are contract, not prose.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(114 * 1024);
+    expect(bytes).toBeLessThan(115 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the

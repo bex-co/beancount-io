@@ -1,12 +1,12 @@
 # w23 · m31 — Validate every MCP tool result against its published outputSchema
 
-**Worker:** worker1 **Goal:** A schema-validating MCP client can read every tool result, including write previews that report new bean-check errors, and a gate keeps it that way. **Status:** todo
+**Worker:** worker1 **Goal:** A schema-validating MCP client can read every tool result, including write previews that report new bean-check errors, and a gate keeps it that way. **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Declare `code` on the published bean-check error item | 40m | — |
+| t001 | Declare `code` on the published bean-check error item — **DONE** | 40m | — |
 | t002 | Build a schema-conformance fixture over every tool | 60m | t001 |
 | t003 | Fix every extra key the handlers return beyond the published schema | 60m | t002 |
 | t004 | Validate live tool results in yarn mcp:conformance | 45m | t002 |
