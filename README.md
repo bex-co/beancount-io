@@ -23,6 +23,7 @@
 <p align="center">
   <a href="https://github.com/bex-co/beancount-io"><img src="https://img.shields.io/github/stars/bex-co/beancount-io?style=social" alt="Star Beancount.io on GitHub"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
+  <a href="https://dashboard.bex.co/deploy?repo=https://github.com/bex-co/beancount-io&path=bex.yaml"><img src="./deploy/bex/deploy-to-bex.svg" height="30" align="absmiddle" alt="Deploy to bex.co"></a>
 </p>
 
 <p align="center">
