@@ -1,29 +1,38 @@
 <p align="center">
   <a href="https://beancount.io/?utm_source=github.com&utm_medium=readme&utm_campaign=oss">
-    <img width="96" src="https://beancount.io/img/favicon.png" alt="Beancount.io logo">
+    <img width="88" src="https://beancount.io/img/favicon.png" alt="Beancount.io logo">
   </a>
 </p>
 
 <h1 align="center">Beancount.io</h1>
 
 <p align="center">
-  <strong>Your money in plain text forever — beautiful reports, a phone app, a terminal CLI, and AI agents that can actually do your books.</strong>
+  <strong>Your money in plain text, forever.</strong>
   <br>
-  No lock-in. No database you can't read. Your ledger is a <code>.bean</code> text file you own, diff, and back up with Git — Beancount.io just makes it effortless to use everywhere.
+  Beautiful reports, a phone app, a terminal CLI, and AI agents that can actually do your books.
 </p>
 
 <p align="center">
-  <a href="https://beancount.io/ledger/open_ledger/example/income-statement?utm_source=github.com&utm_medium=readme&utm_campaign=live-demo"><strong>▶ Try the live demo — no sign-up</strong></a>
-  ·
-  <a href="#try-it-in-30-seconds">Sign up and record a transaction</a>
-  ·
-  <a href="https://github.com/bex-co/beancount-io"><strong>⭐ Star to support open finance</strong></a>
+  <sub>No lock-in. No database you can't read. Your ledger is a <code>.bean</code> file you own, diff, and back up with Git.</sub>
 </p>
 
 <p align="center">
-  <a href="https://github.com/bex-co/beancount-io"><img src="https://img.shields.io/github/stars/bex-co/beancount-io?style=social" alt="Star Beancount.io on GitHub"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
-  <a href="https://dashboard.bex.co/deploy?repo=https://github.com/bex-co/beancount-io&path=bex.yaml"><img src="./deploy/bex/deploy-to-bex.svg" height="24" align="absmiddle" alt="Deploy to bex.co"></a>
+  <a href="https://beancount.io/ledger/open_ledger/example/income-statement?utm_source=github.com&utm_medium=readme&utm_campaign=live-demo"><strong>Live demo</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#try-it-in-30-seconds"><strong>Quickstart</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#agents-and-mcp"><strong>Agents</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#self-host"><strong>Self-host</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#contributing"><strong>Contribute</strong></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/bex-co/beancount-io"><img src="https://img.shields.io/github/stars/bex-co/beancount-io?style=flat-square&logo=github&label=Star" alt="Star Beancount.io on GitHub"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT license"></a>
+  <a href="https://pypi.org/project/beancount-io/"><img src="https://img.shields.io/pypi/v/beancount-io?style=flat-square&label=bea%20cli" alt="beancount-io on PyPI"></a>
+  <a href="https://t.me/beancount"><img src="https://img.shields.io/badge/chat-Telegram-26A5E4?style=flat-square&logo=telegram&logoColor=white" alt="Join the Telegram chat"></a>
 </p>
 
 <p align="center">
@@ -33,13 +42,40 @@
 </p>
 
 <p align="center">
-  <sub>Turn a plain-text ledger into reports you can explore — <a href="https://beancount.io/ledger/open_ledger/example/income-statement">open the live example</a>.</sub>
-</p>
-
-<p align="center">
   <a href="https://beancount.io/ledger/open_ledger/example/income-statement"><img width="49%" src="./docs/images/income-statement-expenses.webp" alt="Monthly expenses shown as a stacked bar chart"></a>
   <a href="https://beancount.io/ledger/open_ledger/example/income-statement"><img width="49%" src="./docs/images/income-statement-expenses-hierarchy.webp" alt="Expenses shown as an interactive account hierarchy treemap"></a>
 </p>
+
+<p align="center">
+  <sub>Plain-text ledger in, reports you can explore out — <a href="https://beancount.io/ledger/open_ledger/example/income-statement">open the live example</a>, no sign-up.</sub>
+</p>
+
+---
+
+## Pick your way in
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>👀 Look first</h3>
+      Click through reports on a real example ledger. No account, no install.
+      <br><br>
+      <a href="https://beancount.io/ledger/open_ledger/example/income-statement"><strong>Open the live demo →</strong></a>
+    </td>
+    <td width="33%" valign="top">
+      <h3>⌨️ Terminal</h3>
+      One command installs <code>bea</code>; it provisions its own engine.
+      <br><br>
+      <a href="#try-it-in-30-seconds"><strong>First transaction in 30s →</strong></a>
+    </td>
+    <td width="33%" valign="top">
+      <h3>🤖 Agent</h3>
+      Skills for Claude Code and Codex, plus a remote MCP server.
+      <br><br>
+      <a href="#agents-and-mcp"><strong>Hand your agent the books →</strong></a>
+    </td>
+  </tr>
+</table>
 
 ## Try it in 30 seconds
 
@@ -51,8 +87,6 @@ No install. No empty-ledger setup. Just record your first real transaction:
 4. **See it land** — check the journal, then watch the income statement and balance sheet update.
 
 That's the whole idea: double-entry books you can read as plain text, with reports, phone, terminal, and agents on top of the same ledger.
-
-> If Beancount.io is the kind of open, programmable finance you want more of, [⭐ star this repo](https://github.com/bex-co/beancount-io) — it genuinely helps other developers find it.
 
 <details>
 <summary><strong>Prefer the terminal? Same first transaction from the CLI</strong></summary>
@@ -77,37 +111,33 @@ Checking now holds **987.50 USD** — validated, formatted, and readable as plai
 
 </details>
 
-### Your first five minutes
-
-- [ ] Sign up, open your ledger, and record the transaction above — on the web or in the [mobile app](#mobile-apps).
-- [ ] Open the [live demo](https://beancount.io/ledger/open_ledger/example/income-statement) and click through the income statement, balance sheet, and account trees.
-- [ ] Add two or three real transactions, then check the updated reports.
-- [ ] Optional: automate with the [CLI tutorial](./cli/docs/TUTORIAL.md) or point your coding agent at the [skills](#agents-and-mcp).
+**Then:** record two or three real transactions · open the [live demo](https://beancount.io/ledger/open_ledger/example/income-statement) and click through the balance sheet and account trees · automate with the [CLI tutorial](./cli/docs/TUTORIAL.md) or point your coding agent at the [skills](#agents-and-mcp).
 
 ## Who this is for
 
-- **Plain-text purists** — you want double-entry accounting in files that outlive any app, work with Git, and open in any editor.
-- **Developers** — you want to script, query, and build on your finances from Python and the terminal instead of exporting CSVs from a SaaS.
-- **Agent users** — you want Claude Code, Codex, or another coding agent to import statements, reconcile accounts, and close the month, with every write checked and confirm-gated.
+<table>
+  <tr>
+    <td width="33%" valign="top"><strong>Plain-text purists</strong><br>Double-entry accounting in files that outlive any app, work with Git, and open in any editor.</td>
+    <td width="33%" valign="top"><strong>Developers</strong><br>Script, query, and build on your finances from Python and the terminal instead of exporting CSVs from a SaaS.</td>
+    <td width="33%" valign="top"><strong>Agent users</strong><br>Have Claude Code, Codex, or another coding agent import statements, reconcile accounts, and close the month — every write checked and confirm-gated.</td>
+  </tr>
+</table>
 
-Not sure yet? The [live demo](https://beancount.io/ledger/open_ledger/example/income-statement) needs no account — decide there.
+## Every surface, one ledger
 
-## How it compares
+| You want to… | Use | Start |
+| --- | --- | --- |
+| Work from the terminal or scripts | `bea` CLI and Python library | [CLI tutorial](./cli/docs/TUTORIAL.md) · [reference](./cli/docs/USAGE.md) |
+| See polished reports in a browser | Web dashboard | [Live demo](https://beancount.io/ledger/open_ledger/example/income-statement) · [`dashboard/`](./dashboard) |
+| Track money on the go | iOS & Android apps | [Mobile apps](#mobile-apps) · [`mobile/`](./mobile) |
+| Let an agent do your books | Agent skills and MCP | [Agents and MCP](#agents-and-mcp) |
+| Self-host the whole stack | Backend cluster | [Self-host](#self-host) |
 
-| | Beancount.io | Plain Beancount + Fava | Spreadsheet / SaaS finance app |
-| --- | --- | --- | --- |
-| Your data | Plain-text `.bean` files you own | Plain-text `.bean` files you own | Locked in a database / their cloud |
-| Reports | Web, mobile, CLI, and Python reports | Web reports (Fava) | Built-in, but not programmable |
-| On your phone | Native iOS & Android apps | Browser only | Native app, tied to the service |
-| AI agents | CLI, skills, and MCP built in | Do it yourself | No agent access |
-| Self-host | Yes — hosted, local-only, or your server | Yes, manual | No |
-| Cost / license | Free, MIT | Free, open source | Subscription |
-
-Beancount.io stands on [Beancount](https://beancount.github.io/docs/) and Fava rather than replacing them — existing ledgers keep working. Full credits: [ACKNOWLEDGEMENTS.md](./ACKNOWLEDGEMENTS.md).
+Your ledger stays the same plain-text file across all of them — hosted or local-first, with no hosted service required for CLI and skills workflows.
 
 ## Mobile apps
 
-Review your finances, add transactions, scan receipts, and edit ledger files from the native Beancount client. The same open ledger remains available from the web, terminal, Python, and agent workflows.
+Review your finances, add transactions, scan receipts, and edit ledger files from the native Beancount client. The same open ledger stays available from the web, terminal, Python, and agent workflows.
 
 <p align="center">
   <a href="./mobile/README.md"><img width="31%" src="./mobile/docs/marketing-showcase/webp/01-home.webp" alt="Beancount Mobile home dashboard with net worth trend and recent transactions"></a>
@@ -122,33 +152,6 @@ Review your finances, add transactions, scan receipts, and edit ledger files fro
 </p>
 
 <p align="center"><sub><a href="./mobile/README.md">Explore the mobile product tour</a> or run the Expo app locally.</sub></p>
-
-## Every surface, one ledger
-
-| You want to… | Use | Start |
-| --- | --- | --- |
-| Work from the terminal or scripts | `bea` CLI and Python library | [CLI tutorial](./cli/docs/TUTORIAL.md) · [reference](./cli/docs/USAGE.md) |
-| See polished reports in a browser | Web dashboard | [Live demo](https://beancount.io/ledger/open_ledger/example/income-statement) · [`dashboard/`](./dashboard) |
-| Track money on the go | iOS & Android apps | [Mobile apps](#mobile-apps) · [`mobile/`](./mobile) |
-| Let an agent do your books | Agent skills and MCP | [Agents and MCP](#agents-and-mcp) |
-| Self-host the whole stack | Backend cluster | [`deploy/docker/`](./deploy/docker) (one server) · [`deploy/docker-mac/`](./deploy/docker-mac) (local) · [`deploy/bex/`](./deploy/bex) (bex PaaS, one click: [![Deploy to bex.co](./deploy/bex/deploy-to-bex.svg)](https://dashboard.bex.co/deploy?repo=https://github.com/bex-co/beancount-io&path=bex.yaml)) |
-
-Your ledger stays the same plain-text file across all of them — hosted or local-first, with no hosted service required for CLI and skills workflows.
-
-<details>
-<summary><strong>For contributors: what's in this monorepo</strong></summary>
-
-| Package | What it is |
-| --- | --- |
-| [`dashboard/`](./dashboard) | Active web client: ledgers, journal, reports, Monaco editor, imports, collaboration, AI assistant (React 19 + TanStack Start + Apollo) |
-| [`mobile/`](./mobile) | Active iOS & Android client (Expo + React Native + Apollo) |
-| [`cli/`](./cli) | Active `bea` CLI (including a local read-only MCP server, `bea mcp`) and Python tooling ([releases](https://github.com/bex-co/beancount-io/releases?q=bea)) |
-| [`skills/`](./skills) | One Beancount.io ledger suite with sixteen `beancount-*` workflows; install the versioned `beancount-io` plugin or the complete source collection. |
-| [`backend-cluster/`](./backend-cluster) | Active backend: GraphQL/REST gateway, ledger service, IDL, and agent sandbox |
-
-The dashboard and mobile app are clients for the Beancount.io API served by `backend-cluster/` — hosted, or self-run. Skills have two audiences: Beancount users get [`skills/`](./skills/README.md); repository contributors get [`.agents/skills/`](./.agents/skills) (see [`.agents/AGENTS.md`](./.agents/AGENTS.md)). The root `.claude/skills` links to `.agents/skills` so Claude Code and Codex share the internal workflows.
-
-</details>
 
 ## Agents and MCP
 
@@ -175,6 +178,39 @@ Beancount.io is built for the agent era: your ledger is text an agent can read, 
 Tools cover BQL queries, file reads and edits, entry and receipt insertion, statement parsing, bank import, and more. URI-addressed resources and accounting prompts support spending reports, month-end close, reconciliation and import categorization — e.g. `/mcp__beancount__close-month` in Claude Code. Use `tools/list`, `resources/templates/list`, and `prompts/list` against your deployment for its current catalog. File edits, directive appends, and bank imports preview with `dry_run`, every call re-authorizes, and failures return a machine code plus the next call to make. Per-host notes for Claude, Claude Code, ChatGPT, Cursor, Copilot, OpenClaw, and Hermes Agent: [MCP docs](./backend-cluster/backend-v2/docs/mcp.md); contract: [ADR 0007](./docs/adrs/ADR007-backend-v2-mcp-surface.md).
 
 </details>
+
+## How it compares
+
+| | Beancount.io | Plain Beancount + Fava | Spreadsheet / SaaS finance app |
+| --- | --- | --- | --- |
+| Your data | Plain-text `.bean` files you own | Plain-text `.bean` files you own | Locked in a database / their cloud |
+| Reports | Web, mobile, CLI, and Python reports | Web reports (Fava) | Built-in, but not programmable |
+| On your phone | Native iOS & Android apps | Browser only | Native app, tied to the service |
+| AI agents | CLI, skills, and MCP built in | Do it yourself | No agent access |
+| Self-host | Yes — hosted, local-only, or your server | Yes, manual | No |
+| Cost / license | Free, MIT | Free, open source | Subscription |
+
+Beancount.io stands on [Beancount](https://beancount.github.io/docs/) and Fava rather than replacing them — existing ledgers keep working. Full credits: [ACKNOWLEDGEMENTS.md](./ACKNOWLEDGEMENTS.md).
+
+## Self-host
+
+Hosted, local-only, or your own infrastructure — same ledger either way.
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>bex PaaS — one click</strong><br>
+      Provisions Postgres, Gitea on a persistent disk, the API, and the dashboard from the root Blueprint. First build can take 20–40 minutes; see <a href="./deploy/bex/README.md">deploy/bex</a>.
+      <br><br>
+      <a href="https://dashboard.bex.co/deploy?repo=https://github.com/bex-co/beancount-io&path=bex.yaml"><img src="./deploy/bex/deploy-to-bex.svg" height="38" alt="Deploy to bex.co"></a>
+    </td>
+    <td width="50%" valign="top">
+      <strong>Your own server or laptop</strong><br>
+      <a href="./deploy/docker"><code>deploy/docker/</code></a> — persistent single-server install with automatic TLS.<br>
+      <a href="./deploy/docker-mac"><code>deploy/docker-mac/</code></a> — the full stack locally on macOS.
+    </td>
+  </tr>
+</table>
 
 ## FAQ
 
@@ -251,6 +287,21 @@ cd cli && uv sync --all-groups && uv run bea --help
 | Skills | `python3 scripts/skills/ci-check.py` |
 
 Every active package has path-filtered CI, and a repository-wide secret scan gates every push and pull request. Run `scripts/lint-deadcode.sh` from the repository root to check for unused files and symbols (`scripts/fix-deadcode.sh` applies removals; review the diff and rerun full checks).
+
+</details>
+
+<details>
+<summary><strong>For contributors: what's in this monorepo</strong></summary>
+
+| Package | What it is |
+| --- | --- |
+| [`dashboard/`](./dashboard) | Active web client: ledgers, journal, reports, Monaco editor, imports, collaboration, AI assistant (React 19 + TanStack Start + Apollo) |
+| [`mobile/`](./mobile) | Active iOS & Android client (Expo + React Native + Apollo) |
+| [`cli/`](./cli) | Active `bea` CLI (including a local read-only MCP server, `bea mcp`) and Python tooling ([releases](https://github.com/bex-co/beancount-io/releases?q=bea)) |
+| [`skills/`](./skills) | One Beancount.io ledger suite with sixteen `beancount-*` workflows; install the versioned `beancount-io` plugin or the complete source collection. |
+| [`backend-cluster/`](./backend-cluster) | Active backend: GraphQL/REST gateway, ledger service, IDL, and agent sandbox |
+
+The dashboard and mobile app are clients for the Beancount.io API served by `backend-cluster/` — hosted, or self-run. Skills have two audiences: Beancount users get [`skills/`](./skills/README.md); repository contributors get [`.agents/skills/`](./.agents/skills) (see [`.agents/AGENTS.md`](./.agents/AGENTS.md)). The root `.claude/skills` links to `.agents/skills` so Claude Code and Codex share the internal workflows.
 
 </details>
 
