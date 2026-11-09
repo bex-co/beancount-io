@@ -35,7 +35,7 @@
 - [x] **m30** — [Make every MCP failure carry an actionable hint](./done/m30/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 4
 - [ ] **m31** — [Validate every MCP tool result against its published outputSchema](./blocked/m31/README.md) (8 tasks) ← promoted from `w23/230`; `/pm-brainstorm for w23` 2026-11-08, proposal 1 — **blocked:** live `mcp:conformance` check 17 needs the `597aa09dc` fix deployed to production
 - [x] **m32** — [Make the MCP endpoint answer every HTTP verb and header consistently](./done/m32/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 2; absorbs `w23/229`
-- [ ] **m33** — [Make every tool, parameter and recipe the docs and hints name resolve](./m33/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 3
+- [x] **m33** — [Make every tool, parameter and recipe the docs and hints name resolve](./done/m33/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 3
 - [ ] **m34** — [Bound a tool call's runtime and stop work when the client disconnects](./m34/README.md) (9 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 4; from `w23/done/209`
 - [ ] **m35** — [Offer argument completion for MCP prompts and resource templates](./m35/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 5; evidence-gated
 

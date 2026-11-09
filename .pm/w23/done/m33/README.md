@@ -1,6 +1,6 @@
 # w23 · m33 — Make every tool, parameter and recipe the docs and hints name resolve
 
-**Worker:** worker1 **Goal:** A renamed tool, a wrong parameter in a hint, or a recipe that no longer runs fails CI instead of reaching a reader. **Status:** todo (t001–t007 done)
+**Worker:** worker1 **Goal:** A renamed tool, a wrong parameter in a hint, or a recipe that no longer runs fails CI instead of reaching a reader. **Status:** done
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Adoption surface — **DONE** | 20m | t004 |
 | t006 | Simplify — **DONE** | 20m | t005 |
 | t007 | Test coverage — **DONE** | 30m | t005 |
-| t008 | Closeout | 15m | t007 |
+| t008 | Closeout — **DONE** | 15m | t007 |
 
 ## Definition of done
 
