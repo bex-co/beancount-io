@@ -57,12 +57,19 @@ beforeAll(async () => {
   });
 });
 
+// Entry hashes are 32 lowercase hex digits; each names one entry below.
+const HASH = { broken: "b0".repeat(16), fine: "f1".repeat(16) };
+const ENTRY_BY_HASH: Record<string, string> = {
+  [HASH.broken]: "broken",
+  [HASH.fine]: "fine",
+};
+
 async function fixture() {
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   const journal = {
     getContext: jest.fn(async (_owner: string, _name: string, hash: string) =>
       envelope({
-        entry: entries[hash],
+        entry: entries[ENTRY_BY_HASH[hash]],
         sha256sum: "sha",
         slice: "",
         managed_source: null,
@@ -170,8 +177,8 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
   it("flags a transaction that failed booking, and only that one", async () => {
     const f = await fixture();
     try {
-      expect(await f.notBooked(surface, "broken")).toBe(true);
-      expect(await f.notBooked(surface, "fine")).toBeUndefined();
+      expect(await f.notBooked(surface, HASH.broken)).toBe(true);
+      expect(await f.notBooked(surface, HASH.fine)).toBeUndefined();
     } finally {
       await f.close();
     }

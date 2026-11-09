@@ -239,7 +239,7 @@ describe("public profile enrichment across adapters", () => {
     },
   );
 
-  it.each(["ada", "other + café"])(
+  it.each(["ada", "Other.cafe-2"])(
     "preserves authenticated visibility for %s",
     async (username) => {
       const f = await fixture(identity);
@@ -261,6 +261,27 @@ describe("public profile enrichment across adapters", () => {
         expect(profile.repositories).toHaveLength(username === "ada" ? 2 : 1);
         expect(profile.activities).toHaveLength(username === "ada" ? 1 : 0);
         if (username !== "ada") expect(f.privateReads).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  // A username is one URL segment on the git host: a value that could add
+  // segments, a query or a fragment is refused as bad input on every surface.
+  it.each(["../repos/ada/books", "ada?x=1", "ada#x", "a/b", ".."])(
+    "refuses the username %j as bad input on every surface",
+    async (bad) => {
+      const f = await fixture(identity);
+      try {
+        expect((await f.rest(bad)).status).toBe(400);
+        const g = await f.gql(bad);
+        expect(g.errors?.[0].originalError).toMatchObject({
+          category: "BAD_USER_INPUT",
+        });
+        await expect(f.read(bad)).rejects.toMatchObject({
+          data: { code: "BAD_USER_INPUT" },
+        });
+        expect(f.privateReads).not.toHaveBeenCalled();
       } finally {
         await f.close();
       }

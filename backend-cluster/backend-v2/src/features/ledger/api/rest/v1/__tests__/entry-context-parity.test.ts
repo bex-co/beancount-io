@@ -35,10 +35,17 @@ const identity: Identity = {
 };
 
 const SLICE = '2026-06-01 * "QA Insurer" "car insurance"\n';
+// Entry hashes are 32 lowercase hex digits; anything else is refused unread.
+const H = {
+  copy: "c0".repeat(16),
+  own: "a1".repeat(16),
+  older: "b2".repeat(16),
+  stale: "d3".repeat(16),
+};
 const contexts: Record<string, { generated_from?: string | null }> = {
-  copy: { generated_from: "template-hash" },
-  own: { generated_from: null },
-  older: {},
+  [H.copy]: { generated_from: "template-hash" },
+  [H.own]: { generated_from: null },
+  [H.older]: {},
 };
 
 let resolver: LedgerJournalQueryResolver;
@@ -163,7 +170,7 @@ async function fixture() {
     conflictRefused: async (surface: string) => {
       if (surface === "rest") {
         const response = await fetch(
-          `${rest.url}/api-gateway/v1/ledgers/alice/main/entry-context?entryHash=copy&entry_hash=own`,
+          `${rest.url}/api-gateway/v1/ledgers/alice/main/entry-context?entryHash=${H.copy}&entry_hash=${H.own}`,
         );
         expect(response.status).toBe(400);
         return;
@@ -171,7 +178,7 @@ async function fixture() {
       if (surface === "gql") {
         const response = await graphql({
           schema,
-          source: `query { getLedgerEntryContext(ledgerId:"alice/main",entryHash:"copy",entry_hash:"own") { slice } }`,
+          source: `query { getLedgerEntryContext(ledgerId:"alice/main",entryHash:"${H.copy}",entry_hash:"${H.own}") { slice } }`,
           contextValue: { identity, getCurrentIdentity: () => identity },
         });
         expect(response.errors).not.toBeUndefined();
@@ -179,7 +186,7 @@ async function fixture() {
       }
       const response = await client.callTool({
         name: "getEntryContext",
-        arguments: { entryHash: "copy", entry_hash: "own" },
+        arguments: { entryHash: H.copy, entry_hash: H.own },
       });
       expect(response.isError).toBe(true);
     },
@@ -213,6 +220,35 @@ async function fixture() {
       expect(error.hint).toContain("listLedgerEntries");
       return error.message;
     },
+    /** Each surface's error code for a value that is not an entry hash. */
+    badShapeCode: async (surface: string, entryHash: string) => {
+      if (surface === "rest") {
+        const response = await fetch(
+          `${rest.url}/api-gateway/v1/ledgers/alice/main/entry-context?entryHash=${encodeURIComponent(entryHash)}`,
+        );
+        return ((await response.json()) as { error: { code: string } }).error
+          .code;
+      }
+      if (surface === "gql") {
+        const response = await graphql({
+          schema,
+          source: `query { getLedgerEntryContext(ledgerId:"alice/main",entryHash:${JSON.stringify(entryHash)}) { slice } }`,
+          contextValue: { identity, getCurrentIdentity: () => identity },
+        });
+        return (
+          response.errors?.[0]?.originalError as
+            | { category?: string }
+            | undefined
+        )?.category;
+      }
+      const response = await client.callTool({
+        name: "getEntryContext",
+        arguments: { entryHash },
+      });
+      expect(response.isError).toBe(true);
+      return (response.structuredContent as { error: { code: string } }).error
+        .code;
+    },
     close: async () => {
       await client.close();
       await server.close();
@@ -225,10 +261,10 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
   it("names the entry a copy was generated from, null otherwise", async () => {
     const f = await fixture();
     try {
-      expect(await f.generatedFrom(surface, "copy")).toBe("template-hash");
-      expect(await f.generatedFrom(surface, "own")).toBeNull();
+      expect(await f.generatedFrom(surface, H.copy)).toBe("template-hash");
+      expect(await f.generatedFrom(surface, H.own)).toBeNull();
       // An older ledger service omits the field: read as "not a copy".
-      expect(await f.generatedFrom(surface, "older")).toBeNull();
+      expect(await f.generatedFrom(surface, H.older)).toBeNull();
     } finally {
       await f.close();
     }
@@ -239,8 +275,8 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
   it("names the entry a stale hash no longer resolves to", async () => {
     const f = await fixture();
     try {
-      expect(await f.refusal(surface, "stale")).toBe(
-        "Entry with ID 'stale' not found",
+      expect(await f.refusal(surface, H.stale)).toBe(
+        `Entry with ID '${H.stale}' not found`,
       );
     } finally {
       await f.close();
@@ -253,7 +289,7 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
   it("accepts the entry_hash spelling list output uses", async () => {
     const f = await fixture();
     try {
-      expect(await f.generatedFrom(surface, "copy", "entry_hash")).toBe(
+      expect(await f.generatedFrom(surface, H.copy, "entry_hash")).toBe(
         "template-hash",
       );
     } finally {
@@ -266,6 +302,26 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
     const f = await fixture();
     try {
       await f.conflictRefused(surface);
+      expect(f.journal.getContext).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+
+  // The hash is one URL segment on the ledger service: a value that could
+  // add segments, a query or a fragment is refused before any ledger read.
+  it.each([
+    `../../other/context/${H.copy}`,
+    `${H.copy}?x=1`,
+    `${H.copy}#x`,
+    `${H.copy}/x`,
+    `${H.copy}%2Fx`,
+    H.copy.toUpperCase(),
+    "",
+  ])("refuses %j as BAD_USER_INPUT without a ledger read", async (bad) => {
+    const f = await fixture();
+    try {
+      expect(await f.badShapeCode(surface, bad)).toBe("BAD_USER_INPUT");
       expect(f.journal.getContext).not.toHaveBeenCalled();
     } finally {
       await f.close();

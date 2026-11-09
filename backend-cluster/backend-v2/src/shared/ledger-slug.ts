@@ -1,3 +1,5 @@
+import { BadUserInputError } from "@/shared/errors/domain-errors";
+
 // Match the absolute end, including trailing newlines that `$` alone permits.
 // Existing Gitea usernames may contain dots and uppercase letters.
 export const LEDGER_OWNER_PATTERN = /^(?!\.{1,2}$)[A-Za-z0-9_.-]+(?![\s\S])/;
@@ -6,6 +8,21 @@ export const LEDGER_OWNER_RULE =
   "Owner slug must contain only letters, digits, dots, underscores, or hyphens and cannot be . or ..";
 export const LEDGER_NAME_RULE =
   "Ledger name slug must contain 1-100 lowercase letters, digits, underscores, or hyphens";
+
+/**
+ * A username sent to the git host as one URL segment — a collaborator or a
+ * profile to read or follow — is held to the owner-slug pattern, which every
+ * existing account name fits. Anything else is `BAD_USER_INPUT` before an
+ * upstream call, never a lookup with `/`, `?` or `#` in it.
+ */
+export function assertUsernameSegment(value: string, field: string): void {
+  if (typeof value !== "string" || !LEDGER_OWNER_PATTERN.test(value)) {
+    throw new BadUserInputError(
+      `${field} must be a username: letters, digits, dots, underscores, or hyphens, and not . or ..`,
+      field,
+    );
+  }
+}
 
 /**
  * A new ledger's name exactly as the ledger service stores it: lowercase

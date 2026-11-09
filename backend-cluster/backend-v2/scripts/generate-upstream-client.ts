@@ -20,18 +20,25 @@ const clients = {
 };
 const client = clients[target];
 
+const MULTI_SEGMENT_PATH_PARAMS = new Set([
+  "filepath",
+  "branch",
+  "ref",
+  "basehead",
+]);
+
 generateApi({
   ...client,
   input: resolve(__dirname, client.input),
   output: resolve(__dirname, client.output),
   hooks: {
-    // Ledger coordinates are single segments on every upstream endpoint.
-    // Other parameters, such as Gitea's wildcard filepath, retain their
-    // existing path semantics.
+    // Every path parameter is one encoded segment, so a value cannot add
+    // segments, a query or a fragment to the upstream URL. Gitea's wildcard
+    // routes are the exception: their parameters span slashes by design
+    // (a file path, a branch or ref name, `base...head`), and the services
+    // validate those values before calling.
     onInsertPathParam: (name) =>
-      ["owner", "repo", "repoName"].includes(name)
-        ? `encodeURIComponent(${name})`
-        : name,
+      MULTI_SEGMENT_PATH_PARAMS.has(name) ? name : `encodeURIComponent(${name})`,
   },
 }).catch((error: unknown) => {
   console.error(error);

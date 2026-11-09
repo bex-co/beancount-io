@@ -4122,7 +4122,7 @@ export class Api<
      */
     getLedgerByRepoId: (id: number, params: RequestParams = {}) =>
       this.request<SuccessResponseLedgerPublic, ErrorResponse>({
-        path: `/admin/ledgers/${id}`,
+        path: `/admin/ledgers/${encodeURIComponent(id)}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4160,7 +4160,7 @@ export class Api<
      */
     deleteUser: (username: string, params: RequestParams = {}) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/admin/users/${username}`,
+        path: `/admin/users/${encodeURIComponent(username)}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -4182,7 +4182,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseUserPublic, ErrorResponse>({
-        path: `/admin/users/${username}`,
+        path: `/admin/users/${encodeURIComponent(username)}`,
         method: "PATCH",
         body: data,
         secure: true,
@@ -4206,7 +4206,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/admin/users/${username}/rename`,
+        path: `/admin/users/${encodeURIComponent(username)}/rename`,
         method: "POST",
         body: data,
         secure: true,
@@ -4284,7 +4284,7 @@ export class Api<
      */
     getWebhook: (hookId: number, params: RequestParams = {}) =>
       this.request<SuccessResponseWebhookResponse, ErrorResponse>({
-        path: `/admin/webhooks/${hookId}`,
+        path: `/admin/webhooks/${encodeURIComponent(hookId)}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -4306,7 +4306,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseWebhookResponse, ErrorResponse>({
-        path: `/admin/webhooks/${hookId}`,
+        path: `/admin/webhooks/${encodeURIComponent(hookId)}`,
         method: "PATCH",
         body: data,
         secure: true,
@@ -4326,7 +4326,7 @@ export class Api<
      */
     deleteWebhook: (hookId: number, params: RequestParams = {}) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/admin/webhooks/${hookId}`,
+        path: `/admin/webhooks/${encodeURIComponent(hookId)}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -4449,7 +4449,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListLedgerPublic, ErrorResponse>({
-        path: `/ledgers/users/${username}`,
+        path: `/ledgers/users/${encodeURIComponent(username)}`,
         method: "GET",
         query: query,
         secure: true,
@@ -5871,7 +5871,7 @@ export class Api<
      */
     getPublicKey: (keyId: number, params: RequestParams = {}) =>
       this.request<SuccessResponseKeyPublic, ErrorResponse>({
-        path: `/keys/${keyId}`,
+        path: `/keys/${encodeURIComponent(keyId)}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5889,7 +5889,7 @@ export class Api<
      */
     deletePublicKey: (keyId: number, params: RequestParams = {}) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/keys/${keyId}`,
+        path: `/keys/${encodeURIComponent(keyId)}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -5948,7 +5948,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseLedgerCollaboratorPermission, ErrorResponse>({
-        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/${collaborator}`,
+        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/${encodeURIComponent(collaborator)}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -5972,7 +5972,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/${collaborator}`,
+        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/${encodeURIComponent(collaborator)}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -5997,7 +5997,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/${collaborator}`,
+        path: `/collaborators/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/${encodeURIComponent(collaborator)}`,
         method: "DELETE",
         secure: true,
         format: "json",
@@ -6416,7 +6416,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseContextPublic, ErrorResponse>({
-        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/context/${entryHash}`,
+        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/context/${encodeURIComponent(entryHash)}`,
         method: "GET",
         secure: true,
         format: "json",
@@ -6704,7 +6704,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseListTokenPublic, ErrorResponse>({
-        path: `/tokens/${username}`,
+        path: `/tokens/${encodeURIComponent(username)}`,
         method: "GET",
         query: query,
         secure: true,
@@ -6727,7 +6727,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseTokenCreateResponse, ErrorResponse>({
-        path: `/tokens/${username}`,
+        path: `/tokens/${encodeURIComponent(username)}`,
         method: "POST",
         body: data,
         secure: true,
@@ -6751,7 +6751,7 @@ export class Api<
       params: RequestParams = {},
     ) =>
       this.request<SuccessResponseNoneType, ErrorResponse>({
-        path: `/tokens/${username}/${token}`,
+        path: `/tokens/${encodeURIComponent(username)}/${encodeURIComponent(token)}`,
         method: "DELETE",
         secure: true,
         format: "json",

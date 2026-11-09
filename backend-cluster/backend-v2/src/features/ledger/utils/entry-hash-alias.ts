@@ -29,3 +29,20 @@ export function resolveEntryHash(input: {
   }
   return resolved;
 }
+
+/** An entry hash as the ledger service computes it: 32 lowercase hex digits. */
+const ENTRY_HASH_PATTERN = /^[0-9a-f]{32}$/;
+
+/**
+ * The hash travels to the ledger service as one URL segment, so anything but
+ * the hash shape is refused as `BAD_USER_INPUT` before that call, rather than
+ * looked up.
+ */
+export function assertEntryHashFormat(entryHash: string): void {
+  if (typeof entryHash !== "string" || !ENTRY_HASH_PATTERN.test(entryHash)) {
+    throw new BadUserInputError(
+      "entryHash must be the 32 lowercase hex digits listLedgerEntries returns as entry_hash",
+      "entryHash",
+    );
+  }
+}

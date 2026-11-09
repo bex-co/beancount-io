@@ -364,13 +364,14 @@ export class CommitsService implements ICommitsService {
         throw new NotFoundError("Commit", sha, COMMIT_NOT_FOUND_HINT);
       }
 
-      // Get unified diff using the git commits diff endpoint
+      // Get unified diff using the git commits diff endpoint, for the commit
+      // the lookup resolved rather than the caller's text (which may be a ref).
       let diff = "";
       try {
         const diffResponse = await client.repos.repoDownloadCommitDiffOrPatch(
           owner,
           repo,
-          sha,
+          commit.sha ?? sha,
           "diff",
           { format: "text" },
         );

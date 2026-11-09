@@ -1,5 +1,6 @@
 import { USER_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import { assertNoNul } from "@/shared/assert-no-nul";
+import { assertUsernameSegment } from "@/shared/ledger-slug";
 import { publicAvatarUrl } from "@/shared/gitea-utils";
 import { assertHostPage } from "@/shared/host-page";
 import type { DbExecutor } from "@/drizzle/drizzle";
@@ -90,6 +91,7 @@ export class UserProfileService implements IUserProfileService {
     userId?: string,
   ): Promise<PublicUserProfileResponse> {
     assertNoNul(username, "username");
+    assertUsernameSegment(username, "username");
     const giteaClient = this.giteaClientFactory.getAnonymousApiClient();
 
     // Fetch user profile
@@ -245,6 +247,7 @@ export class UserProfileService implements IUserProfileService {
       action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
       resource: userResource(identity.userId),
     });
+    assertUsernameSegment(username, "username");
     try {
       // Get current user to check if they're trying to follow themselves
       const currentUser = await this.models.user.getById(
@@ -288,6 +291,7 @@ export class UserProfileService implements IUserProfileService {
       action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
       resource: userResource(identity.userId),
     });
+    assertUsernameSegment(username, "username");
     const currentUser = await this.models.user.getById(
       this.db,
       identity.userId,
@@ -328,6 +332,7 @@ export class UserProfileService implements IUserProfileService {
       action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_DELETE,
       resource: userResource(identity.userId),
     });
+    assertUsernameSegment(username, "username");
     try {
       const giteaClient = await this.giteaClientFactory.getUserApiClient(
         identity.userId,
@@ -363,6 +368,7 @@ export class UserProfileService implements IUserProfileService {
     page = 1,
     limit = 20,
   ): Promise<UserListResponse> {
+    assertUsernameSegment(username, "username");
     // Outside the try: a refusal is not an upstream failure (w23/038).
     assertHostPage(page, limit);
     try {
@@ -397,6 +403,7 @@ export class UserProfileService implements IUserProfileService {
     page = 1,
     limit = 20,
   ): Promise<UserListResponse> {
+    assertUsernameSegment(username, "username");
     // Outside the try: a refusal is not an upstream failure (w23/038).
     assertHostPage(page, limit);
     try {
@@ -432,6 +439,7 @@ export class UserProfileService implements IUserProfileService {
     limit = 20,
     viewerUserId?: string,
   ): Promise<RepositoryListResponse> {
+    assertUsernameSegment(username, "username");
     // Outside the try: a refusal is not an upstream failure (w23/038).
     assertHostPage(page, limit);
     try {

@@ -267,6 +267,7 @@ export class PullRequestService implements IPullRequestService {
     if (!baseBranch) {
       throw new BadUserInputError("baseBranch must not be empty");
     }
+    assertBranchName(baseBranch);
     if (!clearCommitMessage) {
       throw new BadUserInputError(
         "clearCommitMessage must not be empty — it becomes the commit message for the pull request branch",
@@ -728,5 +729,32 @@ export class PullRequestService implements IPullRequestService {
     } catch (error) {
       return reviewFailure(error, prNumber);
     }
+  }
+}
+
+/**
+ * A branch name travels to the git host as the tail of a URL path, so it is
+ * held to git's own ref-name rules (`git check-ref-format --branch`) plus the
+ * URL delimiters `?`, `#` and `%`: a name outside them is `BAD_USER_INPUT`
+ * before any call, never a different request.
+ */
+function assertBranchName(branch: string): void {
+  const invalid =
+    /[\u0000-\u0020\u007f~^:?*[\\#%]/.test(branch) ||
+    branch.includes("..") ||
+    branch.includes("@{") ||
+    branch.includes("//") ||
+    branch.startsWith("/") ||
+    branch.endsWith("/") ||
+    branch.endsWith(".") ||
+    branch.endsWith(".lock") ||
+    branch.split("/").some((part) => part.startsWith(".")) ||
+    branch === "@" ||
+    branch.startsWith("-");
+  if (invalid) {
+    throw new BadUserInputError(
+      `baseBranch '${branch}' is not a valid branch name`,
+      "baseBranch",
+    );
   }
 }

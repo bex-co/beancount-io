@@ -141,8 +141,8 @@ it("inspects an existing entry through tools alone", async () => {
     postings: [{ account: "Assets:Checking", amount: "-42.10 USD" }],
   });
   const contexts: Record<string, { sha256sum: string; slice: string }> = {
-    "hash-first": { sha256sum: "sum-first", slice: "first occurrence" },
-    "hash-second": { sha256sum: "sum-second", slice: "second occurrence" },
+    ["f0".repeat(16)]: { sha256sum: "sum-first", slice: "first occurrence" },
+    ["5e".repeat(16)]: { sha256sum: "sum-second", slice: "second occurrence" },
   };
   const journal = {
     getJournal: jest.fn().mockResolvedValue({
@@ -150,7 +150,7 @@ it("inspects an existing entry through tools alone", async () => {
         success: true,
         data: {
           total: 2,
-          items: [groceries("hash-second")],
+          items: [groceries("5e".repeat(16))],
           is_empty: false,
         },
       },
@@ -218,14 +218,14 @@ it("inspects an existing entry through tools alone", async () => {
     entryHash: page.data[0].entry_hash,
   })) as { entry: { entry_hash: string }; sha256sum: string; slice: string };
   expect(context).toMatchObject({
-    entry: { entry_hash: "hash-second" },
+    entry: { entry_hash: "5e".repeat(16) },
     sha256sum: "sum-second",
     slice: "second occurrence",
   });
   expect(journal.getContext).toHaveBeenCalledWith(
     "alice",
     "main",
-    "hash-second",
+    "5e".repeat(16),
   );
 
   expect(readResource).not.toHaveBeenCalled();

@@ -18,6 +18,7 @@ import {
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import { normalizeJournalKinds } from "@/features/ledger/utils/journal-kinds";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";
+import { assertEntryHashFormat } from "@/features/ledger/utils/entry-hash-alias";
 
 /**
  * The page a journal read asks for: limit 1–1000 (default 20), offset 0 or
@@ -306,6 +307,7 @@ export class LedgerJournalService
       identity,
       AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
     );
+    assertEntryHashFormat(entryHash);
 
     // Entry hashes are content-derived, so a stale hash is a NORMAL outcome
     // after an edit: the ledger service answers 404/409, which unwrapFavaResponse

@@ -22,7 +22,7 @@ const identity = {
   scopes: new Set<string>(),
   ledgerScope: "someone/restricted",
 };
-const username = "élise + café/ledger";
+const username = "Elise.cafe-ledger_2";
 const users = ["alice", "bob", "carol"].map((login) => ({
   login,
   full_name: `Name ${login}`,

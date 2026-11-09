@@ -1,4 +1,5 @@
 import { assertNoNul } from "@/shared/assert-no-nul";
+import { assertUsernameSegment } from "@/shared/ledger-slug";
 import { type IStripeService } from "@/features/stripe/service/stripe-service";
 import { assertHostPage } from "@/shared/host-page";
 import { type IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
@@ -56,6 +57,7 @@ function assertCollaboratorName(collaborator: string): void {
       "collaborator",
     );
   }
+  assertUsernameSegment(collaborator, "collaborator");
 }
 
 /**

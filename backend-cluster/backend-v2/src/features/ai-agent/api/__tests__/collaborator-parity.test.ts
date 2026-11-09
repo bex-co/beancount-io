@@ -89,7 +89,7 @@ async function fixture(
   let identity = initialIdentity;
   const members = new Map<string, string>([
     ["bob", "admin"],
-    ["café+ops", "read"],
+    ["ops.team-1", "read"],
   ]);
   const repoGet = jest.fn(
     async (caller: string, owner: string, name: string) => {
@@ -400,9 +400,9 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
     async (identity) => {
       const f = await fixture(identity);
       try {
-        const expected = ["alice", "bob", "café+ops"].map((login) => ({
+        const expected = ["alice", "bob", "ops.team-1"].map((login) => ({
           ...mappedUser(login),
-          permission: login === "café+ops" ? "read" : "admin",
+          permission: login === "ops.team-1" ? "read" : "admin",
         }));
         const response = await f.request("collaborators");
         expect(response.status).toBe(200);
@@ -425,7 +425,7 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
   it("preserves paging and encoded collaborator names", async () => {
     const f = await fixture();
     try {
-      const expected = [{ ...mappedUser("café+ops"), permission: "read" }];
+      const expected = [{ ...mappedUser("ops.team-1"), permission: "read" }];
       const r = await f.request("collaborators?page=2&limit=2");
       expect(await r.json()).toEqual(expected);
       expect(await f.read("collaborators?page=2&limit=2")).toEqual(expected);
@@ -437,20 +437,20 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       const p = {
         permission: "read",
         roleName: "read",
-        user: mappedUser("café+ops"),
+        user: mappedUser("ops.team-1"),
       };
       expect(
         await (
           await f.request(
-            "collaborators/permission?collaborator=caf%C3%A9%2Bops",
+            "collaborators/permission?collaborator=ops%2Eteam%2D1",
           )
         ).json(),
       ).toEqual(p);
       expect(
-        await f.read("collaborators/permission?collaborator=caf%C3%A9%2Bops"),
+        await f.read("collaborators/permission?collaborator=ops%2Eteam%2D1"),
       ).toEqual(p);
       const pg = await f.gql(
-        `{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"café+ops"){permission roleName user{${userFields}}}}`,
+        `{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"ops.team-1"){permission roleName user{${userFields}}}}`,
       );
       expect(pg.errors).toBeUndefined();
       expect(pg.data?.getLedgerCollaboratorPermission).toEqual(p);
@@ -461,7 +461,7 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
   it.each([
     { identity: token("alice", "ledger.read"), status: 403 },
     // A read collaborator sees the ledger, so is told why (w23/069).
-    { identity: token("café+ops"), status: 403 },
+    { identity: token("ops.team-1"), status: 403 },
     { identity: token("alice", "ledger.admin", "other/main"), status: 403 },
   ])(
     "denies insufficient scope, relationship, or ledger pin",
@@ -532,7 +532,7 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
         if (login === "bob") throw new Error("member source unavailable");
         return envelope({ permission: "read" });
       });
-      const expected = ["alice", "café+ops"].map((login) => ({
+      const expected = ["alice", "ops.team-1"].map((login) => ({
         ...mappedUser(login),
         permission: "read",
       }));
@@ -556,7 +556,7 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       try {
         // w23/m13/t004: commits echo the flag — dryRun on REST, dry_run on
         // MCP; this file's GraphQL selection predates the echo.
-        expect(await f.write(surface, "update", "new+member", "read")).toEqual({
+        expect(await f.write(surface, "update", "new.member", "read")).toEqual({
           failed: false,
           data: {
             success: true,
@@ -568,11 +568,11 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
                 : { dryRun: false }),
           },
         });
-        expect(f.members.get("new+member")).toBe("read");
+        expect(f.members.get("new.member")).toBe("read");
         expect(
-          (await f.write(surface, "update", "new+member", "admin")).failed,
+          (await f.write(surface, "update", "new.member", "admin")).failed,
         ).toBe(false);
-        expect(f.members.get("new+member")).toBe("admin");
+        expect(f.members.get("new.member")).toBe("admin");
         expect(await f.write(surface, "delete", "bob")).toEqual({
           failed: false,
           data: {
@@ -629,6 +629,42 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       await f.close();
     }
   });
+  // A collaborator is one URL segment on the ledger service: a name that
+  // could add segments, a query or a fragment is refused before any call.
+  it.each(["../../other/ledger/bob", "bob?x=1", "bob#x", "a/b", ".."])(
+    "refuses the collaborator %j as bad input on every surface without an upstream call",
+    async (bad) => {
+      const f = await fixture();
+      try {
+        const query = `collaborators/permission?collaborator=${encodeURIComponent(bad)}`;
+        expect((await f.request(query)).status).toBe(400);
+        await expect(f.read(query)).rejects.toMatchObject({
+          data: { code: "BAD_USER_INPUT" },
+        });
+        const gql = await f.gql(
+          `{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:${JSON.stringify(bad)}){permission}}`,
+        );
+        expect(gql.errors?.[0].originalError).toMatchObject({
+          category: "BAD_USER_INPUT",
+        });
+        const mcp = await f.client.callTool(
+          perOperation({
+            operation: "update",
+            ledger: "alice/main",
+            collaborator: bad,
+            permission: "read",
+          }),
+        );
+        expect(mcp.structuredContent).toMatchObject({
+          error: { code: "BAD_USER_INPUT" },
+        });
+        expect(f.permission).not.toHaveBeenCalled();
+        expect(f.update).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("answers a permission read for an unknown user as bad input, without upstream internals, on every surface", async () => {
     const f = await fixture();
     try {
@@ -831,7 +867,7 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
   // every collaborator action, and concluded it was gone.
   it.each([
     ["a public-ledger reader", token("carol"), true],
-    ["a read collaborator", token("café+ops"), false],
+    ["a read collaborator", token("ops.team-1"), false],
   ] as const)(
     "tells %s that collaborators need admin access, on every surface",
     async (_caller, identity, publicLedger) => {
@@ -1106,7 +1142,7 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
                 await f.write(
                   surface,
                   operation,
-                  operation === "leave" ? undefined : "café+ops",
+                  operation === "leave" ? undefined : "ops.team-1",
                 )
               ).failed,
             ).toBe(true);
@@ -1137,7 +1173,7 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
               await f.write(
                 surface,
                 operation,
-                operation === "leave" ? undefined : "café+ops",
+                operation === "leave" ? undefined : "ops.team-1",
               )
             ).failed,
           ).toBe(true);

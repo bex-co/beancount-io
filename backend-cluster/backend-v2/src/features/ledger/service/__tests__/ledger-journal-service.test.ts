@@ -151,6 +151,12 @@ describe("LedgerJournalService", () => {
   });
 
   describe("getContext", () => {
+    // Entry hashes are 32 lowercase hex digits.
+    const DEAD = "de".repeat(16);
+    const ABC = "ab".repeat(16);
+    const H = "0f".repeat(16);
+    const X = "9a".repeat(16);
+
     it("maps a ledger 404 for a dead entry hash to NotFoundError", async () => {
       mockGetContext.mockRejectedValue(
         new FavaApiError("Entry not found", 404, { error: "Entry not found" }),
@@ -160,7 +166,7 @@ describe("LedgerJournalService", () => {
         service.getContext({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entryHash: "dead",
+          entryHash: DEAD,
         }),
       ).rejects.toThrow(NotFoundError);
     });
@@ -182,7 +188,7 @@ describe("LedgerJournalService", () => {
       const result = await service.getContext({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        entryHash: "hash-abc",
+        entryHash: ABC,
       });
 
       expect(result.sha256sum).toBe("abc123");
@@ -191,7 +197,7 @@ describe("LedgerJournalService", () => {
       expect(mockGetContext).toHaveBeenCalledWith(
         "testowner",
         "testledger",
-        "hash-abc",
+        ABC,
       );
     });
 
@@ -208,7 +214,7 @@ describe("LedgerJournalService", () => {
       const managed = await service.getContext({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        entryHash: "h",
+        entryHash: H,
       });
       expect(managed.managed_source).toBe(
         "https://beancount.io/prices/BTC-USD",
@@ -219,7 +225,7 @@ describe("LedgerJournalService", () => {
       const plain = await service.getContext({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        entryHash: "h",
+        entryHash: H,
       });
       expect(plain.managed_source).toBeNull();
     });
@@ -231,7 +237,7 @@ describe("LedgerJournalService", () => {
         service.getContext({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entryHash: "x",
+          entryHash: X,
         }),
       ).rejects.toThrow(InternalServerError);
     });

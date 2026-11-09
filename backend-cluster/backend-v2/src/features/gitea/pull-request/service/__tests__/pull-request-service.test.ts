@@ -318,6 +318,43 @@ describe("PullRequestService", () => {
       expect(mockClient.repos.repoChangeFiles).not.toHaveBeenCalled();
     });
 
+    // The base branch is the tail of a git-host URL path: a name outside
+    // git's ref rules, or holding a URL delimiter, never reaches the host.
+    it.each([
+      "../../other/repo",
+      "main?x=1",
+      "main#x",
+      "a//b",
+      "main..x",
+      "/main",
+      "feat.lock",
+    ])(
+      "refuses the base branch %j as bad input before reading it",
+      async (baseBranch) => {
+        await expect(
+          service.createPRFromPatch(identity, owner, repo, {
+            ...input,
+            baseBranch,
+          }),
+        ).rejects.toMatchObject({ category: "BAD_USER_INPUT" });
+        expect(mockClient.repos.repoGetBranch).not.toHaveBeenCalled();
+      },
+    );
+
+    it("accepts a base branch with a slash, as git allows", async () => {
+      mockSuccessfulCreate();
+      await service.createPRFromPatch(identity, owner, repo, {
+        ...input,
+        baseBranch: "release/2026-11",
+      });
+      expect(mockClient.repos.repoGetBranch).toHaveBeenCalledWith(
+        owner,
+        repo,
+        "release/2026-11",
+        { format: "json" },
+      );
+    });
+
     it("should refuse a diff-less branch with the revisions to re-verify", async () => {
       mockSuccessfulCreate();
       mockClient.repos.repoCompareDiff.mockResolvedValue({
