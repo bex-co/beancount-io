@@ -19,6 +19,7 @@ import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
+import { corsMiddleware } from "@/server/middleware/cors-middleware";
 import { CHECKS } from "../mcp-conformance";
 
 const [
@@ -39,6 +40,7 @@ const [
   checkResourceMatches,
   checkCimd,
   checkOutputSchemaConformance,
+  checkBrowserDiscovery,
 ] = CHECKS;
 
 const ledgerScoped: Identity = {
@@ -113,6 +115,7 @@ beforeAll(async () => {
 
   const app = new Koa();
   const router = new Router();
+  app.use(corsMiddleware());
   app.use(restErrorMiddleware());
   app.use(bodyParser());
   setMcpRoute(router, layers, config, (ctx) =>
@@ -154,10 +157,55 @@ describe("MCP conformance checks", () => {
     expect(result.detail).toContain(".well-known/oauth-protected-resource");
   });
 
-  it("check 3 passes when GET and DELETE are refused and complete", async () => {
+  it("check 3 passes when GET, DELETE, OPTIONS and PUT are refused and complete", async () => {
     acceptTokens({ good: ledgerScoped });
     const result = await checkMethodRefusal({ baseUrl, token: "good" });
     expect(result.outcome).toBe("pass");
+  });
+
+  it("check 18 passes when the 401 exposes WWW-Authenticate to a browser origin", async () => {
+    const result = await checkBrowserDiscovery({ baseUrl });
+    expect(result.outcome).toBe("pass");
+  });
+
+  it("check 18 fails when WWW-Authenticate is set but not exposed", async () => {
+    // A bare server: the header is on the 401, but nothing lists it for
+    // cross-origin readers — what every deployment looked like before w23/m32.
+    const bare = http.createServer((_req, res) => {
+      res.writeHead(401, { "WWW-Authenticate": 'Bearer resource_metadata="x"' });
+      res.end("{}");
+    });
+    await new Promise<void>((r) => bare.listen(0, "127.0.0.1", r));
+    const { port } = bare.address() as { port: number };
+    try {
+      const result = await checkBrowserDiscovery({
+        baseUrl: `http://127.0.0.1:${port}`,
+      });
+      expect(result.outcome).toBe("fail");
+      expect(result.detail).toContain("cannot read WWW-Authenticate");
+    } finally {
+      await new Promise<void>((r) => bare.close(() => r()));
+    }
+  });
+
+  it("check 3 fails when an unsupported method advertises methods it refuses", async () => {
+    acceptTokens({ good: ledgerScoped });
+    const liar = http.createServer((req, res) => {
+      res.writeHead(405, { Allow: req.method === "OPTIONS" ? "POST, GET" : "POST" });
+      res.end("{}");
+    });
+    await new Promise<void>((r) => liar.listen(0, "127.0.0.1", r));
+    const { port } = liar.address() as { port: number };
+    try {
+      const result = await checkMethodRefusal({
+        baseUrl: `http://127.0.0.1:${port}`,
+        token: "good",
+      });
+      expect(result.outcome).toBe("fail");
+      expect(result.detail).toContain("OPTIONS");
+    } finally {
+      await new Promise<void>((r) => liar.close(() => r()));
+    }
   });
 
   it("check 4 passes and reports every tool publishing an outputSchema", async () => {

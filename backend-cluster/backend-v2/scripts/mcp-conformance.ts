@@ -228,7 +228,7 @@ async function checkDiscovery(o: Options): Promise<CheckResult> {
 async function checkMethodRefusal(o: Options): Promise<CheckResult> {
   const v = verdict(
     "3 method-refusal",
-    "GET and DELETE return 405 + Allow: POST, and complete",
+    "GET, DELETE, OPTIONS and PUT return 405 + Allow: POST, and complete",
   );
   if (!o.token) {
     return v.skip(
@@ -236,7 +236,7 @@ async function checkMethodRefusal(o: Options): Promise<CheckResult> {
     );
   }
   const failures: string[] = [];
-  for (const method of ["GET", "DELETE"]) {
+  for (const method of ["GET", "DELETE", "OPTIONS", "PUT"]) {
     const res = await probe(`${o.baseUrl}${MCP_PATH}`, {
       method,
       headers: { Accept: "text/event-stream", Authorization: `Bearer ${o.token}` },
@@ -262,7 +262,7 @@ async function checkMethodRefusal(o: Options): Promise<CheckResult> {
   }
   return failures.length
     ? v.fail(failures.join("; "))
-    : v.pass("both refused and completed");
+    : v.pass("all four refused and completed");
 }
 
 /** 4 — a real credential reaches the tools, and they publish their contract. */
@@ -878,6 +878,43 @@ async function checkOutputSchemaConformance(o: Options): Promise<CheckResult> {
   );
 }
 
+/**
+ * 18 — a browser-hosted client can read where to sign in.
+ *
+ * The 401 names the OAuth metadata in `WWW-Authenticate`. Cross-origin
+ * JavaScript sees only the response headers listed in
+ * `Access-Control-Expose-Headers`, so an endpoint that sets the header without
+ * exposing it works for every server-side client and fails every browser one
+ * (w23/m32). Needs no credential: the probe is the anonymous 401, sent from a
+ * `localhost` origin, which every deployment trusts.
+ */
+async function checkBrowserDiscovery(o: Options): Promise<CheckResult> {
+  const v = verdict(
+    "18 browser-discovery",
+    "A cross-origin 401 exposes WWW-Authenticate to browser clients",
+  );
+  const res = await probe(`${o.baseUrl}${MCP_PATH}`, {
+    method: "POST",
+    headers: { ...jsonRpcHeaders(), Origin: "http://localhost" },
+    body: INITIALIZE,
+  });
+  if (!res.ok) return v.fail(res.error);
+  if (res.status !== 401) {
+    return v.fail(
+      `an anonymous POST returned ${res.status}, not 401, so the sign-in pointer could not be observed`,
+    );
+  }
+  const exposed = (res.headers.get("access-control-expose-headers") ?? "")
+    .split(",")
+    .map((header) => header.trim().toLowerCase());
+  if (!exposed.includes("www-authenticate")) {
+    return v.fail(
+      `Access-Control-Expose-Headers is ${JSON.stringify(res.headers.get("access-control-expose-headers"))}: a browser-hosted client cannot read WWW-Authenticate, so it cannot find the OAuth metadata`,
+    );
+  }
+  return v.pass("WWW-Authenticate is exposed to a trusted cross-origin caller");
+}
+
 // --- runner ---------------------------------------------------------------
 
 function parseArgs(argv: string[]): Options {
@@ -928,6 +965,7 @@ export const CHECKS = [
   checkResourceMatches,
   checkCimd,
   checkOutputSchemaConformance,
+  checkBrowserDiscovery,
 ] as const;
 
 export type { CheckResult, Options, Outcome };
