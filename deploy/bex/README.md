@@ -8,6 +8,13 @@ lives at the repo root as [`bex.yaml`](../../bex.yaml).
 Click, choose the workspace that should own it, review the plan, and apply.
 Nothing is created until you approve the preview.
 
+> **Beta.** The first build is slow: bex builds one image at a time, so the four
+> services can take 20–40 minutes to go live when its queue is busy. A rollout
+> that misses bex's readiness deadline is marked failed and is not retried; if a
+> service shows that, trigger a deploy of it again from the dashboard. A
+> Blueprint created from this link has no push webhook, so later updates are
+> manual ([Rolling out a change](#rolling-out-a-change)).
+
 - **What you get:** the dashboard (the one public address), the API, the ledger
   service (private), Gitea on a 10 GB disk, one managed Postgres and one Key
   Value. Sign-up needs no email step and no plan limits apply
