@@ -1,6 +1,6 @@
 # w23 · m31 — Validate every MCP tool result against its published outputSchema
 
-**Worker:** worker1 **Goal:** A schema-validating MCP client can read every tool result, including write previews that report new bean-check errors, and a gate keeps it that way. **Status:** todo (t001–t006 done)
+**Worker:** worker1 **Goal:** A schema-validating MCP client can read every tool result, including write previews that report new bean-check errors, and a gate keeps it that way. **Status:** todo (t001–t007 done)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Validate live tool results in yarn mcp:conformance — **DONE** | 45m | t002 |
 | t005 | Adoption surface — **DONE** | 20m | t004 |
 | t006 | Simplify — **DONE** | 20m | t005 |
-| t007 | Test coverage | 30m | t005 |
+| t007 | Test coverage — **DONE** | 30m | t005 |
 | t008 | Closeout | 15m | t007 |
 
 ## Definition of done
