@@ -7,7 +7,14 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import type { AppConfig } from "@/config/config";
+import type { z } from "zod";
 import type { McpRequestContext } from "../mcp-context";
+import type {
+  ledgerResultSchema,
+  ledgerPreviewResultSchema,
+} from "@/features/ledger/api/rest/v1/lifecycle-handler";
+import type { fileParseResult } from "@/features/llm/api/file-parse-route";
+import type { tempAssetUploadResult } from "@/features/s3/api/temp-asset-routes";
 
 /**
  * w23/m31 — a write result must validate against the schema its tool
@@ -23,6 +30,46 @@ import type { McpRequestContext } from "../mcp-context";
  * TypeScript type accepts the extra key because the real error type is wider
  * than the schema's.
  */
+/**
+ * The other way a key leaks past `additionalProperties: false` is a handler
+ * returning a service's result untouched: TypeScript accepts a value with
+ * more keys than the schema's type when it is not an object literal. The four
+ * MCP tools that pass a service result straight through are pinned here at
+ * compile time: a service that grows a key the published schema lacks fails
+ * `yarn typecheck` and this suite, naming the key in the error.
+ */
+type Returned<F extends (...args: never[]) => Promise<unknown>> = Awaited<
+  ReturnType<F>
+>;
+type ExtraKeys<Actual, Published> = Exclude<keyof Actual, keyof Published>;
+type MustBeNone<T extends never> = T;
+export type PassthroughKeysMatchTheirSchemas = [
+  MustBeNone<
+    ExtraKeys<
+      Returned<McpRequestContext["ledgerWorkflow"]["createLedger"]>,
+      z.infer<typeof ledgerResultSchema> & { ledgerId: string }
+    >
+  >,
+  MustBeNone<
+    ExtraKeys<
+      Returned<McpRequestContext["ledgerWorkflow"]["previewLedgerSetup"]>,
+      z.infer<typeof ledgerPreviewResultSchema>
+    >
+  >,
+  MustBeNone<
+    ExtraKeys<
+      Returned<McpRequestContext["llmService"]["parseFile"]>,
+      z.infer<typeof fileParseResult>
+    >
+  >,
+  MustBeNone<
+    ExtraKeys<
+      Returned<McpRequestContext["assetStorage"]["generateUploadUrl"]>,
+      z.infer<typeof tempAssetUploadResult>
+    >
+  >,
+];
+
 const config = { api: { scopeEnforcement: "shadow" } } as AppConfig;
 
 /** What bean-check reports: message and source, plus the engine's stable code. */
