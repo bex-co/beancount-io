@@ -76,6 +76,9 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [188](./188.md) — MCP QA tooling: `resources-list` sends the wrong method, conformance needs the token on argv (MCP QA 2026-11-08)
 - [189](./189.md) — An unexpected error that mentions "not found" reaches MCP callers unmasked (MCP QA 2026-11-08)
 - [190](./190.md) — Parsing an issued but never-uploaded temp asset is a 500, not "upload first" (MCP QA 2026-11-08)
+- [191](./191.md) — Interval totals without `accountName` return all-zero intervals (MCP QA 2026-11-08)
+- [192](./192.md) — BQL `FROM … CLEAR` is accepted and silently ignored (MCP QA 2026-11-08)
+- [193](./193.md) — Balance-sheet summary labels as-of valuation `latest-price` (MCP QA 2026-11-08)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
