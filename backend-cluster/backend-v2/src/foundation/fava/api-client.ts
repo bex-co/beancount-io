@@ -17,6 +17,8 @@ export class FavaApiError extends Error {
     message: string,
     public readonly status?: number,
     public readonly body?: ErrorResponse,
+    /** The request outlived its deadline; the ledger may still have acted on it. */
+    public readonly timedOut = false,
   ) {
     super(message);
     this.name = "FavaApiError";
@@ -96,7 +98,12 @@ export class ApiClient extends Api<unknown> {
             path,
             timeoutMs: this.timeoutMs,
           });
-          throw new FavaApiError("Fava API request timed out", 504);
+          throw new FavaApiError(
+            "Fava API request timed out",
+            504,
+            undefined,
+            true,
+          );
         }
 
         const response = e as HttpResponse<unknown, ErrorResponse>;

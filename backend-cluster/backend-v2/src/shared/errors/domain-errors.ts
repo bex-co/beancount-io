@@ -314,13 +314,18 @@ export class InternalServerError extends DomainError {
  * @example
  * throw new ServiceUnavailableError("Database");
  * throw new ServiceUnavailableError("Ledger API", 30);
+ * throw new ServiceUnavailableError("Ledger API", undefined, "…what to do next");
  */
 export class ServiceUnavailableError extends DomainError {
-  constructor(service: string, retryAfter?: number) {
+  constructor(service: string, retryAfter?: number, hint?: string) {
     super(
       ErrorCategory.SERVICE_UNAVAILABLE,
       `${service} is temporarily unavailable`,
-      retryAfter ? { service, retryAfter } : { service },
+      {
+        service,
+        ...(retryAfter ? { retryAfter } : {}),
+        ...(hint ? { hint } : {}),
+      },
     );
   }
 }

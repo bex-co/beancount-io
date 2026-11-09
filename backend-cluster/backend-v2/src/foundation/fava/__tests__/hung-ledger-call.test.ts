@@ -3,7 +3,11 @@ import http from "node:http";
 import type { Socket } from "node:net";
 import { ApiClient, FavaApiError } from "../api-client";
 import { favaApiErrorToDomainError } from "../error-to-domain";
+import Koa from "koa";
+import Router from "@koa/router";
 import { envelopeFromThrown } from "@/features/ai-agent/api/mcp-errors";
+import { restErrorMiddleware } from "@/server/rest/error-middleware";
+import { formatError } from "@/server/graphql/format-error";
 
 /**
  * w23/m34 — what a ledger call that never answers does, end to end.
@@ -70,7 +74,7 @@ describe("a ledger call that never answers", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("reaches an MCP agent as SERVICE_UNAVAILABLE with a hint, never an internal error", async () => {
+  it("tells an MCP agent the call may have landed, naming how to retry safely", async () => {
     const error = await hang(100);
 
     const envelope = envelopeFromThrown(
@@ -78,8 +82,54 @@ describe("a ledger call that never answers", () => {
     );
 
     expect(envelope.code).toBe("SERVICE_UNAVAILABLE");
-    expect(envelope.hint).toEqual(expect.any(String));
-    expect(envelope.hint.length).toBeGreaterThan(10);
+    expect(envelope.hint).toContain("may already have committed");
+    expect(envelope.hint).toContain("`requestId`");
     expect(envelope.message).not.toMatch(/Abort|stack|at Object/);
+  });
+
+  it("keeps the generic hint for a ledger that is simply down", () => {
+    const down = new FavaApiError("upstream down", 503);
+
+    const envelope = envelopeFromThrown(
+      favaApiErrorToDomainError(down, "query the ledger"),
+    );
+
+    expect(envelope.code).toBe("SERVICE_UNAVAILABLE");
+    expect(envelope.hint).toContain("A dependency is down");
+    expect(envelope.hint).not.toContain("requestId");
+  });
+
+  it("carries the same hint on REST and GraphQL, from the one error", async () => {
+    const domain = favaApiErrorToDomainError(await hang(100), "write");
+    const mcpHint = envelopeFromThrown(domain).hint;
+
+    const app = new Koa();
+    const router = new Router();
+    app.use(restErrorMiddleware());
+    router.get("/x", () => {
+      throw domain;
+    });
+    app.use(router.routes());
+    const rest = http.createServer(app.callback());
+    await new Promise<void>((r) => rest.listen(0, "127.0.0.1", r));
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:${(rest.address() as { port: number }).port}/x`,
+      );
+      const body = (await res.json()) as {
+        error: { code: string; metadata: { hint: string } };
+      };
+      expect(res.status).toBe(503);
+      expect(body.error.code).toBe("SERVICE_UNAVAILABLE");
+      expect(body.error.metadata.hint).toBe(mcpHint);
+    } finally {
+      await new Promise<void>((r) => rest.close(() => r()));
+    }
+
+    const gql = formatError({ message: "x", extensions: {} }, domain);
+    expect(gql.extensions).toMatchObject({
+      code: "SERVICE_UNAVAILABLE",
+      hint: mcpHint,
+    });
   });
 });

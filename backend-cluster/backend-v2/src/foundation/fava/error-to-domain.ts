@@ -103,10 +103,22 @@ function resourceLimitFromError(
  * envelope exposes HTTP status plus prose for most failures, so status is the
  * fallback; known machine codes and stable legacy shapes take precedence.
  */
+/**
+ * What an agent is told when the ledger did not answer in time (w23/m34). A
+ * timeout is not "down": the request reached the engine, which may have acted
+ * on it, so the remedy differs for a read (just ask again) and a write (check
+ * first, or resend an entry write under its `requestId`).
+ */
+const TIMEOUT_HINT =
+  "The ledger did not answer before the deadline. A read is safe to retry. A write may already have committed: re-read the ledger before repeating it, or resend an entry write with the same `requestId` so nothing is applied twice.";
+
 export function favaApiErrorToDomainError(
   error: FavaApiError,
   operation: string,
 ): DomainError {
+  if (error.timedOut) {
+    return new ServiceUnavailableError("Ledger API", undefined, TIMEOUT_HINT);
+  }
   const code = error.body?.code?.toUpperCase();
   const message = upstreamMessage(error, `Failed to ${operation}`);
 
