@@ -22,7 +22,7 @@ Tests with a never-returning ledger stub show the call ending with a hinted erro
 
 ## Source + Goal linkage
 
-- **Source:** [w23/done/209](../../done/209.md), `/pm-brainstorm for w23` 2026-11-08, proposal 4.
+- **Source:** `w23/done/209`, `/pm-brainstorm for w23` 2026-11-08, proposal 4.
 - **Goal linkage:** A1 — Agent-native accounting.
 - **Expected outcome:** An agent whose query hangs gets a prompt, actionable error rather than an indefinite wait, and one oversize call cannot hold the ledger.
 - **Why now:** w23/209's ~12-minute outage was never explained and the route and tool files hold no deadline or abort handling; w23/m26 widened preview budgets, which concentrates long calls.

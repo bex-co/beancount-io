@@ -21,7 +21,7 @@ A test fails when `docs/mcp.md` prose, a tool or prompt description, or an error
 
 ## Source + Goal linkage
 
-- **Source:** [w23/done/217](../../done/217.md), [w23/done/228](../../done/228.md), w23/m30, `/pm-brainstorm for w23` 2026-11-08, proposal 3.
+- **Source:** `w23/done/217`, `w23/done/228`, w23/m30, `/pm-brainstorm for w23` 2026-11-08, proposal 3.
 - **Goal linkage:** A2 — Frictionless onboarding (quickstarts that work exactly as written); A1.
 - **Expected outcome:** A newcomer or agent following the docs gets a working first tool call, and renames cannot silently strand the docs.
 - **Why now:** w23/217 showed a hint citing a parameter that does not exist, and w23/228 just added a recipe nothing keeps runnable.

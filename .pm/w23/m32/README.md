@@ -21,7 +21,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** [w23/229](../../229.md) (folded in as t001), `/pm-brainstorm for w23` 2026-11-08, proposal 2.
+- **Source:** `w23/229` (folded in as t001), `/pm-brainstorm for w23` 2026-11-08, proposal 2.
 - **Goal linkage:** A1 — Agent-native accounting; A3 — credibility with clients and registries.
 - **Expected outcome:** Hand-written clients and registry crawlers get one predictable answer per verb and header, so a probe never advertises what the endpoint refuses.
 - **Why now:** w23/229 shows the transport layer has unexamined edges; fixing one verb without the table would leave the next probe to find the rest.
