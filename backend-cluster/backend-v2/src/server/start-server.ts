@@ -1,20 +1,18 @@
-import { PAGE_RESPONSE_HEADERS } from "@/server/rest/page-headers";
 import "reflect-metadata";
 import "dotenv/config";
 
-import { isAllowedOrigin } from "@/server/api/allowed-origin";
 import { config, type AppConfig } from "@/config/config";
 import Koa from "koa";
 import Router from "@koa/router";
 import http from "http";
 
 import cookie from "koa-cookie";
-import cors from "@koa/cors";
 import { restMetricsMiddleware } from "@/metrics/koa-middleware";
 import { logger } from "@/shared/logger";
 import { cookieDomainNeedsConfig } from "@/shared/cookie-utils";
 import { asyncContextMiddleware } from "./middleware/async-context-middleware";
 import { bodyParserMiddleware } from "./middleware/body-parser-middleware";
+import { corsMiddleware } from "./middleware/cors-middleware";
 import { createOrphanedHostCookieMiddleware } from "./middleware/orphaned-host-cookie-middleware";
 
 import { buildAppLayers } from "@/foundation";
@@ -70,28 +68,7 @@ export async function startServer(): Promise<void> {
   // Add cookie middleware
   app.use(cookie());
 
-  // Update CORS to support credentials for cookie-based auth
-  // Pattern-based origin matching (no env vars needed)
-  app.use(
-    cors({
-      origin: (ctx) => {
-        const origin = ctx.get("Origin");
-
-        // If no origin header (same-origin request), allow it
-        if (!origin) {
-          return "*";
-        }
-
-        // A rejected origin gets an empty string, which keeps the
-        // Access-Control-Allow-Origin header from being set
-        return isAllowedOrigin(origin) ? origin : "";
-      },
-      credentials: true,
-      // A browser client reads the has-more headers only if they are exposed
-      // (w23/m28); the allowed-origin check above still applies.
-      exposeHeaders: PAGE_RESPONSE_HEADERS,
-    }),
-  );
+  app.use(corsMiddleware());
 
   // Add metrics middleware for REST API
   app.use(restMetricsMiddleware());

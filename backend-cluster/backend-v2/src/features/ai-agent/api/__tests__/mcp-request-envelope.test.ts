@@ -189,6 +189,46 @@ it("initialize succeeds", async () => {
     }),
   ]);
 });
+// w23/m32 — the transport's answers to requests a client may legitimately
+// send but that no other test here pinned.
+it("initialize with a protocol version the server lacks negotiates its own", async () => {
+  const res = await post(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "1999-01-01",
+        capabilities: {},
+        clientInfo: { name: "socket-test", version: "1" },
+      },
+    }),
+  );
+  expect(res.status).toBe(200);
+  const [reply] = messages(res.text) as {
+    result: { protocolVersion: string };
+  }[];
+  expect(reply.result.protocolVersion).not.toBe("1999-01-01");
+  expect(reply.result.protocolVersion).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+});
+it("an unknown method is a -32601 result on a completed response", async () => {
+  const res = await post(
+    JSON.stringify({ jsonrpc: "2.0", id: 5, method: "nope/nope" }),
+  );
+  expect(res.status).toBe(200);
+  expect(messages(res.text)).toEqual([
+    {
+      jsonrpc: "2.0",
+      id: 5,
+      error: { code: -32601, message: "Method not found" },
+    },
+  ]);
+});
+it("a JSON-RPC response posted by the client is accepted with no body", async () => {
+  const res = await post(JSON.stringify({ jsonrpc: "2.0", id: 9, result: {} }));
+  expect(res.status).toBe(202);
+  expect(res.text).toBe("");
+});
 it("notification completes without a response body", async () => {
   const res = await post(
     JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }),
