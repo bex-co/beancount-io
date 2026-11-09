@@ -573,7 +573,7 @@ The server will be available at the port specified in your configuration (defaul
 - `yarn test`: Run unit tests
 - `yarn lint`: Run ESLint to check and fix code style issues
 - `yarn kill`: Kill the node server occupying port 4104
-- `yarn mcp:conformance <base-url>`: Check whether a deployment's MCP endpoint is connectable (see [Connecting an MCP client](#connecting-an-mcp-client))
+- `yarn mcp:conformance <base-url>`: Check whether a deployment's MCP endpoint is connectable, including whether live results validate against the published `outputSchema` (`--token`, `--ledger`) (see [Connecting an MCP client](#connecting-an-mcp-client))
 - `yarn mcp:agent-eval`: Run the onboarding journeys through real Claude Code and Codex sessions against the hosted MCP endpoint and score answers and ledger effects (billed, opt-in; see [MCP agent journeys](./docs/mcp-agent-eval.md))
 
 ### Job Scheduler

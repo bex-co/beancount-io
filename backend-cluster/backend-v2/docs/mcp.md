@@ -376,7 +376,7 @@ five lifecycle mutations (`updateLedger`, `deleteLedger`,
 ### The preview rule
 
 A preview never refuses for new bean-check errors; only the commit does.
-The nine tools that project a write through bean-check (`appendLedgerText`,
+The eight tools that project a write through bean-check (`appendLedgerText`,
 `addLedgerEntries`, `createLedgerFiles`, `updateLedgerFiles`,
 `deleteLedgerFiles`, `updateEntrySource`, `deleteEntrySource`,
 `deleteEntrySources`) answer a `dry_run` with success, the diff or per-file
@@ -386,6 +386,13 @@ the write adds no error, so an agent approves a preview only when `valid` is
 without `dry_run` is refused (`UNBALANCED` or `VALIDATION_FAILED`) unless
 `allowInvalid` records it deliberately. The same holds on REST (`dryRun`) and
 GraphQL, which carry `valid` next to `newErrors`. A preview also writes nothing.
+
+Each `newErrors` item is `{message, source?, code?}`: the message, the
+`file:line` of the offending directive when bean-check reports one, and the
+engine's stable error `code` (for example `E1001`) when it has one. The
+published `outputSchema` declares all three, and a client that validates
+`structuredContent` against it accepts the result; a key the schema omitted
+would make that client reject the whole preview.
 
 `renameLedgerFile`, the bank tools, and the lifecycle and collaborator tools
 preview a summary (a move, a sync count, a destroy summary, a would-be grant),
@@ -1511,6 +1518,16 @@ registration endpoint (DCR hosts such as Cursor), `none` at the token endpoint
 D6, D8). Checks requiring absent credentials are **skipped**, not passed. It
 registers no client, does not complete browser OAuth, and does not verify all
 resource reads.
+
+With `--token`, check 17 also validates real results against the `outputSchema`
+that `tools/list` publishes, the way the MCP SDK client does: a `runBqlQuery`
+read and one `appendLedgerText` `dry_run` preview that reports a new bean-check
+error, so nothing is written. A result with a key its schema forbids fails the
+check. A refused call carries no structured result to compare and is reported as
+not compared, not as a pass.
+
+A credential that is not pinned to one ledger needs `--ledger owner/name` so the
+read, preview and refusal checks (5, 10 and 17) can name the ledger they use.
 
 An optional `--read-only-token` checks refusal of a file write. Supply only a
 credential restricted to `ledger.read`: the probe attempts a real create-file
