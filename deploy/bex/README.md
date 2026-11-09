@@ -3,7 +3,7 @@
 [bex](https://github.com/bex-co/bex) is a Render-compatible PaaS. The Blueprint
 lives at the repo root as [`bex.yaml`](../../bex.yaml).
 
-[![Deploy to bex](https://dashboard.bex.co/images/deploy-to-bex-button.svg)](https://dashboard.bex.co/deploy?repo=https://github.com/bex-co/beancount-io&path=bex.yaml)
+[![Deploy to bex.co](./deploy-to-bex.svg)](https://dashboard.bex.co/deploy?repo=https://github.com/bex-co/beancount-io&path=bex.yaml)
 
 Click, choose the workspace that should own it, review the plan, and apply.
 Nothing is created until you approve the preview.
