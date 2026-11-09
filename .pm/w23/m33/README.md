@@ -1,6 +1,6 @@
 # w23 · m33 — Make every tool, parameter and recipe the docs and hints name resolve
 
-**Worker:** worker1 **Goal:** A renamed tool, a wrong parameter in a hint, or a recipe that no longer runs fails CI instead of reaching a reader. **Status:** todo (t001–t004 done)
+**Worker:** worker1 **Goal:** A renamed tool, a wrong parameter in a hint, or a recipe that no longer runs fails CI instead of reaching a reader. **Status:** todo (t001–t005 done)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | Test that every named tool and parameter exists — **DONE** | 60m | t001 |
 | t003 | Run the documented recipes in-process — **DONE** | 60m | t001 |
 | t004 | Fix the drift found — **DONE** | 40m | t002, t003 |
-| t005 | Adoption surface | 20m | t004 |
+| t005 | Adoption surface — **DONE** | 20m | t004 |
 | t006 | Simplify | 20m | t005 |
 | t007 | Test coverage | 30m | t005 |
 | t008 | Closeout | 15m | t007 |

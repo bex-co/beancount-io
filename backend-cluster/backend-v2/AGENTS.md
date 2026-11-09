@@ -154,6 +154,10 @@ Prompt and agent-routing evals live entirely under `evals/`. Use the focused `ya
 
 `/llms.txt`, `/openapi.json` and the `/mcp` page on the website repository name MCP tools (`runBqlQuery`, `appendLedgerText`, the `…LedgerFiles` family). They read the deployed `/.well-known/mcp.json`, which `src/features/well-known/api/well-known-route.ts` builds from `MCP_TOOLS`, so renaming or removing a tool changes what agents are told. The website picks the change up through its own scheduled sync and opens a pull request there; mention the rename in the commit so its owner knows to expect it. See the root [`AGENTS.md`](../../AGENTS.md#the-public-website-lives-in-a-separate-repository).
 
+### MCP docs, descriptions and hints are checked against the surface
+
+Renaming a tool or parameter has a second cost: everything that names it. `src/server/api/__tests__/mcp-reference-resolution.test.ts` fails when a tool description, the server instructions, a prompt, a hint in the source, or the tool-shaped names in the agent-facing part of `docs/mcp.md` cite a camelCase or snake_case name no published schema, tool or prompt has; naming another surface's operation on purpose (a GraphQL mutation in a multi-surface hint) goes in that file's allow-list with a reason. `src/features/ai-agent/api/__tests__/mcp-doc-recipes.test.ts` replays the `mcp_post '…'` requests and the `resources/read` block of "Inspect the protocol with curl" against the real route, so keep those requests machine-readable and runnable as written.
+
 ### Required API parity workflow
 
 REST, GraphQL, and MCP are equal public contracts. An API change is complete only when every eligible surface exposes the same domain behavior and its contract tests pass. This applies to new operations, changed inputs or outputs, bug fixes, authorization changes, and deprecations.
