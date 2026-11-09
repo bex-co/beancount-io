@@ -88,7 +88,9 @@ export class ApiClient extends Api<unknown> {
         }
         return response;
       } catch (e: unknown) {
-        if (e instanceof Error && e.name === "TimeoutError") {
+        // By name, not `instanceof Error`: the abort reason is a DOMException,
+        // which is not an `Error` of every realm that can throw it.
+        if ((e as { name?: unknown } | null)?.name === "TimeoutError") {
           favaLogger.warn("Request timed out", {
             method,
             path,

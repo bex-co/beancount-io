@@ -265,6 +265,23 @@ describe("ApiClient", () => {
       expect(mockFavaLogger.error).not.toHaveBeenCalled();
     });
 
+    it("recognizes a timeout whose abort reason is not an Error of this realm", async () => {
+      // `AbortSignal.timeout` rejects with a DOMException, which another realm
+      // (a vm context, a worker) does not see as `instanceof Error`.
+      const spy = jest
+        .fn()
+        .mockRejectedValue({ name: "TimeoutError", message: "timed out" });
+      stubOriginalRequest(spy);
+
+      await expect(
+        apiClient.request({ path: "/slow", method: "GET" }),
+      ).rejects.toMatchObject({
+        message: "Fava API request timed out",
+        status: 504,
+      });
+      expect(mockFavaLogger.error).not.toHaveBeenCalled();
+    });
+
     it("should include custom timeoutMs in timeout warn log", async () => {
       const customClient = new ApiClient({
         baseUrl: "http://localhost:5000",
