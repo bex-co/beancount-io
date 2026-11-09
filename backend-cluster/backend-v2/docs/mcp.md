@@ -1460,7 +1460,7 @@ A `NOT_FOUND` on a bank connection, pull request, commit, branch, archive or use
 | `OPERATION_NOT_ALLOWED`  | `-32003` | The ledger's current state forbids it.                                                                                                                                                                   |
 | `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`.                                                                                                    |
 | `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                                                                                                                |
-| `SERVICE_UNAVAILABLE`    | `-32000` | A dependency is down. Retry with backoff; the request is not the problem.                                                                                                                                |
+| `SERVICE_UNAVAILABLE`    | `-32000` | A dependency is down, or the ledger did not answer before its deadline (30 seconds for a read, 90 for a write). Retry with backoff; the request is not the problem. After a timeout a write may already have committed: re-read the ledger before repeating it, or resend an entry write with the same `requestId` ([retry-safe entry writes](#retry-safe-entry-writes-requestid)). |
 | `CONFIGURATION_ERROR`    | `-32000` | The deployment is missing configuration. Nothing about the request will fix it.                                                                                                                          |
 | `INTERNAL_SERVER_ERROR`  | `-32000` | Server-side failure. Retry once; changing the request will not help.                                                                                                                                     |
 
@@ -1957,7 +1957,7 @@ preview whose `valid` is `true` before re-issuing it with `dry_run: false`
 optional `requestId` (1–200 characters), as do their REST and GraphQL twins and
 the legacy `addEntries` (w3/m61). It copies ledger creation's contract
 (ADR026). Send a new id for each write, and reuse it only to retry that write
-after a timeout or a dropped reply:
+after a timeout or a dropped reply (a ledger timeout answers `SERVICE_UNAVAILABLE` with a hint saying so):
 
 - Within 24 hours, the same id with the same request returns the first
   result without writing again. The validation in a replayed MCP result is

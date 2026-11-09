@@ -1,6 +1,6 @@
 # w23 · m34 — Make a ledger timeout tell the agent what happened and how to retry
 
-**Worker:** worker1 **Goal:** A slow or hung ledger call ends inside its documented deadline with an error that says the write may have committed and how to retry safely, the same on REST, GraphQL and MCP. **Status:** todo (t001–t003 done)
+**Worker:** worker1 **Goal:** A slow or hung ledger call ends inside its documented deadline with an error that says the write may have committed and how to retry safely, the same on REST, GraphQL and MCP. **Status:** todo (t001–t003, t005 done)
 
 ## Tasks (in order)
 
@@ -9,7 +9,7 @@
 | t001 | Map existing timeouts and cancellation points — **DONE** | 30m | — |
 | t002 | Reproduce a hung ledger call with a slow stub — **DONE** | 45m | t001 |
 | t003 | Add a deadline in the shared ledger-call layer — **DONE** (reshaped: timeout hint, not a new deadline) | 60m | t002 |
-| t005 | Document the timeout behavior | 20m | t003 |
+| t005 | Document the timeout behavior — **DONE** | 20m | t003 |
 | t006 | Adoption surface | 20m | t005 |
 | t007 | Simplify | 20m | t006 |
 | t008 | Test coverage | 30m | t006 |
