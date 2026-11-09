@@ -807,13 +807,15 @@ async function checkOutputSchemaConformance(o: Options): Promise<CheckResult> {
     "17 output-schema-conformance",
     "Live tool results validate against their published outputSchema",
   );
+  // The read prefers the least-privileged credential supplied.
+  const readToken = o.readOnlyToken ?? o.token;
   const calls = [
-    ...(o.readOnlyToken ?? o.token
+    ...(readToken
       ? [
           {
             name: "runBqlQuery",
             arguments: withLedger(o, { query: "SELECT account LIMIT 1" }),
-            token: (o.readOnlyToken ?? o.token) as string,
+            token: readToken,
           },
         ]
       : []),
