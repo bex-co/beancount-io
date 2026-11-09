@@ -197,13 +197,11 @@ describe("names the MCP surface cites resolve to something it publishes (w23/m33
       if (!/hint/i.test(text)) continue;
       // Comments name implementation details, not what an agent is told.
       text = text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+      // Spans inside a double-quoted string, plus those escaped in a template.
+      const literals = [...text.matchAll(/"[^"\n]*"/g)].map((m) => m[0]);
       for (const name of [
         ...tokens(text, ESCAPED_SPAN),
-        ...[...text.matchAll(/"[^"\n]*`([^`\n]+)`[^"\n]*"/g)]
-          .map((m) => m[1])
-          .filter((n) =>
-            /^(?:[a-z]+(?:[A-Z][a-z0-9]+)+|[a-z]+(?:_[a-z0-9]+)+)$/.test(n),
-          ),
+        ...literals.flatMap((literal) => tokens(literal, CODE_SPAN)),
       ]) {
         if (corpus.vocabulary.has(name) || name in ALLOWED_HINT_SOURCES)
           continue;
