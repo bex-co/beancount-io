@@ -87,6 +87,8 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [199](./199.md) — Confirm upstream path-parameter hardening on production after deploy (needs a backend-v2 deploy)
 - [200](./200.md) — `docs/mcp.md` contradicts the served contract in eight places (MCP QA 2026-11-09)
 - [201](./201.md) — Invalid percent-encoding in a resource query value is accepted silently (MCP QA 2026-11-09)
+- [202](./202.md) — Receipt insert's UNBALANCED hint suggests `allowInvalid`, which the tool refuses (MCP QA 2026-11-09)
+- [203](./203.md) — Journal filter `>N` compares absolute units, and the description doesn't say so (MCP QA 2026-11-09)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
