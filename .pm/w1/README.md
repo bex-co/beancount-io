@@ -74,6 +74,8 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [186](./186.md) — `renameLedgerFile` reports only the new path in `wrote` (MCP QA 2026-11-08)
 - [187](./187.md) — Fix three garbled refusal hints and the preview rule's tool count (MCP QA 2026-11-08)
 - [188](./188.md) — MCP QA tooling: `resources-list` sends the wrong method, conformance needs the token on argv (MCP QA 2026-11-08)
+- [189](./189.md) — An unexpected error that mentions "not found" reaches MCP callers unmasked (MCP QA 2026-11-08)
+- [190](./190.md) — Parsing an issued but never-uploaded temp asset is a 500, not "upload first" (MCP QA 2026-11-08)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
