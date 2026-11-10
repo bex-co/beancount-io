@@ -115,6 +115,9 @@ describe("the introspection endpoint is never anonymous", () => {
       state: {},
       request: { body: { token: "bcio_anything" } },
       headers: {},
+      get: () => "",
+      set: () => undefined,
+      is: () => "json",
     } as unknown as RouterContext;
 
     await router.routes()(ctx, async () => undefined);

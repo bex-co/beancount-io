@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [222](./222.md) — REST v1 errors outside the route handlers break the error contract, and 401s carry no challenge (MCP QA 2026-11-10)
 - [223](./223.md) — Two access answers miss rules recent work set: latest commit on public ledgers, ledger-wide bank reads (MCP QA 2026-11-10)
 - [224](./224.md) — Bank tools take each row's `id`, but their text sends agents to `itemId`/`accountId` (MCP QA 2026-11-10)
 - [225](./225.md) — Refusals echo caller input unbounded, and one hint names a removed `replace` operation (MCP QA 2026-11-10)

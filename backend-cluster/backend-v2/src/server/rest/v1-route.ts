@@ -16,7 +16,8 @@ import {
   validatedFromState,
   type RequestSchemas,
 } from "./validation-middleware";
-import { UnauthenticatedError } from "@/shared/errors";
+import { ErrorCategory, UnauthenticatedError } from "@/shared/errors";
+import { V1_PREFIX, writeV1Error } from "./v1-envelope";
 import { errorSchema, json } from "./v1-schemas";
 
 /**
@@ -34,8 +35,7 @@ import { errorSchema, json } from "./v1-schemas";
  * because a helper is only a guarantee for the routes that use it.
  */
 
-/** The prefix every v1 path carries. */
-export const V1_PREFIX = "/api-gateway/v1";
+export { V1_PREFIX };
 
 /**
  * Path syntax for a route declaration: OpenAPI-style `{param}`, plus `{*param}`
@@ -191,6 +191,21 @@ function documentPageHeaders(
 const NO_QUERY = z.strictObject({}).optional();
 const NO_BODY = z.strictObject({}).optional();
 
+const requireJsonBody: Router.Middleware = async (ctx, next) => {
+  // A request with no body, or an empty one, has no content type to check
+  // (`is` answers null without a body).
+  if (ctx.request.length !== 0 && ctx.is("json") === false) {
+    writeV1Error(
+      ctx,
+      415,
+      ErrorCategory.BAD_USER_INPUT,
+      `This endpoint reads a JSON body: send it with Content-Type: application/json, not ${ctx.request.type}`,
+    );
+    return;
+  }
+  await next();
+};
+
 /** The schemas a route's request is validated against. */
 export function v1RequestSchemas(
   route: Pick<
@@ -212,6 +227,9 @@ function registerV1Route<P, Q, B>(
   route: RouteDeclaration<P, Q, B>,
 ): void {
   const middlewares: Router.Middleware[] = [
+    // A declared body is JSON. Sent as a form or text it was parsed anyway
+    // and refused as a missing field, never naming the content type (w1/222).
+    ...(route.body ? [requireJsonBody] : []),
     // Every route parses its body, so one it does not declare is checked too.
     bodyParser(),
     validateRequest(v1RequestSchemas(route)),

@@ -61,7 +61,12 @@ describe.each(CATEGORIES)("%s", (category) => {
   const error = new ProbeError(category, "probe message");
 
   it("renders on REST with its code and status", async () => {
-    const ctx = { method: "GET", path: "/x" } as unknown as RouterContext;
+    const ctx = {
+      method: "GET",
+      path: "/x",
+      get: () => "",
+      set: () => undefined,
+    } as unknown as RouterContext;
     await restErrorMiddleware()(ctx, async () => {
       throw error;
     });

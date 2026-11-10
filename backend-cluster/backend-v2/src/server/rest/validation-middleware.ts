@@ -53,6 +53,29 @@ function parseOrThrow(
   if (!schema) return value ?? {};
   const result = schema.safeParse(value);
   if (result.success) return result.data;
+  // A required query name left off said what zod says ("expected number,
+  // received NaN"); it says what MCP's resources say (w1/187, w1/222). A
+  // name that is present but malformed keeps zod's message.
+  if (part === "query") {
+    const sent = (value ?? {}) as Record<string, unknown>;
+    const missing = [
+      ...new Set(
+        result.error.issues
+          .filter((issue) => issue.path.length === 1)
+          .map((issue) => issue.path[0])
+          .filter(
+            (name): name is string =>
+              typeof name === "string" && !Object.hasOwn(sent, name),
+          ),
+      ),
+    ];
+    if (missing.length > 0) {
+      throw new ValidationError(
+        `query.${missing[0]}`,
+        `${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} required`,
+      );
+    }
+  }
   // The first issue is the one a caller can act on; the rest usually follow
   // from it. `field` names the part and the path so a 400 says where to look
   // without echoing the value back — validation messages are logged, and a

@@ -7,18 +7,27 @@ import {
 import { config } from "@/config/config";
 import { restErrorMiddleware } from "../error-middleware";
 
-function makeCtx(): RouterContext {
+function makeCtx(request: Record<string, string> = {}): RouterContext {
+  const response: Record<string, string> = {};
   return {
     method: "GET",
     path: "/api/test",
     status: 200,
     body: undefined,
+    get: (name: string) => request[name.toLowerCase()] ?? "",
+    set: (name: string, value: string) => {
+      response[name.toLowerCase()] = value;
+    },
+    response,
   } as unknown as RouterContext;
 }
 
 describe("restErrorMiddleware (REST transport adapter)", () => {
-  const run = async (throwFn: () => never | Promise<never>) => {
-    const ctx = makeCtx();
+  const run = async (
+    throwFn: () => never | Promise<never>,
+    request: Record<string, string> = {},
+  ) => {
+    const ctx = makeCtx(request);
     await restErrorMiddleware()(ctx, async () => {
       await throwFn();
     });
@@ -51,6 +60,40 @@ describe("restErrorMiddleware (REST transport adapter)", () => {
       ok: false,
       error: { code: "UNAUTHENTICATED", message: "invalid api token" },
     });
+  });
+
+  // w1/222: RFC 9110 requires a challenge on a 401, and REST sent none.
+  it.each([
+    ["no credential", {}, 'Bearer realm="beancount.io"'],
+    [
+      "a rejected bearer token",
+      { authorization: "Bearer bcio_garbage" },
+      'Bearer realm="beancount.io", error="invalid_token"',
+    ],
+    [
+      "a rejected x-api-key",
+      { "x-api-key": "bcio_garbage" },
+      'Bearer realm="beancount.io", error="invalid_token"',
+    ],
+  ])("challenges a 401 sent %s", async (_name, request, challenge) => {
+    const ctx = await run(() => {
+      throw new UnauthenticatedError();
+    }, request);
+    expect(ctx.status).toBe(401);
+    expect(
+      (ctx as unknown as { response: Record<string, string> }).response[
+        "www-authenticate"
+      ],
+    ).toBe(challenge);
+  });
+
+  it("challenges nothing but a 401", async () => {
+    const ctx = await run(() => {
+      throw new NotFoundError("User");
+    });
+    expect(
+      (ctx as unknown as { response: Record<string, string> }).response,
+    ).toEqual({});
   });
 
   it("honours httpStatusHint for passthrough errors", async () => {

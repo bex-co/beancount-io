@@ -40,6 +40,20 @@ function getLogLevel(category: ErrorCategory): "debug" | "info" | "error" {
 }
 
 /**
+ * The challenge a 401 carries (RFC 9110 §15.5.2), which REST sent none of
+ * (w1/222). A credential that was presented and rejected — a bearer token or
+ * an `x-api-key` — adds `error="invalid_token"` (RFC 6750 §3.1), so a client
+ * replaces it rather than reading "no credential sent"; no credential, or a
+ * browser session, gets the plain challenge, as on MCP (w1/206).
+ */
+function restChallenge(ctx: RouterContext): string {
+  const rejected =
+    /^Bearer\s+\S/i.test(ctx.get("Authorization")) ||
+    ctx.get("x-api-key") !== "";
+  return `Bearer realm="beancount.io"${rejected ? ', error="invalid_token"' : ""}`;
+}
+
+/**
  * REST transport adapter — Koa middleware that translates thrown errors into the
  * standardized REST response shape:
  * `{ ok: false, error: { code: string, message: string, metadata?: object } }`.
@@ -70,6 +84,9 @@ export function restErrorMiddleware(): Router.Middleware {
 
         ctx.status =
           error.httpStatusHint ?? CATEGORY_HTTP_STATUS[error.category];
+        if (error.category === ErrorCategory.UNAUTHENTICATED) {
+          ctx.set("WWW-Authenticate", restChallenge(ctx));
+        }
         ctx.body = {
           ok: false,
           error: {

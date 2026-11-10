@@ -297,6 +297,22 @@ which reads it from the query. `accounts` still answers every account for a
 their unknown keys are refused. `undeclared-request-parts.test.ts` checks
 every v1 route.
 
+A v1 refusal made before any route runs uses the same JSON envelope
+(w1/222):
+
+- an unknown path is 404 `NOT_FOUND`;
+- a wrong method is 405, with `Allow` kept;
+- a body the parser cannot read is 400 `VALIDATION_FAILED`;
+- an oversized body is 413;
+- a Brotli body is 415, and so is a body that is not `application/json`, with
+  a message naming that content type.
+
+A missing required query name reads "`<name>` is required", as on MCP. A 401
+carries `WWW-Authenticate: Bearer realm="beancount.io"`, plus
+`error="invalid_token"` when the request presented a credential and it was
+rejected. Malformed JSON sent to GraphQL is a JSON `BAD_REQUEST`.
+`v1-error-envelope.test.ts` covers each case.
+
 ## Preview rate bucket (w23/m26)
 
 A `dry_run`/`dryRun` preview of a write operation is charged to its own rate

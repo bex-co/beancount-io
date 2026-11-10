@@ -25,6 +25,7 @@ import { runStartupLlmProbe } from "@/features/llm/utils/llm-probe";
 import { SshProxyServer } from "@/features/gitea/ssh/ssh-proxy-server";
 import { SshAuthenticator } from "@/features/gitea/ssh/ssh-authenticator";
 import { trustProxyHops } from "@/server/client-address";
+import { v1FallbackMiddleware } from "@/server/rest/v1-envelope";
 
 const serverLogger = logger.child({ module: "start-server" });
 
@@ -135,6 +136,9 @@ export async function startServer(): Promise<void> {
 
   await assembleApi(httpServer, router, { layers, config });
 
+  // Ahead of the router, so an unmatched v1 path or method is answered in
+  // the v1 envelope rather than Koa's plain text (w1/222).
+  app.use(v1FallbackMiddleware());
   app.use(router.routes());
   app.use(router.allowedMethods());
 

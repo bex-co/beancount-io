@@ -4,6 +4,8 @@ import {
   MCP_ENDPOINT_PATH,
   mcpBodyParseFailure,
 } from "@/features/ai-agent/api/mcp-route";
+import { isV1Path, writeV1Error } from "@/server/rest/v1-envelope";
+import { ErrorCategory } from "@/shared/errors";
 
 /** The JSON body cap, and how an over-cap MCP refusal names it. */
 const JSON_LIMIT = { bytes: "2mb", label: "2 MiB" } as const;
@@ -26,6 +28,18 @@ class BodyParseFailure extends Error {
  * upload-pack requests, so gzip and deflate stay accepted.
  */
 const BROTLI_ENCODING = /(^|,)\s*br\s*(,|$)/i;
+
+/** GraphQL's one endpoint, where Apollo answers its own refusals in JSON. */
+const GRAPHQL_PATHS = new Set(["/api-gateway", "/api-gateway/"]);
+
+/** What a refused body was, in words a caller can act on. */
+function describeBodyFailure(status: number, cause: Error): string {
+  if (status === 413) {
+    return `The request body exceeds the ${JSON_LIMIT.label} limit`;
+  }
+  if (status === 415) return cause.message;
+  return `The request body is not a JSON object: ${cause.message}`;
+}
 
 function brotliBodyRefusal(): BodyParseFailure {
   return new BodyParseFailure(
@@ -78,8 +92,34 @@ export function bodyParserMiddleware(): Koa.Middleware {
       return await parse(ctx as unknown as Parameters<typeof parse>[0], next);
     } catch (error) {
       if (!(error instanceof BodyParseFailure)) throw error;
+      const status = error.cause.status ?? 400;
+      // The REST and GraphQL surfaces answer every refusal in JSON, and this
+      // one happens before either sees the request (w1/222).
+      if (isV1Path(ctx.path)) {
+        writeV1Error(
+          ctx,
+          status,
+          status === 400
+            ? ErrorCategory.VALIDATION_FAILED
+            : ErrorCategory.BAD_USER_INPUT,
+          describeBodyFailure(status, error.cause),
+        );
+        return;
+      }
+      if (GRAPHQL_PATHS.has(ctx.path)) {
+        ctx.status = status;
+        ctx.body = {
+          errors: [
+            {
+              message: describeBodyFailure(status, error.cause),
+              extensions: { code: "BAD_REQUEST" },
+            },
+          ],
+        };
+        return;
+      }
       if (ctx.path !== MCP_ENDPOINT_PATH) throw error.cause;
-      ctx.status = error.cause.status ?? 400;
+      ctx.status = status;
       ctx.body = mcpBodyParseFailure(
         error.cause.body,
         ctx.status === 413 ? JSON_LIMIT.label : undefined,
