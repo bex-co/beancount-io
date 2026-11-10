@@ -13,6 +13,21 @@ import {
 import { parseLedgerId } from "@/shared/str";
 import type { IPlaidItemService } from "@/features/plaid/service/plaid-item-service";
 import type { IPlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
+import {
+  DRY_RUN_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
+import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+
+/**
+ * The preview flag under either spelling, as REST and MCP take it on the same
+ * five bank writes (w1/211); two different values are refused.
+ */
+const preview = (flags: { dryRun?: boolean; dry_run?: boolean }) =>
+  resolveFlagAlias(
+    { primary: flags.dry_run, legacy: flags.dryRun },
+    DRY_RUN_NAMES,
+  );
 
 @Resolver()
 export class PlaidMutationResolver {
@@ -68,12 +83,23 @@ export class PlaidMutationResolver {
     @Arg("itemId", () => String) itemId: string,
     @Arg("ledgerId", () => String) ledgerId: string,
     @Ctx() ctx: IContext,
+    @Arg("dryRun", () => Boolean, {
+      nullable: true,
+      description: PREVIEW_FLAG_DESCRIPTION,
+    })
+    dryRun?: boolean,
+    @Arg("dry_run", () => Boolean, {
+      nullable: true,
+      description: "Alias of dryRun, as MCP spells it.",
+    })
+    dry_run?: boolean,
   ): Promise<PlaidAccountReconcileResult> {
     const identity = ctx.getCurrentIdentity();
     return this.plaidItemService.reconcileItemAccounts(
       identity,
       itemId,
       ledgerId,
+      preview({ dryRun, dry_run }),
     );
   }
 
@@ -155,11 +181,29 @@ export class PlaidMutationResolver {
     @Arg("itemId", () => String) itemId: string,
     @Arg("ledgerId", () => String) ledgerId: string,
     @Ctx() ctx: IContext,
+    @Arg("dryRun", () => Boolean, {
+      nullable: true,
+      description: PREVIEW_FLAG_DESCRIPTION,
+    })
+    dryRun?: boolean,
+    @Arg("dry_run", () => Boolean, {
+      nullable: true,
+      description: "Alias of dryRun, as MCP spells it.",
+    })
+    dry_run?: boolean,
   ): Promise<boolean> {
     const identity = ctx.getCurrentIdentity();
-    // GraphQL's contract stays boolean: the dashboard never dry-runs, and the
-    // service throws rather than returning false on failure.
-    await this.plaidItemService.unlinkItem(identity, itemId, ledgerId);
+    // GraphQL's contract stays boolean, which the dashboard and the app
+    // select: a preview runs every check the unlink makes and answers true
+    // without unlinking (w1/211). What it would sever is read through
+    // `getPlaidItem` and `getPlaidAccounts`. The service throws rather than
+    // returning false on failure.
+    await this.plaidItemService.unlinkItem(
+      identity,
+      itemId,
+      ledgerId,
+      preview({ dryRun, dry_run }),
+    );
     return true;
   }
 
@@ -171,6 +215,16 @@ export class PlaidMutationResolver {
     @Arg("itemId", () => String) itemId: string,
     @Arg("ledgerId", () => String) ledgerId: string,
     @Ctx() ctx: IContext,
+    @Arg("dryRun", () => Boolean, {
+      nullable: true,
+      description: PREVIEW_FLAG_DESCRIPTION,
+    })
+    dryRun?: boolean,
+    @Arg("dry_run", () => Boolean, {
+      nullable: true,
+      description: "Alias of dryRun, as MCP spells it.",
+    })
+    dry_run?: boolean,
   ): Promise<PlaidSyncResult> {
     const identity = ctx.getCurrentIdentity();
     return this.plaidSyncService.syncItemTransactions(
@@ -178,6 +232,7 @@ export class PlaidMutationResolver {
       itemId,
       "manual",
       ledgerId,
+      preview({ dryRun, dry_run }),
     );
   }
 
@@ -197,6 +252,16 @@ export class PlaidMutationResolver {
         "Existing ledger file to write the transactions to; defaults to main.bean",
     })
     filename?: string,
+    @Arg("dryRun", () => Boolean, {
+      nullable: true,
+      description: PREVIEW_FLAG_DESCRIPTION,
+    })
+    dryRun?: boolean,
+    @Arg("dry_run", () => Boolean, {
+      nullable: true,
+      description: "Alias of dryRun, as MCP spells it.",
+    })
+    dry_run?: boolean,
   ): Promise<PlaidSubmitResult> {
     const identity = ctx.getCurrentIdentity();
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
@@ -206,6 +271,7 @@ export class PlaidMutationResolver {
       ledgerName,
       transactions,
       filename,
+      preview({ dryRun, dry_run }),
     );
   }
 
@@ -218,12 +284,23 @@ export class PlaidMutationResolver {
     @Arg("ledgerId", () => String) ledgerId: string,
     @Arg("transactionIds", () => [String]) transactionIds: string[],
     @Ctx() ctx: IContext,
+    @Arg("dryRun", () => Boolean, {
+      nullable: true,
+      description: PREVIEW_FLAG_DESCRIPTION,
+    })
+    dryRun?: boolean,
+    @Arg("dry_run", () => Boolean, {
+      nullable: true,
+      description: "Alias of dryRun, as MCP spells it.",
+    })
+    dry_run?: boolean,
   ): Promise<PlaidDeleteResult> {
     const identity = ctx.getCurrentIdentity();
     return this.plaidSyncService.deleteTransactions(
       identity,
       ledgerId,
       transactionIds,
+      preview({ dryRun, dry_run }),
     );
   }
 }

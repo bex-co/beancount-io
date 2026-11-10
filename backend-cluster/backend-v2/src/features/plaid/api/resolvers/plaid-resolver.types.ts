@@ -1,4 +1,5 @@
 import { ObjectType, Field, InputType, Float } from "type-graphql";
+import { GraphQLJSONObject } from "graphql-scalars";
 
 // Link Token Response
 @ObjectType()
@@ -199,6 +200,51 @@ export class PlaidSyncResult {
 
   @Field(() => String, { nullable: true })
   message?: string;
+
+  // A `dryRun` answer only (w1/211): what a real sync would stage.
+  @Field(() => Boolean, { nullable: true })
+  dryRun?: boolean;
+
+  @Field(() => Number, { nullable: true })
+  wouldAdd?: number;
+
+  @Field(() => Number, { nullable: true })
+  wouldModify?: number;
+
+  @Field(() => Number, { nullable: true })
+  wouldRemove?: number;
+
+  @Field(() => Boolean, { nullable: true })
+  morePagesAvailable?: boolean;
+}
+
+/** One account a reconcile would add or delete (w1/211). */
+@ObjectType()
+export class PlaidReconcileAccountChange {
+  @Field(() => String)
+  accountId: string;
+
+  @Field(() => String)
+  accountName: string;
+
+  @Field(() => String, { nullable: true })
+  mask?: string;
+
+  @Field(() => String, { nullable: true })
+  ledgerAccount?: string;
+}
+
+/** One staged row a delete would remove (w1/211). */
+@ObjectType()
+export class PlaidDeletePreviewRow {
+  @Field(() => String)
+  transactionId: string;
+
+  @Field(() => String)
+  name: string;
+
+  @Field(() => String)
+  amount: string;
 }
 
 // Account Reconcile Result
@@ -217,6 +263,16 @@ export class PlaidAccountReconcileResult {
       "Stored accounts Plaid no longer shares; these were deleted along with their transactions",
   })
   removedCount: number;
+
+  // A `dryRun` answer only (w1/211): the diff a real reconcile would act on.
+  @Field(() => Boolean, { nullable: true })
+  dryRun?: boolean;
+
+  @Field(() => [PlaidReconcileAccountChange], { nullable: true })
+  wouldAdd?: PlaidReconcileAccountChange[];
+
+  @Field(() => [PlaidReconcileAccountChange], { nullable: true })
+  wouldDelete?: PlaidReconcileAccountChange[];
 }
 
 // Submit Result
@@ -230,6 +286,16 @@ export class PlaidSubmitResult {
 
   @Field(() => String, { nullable: true })
   message?: string;
+
+  // A `dryRun` answer only (w1/211): the transactions it would write.
+  @Field(() => Boolean, { nullable: true })
+  dryRun?: boolean;
+
+  @Field(() => Number, { nullable: true })
+  wouldAddCount?: number;
+
+  @Field(() => [GraphQLJSONObject], { nullable: true })
+  preview?: unknown[];
 }
 
 // Delete Result
@@ -243,6 +309,16 @@ export class PlaidDeleteResult {
 
   @Field(() => String, { nullable: true })
   message?: string;
+
+  // A `dryRun` answer only (w1/211): the staged rows it would remove.
+  @Field(() => Boolean, { nullable: true })
+  dryRun?: boolean;
+
+  @Field(() => Number, { nullable: true })
+  wouldDeleteCount?: number;
+
+  @Field(() => [PlaidDeletePreviewRow], { nullable: true })
+  preview?: PlaidDeletePreviewRow[];
 }
 
 // Submit Input

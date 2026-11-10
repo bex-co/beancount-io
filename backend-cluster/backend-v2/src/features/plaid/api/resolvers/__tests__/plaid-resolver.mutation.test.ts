@@ -173,6 +173,7 @@ describe("PlaidMutationResolver", () => {
         expect.objectContaining({ userId: "user_test" }),
         "pitm_1",
         "owner/ledger",
+        false,
       );
       expect(result).toEqual({
         success: true,
@@ -291,6 +292,7 @@ describe("PlaidMutationResolver", () => {
         expect.objectContaining({ userId: "user_test" }),
         "pitm_1",
         "owner/ledger",
+        false,
       );
       expect(result).toBe(true);
     });
@@ -319,6 +321,7 @@ describe("PlaidMutationResolver", () => {
         "pitm_1",
         "manual",
         "owner/ledger",
+        false,
       );
       expect(result).toBe(expected);
     });
@@ -352,6 +355,7 @@ describe("PlaidMutationResolver", () => {
         "personal",
         transactions,
         undefined,
+        false,
       );
       expect(result).toBe(expected);
     });
@@ -380,6 +384,7 @@ describe("PlaidMutationResolver", () => {
         "personal",
         transactions,
         "books/2026.bean",
+        false,
       );
     });
   });
@@ -404,6 +409,7 @@ describe("PlaidMutationResolver", () => {
         expect.objectContaining({ userId: "user_test" }),
         "testuser/personal",
         transactionIds,
+        false,
       );
       expect(result).toBe(expected);
     });
@@ -558,6 +564,9 @@ describe("PlaidMutationResolver", () => {
       schema.getMutationType()?.getFields() ?? {},
     )) {
       for (const arg of field.args) {
+        // The preview flag's twin is the one cross-surface exception: both
+        // spellings work wherever the flag exists (w23/m9, w1/211).
+        if (arg.name === "dry_run") continue;
         if (arg.name.includes("_")) offending.push(`${field.name}.${arg.name}`);
       }
     }

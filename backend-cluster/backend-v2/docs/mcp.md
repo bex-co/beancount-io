@@ -421,8 +421,11 @@ bank-query routes, the five lifecycle bodies (ledger update and
 delete, collaborator set and remove, leave) — bodies take `dryRun`
 and each accepts the other spelling — and, accepting `false` and
 refusing `true`, the three config routes; the star routes refuse the
-key outright. GraphQL offers it on the six write mutations and the
-five lifecycle mutations. The errors flag is offered where a write
+key outright. GraphQL offers it on the six write mutations, the
+five lifecycle mutations, and the five bank writes — sync, submit, delete,
+reconcile and unlink — whose results carry the same preview fields; the
+unlink mutation stays a `Boolean` and answers `true` from a preview that runs
+every check (w1/211). The errors flag is offered where a write
 can add bean-check errors: the entry and slice writes on all three
 surfaces, and `createLedgerFiles`, `updateLedgerFiles` and
 `deleteLedgerFiles` take `allow_invalid`. Bank, rename, and lifecycle writes
