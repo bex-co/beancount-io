@@ -4,8 +4,6 @@ import { z } from "@/shared/zod-openapi-setup";
 import type { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import type { Identity } from "@/server/api/identity";
 
-const numberQuery = z.coerce.number().optional();
-const listQuery = z.object({ page: numberQuery, limit: numberQuery }).strict();
 // The same bounds as every other catalog list; the workflow holds GraphQL to
 // them too (w23/019).
 const idQuery = z.coerce.number().int().min(1).optional();
@@ -45,7 +43,7 @@ export const CATALOG_READS = [
     segment: "owned",
     name: "ownedLedgers",
     summary: "List the caller's owned ledgers",
-    query: listQuery,
+    query: paginationSchema,
     fetch: (
       workflow: ILedgerWorkflow,
       identity: Identity,

@@ -1202,13 +1202,23 @@ describe("LedgerWorkflow", () => {
       it("keeps one upstream call when page arithmetic would pass 2^53", async () => {
         const result = await workflow.listLedgers({
           identity: IDENTITY,
-          args: { page: 1e12, limit: 1e12 },
+          args: { page: 2 ** 52, limit: 100 },
         });
 
         expect(result).toEqual([]);
         expect(mockFavaApiClient.ledgers.listLedgers.mock.calls).toEqual([
-          [{ page: 1e12, limit: 1e12 }],
+          [{ page: 2 ** 52, limit: 100 }],
         ]);
+      });
+
+      it("refuses a limit past 100 before contacting the ledger service (w1/205)", async () => {
+        await expect(
+          workflow.listLedgers({
+            identity: IDENTITY,
+            args: { page: 1, limit: 1e12 },
+          }),
+        ).rejects.toThrow("limit must be an integer from 1 to 100");
+        expect(mockFavaApiClient.ledgers.listLedgers).not.toHaveBeenCalled();
       });
     });
 

@@ -243,6 +243,47 @@ describe("catalog adapters", () => {
   });
 });
 
+// w1/205: the account catalog and the owned-ledgers list took any page and
+// limit and echoed it back, while search, the public catalog and REST refused.
+describe("list pagination arguments", () => {
+  it.each(
+    [
+      ["catalog/ledgers/owned", "listUserOwnedLedgers", "owned"],
+      ["catalog/ledgers", "listLedgers", ""],
+    ].flatMap(([uri, field, path]) =>
+      [
+        ["limit=0", "limit: 0", "limit"],
+        ["limit=1000", "limit: 1000", "limit"],
+        ["page=-1", "page: -1", "page"],
+        ["page=0", "page: 0", "page"],
+      ].map(([param, gqlArg, name]) => [uri, field, path, param, gqlArg, name]),
+    ),
+  )(
+    "refuses %s on %s on every surface before listing",
+    async (uri, field, path, param, gqlArg, name) => {
+      const f = await fixture();
+      try {
+        const rest = await f.rest(`${path}?${param}`);
+        expect(rest.status).toBe(400);
+        await expect(
+          f.client.readResource({ uri: `beancount://${uri}?${param}` }),
+        ).rejects.toMatchObject({ data: { code: "BAD_USER_INPUT" } });
+        const gql = await f.gql(`${field}(${gqlArg})`);
+        const error = gql.errors?.[0];
+        expect(error).toBeDefined();
+        expect(formatError(error!.toJSON(), error!).extensions).toMatchObject({
+          code: "BAD_USER_INPUT",
+          field: name,
+        });
+        expect(f.ledgers.listLedgers).not.toHaveBeenCalled();
+        expect(f.ledgers.listUserLedgers).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+});
+
 // w23/019: search ignored a bad `order`, `limit=0` and negative ids, unlike
 // the catalog's other lists.
 describe("search arguments", () => {

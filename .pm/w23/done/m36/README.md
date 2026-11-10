@@ -1,20 +1,20 @@
 # w23 · m36 — Give the same bad call the same failure on REST, GraphQL and MCP
 
-**Worker:** worker1 **Goal:** A test matrix drives one invalid call through all three surfaces and fails when they answer with different error categories, and the known divergences are fixed. **Status:** todo
+**Worker:** worker1 **Goal:** A test matrix drives one invalid call through all three surfaces and fails when they answer with different error categories, and the known divergences are fixed. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Enumerate the bad-call set | 40m | — |
-| t002 | Write the failure-parity matrix test | 60m | t001 |
-| t003 | Fix the unknown-ledger write answer (w1/194) | 45m | t002 |
-| t004 | Validate pagination bounds on the catalog reads (w1/205) | 40m | t002 |
-| t005 | Record the remaining divergences | 30m | t002 |
-| t006 | Adoption surface | 20m | t005 |
-| t007 | Simplify | 20m | t006 |
-| t008 | Test coverage | 30m | t006 |
-| t009 | Closeout | 15m | t008 |
+| t001 | Enumerate the bad-call set — **DONE** | 40m | — |
+| t002 | Write the failure-parity matrix test — **DONE** | 60m | t001 |
+| t003 | Fix the unknown-ledger write answer (w1/194) — **DONE** | 45m | t002 |
+| t004 | Validate pagination bounds on the catalog reads (w1/205) — **DONE** | 40m | t002 |
+| t005 | Record the remaining divergences — **DONE** | 30m | t002 |
+| t006 | Adoption surface — **DONE** | 20m | t005 |
+| t007 | Simplify — **DONE** | 20m | t006 |
+| t008 | Test coverage — **DONE** | 30m | t006 |
+| t009 | Closeout — **DONE** | 15m | t008 |
 
 ## Definition of done
 

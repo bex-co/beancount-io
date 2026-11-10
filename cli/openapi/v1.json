@@ -2116,19 +2116,26 @@
         "parameters": [
           {
             "schema": {
-              "type": "number",
-              "nullable": true
+              "type": "integer",
+              "minimum": 1,
+              "description": "1-based page number",
+              "example": 1
             },
             "required": false,
+            "description": "1-based page number",
             "name": "page",
             "in": "query"
           },
           {
             "schema": {
-              "type": "number",
-              "nullable": true
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Page size, at most 100",
+              "example": 20
             },
             "required": false,
+            "description": "Page size, at most 100",
             "name": "limit",
             "in": "query"
           }

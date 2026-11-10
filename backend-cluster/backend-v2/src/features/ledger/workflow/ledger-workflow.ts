@@ -415,16 +415,11 @@ interface CreateRequestRecord {
 }
 
 /**
- * Search's own arguments, held to the catalog's other lists (w23/019).
- *
- * The repository host refuses a bad `sort` or `mode` itself, but ignores a
- * bad `order`, a `limit` of 0 (returning every match) and a negative id
- * filter, so a typo like `order=dsc` came back as the default with no signal.
- * Checked here so GraphQL, whose `Number` arguments arrive unchecked, refuses
- * the same values the REST and MCP schema do.
+ * `page` and `limit` held to one bound on every catalog list (w1/205): the
+ * owned-ledgers and account catalogs accepted `limit=0`, `limit=1000` and
+ * `page=-1` and echoed them back, while search and REST refused them.
  */
-function assertSearchArgs(args: SearchLedgersParams): void {
-  assertNoNul(args.q, "q");
+function assertPageArgs(args: { page?: number | null; limit?: number | null }) {
   const page = args.page ?? undefined;
   if (page !== undefined && (!Number.isSafeInteger(page) || page < 1)) {
     throw new BadUserInputError("page must be a positive integer", "page");
@@ -439,6 +434,20 @@ function assertSearchArgs(args: SearchLedgersParams): void {
       "limit",
     );
   }
+}
+
+/**
+ * Search's own arguments, held to the catalog's other lists (w23/019).
+ *
+ * The repository host refuses a bad `sort` or `mode` itself, but ignores a
+ * bad `order`, a `limit` of 0 (returning every match) and a negative id
+ * filter, so a typo like `order=dsc` came back as the default with no signal.
+ * Checked here so GraphQL, whose `Number` arguments arrive unchecked, refuses
+ * the same values the REST and MCP schema do.
+ */
+function assertSearchArgs(args: SearchLedgersParams): void {
+  assertNoNul(args.q, "q");
+  assertPageArgs(args);
   for (const field of [
     "uid",
     "priorityOwnerId",
@@ -1588,6 +1597,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     identity: Identity;
     args: ListLedgersParams;
   }): Promise<LedgerData[]> {
+    assertPageArgs(args);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
@@ -1629,6 +1639,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     identity: Identity;
     args: ListLedgersParams;
   }): Promise<LedgerData[]> {
+    assertPageArgs(args);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,

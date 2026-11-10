@@ -194,6 +194,17 @@ credential whose scope or ledger pin does not allow the write is refused as
 `FORBIDDEN` before any relationship is checked, so a read-only key never
 learns whether a ledger exists.
 
+`unknown-ledger-matrix.test.ts` walks every ledger-scoped authorization action
+with a caller who cannot see the ledger and fails when one answers anything but
+`NOT_FOUND` "Ledger not found"; the only documented differences are
+account-scoped actions (`ledger.catalog.read`, `ledger.create`) and a
+non-member leaving (w23/063). REST, GraphQL and MCP all authorize through that
+one service, so the answer is the same on each.
+
+The catalog lists share one page bound on every surface (w1/205): `page` is a
+positive integer and `limit` is 1–100 on the account catalog, the owned-ledgers
+list and search; `limit=0`, `limit=1000` and `page=-1` are `BAD_USER_INPUT`.
+
 ## Explicit file-write byte limits
 
 GraphQL `createLedgerFile` and `updateLedgerFile`, REST `PUT …/files/{path}`,

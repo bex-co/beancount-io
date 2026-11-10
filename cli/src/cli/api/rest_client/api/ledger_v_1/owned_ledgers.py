@@ -12,25 +12,15 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
-    json_page: float | None | Unset
-    if isinstance(page, Unset):
-        json_page = UNSET
-    else:
-        json_page = page
-    params["page"] = json_page
+    params["page"] = page
 
-    json_limit: float | None | Unset
-    if isinstance(limit, Unset):
-        json_limit = UNSET
-    else:
-        json_limit = limit
-    params["limit"] = json_limit
+    params["limit"] = limit
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -121,16 +111,16 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Response[V1Error | list[OwnedLedgersResponse200Item]]:
     """List the caller's owned ledgers
 
      List the caller's owned ledgers
 
     Args:
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -155,16 +145,16 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> V1Error | list[OwnedLedgersResponse200Item] | None:
     """List the caller's owned ledgers
 
      List the caller's owned ledgers
 
     Args:
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -184,16 +174,16 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Response[V1Error | list[OwnedLedgersResponse200Item]]:
     """List the caller's owned ledgers
 
      List the caller's owned ledgers
 
     Args:
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -216,16 +206,16 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    page: float | None | Unset = UNSET,
-    limit: float | None | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> V1Error | list[OwnedLedgersResponse200Item] | None:
     """List the caller's owned ledgers
 
      List the caller's owned ledgers
 
     Args:
-        page (float | None | Unset):
-        limit (float | None | Unset):
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

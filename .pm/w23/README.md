@@ -38,7 +38,7 @@
 - [x] **m33** — [Make every tool, parameter and recipe the docs and hints name resolve](./done/m33/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 3
 - [x] **m34** — [Make a ledger timeout tell the agent what happened and how to retry](./done/m34/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 4; from `w23/done/209`
 - [ ] **m35** — [Offer argument completion for MCP prompts and resource templates](./blocked/m35/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 5; evidence-gated — **blocked:** no evaluated host is known to send `completion/complete`; needs an observed host call (billed agent-eval run) before building
-- [ ] **m36** — [Give the same bad call the same failure on REST, GraphQL and MCP](./m36/README.md) (9 tasks) ← `/pm-brainstorm for w23` 2026-11-10, proposal 4; absorbs `w1/194`, `w1/205`
+- [x] **m36** — [Give the same bad call the same failure on REST, GraphQL and MCP](./done/m36/README.md) (9 tasks) ← `/pm-brainstorm for w23` 2026-11-10, proposal 4; absorbs `w1/194`, `w1/205`
 - [ ] **m37** — [Turn the numeric claims in docs/mcp.md into executable checks](./m37/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-10, proposal 5; absorbs `w1/200`, `w1/203`, `w1/196`
 
 ## Dropped
