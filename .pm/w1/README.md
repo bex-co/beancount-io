@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [199](./199.md) — Confirm upstream path-parameter hardening on production after deploy (needs a backend-v2 deploy)
 - [201](./201.md) — Invalid percent-encoding in a resource query value is accepted silently (MCP QA 2026-11-09)
 - [202](./202.md) — Receipt insert's UNBALANCED hint suggests `allowInvalid`, which the tool refuses (MCP QA 2026-11-09)
 - [203](./203.md) — Journal filter `>N` compares absolute units, and the description doesn't say so (MCP QA 2026-11-09)
@@ -105,6 +104,7 @@ The four mobile QA findings filed on 2026-09-16 were drained the same day: [031]
 Blocked notes live under [`blocked/`](./blocked/) with their reason and **Unblock:** condition; they keep their IDs and return to the open tree when work can resume.
 
 - [033](./blocked/033.md) — Slice-delete success precedes removal by minutes; a refetch resurrects the row — **blocked:** no async-apply code exists in this monorepo and the acceptance cannot be proven here. **Unblock:** hosted diagnosis naming the lagging layer, or a local full-stack repro. Cleared by the user (hosted access plus QA credentials).
+- [199](./blocked/199.md) — Confirm upstream path-parameter hardening on production after deploy — **blocked:** production still answers a malformed `entryHash` with `NOT_FOUND` (2026-11-10 probe), so `8a2e14649` is not deployed. **Unblock:** an operator deploy of backend-v2 at or after `a23eeb234` (includes `8a2e14649`), then the checks in the note. Cleared by the user.
 
 ## Absorbed CLI QA notes (m23–m27)
 
