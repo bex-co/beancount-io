@@ -88,6 +88,8 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [226](./226.md) — Served tool and template descriptions make three false claims (MCP QA 2026-11-10)
 - [227](./227.md) — File writes report "No new bean-check errors" for a `.bean` file nothing includes (MCP QA 2026-11-10)
 - [228](./228.md) — Idea: give agents the write primitives a hosted session keeps reaching for (commit sha in results, undo, account rename, move entries)
+- [229](./229.md) — Holdings and BQL price an asset from its `@` sale; statements and net worth say the price is missing — needs an owner decision on the price basis (MCP QA 2026-11-10)
+- [230](./230.md) — spending-report prompt still says "use cost(position) for currency totals" (MCP QA 2026-11-10)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
