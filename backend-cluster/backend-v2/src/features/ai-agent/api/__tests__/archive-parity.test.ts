@@ -326,22 +326,28 @@ describe("archive bytes through canonical adapters and the legacy REST twin", ()
  * reference names (`main.zip`, `main.tar.gz`) as `application/octet-stream`.
  */
 describe("the published archive contract", () => {
-  const spec = () => {
-    const document = generateV1OpenAPIDocument() as unknown as {
-      paths: Record<
-        string,
-        {
-          get: {
-            parameters: { name: string; schema: { example?: string } }[];
-            responses: { 200: { content: Record<string, unknown> } };
-          };
-        }
-      >;
-    };
-    return document.paths[
-      "/api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}"
-    ].get;
+  type ArchiveDocument = {
+    paths: Record<
+      string,
+      {
+        get: {
+          parameters: { name: string; schema: { example?: string } }[];
+          responses: { 200: { content: Record<string, unknown> } };
+        };
+      }
+    >;
   };
+  // Generating the whole v1 document costs about two seconds of CPU, which
+  // the full suite's parallel load stretched past the test timeout (w1/198).
+  // It is the fixture, not the behaviour under test, so it runs once, under a
+  // budget of its own.
+  let document: ArchiveDocument;
+  beforeAll(() => {
+    document = generateV1OpenAPIDocument() as unknown as ArchiveDocument;
+  }, 60_000);
+  const spec = () =>
+    document.paths["/api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}"]
+      .get;
 
   it("publishes an example that reaches the archive on REST and MCP", async () => {
     const f = await fixture();

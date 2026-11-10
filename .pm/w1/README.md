@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [198](./198.md) — `archive-parity` times out under the full backend-v2 suite
 - [199](./199.md) — Confirm upstream path-parameter hardening on production after deploy (needs a backend-v2 deploy)
 - [200](./200.md) — `docs/mcp.md` contradicts the served contract in eight places (MCP QA 2026-11-09)
 - [201](./201.md) — Invalid percent-encoding in a resource query value is accepted silently (MCP QA 2026-11-09)
