@@ -30,8 +30,12 @@ export function resolveEntryHash(input: {
   return resolved;
 }
 
-/** An entry hash as the ledger service computes it: 32 lowercase hex digits. */
-const ENTRY_HASH_PATTERN = /^[0-9a-f]{32}$/;
+/**
+ * An entry ID as the ledger service issues it: 32 lowercase hex digits, plus
+ * `:<k>` for the k-th byte-identical duplicate (`entryIdFor` in the ledger
+ * service). `:` survives the encoded path segment, so the suffix is safe.
+ */
+const ENTRY_HASH_PATTERN = /^[0-9a-f]{32}(?::[1-9][0-9]*)?$/;
 
 /**
  * The hash travels to the ledger service as one URL segment, so anything but
@@ -41,7 +45,7 @@ const ENTRY_HASH_PATTERN = /^[0-9a-f]{32}$/;
 export function assertEntryHashFormat(entryHash: string): void {
   if (typeof entryHash !== "string" || !ENTRY_HASH_PATTERN.test(entryHash)) {
     throw new BadUserInputError(
-      "entryHash must be the 32 lowercase hex digits listLedgerEntries returns as entry_hash",
+      "entryHash must be an entry_hash from list output: 32 lowercase hex digits, with a :<n> suffix on a repeated entry",
       "entryHash",
     );
   }

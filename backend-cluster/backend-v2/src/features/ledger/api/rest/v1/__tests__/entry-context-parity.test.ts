@@ -35,17 +35,20 @@ const identity: Identity = {
 };
 
 const SLICE = '2026-06-01 * "QA Insurer" "car insurance"\n';
-// Entry hashes are 32 lowercase hex digits; anything else is refused unread.
+// Entry hashes are 32 lowercase hex digits, with `:<k>` on the k-th
+// byte-identical duplicate; anything else is refused unread.
 const H = {
   copy: "c0".repeat(16),
   own: "a1".repeat(16),
   older: "b2".repeat(16),
   stale: "d3".repeat(16),
+  duplicate: `${"e4".repeat(16)}:1`,
 };
 const contexts: Record<string, { generated_from?: string | null }> = {
   [H.copy]: { generated_from: "template-hash" },
   [H.own]: { generated_from: null },
   [H.older]: {},
+  [H.duplicate]: { generated_from: "duplicate-of-e4" },
 };
 
 let resolver: LedgerJournalQueryResolver;
@@ -283,6 +286,19 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
     }
   });
 
+  // List output names the second of two byte-identical entries
+  // `<hash>:1`; that ID must resolve like any other.
+  it("resolves the :<k> ID of a repeated entry", async () => {
+    const f = await fixture();
+    try {
+      expect(await f.generatedFrom(surface, H.duplicate)).toBe(
+        "duplicate-of-e4",
+      );
+    } finally {
+      await f.close();
+    }
+  });
+
   // w23/m3/t001: the note's repro — the `entry_hash` spelling list output
   // uses works where `entryHash` did. (The MCP resource twin shares the
   // REST query schema and fetch, so it inherits the alias.)
@@ -317,6 +333,10 @@ describe.each(["rest", "gql", "mcp"])("entry context via %s", (surface) => {
     `${H.copy}/x`,
     `${H.copy}%2Fx`,
     H.copy.toUpperCase(),
+    `${H.copy}:`,
+    `${H.copy}:0`,
+    `${H.copy}:01`,
+    `${H.copy}:1:2`,
     "",
   ])("refuses %j as BAD_USER_INPUT without a ledger read", async (bad) => {
     const f = await fixture();
