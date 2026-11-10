@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 840" width="1280" height="840" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR028: Plaid bank connections as built today</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="840" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" font-weight="600">ADR028 — Plaid bank connections today</text>
+  <text x="30" y="58" fill="#57606a">Every transaction waits in staging until a person or an API client submits it. Red markers are the gaps G1–G9 listed in the ADR.</text>
+
+  <!-- Legend -->
+  <rect x="900" y="26" width="14" height="14" rx="3" fill="#eef4ff" stroke="#3b6fd8"/>
+  <text x="920" y="38" fill="#57606a">existing</text>
+  <rect x="985" y="26" width="14" height="14" rx="3" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="1005" y="38" fill="#57606a">external</text>
+  <circle cx="1077" cy="33" r="8" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="1077" y="37" text-anchor="middle" font-size="9" font-weight="600" fill="#cf222e">G</text>
+  <text x="1091" y="38" fill="#57606a">gap</text>
+
+  <!-- Column headers -->
+  <text x="30" y="100" font-size="13" font-weight="600" fill="#57606a">PEOPLE · CLIENTS</text>
+  <text x="300" y="100" font-size="13" font-weight="600" fill="#3b6fd8">BACKEND-V2 · features/plaid</text>
+  <text x="940" y="100" font-size="13" font-weight="600" fill="#57606a">PLAID · STORAGE</text>
+
+  <!-- Connectors (drawn first so boxes sit on top) -->
+  <g fill="none" stroke="#57606a" stroke-width="1.5">
+    <path d="M260 170 H298" marker-end="url(#arrow)"/>
+    <path d="M902 175 H938" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <path d="M940 255 H918 V330 H902" marker-end="url(#arrow)"/>
+    <path d="M902 480 H928 V275 H938" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <path d="M600 435 V453" marker-end="url(#arrow)"/>
+    <path d="M900 540 H938" marker-end="url(#arrow)"/>
+    <path d="M260 705 H298" marker-end="url(#arrow)"/>
+    <path d="M900 705 H938" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- Left: dashboard -->
+  <rect x="30" y="115" width="230" height="250" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="46" y="139" font-size="13" font-weight="600">Dashboard · bank settings</text>
+  <text x="46" y="161">Connect bank (Plaid Link)</text>
+  <text x="46" y="181">Manage accounts · Reconnect</text>
+  <text x="46" y="201">Map each Plaid account to a</text>
+  <text x="46" y="221">ledger account</text>
+  <text x="46" y="241">Review table:</text>
+  <text x="46" y="261">Sync · Suggest · Submit</text>
+  <text x="46" y="291" fill="#57606a" font-style="italic">Link, exchange and reconnect</text>
+  <text x="46" y="309" fill="#57606a" font-style="italic">are GraphQL-only; API keys</text>
+  <text x="46" y="327" fill="#57606a" font-style="italic">cannot start them</text>
+
+  <!-- Left: note on G3 -->
+  <circle cx="44" cy="421" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="44" y="425" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G3</text>
+  <text x="60" y="425" fill="#57606a">Nothing reaches the ledger</text>
+  <text x="60" y="443" fill="#57606a">until a person, or a client</text>
+  <text x="60" y="461" fill="#57606a">holding an API key, submits</text>
+
+  <!-- Left: API and MCP clients -->
+  <rect x="30" y="625" width="230" height="165" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="46" y="649" font-size="13" font-weight="600">API key · MCP clients</text>
+  <text x="46" y="671">Sync, list staged, suggest,</text>
+  <text x="46" y="691">submit, discard, map,</text>
+  <text x="46" y="711">set currency, reconcile</text>
+  <text x="46" y="741" fill="#57606a" font-style="italic">Cannot link or reconnect</text>
+
+  <!-- Middle: link and exchange -->
+  <rect x="300" y="115" width="600" height="150" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="316" y="139" font-size="13" font-weight="600">Link and exchange · plaid-item-service.ts</text>
+  <text x="316" y="161">createPlaidLinkToken: Transactions, US + CA, webhook URL</text>
+  <text x="316" y="181">exchangePublicToken: /item/public_token/exchange, then /item/get</text>
+  <text x="316" y="201">Same institution already on this ledger → ConflictError</text>
+  <text x="316" y="221">…and the refused Item stays live at Plaid: no /item/remove</text>
+  <text x="316" y="241">Saves item + accounts, then saves the LLM account mapping unconfirmed</text>
+  <circle cx="878" cy="197" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="201" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G1</text>
+  <circle cx="878" cy="217" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="221" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G2</text>
+  <circle cx="878" cy="237" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="241" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G9</text>
+
+  <!-- Middle: webhooks -->
+  <rect x="300" y="285" width="600" height="150" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="316" y="309" font-size="13" font-weight="600">Webhooks · POST /api/plaid/webhook</text>
+  <text x="316" y="331">Verify the ES256 JWT, queue in plaid_webhook_events; redeliveries are not deduplicated</text>
+  <text x="316" y="351">Processor every 2 minutes: up to 50 events, 5 attempts</text>
+  <text x="316" y="371">SYNC_UPDATES_AVAILABLE → start a sync; a failed sync is not retried</text>
+  <text x="316" y="391">ITEM_LOGIN_REQUIRED, ERROR → status requires_reauth; nobody is told</text>
+  <text x="316" y="411">NEW_ACCOUNTS_AVAILABLE → ignored</text>
+  <circle cx="878" cy="327" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="331" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G7</text>
+  <circle cx="878" cy="367" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="371" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G7</text>
+  <circle cx="878" cy="387" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="391" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G8</text>
+  <circle cx="878" cy="407" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="411" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G8</text>
+
+  <!-- Middle: cursor sync -->
+  <rect x="300" y="455" width="600" height="150" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="316" y="479" font-size="13" font-weight="600">Cursor sync · plaid-sync-service.ts</text>
+  <text x="316" y="501">In-process lock per item, then /transactions/sync</text>
+  <text x="316" y="521">added → insert · modified → update · removed → hard delete</text>
+  <text x="316" y="541">Pending → posted arrives as a new row with a new import-id, so a</text>
+  <text x="316" y="561">pending entry already in the ledger can be booked a second time</text>
+  <text x="316" y="581">The 6-hour fallback sync job exists but is disabled</text>
+  <circle cx="878" cy="497" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="501" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G6</text>
+  <circle cx="878" cy="537" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="541" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G5</text>
+  <circle cx="878" cy="577" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="581" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G7</text>
+
+  <!-- Middle: review and submit -->
+  <rect x="300" y="625" width="600" height="165" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="316" y="649" font-size="13" font-weight="600">Review and submit · dashboard, REST, GraphQL, MCP</text>
+  <text x="316" y="671">The staged list includes pending rows</text>
+  <text x="316" y="691">Suggested categories: the LLM sees payee, amount and the account list,</text>
+  <text x="316" y="711">but no ledger history; the dashboard ignores confidence; no AI quota</text>
+  <text x="316" y="731">Submit only on request: flag * or !, import-id "plaid:&lt;transactionId&gt;"</text>
+  <text x="316" y="751">No lock, and no compare-and-set on the synced flag</text>
+  <text x="316" y="771">The target file must already exist; default main.bean</text>
+  <circle cx="878" cy="687" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="691" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G4</text>
+  <circle cx="878" cy="707" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="711" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G9</text>
+  <circle cx="878" cy="727" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="731" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G3</text>
+  <circle cx="878" cy="747" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="878" y="751" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G6</text>
+
+  <!-- Right: Plaid -->
+  <rect x="940" y="115" width="310" height="170" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="956" y="139" font-size="13" font-weight="600">Plaid</text>
+  <text x="956" y="161">Link UI: bank login, MFA, consent</text>
+  <text x="956" y="181">/item/public_token/exchange, /item/get</text>
+  <text x="956" y="201">/accounts/get, /transactions/sync</text>
+  <text x="956" y="221">Sends TRANSACTIONS and ITEM webhooks</text>
+  <text x="956" y="241" fill="#57606a">One Item per bank login; each Item</text>
+  <text x="956" y="259" fill="#57606a">has its own transaction ids</text>
+
+  <!-- Right: postgres -->
+  <rect x="940" y="330" width="310" height="230" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="956" y="354" font-size="13" font-weight="600">postgres-backend</text>
+  <text x="956" y="376">plaid_items: AES-256-GCM token,</text>
+  <text x="956" y="394" fill="#57606a">status, sync cursor</text>
+  <text x="956" y="416">plaid_accounts: ledger mapping,</text>
+  <text x="956" y="434" fill="#57606a">currency, enabled</text>
+  <text x="956" y="456">plaid_transactions: the staging area,</text>
+  <text x="956" y="474" fill="#57606a">synced_to_ledger flag</text>
+  <text x="956" y="496">plaid_webhook_events · plaid_sync_logs</text>
+
+  <!-- Right: ledger -->
+  <rect x="940" y="625" width="310" height="165" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="956" y="649" font-size="13" font-weight="600">ledger service → Gitea repository</text>
+  <text x="956" y="671">Entries land in main.bean or an</text>
+  <text x="956" y="691">existing file the caller names</text>
+  <text x="956" y="711">Each entry carries import-id</text>
+  <text x="956" y="731">Nothing arrives without a submit</text>
+  <circle cx="1228" cy="727" r="9" fill="#ffebe9" stroke="#cf222e"/>
+  <text x="1228" y="731" text-anchor="middle" font-size="10" font-weight="600" fill="#cf222e">G3</text>
+
+  <text x="30" y="824" font-size="11" fill="#57606a">Baseline: main at c52b750fbd (2026-11-09), which production builds. Webhooks reach backend-v2 through api.v3.beancount.io with PLAID_WEBHOOK_URL set.</text>
+</svg>

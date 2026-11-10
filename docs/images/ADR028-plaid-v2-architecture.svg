@@ -1,0 +1,203 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 960" width="1280" height="960" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR028: Plaid bank connections v2</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2f8f4e"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="960" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" font-weight="600">ADR028 — Plaid bank connections v2</text>
+  <text x="30" y="58" fill="#57606a">Posted, history-matched transactions on opted-in accounts reach the ledger on their own; the rest wait for review. Tags name decisions D1–D9.</text>
+
+  <!-- Legend -->
+  <rect x="860" y="26" width="14" height="14" rx="3" fill="#eef4ff" stroke="#3b6fd8"/>
+  <text x="880" y="38" fill="#57606a">existing</text>
+  <rect x="945" y="26" width="14" height="14" rx="3" fill="#fff8e5" stroke="#bf8700"/>
+  <text x="965" y="38" fill="#57606a">changed</text>
+  <rect x="1030" y="26" width="14" height="14" rx="3" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="1050" y="38" fill="#57606a">new</text>
+  <rect x="1090" y="26" width="14" height="14" rx="3" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="1110" y="38" fill="#57606a">external</text>
+
+  <!-- Column headers -->
+  <text x="30" y="100" font-size="13" font-weight="600" fill="#57606a">PEOPLE · CLIENTS</text>
+  <text x="300" y="100" font-size="13" font-weight="600" fill="#3b6fd8">BACKEND-V2 · features/plaid</text>
+  <text x="940" y="100" font-size="13" font-weight="600" fill="#57606a">PLAID · STORAGE · CONSUMERS</text>
+
+  <!-- Connectors -->
+  <g fill="none" stroke="#57606a" stroke-width="1.5">
+    <path d="M260 170 H298" marker-end="url(#arrow)"/>
+    <path d="M902 175 H938" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <path d="M940 255 H918 V330 H902" marker-end="url(#arrow)"/>
+    <path d="M902 480 H928 V275 H938" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <path d="M600 415 V433" marker-end="url(#arrow)"/>
+    <path d="M600 575 V593" marker-end="url(#arrow)"/>
+    <path d="M900 540 H938" marker-end="url(#arrow)"/>
+    <path d="M900 800 H938" marker-end="url(#arrow)"/>
+    <path d="M260 810 H298" marker-end="url(#arrow)"/>
+    <path d="M1095 845 V822" marker-end="url(#arrow)"/>
+  </g>
+  <g fill="none" stroke="#2f8f4e" stroke-width="1.75">
+    <path d="M900 665 H938" marker-end="url(#arrow-green)"/>
+    <path d="M300 408 H262" marker-end="url(#arrow-green)"/>
+  </g>
+
+  <!-- Left: dashboard -->
+  <rect x="30" y="115" width="230" height="250" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="46" y="139" font-size="13" font-weight="600">Dashboard · bank settings</text>
+  <text x="46" y="161">Connect bank: one connection</text>
+  <text x="46" y="181">per bank login (D1)</text>
+  <text x="46" y="201">Manage accounts · Reconnect</text>
+  <text x="46" y="221">Confirm suggested mappings (D9)</text>
+  <text x="46" y="241">Auto-import per bank account:</text>
+  <text x="46" y="261">off | history (D5)</text>
+  <text x="46" y="281">Banner when a bank needs</text>
+  <text x="46" y="301">attention (D8)</text>
+  <text x="46" y="321">Review: history matches first</text>
+
+  <!-- Left: email -->
+  <rect x="30" y="380" width="230" height="90" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="46" y="404" font-size="13" font-weight="600">Email to the bank's owner</text>
+  <text x="46" y="426">Reconnect needed, or new</text>
+  <text x="46" y="446">accounts to share (D8)</text>
+
+  <!-- Left: API and MCP clients -->
+  <rect x="30" y="745" width="230" height="125" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="46" y="769" font-size="13" font-weight="600">API key · MCP clients</text>
+  <text x="46" y="791">setBankAccountAutoImport (new)</text>
+  <text x="46" y="811">Suggestions carry source</text>
+  <text x="46" y="831">Banks carry needsAttention</text>
+  <text x="46" y="855" fill="#57606a" font-style="italic">Still cannot link or reconnect</text>
+
+  <!-- Middle: link and exchange -->
+  <rect x="300" y="115" width="600" height="140" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="316" y="139" font-size="13" font-weight="600">Link and exchange</text>
+  <text x="316" y="161">Duplicate = an account already linked to this ledger, checked before exchange:</text>
+  <text x="316" y="181">same persistent_account_id, else same institution, name and mask</text>
+  <text x="316" y="201">Refused after exchange, or failed to save → /item/remove first</text>
+  <text x="316" y="221">Item and its accounts saved in one database transaction</text>
+  <text x="316" y="241">Account mapping is suggested, and saved only when confirmed</text>
+  <rect x="850" y="149" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="161" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D1</text>
+  <rect x="850" y="189" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="201" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D2</text>
+  <rect x="850" y="209" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="221" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D2</text>
+  <rect x="850" y="229" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="241" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D9</text>
+
+  <!-- Middle: webhooks -->
+  <rect x="300" y="275" width="600" height="140" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="316" y="299" font-size="13" font-weight="600">Webhooks · POST /api/plaid/webhook</text>
+  <text x="316" y="321">Redeliveries deduplicated by body hash; stuck rows reclaimed</text>
+  <text x="316" y="341">A failed sync fails the event, so the queue retries it</text>
+  <text x="316" y="361">ITEM_LOGIN_REQUIRED, ERROR → needsAttention: reauth, and an email</text>
+  <text x="316" y="381">NEW_ACCOUNTS_AVAILABLE → needsAttention: new_accounts, and an email</text>
+  <text x="316" y="401">Login errors read from Plaid's error_code, not the message text</text>
+  <rect x="850" y="309" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="321" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D3</text>
+  <rect x="850" y="329" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="341" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D3</text>
+  <rect x="850" y="349" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="361" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D8</text>
+  <rect x="850" y="369" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="381" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D8</text>
+  <rect x="850" y="389" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="401" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D3</text>
+
+  <!-- Middle: cursor sync -->
+  <rect x="300" y="435" width="600" height="140" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="316" y="459" font-size="13" font-weight="600">Cursor sync</text>
+  <text x="316" y="481">Per-item lock, shared with every submit</text>
+  <text x="316" y="501">A posted row that replaces a submitted pending row updates that</text>
+  <text x="316" y="521">entry instead of staging a second one</text>
+  <text x="316" y="541">Removed after submit → flagged for review, not deleted</text>
+  <text x="316" y="561">6-hour fallback sync enabled</text>
+  <rect x="850" y="469" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="481" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D7</text>
+  <rect x="850" y="489" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="501" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D6</text>
+  <rect x="850" y="529" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="541" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D6</text>
+  <rect x="850" y="549" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="561" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D3</text>
+
+  <!-- Middle: auto-import (new) -->
+  <rect x="300" y="595" width="600" height="140" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="316" y="619" font-size="13" font-weight="600">Auto-import · runs after every sync</text>
+  <text x="316" y="641">Only bank accounts with autoImport = history, a mapping and a currency</text>
+  <text x="316" y="661">Only posted rows; pending rows wait for the posted version</text>
+  <text x="316" y="681">History match, high tier: the payee matches at least two earlier</text>
+  <text x="316" y="701">entries on this account, all with the same counter-account; no AI call</text>
+  <text x="316" y="721">Submitted as plaid_webhook or plaid_scheduler; the rest stay staged</text>
+  <rect x="850" y="629" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="641" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D5</text>
+  <rect x="850" y="649" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="661" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D6</text>
+  <rect x="850" y="669" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="681" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D4</text>
+  <rect x="850" y="709" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="721" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D5</text>
+
+  <!-- Middle: review and submit -->
+  <rect x="300" y="755" width="600" height="120" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="316" y="779" font-size="13" font-weight="600">Review and submit · dashboard, REST, GraphQL, MCP</text>
+  <text x="316" y="801">Suggestions: history first at no AI cost; the LLM only on request</text>
+  <text x="316" y="821">LLM suggestions are quota-gated and recorded like other AI calls</text>
+  <text x="316" y="841">Submit takes the item lock; the synced flag is a compare-and-set</text>
+  <text x="316" y="861">Each row stores its own entry hash</text>
+  <rect x="850" y="789" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="801" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D4</text>
+  <rect x="850" y="809" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="821" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D9</text>
+  <rect x="850" y="829" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="841" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D7</text>
+  <rect x="850" y="849" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="866" y="861" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D7</text>
+
+  <!-- Right: Plaid -->
+  <rect x="940" y="115" width="310" height="170" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="956" y="139" font-size="13" font-weight="600">Plaid</text>
+  <text x="956" y="161">Link UI: bank login, MFA, consent</text>
+  <text x="956" y="181">/item/public_token/exchange, /item/get</text>
+  <text x="956" y="201">/accounts/get, /transactions/sync</text>
+  <text x="956" y="221">/item/remove on every dropped Item</text>
+  <text x="956" y="241" fill="#57606a">Sends TRANSACTIONS and ITEM webhooks</text>
+  <text x="956" y="259" fill="#57606a">via api.v3.beancount.io</text>
+
+  <!-- Right: postgres -->
+  <rect x="940" y="330" width="310" height="230" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="956" y="354" font-size="13" font-weight="600">postgres-backend</text>
+  <text x="956" y="376">plaid_accounts:</text>
+  <text x="956" y="394" fill="#57606a">+ auto_import, + target_file,</text>
+  <text x="956" y="412" fill="#57606a">+ persistent_account_id</text>
+  <text x="956" y="434">plaid_items:</text>
+  <text x="956" y="452" fill="#57606a">+ needs_attention</text>
+  <text x="956" y="474">plaid_transactions:</text>
+  <text x="956" y="492" fill="#57606a">+ removed state, entry hash per row</text>
+  <text x="956" y="514">plaid_webhook_events:</text>
+  <text x="956" y="532" fill="#57606a">+ body hash, unique while the row is kept</text>
+
+  <!-- Right: ledger -->
+  <rect x="940" y="615" width="310" height="205" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="956" y="639" font-size="13" font-weight="600">ledger service → Gitea repository</text>
+  <text x="956" y="661">Auto-imported entries carry</text>
+  <text x="956" y="681">import-id and import-rule: "history"</text>
+  <text x="956" y="701">A pending entry is updated in place</text>
+  <text x="956" y="721">when its posted version arrives</text>
+  <text x="956" y="741">Target file chosen per bank account,</text>
+  <text x="956" y="761">default main.bean</text>
+  <text x="956" y="791" fill="#2f8f4e" font-weight="600">Green arrow: automatic, no person</text>
+
+  <!-- Right: consumers -->
+  <rect x="940" y="845" width="310" height="80" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="956" y="869" font-size="13" font-weight="600">Customer jobs</text>
+  <text x="956" y="891">For example a receipt matcher that</text>
+  <text x="956" y="911">attaches receipts by import-id</text>
+
+  <text x="30" y="948" font-size="11" fill="#57606a">Unchanged: first link and reconnect need the account holder in Plaid Link, so they stay manual; the per-item lock stays in-process while backend-v2 runs one instance.</text>
+</svg>
