@@ -257,3 +257,108 @@ describe("accountHierarchy balance strings", () => {
     ).toEqual({ EUR: "1000.00" });
   });
 });
+
+// w22/016: Accounts read "Not in total: 1,800 EUR" for 10 VTI {180.00 EUR} (no
+// VTI price) beside "970.00 EUR" for a mixed account, and the account's own
+// journal read +1,800.00 EUR. A valued amount keeps the places of its units and
+// its cost, as the journal and Python's Decimal do.
+describe("accountHierarchy balances valued at a cost or a price", () => {
+  const buy = (account: string, cost: string): DirectiveJson =>
+    ({
+      type: "transaction",
+      date: "2026-07-01",
+      flag: "*",
+      narration: "Buy VTI",
+      tags: [],
+      links: [],
+      postings: [
+        {
+          account,
+          units: { number: "10", currency: "VTI" },
+          cost: { number: { kind: "per_unit", value: cost }, currency: "EUR" },
+        },
+        { account: "Equity:Opening", units: { number: "-1800.00", currency: "EUR" } },
+      ],
+    }) as DirectiveJson;
+  const price = (number: string): DirectiveJson =>
+    ({
+      type: "price",
+      date: "2026-07-02",
+      currency: "VTI",
+      amount: { number, currency: "EUR" },
+    }) as DirectiveJson;
+  const balance = (
+    directives: DirectiveJson[],
+    account: string,
+    conversion: string,
+  ) =>
+    accountHierarchy(
+      directives,
+      account,
+      conversion,
+      buildPriceMap(directives),
+    ).balance;
+
+  it("keeps the cost's places for a lot with no price", () => {
+    const directives = [buy("Assets:BrokerEur", "180.00")];
+    expect(balance(directives, "Assets:BrokerEur", "at_value")).toEqual({
+      EUR: "1800.00",
+    });
+    expect(balance(directives, "Assets:BrokerEur", "at_cost")).toEqual({
+      EUR: "1800.00",
+    });
+  });
+
+  it("keeps the price's places for a lot with one", () => {
+    const directives = [buy("Assets:BrokerEur", "180.00"), price("200.00")];
+    expect(balance(directives, "Assets:BrokerEur", "at_value")).toEqual({
+      EUR: "2000.00",
+    });
+  });
+
+  it("sums several lots and currencies at the widest places", () => {
+    // The QA "Mixed" account: 3 VTI {180.00 EUR}, 2 VTI {190.00 EUR},
+    // 4 VTI {200.00 USD} and 50.00 EUR of cash, no VTI price.
+    const lot = (number: string, cost: string, currency: string) => ({
+      account: "Assets:Mixed",
+      units: { number, currency: "VTI" },
+      cost: { number: { kind: "per_unit", value: cost }, currency },
+    });
+    const mixed = {
+      type: "transaction",
+      date: "2026-07-01",
+      flag: "*",
+      narration: "Mixed",
+      tags: [],
+      links: [],
+      postings: [
+        lot("3", "180.00", "EUR"),
+        lot("2", "190.00", "EUR"),
+        lot("4", "200.00", "USD"),
+        { account: "Assets:Mixed", units: { number: "50.00", currency: "EUR" } },
+      ],
+    } as unknown as DirectiveJson;
+    expect(balance([mixed], "Assets:Mixed", "at_value")).toEqual({
+      EUR: "970.00",
+      USD: "800.00",
+    });
+  });
+
+  it("reads the same amount the same way beside written-scale cash", () => {
+    const withCash: DirectiveJson = {
+      type: "transaction",
+      date: "2026-07-03",
+      flag: "*",
+      narration: "Cash",
+      tags: [],
+      links: [],
+      postings: [
+        { account: "Assets:BrokerEur", units: { number: "500.00", currency: "EUR" } },
+        { account: "Equity:Opening", units: { number: "-500.00", currency: "EUR" } },
+      ],
+    } as DirectiveJson;
+    expect(
+      balance([buy("Assets:BrokerEur", "180.00"), withCash], "Assets:BrokerEur", "at_value"),
+    ).toEqual({ EUR: "2300.00" });
+  });
+});

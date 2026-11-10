@@ -11,6 +11,12 @@ const Division = BigNumber.clone({
   ROUNDING_MODE: BigNumber.ROUND_HALF_EVEN,
 });
 
+/** Decimal places a number was written with: `"1250.50"` -> 2, `"7"` -> 0. */
+export function writtenScale(number: string): number {
+  const dot = number.indexOf(".");
+  return dot < 0 ? 0 : number.length - dot - 1;
+}
+
 /** `numerator / denominator` under Python Decimal's default context. */
 export function divideWithPythonDecimalContext(
   numerator: BigNumber.Value,

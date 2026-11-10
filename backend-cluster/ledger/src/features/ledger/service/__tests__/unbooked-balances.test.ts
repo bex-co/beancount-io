@@ -127,8 +127,9 @@ describe("a ledger with a sale that failed booking", () => {
     const cash = find(report.assets_hierarchy_data, "Assets:BrCash");
     const broker = find(report.assets_hierarchy_data, "Assets:Broker");
     expect(cash?.balance).toEqual({ USD: "4000.00" });
-    // 10 VTI at cost 100, none sold.
-    expect(broker?.balance).toEqual({ USD: "1000" });
+    // 10 VTI at cost 100.00, none sold: 10 x 100.00 keeps both places of the
+    // cost, as Python's Decimal multiplies (w22/016).
+    expect(broker?.balance).toEqual({ USD: "1000.00" });
     // Nothing realized: the interpolated gains leg never existed.
     expect(find(report.income_hierarchy_data, "Income:Gains")?.balance).toEqual(
       {},

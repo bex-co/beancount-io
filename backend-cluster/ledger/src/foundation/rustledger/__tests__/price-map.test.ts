@@ -89,3 +89,47 @@ describe("convertInventory", () => {
     expect(out.has("USD")).toBe(false);
   });
 });
+
+// w22/016: a rate's written places travel with it, because Decimal multiplication
+// sums them and a BigNumber has already dropped its trailing zeros.
+describe("getScaledRate", () => {
+  const map = buildPriceMap([
+    ...prices,
+    {
+      type: "price",
+      date: "2024-03-01",
+      currency: "VTI",
+      amount: { number: "200.00", currency: "EUR" },
+    } as DirectiveJson,
+  ]);
+
+  it("returns the price as written, with its places", () => {
+    expect(map.getScaledRate("VTI", "EUR")?.scale).toBe(2);
+    expect(map.getScaledRate("VTI", "EUR")?.value.toString()).toBe("200");
+    expect(map.getScaledRate("EUR", "USD", "2024-01-15")?.scale).toBe(2);
+  });
+
+  it("gives an inverse the places of its own quotient", () => {
+    const inverse = map.getScaledRate("EUR", "VTI");
+    expect(inverse?.scale).toBe(inverse?.value.decimalPlaces() ?? 0);
+    expect(inverse?.value.toString()).toBe("0.005");
+  });
+
+  it("gives the identity rate no places, and no path no rate", () => {
+    expect(map.getScaledRate("EUR", "EUR")?.scale).toBe(0);
+    expect(map.getScaledRate("JPY", "USD")).toBeNull();
+    expect(map.getScaledRate("EUR", "USD", "2024-01-05")).toBeNull();
+  });
+
+  it("agrees with getRate on the value", () => {
+    for (const [base, quote, date] of [
+      ["EUR", "USD", "2024-02-15"],
+      ["VTI", "EUR", undefined],
+      ["USD", "EUR", "2024-02-15"],
+    ] as const) {
+      expect(map.getScaledRate(base, quote, date)?.value.toString()).toBe(
+        map.getRate(base, quote, date)?.toString(),
+      );
+    }
+  });
+});

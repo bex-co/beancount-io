@@ -95,7 +95,9 @@ describe("closeCurrentEarnings", () => {
     expect(
       accountHierarchy(closed, "Equity:Earnings:Current", "at_cost", prices)
         .balance,
-    ).toEqual({ USD: "-164.250" });
+      // -2.000 HOOL {84.60 USD} is -169.20000 (3 + 2 places), plus 4.950 and
+      // 164.250 of cash: Python's Decimal keeps the widest, 5 (w22/016).
+    ).toEqual({ USD: "-164.25000" });
     expect(
       accountHierarchy(closed, "Equity:Earnings:Current", "units", prices)
         .balance,

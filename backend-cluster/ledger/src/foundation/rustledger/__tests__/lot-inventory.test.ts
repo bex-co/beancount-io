@@ -303,3 +303,137 @@ describe("LotInventory valuation (fava conversion.py parity)", () => {
     });
   });
 });
+
+// w22/016: a lot valued at its cost or a price lost the decimal places it was
+// written with. BigNumber has no trailing zeros, so `10 x 180.00` was `1800`
+// where the account journal and Python's Decimal say `1800.00`, and clients
+// read the display scale from the string. A product's places are the sum of
+// its operands'; a sum keeps the widest.
+describe("valued amounts keep Decimal's decimal places (w22/016)", () => {
+  /** reduceScaled as the strings the API serialises (`toFixed(scale)`). */
+  const scaled = (
+    inventory: LotInventory,
+    conversion: string,
+    prices: PriceMap = NO_PRICES,
+  ) =>
+    Object.fromEntries(
+      [
+        ...inventory.reduceScaled(
+          parseConversion(conversion),
+          prices,
+          "2024-06-01",
+        ),
+      ].map(([currency, { value, scale }]) => [currency, value.toFixed(scale)]),
+    );
+
+  const buy = (
+    number: string,
+    cost: string,
+    currency = "EUR",
+    units = "VTI",
+  ): PostingJson =>
+    ({
+      account: "Assets:Broker",
+      units: { number, currency: units },
+      cost: { number: { kind: "per_unit", value: cost }, currency },
+    }) as PostingJson;
+  const cash = (number: string, currency = "EUR"): PostingJson =>
+    ({
+      account: "Assets:Broker",
+      units: { number, currency },
+    }) as PostingJson;
+  const held = (...postings: PostingJson[]) => {
+    const inventory = new LotInventory();
+    postings.forEach((posting) => inventory.addPosting(posting));
+    return inventory;
+  };
+
+  it("keeps the cost's places when an unpriced lot is valued at its cost", () => {
+    // The QA ledger: 10 VTI {180.00 EUR}, no VTI price.
+    expect(scaled(held(buy("10", "180.00")), "at_value")).toEqual({
+      EUR: "1800.00",
+    });
+    expect(scaled(held(buy("10", "180.00")), "at_cost")).toEqual({
+      EUR: "1800.00",
+    });
+  });
+
+  it("adds the units' places to the cost's", () => {
+    expect(scaled(held(buy("2.500", "84.60")), "at_cost")).toEqual({
+      EUR: "211.50000",
+    });
+    expect(scaled(held(buy("0.5", "1.25")), "at_cost")).toEqual({
+      EUR: "0.625",
+    });
+  });
+
+  it("keeps the price's places when a lot is valued at a price", () => {
+    const prices = buildPriceMap([priceDir("VTI", "200.00", "EUR")]);
+    expect(scaled(held(buy("10", "180.00")), "at_value", prices)).toEqual({
+      EUR: "2000.00",
+    });
+    // And on a conversion to the price's currency.
+    expect(scaled(held(buy("10", "180.00", "USD")), "EUR", prices)).toEqual({
+      EUR: "2000.00",
+    });
+  });
+
+  it("adds both rates' places across a two-hop conversion", () => {
+    const prices = buildPriceMap([
+      priceDir("VTI", "2.0", "USD"),
+      priceDir("USD", "0.90", "EUR"),
+    ]);
+    // 10 x 2.0 x 0.90 = 18.000: 0 + 1 + 2 places.
+    expect(scaled(held(buy("10", "180.00", "USD")), "EUR", prices)).toEqual({
+      EUR: "18.000",
+    });
+  });
+
+  it("leaves an amount written without places without any", () => {
+    expect(scaled(held(buy("10", "10", "USD", "HOOL")), "at_value")).toEqual({
+      USD: "100",
+    });
+    expect(scaled(held(buy("10", "180", "EUR")), "at_cost")).toEqual({
+      EUR: "1800",
+    });
+  });
+
+  it("keeps a passed-through amount's own places beside a valued one", () => {
+    // BrokerEur: the same purchase plus 500.00 of cash read 2300.00 and the
+    // lone purchase 1800 — one amount, two spellings.
+    expect(
+      scaled(held(buy("10", "180.00"), cash("500.00")), "at_value"),
+    ).toEqual({ EUR: "2300.00" });
+    expect(scaled(held(cash("500.00")), "at_value")).toEqual({ EUR: "500.00" });
+  });
+
+  it("takes the widest places across lots valued together", () => {
+    expect(
+      scaled(held(buy("10", "180"), buy("5", "190.50")), "at_cost"),
+    ).toEqual({ EUR: "2752.50" });
+  });
+
+  it("gives a total cost the places of its per-unit quotient", () => {
+    // {{1800.00 EUR}} over 10 units is 180.00 a unit, so 10 units value to
+    // 1800.00 (Decimal('1800.00') / Decimal('10') is Decimal('180.00')).
+    const total = {
+      account: "Assets:Broker",
+      units: { number: "10", currency: "VTI" },
+      cost: { number: { kind: "total", value: "1800.00" }, currency: "EUR" },
+    } as PostingJson;
+    expect(scaled(held(total), "at_cost")).toEqual({ EUR: "1800.00" });
+  });
+
+  it("keeps a value's places through a unit sale that nets the lot", () => {
+    expect(
+      scaled(held(buy("10", "180.00"), buy("-4", "180.00")), "at_cost"),
+    ).toEqual({ EUR: "1080.00" });
+  });
+
+  it("still reads raw units under `units` and `units_by_cost` as written", () => {
+    expect(scaled(held(buy("10", "180.00")), "units")).toEqual({ VTI: "10" });
+    expect(scaled(held(buy("10.50", "180.00")), "units")).toEqual({
+      VTI: "10.50",
+    });
+  });
+});

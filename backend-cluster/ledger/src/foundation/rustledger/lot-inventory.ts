@@ -1,7 +1,8 @@
 import BigNumber from "bignumber.js";
 import type { PostingJson } from "@rustledger/wasm";
 import type { PriceMap } from "./price-map";
-import { perUnitFromTotalCost } from "./total-cost";
+import { perUnitFromTotalCost, perUnitFromTotalCostString } from "./total-cost";
+import { writtenScale } from "./decimal-context";
 
 /**
  * A cost-lot-aware inventory + Fava's three valuation reducers, ported from
@@ -40,8 +41,13 @@ interface Lot {
   scale: number;
   currency: string;
   costNumber: BigNumber | null;
+  /** Decimal places the per-unit cost was written with, at their widest. */
+  costScale: number;
   costCurrency: string | null;
 }
+
+/** An amount, its currency, and the decimal places Python's `Decimal` keeps. */
+type ValuedAmount = [currency: string, value: BigNumber, scale: number];
 
 /**
  * How an inventory is valued before display — Fava's conversion keywords. A bare
@@ -92,29 +98,59 @@ export function parseConversion(target: string): Conversion {
  */
 function bookedCostPerUnit(
   posting: PostingJson,
-): { number: BigNumber; currency: string } | null {
+): { number: BigNumber; currency: string; scale: number } | null {
   const cost = posting.cost;
   if (!cost || !cost.number || !cost.currency) return null;
   const n = cost.number;
+  const unitsNumber = posting.units?.number;
+  // The places a per-unit cost carries into a valued amount, as Python's
+  // `Decimal` keeps them: as written, and for a total divided by the units the
+  // exact quotient's ideal places (`1000.00 / 10` is `100.00`, w22/016).
+  const resolvedScale = (total: string, perUnit: BigNumber): number =>
+    Math.max(
+      perUnit.decimalPlaces() ?? 0,
+      writtenScale(perUnitFromTotalCostString(total, unitsNumber) ?? ""),
+    );
   switch (n.kind) {
     case "per_unit":
-      return { number: new Amount(n.value), currency: cost.currency };
+      return {
+        number: new Amount(n.value),
+        currency: cost.currency,
+        scale: writtenScale(n.value),
+      };
     case "per_unit_from_total":
-      return { number: new Amount(n.per_unit), currency: cost.currency };
+      return {
+        number: new Amount(n.per_unit),
+        currency: cost.currency,
+        scale: writtenScale(n.per_unit),
+      };
     case "compound": {
-      const totalPart = perUnitFromTotalCost(n.total, posting.units?.number);
+      const totalPart = perUnitFromTotalCost(n.total, unitsNumber);
       if (totalPart === null) {
-        return { number: new Amount(n.per_unit), currency: cost.currency };
+        return {
+          number: new Amount(n.per_unit),
+          currency: cost.currency,
+          scale: writtenScale(n.per_unit),
+        };
       }
       return {
         number: new Amount(n.per_unit).plus(totalPart),
         currency: cost.currency,
+        // A sum keeps the wider operand's places.
+        scale: Math.max(
+          writtenScale(n.per_unit),
+          resolvedScale(n.total, totalPart),
+        ),
       };
     }
     case "total": {
-      const perUnit = perUnitFromTotalCost(n.value, posting.units?.number);
+      const perUnit = perUnitFromTotalCost(n.value, unitsNumber);
       if (perUnit === null) return null;
-      return { number: perUnit, currency: cost.currency };
+      return {
+        number: perUnit,
+        currency: cost.currency,
+        scale: resolvedScale(n.value, perUnit),
+      };
     }
     default:
       return null;
@@ -130,48 +166,83 @@ function lotKey(
   return `${currency}\0${costNumber ? costNumber.toString() : ""}\0${costCurrency ?? ""}`;
 }
 
-/** Value one lot under `conversion`, returning `[currency, amount]`. */
+/**
+ * Value one lot under `conversion`, returning `[currency, amount, scale]`. The
+ * scale is Python's `Decimal` rule: a product's places are the sum of its
+ * operands' (`10 × 180.00` is `1800.00`), where the `BigNumber` product alone
+ * would say `1800` (w22/016).
+ */
 function valueLot(
   lot: Lot,
   conversion: Conversion,
   priceMap: PriceMap,
   date: string | undefined,
-): [string, BigNumber] {
+): ValuedAmount {
   switch (conversion.kind) {
     case "units":
-      return [lot.currency, lot.number];
+      return [lot.currency, lot.number, lot.scale];
     case "units_by_cost":
-      return [unitsByCostKey(lot.currency, lot.costCurrency), lot.number];
+      return [
+        unitsByCostKey(lot.currency, lot.costCurrency),
+        lot.number,
+        lot.scale,
+      ];
     case "at_cost":
       // get_cost: units × per-unit cost, in the cost currency (else raw units).
       if (lot.costNumber && lot.costCurrency) {
-        return [lot.costCurrency, lot.number.times(lot.costNumber)];
+        return [
+          lot.costCurrency,
+          lot.number.times(lot.costNumber),
+          lot.scale + lot.costScale,
+        ];
       }
-      return [lot.currency, lot.number];
+      return [lot.currency, lot.number, lot.scale];
     case "at_value": {
       // get_market_value: price(units→cost.ccy) × units, else the COST value —
       // in the cost currency; a cost-less lot stays in its units currency.
       if (lot.costNumber && lot.costCurrency) {
-        const rate = priceMap.getRate(lot.currency, lot.costCurrency, date);
-        if (rate) return [lot.costCurrency, lot.number.times(rate)];
-        return [lot.costCurrency, lot.number.times(lot.costNumber)];
+        const rate = priceMap.getScaledRate(lot.currency, lot.costCurrency, date);
+        if (rate) {
+          return [
+            lot.costCurrency,
+            lot.number.times(rate.value),
+            lot.scale + rate.scale,
+          ];
+        }
+        return [
+          lot.costCurrency,
+          lot.number.times(lot.costNumber),
+          lot.scale + lot.costScale,
+        ];
       }
-      return [lot.currency, lot.number];
+      return [lot.currency, lot.number, lot.scale];
     }
     case "currency": {
       // convert_position to the first target: direct price, else a cost-currency
       // two-hop (units → cost.ccy → target), else the raw units.
       const target = conversion.targets[0];
-      const direct = priceMap.getRate(lot.currency, target, date);
-      if (direct) return [target, lot.number.times(direct)];
+      const direct = priceMap.getScaledRate(lot.currency, target, date);
+      if (direct) {
+        return [
+          target,
+          lot.number.times(direct.value),
+          lot.scale + direct.scale,
+        ];
+      }
       if (lot.costCurrency && lot.costCurrency !== target) {
-        const r1 = priceMap.getRate(lot.currency, lot.costCurrency, date);
+        const r1 = priceMap.getScaledRate(lot.currency, lot.costCurrency, date);
         if (r1) {
-          const r2 = priceMap.getRate(lot.costCurrency, target, date);
-          if (r2) return [target, lot.number.times(r1).times(r2)];
+          const r2 = priceMap.getScaledRate(lot.costCurrency, target, date);
+          if (r2) {
+            return [
+              target,
+              lot.number.times(r1.value).times(r2.value),
+              lot.scale + r1.scale + r2.scale,
+            ];
+          }
         }
       }
-      return [lot.currency, lot.number];
+      return [lot.currency, lot.number, lot.scale];
     }
   }
 }
@@ -189,6 +260,7 @@ export class LotInventory {
     if (!posting.units) return;
     const perUnit = bookedCostPerUnit(posting);
     const costNumber = perUnit?.number ?? null;
+    const costScale = perUnit?.scale ?? 0;
     const costCurrency = perUnit?.currency ?? null;
     const key = lotKey(posting.units.currency, costNumber, costCurrency);
     const incoming = new Amount(posting.units.number);
@@ -197,6 +269,7 @@ export class LotInventory {
     if (existing) {
       existing.number = existing.number.plus(incoming);
       existing.scale = Math.max(existing.scale, scale);
+      existing.costScale = Math.max(existing.costScale, costScale);
       return;
     }
     this.lots.set(key, {
@@ -204,6 +277,7 @@ export class LotInventory {
       scale,
       currency: posting.units.currency,
       costNumber,
+      costScale,
       costCurrency,
     });
   }
@@ -222,6 +296,7 @@ export class LotInventory {
       if (existing) {
         existing.number = existing.number.plus(lot.number);
         existing.scale = Math.max(existing.scale, lot.scale);
+        existing.costScale = Math.max(existing.costScale, lot.costScale);
       } else this.lots.set(key, { ...lot });
     });
   }
@@ -242,7 +317,9 @@ export class LotInventory {
   /**
    * {@link reduce}, keeping each amount's decimal places: the units' written
    * scale where they pass through unconverted (`1250.50 EUR` stays two
-   * places), a valued amount's own places otherwise, the widest across a sum.
+   * places), the units' plus the cost's or price's written places where they
+   * are valued (`10 × 180.00` is `1800.00`, as Python's `Decimal` multiplies),
+   * the widest across a sum.
    * Serialised with `toString()`, `0.00000050` went out as `5e-7` and
    * `1250.50` as `1250.5`, and clients read the display scale from that
    * string (w21/125).
@@ -256,11 +333,12 @@ export class LotInventory {
     // First pass — value each lot (cost-aware) into targets[0] (or the sole
     // target for non-currency conversions).
     this.lots.forEach((lot) => {
-      const [currency, value] = valueLot(lot, conversion, priceMap, date);
-      const scale =
-        currency === lot.currency || conversion.kind === "units_by_cost"
-          ? lot.scale
-          : (value.decimalPlaces() ?? 0);
+      const [currency, value, scale] = valueLot(
+        lot,
+        conversion,
+        priceMap,
+        date,
+      );
       addScaledInto(out, currency, value, scale);
     });
 
@@ -275,14 +353,13 @@ export class LotInventory {
         const target = conversion.targets[i];
         const next = new Map<string, { value: BigNumber; scale: number }>();
         out.forEach(({ value, scale }, currency) => {
-          const rate = priceMap.getRate(currency, target, date);
+          const rate = priceMap.getScaledRate(currency, target, date);
           if (rate) {
-            const converted = value.times(rate);
             addScaledInto(
               next,
               target,
-              converted,
-              converted.decimalPlaces() ?? 0,
+              value.times(rate.value),
+              scale + rate.scale,
             );
           } else addScaledInto(next, currency, value, scale);
         });
@@ -312,8 +389,4 @@ function addScaledInto(
   );
 }
 
-/** Decimal places a number was written with: `"1250.50"` → 2. */
-function writtenScale(number: string): number {
-  const dot = number.indexOf(".");
-  return dot < 0 ? 0 : number.length - dot - 1;
-}
+

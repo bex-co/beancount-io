@@ -1,6 +1,9 @@
 import BigNumber from "bignumber.js";
 import type { DirectiveJson } from "@rustledger/wasm";
-import { divideWithPythonDecimalContext } from "./decimal-context";
+import {
+  divideWithPythonDecimalContext,
+  writtenScale,
+} from "./decimal-context";
 
 const Rate = BigNumber.clone({
   DECIMAL_PLACES: 28,
@@ -10,6 +13,14 @@ const Rate = BigNumber.clone({
 interface PricePoint {
   date: string;
   rate: BigNumber;
+  /** Decimal places the price was written with (an inverse: its own places). */
+  scale: number;
+}
+
+/** A rate with the decimal places Python's `Decimal` would keep for it. */
+interface ScaledRate {
+  value: BigNumber;
+  scale: number;
 }
 
 const SEP = " ";
@@ -21,9 +32,16 @@ const key = (base: string, quote: string): string => `${base}${SEP}${quote}`;
  * quoted rate and its inverse, keeps the last rate per day, and resolves the
  * latest (or as-of-date) rate for a currency pair. `getRate(base, quote)`
  * returns a stringifiable `BigNumber`, or `null` when no path exists.
+ *
+ * `getScaledRate` is the same lookup with the price's written decimal places.
+ * `Decimal` multiplication sums the operands' places (`10 * Decimal("200.00")`
+ * is `Decimal("2000.00")`) and a `BigNumber` rate has already dropped its
+ * trailing zeros, so a valued amount's places cannot be recovered from the
+ * product (w22/016).
  */
 export interface PriceMap {
   getRate(base: string, quote: string, date?: string): BigNumber | null;
+  getScaledRate(base: string, quote: string, date?: string): ScaledRate | null;
 }
 
 export function buildPriceMap(directives: DirectiveJson[]): PriceMap {
@@ -34,23 +52,32 @@ export function buildPriceMap(directives: DirectiveJson[]): PriceMap {
     quote: string,
     date: string,
     rate: BigNumber,
+    scale: number,
   ): void => {
     const k = key(base, quote);
     const list = raw.get(k);
-    if (list) list.push({ date, rate });
-    else raw.set(k, [{ date, rate }]);
+    if (list) list.push({ date, rate, scale });
+    else raw.set(k, [{ date, rate, scale }]);
   };
 
   directives.forEach((directive) => {
     if (directive.type !== "price") return;
     const rate = new Rate(directive.amount.number);
-    add(directive.currency, directive.amount.currency, directive.date, rate);
+    add(
+      directive.currency,
+      directive.amount.currency,
+      directive.date,
+      rate,
+      writtenScale(directive.amount.number),
+    );
     if (!rate.isZero()) {
+      const inverse = divideWithPythonDecimalContext(1, rate);
       add(
         directive.amount.currency,
         directive.currency,
         directive.date,
-        divideWithPythonDecimalContext(1, rate),
+        inverse,
+        inverse.decimalPlaces() ?? 0,
       );
     }
   });
@@ -68,12 +95,18 @@ export function buildPriceMap(directives: DirectiveJson[]): PriceMap {
     map.set(k, perDay);
   });
 
-  return {
-    getRate(base: string, quote: string, date?: string): BigNumber | null {
-      if (base === quote) return new Rate(1);
+  const lookup = (
+    base: string,
+    quote: string,
+    date?: string,
+  ): ScaledRate | null => {
+      if (base === quote) return { value: new Rate(1), scale: 0 };
       const list = map.get(key(base, quote));
       if (!list || list.length === 0) return null;
-      if (date === undefined) return list[list.length - 1].rate;
+      if (date === undefined) {
+        const last = list[list.length - 1];
+        return { value: last.rate, scale: last.scale };
+      }
       // Latest point with date <= the requested date. Price histories can have
       // one entry per day for years; bisect instead of walking from the start on
       // every valuation.
@@ -89,8 +122,14 @@ export function buildPriceMap(directives: DirectiveJson[]): PriceMap {
           high = middle - 1;
         }
       }
-      return foundIndex === -1 ? null : list[foundIndex].rate;
-    },
+      if (foundIndex === -1) return null;
+      const found = list[foundIndex];
+      return { value: found.rate, scale: found.scale };
+  };
+
+  return {
+    getRate: (base, quote, date) => lookup(base, quote, date)?.value ?? null,
+    getScaledRate: lookup,
   };
 }
 
