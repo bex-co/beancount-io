@@ -168,6 +168,7 @@ async function fixture(
               {
                 message: "Transaction does not balance: residual 5 USD",
                 source: { filename: "main.bean", lineno: 73 },
+                code: "E3001",
               },
             ],
           }
@@ -363,7 +364,7 @@ async function fixture(
         const response = await graphql({
           schema,
           source: previewing
-            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source } valid } }'
+            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source code } valid } }'
             : opts.requestId !== undefined
               ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$requestId:String) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,requestId:$requestId) { success message entryHashes } }'
               : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid) { success message entryHashes } }',
@@ -1266,6 +1267,54 @@ describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
     }
   });
 
+  // w1/220: GraphQL's JSON object took any value; `7` rendered as
+  // `qn: undefined undefined`, and `true` committed typed metadata.
+  it.each([
+    ["a number", 7],
+    ["an object", { a: 1 }],
+    ["an array", [1, 2]],
+    ["a boolean", true],
+    ["null", null],
+    ["an amount", { number: "5", currency: "USD" }],
+  ])("refuses %s as a posting meta value", async (_kind, value) => {
+    const batch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "typed",
+          postings: [
+            {
+              account: "Expenses:Food",
+              units: { number: "10", currency: "USD" },
+              meta: { qn: value },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-10", currency: "USD" },
+            },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      for (const opts of [{}, { dryRun: true, dry_run: true }]) {
+        const result = await f.call(surface, batch, opts);
+        expect(result.success).toBe(false);
+        const text = JSON.stringify(
+          "errors" in result ? result.errors : result,
+        );
+        expect(text).toContain("qn");
+      }
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.committed).toEqual([]);
+    } finally {
+      await f.close();
+    }
+  });
+
   it("leaves plain postings without meta, tags, or links keys", async () => {
     const batch = [
       {
@@ -1613,17 +1662,19 @@ describe.each(["rest", "gql", "mcp"])("typed add preview via %s", (surface) => {
       expect(result.success).toBe(true);
       expect(f.committed).toEqual([]);
       const body = result.result as Record<string, any>;
+      // Every surface carries the engine's code, GraphQL too (w1/220).
       const newErrors = [
         {
           message: "Transaction does not balance: residual 5 USD",
           source: "main.bean:73",
+          code: "E3001",
         },
       ];
       if (surface === "mcp") {
         expect(body.validation).toMatchObject({ valid: false, newErrors });
       } else {
         expect(body).toMatchObject({ valid: false });
-        if (surface === "rest") expect(body.newErrors).toEqual(newErrors);
+        expect(body.newErrors).toEqual(newErrors);
       }
       const commit = await f.call(surface, unbalancedBatch);
       expect(commit.success).toBe(false);
@@ -2319,6 +2370,34 @@ it.each(["rest", "gql", "mcp"])(
     }
   },
 );
+
+// w1/220: each surface built the request in its own key order (GraphQL's
+// posting input puts `units` before `account`), so a replay of the same
+// transaction from another surface was refused as a different request.
+describe.each([
+  ["gql", "mcp"],
+  ["mcp", "gql"],
+  ["gql", "rest"],
+  ["rest", "gql"],
+])("a requestId first sent on %s and replayed on %s", (first, replay) => {
+  beforeEach(() => fakeRedisIdempotencyState.reset());
+
+  it("returns the first result and commits once", async () => {
+    const f = await fixture({
+      ...identity,
+      userId: `usr_cross_replay_${first}_${replay}`,
+    });
+    try {
+      const sent = await f.call(first, entries, { requestId: "cross-1" });
+      const again = await f.call(replay, entries, { requestId: "cross-1" });
+      expect(sent.success).toBe(true);
+      expect(again.success).toBe(true);
+      expect(f.write).toHaveBeenCalledTimes(1);
+    } finally {
+      await f.close();
+    }
+  });
+});
 
 describe.each(["rest", "gql", "mcp"])("requestId via %s", (surface) => {
   beforeEach(() => fakeRedisIdempotencyState.reset());

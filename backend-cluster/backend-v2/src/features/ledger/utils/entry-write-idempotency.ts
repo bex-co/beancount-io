@@ -18,6 +18,30 @@ export const ENTRY_REQUEST_ID_DESCRIPTION =
   "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.";
 
 /**
+ * A request as plain data with its object keys sorted and absent fields
+ * (`undefined` or `null`) dropped. Each surface builds the request in its own
+ * key order — GraphQL's posting input puts `units` before `account`, zod keeps
+ * the caller's — so hashing the objects as built refused a replay of the same
+ * write from another surface (w1/220).
+ */
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value === null || typeof value !== "object") return value;
+  // A Date (or anything else with its own JSON form) hashes as JSON writes it.
+  const { toJSON } = value as { toJSON?: () => unknown };
+  if (typeof toJSON === "function") return canonical(toJSON.call(value));
+  return Object.fromEntries(
+    Object.keys(value)
+      .filter((key) => {
+        const field = (value as Record<string, unknown>)[key];
+        return field !== undefined && field !== null;
+      })
+      .sort()
+      .map((key) => [key, canonical((value as Record<string, unknown>)[key])]),
+  );
+}
+
+/**
  * Run an entry write at most once per `requestId` (w3/m61, owner decision
  * 2026-11-02, after ledger creation's ADR026 contract).
  *
@@ -70,7 +94,7 @@ export async function runIdempotentEntryWrite<T>(params: {
     requestId,
   );
   const requestHash = createHash("sha256")
-    .update(JSON.stringify([params.operation, params.request]))
+    .update(JSON.stringify(canonical([params.operation, params.request])))
     .digest("hex");
 
   const claim = await store.claim(key, requestHash, TTL.HOUR_24);

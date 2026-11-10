@@ -104,6 +104,62 @@ describe("runIdempotentEntryWrite", () => {
     expect(write).toHaveBeenCalledTimes(1);
   });
 
+  // w1/220: GraphQL builds a posting `units` first, zod keeps the caller's
+  // order, and the same transaction hashed as two requests.
+  it("treats key order and absent fields as the same request", async () => {
+    const { store } = memoryStore();
+    const write = jest.fn().mockResolvedValue({ success: true });
+    await runIdempotentEntryWrite({
+      ...base,
+      request: {
+        inputs: [{ account: "Assets:Cash", units: { number: "1" } }],
+        allowInvalid: false,
+      },
+      requestId: "id-1",
+      write,
+      store,
+    });
+
+    await expect(
+      runIdempotentEntryWrite({
+        ...base,
+        request: {
+          allowInvalid: false,
+          inputs: [
+            { units: { number: "1" }, price: null, account: "Assets:Cash" },
+          ],
+          path: undefined,
+        },
+        requestId: "id-1",
+        write,
+        store,
+      }),
+    ).resolves.toEqual({ success: true });
+    expect(write).toHaveBeenCalledTimes(1);
+  });
+
+  it("still tells two orders of the same list apart", async () => {
+    const { store } = memoryStore();
+    const write = jest.fn().mockResolvedValue({ success: true });
+    await runIdempotentEntryWrite({
+      ...base,
+      request: { inputs: ["a", "b"] },
+      requestId: "id-1",
+      write,
+      store,
+    });
+
+    await expect(
+      runIdempotentEntryWrite({
+        ...base,
+        request: { inputs: ["b", "a"] },
+        requestId: "id-1",
+        write,
+        store,
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
   it("never lets one id span two kinds of write", async () => {
     const { store } = memoryStore();
     const write = jest.fn().mockResolvedValue({ success: true });

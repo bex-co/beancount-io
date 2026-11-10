@@ -435,18 +435,12 @@ class AddEntryInput {
 /** Map a GraphQL entry input onto the service's discriminated union. */
 function toServiceEntry(input: AddEntryInput): LedgerEntryInput {
   switch (input.type) {
-    case LedgerEntryType.TRANSACTION: {
-      const entry = requirePayload(input, input.transaction);
-      if (
-        entry.meta != null &&
-        Object.values(entry.meta).some((value) => typeof value !== "string")
-      ) {
-        throw new BadUserInputError(
-          "Transaction metadata values must be strings",
-        );
-      }
-      return { type: "transaction", entry };
-    }
+    case LedgerEntryType.TRANSACTION:
+      // Metadata values are checked in the service, for every surface.
+      return {
+        type: "transaction",
+        entry: requirePayload(input, input.transaction),
+      };
     case LedgerEntryType.COMMODITY:
       return {
         type: "commodity",
@@ -501,6 +495,12 @@ class DirectiveTextDiff {
 class DirectiveTextError {
   @Field(() => String) message!: string;
   @Field(() => String, { nullable: true }) source?: string;
+  // MCP and REST carry the engine's code; so does GraphQL (w1/220).
+  @Field(() => String, {
+    nullable: true,
+    description: "The engine's stable error code, such as E3001",
+  })
+  code?: string;
 }
 
 /** What appending Beancount text did, or would do (w2/m28:t005). */

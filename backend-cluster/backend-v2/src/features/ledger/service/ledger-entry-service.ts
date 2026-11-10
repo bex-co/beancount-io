@@ -133,6 +133,26 @@ type BudgetInput = {
 const DECIMAL_NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
 
 /** An optional field counts as set unless it is null or undefined. */
+/** Refuse a metadata value that is not a string, naming its key. */
+function assertStringMeta(
+  index: number,
+  field: string,
+  meta: Readonly<Record<string, unknown>> | null | undefined,
+): void {
+  for (const [key, value] of Object.entries(meta ?? {})) {
+    if (typeof value === "string") continue;
+    const kind =
+      value === null
+        ? "null"
+        : Array.isArray(value)
+          ? "an array"
+          : `a ${typeof value}`;
+    throw new BadUserInputError(
+      `entry ${index}: ${field}.${key} must be a string, not ${kind}`,
+    );
+  }
+}
+
 function isPresent(value: unknown): boolean {
   return value !== undefined && value !== null;
 }
@@ -525,6 +545,14 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     // entry before any file is read or committed, on every surface at once.
     inputs.forEach((input, index) => {
       if (input.type !== "transaction") return;
+      // Metadata values are strings. REST and MCP refuse anything else in
+      // their schemas; GraphQL's JSON object took a posting `qn: 7`, rendered
+      // `qn: undefined undefined`, and wrote typed metadata no other surface
+      // accepts (w1/220).
+      assertStringMeta(index, "meta", input.entry.meta);
+      input.entry.postings.forEach((posting, postingIndex) =>
+        assertStringMeta(index, `postings[${postingIndex}].meta`, posting.meta),
+      );
       const elided = input.entry.postings.filter(
         (posting) => posting.units === undefined || posting.units === null,
       ).length;

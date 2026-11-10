@@ -106,6 +106,7 @@ async function fixture(caller = identity) {
             {
               message: BALANCE_MESSAGE,
               source: { filename: "main.bean", lineno: 84 },
+              code: "E2001",
             },
           ],
         }
@@ -303,7 +304,7 @@ async function fixture(caller = identity) {
         // bulkEntries fixture (w23/m7/t002).
         const fields =
           input.dryRun === true
-            ? `${spec.fields} dryRun preview { path text } errorsBefore errorsAfter newErrors { message source } valid`
+            ? `${spec.fields} dryRun preview { path text } errorsBefore errorsAfter newErrors { message source code } valid`
             : spec.fields;
         const response = await graphql({
           schema,
@@ -706,11 +707,13 @@ describe.each(["rest", "gql", "mcp"])(
           const breaking = {
             errorsBefore: 0,
             errorsAfter: 1,
+            // GraphQL carries the engine's code as well (w1/220).
             newErrors: [
               {
                 message:
                   "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD",
                 source: "main.bean:84",
+                code: "E2001",
               },
             ],
             valid: false,

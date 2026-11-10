@@ -80,6 +80,13 @@ class SliceWriteError {
 
   @Field(() => String, { nullable: true })
   source?: string;
+
+  // MCP and REST carry the engine's code; so does GraphQL (w1/220).
+  @Field(() => String, {
+    nullable: true,
+    description: "The engine's stable error code, such as E3001",
+  })
+  code?: string;
 }
 
 @ObjectType()
