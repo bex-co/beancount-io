@@ -64,12 +64,12 @@ export interface BalanceSheetSummary {
   readonly asOf: string | null;
   readonly currency: string;
   /**
-   * How every amount below is valued (w6/009). `asOf` cuts off which
-   * positions count; it does not date the prices. `units` reports positions
+   * How every amount below is valued (w6/009). `units` reports positions
    * unconverted, `cost` at their booked cost, and `latest-price` — a currency
-   * conversion or `at_value` — at the ledger's most recent price, not the
-   * price on `asOf`. A conversion to a currency the ledger has no prices for
-   * converts nothing, so it reads `units` (w23/050).
+   * conversion or `at_value` — at the latest price on or before `asOf`, so a
+   * past period is priced as of its own last day (w3/500, w1/193). A
+   * conversion to a currency the ledger has no prices for converts nothing,
+   * so it reads `units` (w23/050).
    */
   readonly valuation: "units" | "cost" | "latest-price";
   /** What `netWorth` leaves out, per other currency. */

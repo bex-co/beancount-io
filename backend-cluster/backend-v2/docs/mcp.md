@@ -989,14 +989,16 @@ excludes — net worth on the balance sheet and overview, `net` on the income
 statement, each interval's `total` — so `conversion=units` on a ledger with
 stocks lists them there. The balance sheet adds `valuation`: `units`
 (positions unconverted), `cost` (booked cost), or `latest-price` (a currency
-conversion or `at_value`, priced at the ledger's most recent price). A
+conversion or `at_value`, priced as of `asOf`: the latest price on or before
+it). A
 conversion to a currency the ledger has no prices for converts nothing, so it
 reads `units` and reports in the currency the data does carry.
 `conversion=units_by_cost` reads `units` too: its balances are raw units keyed
 by cost currency — `VTI {EUR}` for units held at a EUR cost, `EUR {}` for units
 held without one — so a client can tell cash from a cost-basis holding in the
-same currency; read it with `shape=fava` to keep every key per account. `asOf` is the position cut-off, not the price date, so a
-historical window shows its positions at the latest recorded prices. `netWorth` is always
+same currency; read it with `shape=fava` to keep every key per account. `asOf` is both
+the position cut-off and the price date, so a historical window shows its positions at
+the prices recorded by its last day (w1/193). `netWorth` is always
 `assets + liabilities`, on the same basis as `byAccount`. The income
 statement's `period` gives `to`, the statement's last day, and `time`, the
 selection as requested. `from` is `null` because chart buckets carry only
