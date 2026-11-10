@@ -279,6 +279,76 @@ describe("appendDirectiveText with a requestId", () => {
   });
 });
 
+/**
+ * w1/195. A preview answered `valid: true` for a requestId the commit refuses,
+ * so resending the approved preview with dry_run false failed on an argument
+ * the preview had accepted. Both writes check the id the same way either way.
+ */
+describe("a requestId the commit refuses", () => {
+  const writes = {
+    addBulkEntries: (
+      service: LedgerEntryService,
+      dryRun: boolean,
+      requestId: string,
+    ) =>
+      service.addBulkEntries(
+        identity,
+        "alice",
+        "books",
+        rent,
+        "web",
+        false,
+        dryRun,
+        requestId,
+      ),
+    appendDirectiveText: (
+      service: LedgerEntryService,
+      dryRun: boolean,
+      requestId: string,
+    ) =>
+      service.appendDirectiveText(
+        identity,
+        "alice",
+        "books",
+        { text: '2026-11-01 note Assets:Bank "hi"\n', dryRun },
+        requestId,
+      ),
+  };
+
+  it.each(
+    Object.keys(writes).flatMap((write) =>
+      ["", "x".repeat(201)].map((id) => [write, id.length] as const),
+    ),
+  )(
+    "%s refuses a %i-character id on a dry run as on a commit",
+    async (write, length) => {
+      const { service, writer, directiveAppend } = entryService();
+      const call = writes[write as keyof typeof writes];
+      const id = "x".repeat(length);
+      for (const dryRun of [true, false]) {
+        const refusal = await call(service, dryRun, id).catch(
+          (error: unknown) => error,
+        );
+        expect(refusal).toBeInstanceOf(ValidationError);
+        expect((refusal as ValidationError).message).toMatch(
+          /requestId must be 1-200 characters/,
+        );
+      }
+      expect(writer.writeBulkEntries).not.toHaveBeenCalled();
+      expect(directiveAppend.appendDirectiveText).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(Object.keys(writes))(
+    "%s still records nothing for a dry run with a valid id",
+    async (write) => {
+      const { service } = entryService();
+      await writes[write as keyof typeof writes](service, true, "ok-id");
+      expect(fakeRedisIdempotencyState.records.size).toBe(0);
+    },
+  );
+});
+
 describe("insertReceiptTransaction with a requestId", () => {
   it("does not store the receipt or post the entry a second time on retry", async () => {
     const getAdminClient = jest.fn(() => ({

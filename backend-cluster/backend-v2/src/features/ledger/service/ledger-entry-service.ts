@@ -445,13 +445,15 @@ export class LedgerEntryService implements ILedgerEntryService {
         allowInvalid,
         dryRun,
       );
-    // A dry run writes nothing, so there is nothing to make idempotent.
+    // A dry run writes nothing, so there is nothing to make idempotent; its
+    // id is still checked as the commit's would be.
     return runIdempotentEntryWrite({
       userId: identity.userId,
       ledgerId,
       operation: "bulkEntries",
       committed: (result) => result.success,
-      requestId: dryRun ? undefined : requestId,
+      requestId,
+      preview: dryRun,
       request: { inputs, allowInvalid },
       write,
     });
@@ -483,7 +485,8 @@ export class LedgerEntryService implements ILedgerEntryService {
       ledgerId,
       operation: "appendText",
       committed: (result) => result.success,
-      requestId: input.dryRun ? undefined : requestId,
+      requestId,
+      preview: input.dryRun,
       request: {
         text: input.text,
         path: input.path,

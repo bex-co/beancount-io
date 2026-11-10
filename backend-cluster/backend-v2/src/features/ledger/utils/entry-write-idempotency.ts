@@ -45,6 +45,12 @@ export async function runIdempotentEntryWrite<T>(params: {
   write: () => Promise<T>;
   /** Whether a result that did not throw committed; a refusal is not stored. */
   committed: (result: T) => boolean;
+  /**
+   * A dry run writes nothing, so it records nothing — but it refuses the id
+   * the commit would refuse, or a `valid: true` preview resent with
+   * `dry_run: false` fails on an argument the preview accepted (w1/195).
+   */
+  preview?: boolean;
   store?: IdempotencyStore;
 }): Promise<T> {
   const { requestId, write } = params;
@@ -55,6 +61,7 @@ export async function runIdempotentEntryWrite<T>(params: {
       `requestId must be 1-${ENTRY_REQUEST_ID_MAX} characters`,
     );
   }
+  if (params.preview) return write();
 
   const store = params.store ?? redisIdempotencyStore;
   const key = CACHE_KEYS.ledger.entryWriteRequest(
