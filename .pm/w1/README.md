@@ -89,6 +89,7 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [233](./233.md) — Typed entries take metadata only on transactions; directive metadata from the journal can't be written back (MCP QA 2026-11-10)
 - [234](./234.md) — `requestId` idempotency is keyed on the owner spelling, so a retry with different owner case writes twice (MCP QA 2026-11-10)
 - [235](./235.md) — The MCP tool refuses a malformed `ledger` as if none were given (MCP QA 2026-11-10)
+- [236](./236.md) — `renameLedgerFile` reports every pre-existing error in the moved file as new on commit; its preview says none (MCP QA 2026-11-10)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
