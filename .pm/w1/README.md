@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [212](./212.md) — A blank commit message writes a blank commit; an empty one defaults differently on MCP and REST (MCP QA 2026-11-09)
 - [213](./213.md) — Bulk OR chains of comparisons are refused at about 250 terms, though the doc says they run (MCP QA 2026-11-09)
 - [214](./214.md) — A setup that lists the same account twice silently keeps only the last entry (MCP QA 2026-11-09)
 - [215](./215.md) — A bare filter word with a combining mark is refused "Illegal character" (MCP QA 2026-11-10)

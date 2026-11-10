@@ -594,6 +594,27 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
     }
   });
 
+  // w1/212: a blank message wrote a blank commit; it is an omitted one.
+  it.each(["", "   "])(
+    "defaults a blank message %j to Rename a → b",
+    async (blank) => {
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, "old.bean", "new.bean", {
+          message: blank,
+        });
+        expect(result.success).toBe(true);
+        expect(f.change).toHaveBeenCalledWith(
+          "alice",
+          "main",
+          expect.objectContaining({ message: "Rename old.bean → new.bean" }),
+        );
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   // w23/m3/t002: the MCP file tools spell the commit message `description`,
   // so rename accepts it too; two different texts refuse without renaming.
   it("accepts description as the commit message", async () => {

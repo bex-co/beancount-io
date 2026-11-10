@@ -22,8 +22,10 @@ export function resolveCommitMessage(
   input: { description?: string | null; message?: string | null },
   opts: { required: boolean },
 ): string | undefined {
-  const description = input.description ?? undefined;
-  const message = input.message ?? undefined;
+  // A message that is blank once trimmed is an omitted one: it wrote a blank
+  // commit, and `""` defaulted differently by surface (w1/212, w21/553).
+  const description = present(input.description);
+  const message = present(input.message);
   if (
     description !== undefined &&
     message !== undefined &&
@@ -39,8 +41,15 @@ export function resolveCommitMessage(
   assertNoNul(resolved, description !== undefined ? "description" : "message");
   if (resolved === undefined && opts.required) {
     throw new BadUserInputError(
-      "A commit message is required — description or message.",
+      "A commit message is required — description or message, not blank.",
     );
   }
   return resolved;
+}
+
+/** The text, or `undefined` when it is missing or only whitespace. */
+function present(text: string | null | undefined): string | undefined {
+  return text === null || text === undefined || text.trim() === ""
+    ? undefined
+    : text;
 }

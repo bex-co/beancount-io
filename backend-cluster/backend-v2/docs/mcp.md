@@ -570,7 +570,10 @@ four accepts both spellings, so one argument pastes across all of them.
 Two different texts in one call are refused with `BAD_USER_INPUT` rather
 than guessed. The three file tools require one of the two on MCP; rename,
 REST, and GraphQL leave both optional and default per operation
-(`Create/Update/Delete <path>`, `Rename a → b`). `addLedgerEntries`,
+(`Create/Update/Delete <path>`, `Rename a → b`). A message that is blank once
+trimmed counts as omitted: it takes that default where the message is
+optional, and the MCP file tools refuse it with `BAD_USER_INPUT`, so no commit
+is ever blank (w1/212). `addLedgerEntries`,
 `appendLedgerText`, and the
 entry-source tools take neither: they compose the message from the
 operation and its content (`Add <date> "<payee>"`, `Add N directives to <file>`,

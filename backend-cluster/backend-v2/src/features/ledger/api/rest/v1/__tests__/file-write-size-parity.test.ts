@@ -312,6 +312,7 @@ async function fixture(initial: Record<string, string> = {}) {
     operations: Record<string, unknown>[],
     dryRun = false,
     messageKey: string | "both" = "description",
+    text = "Size contract edit",
   ): Promise<Outcome> => {
     // One MCP tool per kind of change (ADR 019, 2026-10-18): every batch
     // here is a single kind, so the first operation names the tool.
@@ -319,7 +320,7 @@ async function fixture(initial: Record<string, string> = {}) {
     const texts =
       messageKey === "both"
         ? { description: "Size contract edit", message: "A different text" }
-        : { [messageKey]: "Size contract edit" };
+        : { [messageKey]: text };
     const result = await client.callTool({
       name:
         kind === "create"
@@ -357,6 +358,7 @@ async function fixture(initial: Record<string, string> = {}) {
       messageKey: string | "both" = surface === "mcp"
         ? "description"
         : "message",
+      text = "Size contract edit",
     ): Promise<Outcome> => {
       const path = update ? "existing.bean" : "new.bean";
       const sha = update ? files.get(path)?.sha : undefined;
@@ -365,11 +367,12 @@ async function fixture(initial: Record<string, string> = {}) {
           [{ operation: update ? "replace" : "create", path, content }],
           false,
           messageKey,
+          text,
         );
       const texts =
         messageKey === "both"
           ? ',message:"Size contract edit",description:"A different text"'
-          : `,${messageKey}:"Size contract edit"`;
+          : `,${messageKey}:${JSON.stringify(text)}`;
       if (surface === "rest") {
         const result = await request(
           `/api-gateway/v1/ledgers/alice/main/files/${path}`,
@@ -381,7 +384,7 @@ async function fixture(initial: Record<string, string> = {}) {
                   message: "Size contract edit",
                   description: "A different text",
                 }
-              : { [messageKey]: "Size contract edit" }),
+              : { [messageKey]: text }),
           },
           "PUT",
         );
@@ -842,3 +845,69 @@ describe.each<Surface>(["rest", "gql", "mcp"])(
     });
   },
 );
+
+/**
+ * w1/212. A blank commit message wrote a blank commit, and "" defaulted
+ * differently by surface (Gitea's "Add <path>" through MCP, the server's
+ * "Create <path>" on REST). Blank is omitted: REST and GraphQL default it,
+ * MCP — which requires a message — refuses it, and no commit is blank.
+ */
+describe.each(["", "   "])("a blank commit message %j", (blank) => {
+  const path = (update: boolean) => (update ? "existing.bean" : "new.bean");
+  const once = async (surface: Surface, update: boolean) => {
+    const f = await fixture({ "existing.bean": "; old\n" });
+    try {
+      const outcome = await f.write(
+        surface,
+        "; x\n",
+        update,
+        false,
+        surface === "mcp" ? "description" : "message",
+        blank,
+      );
+      return { outcome, commits: [...f.commits] };
+    } finally {
+      await f.close();
+    }
+  };
+
+  it.each([false, true])("is refused on MCP (update: %s)", async (update) => {
+    const { outcome, commits } = await once("mcp", update);
+    expect(outcome).toMatchObject({ ok: false, code: "BAD_USER_INPUT" });
+    expect(commits).toEqual([]);
+  });
+
+  it("is refused on an MCP delete", async () => {
+    const f = await fixture({ "existing.bean": "; old\n" });
+    try {
+      const outcome = await f.mcpEdit(
+        [{ operation: "delete", path: "existing.bean" }],
+        false,
+        "description",
+        blank,
+      );
+      expect(outcome).toMatchObject({ ok: false, code: "BAD_USER_INPUT" });
+      expect(f.commits).toEqual([]);
+      expect(f.files.has("existing.bean")).toBe(true);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it.each([false, true])("defaults on REST (update: %s)", async (update) => {
+    const { outcome, commits } = await once("rest", update);
+    expect(outcome.ok).toBe(true);
+    expect(commits.map((commit) => commit.message)).toEqual([
+      `${update ? "Update" : "Create"} ${path(update)}`,
+    ]);
+  });
+
+  it.each([false, true])(
+    "is omitted on GraphQL, for the ledger's same default (update: %s)",
+    async (update) => {
+      const { outcome, commits } = await once("gql", update);
+      expect(outcome.ok).toBe(true);
+      expect(commits.map((commit) => commit.message)).toEqual([undefined]);
+    },
+  );
+});

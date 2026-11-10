@@ -39,6 +39,30 @@ describe("resolveCommitMessage", () => {
     ).toThrow(BadUserInputError);
   });
 
+  // w1/212: a blank message wrote a blank commit, and "" defaulted
+  // differently on MCP and REST.
+  it.each(["", "   ", "\n\t"])("treats %j as omitted", (blank) => {
+    expect(
+      resolveCommitMessage({ description: blank }, { required: false }),
+    ).toBeUndefined();
+    expect(() =>
+      resolveCommitMessage({ message: blank }, { required: true }),
+    ).toThrow(BadUserInputError);
+    // A blank twin is no second text to conflict with.
+    expect(
+      resolveCommitMessage(
+        { description: blank, message: "b" },
+        { required: true },
+      ),
+    ).toBe("b");
+  });
+
+  it("keeps a message's own whitespace when it has text", () => {
+    expect(
+      resolveCommitMessage({ message: "  Move files  " }, { required: true }),
+    ).toBe("  Move files  ");
+  });
+
   it("requires one spelling on MCP, leaves REST/GraphQL optional", () => {
     expect(() => resolveCommitMessage({}, { required: true })).toThrow(
       BadUserInputError,
