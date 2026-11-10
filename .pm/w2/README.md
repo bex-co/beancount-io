@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [110 — A file save that conflicts with another write tells the editor to refresh, which discards their edit](./110.md) — dashboard QA 2026-11-10
 - [109 — A renamed file shows as an empty section in commit diffs](./109.md) — dashboard QA 2026-11-10
 - [108 — Account searches find nothing when the text has a leading or trailing space](./108.md) — dashboard QA 2026-11-10
 - [107 — Error and warning alert text is below 4.5:1 contrast in dark mode](./107.md) — dashboard QA 2026-11-10; shared `alert.tsx` destructive variant
