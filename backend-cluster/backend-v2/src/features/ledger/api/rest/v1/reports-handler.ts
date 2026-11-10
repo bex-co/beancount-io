@@ -11,12 +11,16 @@ import {
 } from "@/features/ledger/utils/report-summaries";
 import { BALANCE_CONVERSION_DESCRIPTION } from "@/features/ledger/utils/report-conversion";
 
-export const accountsQuerySchema = z.object({
-  status: z.string().optional().openapi({
-    description:
-      "Use open or closed to filter; other values return all accounts, matching GraphQL",
-  }),
-});
+export const accountsQuerySchema = z
+  .object({
+    status: z.string().optional().openapi({
+      description:
+        "Use open or closed to filter; other values return all accounts, matching GraphQL",
+    }),
+  })
+  // Lenient in `status`'s value only: a mistyped key such as `statu` is
+  // refused, as the MCP resource refuses it (w1/218).
+  .strict();
 
 const statementParamsSchema = ledgerPathSchema.extend({
   statement: z.enum(["balance-sheet", "income-statement"]).openapi({

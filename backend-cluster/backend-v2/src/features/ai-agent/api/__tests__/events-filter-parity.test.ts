@@ -10,10 +10,7 @@ import { buildSchema } from "type-graphql";
 import { LedgerDataQueryResolver } from "@/features/ledger/api/resolvers/ledger-data-resolver.query";
 import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { FavaApiError } from "@/foundation/fava/api-client";
-import {
-  AuthorizationService,
-  AUTHORIZATION_ACTIONS,
-} from "@/server/api/authorization";
+import { AuthorizationService } from "@/server/api/authorization";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { formatError } from "@/server/graphql/format-error";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
@@ -152,7 +149,7 @@ async function fixture(identity: Identity = pinnedReadToken) {
 }
 
 describe("event filter adapter parity", () => {
-  it("ignores query overrides of trusted ledger and caller on an unfiltered vocabulary read", async () => {
+  it("refuses query overrides of trusted ledger and caller on an unfiltered vocabulary read", async () => {
     const f = await fixture();
     try {
       const response = await f.restPayees(
@@ -166,23 +163,11 @@ describe("event filter adapter parity", () => {
           time: "2016",
         }).toString(),
       );
-      expect(response.status).toBe(200);
-      expect(await response.json()).toEqual(["Café + Co", "Tokyo"]);
-      expect(f.authorize.mock.calls).toEqual([
-        [
-          {
-            principal: pinnedReadToken,
-            action: AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
-            resource: "ledger:alice/main",
-          },
-        ],
-      ]);
-      expect(f.authorize.mock.calls[0][0].principal).toBe(pinnedReadToken);
-      expect(f.factory.getPublicApiClient.mock.calls).toEqual([
-        ["alice/main", pinnedReadToken.userId],
-      ]);
-      expect(f.getLedgerPayees.mock.calls).toEqual([["alice", "main"]]);
-      expect(f.getLedgerEvents).not.toHaveBeenCalled();
+      // Ignored until w1/218; a route that declares no query now refuses one.
+      expect(response.status).toBe(400);
+      expect(f.authorize).not.toHaveBeenCalled();
+      expect(f.factory.getPublicApiClient).not.toHaveBeenCalled();
+      expect(f.getLedgerPayees).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }

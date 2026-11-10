@@ -94,6 +94,9 @@ const routes: [string, string][] = [
     "temp-assets/download-url",
     "/api-gateway/v1/temp-assets/download-url?bogus_param=1",
   ],
+  // w1/218: lenient in their values only (see below).
+  ["accounts", `${LEDGER}/accounts?bogus_param=1`],
+  ["feature-flags", "/api-gateway/v1/feature-flags?bogus_param=1"],
 ];
 
 let server: V1TestServer;
@@ -215,9 +218,9 @@ it("refuses ?interval=month on trial-balance", async () => {
   });
 });
 
-// w23/m12/t007: the two documented exceptions stay lenient — pinning them
-// so a future strict sweep does not "fix" them.
-describe("documented lenient queries", () => {
+// w23/m12/t007 kept two queries lenient in their values; w1/218 made both
+// refuse an unknown key, as their MCP resources do. The value leniency stays.
+describe("documented lenient values", () => {
   const getAccounts = jest.fn(async () => ["Assets:Cash"]);
   let loose: V1TestServer;
   beforeAll(async () => {
@@ -231,23 +234,23 @@ describe("documented lenient queries", () => {
   });
   afterAll(async () => loose.close());
 
-  it("accounts drops junk and lists all accounts", async () => {
+  it("accounts lists all accounts for a status it does not know", async () => {
     const response = await fetch(
-      `${loose.url}/api-gateway/v1/ledgers/alice/main/accounts?bogus_param=1`,
+      `${loose.url}/api-gateway/v1/ledgers/alice/main/accounts?status=bogus`,
     );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(["Assets:Cash"]);
     expect(getAccounts).toHaveBeenCalledWith(
       "alice",
       "main",
-      undefined,
+      "bogus",
       expect.anything(),
     );
   });
 
-  it("feature-flags drops junk and answers the flags", async () => {
+  it("feature-flags answers the flags for any userId", async () => {
     const response = await fetch(
-      `${loose.url}/api-gateway/v1/feature-flags?bogus_param=1`,
+      `${loose.url}/api-gateway/v1/feature-flags?userId=anyone`,
     );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({

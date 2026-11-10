@@ -43,16 +43,20 @@ export const bankAccountQuery = z
   // mistyped filter, not an unfiltered list (w23/112).
   .strict();
 
-const dryRunQuery = z.object({
-  dry_run: booleanQuery.openapi({
-    description:
-      "Validate and report what would change, without changing anything.",
-  }),
-  // Alias (w23/m9/t002): request bodies spell it `dryRun`.
-  dryRun: booleanQuery.openapi({
-    description: "Alias of dry_run, as request bodies spell it.",
-  }),
-});
+const dryRunQuery = z
+  .object({
+    dry_run: booleanQuery.openapi({
+      description:
+        "Validate and report what would change, without changing anything.",
+    }),
+    // Alias (w23/m9/t002): request bodies spell it `dryRun`.
+    dryRun: booleanQuery.openapi({
+      description: "Alias of dry_run, as request bodies spell it.",
+    }),
+  })
+  // Strict, and so are the bodies below: the bank writes read the preview
+  // flag here only, and a stray key elsewhere must not mean "commit" (w1/218).
+  .strict();
 const noPreviewQuery = z
   .object({
     dry_run: z.literal("false").optional(),
@@ -245,6 +249,7 @@ export const BANK_ROUTES = [
           description: "Which ledger file to append to; must already exist",
         }),
       })
+      .strict()
       .openapi("BankTransactionSubmission"),
     responses: { 200: json("Submission result, or a preview of one") },
     handler: async ({ layers }, { identity, params, body, query }) => {
@@ -272,6 +277,7 @@ export const BANK_ROUTES = [
     query: dryRunQuery,
     body: z
       .object({ transactionIds: z.array(z.string()).min(1) })
+      .strict()
       .openapi("BankTransactionDiscard"),
     responses: { 200: json("Deletion result, or a preview of one") },
     handler: async ({ layers }, { identity, params, body, query }) =>

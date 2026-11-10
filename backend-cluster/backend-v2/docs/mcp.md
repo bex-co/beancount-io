@@ -379,6 +379,10 @@ rather than guessed; omitting both leaves the flag off.
 | Preview               | `dry_run`, or `dryRun`             | bodies take `dryRun`, bank queries take `dry_run`; each accepts the other | `dryRun`, or `dry_run`             |
 | Commit despite errors | `allowInvalid`, or `allow_invalid` | `allowInvalid`, or `allow_invalid`                                        | `allowInvalid`, or `allow_invalid` |
 
+On REST the flag goes where the route reads it: the JSON body, or the query
+on the bank writes. Sent in the other place, it is refused with
+`VALIDATION_FAILED` rather than ignored.
+
 The preview flag is offered on nineteen listed tools: the entry,
 file, slice, and rename writes, the five bank tools that move
 state (`sync`, `import`, `discard`, `reconcile`, `unlink`), and the

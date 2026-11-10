@@ -4,13 +4,18 @@ import Router, { RouterContext } from "@koa/router";
 import bodyParser from "koa-bodyparser";
 import type { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import type { ZodType } from "zod";
+import { z } from "@/shared/zod-openapi-setup";
 
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { credentialRejection, type Identity } from "@/server/api/identity";
 import { identityFromState } from "./identity-middleware";
 import { registerRoute, V1_TAG } from "./openapi-registry";
-import { validateRequest, validatedFromState } from "./validation-middleware";
+import {
+  validateRequest,
+  validatedFromState,
+  type RequestSchemas,
+} from "./validation-middleware";
 import { UnauthenticatedError } from "@/shared/errors";
 import { errorSchema, json } from "./v1-schemas";
 
@@ -176,21 +181,41 @@ function documentPageHeaders(
   } as RouteConfig["responses"];
 }
 
+/**
+ * What a route that declares no query or body accepts: nothing (w1/218). An
+ * undeclared part used to pass unchecked, so `?dry_run=true` on a route that
+ * reads the preview flag from its body, or a body `dryRun` on one that reads
+ * it from the query, was dropped and the write committed. An empty body, or
+ * none, still passes.
+ */
+const NO_QUERY = z.strictObject({}).optional();
+const NO_BODY = z.strictObject({}).optional();
+
+/** The schemas a route's request is validated against. */
+export function v1RequestSchemas(
+  route: Pick<
+    RouteDeclaration<unknown, unknown, unknown>,
+    "params" | "query" | "body"
+  >,
+): RequestSchemas {
+  return {
+    params: route.params,
+    query: route.query ?? NO_QUERY,
+    body: route.body ?? NO_BODY,
+  };
+}
+
 /** Mount one route and register it with the spec, from one declaration. */
 function registerV1Route<P, Q, B>(
   router: Router,
   deps: V1Deps,
   route: RouteDeclaration<P, Q, B>,
 ): void {
-  const middlewares: Router.Middleware[] = [];
-  if (route.body) middlewares.push(bodyParser());
-  middlewares.push(
-    validateRequest({
-      params: route.params,
-      query: route.query,
-      body: route.body,
-    }),
-  );
+  const middlewares: Router.Middleware[] = [
+    // Every route parses its body, so one it does not declare is checked too.
+    bodyParser(),
+    validateRequest(v1RequestSchemas(route)),
+  ];
 
   router[route.method](toKoaPath(route.path), ...middlewares, async (ctx) => {
     const validated = validatedFromState(ctx);

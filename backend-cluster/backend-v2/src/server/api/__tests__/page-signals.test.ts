@@ -3,6 +3,7 @@ import { ApolloServer } from "@apollo/server";
 import Koa from "koa";
 import Router from "@koa/router";
 import type { ZodTypeAny } from "zod";
+import { z } from "@/shared/zod-openapi-setup";
 
 import { MCP_RESOURCES } from "@/features/ai-agent/api/mcp-resources";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
@@ -188,6 +189,11 @@ describe("REST headers", () => {
       await next();
     });
     const rows = (n: number) => new Array(n).fill({ sha: "a" });
+    // A route accepts only the query it declares (w1/218).
+    const query = z
+      .object({ branch: z.string(), page: z.string(), limit: z.string() })
+      .partial()
+      .strict();
     registerV1Routes(
       router,
       { layers: {} as AppLayers, config: {} as AppConfig },
@@ -198,6 +204,7 @@ describe("REST headers", () => {
           summary: "A full page",
           description: "A full page of commits.",
           pagedRead: "ledgerCommits",
+          query,
           responses: { 200: { description: "ok" } },
           handler: async () => rows(30),
         }),
@@ -207,6 +214,7 @@ describe("REST headers", () => {
           summary: "A short page",
           description: "A short last page of commits.",
           pagedRead: "ledgerCommits",
+          query,
           responses: { 200: { description: "ok" } },
           handler: async () => rows(4),
         }),
@@ -216,6 +224,7 @@ describe("REST headers", () => {
           summary: "A journal page",
           description: "A journal page with a total.",
           pagedRead: "ledgerJournal",
+          query,
           responses: { 200: { description: "ok" } },
           handler: async () => ({ total: 45, data: rows(20) }),
         }),

@@ -1260,7 +1260,8 @@
         },
         "required": [
           "transactions"
-        ]
+        ],
+        "additionalProperties": false
       },
       "BankTransactionDiscard": {
         "type": "object",
@@ -1275,7 +1276,8 @@
         },
         "required": [
           "transactionIds"
-        ]
+        ],
+        "additionalProperties": false
       },
       "BankAccountMapping": {
         "type": "object",
@@ -1412,6 +1414,7 @@
           "name",
           "scopes"
         ],
+        "additionalProperties": false,
         "description": "A new API key to mint"
       },
       "Introspection": {

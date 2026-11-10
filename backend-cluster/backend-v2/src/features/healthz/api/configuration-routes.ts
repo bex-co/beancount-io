@@ -9,7 +9,10 @@ import {
 import { json } from "@/server/rest/v1-schemas";
 import { readHealth, readFeatureFlags } from "../utils/public-configuration";
 
-export const featureFlagsQuery = z.object({ userId: z.string().optional() });
+// Any `userId` is accepted, and ignored; any other key is refused (w1/218).
+export const featureFlagsQuery = z
+  .object({ userId: z.string().optional() })
+  .strict();
 
 export const CONFIGURATION_V1_ROUTES = [
   tierQuotaRoute,

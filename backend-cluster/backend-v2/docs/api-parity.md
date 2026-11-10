@@ -287,6 +287,16 @@ GraphQL arguments travel in the JSON body and have no URI encoding.
 `rest-query-strictness.test.ts` covers every REST GET, and
 `mcp-resources.test.ts` every template that reads a query.
 
+A REST route accepts only the query and body keys it declares, as MCP and
+GraphQL accept only their declared arguments (w1/218). A route that declares
+no query or no body refuses any key there with `VALIDATION_FAILED`, so
+`?dry_run=true` on a route that reads the preview flag from its body is
+refused, not dropped and committed; so is a body `dryRun` on a bank write,
+which reads it from the query. `accounts` still answers every account for a
+`status` it does not know, and `feature-flags` still ignores `userId`; only
+their unknown keys are refused. `undeclared-request-parts.test.ts` checks
+every v1 route.
+
 ## Preview rate bucket (w23/m26)
 
 A `dry_run`/`dryRun` preview of a write operation is charged to its own rate

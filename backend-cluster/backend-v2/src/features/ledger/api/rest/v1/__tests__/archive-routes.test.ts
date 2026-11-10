@@ -164,7 +164,15 @@ describe("v1 archive download", () => {
     server.setIdentity(undefined);
     const response = await fetch(`${server.url}${ARCHIVE}?token=a.jwt.value`);
 
-    expect(response.status).toBe(401);
+    // The route declares no query, so the key is refused before any
+    // credential is looked for (w1/218).
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "VALIDATION_FAILED",
+        message: expect.stringContaining("token"),
+      },
+    });
     expect(origin.requests).toHaveLength(0);
   });
 

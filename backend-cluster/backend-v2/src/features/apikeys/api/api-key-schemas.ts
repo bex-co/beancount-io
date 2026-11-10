@@ -37,6 +37,9 @@ export const createApiKeySchema = z
       description: "When the key stops working (ISO 8601). Omit for no expiry.",
     }),
   })
+  // A mistyped key (`ledger_scope`) was dropped, minting an unconfined key;
+  // a body `dryRun` minted one too (w1/218).
+  .strict()
   .openapi("CreateApiKey", { description: "A new API key to mint" });
 
 export const apiKeyIdSchema = z.object({
