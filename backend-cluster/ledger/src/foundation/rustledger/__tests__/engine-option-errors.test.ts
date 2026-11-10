@@ -32,6 +32,7 @@ jest.mock("@/foundation/rustledger/loader", () => ({
           ),
           wasmError("[E7002] Invalid leaf account name: 'rounding'"),
           wasmError('[E7001] Invalid option "bogus_option"'),
+          wasmError("[E7004] Renamed to 'tolerance_multiplier'."),
         ],
         getOptions: () => ({ title: null, operating_currencies: [] }),
         getDirectives: () => [],
@@ -72,9 +73,10 @@ describe("parseLedgerFilesInProcess with Beancount's default options", () => {
       ]),
     ).toEqual([
       ["warning", "Option "],
-      // An unplaceable one keeps its text, tag included.
-      ["error", "[E7002]"],
+      // An unplaceable one keeps its text, its tag moved into code (w1/209).
       ["error", "Invalid"],
+      ["error", "Invalid"],
+      ["error", "Renamed"],
     ]);
     // The genuinely invalid leaf is still an error, so the ledger is invalid.
     expect(snapshot.valid).toBe(false);
@@ -88,7 +90,7 @@ describe("the same parse", () => {
     const snapshot = await parseLedgerFilesInProcess(
       {
         "main.bean":
-          'option "account_previous_balances" "Opening-Balances"\noption "account_rounding" "Rounding"\noption "bogus_option" "x"\n',
+          'option "account_previous_balances" "Opening-Balances"\noption "account_rounding" "Rounding"\noption "bogus_option" "x"\noption "inferred_tolerance_multiplier" "3"\n',
       },
       "main.bean",
       { repoPaths: ["main.bean"] },
@@ -97,9 +99,11 @@ describe("the same parse", () => {
       snapshot.errors.map((error) => [error.code, error.file, error.line]),
     ).toEqual([
       ["E7007", "main.bean", 2],
-      // The leaf 'rounding' matches no option's value: left unplaced.
-      [null, null, null],
+      // The leaf 'rounding' matches no option's value: unplaced, but coded.
+      ["E7002", null, null],
       ["E7001", "main.bean", 3],
+      // The renamed option, on the line that uses its old name (w1/209).
+      ["E7004", "main.bean", 4],
     ]);
   });
 });

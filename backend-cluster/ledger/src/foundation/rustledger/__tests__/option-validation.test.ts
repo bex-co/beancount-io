@@ -79,6 +79,7 @@ describe("locateOptionErrors", () => {
     'option "title" "B"',
     'option "name_assets" "assets"',
     'option "account_rounding" "Rounding"',
+    'option "inferred_tolerance_multiplier" "3"',
     "",
   ].join("\n");
   const files = { "main.bean": main, "sub.bean": 'option "title" "C"\n' };
@@ -129,13 +130,32 @@ describe("locateOptionErrors", () => {
     });
   });
 
-  it("leaves what it cannot place, what is placed and the document root alone", () => {
+  // w1/209: E7004 quotes only the new name; the line declares the old one.
+  it("puts a renamed option on the line that uses its old name", () => {
+    expect(locate("[E7004] Renamed to 'tolerance_multiplier'.")).toMatchObject({
+      code: "E7004",
+      message: "Renamed to 'tolerance_multiplier'.",
+      file: "main.bean",
+      line: 9,
+    });
+  });
+
+  it("moves the tag into code where it cannot place, and leaves the rest alone", () => {
     const unknown = error('[E7001] Invalid option "not_in_the_file"');
     const placed = { ...error("Balance failed"), file: "main.bean", line: 9 };
     const root = error("[E7006] Document root 'x' does not exist");
     expect(
       locateOptionErrors([unknown, placed, root], files, "main.bean"),
-    ).toEqual([unknown, placed, root]);
+    ).toEqual([
+      // Unplaced, but its code is a field, not a tag in the text (w1/209).
+      {
+        ...unknown,
+        code: "E7001",
+        message: 'Invalid option "not_in_the_file"',
+      },
+      placed,
+      root,
+    ]);
     expect(locateOptionErrors([unknown], {}, "main.bean")).toEqual([unknown]);
   });
 });

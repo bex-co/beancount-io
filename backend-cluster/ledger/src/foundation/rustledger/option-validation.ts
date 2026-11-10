@@ -69,6 +69,15 @@ function optionDeclarations(
 }
 
 /**
+ * The options the engine renamed, by new name: its E7004 "Renamed to 'X'."
+ * quotes only the new name, so the old ones are what a line declares. The
+ * engine (rustledger 0.24.0) renames exactly this one.
+ */
+const RENAMED_OPTIONS: Readonly<Record<string, readonly string[]>> = {
+  tolerance_multiplier: ["inferred_tolerance_multiplier"],
+};
+
+/**
  * Put option errors on the `option` line they are about, with their code.
  *
  * The engine reports `[E7001] Invalid option "bogus_option"` with no file, line
@@ -99,6 +108,11 @@ export function locateOptionErrors(
         (match) => match[1] ?? match[2],
       ),
     );
+    // A renamed option's error quotes only the new name; the line declares
+    // an old one (w1/209).
+    for (const name of [...quoted]) {
+      for (const old of RENAMED_OPTIONS[name] ?? []) quoted.add(old);
+    }
     let best: { line: number; score: number } | null = null;
     for (const option of options) {
       const score =
@@ -107,7 +121,9 @@ export function locateOptionErrors(
         best = { line: option.line, score };
       }
     }
-    if (best === null) return error;
+    // Unplaced, the error still carries its code rather than a tag in the
+    // message (w1/209).
+    if (best === null) return { ...error, code: tagged[1], message: tagged[2] };
     return {
       ...error,
       code: tagged[1],
