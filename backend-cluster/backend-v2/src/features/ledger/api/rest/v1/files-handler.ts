@@ -140,6 +140,11 @@ const commitAckSchema = z
     newErrors: z.array(
       z.strictObject({ message: z.string(), source: z.string().optional() }),
     ),
+    checked: z.literal(false).optional().openapi({
+      description:
+        "Present, as false, when bean-check could not read the ledger's current errors, so `valid` and `newErrors` say nothing; `checkError` says why. Nothing is refused on it.",
+    }),
+    checkError: z.string().optional(),
     commit: z.string().optional().openapi({
       description: COMMIT_SHA_DESCRIPTION,
     }),
@@ -261,7 +266,7 @@ export const FILE_ROUTES = [
       await layers.services.ledgerRepo.changeFiles({ ...write, dryRun: true });
       // A preview reports the new errors and `valid`; only a commit is
       // refused for them (w23/219).
-      const { newErrors, valid } = await gateFileWrite(
+      const { newErrors, valid, checked, checkError } = await gateFileWrite(
         layers.services,
         identity,
         write.ledgerId,
@@ -288,6 +293,7 @@ export const FILE_ROUTES = [
         dryRun,
         valid,
         newErrors,
+        ...(checked === false && { checked, checkError }),
         ...committed,
         ...(notLoaded.length > 0 && { notLoaded }),
       };
@@ -348,7 +354,7 @@ export const FILE_ROUTES = [
           `Delete ${params.path}`,
       };
       await layers.services.ledgerRepo.changeFiles({ ...write, dryRun: true });
-      const { newErrors, valid } = await gateFileWrite(
+      const { newErrors, valid, checked, checkError } = await gateFileWrite(
         layers.services,
         identity,
         write.ledgerId,
@@ -371,6 +377,7 @@ export const FILE_ROUTES = [
         dryRun,
         valid,
         newErrors,
+        ...(checked === false && { checked, checkError }),
         ...committed,
       };
     },

@@ -123,9 +123,8 @@ import {
 } from "../tools/types";
 import {
   summarizeWrite,
-  runWriteWithValidation,
   withPostWriteValidation,
-} from "../tools/write-validation";
+} from "@/features/ledger/utils/write-validation";
 import type { WriteValidation } from "@/features/ledger/utils/bean-check-errors";
 import { BANK_OPERATIONS } from "../tools/bank-import-tool";
 import { normalizeAgentRepoPath } from "../tools/agent-repo-path";
@@ -295,6 +294,32 @@ const EXTERNAL_DESTRUCTIVE: ToolAnnotations = {
 // MCP keeps its file-tool snake-case spelling for the preview flag while
 // REST spells it dryRun (same split the append path ships; w23/m7/t002),
 // with a dryRun twin on each side (w23/m9/t002).
+/**
+ * The REST result publishes a write's verdict flat; MCP nests it under
+ * `validation`, so a tool's output shape drops the flat fields (w23/233).
+ */
+function withoutFlatVerdict<
+  T extends {
+    errorsBefore: unknown;
+    errorsAfter: unknown;
+    newErrors: unknown;
+    valid: unknown;
+    checked: unknown;
+    checkError: unknown;
+  },
+>(shape: T) {
+  const {
+    errorsBefore: _before,
+    errorsAfter: _after,
+    newErrors: _new,
+    valid: _valid,
+    checked: _checked,
+    checkError: _checkError,
+    ...rest
+  } = shape;
+  return rest;
+}
+
 const addLedgerEntriesInput = entriesBodySchema
   .omit({ dryRun: true, requestId: true })
   .extend({ ledger: ledgerSelection, ...dryRunInput, requestId: mcpRequestId })
@@ -685,7 +710,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     outputSchema: mcpOutputSchema(
       toolOutputSchema(
         withWriteOutcome({
-          ...withoutDryRun(renameFileResult.shape),
+          ...withoutFlatVerdict(withoutDryRun(renameFileResult.shape)),
           dry_run: z.boolean(),
         }),
       ),
@@ -701,32 +726,20 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         { primary: args.dry_run, legacy: args.dryRun },
         DRY_RUN_NAMES,
       );
-      // The moved file's errors move with it: they are not new for having a
-      // new path (w1/236).
-      const renames = new Map([[oldPath, newPath]]);
-      // A dry run changes nothing, so reading the errors around it always
-      // reads clean: the preview projects the rename instead, and says what
-      // the commit will say (w1/236).
-      const { written, validation } = await runWriteWithValidation({
-        services: context.services,
-        identity: context.identity,
-        ledgerId,
-        previewing,
-        renames,
-        run: (onProjectedFiles) =>
-          context.ledgerWorkflow.renameLedgerFile({
-            identity: context.identity,
-            ledgerId,
-            input: {
-              oldPath,
-              newPath,
-              message: resolveCommitMessage(args, { required: false }),
-              updateIncludes: args.updateIncludes ?? undefined,
-              dryRun: previewing,
-            },
-            onProjectedFiles,
-          }),
-      });
+      // The workflow says what the commit will say, preview or commit, and the
+      // moved file's errors are not new for having a new path (w1/236).
+      const { validation, ...written } =
+        await context.ledgerWorkflow.renameLedgerFile({
+          identity: context.identity,
+          ledgerId,
+          input: {
+            oldPath,
+            newPath,
+            message: resolveCommitMessage(args, { required: false }),
+            updateIncludes: args.updateIncludes ?? undefined,
+            dryRun: previewing,
+          },
+        });
       // The workflow spells the echo dryRun; MCP publishes dry_run (w23/m7/t004).
       const { dryRun, ...result } = written;
       const moved =
@@ -770,7 +783,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     outputSchema: mcpOutputSchema(
       toolOutputSchema(
         withWriteOutcome({
-          ...withoutDryRun(revertCommitResult.shape),
+          ...withoutFlatVerdict(withoutDryRun(revertCommitResult.shape)),
           dry_run: z.boolean(),
         }),
       ),
@@ -782,23 +795,16 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
         { primary: args.dry_run, legacy: args.dryRun },
         DRY_RUN_NAMES,
       );
-      const { written, validation } = await runWriteWithValidation({
-        services: context.services,
-        identity: context.identity,
-        ledgerId,
-        previewing,
-        run: (onProjectedFiles) =>
-          context.ledgerWorkflow.revertLedgerCommit({
-            identity: context.identity,
-            ledgerId,
-            input: {
-              sha: args.sha,
-              message: args.message ?? undefined,
-              dryRun: previewing,
-            },
-            onProjectedFiles,
-          }),
-      });
+      const { validation, ...written } =
+        await context.ledgerWorkflow.revertLedgerCommit({
+          identity: context.identity,
+          ledgerId,
+          input: {
+            sha: args.sha,
+            message: args.message ?? undefined,
+            dryRun: previewing,
+          },
+        });
       const { dryRun, ...result } = written;
       return {
         ok: true,

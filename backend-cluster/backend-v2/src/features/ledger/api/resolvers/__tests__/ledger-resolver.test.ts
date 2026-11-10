@@ -167,9 +167,26 @@ describe("Ledger resolvers (delegation)", () => {
       expect(call.input).not.toHaveProperty("description");
     });
 
-    it("renameLedgerFile delegates", async () => {
+    // w23/233: the workflow's verdict reaches the response flat, as REST's.
+    const verdict = {
+      errorsBefore: 1,
+      errorsAfter: 1,
+      newErrors: [],
+      valid: true,
+    };
+
+    it("renameLedgerFile delegates and flattens the workflow's verdict", async () => {
       const input = { oldPath: "a", newPath: "b" };
-      await mutationResolver.renameLedgerFile("o/l", input as never, ctx);
+      workflow.renameLedgerFile.mockResolvedValue({
+        message: "Renamed",
+        validation: verdict,
+      } as never);
+      const result = await mutationResolver.renameLedgerFile(
+        "o/l",
+        input as never,
+        ctx,
+      );
+      expect(result).toEqual({ message: "Renamed", ...verdict });
       expect(workflow.renameLedgerFile).toHaveBeenCalledWith({
         identity: IDENTITY,
         ledgerId: "o/l",
@@ -181,6 +198,9 @@ describe("Ledger resolvers (delegation)", () => {
 
     it("renameLedgerFile folds the dry_run twin into dryRun", async () => {
       const input = { oldPath: "a", newPath: "b", dry_run: true };
+      workflow.renameLedgerFile.mockResolvedValue({
+        validation: verdict,
+      } as never);
       await mutationResolver.renameLedgerFile("o/l", input as never, ctx);
       const call = workflow.renameLedgerFile.mock.calls[0][0] as unknown as {
         input: Record<string, unknown>;

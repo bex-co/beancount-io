@@ -713,8 +713,58 @@ export class RenamePreviewFile {
   text: string;
 }
 
+/** A bean-check error the write adds, as the append result publishes it. */
 @ObjectType()
-export class RenameLedgerFileResponse {
+export class SliceWriteError {
+  @Field(() => String)
+  message: string;
+
+  @Field(() => String, { nullable: true })
+  source?: string;
+
+  // MCP and REST carry the engine's code; so does GraphQL (w1/220).
+  @Field(() => String, {
+    nullable: true,
+    description: "The engine's stable error code, such as E3001",
+  })
+  code?: string;
+}
+
+/**
+ * bean-check around a write that previews by projection and commits by reading
+ * the ledger back: the fields REST publishes flat and MCP under `validation`
+ * (w23/233).
+ */
+@ObjectType()
+class WriteVerdict {
+  @Field(() => Number)
+  errorsBefore: number;
+
+  @Field(() => Number)
+  errorsAfter: number;
+
+  @Field(() => [SliceWriteError])
+  newErrors: SliceWriteError[];
+
+  @Field(() => Boolean, {
+    description:
+      "True only when the write adds no bean-check error; gate a preview on this.",
+  })
+  valid: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why.",
+  })
+  checked?: false;
+
+  @Field(() => String, { nullable: true })
+  checkError?: string;
+}
+
+@ObjectType()
+export class RenameLedgerFileResponse extends WriteVerdict {
   @Field(() => String)
   message: string;
 
@@ -755,7 +805,7 @@ export class RevertedFile {
 }
 
 @ObjectType()
-export class RevertLedgerCommitResponse {
+export class RevertLedgerCommitResponse extends WriteVerdict {
   @Field(() => String, {
     description: "The full sha of the commit the revert undoes.",
   })

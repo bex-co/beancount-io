@@ -41,7 +41,7 @@ const identity: Identity = {
   ledgerScope: "alice/main",
 };
 
-async function fixture(history: Snapshot[]) {
+async function fixture(history: Snapshot[], baselineFails = false) {
   const ledger = createFakeLedger(history);
   const models = {
     user: {
@@ -57,21 +57,26 @@ async function fixture(history: Snapshot[]) {
       ledger.fava as never,
     ),
   );
+  const ledgerData = {
+    getErrors: jest.fn(async () => {
+      // The ledger's current errors cannot be read (w23/233).
+      if (baselineFails) throw new Error("ledger service unavailable");
+      return ledger.errors();
+    }),
+  };
   const workflow = new LedgerWorkflow(
     ledger.fava as never,
     ledger.giteaClientFactory as never,
     {} as never,
     {} as never,
-    {} as never,
+    // The workflow reads the ledger's errors around a rename or revert itself.
+    ledgerData as never,
     {} as never,
     {} as never,
     config,
     authorization,
   );
   const ledgerRepo = new LedgerRepoService(ledger.fava as never, authorization);
-  const ledgerData = {
-    getErrors: jest.fn(async () => ledger.errors()),
-  };
   const server = assembleMcpRegistry(
     {
       identity,
@@ -130,9 +135,41 @@ type Case = {
   args: Record<string, unknown>;
   /** The files the commit leaves behind, to prove it wrote and the preview did not. */
   after?: Record<string, string>;
+  /** The ledger's current errors cannot be read, so new cannot be told from existing. */
+  baselineFails?: true;
 };
 
 const CASES: Case[] = [
+  {
+    // w23/233: the gate read an unreadable baseline as "no errors", so every
+    // error the ledger already had read as new: the preview said invalid with
+    // errors it did not add, and the commit refused a write that added none.
+    name: "updating a file that keeps its errors, with no baseline to read",
+    initial: { "main.bean": MAIN, "broken.bean": BROKEN },
+    tool: "updateLedgerFiles",
+    args: {
+      description: "keep",
+      files: [
+        { path: "broken.bean", content: "BAD\nBAD\n", sha: blobSha(BROKEN) },
+      ],
+    },
+    after: { "main.bean": MAIN, "broken.bean": "BAD\nBAD\n" },
+    baselineFails: true,
+  },
+  {
+    name: "creating a file, with no baseline to read",
+    initial: { "main.bean": 'include "extra/*.bean"\n; BAD\n' },
+    tool: "createLedgerFiles",
+    args: {
+      description: "add",
+      files: [{ path: "extra/new.bean", content: "; fine\n" }],
+    },
+    after: {
+      "main.bean": 'include "extra/*.bean"\n; BAD\n',
+      "extra/new.bean": "; fine\n",
+    },
+    baselineFails: true,
+  },
   {
     // w1/236: every error in the moved file read as new on commit, and the
     // preview never looked.
@@ -264,8 +301,8 @@ const historyOf = (initial: Snapshot | Snapshot[]): Snapshot[] =>
 describe.each(CASES)("$tool: $name", (c) => {
   it("previews what it commits", async () => {
     const history = historyOf(c.initial);
-    const preview = await fixture(history);
-    const commit = await fixture(history);
+    const preview = await fixture(history, c.baselineFails);
+    const commit = await fixture(history, c.baselineFails);
     try {
       const previewed = await preview.call(c.tool, {
         ...c.args,
@@ -277,6 +314,12 @@ describe.each(CASES)("$tool: $name", (c) => {
       });
 
       expect(verdict(previewed)).toEqual(verdict(committed));
+      // The same verdict says why nothing was checked, and refuses nothing on it.
+      if (c.baselineFails) {
+        expect(verdict(previewed)).toMatchObject({
+          validation: { checked: false, valid: false, newErrors: [] },
+        });
+      }
       // A preview writes nothing; the commit writes what the case says.
       expect(preview.snapshot()).toEqual(history.at(-1));
       if (c.after) expect(commit.snapshot()).toEqual(c.after);

@@ -2,6 +2,7 @@ import { NewLedgerErrorsError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import type { ILedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import {
+  checkFailureMessage,
   hasParseError,
   toBeanCheckErrors,
   toWriteValidation,
@@ -71,9 +72,10 @@ export interface FileWriteGateServices {
 
 /**
  * Run the gate over a file write: bean-check over the projected contents
- * (`null` projects a deletion) against the ledger's current errors. The
- * baseline read is fail-open, as in the post-write verdict — a check that
- * cannot run reads no errors, so the projection alone decides.
+ * (`null` projects a deletion) against the ledger's current errors. A baseline
+ * that cannot be read cannot tell an error the write adds from one the ledger
+ * already had, so the verdict says it was not checked and why, as the
+ * post-write verdict does (w23/031), and nothing is refused on it (w23/233).
  */
 export async function gateFileWrite(
   services: FileWriteGateServices,
@@ -84,15 +86,22 @@ export async function gateFileWrite(
   renames?: FileRenames,
 ): Promise<WriteValidation> {
   const getErrors = services.ledgerData?.getErrors;
-  const readBaseline = async (): Promise<BeanCheckError[]> => {
-    if (!getErrors) return [];
+  const readBaseline = async (): Promise<
+    { errors: BeanCheckError[] } | { failure: string }
+  > => {
+    // A composition without the check service has nothing to report.
+    if (!getErrors) return { errors: [] };
     try {
-      return toBeanCheckErrors(
-        (await getErrors.call(services.ledgerData, { ledgerId, identity })) ??
-          [],
-      );
-    } catch {
-      return [];
+      return {
+        errors: toBeanCheckErrors(
+          (await getErrors.call(services.ledgerData, {
+            ledgerId,
+            identity,
+          })) ?? [],
+        ),
+      };
+    } catch (error) {
+      return { failure: checkFailureMessage(error) };
     }
   };
   // Independent reads: the baseline does not wait for the projection.
@@ -100,9 +109,17 @@ export async function gateFileWrite(
     readBaseline(),
     services.ledgerRepo.checkProjectedFiles({ ledgerId, identity, overlays }),
   ]);
+  if ("failure" in before) {
+    return {
+      ...toWriteValidation([], []),
+      valid: false,
+      checked: false,
+      checkError: before.failure,
+    };
+  }
   const projected = toBeanCheckErrors(projectedErrors);
   return assertFileWriteValid(
-    toWriteValidation(before, projected, renames),
+    toWriteValidation(before.errors, projected, renames),
     allowInvalid,
   );
 }

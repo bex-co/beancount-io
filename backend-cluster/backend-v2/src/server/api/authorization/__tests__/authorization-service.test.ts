@@ -831,6 +831,34 @@ describe("AuthorizationService", () => {
     expect(relationships.check).not.toHaveBeenCalled();
   });
 
+  // w23/232: host usernames are case-insensitive, so the pin holds the owner's
+  // other spellings on REST and GraphQL as it does on MCP; the name is exact.
+  it.each([
+    ["alice/allowed", true],
+    ["Alice/allowed", true],
+    ["ALICE/allowed", true],
+    ["alice/other", false],
+    ["mallory/allowed", false],
+  ])(
+    "admits %s under a pin on alice/allowed: %s",
+    async (spelling, admitted) => {
+      const service = new AuthorizationService({ check: async () => true });
+      const decision = await service.authorize({
+        principal: {
+          ...identity("oauth", "usr_alice", ["ledger.write"]),
+          ledgerScope: "alice/allowed",
+        },
+        action: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
+        resource: ledgerResource(spelling),
+      });
+      expect(decision).toMatchObject(
+        admitted
+          ? { allowed: true }
+          : { allowed: false, reason: "credential_not_permitted" },
+      );
+    },
+  );
+
   it("enforces a delegated credential's ledger pin before Gitea lookup", async () => {
     const relationships = { check: jest.fn(async () => true) };
     const service = new AuthorizationService(relationships);

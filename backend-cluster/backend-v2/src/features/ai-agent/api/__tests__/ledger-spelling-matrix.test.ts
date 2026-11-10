@@ -1,6 +1,7 @@
 import { ledgerResource } from "@/server/api/authorization/authorization-contract";
 import { DomainError, ErrorCategory } from "@/shared/errors";
 import { canonicalLedgerId, createLedgerId, parseLedgerId } from "@/shared/str";
+import { identityAllowsLedgerScope } from "@/server/api/identity";
 import { resolveMcpLedger } from "../mcp-context";
 import { validatePromptArgs } from "../mcp-prompts";
 
@@ -109,6 +110,38 @@ describe("ledger spellings the backend accepts", () => {
     expect(canonicalLedgerId("puncsky/other")).not.toBe("puncsky/example");
     expect(canonicalLedgerId("other/example")).not.toBe("puncsky/example");
   });
+});
+
+/**
+ * w23/232 — a credential pinned to `puncsky/example` holds the owner's other
+ * cases on every surface, and nothing else. REST and GraphQL decide it through
+ * `identityAllowsLedgerScope` (`authorization-service.test.ts` drives the same
+ * rule through the policy decision point); MCP through `resolveMcpLedger`,
+ * which also answers with the pin's own spelling.
+ */
+describe("a pinned credential and the owner's case", () => {
+  const pin = "puncsky/example";
+  const pinned = { identity: { userId: "usr_1", ledgerScope: pin } } as never;
+
+  it.each(["puncsky/example", "Puncsky/example", "PUNCSKY/example"])(
+    "%s is the pinned ledger on every surface",
+    (spelling) => {
+      expect(
+        identityAllowsLedgerScope({ ledgerScope: pin } as never, spelling),
+      ).toBe(true);
+      expect(resolveMcpLedger(pinned, spelling)).toBe(pin);
+    },
+  );
+
+  it.each(["puncsky/other", "mallory/example", "puncsky/Example", "puncsky"])(
+    "%s is not the pinned ledger on any surface",
+    (spelling) => {
+      expect(
+        identityAllowsLedgerScope({ ledgerScope: pin } as never, spelling),
+      ).toBe(false);
+      refusal(() => resolveMcpLedger(pinned, spelling));
+    },
+  );
 });
 
 describe("ledger spellings the backend refuses", () => {

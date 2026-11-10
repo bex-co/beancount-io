@@ -1,5 +1,5 @@
 import { resolveMcpLedger } from "../mcp-context";
-import { ledgerIdMatchesPin } from "../mcp-ledger-selection";
+import { sameLedger } from "@/shared/str";
 import { MCP_PROMPTS } from "../mcp-prompts";
 import { ForbiddenError } from "@/shared/errors";
 
@@ -8,23 +8,23 @@ import { ForbiddenError } from "@/shared/errors";
  * `puncsky/x` holds `PUNCSKY/x` too — but ledger names are lowercase-only, so
  * the name still compares exactly.
  */
-describe("ledgerIdMatchesPin", () => {
+describe("sameLedger", () => {
   it("matches the exact pin spelling", () => {
-    expect(ledgerIdMatchesPin("puncsky/x", "puncsky/x")).toBe(true);
+    expect(sameLedger("puncsky/x", "puncsky/x")).toBe(true);
   });
 
   it("matches owner spellings that differ only in case", () => {
-    expect(ledgerIdMatchesPin("PUNCSKY/x", "puncsky/x")).toBe(true);
-    expect(ledgerIdMatchesPin("Puncsky/x", "puncsky/x")).toBe(true);
+    expect(sameLedger("PUNCSKY/x", "puncsky/x")).toBe(true);
+    expect(sameLedger("Puncsky/x", "puncsky/x")).toBe(true);
   });
 
   it("refuses a different owner, name, or malformed id", () => {
-    expect(ledgerIdMatchesPin("mallory/x", "puncsky/x")).toBe(false);
-    expect(ledgerIdMatchesPin("puncsky/y", "puncsky/x")).toBe(false);
+    expect(sameLedger("mallory/x", "puncsky/x")).toBe(false);
+    expect(sameLedger("puncsky/y", "puncsky/x")).toBe(false);
     // The name is lowercase-only: an uppercase name is never the pin.
-    expect(ledgerIdMatchesPin("puncsky/X", "puncsky/x")).toBe(false);
-    expect(ledgerIdMatchesPin("puncsky", "puncsky/x")).toBe(false);
-    expect(ledgerIdMatchesPin("puncsky/x", "puncsky")).toBe(false);
+    expect(sameLedger("puncsky/X", "puncsky/x")).toBe(false);
+    expect(sameLedger("puncsky", "puncsky/x")).toBe(false);
+    expect(sameLedger("puncsky/x", "puncsky")).toBe(false);
   });
 });
 

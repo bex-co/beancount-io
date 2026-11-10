@@ -15,7 +15,7 @@ import {
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
-import { summarizeWrite } from "./write-validation";
+import { summarizeWrite } from "@/features/ledger/utils/write-validation";
 import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 const toolLogger = logger.child({ module: "tool:append-ledger-text" });

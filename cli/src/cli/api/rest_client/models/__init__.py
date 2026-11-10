@@ -359,6 +359,9 @@ from .post_api_gateway_v1_ledgers_owner_name_rename_file_body import PostApiGate
 from .post_api_gateway_v1_ledgers_owner_name_rename_file_response_200 import (
     PostApiGatewayV1LedgersOwnerNameRenameFileResponse200,
 )
+from .post_api_gateway_v1_ledgers_owner_name_rename_file_response_200_new_errors_item import (
+    PostApiGatewayV1LedgersOwnerNameRenameFileResponse200NewErrorsItem,
+)
 from .post_api_gateway_v1_ledgers_owner_name_rename_file_response_200_preview_item import (
     PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem,
 )
@@ -371,6 +374,9 @@ from .post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_files_it
 )
 from .post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_files_item_change import (
     PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItemChange,
+)
+from .post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_new_errors_item import (
+    PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200NewErrorsItem,
 )
 from .post_api_gateway_v1_legacy_entries_body import PostApiGatewayV1LegacyEntriesBody
 from .post_api_gateway_v1_legacy_entries_body_entries_input_item import (
@@ -670,11 +676,13 @@ __all__ = (
     "PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200",
     "PostApiGatewayV1LedgersOwnerNameRenameFileBody",
     "PostApiGatewayV1LedgersOwnerNameRenameFileResponse200",
+    "PostApiGatewayV1LedgersOwnerNameRenameFileResponse200NewErrorsItem",
     "PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem",
     "PostApiGatewayV1LedgersOwnerNameRevertCommitBody",
     "PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200",
     "PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem",
     "PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItemChange",
+    "PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200NewErrorsItem",
     "PostApiGatewayV1LegacyEntriesBody",
     "PostApiGatewayV1LegacyEntriesBodyEntriesInputItem",
     "PostApiGatewayV1LegacyEntriesBodyEntriesInputItemMeta",

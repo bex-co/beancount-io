@@ -2045,7 +2045,11 @@ list is empty on a dry run, or when the hashes could not be resolved after
 the commit; the write still stands. When bean-check cannot
 run before or after the write, `validation` adds `checked: false` and
 `checkError`, and the summary says the ledger is unverified instead of
-claiming no new errors; the write itself still stands. A transaction with at
+claiming no new errors; the write itself still stands. A file write's preview
+and its pre-commit gate read it the same way: when the ledger's current errors
+cannot be read they cannot tell an error the write adds from one the ledger
+already had, so both say `checked: false` (REST adds the same two fields to a
+file write's answer) and the commit is not refused on it. A transaction with at
 most one amount omitted is written elided; any other imbalance is refused with
 `UNBALANCED`. Like `appendLedgerText`, it bean-checks the projected ledger
 before committing: entries that would add new errors — a second `open` for an

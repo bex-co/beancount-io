@@ -1,4 +1,5 @@
 import type { LedgerSetup } from "@/features/ledger/setup/build-ledger";
+import type { WriteValidation } from "@/features/ledger/utils/bean-check-errors";
 
 /**
  * Domain input/output types for the ledger workflow. These are plain,
@@ -101,6 +102,8 @@ export interface RevertLedgerCommitResult {
   dryRun: boolean;
   /** The sha of the revert commit; absent on a preview. */
   commit?: string;
+  /** bean-check around the revert: projected for a preview, read back after a commit. */
+  validation: WriteValidation;
 }
 
 export interface RenameLedgerFileCommand {
@@ -248,6 +251,8 @@ export interface RenameLedgerFileResult {
   preview: { path: string; text: string }[];
   /** The sha of the commit the rename made; absent on a preview. */
   commit?: string;
+  /** bean-check around the rename: projected for a preview, read back after a commit. */
+  validation: WriteValidation;
 }
 
 export interface StarLedgerResult {

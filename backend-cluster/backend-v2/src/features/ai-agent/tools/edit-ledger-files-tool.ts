@@ -28,7 +28,7 @@ import {
   summarizeWrite,
   toWriteValidation,
   withPostWriteValidation,
-} from "./write-validation";
+} from "@/features/ledger/utils/write-validation";
 import { unifiedDiff } from "@/shared/unified-diff";
 import { assertWritableText } from "@/shared/file-content";
 import { assertAmountsFitEngineDecimal } from "@/features/ledger/utils/engine-decimal";

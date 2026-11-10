@@ -1,3 +1,4 @@
+import { DomainError } from "@/shared/errors";
 /**
  * bean-check's errors, reduced to what a caller can act on.
  *
@@ -51,6 +52,31 @@ export function hasParseError(errors: readonly BeanCheckError[]): boolean {
           LOAD_PARSE_SUMMARY_PATTERN.test(error.message))
       : /parse error/i.test(error.message),
   );
+}
+
+/**
+ * A write's verdict as REST and GraphQL publish it: its fields flat beside the
+ * write's own, where MCP nests them under `validation`. `checked` and
+ * `checkError` appear only when bean-check could not run.
+ */
+export function flattenValidation(validation: WriteValidation) {
+  return {
+    errorsBefore: validation.errorsBefore,
+    errorsAfter: validation.errorsAfter,
+    newErrors: validation.newErrors,
+    valid: validation.valid,
+    ...(validation.checked === false && {
+      checked: false as const,
+      checkError: validation.checkError,
+    }),
+  };
+}
+
+/** Why a check could not run: a domain message is written for callers; anything else is internal. */
+export function checkFailureMessage(error: unknown): string {
+  return error instanceof DomainError
+    ? error.message
+    : "the ledger check failed";
 }
 
 /** bean-check's verdict around a write. */

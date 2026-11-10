@@ -56,13 +56,30 @@ function validateLedgerSlugs(owner: string, name: string): void {
  *
  * Host usernames are case-insensitive and ledger names are lowercase-only, so
  * `Alice/books` and `alice/books` are one ledger; the owner folds to lowercase
- * and the name stays exact (the rule `ledgerIdMatchesPin` already applies).
+ * and the name stays exact (the rule `sameLedger` applies to a pin).
  * Anything that stores or looks up a record per ledger must key on this, never
  * on the spelling the caller sent (w23/m38, w1/234).
  */
 export function canonicalLedgerId(id: string): string {
   const { ledgerOwner, ledgerName } = parseLedgerId(id);
   return `${ledgerOwner.toLowerCase()}/${ledgerName}`;
+}
+
+/**
+ * Whether two ledger ids name one ledger, by the rule `canonicalLedgerId`
+ * applies: the owner compares without regard to case, the name exactly. A
+ * malformed id is simply not the same ledger as anything (this answers a
+ * question; `canonicalLedgerId` refuses). A credential's ledger pin is held to
+ * the request's ledger by this on every surface (w23/232).
+ */
+export function sameLedger(a: string, b: string): boolean {
+  const slashA = a.indexOf("/");
+  const slashB = b.indexOf("/");
+  if (slashA === -1 || slashB === -1) return false;
+  return (
+    a.slice(0, slashA).toLowerCase() === b.slice(0, slashB).toLowerCase() &&
+    a.slice(slashA + 1) === b.slice(slashB + 1)
+  );
 }
 
 export function parseLedgerId(id: string): {

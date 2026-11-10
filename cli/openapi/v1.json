@@ -364,6 +364,16 @@
               "additionalProperties": false
             }
           },
+          "checked": {
+            "type": "boolean",
+            "enum": [
+              false
+            ],
+            "description": "Present, as false, when bean-check could not read the ledger's current errors, so `valid` and `newErrors` say nothing; `checkError` says why. Nothing is refused on it."
+          },
+          "checkError": {
+            "type": "string"
+          },
           "commit": {
             "type": "string",
             "description": "The sha of the commit this write made; absent on a preview or a read."
@@ -11224,6 +11234,44 @@
                     "commit": {
                       "type": "string",
                       "description": "The sha of the commit this write made; absent on a preview or a read."
+                    },
+                    "errorsBefore": {
+                      "type": "integer"
+                    },
+                    "errorsAfter": {
+                      "type": "integer"
+                    },
+                    "newErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "valid": {
+                      "type": "boolean",
+                      "description": "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on the status."
+                    },
+                    "checked": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ],
+                      "description": "Present, as false, when bean-check could not run, so the other fields say nothing; `checkError` says why."
+                    },
+                    "checkError": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -11232,7 +11280,11 @@
                     "oldPath",
                     "newPath",
                     "updatedIncludes",
-                    "preview"
+                    "preview",
+                    "errorsBefore",
+                    "errorsAfter",
+                    "newErrors",
+                    "valid"
                   ]
                 }
               }
@@ -11455,6 +11507,44 @@
                     "commit": {
                       "type": "string",
                       "description": "The sha of the revert commit; absent on a preview, and when another commit landed in between."
+                    },
+                    "errorsBefore": {
+                      "type": "integer"
+                    },
+                    "errorsAfter": {
+                      "type": "integer"
+                    },
+                    "newErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "valid": {
+                      "type": "boolean",
+                      "description": "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on the status."
+                    },
+                    "checked": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ],
+                      "description": "Present, as false, when bean-check could not run, so the other fields say nothing; `checkError` says why."
+                    },
+                    "checkError": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -11462,7 +11552,11 @@
                     "subject",
                     "message",
                     "files",
-                    "dryRun"
+                    "dryRun",
+                    "errorsBefore",
+                    "errorsAfter",
+                    "newErrors",
+                    "valid"
                   ]
                 }
               }

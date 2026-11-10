@@ -9,6 +9,9 @@ from attrs import field as _attrs_field
 from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
+    from ..models.post_api_gateway_v1_ledgers_owner_name_rename_file_response_200_new_errors_item import (
+        PostApiGatewayV1LedgersOwnerNameRenameFileResponse200NewErrorsItem,
+    )
     from ..models.post_api_gateway_v1_ledgers_owner_name_rename_file_response_200_preview_item import (
         PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem,
     )
@@ -28,7 +31,15 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
         updated_includes (list[str]):
         preview (list[PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem]): Per-file rewritten include
             lines; populated on dry runs only.
+        errors_before (int):
+        errors_after (int):
+        new_errors (list[PostApiGatewayV1LedgersOwnerNameRenameFileResponse200NewErrorsItem]):
+        valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
+            refusing, so gate on this, not on the status.
         commit (str | Unset): The sha of the commit this write made; absent on a preview or a read.
+        checked (bool | Unset): Present, as false, when bean-check could not run, so the other fields say nothing;
+            `checkError` says why.
+        check_error (str | Unset):
     """
 
     message: str
@@ -37,7 +48,13 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
     new_path: str
     updated_includes: list[str]
     preview: list[PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem]
+    errors_before: int
+    errors_after: int
+    new_errors: list[PostApiGatewayV1LedgersOwnerNameRenameFileResponse200NewErrorsItem]
+    valid: bool
     commit: str | Unset = UNSET
+    checked: bool | Unset = UNSET
+    check_error: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,7 +73,22 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
             preview_item = preview_item_data.to_dict()
             preview.append(preview_item)
 
+        errors_before = self.errors_before
+
+        errors_after = self.errors_after
+
+        new_errors = []
+        for new_errors_item_data in self.new_errors:
+            new_errors_item = new_errors_item_data.to_dict()
+            new_errors.append(new_errors_item)
+
+        valid = self.valid
+
         commit = self.commit
+
+        checked = self.checked
+
+        check_error = self.check_error
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -68,15 +100,26 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
                 "newPath": new_path,
                 "updatedIncludes": updated_includes,
                 "preview": preview,
+                "errorsBefore": errors_before,
+                "errorsAfter": errors_after,
+                "newErrors": new_errors,
+                "valid": valid,
             }
         )
         if commit is not UNSET:
             field_dict["commit"] = commit
+        if checked is not UNSET:
+            field_dict["checked"] = checked
+        if check_error is not UNSET:
+            field_dict["checkError"] = check_error
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.post_api_gateway_v1_ledgers_owner_name_rename_file_response_200_new_errors_item import (
+            PostApiGatewayV1LedgersOwnerNameRenameFileResponse200NewErrorsItem,  # noqa: PLC0415
+        )
         from ..models.post_api_gateway_v1_ledgers_owner_name_rename_file_response_200_preview_item import (
             PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem,  # noqa: PLC0415
         )
@@ -99,7 +142,26 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
 
             preview.append(preview_item)
 
+        errors_before = d.pop("errorsBefore")
+
+        errors_after = d.pop("errorsAfter")
+
+        new_errors = []
+        _new_errors = d.pop("newErrors")
+        for new_errors_item_data in _new_errors:
+            new_errors_item = PostApiGatewayV1LedgersOwnerNameRenameFileResponse200NewErrorsItem.from_dict(
+                new_errors_item_data
+            )
+
+            new_errors.append(new_errors_item)
+
+        valid = d.pop("valid")
+
         commit = d.pop("commit", UNSET)
+
+        checked = d.pop("checked", UNSET)
+
+        check_error = d.pop("checkError", UNSET)
 
         post_api_gateway_v1_ledgers_owner_name_rename_file_response_200 = cls(
             message=message,
@@ -108,7 +170,13 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
             new_path=new_path,
             updated_includes=updated_includes,
             preview=preview,
+            errors_before=errors_before,
+            errors_after=errors_after,
+            new_errors=new_errors,
+            valid=valid,
             commit=commit,
+            checked=checked,
+            check_error=check_error,
         )
 
         post_api_gateway_v1_ledgers_owner_name_rename_file_response_200.additional_properties = d

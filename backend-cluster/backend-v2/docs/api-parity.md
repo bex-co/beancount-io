@@ -271,9 +271,13 @@ A projection tool also has a case in `preview-commit-differential.test.ts`
 once as a commit, and compares the verdicts, or a written reason in the
 registry for why the harness cannot run it. MCP's `renameLedgerFile` is one of
 them: its preview projects the move, and the moved file's errors are not new
-for having a new path (w1/236). REST and GraphQL rename return no validation
-block, and no surface refuses a rename for new errors; the registry records
-that exception.
+for having a new path (w1/236). The workflow computes the verdict for a rename
+and for a revert, so REST (`errorsBefore`, `errorsAfter`, `newErrors`, `valid`,
+and `checked`/`checkError` when bean-check could not run, flat), GraphQL (the
+same fields) and MCP (nested under `validation`) all carry it (w23/233); no
+surface refuses a rename for new errors, and the registry records that
+exception. A file write's pre-commit gate reads an unreadable baseline the same
+way: `checked: false`, nothing refused on it.
 
 ## The commit a write made, and undoing it (w23/m42)
 

@@ -20,7 +20,7 @@ import {
   summarizeWrite,
   toWriteValidation,
   withPostWriteValidation,
-} from "./write-validation";
+} from "@/features/ledger/utils/write-validation";
 
 const toolLogger = logger.child({ module: "tool:bank" });
 

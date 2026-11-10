@@ -12,6 +12,9 @@ if TYPE_CHECKING:
     from ..models.post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_files_item import (
         PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem,
     )
+    from ..models.post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_new_errors_item import (
+        PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200NewErrorsItem,
+    )
 
 
 T = TypeVar("T", bound="PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200")
@@ -27,8 +30,16 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
         files (list[PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem]): Each file the commit touched,
             and what the revert does to it.
         dry_run (bool):
+        errors_before (int):
+        errors_after (int):
+        new_errors (list[PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200NewErrorsItem]):
+        valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
+            refusing, so gate on this, not on the status.
         commit (str | Unset): The sha of the revert commit; absent on a preview, and when another commit landed in
             between.
+        checked (bool | Unset): Present, as false, when bean-check could not run, so the other fields say nothing;
+            `checkError` says why.
+        check_error (str | Unset):
     """
 
     sha: str
@@ -36,7 +47,13 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
     message: str
     files: list[PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem]
     dry_run: bool
+    errors_before: int
+    errors_after: int
+    new_errors: list[PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200NewErrorsItem]
+    valid: bool
     commit: str | Unset = UNSET
+    checked: bool | Unset = UNSET
+    check_error: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -53,7 +70,22 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
 
         dry_run = self.dry_run
 
+        errors_before = self.errors_before
+
+        errors_after = self.errors_after
+
+        new_errors = []
+        for new_errors_item_data in self.new_errors:
+            new_errors_item = new_errors_item_data.to_dict()
+            new_errors.append(new_errors_item)
+
+        valid = self.valid
+
         commit = self.commit
+
+        checked = self.checked
+
+        check_error = self.check_error
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -64,10 +96,18 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
                 "message": message,
                 "files": files,
                 "dryRun": dry_run,
+                "errorsBefore": errors_before,
+                "errorsAfter": errors_after,
+                "newErrors": new_errors,
+                "valid": valid,
             }
         )
         if commit is not UNSET:
             field_dict["commit"] = commit
+        if checked is not UNSET:
+            field_dict["checked"] = checked
+        if check_error is not UNSET:
+            field_dict["checkError"] = check_error
 
         return field_dict
 
@@ -75,6 +115,9 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_files_item import (
             PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200FilesItem,  # noqa: PLC0415
+        )
+        from ..models.post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200_new_errors_item import (
+            PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200NewErrorsItem,  # noqa: PLC0415
         )
 
         d = dict(src_dict)
@@ -93,7 +136,26 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
 
         dry_run = d.pop("dryRun")
 
+        errors_before = d.pop("errorsBefore")
+
+        errors_after = d.pop("errorsAfter")
+
+        new_errors = []
+        _new_errors = d.pop("newErrors")
+        for new_errors_item_data in _new_errors:
+            new_errors_item = PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200NewErrorsItem.from_dict(
+                new_errors_item_data
+            )
+
+            new_errors.append(new_errors_item)
+
+        valid = d.pop("valid")
+
         commit = d.pop("commit", UNSET)
+
+        checked = d.pop("checked", UNSET)
+
+        check_error = d.pop("checkError", UNSET)
 
         post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200 = cls(
             sha=sha,
@@ -101,7 +163,13 @@ class PostApiGatewayV1LedgersOwnerNameRevertCommitResponse200:
             message=message,
             files=files,
             dry_run=dry_run,
+            errors_before=errors_before,
+            errors_after=errors_after,
+            new_errors=new_errors,
+            valid=valid,
             commit=commit,
+            checked=checked,
+            check_error=check_error,
         )
 
         post_api_gateway_v1_ledgers_owner_name_revert_commit_response_200.additional_properties = d

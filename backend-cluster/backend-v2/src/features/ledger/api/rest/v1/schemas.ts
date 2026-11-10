@@ -93,6 +93,20 @@ export const writeProjectionShape = {
   }),
 };
 
+/**
+ * The verdict of a write that previews by projection and commits by reading
+ * the ledger back (rename, revert): the projection's fields, and the two that
+ * say bean-check could not run (w23/233).
+ */
+export const writeVerdictShape = {
+  ...writeProjectionShape,
+  checked: z.literal(false).optional().openapi({
+    description:
+      "Present, as false, when bean-check could not run, so the other fields say nothing; `checkError` says why.",
+  }),
+  checkError: z.string().optional(),
+};
+
 /** Fava's own narrowing expressions, as `/journal` already publishes them. */
 export const filterQuerySchema = z
   .object({

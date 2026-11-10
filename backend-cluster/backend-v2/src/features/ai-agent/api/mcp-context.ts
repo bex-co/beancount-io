@@ -19,10 +19,8 @@ import {
   MCP_TRANSPORT_OP_ID,
   MCP_HANDSHAKE_OP_ID,
 } from "@/server/api/rate-limit";
-import {
-  assertLedgerSpelling,
-  ledgerIdMatchesPin,
-} from "./mcp-ledger-selection";
+import { assertLedgerSpelling } from "./mcp-ledger-selection";
+import { sameLedger } from "@/shared/str";
 
 export { ledgerSelection, mcpRequestId } from "./mcp-ledger-selection";
 
@@ -106,7 +104,7 @@ export function resolveMcpLedger(
   // "select one" is for a call that named none (w1/235).
   assertLedgerSpelling(ledger);
   const pin = context.identity.ledgerScope;
-  if (pin && !ledgerIdMatchesPin(ledger, pin)) {
+  if (pin && !sameLedger(ledger, pin)) {
     throw new ForbiddenError(
       "The selected ledger is outside this credential's ledger restriction",
       "ledger",

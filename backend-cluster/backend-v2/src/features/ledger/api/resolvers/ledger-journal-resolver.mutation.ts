@@ -20,6 +20,7 @@ import {
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
 import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
+import { SliceWriteError } from "./ledger-resolver.types";
 
 @InputType()
 class DeleteSourceSliceInput {
@@ -72,23 +73,6 @@ class SlicePreviewFile {
 
   @Field(() => String)
   text: string;
-}
-
-/** A bean-check error the write adds, as the append result publishes it. */
-@ObjectType()
-class SliceWriteError {
-  @Field(() => String)
-  message: string;
-
-  @Field(() => String, { nullable: true })
-  source?: string;
-
-  // MCP and REST carry the engine's code; so does GraphQL (w1/220).
-  @Field(() => String, {
-    nullable: true,
-    description: "The engine's stable error code, such as E3001",
-  })
-  code?: string;
 }
 
 @ObjectType()

@@ -26,6 +26,9 @@ class FileCommitAck:
         valid (bool): True only when the change adds no bean-check error. A dry run reports the new errors instead of
             refusing, so gate on this, not on the status.
         new_errors (list[FileCommitAckNewErrorsItem]):
+        checked (bool | Unset): Present, as false, when bean-check could not read the ledger's current errors, so
+            `valid` and `newErrors` say nothing; `checkError` says why. Nothing is refused on it.
+        check_error (str | Unset):
         commit (str | Unset): The sha of the commit this write made; absent on a preview or a read.
         not_loaded (list[str] | Unset): Ledger files the change writes that no loaded file includes: their entries don't
             count and bean-check did not read them. Present only when there are any.
@@ -36,6 +39,8 @@ class FileCommitAck:
     dry_run: bool
     valid: bool
     new_errors: list[FileCommitAckNewErrorsItem]
+    checked: bool | Unset = UNSET
+    check_error: str | Unset = UNSET
     commit: str | Unset = UNSET
     not_loaded: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -54,6 +59,10 @@ class FileCommitAck:
             new_errors_item = new_errors_item_data.to_dict()
             new_errors.append(new_errors_item)
 
+        checked = self.checked
+
+        check_error = self.check_error
+
         commit = self.commit
 
         not_loaded: list[str] | Unset = UNSET
@@ -71,6 +80,10 @@ class FileCommitAck:
                 "newErrors": new_errors,
             }
         )
+        if checked is not UNSET:
+            field_dict["checked"] = checked
+        if check_error is not UNSET:
+            field_dict["checkError"] = check_error
         if commit is not UNSET:
             field_dict["commit"] = commit
         if not_loaded is not UNSET:
@@ -98,6 +111,10 @@ class FileCommitAck:
 
             new_errors.append(new_errors_item)
 
+        checked = d.pop("checked", UNSET)
+
+        check_error = d.pop("checkError", UNSET)
+
         commit = d.pop("commit", UNSET)
 
         not_loaded = cast(list[str], d.pop("notLoaded", UNSET))
@@ -108,6 +125,8 @@ class FileCommitAck:
             dry_run=dry_run,
             valid=valid,
             new_errors=new_errors,
+            checked=checked,
+            check_error=check_error,
             commit=commit,
             not_loaded=not_loaded,
         )

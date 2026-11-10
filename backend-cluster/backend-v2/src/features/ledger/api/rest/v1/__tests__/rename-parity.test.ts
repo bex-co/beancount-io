@@ -205,12 +205,21 @@ async function fixture(
       fava as never,
     ),
   );
+  const ledgerData = {
+    getErrors: jest.fn(async () => {
+      const batch =
+        errorBatches[Math.min(errorCalls.count, errorBatches.length - 1)] ?? [];
+      errorCalls.count += 1;
+      return batch;
+    }),
+  };
   const workflow = new LedgerWorkflow(
     fava as never,
     {} as never,
     {} as never,
     {} as never,
-    {} as never,
+    // The workflow reads the ledger's errors around a rename itself (w23/233).
+    ledgerData as never,
     {} as never,
     {} as never,
     config,
@@ -220,14 +229,6 @@ async function fixture(
   // The delete-guard parity below drives the real repo service through the
   // same fake repository; rename never touches it.
   const ledgerRepo = new LedgerRepoService(fava as never, authorization);
-  const ledgerData = {
-    getErrors: jest.fn(async () => {
-      const batch =
-        errorBatches[Math.min(errorCalls.count, errorBatches.length - 1)] ?? [];
-      errorCalls.count += 1;
-      return batch;
-    }),
-  };
   const rest = await startV1TestServer(
     {
       workflows: { ledger: workflow },
@@ -305,7 +306,7 @@ async function fixture(
         ].join(",");
         const result = await graphql({
           schema,
-          source: `mutation(${defs}) { renameLedgerFile(ledgerId:"alice/main",${uses}) { message dryRun oldPath newPath updatedIncludes preview { path text } } }`,
+          source: `mutation(${defs}) { renameLedgerFile(ledgerId:"alice/main",${uses}) { message dryRun oldPath newPath updatedIncludes preview { path text } errorsBefore errorsAfter newErrors { message source } valid } }`,
           variableValues: args,
           contextValue: { identity: caller, getCurrentIdentity: () => caller },
         });
@@ -421,7 +422,14 @@ const withRenameOutcome = (
           valid: true,
         },
       }
-    : { ...base, dryRun: preview };
+    : {
+        ...base,
+        dryRun: preview,
+        errorsBefore: 0,
+        errorsAfter: 0,
+        newErrors: [],
+        valid: true,
+      };
 
 describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
   const withOutcome = (base: Record<string, unknown>, summary: string) =>
@@ -779,7 +787,21 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
           },
         });
       } else {
-        expect(result.success).toBe(true);
+        // w23/233: REST and GraphQL carry the same verdict, flat.
+        expect(result).toMatchObject({
+          success: true,
+          result: {
+            errorsBefore: 0,
+            errorsAfter: 1,
+            newErrors: [
+              {
+                message: "Failed to read file folder/new.bean",
+                source: "main.bean:1",
+              },
+            ],
+            valid: false,
+          },
+        });
       }
     } finally {
       await f.close();

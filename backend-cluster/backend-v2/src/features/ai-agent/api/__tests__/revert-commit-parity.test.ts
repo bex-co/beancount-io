@@ -84,12 +84,15 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
       ledger.fava as never,
     ),
   );
+  const ledgerData = {
+    getErrors: jest.fn(async () => ledger.errors()),
+  };
   const workflow = new LedgerWorkflow(
     ledger.fava as never,
     ledger.giteaClientFactory as never,
     {} as never,
     {} as never,
-    {} as never,
+    ledgerData as never,
     {} as never,
     {} as never,
     config,
@@ -97,9 +100,6 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
   );
   resolver = new LedgerMutationResolver(workflow);
   const ledgerRepo = new LedgerRepoService(ledger.fava as never, authorization);
-  const ledgerData = {
-    getErrors: jest.fn(async () => ledger.errors()),
-  };
   const rest = await startV1TestServer(
     {
       workflows: { ledger: workflow },
@@ -142,7 +142,7 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
       const response = await graphql({
         schema,
         source:
-          'mutation($sha:String!,$message:String,$dryRun:Boolean) { revertLedgerCommit(ledgerId:"alice/main",sha:$sha,message:$message,dryRun:$dryRun) { sha subject message files { path change } dryRun commit } }',
+          'mutation($sha:String!,$message:String,$dryRun:Boolean) { revertLedgerCommit(ledgerId:"alice/main",sha:$sha,message:$message,dryRun:$dryRun) { sha subject message files { path change } dryRun commit errorsBefore errorsAfter newErrors { message source } valid } }',
         variableValues: args,
         contextValue: {
           identity: caller,
@@ -197,7 +197,19 @@ async function fixture(history: Snapshot[], caller: Identity = writer) {
  * answers an absent `commit` as `null`, as it does every nullable field.
  */
 const common = (answer: Answer) => {
-  const { sha, subject, message, files, commit } = answer.result ?? {};
+  const { sha, subject, message, files, commit, ...rest } = answer.result ?? {};
+  // MCP nests the verdict under `validation`; REST and GraphQL publish it flat
+  // (w23/233).
+  const validation =
+    rest.validation ??
+    (answer.ok
+      ? {
+          errorsBefore: rest.errorsBefore,
+          errorsAfter: rest.errorsAfter,
+          newErrors: rest.newErrors,
+          valid: rest.valid,
+        }
+      : undefined);
   return {
     ok: answer.ok,
     code: answer.code,
@@ -206,6 +218,7 @@ const common = (answer: Answer) => {
     message,
     files,
     commit: commit ?? undefined,
+    validation,
   };
 };
 
@@ -222,6 +235,13 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
         message: 'Revert "Commit 1"\n\nThis reverts commit c1.',
         files: [{ path: "ok.bean", change: "updated" }],
         commit: undefined,
+        // The projection of the files the revert would leave.
+        validation: {
+          errorsBefore: 1,
+          errorsAfter: 0,
+          newErrors: [],
+          valid: true,
+        },
       });
       expect(f.snapshot()).toEqual(BROKEN);
       expect(f.shas()).toEqual(["c0", "c1"]);
@@ -242,6 +262,13 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
         message: "Undo it",
         files: [{ path: "ok.bean", change: "updated" }],
         commit: "c2",
+        // Read back after the commit: the revert fixed the file's one error.
+        validation: {
+          errorsBefore: 1,
+          errorsAfter: 0,
+          newErrors: [],
+          valid: true,
+        },
       });
       expect(f.snapshot()).toEqual(FINE);
       expect(f.shas()).toEqual(["c0", "c1", "c2"]);

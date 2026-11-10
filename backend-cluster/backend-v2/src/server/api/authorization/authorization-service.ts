@@ -20,6 +20,7 @@ import {
 import { isMobileOAuthClient } from "@/features/oauth/data/config";
 import { logger } from "@/shared/logger";
 import { getOperationId } from "@/shared/async-context";
+import { sameLedger } from "@/shared/str";
 import {
   AUTHORIZATION_ACTIONS,
   isTrustedAnonymousPrincipal,
@@ -1195,7 +1196,7 @@ export class AuthorizationService implements IAuthorizationService {
       !isTrustedPlaidBackgroundPrincipal(input.principal) &&
       auditLedgerId &&
       input.principal.ledgerScope &&
-      input.principal.ledgerScope !== auditLedgerId
+      !sameLedger(input.principal.ledgerScope, auditLedgerId)
     ) {
       return deny("credential_not_permitted", {
         message:

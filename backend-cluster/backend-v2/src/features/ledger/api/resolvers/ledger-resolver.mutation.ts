@@ -40,6 +40,7 @@ import {
   RevertLedgerCommitResponse,
   StarLedgerResponse,
 } from "./ledger-resolver.types";
+import { flattenValidation } from "@/features/ledger/utils/bean-check-errors";
 
 @Resolver(() => Ledger)
 export class LedgerMutationResolver {
@@ -156,11 +157,12 @@ export class LedgerMutationResolver {
     @Args() input: RenameLedgerFileInput,
     @Ctx() ctx: IContext,
   ): Promise<RenameLedgerFileResponse> {
-    return this.workflow.renameLedgerFile({
+    const { validation, ...result } = await this.workflow.renameLedgerFile({
       identity: ctx.getCurrentIdentity(),
       ledgerId,
       input: withResolvedMessage(withResolvedPreview(input)),
     });
+    return { ...result, ...flattenValidation(validation) };
   }
 
   @Authenticated()
@@ -173,11 +175,12 @@ export class LedgerMutationResolver {
     @Args() input: RevertLedgerCommitInput,
     @Ctx() ctx: IContext,
   ): Promise<RevertLedgerCommitResponse> {
-    return this.workflow.revertLedgerCommit({
+    const { validation, ...result } = await this.workflow.revertLedgerCommit({
       identity: ctx.getCurrentIdentity(),
       ledgerId,
       input: withResolvedPreview(input),
     });
+    return { ...result, ...flattenValidation(validation) };
   }
 
   @Authenticated()

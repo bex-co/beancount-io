@@ -22,7 +22,7 @@ import {
 import {
   summarizeWrite,
   withPostWriteValidation,
-} from "../tools/write-validation";
+} from "@/features/ledger/utils/write-validation";
 import type {
   ReportedProjection,
   WriteValidation,

@@ -10,7 +10,8 @@ import {
   REVERT_SHA_DESCRIPTION,
 } from "@/features/ledger/utils/commit-revert";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
-import { ledgerPathSchema, ledgerIdOf } from "./schemas";
+import { flattenValidation } from "@/features/ledger/utils/bean-check-errors";
+import { ledgerPathSchema, ledgerIdOf, writeVerdictShape } from "./schemas";
 
 export const revertCommitInput = z
   .object({
@@ -46,6 +47,7 @@ export const revertCommitResult = z.object({
     .describe(
       "The sha of the revert commit; absent on a preview, and when another commit landed in between.",
     ),
+  ...writeVerdictShape,
 });
 
 export const revertCommitRoute = v1Route({
@@ -59,16 +61,21 @@ export const revertCommitRoute = v1Route({
   body: revertCommitInput,
   responses: { 200: json("The commit reverted", revertCommitResult) },
   handler: ({ layers }, { identity, params, body }) =>
-    layers.workflows.ledger.revertLedgerCommit({
-      identity,
-      ledgerId: ledgerIdOf(params),
-      input: {
-        sha: body.sha,
-        message: body.message ?? undefined,
-        dryRun: resolveFlagAlias(
-          { primary: body.dry_run, legacy: body.dryRun },
-          DRY_RUN_NAMES,
-        ),
-      },
-    }),
+    layers.workflows.ledger
+      .revertLedgerCommit({
+        identity,
+        ledgerId: ledgerIdOf(params),
+        input: {
+          sha: body.sha,
+          message: body.message ?? undefined,
+          dryRun: resolveFlagAlias(
+            { primary: body.dry_run, legacy: body.dryRun },
+            DRY_RUN_NAMES,
+          ),
+        },
+      })
+      .then(({ validation, ...result }) => ({
+        ...result,
+        ...flattenValidation(validation),
+      })),
 });

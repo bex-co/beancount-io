@@ -11,6 +11,7 @@ import {
   isApiKeyLive,
 } from "@/features/apikeys/service/api-key-service";
 import { logger } from "@/shared/logger";
+import { sameLedger } from "@/shared/str";
 import { ForbiddenError } from "@/shared/errors";
 import type { LedgerPinResolver } from "@/features/ledger/utils/ledger-pin-resolver";
 
@@ -319,7 +320,8 @@ export function identityAllowsLedgerScope(
   ledgerId: string,
 ): boolean {
   return (
-    identity?.ledgerScope === undefined || identity.ledgerScope === ledgerId
+    identity?.ledgerScope === undefined ||
+    sameLedger(identity.ledgerScope, ledgerId)
   );
 }
 

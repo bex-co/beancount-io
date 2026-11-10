@@ -1,34 +1,26 @@
 import { logger } from "@/shared/logger";
-import { DomainError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
-import type { ToolServices } from "./types";
 import {
   gateFileWrite,
   type FileOverlay,
   type FileWriteGateServices,
-} from "@/features/ledger/utils/file-write-gate";
+} from "./file-write-gate";
 import {
+  checkFailureMessage,
   toBeanCheckErrors,
   toWriteValidation,
   type BeanCheckError,
   type FileRenames,
   type WriteValidation,
-} from "@/features/ledger/utils/bean-check-errors";
+} from "./bean-check-errors";
 
-const validationLogger = logger.child({ module: "tool:write-validation" });
+const validationLogger = logger.child({ module: "write-validation" });
 
-type ValidationServices = Pick<ToolServices, "ledgerData">;
+type ValidationServices = Pick<FileWriteGateServices, "ledgerData">;
 
 // Re-exported so the tools keep one import for the whole validation vocabulary
 // while the shaping and diffing live beside the ledger they describe (w2/m28).
 export { toWriteValidation };
-
-/** Domain messages are written for callers; anything else is internal. */
-function checkFailureMessage(error: unknown): string {
-  return error instanceof DomainError
-    ? error.message
-    : "the ledger check failed";
-}
 
 /**
  * The ledger's current bean-check errors through the same call the `errors`

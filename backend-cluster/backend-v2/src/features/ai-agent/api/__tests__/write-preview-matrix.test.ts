@@ -142,10 +142,14 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
         file: DIFFERENTIAL_FILE,
         test: "renaming a file that carries errors adds none",
       },
+      {
+        file: `${REST_V1}/rename-parity.test.ts`,
+        test: "reports bean-check's verdict around the write",
+      },
     ],
     differential: DIFFERENTIAL_CASE,
     exception:
-      "MCP only: REST and GraphQL rename return no validation block, and no surface refuses the commit for new errors (it reports them, as the preview does)",
+      "no surface refuses the commit for new errors (it reports them, as the preview does); REST, GraphQL and MCP all carry the verdict (w23/233)",
   },
   // Undoing a commit projects bean-check over the files it would leave, as a
   // rename does, and reports it, never refusing for new errors (w23/m42).

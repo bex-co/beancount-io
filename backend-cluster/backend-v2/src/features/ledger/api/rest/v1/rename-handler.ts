@@ -7,7 +7,8 @@ import {
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
-import { ledgerPathSchema, ledgerIdOf } from "./schemas";
+import { flattenValidation } from "@/features/ledger/utils/bean-check-errors";
+import { ledgerPathSchema, ledgerIdOf, writeVerdictShape } from "./schemas";
 import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 export const renameFileInput = z
@@ -39,6 +40,7 @@ export const renameFileResult = z.object({
     .array(previewFile)
     .describe("Per-file rewritten include lines; populated on dry runs only."),
   commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
+  ...writeVerdictShape,
 });
 export const renameFileRoute = v1Route({
   method: "post",
@@ -51,18 +53,23 @@ export const renameFileRoute = v1Route({
   body: renameFileInput,
   responses: { 200: json("Renamed file paths", renameFileResult) },
   handler: ({ layers }, { identity, params, body }) =>
-    layers.workflows.ledger.renameLedgerFile({
-      identity,
-      ledgerId: ledgerIdOf(params),
-      input: {
-        oldPath: body.oldPath,
-        newPath: body.newPath,
-        message: resolveCommitMessage(body, { required: false }),
-        updateIncludes: body.updateIncludes ?? undefined,
-        dryRun: resolveFlagAlias(
-          { primary: body.dry_run, legacy: body.dryRun },
-          DRY_RUN_NAMES,
-        ),
-      },
-    }),
+    layers.workflows.ledger
+      .renameLedgerFile({
+        identity,
+        ledgerId: ledgerIdOf(params),
+        input: {
+          oldPath: body.oldPath,
+          newPath: body.newPath,
+          message: resolveCommitMessage(body, { required: false }),
+          updateIncludes: body.updateIncludes ?? undefined,
+          dryRun: resolveFlagAlias(
+            { primary: body.dry_run, legacy: body.dryRun },
+            DRY_RUN_NAMES,
+          ),
+        },
+      })
+      .then(({ validation, ...result }) => ({
+        ...result,
+        ...flattenValidation(validation),
+      })),
 });

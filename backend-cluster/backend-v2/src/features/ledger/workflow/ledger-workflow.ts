@@ -142,7 +142,9 @@ import {
 import {
   overlaysOf,
   type FileOverlay,
+  type FileWriteGateServices,
 } from "@/features/ledger/utils/file-write-gate";
+import { runWriteWithValidation } from "@/features/ledger/utils/write-validation";
 import {
   commitSubject,
   defaultRevertMessage,
@@ -284,12 +286,6 @@ export interface ILedgerWorkflow {
     identity: Identity;
     ledgerId: string;
     input: RenameLedgerFileCommand;
-    /**
-     * Receives the files the rename would leave behind (`null` content is a
-     * deletion) so the caller can project bean-check over them; the result
-     * itself carries nothing a surface would have to publish.
-     */
-    onProjectedFiles?: (overlays: FileOverlay[]) => void;
   }): Promise<RenameLedgerFileResult>;
   /**
    * Undo one commit as a new commit: each file it touched is set back to its
@@ -299,8 +295,6 @@ export interface ILedgerWorkflow {
     identity: Identity;
     ledgerId: string;
     input: RevertLedgerCommitCommand;
-    /** Receives the files the revert would leave, for a bean-check projection. */
-    onProjectedFiles?: (overlays: FileOverlay[]) => void;
   }): Promise<RevertLedgerCommitResult>;
   starLedger(params: {
     identity: Identity;
@@ -1288,7 +1282,71 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     };
   }
 
+  /**
+   * The ledger's own checks, as the write-verdict helpers read them: the
+   * current errors through the data service, and bean-check over projected
+   * files through the ledger service. The write is authorized by the caller.
+   */
+  private validationServices(
+    ledgerId: string,
+    identity: Identity,
+  ): FileWriteGateServices {
+    return {
+      ledgerData: this.ledgerDataService,
+      ledgerRepo: {
+        checkProjectedFiles: async ({ overlays }) => {
+          const favaApiClient = await this.favaClientFactory.getPublicApiClient(
+            ledgerId,
+            identity.userId,
+          );
+          const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+          return unwrapFavaResponse(
+            favaApiClient.reports.checkProjectedErrors(
+              ledgerOwner,
+              ledgerName,
+              {
+                files: overlays.map((overlay) => ({
+                  path: overlay.path,
+                  content:
+                    overlay.content === null
+                      ? null
+                      : Buffer.from(overlay.content, "utf8").toString("base64"),
+                })),
+              },
+            ),
+            "check projected files",
+          );
+        },
+      },
+    };
+  }
+
   async renameLedgerFile({
+    identity,
+    ledgerId,
+    input,
+  }: {
+    identity: Identity;
+    ledgerId: string;
+    input: RenameLedgerFileCommand;
+  }): Promise<RenameLedgerFileResult> {
+    // The moved file's errors move with it: they are not new for having a new
+    // path. A dry run changes nothing, so reading the errors around it would
+    // always read clean: the preview projects the rename and says what the
+    // commit will say (w1/236).
+    const { written, validation } = await runWriteWithValidation({
+      services: this.validationServices(ledgerId, identity),
+      identity,
+      ledgerId,
+      previewing: input.dryRun === true,
+      renames: new Map([[input.oldPath, input.newPath]]),
+      run: (onProjectedFiles) =>
+        this.moveLedgerFile({ identity, ledgerId, input, onProjectedFiles }),
+    });
+    return { ...written, validation };
+  }
+
+  private async moveLedgerFile({
     identity,
     ledgerId,
     input,
@@ -1298,7 +1356,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     ledgerId: string;
     input: RenameLedgerFileCommand;
     onProjectedFiles?: (overlays: FileOverlay[]) => void;
-  }): Promise<RenameLedgerFileResult> {
+  }): Promise<Omit<RenameLedgerFileResult, "validation">> {
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
@@ -1526,13 +1584,33 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     identity,
     ledgerId,
     input,
+  }: {
+    identity: Identity;
+    ledgerId: string;
+    input: RevertLedgerCommitCommand;
+  }): Promise<RevertLedgerCommitResult> {
+    const { written, validation } = await runWriteWithValidation({
+      services: this.validationServices(ledgerId, identity),
+      identity,
+      ledgerId,
+      previewing: input.dryRun === true,
+      run: (onProjectedFiles) =>
+        this.undoLedgerCommit({ identity, ledgerId, input, onProjectedFiles }),
+    });
+    return { ...written, validation };
+  }
+
+  private async undoLedgerCommit({
+    identity,
+    ledgerId,
+    input,
     onProjectedFiles,
   }: {
     identity: Identity;
     ledgerId: string;
     input: RevertLedgerCommitCommand;
     onProjectedFiles?: (overlays: FileOverlay[]) => void;
-  }): Promise<RevertLedgerCommitResult> {
+  }): Promise<Omit<RevertLedgerCommitResult, "validation">> {
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
