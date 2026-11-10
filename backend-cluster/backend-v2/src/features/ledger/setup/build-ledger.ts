@@ -263,6 +263,9 @@ export function previewLedgerSetup(
   for (const name of [...enabledAccounts, ...moduleNames]) {
     if (!selected.has(name)) selected.set(name, { name });
   }
+  // A repeat overwrote the earlier entry, so a known opening listed again as
+  // zero dropped its balance without a word (w1/214).
+  const listed = new Set<string>();
   for (const selection of setup.accounts ?? []) {
     if (
       typeof selection.name !== "string" ||
@@ -273,6 +276,10 @@ export function previewLedgerSetup(
         `Account ${JSON.stringify(selection.name)} is not a Beancount account name: it starts with Assets, Liabilities, Equity, Income or Expenses, each further part starts with a capital letter or a digit, and it holds no spaces`,
       );
     }
+    if (listed.has(selection.name)) {
+      fail(`Account "${selection.name}" is listed more than once`);
+    }
+    listed.add(selection.name);
     if (!isBlank && !allowed.has(selection.name)) {
       fail(
         `Account "${selection.name}" is not part of preset "${preset.id}", an enabled capability, or a selected module`,

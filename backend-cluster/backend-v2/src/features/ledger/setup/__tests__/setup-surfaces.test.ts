@@ -101,6 +101,42 @@ describe("setup surfaces (w3/m53/t008)", () => {
     ).toThrow();
   });
 
+  // w1/214: a repeated account overwrote the earlier entry silently.
+  it("refuses an account listed twice on every surface", async () => {
+    const setup = {
+      ...SETUP,
+      accounts: [
+        { name: "Assets:Cash", openingState: "known" as const, amount: "10" },
+        { name: "Assets:Cash", openingState: "zero" as const },
+      ],
+    };
+    // REST and MCP accept the shape; the one builder they and GraphQL reach
+    // refuses it.
+    expect(() =>
+      ledgerCreateInput.parse({ name: "household", setup }),
+    ).not.toThrow();
+    expect(() => previewLedgerSetup(setup)).toThrow(
+      'Account "Assets:Cash" is listed more than once',
+    );
+    const context = {
+      identity: { userId: "usr_1" },
+      platform: "web",
+      ledgerWorkflow: {
+        previewLedgerSetup: async ({ setup: spec }: { setup: typeof setup }) =>
+          previewLedgerSetup(spec),
+      },
+    } as never;
+    // The MCP boundary renders the thrown refusal as VALIDATION_FAILED.
+    await expect(
+      LIFECYCLE_EXECUTORS.preview(context, { setup }),
+    ).rejects.toMatchObject({
+      category: "VALIDATION_FAILED",
+      message: expect.stringContaining(
+        '"Assets:Cash" is listed more than once',
+      ),
+    });
+  });
+
   it("MCP preview returns the builder result and create passes setup through", async () => {
     const calls: unknown[] = [];
     const context = {

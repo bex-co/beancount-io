@@ -707,6 +707,32 @@ describe("personal modules (w3/m59/t002)", () => {
       },
       'Module "investments@1" is selected more than once',
     ],
+    // w1/214: the second entry silently replaced the first, so a known
+    // opening listed again as zero dropped its balance.
+    [
+      "a repeated account",
+      {
+        preset: "personal@1",
+        historyStart: "2024-01-01",
+        accounts: [
+          { name: "Assets:Bank", openingState: "known", amount: "10" },
+          { name: "Assets:Bank", openingState: "zero" },
+        ],
+      },
+      'Account "Assets:Bank" is listed more than once',
+    ],
+    [
+      "a repeated known account",
+      {
+        preset: "personal@1",
+        historyStart: "2024-01-01",
+        accounts: [
+          { name: "Assets:Bank", openingState: "known", amount: "10" },
+          { name: "Assets:Bank", openingState: "known", amount: "20" },
+        ],
+      },
+      'Account "Assets:Bank" is listed more than once',
+    ],
     [
       "a property name on another module",
       {
