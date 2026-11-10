@@ -168,7 +168,15 @@ describe("changeExistingFiles", () => {
     );
     await expect(change(stale)).rejects.toMatchObject({ status: 422 });
     const fine = clientAnswering(() => json(201, {}));
-    await expect(change(fine)).resolves.toBeUndefined();
+    await expect(change(fine)).resolves.toEqual({});
+  });
+
+  // w23/m42: the commit a write made is the one thing an agent needs to undo it.
+  it("returns the sha of the commit the host made", async () => {
+    const client = clientAnswering(() =>
+      json(201, { commit: { sha: "abc123" }, files: [] }),
+    );
+    await expect(change(client)).resolves.toEqual({ commit: "abc123" });
   });
 
   // w21/551: a delete of a file that is already gone failed the same way, and

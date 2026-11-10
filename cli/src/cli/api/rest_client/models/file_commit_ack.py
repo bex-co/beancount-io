@@ -26,6 +26,7 @@ class FileCommitAck:
         valid (bool): True only when the change adds no bean-check error. A dry run reports the new errors instead of
             refusing, so gate on this, not on the status.
         new_errors (list[FileCommitAckNewErrorsItem]):
+        commit (str | Unset): The sha of the commit this made; absent on a dry run.
         not_loaded (list[str] | Unset): Ledger files the change writes that no loaded file includes: their entries don't
             count and bean-check did not read them. Present only when there are any.
     """
@@ -35,6 +36,7 @@ class FileCommitAck:
     dry_run: bool
     valid: bool
     new_errors: list[FileCommitAckNewErrorsItem]
+    commit: str | Unset = UNSET
     not_loaded: list[str] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -52,6 +54,8 @@ class FileCommitAck:
             new_errors_item = new_errors_item_data.to_dict()
             new_errors.append(new_errors_item)
 
+        commit = self.commit
+
         not_loaded: list[str] | Unset = UNSET
         if not isinstance(self.not_loaded, Unset):
             not_loaded = self.not_loaded
@@ -67,6 +71,8 @@ class FileCommitAck:
                 "newErrors": new_errors,
             }
         )
+        if commit is not UNSET:
+            field_dict["commit"] = commit
         if not_loaded is not UNSET:
             field_dict["notLoaded"] = not_loaded
 
@@ -92,6 +98,8 @@ class FileCommitAck:
 
             new_errors.append(new_errors_item)
 
+        commit = d.pop("commit", UNSET)
+
         not_loaded = cast(list[str], d.pop("notLoaded", UNSET))
 
         file_commit_ack = cls(
@@ -100,6 +108,7 @@ class FileCommitAck:
             dry_run=dry_run,
             valid=valid,
             new_errors=new_errors,
+            commit=commit,
             not_loaded=not_loaded,
         )
 

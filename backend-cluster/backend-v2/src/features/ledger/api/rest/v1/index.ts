@@ -1,6 +1,7 @@
 import { legacyEntryRoute } from "./legacy-entry-handler";
 import { SOURCE_SLICE_ROUTES } from "./source-slice-handler";
 import { renameFileRoute } from "./rename-handler";
+import { revertCommitRoute } from "./revert-handler";
 import { receiptInsertRoute } from "./receipt-insert-handler";
 import { receiptParseRoute } from "@/features/llm/api/receipt-parse-route";
 import { fileParseRoute } from "@/features/llm/api/file-parse-route";
@@ -63,6 +64,7 @@ const V1_SCOPED_ROUTES: Parameters<typeof registerV1Routes>[2] = [
   ...REPORT_ROUTES,
   ...FILE_ROUTES,
   renameFileRoute,
+  revertCommitRoute,
   ...ENTRY_ROUTES,
   legacyEntryRoute,
   ...SOURCE_SLICE_ROUTES,

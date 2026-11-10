@@ -21,6 +21,10 @@ import {
   LEDGER_DESCRIPTION_MAX,
   LedgerTemplate,
 } from "@/features/ledger/workflow/ledger-workflow.types";
+import {
+  REVERT_MESSAGE_DESCRIPTION,
+  REVERT_SHA_DESCRIPTION,
+} from "@/features/ledger/utils/commit-revert";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 
 registerEnumType(LedgerTemplate, {
@@ -518,6 +522,30 @@ export class RenameLedgerFileInput {
 }
 
 @ArgsType()
+export class RevertLedgerCommitInput {
+  @Field(() => String, { description: REVERT_SHA_DESCRIPTION })
+  sha: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: REVERT_MESSAGE_DESCRIPTION,
+  })
+  message?: string;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: PREVIEW_FLAG_DESCRIPTION,
+  })
+  dryRun?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of dryRun, as MCP spells it.",
+  })
+  dry_run?: boolean;
+}
+
+@ArgsType()
 export class ListLedgersArgs {
   @Field(() => Number, { nullable: true })
   page?: number;
@@ -693,6 +721,56 @@ export class RenameLedgerFileResponse {
     description: "Per-file rewritten include lines; populated on dry runs only",
   })
   preview: RenamePreviewFile[];
+
+  @Field(() => String, {
+    nullable: true,
+    description: "The sha of the commit the rename made; absent on a preview.",
+  })
+  commit?: string;
+}
+
+@ObjectType()
+export class RevertedFile {
+  @Field(() => String)
+  path: string;
+
+  @Field(() => String, {
+    description:
+      "What the revert does to the file: created, updated or deleted.",
+  })
+  change: string;
+}
+
+@ObjectType()
+export class RevertLedgerCommitResponse {
+  @Field(() => String, {
+    description: "The full sha of the commit the revert undoes.",
+  })
+  sha: string;
+
+  @Field(() => String, {
+    description: "The first line of that commit's message.",
+  })
+  subject: string;
+
+  @Field(() => String, { description: "The revert's own commit message." })
+  message: string;
+
+  @Field(() => [RevertedFile], {
+    description:
+      "Each file the commit touched, and what the revert does to it.",
+  })
+  files: RevertedFile[];
+
+  @Field(() => Boolean)
+  dryRun: boolean;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "The sha of the revert commit; absent on a preview, and when another commit landed in between.",
+  })
+  commit?: string;
 }
 
 @ObjectType()

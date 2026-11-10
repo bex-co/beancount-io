@@ -692,6 +692,15 @@
       ]
     },
     {
+      "name": "revertCommit",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
       "name": "setLedgerStar",
       "annotations": {
         "readOnlyHint": false,

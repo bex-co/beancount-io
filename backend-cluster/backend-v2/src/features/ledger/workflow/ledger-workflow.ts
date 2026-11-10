@@ -65,6 +65,8 @@ import {
   LedgerDeletePreview,
   DeleteLedgerFileResult,
   RenameLedgerFileResult,
+  RevertLedgerCommitCommand,
+  RevertLedgerCommitResult,
   StarLedgerResult,
   LedgerAttributesData,
   LedgerOptionsData,
@@ -137,7 +139,20 @@ import {
   refuseDanglingDeletes,
   scanLedgerBeanFiles,
 } from "@/features/ledger/utils/include-references";
-import type { FileOverlay } from "@/features/ledger/utils/file-write-gate";
+import {
+  overlaysOf,
+  type FileOverlay,
+} from "@/features/ledger/utils/file-write-gate";
+import {
+  commitSubject,
+  defaultRevertMessage,
+  planRevert,
+  revertChanges,
+  revertedStatus,
+  type Blob,
+} from "@/features/ledger/utils/commit-revert";
+import { isMissingCommitLookupError } from "@/features/gitea/commits/service/commits-service";
+import { COMMIT_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
 
@@ -276,6 +291,17 @@ export interface ILedgerWorkflow {
      */
     onProjectedFiles?: (overlays: FileOverlay[]) => void;
   }): Promise<RenameLedgerFileResult>;
+  /**
+   * Undo one commit as a new commit: each file it touched is set back to its
+   * parent's contents, or refused when a later commit changed it (w23/m42).
+   */
+  revertLedgerCommit(params: {
+    identity: Identity;
+    ledgerId: string;
+    input: RevertLedgerCommitCommand;
+    /** Receives the files the revert would leave, for a bean-check projection. */
+    onProjectedFiles?: (overlays: FileOverlay[]) => void;
+  }): Promise<RevertLedgerCommitResult>;
   starLedger(params: {
     identity: Identity;
     ledgerId: string;
@@ -1462,21 +1488,14 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     }
 
     const dryRun = input.dryRun === true;
-    onProjectedFiles?.(
-      files.map((file) => ({
-        path: file.path,
-        content:
-          file.operation === "delete"
-            ? null
-            : Buffer.from(file.content ?? "", "base64").toString("utf-8"),
-      })),
-    );
+    onProjectedFiles?.(overlaysOf(files));
     const changeOptions: LedgerChangeFilesOptions = {
       files,
       message: input.message ?? `Rename ${input.oldPath} → ${input.newPath}`,
     };
+    let changed: { commit?: string | null } | undefined;
     if (!dryRun) {
-      await unwrapFavaResponse(
+      changed = await unwrapFavaResponse(
         favaApiClient.ledgers.changeLedgerFiles(
           ledgerOwner,
           ledgerName,
@@ -1496,7 +1515,151 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         : `Renamed ${input.oldPath} → ${input.newPath}`,
       dryRun,
       preview: dryRun ? preview : [],
+      ...(changed?.commit && { commit: changed.commit }),
     };
+  }
+
+  async revertLedgerCommit({
+    identity,
+    ledgerId,
+    input,
+    onProjectedFiles,
+  }: {
+    identity: Identity;
+    ledgerId: string;
+    input: RevertLedgerCommitCommand;
+    onProjectedFiles?: (overlays: FileOverlay[]) => void;
+  }): Promise<RevertLedgerCommitResult> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      resource: ledgerResource(ledgerId),
+    });
+    const sha = input.sha.trim();
+    if (sha === "") {
+      throw new BadUserInputError(
+        "sha is required",
+        "sha",
+        COMMIT_NOT_FOUND_HINT,
+      );
+    }
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const gitea = await this.giteaClientFactory.getUserApiClient(
+      identity.userId,
+    );
+    let commit;
+    try {
+      const listed = await gitea.repos.repoGetAllCommits(
+        ledgerOwner,
+        ledgerName,
+        { sha, limit: 1, files: true, stat: false },
+        { format: "json" },
+      );
+      commit = listed.data[0];
+    } catch (error) {
+      if (!isMissingCommitLookupError(error)) throw error;
+    }
+    if (!commit?.sha)
+      throw new NotFoundError("Commit", sha, COMMIT_NOT_FOUND_HINT);
+    const parents = commit.parents ?? [];
+    if (parents.length !== 1 || !parents[0]?.sha) {
+      throw new BadUserInputError(
+        `${commit.sha.slice(0, 12)} is a ${parents.length === 0 ? "root" : "merge"} commit, which cannot be reverted`,
+        "sha",
+        "Pass the sha of an ordinary commit that `beancount://{owner}/{name}/commits` lists.",
+      );
+    }
+    const parentSha = parents[0].sha;
+    const files = (commit.files ?? []).flatMap((file) =>
+      file.filename
+        ? [{ path: file.filename, status: revertedStatus(file.status) }]
+        : [],
+    );
+
+    const favaApiClient = await this.favaClientFactory.getPublicApiClient(
+      ledgerId,
+      identity.userId,
+    );
+    const encoded = (path: string) =>
+      path.split("/").map(encodeURIComponent).join("/");
+    const blobAt = async (path: string, ref: string): Promise<Blob> => {
+      try {
+        const found = await gitea.repos.repoGetContents(
+          ledgerOwner,
+          ledgerName,
+          encoded(path),
+          { ref },
+        );
+        const { sha: blobSha, content } = found.data;
+        return blobSha
+          ? { sha: blobSha, content: (content ?? "").replace(/\s/g, "") }
+          : null;
+      } catch (error) {
+        if (error instanceof Response && error.status === 404) return null;
+        throw error;
+      }
+    };
+    // Where each file stands now, in one read; the commit's and its parent's
+    // versions only where the status says there is one.
+    const current = new Map(
+      (
+        await unwrapFavaResponse(
+          favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
+            files: files.map((file) => file.path),
+          }),
+          "read ledger files for revert",
+          (cause) =>
+            operationNotAllowedFromCause("read ledger files for revert", cause),
+        )
+      ).map((file) => [file.path, { sha: file.sha, content: "" }] as const),
+    );
+    const blobs = Object.fromEntries(
+      await Promise.all(
+        files.map(async ({ path, status }) => {
+          const [atCommit, atParent] = await Promise.all([
+            status === "removed" ? null : blobAt(path, commit.sha),
+            status === "added" ? null : blobAt(path, parentSha),
+          ]);
+          return [
+            path,
+            { atCommit, atParent, current: current.get(path) ?? null },
+          ] as const;
+        }),
+      ),
+    );
+    const plan = planRevert(files, blobs);
+    if (plan.conflicts.length > 0) {
+      throw new ConflictError(
+        "Commit",
+        `${commit.sha.slice(0, 12)} cannot be reverted without losing newer changes: ${plan.conflicts.join("; ")}`,
+        {
+          hint: "Read the current files with `readLedgerFiles` and fix them with the file tools; revert only a commit whose files nothing has changed since.",
+        },
+      );
+    }
+    const subject = commitSubject(commit.commit?.message);
+    const message =
+      input.message?.trim() || defaultRevertMessage(commit.sha, subject);
+    const dryRun = input.dryRun === true;
+    onProjectedFiles?.(overlaysOf(plan.operations));
+    const summary = {
+      sha: commit.sha,
+      subject,
+      message,
+      files: revertChanges(plan.operations),
+      dryRun,
+    };
+    if (dryRun) return summary;
+
+    const changed = await unwrapFavaResponse(
+      favaApiClient.ledgers.changeLedgerFiles(ledgerOwner, ledgerName, {
+        files: plan.operations,
+        message,
+      }),
+      "revert commit",
+      (cause) => operationNotAllowedFromCause("revert commit", cause),
+    );
+    return { ...summary, ...(changed?.commit && { commit: changed.commit }) };
   }
 
   /**

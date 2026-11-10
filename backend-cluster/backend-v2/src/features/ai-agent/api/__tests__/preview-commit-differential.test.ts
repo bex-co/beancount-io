@@ -1,7 +1,6 @@
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
-import { posix } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
@@ -14,6 +13,7 @@ import { assembleMcpRegistry } from "@/server/api/composition-root";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "@/server/api/identity";
 import type { McpRequestContext } from "../mcp-context";
+import { blobSha, createFakeLedger, type Snapshot } from "./fake-ledger";
 
 /**
  * w23/m39 — a preview and its commit give the same verdict.
@@ -41,183 +41,8 @@ const identity: Identity = {
   ledgerScope: "alice/main",
 };
 
-type Files = Map<string, { content: string; sha: string }>;
-
-const ERROR_MESSAGE = "Account Expenses:Nope was never opened";
-
-/** What an `include` line names, resolved from the file that declares it. */
-function includedBy(path: string, line: string): string | undefined {
-  const target = /^include\s+"([^"]+)"/.exec(line)?.[1];
-  return target && posix.normalize(posix.join(posix.dirname(path), target));
-}
-
-/** The files bean-check loads: `main.bean` and what its includes reach. */
-function loadedFiles(files: ReadonlyMap<string, string>): string[] {
-  const loaded: string[] = [];
-  const visit = (path: string) => {
-    if (loaded.includes(path) || !files.has(path)) return;
-    loaded.push(path);
-    for (const line of (files.get(path) ?? "").split("\n")) {
-      const resolved = includedBy(path, line);
-      if (!resolved) continue;
-      if (resolved.includes("*")) {
-        const pattern = new RegExp(
-          `^${resolved.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*")}$`,
-        );
-        for (const candidate of files.keys()) {
-          if (pattern.test(candidate)) visit(candidate);
-        }
-      } else {
-        visit(resolved);
-      }
-    }
-  };
-  visit("main.bean");
-  return loaded;
-}
-
-/** The ledger service's `errors`: a `BAD` line, or an include that names nothing. */
-function errorsOf(files: ReadonlyMap<string, string>) {
-  const errors: {
-    message: string;
-    source: { filename: string; lineno: number };
-  }[] = [];
-  for (const path of loadedFiles(files)) {
-    (files.get(path) ?? "").split("\n").forEach((line, index) => {
-      const source = { filename: path, lineno: index + 1 };
-      if (line.includes("BAD")) errors.push({ message: ERROR_MESSAGE, source });
-      const resolved = includedBy(path, line);
-      if (resolved && !resolved.includes("*") && !files.has(resolved)) {
-        errors.push({ message: `File "${resolved}" does not exist`, source });
-      }
-    });
-  }
-  return errors;
-}
-
-const decode = (content: string) =>
-  Buffer.from(content.replace(/\s/g, ""), "base64").toString("utf-8");
-
-async function fixture(initial: Record<string, string>) {
-  const files: Files = new Map(
-    Object.entries(initial).map(([path, content], index) => [
-      path,
-      { content, sha: `sha-${index}-${path}` },
-    ]),
-  );
-  const plain = () =>
-    new Map([...files].map(([path, file]) => [path, file.content]));
-  const withOverlays = (
-    overlays: { path: string; content: string | null }[],
-  ) => {
-    const projected = plain();
-    for (const overlay of overlays) {
-      if (overlay.content === null) projected.delete(overlay.path);
-      else projected.set(overlay.path, decode(overlay.content));
-    }
-    return projected;
-  };
-  const envelope = (data: unknown) => ({ data: { success: true, data } });
-  const toPublic = (path: string) => {
-    const entry = files.get(path);
-    if (!entry) return null;
-    return {
-      name: path.split("/").pop(),
-      path,
-      type: "file",
-      sha: entry.sha,
-      size: entry.content.length,
-      content: entry.content,
-      encoding: null,
-    };
-  };
-  const change = jest.fn(
-    async (
-      _owner: string,
-      _name: string,
-      options: {
-        files: {
-          operation: string;
-          path: string;
-          content?: string | null;
-        }[];
-      },
-    ) => {
-      for (const op of options.files) {
-        if (op.operation === "delete") files.delete(op.path);
-        else
-          files.set(op.path, {
-            content: decode(op.content ?? ""),
-            sha: `sha-new-${op.path}`,
-          });
-      }
-      return envelope({});
-    },
-  );
-  const fava = {
-    getAdminClient: () => ({
-      ledgers: { getLedger: async () => envelope({ id: 42, private: true }) },
-    }),
-    getApiContext: async () => ({
-      favaApiClient: {
-        collaborators: {
-          getLedgerCollaboratorPermission: async () =>
-            envelope({ permission: "write" }),
-        },
-      },
-    }),
-    getPublicApiClient: async () => ({
-      reports: {
-        checkProjectedErrors: async (
-          _o: string,
-          _n: string,
-          body: { files: { path: string; content: string | null }[] },
-        ) => envelope(errorsOf(withOverlays(body.files))),
-        getProjectedSourceFiles: async (
-          _o: string,
-          _n: string,
-          body: { files: { path: string; content: string | null }[] },
-        ) => envelope(loadedFiles(withOverlays(body.files))),
-      },
-      ledgers: {
-        changeLedgerFiles: change,
-        getLedgerFile: async (_o: string, _n: string, q: { path: string }) =>
-          envelope(toPublic(q.path)),
-        getLedgerFilesContent: async (
-          _o: string,
-          _n: string,
-          body: { files: string[] },
-        ) => envelope(body.files.map(toPublic).filter(Boolean)),
-        getLedgerDirContent: async (
-          _o: string,
-          _n: string,
-          query?: { dir_path?: string | null },
-        ) => {
-          const prefix = query?.dir_path ? `${query.dir_path}/` : "";
-          const seen = new Map<
-            string,
-            { type: string; path: string; name: string }
-          >();
-          for (const path of files.keys()) {
-            if (!path.startsWith(prefix)) continue;
-            const rest = path.slice(prefix.length);
-            const slash = rest.indexOf("/");
-            if (slash === -1) {
-              seen.set(path, { type: "file", path, name: rest });
-            } else {
-              const sub = prefix + rest.slice(0, slash);
-              seen.set(sub, {
-                type: "dir",
-                path: sub,
-                name: rest.slice(0, slash),
-              });
-            }
-          }
-          return envelope([...seen.values()]);
-        },
-      },
-    }),
-  };
+async function fixture(history: Snapshot[]) {
+  const ledger = createFakeLedger(history);
   const models = {
     user: {
       getUserByUsername: async () => ({ id: "usr_owner" }),
@@ -229,12 +54,12 @@ async function fixture(initial: Record<string, string>) {
       {} as never,
       models as never,
       {} as never,
-      fava as never,
+      ledger.fava as never,
     ),
   );
   const workflow = new LedgerWorkflow(
-    fava as never,
-    {} as never,
+    ledger.fava as never,
+    ledger.giteaClientFactory as never,
     {} as never,
     {} as never,
     {} as never,
@@ -243,8 +68,10 @@ async function fixture(initial: Record<string, string>) {
     config,
     authorization,
   );
-  const ledgerRepo = new LedgerRepoService(fava as never, authorization);
-  const ledgerData = { getErrors: jest.fn(async () => errorsOf(plain())) };
+  const ledgerRepo = new LedgerRepoService(ledger.fava as never, authorization);
+  const ledgerData = {
+    getErrors: jest.fn(async () => ledger.errors()),
+  };
   const server = assembleMcpRegistry(
     {
       identity,
@@ -257,7 +84,7 @@ async function fixture(initial: Record<string, string>) {
   const [a, b] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(a), server.connect(b)]);
   return {
-    snapshot: () => Object.fromEntries(plain()),
+    snapshot: ledger.snapshot,
     call: (name: string, args: Record<string, unknown>) =>
       client.callTool({ name, arguments: args }),
     close: async () => {
@@ -278,6 +105,7 @@ function verdict(
       notLoaded?: string[];
       count?: number;
       updatedIncludes?: string[];
+      files?: { path: string; change: string }[];
     };
     error?: { code?: string };
   };
@@ -287,6 +115,7 @@ function verdict(
     notLoaded: content.result?.notLoaded ?? [],
     count: content.result?.count,
     updatedIncludes: content.result?.updatedIncludes,
+    files: content.result?.files,
   };
 }
 
@@ -295,7 +124,8 @@ const BROKEN = "BAD\nBAD\nBAD\nBAD\n";
 
 type Case = {
   name: string;
-  initial: Record<string, string>;
+  /** The files, or the repository's commits oldest first: each a snapshot of every file. */
+  initial: Snapshot | Snapshot[];
   tool: string;
   args: Record<string, unknown>;
   /** The files the commit leaves behind, to prove it wrote and the preview did not. */
@@ -358,7 +188,7 @@ const CASES: Case[] = [
     args: {
       description: "fix",
       files: [
-        { path: "broken.bean", content: "; fixed\n", sha: "sha-1-broken.bean" },
+        { path: "broken.bean", content: "; fixed\n", sha: blobSha(BROKEN) },
       ],
     },
     after: { "main.bean": MAIN, "broken.bean": "; fixed\n" },
@@ -370,7 +200,7 @@ const CASES: Case[] = [
     args: {
       description: "break",
       allow_invalid: true,
-      files: [{ path: "ok.bean", content: "BAD\n", sha: "sha-1-ok.bean" }],
+      files: [{ path: "ok.bean", content: "BAD\n", sha: blobSha("; fine\n") }],
     },
     after: { "main.bean": 'include "ok.bean"\n', "ok.bean": "BAD\n" },
   },
@@ -381,7 +211,7 @@ const CASES: Case[] = [
     args: {
       description: "drop",
       remove_includes: true,
-      files: [{ path: "broken.bean", sha: "sha-1-broken.bean" }],
+      files: [{ path: "broken.bean", sha: blobSha(BROKEN) }],
     },
     after: { "main.bean": "; BAD\n" },
   },
@@ -391,15 +221,51 @@ const CASES: Case[] = [
     tool: "deleteLedgerFiles",
     args: {
       description: "drop",
-      files: [{ path: "broken.bean", sha: "sha-1-broken.bean" }],
+      files: [{ path: "broken.bean", sha: blobSha(BROKEN) }],
     },
+  },
+  {
+    // w23/m42: undoing the commit that broke a file restores it.
+    name: "reverting the commit that broke a file adds no errors",
+    initial: [
+      { "main.bean": 'include "ok.bean"\n', "ok.bean": "; fine\n" },
+      { "main.bean": 'include "ok.bean"\n', "ok.bean": "BAD\n" },
+    ],
+    tool: "revertCommit",
+    args: { sha: "c1" },
+    after: { "main.bean": 'include "ok.bean"\n', "ok.bean": "; fine\n" },
+  },
+  {
+    name: "reverting the commit that added a file deletes it",
+    initial: [
+      { "main.bean": "; empty\n" },
+      { "main.bean": "; empty\n", "new.bean": "BAD\n" },
+    ],
+    tool: "revertCommit",
+    args: { sha: "main" },
+    after: { "main.bean": "; empty\n" },
+  },
+  {
+    // A later commit built on the file: reverting would discard it.
+    name: "reverting a commit a later commit built on is refused the same way",
+    initial: [
+      { "main.bean": 'include "ok.bean"\n', "ok.bean": "; fine\n" },
+      { "main.bean": 'include "ok.bean"\n', "ok.bean": "BAD\n" },
+      { "main.bean": 'include "ok.bean"\n', "ok.bean": "BAD\nBAD\n" },
+    ],
+    tool: "revertCommit",
+    args: { sha: "c1" },
   },
 ];
 
+const historyOf = (initial: Snapshot | Snapshot[]): Snapshot[] =>
+  Array.isArray(initial) ? initial : [initial];
+
 describe.each(CASES)("$tool: $name", (c) => {
   it("previews what it commits", async () => {
-    const preview = await fixture(c.initial);
-    const commit = await fixture(c.initial);
+    const history = historyOf(c.initial);
+    const preview = await fixture(history);
+    const commit = await fixture(history);
     try {
       const previewed = await preview.call(c.tool, {
         ...c.args,
@@ -412,9 +278,9 @@ describe.each(CASES)("$tool: $name", (c) => {
 
       expect(verdict(previewed)).toEqual(verdict(committed));
       // A preview writes nothing; the commit writes what the case says.
-      expect(preview.snapshot()).toEqual(c.initial);
+      expect(preview.snapshot()).toEqual(history.at(-1));
       if (c.after) expect(commit.snapshot()).toEqual(c.after);
-      else expect(commit.snapshot()).toEqual(c.initial);
+      else expect(commit.snapshot()).toEqual(history.at(-1));
     } finally {
       await preview.close();
       await commit.close();

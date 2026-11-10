@@ -82,6 +82,27 @@ export interface DeleteLedgerFileCommand {
   removeIncludes?: boolean | null;
 }
 
+export interface RevertLedgerCommitCommand {
+  /** A commit sha, or a branch name for the commit at its head. */
+  sha: string;
+  message?: string;
+  dryRun?: boolean;
+}
+
+export interface RevertLedgerCommitResult {
+  /** The full sha of the commit the revert undoes. */
+  sha: string;
+  /** The first line of that commit's message. */
+  subject: string;
+  /** The revert's own commit message. */
+  message: string;
+  /** What the revert does to each file the commit touched. */
+  files: { path: string; change: "created" | "updated" | "deleted" }[];
+  dryRun: boolean;
+  /** The sha of the revert commit; absent on a preview. */
+  commit?: string;
+}
+
 export interface RenameLedgerFileCommand {
   newPath: string;
   oldPath: string;
@@ -221,6 +242,8 @@ export interface RenameLedgerFileResult {
   dryRun: boolean;
   /** The rewritten include lines per file; populated on dry runs only. */
   preview: { path: string; text: string }[];
+  /** The sha of the commit the rename made; absent on a preview. */
+  commit?: string;
 }
 
 export interface StarLedgerResult {

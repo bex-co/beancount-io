@@ -531,6 +531,11 @@ class AppendDirectiveTextResponse {
       "Files whose directives were not in date order, so these were appended at the end",
   })
   appendedUnsorted!: string[];
+  @Field(() => String, {
+    nullable: true,
+    description: "The sha of the commit this made; absent on a dry run.",
+  })
+  commit?: string;
 }
 
 @Resolver()

@@ -3846,6 +3846,25 @@ export interface SourceSlicePreviewFile {
   text: string;
 }
 
+/** LedgerChangeFilesResult */
+export interface LedgerChangeFilesResult {
+  /**
+   * Commit
+   * The sha of the commit the change made; null when the write landed but its commit could not be read back.
+   */
+  commit?: string | null;
+}
+
+/** SuccessResponse[LedgerChangeFilesResult] */
+export interface SuccessResponseLedgerChangeFilesResult {
+  /**
+   * Success
+   * @default true
+   */
+  success?: boolean;
+  data: LedgerChangeFilesResult;
+}
+
 export type QueryParamsType = Record<string | number, any>;
 export type ResponseFormat = keyof Omit<Body, "body" | "bodyUsed">;
 
@@ -4724,7 +4743,7 @@ export class Api<
       data: LedgerChangeFilesOptions,
       params: RequestParams = {},
     ) =>
-      this.request<SuccessResponseNoneType, ErrorResponse>({
+      this.request<SuccessResponseLedgerChangeFilesResult, ErrorResponse>({
         path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/change-files`,
         method: "POST",
         body: data,

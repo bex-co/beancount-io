@@ -32,10 +32,12 @@ import {
   UpdateLedgerFileInput,
   DeleteLedgerFileInput,
   RenameLedgerFileInput,
+  RevertLedgerCommitInput,
   DeleteLedgerInput,
   DeleteLedgerResponse,
   DeleteLedgerFileResponse,
   RenameLedgerFileResponse,
+  RevertLedgerCommitResponse,
   StarLedgerResponse,
 } from "./ledger-resolver.types";
 
@@ -158,6 +160,23 @@ export class LedgerMutationResolver {
       identity: ctx.getCurrentIdentity(),
       ledgerId,
       input: withResolvedMessage(withResolvedPreview(input)),
+    });
+  }
+
+  @Authenticated()
+  @Mutation(() => RevertLedgerCommitResponse, {
+    description:
+      "Undo one commit of a specific ledger as a new commit; refused when a later commit changed any file it touched",
+  })
+  async revertLedgerCommit(
+    @Arg("ledgerId", () => String) ledgerId: string,
+    @Args() input: RevertLedgerCommitInput,
+    @Ctx() ctx: IContext,
+  ): Promise<RevertLedgerCommitResponse> {
+    return this.workflow.revertLedgerCommit({
+      identity: ctx.getCurrentIdentity(),
+      ledgerId,
+      input: withResolvedPreview(input),
     });
   }
 

@@ -1,17 +1,18 @@
 # w23 · m42 — Name the commit every write makes, and let an agent undo it
 
-**Worker:** worker1 **Goal:** Every write result carries the sha of the commit it made, and one tool reverts a commit with a preview, the same way on REST, GraphQL and MCP. **Status:** todo
+**Worker:** worker1 **Goal:** Every write result carries the sha of the commit it made, and one tool reverts a commit with a preview, the same way on REST, GraphQL and MCP. **Status:** todo (t001–t005 done; t010 added when t002 was narrowed)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Spike: how to revert one commit on a main-only repository | 40m | — |
-| t002 | Return the commit sha on every write result | 50m | t001 |
-| t003 | Implement revertCommit with a preview | 70m | t001 |
-| t004 | Expose revertCommit on REST, GraphQL and MCP | 60m | t003 |
-| t005 | Document the undo recipe | 20m | t004 |
-| t006 | Adoption surface | 20m | t002, t005 |
+| t001 | Spike: how to revert one commit on a main-only repository — **DONE** | 40m | — |
+| t002 | Return the commit sha on the file-write family's results — **DONE** | 50m | t001 |
+| t003 | Implement revertCommit with a preview — **DONE** | 70m | t001 |
+| t004 | Expose revertCommit on REST, GraphQL and MCP — **DONE** | 60m | t003 |
+| t005 | Document the undo recipe — **DONE** | 20m | t004 |
+| t010 | Return the commit sha on the entry, source-slice, receipt and GraphQL file writes | 90m | t002 |
+| t006 | Adoption surface | 20m | t002, t005, t010 |
 | t007 | Simplify | 20m | t006 |
 | t008 | Test coverage | 30m | t006 |
 | t009 | Closeout | 15m | t008 |

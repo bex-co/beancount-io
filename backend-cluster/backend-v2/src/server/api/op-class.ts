@@ -1298,6 +1298,8 @@ const LEDGER_WRITE_ACTION_BY_VERB = {
   // canonical action, so the dialect is never the authorization ceiling.
   "Mutation.appendLedgerText": AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
   "Mutation.renameLedgerFile": AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+  // Undoing a commit writes the files it touched, so it is a file write.
+  "Mutation.revertLedgerCommit": AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
   // Not a content write, but it spends an upstream fetch shared across every
   // ledger on the node (ADR 015 §5), so it takes the ledger's write
   // capability: read-only and anonymous viewers of a public ledger cannot
@@ -1386,6 +1388,13 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.renameLedgerFile",
     rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/rename-file",
     mcp: "renameLedgerFile",
+  },
+  {
+    verb: "Mutation.revertLedgerCommit",
+    class: "write" as const,
+    gql: "Mutation.revertLedgerCommit",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/revert-commit",
+    mcp: "revertCommit",
   },
   {
     verb: "Mutation.refreshLedgerManagedPrices",

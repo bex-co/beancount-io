@@ -280,9 +280,9 @@ export async function changeExistingFiles(
   repoName: string,
   body: ChangeFilesBody,
   operations: ChangeFilesBody["files"] = [],
-): Promise<void> {
+): Promise<{ commit?: string }> {
   try {
-    await client.repos.repoChangeFiles(owner, repoName, {
+    const response = await client.repos.repoChangeFiles(owner, repoName, {
       files: operations.map((op) => ({
         operation: op.operation,
         path: op.path,
@@ -294,6 +294,9 @@ export async function changeExistingFiles(
       branch: body.branch ?? undefined,
       new_branch: body.new_branch ?? undefined,
     });
+    // The sha of the commit this made (w23/m42). A write that landed and lost
+    // its answer, settled below, has none to report.
+    return { commit: response.data?.commit?.sha ?? undefined };
   } catch (err) {
     if (!isUnexplainedServerError(err)) throw err;
     // A delete of a path that is gone fails the same way (w21/551): Gitea has no
@@ -318,6 +321,7 @@ export async function changeExistingFiles(
       ),
       err,
     );
+    return {};
   }
 }
 
@@ -513,8 +517,14 @@ export function setFilesHandler(router: Router): void {
         fileChanges,
         { exempt: directiveLimitExempt(ctx) },
       );
-      await changeExistingFiles(client, owner, repoName, body, operations);
-      ctx.body = successResponse(null);
+      const { commit } = await changeExistingFiles(
+        client,
+        owner,
+        repoName,
+        body,
+        operations,
+      );
+      ctx.body = successResponse({ commit: commit ?? null });
     },
   );
 

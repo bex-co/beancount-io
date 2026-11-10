@@ -364,6 +364,10 @@
               "additionalProperties": false
             }
           },
+          "commit": {
+            "type": "string",
+            "description": "The sha of the commit this made; absent on a dry run."
+          },
           "notLoaded": {
             "type": "array",
             "items": {
@@ -11139,6 +11143,10 @@
                         ]
                       },
                       "description": "Per-file rewritten include lines; populated on dry runs only."
+                    },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the commit the rename made; absent on a preview."
                     }
                   },
                   "required": [
@@ -11148,6 +11156,236 @@
                     "newPath",
                     "updatedIncludes",
                     "preview"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-gateway/v1/ledgers/{owner}/{name}/revert-commit": {
+      "post": {
+        "summary": "Revert a commit",
+        "description": "Undo one commit as a new commit: each file it touched is set back to its parent's contents in one atomic commit on the default branch. Refused with CONFLICT when a later commit changed any of those files, so a revert never discards newer work. A merge or root commit cannot be reverted. dryRun previews the files and writes nothing.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sha": {
+                    "type": "string",
+                    "description": "The commit to undo: a sha that a write result returned or the commits read lists, or a branch name for its latest commit."
+                  },
+                  "message": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "The revert commit's message; defaults to `Revert \"<subject>\"` and the sha it reverts."
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Alias of dryRun, as MCP spells it."
+                  }
+                },
+                "required": [
+                  "sha"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The commit reverted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sha": {
+                      "type": "string",
+                      "description": "The full sha of the commit the revert undoes."
+                    },
+                    "subject": {
+                      "type": "string",
+                      "description": "The first line of that commit's message."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "The revert's own commit message."
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "change": {
+                            "type": "string",
+                            "enum": [
+                              "created",
+                              "updated",
+                              "deleted"
+                            ],
+                            "description": "What the revert does to the file."
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "change"
+                        ]
+                      },
+                      "description": "Each file the commit touched, and what the revert does to it."
+                    },
+                    "dryRun": {
+                      "type": "boolean"
+                    },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the revert commit; absent on a preview, and when another commit landed in between."
+                    }
+                  },
+                  "required": [
+                    "sha",
+                    "subject",
+                    "message",
+                    "files",
+                    "dryRun"
                   ]
                 }
               }
@@ -11625,6 +11863,10 @@
                       "items": {
                         "type": "string"
                       }
+                    },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the commit this made; absent on a dry run."
                     }
                   },
                   "required": [

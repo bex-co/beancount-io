@@ -56,7 +56,7 @@ const services = {
     getFilesContent: jest.fn(async () => [
       { path: "main.bean", content: "; ledger", sha: "sha123" },
     ]),
-    changeFiles: jest.fn(async () => undefined),
+    changeFiles: jest.fn(async () => ({})),
     // The file-write gate projects bean-check over the new contents.
     checkProjectedFiles: jest.fn(async () => []),
   },

@@ -1804,7 +1804,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse_NoneType_"
+                  "$ref": "#/components/schemas/SuccessResponse_LedgerChangeFilesResult_"
                 }
               }
             }
@@ -15657,6 +15657,41 @@
         ],
         "title": "SourceSlicePreviewFile",
         "description": "Per-file preview of a source-slice dry run."
+      },
+      "LedgerChangeFilesResult": {
+        "properties": {
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit",
+            "description": "The sha of the commit the change made; null when the write landed but its commit could not be read back."
+          }
+        },
+        "type": "object",
+        "title": "LedgerChangeFilesResult"
+      },
+      "SuccessResponse_LedgerChangeFilesResult_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/LedgerChangeFilesResult"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[LedgerChangeFilesResult]"
       }
     },
     "securitySchemes": {

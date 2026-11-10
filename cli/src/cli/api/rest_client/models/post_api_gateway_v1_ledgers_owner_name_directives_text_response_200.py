@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 
+from ..types import UNSET, Unset
+
 if TYPE_CHECKING:
     from ..models.post_api_gateway_v1_ledgers_owner_name_directives_text_response_200_diff_item import (
         PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200DiffItem,
@@ -39,6 +41,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
         valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
             refusing, so gate on this, not on the status.
         appended_unsorted (list[str]):
+        commit (str | Unset): The sha of the commit this made; absent on a dry run.
     """
 
     success: bool
@@ -53,6 +56,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
     new_errors: list[PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200NewErrorsItem]
     valid: bool
     appended_unsorted: list[str]
+    commit: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         success = self.success
@@ -88,6 +92,8 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
 
         appended_unsorted = self.appended_unsorted
 
+        commit = self.commit
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -106,6 +112,8 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
                 "appendedUnsorted": appended_unsorted,
             }
         )
+        if commit is not UNSET:
+            field_dict["commit"] = commit
 
         return field_dict
 
@@ -163,6 +171,8 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
 
         appended_unsorted = cast(list[str], d.pop("appendedUnsorted"))
 
+        commit = d.pop("commit", UNSET)
+
         post_api_gateway_v1_ledgers_owner_name_directives_text_response_200 = cls(
             success=success,
             message=message,
@@ -176,6 +186,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
             new_errors=new_errors,
             valid=valid,
             appended_unsorted=appended_unsorted,
+            commit=commit,
         )
 
         return post_api_gateway_v1_ledgers_owner_name_directives_text_response_200

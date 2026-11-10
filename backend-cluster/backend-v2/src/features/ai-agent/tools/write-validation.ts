@@ -146,6 +146,49 @@ export async function projectedWriteValidation(
 }
 
 /**
+ * Run a write that previews by projection and commits by reading the ledger
+ * back: the rename and the revert (w1/236, w23/m42). A preview's `run` gets the
+ * hook that receives the files the write would leave, and the verdict is
+ * bean-check over them; a commit's verdict is the ledger's errors before and
+ * after, with the files the write moves carried to their new path.
+ */
+export async function runWriteWithValidation<T>(params: {
+  services: FileWriteGateServices & Partial<ValidationServices>;
+  identity: Identity;
+  ledgerId: string;
+  previewing: boolean;
+  renames?: FileRenames;
+  run: (
+    onProjectedFiles: ((overlays: FileOverlay[]) => void) | undefined,
+  ) => Promise<T>;
+}): Promise<{ written: T; validation: WriteValidation }> {
+  const { services, identity, ledgerId, previewing, renames, run } = params;
+  if (!previewing) {
+    return withPostWriteValidation(
+      services,
+      identity,
+      ledgerId,
+      () => run(undefined),
+      renames,
+    );
+  }
+  let projected: FileOverlay[] = [];
+  const written = await run((overlays) => {
+    projected = overlays;
+  });
+  return {
+    written,
+    validation: await projectedWriteValidation(
+      services,
+      identity,
+      ledgerId,
+      projected,
+      renames,
+    ),
+  };
+}
+
+/**
  * One-line verdict for the front of a write result: what was written and how
  * many new bean-check errors, if any, it introduced — plus the first new
  * error's message so the agent need not parse further to start fixing it.

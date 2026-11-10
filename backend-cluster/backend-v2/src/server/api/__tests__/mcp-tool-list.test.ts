@@ -317,9 +317,16 @@ describe("MCP tool list", () => {
     // measured at 118,156 bytes. Bank tool text naming each row's own id
     // (w1/224) had taken the list to just under 115 KB; the field, with a
     // one-line description, is the contract the note asked for.
+    //
+    // 124 KB since w23/m42 added revertCommit, the undo of one commit, and a
+    // `commit` sha on the write results that make one (the file tools,
+    // appendLedgerText, renameLedgerFile): measured at 122,288 bytes. The new
+    // tool is the larger part (its input and its write outcome); the sha is one
+    // optional string with a short description on each write result, which is
+    // how an agent that only calls tools learns what to pass to revertCommit.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(116 * 1024);
+    expect(bytes).toBeLessThan(124 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the
@@ -351,37 +358,47 @@ describe("MCP tool list", () => {
   // look — tools/list — not just accepted when sent. Both hosts read the
   // same listing, so this pins the instructions Claude Code and Codex see.
   it.each([
-    "addLedgerEntries",
-    "updateEntrySource",
-    "deleteEntrySource",
-    "deleteEntrySources",
-    "renameLedgerFile",
+    ["addLedgerEntries", "preview"],
+    ["updateEntrySource", "preview"],
+    ["deleteEntrySource", "preview"],
+    ["deleteEntrySources", "preview"],
+    ["renameLedgerFile", "preview"],
+    // w23/m42: the preview of an undo is the list of files it would restore.
+    ["revertCommit", "files"],
     // w23/m13/t002: lifecycle previews join the same dialect.
-    "updateLedger",
-  ])("advertises the dry_run preview flag on %s", async (name) => {
-    const { tools } = await listToolsRaw();
-    const tool = tools.find((entry) => entry.name === name);
-    expect(tool?.description).toContain("dry_run previews without committing");
-    const input = tool?.inputSchema as
-      | { properties?: Record<string, { description?: string }> }
-      | undefined;
-    expect(input?.properties?.dry_run?.description).toBe(
-      PREVIEW_FLAG_DESCRIPTION,
-    );
-    // w23/m9/t002: the dryRun twin is advertised alongside, naming home.
-    expect(input?.properties?.dryRun?.description).toBe(
-      "Alias of dry_run, as REST and GraphQL spell it.",
-    );
-    const output = tool?.outputSchema as
-      | {
-          properties?: Record<string, { properties?: Record<string, unknown> }>;
-        }
-      | undefined;
-    // The echo and the preview the flag returns.
-    expect(Object.keys(output?.properties?.result?.properties ?? {})).toEqual(
-      expect.arrayContaining(["dry_run", "preview"]),
-    );
-  });
+    ["updateLedger", "preview"],
+  ])(
+    "advertises the dry_run preview flag on %s",
+    async (name, previewField) => {
+      const { tools } = await listToolsRaw();
+      const tool = tools.find((entry) => entry.name === name);
+      expect(tool?.description).toContain(
+        "dry_run previews without committing",
+      );
+      const input = tool?.inputSchema as
+        | { properties?: Record<string, { description?: string }> }
+        | undefined;
+      expect(input?.properties?.dry_run?.description).toBe(
+        PREVIEW_FLAG_DESCRIPTION,
+      );
+      // w23/m9/t002: the dryRun twin is advertised alongside, naming home.
+      expect(input?.properties?.dryRun?.description).toBe(
+        "Alias of dry_run, as REST and GraphQL spell it.",
+      );
+      const output = tool?.outputSchema as
+        | {
+            properties?: Record<
+              string,
+              { properties?: Record<string, unknown> }
+            >;
+          }
+        | undefined;
+      // The echo and the preview the flag returns.
+      expect(Object.keys(output?.properties?.result?.properties ?? {})).toEqual(
+        expect.arrayContaining(["dry_run", previewField]),
+      );
+    },
+  );
 
   it("exposes each operation as its own tool, never behind a selector argument", async () => {
     // OpenAI's app-directory scan refuses a tool that "appears to execute
@@ -439,6 +456,7 @@ describe("MCP tool list", () => {
   // behind a rename, receipt promotion, bank sync, or personal toggle.
   it.each([
     "renameLedgerFile",
+    "revertCommit",
     "insertReceiptTransaction",
     "syncBankTransactions",
     "setLedgerStar",

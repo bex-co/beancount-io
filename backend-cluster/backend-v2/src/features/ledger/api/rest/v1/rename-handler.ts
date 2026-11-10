@@ -37,6 +37,10 @@ export const renameFileResult = z.object({
   preview: z
     .array(previewFile)
     .describe("Per-file rewritten include lines; populated on dry runs only."),
+  commit: z
+    .string()
+    .optional()
+    .describe("The sha of the commit the rename made; absent on a preview."),
 });
 export const renameFileRoute = v1Route({
   method: "post",

@@ -42,6 +42,16 @@ type Source = { from: string[]; journey?: true } | { caller: string };
 /** `tool.argument` → where an agent gets the value. */
 const HANDOFFS: Record<string, Source> = {
   "getEntryContext.entryHash": { from: ["listLedgerEntries"], journey: true },
+  // The commit field every file write, text append and rename returns.
+  "revertCommit.sha": {
+    from: [
+      "createLedgerFiles",
+      "updateLedgerFiles",
+      "deleteLedgerFiles",
+      "appendLedgerText",
+      "renameLedgerFile",
+    ],
+  },
   "updateEntrySource.entryHash": { from: ["listLedgerEntries"] },
   "updateEntrySource.sha256sum": { from: ["getEntryContext"] },
   "deleteEntrySource.entryHash": { from: ["listLedgerEntries"] },

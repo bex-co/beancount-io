@@ -86,8 +86,14 @@ type FileChangesParams = {
 
 /** Internal commits of generated/merged ledger text, not explicit file uploads. */
 export interface ILedgerGeneratedFileWriter {
-  changeGeneratedFiles(params: FileChangesParams): Promise<void>;
+  changeGeneratedFiles(params: FileChangesParams): Promise<FileChangesResult>;
 }
+
+/**
+ * What a file commit answers: the sha of the commit it made (w23/m42). A
+ * preview, or a write that landed and lost its answer, has none.
+ */
+export type FileChangesResult = { commit?: string };
 
 export interface ILedgerRepoService {
   getLatestCommit(params: {
@@ -119,7 +125,7 @@ export interface ILedgerRepoService {
    * before the repository commit — so a preview refuses exactly what the
    * write would.
    */
-  changeFiles(params: FileChangesParams): Promise<void>;
+  changeFiles(params: FileChangesParams): Promise<FileChangesResult>;
 
   /**
    * bean-check over projected file contents without committing: `content`
@@ -328,7 +334,7 @@ export class LedgerRepoService
     });
   }
 
-  async changeFiles(params: FileChangesParams): Promise<void> {
+  async changeFiles(params: FileChangesParams): Promise<FileChangesResult> {
     await this.authorizeFileChanges(params);
     params.operations.forEach((operation, index) => {
       if (operation.content !== null && operation.content !== undefined) {
@@ -340,7 +346,7 @@ export class LedgerRepoService
       }
     });
     await this.assertNewPathsPortable(params);
-    await this.commitFileChanges(params);
+    return this.commitFileChanges(params);
   }
 
   /**
@@ -441,9 +447,11 @@ export class LedgerRepoService
 
   // Excluded from ILedgerRepoService: only composition injects this capability
   // into the append workflow. Generated merges retain all other write guards.
-  async changeGeneratedFiles(params: FileChangesParams): Promise<void> {
+  async changeGeneratedFiles(
+    params: FileChangesParams,
+  ): Promise<FileChangesResult> {
     await this.authorizeFileChanges(params);
-    await this.commitFileChanges(params);
+    return this.commitFileChanges(params);
   }
 
   private async authorizeFileChanges(params: FileChangesParams): Promise<void> {
@@ -482,10 +490,12 @@ export class LedgerRepoService
     });
   }
 
-  private async commitFileChanges(params: FileChangesParams): Promise<void> {
+  private async commitFileChanges(
+    params: FileChangesParams,
+  ): Promise<FileChangesResult> {
     const { ledgerId, identity, operations, message, dryRun = false } = params;
     // An authorization-only call (no changes) has nothing to preview.
-    if (dryRun && operations.length === 0) return;
+    if (dryRun && operations.length === 0) return {};
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -542,10 +552,10 @@ export class LedgerRepoService
           if (current.sha !== sha) throw staleFileConflict(path);
         }
       }
-      return;
+      return {};
     }
 
-    await unwrapFavaResponse(
+    const changed = await unwrapFavaResponse(
       favaApiClient.ledgers.changeLedgerFiles(ledgerOwner, ledgerName, {
         // Base64 is the ledger service's wire encoding (it forwards straight to
         // Gitea), not this service's contract. Encoding here rather than at
@@ -576,6 +586,7 @@ export class LedgerRepoService
       // every other caller of this method wanted it too.
       (cause) => operationNotAllowedFromCause("commit file operations", cause),
     );
+    return changed?.commit ? { commit: changed.commit } : {};
   }
 
   async checkProjectedFiles(params: {

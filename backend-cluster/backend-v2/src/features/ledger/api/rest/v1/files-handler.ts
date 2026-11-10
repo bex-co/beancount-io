@@ -139,6 +139,9 @@ const commitAckSchema = z
     newErrors: z.array(
       z.strictObject({ message: z.string(), source: z.string().optional() }),
     ),
+    commit: z.string().optional().openapi({
+      description: "The sha of the commit this made; absent on a dry run.",
+    }),
     notLoaded: z.array(z.string()).optional().openapi({
       description:
         "Ledger files the change writes that no loaded file includes: their entries don't count and bean-check did not read them. Present only when there are any.",
@@ -275,13 +278,16 @@ export const FILE_ROUTES = [
         write.ledgerId,
         [{ path: params.path, content: body.content }],
       );
-      if (!dryRun) await layers.services.ledgerRepo.changeFiles(write);
+      const committed = dryRun
+        ? {}
+        : await layers.services.ledgerRepo.changeFiles(write);
       return {
         ok: true as const,
         path: params.path,
         dryRun,
         valid,
         newErrors,
+        ...committed,
         ...(notLoaded.length > 0 && { notLoaded }),
       };
     },
@@ -355,8 +361,17 @@ export const FILE_ROUTES = [
             ALLOW_INVALID_NAMES,
           ),
       );
-      if (!dryRun) await layers.services.ledgerRepo.changeFiles(write);
-      return { ok: true as const, path: params.path, dryRun, valid, newErrors };
+      const committed = dryRun
+        ? {}
+        : await layers.services.ledgerRepo.changeFiles(write);
+      return {
+        ok: true as const,
+        path: params.path,
+        dryRun,
+        valid,
+        newErrors,
+        ...committed,
+      };
     },
   }),
 ] as const;

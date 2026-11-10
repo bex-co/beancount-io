@@ -263,8 +263,9 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
       target.lines.map((line) => ({ path: target.path, line })),
     );
     let entryHashes: string[] = [];
+    let commit: string | undefined;
     if (!dryRun) {
-      await this.ledgerRepo.changeGeneratedFiles({
+      ({ commit } = await this.ledgerRepo.changeGeneratedFiles({
         ledgerId,
         identity,
         operations: targets.map((target) => ({
@@ -274,7 +275,7 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
           ...(target.sha && { sha: target.sha }),
         })),
         message: `Add ${summary}`,
-      });
+      }));
       this.logger.info("Appended directive text", {
         ledgerId,
         count: directives.length,
@@ -312,6 +313,7 @@ export class DirectiveAppendWorkflow implements IDirectiveAppendWorkflow {
       appendedUnsorted: targets
         .filter((target) => target.appended)
         .map((target) => target.path),
+      ...(commit && { commit }),
     };
   }
 

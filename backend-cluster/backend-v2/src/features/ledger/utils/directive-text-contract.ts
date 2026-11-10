@@ -66,6 +66,8 @@ export interface AppendDirectiveTextResult {
    * were appended at the end instead of threaded in.
    */
   readonly appendedUnsorted: readonly string[];
+  /** The sha of the commit this made; absent on a preview (w23/m42). */
+  readonly commit?: string;
 }
 
 /**

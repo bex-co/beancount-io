@@ -320,6 +320,7 @@ the principal inputs; inspect the schema before constructing a call.
 | `deleteEntrySource`             | `entryHash`, `sha256sum`, optional `dry_run`; deletes one entry's source.                                                                                                                                                                                              | Write      |
 | `deleteEntrySources`            | `entries: [{entryHash, sha256sum}]`, optional `dry_run`; deletes entries' source in one commit.                                                                                                                                                                        | Write      |
 | `renameLedgerFile`              | `oldPath`, `newPath`, optional `message`, `updateIncludes`, `dry_run`; moves a file, rewriting includes. A preview names the move plus the rewritten include lines and reports the same `validation` the commit will.                                                                                                    | Write      |
+| `revertCommit`                  | `sha` (a commit from the `commit` of a write result, or `main` for the latest), optional `message`, `dry_run`; undoes one commit as a new commit, setting each file it touched back to its parent's contents. A preview lists the files and reports `validation`. Refused with `CONFLICT` when a later commit changed any of them. | Write      |
 | `syncBankTransactions`          | `itemId`, optional `dry_run`; pulls new transactions from a linked bank into staging.                                                                                                                                                                                  | Write      |
 | `importStagedBankTransactions`  | `transactions: [{ transactionId, targetAccount, sourceAccount? }]`, optional `filename`, `dry_run`; writes staged transactions into the ledger.                                                                                                                        | Write      |
 | `discardStagedBankTransactions` | `transactionIds`, optional `dry_run`; removes staged transactions.                                                                                                                                                                                                     | Write      |
@@ -415,7 +416,7 @@ published `outputSchema` declares all three, and a client that validates
 `structuredContent` against it accepts the result; a key the schema omitted
 would make that client reject the whole preview.
 
-`renameLedgerFile` previews like the file tools: it projects bean-check over
+`renameLedgerFile` and `revertCommit` preview like the file tools: it projects bean-check over
 the files the move would leave, and the moved file's own errors go with it to
 its new path, so renaming a file that carries errors reports none as new in the
 preview and in the commit alike. The bank tools and the lifecycle and
@@ -928,6 +929,21 @@ owner, or a reader of a public ledger who holds no grant, gets
 `OPERATION_NOT_ALLOWED` saying why, while a caller who cannot see the ledger
 still gets `NOT_FOUND` (w23/063). A membership removal affects the next
 protected call.
+
+## Undo a change
+
+A write that makes a commit returns its sha as `commit`: the file tools
+(`createLedgerFiles`, `updateLedgerFiles`, `deleteLedgerFiles`),
+`appendLedgerText` and `renameLedgerFile` (REST: the file `PUT`/`DELETE`, the
+directive-text append and `rename-file`; GraphQL: `appendLedgerText` and
+`renameLedgerFile`). A preview has none. `revertCommit` takes that sha (or
+`main` for the latest commit), previews with `dry_run`, and commits the undo as
+one new commit that sets each file the commit touched back to its parent's
+contents; its own result carries the new `commit`. It is refused with `CONFLICT`
+naming the file when a later commit changed any file the revert would touch, so
+an undo never discards newer work, and a merge or root commit cannot be
+reverted. The entry tools, the source-slice edits and the receipt insert do not
+return a `commit` yet.
 
 ## Resources
 

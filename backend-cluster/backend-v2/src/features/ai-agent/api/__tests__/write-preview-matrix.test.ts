@@ -147,6 +147,20 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
     exception:
       "MCP only: REST and GraphQL rename return no validation block, and no surface refuses the commit for new errors (it reports them, as the preview does)",
   },
+  // Undoing a commit projects bean-check over the files it would leave, as a
+  // rename does, and reports it, never refusing for new errors (w23/m42).
+  revertCommit: {
+    kind: "projection",
+    proofs: [
+      {
+        file: DIFFERENTIAL_FILE,
+        test: "reverting the commit that broke a file adds no errors",
+      },
+    ],
+    differential: DIFFERENTIAL_CASE,
+    exception:
+      "no surface refuses the commit for new errors (it reports them, as the preview does), and only a conflict with a later commit refuses it",
+  },
   syncBankTransactions: SUMMARY("counts what a sync would stage"),
   importStagedBankTransactions: SUMMARY(
     "returns the transactions it would write",

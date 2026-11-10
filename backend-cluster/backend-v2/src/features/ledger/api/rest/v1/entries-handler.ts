@@ -328,6 +328,10 @@ const directiveTextResultSchema = z.strictObject({
       "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on the status.",
   }),
   appendedUnsorted: z.array(z.string()),
+  commit: z
+    .string()
+    .optional()
+    .describe("The sha of the commit this made; absent on a dry run."),
 });
 
 /**

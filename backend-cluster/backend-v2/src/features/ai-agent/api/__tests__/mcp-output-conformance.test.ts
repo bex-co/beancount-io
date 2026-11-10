@@ -203,6 +203,7 @@ const SHARED_SCHEMA_ONLY: Record<string, string> = {
   deleteEntrySource: "source-slice executor; needs entry-hash fixtures (t003)",
   deleteEntrySources: "source-slice executor; needs entry-hash fixtures (t003)",
   renameLedgerFile: "move workflow; needs a ledgerWorkflow stub (t003)",
+  revertCommit: "revert workflow; needs a ledgerWorkflow and git host stub",
   insertReceiptTransaction: "receipt workflow; needs a workflow stub (t003)",
   syncBankTransactions: "bank workflow; needs a bank stub (t003)",
   importStagedBankTransactions: "bank workflow; needs a bank stub (t003)",

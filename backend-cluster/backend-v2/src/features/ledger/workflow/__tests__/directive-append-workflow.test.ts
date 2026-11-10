@@ -71,8 +71,9 @@ function fixture(
           : (options.projectedErrors ?? []),
     ),
     changeGeneratedFiles: jest.fn(
-      async (_params: { operations: { path: string; content?: string }[] }) =>
-        undefined,
+      async (_params: {
+        operations: { path: string; content?: string }[];
+      }) => ({}),
     ),
     projectedSourceFiles: jest.fn(
       async (params: { overlays: { path: string; content: string }[] }) => {

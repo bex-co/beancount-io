@@ -65,6 +65,10 @@ export const appendLedgerTextOutputSchema = toolOutputSchema(
     appendedUnsorted: z
       .array(z.string())
       .describe("Files not in date order, so these went at the end"),
+    commit: z
+      .string()
+      .optional()
+      .describe("The commit's sha; absent on a preview."),
   }),
 );
 
@@ -114,6 +118,7 @@ export async function executeAppendLedgerText(
         count: result.count,
         diff: [...result.diff],
         appendedUnsorted: [...result.appendedUnsorted],
+        ...(result.commit && { commit: result.commit }),
         wrote: [...result.wrote],
         entryHashes: [...result.entryHashes],
         validation,

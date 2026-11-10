@@ -34,6 +34,7 @@ describe("Ledger resolvers (delegation)", () => {
       updateLedgerFile: jest.fn(),
       deleteLedgerFile: jest.fn(),
       renameLedgerFile: jest.fn(),
+      revertLedgerCommit: jest.fn(),
       starLedger: jest.fn(),
       unstarLedger: jest.fn(),
       listLedgers: jest.fn(),

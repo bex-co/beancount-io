@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..types import UNSET, Unset
+
 if TYPE_CHECKING:
     from ..models.post_api_gateway_v1_ledgers_owner_name_rename_file_response_200_preview_item import (
         PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem,
@@ -26,6 +28,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
         updated_includes (list[str]):
         preview (list[PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem]): Per-file rewritten include
             lines; populated on dry runs only.
+        commit (str | Unset): The sha of the commit the rename made; absent on a preview.
     """
 
     message: str
@@ -34,6 +37,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
     new_path: str
     updated_includes: list[str]
     preview: list[PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem]
+    commit: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -52,6 +56,8 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
             preview_item = preview_item_data.to_dict()
             preview.append(preview_item)
 
+        commit = self.commit
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -64,6 +70,8 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
                 "preview": preview,
             }
         )
+        if commit is not UNSET:
+            field_dict["commit"] = commit
 
         return field_dict
 
@@ -91,6 +99,8 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
 
             preview.append(preview_item)
 
+        commit = d.pop("commit", UNSET)
+
         post_api_gateway_v1_ledgers_owner_name_rename_file_response_200 = cls(
             message=message,
             dry_run=dry_run,
@@ -98,6 +108,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
             new_path=new_path,
             updated_includes=updated_includes,
             preview=preview,
+            commit=commit,
         )
 
         post_api_gateway_v1_ledgers_owner_name_rename_file_response_200.additional_properties = d

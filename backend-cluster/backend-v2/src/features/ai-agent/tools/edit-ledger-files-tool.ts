@@ -163,6 +163,10 @@ const editLedgerFilesOutputSchema = toolOutputSchema(
       .describe(
         "Written ledger files no loaded file includes, so not checked; present only when any.",
       ),
+    commit: z
+      .string()
+      .optional()
+      .describe("The commit's sha; absent on a preview."),
   }),
 );
 export type EditLedgerFilesOutput = z.infer<typeof editLedgerFilesOutputSchema>;
@@ -173,6 +177,7 @@ type EditLedgerFilesResult = {
   operations: { operation: string; path: string }[];
   diff: { path: string; diff: string }[];
   notLoaded?: string[];
+  commit?: string;
   wrote: { path: string }[];
   entryHashes: string[];
   validation: {
@@ -544,7 +549,7 @@ export async function executeEditLedgerFiles(
         overlays(),
       );
 
-      const { validation } = await withPostWriteValidation(
+      const { validation, written } = await withPostWriteValidation(
         services,
         identity,
         ledgerId,
@@ -591,6 +596,7 @@ export async function executeEditLedgerFiles(
         operations: ops,
         diff: [],
         ...(notLoaded.length > 0 && { notLoaded }),
+        ...written,
         wrote,
         entryHashes: [],
         validation,

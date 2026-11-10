@@ -38,6 +38,26 @@ function assertFileWriteValid(
 /** A file as a write would leave it; `null` content projects a deletion. */
 export type FileOverlay = { path: string; content: string | null };
 
+/**
+ * The files a set of ledger-service operations would leave: base64 contents
+ * decoded to text, a delete as `null`.
+ */
+export function overlaysOf(
+  operations: readonly {
+    operation: string;
+    path: string;
+    content?: string | null;
+  }[],
+): FileOverlay[] {
+  return operations.map((operation) => ({
+    path: operation.path,
+    content:
+      operation.operation === "delete"
+        ? null
+        : Buffer.from(operation.content ?? "", "base64").toString("utf-8"),
+  }));
+}
+
 /** What the gate needs of the ledger services, REST and MCP alike. */
 export interface FileWriteGateServices {
   ledgerRepo: Pick<ILedgerRepoService, "checkProjectedFiles">;

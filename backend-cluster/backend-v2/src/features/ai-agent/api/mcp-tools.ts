@@ -20,6 +20,10 @@ import {
   renameFileResult,
 } from "@/features/ledger/api/rest/v1/rename-handler";
 import {
+  revertCommitInput,
+  revertCommitResult,
+} from "@/features/ledger/api/rest/v1/revert-handler";
+import {
   parseReceiptInputSchema,
   parseReceiptOutputSchema,
   executeParseReceipt,
@@ -119,11 +123,10 @@ import {
 } from "../tools/types";
 import {
   summarizeWrite,
+  runWriteWithValidation,
   withPostWriteValidation,
-  projectedWriteValidation,
 } from "../tools/write-validation";
 import type { WriteValidation } from "@/features/ledger/utils/bean-check-errors";
-import type { FileOverlay } from "@/features/ledger/utils/file-write-gate";
 import { BANK_OPERATIONS } from "../tools/bank-import-tool";
 import { normalizeAgentRepoPath } from "../tools/agent-repo-path";
 import { LEDGER_ENTRY_POINT } from "@/features/ledger/utils/ledger-entry-point";
@@ -296,6 +299,10 @@ const addLedgerEntriesInput = entriesBodySchema
   .extend({ ledger: ledgerSelection, ...dryRunInput, requestId: mcpRequestId })
   .strict();
 const renameLedgerFileInput = renameFileInput
+  .omit({ dryRun: true })
+  .extend({ ledger: ledgerSelection, ...dryRunInput })
+  .strict();
+const revertCommitToolInput = revertCommitInput
   .omit({ dryRun: true })
   .extend({ ledger: ledgerSelection, ...dryRunInput })
   .strict();
@@ -690,50 +697,29 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
       // The moved file's errors move with it: they are not new for having a
       // new path (w1/236).
       const renames = new Map([[oldPath, newPath]]);
-      let projected: FileOverlay[] = [];
-      const rename = () =>
-        context.ledgerWorkflow.renameLedgerFile({
-          identity: context.identity,
-          ledgerId,
-          input: {
-            oldPath,
-            newPath,
-            message: resolveCommitMessage(args, { required: false }),
-            updateIncludes: args.updateIncludes ?? undefined,
-            dryRun: previewing,
-          },
-          // Only a preview projects: a commit reads the ledger back instead.
-          onProjectedFiles: previewing
-            ? (files) => {
-                projected = files;
-              }
-            : undefined,
-        });
       // A dry run changes nothing, so reading the errors around it always
       // reads clean: the preview projects the rename instead, and says what
       // the commit will say (w1/236).
-      const previewRename = async () => {
-        const written = await rename();
-        return {
-          written,
-          validation: await projectedWriteValidation(
-            context.services,
-            context.identity,
+      const { written, validation } = await runWriteWithValidation({
+        services: context.services,
+        identity: context.identity,
+        ledgerId,
+        previewing,
+        renames,
+        run: (onProjectedFiles) =>
+          context.ledgerWorkflow.renameLedgerFile({
+            identity: context.identity,
             ledgerId,
-            projected,
-            renames,
-          ),
-        };
-      };
-      const { written, validation } = previewing
-        ? await previewRename()
-        : await withPostWriteValidation(
-            context.services,
-            context.identity,
-            ledgerId,
-            rename,
-            renames,
-          );
+            input: {
+              oldPath,
+              newPath,
+              message: resolveCommitMessage(args, { required: false }),
+              updateIncludes: args.updateIncludes ?? undefined,
+              dryRun: previewing,
+            },
+            onProjectedFiles,
+          }),
+      });
       // The workflow spells the echo dryRun; MCP publishes dry_run (w23/m7/t004).
       const { dryRun, ...result } = written;
       const moved =
@@ -761,6 +747,62 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
                   ...written.updatedIncludes,
                 ]),
               ].map((path) => ({ path })),
+          entryHashes: [],
+          validation,
+        },
+      };
+    },
+  },
+  {
+    name: "revertCommit",
+    title: "Revert Commit",
+    annotations: DESTRUCTIVE,
+    description:
+      "Undo one commit as a new commit. sha is the commit that createLedgerFiles, updateLedgerFiles, deleteLedgerFiles, appendLedgerText or renameLedgerFile returned, or main for the latest. Each file it touched goes back to its parent's contents in one atomic commit; CONFLICT if a later commit changed any of them. Pinned credentials can omit ledger. dry_run previews without committing.",
+    inputSchema: revertCommitToolInput,
+    outputSchema: mcpOutputSchema(
+      toolOutputSchema(
+        withWriteOutcome({
+          ...withoutDryRun(revertCommitResult.shape),
+          dry_run: z.boolean(),
+        }),
+      ),
+    ),
+    execute: async (context, input) => {
+      const { ledger, ...args } = revertCommitToolInput.parse(input);
+      const ledgerId = resolveMcpLedger(context, ledger);
+      const previewing = resolveFlagAlias(
+        { primary: args.dry_run, legacy: args.dryRun },
+        DRY_RUN_NAMES,
+      );
+      const { written, validation } = await runWriteWithValidation({
+        services: context.services,
+        identity: context.identity,
+        ledgerId,
+        previewing,
+        run: (onProjectedFiles) =>
+          context.ledgerWorkflow.revertLedgerCommit({
+            identity: context.identity,
+            ledgerId,
+            input: {
+              sha: args.sha,
+              message: args.message ?? undefined,
+              dryRun: previewing,
+            },
+            onProjectedFiles,
+          }),
+      });
+      const { dryRun, ...result } = written;
+      return {
+        ok: true,
+        result: {
+          summary: summarizeWrite(
+            `${dryRun ? "Would revert" : "Reverted"} ${written.sha.slice(0, 12)} "${written.subject}" (${written.files.map((file) => `${file.change} ${file.path}`).join(", ")})`,
+            validation,
+          ),
+          ...result,
+          dry_run: dryRun,
+          wrote: dryRun ? [] : written.files.map(({ path }) => ({ path })),
           entryHashes: [],
           validation,
         },
