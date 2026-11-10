@@ -40,6 +40,12 @@
 - [ ] **m35** — [Offer argument completion for MCP prompts and resource templates](./blocked/m35/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 5; evidence-gated — **blocked:** no evaluated host is known to send `completion/complete`; needs an observed host call (billed agent-eval run) before building
 - [x] **m36** — [Give the same bad call the same failure on REST, GraphQL and MCP](./done/m36/README.md) (9 tasks) ← `/pm-brainstorm for w23` 2026-11-10, proposal 4; absorbs `w1/194`, `w1/205`
 - [x] **m37** — [Turn the numeric claims in docs/mcp.md into executable checks](./done/m37/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-10, proposal 5; absorbs `w1/200`, `w1/203`, `w1/196`
+- [ ] **m38** — [Key every per-ledger mechanism on one canonical ledger identity](./m38/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 1; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/234`, `w1/235`
+- [ ] **m39** — [Prove a preview and its commit give the same verdict](./m39/README.md) (10 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 2; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/236`, `w1/227`
+- [ ] **m40** — [Run what the served text tells an agent to run](./m40/README.md) (10 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 3; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/224`, `w1/226`, `w1/230`
+- [ ] **m41** — [Diff the report engine against stock beancount in a release gate](./m41/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 4; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/229`
+- [ ] **m42** — [Name the commit every write makes, and let an agent undo it](./m42/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 5; user request via /pmx, 2026-11-10; user routed to w23; source `w1/228`
+- [ ] **m43** — [Accept directive metadata on every typed entry and gate the journal round trip](./m43/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 6; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/233`
 
 ## Dropped
 
