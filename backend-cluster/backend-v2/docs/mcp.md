@@ -319,7 +319,7 @@ the principal inputs; inspect the schema before constructing a call.
 | `updateEntrySource`             | `entryHash`, `sha256sum`, `newContent`, optional `dry_run`; replaces one entry's source. A preview returns the stored replacement.                                                                                                                                     | Write      |
 | `deleteEntrySource`             | `entryHash`, `sha256sum`, optional `dry_run`; deletes one entry's source.                                                                                                                                                                                              | Write      |
 | `deleteEntrySources`            | `entries: [{entryHash, sha256sum}]`, optional `dry_run`; deletes entries' source in one commit.                                                                                                                                                                        | Write      |
-| `renameLedgerFile`              | `oldPath`, `newPath`, optional `message`, `updateIncludes`, `dry_run`; moves a file, rewriting includes. A preview names the move plus the rewritten include lines.                                                                                                    | Write      |
+| `renameLedgerFile`              | `oldPath`, `newPath`, optional `message`, `updateIncludes`, `dry_run`; moves a file, rewriting includes. A preview names the move plus the rewritten include lines and reports the same `validation` the commit will.                                                                                                    | Write      |
 | `syncBankTransactions`          | `itemId`, optional `dry_run`; pulls new transactions from a linked bank into staging.                                                                                                                                                                                  | Write      |
 | `importStagedBankTransactions`  | `transactions: [{ transactionId, targetAccount, sourceAccount? }]`, optional `filename`, `dry_run`; writes staged transactions into the ledger.                                                                                                                        | Write      |
 | `discardStagedBankTransactions` | `transactionIds`, optional `dry_run`; removes staged transactions.                                                                                                                                                                                                     | Write      |
@@ -415,12 +415,20 @@ published `outputSchema` declares all three, and a client that validates
 `structuredContent` against it accepts the result; a key the schema omitted
 would make that client reject the whole preview.
 
-`renameLedgerFile`, the bank tools, and the lifecycle and collaborator tools
-preview a summary (a move, a sync count, a destroy summary, a would-be grant),
-not a bean-check projection, so `valid` does not apply to them. The registry in
+`renameLedgerFile` previews like the file tools: it projects bean-check over
+the files the move would leave, and the moved file's own errors go with it to
+its new path, so renaming a file that carries errors reports none as new in the
+preview and in the commit alike. The bank tools and the lifecycle and
+collaborator tools preview a summary (a sync count, a destroy summary, a
+would-be grant), not a bean-check projection, so `valid` does not apply to
+them. The registry in
 `src/features/ai-agent/api/__tests__/write-preview-matrix.test.ts` classifies
 every tool with a preview flag and names the parity tests that prove the rule;
 adding a write tool with `dry_run` fails it until the tool is classified.
+`preview-commit-differential.test.ts` runs the file tools and the rename twice
+on identical ledgers, once as a dry run and once as a commit, and fails when
+the verdicts differ; every projection tool has a case there or a written
+reason in the registry.
 The three config-only bank tools (`mapBankAccount`,
 `setBankAccountCurrency`, `refreshBankConnection`) publish no preview
 argument, and neither does `setLedgerStar` — starring is an instantly

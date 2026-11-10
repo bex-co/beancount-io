@@ -6,6 +6,7 @@ import {
   toBeanCheckErrors,
   toWriteValidation,
   type BeanCheckError,
+  type FileRenames,
   type WriteValidation,
 } from "./bean-check-errors";
 
@@ -34,6 +35,9 @@ function assertFileWriteValid(
   });
 }
 
+/** A file as a write would leave it; `null` content projects a deletion. */
+export type FileOverlay = { path: string; content: string | null };
+
 /** What the gate needs of the ledger services, REST and MCP alike. */
 export interface FileWriteGateServices {
   ledgerRepo: Pick<ILedgerRepoService, "checkProjectedFiles">;
@@ -55,30 +59,30 @@ export async function gateFileWrite(
   services: FileWriteGateServices,
   identity: Identity,
   ledgerId: string,
-  overlays: { path: string; content: string | null }[],
+  overlays: FileOverlay[],
   allowInvalid: boolean,
+  renames?: FileRenames,
 ): Promise<WriteValidation> {
   const getErrors = services.ledgerData?.getErrors;
-  let before: BeanCheckError[] = [];
-  if (getErrors) {
+  const readBaseline = async (): Promise<BeanCheckError[]> => {
+    if (!getErrors) return [];
     try {
-      before = toBeanCheckErrors(
+      return toBeanCheckErrors(
         (await getErrors.call(services.ledgerData, { ledgerId, identity })) ??
           [],
       );
     } catch {
-      before = [];
+      return [];
     }
-  }
-  const projected = toBeanCheckErrors(
-    await services.ledgerRepo.checkProjectedFiles({
-      ledgerId,
-      identity,
-      overlays,
-    }),
-  );
+  };
+  // Independent reads: the baseline does not wait for the projection.
+  const [before, projectedErrors] = await Promise.all([
+    readBaseline(),
+    services.ledgerRepo.checkProjectedFiles({ ledgerId, identity, overlays }),
+  ]);
+  const projected = toBeanCheckErrors(projectedErrors);
   return assertFileWriteValid(
-    toWriteValidation(before, projected),
+    toWriteValidation(before, projected, renames),
     allowInvalid,
   );
 }

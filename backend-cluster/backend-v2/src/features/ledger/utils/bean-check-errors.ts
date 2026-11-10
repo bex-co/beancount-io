@@ -106,6 +106,11 @@ function withoutEntryTag(message: string): string {
   return message.replace(/ \(\d{4}-\d{2}-\d{2}, ".*"\)$/s, "");
 }
 
+/** Files a write moves, `oldPath` to `newPath`: their errors move with them. */
+export type FileRenames = ReadonlyMap<string, string>;
+
+const NO_RENAMES: FileRenames = new Map();
+
 /**
  * Errors in `after` that `before` did not have, matched by message and file
  * but not line: a write that inserts or removes lines moves every error below
@@ -118,16 +123,24 @@ function withoutEntryTag(message: string): string {
 export function diffBeanCheckErrors(
   before: readonly BeanCheckError[],
   after: readonly BeanCheckError[],
+  renames: FileRenames = NO_RENAMES,
 ): BeanCheckError[] {
-  const key = (error: BeanCheckError) =>
-    `${withoutEntryTag(error.message)}\u0000${error.source?.replace(/:\d+$/, "") ?? ""}`;
+  const fileOf = (error: BeanCheckError) =>
+    error.source?.replace(/:\d+$/, "") ?? "";
+  const key = (error: BeanCheckError, file: string) =>
+    `${withoutEntryTag(error.message)}\u0000${file}`;
   const left = new Map<string, number>();
   for (const error of before) {
-    left.set(key(error), (left.get(key(error)) ?? 0) + 1);
+    // A moved file's errors did not appear with the move: keyed on the old
+    // path every one of them read as new (w1/236).
+    const file = fileOf(error);
+    const k = key(error, renames.get(file) ?? file);
+    left.set(k, (left.get(k) ?? 0) + 1);
   }
   return after.filter((error) => {
-    const count = left.get(key(error)) ?? 0;
-    if (count > 0) left.set(key(error), count - 1);
+    const k = key(error, fileOf(error));
+    const count = left.get(k) ?? 0;
+    if (count > 0) left.set(k, count - 1);
     return count === 0;
   });
 }
@@ -135,11 +148,12 @@ export function diffBeanCheckErrors(
 export function toWriteValidation(
   before: readonly BeanCheckError[],
   after: readonly BeanCheckError[],
+  renames: FileRenames = NO_RENAMES,
 ): WriteValidation {
   return {
     errorsBefore: before.length,
     errorsAfter: after.length,
-    ...withValidity(diffBeanCheckErrors(before, after)),
+    ...withValidity(diffBeanCheckErrors(before, after, renames)),
   };
 }
 

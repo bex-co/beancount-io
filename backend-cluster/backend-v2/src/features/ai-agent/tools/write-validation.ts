@@ -3,9 +3,15 @@ import { DomainError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import type { ToolServices } from "./types";
 import {
+  gateFileWrite,
+  type FileOverlay,
+  type FileWriteGateServices,
+} from "@/features/ledger/utils/file-write-gate";
+import {
   toBeanCheckErrors,
   toWriteValidation,
   type BeanCheckError,
+  type FileRenames,
   type WriteValidation,
 } from "@/features/ledger/utils/bean-check-errors";
 
@@ -16,6 +22,13 @@ type ValidationServices = Pick<ToolServices, "ledgerData">;
 // Re-exported so the tools keep one import for the whole validation vocabulary
 // while the shaping and diffing live beside the ledger they describe (w2/m28).
 export { toWriteValidation };
+
+/** Domain messages are written for callers; anything else is internal. */
+function checkFailureMessage(error: unknown): string {
+  return error instanceof DomainError
+    ? error.message
+    : "the ledger check failed";
+}
 
 /**
  * The ledger's current bean-check errors through the same call the `errors`
@@ -40,13 +53,7 @@ async function tryReadBeanCheckErrors(
       ledgerId,
       error: error instanceof Error ? error.message : String(error),
     });
-    // Domain messages are written for callers; anything else is internal.
-    return {
-      failure:
-        error instanceof DomainError
-          ? error.message
-          : "the ledger check failed",
-    };
+    return { failure: checkFailureMessage(error) };
   }
 }
 
@@ -75,6 +82,8 @@ export async function withPostWriteValidation<T>(
   identity: Identity,
   ledgerId: string,
   write: () => Promise<T>,
+  /** Files the write moves: their errors are not new for having moved (w1/236). */
+  renames?: FileRenames,
 ): Promise<{ written: T; validation: WriteValidation }> {
   const before = await tryReadBeanCheckErrors(services, identity, ledgerId);
   const written = await write();
@@ -82,6 +91,7 @@ export async function withPostWriteValidation<T>(
   const validation = toWriteValidation(
     "errors" in before ? before.errors : [],
     "errors" in after ? after.errors : [],
+    renames,
   );
   const failure =
     "failure" in after
@@ -96,6 +106,43 @@ export async function withPostWriteValidation<T>(
         ? validation
         : { ...validation, valid: false, checked: false, checkError: failure },
   };
+}
+
+/**
+ * A preview's verdict when the write has no commit to read back: bean-check
+ * over the files the write would leave behind, against the ledger's errors
+ * now. Never refuses for new errors (a preview returns them), and a check that
+ * cannot run reads `checked: false` rather than clean, as the commit's does.
+ */
+export async function projectedWriteValidation(
+  services: FileWriteGateServices,
+  identity: Identity,
+  ledgerId: string,
+  overlays: FileOverlay[],
+  renames?: FileRenames,
+): Promise<WriteValidation> {
+  try {
+    // `allowInvalid`: a preview returns the new errors, it never refuses.
+    return await gateFileWrite(
+      services,
+      identity,
+      ledgerId,
+      overlays,
+      true,
+      renames,
+    );
+  } catch (error) {
+    validationLogger.warn("Projected bean-check failed", {
+      ledgerId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return {
+      ...toWriteValidation([], []),
+      valid: false,
+      checked: false,
+      checkError: checkFailureMessage(error),
+    };
+  }
 }
 
 /**

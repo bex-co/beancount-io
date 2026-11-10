@@ -1,21 +1,21 @@
 # w23 · m39 — Prove a preview and its commit give the same verdict
 
-**Worker:** worker1 **Goal:** A differential test runs each write twice on identical state, once with `dry_run` and once to commit, and fails when the validation verdict, the files written or the hashes differ. **Status:** todo
+**Worker:** worker1 **Goal:** A differential test runs each write twice on identical state, once with `dry_run` and once to commit, and fails when the validation verdict, the files written or the hashes differ. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Choose the harness for a real preview-versus-commit run | 30m | — |
-| t002 | Build the fixtures | 30m | t001 |
-| t003 | Write the differential runner over every projection tool | 60m | t002 |
-| t004 | Fix the renameLedgerFile preview baseline (w1/236) | 30m | t003 |
-| t005 | Report an unincluded file as unvalidated, not green (w1/227) | 40m | t003 |
-| t006 | Make a projection tool without a differential case fail the matrix | 20m | t003 |
-| t007 | Adoption surface | 20m | t004, t005, t006 |
-| t008 | Simplify | 20m | t007 |
-| t009 | Test coverage | 30m | t007 |
-| t010 | Closeout | 15m | t009 |
+| t001 | Choose the harness for a real preview-versus-commit run — **DONE** | 30m | — |
+| t002 | Build the fixtures — **DONE** | 30m | t001 |
+| t003 | Write the differential runner over every projection tool — **DONE** | 60m | t002 |
+| t004 | Fix the renameLedgerFile preview baseline (w1/236) — **DONE** | 30m | t003 |
+| t005 | Report an unincluded file as unvalidated, not green (w1/227) — **DONE** | 40m | t003 |
+| t006 | Make a projection tool without a differential case fail the matrix — **DONE** | 20m | t003 |
+| t007 | Adoption surface — **DONE** | 20m | t004, t005, t006 |
+| t008 | Simplify — **DONE** | 20m | t007 |
+| t009 | Test coverage — **DONE** | 30m | t007 |
+| t010 | Closeout — **DONE** | 15m | t009 |
 
 ## Definition of done
 

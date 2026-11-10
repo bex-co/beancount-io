@@ -120,8 +120,10 @@ import {
 import {
   summarizeWrite,
   withPostWriteValidation,
+  projectedWriteValidation,
 } from "../tools/write-validation";
 import type { WriteValidation } from "@/features/ledger/utils/bean-check-errors";
+import type { FileOverlay } from "@/features/ledger/utils/file-write-gate";
 import { BANK_OPERATIONS } from "../tools/bank-import-tool";
 import { normalizeAgentRepoPath } from "../tools/agent-repo-path";
 import { LEDGER_ENTRY_POINT } from "@/features/ledger/utils/ledger-entry-point";
@@ -677,28 +679,61 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     execute: async (context, input) => {
       const { ledger, ...args } = renameLedgerFileInput.parse(input);
       const ledgerId = resolveMcpLedger(context, ledger);
-      const { written, validation } = await withPostWriteValidation(
-        context.services,
-        context.identity,
-        ledgerId,
-        () =>
-          context.ledgerWorkflow.renameLedgerFile({
-            identity: context.identity,
-            ledgerId,
-            input: {
-              // Models spell shell-style `./old.bean`; every other file
-              // tool normalizes that here, before the strict validator.
-              oldPath: normalizeAgentRepoPath(args.oldPath),
-              newPath: normalizeAgentRepoPath(args.newPath),
-              message: resolveCommitMessage(args, { required: false }),
-              updateIncludes: args.updateIncludes ?? undefined,
-              dryRun: resolveFlagAlias(
-                { primary: args.dry_run, legacy: args.dryRun },
-                DRY_RUN_NAMES,
-              ),
-            },
-          }),
+      // Models spell shell-style `./old.bean`; every other file tool
+      // normalizes that here, before the strict validator.
+      const oldPath = normalizeAgentRepoPath(args.oldPath);
+      const newPath = normalizeAgentRepoPath(args.newPath);
+      const previewing = resolveFlagAlias(
+        { primary: args.dry_run, legacy: args.dryRun },
+        DRY_RUN_NAMES,
       );
+      // The moved file's errors move with it: they are not new for having a
+      // new path (w1/236).
+      const renames = new Map([[oldPath, newPath]]);
+      let projected: FileOverlay[] = [];
+      const rename = () =>
+        context.ledgerWorkflow.renameLedgerFile({
+          identity: context.identity,
+          ledgerId,
+          input: {
+            oldPath,
+            newPath,
+            message: resolveCommitMessage(args, { required: false }),
+            updateIncludes: args.updateIncludes ?? undefined,
+            dryRun: previewing,
+          },
+          // Only a preview projects: a commit reads the ledger back instead.
+          onProjectedFiles: previewing
+            ? (files) => {
+                projected = files;
+              }
+            : undefined,
+        });
+      // A dry run changes nothing, so reading the errors around it always
+      // reads clean: the preview projects the rename instead, and says what
+      // the commit will say (w1/236).
+      const previewRename = async () => {
+        const written = await rename();
+        return {
+          written,
+          validation: await projectedWriteValidation(
+            context.services,
+            context.identity,
+            ledgerId,
+            projected,
+            renames,
+          ),
+        };
+      };
+      const { written, validation } = previewing
+        ? await previewRename()
+        : await withPostWriteValidation(
+            context.services,
+            context.identity,
+            ledgerId,
+            rename,
+            renames,
+          );
       // The workflow spells the echo dryRun; MCP publishes dry_run (w23/m7/t004).
       const { dryRun, ...result } = written;
       const moved =

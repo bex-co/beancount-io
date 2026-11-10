@@ -137,6 +137,7 @@ import {
   refuseDanglingDeletes,
   scanLedgerBeanFiles,
 } from "@/features/ledger/utils/include-references";
+import type { FileOverlay } from "@/features/ledger/utils/file-write-gate";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
 
@@ -268,6 +269,12 @@ export interface ILedgerWorkflow {
     identity: Identity;
     ledgerId: string;
     input: RenameLedgerFileCommand;
+    /**
+     * Receives the files the rename would leave behind (`null` content is a
+     * deletion) so the caller can project bean-check over them; the result
+     * itself carries nothing a surface would have to publish.
+     */
+    onProjectedFiles?: (overlays: FileOverlay[]) => void;
   }): Promise<RenameLedgerFileResult>;
   starLedger(params: {
     identity: Identity;
@@ -1256,10 +1263,12 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     identity,
     ledgerId,
     input,
+    onProjectedFiles,
   }: {
     identity: Identity;
     ledgerId: string;
     input: RenameLedgerFileCommand;
+    onProjectedFiles?: (overlays: FileOverlay[]) => void;
   }): Promise<RenameLedgerFileResult> {
     await this.authorization.authorizeOrThrow({
       principal: identity,
@@ -1453,6 +1462,15 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     }
 
     const dryRun = input.dryRun === true;
+    onProjectedFiles?.(
+      files.map((file) => ({
+        path: file.path,
+        content:
+          file.operation === "delete"
+            ? null
+            : Buffer.from(file.content ?? "", "base64").toString("utf-8"),
+      })),
+    );
     const changeOptions: LedgerChangeFilesOptions = {
       files,
       message: input.message ?? `Rename ${input.oldPath} → ${input.newPath}`,

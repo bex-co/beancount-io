@@ -41,7 +41,7 @@
 - [x] **m36** — [Give the same bad call the same failure on REST, GraphQL and MCP](./done/m36/README.md) (9 tasks) ← `/pm-brainstorm for w23` 2026-11-10, proposal 4; absorbs `w1/194`, `w1/205`
 - [x] **m37** — [Turn the numeric claims in docs/mcp.md into executable checks](./done/m37/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-10, proposal 5; absorbs `w1/200`, `w1/203`, `w1/196`
 - [x] **m38** — [Key every per-ledger mechanism on one canonical ledger identity](./done/m38/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 1; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/234`, `w1/235`
-- [ ] **m39** — [Prove a preview and its commit give the same verdict](./m39/README.md) (10 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 2; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/236`, `w1/227`
+- [x] **m39** — [Prove a preview and its commit give the same verdict](./done/m39/README.md) (10 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 2; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/236`, `w1/227`
 - [ ] **m40** — [Run what the served text tells an agent to run](./m40/README.md) (10 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 3; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/224`, `w1/226`, `w1/230`
 - [ ] **m41** — [Diff the report engine against stock beancount in a release gate](./m41/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 4; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/229`
 - [ ] **m42** — [Name the commit every write makes, and let an agent undo it](./m42/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 5; user request via /pmx, 2026-11-10; user routed to w23; source `w1/228`
@@ -102,3 +102,5 @@
 - [x] [227](./done/227.md) — `importStagedBankTransactions` retry after a lost reply: pin the error and document or reword it
 - [x] [228](./done/228.md) — `docs/mcp.md`: short agent happy-path recipe after "Connect a client"
 - [ ] [232](./232.md) — REST and GraphQL refuse the owner-case variant of a pinned ledger that MCP admits (found by the m38 audit; from source, repro unverified)
+- [ ] [233](./233.md) — a file-write gate reads an unreadable baseline as "no errors", so every existing error reads as new (found by the m39 review; from source)
+- [ ] [234](./234.md) — REST and GraphQL rename return no validation block; MCP's rename does (found by the m39 review)

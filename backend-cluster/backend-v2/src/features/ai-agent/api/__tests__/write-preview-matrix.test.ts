@@ -18,11 +18,26 @@ import { MCP_TOOLS } from "../mcp-tools";
 const FEATURES = join(__dirname, "..", "..", "..");
 
 type Proof = { file: string; test: string };
+/**
+ * How a projection tool's preview is shown to equal its commit (w23/m39): a
+ * case in `preview-commit-differential.test.ts`, which runs the write twice
+ * on identical ledgers and compares the verdicts, or the written reason the
+ * differential cannot cover it.
+ */
+type Differential = { case: true } | { reason: string };
 type Entry =
-  | { kind: "projection"; proofs: Proof[] }
+  | {
+      kind: "projection";
+      proofs: Proof[];
+      differential: Differential;
+      /** Where the rule below does not hold in full, and why. */
+      exception?: string;
+    }
   | { kind: "summary"; reason: string };
 
 const REST_V1 = "ledger/api/rest/v1/__tests__";
+const DIFFERENTIAL_FILE =
+  "ai-agent/api/__tests__/preview-commit-differential.test.ts";
 const ENTRY_PARITY: Proof[] = [
   {
     file: `${REST_V1}/structured-entry-parity.test.ts`,
@@ -59,8 +74,25 @@ const SLICE_PARITY: Proof[] = [
 ];
 const SUMMARY = (reason: string): Entry => ({ kind: "summary", reason });
 
+/**
+ * The entry and text tools preview and commit through one ledger-service call
+ * that reports the projection (`errors_before`, `errors_after`, `new_errors`),
+ * so a preview is the commit minus the write; the differential harness has no
+ * ledger engine to run them on. Each is proved by its parity suite instead.
+ */
+const DIFFERENTIAL_CASE: Differential = { case: true };
+
+const ONE_PROJECTION_CALL: Differential = {
+  reason:
+    "preview and commit share one ledger-service projection call, proved by the parity suites named above; the differential harness has no ledger engine to run it on",
+};
+
 const WRITE_PREVIEW_RULES: Record<string, Entry> = {
-  addLedgerEntries: { kind: "projection", proofs: ENTRY_PARITY },
+  addLedgerEntries: {
+    kind: "projection",
+    proofs: ENTRY_PARITY,
+    differential: ONE_PROJECTION_CALL,
+  },
   appendLedgerText: {
     kind: "projection",
     proofs: [
@@ -69,16 +101,52 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
         test: "previews a write that would break the ledger, with its new errors, via %s",
       },
     ],
+    differential: ONE_PROJECTION_CALL,
   },
-  createLedgerFiles: { kind: "projection", proofs: FILE_PARITY },
-  updateLedgerFiles: { kind: "projection", proofs: FILE_PARITY },
-  deleteLedgerFiles: { kind: "projection", proofs: FILE_PARITY },
-  updateEntrySource: { kind: "projection", proofs: SLICE_PARITY },
-  deleteEntrySource: { kind: "projection", proofs: SLICE_PARITY },
-  deleteEntrySources: { kind: "projection", proofs: SLICE_PARITY },
-  renameLedgerFile: SUMMARY(
-    "a move plus rewritten include lines; the content is not re-projected through bean-check",
-  ),
+  createLedgerFiles: {
+    kind: "projection",
+    proofs: FILE_PARITY,
+    differential: DIFFERENTIAL_CASE,
+  },
+  updateLedgerFiles: {
+    kind: "projection",
+    proofs: FILE_PARITY,
+    differential: DIFFERENTIAL_CASE,
+  },
+  deleteLedgerFiles: {
+    kind: "projection",
+    proofs: FILE_PARITY,
+    differential: DIFFERENTIAL_CASE,
+  },
+  updateEntrySource: {
+    kind: "projection",
+    proofs: SLICE_PARITY,
+    differential: ONE_PROJECTION_CALL,
+  },
+  deleteEntrySource: {
+    kind: "projection",
+    proofs: SLICE_PARITY,
+    differential: ONE_PROJECTION_CALL,
+  },
+  deleteEntrySources: {
+    kind: "projection",
+    proofs: SLICE_PARITY,
+    differential: ONE_PROJECTION_CALL,
+  },
+  // A move projects bean-check over the files it would leave, with the moved
+  // file's errors carried to its new path; it was a summary until w1/236.
+  renameLedgerFile: {
+    kind: "projection",
+    proofs: [
+      {
+        file: DIFFERENTIAL_FILE,
+        test: "renaming a file that carries errors adds none",
+      },
+    ],
+    differential: DIFFERENTIAL_CASE,
+    exception:
+      "MCP only: REST and GraphQL rename return no validation block, and no surface refuses the commit for new errors (it reports them, as the preview does)",
+  },
   syncBankTransactions: SUMMARY("counts what a sync would stage"),
   importStagedBankTransactions: SUMMARY(
     "returns the transactions it would write",
@@ -98,6 +166,14 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
   removeLedgerCollaborator: SUMMARY("the would-be revocation"),
   leaveLedger: SUMMARY("the would-be self-removal"),
 };
+
+/** The tools the differential test has a case for, read off its `CASES` table. */
+function differentialCaseTools(): string[] {
+  const source = readFileSync(join(FEATURES, DIFFERENTIAL_FILE), "utf8");
+  return [
+    ...new Set([...source.matchAll(/^\s+tool: "(\w+)",$/gm)].map((m) => m[1])),
+  ];
+}
 
 function previewTools(): string[] {
   return (MCP_TOOLS as unknown as { name: string; inputSchema: unknown }[])
@@ -131,6 +207,44 @@ describe("the write-preview rule matrix (w23/m21)", () => {
       const path = join(FEATURES, proof.file);
       expect(existsSync(path)).toBe(true);
       expect(readFileSync(path, "utf8")).toContain(proof.test);
+    },
+  );
+
+  const differentials = Object.entries(WRITE_PREVIEW_RULES).flatMap(
+    ([tool, entry]) =>
+      entry.kind === "projection" ? [[tool, entry.differential] as const] : [],
+  );
+
+  it.each(differentials)(
+    "%s has a preview-versus-commit case, or says why it cannot: %j",
+    (tool, differential) => {
+      if ("reason" in differential) {
+        expect(differential.reason.length).toBeGreaterThan(40);
+        return;
+      }
+      expect(differentialCaseTools()).toContain(tool);
+    },
+  );
+
+  it("has no differential case for a tool the registry does not mark as having one", () => {
+    const registered = differentials
+      .filter(([, differential]) => "case" in differential)
+      .map(([tool]) => tool);
+    expect(differentialCaseTools().sort()).toEqual(
+      [...new Set(registered)].sort(),
+    );
+  });
+
+  it.each(
+    Object.entries(WRITE_PREVIEW_RULES).flatMap(([tool, entry]) =>
+      entry.kind === "projection" && entry.exception
+        ? [[tool, entry.exception] as const]
+        : [],
+    ),
+  )(
+    "%s departs from the projection rule, for a stated reason: %s",
+    (_t, why) => {
+      expect(why.length).toBeGreaterThan(40);
     },
   );
 

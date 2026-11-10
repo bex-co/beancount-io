@@ -45,3 +45,57 @@ describe("diffBeanCheckErrors", () => {
     ]);
   });
 });
+
+// w1/236: a renamed file's errors went with it; keyed on the old path every
+// one of them read as new.
+describe("diffBeanCheckErrors with renamed files", () => {
+  const renames = new Map([["broken.bean", "broken2.bean"]]);
+
+  it("does not count the errors of a file that only moved", () => {
+    expect(
+      diffBeanCheckErrors(
+        [
+          error("Account was never opened", "broken.bean:1"),
+          error("Account was never opened", "broken.bean:2"),
+        ],
+        [
+          error("Account was never opened", "broken2.bean:1"),
+          error("Account was never opened", "broken2.bean:2"),
+        ],
+        renames,
+      ),
+    ).toEqual([]);
+  });
+
+  it("still counts an error the moved file gained", () => {
+    const gained = error("Unbalanced", "broken2.bean:9");
+    expect(
+      diffBeanCheckErrors(
+        [error("Account was never opened", "broken.bean:1")],
+        [error("Account was never opened", "broken2.bean:1"), gained],
+        renames,
+      ),
+    ).toEqual([gained]);
+  });
+
+  it("does not excuse the same message in an unrelated file", () => {
+    const elsewhere = error("Account was never opened", "other.bean:1");
+    expect(
+      diffBeanCheckErrors(
+        [error("Account was never opened", "broken.bean:1")],
+        [error("Account was never opened", "broken2.bean:1"), elsewhere],
+        renames,
+      ),
+    ).toEqual([elsewhere]);
+  });
+
+  it("leaves errors with no file alone", () => {
+    expect(
+      diffBeanCheckErrors(
+        [error("Load failed")],
+        [error("Load failed")],
+        renames,
+      ),
+    ).toEqual([]);
+  });
+});
