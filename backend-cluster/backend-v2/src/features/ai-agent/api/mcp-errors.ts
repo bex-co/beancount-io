@@ -1,4 +1,4 @@
-import { DomainError, ErrorCategory } from "@/shared/errors";
+import { boundEchoes, DomainError, ErrorCategory } from "@/shared/errors";
 import { carrierFields } from "../utils/run-tool";
 
 /**
@@ -285,7 +285,11 @@ export function envelopeFromThrown(
       ...carrierFields(error.metadata),
     };
   }
-  const raw = error instanceof Error ? error.message : String(error);
+  // A DomainError bounded its own echoes; anything else is bounded here
+  // (w1/225).
+  const raw = boundEchoes(
+    error instanceof Error ? error.message : String(error),
+  );
   const compacted = compactZodMessage(raw);
   if (compacted) {
     return {
@@ -346,7 +350,9 @@ export function splitToolFailure(
     newLedgerErrors?: unknown;
     limitOwner?: unknown;
   } & Record<string, unknown>;
-  const raw = typeof error === "string" ? error : "The tool failed.";
+  const raw = boundEchoes(
+    typeof error === "string" ? error : "The tool failed.",
+  );
   // A failure with no category of its own came from something other than a
   // `DomainError`, so it is the one kind the mask applies to.
   const uncoded = typeof errorCode !== "string";

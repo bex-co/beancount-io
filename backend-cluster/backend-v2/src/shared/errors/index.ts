@@ -24,6 +24,7 @@
 // ERROR CATEGORY (canonical codes) + HTTP STATUS MAPPING
 // ============================================================================
 export { ErrorCategory, CATEGORY_HTTP_STATUS } from "./error-category";
+export { boundEchoes } from "./bound-echoes";
 
 // ============================================================================
 // DOMAIN ERROR CLASSES

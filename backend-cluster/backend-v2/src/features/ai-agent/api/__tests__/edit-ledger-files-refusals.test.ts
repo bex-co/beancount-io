@@ -482,6 +482,10 @@ describe("several changes to one file in one call", () => {
           message: expect.stringContaining(
             "main.bean: old_string matches 2 times",
           ),
+          // w1/225: it offered a `replace` operation the tool no longer has.
+          hint: expect.stringContaining(
+            "send the whole file as `content`, with its `sha`",
+          ),
         });
       }
       expect(f.changeLedgerFiles).not.toHaveBeenCalled();

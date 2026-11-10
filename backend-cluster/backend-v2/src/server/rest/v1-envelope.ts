@@ -1,5 +1,5 @@
 import type Koa from "koa";
-import { ErrorCategory } from "@/shared/errors";
+import { boundEchoes, ErrorCategory } from "@/shared/errors";
 
 /** The prefix every v1 path carries. */
 export const V1_PREFIX = "/api-gateway/v1";
@@ -24,7 +24,7 @@ export function writeV1Error(
   message: string,
 ): void {
   ctx.status = status;
-  ctx.body = { ok: false, error: { code, message } };
+  ctx.body = { ok: false, error: { code, message: boundEchoes(message) } };
 }
 
 /**

@@ -1,3 +1,4 @@
+import { boundEchoes } from "./bound-echoes";
 import { ErrorCategory } from "./error-category";
 
 /**
@@ -37,8 +38,20 @@ export abstract class DomainError extends Error {
     public readonly metadata?: Record<string, unknown>,
     public readonly httpStatusHint?: number,
   ) {
-    super(message);
+    // Every surface reads the message, and REST and GraphQL the metadata, so
+    // what they echo is bounded once, here (w1/225). A hint is ours.
+    super(boundEchoes(message));
     this.name = this.constructor.name;
+    if (metadata) {
+      this.metadata = Object.fromEntries(
+        Object.entries(metadata).map(([key, value]) => [
+          key,
+          typeof value === "string" && key !== "hint"
+            ? boundEchoes(value)
+            : value,
+        ]),
+      );
+    }
   }
 }
 

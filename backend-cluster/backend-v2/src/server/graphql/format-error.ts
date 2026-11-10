@@ -2,7 +2,7 @@ import { unwrapResolverError } from "@apollo/server/errors";
 import type { GraphQLFormattedError } from "graphql";
 import { ArgumentValidationError } from "type-graphql";
 import { config } from "@/config/config";
-import { DomainError, ErrorCategory } from "@/shared/errors";
+import { DomainError, ErrorCategory, boundEchoes } from "@/shared/errors";
 
 /** One class-validator failure: a field plus its failed constraint messages. */
 type ValidationErrorItem = {
@@ -91,5 +91,6 @@ export function formatError(
     };
   }
 
-  return formatted;
+  // GraphQL's own parse and validation errors quote the request too (w1/225).
+  return { ...formatted, message: boundEchoes(formatted.message) };
 }

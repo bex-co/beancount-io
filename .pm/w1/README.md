@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [225](./225.md) — Refusals echo caller input unbounded, and one hint names a removed `replace` operation (MCP QA 2026-11-10)
 - [226](./226.md) — Served tool and template descriptions make three false claims (MCP QA 2026-11-10)
 - [227](./227.md) — File writes report "No new bean-check errors" for a `.bean` file nothing includes (MCP QA 2026-11-10)
 - [228](./228.md) — Idea: give agents the write primitives a hosted session keeps reaching for (commit sha in results, undo, account rename, move entries)

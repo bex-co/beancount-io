@@ -271,7 +271,7 @@ function foldOperations(
       throw new BadUserInputError(
         `${f.path}: old_string matches ${count} times (must match exactly once — add more context lines)`,
         "old_string",
-        "Extend `old_string` with neighbouring lines until it is unique in the file, or use `replace` to overwrite the whole file.",
+        "Extend `old_string` with neighbouring lines until it is unique in the file, or send the whole file as `content`, with its `sha` from `readLedgerFiles`.",
       );
     const at = current.indexOf(f.old_string);
     touched.set(f.path, {
