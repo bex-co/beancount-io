@@ -11,6 +11,7 @@ import {
   DomainError,
   NotFoundError,
   ServiceUnavailableError,
+  withoutAllowInvalidOffer,
 } from "@/shared/errors";
 import { lock, LOCK_KEYS } from "@/shared/lock";
 import { unwrapFavaResponse } from "@/foundation/fava";
@@ -842,7 +843,11 @@ export class PlaidSyncService implements IPlaidSyncService {
       "add transactions to ledger",
       (cause) =>
         operationNotAllowedFromCause("add transactions to ledger", cause),
-    );
+    ).catch((error: unknown) => {
+      // The bank import takes no allowInvalid, so its refusals must not
+      // offer one (w1/202).
+      throw withoutAllowInvalidOffer(error);
+    });
     // A ledger service older than w23/060 answers `null`.
     const entryHashes =
       (written as { entry_hashes?: string[] } | null)?.entry_hashes ?? [];

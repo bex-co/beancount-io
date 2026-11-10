@@ -8,7 +8,11 @@ import {
   type FavaApiClient,
   unwrapFavaResponse,
 } from "@/foundation/fava";
-import { InternalServerError, NotFoundError } from "@/shared/errors";
+import {
+  InternalServerError,
+  NotFoundError,
+  withoutAllowInvalidOffer,
+} from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
@@ -160,6 +164,9 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       request: { receiptObjectKey, input },
       write: () =>
         this.insertAuthorized({ ledgerId, receiptObjectKey, input, identity }),
+    }).catch((error: unknown) => {
+      // The insert takes no allowInvalid, so its refusals must not offer one.
+      throw withoutAllowInvalidOffer(error);
     });
   }
 

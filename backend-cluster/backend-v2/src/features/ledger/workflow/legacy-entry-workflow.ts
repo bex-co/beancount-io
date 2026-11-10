@@ -7,7 +7,7 @@ import type {
 } from "../service/ledger-entry-service";
 import { resolveLegacyLedgerId } from "../utils/resolve-legacy-ledger";
 import { parseLedgerId } from "@/shared/str";
-import { BadUserInputError } from "@/shared/errors";
+import { BadUserInputError, withoutAllowInvalidOffer } from "@/shared/errors";
 import { parsePostingAmount } from "./legacy-posting-amount";
 
 export interface LegacyEntryInput {
@@ -66,16 +66,21 @@ export class LegacyEntryWorkflow implements ILegacyEntryWorkflow {
       };
     });
 
-    await this.ledgerEntry.addBulkEntries(
-      identity,
-      ledgerOwner,
-      ledgerName,
-      inputs,
-      platform,
-      false,
-      false,
-      input.requestId,
-    );
+    await this.ledgerEntry
+      .addBulkEntries(
+        identity,
+        ledgerOwner,
+        ledgerName,
+        inputs,
+        platform,
+        false,
+        false,
+        input.requestId,
+      )
+      .catch((error: unknown) => {
+        // The legacy mutation has no allowInvalid argument to offer.
+        throw withoutAllowInvalidOffer(error);
+      });
     return { data: "", success: true };
   }
 }

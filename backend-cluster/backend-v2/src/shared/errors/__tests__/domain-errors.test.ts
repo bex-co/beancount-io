@@ -15,6 +15,9 @@ import {
   ResourceLimitReachedError,
   OperationNotAllowedError,
   PremiumRequiredError,
+  UnbalancedTransactionError,
+  NewLedgerErrorsError,
+  withoutAllowInvalidOffer,
 } from "@/shared/errors";
 
 describe("domain errors", () => {
@@ -84,5 +87,58 @@ describe("domain errors", () => {
     const err = new InternalServerError("upstream", undefined, 502);
     expect(err.httpStatusHint).toBe(502);
     expect(err.category).toBe(ErrorCategory.INTERNAL_SERVER_ERROR);
+  });
+});
+
+/**
+ * w1/202: the receipt insert, bank import and legacy addEntries take no
+ * allowInvalid, but their UNBALANCED and new-error refusals told the caller
+ * to pass it — and the retry was refused as an unknown key.
+ */
+describe("withoutAllowInvalidOffer", () => {
+  it("rewords UNBALANCED without allowInvalid and keeps the rest", () => {
+    const offered = new UnbalancedTransactionError(
+      "entry 0: Transaction does not balance: residual 4.50 USD",
+      "4.50 USD",
+      0,
+    );
+    expect(offered.metadata?.hint).toContain("allowInvalid");
+    const refused = withoutAllowInvalidOffer(
+      offered,
+    ) as UnbalancedTransactionError;
+    expect(refused).toBeInstanceOf(UnbalancedTransactionError);
+    expect(refused.category).toBe(ErrorCategory.UNBALANCED);
+    expect(refused.message).toBe(offered.message);
+    expect(refused.metadata).toMatchObject({ residual: "4.50 USD", entry: 0 });
+    expect(refused.metadata?.hint).toBe(
+      "residual 4.50 USD; add the missing posting or elide one amount",
+    );
+  });
+
+  it.each([false, true])(
+    "keeps a new-error refusal's errors and drops the flag (parse error: %s)",
+    (hasParseError) => {
+      const offered = new NewLedgerErrorsError(
+        "entries",
+        1,
+        "Account Expenses:Nope is not open (main.bean:9)",
+        { hasParseError },
+      );
+      expect(offered.metadata?.hint).toContain("allowInvalid");
+      const refused = withoutAllowInvalidOffer(offered) as NewLedgerErrorsError;
+      expect(refused).toBeInstanceOf(NewLedgerErrorsError);
+      expect(refused.category).toBe(ErrorCategory.VALIDATION_FAILED);
+      expect(refused.message).toBe(offered.message);
+      expect(refused.metadata).toMatchObject({
+        newLedgerErrors: "Account Expenses:Nope is not open (main.bean:9)",
+      });
+      expect(String(refused.metadata?.hint)).not.toMatch(/allowInvalid/);
+      expect(String(refused.metadata?.hint)).toMatch(/Fix the entries\.$/);
+    },
+  );
+
+  it("passes any other error through unchanged", () => {
+    const other = new BadUserInputError("date is not a date");
+    expect(withoutAllowInvalidOffer(other)).toBe(other);
   });
 });

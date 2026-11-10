@@ -9,6 +9,8 @@ import {
   ResourceLimitReachedError,
 } from "@/shared/errors";
 import { parseBankConnectionResource } from "@/server/api/authorization";
+import { FavaApiError } from "@/foundation/fava/api-client";
+import { NewLedgerErrorsError } from "@/shared/errors";
 
 // Mock logger
 jest.mock("@/shared/logger", () => ({
@@ -694,6 +696,37 @@ describe("PlaidSyncService", () => {
         ["ptxn_1"],
         expect.any(String),
       );
+    });
+
+    // w1/202: the bank import takes no allowInvalid, so the ledger's
+    // new-error refusal must not tell the caller to pass one.
+    it("refuses a write the ledger rejects without offering allowInvalid", async () => {
+      mockPlaidTransactionModel.getByTransactionIds.mockResolvedValue(
+        mockTransactions,
+      );
+      mockPlaidAccountModel.getById.mockResolvedValue(mockAccount);
+      mockPlaidItemModel.getById.mockResolvedValue(mockItem);
+      mockFavaApiClient.entries.addBulkEntries.mockRejectedValueOnce(
+        new FavaApiError("new errors", 400, {
+          code: "NEW_LEDGER_ERRORS",
+          message: "adding these entries would introduce 1 new error",
+          details: { detail: "Account Expenses:Nope is not open", count: 1 },
+        } as never),
+      );
+
+      const refusal = await service
+        .submitTransactionsToLedger(
+          systemIdentity(userId),
+          ledgerOwner,
+          ledgerName,
+          txInputs,
+        )
+        .catch((error: unknown) => error);
+      expect(refusal).toBeInstanceOf(NewLedgerErrorsError);
+      expect(
+        String((refusal as NewLedgerErrorsError).metadata?.hint),
+      ).not.toMatch(/allowInvalid/);
+      expect(mockPlaidTransactionModel.markAsSynced).not.toHaveBeenCalled();
     });
 
     // w5/941: the staging flag is not the only record of an import.

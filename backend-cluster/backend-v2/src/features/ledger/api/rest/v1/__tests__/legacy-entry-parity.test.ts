@@ -16,6 +16,8 @@ import {
   SourceBackedRelationshipEvaluator,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { formatError } from "@/server/graphql/format-error";
+import { FavaApiError } from "@/foundation/fava/api-client";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
@@ -72,10 +74,16 @@ const entries: LegacyEntryInput[] = [
 ];
 async function fixture(caller = identity, ledgerId?: string | null) {
   const committed: unknown[] = [];
-  const state = { writable: true, failCommit: false };
+  const state = {
+    writable: true,
+    failCommit: false,
+    /** The ledger's own refusal, as its API answers it (w1/202). */
+    refuse: undefined as FavaApiError | undefined,
+  };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   const write = jest.fn(async (_owner, _name, body) => {
     if (state.failCommit) throw new Error("Fixture commit refused");
+    if (state.refuse) throw state.refuse;
     committed.push(...body.entries);
     return envelope(null);
   });
@@ -186,9 +194,12 @@ async function fixture(caller = identity, ledgerId?: string | null) {
             platform: "web",
           },
         });
+        const error = response.errors?.[0];
         return {
           success: !response.errors,
-          result: response.data?.addEntries,
+          result: error
+            ? formatError(error.toJSON(), error)
+            : response.data?.addEntries,
         };
       }
       throw new Error(`unknown surface: ${surface}`);
@@ -297,6 +308,44 @@ describe.each(["rest", "gql"])("legacy entries requestId via %s", (surface) => {
 
       await f.call(surface, entries, "tx-2");
       expect(f.write).toHaveBeenCalledTimes(2);
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+/**
+ * w1/202. Legacy addEntries has no allowInvalid argument, but the ledger's
+ * UNBALANCED and new-error refusals reached it saying "pass allowInvalid:
+ * true".
+ */
+describe.each(["rest", "gql"])("legacy entries refusals via %s", (surface) => {
+  it.each([
+    [
+      "UNBALANCED",
+      new FavaApiError("Transaction does not balance", 400, {
+        code: "UNBALANCED",
+        message: "entry 0: Transaction does not balance: residual 4.50 USD",
+        details: { residual: "4.50 USD", entry: 0 },
+      } as never),
+    ],
+    [
+      "VALIDATION_FAILED",
+      new FavaApiError("new errors", 400, {
+        code: "NEW_LEDGER_ERRORS",
+        message: "adding these entries would introduce 1 new error",
+        details: { detail: "Account Expenses:Nope is not open", count: 1 },
+      } as never),
+    ],
+  ])("refuses %s without offering allowInvalid", async (code, refusal) => {
+    const f = await fixture();
+    f.state.refuse = refusal;
+    try {
+      const outcome = await f.call(surface);
+      expect(outcome.success).toBe(false);
+      const text = JSON.stringify(outcome.result);
+      expect(text).toContain(code);
+      expect(text).not.toContain("allowInvalid");
     } finally {
       await f.close();
     }

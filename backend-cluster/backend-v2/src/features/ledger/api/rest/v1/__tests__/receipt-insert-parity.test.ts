@@ -11,6 +11,7 @@ import { LedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt
 import { S3Client } from "@aws-sdk/client-s3";
 import { AssetStorageService } from "@/features/s3/service/asset-storage-service";
 import { formatError } from "@/server/graphql/format-error";
+import { UnbalancedTransactionError } from "@/shared/errors";
 import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
@@ -816,5 +817,44 @@ it("answers a consumed receipt key as NOT_FOUND on REST, GraphQL and MCP without
   } finally {
     await f.close();
     send.mockRestore();
+  }
+});
+
+/**
+ * w1/202. The receipt insert takes no allowInvalid, but its UNBALANCED refusal
+ * said "add a posting or pass allowInvalid: true", and following it was
+ * refused as an unknown key.
+ */
+it("refuses an unbalanced receipt without offering allowInvalid on every surface", async () => {
+  const f = await fixture();
+  f.write.mockRejectedValue(
+    new UnbalancedTransactionError(
+      "entry 0: Transaction does not balance: residual 4.50 USD",
+      "4.50 USD",
+      0,
+    ) as never,
+  );
+  try {
+    const r = await f.rest();
+    expect(r.status).toBe(400);
+    const restBody = await r.json();
+    expect(restBody).toMatchObject({ error: { code: "UNBALANCED" } });
+    expect(JSON.stringify(restBody)).not.toContain("allowInvalid");
+    const g = await f.gql();
+    const gqlError = formatError(g.errors![0].toJSON(), g.errors![0]);
+    expect(gqlError.extensions?.code).toBe("UNBALANCED");
+    expect(JSON.stringify(gqlError)).not.toContain("allowInvalid");
+    const m = await f.mcp();
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      ok: false,
+      error: {
+        code: "UNBALANCED",
+        hint: "residual 4.50 USD; add the missing posting or elide one amount",
+      },
+    });
+    expect(f.copy).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
   }
 });

@@ -47,4 +47,5 @@ export {
   UnbalancedTransactionError,
   NewLedgerErrorsError,
   ConfigurationError,
+  withoutAllowInvalidOffer,
 } from "./domain-errors";

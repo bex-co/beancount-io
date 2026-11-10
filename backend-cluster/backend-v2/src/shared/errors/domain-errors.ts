@@ -215,24 +215,44 @@ const NEW_LEDGER_ERRORS_WORDING: Record<
  */
 export class NewLedgerErrorsError extends ValidationError {
   constructor(
-    write: NewLedgerErrorsWrite,
-    count: number,
-    newLedgerErrors: string,
-    opts?: { hasParseError?: boolean },
+    private readonly write: NewLedgerErrorsWrite,
+    private readonly count: number,
+    private readonly newLedgerErrors: string,
+    private readonly opts?: {
+      hasParseError?: boolean;
+      /** False for a write with no `allowInvalid` to pass (w1/202). */
+      offersAllowInvalid?: boolean;
+    },
   ) {
     const { field, subject, valid, invalid, fix } =
       NEW_LEDGER_ERRORS_WORDING[write];
+    // Every fix reads "Do X, or pass `allowInvalid: true` to …"; a write that
+    // takes no such flag keeps only the first half.
+    const remedy =
+      opts?.offersAllowInvalid === false
+        ? `${fix.split(", or pass")[0]}.`
+        : fix;
     // A semantic-only breakage keeps "valid but would break the ledger";
     // when the text itself does not parse, saying so points the agent at
     // the lines instead of the ledger (w23/093).
     const hint = opts?.hasParseError
-      ? `The ${invalid} — the message names each new error. ${fix}`
-      : `The ${valid} but would break the ledger — the message names each new error. ${fix}`;
+      ? `The ${invalid} — the message names each new error. ${remedy}`
+      : `The ${valid} but would break the ledger — the message names each new error. ${remedy}`;
     super(
       field,
       `${subject} would introduce ${count} new bean-check error${count === 1 ? "" : "s"}: ${newLedgerErrors}`,
       hint,
       { newLedgerErrors },
+    );
+  }
+
+  /** The same refusal for a write that offers no `allowInvalid` (w1/202). */
+  withoutAllowInvalid(): NewLedgerErrorsError {
+    return new NewLedgerErrorsError(
+      this.write,
+      this.count,
+      this.newLedgerErrors,
+      { ...this.opts, offersAllowInvalid: false },
     );
   }
 }
@@ -457,13 +477,47 @@ export class BilledByStoreError extends DomainError {
  * throw new UnbalancedTransactionError("entry 0: Transaction does not balance: residual 5 USD", "5 USD");
  */
 export class UnbalancedTransactionError extends DomainError {
-  constructor(message: string, residual: string, entry?: number) {
+  constructor(
+    message: string,
+    private readonly residual: string,
+    private readonly entry?: number,
+    /** False for a write with no `allowInvalid` to pass (w1/202). */
+    offersAllowInvalid = true,
+  ) {
     super(ErrorCategory.UNBALANCED, message, {
       residual,
       ...(entry !== undefined && { entry }),
-      hint: `residual ${residual}; add a posting or pass allowInvalid: true`,
+      hint: offersAllowInvalid
+        ? `residual ${residual}; add a posting or pass allowInvalid: true`
+        : `residual ${residual}; add the missing posting or elide one amount`,
     });
   }
+
+  /** The same refusal for a write that offers no `allowInvalid` (w1/202). */
+  withoutAllowInvalid(): UnbalancedTransactionError {
+    return new UnbalancedTransactionError(
+      this.message,
+      this.residual,
+      this.entry,
+      false,
+    );
+  }
+}
+
+/**
+ * A refusal as a write with no `allowInvalid` flag must word it (w1/202).
+ *
+ * The ledger's UNBALANCED and new-error refusals tell the caller to pass
+ * `allowInvalid: true`, which the receipt insert, the bank import and the
+ * legacy `addEntries` do not accept: following the hint was refused as an
+ * unknown key. Those writes rethrow through here; anything else passes
+ * through unchanged.
+ */
+export function withoutAllowInvalidOffer(error: unknown): unknown {
+  return error instanceof UnbalancedTransactionError ||
+    error instanceof NewLedgerErrorsError
+    ? error.withoutAllowInvalid()
+    : error;
 }
 
 /**
