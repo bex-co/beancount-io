@@ -1,19 +1,19 @@
 # w23 · m37 — Turn the numeric claims in docs/mcp.md into executable checks
 
-**Worker:** worker1 **Goal:** Every default, limit, error code and capability flag that `docs/mcp.md` states is compared to the served contract, and the known contradictions are corrected. **Status:** todo
+**Worker:** worker1 **Goal:** Every default, limit, error code and capability flag that `docs/mcp.md` states is compared to the served contract, and the known contradictions are corrected. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Extract the numeric claims into a claims table | 50m | — |
-| t002 | Test the claims against the served contract | 60m | t001 |
-| t003 | Correct the contradictions (w1/200, w1/203) | 40m | t002 |
-| t004 | Stop advertising listChanged on the stateless endpoint (w1/196) | 20m | t002 |
-| t005 | Adoption surface | 20m | t003, t004 |
-| t006 | Simplify | 20m | t005 |
-| t007 | Test coverage | 30m | t005 |
-| t008 | Closeout | 15m | t007 |
+| t001 | Extract the numeric claims into a claims table — **DONE** | 50m | — |
+| t002 | Test the claims against the served contract — **DONE** | 60m | t001 |
+| t003 | Correct the contradictions (w1/200, w1/203) — **DONE** | 40m | t002 |
+| t004 | Stop advertising listChanged on the stateless endpoint (w1/196) — **DONE** | 20m | t002 |
+| t005 | Adoption surface — **DONE** | 20m | t003, t004 |
+| t006 | Simplify — **DONE** | 20m | t005 |
+| t007 | Test coverage — **DONE** | 30m | t005 |
+| t008 | Closeout — **DONE** | 15m | t007 |
 
 ## Definition of done
 

@@ -12,7 +12,9 @@ export const JOURNAL_FILTER_DESCRIPTION =
   '"quoted" words match narration/payee (transactions) or comment (notes); ' +
   "`field:value` looks up `account` (posting accounts included), `tag`, `link`, " +
   "`payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts " +
-  "and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to " +
+  "and bare `>100` matches posting units; both compare the absolute value, so " +
+  "thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` " +
+  "scope a test to " +
   "postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. " +
   "Quote values holding a colon, a space, or a leading digit — " +
   '`account:"Assets:Bank:Checking"`, `date:"2026"` — ' +

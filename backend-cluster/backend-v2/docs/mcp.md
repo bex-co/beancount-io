@@ -220,11 +220,11 @@ Five calls cover almost every session. Each links to the section that defines it
 
 The current implementation computes cumulative capabilities from the grant:
 
-| Scope          | Capability                                                                                |
-| -------------- | ----------------------------------------------------------------------------------------- |
-| `ledger.read`  | Query and read ledger content.                                                            |
-| `ledger.write` | Read plus ordinary writes, including file edits and bank imports.                         |
-| `ledger.admin` | Read, write, and administrative operations, including key and bank-connection management. |
+| Scope          | Capability                                                                        |
+| -------------- | --------------------------------------------------------------------------------- |
+| `ledger.read`  | Query and read ledger content.                                                    |
+| `ledger.write` | Read plus ordinary writes, including file edits and bank imports.                 |
+| `ledger.admin` | Read, write, and administrative operations, including bank-connection management. |
 
 These are credential ceilings. The protected service also checks the caller's
 current relationship to the ledger or other target. Bank access, for example,
@@ -294,46 +294,56 @@ This is compatible with the optional GET stream in the
 Call `tools/list` for the deployed input and output schemas. Arguments below are
 the principal inputs; inspect the schema before constructing a call.
 
-| Tool                            | Inputs and behavior                                                                                                                                                                                                                                                    | Capability                                                                                 |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----- |
-| `runBqlQuery`                   | `{ "query": "BALANCES" }`; returns formatted query output as a string, cut at 1,000 rows or 100 KB with a closing `[truncated: …]` line.                                                                                                                               | Read                                                                                       |
-| `runBqlQueryStructured`         | `{ "query": "BALANCES" }`; returns column metadata (`dtype` labels) and rows, or a structured text result, matching REST JSON and GraphQL `queryShell`.                                                                                                                | Read                                                                                       |
-| `listLedgers`                   | Optional `page`, `limit` (at most 100); omit both for every ledger. A pinned credential returns its one ledger. Start here, then `getLedgerContext`.                                                                                                                   | Read                                                                                       |
-| `checkLedger`                   | `{}`; bean-check errors with file and line, entry counts, and the latest commit, in one call. Call after any write.                                                                                                                                                    | Read                                                                                       |
-| `getLedgerContext`              | Optional `payeeLimit`; attributes, open accounts, currencies, payees, years, and source files with counts.                                                                                                                                                             | Read                                                                                       |
-| `listLedgerEntries`             | Optional `account`, `filter`, `time`, `directiveTypes`, `transactionSubtypes`, `documentSubtypes`, `customSubtypes`, `limit`, `offset`; journal entries with the `entry_hash` other tools take.                                                                        | Read                                                                                       |
-| `getEntryContext`               | `entryHash` or `entry_hash` from `listLedgerEntries`; the source context around one entry — read before editing it. `generated_from` names the source of a plugin or pad copy. `not_booked: true` marks a transaction the ledger could not book; no balance counts it. | Read                                                                                       |
-| `listLedgerFiles`               | Optional `dir_path`; lists one directory level, directories first. A `dir_path` that does not exist, or names a file, is `NOT_FOUND`.                                                                                                                                  | Read                                                                                       |
-| `readLedgerFiles`               | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                                                                                                                                                     | Read                                                                                       |
-| `appendLedgerText`              | `text`, optional `path`, `dry_run`, `allowInvalid`, `requestId`; appends Beancount directive text, routed by type and date and inserted in date order.                                                                                                                 | Write                                                                                      |
-| `addLedgerEntries`              | `entries: [{type, entry}]`, optional `dry_run`, `allowInvalid`, `requestId`; appends structured directives, routed by type and date. A preview returns the per-file entry text. `custom`/`query`/`option`/`plugin` have no typed form — add them as raw text.          | Write                                                                                      |
-| `refreshManagedPrices`          | Optional `ledger`; re-fetches every managed price include (`include "https://beancount.io/prices/BTC-USD"`) now and returns each source's status. Never edits the ledger.                                                                                              | Write                                                                                      |
-| `createLedgerFiles`             | `description` or `message`, `files: [{ path, content }]`, optional `dry_run`; creates new files in one commit.                                                                                                                                                         | Write                                                                                      |
-| `updateLedgerFiles`             | `description` or `message`, `files: [{ path, old_string, new_string }                                                                                                                                                                                                  | { path, content }]`, optional `dry_run`; replaces exact text or whole files in one commit. | Write |
-| `deleteLedgerFiles`             | `description` or `message`, `files: [{ path }]`, optional `dry_run`; deletes files in one commit.                                                                                                                                                                      | Write                                                                                      |
-| `updateEntrySource`             | `entryHash`, `sha256sum`, `newContent`, optional `dry_run`; replaces one entry's source. A preview returns the stored replacement.                                                                                                                                     | Write                                                                                      |
-| `deleteEntrySource`             | `entryHash`, `sha256sum`, optional `dry_run`; deletes one entry's source.                                                                                                                                                                                              | Write                                                                                      |
-| `deleteEntrySources`            | `entries: [{entryHash, sha256sum}]`, optional `dry_run`; deletes entries' source in one commit.                                                                                                                                                                        | Write                                                                                      |
-| `renameLedgerFile`              | `oldPath`, `newPath`, optional `message`, `updateIncludes`, `dry_run`; moves a file, rewriting includes. A preview names the move plus the rewritten include lines.                                                                                                    | Write                                                                                      |
-| `syncBankTransactions`          | `itemId`, optional `dry_run`; pulls new transactions from a linked bank into staging.                                                                                                                                                                                  | Write                                                                                      |
-| `importStagedBankTransactions`  | `transactions: [{ transactionId, targetAccount, sourceAccount? }]`, optional `filename`, `dry_run`; writes staged transactions into the ledger.                                                                                                                        | Write                                                                                      |
-| `discardStagedBankTransactions` | `transactionIds`, optional `dry_run`; removes staged transactions.                                                                                                                                                                                                     | Write                                                                                      |
-| `reconcileBankAccounts`         | `itemId`, optional `dry_run`; re-reads which accounts a bank shares and can delete ones it no longer shares.                                                                                                                                                           | Admin                                                                                      |
-| `mapBankAccount`                | `accountId`, `ledgerAccount`; points a bank account at a ledger account.                                                                                                                                                                                               | Admin                                                                                      |
-| `setBankAccountCurrency`        | `accountId`, `currency`; sets a bank account's currency.                                                                                                                                                                                                               | Admin                                                                                      |
-| `refreshBankConnection`         | `itemId`; re-reads a connection's health.                                                                                                                                                                                                                              | Admin                                                                                      |
-| `unlinkBankConnection`          | `itemId`, optional `dry_run`; severs a linked bank.                                                                                                                                                                                                                    | Admin                                                                                      |
-| `listBankConnections`           | `{}`; linked bank connections (`item_id`) and their accounts (`account_id`, mapping) — the `banks` and `bank-accounts` resources as a tool.                                                                                                                            | Admin                                                                                      |
-| `listStagedBankTransactions`    | Optional `accountId`; transactions staged for import, with the ids `importStagedBankTransactions` and `discardStagedBankTransactions` take — the `bank-transactions/unsynced` resource as a tool.                                                                      | Read                                                                                       |
-| `updateLedger`                  | `name`, `description`, `private`, optional `dry_run`; renames a ledger or changes its description or visibility. A preview returns the current→new diff, with a flip to public called out. Commits echo `dry_run: false`.                                              | Admin                                                                                      |
-| `deleteLedger`                  | Optional `dry_run`; permanently deletes a ledger, including its history and linked-bank cleanup. A preview returns the destroy summary — identity, emptiness, size, and warnings. Commits echo `dry_run: false`.                                                       | Admin                                                                                      |
-| `setLedgerCollaborator`         | `collaborator`, optional `permission` (read, write, or admin; omitted uses the repository default), `dry_run`; grants or changes access. A preview returns the would-be grant, current→requested. Commits echo `dry_run: false`.                                       | Admin                                                                                      |
-| `removeLedgerCollaborator`      | `collaborator`, optional `dry_run`; revokes access. A preview returns the would-be revocation. Commits echo `dry_run: false`.                                                                                                                                          | Admin                                                                                      |
-| `leaveLedger`                   | Optional `dry_run`; removes the caller's own access. A preview returns the would-be self-removal. Commits echo `dry_run: false`.                                                                                                                                       | Admin                                                                                      |
-| `setLedgerStar`                 | `starred`; stars or unstars a ledger for the caller. No `dry_run`: starring is an instantly reversible personal toggle, so there is nothing worth previewing.                                                                                                          | Write                                                                                      |
+| Tool                            | Inputs and behavior                                                                                                                                                                                                                                                    | Capability |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `runBqlQuery`                   | `{ "query": "BALANCES" }`; returns formatted query output as a string, cut at 1,000 rows or 100 KB with a closing `[truncated: …]` line.                                                                                                                               | Read       |
+| `runBqlQueryStructured`         | `{ "query": "BALANCES" }`; returns column metadata (`dtype` labels) and rows, or a structured text result, matching REST JSON and GraphQL `queryShell`.                                                                                                                | Read       |
+| `listLedgers`                   | Optional `page`, `limit` (at most 100); omit both for every ledger. A pinned credential returns its one ledger. Start here, then `getLedgerContext`.                                                                                                                   | Read       |
+| `checkLedger`                   | `{}`; bean-check errors with file and line, entry counts, and the latest commit, in one call. Call after any write.                                                                                                                                                    | Read       |
+| `getLedgerContext`              | Optional `payeeLimit`; attributes, open accounts, currencies, payees, years, and source files with counts.                                                                                                                                                             | Read       |
+| `listLedgerEntries`             | Optional `account`, `filter`, `time`, `directiveTypes`, `transactionSubtypes`, `documentSubtypes`, `customSubtypes`, `limit`, `offset`; journal entries with the `entry_hash` other tools take.                                                                        | Read       |
+| `getEntryContext`               | `entryHash` or `entry_hash` from `listLedgerEntries`; the source context around one entry — read before editing it. `generated_from` names the source of a plugin or pad copy. `not_booked: true` marks a transaction the ledger could not book; no balance counts it. | Read       |
+| `listLedgerFiles`               | Optional `dir_path`; lists one directory level, directories first. A `dir_path` that does not exist, or names a file, is `NOT_FOUND`.                                                                                                                                  | Read       |
+| `readLedgerFiles`               | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                                                                                                                                                     | Read       |
+| `appendLedgerText`              | `text`, optional `path`, `dry_run`, `allowInvalid`, `requestId`; appends Beancount directive text, routed by type and date and inserted in date order.                                                                                                                 | Write      |
+| `addLedgerEntries`              | `entries: [{type, entry}]`, optional `dry_run`, `allowInvalid`, `requestId`; appends structured directives, routed by type and date. A preview returns the per-file entry text. `custom`/`query`/`option`/`plugin` have no typed form — add them as raw text.          | Write      |
+| `refreshManagedPrices`          | Optional `ledger`; re-fetches every managed price include (`include "https://beancount.io/prices/BTC-USD"`) now and returns each source's status. Never edits the ledger.                                                                                              | Write      |
+| `createLedgerFiles`             | `description` or `message`, `files: [{ path, content }]`, optional `dry_run`; creates new files in one commit.                                                                                                                                                         | Write      |
+| `updateLedgerFiles`             | `description` or `message`, `files: [{ path, old_string, new_string } \| { path, content }]`, optional `dry_run`; replaces exact text or whole files in one commit.                                                                                                    | Write      |
+| `deleteLedgerFiles`             | `description` or `message`, `files: [{ path }]`, optional `dry_run`; deletes files in one commit.                                                                                                                                                                      | Write      |
+| `updateEntrySource`             | `entryHash`, `sha256sum`, `newContent`, optional `dry_run`; replaces one entry's source. A preview returns the stored replacement.                                                                                                                                     | Write      |
+| `deleteEntrySource`             | `entryHash`, `sha256sum`, optional `dry_run`; deletes one entry's source.                                                                                                                                                                                              | Write      |
+| `deleteEntrySources`            | `entries: [{entryHash, sha256sum}]`, optional `dry_run`; deletes entries' source in one commit.                                                                                                                                                                        | Write      |
+| `renameLedgerFile`              | `oldPath`, `newPath`, optional `message`, `updateIncludes`, `dry_run`; moves a file, rewriting includes. A preview names the move plus the rewritten include lines.                                                                                                    | Write      |
+| `syncBankTransactions`          | `itemId`, optional `dry_run`; pulls new transactions from a linked bank into staging.                                                                                                                                                                                  | Write      |
+| `importStagedBankTransactions`  | `transactions: [{ transactionId, targetAccount, sourceAccount? }]`, optional `filename`, `dry_run`; writes staged transactions into the ledger.                                                                                                                        | Write      |
+| `discardStagedBankTransactions` | `transactionIds`, optional `dry_run`; removes staged transactions.                                                                                                                                                                                                     | Write      |
+| `reconcileBankAccounts`         | `itemId`, optional `dry_run`; re-reads which accounts a bank shares and can delete ones it no longer shares.                                                                                                                                                           | Admin      |
+| `mapBankAccount`                | `accountId`, `ledgerAccount`; points a bank account at a ledger account.                                                                                                                                                                                               | Admin      |
+| `setBankAccountCurrency`        | `accountId`, `currency`; sets a bank account's currency.                                                                                                                                                                                                               | Admin      |
+| `refreshBankConnection`         | `itemId`; re-reads a connection's health.                                                                                                                                                                                                                              | Admin      |
+| `unlinkBankConnection`          | `itemId`, optional `dry_run`; severs a linked bank.                                                                                                                                                                                                                    | Admin      |
+| `listBankConnections`           | `{}`; linked bank connections (`item_id`) and their accounts (`account_id`, mapping) — the `banks` and `bank-accounts` resources as a tool.                                                                                                                            | Admin      |
+| `listStagedBankTransactions`    | Optional `accountId`; transactions staged for import, with the ids `importStagedBankTransactions` and `discardStagedBankTransactions` take — the `bank-transactions/unsynced` resource as a tool.                                                                      | Read       |
+| `updateLedger`                  | `name`, `description`, `private`, optional `dry_run`; renames a ledger or changes its description or visibility. A preview returns the current→new diff, with a flip to public called out. Commits echo `dry_run: false`.                                              | Admin      |
+| `deleteLedger`                  | Optional `dry_run`; permanently deletes a ledger, including its history and linked-bank cleanup. A preview returns the destroy summary — identity, emptiness, size, and warnings. Commits echo `dry_run: false`.                                                       | Admin      |
+| `setLedgerCollaborator`         | `collaborator`, optional `permission` (read, write, or admin; omitted uses the repository default), `dry_run`; grants or changes access. A preview returns the would-be grant, current→requested. Commits echo `dry_run: false`.                                       | Admin      |
+| `removeLedgerCollaborator`      | `collaborator`, optional `dry_run`; revokes access. A preview returns the would-be revocation. Commits echo `dry_run: false`.                                                                                                                                          | Admin      |
+| `leaveLedger`                   | Optional `dry_run`; removes the caller's own access. A preview returns the would-be self-removal. Commits echo `dry_run: false`.                                                                                                                                       | Admin      |
+| `setLedgerStar`                 | `starred`; stars or unstars a ledger for the caller. No `dry_run`: starring is an instantly reversible personal toggle, so there is nothing worth previewing.                                                                                                          | Write      |
+
+Tools with their own sections rather than a row here: `createLedger` and
+`previewLedgerSetup` (Ledger lifecycle), `createPullRequest`, `mergePullRequest`
+and `rejectPullRequest` (Pull requests), `generateTempAssetUploadUrl`,
+`parseFile`, `parseReceipt` and `insertReceiptTransaction` (the temporary asset,
+statement and receipt sections).
 
 The implementation is listed in
 [`mcp-tools.ts`](../src/features/ai-agent/api/mcp-tools.ts).
+
+`initialize` advertises `listChanged: false` for tools, resources and prompts:
+the endpoint is POST-only and stateless, so it never pushes list-change
+notifications — list again to see a change.
 
 The three `list…` tools exist for hosts that call tools but never read
 resources, such as ChatGPT and GitHub Copilot's cloud agent: every id a tool
@@ -344,15 +354,8 @@ scope its most privileged operation needs (`ledger.read`, `ledger.write`, or
 `ledger.admin`) — top-level and mirrored in `_meta`, as OpenAI's Apps SDK
 reads it to decide when to link an account (D2). The declarations are derived
 from the authorization table, never written by hand.
-MCP key creation advertises camelCase `ledgerScope` and ISO 8601 `expiresAt`
-(`format: date-time`). The snake_case spellings stay accepted on input for one
-release; when both spellings arrive, the documented one wins.
-An omitted or blank ledger restriction inherits the caller's pin; an omitted
-expiry creates a key without an expiry. A new key cannot exceed its creator's
-scopes or widen its ledger restriction. MCP key results use
-`key_prefix`, `ledger_scope`, `last_used_at`, `expires_at`, `revoked_at`, and
-`created_at` for REST/GraphQL's camelCase fields; `revoked` remains available
-for compatibility. Only creation returns the plaintext key.
+MCP has no API-key tool: keys are minted and revoked on REST and GraphQL
+(ADR 019), so a credential cannot mint another through this endpoint.
 
 ### Write-flag spellings
 
@@ -412,8 +415,9 @@ refusing `true`, the three config routes; the star routes refuse the
 key outright. GraphQL offers it on the six write mutations and the
 five lifecycle mutations. The errors flag is offered where a write
 can add bean-check errors: the entry and slice writes on all three
-surfaces. File, bank, rename, and lifecycle writes take no errors
-flag.
+surfaces, and `createLedgerFiles`, `updateLedgerFiles` and
+`deleteLedgerFiles` take `allow_invalid`. Bank, rename, and lifecycle writes
+take no errors flag.
 
 #### Lifecycle preview shapes
 
@@ -557,7 +561,8 @@ REST, and GraphQL leave both optional and default per operation
 (`Create/Update/Delete <path>`, `Rename a → b`). `addLedgerEntries`,
 `appendLedgerText`, and the
 entry-source tools take neither: they compose the message from the
-operation and its content (`Added N …`), so a caller message would
+operation and its content (`Add <date> "<payee>"`, `Add N directives to <file>`,
+`Update …`, `Delete …`), so a caller message would
 duplicate what the server counts.
 
 `readLedgerFiles` returns each file's blob `sha`. Pass it back on a `content`
@@ -636,7 +641,7 @@ the new errors, and proceed only when `valid` is `true`, before re-issuing the s
 does not guarantee that applying the edit will succeed.
 
 Applying the edit calls `LedgerRepoService.changeFiles` and creates an atomic
-commit with message `AI edit: {description}`. Existing-file operations include
+commit whose message is the `description` verbatim. Existing-file operations include
 the fetched file SHA. The MCP handler does not present an approval dialog;
 confirmation behavior belongs to the client. These details come from the
 [file-edit implementation](../src/features/ai-agent/tools/edit-ledger-files-tool.ts).
@@ -787,7 +792,8 @@ for review. The three mutations use POST; review bodies are `{}`.
 
 `createLedger`, `updateLedger`, and `deleteLedger` require administrative
 authority and apply changes immediately. Creation can be previewed first with
-`previewLedgerSetup`; update and delete offer no preview.
+`previewLedgerSetup`; `updateLedger` and `deleteLedger` take `dry_run` and
+return a preview of the change instead of applying it.
 
 - `previewLedgerSetup` requires `setup`, the same setup specification
   `createLedger` accepts ([ADR 026](../../../docs/adrs/ADR026-dashboard-onboarding.md)). It creates nothing and
@@ -837,7 +843,8 @@ authority and apply changes immediately. Creation can be previewed first with
   the renamed ledger, so the name stays taken though no ledger has it, and the
   refusal (reason code `LEDGER_NAME_RESERVED`) names the ledger it redirects to
   (w23/061). Renaming a ledger back to its own former name is allowed.
-- `deleteLedger` accepts only `ledger` and returns `{ "ledgerId": "owner/name" }`.
+- `deleteLedger` takes `ledger` and optional `dry_run`, and returns
+  `{ "ledgerId": "owner/name" }`; a preview returns `{ "ledgerId", "preview" }`.
 
 For update/delete, unpinned credentials must supply `ledger`; pinned credentials
 may omit it and cannot select another ledger. Creation and update return ledger
@@ -872,8 +879,8 @@ credential can omit it.
 | `removeLedgerCollaborator` | Required `collaborator`                                                      | Remove that member.                                                                                                           |
 | `leaveLedger`              | No collaborator or permission argument                                       | Remove the authenticated caller. Owners cannot leave their own ledger.                                                        |
 
-These tools apply immediately; preview is not supported. Undeclared arguments,
-including `dry_run`, are rejected. Only an explicit collaborator can leave: the
+These tools take `dry_run` (`dryRun` on GraphQL) and preview the change
+without applying it. Undeclared arguments are rejected. Only an explicit collaborator can leave: the
 owner, or a reader of a public ledger who holds no grant, gets
 `OPERATION_NOT_ALLOWED` saying why, while a caller who cannot see the ledger
 still gets `NOT_FOUND` (w23/063). A membership removal affects the next
@@ -939,8 +946,9 @@ GraphQL, MCP tools, and MCP resources. `#tag` and `^link` match exactly; bare
 or `"quoted"` words match narration/payee (transactions) or comment (notes);
 `field:value` looks up `account` (posting accounts included), `tag`, `link`,
 `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts
-and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to
-postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group.
+and bare `>100` matches posting units; both compare the absolute value, so
+thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a
+test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group.
 Quote values holding a colon, a space, or a leading digit —
 `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape
 sequences. An unparseable filter is refused with `BAD_USER_INPUT` naming the
@@ -1007,9 +1015,10 @@ their end dates.
 When an explicit currency `conversion` did not reach everything, the summary
 also carries `missingPrices`: one `{from, to}` leg per currency that stayed
 unconverted because the ledger has no price path to `to` — the same shape holdings
-returns. `?conversion=EUR` on a ledger that only has USD prices answers in `USD`
-with `missingPrices: [{"from": "USD", "to": "EUR"}]` rather than passing for a
-EUR report. The field is present only then; it is absent for `units`, `at_cost`,
+returns. `?conversion=EUR` on a ledger that names EUR but has no price path to it
+answers in `USD` with `missingPrices: [{"from": "USD", "to": "EUR"}]` rather than
+passing for a EUR report; a currency the ledger never names is refused with
+`BAD_USER_INPUT` "Unsupported conversion". The field is present only then; it is absent for `units`, `at_cost`,
 `at_value`, `units_by_cost`, an omitted conversion, and a fully converted report. The raw
 `shape=fava` payloads and GraphQL return the chart data unchanged: their
 currency-keyed balances already show which currencies were not converted.
@@ -1298,7 +1307,8 @@ to a ceiling: past 1,002 lines (header, separator, and 1,000 rows) or 100 KB,
 the text is cut at a line boundary and ends with a `[truncated: showing the
 first N of M lines (B of T bytes) …]` line. The lead line then reads
 `3209 rows (output truncated; …)`. The count is still the whole result's. Add
-`LIMIT` or a narrower `WHERE`, or use `runBqlQueryStructured`, to see the rest.
+`LIMIT` or a narrower `WHERE` to see the rest; `runBqlQueryStructured` stops at
+the same 1,000 rows (`truncated: true`, no total).
 REST and GraphQL `queryShellText` return the full text.
 
 A zero-row result renders as the empty string on every surface — no
@@ -1374,7 +1384,7 @@ mean the tool succeeded.
 Each tool advertises an object `outputSchema`: `ok` is required, with optional
 `result` and `error`. Its fields are intentionally undocumented there — the
 envelope is identical on every tool, so describing it once here costs one copy
-instead of forty-three in each `tools/list`. The runtime success/failure
+instead of one per tool in each `tools/list`. The runtime success/failure
 convention is stronger than that published schema because the SDK requires an
 object schema here. See
 [`types.ts`](../src/features/ai-agent/tools/types.ts) and MCP's
@@ -1454,34 +1464,34 @@ and still returns the SDK's own refusal.
 
 A `NOT_FOUND` on a bank connection, pull request, commit, branch, archive or user carries its own hint naming where that id comes from (for example `listBankConnections`), instead of the fallback that points at `listLedgers`, `listLedgerFiles` and `listLedgerEntries`. The sentence travels in `error.hint` on MCP and in the same metadata on REST and GraphQL.
 
-| `error.code`             | JSON-RPC | What it means and what to do                                                                                                                                                                             |
-| ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BAD_USER_INPUT`         | `-32602` | An argument is wrong. `tools/list` publishes each tool's input schema.                                                                                                                                   |
-| `VALIDATION_FAILED`      | `-32602` | A field failed a business rule. The message names the field path. On `entries`, it names each bean-check error the write would add; fix the entries, or pass `allowInvalid: true` to record them anyway. |
-| `UNBALANCED`             | `-32602` | Postings do not sum to zero. Add a posting, elide an amount, or pass `allowInvalid: true`.                                                                                                               |
-| `NOT_FOUND`              | `-32002` | No such ledger, file, entry, or revision. `listLedgers` and `listLedgerFiles` say what exists.                                                                                                           |
-| `FORBIDDEN`              | `-32003` | The credential lacks authority, or a pinned credential named another ledger. Read the ledger's `metadata`.                                                                                               |
-| `UNAUTHENTICATED`        | `-32003` | The credential expired or was revoked. Re-run the OAuth flow, or use a live API key.                                                                                                                     |
-| `PREMIUM_REQUIRED`       | `-32003` | The operation needs a paid plan on the credential's account.                                                                                                                                             |
-| `RESOURCE_LIMIT_REACHED` | `-32003` | A limit is reached. Remove something; `limitOwner`, when present, says whose plan set it.                                                                                                                |
-| `OPERATION_NOT_ALLOWED`  | `-32003` | The ledger's current state forbids it.                                                                                                                                                                   |
-| `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`.                                                                                                    |
-| `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                                                                                                                |
+| `error.code`             | JSON-RPC | What it means and what to do                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BAD_USER_INPUT`         | `-32602` | An argument is wrong. `tools/list` publishes each tool's input schema.                                                                                                                                                                                                                                                                                                              |
+| `VALIDATION_FAILED`      | `-32602` | A field failed a business rule. The message names the field path. On `entries`, it names each bean-check error the write would add; fix the entries, or pass `allowInvalid: true` to record them anyway.                                                                                                                                                                            |
+| `UNBALANCED`             | `-32602` | Postings do not sum to zero. Add a posting, elide an amount, or pass `allowInvalid: true`.                                                                                                                                                                                                                                                                                          |
+| `NOT_FOUND`              | `-32002` | No such ledger, file, entry, or revision. `listLedgers` and `listLedgerFiles` say what exists.                                                                                                                                                                                                                                                                                      |
+| `FORBIDDEN`              | `-32003` | The credential lacks authority, or a pinned credential named another ledger. Read the ledger's `metadata`.                                                                                                                                                                                                                                                                          |
+| `UNAUTHENTICATED`        | `-32003` | The credential expired or was revoked. Re-run the OAuth flow, or use a live API key.                                                                                                                                                                                                                                                                                                |
+| `PREMIUM_REQUIRED`       | `-32003` | The operation needs a paid plan on the credential's account.                                                                                                                                                                                                                                                                                                                        |
+| `RESOURCE_LIMIT_REACHED` | `-32003` | A limit is reached. Remove something; `limitOwner`, when present, says whose plan set it.                                                                                                                                                                                                                                                                                           |
+| `OPERATION_NOT_ALLOWED`  | `-32003` | The ledger's current state forbids it.                                                                                                                                                                                                                                                                                                                                              |
+| `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`.                                                                                                                                                                                                                                                                               |
+| `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                                                                                                                                                                                                                                                                                           |
 | `SERVICE_UNAVAILABLE`    | `-32000` | A dependency is down, or the ledger did not answer before its deadline (30 seconds for a read, 90 for a write). Retry with backoff; the request is not the problem. After a timeout a write may already have committed: re-read the ledger before repeating it, or resend an entry write with the same `requestId` ([retry-safe entry writes](#retry-safe-entry-writes-requestid)). |
-| `CONFIGURATION_ERROR`    | `-32000` | The deployment is missing configuration. Nothing about the request will fix it.                                                                                                                          |
-| `INTERNAL_SERVER_ERROR`  | `-32000` | Server-side failure. Retry once; changing the request will not help. In production its message is always `Internal server error`, whatever the failure said (w1/189).                                     |
+| `CONFIGURATION_ERROR`    | `-32000` | The deployment is missing configuration. Nothing about the request will fix it.                                                                                                                                                                                                                                                                                                     |
+| `INTERNAL_SERVER_ERROR`  | `-32000` | Server-side failure. Retry once; changing the request will not help. In production its message is always `Internal server error`, whatever the failure said (w1/189).                                                                                                                                                                                                               |
 
-| Symptom                                           | Meaning and next step                                                                                                                                                                                                                                                                                     |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| HTML or an SSR error after posting to `/mcp`      | Use `/api-gateway/mcp` and check proxy routing.                                                                                                                                                                                                                                                           |
-| `401` with `resource_metadata`                    | Missing/invalid credential, browser session, expired OAuth token, or wrong OAuth audience. Follow discovery or supply a valid key.                                                                                                                                                                        |
-| Tool error requesting a ledger                    | Pass `ledger: "owner/name"` when using an unpinned credential.                                                                                                                                                                                                                                            |
-| `403`, JSON-RPC error with `id: null`             | The request carried an `Origin` header outside the trusted set (any `beancount.io` host, `localhost` or `127.0.0.1` on any port). Browser pages on other sites cannot call the endpoint; native and server-side clients send no `Origin` and are unaffected. An anonymous request still gets `401` first. |
+| Symptom                                                                                             | Meaning and next step                                                                                                                                                                                                                                                                                     |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTML or an SSR error after posting to `/mcp`                                                        | Use `/api-gateway/mcp` and check proxy routing.                                                                                                                                                                                                                                                           |
+| `401` with `resource_metadata`                                                                      | Missing/invalid credential, browser session, expired OAuth token, or wrong OAuth audience. Follow discovery or supply a valid key.                                                                                                                                                                        |
+| Tool error requesting a ledger                                                                      | Pass `ledger: "owner/name"` when using an unpinned credential.                                                                                                                                                                                                                                            |
+| `403`, JSON-RPC error with `id: null`                                                               | The request carried an `Origin` header outside the trusted set (any `beancount.io` host, `localhost` or `127.0.0.1` on any port). Browser pages on other sites cannot call the endpoint; native and server-side clients send no `Origin` and are unaffected. An anonymous request still gets `401` first. |
 | `405`, `Allow: POST`, on any authenticated non-POST method (GET, DELETE, HEAD, OPTIONS, PUT, PATCH) | Expected behavior; use Streamable HTTP POST.                                                                                                                                                                                                                                                              |
-| `400`/`406` before tool execution                 | Check JSON-RPC, protocol version, content type, and both Accept values.                                                                                                                                                                                                                                   |
-| `isError: true`                                   | Read `structuredContent.error.code` and follow `error.hint`; the table above lists every code.                                                                                                                                                                                                            |
-| Resources appear absent                           | Call `resources/templates/list`; verify the client supports resource reads.                                                                                                                                                                                                                               |
-| OAuth metadata returns `503 oauth_not_configured` | Fix the deployment's signing configuration. A valid API key can still authenticate independently of OAuth.                                                                                                                                                                                                |
+| `400`/`406` before tool execution                                                                   | Check JSON-RPC, protocol version, content type, and both Accept values.                                                                                                                                                                                                                                   |
+| `isError: true`                                                                                     | Read `structuredContent.error.code` and follow `error.hint`; the table above lists every code.                                                                                                                                                                                                            |
+| Resources appear absent                                                                             | Call `resources/templates/list`; verify the client supports resource reads.                                                                                                                                                                                                                               |
+| OAuth metadata returns `503 oauth_not_configured`                                                   | Fix the deployment's signing configuration. A valid API key can still authenticate independently of OAuth.                                                                                                                                                                                                |
 
 ## Deployment and diagnostics
 
@@ -1923,8 +1933,8 @@ per-unit market annotation (`@`), and `totalPrice` the whole-posting price
 (`@@`). Cost and price are different facts: cost says what was paid for the
 lot, price says what one unit was worth. A posting takes at most one price —
 `price` with `totalPrice` is refused — and cost, like either price, needs
-units. Postings also take `tags`, `links`, and string-valued `meta`, written
-onto the posting line and beneath it. An `open` takes `booking` (`STRICT`,
+units. Postings take string-valued `meta`, written beneath the posting line;
+posting `tags` and `links` are refused (w23/171). An `open` takes `booking` (`STRICT`,
 `FIFO`, `LIFO`, `NONE`); anything else is refused. A `balance` takes
 `tolerance`, a plain-decimal slack rendered `~`. A `pad` takes
 `sourceAccount`.
