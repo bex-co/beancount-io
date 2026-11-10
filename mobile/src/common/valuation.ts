@@ -31,7 +31,10 @@ import {
   type ValueBasis,
 } from "./balance-display";
 import { formatLedgerDateShort, localizeDigits } from "./date-format";
-import { formatSignedMoneyWithCurrency } from "./number-utils";
+import {
+  formatSignedMoneyWithCurrency,
+  keepSignWithSymbol,
+} from "./number-utils";
 import { utcTime } from "./calendar-date";
 import { isolateLtr } from "./bidi";
 
@@ -515,10 +518,18 @@ export function costBasisLine(
   if (cost === null || unrealized === null || Math.abs(unrealized) < 0.005) {
     return null;
   }
-  // Isolated so a Persian sentence keeps each amount's sign in place (w21/095).
+  // Isolated so a Persian sentence keeps each amount's sign in place (w21/095),
+  // and joined so a sentence that wraps never leaves "+" at the end of a line
+  // and "$10,823.44" at the start of the next (w22/014).
   return t("costBasisLine", {
-    cost: isolateLtr(formatSignedMoneyWithCurrency(cost, currency)),
-    gain: isolateLtr(formatSignedMoneyWithCurrency(unrealized, currency, true)),
+    cost: isolateLtr(
+      keepSignWithSymbol(formatSignedMoneyWithCurrency(cost, currency)),
+    ),
+    gain: isolateLtr(
+      keepSignWithSymbol(
+        formatSignedMoneyWithCurrency(unrealized, currency, true),
+      ),
+    ),
   });
 }
 
@@ -554,7 +565,11 @@ export function balanceNotes(
     t(value.basis === "market" ? "atMarket" : "atCost", {
       // Isolated so a Persian sentence keeps the sign beside its number
       // (w21/249).
-      amount: isolateLtr(formatSignedMoneyWithCurrency(value.amount, currency)),
+      amount: isolateLtr(
+        keepSignWithSymbol(
+          formatSignedMoneyWithCurrency(value.amount, currency),
+        ),
+      ),
     }),
     ...notInTotalNotes(display.notInTotal, t),
     ...attention,

@@ -278,7 +278,7 @@ describe("the spending card's totals and empty state", () => {
         "USD",
         labels,
       ),
-    ).toBe("This month -$380.00 · Last month $1,200.00");
+    ).toBe("This month -\u2060$380.00 · Last month $1,200.00");
     const { spendingChartSummary } = require("../select-spending-compare");
     expect(
       spendingChartSummary(

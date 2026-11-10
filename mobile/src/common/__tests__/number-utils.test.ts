@@ -6,6 +6,7 @@ import {
   formatSignedMoneyWithCurrency,
   formatShortMoneyWithCurrency,
   formatUnits,
+  keepSignWithSymbol,
 } from "../number-utils";
 
 describe("shortNumber", () => {
@@ -375,5 +376,58 @@ describe("formatShortMoneyWithCurrency in Persian", () => {
 
   it("leaves a full amount in Latin digits", () => {
     expect(formatSignedMoneyWithCurrency(1234.5, "USD")).toBe("$1,234.50");
+  });
+});
+
+// w22/014: Home's caption read "Cost $107,567.07 · Unrealized +" and put
+// "$10,823.44" on the next line. A sign and a symbol that follows it are both
+// prefix characters of a number, so a wrapping sentence may break between them;
+// a digit after the sign is not a break point. U+2060 forbids the break.
+describe("keepSignWithSymbol", () => {
+  const WJ = "\u2060";
+
+  it("holds a plus and a minus to the symbol after them", () => {
+    expect(keepSignWithSymbol("+$10,823.44")).toBe(`+${WJ}$10,823.44`);
+    expect(keepSignWithSymbol("-$50.00")).toBe(`-${WJ}$50.00`);
+    expect(keepSignWithSymbol("\u2212\u20ac5")).toBe(`\u2212${WJ}\u20ac5`);
+  });
+
+  it("holds the sign to what the formatter writes, symbol first", () => {
+    expect(
+      keepSignWithSymbol(formatSignedMoneyWithCurrency(10823.44, "USD", true)),
+    ).toBe(`+${WJ}$10,823.44`);
+    expect(keepSignWithSymbol(formatSignedMoneyWithCurrency(-100, "USD"))).toBe(
+      `-${WJ}$100.00`,
+    );
+  });
+
+  it("changes nothing visible: only the joiner is added", () => {
+    for (const text of [
+      "+$10,823.44",
+      "-$1.00",
+      "-\u2067\u062f.\u0643\u2069 1",
+    ]) {
+      expect(keepSignWithSymbol(text).replace(WJ, "")).toBe(text);
+    }
+  });
+
+  it("leaves a figure with no symbol after its sign as it was", () => {
+    // Nothing to split: a digit follows the sign, or there is no sign.
+    for (const text of [
+      "$10,823.44",
+      "+10,823.44 $",
+      "-1,234.50 MUSD",
+      "551,620.00 MUSD",
+      "+5",
+      "",
+      "Unrealized",
+    ]) {
+      expect(keepSignWithSymbol(text)).toBe(text);
+    }
+  });
+
+  it("only reaches a sign at the start of the amount", () => {
+    expect(keepSignWithSymbol("$-5")).toBe("$-5");
+    expect(keepSignWithSymbol("a +$5")).toBe("a +$5");
   });
 });

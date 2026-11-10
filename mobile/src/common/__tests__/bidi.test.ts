@@ -47,7 +47,7 @@ describe("isolateLtr", () => {
         .replace(/\s+/g, "");
     expect(
       read("common", "valuation.ts").includes(
-        "amount:isolateLtr(formatSignedMoneyWithCurrency(value.amount,currency))",
+        "amount:isolateLtr(keepSignWithSymbol(formatSignedMoneyWithCurrency(value.amount,currency),),)",
       ),
     ).toBe(true);
     expect(

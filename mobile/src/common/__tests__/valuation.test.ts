@@ -405,10 +405,23 @@ describe("isPriceStale", () => {
   });
 });
 
+// w22/014: "Unrealized +" ended a line and "$10,823.44" began the next.
+describe("costBasisLine at a line end", () => {
+  it("never lets the gain's sign come apart from its symbol", () => {
+    const line = costBasisLine(selectValuation(EXAMPLE), "USD", t) ?? "";
+    expect(line.includes("+\u2060$10,823.44")).toBe(true);
+    expect(line.includes("+$10,823.44")).toBe(false);
+    // Otherwise the sentence reads as it did.
+    expect(line.replace("\u2060", "")).toBe(
+      'costBasisLine({"cost":"\u2066$106,826.05\u2069","gain":"\u2066+$10,823.44\u2069"})',
+    );
+  });
+});
+
 describe("costBasisLine", () => {
   it("shows the cost and the signed unrealized difference", () => {
     expect(costBasisLine(selectValuation(EXAMPLE), "USD", t)).toBe(
-      'costBasisLine({"cost":"\u2066$106,826.05\u2069","gain":"\u2066+$10,823.44\u2069"})',
+      'costBasisLine({"cost":"\u2066$106,826.05\u2069","gain":"\u2066+\u2060$10,823.44\u2069"})',
     );
   });
 
@@ -419,7 +432,7 @@ describe("costBasisLine", () => {
       cost: { USD: "1000" },
     });
     expect(costBasisLine(valuation, "USD", t)).toBe(
-      'costBasisLine({"cost":"\u2066$1,000.00\u2069","gain":"\u2066-$100.00\u2069"})',
+      'costBasisLine({"cost":"\u2066$1,000.00\u2069","gain":"\u2066-\u2060$100.00\u2069"})',
     );
   });
 

@@ -308,6 +308,24 @@ const annotateCurrency = (
   return after ? `${sign}${written} ${symbol}` : `${sign}${symbol}${written}`;
 };
 
+/** U+2060: no line break on either side of it. */
+const WORD_JOINER = "\u2060";
+
+/**
+ * A signed money string with its sign held to the currency symbol after it.
+ * A sign and a symbol are both prefix characters of a number, and a sentence
+ * that wraps may break between them: Home's caption ended a line on
+ * "Unrealized +" and began the next with "$10,823.44" (w22/014). A digit after
+ * the sign is not a break point, so an amount that reads "+10,823.44 $" or
+ * "-1,234.50 MUSD" never split and is returned as it was, like an unsigned one.
+ *
+ * Only for an amount set inside a sentence that can wrap, not a number on its
+ * own line or a string read aloud, so the strings the formatters return and
+ * every comparison against them stay exactly as they were.
+ */
+export const keepSignWithSymbol = (text: string): string =>
+  text.replace(/^([-+\u2212])(?=[^\d\s])/u, `$1${WORD_JOINER}`);
+
 /**
  * `value` settled at money precision: a sum of monthly nets such as +10.10,
  * +20.20 and -30.30 lands on -3.6e-15, which a screen reader read out as

@@ -1,6 +1,9 @@
 import { resolveCurrencyBalance } from "../../../common/balance-util";
 import { notInTotalOf, type Holding } from "../../../common/balance-display";
-import { formatSignedMoneyWithCurrency } from "../../../common/number-utils";
+import {
+  formatSignedMoneyWithCurrency,
+  keepSignWithSymbol,
+} from "../../../common/number-utils";
 import { formatTimeFilter } from "../../transactions-screen/filters/select-filter-query";
 
 export type SpendingCompare = {
@@ -142,8 +145,10 @@ export function spendingTotalsCaption(
   labels: { thisMonth: string; lastMonth: string },
   isolate: (text: string) => string = (text) => text,
 ): string {
+  // Joined so a wrapping caption never strands a net-refund month's "-" at the
+  // end of a line (w22/014).
   const amount = (value: number) =>
-    isolate(formatSignedMoneyWithCurrency(value, currency));
+    isolate(keepSignWithSymbol(formatSignedMoneyWithCurrency(value, currency)));
   return `${labels.thisMonth} ${amount(thisMonth)} · ${labels.lastMonth} ${amount(lastMonth)}`;
 }
 
