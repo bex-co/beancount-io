@@ -1,4 +1,5 @@
 import { parseLedgerId } from "@/shared/str";
+import { entryCount } from "@/features/ledger/utils/entry-count";
 import {
   BadUserInputError,
   ConflictError,
@@ -1198,9 +1199,10 @@ export class LedgerJournalService implements ILedgerJournalService {
       );
     }
     return {
+      // "1 entries" read wrong in every preview of a single delete (w1/226).
       message: dryRun
-        ? `Would delete ${deletedHashes.length} entries`
-        : `Deleted ${deletedHashes.length} entries successfully`,
+        ? `Would delete ${entryCount(deletedHashes.length)}`
+        : `Deleted ${entryCount(deletedHashes.length)} successfully`,
       deletedHashes,
       files: [...byFile.keys()],
       preview,

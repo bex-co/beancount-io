@@ -137,7 +137,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     segment: "trial-balance",
     summary: "Get the trial balance",
     description:
-      "Every account's debit and credit totals — the statement that proves the books balance.",
+      "Each account's balance per currency, as signed trees under the five roots (Assets, Liabilities, Equity, Income, Expenses): debits positive, credits negative. No debit or credit totals are returned.",
     query: trialBalanceQuery,
     uriPath: "",
     fetch: (s, { ledgerId, identity, query }) =>

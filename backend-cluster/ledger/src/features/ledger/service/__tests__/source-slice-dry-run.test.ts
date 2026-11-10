@@ -218,7 +218,7 @@ describe("source-slice dry runs (w23/m7/t003)", () => {
       dryRun: true,
     });
 
-    expect(deleted.message).toBe("Would delete 1 entries");
+    expect(deleted.message).toBe("Would delete 1 entry");
     expect(deleted.deletedHashes).toEqual([OLD_ID]);
     expect(deleted.preview).toEqual([{ path: "main.bean", text: TXN_OLD }]);
     expect(commitMock).not.toHaveBeenCalled();

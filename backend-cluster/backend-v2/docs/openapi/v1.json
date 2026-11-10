@@ -5214,11 +5214,11 @@
                     },
                     "baseBranch": {
                       "type": "string",
-                      "description": "The created PR's actual base ref, read back — never a default"
+                      "description": "The pull request's base branch, read back from the repository — never a default"
                     },
                     "headBranch": {
                       "type": "string",
-                      "description": "The created PR's actual head ref, read back — never a default"
+                      "description": "The pull request's head branch, read back from the repository — never a default"
                     }
                   },
                   "required": [
@@ -5404,11 +5404,11 @@
                     },
                     "baseBranch": {
                       "type": "string",
-                      "description": "The created PR's actual base ref, read back — never a default"
+                      "description": "The pull request's base branch, read back from the repository — never a default"
                     },
                     "headBranch": {
                       "type": "string",
-                      "description": "The created PR's actual head ref, read back — never a default"
+                      "description": "The pull request's head branch, read back from the repository — never a default"
                     }
                   },
                   "required": [
@@ -5594,11 +5594,11 @@
                     },
                     "baseBranch": {
                       "type": "string",
-                      "description": "The created PR's actual base ref, read back — never a default"
+                      "description": "The pull request's base branch, read back from the repository — never a default"
                     },
                     "headBranch": {
                       "type": "string",
-                      "description": "The created PR's actual head ref, read back — never a default"
+                      "description": "The pull request's head branch, read back from the repository — never a default"
                     }
                   },
                   "required": [
@@ -15324,7 +15324,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/trial-balance": {
       "get": {
         "summary": "Get the trial balance",
-        "description": "Every account's debit and credit totals — the statement that proves the books balance.",
+        "description": "Each account's balance per currency, as signed trees under the five roots (Assets, Liabilities, Equity, Income, Expenses): debits positive, credits negative. No debit or credit totals are returned.",
         "tags": [
           "Ledger v1"
         ],

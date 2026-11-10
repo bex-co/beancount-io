@@ -19,8 +19,8 @@ class PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200:
         message (str | Unset):
         pr_number (int | Unset):
         pr_url (str | Unset):
-        base_branch (str | Unset): The created PR's actual base ref, read back — never a default
-        head_branch (str | Unset): The created PR's actual head ref, read back — never a default
+        base_branch (str | Unset): The pull request's base branch, read back from the repository — never a default
+        head_branch (str | Unset): The pull request's head branch, read back from the repository — never a default
     """
 
     success: bool

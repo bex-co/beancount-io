@@ -65,14 +65,14 @@ export class PullRequestResult {
   @Field(() => String, {
     nullable: true,
     description:
-      "The created PR's actual base ref, read back — never a default",
+      "The pull request's base branch, read back from the repository — never a default",
   })
   baseBranch?: string;
 
   @Field(() => String, {
     nullable: true,
     description:
-      "The created PR's actual head ref, read back — never a default",
+      "The pull request's head branch, read back from the repository — never a default",
   })
   headBranch?: string;
 }

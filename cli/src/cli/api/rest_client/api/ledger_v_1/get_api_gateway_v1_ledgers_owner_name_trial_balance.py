@@ -121,7 +121,9 @@ def sync_detailed(
 ) -> Response[Any | V1Error]:
     """Get the trial balance
 
-     Every account's debit and credit totals — the statement that proves the books balance.
+     Each account's balance per currency, as signed trees under the five roots (Assets, Liabilities,
+    Equity, Income, Expenses): debits positive, credits negative. No debit or credit totals are
+    returned.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -179,7 +181,9 @@ def sync(
 ) -> Any | V1Error | None:
     """Get the trial balance
 
-     Every account's debit and credit totals — the statement that proves the books balance.
+     Each account's balance per currency, as signed trees under the five roots (Assets, Liabilities,
+    Equity, Income, Expenses): debits positive, credits negative. No debit or credit totals are
+    returned.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -232,7 +236,9 @@ async def asyncio_detailed(
 ) -> Response[Any | V1Error]:
     """Get the trial balance
 
-     Every account's debit and credit totals — the statement that proves the books balance.
+     Each account's balance per currency, as signed trees under the five roots (Assets, Liabilities,
+    Equity, Income, Expenses): debits positive, credits negative. No debit or credit totals are
+    returned.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -288,7 +294,9 @@ async def asyncio(
 ) -> Any | V1Error | None:
     """Get the trial balance
 
-     Every account's debit and credit totals — the statement that proves the books balance.
+     Each account's balance per currency, as signed trees under the five roots (Assets, Liabilities,
+    Equity, Income, Expenses): debits positive, credits negative. No debit or credit totals are
+    returned.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

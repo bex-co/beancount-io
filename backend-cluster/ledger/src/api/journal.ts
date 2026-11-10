@@ -1,4 +1,5 @@
 import Router from "@koa/router";
+import { entryCount } from "@/features/ledger/utils/entry-count";
 import { authMiddleware } from "@/server/auth";
 import { successResponse } from "@/server/envelope";
 import { intQuery, strQuery, boolQuery } from "./query-params";
@@ -31,17 +32,13 @@ export function setJournalHandler(router: Router): void {
         offset: intQuery(ctx.query.offset),
         limit: intQuery(ctx.query.limit),
         directiveTypes: listQuery(ctx.query.directive_types) as
-          | DirectiveType[]
-          | undefined,
+          DirectiveType[] | undefined,
         transactionSubtypes: listQuery(ctx.query.transaction_subtypes) as
-          | TransactionSubtype[]
-          | undefined,
+          TransactionSubtype[] | undefined,
         documentSubtypes: listQuery(ctx.query.document_subtypes) as
-          | DocumentSubtype[]
-          | undefined,
+          DocumentSubtype[] | undefined,
         customSubtypes: listQuery(ctx.query.custom_subtypes) as
-          | CustomSubtype[]
-          | undefined,
+          CustomSubtype[] | undefined,
       },
     });
     ctx.body = successResponse({
@@ -86,17 +83,13 @@ export function setJournalHandler(router: Router): void {
           with_children: boolQuery(ctx.query.with_children),
           conversion: strQuery(ctx.query.conversion),
           directiveTypes: listQuery(ctx.query.directive_types) as
-            | DirectiveType[]
-            | undefined,
+            DirectiveType[] | undefined,
           transactionSubtypes: listQuery(ctx.query.transaction_subtypes) as
-            | TransactionSubtype[]
-            | undefined,
+            TransactionSubtype[] | undefined,
           documentSubtypes: listQuery(ctx.query.document_subtypes) as
-            | DocumentSubtype[]
-            | undefined,
+            DocumentSubtype[] | undefined,
           customSubtypes: listQuery(ctx.query.custom_subtypes) as
-            | CustomSubtype[]
-            | undefined,
+            CustomSubtype[] | undefined,
         },
       }),
     );
@@ -208,8 +201,8 @@ export function setJournalHandler(router: Router): void {
     ctx.body = successResponse({
       // Python: f"Deleted {n} entries: {', '.join(deleted_hashes)}"
       message: dryRun
-        ? `Would delete ${count} entries: ${result.deletedHashes.join(", ")}`
-        : `Deleted ${count} entries: ${result.deletedHashes.join(", ")}`,
+        ? `Would delete ${entryCount(count)}: ${result.deletedHashes.join(", ")}`
+        : `Deleted ${entryCount(count)}: ${result.deletedHashes.join(", ")}`,
       deleted_hashes: result.deletedHashes,
       files: result.files,
       errors_before: result.validation.errorsBefore,

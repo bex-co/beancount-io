@@ -40,11 +40,15 @@ export const pullRequestResultSchema = z.object({
   baseBranch: z
     .string()
     .optional()
-    .describe("The created PR's actual base ref, read back — never a default"),
+    .describe(
+      "The pull request's base branch, read back from the repository — never a default",
+    ),
   headBranch: z
     .string()
     .optional()
-    .describe("The created PR's actual head ref, read back — never a default"),
+    .describe(
+      "The pull request's head branch, read back from the repository — never a default",
+    ),
 });
 const pullRequestDetailsSchema = z.object({
   number: z.number().int(),
