@@ -466,5 +466,172 @@
     "ledger": "main.bean",
     "source": "w23/216",
     "query": "SELECT null LIMIT 1"
+  },
+  {
+    "id": "report-plain-trial-balance-units",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, units(sum(position)) GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-trial-balance-at_cost",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, cost(sum(position)) GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-trial-balance-at_value",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, value(sum(position)) GROUP BY account ORDER BY account"
+  },
+  {
+    "id": "report-plain-trial-balance-usd",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, convert(sum(position), 'USD') GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-balance-sheet-units",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, units(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-balance-sheet-at_cost",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, cost(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-balance-sheet-at_value",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, value(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-balance-sheet-usd",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, convert(sum(position), 'USD') WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-income-statement-units",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, units(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-income-statement-at_cost",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, cost(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-income-statement-at_value",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, value(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-plain-income-statement-usd",
+    "ledger": "reports.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, convert(sum(position), 'USD') WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-trial-balance-units",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, units(sum(position)) GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-trial-balance-at_cost",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, cost(sum(position)) GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-trial-balance-at_value",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, value(sum(position)) GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-trial-balance-usd",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, convert(sum(position), 'USD') GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-balance-sheet-units",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, units(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-balance-sheet-at_cost",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, cost(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-balance-sheet-at_value",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, value(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-balance-sheet-usd",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, convert(sum(position), 'USD') WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-income-statement-units",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, units(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-income-statement-at_cost",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, cost(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-income-statement-at_value",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, value(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+    "replay": false
+  },
+  {
+    "id": "report-priced-income-statement-usd",
+    "ledger": "reports-priced.bean",
+    "source": "w23/m41",
+    "query": "SELECT account, convert(sum(position), 'USD') WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+    "replay": false
   }
 ]

@@ -1,0 +1,43 @@
+option "title" "Report oracle: no price directives"
+option "operating_currency" "USD"
+
+; w23/m41. A ledger with no `price` directives and no implicit_prices plugin:
+; stock beancount has no price for QAX or EUR here, only the `@` annotations.
+
+2026-01-01 open Assets:Bank:Checking   USD,EUR
+2026-01-01 open Assets:Bank:Savings    USD
+2026-01-01 open Assets:Broker          QAX,USD "FIFO"
+2026-01-01 open Liabilities:Card       USD
+2026-01-01 open Equity:Opening-Balances
+2026-01-01 open Income:Salary          USD
+2026-01-01 open Income:Gains           USD
+2026-01-01 open Expenses:Food          USD
+2026-01-01 open Expenses:Travel        EUR,USD
+
+2026-01-02 * "Opening"
+  Assets:Bank:Checking     5000.00 USD
+  Equity:Opening-Balances
+
+2026-01-15 * "Salary"
+  Assets:Bank:Checking     3000.00 USD
+  Income:Salary
+
+2026-02-03 * "Groceries"
+  Expenses:Food             120.40 USD
+  Liabilities:Card
+
+2026-03-01 pad Assets:Bank:Savings Equity:Opening-Balances
+2026-03-02 balance Assets:Bank:Savings 800.00 USD
+
+2026-07-01 * "Buy QAX"
+  Assets:Broker            10 QAX {12.34 USD}
+  Assets:Bank:Checking     -123.40 USD
+
+2026-08-10 * "Hotel in Europe"
+  Expenses:Travel          80.00 EUR @ 1.09 USD
+  Assets:Bank:Checking     -87.20 USD
+
+2026-09-01 * "Sell QAX"
+  Assets:Broker            -4 QAX {12.34 USD} @ 15.00 USD
+  Assets:Bank:Checking      60.00 USD
+  Income:Gains             -10.64 USD

@@ -379,5 +379,16 @@
       ".pm/w23/done/134.md"
     ],
     "note": "NULL is typed with the neutral str marker, not NoneType."
+  },
+  {
+    "id": "report-plain-trial-balance-at_value",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      "backend-cluster/backend-v2/src/features/ledger/utils/holdings.ts",
+      "backend-cluster/ledger/src/foundation/rustledger/price-map.ts"
+    ],
+    "note": "value() prices a lot from the `@` annotation of the sale that reduced it (90.00 USD for 6 QAX); stock beancount without the implicit_prices plugin has no price and leaves 6 QAX. The engine derives implicit prices upstream; the reports and holdings use price directives only (w1/229)."
   }
 ]

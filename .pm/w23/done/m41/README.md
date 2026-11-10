@@ -1,20 +1,20 @@
 # w23 · m41 — Diff the report engine against stock beancount in a release gate
 
-**Worker:** worker1 **Goal:** The overview, income statement, balance sheet, trial balance and holdings are replayed against checked-in stock beanquery results, so a report that disagrees with stock beancount turns the gate red. **Status:** todo
+**Worker:** worker1 **Goal:** The overview, income statement, balance sheet, trial balance and holdings are replayed against checked-in stock beanquery results, so a report that disagrees with stock beancount turns the gate red. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Map each report to the stock statement that defines it | 45m | — |
-| t002 | Extend the oracle generator to emit stock report results offline | 45m | t001 |
-| t003 | Replay the reports against the corpus | 60m | t002 |
-| t004 | Value a position one way everywhere (w1/229) | 45m | t003 |
-| t005 | Allowlist deviations with references and document the command | 25m | t003 |
-| t006 | Adoption surface | 20m | t004, t005 |
-| t007 | Simplify | 20m | t006 |
-| t008 | Test coverage | 30m | t006 |
-| t009 | Closeout | 15m | t008 |
+| t001 | Map each report to the stock statement that defines it — **DONE** | 45m | — |
+| t002 | Extend the oracle generator to emit stock report results offline — **DONE** | 45m | t001 |
+| t003 | Replay the reports against the corpus — **DONE** | 60m | t002 |
+| t004 | Value a position one way everywhere (w1/229) — **DONE** | 45m | t003 |
+| t005 | Allowlist deviations with references and document the command — **DONE** | 25m | t003 |
+| t006 | Adoption surface — **DONE** | 20m | t004, t005 |
+| t007 | Simplify — **DONE** | 20m | t006 |
+| t008 | Test coverage — **DONE** | 30m | t006 |
+| t009 | Closeout — **DONE** | 15m | t008 |
 
 ## Definition of done
 

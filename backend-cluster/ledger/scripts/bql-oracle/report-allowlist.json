@@ -1,0 +1,22 @@
+[
+  {
+    "id": "report-plain-trial-balance-at_value",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      "backend-cluster/ledger/src/foundation/rustledger/cost-valuation.ts"
+    ],
+    "note": "The reports' at_value is Fava's get_market_value: a lot with no price directive is valued at cost (74.04 USD for 6 QAX). Stock BQL value() leaves the units. Documented in cost-valuation.ts."
+  },
+  {
+    "id": "report-plain-balance-sheet-at_value",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      "backend-cluster/ledger/src/foundation/rustledger/cost-valuation.ts"
+    ],
+    "note": "The reports' at_value is Fava's get_market_value: a lot with no price directive is valued at cost (74.04 USD for 6 QAX). Stock BQL value() leaves the units. Documented in cost-valuation.ts."
+  }
+]

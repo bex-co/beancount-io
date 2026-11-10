@@ -1055,6 +1055,12 @@ statement's `period` gives `to`, the statement's last day, and `time`, the
 selection as requested. `from` is `null` because chart buckets carry only
 their end dates.
 
+Prices come from the ledger's `price` directives alone, on the statements, the
+overview and holdings alike, as in stock beancount without the `implicit_prices`
+plugin: an `@` annotation on a posting is not a price (w1/229). A holding with no
+directive is valued at cost, and holdings answers `valuation: "partial"` naming
+the missing leg.
+
 When an explicit currency `conversion` did not reach everything, the summary
 also carries `missingPrices`: one `{from, to}` leg per currency that stayed
 unconverted because the ledger has no price path to `to` — the same shape holdings

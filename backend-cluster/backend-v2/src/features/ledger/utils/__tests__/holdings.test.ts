@@ -1,8 +1,10 @@
 import { BadUserInputError } from "@/shared/errors";
 import {
   composeHoldings,
+  HOLDINGS_PRICES_QUERY,
   holdingsDetailQuery,
   resolveHoldingsConversion,
+  valueHoldingRows,
 } from "../holdings";
 
 const COLUMNS = [
@@ -43,23 +45,108 @@ const base = {
 };
 
 describe("holdingsDetailQuery", () => {
-  it("selects the seven detail columns without a conversion leg", () => {
-    const query = holdingsDetailQuery(null);
+  it("asks the engine for units and cost only, never for a price", () => {
+    const query = holdingsDetailQuery();
     expect(query).toContain("units(sum(position)) AS units");
     expect(query).toContain("cost(sum(position)) AS book_value");
-    expect(query).toContain("value(sum(position), today()) AS market_value");
-    expect(query).toContain(
-      "first(getprice(currency, cost_currency, today())) AS price",
-    );
-    expect(query).not.toContain("conv_rate");
     expect(query).toContain("GROUP BY account, currency, cost_currency");
+    // The engine's value() and getprice() include prices implied by `@`
+    // annotations, which no statement uses (w1/229).
+    expect(query).not.toMatch(/value\(|getprice|conv_rate/);
   });
 
-  it("adds a quoted conversion leg for a validated target", () => {
-    const query = holdingsDetailQuery("EUR");
-    expect(query).toContain(
-      'first(getprice(cost_currency, "EUR", today())) AS conv_rate',
+  it("reads the price directives from the prices table", () => {
+    expect(HOLDINGS_PRICES_QUERY).toBe(
+      "SELECT date, currency, amount FROM prices ORDER BY date",
     );
+  });
+});
+
+describe("valueHoldingRows", () => {
+  const DETAIL = [
+    "account",
+    "currency",
+    "cost_currency",
+    "units",
+    "book_value",
+  ];
+  const qax = (units = "6", basis = "74.04"): Cell[] => [
+    "Assets:Broker",
+    "QAX",
+    "USD",
+    map("QAX", units),
+    map("USD", basis),
+  ];
+  const value = (
+    prices: Cell[][],
+    rows: Cell[][] = [qax()],
+    conversionTarget: string | null = null,
+  ) =>
+    valueHoldingRows({
+      columns: DETAIL,
+      rows,
+      prices,
+      conversionTarget,
+      asOf: "2026-10-25",
+    });
+  /** The three columns it adds: market value, quote, conversion rate. */
+  const added = (valued: ReturnType<typeof value>) =>
+    valued.rows[0]!.slice(DETAIL.length);
+
+  it("values at the latest directive on or before the day", () => {
+    const valued = value([
+      ["2026-09-01", "QAX", map("USD", "15.00")],
+      ["2026-10-25", "QAX", map("USD", "16.00")],
+      ["2026-11-30", "QAX", map("USD", "99.00")],
+    ]);
+    expect(valued.columns.slice(DETAIL.length)).toEqual([
+      "market_value",
+      "price",
+      "conv_rate",
+    ]);
+    expect(added(valued)).toEqual([map("USD", "96"), "16", ""]);
+  });
+
+  it("takes the later of two directives on one day", () => {
+    const valued = value([
+      ["2026-10-01", "QAX", map("USD", "15.00")],
+      ["2026-10-01", "QAX", map("USD", "17.00")],
+    ]);
+    expect(added(valued)).toEqual([map("USD", "102"), "17", ""]);
+  });
+
+  it("uses a pair's inverse when only the other direction is quoted", () => {
+    const valued = value([["2026-10-01", "USD", map("QAX", "0.0625")]]);
+    expect(added(valued)).toEqual([map("USD", "96"), "16", ""]);
+  });
+
+  // w1/229: the sale was `-4 QAX {12.34 USD} @ 15.00 USD`. The engine derives a
+  // price from it; stock beancount and the statements have none.
+  it("values a lot with no directive at cost, with no quote", () => {
+    expect(added(value([]))).toEqual([map("USD", "74.04"), "", ""]);
+  });
+
+  it("quotes the conversion leg from the held currency to the target", () => {
+    const valued = value(
+      [
+        ["2026-10-01", "QAX", map("USD", "16.00")],
+        ["2026-10-01", "USD", map("EUR", "0.92")],
+      ],
+      [qax()],
+      "EUR",
+    );
+    expect(added(valued)).toEqual([map("USD", "96"), "16", "0.92"]);
+  });
+
+  it("asks for no rate when the target is the held currency, or none is set", () => {
+    const prices: Cell[][] = [["2026-10-01", "QAX", map("USD", "16.00")]];
+    expect(added(value(prices, [qax()], "USD"))[2]).toBe("");
+    expect(added(value(prices, [qax()], null))[2]).toBe("");
+  });
+
+  it("leaves a row it cannot read for the composer to skip", () => {
+    const valued = value([], [["Assets:Broker", "QAX", "USD", "", ""]]);
+    expect(added(valued)).toEqual(["", "", ""]);
   });
 });
 

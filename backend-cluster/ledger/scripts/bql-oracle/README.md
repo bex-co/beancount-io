@@ -84,3 +84,12 @@ Open deviations that nobody has decided yet have their own inbox note, for examp
 ## Limits
 
 The oracle is stock beanquery **0.2.0**. A behavior newer stock versions add (for example `account_balance`) shows up here as a superset entry rather than a match. Regenerating on a newer beanquery is a deliberate change: update `ENGINE_BEANQUERY` in the generator, regenerate, and review every changed answer.
+
+## Report oracle (w23/m41)
+
+The trial balance, balance sheet and income statement are compared with stock beancount through the same corpus. `report-cases.json` names a report, a conversion mode and the `report-*` query in `queries.json` that defines the figure in stock BQL (`SELECT account, <fn>(sum(position)) … GROUP BY account`, with `units`, `cost`, `value` and `convert` for the modes `units`, `at_cost`, `at_value` and `usd`). `replay-report-oracle.ts` runs the report through `LedgerFinanceService`, flattens each account tree to the balance each account holds, and fails on a missing or extra account or a different amount (as exact decimals, so `96` and `96.00` agree). The fixtures `reports.bean` (no `price` directives: only `@` annotations) and `reports-priced.bean` (the same ledger with directives) cover the price paths.
+
+- The `report-*` queries carry `"replay": false`, so the BQL replay skips them: their question is whether the report agrees with stock, not whether the engine's BQL does. One, `report-plain-trial-balance-at_value`, is replayed on purpose to document that the engine's `value()` prices a lot from an `@` annotation, which stock without `implicit_prices` does not (w1/229).
+- Deviations are in `report-allowlist.json`, with the same rules as `allowlist.json`. The reports' `at_value` is Fava's `get_market_value`: a lot with no price directive is valued at cost, where stock BQL `value()` leaves the units.
+- The balance sheet adds equity accounts no ledger declares (`Equity:Earnings:Current`, `Equity:Earnings:Previous`, `Equity:Conversions:Current`, `Equity:Unrealized`); the replay ignores them by name.
+- Regenerate with the same command as the BQL oracle: the answers live in `bql-oracle.json`.

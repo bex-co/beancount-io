@@ -10,7 +10,9 @@ import {
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 import {
   composeHoldings,
+  HOLDINGS_PRICES_QUERY,
   holdingsDetailQuery,
+  valueHoldingRows,
   resolveHoldingsConversion,
 } from "@/features/ledger/utils/holdings";
 import type {
@@ -233,30 +235,44 @@ export class LedgerFinanceService
         operating,
       );
     }
-    const queryResult = await unwrapFavaResponse(
-      favaApiClient.shell.queryShellPost(ledgerOwner, ledgerName, {
-        query: holdingsDetailQuery(target),
-      }),
-      "get ledger holdings",
-    );
+    // The detail rows and the price directives are independent reads.
+    const [queryResult, priceResult] = await Promise.all([
+      unwrapFavaResponse(
+        favaApiClient.shell.queryShellPost(ledgerOwner, ledgerName, {
+          query: holdingsDetailQuery(),
+        }),
+        "get ledger holdings",
+      ),
+      unwrapFavaResponse(
+        favaApiClient.shell.queryShellPost(ledgerOwner, ledgerName, {
+          query: HOLDINGS_PRICES_QUERY,
+        }),
+        "get ledger prices",
+      ),
+    ]);
     const result = queryResult.result;
     if (!("types" in result && "rows" in result)) {
       throw new InternalServerError("Holdings query returned no table");
     }
-    return composeHoldings({
+    type Cell = string | number | boolean | null | Record<string, unknown>;
+    const asOf = new Date().toISOString().slice(0, 10);
+    const valued = valueHoldingRows({
       columns: result.types.map((col) => col.name),
-      rows: result.rows as (
-        | string
-        | number
-        | boolean
-        | null
-        | Record<string, unknown>
-      )[][],
+      rows: result.rows as Cell[][],
+      prices:
+        "rows" in priceResult.result
+          ? (priceResult.result.rows as Cell[][])
+          : [],
+      conversionTarget: target,
+      asOf,
+    });
+    return composeHoldings({
+      ...valued,
       groupBy: groupBy ?? "account",
       account,
       roots: this.rootsOf(options),
       conversionTarget: target,
-      asOf: new Date().toISOString().slice(0, 10),
+      asOf,
     });
   }
 

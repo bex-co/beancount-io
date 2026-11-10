@@ -1594,6 +1594,1278 @@
       ],
       "source": "w23/157"
     },
+    "report-plain-balance-sheet-at_cost": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "cost(sum(position))"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, cost(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "74.04 USD"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-balance-sheet-at_value": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "value(sum(position))"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, value(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "6 QAX"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-balance-sheet-units": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "units(sum(position))"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, units(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "6 QAX"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-balance-sheet-usd": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "convert(sum(position), 'USD')"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, convert(sum(position), 'USD') WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "6 QAX"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-income-statement-at_cost": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "cost(sum(position))"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, cost(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-income-statement-at_value": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "value(sum(position))"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, value(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-income-statement-units": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "units(sum(position))"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, units(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-income-statement-usd": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "convert(sum(position), 'USD')"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, convert(sum(position), 'USD') WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-trial-balance-at_cost": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "cost(sum(position))"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, cost(sum(position)) GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "74.04 USD"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-trial-balance-at_value": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "value(sum(position))"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, value(sum(position)) GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "6 QAX"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-trial-balance-units": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "units(sum(position))"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, units(sum(position)) GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "6 QAX"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-plain-trial-balance-usd": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "convert(sum(position), 'USD')"
+        }
+      ],
+      "ledger": "reports.bean",
+      "query": "SELECT account, convert(sum(position), 'USD') GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "6 QAX"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-balance-sheet-at_cost": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "cost(sum(position))"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, cost(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "74.04 USD"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-balance-sheet-at_value": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "value(sum(position))"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, value(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "96.00 USD"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-balance-sheet-units": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "units(sum(position))"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, units(sum(position)) WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "6 QAX"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-balance-sheet-usd": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "convert(sum(position), 'USD')"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, convert(sum(position), 'USD') WHERE account ~ '^(Assets|Liabilities|Equity):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "96.00 USD"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-income-statement-at_cost": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "cost(sum(position))"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, cost(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-income-statement-at_value": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "value(sum(position))"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, value(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-income-statement-units": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "units(sum(position))"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, units(sum(position)) WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-income-statement-usd": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "convert(sum(position), 'USD')"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, convert(sum(position), 'USD') WHERE year = 2026 AND account ~ '^(Income|Expenses):' GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "89.6000 USD"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-trial-balance-at_cost": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "cost(sum(position))"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, cost(sum(position)) GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "74.04 USD"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-trial-balance-at_value": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "value(sum(position))"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, value(sum(position)) GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "96.00 USD"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-trial-balance-units": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "units(sum(position))"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, units(sum(position)) GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "6 QAX"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "80.00 EUR"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
+    "report-priced-trial-balance-usd": {
+      "columns": [
+        {
+          "dtype": "str",
+          "name": "account"
+        },
+        {
+          "dtype": "Inventory",
+          "name": "convert(sum(position), 'USD')"
+        }
+      ],
+      "ledger": "reports-priced.bean",
+      "query": "SELECT account, convert(sum(position), 'USD') GROUP BY account ORDER BY account",
+      "rows": [
+        [
+          "Assets:Bank:Checking",
+          [
+            "7849.40 USD"
+          ]
+        ],
+        [
+          "Assets:Bank:Savings",
+          [
+            "800.00 USD"
+          ]
+        ],
+        [
+          "Assets:Broker",
+          [
+            "96.00 USD"
+          ]
+        ],
+        [
+          "Equity:Opening-Balances",
+          [
+            "-5800.00 USD"
+          ]
+        ],
+        [
+          "Expenses:Food",
+          [
+            "120.40 USD"
+          ]
+        ],
+        [
+          "Expenses:Travel",
+          [
+            "89.6000 USD"
+          ]
+        ],
+        [
+          "Income:Gains",
+          [
+            "-10.64 USD"
+          ]
+        ],
+        [
+          "Income:Salary",
+          [
+            "-3000.00 USD"
+          ]
+        ],
+        [
+          "Liabilities:Card",
+          [
+            "-120.40 USD"
+          ]
+        ]
+      ],
+      "source": "w23/m41"
+    },
     "row-number-over": {
       "error": "parse",
       "ledger": "main.bean",
@@ -1767,5 +3039,5 @@
       "source": "w23/169"
     }
   },
-  "sourceHash": "ec68e02f3f8871824c6780a84cab8aa83b21d4eb332aab4fadd2d0f51704cfc7"
+  "sourceHash": "29c5b3870778ecffafc50650b656d6097898dc13adddb8cdae60bef38da0c58e"
 }

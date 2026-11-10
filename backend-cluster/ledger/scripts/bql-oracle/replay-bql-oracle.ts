@@ -84,7 +84,19 @@ export async function verifyBqlOracle(): Promise<void> {
     join(DIR, "queries.json"),
     join(DIR, "fixtures"),
   );
-  const ids = Object.keys(oracle.results);
+  // Queries that only define a report's figure in stock BQL (`report-*`) are
+  // replayed by `replay-report-oracle.ts`, against the report, not the engine.
+  const skipped = new Set(
+    (
+      JSON.parse(readFileSync(join(DIR, "queries.json"), "utf8")) as {
+        id: string;
+        replay?: boolean;
+      }[]
+    )
+      .filter((query) => query.replay === false)
+      .map((query) => query.id),
+  );
+  const ids = Object.keys(oracle.results).filter((id) => !skipped.has(id));
   const allowlist = parseAllowlist(
     JSON.parse(readFileSync(join(DIR, "allowlist.json"), "utf8")),
     new Set(ids),

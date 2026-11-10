@@ -11,7 +11,11 @@ import { resolveConversionTarget } from "./report-conversion";
  * the dashboard's holdings page asks — per-(account, commodity, cost
  * currency) units, book value, market value, and quote — and groups the
  * rows here, where the CLI's exact account matcher and grouping rules
- * apply. Quotes pin at `today()`, the BQL the dashboard proves; entry
+ * apply. Quotes pin at today and come from the ledger's `price` directives
+ * alone, the price source stock beancount and the statements use (w23/m41,
+ * w1/229): the BQL engine also derives a price from every `@` annotation,
+ * which valued a sold lot's remaining units at the sale price while the
+ * balance sheet and net worth said the price was missing. Entry
  * time-scoping has no BQL form, so this read takes no `time` input.
  */
 
@@ -40,7 +44,7 @@ export type HoldingsResult = {
   valuation: "complete" | "partial";
   missing_prices: { from: string; to: string }[];
   missing_price_summary: string[];
-  /** ISO date the quotes pin at (`today()` in the detail query). */
+  /** ISO date the quotes are looked up at (today). */
   as_of: string;
 };
 
@@ -55,25 +59,27 @@ type HoldingsColumn =
   | "conv_rate";
 
 /**
- * The detail query. Fixed text apart from the conversion leg, whose target
- * is a validated commodity code — the only interpolation, and it cannot
- * carry a quote or backslash. `first()` wraps the quote lookups because
- * BQL aggregates every selected expression; each group holds one
- * (commodity, cost currency), so the first row's quote is the group's.
+ * The detail query: per-(account, commodity, cost currency) units and book
+ * value. Fixed text, no interpolation. The market value and the quotes are not
+ * asked of the engine; {@link valueHoldingRows} derives them from the price
+ * directives, so the engine's implied prices never reach a holdings figure.
  */
-export function holdingsDetailQuery(conversionTarget: string | null): string {
-  const leg =
-    conversionTarget === null
-      ? ""
-      : `, first(getprice(cost_currency, "${conversionTarget}", today())) AS conv_rate`;
+export function holdingsDetailQuery(): string {
   return (
     "SELECT account, currency, cost_currency, units(sum(position)) AS units, " +
-    "cost(sum(position)) AS book_value, value(sum(position), today()) AS market_value, " +
-    `first(getprice(currency, cost_currency, today())) AS price${leg} ` +
+    "cost(sum(position)) AS book_value " +
     "GROUP BY account, currency, cost_currency " +
     "ORDER BY account, currency, cost_currency"
   );
 }
+
+/**
+ * The ledger's explicit `price` directives, oldest first. Both stock beanquery
+ * and the engine list only directives here, never an `@` annotation's implied
+ * price (checked in the oracle fixtures, `scripts/bql-oracle`).
+ */
+export const HOLDINGS_PRICES_QUERY =
+  "SELECT date, currency, amount FROM prices ORDER BY date";
 
 /**
  * Resolve the conversion target: an explicit currency, `units` for none,
@@ -123,6 +129,97 @@ function quoteIn(cell: BqlCell | undefined): string | null {
 function plain(value: BigNumber): string {
   const text = value.toString();
   return /[eE]/.test(text) ? value.toFixed() : text;
+}
+
+/**
+ * The latest quote on or before `asOf` for each pair, from the pair's own
+ * directives or its inverse's. One entry per pair is kept, so a ledger with
+ * years of daily quotes costs one pass, not a list per directive.
+ */
+function priceLookup(priceRows: BqlCell[][], asOf: string) {
+  const latest = new Map<string, { date: string; rate: BigNumber }>();
+  const keep = (base: string, quote: string, date: string, rate: BigNumber) => {
+    const key = JSON.stringify([base, quote]);
+    const current = latest.get(key);
+    // Listed oldest first; of two on one day the later one wins.
+    if (current === undefined || date >= current.date) {
+      latest.set(key, { date, rate });
+    }
+  };
+  for (const [date, base, amount] of priceRows) {
+    if (
+      typeof date !== "string" ||
+      date > asOf ||
+      typeof base !== "string" ||
+      typeof amount !== "object" ||
+      amount === null ||
+      Array.isArray(amount)
+    ) {
+      continue;
+    }
+    for (const [quote, number] of Object.entries(amount)) {
+      const rate = new BigNumber(String(number));
+      if (!rate.isFinite() || rate.isZero()) continue;
+      keep(base, quote, date, rate);
+      keep(quote, base, date, new BigNumber(1).dividedBy(rate));
+    }
+  }
+  return (base: string, quote: string): BigNumber | null =>
+    latest.get(JSON.stringify([base, quote]))?.rate ?? null;
+}
+
+/**
+ * Add the market value, the quote and the conversion rate to each detail row
+ * from the ledger's price directives (w1/229). A lot with no quote is valued at
+ * cost, as the composer reports; a conversion with no quote leaves the lot in
+ * its held currency, as the composer reports too.
+ */
+export function valueHoldingRows(params: {
+  columns: string[];
+  rows: BqlCell[][];
+  prices: BqlCell[][];
+  conversionTarget: string | null;
+  asOf: string;
+}): { columns: string[]; rows: BqlCell[][] } {
+  const { columns, rows, prices, conversionTarget, asOf } = params;
+  const quote = priceLookup(prices, asOf);
+  const at = (name: string): number => columns.indexOf(name);
+  return {
+    columns: [...columns, "market_value", "price", "conv_rate"],
+    rows: rows.map((row) => {
+      const commodity = row[at("currency")];
+      const held = row[at("cost_currency")];
+      const unitsText =
+        typeof commodity === "string"
+          ? moneyIn(row[at("units")], commodity)
+          : null;
+      const basisText =
+        typeof held === "string" ? moneyIn(row[at("book_value")], held) : null;
+      if (
+        typeof commodity !== "string" ||
+        typeof held !== "string" ||
+        unitsText === null ||
+        basisText === null
+      ) {
+        return [...row, "", "", ""];
+      }
+      const price = quote(commodity, held);
+      const market =
+        price === null
+          ? new BigNumber(basisText)
+          : new BigNumber(unitsText).times(price);
+      const rate =
+        conversionTarget === null || conversionTarget === held
+          ? null
+          : quote(held, conversionTarget);
+      return [
+        ...row,
+        { [held]: plain(market) },
+        price === null ? "" : plain(price),
+        rate === null ? "" : plain(rate),
+      ];
+    }),
+  };
 }
 
 export function composeHoldings(params: {

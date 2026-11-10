@@ -50,12 +50,23 @@ const COLUMNS = [
   "cost_currency",
   "units",
   "book_value",
-  "market_value",
-  "price",
-  "conv_rate",
 ].map((name) => ({ name, dtype: "str" }));
 
+const PRICE_COLUMNS = ["date", "currency", "amount"].map((name) => ({
+  name,
+  dtype: "str",
+}));
+
 const table = (rows: unknown[][]) => ({ result: { types: COLUMNS, rows } });
+
+/** The shell answers the detail query and the price-directive query apart (w1/229). */
+const answerShell = (rows: unknown[][], prices: unknown[][] = []) =>
+  mockShell.queryShellPost.mockImplementation(
+    async (_owner: string, _name: string, { query }: { query: string }) =>
+      query.includes("FROM prices")
+        ? ok({ result: { types: PRICE_COLUMNS, rows: prices } })
+        : ok(table(rows)),
+  );
 
 describe("LedgerFinanceService.getHoldings", () => {
   let service: LedgerFinanceService;
@@ -73,20 +84,15 @@ describe("LedgerFinanceService.getHoldings", () => {
   });
 
   const holdingsRows = () => [
-    [
-      "Assets:Broker:AAPL",
-      "AAPL",
-      "USD",
-      { AAPL: "10" },
-      { USD: "1500.00" },
-      { USD: "1800.00" },
-      "180.00",
-      "0.92",
-    ],
+    ["Assets:Broker:AAPL", "AAPL", "USD", { AAPL: "10" }, { USD: "1500.00" }],
+  ];
+  const quotes = [
+    ["2026-10-01", "AAPL", { USD: "180.00" }],
+    ["2026-10-01", "USD", { EUR: "0.92" }],
   ];
 
   it("authorizes as a reports read and composes groups", async () => {
-    mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
+    answerShell(holdingsRows(), quotes);
 
     const result = await service.getHoldings({
       ledgerId: LEDGER_ID,
@@ -108,34 +114,54 @@ describe("LedgerFinanceService.getHoldings", () => {
       market_value: { number: "1800", currency: "USD" },
     });
     expect(result.valuation).toBe("complete");
-    // No conversion leg without a target.
+    // The engine is asked for units and cost only: its market values and
+    // quotes include prices implied by `@` annotations, which no statement
+    // uses (w1/229); the price directives are read in a second query.
     expect(mockShell.queryShellPost).toHaveBeenCalledWith(
       "testowner",
       "testledger",
-      { query: expect.not.stringContaining("conv_rate") },
+      { query: expect.not.stringContaining("getprice") },
+    );
+    expect(mockShell.queryShellPost).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      { query: "SELECT date, currency, amount FROM prices ORDER BY date" },
     );
   });
 
+  // w1/229: a lot with no `price` directive is valued at cost, whatever the
+  // engine would have implied from a sale's `@` annotation.
+  it("values a lot with no price directive at cost", async () => {
+    answerShell(holdingsRows(), []);
+
+    const result = await service.getHoldings({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      conversion: "units",
+    });
+
+    expect(result.valuation).toBe("partial");
+    expect(result.missing_prices).toEqual([{ from: "AAPL", to: "USD" }]);
+    expect(result.groups[0]).toMatchObject({
+      market_value: { number: "1500", currency: "USD" },
+      price: null,
+    });
+  });
+
   it("defaults conversion to one operating currency", async () => {
-    mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
+    answerShell(holdingsRows(), quotes);
 
     const result = await service.getHoldings({
       ledgerId: LEDGER_ID,
       identity: IDENTITY,
     });
 
-    // The target is resolved before any row is seen, so the leg is always
-    // quoted; USD-held lots skip it per row.
-    expect(mockShell.queryShellPost).toHaveBeenCalledWith(
-      "testowner",
-      "testledger",
-      { query: expect.stringContaining('getprice(cost_currency, "USD"') },
-    );
+    // USD-held lots skip the conversion per row.
     expect(result.groups[0]!.cost_basis.currency).toBe("USD");
   });
 
   it("quotes an explicit target through the conversion leg", async () => {
-    mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
+    answerShell(holdingsRows(), quotes);
     // EUR is named only as a price quote, which counts (w1/204).
     mockReports.getLedgerCurrencies.mockResolvedValue(ok(["USD", "AAPL"]));
     mockReports.getLedgerCommodities.mockResolvedValue(
@@ -148,11 +174,6 @@ describe("LedgerFinanceService.getHoldings", () => {
       conversion: "EUR",
     });
 
-    expect(mockShell.queryShellPost).toHaveBeenCalledWith(
-      "testowner",
-      "testledger",
-      { query: expect.stringContaining('getprice(cost_currency, "EUR"') },
-    );
     expect(result.groups[0]).toMatchObject({
       cost_basis: { number: "1380", currency: "EUR" },
       market_value: { number: "1656", currency: "EUR" },
@@ -180,7 +201,7 @@ describe("LedgerFinanceService.getHoldings", () => {
   );
 
   it("passes account and grouping through to the composer", async () => {
-    mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
+    answerShell(holdingsRows(), quotes);
 
     const result = await service.getHoldings({
       ledgerId: LEDGER_ID,

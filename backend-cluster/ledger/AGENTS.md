@@ -87,7 +87,8 @@ files need no import rewrites (decision: keep `foundation/rustledger`, not
   `rustledger-shadow/` fixtures + Python oracle, `bql-oracle/` (stock beanquery
   0.2.0 answers replayed by `verify:rustledger`; a BQL change that the engine now
   refuses or rewords fails it unless `allowlist.json` documents it — see its
-  README), `served-bql/` (the columns, statement forms and expressions the
+  README; the same corpus also checks the trial balance, balance sheet and
+  income statement against stock beancount, `report-allowlist.json`), `served-bql/` (the columns, statement forms and expressions the
   hosted MCP surface tells agents to use, replayed by `verify:rustledger`;
   backend-v2's `served-bql-claims.test.ts` keeps `served-bql-claims.json` equal
   to what it serves, so a claim the engine refuses, like the `change` column of
