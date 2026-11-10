@@ -60,8 +60,16 @@ async function fixture(answer: string) {
         changeLedgerFiles,
         updateLedgerFile,
         deleteLedgerFile,
+        // The stale case loses the race after the preview's own sha check
+        // (w1/219) passed: the file was still at `old` when it was read.
         getLedgerFilesContent: async () => ({
-          data: { success: true, data: [] },
+          data: {
+            success: true,
+            data:
+              answer === STALE
+                ? [{ path: "qa.bean", type: "file", sha: "old", content: "" }]
+                : [],
+          },
         }),
         getLedgerDirContent: async () => ({
           data: { success: true, data: [] },

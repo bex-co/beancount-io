@@ -576,7 +576,13 @@ describe("LedgerRepoService", () => {
       expect(FILE_EXISTS_HINT).not.toContain("replace");
     });
 
-    it("lets a dry run create a path the same batch deletes first, and reads nothing without a create", async () => {
+    it("lets a dry run create a path the same batch deletes first, checking only the delete's sha", async () => {
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [{ path: "main.bean", type: "file", sha: "s1", content: "" }],
+        },
+      });
       await service.changeFiles({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
@@ -587,8 +593,77 @@ describe("LedgerRepoService", () => {
         message: "recreate",
         dryRun: true,
       });
-      expect(mockGetLedgerFilesContent).not.toHaveBeenCalled();
+      expect(mockGetLedgerFilesContent).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        { files: ["main.bean"] },
+      );
       expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+
+    it("reads nothing on a dry run with no create and no sha", async () => {
+      await service.changeFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: [{ operation: "delete", path: "old.bean" }],
+        message: "drop",
+        dryRun: true,
+      });
+      expect(mockGetLedgerFilesContent).not.toHaveBeenCalled();
+    });
+
+    // w1/219: the commit refuses an update or delete from a stale read, and
+    // REST previewed one as valid.
+    it.each(["update", "delete"] as const)(
+      "refuses a dry-run %s whose sha is not the file's current one",
+      async (operation) => {
+        mockGetLedgerFilesContent.mockResolvedValue({
+          data: {
+            success: true,
+            data: [{ path: "sub.bean", type: "file", sha: "s2", content: "" }],
+          },
+        });
+        await expect(
+          service.changeFiles({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            operations: [
+              {
+                operation,
+                path: "sub.bean",
+                sha: "s1",
+                ...(operation === "update" ? { content: "Zm9v" } : {}),
+              },
+            ],
+            message: "stale",
+            dryRun: true,
+          }),
+        ).rejects.toMatchObject({
+          category: "CONFLICT",
+          message: expect.stringContaining(
+            "sub.bean changed since you read it",
+          ),
+          metadata: { hint: expect.stringContaining("readLedgerFiles") },
+        });
+        expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+      },
+    );
+
+    it("refuses a dry-run update of a file that is not there", async () => {
+      mockGetLedgerFilesContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      await expect(
+        service.changeFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [
+            { operation: "update", path: "gone.bean", sha: "s1", content: "x" },
+          ],
+          message: "gone",
+          dryRun: true,
+        }),
+      ).rejects.toMatchObject({ category: "NOT_FOUND" });
     });
 
     it("lists a folder once however many new files share it (w23/206)", async () => {

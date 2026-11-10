@@ -107,6 +107,7 @@ async function fixture(opts: {
     });
   return {
     changeLedgerFiles,
+    send,
     put: (body: object) =>
       send("PUT", "new.bean", { content: "; x\n", message: "m", ...body }),
     del: (body: object) =>
@@ -260,5 +261,73 @@ describe("a read-only credential is refused FORBIDDEN before any file lookup", (
       const response = await f.del({ dryRun: true });
       expect(response.status).toBe(403);
       expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    }));
+});
+
+// w1/219: REST previewed an update or delete from a stale read as valid,
+// and only the commit was refused; MCP refused the preview.
+describe("a stale sha is refused as CONFLICT on preview and commit", () => {
+  it.each([
+    ["a stale", "sha-stale"],
+    ["a malformed", "not-a-sha"],
+  ])("refuses %s sha on a REST PUT and DELETE, dryRun or not", (_k, sha) =>
+    withFixture({ projected: [] }, async (f) => {
+      for (const dryRun of [true, false]) {
+        for (const response of [
+          await f.send("PUT", "a.bean", { content: "; x\n", sha, dryRun }),
+          await f.send("DELETE", "a.bean", { sha, dryRun }),
+        ]) {
+          expect(response.status).toBe(409);
+          const body = (await response.json()) as any;
+          expect(body.error.code).toBe("CONFLICT");
+          expect(body.error.message).toContain(
+            "a.bean changed since you read it",
+          );
+        }
+      }
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    }),
+  );
+
+  it("refuses the same on the MCP update and delete tools", () =>
+    withFixture({ projected: [] }, async (f) => {
+      for (const dry_run of [true, false]) {
+        for (const [name, args] of [
+          [
+            "updateLedgerFiles",
+            { files: [{ path: "a.bean", content: "x", sha: "sha-stale" }] },
+          ],
+          [
+            "deleteLedgerFiles",
+            { files: [{ path: "a.bean", sha: "sha-stale" }] },
+          ],
+        ] as const) {
+          const result = await f.mcp(name, { ...args, dry_run });
+          expect(result.isError).toBe(true);
+          expect(result.structuredContent).toMatchObject({
+            error: {
+              code: "CONFLICT",
+              message: expect.stringContaining(
+                "a.bean changed since you read it",
+              ),
+            },
+          });
+        }
+      }
+      expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+    }));
+
+  it("still previews a current sha as valid", () =>
+    withFixture({ projected: [] }, async (f) => {
+      const response = await f.send("PUT", "a.bean", {
+        content: "; x\n",
+        sha: "sha-a.bean",
+        dryRun: true,
+      });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        dryRun: true,
+        valid: true,
+      });
     }));
 });

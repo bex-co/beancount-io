@@ -35,6 +35,7 @@ import {
   NotFoundError,
 } from "@/shared/errors";
 import { listDirectory } from "@/features/ledger/utils/directory-listing";
+import { staleFileConflict } from "@/features/ledger/utils/stale-file-conflict";
 import {
   deleteGuardFileAccess,
   findDanglingDeleteIncluders,
@@ -502,26 +503,43 @@ export class LedgerRepoService
       // The commit refuses a `create` over a file that is already there, so
       // the preview has to as well — otherwise it approves a write that will
       // then fail, or tempts the caller to believe it overwrote something.
+      // The same holds for an update or delete whose `sha` is not the file's
+      // current one, which REST previewed as valid (w1/219).
       const created = new Set<string>();
       const freed = new Set<string>();
+      const versioned = new Map<string, string>();
       for (const operation of operations) {
+        const touched =
+          created.has(operation.path) || freed.has(operation.path);
+        if (
+          operation.operation !== "create" &&
+          operation.sha &&
+          !touched &&
+          !versioned.has(operation.path)
+        )
+          versioned.set(operation.path, operation.sha);
         if (operation.operation === "delete") freed.add(operation.path);
         // A file this same batch deletes first is free to create again.
         else if (operation.operation === "create" && !freed.has(operation.path))
           created.add(operation.path);
       }
-      if (created.size > 0) {
+      if (created.size > 0 || versioned.size > 0) {
         const existing = await unwrapFavaResponse(
           favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
-            files: [...created],
+            files: [...new Set([...created, ...versioned.keys()])],
           }),
-          "check new file paths",
+          "check file versions",
         );
         const taken = existing.find((file) => created.has(file.path));
         if (taken) {
           throw new ConflictError("File", `${taken.path} already exists`, {
             hint: FILE_EXISTS_HINT,
           });
+        }
+        for (const [path, sha] of versioned) {
+          const current = existing.find((file) => file.path === path);
+          if (!current) throw new NotFoundError("File", path);
+          if (current.sha !== sha) throw staleFileConflict(path);
         }
       }
       return;

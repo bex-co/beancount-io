@@ -17,6 +17,7 @@ import {
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
 import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
+import { staleFileConflict } from "@/features/ledger/utils/stale-file-conflict";
 import { normalizeAgentRepoPath } from "./agent-repo-path";
 import {
   readBeanCheckErrors,
@@ -243,16 +244,7 @@ function foldOperations(
       f.sha !== undefined &&
       f.sha !== fileCache.get(f.path)?.sha
     )
-      throw new ConflictError(
-        "File",
-        `${f.path} changed since you read it; re-read it and retry`,
-        // Without one, MCP falls back to the CONFLICT category's hint,
-        // which names an entry-hash lookup that cannot satisfy a file
-        // version check (w23/147).
-        {
-          hint: "Re-read the file's current `sha` with `readLedgerFiles` and retry with that `sha`.",
-        },
-      );
+      throw staleFileConflict(f.path);
     const create = state?.create ?? false;
     if (f.operation === "replace") {
       touched.set(f.path, { content: f.content, create });

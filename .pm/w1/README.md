@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [219](./219.md) — REST file previews skip the sha check that the commit makes (MCP QA 2026-11-10)
 - [220](./220.md) — GraphQL entry writes diverge from MCP/REST in three small ways: posting meta types, preview error `code`, cross-surface `requestId` replay (MCP QA 2026-11-10)
 - [221](./221.md) — A write that adds a managed price include previews as "source unavailable" and is refused (MCP QA 2026-11-10)
 - [222](./222.md) — REST v1 errors outside the route handlers break the error contract, and 401s carry no challenge (MCP QA 2026-11-10)

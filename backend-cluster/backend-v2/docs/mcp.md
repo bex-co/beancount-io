@@ -587,7 +587,8 @@ duplicate what the server counts.
 `readLedgerFiles` returns each file's blob `sha`. Pass it back on a `content`
 rewrite or a delete: if another writer committed since you read the file, the
 write is refused as `CONFLICT` — "`<path>` changed since you read it" — and
-nothing changes. Without `sha`, a whole-file `content` write or a delete
+nothing changes. A `dry_run` is refused the same way, as is a REST `PUT` or
+`DELETE` preview with a stale `sha` (w1/219). Without `sha`, a whole-file `content` write or a delete
 replaces whatever is there now, including changes you never saw. An
 `old_string` edit is guarded by its own text, which must still match.
 
