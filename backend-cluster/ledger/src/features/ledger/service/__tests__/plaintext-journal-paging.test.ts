@@ -76,7 +76,8 @@ describe("plaintextJournal paging", () => {
         { total: 5, truncated: false },
       ],
     );
-    // Each page keeps the option header, so it loads on its own.
+    // Each page keeps the option header, so it parses on its own (its
+    // assertions and lot reductions need the pages before it, w1/232).
     for (const page of pages)
       expect(page.content).toContain('option "operating_currency" "USD"');
   });

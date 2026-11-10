@@ -1017,7 +1017,11 @@ fix (quote the value, drop a stray `#`/`^` after a colon), never silently
 treated as match-all or match-none.
 Plaintext journal returns `{ "content": "...", "total": N, "truncated": … }`
 and takes `limit` (1–1,000 entries) and `offset`. Every page keeps the
-ledger's option header, so each one loads on its own; `total` counts the
+ledger's option header, so each one parses on its own; but a page past the
+first carries no balances from before it, so its balance assertions, pads and
+lot reductions validate only across the whole export (w1/232). A `time` window
+read in one page does carry them, as opening `S` summaries, and checks on its
+own. `total` counts the
 entries the filters select and `truncated` says whether more remain. Without
 `limit`, the MCP resource returns the first 200 entries — a whole ledger's text
 can run to hundreds of kilobytes — while REST and GraphQL return every entry,

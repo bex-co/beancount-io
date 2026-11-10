@@ -963,8 +963,11 @@ export class LedgerJournalService implements ILedgerJournalService {
       windowed: Boolean(query?.time),
       ledger: new Set(snapshot.directives),
     });
-    // Every page keeps the option header, so each one loads on its own; the
+    // Every page keeps the option header, so each one parses on its own; the
     // whole ledger in one read was a context blowup for agents (w23/044).
+    // Nothing carries the balances from before a later page, so its
+    // assertions and lot reductions validate only across the whole export
+    // (w1/232); a time window keeps its opening summaries for that.
     const page =
       limit === undefined
         ? exported.slice(offset)

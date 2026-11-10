@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [232](./232.md) — A plaintext-journal page past the first fails bean-check on its own (MCP QA 2026-11-10)
 - [233](./233.md) — Typed entries take metadata only on transactions; directive metadata from the journal can't be written back (MCP QA 2026-11-10)
 - [234](./234.md) — `requestId` idempotency is keyed on the owner spelling, so a retry with different owner case writes twice (MCP QA 2026-11-10)
 - [235](./235.md) — The MCP tool refuses a malformed `ledger` as if none were given (MCP QA 2026-11-10)

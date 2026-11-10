@@ -157,6 +157,8 @@ const STALE = [
   "File, bank, rename, and lifecycle writes take no errors flag",
   "MCP key creation advertises",
   "`deleteLedger` accepts only `ledger`",
+  // w1/232: a later page carries no balances from before it.
+  "so each one loads on its own",
 ];
 
 let served: Served;
