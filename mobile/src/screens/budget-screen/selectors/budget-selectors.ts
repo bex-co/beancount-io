@@ -805,6 +805,25 @@ export function isFavorableVariance(
   return direction > 0 ? status === "below" : status === "above";
 }
 
+/**
+ * The day to budget a charted point through. A window that runs through today
+ * has its last row dated today, not at the end of its period (the ledger ends a
+ * filtered series exactly at its window's last day), and budgeting only up to
+ * that day prorated the period in progress: a Monthly 122 read "Budget $40.67"
+ * on the 10th while Home and the dashboard read the full target (w22/015,
+ * w21/994). That row stands for the period in progress, so it is budgeted
+ * through the period's own last day. Any other date is left as it is: a period
+ * end already, or the end of a window that finished before today, whose last
+ * period is deliberately clipped to it (w21/764).
+ */
+export function budgetedThrough(
+  date: string,
+  interval: string,
+  today: string,
+): string {
+  return date === today ? currentPeriodRange(interval, today).end : date;
+}
+
 /** Inclusive date range of the period containing `date` for a given cadence. */
 export function currentPeriodRange(
   interval: string,

@@ -11,6 +11,7 @@ import { getFormatDate } from "@/common/format-util";
 import {
   budgetNotInTotal,
   budgetForIntervalExact,
+  budgetedThrough,
   allTimeThroughToday,
   budgetActualsState,
   currentPeriodKnown,
@@ -127,7 +128,9 @@ export function useBudgetActuals({
       const actualExact = directed(actual);
       const budgetExact = directed(
         budgetForIntervalExact(
-          date,
+          // The row dated today is the period in progress, judged in full
+          // (w22/015).
+          budgetedThrough(date, group.interval, today),
           group.interval,
           history,
           today,

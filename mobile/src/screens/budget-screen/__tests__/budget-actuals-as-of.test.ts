@@ -2,9 +2,11 @@ import fs from "fs";
 import path from "path";
 
 /**
- * Static guardrail: budget actuals prorate each period's budget no further
- * than today. The hook cannot be rendered by the unit runner; the proration
- * itself is covered in budget-selectors.test.ts.
+ * Static guardrail: budget actuals still pass today as `asOf`, so a period not
+ * yet begun has no budget; the row dated today is budgeted through its
+ * period's end (w22/015, in-progress-period.test.ts). The hook cannot be
+ * rendered by the unit runner; the budget itself is covered in
+ * budget-selectors.test.ts.
  */
 describe("useBudgetActuals", () => {
   it("passes today as the end of the budgeted span", () => {
@@ -13,10 +15,11 @@ describe("useBudgetActuals", () => {
         path.join(__dirname, "..", "hooks", "use-budget-actuals.ts"),
         "utf8",
       )
+      .replace(/\/\/.*$/gmu, "")
       .replace(/\s+/gu, "");
     expect(
       source.includes(
-        "budgetForIntervalExact(date,group.interval,history,today,windowStart,endsOn,)",
+        "budgetForIntervalExact(budgetedThrough(date,group.interval,today),group.interval,history,today,windowStart,endsOn,)",
       ),
     ).toBe(true);
   });
