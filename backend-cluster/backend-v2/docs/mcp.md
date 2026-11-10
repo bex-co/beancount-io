@@ -1504,8 +1504,13 @@ From `backend-cluster/backend-v2/`, run:
 
 ```bash
 yarn mcp:conformance https://books.example.com
-yarn mcp:conformance https://books.example.com --token "$BEANCOUNT_MCP_TOKEN"
+BEANCOUNT_MCP_TOKEN=… yarn mcp:conformance https://books.example.com
 ```
+
+The authenticated checks read `QA_MCP_TOKEN` (or `BEANCOUNT_MCP_TOKEN`) and
+`QA_MCP_READ_ONLY_TOKEN` from the repository root's `.env` first and the
+environment second, so the credential need not appear on the command line;
+`--token` and `--read-only-token` still override both (w1/188).
 
 The [conformance script](../scripts/mcp-conformance.ts) checks the unauthenticated
 challenge, discovery, method handling (`GET`, `DELETE`, `OPTIONS` and `PUT` must all be

@@ -21,7 +21,9 @@ const USAGE = `usage: qa-mcp.mjs [options] <command> [arguments]
 
 commands
   initialize                      negotiate a protocol version, print serverInfo
-  tools-list | resources-list | prompts-list
+  tools-list | prompts-list
+  resources-list                  resources/list: the concrete resource instances
+  resource-templates-list         resources/templates/list: the URI templates
   call <tool> [json-arguments]    tools/call
   read <uri>                      resources/read
   prompt <name> [json-arguments]  prompts/get
@@ -184,6 +186,9 @@ function buildRequest() {
       message = { method: "tools/list", params: {} };
       break;
     case "resources-list":
+      message = { method: "resources/list", params: {} };
+      break;
+    case "resource-templates-list":
       message = { method: "resources/templates/list", params: {} };
       break;
     case "prompts-list":

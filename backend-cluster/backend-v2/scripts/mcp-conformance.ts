@@ -3,6 +3,11 @@
  *
  *   yarn mcp:conformance <base-url> [--token <bcio_…>] [--read-only-token <bcio_…>]
  *
+ * The credentials can stay off argv: without a flag, `QA_MCP_TOKEN` (or
+ * `BEANCOUNT_MCP_TOKEN`) and `QA_MCP_READ_ONLY_TOKEN` are read from the
+ * repository root's `.env` first and the environment second, the way
+ * `.agents/skills/qa-shared/scripts/qa-mcp.mjs` reads them (w1/188).
+ *
  * Answers one question — "is this deployment's MCP endpoint actually
  * connectable?" — and, when it is not, names which check failed
  * rather than leaving an operator to infer it from a curl transcript. The
@@ -17,10 +22,22 @@
  * evidence that was never gathered.
  */
 
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { parseEnv } from "node:util";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 const MCP_PATH = "/api-gateway/mcp";
+
+/** The names `qa-mcp.mjs` reads a credential from, in preference order. */
+const TOKEN_VARIABLES = ["QA_MCP_TOKEN", "BEANCOUNT_MCP_TOKEN"] as const;
+const READ_ONLY_TOKEN_VARIABLES = ["QA_MCP_READ_ONLY_TOKEN"] as const;
+const TOKEN_SOURCE = "--token or QA_MCP_TOKEN";
+const READ_ONLY_TOKEN_SOURCE = "--read-only-token or QA_MCP_READ_ONLY_TOKEN";
+
+/** The repository root's `.env`, wherever the command is run from. */
+const REPO_ENV_FILE = path.resolve(__dirname, "../../../.env");
 const VANITY_PATH = "/mcp";
 
 /** Long enough to clear a cold start, short enough that a hang is a result. */
@@ -232,7 +249,7 @@ async function checkMethodRefusal(o: Options): Promise<CheckResult> {
   );
   if (!o.token) {
     return v.skip(
-      "needs --token: the method check runs after authentication, so an anonymous probe only reproduces check 1",
+      `needs ${TOKEN_SOURCE}: the method check runs after authentication, so an anonymous probe only reproduces check 1`,
     );
   }
   const failures: string[] = [];
@@ -271,7 +288,7 @@ async function checkToolsList(o: Options): Promise<CheckResult> {
     "4 tools-list",
     "A ledger-scoped credential reaches initialize + tools/list",
   );
-  if (!o.token) return v.skip("needs --token");
+  if (!o.token) return v.skip(`needs ${TOKEN_SOURCE}`);
 
   const init = await probe(`${o.baseUrl}${MCP_PATH}`, {
     method: "POST",
@@ -322,7 +339,7 @@ async function checkScopeRefusal(o: Options): Promise<CheckResult> {
   );
   if (!o.readOnlyToken) {
     return v.skip(
-      "needs --read-only-token: a credential holding ledger.read but not ledger.write",
+      `needs ${READ_ONLY_TOKEN_SOURCE}: a credential holding ledger.read but not ledger.write`,
     );
   }
   const res = await probe(`${o.baseUrl}${MCP_PATH}`, {
@@ -392,7 +409,9 @@ async function checkResultShape(o: Options): Promise<CheckResult> {
   );
   const token = o.readOnlyToken ?? o.token;
   if (!token) {
-    return v.skip("needs --token or --read-only-token to run a query");
+    return v.skip(
+      `needs ${TOKEN_SOURCE}, or ${READ_ONLY_TOKEN_SOURCE}, to run a query`,
+    );
   }
   const res = await probe(`${o.baseUrl}${MCP_PATH}`, {
     method: "POST",
@@ -506,7 +525,7 @@ async function checkDiscoveryWorkload(o: Options): Promise<CheckResult> {
     "9 discovery-workload",
     "Instructions, hero tools, and concrete resources list cleanly",
   );
-  if (!o.token) return v.skip("needs --token");
+  if (!o.token) return v.skip(`needs ${TOKEN_SOURCE}`);
 
   const init = await probe(`${o.baseUrl}${MCP_PATH}`, {
     method: "POST",
@@ -582,7 +601,7 @@ async function checkOptionalUserId(o: Options): Promise<CheckResult> {
     "8 optional-userid",
     "The feature-flags resource reads without userId",
   );
-  if (!o.token) return v.skip("needs --token");
+  if (!o.token) return v.skip(`needs ${TOKEN_SOURCE}`);
 
   const res = await probe(`${o.baseUrl}${MCP_PATH}`, {
     method: "POST",
@@ -833,7 +852,9 @@ async function checkOutputSchemaConformance(o: Options): Promise<CheckResult> {
       : []),
   ];
   if (calls.length === 0) {
-    return v.skip("needs --token (or --read-only-token) to call tools");
+    return v.skip(
+      `needs ${TOKEN_SOURCE} (or ${READ_ONLY_TOKEN_SOURCE}) to call tools`,
+    );
   }
 
   const checked: string[] = [];
@@ -917,6 +938,35 @@ async function checkBrowserDiscovery(o: Options): Promise<CheckResult> {
 
 // --- runner ---------------------------------------------------------------
 
+/**
+ * The credentials, kept off argv when the caller wants them off (w1/188).
+ *
+ * A token on the command line reaches shell history and process listings, so
+ * QA could only run the checklist anonymously and skipped every authenticated
+ * check. A flag still wins; otherwise each credential comes from the repository
+ * root's `.env` when it names one, and from the environment when it does not.
+ */
+export function resolveTokens(
+  flags: { readonly token?: string; readonly readOnlyToken?: string },
+  env: NodeJS.ProcessEnv,
+  envFile = REPO_ENV_FILE,
+): { token?: string; readOnlyToken?: string } {
+  const fromFile = existsSync(envFile)
+    ? parseEnv(readFileSync(envFile, "utf8"))
+    : {};
+  const first = (names: readonly string[]) => {
+    for (const source of [fromFile, env]) {
+      const name = names.find((candidate) => source[candidate]);
+      if (name) return source[name];
+    }
+    return undefined;
+  };
+  return {
+    token: flags.token ?? first(TOKEN_VARIABLES),
+    readOnlyToken: flags.readOnlyToken ?? first(READ_ONLY_TOKEN_VARIABLES),
+  };
+}
+
 function parseArgs(argv: string[]): Options {
   const positional = argv.filter((a) => !a.startsWith("--"));
   const flag = (name: string) => {
@@ -927,14 +977,18 @@ function parseArgs(argv: string[]): Options {
   if (!baseUrl) {
     console.error(
       "usage: yarn mcp:conformance <base-url> [--token <bcio_…>] [--read-only-token <bcio_…>] [--ledger <owner/name>]\n" +
+        "  Without the flags, QA_MCP_TOKEN (or BEANCOUNT_MCP_TOKEN) and QA_MCP_READ_ONLY_TOKEN are read\n" +
+        "  from the repository root's .env, then the environment, so no credential has to be on argv.\n" +
         "  e.g. yarn mcp:conformance http://localhost:4104",
     );
     process.exit(2);
   }
   return {
     baseUrl: baseUrl.replace(/\/+$/, ""),
-    token: flag("token"),
-    readOnlyToken: flag("read-only-token"),
+    ...resolveTokens(
+      { token: flag("token"), readOnlyToken: flag("read-only-token") },
+      process.env,
+    ),
     ledger: flag("ledger"),
   };
 }

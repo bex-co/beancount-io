@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [188](./188.md) — MCP QA tooling: `resources-list` sends the wrong method, conformance needs the token on argv (MCP QA 2026-11-08)
 - [189](./189.md) — An unexpected error that mentions "not found" reaches MCP callers unmasked (MCP QA 2026-11-08)
 - [190](./190.md) — Parsing an issued but never-uploaded temp asset is a 500, not "upload first" (MCP QA 2026-11-08)
 - [191](./191.md) — Interval totals without `accountName` return all-zero intervals (MCP QA 2026-11-08)

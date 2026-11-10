@@ -46,8 +46,9 @@ on a designated QA ledger needed to reproduce bugs.
   node .agents/skills/qa-shared/scripts/qa-mcp.mjs [--credentials-file FILE] [--url URL] <command>
   ```
 
-  Commands: `initialize`, `tools-list`, `resources-list`, `prompts-list`,
-  `call <tool> [json]`, `read <uri>`, `prompt <name> [json]`,
+  Commands: `initialize`, `tools-list`, `resources-list` (`resources/list`,
+  the concrete instances), `resource-templates-list`
+  (`resources/templates/list`), `prompts-list`, `call <tool> [json]`, `read <uri>`, `prompt <name> [json]`,
   `rpc <method> [json]`, and `raw --method GET|DELETE|POST [--accept TEXT]
   [--body TEXT]` for transport checks. `--anonymous` omits the credential. It
   reads `QA_MCP_TOKEN` (falling back to `BEANCOUNT_MCP_TOKEN`) from the
@@ -74,9 +75,13 @@ on a designated QA ledger needed to reproduce bugs.
   is already up; `.pm/DO_NOT_DO.md` forbids provisioning a second stack for
   MCP testing. Label local results as local, with the backend image or HEAD
   they ran.
-- `yarn mcp:conformance <base-url> [--token …] [--read-only-token …]` inside
+- `yarn mcp:conformance <base-url> [--ledger owner/name]` inside
   `backend-cluster/backend-v2/` runs ADR 0007's checklist and only observes;
   run it first against the target and treat a failed check as a candidate.
+  It reads `QA_MCP_TOKEN` and `QA_MCP_READ_ONLY_TOKEN` from the repo-root
+  `./.env` (preferred) or the environment, so never pass `--token` or
+  `--read-only-token`: those flags put the credential on argv. An unpinned
+  credential needs `--ledger` for the result-shape and output-schema checks.
   `yarn mcp:agent-eval` drives real Claude Code and Codex sessions and is
   billed; run it only when the user asks for client journeys.
 - Store evidence under the gitignored repo-root `.tmp/qa-<date>/`: the exact

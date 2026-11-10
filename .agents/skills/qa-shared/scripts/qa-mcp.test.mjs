@@ -276,6 +276,26 @@ test("SSE-framed responses are parsed into messages with leftovers kept as text"
   }
 });
 
+test("each list command sends its own JSON-RPC method", async () => {
+  // w1/188: resources-list sent resources/templates/list, so QA compared the
+  // documented instance set against the template inventory.
+  const server = await startServer();
+  try {
+    for (const [command, method] of [
+      ["tools-list", "tools/list"],
+      ["resources-list", "resources/list"],
+      ["resource-templates-list", "resources/templates/list"],
+      ["prompts-list", "prompts/list"],
+    ]) {
+      const result = await run(["--url", `${server.base}/json`, command]);
+      assert.equal(result.code, 0, result.stderr);
+      assert.equal(JSON.parse(server.seen.at(-1).body).method, method, command);
+    }
+  } finally {
+    await server.close();
+  }
+});
+
 test("raw requests carry only what was asked and notifications omit the id", async () => {
   const server = await startServer();
   try {

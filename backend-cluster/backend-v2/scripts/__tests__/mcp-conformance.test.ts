@@ -20,7 +20,10 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
 import { corsMiddleware } from "@/server/middleware/cors-middleware";
-import { CHECKS } from "../mcp-conformance";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { CHECKS, resolveTokens } from "../mcp-conformance";
 
 const [
   checkUnauthenticated,
@@ -483,5 +486,67 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
       expect(result.outcome).toBe("skip");
       expect(result.detail).toMatch(/check 1/);
     }
+  });
+});
+
+// w1/188: a token on argv breaks the QA contract, so QA ran anonymously and
+// skipped every authenticated check. The credentials resolve like qa-mcp.mjs's.
+describe("resolveTokens", () => {
+  let dir: string;
+  let envFile: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "mcp-conformance-"));
+    envFile = join(dir, ".env");
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  it("reads both credentials from the repository .env", () => {
+    writeFileSync(
+      envFile,
+      "QA_MCP_TOKEN=bcio_file_rw\nQA_MCP_READ_ONLY_TOKEN=bcio_file_ro\n",
+    );
+    expect(resolveTokens({}, {}, envFile)).toEqual({
+      token: "bcio_file_rw",
+      readOnlyToken: "bcio_file_ro",
+    });
+  });
+
+  it("prefers the .env over the environment, per credential", () => {
+    writeFileSync(envFile, "QA_MCP_TOKEN=bcio_file_rw\n");
+    expect(
+      resolveTokens(
+        {},
+        {
+          QA_MCP_TOKEN: "bcio_env_rw",
+          QA_MCP_READ_ONLY_TOKEN: "bcio_env_ro",
+        },
+        envFile,
+      ),
+    ).toEqual({ token: "bcio_file_rw", readOnlyToken: "bcio_env_ro" });
+  });
+
+  it("falls back to BEANCOUNT_MCP_TOKEN and to the environment without a file", () => {
+    expect(
+      resolveTokens({}, { BEANCOUNT_MCP_TOKEN: "bcio_env_alias" }, envFile),
+    ).toEqual({ token: "bcio_env_alias", readOnlyToken: undefined });
+  });
+
+  it("lets an explicit flag win over both", () => {
+    writeFileSync(envFile, "QA_MCP_TOKEN=bcio_file_rw\n");
+    expect(
+      resolveTokens(
+        { token: "bcio_flag_rw", readOnlyToken: "bcio_flag_ro" },
+        { QA_MCP_READ_ONLY_TOKEN: "bcio_env_ro" },
+        envFile,
+      ),
+    ).toEqual({ token: "bcio_flag_rw", readOnlyToken: "bcio_flag_ro" });
+  });
+
+  it("leaves both unset when nothing names one", () => {
+    writeFileSync(envFile, "UNRELATED=1\n");
+    expect(resolveTokens({}, {}, envFile)).toEqual({
+      token: undefined,
+      readOnlyToken: undefined,
+    });
   });
 });
