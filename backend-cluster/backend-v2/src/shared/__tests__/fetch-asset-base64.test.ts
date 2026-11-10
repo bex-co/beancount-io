@@ -42,4 +42,28 @@ describe("fetchAssetAsBase64", () => {
       fetchAssetAsBase64("https://example.com/missing.png"),
     ).rejects.toThrow("asset download failed with status 404");
   });
+
+  // w1/190: an issued but never-uploaded receipt is the caller's miss.
+  it("throws the caller's error for a 404 when it names one", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+    }) as unknown as typeof fetch;
+    const missing = new Error("Temporary asset not found");
+
+    await expect(
+      fetchAssetAsBase64("https://example.com/missing.png", () => missing),
+    ).rejects.toBe(missing);
+  });
+
+  it("keeps any other failure unexpected even with a missing error", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+    }) as unknown as typeof fetch;
+
+    await expect(
+      fetchAssetAsBase64("https://example.com/a.png", () => new Error("no")),
+    ).rejects.toThrow("asset download failed with status 503");
+  });
 });

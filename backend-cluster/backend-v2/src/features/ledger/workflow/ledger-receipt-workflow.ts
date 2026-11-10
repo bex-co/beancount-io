@@ -8,7 +8,7 @@ import {
   type FavaApiClient,
   unwrapFavaResponse,
 } from "@/foundation/fava";
-import { InternalServerError } from "@/shared/errors";
+import { InternalServerError, NotFoundError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
@@ -21,6 +21,7 @@ import type { Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
   ledgerResource,
+  TEMP_ASSET_NOT_FOUND_HINT,
   tempAssetResource,
   type IAuthorizationService,
 } from "@/server/api/authorization";
@@ -244,7 +245,16 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
 
     const { downloadUrl } =
       await this.assetStorage.generateDownloadUrl(receiptObjectKey);
-    const fileBase64 = await fetchAssetAsBase64(downloadUrl);
+    // Issued but never uploaded: the same miss the S3 store reports (w1/190).
+    const fileBase64 = await fetchAssetAsBase64(
+      downloadUrl,
+      () =>
+        new NotFoundError(
+          "Temporary asset",
+          undefined,
+          TEMP_ASSET_NOT_FOUND_HINT,
+        ),
+    );
 
     const stored = await unwrapFavaResponse(
       favaApiClient.ledgers.createLedgerFile(ledgerOwner, ledgerName, {

@@ -10,18 +10,44 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { extname } from "path";
 import { nanoid } from "nanoid";
 import type { AssetS3Config } from "@/config/config";
-import { BadUserInputError, ConfigurationError } from "@/shared/errors";
+import {
+  BadUserInputError,
+  ConfigurationError,
+  NotFoundError,
+} from "@/shared/errors";
 import { S3_PREFIX_TMP } from "@/features/s3/temp-asset-key";
 import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
 import type { Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
+  TEMP_ASSET_NOT_FOUND_HINT,
   tempAssetResource,
   type IAuthorizationService,
   userResource,
 } from "@/server/api/authorization";
 
 export { S3_PREFIX_TMP } from "@/features/s3/temp-asset-key";
+
+/**
+ * A key that holds no object — issued but never uploaded, or already promoted
+ * and deleted — is the caller's to fix, not a server fault (w1/190). S3 says
+ * `NotFound` on a HEAD and `NoSuchKey` on a copy or GET; S3-compatible stores
+ * agree on the 404. It reads as the concealed temp-asset miss authorization
+ * already gives a foreign or unknown key, hint included.
+ */
+function refuseMissingObject(error: unknown): never {
+  const status = (error as { $metadata?: { httpStatusCode?: number } })
+    ?.$metadata?.httpStatusCode;
+  const name = error instanceof Error ? error.name : undefined;
+  if (name === "NotFound" || name === "NoSuchKey" || status === 404) {
+    throw new NotFoundError(
+      "Temporary asset",
+      undefined,
+      TEMP_ASSET_NOT_FOUND_HINT,
+    );
+  }
+  throw error;
+}
 export const S3_PREFIX_ASSETS = "assets";
 
 // Uploaders are addressed by one path segment: user ids are ObjectId hex or
@@ -231,13 +257,15 @@ export class AssetStorageService implements IAssetStorageService {
       ? `${S3_PREFIX_ASSETS}/${scope}/${filename}`
       : `${S3_PREFIX_ASSETS}/${filename}`;
 
-    await this.s3Client.send(
-      new CopyObjectCommand({
-        Bucket: this.config.bucket,
-        CopySource: `${this.config.bucket}/${objectKey}`,
-        Key: newObjectKey,
-      }),
-    );
+    await this.s3Client
+      .send(
+        new CopyObjectCommand({
+          Bucket: this.config.bucket,
+          CopySource: `${this.config.bucket}/${objectKey}`,
+          Key: newObjectKey,
+        }),
+      )
+      .catch(refuseMissingObject);
 
     return {
       objectKey: newObjectKey,
@@ -327,7 +355,9 @@ export class AssetStorageService implements IAssetStorageService {
       Key: objectKey,
     });
 
-    const response = await this.s3Client.send(command);
+    const response = await this.s3Client
+      .send(command)
+      .catch(refuseMissingObject);
 
     return {
       contentType: response.ContentType,

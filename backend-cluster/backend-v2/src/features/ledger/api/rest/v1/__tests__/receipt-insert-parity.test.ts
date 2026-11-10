@@ -8,9 +8,13 @@ import { graphql } from "graphql";
 import { LedgerReceiptMutationResolver } from "../../../resolvers/ledger-receipt-resolver";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { LedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
+import { S3Client } from "@aws-sdk/client-s3";
+import { AssetStorageService } from "@/features/s3/service/asset-storage-service";
+import { formatError } from "@/server/graphql/format-error";
 import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
+  TEMP_ASSET_NOT_FOUND_HINT,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
@@ -75,11 +79,19 @@ beforeAll(async () => {
   });
 });
 
-async function fixture(caller = identity) {
+async function fixture(
+  caller = identity,
+  promote: (params: {
+    objectKey: string;
+    scope?: string;
+  }) => Promise<{ filename: string }> = async () => ({
+    filename: "promoted-receipt.pdf",
+  }),
+) {
   const state = { permission: "write", bcio: {} as Record<string, string> };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   const write = jest.fn(async () => ({ success: true }));
-  const copy = jest.fn(async () => ({ filename: "promoted-receipt.pdf" }));
+  const copy = jest.fn(promote);
   const deleteTemp = jest.fn(async () => undefined);
   const download = jest.fn(async () => ({
     downloadUrl: `data:application/pdf;base64,${receiptBytes.toString("base64")}`,
@@ -745,4 +757,64 @@ describe("requestId on receipt insertion", () => {
       }
     },
   );
+});
+
+/**
+ * w1/190. After a receipt is inserted the S3 store promotes and deletes the
+ * temp object, so a second insert with the same key and no requestId copied
+ * from nothing: S3's NoSuchKey reached the caller as a 500 with "Retry once".
+ */
+it("answers a consumed receipt key as NOT_FOUND on REST, GraphQL and MCP without writing", async () => {
+  const send = jest.spyOn(S3Client.prototype, "send").mockRejectedValue(
+    Object.assign(new Error("NoSuchKey"), {
+      name: "NoSuchKey",
+      $metadata: { httpStatusCode: 404 },
+    }) as never,
+  );
+  const storage = new AssetStorageService(
+    {
+      region: "us-east-1",
+      bucket: "fixture",
+      accessKeyId: "fixture",
+      secretAccessKey: "fixture",
+      endpoint: "",
+      uploadUrlExpiration: 300,
+      downloadUrlExpiration: 600,
+    },
+    {} as never,
+  );
+  const f = await fixture(identity, (params) =>
+    storage.copyTempToPermanent(params),
+  );
+  try {
+    const r = await f.rest();
+    expect(r.status).toBe(404);
+    expect(await r.json()).toMatchObject({
+      error: { code: "NOT_FOUND", message: "Temporary asset not found" },
+    });
+    const g = await f.gql();
+    const gqlError = g.errors![0];
+    expect(formatError(gqlError.toJSON(), gqlError)).toMatchObject({
+      message: "Temporary asset not found",
+      extensions: { code: "NOT_FOUND" },
+    });
+    const m = await f.mcp();
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      ok: false,
+      error: {
+        code: "NOT_FOUND",
+        message: "Temporary asset not found",
+        hint: TEMP_ASSET_NOT_FOUND_HINT,
+      },
+    });
+    // Each surface ran the entry pre-check only; nothing was committed.
+    expect(f.write).toHaveBeenCalledTimes(3);
+    for (const call of f.write.mock.calls as unknown[][])
+      expect(call[6]).toBe(true);
+    expect(f.deleteTemp).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+    send.mockRestore();
+  }
 });

@@ -15,11 +15,15 @@ import { graphql } from "graphql";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { LLMParserResolver } from "../llm-parser-resolver";
 import { LLMService } from "../../service/llm-service";
+import { S3Client } from "@aws-sdk/client-s3";
+import { AssetStorageService } from "@/features/s3/service/asset-storage-service";
 import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
+  TEMP_ASSET_NOT_FOUND_HINT,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { formatError } from "@/server/graphql/format-error";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
@@ -156,10 +160,18 @@ it("grounds actual model descriptions identically through REST, GraphQL, and MCP
   }
 });
 
-async function fixture(caller = identity, appId?: string) {
+async function fixture(
+  caller = identity,
+  appId?: string,
+  readMetadata: (
+    key: string,
+  ) => Promise<{ contentType?: string }> = async () => ({
+    contentType: "text/csv",
+  }),
+) {
   const headers: Record<string, string> = appId ? { "x-app-id": appId } : {};
   const platform = requestPlatform(headers);
-  const metadata = jest.fn(async () => ({ contentType: "text/csv" }));
+  const metadata = jest.fn(readMetadata);
   const download = jest.fn(async () => ({
     downloadUrl: "https://storage.invalid/fixture",
     expiresIn: 600,
@@ -513,5 +525,60 @@ it("refuses a missing key as bad input on every surface", async () => {
     expect(f.metadata).not.toHaveBeenCalled();
   } finally {
     await f.close();
+  }
+});
+
+// w1/190: an issued key whose upload never happened was a 500 with "Retry
+// once" on every surface; it is the temp-asset miss, before any model call.
+it("answers an issued but never-uploaded key as NOT_FOUND on REST, GraphQL and MCP", async () => {
+  const send = jest.spyOn(S3Client.prototype, "send").mockRejectedValue(
+    Object.assign(new Error("NotFound"), {
+      name: "NotFound",
+      $metadata: { httpStatusCode: 404 },
+    }) as never,
+  );
+  const storage = new AssetStorageService(
+    {
+      region: "us-east-1",
+      bucket: "fixture",
+      accessKeyId: "fixture",
+      secretAccessKey: "fixture",
+      endpoint: "",
+      uploadUrlExpiration: 300,
+      downloadUrlExpiration: 600,
+    },
+    {} as never,
+  );
+  const f = await fixture(identity, undefined, (key) =>
+    storage.getObjectMetadata(key),
+  );
+  try {
+    const r = await f.rest();
+    expect(r.status).toBe(404);
+    expect(await r.json()).toMatchObject({
+      error: { code: "NOT_FOUND", message: "Temporary asset not found" },
+    });
+    const g = await f.gql();
+    const gqlError = g.errors![0];
+    expect(formatError(gqlError.toJSON(), gqlError)).toMatchObject({
+      message: "Temporary asset not found",
+      extensions: { code: "NOT_FOUND" },
+    });
+    const m = await f.mcp();
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      ok: false,
+      error: {
+        code: "NOT_FOUND",
+        message: "Temporary asset not found",
+        hint: TEMP_ASSET_NOT_FOUND_HINT,
+      },
+    });
+    expect(f.download).not.toHaveBeenCalled();
+    expect(f.charge).not.toHaveBeenCalled();
+    expect(extractTransactionsFromFile).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+    send.mockRestore();
   }
 });

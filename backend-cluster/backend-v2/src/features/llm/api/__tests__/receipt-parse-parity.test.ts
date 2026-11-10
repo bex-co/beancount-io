@@ -18,9 +18,13 @@ import { DirectiveType } from "@/foundation/fava";
 import { HealthResolver } from "@/features/healthz/api/health-resolver";
 import { LLMParserResolver } from "../llm-parser-resolver";
 import { LLMService } from "../../service/llm-service";
+import { S3Client } from "@aws-sdk/client-s3";
+import { AssetStorageService } from "@/features/s3/service/asset-storage-service";
+import { formatError } from "@/server/graphql/format-error";
 import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
+  TEMP_ASSET_NOT_FOUND_HINT,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
@@ -82,10 +86,18 @@ beforeEach(() => {
   });
 });
 
-async function fixture(caller = identity, appId?: string) {
+async function fixture(
+  caller = identity,
+  appId?: string,
+  readMetadata: (
+    key: string,
+  ) => Promise<{ contentType?: string }> = async () => ({
+    contentType: "application/pdf",
+  }),
+) {
   const headers: Record<string, string> = appId ? { "x-app-id": appId } : {};
   const platform = requestPlatform(headers);
-  const metadata = jest.fn(async () => ({ contentType: "application/pdf" }));
+  const metadata = jest.fn(readMetadata);
   const download = jest.fn(async () => ({
     downloadUrl: "https://storage.invalid/fixture",
     expiresIn: 600,
@@ -692,5 +704,59 @@ it("refuses a missing key as bad input on every surface", async () => {
     expect(f.metadata).not.toHaveBeenCalled();
   } finally {
     await f.close();
+  }
+});
+
+// w1/190: the receipt twin of the never-uploaded parse — a 500 before.
+it("answers an issued but never-uploaded receipt as NOT_FOUND on REST, GraphQL and MCP", async () => {
+  const send = jest.spyOn(S3Client.prototype, "send").mockRejectedValue(
+    Object.assign(new Error("NotFound"), {
+      name: "NotFound",
+      $metadata: { httpStatusCode: 404 },
+    }) as never,
+  );
+  const storage = new AssetStorageService(
+    {
+      region: "us-east-1",
+      bucket: "fixture",
+      accessKeyId: "fixture",
+      secretAccessKey: "fixture",
+      endpoint: "",
+      uploadUrlExpiration: 300,
+      downloadUrlExpiration: 600,
+    },
+    {} as never,
+  );
+  const f = await fixture(identity, undefined, (key) =>
+    storage.getObjectMetadata(key),
+  );
+  try {
+    const r = await f.rest();
+    expect(r.status).toBe(404);
+    expect(await r.json()).toMatchObject({
+      error: { code: "NOT_FOUND", message: "Temporary asset not found" },
+    });
+    const g = await f.gql();
+    const gqlError = g.errors![0];
+    expect(formatError(gqlError.toJSON(), gqlError)).toMatchObject({
+      message: "Temporary asset not found",
+      extensions: { code: "NOT_FOUND" },
+    });
+    const m = await f.mcp();
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      ok: false,
+      error: {
+        code: "NOT_FOUND",
+        message: "Temporary asset not found",
+        hint: TEMP_ASSET_NOT_FOUND_HINT,
+      },
+    });
+    expect(f.download).not.toHaveBeenCalled();
+    expect(f.charge).not.toHaveBeenCalled();
+    expect(extractReceiptFromFile).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+    send.mockRestore();
   }
 });

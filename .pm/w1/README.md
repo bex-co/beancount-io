@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [190](./190.md) — Parsing an issued but never-uploaded temp asset is a 500, not "upload first" (MCP QA 2026-11-08)
 - [191](./191.md) — Interval totals without `accountName` return all-zero intervals (MCP QA 2026-11-08)
 - [192](./192.md) — BQL `FROM … CLEAR` is accepted and silently ignored (MCP QA 2026-11-08)
 - [193](./193.md) — Balance-sheet summary labels as-of valuation `latest-price` (MCP QA 2026-11-08)

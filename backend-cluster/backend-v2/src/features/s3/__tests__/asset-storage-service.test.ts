@@ -6,9 +6,16 @@ import {
 } from "../service/asset-storage-service";
 import type { AssetS3Config } from "@/config/config";
 import * as S3Presigner from "@aws-sdk/s3-request-presigner";
-import { BadUserInputError, ConfigurationError } from "@/shared/errors";
+import {
+  BadUserInputError,
+  ConfigurationError,
+  NotFoundError,
+} from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
-import { AuthorizationService } from "@/server/api/authorization";
+import {
+  AuthorizationService,
+  TEMP_ASSET_NOT_FOUND_HINT,
+} from "@/server/api/authorization";
 
 // Mock AWS SDK
 jest.mock("@aws-sdk/client-s3");
@@ -187,6 +194,54 @@ describe("AssetStorageService", () => {
       });
 
       expect(objectKey).toBe("assets/2026-01-01-abc12345");
+    });
+  });
+
+  // w1/190: an issued key never uploaded, or one already promoted and deleted,
+  // was an unexpected 500 on parse and receipt insert.
+  describe("a key that holds no object", () => {
+    const s3Error = (name: string, httpStatusCode: number) =>
+      Object.assign(new Error(name), {
+        name,
+        $metadata: { httpStatusCode },
+      });
+
+    it.each([
+      ["NotFound", 404],
+      ["NoSuchKey", 404],
+      ["UnknownError", 404],
+    ])(
+      "answers %s (%i) as the temp-asset NOT_FOUND on read and copy",
+      async (name, status) => {
+        jest
+          .spyOn(S3Client.prototype, "send")
+          .mockRejectedValue(s3Error(name, status) as never);
+        for (const call of [
+          () => s3Service.getObjectMetadata("tmp/user123/a.csv"),
+          () =>
+            s3Service.copyTempToPermanent({ objectKey: "tmp/user123/a.pdf" }),
+        ]) {
+          const error = await call().catch((e: unknown) => e);
+          expect(error).toBeInstanceOf(NotFoundError);
+          expect((error as NotFoundError).message).toBe(
+            "Temporary asset not found",
+          );
+          expect((error as NotFoundError).metadata?.hint).toBe(
+            TEMP_ASSET_NOT_FOUND_HINT,
+          );
+        }
+      },
+    );
+
+    it("leaves any other storage failure as it was", async () => {
+      const outage = s3Error("ServiceUnavailable", 503);
+      jest.spyOn(S3Client.prototype, "send").mockRejectedValue(outage as never);
+      await expect(
+        s3Service.getObjectMetadata("tmp/user123/a.csv"),
+      ).rejects.toBe(outage);
+      await expect(
+        s3Service.copyTempToPermanent({ objectKey: "tmp/user123/a.pdf" }),
+      ).rejects.toBe(outage);
     });
   });
 

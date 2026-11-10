@@ -1758,7 +1758,11 @@ The existing policy requires read capability for both operations, including URL
 creation. Neither requires a ledger target. Keys are bound to the authenticated
 user; foreign, permanent, and malformed references receive a concealed denial.
 The upload tool has no preview. Issuing a URL does not upload data or establish
-that an object exists. URLs retain their configured lifetime once issued.
+that an object exists. URLs retain their configured lifetime once issued. A key
+whose object is absent — issued but never uploaded, or already consumed by a
+receipt insert, which promotes and deletes the upload — gets the same
+`NOT_FOUND` "Temporary asset not found" as an unknown key, before any model
+call or charge (w1/190).
 
 ### AI CFO usage
 
