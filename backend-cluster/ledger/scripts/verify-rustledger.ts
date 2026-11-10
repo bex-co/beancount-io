@@ -4821,6 +4821,56 @@ async function main(): Promise<void> {
     "the windowed sum the lot-error hint names runs",
   );
 
+  // w1/192: the engine parses FROM … CLEAR and ignores it — Income and
+  // Expenses keep their balances and no Equity:Earnings:Current row appears.
+  // The first check fails once an engine bump books the transfer, and the
+  // guard can go.
+  const clearFiles: FileMap = {
+    "main.bean": [
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Income:Salary USD",
+      "2026-01-01 open Expenses:Food USD",
+      '2026-02-01 * "pay"',
+      "  Assets:Cash   1000.00 USD",
+      "  Income:Salary",
+      '2026-02-02 * "lunch"',
+      "  Expenses:Food   20.00 USD",
+      "  Assets:Cash",
+      "",
+    ].join("\n"),
+  };
+  const clearQuery =
+    "SELECT account, sum(position) FROM CLOSE ON 2026-08-01 CLEAR GROUP BY account";
+  const rawClear = await withLedger(clearFiles, "main.bean", (ledger) =>
+    ledger.query(clearQuery),
+  );
+  assert(
+    JSON.stringify(rawClear.rows).includes("Income:Salary") &&
+      !JSON.stringify(rawClear.rows).includes("Equity:Earnings:Current"),
+    "raw engine still ignores FROM … CLEAR (w1/192)",
+  );
+  const guardedClear = await queryLedgerFilesResult(
+    clearFiles,
+    "main.bean",
+    clearQuery,
+  );
+  assert(
+    guardedClear.rows.length === 0 &&
+      guardedClear.errors[0]?.message.includes("CLEAR is not supported") ===
+        true,
+    "the query path refuses FROM … CLEAR",
+  );
+  const earnings = await queryLedgerFilesResult(
+    clearFiles,
+    "main.bean",
+    "SELECT sum(position) FROM CLOSE ON 2026-08-01 WHERE account ~ '^(Income|Expenses):'",
+  );
+  assert(
+    earnings.errors.length === 0 &&
+      JSON.stringify(earnings.rows).includes('"number":"-980.00"'),
+    "the earnings sum the CLEAR refusal names runs",
+  );
+
   // The strict camp (w23/m14/t004): the engine still errors on a NULL argument
   // to these builtins where its siblings pass NULL through, and the
   // workaround the hint names runs.

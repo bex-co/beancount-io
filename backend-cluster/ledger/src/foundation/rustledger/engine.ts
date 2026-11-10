@@ -88,6 +88,7 @@ import { unresolvedNameError } from "./unresolved-name-guard";
 import { integerOverflowError } from "./integer-overflow-guard";
 import { windowFromError } from "./window-from-guard";
 import { atValueError } from "./at-value-guard";
+import { clearScopeError } from "./clear-scope-guard";
 import { starAliasError } from "./star-alias-guard";
 import { idColumnError } from "./id-column-guard";
 import { quotedColumnError } from "./quoted-column-guard";
@@ -1073,6 +1074,7 @@ export async function queryLedgerFilesResultInProcess(
           ordinalRangeError(query) ??
           windowFromError(query) ??
           atValueError(query) ??
+          clearScopeError(query) ??
           starAliasError(query) ??
           idColumnError(query) ??
           quotedColumnError(query) ??
@@ -1125,7 +1127,10 @@ async function withoutUnbookedSource(
     key,
     async () => {
       const mod = await loadRustledger();
-      return mod.Ledger.fromFiles(parseableFiles(files, entryPoint), entryPoint);
+      return mod.Ledger.fromFiles(
+        parseableFiles(files, entryPoint),
+        entryPoint,
+      );
     },
     (ledger) => ledger.getErrors().filter((error) => error.code === "BOOK"),
   );

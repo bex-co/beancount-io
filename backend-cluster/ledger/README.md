@@ -163,6 +163,20 @@ query-side spelling for the summary entry — refusing the scope would
 steal its correct suffix rows — so the scope stays suffix-only until the
 engine synthesizes the entry (w23/blocked/022).
 
+## BQL `FROM … CLEAR` is refused
+
+Stock's `CLEAR` books every Income and Expenses balance into
+`Equity:Earnings:Current`, which is how a balance sheet as of a date reads
+in beanquery. The pinned engine parses the keyword and ignores it, so the
+same query kept the income and expense balances and had no earnings row —
+wrong numbers with no error. The shell refuses `CLEAR` before the query
+runs (`FROM … CLEAR is not supported …`, w1/192) and names the stand-in:
+drop `CLEAR` and read the earnings with
+`SELECT sum(position) FROM <the same scope> WHERE account ~ '^(Income|Expenses):'`.
+The refusal goes once the engine books the transfer; `yarn verify:rustledger`
+fails its "raw engine still ignores FROM … CLEAR" check when it does. Engine
+gaps are tracked upstream (w23/blocked/022).
+
 ## BQL `balances.discrepancy`
 
 The pinned engine leaves `balances.discrepancy` NULL even for a failing
