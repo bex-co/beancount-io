@@ -714,7 +714,18 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
           ),
           ...result,
           dry_run: dryRun,
-          wrote: dryRun ? [] : [{ path: written.newPath }],
+          // Every path the commit changed: the move's two ends and each file
+          // whose include it rewrote, as deleteLedgerFiles lists the files it
+          // removed beside main.bean (w1/186).
+          wrote: dryRun
+            ? []
+            : [
+                ...new Set([
+                  written.newPath,
+                  written.oldPath,
+                  ...written.updatedIncludes,
+                ]),
+              ].map((path) => ({ path })),
           entryHashes: [],
           validation,
         },

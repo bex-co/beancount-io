@@ -380,7 +380,15 @@ const withRenameOutcome = (
         ...base,
         dry_run: preview,
         summary,
-        wrote: preview ? [] : [{ path: base["newPath"] }],
+        wrote: preview
+          ? []
+          : [
+              ...new Set([
+                base["newPath"],
+                base["oldPath"],
+                ...(base["updatedIncludes"] as string[]),
+              ]),
+            ].map((path) => ({ path })),
         entryHashes: [],
         validation: {
           errorsBefore: 0,
@@ -636,6 +644,37 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
       });
       expect(f.files.get("new.bean")?.content).toBe("; Café\n");
       expect(f.files.get("main.bean")?.content).toBe('include "new.bean"\n');
+      // An agent reading wrote learns main.bean changed too (w1/186).
+      if (surface === "mcp") {
+        expect((result.result as { wrote: unknown }).wrote).toEqual([
+          { path: "new.bean" },
+          { path: "old.bean" },
+          { path: "main.bean" },
+        ]);
+      }
+    } finally {
+      await f.close();
+    }
+  });
+  it("names the moved file once when it rewrites its own includes", async () => {
+    const f = await fixture(identity, {
+      "d/x.bean": "; x\n",
+      "d/inc.bean": 'include "x.bean"\n',
+    });
+    try {
+      const result = await f.call(surface, "d/inc.bean", "e/inc.bean", {
+        updateIncludes: true,
+      });
+      expect(result.success).toBe(true);
+      expect(f.files.get("e/inc.bean")?.content).toBe(
+        'include "../d/x.bean"\n',
+      );
+      if (surface === "mcp") {
+        expect((result.result as { wrote: unknown }).wrote).toEqual([
+          { path: "e/inc.bean" },
+          { path: "d/inc.bean" },
+        ]);
+      }
     } finally {
       await f.close();
     }
@@ -679,7 +718,7 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
             updatedIncludes: [],
             preview: [],
             dry_run: false,
-            wrote: [{ path: "folder/new.bean" }],
+            wrote: [{ path: "folder/new.bean" }, { path: "old.bean" }],
             entryHashes: [],
             validation: {
               errorsBefore: 0,
@@ -1306,7 +1345,7 @@ describe("dot-prefix normalization", () => {
         expect.objectContaining({
           oldPath: "old.bean",
           newPath: "new.bean",
-          wrote: [{ path: "new.bean" }],
+          wrote: [{ path: "new.bean" }, { path: "old.bean" }],
         }),
       );
       expect(f.files.get("new.bean")?.content).toBe("; old\n");

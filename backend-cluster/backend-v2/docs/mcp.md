@@ -1833,8 +1833,10 @@ matches a glob that `newPath` would not, the rename is refused even with
 rule: a move to another folder that would point them elsewhere is refused
 without `updateIncludes` and rewritten with it, and a glob in the moved file
 is refused. The result contains `message`, `oldPath`, `newPath`,
-`updatedIncludes`, and `preview`. Write capability and current content-write access are
-required.
+`updatedIncludes`, and `preview`; on MCP, the write outcome's `wrote` names
+`newPath`, the removed `oldPath`, and every file whose include was rewritten,
+and is empty on a preview (w1/186). Write capability and current content-write
+access are required.
 
 With `dry_run: true` the workflow runs every check the commit runs, then
 returns the move plus the `updateIncludes` rewrites — a `Would rename …`
