@@ -17,6 +17,9 @@ async function runRest(parts: {
   body?: unknown;
 }) {
   const ctx = {
+    // A real Koa context always carries the raw path and query string.
+    path: "/",
+    querystring: "",
     params: parts.params ?? {},
     query: parts.query ?? {},
     request: { body: parts.body ?? {} },
@@ -40,6 +43,8 @@ describe("REST validateRequest", () => {
     async (_name, parts) => {
       const next = jest.fn();
       const ctx = {
+        path: "/",
+        querystring: "",
         params: (parts as { params?: unknown }).params ?? {},
         query: (parts as { query?: unknown }).query ?? {},
         request: { body: (parts as { body?: unknown }).body ?? {} },
@@ -67,6 +72,8 @@ describe("REST validateRequest", () => {
 
   it("still parses clean requests through the route schemas", async () => {
     const ctx = {
+      path: "/",
+      querystring: "",
       params: { owner: "alice" },
       query: {},
       request: { body: {} },

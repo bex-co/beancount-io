@@ -2,7 +2,7 @@ import Router, { RouterContext } from "@koa/router";
 import { assertNoNulDeep } from "@/shared/assert-no-nul";
 import { NUL_EXEMPT_PATHS } from "@/shared/nul-exempt-paths";
 import type { ZodType } from "zod";
-import { ValidationError } from "@/shared/errors";
+import { BadUserInputError, ValidationError } from "@/shared/errors";
 
 /**
  * Runtime request validation from the same zod schemas that generate the spec
@@ -62,6 +62,45 @@ function parseOrThrow(
   throw new ValidationError(path, issue.message);
 }
 
+const ENCODING_HINT =
+  "Percent-encode each path segment and query value as UTF-8 (`encodeURIComponent`) and send it again.";
+
+/** `decodeURIComponent`, or a refusal naming where the bad encoding was. */
+function assertDecodes(raw: string, where: string): void {
+  try {
+    decodeURIComponent(raw);
+  } catch {
+    throw new BadUserInputError(
+      `Invalid URI encoding in ${where}`,
+      undefined,
+      ENCODING_HINT,
+    );
+  }
+}
+
+/**
+ * A path or query whose percent-encoding does not decode is refused (w1/201).
+ * The framework keeps an invalid `%XX` literally and maps invalid UTF-8 to
+ * U+FFFD, so a truncated or double-encoded filter reached the service as a
+ * different value and answered an empty success. MCP refuses the same input
+ * in a resource URI. Read from the raw request, since the parsed values have
+ * already lost what was wrong.
+ */
+function assertWellEncoded(ctx: RouterContext): void {
+  for (const segment of ctx.path.split("/")) {
+    assertDecodes(segment, "request path");
+  }
+  if (!ctx.querystring) return;
+  for (const pair of ctx.querystring.split("&")) {
+    const [name, ...value] = pair.split("=");
+    assertDecodes(name.replace(/\+/g, " "), "query parameter name");
+    assertDecodes(
+      value.join("=").replace(/\+/g, " "),
+      `query parameter ${name}`,
+    );
+  }
+}
+
 /**
  * Validate params/query/body against the route's schemas, publishing the parsed
  * values on `ctx.state.validated`.
@@ -72,6 +111,7 @@ function parseOrThrow(
  */
 export function validateRequest(schemas: RequestSchemas): Router.Middleware {
   return async (ctx: RouterContext, next: () => Promise<void>) => {
+    assertWellEncoded(ctx);
     // U+0000 in a path segment, query value or body string is the caller's
     // mistake, refused before any schema or service sees it (w23/m22). Only
     // the body can carry file content verbatim.

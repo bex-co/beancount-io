@@ -8,7 +8,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { MCP_TOOLS } from "../mcp-tools";
 import type { McpError } from "@modelcontextprotocol/sdk/types.js";
-import { RESOURCE_SCHEME } from "../mcp-resources";
+import { MCP_RESOURCES, RESOURCE_SCHEME } from "../mcp-resources";
 import { JSON_RPC_INVALID_PARAMS, JSON_RPC_NOT_FOUND } from "../mcp-errors";
 import { ForbiddenError } from "@/shared/errors";
 import type { AppConfig } from "@/config/config";
@@ -380,6 +380,36 @@ describe("a malformed resource URI", () => {
         `MCP error ${JSON_RPC_INVALID_PARAMS}: ${message}`,
       );
       expect(getFilesContent).not.toHaveBeenCalled();
+    } finally {
+      await close();
+    }
+  });
+
+  // w1/201: every template that reads a query refuses a value it cannot
+  // decode — the matcher is shared, and this keeps it so for new templates.
+  it.each(
+    MCP_RESOURCES.filter((d) => (d.queryNames ?? []).length > 0).map((d) => [
+      d.name,
+      `${d.uriTemplate
+        .replace("{owner}", "alice")
+        .replace("{name}", "main")
+        .replace(/\{[^}]+\}/g, "x")}?${d.queryNames![0]}=%ZZ`,
+      d.queryNames![0],
+    ]),
+  )("refuses a malformed query value on %s", async (_name, uri, param) => {
+    const { client, close } = await connect(
+      ctx(contentOf("main.beancount", "")),
+    );
+    try {
+      const error = await client
+        .readResource({ uri })
+        .then(() => undefined)
+        .catch((caught: unknown) => caught as McpError);
+      expect(error?.code).toBe(JSON_RPC_INVALID_PARAMS);
+      expect(error?.data).toMatchObject({
+        code: "BAD_USER_INPUT",
+        message: `Invalid URI encoding in resource parameter ${param}`,
+      });
     } finally {
       await close();
     }

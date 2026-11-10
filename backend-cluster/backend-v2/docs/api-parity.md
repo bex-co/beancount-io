@@ -277,6 +277,16 @@ surrogate, an oversize string, a long array and deep nesting, each as
 derives the MCP cases from the tool schemas and `nul-boundary.test.ts` covers
 REST and GraphQL.
 
+A URI whose percent-encoding does not decode — a bare `%ZZ`, a truncated
+UTF-8 sequence — is refused the same way on REST and MCP: `BAD_USER_INPUT`
+"Invalid URI encoding in request path", "… in query parameter `<name>`" (REST)
+or "… in resource parameter `<name>`" (MCP), with a hint to percent-encode as
+UTF-8 (w1/201). The frameworks would otherwise keep an invalid `%XX` literally
+and read invalid UTF-8 as U+FFFD, handing the service a different value.
+GraphQL arguments travel in the JSON body and have no URI encoding.
+`rest-query-strictness.test.ts` covers every REST GET, and
+`mcp-resources.test.ts` every template that reads a query.
+
 ## Preview rate bucket (w23/m26)
 
 A `dry_run`/`dryRun` preview of a write operation is charged to its own rate

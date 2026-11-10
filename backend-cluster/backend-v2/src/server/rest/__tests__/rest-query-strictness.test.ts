@@ -118,6 +118,87 @@ it.each(routes)("refuses ?bogus_param=1 on %s", async (_name, path) => {
   });
 });
 
+// w1/201: an invalid `%XX` was kept literally and invalid UTF-8 became
+// U+FFFD, so a truncated or double-encoded filter reached the service as a
+// different value and answered an empty success. The encoding is checked
+// before the schema, on every route.
+it.each(routes)(
+  "refuses a malformed percent-encoding on %s",
+  async (_name, path) => {
+    for (const bad of ["%ZZ", "%E0%A4%A"]) {
+      const response = await fetch(
+        `${server.url}${path.replace("bogus_param=1", `bogus_param=${bad}`)}`,
+      );
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message: "Invalid URI encoding in query parameter bogus_param",
+        },
+      });
+    }
+  },
+);
+
+describe("percent-encoding on a REST read (w1/201)", () => {
+  const getJournal = jest.fn(async () => ({
+    total: 0,
+    data: [],
+    is_empty: true,
+  }));
+  let reads: V1TestServer;
+  beforeAll(async () => {
+    reads = await startV1TestServer(
+      {
+        services: {
+          ledgerData: { getJournal },
+          ledgerJournal: { getJournal },
+        },
+      } as unknown as AppLayers,
+      { api: { scopeEnforcement: "enforce" } } as AppConfig,
+    );
+    reads.setIdentity(sessionIdentity);
+  });
+  afterAll(async () => reads.close());
+  beforeEach(() => getJournal.mockClear());
+
+  it("refuses a malformed path segment before any handler", async () => {
+    const response = await fetch(`${reads.url}${LEDGER}/files/%ZZ`);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: {
+        code: "BAD_USER_INPUT",
+        message: "Invalid URI encoding in request path",
+      },
+    });
+  });
+
+  it("still decodes a well-formed value, `+` included", async () => {
+    for (const [raw, decoded] of [
+      ["Caf%C3%A9", "Café"],
+      ["a+b", "a b"],
+      ["Assets%3ABank", "Assets:Bank"],
+    ]) {
+      const response = await fetch(
+        `${reads.url}${LEDGER}/journal?account=${raw}`,
+      );
+      expect(response.status).toBe(200);
+      expect(getJournal).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          query: expect.objectContaining({ account: decoded }),
+        }),
+      );
+    }
+  });
+
+  it("never hands the service a value it could not decode", async () => {
+    const response = await fetch(`${reads.url}${LEDGER}/journal?account=%ZZ`);
+    expect(response.status).toBe(400);
+    expect(getJournal).not.toHaveBeenCalled();
+  });
+});
+
 // w23/159: the trial balance is hierarchy-only, so its query drops
 // `interval` — an advertised grouping there would be accepted and ignored.
 it("refuses ?interval=month on trial-balance", async () => {
