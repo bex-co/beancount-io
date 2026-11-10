@@ -218,6 +218,33 @@ async function withManagedPrices(
 }
 
 /**
+ * Resolve the managed price includes of a projected map — a load's committed
+ * files with a write's overlays applied — the way the load after the commit
+ * will. A write that added or moved an include previewed it as unavailable,
+ * because the load's overlay only knew the committed includes (w1/221).
+ * `files` must hold no virtual feed file: drop the load's
+ * `managedPricePaths` before applying the overlays.
+ */
+export async function overlayProjectedManagedPrices(
+  files: FileMap,
+  entryPoint: string,
+  cacheHelper: CacheHelper,
+  options: CachedLoadOptions = {},
+): Promise<FileMap> {
+  const overlaid = await withManagedPrices(
+    {
+      files,
+      entryPoint,
+      sourceFiles: collectSourceFiles(files, entryPoint),
+      repoPaths: [],
+    },
+    cacheHelper,
+    options,
+  );
+  return overlaid.files;
+}
+
+/**
  * Load a ledger repo's FileMap through the SHA-keyed Redis cache. On a cache
  * hit this serves the FileMap without any tree/contents round-trips (the single
  * commit lookup — shared across concurrent same-client loads — is the only

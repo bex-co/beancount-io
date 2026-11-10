@@ -1,9 +1,13 @@
-import { loadCachedFileMapForRepo } from "@/foundation/clients/load-cached-ledger-file-map";
+import {
+  loadCachedFileMapForRepo,
+  overlayProjectedManagedPrices,
+} from "@/foundation/clients/load-cached-ledger-file-map";
 import { hashEntry, parseLedgerFiles } from "@/foundation/rustledger";
 import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
 
 jest.mock("@/foundation/clients/load-cached-ledger-file-map", () => ({
   loadCachedFileMapForRepo: jest.fn(),
+  overlayProjectedManagedPrices: jest.fn(),
 }));
 
 jest.mock("@/foundation/rustledger", () => {
@@ -12,6 +16,7 @@ jest.mock("@/foundation/rustledger", () => {
 });
 
 const loadMock = loadCachedFileMapForRepo as jest.Mock;
+const overlayMock = overlayProjectedManagedPrices as jest.Mock;
 const parseMock = parseLedgerFiles as jest.Mock;
 
 const MAIN = [
@@ -36,6 +41,8 @@ beforeEach(() => {
     managedPricePaths: [],
   });
   parseMock.mockResolvedValue({ errors: [] });
+  overlayMock.mockReset();
+  overlayMock.mockImplementation(async (files) => files);
 });
 
 const b64 = (text: string) => Buffer.from(text, "utf8").toString("base64");
@@ -75,6 +82,49 @@ describe("checkProjectedErrors", () => {
     expect(parseMock.mock.calls[0]?.[0]).toEqual({
       "main.bean": `${MAIN}include "extra.bean"\n`,
     });
+  });
+
+  // w1/221: the load overlaid feeds for committed includes only, so a write
+  // that added one previewed it as "managed price source is unavailable".
+  it("resolves the managed includes of the projection, not of the commit", async () => {
+    const VIRTUAL = "https:/beancount.io/prices/BTC-USD";
+    loadMock.mockResolvedValue({
+      files: {
+        "main.bean": `${MAIN}include "https://beancount.io/prices/BTC-USD"\n`,
+        [VIRTUAL]: "2026-09-15 price BTC 76000 USD\n",
+      },
+      entryPoint: "main.bean",
+      repoPaths: ["main.bean"],
+      managedPrices: [],
+      managedPricePaths: [VIRTUAL],
+    });
+    const added = `${MAIN}include "https://beancount.io/prices/ETH-USD"\n`;
+    const feeds = { [VIRTUAL.replace("BTC", "ETH")]: "eth feed\n" };
+    overlayMock.mockImplementation(async (files) => ({ ...files, ...feeds }));
+    await service().checkProjectedErrors({
+      ledgerId: "alice/main",
+      userId: "user-1",
+      overlays: [{ path: "main.bean", content: b64(added) }],
+    });
+    // The committed feed is dropped before the overlay resolves the new one.
+    expect(overlayMock).toHaveBeenCalledWith(
+      { "main.bean": added },
+      "main.bean",
+      expect.anything(),
+    );
+    expect(parseMock.mock.calls[0]?.[0]).toEqual({
+      "main.bean": added,
+      ...feeds,
+    });
+  });
+
+  it("resolves no feeds for a projection without the entry point", async () => {
+    await service().checkProjectedErrors({
+      ledgerId: "alice/main",
+      userId: "user-1",
+      overlays: [{ path: "main.bean", content: null }],
+    });
+    expect(overlayMock).not.toHaveBeenCalled();
   });
 
   // w23/031: the engine threw on the missing entry point, so a preview of

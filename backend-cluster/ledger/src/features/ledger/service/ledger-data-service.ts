@@ -57,6 +57,7 @@ import {
 } from "@/foundation/rustledger";
 import {
   loadCachedFileMapForRepo,
+  overlayProjectedManagedPrices,
   type GiteaCommitClient,
 } from "@/foundation/clients/load-cached-ledger-file-map";
 import type { CacheHelper } from "@/shared/cache";
@@ -569,7 +570,10 @@ export class LedgerDataService implements ILedgerDataService {
         ledgerOwner,
         ledgerName,
       );
+    // The committed files alone: the managed feeds are resolved again below,
+    // over the includes the projection holds.
     const projected: Record<string, string> = { ...files };
+    for (const path of managedPricePaths) delete projected[path];
     let totalBytes = 0;
     overlays.forEach((overlay, index) => {
       if (
@@ -599,7 +603,17 @@ export class LedgerDataService implements ILedgerDataService {
       }
       projected[overlay.path] = text;
     });
-    return { projected, entryPoint, repoPaths };
+    if (!Object.hasOwn(projected, entryPoint)) {
+      return { projected, entryPoint, repoPaths };
+    }
+    // A write that adds or moves a managed include gets its feed, from the
+    // cache or one fetch, as the commit's own load would (w1/221).
+    const overlaid = await overlayProjectedManagedPrices(
+      projected,
+      entryPoint,
+      this.cacheHelper,
+    );
+    return { projected: overlaid, entryPoint, repoPaths };
   }
 
   async checkLedgerFiles(params: {

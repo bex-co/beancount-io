@@ -1,5 +1,8 @@
 import { CACHE_KEYS } from "@/shared/cache";
-import { loadCachedFileMapForRepo } from "../load-cached-ledger-file-map";
+import {
+  loadCachedFileMapForRepo,
+  overlayProjectedManagedPrices,
+} from "../load-cached-ledger-file-map";
 import {
   fakeClock,
   feedResponse,
@@ -148,13 +151,72 @@ describe("loadCachedFileMapForRepo with managed price includes", () => {
 
   it("does nothing for a ledger without URL includes", async () => {
     const helper = memoryCache();
-    const { client } = giteaClient({ "main.bean": "2020-01-01 open Assets:A USD\n" });
+    const { client } = giteaClient({
+      "main.bean": "2020-01-01 open Assets:A USD\n",
+    });
     const { fetchImpl, calls } = scriptedFetch([]);
     const loaded = await loadCachedFileMapForRepo(client, helper, "o", "r", {
       managedPrices: { config: TEST_CONFIG, fetchImpl },
     });
     expect(loaded.managedPrices).toEqual([]);
     expect(loaded.managedPricePaths).toEqual([]);
+    expect(calls).toHaveLength(0);
+  });
+});
+
+// w1/221: a write that adds a managed include is previewed over the projected
+// map, so its feed has to resolve there, as the load after the commit will.
+describe("overlayProjectedManagedPrices", () => {
+  const PROJECTED = {
+    "main.bean": 'include "prices.bean"\n',
+    "prices.bean": `2020-01-01 open Assets:BTC BTC\ninclude "${URL_BTC}"\n`,
+  };
+
+  it("resolves an include that only the projection holds", async () => {
+    const helper = memoryCache();
+    const text = feedText([["2026-09-15", "76000", "2026-09-15T08:29:00Z"]]);
+    const { fetchImpl, calls } = scriptedFetch([feedResponse(text, '"e1"')]);
+    const files = await overlayProjectedManagedPrices(
+      PROJECTED,
+      "main.bean",
+      helper,
+      {
+        managedPrices: { config: TEST_CONFIG, now: fakeClock().now, fetchImpl },
+      },
+    );
+    expect(files[KEY_BTC]).toBe(text);
+    expect(files["prices.bean"]).toBe(PROJECTED["prices.bean"]);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("reuses the revision a load already cached, with no second fetch", async () => {
+    const helper = memoryCache();
+    const clock = fakeClock();
+    const text = feedText([["2026-09-15", "76000", "2026-09-15T08:29:00Z"]]);
+    const { fetchImpl, calls } = scriptedFetch([feedResponse(text, '"e1"')]);
+    const managedPrices = { config: TEST_CONFIG, now: clock.now, fetchImpl };
+    const { client } = giteaClient(LEDGER);
+    await loadCachedFileMapForRepo(client, helper, "o", "r", { managedPrices });
+
+    const files = await overlayProjectedManagedPrices(
+      PROJECTED,
+      "main.bean",
+      helper,
+      { managedPrices },
+    );
+    expect(files[KEY_BTC]).toBe(text);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("adds nothing when the projection holds no managed include", async () => {
+    const { fetchImpl, calls } = scriptedFetch([]);
+    const files = await overlayProjectedManagedPrices(
+      { "main.bean": "2020-01-01 open Assets:Cash USD\n" },
+      "main.bean",
+      memoryCache(),
+      { managedPrices: { config: TEST_CONFIG, fetchImpl } },
+    );
+    expect(Object.keys(files)).toEqual(["main.bean"]);
     expect(calls).toHaveLength(0);
   });
 });
