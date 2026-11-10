@@ -101,6 +101,6 @@
 - [x] [226](./done/226.md) — table-driven test: every `ErrorCategory` maps to one MCP code and one HTTP status on REST, GraphQL and MCP
 - [x] [227](./done/227.md) — `importStagedBankTransactions` retry after a lost reply: pin the error and document or reword it
 - [x] [228](./done/228.md) — `docs/mcp.md`: short agent happy-path recipe after "Connect a client"
-- [ ] [232](./232.md) — REST and GraphQL refuse the owner-case variant of a pinned ledger that MCP admits (found by the m38 audit; from source, repro unverified)
-- [ ] [233](./233.md) — a file-write gate reads an unreadable baseline as "no errors", so every existing error reads as new (found by the m39 review; from source)
-- [ ] [234](./234.md) — REST and GraphQL rename return no validation block; MCP's rename does (found by the m39 review)
+- [x] [232](./done/232.md) — REST and GraphQL refuse the owner-case variant of a pinned ledger that MCP admits (found by the m38 audit; from source, repro unverified)
+- [x] [233](./done/233.md) — a file-write gate reads an unreadable baseline as "no errors", so every existing error reads as new (found by the m39 review; from source)
+- [x] [234](./done/234.md) — REST and GraphQL rename return no validation block; MCP's rename does (found by the m39 review)

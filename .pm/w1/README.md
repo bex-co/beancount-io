@@ -91,7 +91,6 @@ Blocked notes live under [`blocked/`](./blocked/) with their reason and **Unbloc
 - [199](./blocked/199.md) — Confirm upstream path-parameter hardening on production after deploy — **blocked:** production still answers a malformed `entryHash` with `NOT_FOUND` (2026-11-10 probe), so `8a2e14649` is not deployed. **Unblock:** an operator deploy of backend-v2 at or after `a23eeb234` (includes `8a2e14649`), then the checks in the note. Cleared by the user.
 - [210](./blocked/210.md) — GraphQL file writes skip the bean-check gate and have no preview — **blocked:** gating them changes how the dashboard file editor saves a mid-edit invalid state. **Unblock:** the user picks (a) the editor passes `allowInvalid: true`, or (b) refuse-then-confirm. Cleared by the user.
 - [228](./blocked/228.md) — Idea: give agents the write primitives a hosted session keeps reaching for — **blocked:** an unsized idea; its commit-sha/undo half is now `w23/m42`. **Unblock:** the user brainstorms, routes or drops the other three (account rename, atomic move between files, bulk source reads). Cleared by the user.
-- [229](./blocked/229.md) — Holdings and BQL price an asset from its `@` sale; statements and net worth say the price is missing — **blocked:** the user routed the fix and its price-basis decision to `w23/m41/t004`. **Unblock:** that task ships (then close this note), or the milestone is dropped and the user picks the basis. Cleared by the `w23` worker or the user.
 
 ## Absorbed CLI QA notes (m23–m27)
 
