@@ -98,6 +98,7 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [213](./213.md) — Bulk OR chains of comparisons are refused at about 250 terms, though the doc says they run (MCP QA 2026-11-09)
 - [214](./214.md) — A setup that lists the same account twice silently keeps only the last entry (MCP QA 2026-11-09)
 - [215](./215.md) — A bare filter word with a combining mark is refused "Illegal character" (MCP QA 2026-11-10)
+- [216](./216.md) — Statement summaries pick their headline currency by key order, not `operating_currency` (MCP QA 2026-11-10)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
