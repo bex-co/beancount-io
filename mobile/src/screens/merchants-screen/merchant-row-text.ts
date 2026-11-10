@@ -1,4 +1,7 @@
-import { formatLedgerDateShort } from "../../common/date-format";
+import {
+  formatLedgerDateShort,
+  localizeDigits,
+} from "../../common/date-format";
 import type { useTranslations } from "../../common/hooks/use-translations";
 import { formatMerchantAmount } from "../merchant-detail-screen/selectors/format-merchant-total";
 import {
@@ -37,9 +40,12 @@ export function merchantRowText(
   const showBadge = resolved.isRecurring && !inRecurringSection;
   const detection = resolved.detection;
 
-  const countLabel = t("merchantsTransactionCount", {
-    count: merchant.transactionCount,
-  });
+  // `t` prints the count in Latin digits; the dates beside it are in the
+  // language's own, so Persian read "71 تراکنش" under "۷ سپتامبر ۲۰۱۷" (w22/012).
+  const countLabel = localizeDigits(
+    t("merchantsTransactionCount", { count: merchant.transactionCount }),
+    locale,
+  );
   // A last date after today is a pre-entered payment, not one made
   // (w21/167). With every entry pre-entered, the next is the first: the
   // furthest read as the one coming (w21/761).

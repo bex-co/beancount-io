@@ -94,6 +94,7 @@ import { useLedgerReadContext } from "@/common/hooks/use-ledger-read-context";
 import { formatMerchantTotals } from "./selectors/format-merchant-total";
 import { MerchantDetailSkeleton } from "./merchant-detail-skeleton";
 import { merchantKey } from "@/common/merchant-key";
+import { localizeDigits } from "@/common/date-format";
 import { useRouteParams } from "@/common/hooks/use-route-params";
 
 const PAGE_SIZE = 20;
@@ -609,9 +610,12 @@ function MerchantDetailBody({
           </Text>
           {stats ? (
             <Text style={styles.count}>
-              {t("merchantsTransactionCount", {
-                count: stats.transactionCount,
-              })}
+              {localizeDigits(
+                t("merchantsTransactionCount", {
+                  count: stats.transactionCount,
+                }),
+                locale,
+              )}
             </Text>
           ) : null}
         </View>

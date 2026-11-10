@@ -57,6 +57,7 @@ import {
 import { usePayeeRecurrence } from "./use-payee-recurrence";
 import { merchantsSortButtonLabelKey } from "./sort-button-label";
 import { letterSpacing } from "@/common/rtl";
+import { localizeDigits } from "@/common/date-format";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -153,7 +154,7 @@ function MerchantsDirectory() {
   const ledgerId = useLedgerGuard();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -277,9 +278,11 @@ function MerchantsDirectory() {
     [router, ledgerId],
   );
 
-  const searchPlaceholder = t("merchantsSearchPlaceholder", {
-    count: merchants.length,
-  });
+  // In the language's own digits, like the dates in the rows (w22/012).
+  const searchPlaceholder = localizeDigits(
+    t("merchantsSearchPlaceholder", { count: merchants.length }),
+    locale,
+  );
   // The button is named for what tapping it does — the other order. The icon
   // shows the order already applied, so the two deliberately differ.
   const sortLabel = t(merchantsSortButtonLabelKey(sort));

@@ -265,3 +265,49 @@ describe("a merchant row with every entry scheduled", () => {
     expect(text.lastDate.includes("Oct 31, 2026")).toBe(true);
   });
 });
+
+// w22/012: in Persian the count printed in Latin digits ("71 تراکنش") under a
+// date in Persian ones ("۷ سپتامبر ۲۰۱۷"), because `t` fills `{{count}}` as is.
+describe("a Merchants row's count in the language's own digits", () => {
+  // The real strings are plural objects; this fills the count the way they do.
+  const translate = ((_key: string, options?: { count: number }) =>
+    `${options?.count} تراکنش`) as never;
+
+  it("reads in Persian digits, in the row and in what is spoken", () => {
+    const text = merchantRowText(
+      netflix(false, false),
+      translate,
+      "fa",
+      "2026-10-21",
+    );
+    expect(text.subtitle).toBe("۱۲ تراکنش");
+    expect(text.accessibilityLabel.split(", ")[1]).toBe("۱۲ تراکنش");
+    expect(/[0-9]/.test(text.subtitle)).toBe(false);
+  });
+
+  it("reads in Latin digits in a language whose own digits are Latin", () => {
+    for (const locale of ["en", "de", "ru", "zh"]) {
+      expect(
+        merchantRowText(netflix(false, false), translate, locale, "2026-10-21")
+          .subtitle,
+      ).toBe("12 تراکنش");
+    }
+  });
+
+  it("is how the search field and the detail header read their counts too", () => {
+    const read = (file: string) =>
+      fs
+        .readFileSync(path.join(__dirname, "..", "..", file), "utf8")
+        .replace(/\s+/g, "");
+    expect(
+      read("merchants-screen/merchants-screen.tsx").includes(
+        'localizeDigits(t("merchantsSearchPlaceholder",{count:merchants.length}),locale,)',
+      ),
+    ).toBe(true);
+    expect(
+      read("merchant-detail-screen/merchant-detail-screen.tsx").includes(
+        'localizeDigits(t("merchantsTransactionCount",{count:stats.transactionCount,}),locale,)',
+      ),
+    ).toBe(true);
+  });
+});
