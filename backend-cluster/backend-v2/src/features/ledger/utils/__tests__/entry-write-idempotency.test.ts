@@ -104,6 +104,52 @@ describe("runIdempotentEntryWrite", () => {
     expect(write).toHaveBeenCalledTimes(1);
   });
 
+  // w23/m38, w1/234: host usernames are case-insensitive, so `Alice/books` is
+  // the ledger `alice/books`. A retry that spells the owner differently used to
+  // find no record and write the same transaction twice.
+  it.each(["Alice/books", "ALICE/books"])(
+    "treats %s as the ledger the first write named, writing once",
+    async (spelling) => {
+      const { store } = memoryStore();
+      const write = jest
+        .fn()
+        .mockResolvedValueOnce({ success: true, entryHashes: ["h1"] })
+        .mockResolvedValue({ success: true, entryHashes: ["duplicate"] });
+
+      const first = await runIdempotentEntryWrite({
+        ...base,
+        requestId: "rent-a7f3",
+        write,
+        store,
+      });
+      const retry = await runIdempotentEntryWrite({
+        ...base,
+        ledgerId: spelling,
+        requestId: "rent-a7f3",
+        write,
+        store,
+      });
+
+      expect(retry).toEqual(first);
+      expect(write).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("keeps a different ledger, owner or name apart under one id", async () => {
+    const { store } = memoryStore();
+    const write = jest.fn().mockResolvedValue({ success: true });
+    for (const ledgerId of ["alice/books", "alice/other", "bob/books"]) {
+      await runIdempotentEntryWrite({
+        ...base,
+        ledgerId,
+        requestId: "same-id",
+        write,
+        store,
+      });
+    }
+    expect(write).toHaveBeenCalledTimes(3);
+  });
+
   // w1/220: GraphQL builds a posting `units` first, zod keeps the caller's
   // order, and the same transaction hashed as two requests.
   it("treats key order and absent fields as the same request", async () => {

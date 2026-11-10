@@ -51,6 +51,20 @@ function validateLedgerSlugs(owner: string, name: string): void {
   }
 }
 
+/**
+ * The one spelling that keys state shared by every request for a ledger.
+ *
+ * Host usernames are case-insensitive and ledger names are lowercase-only, so
+ * `Alice/books` and `alice/books` are one ledger; the owner folds to lowercase
+ * and the name stays exact (the rule `ledgerIdMatchesPin` already applies).
+ * Anything that stores or looks up a record per ledger must key on this, never
+ * on the spelling the caller sent (w23/m38, w1/234).
+ */
+export function canonicalLedgerId(id: string): string {
+  const { ledgerOwner, ledgerName } = parseLedgerId(id);
+  return `${ledgerOwner.toLowerCase()}/${ledgerName}`;
+}
+
 export function parseLedgerId(id: string): {
   ledgerOwner: string;
   ledgerName: string;

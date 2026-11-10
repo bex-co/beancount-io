@@ -1,14 +1,29 @@
 import { z } from "zod";
+import { BadUserInputError } from "@/shared/errors";
+import { parseLedgerId } from "@/shared/str";
 
 /**
- * How a ledger is named on the MCP surface: `owner/name`, with none of the
- * characters a URL or resource URI would reinterpret. Tools enforce it when they
- * resolve a ledger, and prompt arguments validate against the same pattern.
+ * Refuse a ledger that is not spelled `owner/name`, naming the slug rule it
+ * broke. The MCP tools and the prompt arguments share it, and it parses with
+ * the same `parseLedgerId` the resource, REST and GraphQL use, so a malformed
+ * value reads the same on every surface instead of as "no ledger given"
+ * (w1/235).
  *
- * Kept free of other imports so the prompt fragment — and the eval harness that
- * renders it — can use it without loading the rate limiter.
+ * Kept free of the rate limiter and the transport, so the prompt fragment — and
+ * the eval harness that renders it — can use it without loading them.
  */
-export const LEDGER_ID_PATTERN = /^[^/\s?#%]+\/[^/\s?#%]+$/;
+export function assertLedgerSpelling(ledger: string): void {
+  try {
+    parseLedgerId(ledger);
+  } catch (error) {
+    if (!(error instanceof BadUserInputError)) throw error;
+    throw new BadUserInputError(
+      error.message,
+      "ledger",
+      "Pass `ledger` as exactly `owner/name`: one `/`, no spaces and no URL characters. `listLedgers` shows the names this credential can reach.",
+    );
+  }
+}
 
 /**
  * Whether a requested ledger id names the credential's pinned ledger.
@@ -16,6 +31,8 @@ export const LEDGER_ID_PATTERN = /^[^/\s?#%]+\/[^/\s?#%]+$/;
  * Host usernames are case-insensitive while ledger names are lowercase-only,
  * so the owner compares case-insensitively and the name exactly: `PUNCSKY/x`
  * is the pin `puncsky/x`, but `puncsky/y` is a different ledger (w23/078).
+ * `canonicalLedgerId` (`@/shared/str`) folds a ledger id by the same rule; this
+ * one tolerates a malformed id (it is simply no match), that one refuses it.
  */
 export function ledgerIdMatchesPin(requested: string, pin: string): boolean {
   const slash = requested.indexOf("/");

@@ -325,21 +325,24 @@ async function fixture(
     call: async (
       surface: string,
       batch = entries,
-      opts: {
+      callOpts: {
         allowInvalid?: boolean;
         allow_invalid?: boolean;
         dryRun?: boolean;
         dry_run?: boolean;
         requestId?: string;
+        /** How the ledger is spelled on this call (w23/m38); default `alice/main`. */
+        ledger?: string;
       } = {},
       // The spelling test sends the other surface's flag untouched.
       raw = false,
     ) => {
+      const { ledger: spelling = "alice/main", ...opts } = callOpts;
       if (surface === "rest") {
         const { dry_run: _s1, allow_invalid: _s2, ...restOpts } = opts;
         const sent = raw ? opts : restOpts;
         const response = await fetch(
-          `${rest.url}/api-gateway/v1/ledgers/alice/main/entries`,
+          `${rest.url}/api-gateway/v1/ledgers/${spelling}/entries`,
           {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -364,11 +367,11 @@ async function fixture(
         const response = await graphql({
           schema,
           source: previewing
-            ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source code } valid } }'
+            ? "mutation($ledgerId:String!,$entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:$ledgerId,entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source code } valid } }"
             : opts.requestId !== undefined
-              ? 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$requestId:String) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,requestId:$requestId) { success message entryHashes } }'
-              : 'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid) { success message entryHashes } }',
-          variableValues: { entries: input, ...opts },
+              ? "mutation($ledgerId:String!,$entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$requestId:String) { bulkEntries(ledgerId:$ledgerId,entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,requestId:$requestId) { success message entryHashes } }"
+              : "mutation($ledgerId:String!,$entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean) { bulkEntries(ledgerId:$ledgerId,entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid) { success message entryHashes } }",
+          variableValues: { ledgerId: spelling, entries: input, ...opts },
           contextValue: {
             identity: caller,
             getCurrentIdentity: () => caller,
@@ -390,7 +393,7 @@ async function fixture(
         arguments: {
           entries: batch,
           ...sent,
-          ...(caller.ledgerScope ? {} : { ledger: "alice/main" }),
+          ...(caller.ledgerScope ? {} : { ledger: spelling }),
         },
       });
       return {
@@ -2398,6 +2401,46 @@ describe.each([
     }
   });
 });
+
+// w23/m38, w1/234: host usernames are case-insensitive, so the same write
+// retried with the owner spelled in another case is a retry, not a second
+// write. The unpinned credential matters: a pinned one is resolved to the
+// pin's spelling before it gets here.
+describe.each([
+  ["rest", "rest"],
+  ["gql", "gql"],
+  ["mcp", "mcp"],
+  ["mcp", "gql"],
+  ["rest", "mcp"],
+])(
+  "a requestId first sent on %s and retried on %s with the owner in another case",
+  (first, replay) => {
+    beforeEach(() => fakeRedisIdempotencyState.reset());
+
+    it.each(["ALICE/main", "Alice/main"])(
+      "commits once for %s",
+      async (spelling) => {
+        const f = await fixture({
+          ...identity,
+          ledgerScope: undefined,
+          userId: `usr_case_replay_${first}_${replay}_${spelling.replace("/", "_")}`,
+        });
+        try {
+          const sent = await f.call(first, entries, { requestId: "case-1" });
+          const again = await f.call(replay, entries, {
+            requestId: "case-1",
+            ledger: spelling,
+          });
+          expect(sent.success).toBe(true);
+          expect(again.success).toBe(true);
+          expect(f.write).toHaveBeenCalledTimes(1);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  },
+);
 
 describe.each(["rest", "gql", "mcp"])("requestId via %s", (surface) => {
   beforeEach(() => fakeRedisIdempotencyState.reset());

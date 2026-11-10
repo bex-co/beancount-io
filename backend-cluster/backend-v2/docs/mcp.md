@@ -235,7 +235,12 @@ the [authorization service](../src/server/api/authorization/authorization-servic
 
 Ledger tools accept an optional `ledger` argument (`owner/name`). A pinned
 credential defaults to its pin and cannot select another ledger. An unpinned
-credential must select a ledger explicitly. Resource URIs select the ledger
+credential must select a ledger explicitly. A ledger is spelled exactly
+`owner/name`: one `/`, no spaces and no URL characters. The owner is
+case-insensitive (`Alice/books` is `alice/books`) and the name is
+lowercase-only. A value that breaks the spelling is `BAD_USER_INPUT` naming the
+slug rule it failed, the same on every surface; `Select a ledger using ledger:
+owner/name` means no ledger was named at all. Resource URIs select the ledger
 with `owner/name` under the same restriction. Account tools need no ledger —
 except creation: `createLedger` is refused with `FORBIDDEN` for a pinned
 credential, because a created ledger would land outside the pin, where the
@@ -1523,7 +1528,7 @@ A `NOT_FOUND` on a bank connection, pull request, commit, branch, archive or use
 | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | HTML or an SSR error after posting to `/mcp`                                                        | Use `/api-gateway/mcp` and check proxy routing.                                                                                                                                                                                                                                                           |
 | `401` with `resource_metadata`                                                                      | Missing/invalid credential, browser session, expired OAuth token, or wrong OAuth audience. Follow discovery or supply a valid key. A bearer that was sent and rejected adds `error="invalid_token"` to the challenge (RFC 6750); no credential, or a browser session, gets the plain challenge (w1/206). |
-| Tool error requesting a ledger                                                                      | Pass `ledger: "owner/name"` when using an unpinned credential.                                                                                                                                                                                                                                            |
+| Tool error requesting a ledger                                                                      | Pass `ledger: "owner/name"` when using an unpinned credential. A refusal that names a slug rule means the value was malformed, not missing.|
 | `403`, JSON-RPC error with `id: null`                                                               | The request carried an `Origin` header outside the trusted set (any `beancount.io` host, `localhost` or `127.0.0.1` on any port). Browser pages on other sites cannot call the endpoint; native and server-side clients send no `Origin` and are unaffected. An anonymous request still gets `401` first. |
 | `405`, `Allow: POST`, on any authenticated non-POST method (GET, DELETE, HEAD, OPTIONS, PUT, PATCH) | Expected behavior; use Streamable HTTP POST.                                                                                                                                                                                                                                                              |
 | `400`/`406` before tool execution                                                                   | Check JSON-RPC, protocol version, content type, and both Accept values.                                                                                                                                                                                                                                   |

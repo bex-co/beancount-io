@@ -19,6 +19,8 @@
  * import { CACHE_KEYS } from "@/shared/cache";
  * const key = CACHE_KEYS.feed.bySourceLocale("blog", "en");
  */
+import { canonicalLedgerId } from "@/shared/str";
+
 export const CACHE_KEYS = {
   /**
    * Auth ephemeral token / session stores.
@@ -128,8 +130,13 @@ export const CACHE_KEYS = {
   ledger: {
     createRequestByUserAndId: (userId: string, requestId: string) =>
       `ledger:create_request:user:${userId}:id:${requestId}`,
-    /** An entry write's idempotency record (w3/m61), per user and ledger. */
+    /**
+     * An entry write's idempotency record (w3/m61), per user and ledger. The
+     * ledger is keyed by `canonicalLedgerId`, so `Alice/books` and
+     * `alice/books` share a record (w1/234); a key per ledger is built here, not
+     * from the spelling a caller sent.
+     */
     entryWriteRequest: (userId: string, ledgerId: string, requestId: string) =>
-      `ledger:entry_write_request:user:${userId}:ledger:${ledgerId}:id:${requestId}`,
+      `ledger:entry_write_request:user:${userId}:ledger:${canonicalLedgerId(ledgerId)}:id:${requestId}`,
   },
 } as const;

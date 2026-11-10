@@ -1,20 +1,20 @@
 # w23 · m38 — Key every per-ledger mechanism on one canonical ledger identity
 
-**Worker:** worker1 **Goal:** The spelling of `owner/name` (case, whitespace, slashes) can no longer change which idempotency record, cache entry or limit a request shares, and a malformed ledger names the rule it broke on every surface. **Status:** todo
+**Worker:** worker1 **Goal:** The spelling of `owner/name` (case, whitespace, slashes) can no longer change which idempotency record, cache entry or limit a request shares, and a malformed ledger names the rule it broke on every surface. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Audit every key built from ledger spelling | 30m | — |
-| t002 | Key idempotency on one canonical ledger id (w1/234) | 40m | t001 |
-| t003 | Name the failing slug rule when the MCP `ledger` is malformed (w1/235) | 25m | — |
-| t004 | Write the ledger-spelling matrix | 45m | t002, t003 |
-| t005 | Document the ledger spelling rule once | 20m | t004 |
-| t006 | Adoption surface | 20m | t005 |
-| t007 | Simplify | 20m | t006 |
-| t008 | Test coverage | 30m | t006 |
-| t009 | Closeout | 15m | t008 |
+| t001 | Audit every key built from ledger spelling — **DONE** | 30m | — |
+| t002 | Key idempotency on one canonical ledger id (w1/234) — **DONE** | 40m | t001 |
+| t003 | Name the failing slug rule when the MCP `ledger` is malformed (w1/235) — **DONE** | 25m | — |
+| t004 | Write the ledger-spelling matrix — **DONE** | 45m | t002, t003 |
+| t005 | Document the ledger spelling rule once — **DONE** | 20m | t004 |
+| t006 | Adoption surface — **DONE** | 20m | t005 |
+| t007 | Simplify — **DONE** | 20m | t006 |
+| t008 | Test coverage — **DONE** | 30m | t006 |
+| t009 | Closeout — **DONE** | 15m | t008 |
 
 ## Definition of done
 

@@ -19,8 +19,10 @@ import {
   MCP_TRANSPORT_OP_ID,
   MCP_HANDSHAKE_OP_ID,
 } from "@/server/api/rate-limit";
-import { LEDGER_ID_PATTERN, ledgerIdMatchesPin } from "./mcp-ledger-selection";
-import { parseLedgerId } from "@/shared/str";
+import {
+  assertLedgerSpelling,
+  ledgerIdMatchesPin,
+} from "./mcp-ledger-selection";
 
 export { ledgerSelection, mcpRequestId } from "./mcp-ledger-selection";
 
@@ -93,14 +95,16 @@ export function resolveMcpLedger(
   requested?: string,
 ): string {
   const ledger = requested ?? context.identity.ledgerScope;
-  if (!ledger || !LEDGER_ID_PATTERN.test(ledger)) {
+  if (!ledger) {
     throw new BadUserInputError(
       "Select a ledger using ledger: owner/name",
       "ledger",
       'Call `listLedgers`, then pass `ledger: "owner/name"` on this call. A credential pinned to one ledger may omit it.',
     );
   }
-  parseLedgerId(ledger);
+  // A ledger that was sent but is malformed names the slug rule it broke;
+  // "select one" is for a call that named none (w1/235).
+  assertLedgerSpelling(ledger);
   const pin = context.identity.ledgerScope;
   if (pin && !ledgerIdMatchesPin(ledger, pin)) {
     throw new ForbiddenError(

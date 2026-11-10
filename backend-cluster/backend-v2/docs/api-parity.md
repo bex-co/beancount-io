@@ -322,6 +322,10 @@ operations are unaffected. `preview-rate-bucket.test.ts` drives the three
 limiter middlewares and proves the two buckets are independent in both
 directions.
 
+## Ledger spelling (w23/m38)
+
+A ledger is spelled `owner/name` on every surface, and a spelling means one thing everywhere. The MCP tools (`resolveMcpLedger`) and prompt arguments (`validatePromptArgs`), MCP resources (`createLedgerId`), REST and GraphQL (`authorizeLedger` → `ledgerResource`) all parse it with `parseLedgerId`, so a malformed value is `BAD_USER_INPUT` naming the same slug rule on each; only a call that names no ledger at all gets "Select a ledger" (MCP tools alone can omit it). State kept per ledger is keyed on `canonicalLedgerId` (`CACHE_KEYS.ledger.entryWriteRequest` applies it itself), never on the spelling the caller sent. `ledger-spelling-matrix.test.ts` runs 28 refused and 5 accepted spellings through the five entry points, and `structured-entry-parity.test.ts` retries one `requestId` with the owner in another case across REST, GraphQL and MCP.
+
 ## Pagination signal (w23/m28)
 
 A paginated read says whether more remains without changing its result's shape. The rule and the per-read table are in [the MCP guide](./mcp.md#pagination); the three channels are REST headers (`X-Has-More`, `X-Total-Count`, `Link`), an MCP `page` object beside `result` (or the resource content's `_meta.page`), and GraphQL `extensions.page`. `src/server/api/page-signals.ts` is the one table every channel reads, and `page-signals.test.ts` fails when a REST route, MCP resource or MCP tool that takes `limit`, `offset` or `page` is not in it. The OpenAPI spec documents the headers on each paginated route's 200 response.
@@ -340,7 +344,7 @@ adapters:
 
 The contract (`features/ledger/utils/entry-write-idempotency.ts`):
 
-- The id is claimed atomically in Redis, keyed by user, ledger, and id, and kept 24 hours.
+- The id is claimed atomically in Redis, keyed by user, ledger, and id, and kept 24 hours. The ledger in the key is `canonicalLedgerId` (the owner in lowercase, the name as sent), so a retry that spells the owner in another case replays the first result instead of writing twice (w23/m38, w1/234).
 - The same id and request returns the first result. A different request is `VALIDATION_FAILED`, and an attempt still writing is `CONFLICT`.
 - A failed write, or one reporting `success: false`, releases the id.
 - An unreachable store lets the write proceed unprotected.

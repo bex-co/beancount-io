@@ -2,7 +2,7 @@ import { z } from "zod";
 import { BadUserInputError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import {
-  LEDGER_ID_PATTERN,
+  assertLedgerSpelling,
   ledgerIdMatchesPin,
   ledgerSelection,
 } from "./mcp-ledger-selection";
@@ -71,19 +71,17 @@ const monthArg = optionalArg(
  * shape costs a client nothing and buys the one dialect every other refusal on
  * this surface already speaks.
  */
-const FIXED_SHAPE_ARGS: Record<
-  string,
-  { readonly pattern: RegExp; readonly message: string; readonly hint: string }
-> = {
-  ledger: {
-    pattern: LEDGER_ID_PATTERN,
-    message: "ledger must be owner/name",
-    hint: "Pass `ledger` as `owner/name`; `listLedgers` returns the ones this credential can reach.",
-  },
-  month: {
-    pattern: /^\d{4}-(0[1-9]|1[0-2])$/,
-    message: "month must be YYYY-MM",
-    hint: "Pass `month` as YYYY-MM, e.g. `2026-08`, or omit it for the last complete calendar month.",
+const FIXED_SHAPE_ARGS: Record<string, (value: string) => void> = {
+  // The same spelling rule, and the same refusal, the tools enforce (w1/235).
+  ledger: assertLedgerSpelling,
+  month: (value) => {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)) {
+      throw new BadUserInputError(
+        "month must be YYYY-MM",
+        "month",
+        "Pass `month` as YYYY-MM, e.g. `2026-08`, or omit it for the last complete calendar month.",
+      );
+    }
   },
 };
 
@@ -93,9 +91,7 @@ export function validatePromptArgs(
 ): void {
   for (const [name, check] of Object.entries(FIXED_SHAPE_ARGS)) {
     const value = args[name];
-    if (value !== undefined && !check.pattern.test(value)) {
-      throw new BadUserInputError(check.message, name, check.hint);
-    }
+    if (value !== undefined) check(value);
   }
 }
 

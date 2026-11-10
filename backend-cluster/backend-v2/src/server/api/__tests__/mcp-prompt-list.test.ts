@@ -14,6 +14,7 @@ import { assembleMcpRegistry } from "../composition-root";
 import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import { MCP_RESOURCES } from "@/features/ai-agent/api/mcp-resources";
+import { LEDGER_NAME_RULE, LEDGER_OWNER_RULE } from "@/shared/ledger-slug";
 import { JSON_RPC_INVALID_PARAMS } from "@/features/ai-agent/api/mcp-errors";
 import { isMcpHandshakeRequest } from "@/features/ai-agent/api/mcp-rate-policy";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
@@ -235,17 +236,15 @@ describe("MCP prompts", () => {
    */
   it.each([
     ["close-month", { month: "banana" }, "month must be YYYY-MM"],
+    // The same spelling rule, and the same refusal, every tool enforces: the
+    // slug rule the value broke, not "no ledger" (w23/m38, w1/235).
     [
       "spending-report",
       { ledger: "not a ledger" },
-      "ledger must be owner/name",
+      "Invalid ledger ID: must contain '/' separator",
     ],
-    // The same pattern every tool enforces: characters a URI would reinterpret.
-    [
-      "spending-report",
-      { ledger: "alice/personal?x" },
-      "ledger must be owner/name",
-    ],
+    ["spending-report", { ledger: "alice/personal?x" }, LEDGER_NAME_RULE],
+    ["spending-report", { ledger: "Alice /personal" }, LEDGER_OWNER_RULE],
   ])(
     "refuses %s with %j instead of folding it into the playbook",
     async (name, args, message) => {

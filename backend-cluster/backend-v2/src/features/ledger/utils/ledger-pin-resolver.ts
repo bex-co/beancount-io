@@ -1,6 +1,6 @@
 import { FavaApiError } from "@/foundation/fava";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
-import { parseLedgerId } from "@/shared/str";
+import { canonicalLedgerId, parseLedgerId } from "@/shared/str";
 
 /**
  * A credential pin names a ledger by its stable repository ID, so a rename
@@ -44,7 +44,9 @@ export function createLedgerPinResolver(
 
   return {
     async repoIdOf(ledgerId) {
-      const cached = ids.get(ledgerId);
+      // One entry per ledger, not per spelling of its owner.
+      const key = canonicalLedgerId(ledgerId);
+      const cached = ids.get(key);
       if (cached && fresh(cached)) return cached.value;
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
       const ledger = await orMissing<{ id: number }>(() =>
@@ -56,7 +58,7 @@ export function createLedgerPinResolver(
         Number.isSafeInteger(ledger?.id) && (ledger?.id ?? 0) > 0
           ? ledger?.id
           : undefined;
-      ids.set(ledgerId, { value, at: now() });
+      ids.set(key, { value, at: now() });
       return value;
     },
 

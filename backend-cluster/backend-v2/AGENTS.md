@@ -89,7 +89,7 @@ Application caches use `CacheHelper` from `src/shared/cache/`, not the raw cache
 
 - Use `getOrSet` for read-through caches; it guards stampedes and fails open.
 - Use `get` / `set` / `del` for non-critical caches and `getStrict` / `setStrict` / `delStrict` for Redis-backed persistence where a dropped write must fail.
-- Use `TTL` and `CACHE_KEYS`; do not add raw duration literals or ad-hoc key strings.
+- Use `TTL` and `CACHE_KEYS`; do not add raw duration literals or ad-hoc key strings. A key that is per ledger takes `canonicalLedgerId` (`@/shared/str`: the owner in lowercase), never the `owner/name` spelling a caller sent, or one retry in another case becomes a second write (w1/234); `ledger-spelling-matrix.test.ts` pins the accepted and refused spellings on every entry point.
 - The Redis codec preserves `Date`, `Map`, `Set`, and `BigInt`; do not manually rehydrate cached values.
 - The sitemap cache is intentionally file-backed because it stores large, persisted XML.
 
