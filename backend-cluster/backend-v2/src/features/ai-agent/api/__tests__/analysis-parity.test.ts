@@ -24,6 +24,10 @@ const fakeServices = () => ({
   ledgerData: {
     getDocuments: jest.fn().mockResolvedValue(["documents"]),
     getIntervalTotals: jest.fn().mockResolvedValue(["intervalTotals"]),
+    // The summary path reads the operating currency beside them (w1/216).
+    getIntervalTotalsForSummary: jest
+      .fn()
+      .mockResolvedValue({ data: [], operatingCurrencies: [] }),
     getAccountReport: jest.fn().mockResolvedValue(["accountReport"]),
     getAccountLastEntries: jest.fn().mockResolvedValue(["accountLastEntries"]),
     getEntriesCountPerType: jest.fn().mockResolvedValue(["entriesCount"]),
@@ -40,6 +44,11 @@ const fakeServices = () => ({
     getHoldings: jest.fn().mockResolvedValue(["holdings"]),
     getRegister: jest.fn().mockResolvedValue(["register"]),
     getCapitalGains: jest.fn().mockResolvedValue(["capitalGains"]),
+    // The summary path reads the operating currency beside it (w1/216).
+    getOverviewForSummary: jest.fn().mockResolvedValue({
+      data: { net_worth_data: [] },
+      operatingCurrencies: [],
+    }),
   },
   ledgerJournal: { getContext: jest.fn().mockResolvedValue(["entryContext"]) },
   ledgerAccount: {
@@ -254,7 +263,7 @@ describe("optional account narrowing", () => {
 
       const call =
         segment === "interval-totals"
-          ? services.ledgerData.getIntervalTotals
+          ? services.ledgerData.getIntervalTotalsForSummary
           : services.ledgerData.getAccountReport;
       expect(call).toHaveBeenCalledWith(
         expect.objectContaining({ accountName: "" }),

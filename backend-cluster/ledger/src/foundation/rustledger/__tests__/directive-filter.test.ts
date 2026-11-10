@@ -672,6 +672,14 @@ describe("filterDirectives — TimeFilter (date-range) parity", () => {
       TimeFilterParseError,
     );
   });
+
+  // w1/216: the refusal named neither the argument nor a form it takes. The
+  // prefix stays, since the dashboard maps it to its own words.
+  it("names time and the forms it takes, keeping the prefix", () => {
+    expect(() => filterDirectives(DIRECTIVES, { time: "last year" })).toThrow(
+      /^Failed to parse date: last year — time takes .* 2016-Q1, 2016-01 .* 2016-01 - 2016-03$/,
+    );
+  });
 });
 
 describe("parseDateRange — util/date.parse_date parity", () => {

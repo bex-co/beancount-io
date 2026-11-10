@@ -75,7 +75,30 @@ export interface ILedgerFinanceService {
   getRegister(params: RegisterParams): Promise<RegisterResult>;
 
   getCapitalGains(params: GainsParams): Promise<GainsResult>;
+
+  /**
+   * The same reports with the ledger's operating currencies, read under the
+   * one authorization: an agent summary's headline currency defers to them
+   * (w1/216).
+   */
+  getOverviewForSummary(
+    params: BaseParams & ConversionParams,
+  ): Promise<WithOperatingCurrencies<OverviewPublic>>;
+
+  getIncomeStatementForSummary(
+    params: BaseParams & ConversionParams,
+  ): Promise<WithOperatingCurrencies<IncomeStatementDataPublic>>;
+
+  getBalanceSheetForSummary(
+    params: BaseParams & ConversionParams,
+  ): Promise<WithOperatingCurrencies<BalanceSheetDataPublic>>;
 }
+
+/** A report and the ledger's declared `operating_currency`, in order. */
+export type WithOperatingCurrencies<T> = {
+  data: T;
+  operatingCurrencies: string[];
+};
 
 export type HoldingsParams = BaseParams & {
   account?: string;
@@ -335,6 +358,69 @@ export class LedgerFinanceService
     );
     if (items.length === 0) return { account: null, rows: [] };
     return { account: root, rows: mapRegisterRows(items, root) };
+  }
+
+  getOverviewForSummary(
+    params: BaseParams & ConversionParams,
+  ): Promise<WithOperatingCurrencies<OverviewPublic>> {
+    return this.withOperatingCurrencies(params, (client, owner, name, rest) =>
+      unwrapFavaResponse(
+        client.reports.getLedgerOverview(owner, name, filterNullish(rest)),
+        "get ledger overview",
+      ),
+    );
+  }
+
+  getIncomeStatementForSummary(
+    params: BaseParams & ConversionParams,
+  ): Promise<WithOperatingCurrencies<IncomeStatementDataPublic>> {
+    return this.withOperatingCurrencies(params, (client, owner, name, rest) =>
+      unwrapFavaResponse(
+        client.reports.getLedgerIncomeStatement(
+          owner,
+          name,
+          filterNullish(rest),
+        ),
+        "get ledger income statement",
+      ),
+    );
+  }
+
+  getBalanceSheetForSummary(
+    params: BaseParams & ConversionParams,
+  ): Promise<WithOperatingCurrencies<BalanceSheetDataPublic>> {
+    return this.withOperatingCurrencies(params, (client, owner, name, rest) =>
+      unwrapFavaResponse(
+        client.reports.getLedgerBalanceSheet(owner, name, filterNullish(rest)),
+        "get ledger balance sheet",
+      ),
+    );
+  }
+
+  /**
+   * A report read beside the options read, under one authorization and one
+   * client (w1/216): a month whose balances all named USD, IRAUSD and VACHR
+   * reported in IRAUSD, the first key, on a USD ledger.
+   */
+  private async withOperatingCurrencies<T>(
+    params: BaseParams & ConversionParams,
+    read: (
+      client: FavaApiClient,
+      ledgerOwner: string,
+      ledgerName: string,
+      rest: Omit<BaseParams & ConversionParams, "ledgerId" | "identity">,
+    ) => Promise<T>,
+  ): Promise<WithOperatingCurrencies<T>> {
+    const { ledgerId, identity, ...rest } = params;
+    const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
+      ledgerId,
+      identity,
+    );
+    const [data, options] = await Promise.all([
+      read(favaApiClient, ledgerOwner, ledgerName, rest),
+      this.reportOptions(favaApiClient, ledgerOwner, ledgerName),
+    ]);
+    return { data, operatingCurrencies: options?.operating_currency ?? [] };
   }
 
   /** One options read: roots for the account matcher, operating currency. */

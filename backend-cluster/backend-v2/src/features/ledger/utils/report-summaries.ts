@@ -150,14 +150,20 @@ type Balance = Record<string, string>;
 /**
  * Which currency the summary reports in.
  *
- * The caller's `conversion` wins when the data actually carries it — a
- * requested currency the ledger never uses would make every total zero, which
- * reads as "no money" rather than "wrong currency". Otherwise the most common
- * currency across the balances is the ledger's working one.
+ * In order (w1/216):
+ * - the caller's `conversion`, when the data carries it or it is one of the
+ *   ledger's operating currencies — a requested currency the ledger never
+ *   uses would make every total zero, which reads as "no money" rather than
+ *   "wrong currency", but the ledger's own reporting currency always means
+ *   something, with what stayed unconverted in `otherCurrencies`;
+ * - the first operating currency the data carries;
+ * - the most common currency across the balances, ties broken by name, never
+ *   by the order a payload happens to list them.
  */
 export function resolveCurrency(
   balances: readonly Balance[],
   requested?: string,
+  operating: readonly string[] = [],
 ): string {
   const counts = new Map<string, number>();
   for (const balance of balances) {
@@ -168,10 +174,15 @@ export function resolveCurrency(
       counts.set(currency, (counts.get(currency) ?? 0) + 1);
     }
   }
-  if (requested && counts.has(requested)) return requested;
-  let best = requested ?? "USD";
+  if (requested && (counts.has(requested) || operating.includes(requested))) {
+    return requested;
+  }
+  const declared = operating.find((currency) => counts.has(currency));
+  if (declared) return declared;
+  let best = requested ?? operating[0] ?? "USD";
   let bestCount = 0;
-  for (const [currency, count] of counts) {
+  const byName = [...counts].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  for (const [currency, count] of byName) {
     if (count > bestCount) {
       best = currency;
       bestCount = count;
@@ -351,6 +362,7 @@ function lastDate(series: readonly { date: string }[]): string | null {
 export function summarizeBalanceSheet(
   data: BalanceSheetDataPublic,
   conversion?: string,
+  operating: readonly string[] = [],
 ): BalanceSheetSummary {
   const currency = resolveCurrency(
     currencyEvidence(
@@ -365,6 +377,7 @@ export function summarizeBalanceSheet(
       ],
     ),
     requestedCurrency(conversion),
+    operating,
   );
   const assets = total(data.assets_hierarchy_data, currency);
   const liabilities = total(data.liabilities_hierarchy_data, currency);
@@ -410,6 +423,7 @@ export function summarizeIncomeStatement(
   data: IncomeStatementDataPublic,
   conversion?: string,
   time?: string,
+  operating: readonly string[] = [],
 ): IncomeStatementSummary {
   const currency = resolveCurrency(
     [
@@ -417,6 +431,7 @@ export function summarizeIncomeStatement(
       data.income_hierarchy_data?.balance_children ?? {},
     ],
     requestedCurrency(conversion),
+    operating,
   );
   const income = total(data.income_hierarchy_data, currency);
   const expenses = total(data.expenses_hierarchy_data, currency);
@@ -452,10 +467,12 @@ export function summarizeIncomeStatement(
 export function summarizeOverview(
   data: OverviewPublic,
   conversion?: string,
+  operating: readonly string[] = [],
 ): OverviewSummary {
   const currency = resolveCurrency(
     data.net_worth_data.map((point) => point.balance),
     requestedCurrency(conversion),
+    operating,
   );
   const series = data.net_worth_data.map((point) => ({
     date: point.date,
@@ -477,6 +494,7 @@ export function summarizeOverview(
 export function summarizeIntervalTotals(
   data: readonly DateAndBalanceWithAccountBalancePublic[],
   conversion?: string,
+  operating: readonly string[] = [],
 ): IntervalTotalsSummary {
   const currency = resolveCurrency(
     currencyEvidence(
@@ -485,6 +503,7 @@ export function summarizeIntervalTotals(
         data.flatMap((point) => Object.values(point.account_balances ?? {})),
     ),
     requestedCurrency(conversion),
+    operating,
   );
   const rows = data.map((point) => ({
     point,

@@ -110,12 +110,17 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     uriPath: "",
     fetch: async (s, { ledgerId, identity, query }) => {
       const { shape, ...rest } = query;
-      const data = await s.ledgerFinance.getOverview({
-        ledgerId,
-        identity,
-        ...rest,
-      });
-      return shape === "fava" ? data : summarizeOverview(data, rest.conversion);
+      if (shape === "fava") {
+        return s.ledgerFinance.getOverview({ ledgerId, identity, ...rest });
+      }
+      // The headline currency defers to the operating one (w1/216).
+      const { data, operatingCurrencies } =
+        await s.ledgerFinance.getOverviewForSummary({
+          ledgerId,
+          identity,
+          ...rest,
+        });
+      return summarizeOverview(data, rest.conversion, operatingCurrencies);
     },
   },
   {
@@ -253,18 +258,24 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     uriPath: "",
     fetch: async (s, { ledgerId, identity, query }) => {
       const { shape, ...rest } = query;
-      const data = await s.ledgerData.getIntervalTotals({
+      // Spread first: `...rest` carries `accountName` as an explicit
+      // `undefined` when the caller omitted it, which would overwrite the
+      // default if it came last.
+      const params = {
         ledgerId,
         identity,
-        // Spread first: `...rest` carries `accountName` as an explicit
-        // `undefined` when the caller omitted it, which would overwrite the
-        // default if it came last.
         ...rest,
         accountName: rest.accountName ?? "",
-      });
-      return shape === "fava"
-        ? data
-        : summarizeIntervalTotals(data, rest.conversion);
+      };
+      if (shape === "fava") return s.ledgerData.getIntervalTotals(params);
+      // The headline currency defers to the operating one (w1/216).
+      const { data, operatingCurrencies } =
+        await s.ledgerData.getIntervalTotalsForSummary(params);
+      return summarizeIntervalTotals(
+        data,
+        rest.conversion,
+        operatingCurrencies,
+      );
     },
   },
   {

@@ -39,6 +39,15 @@ const services = {
     getIncomeStatement: jest.fn(async () => ({
       statement: "income-statement",
     })),
+    // The default summary shape reads the operating currency too (w1/216).
+    getBalanceSheetForSummary: jest.fn(async () => ({
+      data: { net_worth_data: [] },
+      operatingCurrencies: [],
+    })),
+    getIncomeStatementForSummary: jest.fn(async () => ({
+      data: { net_profit_data: [] },
+      operatingCurrencies: [],
+    })),
   },
   ledgerRepo: {
     listDirContent: jest.fn(async () => [
@@ -312,8 +321,12 @@ describe("v1 reads", () => {
   it("serves both statements from one route", async () => {
     await call("GET", `${LEDGER}/statements/balance-sheet`);
     await call("GET", `${LEDGER}/statements/income-statement`);
-    expect(services.ledgerFinance.getBalanceSheet).toHaveBeenCalledTimes(1);
-    expect(services.ledgerFinance.getIncomeStatement).toHaveBeenCalledTimes(1);
+    expect(
+      services.ledgerFinance.getBalanceSheetForSummary,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      services.ledgerFinance.getIncomeStatementForSummary,
+    ).toHaveBeenCalledTimes(1);
   });
 });
 

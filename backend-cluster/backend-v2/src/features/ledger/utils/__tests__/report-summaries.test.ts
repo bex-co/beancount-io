@@ -806,7 +806,8 @@ describe("what the stated currency leaves out", () => {
   } as any;
 
   it("reports holdings in other commodities beside a units balance sheet", () => {
-    expect(summarizeBalanceSheet(portfolio, "units")).toMatchObject({
+    // The ledger's operating currency is USD (w1/216).
+    expect(summarizeBalanceSheet(portfolio, "units", ["USD"])).toMatchObject({
       currency: "USD",
       valuation: "units",
       netWorth: 700,
@@ -815,7 +816,7 @@ describe("what the stated currency leaves out", () => {
   });
 
   it("labels a conversion the ledger cannot price as units, with what it left out", () => {
-    expect(summarizeBalanceSheet(portfolio, "EUR")).toMatchObject({
+    expect(summarizeBalanceSheet(portfolio, "EUR", ["USD"])).toMatchObject({
       currency: "USD",
       valuation: "units",
       otherCurrencies: { ITOT: 10, VACHR: 40 },
@@ -825,7 +826,7 @@ describe("what the stated currency leaves out", () => {
   // w23/m16: an explicit currency conversion that left money elsewhere names
   // the legs that had no price path, beside the amounts otherCurrencies gives.
   it("names the legs a currency conversion could not reach", () => {
-    expect(summarizeBalanceSheet(portfolio, "EUR")).toMatchObject({
+    expect(summarizeBalanceSheet(portfolio, "EUR", ["USD"])).toMatchObject({
       missingPrices: [
         { from: "ITOT", to: "EUR" },
         { from: "USD", to: "EUR" },
@@ -905,7 +906,9 @@ describe("what the stated currency leaves out", () => {
   });
 
   it("reports what the latest net worth and each interval leave out", () => {
-    expect(summarizeOverview(portfolio as OverviewPublic)).toMatchObject({
+    expect(
+      summarizeOverview(portfolio as OverviewPublic, undefined, ["USD"]),
+    ).toMatchObject({
       netWorth: 700,
       otherCurrencies: { ITOT: 10, VACHR: 40 },
     });
@@ -922,5 +925,65 @@ describe("what the stated currency leaves out", () => {
       total: 7,
       otherCurrencies: { VACHR: 2 },
     });
+  });
+});
+
+/**
+ * w1/216. With no explicit conversion the headline was the first currency to
+ * reach the highest count, so a month whose balances all named IRAUSD, USD
+ * and VACHR reported in IRAUSD — the first key — on a USD ledger.
+ */
+describe("the headline currency", () => {
+  const tie = [
+    { IRAUSD: "-18000", USD: "-2500", VACHR: "10" },
+    { IRAUSD: "-18000", USD: "-5000", VACHR: "20" },
+  ];
+
+  it("is the operating currency when the data carries it, whatever the counts", () => {
+    expect(resolveCurrency(tie, undefined, ["USD"])).toBe("USD");
+    expect(
+      resolveCurrency([{ IRAUSD: "1" }, { IRAUSD: "2", USD: "3" }], undefined, [
+        "USD",
+      ]),
+    ).toBe("USD");
+  });
+
+  it("breaks a tie by name, never by the order a payload lists keys", () => {
+    const reordered = tie.map((balance) =>
+      Object.fromEntries(Object.entries(balance).reverse()),
+    );
+    expect(resolveCurrency(tie)).toBe(resolveCurrency(reordered));
+    expect(resolveCurrency(tie)).toBe("IRAUSD");
+  });
+
+  it("keeps an explicitly requested currency the data carries", () => {
+    expect(resolveCurrency(tie, "VACHR", ["USD"])).toBe("VACHR");
+  });
+
+  it("keeps a requested operating currency the data does not carry", () => {
+    // A tag-filtered month whose only spending stayed in EUR (w1/229): the
+    // headline is the USD that was asked for, the EUR beside it.
+    expect(resolveCurrency([{ EUR: "80.00" }], "USD", ["USD"])).toBe("USD");
+  });
+
+  it("falls back to the data for a requested currency the ledger never declares", () => {
+    // w23/050: a conversion the ledger has no prices for reads as units.
+    expect(resolveCurrency([{ USD: "5" }], "EUR", ["USD"])).toBe("USD");
+    expect(resolveCurrency([{ USD: "5" }], "EUR")).toBe("USD");
+  });
+
+  it("puts the income statement and interval totals in USD on the tied month", () => {
+    const point = {
+      date: "2016-01-31",
+      balance: tie[0]!,
+      account_balances: {},
+    };
+    expect(
+      summarizeIntervalTotals(
+        [point] as DateAndBalanceWithAccountBalancePublic[],
+        undefined,
+        ["USD"],
+      ),
+    ).toMatchObject({ currency: "USD", intervals: [{ total: -2500 }] });
   });
 });

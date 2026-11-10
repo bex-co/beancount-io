@@ -123,6 +123,10 @@ async function fixture(raw = payloads()) {
       reports: {
         getLedgerIncomeStatement: reports.income,
         getLedgerOverview: reports.overview,
+        // The summaries' headline currency defers to these (w1/216).
+        getLedgerOptions: async () => ({
+          data: { success: true, data: { operating_currency: [] } },
+        }),
       },
     }),
   };

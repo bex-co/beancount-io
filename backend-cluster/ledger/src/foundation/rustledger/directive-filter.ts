@@ -79,7 +79,11 @@ const MAX_FILTER_PATTERN_LENGTH = 256;
  */
 export class TimeFilterParseError extends Error {
   public constructor(value: string) {
-    super(`Failed to parse date: ${value}`);
+    // The prefix is what the dashboard maps to its own words; the rest names
+    // the argument and a form it takes, which the bare value did not (w1/216).
+    super(
+      `Failed to parse date: ${value} — time takes a year, quarter, month or day such as 2016, 2016-Q1, 2016-01 or 2016-01-15, or a range such as 2016-01 - 2016-03`,
+    );
     this.name = "TimeFilterParseError";
   }
 }

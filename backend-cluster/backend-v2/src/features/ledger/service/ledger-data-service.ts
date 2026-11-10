@@ -19,6 +19,7 @@ import type {
   AccountReportPublic,
   DateAndBalanceWithAccountBalancePublic,
   ManagedPriceSourcePublic,
+  FavaApiClient,
 } from "@/foundation/fava";
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 
@@ -106,6 +107,12 @@ export interface ILedgerDataService {
   getIntervalTotals(
     params: BaseParams & AccountReportParams,
   ): Promise<DateAndBalanceWithAccountBalancePublic[]>;
+  getIntervalTotalsForSummary(
+    params: BaseParams & AccountReportParams,
+  ): Promise<{
+    data: DateAndBalanceWithAccountBalancePublic[];
+    operatingCurrencies: string[];
+  }>;
 }
 
 export class LedgerDataService
@@ -448,11 +455,51 @@ export class LedgerDataService
   async getIntervalTotals(
     params: BaseParams & AccountReportParams,
   ): Promise<DateAndBalanceWithAccountBalancePublic[]> {
-    const { ledgerId, identity, accountName, ...rest } = params;
+    const { ledgerId, identity, ...rest } = params;
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
     );
+    return this.readIntervalTotals(
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
+      rest,
+    );
+  }
+
+  /**
+   * Interval totals and the operating currencies their summary's headline
+   * defers to, under one authorization (w1/216).
+   */
+  async getIntervalTotalsForSummary(
+    params: BaseParams & AccountReportParams,
+  ): Promise<{
+    data: DateAndBalanceWithAccountBalancePublic[];
+    operatingCurrencies: string[];
+  }> {
+    const { ledgerId, identity, ...rest } = params;
+    const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
+      ledgerId,
+      identity,
+    );
+    const [data, options] = await Promise.all([
+      this.readIntervalTotals(favaApiClient, ledgerOwner, ledgerName, rest),
+      unwrapFavaResponse(
+        favaApiClient.reports.getLedgerOptions(ledgerOwner, ledgerName),
+        "get ledger options",
+      ),
+    ]);
+    return { data, operatingCurrencies: options?.operating_currency ?? [] };
+  }
+
+  private readIntervalTotals(
+    favaApiClient: Pick<FavaApiClient, "reports">,
+    ledgerOwner: string,
+    ledgerName: string,
+    params: Omit<BaseParams & AccountReportParams, "ledgerId" | "identity">,
+  ): Promise<DateAndBalanceWithAccountBalancePublic[]> {
+    const { accountName, ...rest } = params;
     return unwrapFavaResponse(
       favaApiClient.reports.getLedgerIntervalTotals(
         ledgerOwner,

@@ -90,7 +90,13 @@ async function fixture(
     .mockResolvedValue({ data: { success: true, data: payload } });
   const factory = {
     getPublicApiClient: jest.fn().mockResolvedValue({
-      reports: { getLedgerBalanceSheet },
+      // The summaries' headline currency defers to these (w1/216).
+      reports: {
+        getLedgerBalanceSheet,
+        getLedgerOptions: async () => ({
+          data: { success: true, data: { operating_currency: ["USD"] } },
+        }),
+      },
     }),
   };
   const services = {
@@ -376,7 +382,9 @@ describe("balance-sheet summary valuation basis (w6/009)", () => {
     {
       conversion: "units",
       payload: sheet({ XYZ: "2" }, { USD: "-15" }, { XYZ: "2", USD: "-15" }),
-      expected: { valuation: "units", currency: "XYZ", netWorth: 2 },
+      // A USD ledger reports in USD whenever its data carries any (w1/216);
+      // the XYZ it holds goes to otherCurrencies.
+      expected: { valuation: "units", currency: "USD", netWorth: -15 },
     },
     {
       // Unfiltered: the last series point is valued at the latest price too.

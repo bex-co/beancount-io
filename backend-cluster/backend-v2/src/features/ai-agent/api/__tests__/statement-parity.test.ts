@@ -125,6 +125,10 @@ async function fixture() {
       jest.fn().mockResolvedValue(envelope(entry.payload)),
     ]),
   );
+  // The summaries' headline currency defers to these (w1/216).
+  reports.getLedgerOptions = jest
+    .fn()
+    .mockResolvedValue(envelope({ operating_currency: ["USD"] }));
   reports.getLedgerAccounts = jest.fn().mockResolvedValue(
     envelope({
       "Assets:Open": { close_date: null },

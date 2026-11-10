@@ -172,7 +172,13 @@ async function fixture(selection: Selection) {
     );
   const factory = {
     getPublicApiClient: jest.fn().mockResolvedValue({
-      reports: { getLedgerIncomeStatement },
+      // The summaries' headline currency defers to these (w1/216).
+      reports: {
+        getLedgerIncomeStatement,
+        getLedgerOptions: async () => ({
+          data: { success: true, data: { operating_currency: [] } },
+        }),
+      },
     }),
   };
   const services = {

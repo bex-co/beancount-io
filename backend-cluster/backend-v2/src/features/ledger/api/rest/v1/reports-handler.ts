@@ -89,15 +89,22 @@ export async function fetchStatement(
     ...rest,
   };
   if (params.statement === "balance-sheet") {
-    const data = await services.ledgerFinance.getBalanceSheet(args);
-    return shape === "fava"
-      ? data
-      : summarizeBalanceSheet(data, rest.conversion);
+    if (shape === "fava") return services.ledgerFinance.getBalanceSheet(args);
+    // The headline currency defers to the ledger's operating currency,
+    // read under the same authorization (w1/216).
+    const { data, operatingCurrencies } =
+      await services.ledgerFinance.getBalanceSheetForSummary(args);
+    return summarizeBalanceSheet(data, rest.conversion, operatingCurrencies);
   }
-  const data = await services.ledgerFinance.getIncomeStatement(args);
-  return shape === "fava"
-    ? data
-    : summarizeIncomeStatement(data, rest.conversion, rest.time);
+  if (shape === "fava") return services.ledgerFinance.getIncomeStatement(args);
+  const { data, operatingCurrencies } =
+    await services.ledgerFinance.getIncomeStatementForSummary(args);
+  return summarizeIncomeStatement(
+    data,
+    rest.conversion,
+    rest.time,
+    operatingCurrencies,
+  );
 }
 
 /**

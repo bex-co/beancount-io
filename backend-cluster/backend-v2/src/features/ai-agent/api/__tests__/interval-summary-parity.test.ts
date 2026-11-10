@@ -8,6 +8,7 @@ import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerDataQueryResolver } from "@/features/ledger/api/resolvers/ledger-data-resolver.query";
 import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
+import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
 import { AuthorizationService } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
@@ -51,7 +52,11 @@ const transferSummary = {
 let resolver: LedgerDataQueryResolver;
 let schemaPromise: ReturnType<typeof buildSchema> | undefined;
 
-async function fixture(data: Intervals, wide: Intervals = data) {
+async function fixture(
+  data: Intervals,
+  wide: Intervals = data,
+  operatingCurrency: string[] = [],
+) {
   const check = jest.fn().mockResolvedValue(true);
   const auth = new AuthorizationService({ check }, jest.fn());
   const getLedgerIntervalTotals = jest
@@ -64,11 +69,25 @@ async function fixture(data: Intervals, wide: Intervals = data) {
     );
   const factory = {
     getPublicApiClient: jest.fn().mockResolvedValue({
-      reports: { getLedgerIntervalTotals },
+      // The summaries' headline currency defers to these (w1/216).
+      reports: {
+        getLedgerIntervalTotals,
+        getLedgerOptions: async () => ({
+          data: {
+            success: true,
+            data: { operating_currency: operatingCurrency },
+          },
+        }),
+      },
     }),
   };
   const services = {
     ledgerData: new LedgerDataService(
+      factory as unknown as IFavaClientFactory,
+      auth,
+    ),
+    // It reads the operating currency the headline defers to (w1/216).
+    ledgerFinance: new LedgerFinanceService(
       factory as unknown as IFavaClientFactory,
       auth,
     ),
@@ -474,4 +493,45 @@ describe("interval summaries through actual report adapters", () => {
       }
     },
   );
+
+  /**
+   * w1/216. A month whose balances all name IRAUSD, USD and VACHR reported in
+   * IRAUSD — the first key — on a ledger that declares USD, moving the salary
+   * into otherCurrencies.
+   */
+  it("reports a tied multi-commodity month in the operating currency", async () => {
+    const tied: Intervals = [
+      {
+        date: "2016-01-31",
+        balance: { IRAUSD: "-18000", USD: "-2500", VACHR: "10" },
+        account_balances: {
+          "Income:US:Hoogle:Salary": { USD: "-2500" },
+          "Income:US:Hoogle:Vacation": { VACHR: "10" },
+          "Income:US:ETrade:IRAUSD": { IRAUSD: "-18000" },
+        },
+      },
+    ];
+    const f = await fixture(tied, tied, ["USD"]);
+    try {
+      await expectSummary(
+        f,
+        { ...params, accountName: "Income" },
+        {
+          currency: "USD",
+          intervals: [
+            {
+              period: "2016-01-31",
+              total: -2500,
+              otherCurrencies: { IRAUSD: -18000, VACHR: 10 },
+              byAccount: [
+                { account: "Income:US:Hoogle:Salary", balance: -2500 },
+              ],
+            },
+          ],
+        },
+      );
+    } finally {
+      await f.close();
+    }
+  });
 });

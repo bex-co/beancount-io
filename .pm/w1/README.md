@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [216](./216.md) — Statement summaries pick their headline currency by key order, not `operating_currency` (MCP QA 2026-11-10)
 - [217](./217.md) — Structured entries: some fields skip the token check, and `filename`/`lineno` meta is silently dropped (MCP QA 2026-11-10)
 - [218](./218.md) — REST write routes drop a preview flag sent in the part they don't read, so the "preview" commits (MCP QA 2026-11-10)
 - [219](./219.md) — REST file previews skip the sha check that the commit makes (MCP QA 2026-11-10)
