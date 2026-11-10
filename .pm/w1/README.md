@@ -97,6 +97,7 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [209](./209.md) — A renamed-option error (E7004) has no file, line or code (MCP QA 2026-11-09)
 - [210](./210.md) — GraphQL file writes skip the bean-check gate and have no preview — needs an owner decision on the dashboard editor first (MCP QA 2026-11-09)
 - [211](./211.md) — GraphQL bank mutations take no `dryRun`, while MCP and REST preview all five (MCP QA 2026-11-09)
+- [212](./212.md) — A blank commit message writes a blank commit; an empty one defaults differently on MCP and REST (MCP QA 2026-11-09)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
