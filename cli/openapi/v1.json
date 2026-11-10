@@ -366,7 +366,7 @@
           },
           "commit": {
             "type": "string",
-            "description": "The sha of the commit this made; absent on a dry run."
+            "description": "The sha of the commit this write made; absent on a preview or a read."
           },
           "notLoaded": {
             "type": "array",
@@ -4790,6 +4790,10 @@
                   "properties": {
                     "success": {
                       "type": "boolean"
+                    },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the commit this write made; absent on a preview or a read."
                     },
                     "entryHashes": {
                       "type": "array",
@@ -11146,7 +11150,7 @@
                     },
                     "commit": {
                       "type": "string",
-                      "description": "The sha of the commit the rename made; absent on a preview."
+                      "description": "The sha of the commit this write made; absent on a preview or a read."
                     }
                   },
                   "required": [
@@ -11578,6 +11582,10 @@
                         "additionalProperties": false
                       }
                     },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the commit this write made; absent on a preview or a read."
+                    },
                     "errorsBefore": {
                       "type": "integer"
                     },
@@ -11866,7 +11874,7 @@
                     },
                     "commit": {
                       "type": "string",
-                      "description": "The sha of the commit this made; absent on a dry run."
+                      "description": "The sha of the commit this write made; absent on a preview or a read."
                     }
                   },
                   "required": [
@@ -12315,6 +12323,10 @@
                       },
                       "description": "Per-file affected text; populated on dry runs only."
                     },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the commit this write made; absent on a preview or a read."
+                    },
                     "errorsBefore": {
                       "type": "integer"
                     },
@@ -12583,6 +12595,10 @@
                       },
                       "description": "Per-file affected text; populated on dry runs only."
                     },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the commit this write made; absent on a preview or a read."
+                    },
                     "errorsBefore": {
                       "type": "integer"
                     },
@@ -12841,6 +12857,10 @@
                         ]
                       },
                       "description": "Per-file affected text; populated on dry runs only."
+                    },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the commit this write made; absent on a preview or a read."
                     },
                     "errorsBefore": {
                       "type": "integer"

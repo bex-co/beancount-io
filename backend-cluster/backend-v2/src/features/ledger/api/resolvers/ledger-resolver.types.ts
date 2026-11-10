@@ -24,6 +24,7 @@ import {
 import {
   REVERT_MESSAGE_DESCRIPTION,
   REVERT_SHA_DESCRIPTION,
+  COMMIT_SHA_DESCRIPTION,
 } from "@/features/ledger/utils/commit-revert";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 
@@ -315,6 +316,12 @@ export class LedgerFileContent {
 
   @Field(() => String, { nullable: true })
   lastCommitSha?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: COMMIT_SHA_DESCRIPTION,
+  })
+  commit?: string;
 
   @Field(() => String, { nullable: true })
   lastCommitterDate?: string;
@@ -689,6 +696,12 @@ export class DeleteLedgerResponse {
 export class DeleteLedgerFileResponse {
   @Field(() => String)
   path: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: COMMIT_SHA_DESCRIPTION,
+  })
+  commit?: string;
 }
 
 @ObjectType()
@@ -724,7 +737,7 @@ export class RenameLedgerFileResponse {
 
   @Field(() => String, {
     nullable: true,
-    description: "The sha of the commit the rename made; absent on a preview.",
+    description: COMMIT_SHA_DESCRIPTION,
   })
   commit?: string;
 }

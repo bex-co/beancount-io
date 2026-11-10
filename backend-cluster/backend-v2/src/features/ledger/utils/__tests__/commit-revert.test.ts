@@ -3,10 +3,10 @@ import {
   defaultRevertMessage,
   planRevert,
   revertedStatus,
-  type Blob,
+  type GitBlob,
 } from "../commit-revert";
 
-const blob = (sha: string, content = "Y29udGVudA=="): Blob => ({
+const blob = (sha: string, content = "Y29udGVudA=="): GitBlob => ({
   sha,
   content,
 });

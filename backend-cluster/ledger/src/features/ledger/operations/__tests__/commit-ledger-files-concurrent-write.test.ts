@@ -94,6 +94,61 @@ describe("a commit that loses the race for the branch ref", () => {
     expect(remote).toBe("; 0\n; 1\n");
   });
 
+  // w23/m42: the commit that landed is the one the git host reports, so an
+  // agent can undo it; the attempt that lost the race named none.
+  it("returns the sha of the commit that landed, not of a lost attempt", async () => {
+    let attempts = 0;
+    const client = {
+      repos: {
+        repoGetContents: jest.fn(async () => ({
+          data: {
+            content: Buffer.from("; a\n").toString("base64"),
+            encoding: "base64",
+            sha: "blob-a",
+          },
+        })),
+        repoChangeFiles: jest.fn(async () => {
+          attempts += 1;
+          if (attempts === 1) throw LOST_RACE;
+          return { data: { commit: { sha: "c0mm1t5ha" } } };
+        }),
+      },
+    };
+
+    await expect(
+      commitLedgerFiles(
+        client as never,
+        "alice",
+        "books",
+        new Map([["race.bean", (content: string | null) => `${content}; b\n`]]),
+        "edit",
+        { directiveLimit: { exempt: true } },
+      ),
+    ).resolves.toEqual({ commit: "c0mm1t5ha" });
+    expect(attempts).toBe(2);
+  });
+
+  it("names no commit when the host answers without one", async () => {
+    const client = {
+      repos: {
+        repoGetContents: jest.fn(async () => ({
+          data: { content: "", encoding: "base64", sha: "blob-a" },
+        })),
+        repoChangeFiles: jest.fn(async () => ({ data: {} })),
+      },
+    };
+    await expect(
+      commitLedgerFiles(
+        client as never,
+        "alice",
+        "books",
+        new Map([["race.bean", () => "; x\n"]]),
+        "edit",
+        { directiveLimit: { exempt: true } },
+      ),
+    ).resolves.toEqual({});
+  });
+
   // w23/m1: the production lost-race 500 (w23/072) matches no conflict rule,
   // so no retry fires — but the failure must read retryable, never
   // "not allowed" for an authorized credential.

@@ -21,6 +21,7 @@ import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-d
 import { ledgerIdOf, ledgerPathSchema, removeIncludesBody } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 const filePathSchema = ledgerPathSchema.extend({
   path: z.string().min(1).openapi({
@@ -140,7 +141,7 @@ const commitAckSchema = z
       z.strictObject({ message: z.string(), source: z.string().optional() }),
     ),
     commit: z.string().optional().openapi({
-      description: "The sha of the commit this made; absent on a dry run.",
+      description: COMMIT_SHA_DESCRIPTION,
     }),
     notLoaded: z.array(z.string()).optional().openapi({
       description:

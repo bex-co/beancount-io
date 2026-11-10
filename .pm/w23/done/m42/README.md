@@ -1,6 +1,6 @@
 # w23 · m42 — Name the commit every write makes, and let an agent undo it
 
-**Worker:** worker1 **Goal:** Every write result carries the sha of the commit it made, and one tool reverts a commit with a preview, the same way on REST, GraphQL and MCP. **Status:** todo (t001–t005 done; t010 added when t002 was narrowed)
+**Worker:** worker1 **Goal:** Every write result carries the sha of the commit it made, and one tool reverts a commit with a preview, the same way on REST, GraphQL and MCP. **Status:** done
 
 ## Tasks (in order)
 
@@ -11,11 +11,11 @@
 | t003 | Implement revertCommit with a preview — **DONE** | 70m | t001 |
 | t004 | Expose revertCommit on REST, GraphQL and MCP — **DONE** | 60m | t003 |
 | t005 | Document the undo recipe — **DONE** | 20m | t004 |
-| t010 | Return the commit sha on the entry, source-slice, receipt and GraphQL file writes | 90m | t002 |
-| t006 | Adoption surface | 20m | t002, t005, t010 |
-| t007 | Simplify | 20m | t006 |
-| t008 | Test coverage | 30m | t006 |
-| t009 | Closeout | 15m | t008 |
+| t010 | Return the commit sha on the entry, source-slice, receipt and GraphQL file writes — **DONE** | 90m | t002 |
+| t006 | Adoption surface — **DONE** | 20m | t002, t005, t010 |
+| t007 | Simplify — **DONE** | 20m | t006 |
+| t008 | Test coverage — **DONE** | 30m | t006 |
+| t009 | Closeout — **DONE** | 15m | t008 |
 
 ## Definition of done
 

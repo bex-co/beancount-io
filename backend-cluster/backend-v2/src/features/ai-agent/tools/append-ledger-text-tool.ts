@@ -16,6 +16,7 @@ import {
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
 import { summarizeWrite } from "./write-validation";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 const toolLogger = logger.child({ module: "tool:append-ledger-text" });
 
@@ -65,10 +66,7 @@ export const appendLedgerTextOutputSchema = toolOutputSchema(
     appendedUnsorted: z
       .array(z.string())
       .describe("Files not in date order, so these went at the end"),
-    commit: z
-      .string()
-      .optional()
-      .describe("The commit's sha; absent on a preview."),
+    commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
   }),
 );
 

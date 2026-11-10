@@ -4,6 +4,7 @@ import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
 import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 const receiptPostingSchema = z
   .object({
@@ -45,6 +46,7 @@ export const receiptInsertInput = z
 
 const receiptInsertResult = z.object({
   success: z.boolean(),
+  commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
   entryHashes: z.array(z.string()).openapi({
     description:
       "The hash each committed entry now carries, in request order — what getEntryContext, the source-slice update and delete take. Empty when the hashes could not be resolved after the commit.",
@@ -72,6 +74,10 @@ export const receiptInsertRoute = v1Route({
       });
     // The workflow also reports which files the entries landed in for MCP's
     // write outcome; v1 adds only the hashes, as for bulk adds (w23/060).
-    return { success: result.success, entryHashes: result.entryHashes ?? [] };
+    return {
+      success: result.success,
+      entryHashes: result.entryHashes ?? [],
+      ...(result.commit && { commit: result.commit }),
+    };
   },
 });

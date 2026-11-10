@@ -399,6 +399,9 @@ export type AccountJournalResult = {
 /** The files a slice write rewrote, each once (w23/042). */
 type TouchedFiles = { files: string[] };
 
+/** The sha of the commit a write made; absent on a preview (w23/m42). */
+type CommitSha = { commit?: string };
+
 /** The affected block per file: stored replacement on update, removed slice on delete. */
 type SlicePreview = Array<{ path: string; text: string }>;
 
@@ -413,6 +416,7 @@ export type DeleteSliceResult = {
   entryHash: string;
   preview: SlicePreview;
 } & TouchedFiles &
+  CommitSha &
   ReportedProjection;
 
 export type DeleteMultiSlicesResult = {
@@ -420,9 +424,11 @@ export type DeleteMultiSlicesResult = {
   deletedHashes: string[];
   preview: SlicePreview;
 } & TouchedFiles &
+  CommitSha &
   ReportedProjection;
 
 export type UpdateSliceResult = TouchedFiles &
+  CommitSha &
   ReportedProjection & {
     message: string;
     entryHash: string;
@@ -666,13 +672,13 @@ export class LedgerJournalService implements ILedgerJournalService {
     userId: string,
     transforms: Map<string, LedgerFileTransform>,
     message: string,
-  ): Promise<void> {
+  ): Promise<CommitSha> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const client = await this.giteaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
     );
-    await commitLedgerFiles(
+    return commitLedgerFiles(
       client as unknown as GiteaFileCommitClient,
       ledgerOwner,
       ledgerName,
@@ -1099,8 +1105,9 @@ export class LedgerJournalService implements ILedgerJournalService {
       "delete",
       allowInvalid,
     );
+    let commit: CommitSha = {};
     if (!dryRun) {
-      await this.commitTransforms(
+      commit = await this.commitTransforms(
         ledgerId,
         userId,
         transforms,
@@ -1113,6 +1120,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       files: [found.file],
       preview: [{ path: found.file, text: found.slice }],
       validation,
+      ...commit,
     };
   }
 
@@ -1190,8 +1198,9 @@ export class LedgerJournalService implements ILedgerJournalService {
       "delete",
       allowInvalid,
     );
+    let commit: CommitSha = {};
     if (!dryRun) {
-      await this.commitTransforms(
+      commit = await this.commitTransforms(
         ledgerId,
         userId,
         transforms,
@@ -1207,6 +1216,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       files: [...byFile.keys()],
       preview,
       validation,
+      ...commit,
     };
   }
 
@@ -1277,8 +1287,9 @@ export class LedgerJournalService implements ILedgerJournalService {
       "update",
       allowInvalid,
     );
+    let commit: CommitSha = {};
     if (!dryRun) {
-      await this.commitTransforms(
+      commit = await this.commitTransforms(
         ledgerId,
         userId,
         transforms,
@@ -1308,6 +1319,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       message: dryRun ? "Would update the entry" : "Entry updated successfully",
       entryHash: newEntryHash,
       files: [found.file],
+      ...commit,
       // The entry's block as a fresh read serves it: the checksum the entry's
       // next edit presents (w21/252), without a comment stored beside it
       // (w21/813).

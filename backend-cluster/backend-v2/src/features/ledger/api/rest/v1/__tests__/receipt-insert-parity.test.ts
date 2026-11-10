@@ -388,6 +388,37 @@ describe("written file and entry hashes", () => {
     }
   });
 
+  // w23/m42: the sha the entries' commit made, to undo the insert.
+  it("reports the commit the entries landed in on every surface", async () => {
+    const f = await fixture();
+    f.write.mockImplementation(
+      jest.fn(async () => ({
+        success: true,
+        files: ["2026.bean"],
+        entryHashes: ["tx-hash"],
+        commit: "abc123def",
+      })) as never,
+    );
+    try {
+      expect(await (await f.rest()).json()).toMatchObject({
+        commit: "abc123def",
+      });
+      const g = await f.gql(undefined, "success commit");
+      expect(g.errors).toBeUndefined();
+      expect(g.data!.insertReceiptTransaction).toEqual({
+        success: true,
+        commit: "abc123def",
+      });
+      const m = await f.mcp();
+      expect(m.isError).not.toBe(true);
+      expect((m.structuredContent as { result: unknown }).result).toMatchObject(
+        { commit: "abc123def" },
+      );
+    } finally {
+      await f.close();
+    }
+  });
+
   it("reports the git commit's document and transaction hashes in request order", async () => {
     const f = await fixture();
     f.state.bcio = { receipt_storage: "git" };

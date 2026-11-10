@@ -15,6 +15,7 @@ import type {
   InsertReceiptInput,
 } from "@/features/ledger/workflow/ledger-receipt-workflow";
 import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 @InputType()
 class ReceiptPostingInput {
@@ -56,6 +57,12 @@ class InsertReceiptResult {
       "The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty when it could not be resolved after the commit",
   })
   entryHashes: string[];
+
+  @Field(() => String, {
+    nullable: true,
+    description: COMMIT_SHA_DESCRIPTION,
+  })
+  commit?: string;
 }
 
 @Resolver()
@@ -98,6 +105,10 @@ export class LedgerReceiptMutationResolver {
       identity: ctx.getCurrentIdentity(),
       requestId,
     });
-    return { success: result.success, entryHashes: result.entryHashes ?? [] };
+    return {
+      success: result.success,
+      entryHashes: result.entryHashes ?? [],
+      ...(result.commit && { commit: result.commit }),
+    };
   }
 }

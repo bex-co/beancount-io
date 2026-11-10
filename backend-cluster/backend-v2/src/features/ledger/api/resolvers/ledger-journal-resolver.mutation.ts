@@ -18,6 +18,7 @@ import {
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 @InputType()
 class DeleteSourceSliceInput {
@@ -119,6 +120,12 @@ class DeleteSourceSliceResponse {
       "True only when the write adds no bean-check error; gate a preview on this.",
   })
   valid: boolean;
+
+  @Field(() => String, {
+    nullable: true,
+    description: COMMIT_SHA_DESCRIPTION,
+  })
+  commit?: string;
 }
 
 @InputType()
@@ -201,6 +208,12 @@ class DeleteMultiSourceSlicesResponse {
       "True only when the write adds no bean-check error; gate a preview on this.",
   })
   valid: boolean;
+
+  @Field(() => String, {
+    nullable: true,
+    description: COMMIT_SHA_DESCRIPTION,
+  })
+  commit?: string;
 }
 
 @InputType()
@@ -289,6 +302,12 @@ class UpdateSourceSliceResponse {
       "True only when the write adds no bean-check error; gate a preview on this.",
   })
   valid: boolean;
+
+  @Field(() => String, {
+    nullable: true,
+    description: COMMIT_SHA_DESCRIPTION,
+  })
+  commit?: string;
 }
 
 @Resolver()

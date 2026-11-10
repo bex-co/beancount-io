@@ -39,6 +39,7 @@ import {
   planIncludeRemovals,
   repoServiceFileAccess,
 } from "@/features/ledger/utils/include-references";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 /** Commits one edit call makes before a lost race is the caller's (w23/017). */
 const MAX_COMMIT_ATTEMPTS = 3;
@@ -163,10 +164,7 @@ const editLedgerFilesOutputSchema = toolOutputSchema(
       .describe(
         "Written ledger files no loaded file includes, so not checked; present only when any.",
       ),
-    commit: z
-      .string()
-      .optional()
-      .describe("The commit's sha; absent on a preview."),
+    commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
   }),
 );
 export type EditLedgerFilesOutput = z.infer<typeof editLedgerFilesOutputSchema>;

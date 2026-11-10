@@ -52,6 +52,10 @@ const ALLOWED_HINT_SOURCES: Record<string, string> = {
 
 /** Docs that name GraphQL operations next to their MCP counterparts. */
 const ALLOWED_DOC_NAMES: Record<string, string> = {
+  createLedgerFile:
+    "the GraphQL mutation, cited as a twin whose result carries `commit` (w23/m42)",
+  updateLedgerFile:
+    "the GraphQL mutation, cited as a twin whose result carries `commit` (w23/m42)",
   deleteLedgerFile: "the GraphQL mutation, cited beside REST DELETE",
   getLedgerFile: "the GraphQL query, cited for its exact-bytes behavior",
   queryShell: "the GraphQL query that shares the BQL producer",

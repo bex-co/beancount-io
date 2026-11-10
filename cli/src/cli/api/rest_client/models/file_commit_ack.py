@@ -26,7 +26,7 @@ class FileCommitAck:
         valid (bool): True only when the change adds no bean-check error. A dry run reports the new errors instead of
             refusing, so gate on this, not on the status.
         new_errors (list[FileCommitAckNewErrorsItem]):
-        commit (str | Unset): The sha of the commit this made; absent on a dry run.
+        commit (str | Unset): The sha of the commit this write made; absent on a preview or a read.
         not_loaded (list[str] | Unset): Ledger files the change writes that no loaded file includes: their entries don't
             count and bean-check did not read them. Present only when there are any.
     """

@@ -21,6 +21,7 @@ import {
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 /**
  * REST/MCP null tolerance: an explicit null on an optional field means the
@@ -328,10 +329,7 @@ const directiveTextResultSchema = z.strictObject({
       "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on the status.",
   }),
   appendedUnsorted: z.array(z.string()),
-  commit: z
-    .string()
-    .optional()
-    .describe("The sha of the commit this made; absent on a dry run."),
+  commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
 });
 
 /**
@@ -364,6 +362,7 @@ export const ENTRY_ROUTES = [
           preview: z.array(
             z.strictObject({ path: z.string(), text: z.string() }),
           ),
+          commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
           ...writeProjectionShape,
         }),
       ),
@@ -399,6 +398,7 @@ export const ENTRY_ROUTES = [
         entryHashes: result.entryHashes ?? [],
         dryRun: result.dryRun,
         preview: result.preview ?? [],
+        ...(result.commit && { commit: result.commit }),
         errorsBefore: result.validation.errorsBefore,
         errorsAfter: result.validation.errorsAfter,
         newErrors: result.validation.newErrors,

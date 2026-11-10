@@ -1664,7 +1664,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse_NoneType_"
+                  "$ref": "#/components/schemas/SuccessResponse_LedgerChangeFilesResult_"
                 }
               }
             }
@@ -9409,6 +9409,18 @@
             "type": "array",
             "title": "New Errors",
             "description": "Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal."
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit",
+            "description": "The sha of the commit the write made; absent on a preview."
           }
         },
         "type": "object",
@@ -9497,6 +9509,18 @@
             "type": "array",
             "title": "New Errors",
             "description": "Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal."
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit",
+            "description": "The sha of the commit the write made; absent on a preview."
           }
         },
         "type": "object",
@@ -11926,6 +11950,18 @@
               }
             ],
             "title": "Last Author Date"
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit",
+            "description": "The sha of the commit this write made; absent on a read."
           }
         },
         "type": "object",
@@ -14488,6 +14524,18 @@
             "type": "array",
             "title": "New Errors",
             "description": "Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal."
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit",
+            "description": "The sha of the commit the write made; absent on a preview."
           }
         },
         "type": "object",
@@ -15391,6 +15439,18 @@
             "type": "array",
             "title": "New Errors",
             "description": "Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal."
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit",
+            "description": "The sha of the commit the write made; absent on a preview."
           }
         },
         "type": "object",

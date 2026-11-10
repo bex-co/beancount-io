@@ -28,7 +28,7 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
         updated_includes (list[str]):
         preview (list[PostApiGatewayV1LedgersOwnerNameRenameFileResponse200PreviewItem]): Per-file rewritten include
             lines; populated on dry runs only.
-        commit (str | Unset): The sha of the commit the rename made; absent on a preview.
+        commit (str | Unset): The sha of the commit this write made; absent on a preview or a read.
     """
 
     message: str

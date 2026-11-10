@@ -1,5 +1,6 @@
 import { BadUserInputError, ConflictError, DomainError } from "@/shared/errors";
 import { toSafeRepoUrlPath } from "@/shared/safe-repo-path";
+import { commitShaOf } from "@/features/gitea/utils/commit-sha";
 import { logger } from "@/shared/logger";
 import {
   giteaErrorStatus,
@@ -220,7 +221,7 @@ export async function commitLedgerFiles(
     directiveLimit,
     rawCreates = [],
   }: { directiveLimit: DirectiveLimitOptions; rawCreates?: RawFileCreate[] },
-): Promise<void> {
+): Promise<{ commit?: string }> {
   // One tier lookup per commit, however many attempts it takes.
   const limit: DirectiveLimitOptions = directiveLimit.exempt
     ? directiveLimit
@@ -255,7 +256,7 @@ export async function commitLedgerFiles(
       (operation): operation is CommitOperation => operation !== null,
     );
     const operations = [...textOperations, ...rawOperations];
-    if (operations.length === 0) return;
+    if (operations.length === 0) return {};
 
     await checkDirectiveLimitForFileChanges(
       client,
@@ -268,11 +269,14 @@ export async function commitLedgerFiles(
     );
 
     try {
-      await client.repos.repoChangeFiles(owner, repo, {
+      const response = await client.repos.repoChangeFiles(owner, repo, {
         files: operations,
         message,
       });
-      return;
+      // The sha of the commit this made (w23/m42); a commit that landed and
+      // lost its answer, settled below, has none to report.
+      const commit = commitShaOf(response);
+      return commit ? { commit } : {};
     } catch (error) {
       if (!isGiteaWriteConflict(error)) {
         // An unrecognized server error may be a lost race the classifier does
@@ -297,7 +301,7 @@ export async function commitLedgerFiles(
           outcome,
           files: operations.map((operation) => operation.path),
         });
-        if (outcome === "landed") return;
+        if (outcome === "landed") return {};
         if (outcome !== "lost-race") {
           throw giteaWriteErrorFromCause("commit ledger files", error);
         }

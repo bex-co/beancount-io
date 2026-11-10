@@ -332,6 +332,8 @@ export type AddBulkEntriesResult = {
    * from the entry point in the same commit (w23/062).
    */
   includedFiles?: string[];
+  /** The sha of the commit the write made; absent on a preview (w23/m42). */
+  commit?: string;
   /**
    * Per-file entry text the batch would append; populated on dry runs only,
    * like the append preview's diff (w23/m7/t002).
@@ -714,7 +716,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       allowInvalid,
       dryRun,
     );
-    const { entryHashes, includedFiles, preview } = written;
+    const { entryHashes, includedFiles, preview, commit } = written;
     const validation = withBudgetIssues(written.validation, budgetIssues);
 
     const noun = inputs.length === 1 ? "entry" : "entries";
@@ -734,6 +736,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       files: dryRun ? [] : distinctFiles,
       entryHashes,
       ...(includedFiles.length > 0 && { includedFiles }),
+      ...(commit && { commit }),
       ...(dryRun && { preview }),
       validation,
     };
@@ -1024,6 +1027,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     includedFiles: string[];
     preview: Array<{ path: string; text: string }>;
     validation: ReportedProjection;
+    commit?: string;
   }> {
     const written = await unwrapFavaResponse(
       favaApiClient.entries.addBulkEntries(
@@ -1047,6 +1051,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     return {
       entryHashes: result?.entry_hashes ?? [],
       includedFiles: result?.included_files ?? [],
+      ...(result?.commit && { commit: result.commit }),
       preview: (result?.preview ?? []).map((file) => ({
         path: file.path,
         text: file.text,

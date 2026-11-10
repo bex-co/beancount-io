@@ -132,6 +132,8 @@ async function fixture(
     wouldBreak: false,
     /** bcio `account_file` routing template, when the ledger routes opens. */
     accountFile: null as string | null,
+    /** The sha of the commit the ledger reports for a write (w23/m42). */
+    commit: undefined as string | undefined,
     /** Files the ledger included from the entry point for this write. */
     includedFiles: [] as string[],
     /** The accounts the ledger opens, which a budget's must be among. */
@@ -232,6 +234,7 @@ async function fixture(
         (_entry: unknown, index: number) => `hash-${index}`,
       ),
       included_files: state.includedFiles,
+      ...(state.commit && { commit: state.commit }),
       ...projected,
     });
   });
@@ -2439,6 +2442,66 @@ describe.each([
         }
       },
     );
+  },
+);
+
+// w23/m42: an agent that adds entries can name the commit it made, to undo it.
+// GraphQL's shared selections stay untouched, so it is asked for `commit` here.
+describe.each(["rest", "gql", "mcp"])(
+  "the commit of an entry write via %s",
+  (surface) => {
+    let n = 0;
+    const commitOf = async (
+      f: Awaited<ReturnType<typeof fixture>>,
+      opts: { dryRun?: boolean; dry_run?: boolean },
+    ): Promise<string | null | undefined> => {
+      if (surface !== "gql") {
+        const answer = await f.call(surface, entries, opts);
+        return (answer.result as { commit?: string }).commit;
+      }
+      const response = await graphql({
+        schema,
+        source:
+          'mutation($entries:[AddEntryInput!]!,$dryRun:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,dryRun:$dryRun) { success commit } }',
+        variableValues: {
+          entries: entries.map(({ type, entry }) => ({
+            type: type.toUpperCase(),
+            [type]:
+              type === "budget" ? { ...entry, interval: "MONTHLY" } : entry,
+          })),
+          dryRun: opts.dryRun,
+        },
+        contextValue: {
+          identity,
+          getCurrentIdentity: () => identity,
+          platform: "web",
+        },
+      });
+      return (
+        response.data?.bulkEntries as { commit?: string | null } | undefined
+      )?.commit;
+    };
+
+    it("is the sha the ledger reports for a commit, and absent for a preview", async () => {
+      const f = await fixture({
+        ...identity,
+        userId: `usr_commit_${surface}_${n++}`,
+      });
+      try {
+        f.state.commit = "abc123def";
+        expect(await commitOf(f, {})).toBe("abc123def");
+        // A preview makes no commit, so the ledger names none.
+        f.state.commit = undefined;
+        expect(
+          (await commitOf(
+            f,
+            surface === "mcp" ? { dry_run: true } : { dryRun: true },
+          )) ?? undefined,
+        ).toBeUndefined();
+      } finally {
+        await f.close();
+      }
+    });
   },
 );
 

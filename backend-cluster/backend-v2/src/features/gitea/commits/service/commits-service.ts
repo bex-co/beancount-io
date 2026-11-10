@@ -3,6 +3,7 @@ import {
   COMMIT_NOT_FOUND_HINT,
 } from "@/shared/errors/lookup-hints";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
+import type { Api as GiteaApi } from "@/features/gitea/client/gitea-api";
 import { assertHostPage, HOST_PAGE_MAX } from "@/shared/host-page";
 import { parseLedgerId } from "@/shared/str";
 import type {
@@ -42,6 +43,35 @@ export function isMissingCommitLookupError(error: unknown): boolean {
     message.includes("no commit") ||
     message.includes("unknown revision")
   );
+}
+
+/**
+ * The commit `sha` names (a sha, an abbreviated sha or a branch) with its
+ * changed files, or `NotFound`. The one place the "which failures mean the
+ * commit does not exist" rule is applied to a single-commit lookup, shared by
+ * the commit read and the revert (w23/m42).
+ */
+export async function findCommit(
+  client: GiteaApi<unknown>,
+  owner: string,
+  repo: string,
+  sha: string,
+  { stat }: { stat: boolean },
+) {
+  let commit;
+  try {
+    const listed = await client.repos.repoGetAllCommits(
+      owner,
+      repo,
+      { sha, limit: 1, files: true, stat },
+      { format: "json" },
+    );
+    commit = listed.data[0];
+  } catch (error) {
+    if (!isMissingCommitLookupError(error)) throw error;
+  }
+  if (!commit) throw new NotFoundError("Commit", sha, COMMIT_NOT_FOUND_HINT);
+  return commit;
 }
 
 /**
@@ -346,23 +376,9 @@ export class CommitsService implements ICommitsService {
         ? await this.giteaClientFactory.getUserApiClient(userId)
         : this.giteaClientFactory.getAnonymousApiClient();
 
-      // Get commit metadata with files
-      const commitResponse = await client.repos.repoGetAllCommits(
-        owner,
-        repo,
-        {
-          sha,
-          limit: 1,
-          files: true,
-          stat: true,
-        },
-        { format: "json" },
-      );
-
-      const commit = commitResponse.data[0];
-      if (!commit) {
-        throw new NotFoundError("Commit", sha, COMMIT_NOT_FOUND_HINT);
-      }
+      const commit = await findCommit(client, owner, repo, sha, {
+        stat: true,
+      });
 
       // Get unified diff using the git commits diff endpoint, for the commit
       // the lookup resolved rather than the caller's text (which may be a ref).

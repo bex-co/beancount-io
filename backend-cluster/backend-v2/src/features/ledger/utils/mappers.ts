@@ -32,6 +32,7 @@ export function mapToLedgerFileContent(
     lastCommitSha: data.last_commit_sha || undefined,
     lastCommitterDate: data.last_committer_date || undefined,
     lastAuthorDate: data.last_author_date || undefined,
+    ...(data.commit && { commit: data.commit }),
   };
 }
 

@@ -8,6 +8,7 @@ import {
 } from "@/features/ledger/utils/flag-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { ledgerPathSchema, ledgerIdOf } from "./schemas";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 export const renameFileInput = z
   .object({
@@ -37,10 +38,7 @@ export const renameFileResult = z.object({
   preview: z
     .array(previewFile)
     .describe("Per-file rewritten include lines; populated on dry runs only."),
-  commit: z
-    .string()
-    .optional()
-    .describe("The sha of the commit the rename made; absent on a preview."),
+  commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
 });
 export const renameFileRoute = v1Route({
   method: "post",

@@ -451,7 +451,7 @@ export function setEntriesHandler(router: Router): void {
         // the classifier may not know: settle it from the files' content, so
         // the loser reads as 409 CONFLICT (re-read and retry), never as an
         // outage, and a commit that landed is never reported as failed (w23/072).
-        await changeExistingFiles(
+        const { commit } = await changeExistingFiles(
           client,
           owner,
           repoName,
@@ -482,6 +482,7 @@ export function setEntriesHandler(router: Router): void {
           errors_before: projection.errorsBefore,
           errors_after: projection.errorsAfter,
           new_errors: projection.newErrors,
+          ...(commit ? { commit } : {}),
         });
         return;
       }

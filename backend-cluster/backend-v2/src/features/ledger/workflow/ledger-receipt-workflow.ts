@@ -59,6 +59,8 @@ export type InsertReceiptResult = {
    * Absent when unresolvable (w23/083).
    */
   entryHashes?: string[];
+  /** The sha of the commit that wrote the entries (w23/m42). */
+  commit?: string;
 };
 
 export interface ILedgerReceiptWorkflow {
@@ -284,7 +286,11 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
 
     // Receipts don't get mobile directive-limit bypass treatment yet — no
     // caller of this workflow threads a platform through today.
-    let committed: { files?: string[]; entryHashes?: string[] };
+    let committed: {
+      files?: string[];
+      entryHashes?: string[];
+      commit?: string;
+    };
     try {
       committed = await this.ledgerEntryWriter.writeBulkEntries(
         identity.userId,
@@ -334,6 +340,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       ...(committed.entryHashes !== undefined && {
         entryHashes: committed.entryHashes,
       }),
+      ...(committed.commit && { commit: committed.commit }),
     };
   }
 
@@ -396,6 +403,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
       ...(committed.entryHashes !== undefined && {
         entryHashes: committed.entryHashes,
       }),
+      ...(committed.commit && { commit: committed.commit }),
     };
   }
 }

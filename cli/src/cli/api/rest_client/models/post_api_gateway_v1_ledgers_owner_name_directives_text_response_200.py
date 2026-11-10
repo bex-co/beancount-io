@@ -41,7 +41,7 @@ class PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200:
         valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
             refusing, so gate on this, not on the status.
         appended_unsorted (list[str]):
-        commit (str | Unset): The sha of the commit this made; absent on a dry run.
+        commit (str | Unset): The sha of the commit this write made; absent on a preview or a read.
     """
 
     success: bool

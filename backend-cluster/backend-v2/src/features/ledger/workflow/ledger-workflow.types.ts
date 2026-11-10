@@ -195,6 +195,8 @@ export interface LedgerFileData {
   lastCommitSha?: string;
   lastCommitterDate?: string;
   lastAuthorDate?: string;
+  /** The sha of the commit a create or update made (w23/m42); absent on a read. */
+  commit?: string;
   /** Written ledger files no loaded file includes (w1/227). */
   notLoaded?: string[];
 }
@@ -232,6 +234,8 @@ export interface DeleteLedgerResult {
 
 export interface DeleteLedgerFileResult {
   path: string;
+  /** The sha of the commit the delete made (w23/m42). */
+  commit?: string;
 }
 
 export interface RenameLedgerFileResult {

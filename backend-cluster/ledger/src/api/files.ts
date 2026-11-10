@@ -8,6 +8,7 @@ import {
 import { successResponse } from "@/server/envelope";
 import { checkDirectiveLimitForFileChanges } from "@/core/directive-limit";
 import { NotFoundDetailError } from "@/server/py-errors";
+import { commitShaOf } from "@/features/gitea/utils/commit-sha";
 import { readGiteaRawBuffer } from "@/features/gitea/utils/gitea-file-content";
 import {
   giteaErrorStatus,
@@ -296,7 +297,7 @@ export async function changeExistingFiles(
     });
     // The sha of the commit this made (w23/m42). A write that landed and lost
     // its answer, settled below, has none to report.
-    return { commit: response.data?.commit?.sha ?? undefined };
+    return { commit: commitShaOf(response) };
   } catch (err) {
     if (!isUnexplainedServerError(err)) throw err;
     // A delete of a path that is gone fails the same way (w21/551): Gitea has no
@@ -426,10 +427,12 @@ export function setFilesHandler(router: Router): void {
         },
       );
       const fileResponse = res.data as { content?: ContentsResponse };
+      const commit = commitShaOf(res);
       ctx.status = 201;
-      ctx.body = successResponse(
-        toFileContentPublic(fileResponse.content as ContentsResponse),
-      );
+      ctx.body = successResponse({
+        ...toFileContentPublic(fileResponse.content as ContentsResponse),
+        ...(commit && { commit }),
+      });
     },
   );
 
@@ -462,9 +465,11 @@ export function setFilesHandler(router: Router): void {
         },
       );
       const fileResponse = res.data as { content?: ContentsResponse };
-      ctx.body = successResponse(
-        toFileContentPublic(fileResponse.content as ContentsResponse),
-      );
+      const commit = commitShaOf(res);
+      ctx.body = successResponse({
+        ...toFileContentPublic(fileResponse.content as ContentsResponse),
+        ...(commit && { commit }),
+      });
     },
   );
 
@@ -477,11 +482,16 @@ export function setFilesHandler(router: Router): void {
       const body = (ctx.request.body ?? {}) as DeleteFileBody;
       const safeUrlPath = toSafeRepoUrlPath(body.path);
       const client = giteaClientForRequest(ctx);
-      await client.repos.repoDeleteFile(owner, repoName, safeUrlPath, {
-        sha: body.sha,
-        message: body.message || `Delete ${body.path}`,
-      });
-      ctx.body = successResponse(null);
+      const res = await client.repos.repoDeleteFile(
+        owner,
+        repoName,
+        safeUrlPath,
+        {
+          sha: body.sha,
+          message: body.message || `Delete ${body.path}`,
+        },
+      );
+      ctx.body = successResponse({ commit: commitShaOf(res) ?? null });
     },
   );
 

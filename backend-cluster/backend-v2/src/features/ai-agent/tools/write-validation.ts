@@ -114,7 +114,7 @@ export async function withPostWriteValidation<T>(
  * now. Never refuses for new errors (a preview returns them), and a check that
  * cannot run reads `checked: false` rather than clean, as the commit's does.
  */
-export async function projectedWriteValidation(
+async function projectedWriteValidation(
   services: FileWriteGateServices,
   identity: Identity,
   ledgerId: string,

@@ -932,18 +932,20 @@ protected call.
 
 ## Undo a change
 
-A write that makes a commit returns its sha as `commit`: the file tools
+Every write that makes a commit returns its sha as `commit`: the file tools
 (`createLedgerFiles`, `updateLedgerFiles`, `deleteLedgerFiles`),
-`appendLedgerText` and `renameLedgerFile` (REST: the file `PUT`/`DELETE`, the
-directive-text append and `rename-file`; GraphQL: `appendLedgerText` and
-`renameLedgerFile`). A preview has none. `revertCommit` takes that sha (or
-`main` for the latest commit), previews with `dry_run`, and commits the undo as
-one new commit that sets each file the commit touched back to its parent's
-contents; its own result carries the new `commit`. It is refused with `CONFLICT`
-naming the file when a later commit changed any file the revert would touch, so
-an undo never discards newer work, and a merge or root commit cannot be
-reverted. The entry tools, the source-slice edits and the receipt insert do not
-return a `commit` yet.
+`addLedgerEntries`, `appendLedgerText`, `renameLedgerFile`, the entry-source
+edits (`updateEntrySource`, `deleteEntrySource`, `deleteEntrySources`),
+`insertReceiptTransaction` and `revertCommit` itself, with the same field on
+their REST and GraphQL twins (REST file `PUT`/`DELETE`, GraphQL
+`createLedgerFile`, `updateLedgerFile` and `deleteLedgerFile`). A preview has
+none, and a write that landed but lost its answer names none rather than a
+wrong one. `revertCommit` takes that sha (or `main` for the latest commit),
+previews with `dry_run`, and commits the undo as one new commit that sets each
+file the commit touched back to its parent's contents; its own result carries
+the new `commit`. It is refused with `CONFLICT` naming the file when a later
+commit changed any file the revert would touch, so an undo never discards newer
+work, and a merge or root commit cannot be reverted.
 
 ## Resources
 

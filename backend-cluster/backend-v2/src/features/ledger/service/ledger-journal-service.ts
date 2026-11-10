@@ -115,6 +115,9 @@ export type AccountJournalResult = {
  */
 type TouchedFiles = { files: string[] };
 
+/** The sha of the commit a write made; absent on a preview (w23/m42). */
+type CommitSha = { commit?: string };
+
 /** The affected block per file: stored replacement on update, removed slice on delete. */
 type SlicePreview = Array<{ path: string; text: string }>;
 
@@ -131,6 +134,7 @@ export type DeleteSliceResult = {
   /** Per-file affected text; populated on dry runs only (w23/m7/t003). */
   preview?: SlicePreview;
 } & TouchedFiles &
+  CommitSha &
   ReportedWrite;
 
 export type DeleteMultiSlicesResult = {
@@ -141,9 +145,11 @@ export type DeleteMultiSlicesResult = {
   /** Per-file affected text; populated on dry runs only (w23/m7/t003). */
   preview?: SlicePreview;
 } & TouchedFiles &
+  CommitSha &
   ReportedWrite;
 
 export type UpdateSliceResult = TouchedFiles &
+  CommitSha &
   ReportedWrite & {
     message: string;
     dryRun: boolean;
@@ -444,6 +450,7 @@ export class LedgerJournalService
       dryRun: dryRun ?? false,
       entryHash: data.entry_hash,
       files: dryRun ? [] : (data.files ?? []),
+      ...(data.commit && { commit: data.commit }),
       preview: (data.preview ?? []).map((file) => ({
         path: file.path,
         text: file.text,
@@ -486,6 +493,7 @@ export class LedgerJournalService
       dryRun: dryRun ?? false,
       deletedCount: data.deleted_hashes.length,
       files: dryRun ? [] : (data.files ?? []),
+      ...(data.commit && { commit: data.commit }),
       preview: (data.preview ?? []).map((file) => ({
         path: file.path,
         text: file.text,
@@ -555,6 +563,7 @@ export class LedgerJournalService
       newSha256sum: data.new_sha256sum,
       newEntryHash: data.new_entry_hash,
       files: dryRun ? [] : (data.files ?? []),
+      ...(data.commit && { commit: data.commit }),
       preview: (data.preview ?? []).map((file) => ({
         path: file.path,
         text: file.text,

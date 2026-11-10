@@ -35,6 +35,7 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
         valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
             refusing, so gate on this, not on the status.
         message (None | str | Unset):
+        commit (str | Unset): The sha of the commit this write made; absent on a preview or a read.
     """
 
     success: bool
@@ -46,6 +47,7 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
     new_errors: list[PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem]
     valid: bool
     message: None | str | Unset = UNSET
+    commit: str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         success = self.success
@@ -76,6 +78,8 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
         else:
             message = self.message
 
+        commit = self.commit
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -92,6 +96,8 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
         )
         if message is not UNSET:
             field_dict["message"] = message
+        if commit is not UNSET:
+            field_dict["commit"] = commit
 
         return field_dict
 
@@ -142,6 +148,8 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
 
         message = _parse_message(d.pop("message", UNSET))
 
+        commit = d.pop("commit", UNSET)
+
         post_api_gateway_v1_ledgers_owner_name_entries_response_200 = cls(
             success=success,
             entry_hashes=entry_hashes,
@@ -152,6 +160,7 @@ class PostApiGatewayV1LedgersOwnerNameEntriesResponse200:
             new_errors=new_errors,
             valid=valid,
             message=message,
+            commit=commit,
         )
 
         return post_api_gateway_v1_ledgers_owner_name_entries_response_200

@@ -13,7 +13,7 @@
  */
 
 /** A file as the git host holds it at one revision: its blob sha and base64 content. */
-export type Blob = { sha: string; content: string } | null;
+export type GitBlob = { sha: string; content: string } | null;
 
 export type CommitFile = {
   path: string;
@@ -48,17 +48,21 @@ export function revertedStatus(
 export function planRevert(
   files: readonly CommitFile[],
   blobs: Readonly<
-    Record<string, { atCommit: Blob; atParent: Blob; current: Blob }>
+    Record<
+      string,
+      {
+        atCommit: GitBlob;
+        atParent: GitBlob;
+        /** Where the file stands now: only its sha is compared. */
+        current: { sha: string } | null;
+      }
+    >
   >,
 ): RevertPlan {
   const operations: RevertOperation[] = [];
   const conflicts: string[] = [];
   for (const { path, status } of files) {
-    const { atCommit, atParent, current } = blobs[path] ?? {
-      atCommit: null,
-      atParent: null,
-      current: null,
-    };
+    const { atCommit, atParent, current } = blobs[path]!;
     if (status === "added") {
       if (current === null) {
         conflicts.push(
@@ -127,6 +131,10 @@ export function revertChanges(operations: readonly RevertOperation[]) {
     change: word[operation.operation],
   }));
 }
+
+/** The `commit` field of every write result, so its wording cannot drift across surfaces. */
+export const COMMIT_SHA_DESCRIPTION =
+  "The sha of the commit this write made; absent on a preview or a read.";
 
 export const REVERT_SHA_DESCRIPTION =
   "The commit to undo: a sha that a write result returned or the commits read lists, or a branch name for its latest commit.";

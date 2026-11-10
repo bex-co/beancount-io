@@ -1642,6 +1642,31 @@ describe("LedgerWorkflow", () => {
       expect(result.path).toBe("accounts.bean");
     });
 
+    // w23/m42: the sha the ledger service reports for the commit it made.
+    it("returns the commit the ledger service made", async () => {
+      mockFavaApiClient.ledgers.createLedgerFile.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            path: "accounts.bean",
+            content: "; Accounts file\n",
+            sha: "abc123",
+            encoding: "base64",
+            commit: "c0mm1t5ha",
+          },
+        },
+      });
+
+      const result = await workflow.createLedgerFile({
+        identity: IDENTITY,
+        ledgerId,
+        input: { path: "accounts.bean", content: "; Accounts file\n" },
+        platform: "web",
+      });
+
+      expect(result.commit).toBe("c0mm1t5ha");
+    });
+
     it("should throw error when create file fails", async () => {
       mockFavaApiClient.ledgers.createLedgerFile.mockResolvedValue({
         data: { success: false },
@@ -1844,6 +1869,23 @@ describe("LedgerWorkflow", () => {
         { path: "accounts.bean", sha: "abc123", message: "Delete accounts" },
       );
       expect(result.path).toBe("accounts.bean");
+    });
+
+    it("returns the commit the ledger service made", async () => {
+      mockFavaApiClient.ledgers.deleteLedgerFile.mockResolvedValue({
+        data: { success: true, data: { commit: "c0mm1t5ha" } },
+      });
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+
+      const result = await workflow.deleteLedgerFile({
+        identity: IDENTITY,
+        ledgerId,
+        input: { path: "accounts.bean", sha: "abc123" },
+      });
+
+      expect(result).toEqual({ path: "accounts.bean", commit: "c0mm1t5ha" });
     });
 
     // w23/m4/t002: the workflow path guards includes exactly like the

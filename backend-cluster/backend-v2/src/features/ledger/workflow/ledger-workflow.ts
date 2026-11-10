@@ -149,9 +149,9 @@ import {
   planRevert,
   revertChanges,
   revertedStatus,
-  type Blob,
+  type GitBlob,
 } from "@/features/ledger/utils/commit-revert";
-import { isMissingCommitLookupError } from "@/features/gitea/commits/service/commits-service";
+import { findCommit } from "@/features/gitea/commits/service/commits-service";
 import { COMMIT_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
@@ -1272,7 +1272,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         deletedPaths: [input.path],
       }),
     );
-    await unwrapFavaResponse(
+    const deleted = await unwrapFavaResponse(
       favaApiClient.ledgers.deleteLedgerFile(
         ledgerOwner,
         ledgerName,
@@ -1282,7 +1282,10 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       (cause) => operationNotAllowedFromCause("delete ledger file", cause),
     );
 
-    return { path: input.path };
+    return {
+      path: input.path,
+      ...(deleted?.commit && { commit: deleted.commit }),
+    };
   }
 
   async renameLedgerFile({
@@ -1547,24 +1550,16 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const gitea = await this.giteaClientFactory.getUserApiClient(
       identity.userId,
     );
-    let commit;
-    try {
-      const listed = await gitea.repos.repoGetAllCommits(
-        ledgerOwner,
-        ledgerName,
-        { sha, limit: 1, files: true, stat: false },
-        { format: "json" },
-      );
-      commit = listed.data[0];
-    } catch (error) {
-      if (!isMissingCommitLookupError(error)) throw error;
-    }
-    if (!commit?.sha)
+    const commit = await findCommit(gitea, ledgerOwner, ledgerName, sha, {
+      stat: false,
+    });
+    const commitSha = commit.sha;
+    if (!commitSha)
       throw new NotFoundError("Commit", sha, COMMIT_NOT_FOUND_HINT);
     const parents = commit.parents ?? [];
     if (parents.length !== 1 || !parents[0]?.sha) {
       throw new BadUserInputError(
-        `${commit.sha.slice(0, 12)} is a ${parents.length === 0 ? "root" : "merge"} commit, which cannot be reverted`,
+        `${commitSha.slice(0, 12)} is a ${parents.length === 0 ? "root" : "merge"} commit, which cannot be reverted`,
         "sha",
         "Pass the sha of an ordinary commit that `beancount://{owner}/{name}/commits` lists.",
       );
@@ -1582,7 +1577,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     );
     const encoded = (path: string) =>
       path.split("/").map(encodeURIComponent).join("/");
-    const blobAt = async (path: string, ref: string): Promise<Blob> => {
+    const blobAt = async (path: string, ref: string): Promise<GitBlob> => {
       try {
         const found = await gitea.repos.repoGetContents(
           ledgerOwner,
@@ -1600,38 +1595,41 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       }
     };
     // Where each file stands now, in one read; the commit's and its parent's
-    // versions only where the status says there is one.
-    const current = new Map(
-      (
-        await unwrapFavaResponse(
-          favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
-            files: files.map((file) => file.path),
-          }),
-          "read ledger files for revert",
-          (cause) =>
-            operationNotAllowedFromCause("read ledger files for revert", cause),
-        )
-      ).map((file) => [file.path, { sha: file.sha, content: "" }] as const),
-    );
-    const blobs = Object.fromEntries(
-      await Promise.all(
+    // versions only where the status says there is one. The reads are
+    // independent, so they run together.
+    const [nowFiles, atRevisions] = await Promise.all([
+      unwrapFavaResponse(
+        favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
+          files: files.map((file) => file.path),
+        }),
+        "read ledger files for revert",
+        (cause) =>
+          operationNotAllowedFromCause("read ledger files for revert", cause),
+      ),
+      Promise.all(
         files.map(async ({ path, status }) => {
           const [atCommit, atParent] = await Promise.all([
-            status === "removed" ? null : blobAt(path, commit.sha),
+            status === "removed" ? null : blobAt(path, commitSha),
             status === "added" ? null : blobAt(path, parentSha),
           ]);
-          return [
-            path,
-            { atCommit, atParent, current: current.get(path) ?? null },
-          ] as const;
+          return { atCommit, atParent };
         }),
       ),
+    ]);
+    const current = new Map(
+      nowFiles.map((file) => [file.path, { sha: file.sha }] as const),
+    );
+    const blobs = Object.fromEntries(
+      files.map(({ path }, index) => [
+        path,
+        { ...atRevisions[index]!, current: current.get(path) ?? null },
+      ]),
     );
     const plan = planRevert(files, blobs);
     if (plan.conflicts.length > 0) {
       throw new ConflictError(
         "Commit",
-        `${commit.sha.slice(0, 12)} cannot be reverted without losing newer changes: ${plan.conflicts.join("; ")}`,
+        `${commitSha.slice(0, 12)} cannot be reverted without losing newer changes: ${plan.conflicts.join("; ")}`,
         {
           hint: "Read the current files with `readLedgerFiles` and fix them with the file tools; revert only a commit whose files nothing has changed since.",
         },
@@ -1639,11 +1637,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     }
     const subject = commitSubject(commit.commit?.message);
     const message =
-      input.message?.trim() || defaultRevertMessage(commit.sha, subject);
+      input.message?.trim() || defaultRevertMessage(commitSha, subject);
     const dryRun = input.dryRun === true;
     onProjectedFiles?.(overlaysOf(plan.operations));
     const summary = {
-      sha: commit.sha,
+      sha: commitSha,
       subject,
       message,
       files: revertChanges(plan.operations),

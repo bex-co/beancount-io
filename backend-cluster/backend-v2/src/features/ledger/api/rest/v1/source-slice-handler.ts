@@ -11,6 +11,7 @@ import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-d
 import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
 import type { ReportedProjection } from "@/features/ledger/utils/bean-check-errors";
 import { ledgerPathSchema, ledgerIdOf, writeProjectionShape } from "./schemas";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 // Both spellings accepted (w23/m3/t001); handlers resolve to `entryHash`
 // before the service so the wire contract never sees the alias. The
 // description (not `required`) carries the one-identifier rule:
@@ -90,6 +91,7 @@ export const deleteSliceResult = z.object({
   preview: z
     .array(previewFile)
     .describe("Per-file affected text; populated on dry runs only."),
+  commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
   ...writeProjectionShape,
 });
 export const deleteSlicesResult = z.object({
@@ -99,6 +101,7 @@ export const deleteSlicesResult = z.object({
   preview: z
     .array(previewFile)
     .describe("Per-file affected text; populated on dry runs only."),
+  commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
   ...writeProjectionShape,
 });
 export const updateSliceResult = deleteSliceResult.extend({

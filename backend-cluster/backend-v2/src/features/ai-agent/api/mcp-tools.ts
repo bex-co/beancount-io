@@ -148,6 +148,7 @@ import {
   listLedgersInputSchema,
   listLedgersOutputSchema,
 } from "../tools/ledger-context-tools";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 /**
  * One MCP tool, described rather than registered.
@@ -421,6 +422,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
           preview: z
             .array(z.object({ path: z.string(), text: z.string() }))
             .describe("Per-file entry text; populated on dry runs only"),
+          commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
         }),
       ),
     ),
@@ -533,7 +535,12 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     // `entryHashes` of its own (w23/083), which would collide with the
     // outcome's key.
     outputSchema: mcpOutputSchema(
-      toolOutputSchema(withWriteOutcome({ success: z.boolean() })),
+      toolOutputSchema(
+        withWriteOutcome({
+          success: z.boolean(),
+          commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
+        }),
+      ),
     ),
     execute: async (context, input) => {
       const { ledger, ...args } = insertReceiptTransactionInput.parse(input);
@@ -758,7 +765,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Revert Commit",
     annotations: DESTRUCTIVE,
     description:
-      "Undo one commit as a new commit. sha is the commit that createLedgerFiles, updateLedgerFiles, deleteLedgerFiles, appendLedgerText or renameLedgerFile returned, or main for the latest. Each file it touched goes back to its parent's contents in one atomic commit; CONFLICT if a later commit changed any of them. Pinned credentials can omit ledger. dry_run previews without committing.",
+      "Undo one commit as a new commit. sha is the commit any write result returned (createLedgerFiles, appendLedgerText, addLedgerEntries, …), or main for the latest. Each file it touched goes back to its parent's contents in one atomic commit; CONFLICT if a later commit changed any of them. Pinned credentials can omit ledger. dry_run previews without committing.",
     inputSchema: revertCommitToolInput,
     outputSchema: mcpOutputSchema(
       toolOutputSchema(

@@ -35,6 +35,7 @@ import {
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
+import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
 
 enum BudgetInterval {
   DAILY = "daily",
@@ -112,6 +113,12 @@ class AddLedgerEntryResponse {
     description: "Per-file entry text; populated on dry runs only",
   })
   preview: EntryPreviewFile[];
+
+  @Field(() => String, {
+    nullable: true,
+    description: COMMIT_SHA_DESCRIPTION,
+  })
+  commit?: string;
 
   @Field(() => Number)
   errorsBefore: number;
@@ -533,7 +540,7 @@ class AppendDirectiveTextResponse {
   appendedUnsorted!: string[];
   @Field(() => String, {
     nullable: true,
-    description: "The sha of the commit this made; absent on a dry run.",
+    description: COMMIT_SHA_DESCRIPTION,
   })
   commit?: string;
 }

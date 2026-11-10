@@ -964,6 +964,11 @@ export interface DeleteMultiSourceSlicesResponse {
    * Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal.
    */
   new_errors: BeancountErrorPublic[];
+  /**
+   * Commit
+   * The sha of the commit the write made; absent on a preview.
+   */
+  commit?: string | null;
 }
 
 /**
@@ -1030,6 +1035,11 @@ export interface DeleteSourceSliceResponse {
    * Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal.
    */
   new_errors: BeancountErrorPublic[];
+  /**
+   * Commit
+   * The sha of the commit the write made; absent on a preview.
+   */
+  commit?: string | null;
 }
 
 /**
@@ -2050,6 +2060,11 @@ export interface LedgerFileContentPublic {
   last_committer_date?: string | null;
   /** Last Author Date */
   last_author_date?: string | null;
+  /**
+   * Commit
+   * The sha of the commit this write made; absent on a read.
+   */
+  commit?: string | null;
 }
 
 /** LedgerGetFilesContentOptions */
@@ -3335,6 +3350,11 @@ export interface UpdateSourceSliceResponse {
    * Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal.
    */
   new_errors: BeancountErrorPublic[];
+  /**
+   * Commit
+   * The sha of the commit the write made; absent on a preview.
+   */
+  commit?: string | null;
 }
 
 /**
@@ -3705,6 +3725,11 @@ export interface EntryAddBulkEntriesResult {
    * Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal.
    */
   new_errors: BeancountErrorPublic[];
+  /**
+   * Commit
+   * The sha of the commit the write made; absent on a preview.
+   */
+  commit?: string | null;
 }
 
 /** SuccessResponse[EntryAddBulkEntriesResult] */
@@ -4693,7 +4718,7 @@ export class Api<
       data: LedgerDeleteFileOptions,
       params: RequestParams = {},
     ) =>
-      this.request<SuccessResponseNoneType, ErrorResponse>({
+      this.request<SuccessResponseLedgerChangeFilesResult, ErrorResponse>({
         path: `/ledgers/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/files`,
         method: "DELETE",
         body: data,

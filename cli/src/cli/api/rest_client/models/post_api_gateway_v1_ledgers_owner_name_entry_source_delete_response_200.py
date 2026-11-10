@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..types import UNSET, Unset
+
 if TYPE_CHECKING:
     from ..models.post_api_gateway_v1_ledgers_owner_name_entry_source_delete_response_200_new_errors_item import (
         PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200NewErrorsItem,
@@ -32,6 +34,7 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200:
         new_errors (list[PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200NewErrorsItem]):
         valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
             refusing, so gate on this, not on the status.
+        commit (str | Unset): The sha of the commit this write made; absent on a preview or a read.
     """
 
     message: str
@@ -42,6 +45,7 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200:
     errors_after: int
     new_errors: list[PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200NewErrorsItem]
     valid: bool
+    commit: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -67,6 +71,8 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200:
 
         valid = self.valid
 
+        commit = self.commit
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -81,6 +87,8 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200:
                 "valid": valid,
             }
         )
+        if commit is not UNSET:
+            field_dict["commit"] = commit
 
         return field_dict
 
@@ -124,6 +132,8 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200:
 
         valid = d.pop("valid")
 
+        commit = d.pop("commit", UNSET)
+
         post_api_gateway_v1_ledgers_owner_name_entry_source_delete_response_200 = cls(
             message=message,
             dry_run=dry_run,
@@ -133,6 +143,7 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteResponse200:
             errors_after=errors_after,
             new_errors=new_errors,
             valid=valid,
+            commit=commit,
         )
 
         post_api_gateway_v1_ledgers_owner_name_entry_source_delete_response_200.additional_properties = d

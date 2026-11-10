@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+from ..types import UNSET, Unset
+
 if TYPE_CHECKING:
     from ..models.put_api_gateway_v1_ledgers_owner_name_entry_source_response_200_new_errors_item import (
         PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200NewErrorsItem,
@@ -35,6 +37,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
         new_sha_256_sum (str):
         new_entry_hash (str): The entry's public ID after the commit, re-read post-commit — use it for the next edit,
             not the request's entryHash.
+        commit (str | Unset): The sha of the commit this write made; absent on a preview or a read.
     """
 
     message: str
@@ -47,6 +50,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
     valid: bool
     new_sha_256_sum: str
     new_entry_hash: str
+    commit: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -76,6 +80,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
 
         new_entry_hash = self.new_entry_hash
 
+        commit = self.commit
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -92,6 +98,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
                 "newEntryHash": new_entry_hash,
             }
         )
+        if commit is not UNSET:
+            field_dict["commit"] = commit
 
         return field_dict
 
@@ -137,6 +145,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
 
         new_entry_hash = d.pop("newEntryHash")
 
+        commit = d.pop("commit", UNSET)
+
         put_api_gateway_v1_ledgers_owner_name_entry_source_response_200 = cls(
             message=message,
             dry_run=dry_run,
@@ -148,6 +158,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
             valid=valid,
             new_sha_256_sum=new_sha_256_sum,
             new_entry_hash=new_entry_hash,
+            commit=commit,
         )
 
         put_api_gateway_v1_ledgers_owner_name_entry_source_response_200.additional_properties = d

@@ -183,8 +183,8 @@ read collaborator — gets `FORBIDDEN` naming the authority it lacks, such as
 (w23/069). Leaving keeps its own refusals (w23/063).
 
 Content writes follow the same rule (w1/194): writing files or entries
-(which covers `appendLedgerText`, the entry-source edits, `renameLedgerFile`
-and `refreshManagedPrices`), opening, merging and rejecting pull requests,
+(which covers `appendLedgerText`, the entry-source edits, `renameLedgerFile`,
+`revertCommit` and `refreshManagedPrices`), opening, merging and rejecting pull requests,
 starring a ledger, and listing its bank connections. A caller who cannot see
 the ledger — it does not exist, or it is private to others — gets the
 concealed `NOT_FOUND` "Ledger not found" its reads give, not `FORBIDDEN`. A
@@ -274,6 +274,26 @@ them: its preview projects the move, and the moved file's errors are not new
 for having a new path (w1/236). REST and GraphQL rename return no validation
 block, and no surface refuses a rename for new errors; the registry records
 that exception.
+
+## The commit a write made, and undoing it (w23/m42)
+
+Every write that makes a commit returns its sha as `commit` on REST, GraphQL
+and MCP: the file writes, `appendLedgerText`, `renameLedgerFile`, bulk entries,
+the entry-source edits and deletes, receipt insertion and `revertCommit`. A
+preview has none, and a write that landed but lost its answer names none rather
+than a wrong sha. `revertCommit` (REST `POST …/revert-commit`, GraphQL
+`revertLedgerCommit`) sets each file a commit touched back to its parent's
+contents as one new commit, previews with `dry_run`/`dryRun`, and refuses with
+`CONFLICT` when a later commit changed any of those files. The three surfaces
+agree on the preview, the commit, the conflict, an unknown commit, a root
+commit and a credential that may not write: `revert-commit-parity.test.ts`
+runs the real workflow over a repository with a commit history
+(`fake-ledger.ts`) through each surface. The `commit` field is asserted on the
+ledger service's `change-files` and entries and slice endpoints, and on each
+surface's twin in `structured-entry-parity.test.ts`,
+`source-slice-parity.test.ts` and `receipt-insert-parity.test.ts`.
+`id-handoff-matrix.test.ts` registers `revertCommit.sha` against the results
+that return it. The user-facing recipe is [Undo a change](mcp.md#undo-a-change).
 
 ## Argument limits (w23/m22, w23/m23)
 

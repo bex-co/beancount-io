@@ -141,6 +141,7 @@ export function setJournalHandler(router: Router): void {
       errors_before: result.validation.errorsBefore,
       errors_after: result.validation.errorsAfter,
       new_errors: result.validation.newErrors,
+      ...(result.commit ? { commit: result.commit } : {}),
       ...(dryRun ? { preview: result.preview } : {}),
     });
   });
@@ -173,6 +174,7 @@ export function setJournalHandler(router: Router): void {
       errors_before: result.validation.errorsBefore,
       errors_after: result.validation.errorsAfter,
       new_errors: result.validation.newErrors,
+      ...(result.commit ? { commit: result.commit } : {}),
       ...(dryRun ? { preview: result.preview } : {}),
     });
   });
@@ -208,6 +210,7 @@ export function setJournalHandler(router: Router): void {
       errors_before: result.validation.errorsBefore,
       errors_after: result.validation.errorsAfter,
       new_errors: result.validation.newErrors,
+      ...(result.commit ? { commit: result.commit } : {}),
       ...(dryRun ? { preview: result.preview } : {}),
     });
   });

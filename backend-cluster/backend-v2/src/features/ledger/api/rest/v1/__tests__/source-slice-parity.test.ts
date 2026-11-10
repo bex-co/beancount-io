@@ -80,7 +80,13 @@ async function fixture(caller = identity) {
     ["entry1", original],
     ["entry2", "; second\n"],
   ]);
-  const state = { writable: true, limited: false, breaks: false };
+  const state = {
+    writable: true,
+    limited: false,
+    breaks: false,
+    /** The sha of the commit the ledger reports for a write (w23/m42). */
+    commit: undefined as string | undefined,
+  };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   type Ref = {
     entry_hash: string;
@@ -146,6 +152,7 @@ async function fixture(caller = identity) {
       message: "Deleted",
       entry_hash: ref.entry_hash,
       files: ["main.bean"],
+      ...(state.commit && { commit: state.commit }),
       ...projected(ref),
     });
   });
@@ -176,6 +183,7 @@ async function fixture(caller = identity) {
         deleted_hashes: body.entries.map((ref) => ref.entry_hash),
         // Each rewritten file once, as the ledger service reports them.
         files: ["main.bean", "2026/imports.bean"],
+        ...(state.commit && { commit: state.commit }),
         ...projected(body),
       });
     },
@@ -216,6 +224,7 @@ async function fixture(caller = identity) {
         new_sha256sum: hash(body.new_content),
         new_entry_hash: "entry1-updated",
         files: ["2026/imports.bean"],
+        ...(state.commit && { commit: state.commit }),
         ...projected(body),
       });
     },
@@ -281,6 +290,8 @@ async function fixture(caller = identity) {
       surface: string,
       operation: Operation,
       input: Record<string, unknown>,
+      /** GraphQL fields to select besides the shared ones, so those stay pinned. */
+      extraFields = "",
     ) => {
       const spec = operations[operation];
       if (surface === "rest") {
@@ -308,7 +319,7 @@ async function fixture(caller = identity) {
             : spec.fields;
         const response = await graphql({
           schema,
-          source: `mutation($input:${spec.inputType}!) { ${spec.field}(ledgerId:"alice/main",input:$input) { ${fields} } }`,
+          source: `mutation($input:${spec.inputType}!) { ${spec.field}(ledgerId:"alice/main",input:$input) { ${fields} ${extraFields} } }`,
           variableValues: { input },
           contextValue: { identity: caller, getCurrentIdentity: () => caller },
         });
@@ -737,6 +748,54 @@ describe.each(["rest", "gql", "mcp"])(
 // w23/m3/t001: list output spells the hash `entry_hash`, so every entry tool
 // accepts that spelling on every surface; two different hashes refuse rather
 // than guess.
+// w23/m42: an agent that edits or deletes an entry can name the commit it made.
+describe.each(["rest", "gql", "mcp"])(
+  "the commit of a slice write via %s",
+  (surface) => {
+    it.each(Object.keys(operations) as Operation[])(
+      "%s reports the sha the ledger made, and none for a preview",
+      async (operation) => {
+        // A write changes the ledger, so the preview gets its own; one at a
+        // time, because GraphQL reaches the fixture built last.
+        const f = await fixture();
+        try {
+          f.state.commit = "abc123def";
+          const written = await f.call(
+            surface,
+            operation,
+            args(operation),
+            "commit",
+          );
+          expect(written.success).toBe(true);
+          expect(written.result).toMatchObject({ commit: "abc123def" });
+        } finally {
+          await f.close();
+        }
+        // A preview makes no commit, so the ledger names none.
+        const g = await fixture();
+        try {
+          const previewed = await g.call(
+            surface,
+            operation,
+            {
+              ...args(operation),
+              ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
+            },
+            "commit",
+          );
+          expect(previewed.success).toBe(true);
+          expect(
+            (previewed.result as { commit?: string | null }).commit ??
+              undefined,
+          ).toBeUndefined();
+        } finally {
+          await g.close();
+        }
+      },
+    );
+  },
+);
+
 describe.each(["rest", "gql", "mcp"])("entry_hash alias via %s", (surface) => {
   const snake = (operation: Operation): Record<string, unknown> => {
     const input = args(operation) as Record<string, unknown>;
