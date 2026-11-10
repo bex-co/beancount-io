@@ -157,6 +157,53 @@ describe("MCP prompts", () => {
     }
   });
 
+  /**
+   * w1/207. The playbooks said to append and then read `validation.newErrors`
+   * from the result, but a commit that adds errors is refused VALIDATION_FAILED
+   * with no `validation` and writes nothing — the reconcile batch's
+   * transactions included. They now preview first and say so.
+   */
+  it("previews writes and states that a refused commit writes nothing", () => {
+    const text = (name: string) =>
+      prose(
+        MCP_PROMPTS.find((descriptor) => descriptor.name === name)!.build(
+          {},
+          pinned,
+        ),
+      );
+    // Every playbook that writes carries the ground rules; the read-only
+    // spending report carries neither.
+    const writers = MCP_PROMPTS.map((descriptor) => descriptor.name).filter(
+      (name) => text(name).includes("Ground rules for this playbook"),
+    );
+    expect(writers).toEqual(
+      expect.arrayContaining([
+        "close-month",
+        "reconcile-account",
+        "categorize-imports",
+      ]),
+    );
+    for (const name of writers) {
+      expect(text(name)).toContain(
+        "Preview every ledger write with `dry_run: true`",
+      );
+      expect(text(name)).not.toContain(
+        "read `validation.newErrors` from the result or call",
+      );
+    }
+    const reconcile = text("reconcile-account");
+    expect(reconcile).toContain(
+      "one `addLedgerEntries` call with `dry_run: true`",
+    );
+    expect(reconcile).toContain(
+      "A commit whose assertion fails is refused `VALIDATION_FAILED` and writes nothing, the transactions included",
+    );
+    expect(reconcile).toContain("otherwise only the confirmed transactions");
+    expect(text("categorize-imports")).toContain(
+      "a commit that would add bean-check errors is refused `VALIDATION_FAILED` and writes nothing",
+    );
+  });
+
   it("points the import playbook at the bank resources it needs", () => {
     const text = prose(
       MCP_PROMPTS.find(
