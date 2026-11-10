@@ -87,6 +87,8 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [229](./229.md) — Holdings and BQL price an asset from its `@` sale; statements and net worth say the price is missing — needs an owner decision on the price basis (MCP QA 2026-11-10)
 - [230](./230.md) — spending-report prompt still says "use cost(position) for currency totals" (MCP QA 2026-11-10)
 - [231](./231.md) — Temp-asset uploads don't bind `mimeType`, so a file uploaded as documented is refused by the parser (MCP QA 2026-11-10)
+- [232](./232.md) — A plaintext-journal page past the first fails bean-check on its own (MCP QA 2026-11-10)
+- [233](./233.md) — Typed entries take metadata only on transactions; directive metadata from the journal can't be written back (MCP QA 2026-11-10)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
