@@ -5,11 +5,15 @@ on:
     branches: [main]
     paths:
       - "backend-cluster/backend-v2/**"
+      # The BQL claims the served text makes are pinned here (served-bql-claims.test.ts).
+      - "backend-cluster/ledger/scripts/served-bql/**"
       - ".github/workflows/ci-backend-parity.yml"
   pull_request:
     branches: [main]
     paths:
       - "backend-cluster/backend-v2/**"
+      # The BQL claims the served text makes are pinned here (served-bql-claims.test.ts).
+      - "backend-cluster/ledger/scripts/served-bql/**"
       - ".github/workflows/ci-backend-parity.yml"
 
 concurrency:

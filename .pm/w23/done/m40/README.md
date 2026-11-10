@@ -1,21 +1,21 @@
 # w23 · m40 — Run what the served text tells an agent to run
 
-**Worker:** worker1 **Goal:** The BQL statements, column lists and identifier handoffs that prompts, tool descriptions and hints tell an agent to use are executed in CI against fixtures, and the ones that fail are fixed. **Status:** todo
+**Worker:** worker1 **Goal:** The BQL statements, column lists and identifier handoffs that prompts, tool descriptions and hints tell an agent to use are executed in CI against fixtures, and the ones that fail are fixed. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Extract the executable claims from served text | 40m | — |
-| t002 | Run each statement on the engine over a fixture | 50m | t001 |
-| t003 | Fix spending-report and the false description claims (w1/230, w1/226) | 40m | t002 |
-| t004 | Write the identifier handoff matrix | 50m | — |
-| t005 | Make the bank tools accept the field the list returns (w1/224) | 45m | t004 |
-| t006 | Update docs and hints for the corrected text | 15m | t003, t005 |
-| t007 | Adoption surface | 20m | t006 |
-| t008 | Simplify | 20m | t007 |
-| t009 | Test coverage | 30m | t007 |
-| t010 | Closeout | 15m | t009 |
+| t001 | Extract the executable claims from served text — **DONE** | 40m | — |
+| t002 | Run each statement on the engine over a fixture — **DONE** | 50m | t001 |
+| t003 | Fix spending-report and the false description claims (w1/230, w1/226) — **DONE** | 40m | t002 |
+| t004 | Write the identifier handoff matrix — **DONE** | 50m | — |
+| t005 | Make the bank tools accept the field the list returns (w1/224) — **DONE** | 45m | t004 |
+| t006 | Update docs and hints for the corrected text — **DONE** | 15m | t003, t005 |
+| t007 | Adoption surface — **DONE** | 20m | t006 |
+| t008 | Simplify — **DONE** | 20m | t007 |
+| t009 | Test coverage — **DONE** | 30m | t007 |
+| t010 | Closeout — **DONE** | 15m | t009 |
 
 ## Definition of done
 

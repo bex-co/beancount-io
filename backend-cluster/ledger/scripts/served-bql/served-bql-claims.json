@@ -1,0 +1,28 @@
+{
+  "columns": [
+    "date",
+    "year",
+    "month",
+    "flag",
+    "payee",
+    "narration",
+    "account",
+    "number",
+    "currency",
+    "cost",
+    "weight",
+    "balance",
+    "position",
+    "tags",
+    "links",
+    "meta"
+  ],
+  "expressions": [
+    "cost(position)",
+    "sum(weight)"
+  ],
+  "forms": [
+    "JOURNAL",
+    "BALANCES"
+  ]
+}

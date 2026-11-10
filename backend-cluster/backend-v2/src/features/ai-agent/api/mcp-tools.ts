@@ -520,7 +520,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Insert Receipt Transaction",
     annotations: DESTRUCTIVE,
     description:
-      "Promote the caller-owned temporary receipt named by receiptObjectKey, append the confirmed transaction, then delete the temporary upload. input carries date, payee, description, postings [{account,amountNumber,amountCurrency}], and documentAccount. ledger is required unless pinned. Applies immediately.",
+      "Promote the caller-owned temporary receipt named by receiptObjectKey (the objectKey generateTempAssetUploadUrl returned), append the confirmed transaction, then delete the temporary upload. input carries date, payee, description, postings [{account,amountNumber,amountCurrency}], and documentAccount. ledger is required unless pinned. Applies immediately.",
     inputSchema: insertReceiptTransactionInput,
     // Shaped inline, not from `receiptInsertResult`: that schema grew an
     // `entryHashes` of its own (w23/083), which would collide with the
@@ -568,7 +568,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Parse Receipt and Recommend Accounts",
     annotations: EXTERNAL_WRITE,
     description:
-      "Parse the caller-owned temporary image/PDF named by objectKey and recommend accounts. Pinned credentials may omit ledger; others must select it. Consumes extraction and recommendation tokens, without inserting entries.",
+      "Parse the caller-owned temporary image/PDF named by objectKey (from generateTempAssetUploadUrl) and recommend accounts. Pinned credentials may omit ledger; others must select it. Consumes extraction and recommendation tokens, without inserting entries.",
     inputSchema: parseReceiptInputSchema.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(parseReceiptOutputSchema),
     execute: withLedger(executeParseReceipt),
@@ -578,7 +578,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Parse Uploaded File",
     annotations: EXTERNAL_WRITE,
     description:
-      "Parse a caller-owned temporary upload into transaction rows. s3ObjectKey comes from the upload operation; fileFormat names the format (csv, pdf, xlsx, json, etc.). Consumes AI quota. Does not write ledger entries.",
+      "Parse a caller-owned temporary upload into transaction rows. s3ObjectKey is the objectKey generateTempAssetUploadUrl returned; fileFormat names the format (csv, pdf, xlsx, json, etc.). Consumes AI quota. Does not write ledger entries.",
     inputSchema: fileParseInput,
     outputSchema: mcpOutputSchema(toolOutputSchema(fileParseResult)),
     execute: async (context, input) => {

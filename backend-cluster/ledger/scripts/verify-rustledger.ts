@@ -52,6 +52,7 @@ import { UNDECODABLE_SOURCE } from "@/foundation/rustledger/file-map-loader";
 import { filterDirectives } from "@/foundation/rustledger/directive-filter";
 import { singleFileRepoFactory } from "./single-file-repo";
 import { verifyBqlOracle } from "./bql-oracle/replay-bql-oracle";
+import { verifyServedBql } from "./served-bql/replay-served-bql";
 import { assertEntryTokens } from "@/features/ledger/utils/entry-tokens";
 import {
   checkTransactionBalance,
@@ -5246,6 +5247,9 @@ poptag #trip
 
   // w23/m20: replay the stock beanquery oracle through the shell service.
   await verifyBqlOracle();
+
+  // w23/m40: run the BQL the hosted MCP surface tells agents to use.
+  await verifyServedBql();
 
   console.log("\nAll rustledger engine checks passed.");
 }
