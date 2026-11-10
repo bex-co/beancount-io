@@ -199,10 +199,17 @@ export class LedgerFinanceService
       ledgerOwner,
       ledgerName,
     );
-    const target = resolveHoldingsConversion(
-      conversion,
-      options?.operating_currency ?? [],
-    );
+    const operating = options?.operating_currency ?? [];
+    const target = resolveHoldingsConversion(conversion, operating);
+    if (conversion !== undefined && target !== null) {
+      await this.assertLedgerNamesCurrency(
+        favaApiClient,
+        ledgerOwner,
+        ledgerName,
+        target,
+        operating,
+      );
+    }
     const queryResult = await unwrapFavaResponse(
       favaApiClient.shell.queryShellPost(ledgerOwner, ledgerName, {
         query: holdingsDetailQuery(target),
@@ -228,6 +235,48 @@ export class LedgerFinanceService
       conversionTarget: target,
       asOf: new Date().toISOString().slice(0, 10),
     });
+  }
+
+  /**
+   * Refuse a holdings conversion to a currency the ledger never names (w1/204).
+   * Interpolated into the BQL price lookup, a typo or a lowercase `usd` found
+   * no price and answered `valuation: "partial"` as if it were a real target.
+   * The statements refuse the same values in the ledger service (w23/156);
+   * holdings is composed here, so the set is read here: posting and cost
+   * currencies, both sides of every price pair, and the operating currencies.
+   */
+  private async assertLedgerNamesCurrency(
+    favaApiClient: Pick<FavaApiClient, "reports">,
+    ledgerOwner: string,
+    ledgerName: string,
+    target: string,
+    operating: readonly string[],
+  ): Promise<void> {
+    if (operating.includes(target)) return;
+    const [currencies, pairs] = await Promise.all([
+      unwrapFavaResponse(
+        favaApiClient.reports.getLedgerCurrencies(ledgerOwner, ledgerName),
+        "get ledger currencies",
+      ),
+      unwrapFavaResponse(
+        favaApiClient.reports.getLedgerCommodities(ledgerOwner, ledgerName),
+        "get ledger commodities",
+      ),
+    ]);
+    const known = new Set([
+      ...operating,
+      ...currencies,
+      ...pairs.flatMap((pair) => [pair.base, pair.quote]),
+    ]);
+    if (known.has(target)) return;
+    const shown = [...known].sort();
+    throw new BadUserInputError(
+      `Unsupported conversion "${target}": pass "units" or a currency in this ledger${
+        shown.length === 0
+          ? ""
+          : ` (${shown.slice(0, 10).join(", ")}${shown.length > 10 ? ", …" : ""})`
+      }.`,
+    );
   }
 
   private rootsOf(options: BeancountOptionsPublic): string[] {
@@ -401,7 +450,9 @@ export class LedgerFinanceService
           account: root,
           ...filterNullish({ time }),
           with_children: true,
-          ...(target === null ? {} : { conversion: target }),
+          // Unconverted is `units`, sent as such: omitted, the ledger fell
+          // back to `at_cost` and `units` answered cost totals (w1/204).
+          conversion: target ?? "units",
           directive_types: [DirectiveType.Transaction, DirectiveType.Balance],
           limit: 1000,
           offset,

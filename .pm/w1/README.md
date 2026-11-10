@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [204](./204.md) — Register `conversion=units` returns cost totals, and unknown conversions pass silently (MCP QA 2026-11-09)
 - [205](./205.md) — Owned-ledgers catalog and GraphQL `listLedgers` accept any page and limit (MCP QA 2026-11-09)
 - [206](./206.md) — Two MCP refusal details point clients the wrong way: FORBIDDEN hint and invalid-bearer 401 (MCP QA 2026-11-09)
 - [207](./207.md) — reconcile-account's Verify step assumes a failing assertion still writes (MCP QA 2026-11-09)

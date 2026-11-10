@@ -2,6 +2,7 @@ import { LedgerFinanceService } from "../ledger-finance-service";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 import type { Identity } from "@/server/api/identity";
+import { BadUserInputError } from "@/shared/errors";
 
 // Same seam as the data-service suite: authorizeLedger's own contract has
 // its own suite; here it is mocked so these cases need no owner,
@@ -14,6 +15,8 @@ jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
 const mockReports = {
   getLedgerOptions: jest.fn(),
   getLedgerPostingsPerAccount: jest.fn(),
+  getLedgerCurrencies: jest.fn(),
+  getLedgerCommodities: jest.fn(),
 };
 const mockShell = {
   queryShellPost: jest.fn(),
@@ -133,6 +136,11 @@ describe("LedgerFinanceService.getHoldings", () => {
 
   it("quotes an explicit target through the conversion leg", async () => {
     mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
+    // EUR is named only as a price quote, which counts (w1/204).
+    mockReports.getLedgerCurrencies.mockResolvedValue(ok(["USD", "AAPL"]));
+    mockReports.getLedgerCommodities.mockResolvedValue(
+      ok([{ base: "USD", quote: "EUR", prices: [] }]),
+    );
 
     const result = await service.getHoldings({
       ledgerId: LEDGER_ID,
@@ -150,6 +158,26 @@ describe("LedgerFinanceService.getHoldings", () => {
       market_value: { number: "1656", currency: "EUR" },
     });
   });
+
+  // w1/204: interpolated into the price lookup, an unknown target found no
+  // price and answered valuation "partial" as if it were real.
+  it.each(["bogus", "usd", "EUR"])(
+    "refuses %p, which the ledger never names, before querying",
+    async (conversion) => {
+      mockReports.getLedgerCurrencies.mockResolvedValue(ok(["USD", "AAPL"]));
+      mockReports.getLedgerCommodities.mockResolvedValue(
+        ok([{ base: "AAPL", quote: "USD", prices: [] }]),
+      );
+      const refusal = await service
+        .getHoldings({ ledgerId: LEDGER_ID, identity: IDENTITY, conversion })
+        .catch((error: unknown) => error);
+      expect(refusal).toBeInstanceOf(BadUserInputError);
+      expect((refusal as Error).message).toBe(
+        `Unsupported conversion "${conversion}": pass "units" or a currency in this ledger (AAPL, USD).`,
+      );
+      expect(mockShell.queryShellPost).not.toHaveBeenCalled();
+    },
+  );
 
   it("passes account and grouping through to the composer", async () => {
     mockShell.queryShellPost.mockResolvedValue(ok(table(holdingsRows())));
@@ -432,11 +460,51 @@ describe("LedgerFinanceService.getRegister", () => {
       "testledger",
       expect.objectContaining({ time: "2024" }),
     );
+    // Unconverted is sent as `units`: omitted, the ledger fell back to
+    // `at_cost` and the register answered cost totals (w1/204).
     expect(mockJournal.getAccountJournal).toHaveBeenCalledWith(
       "testowner",
       "testledger",
-      expect.not.objectContaining({ conversion: expect.anything() }),
+      expect.objectContaining({ conversion: "units" }),
     );
+  });
+
+  it("sends an explicit units as units, not as no conversion", async () => {
+    mockReports.getLedgerOptions.mockResolvedValue(
+      ok({
+        operating_currency: ["USD"],
+        name_assets: "Assets",
+        name_liabilities: "Liabilities",
+        name_equity: "Equity",
+        name_income: "Income",
+        name_expenses: "Expenses",
+      }),
+    );
+    mockJournal.getAccountJournal.mockResolvedValue(
+      ok({
+        items: [txnItem("2024-01-01")],
+        total: 1,
+        account: "Assets:Checking",
+        with_children: true,
+      }),
+    );
+    for (const [conversion, sent] of [
+      ["units", "units"],
+      ["Units", "units"],
+      ["at_cost", "at_cost"],
+    ]) {
+      await service.getRegister({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        account: "Assets:Checking",
+        conversion,
+      });
+      expect(mockJournal.getAccountJournal).toHaveBeenLastCalledWith(
+        "testowner",
+        "testledger",
+        expect.objectContaining({ conversion: sent }),
+      );
+    }
   });
 });
 

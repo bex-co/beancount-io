@@ -83,6 +83,10 @@ import {
 } from "@/features/ledger/utils/new-ledger-errors";
 import type { CacheHelper } from "@/shared/cache";
 import { logger } from "@/shared/logger";
+import {
+  collectLedgerCommodities,
+  resolveConversion,
+} from "@/foundation/rustledger/cost-valuation";
 
 const log = logger.child({ module: "ledger-journal-service" });
 
@@ -975,6 +979,17 @@ export class LedgerJournalService implements ILedgerJournalService {
       query.with_children !== undefined ? query.with_children : true;
 
     const snapshot = await this.loadSnapshot(ledgerId, userId);
+    // An explicit conversion is held to the statements' rule (w23/156): a
+    // typo, a case variant or a currency the ledger never names was ignored
+    // and answered the units view as if it had been honoured (w1/204).
+    if (query.conversion) {
+      resolveConversion(
+        query.conversion,
+        snapshot.directives,
+        snapshot.options.operating_currencies?.[0] ?? "USD",
+        collectLedgerCommodities(snapshot.directives),
+      );
+    }
     // Occurrence-disambiguated IDs over the full stream (as in getJournal), so
     // the account view's edit/delete links target the right duplicate.
     const entryIds = buildEntryIdMap(snapshot.directives);
@@ -1175,7 +1190,12 @@ export class LedgerJournalService implements ILedgerJournalService {
       allowInvalid,
     );
     if (!dryRun) {
-      await this.commitTransforms(ledgerId, userId, transforms, "Delete entries");
+      await this.commitTransforms(
+        ledgerId,
+        userId,
+        transforms,
+        "Delete entries",
+      );
     }
     return {
       message: dryRun
