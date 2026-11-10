@@ -399,7 +399,10 @@ const LEX_RULES: Array<{ type: TokenType; regex: RegExp }> = [
   { type: "NUMBER", regex: /\d*\.?\d+/y },
   {
     type: "STRING",
-    regex: /[\p{L}\p{N}_][\p{L}\p{N}_-]*|"[^"]*"|'[^']*'/uy,
+    // Marks after the first character (w1/215): Hindi, Thai and Arabic
+    // words, and decomposed Latin, carry combining marks, so `हिंदी` and an
+    // NFD `école` were refused bare though the ledger takes them in names.
+    regex: /[\p{L}\p{N}_][\p{L}\p{M}\p{N}_-]*|"[^"]*"|'[^']*'/uy,
   },
 ];
 
@@ -443,7 +446,13 @@ function lex(data: string): FilterToken[] {
       );
     }
     // Fava raises FilterIllegalCharError; we fail the whole parse (keep-all).
-    throw new AdvancedFilterParseError(`Illegal character "${char}"`);
+    // A letter-like character the bare rule cannot take is still searchable
+    // in quotes, so say so (w1/215).
+    throw new AdvancedFilterParseError(
+      /[\p{L}\p{M}\p{N}\p{S}]/u.test(char)
+        ? `Illegal character "${char}" — quote the value to search for it, e.g. "${char}"`
+        : `Illegal character "${char}"`,
+    );
   }
   return tokens;
 }
@@ -732,7 +741,10 @@ function linkPredicate(link: string): EntryPredicate {
  * wire, so matching is entry-level only. The plural `tags:`/`links:` keep
  * Fava's joined-list form, which the mobile search relies on (w21/640).
  */
-function memberPredicate(field: "tags" | "links", value: string): EntryPredicate {
+function memberPredicate(
+  field: "tags" | "links",
+  value: string,
+): EntryPredicate {
   const match = makeMatcher(value);
   return (target): boolean => {
     if (target.kind !== "directive") return false;

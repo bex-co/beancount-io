@@ -162,6 +162,50 @@ describe("filterDirectives — AdvancedFilter parity", () => {
     });
   }
 
+  // w1/215: a bare word with a combining mark — every Hindi and Thai word,
+  // Arabic with harakat, decomposed Latin — was refused "Illegal character".
+  describe("bare words with combining marks", () => {
+    const narrated = (narration: string): DirectiveJson =>
+      ({
+        type: "transaction",
+        date: "2026-01-02",
+        flag: "*",
+        payee: null,
+        narration,
+        tags: [],
+        links: [],
+        postings: [],
+      }) as unknown as DirectiveJson;
+    const nfdEcole = "e\u0301cole";
+
+    it.each(["हिंदी", "บัญชี", "مَطعم", nfdEcole, "Tie\u0302\u0301ng"])(
+      "matches %p bare, as it does quoted",
+      (word) => {
+        const entry = narrated(`Lunch at ${word}`);
+        const other = narrated("Something else");
+        expect(filterDirectives([entry, other], { filter: word })).toEqual([
+          entry,
+        ]);
+        expect(
+          filterDirectives([entry, other], { filter: `"${word}"` }),
+        ).toEqual([entry]);
+      },
+    );
+
+    it.each(["#", "'"])("still refuses a stray %p", (bad) => {
+      expect(() =>
+        filterDirectives([narrated("x")], { filter: `a ${bad}` }),
+      ).toThrow(AdvancedFilterParseError);
+    });
+
+    it("suggests quoting a letter-like character it still cannot take", () => {
+      // A leading combining mark has no letter to attach to.
+      expect(() =>
+        filterDirectives([narrated("x")], { filter: "\u0301x" }),
+      ).toThrow(/quote the value to search for it/);
+    });
+  });
+
   it("matches tags and links carried by document directives", () => {
     const document: DirectiveJson = {
       type: "document",
@@ -250,7 +294,10 @@ describe("filterDirectives — AdvancedFilter parity", () => {
       tags: [],
       links: [],
       postings: [
-        { account: "Assets:Bank:Checking", units: { number: "1", currency: "USD" } },
+        {
+          account: "Assets:Bank:Checking",
+          units: { number: "1", currency: "USD" },
+        },
         { account: "Income:Salary", units: { number: "-1", currency: "USD" } },
       ],
     } as DirectiveJson;
@@ -260,14 +307,15 @@ describe("filterDirectives — AdvancedFilter parity", () => {
       account: "Assets:Bank:Checking",
       currencies: ["USD"],
     } as DirectiveJson;
-    expect(filterDirectives([txn, open], { filter: "account:Checking" })).toEqual([
-      txn,
-      open,
-    ]);
-    expect(filterDirectives([txn, open], { filter: "account:Salary" })).toEqual([
-      txn,
-    ]);
-    expect(filterDirectives([txn, open], { filter: "account:Nope" })).toEqual([]);
+    expect(
+      filterDirectives([txn, open], { filter: "account:Checking" }),
+    ).toEqual([txn, open]);
+    expect(filterDirectives([txn, open], { filter: "account:Salary" })).toEqual(
+      [txn],
+    );
+    expect(filterDirectives([txn, open], { filter: "account:Nope" })).toEqual(
+      [],
+    );
   });
 
   // w23/m2/t002: Fava has no `tag`/`link` attribute on entries, so the
@@ -320,7 +368,9 @@ describe("filterDirectives — AdvancedFilter parity", () => {
       links: ["case-42"],
     } as DirectiveJson;
     expect(filterDirectives([note], { filter: "tag:trip" })).toEqual([note]);
-    expect(filterDirectives([note], { filter: "link:case-42" })).toEqual([note]);
+    expect(filterDirectives([note], { filter: "link:case-42" })).toEqual([
+      note,
+    ]);
     expect(filterDirectives([note], { filter: "tag:other" })).toEqual([]);
   });
 
@@ -345,9 +395,9 @@ describe("filterDirectives — AdvancedFilter parity", () => {
   // w23/m2/t002: a sigil after the colon is a syntax slip, not a bare
   // "Expected STRING, got TAG" lexer error.
   it("hints at the bare name when a sigil follows tag: or link:", () => {
-    expect(() => filterDirectives(DIRECTIVES, { filter: "tag:#qafilt" })).toThrow(
-      /tag:qafilt/,
-    );
+    expect(() =>
+      filterDirectives(DIRECTIVES, { filter: "tag:#qafilt" }),
+    ).toThrow(/tag:qafilt/);
     expect(() =>
       filterDirectives(DIRECTIVES, { filter: "link:^qal1nk" }),
     ).toThrow(/link:qal1nk/);
@@ -364,7 +414,10 @@ describe("filterDirectives — AdvancedFilter parity", () => {
       tags: [],
       links: [],
       postings: [
-        { account: "Assets:Bank:Checking", units: { number: "1", currency: "USD" } },
+        {
+          account: "Assets:Bank:Checking",
+          units: { number: "1", currency: "USD" },
+        },
         { account: "Income:Salary", units: { number: "-1", currency: "USD" } },
       ],
     } as DirectiveJson;
@@ -410,15 +463,15 @@ describe("filterDirectives — AdvancedFilter parity", () => {
       links: [],
       postings: [],
     } as DirectiveJson;
-    expect(
-      filterDirectives([dated], { filter: 'date:"2026"' }),
-    ).toEqual([dated]);
-    expect(
-      filterDirectives([dated], { filter: 'payee:"9lives"' }),
-    ).toEqual([dated]);
-    expect(() =>
-      filterDirectives(DIRECTIVES, { filter: "date:2026" }),
-    ).toThrow(/date:"2026"/);
+    expect(filterDirectives([dated], { filter: 'date:"2026"' })).toEqual([
+      dated,
+    ]);
+    expect(filterDirectives([dated], { filter: 'payee:"9lives"' })).toEqual([
+      dated,
+    ]);
+    expect(() => filterDirectives(DIRECTIVES, { filter: "date:2026" })).toThrow(
+      /date:"2026"/,
+    );
   });
 
   it("accepts Unicode unquoted filter words", () => {
