@@ -368,6 +368,9 @@ from .post_api_gateway_v1_public_keys_body import PostApiGatewayV1PublicKeysBody
 from .post_api_gateway_v1_public_keys_response_200 import PostApiGatewayV1PublicKeysResponse200
 from .post_api_gateway_v1_temp_assets_upload_url_body import PostApiGatewayV1TempAssetsUploadUrlBody
 from .post_api_gateway_v1_temp_assets_upload_url_response_200 import PostApiGatewayV1TempAssetsUploadUrlResponse200
+from .post_api_gateway_v1_temp_assets_upload_url_response_200_upload_headers import (
+    PostApiGatewayV1TempAssetsUploadUrlResponse200UploadHeaders,
+)
 from .posting_total_price_type_0 import PostingTotalPriceType0
 from .preview_ledger_setup_body import PreviewLedgerSetupBody
 from .preview_ledger_setup_body_setup import PreviewLedgerSetupBodySetup
@@ -649,6 +652,7 @@ __all__ = (
     "PostApiGatewayV1PublicKeysResponse200",
     "PostApiGatewayV1TempAssetsUploadUrlBody",
     "PostApiGatewayV1TempAssetsUploadUrlResponse200",
+    "PostApiGatewayV1TempAssetsUploadUrlResponse200UploadHeaders",
     "PostingTotalPriceType0",
     "PreviewLedgerSetupBody",
     "PreviewLedgerSetupBodySetup",

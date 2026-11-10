@@ -91,6 +91,8 @@ export type GenerateUploadUrlOutput = {
   uploadUrl: string;
   objectKey: string;
   expiresIn: number;
+  /** Headers the PUT must send: the declared `mimeType`, which is signed. */
+  uploadHeaders?: { "Content-Type": string };
 };
 
 export interface IAssetStorageService {
@@ -145,6 +147,10 @@ export class AssetStorageService implements IAssetStorageService {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
+      // The SDK's default checksum put the CRC32 of an empty body into every
+      // presigned upload URL: Wasabi ignores it, AWS S3 would reject every
+      // non-empty upload (w1/231).
+      requestChecksumCalculation: "WHEN_REQUIRED",
     });
   }
 
@@ -205,14 +211,21 @@ export class AssetStorageService implements IAssetStorageService {
       ContentType: params.mimeType,
     });
 
+    // A declared type is signed, so the PUT must send it: unsigned, a client
+    // that sent none stored `binary/octet-stream` and the parser refused the
+    // file, and one that sent another type stored that one (w1/231).
     const uploadUrl = await getSignedUrl(this.s3Client, command, {
       expiresIn: this.config.uploadUrlExpiration,
+      ...(params.mimeType && { signableHeaders: new Set(["content-type"]) }),
     });
 
     return {
       uploadUrl,
       objectKey,
       expiresIn: this.config.uploadUrlExpiration,
+      ...(params.mimeType && {
+        uploadHeaders: { "Content-Type": params.mimeType },
+      }),
     };
   }
 

@@ -65,3 +65,28 @@ export function resolveMediaType(format: string, mediaType?: string): string {
   if (mediaType && mediaType !== "application/octet-stream") return mediaType;
   return MEDIA_TYPE_MAP[format.toLowerCase()] ?? "application/octet-stream";
 }
+
+/** What an upload stores when its PUT declared no type, or a generic one. */
+const GENERIC_STORED_TYPES = new Set([
+  "binary/octet-stream",
+  "application/octet-stream",
+]);
+
+/**
+ * The type a parse reads for an uploaded object: the stored one, or the one
+ * its key's extension names when the upload declared none. A PUT without a
+ * `Content-Type` is stored as `binary/octet-stream`, so a JPEG uploaded as
+ * the tool described it was refused as "not an image" (w1/231). The key
+ * keeps the extension of the filename the upload URL was minted for.
+ */
+export function uploadedMediaType(
+  contentType: string | undefined,
+  objectKey: string,
+): string | undefined {
+  const declared = contentType?.split(";")[0]?.trim().toLowerCase();
+  if (declared && !GENERIC_STORED_TYPES.has(declared)) return contentType;
+  const extension = /\.([a-z0-9]+)$/iu.exec(objectKey)?.[1]?.toLowerCase();
+  return extension && extension !== "image"
+    ? MEDIA_TYPE_MAP[extension]
+    : undefined;
+}

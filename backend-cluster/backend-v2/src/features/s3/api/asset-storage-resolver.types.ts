@@ -1,4 +1,5 @@
 import { ObjectType, Field } from "type-graphql";
+import { GraphQLJSONObject } from "graphql-scalars";
 
 /**
  * Response type for temporary asset upload URL generation
@@ -13,6 +14,13 @@ export class TempAssetUploadUrlResponse {
 
   @Field()
   expiresIn!: number;
+
+  @Field(() => GraphQLJSONObject, {
+    nullable: true,
+    description:
+      "Headers the PUT must send; present when mimeType was given, which the URL signs.",
+  })
+  uploadHeaders?: { "Content-Type": string };
 }
 
 /**

@@ -1796,8 +1796,11 @@ starring retains one star, and access is checked again before unstar.
 ### Temporary asset upload and download
 
 `generateTempAssetUploadUrl` accepts optional `filename` and `mimeType` and
-returns `uploadUrl`, `objectKey`, and `expiresIn` (seconds). PUT the bytes to the
-returned URL with the supplied MIME type. Then use the object key in an ingestion
+returns `uploadUrl`, `objectKey`, and `expiresIn` (seconds). A given `mimeType`
+is signed into the URL, and the result carries `uploadHeaders`
+(`{"Content-Type": <mimeType>}`): PUT the bytes with exactly those headers, or
+the store refuses the upload (w1/231). An upload that declared no type is read
+by its key's extension, which keeps the filename's. Then use the object key in an ingestion
 operation or read `beancount://temp-assets/download-url{?objectKey,s3ObjectKey,receiptObjectKey}` to obtain a
 `downloadUrl` and its `expiresIn`.
 

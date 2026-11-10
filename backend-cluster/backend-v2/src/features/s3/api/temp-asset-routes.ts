@@ -27,6 +27,12 @@ export const tempAssetUploadResult = z.object({
   uploadUrl: z.string(),
   objectKey: z.string(),
   expiresIn: z.number(),
+  uploadHeaders: z
+    .object({ "Content-Type": z.string() })
+    .optional()
+    .describe(
+      "Headers the PUT must send; present when mimeType was given, which the URL signs.",
+    ),
 });
 const tempAssetDownloadResult = z.object({
   downloadUrl: z.string(),
@@ -39,7 +45,7 @@ export const TEMP_ASSET_ROUTES = [
     path: "/api-gateway/v1/temp-assets/upload-url",
     summary: "Create a temporary asset upload URL",
     description:
-      "Presign a PUT with optional filename and MIME type. The current user owns the generated key; expiresIn is seconds. No preview.",
+      "Presign a PUT with optional filename and MIME type. The current user owns the generated key; expiresIn is seconds. A given mimeType is signed: PUT with `Content-Type: <mimeType>`, as `uploadHeaders` returns it. No preview.",
     body: tempAssetUploadInput.default({}),
     responses: {
       200: json(

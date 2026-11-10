@@ -597,7 +597,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Create Temporary Asset Upload URL",
     annotations: { ...APPEND, openWorldHint: false },
     description:
-      "Create a presigned PUT URL bound to the current user. Optional filename and mimeType preserve the upload metadata. Upload the bytes to uploadUrl before using objectKey in an ingestion workflow.",
+      "Create a presigned PUT URL bound to the current user. Optional filename and mimeType preserve the upload metadata; a given mimeType is signed, so PUT with the uploadHeaders returned (Content-Type: <mimeType>). Upload the bytes to uploadUrl before using objectKey in an ingestion workflow.",
     inputSchema: tempAssetUploadInput,
     outputSchema: mcpOutputSchema(toolOutputSchema(tempAssetUploadResult)),
     execute: async (context, input) => {

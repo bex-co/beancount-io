@@ -3734,7 +3734,7 @@
     "/api-gateway/v1/temp-assets/upload-url": {
       "post": {
         "summary": "Create a temporary asset upload URL",
-        "description": "Presign a PUT with optional filename and MIME type. The current user owns the generated key; expiresIn is seconds. No preview.",
+        "description": "Presign a PUT with optional filename and MIME type. The current user owns the generated key; expiresIn is seconds. A given mimeType is signed: PUT with `Content-Type: <mimeType>`, as `uploadHeaders` returns it. No preview.",
         "tags": [
           "Ledger v1"
         ],
@@ -3783,6 +3783,18 @@
                     },
                     "expiresIn": {
                       "type": "number"
+                    },
+                    "uploadHeaders": {
+                      "type": "object",
+                      "properties": {
+                        "Content-Type": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "Content-Type"
+                      ],
+                      "description": "Headers the PUT must send; present when mimeType was given, which the URL signs."
                     }
                   },
                   "required": [

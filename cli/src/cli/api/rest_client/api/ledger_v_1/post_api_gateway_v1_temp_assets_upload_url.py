@@ -111,7 +111,8 @@ def sync_detailed(
     """Create a temporary asset upload URL
 
      Presign a PUT with optional filename and MIME type. The current user owns the generated key;
-    expiresIn is seconds. No preview.
+    expiresIn is seconds. A given mimeType is signed: PUT with `Content-Type: <mimeType>`, as
+    `uploadHeaders` returns it. No preview.
 
     Args:
         body (PostApiGatewayV1TempAssetsUploadUrlBody | Unset):
@@ -143,7 +144,8 @@ def sync(
     """Create a temporary asset upload URL
 
      Presign a PUT with optional filename and MIME type. The current user owns the generated key;
-    expiresIn is seconds. No preview.
+    expiresIn is seconds. A given mimeType is signed: PUT with `Content-Type: <mimeType>`, as
+    `uploadHeaders` returns it. No preview.
 
     Args:
         body (PostApiGatewayV1TempAssetsUploadUrlBody | Unset):
@@ -170,7 +172,8 @@ async def asyncio_detailed(
     """Create a temporary asset upload URL
 
      Presign a PUT with optional filename and MIME type. The current user owns the generated key;
-    expiresIn is seconds. No preview.
+    expiresIn is seconds. A given mimeType is signed: PUT with `Content-Type: <mimeType>`, as
+    `uploadHeaders` returns it. No preview.
 
     Args:
         body (PostApiGatewayV1TempAssetsUploadUrlBody | Unset):
@@ -200,7 +203,8 @@ async def asyncio(
     """Create a temporary asset upload URL
 
      Presign a PUT with optional filename and MIME type. The current user owns the generated key;
-    expiresIn is seconds. No preview.
+    expiresIn is seconds. A given mimeType is signed: PUT with `Content-Type: <mimeType>`, as
+    `uploadHeaders` returns it. No preview.
 
     Args:
         body (PostApiGatewayV1TempAssetsUploadUrlBody | Unset):

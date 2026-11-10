@@ -128,6 +128,36 @@ describe("LLMService receipt formats", () => {
     });
     expect(generateDownloadUrl).not.toHaveBeenCalled();
   });
+
+  // w1/231: a PUT without a Content-Type stored the JPEG as
+  // binary/octet-stream, and the parser refused it as "not an image".
+  it.each(["binary/octet-stream", "application/octet-stream", undefined])(
+    "reads a JPEG stored as %p by its key's extension",
+    async (contentType) => {
+      getObjectMetadata.mockResolvedValue({ contentType });
+      generateDownloadUrl.mockRejectedValue(new Error("past the gate"));
+      await expect(
+        makeService().parseReceipt(user, "tmp/usr_1/receipt.jpg", "alice/a"),
+      ).rejects.toThrow("past the gate");
+    },
+  );
+
+  it("names objectKey and the stored type when neither says image", async () => {
+    getObjectMetadata.mockResolvedValue({ contentType: "binary/octet-stream" });
+    generateDownloadUrl.mockReset();
+    await expect(
+      makeService().parseReceipt(user, "tmp/usr_1/receipt", "alice/a"),
+    ).rejects.toMatchObject({
+      category: "BAD_USER_INPUT",
+      message:
+        "objectKey must name an image (JPEG, PNG, GIF, WEBP) or PDF file; it was uploaded as binary/octet-stream",
+      metadata: {
+        field: "objectKey",
+        hint: expect.stringContaining("uploadHeaders"),
+      },
+    });
+    expect(generateDownloadUrl).not.toHaveBeenCalled();
+  });
 });
 
 // w21/325: a statement import sent a HEIC to the model too, and it failed as a

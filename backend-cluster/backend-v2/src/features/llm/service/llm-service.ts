@@ -20,6 +20,7 @@ import { recommendAccounts } from "../utils/recommend-accounts";
 import { normalizeReceiptDate } from "../utils/normalize-receipt-date";
 import { categorizeTransactions } from "../utils/categorize-transactions";
 import { modelProxyError } from "../utils/model-proxy-error";
+import { uploadedMediaType } from "../utils/media-type-utils";
 import { parseLedgerId } from "@/shared/str";
 import { DirectiveType } from "@/foundation/fava";
 import {
@@ -48,6 +49,10 @@ const RECEIPT_CONTENT_TYPES = new Set([
 ]);
 
 const llmServiceLogger = logger.child({ module: "llm-service" });
+
+/** What to do about an upload stored as the wrong type (w1/231). */
+const UPLOAD_TYPE_HINT =
+  "Upload the file again: pass its `mimeType` to generateTempAssetUploadUrl and PUT with the `uploadHeaders` it returns.";
 
 // Domain types (transport-agnostic, no TypeGraphQL decorators)
 type ParsedTransaction = {
@@ -187,8 +192,9 @@ export class LLMService implements ILLMService {
     this.assertLlmConfigured();
     await this.assertAssistedQuotaAvailable(userId, platform);
 
-    const { contentType } =
-      await this.assetStorage.getObjectMetadata(s3ObjectKey);
+    const stored = (await this.assetStorage.getObjectMetadata(s3ObjectKey))
+      .contentType;
+    const contentType = uploadedMediaType(stored, s3ObjectKey);
 
     // A statement may be a photo or a scan, but only in a format the models
     // read: an image of any other kind (an iPhone's HEIC, a TIFF) reached the
@@ -198,7 +204,9 @@ export class LLMService implements ILLMService {
     const mediaType = contentType?.split(";")[0]?.trim().toLowerCase() ?? "";
     if (mediaType.startsWith("image/") && !MODEL_IMAGE_TYPES.has(mediaType)) {
       throw new BadUserInputError(
-        "s3ObjectKey must be a CSV, OFX, QIF, spreadsheet or PDF export, or an image (JPEG, PNG, GIF, WEBP)",
+        `objectKey must name a CSV, OFX, QIF, spreadsheet or PDF export, or an image (JPEG, PNG, GIF, WEBP); it was uploaded as ${stored ?? "no type"}`,
+        "objectKey",
+        UPLOAD_TYPE_HINT,
       );
     }
 
@@ -251,15 +259,18 @@ export class LLMService implements ILLMService {
     await this.assertAssistedQuotaAvailable(userId, platform);
 
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
-    const { contentType } =
-      await this.assetStorage.getObjectMetadata(s3ObjectKey);
+    const stored = (await this.assetStorage.getObjectMetadata(s3ObjectKey))
+      .contentType;
+    const contentType = uploadedMediaType(stored, s3ObjectKey);
 
     // Exactly the formats the models read. Any `image/*` used to pass, so an
     // iPhone's HEIC reached the model, failed there, and read only as "Could
     // not read receipt" (w21/108).
     if (!RECEIPT_CONTENT_TYPES.has(contentType ?? "")) {
       throw new BadUserInputError(
-        "s3ObjectKey must be an image (JPEG, PNG, GIF, WEBP) or PDF file",
+        `objectKey must name an image (JPEG, PNG, GIF, WEBP) or PDF file; it was uploaded as ${stored ?? "no type"}`,
+        "objectKey",
+        UPLOAD_TYPE_HINT,
       );
     }
 
