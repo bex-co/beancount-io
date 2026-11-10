@@ -74,6 +74,8 @@
 
 ## Inbox
 
+- [105 — Import preview names fields in English in every language](./105.md) — dashboard QA 2026-11-10
+- [106 — Import preview calls an impossible date a format error](./106.md) — dashboard QA 2026-11-10; dashboard counterpart of w5/330
 - [104 — Ledger Gallery stops at 50 matches and announces them as the whole result](./104.md) — dashboard QA 2026-11-10; `hasMore` from w23/m28 is unused
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains.
 
