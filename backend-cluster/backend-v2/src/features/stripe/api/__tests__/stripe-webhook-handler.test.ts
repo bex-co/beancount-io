@@ -620,7 +620,7 @@ describe("an expired Checkout session (ADR027)", () => {
     await t.run();
 
     expect(mockEmailCheckoutRecovery).toHaveBeenCalledWith(
-      expect.objectContaining({ stripe: t.stripe }),
+      expect.objectContaining({ stripe: t.stripe, groupId: 38671 }),
       expect.objectContaining({ id: "cs_synthetic" }),
       BILLING_CLIENT_ID,
     );

@@ -15,7 +15,6 @@ import {
   invoicePlan,
   isLongFailingRenewal,
 } from "../operations/renewal-email";
-import { config } from "@/config/config";
 import { type AppLayers } from "@/foundation/composition";
 import { logger } from "@/shared/logger";
 import { registerRoute } from "@/server/rest/openapi-registry";
@@ -225,7 +224,7 @@ export function setStripeWebhookHandler(
                 models: layers.database.models,
                 db: layers.database.db,
                 sendgrid: layers.clients.sendgrid,
-                groupId: config.sendGrid.checkoutRecoveryGroupId,
+                groupId: SUBSCRIPTION_CONFIG[clientId].recoveryEmailGroupId,
               },
               event.data.object,
               clientId,

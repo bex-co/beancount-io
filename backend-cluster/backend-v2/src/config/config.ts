@@ -38,7 +38,6 @@ interface PostgresConfig {
 
 interface SendGridConfig {
   apiKey: string;
-  checkoutRecoveryGroupId?: number;
 }
 
 interface JwtConfig {
@@ -449,12 +448,6 @@ export const config: AppConfig = {
   },
   sendGrid: {
     apiKey: process.env.SEND_GRID_API_KEY || "",
-    /**
-     * The unsubscribe group of the checkout recovery email (ADR027 D6).
-     * Unset turns the email off.
-     */
-    checkoutRecoveryGroupId:
-      Number(process.env.SEND_GRID_CHECKOUT_RECOVERY_GROUP_ID) || undefined,
   },
   stripe: {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",

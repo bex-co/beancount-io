@@ -33,7 +33,6 @@ function setup({
   storeRows = [] as object[],
   later = [] as Later[],
   suppressed = false,
-  groupId = 7 as number | null,
 } = {}) {
   const list = jest.fn(() =>
     (async function* () {
@@ -68,7 +67,7 @@ function setup({
     },
     db: {} as DbExecutor,
     sendgrid: { isSuppressed },
-    groupId: groupId ?? undefined,
+    groupId: 7,
   } as unknown as CheckoutRecoveryDeps;
   const check = (session: Stripe.Checkout.Session = expired) =>
     recoveryEligibility(deps, session, BILLING_CLIENT_ID);
@@ -84,12 +83,10 @@ describe("recoveryEligibility (ADR027 D2, D5, D6)", () => {
       userId: "usr_alice",
       email: "alice@example.com",
       plan: current,
-      groupId: 7,
     });
   });
 
   it.each<[string, Parameters<typeof setup>[0], string]>([
-    ["the email is not configured", { groupId: null }, "disabled"],
     ["the user has no email", { email: null }, "no-recipient"],
     [
       "the price is not one of ours",

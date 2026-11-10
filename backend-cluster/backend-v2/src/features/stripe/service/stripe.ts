@@ -144,6 +144,11 @@ export interface StripeClientConfig {
    * Created by hand in the Stripe Dashboard with this ID; not a secret.
    */
   recoveryCouponId: string;
+  /**
+   * The SendGrid unsubscribe group of the checkout recovery email
+   * (ADR027 D6). Account-specific like the coupon, and not a secret.
+   */
+  recoveryEmailGroupId: number;
   /** Webhook URL for Stripe events */
   webhook: string;
 }
@@ -254,6 +259,7 @@ export const SUBSCRIPTION_CONFIG: SubscriptionConfigMap = {
     portalReturnUrl: "https://beancount.io/settings/billing",
     portalConfigurationId: "bpc_1US5i0EqsEqs2tLVVF907WfA",
     recoveryCouponId: "checkout-recovery-20",
+    recoveryEmailGroupId: 38671,
     webhook: "https://beancount.io/api-gateway/stripe/webhook",
   },
 };

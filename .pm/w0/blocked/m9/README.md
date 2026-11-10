@@ -26,6 +26,7 @@
 - **Who:** the repository owner (Stripe Dashboard, SendGrid, production deployment).
 - **Board change:** t007–t009 do not need the live check, so t007 now depends on t005. Closeout (t010) waits on t006 and t009.
 - **2026-11-09 — SendGrid group created:** "Checkout recovery", ID **38671**, not the default group. The suppression search the code calls answers 200. Still open in step 3: set `SEND_GRID_CHECKOUT_RECOVERY_GROUP_ID=38671` in the production backend-v2 environment, which is not on the bex workspace this repository's CLI sees. Also confirm that the production `SEND_GRID_API_KEY` can read suppressions (ASM read), not only send mail. Without that, every lookup fails, the webhook answers 400, and no email goes out.
+- **2026-11-09 — owner decision, no new env var:** the group ID is pinned in code (`SUBSCRIPTION_CONFIG.recoveryEmailGroupId = 38671`, beside the coupon and price IDs), and `SEND_GRID_CHECKOUT_RECOVERY_GROUP_ID` is gone. Step 3 is now done once deployed. The production key's ASM read permission is the only SendGrid item left.
 - **Milestone blocked 2026-11-08:** t007–t009 are done, so every open task (t006, and t010, which depends on it) waits on the owner. The milestone moved to `w0/blocked/m9/`. **Unblock:** the same owner steps as above. Then `/pm unblock w0/m9`, run t006, then t010.
 
 ## Definition of done

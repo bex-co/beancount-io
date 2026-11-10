@@ -33,12 +33,11 @@ export interface CheckoutRecoveryDeps {
   models: Pick<IModels, "user" | "sentBillingEmail" | "storeSubscription">;
   db: DbExecutor;
   sendgrid: ISendGrid;
-  /** The email's SendGrid unsubscribe group; unset turns the email off. */
-  groupId?: number;
+  /** The email's SendGrid unsubscribe group. */
+  groupId: number;
 }
 
 type RecoveryIneligibility =
-  | "disabled"
   | "no-recipient"
   | "unknown-plan"
   | "paid-before"
@@ -51,7 +50,6 @@ export type RecoveryEligibility =
       userId: string;
       email: string;
       plan: PlanConfig;
-      groupId: number;
     }
   | { eligible: false; reason: RecoveryIneligibility };
 
@@ -77,7 +75,6 @@ export async function recoveryEligibility(
   session: Stripe.Checkout.Session,
   clientId: string,
 ): Promise<RecoveryEligibility> {
-  if (!deps.groupId) return ineligible("disabled");
   const userId = session.metadata?.userId;
   if (!userId) return ineligible("no-recipient");
   const user = await deps.models.user.getById(deps.db, userId);
@@ -94,13 +91,7 @@ export async function recoveryEligibility(
   if (await deps.sendgrid.isSuppressed(user.email, deps.groupId)) {
     return ineligible("unsubscribed");
   }
-  return {
-    eligible: true,
-    userId,
-    email: user.email,
-    plan,
-    groupId: deps.groupId,
-  };
+  return { eligible: true, userId, email: user.email, plan };
 }
 
 /** The current, sellable plan the session was for, if any. */
@@ -181,7 +172,7 @@ export async function emailCheckoutRecovery(
 ): Promise<RecoveryOutcome> {
   const verdict = await recoveryEligibility(deps, session, clientId);
   if (!verdict.eligible) return verdict.reason;
-  const { userId, email, plan, groupId } = verdict;
+  const { userId, email, plan } = verdict;
 
   const key = `checkout-recovery:${userId}`;
   if (!(await deps.models.sentBillingEmail.claim(deps.db, key))) {
@@ -215,7 +206,7 @@ export async function emailCheckoutRecovery(
       subject: checkoutRecoveryEmailSubject(params),
       html: renderCheckoutRecoveryHtml(params),
       text: renderCheckoutRecoveryText(params),
-      asm: { groupId },
+      asm: { groupId: deps.groupId },
     });
   } catch (error) {
     if (codeId) {
