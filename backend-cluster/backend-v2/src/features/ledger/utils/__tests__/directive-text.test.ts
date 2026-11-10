@@ -384,3 +384,53 @@ describe("insertDirectives", () => {
     ]);
   });
 });
+
+// w1/197: an append rewrote every line of a CRLF file to LF, so each append to
+// a Windows-authored file was a whole-file diff.
+describe("insertDirectives into a CRLF file", () => {
+  const crlf = [
+    "2020-01-01 open Assets:X USD",
+    '2020-01-02 note Assets:X "a"',
+    "",
+  ].join("\r\n");
+
+  it("keeps the existing lines byte-identical and writes the block in CRLF", () => {
+    const [directive] = parseDirectiveText('2020-05-01 note Assets:X "b"\n');
+    const result = insertDirectives(crlf, [directive]);
+    expect(result.content).toBe(`${crlf}\r\n2020-05-01 note Assets:X "b"\r\n`);
+    expect(result.content.startsWith(crlf)).toBe(true);
+    expect(result.content.replace(/\r\n/g, "")).not.toContain("\n");
+    expect(result.content.split("\r\n")[result.inserted[0].line - 1]).toBe(
+      '2020-05-01 note Assets:X "b"',
+    );
+  });
+
+  it("threads a multi-line block between CRLF lines without mixing endings", () => {
+    const [directive] = parseDirectiveText(
+      ['2020-01-01 * "Mid"', "  Assets:X  1 USD", "  Equity:Opening", ""].join(
+        "\n",
+      ),
+    );
+    const result = insertDirectives(crlf, [directive]);
+    const lines = result.content.split("\r\n");
+    expect(result.content.replace(/\r\n/g, "")).not.toContain("\n");
+    expect(lines[result.inserted[0].line - 1]).toBe('2020-01-01 * "Mid"');
+    expect(lines).toEqual([
+      "2020-01-01 open Assets:X USD",
+      "",
+      '2020-01-01 * "Mid"',
+      "  Assets:X  1 USD",
+      "  Equity:Opening",
+      '2020-01-02 note Assets:X "a"',
+      "",
+    ]);
+  });
+
+  it("leaves an LF file in LF", () => {
+    const lf = "2020-01-01 open Assets:X USD\n";
+    const [directive] = parseDirectiveText('2020-05-01 note Assets:X "b"\n');
+    expect(insertDirectives(lf, [directive]).content).toBe(
+      '2020-01-01 open Assets:X USD\n\n2020-05-01 note Assets:X "b"\n',
+    );
+  });
+});

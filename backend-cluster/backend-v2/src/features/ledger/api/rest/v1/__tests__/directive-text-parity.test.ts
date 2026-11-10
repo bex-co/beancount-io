@@ -858,6 +858,37 @@ describe("appending Beancount text through the real adapters", () => {
     },
   );
 
+  // w1/197: an append rewrote a Windows-authored file to LF, so every append
+  // to one was a whole-file diff.
+  it.each(["rest", "gql", "mcp"] as const)(
+    "keeps a CRLF file's lines byte-identical and appends in CRLF via %s",
+    async (surface) => {
+      const f = await fixture();
+      const crlf = EXISTING.replace(/\n/g, "\r\n");
+      f.state.files.set("main.bean", crlf);
+      try {
+        const result = await f.call(surface, { text: TXN });
+        expect(result.ok).toBe(true);
+        const data = result.ok ? (result.data as Record<string, never>) : {};
+        const written = f.state.files.get("main.bean")!;
+        expect(written.replace(/\r\n/g, "")).not.toContain("\n");
+        const lines = written.split("\r\n");
+        // The untouched head and tail are the original CRLF bytes.
+        expect(
+          written.startsWith(crlf.split("\r\n").slice(0, 6).join("\r\n")),
+        ).toBe(true);
+        expect(written.endsWith(crlf.split("\r\n").slice(6).join("\r\n"))).toBe(
+          true,
+        );
+        expect(data.wrote).toEqual([{ path: "main.bean", line: 7 }]);
+        expect(lines[6]).toBe('2026-02-05 * "Cafe" "Coffee"');
+        expect(data.entryHashes).toEqual(["hash-main.bean:7"]);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it("honours an explicit path over the routing rules", async () => {
     const f = await fixture();
     f.state.routeTransactionsTo = "txns/{year}.bean";

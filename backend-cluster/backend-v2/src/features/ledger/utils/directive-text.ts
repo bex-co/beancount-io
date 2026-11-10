@@ -322,6 +322,10 @@ export function insertDirectives(
   existing: string,
   directives: readonly ParsedDirective[],
 ): InsertionResult {
+  // A Windows-authored file keeps CRLF: rejoining with LF rewrote every line,
+  // so each append was a whole-file diff (w1/197). Detected as the ledger
+  // service's own appends and edits detect it (w21/673, w21/252).
+  const eol = lineEndingOf(existing);
   const normalized = existing.replace(/\r\n?/g, "\n");
   const lines = normalized === "" ? [] : normalized.split("\n");
 
@@ -361,8 +365,14 @@ export function insertDirectives(
     inserted.push({ line: at + prefix.length + 1 });
   }
 
-  const content = `${working.join("\n").replace(/\n+$/, "")}\n`;
+  const content = `${working.join(eol).replace(/(?:\r?\n)+$/, "")}${eol}`;
   return { content, inserted, appended: !sorted };
+}
+
+/** CRLF when the file's first line ends that way, else LF. */
+function lineEndingOf(content: string): "\r\n" | "\n" {
+  const first = content.indexOf("\n");
+  return first > 0 && content[first - 1] === "\r" ? "\r\n" : "\n";
 }
 
 /**
