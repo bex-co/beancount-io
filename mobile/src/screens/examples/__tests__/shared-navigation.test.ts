@@ -90,6 +90,7 @@ function load(relative: string): any {
           return { ...icons, TabBarIcon: "TabBarIcon" };
         if (id === "@/components/haptic-tab") return { HapticTab: "HapticTab" };
         if (id === "./tab-bar-metrics") return { TAB_BAR_CONTENT_HEIGHT: 80 };
+        if (id === "@/common/rtl") return { isRtlLayout: () => false };
         if (id === "@/common/theme")
           return {
             useTheme: () => ({

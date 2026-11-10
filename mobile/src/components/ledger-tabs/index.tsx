@@ -20,6 +20,7 @@ import {
   type LedgerDrawerData,
 } from "@/components/ledger-drawer";
 import { fontSizes, fontWeights, useTheme, withAlpha } from "@/common/theme";
+import { isRtlLayout } from "@/common/rtl";
 import type { ColorTheme } from "@/types/theme-props";
 import { i18n } from "@/translations";
 import { localeVar } from "@/common/vars";
@@ -83,12 +84,21 @@ type TabNavigatorProps = {
  * custom appearance values cannot cover or fight the system material.
  * Each tab's vertical scroll container uses useScrollToTop. Disable native
  * scroll discovery so wrapped lists and horizontal controls have one target.
+ * UIKit lays the bar out in the native app's direction, which follows the
+ * device language and ignores `I18nManager.forceRTL`, so a Persian app on an
+ * English device kept Home at the left edge of an otherwise mirrored screen
+ * (w22/009). The direction is therefore passed to the host from the live
+ * layout, in both directions, as react-native-screens documents for `forceRTL`.
  */
 function NativeTabNavigator({ theme, titles }: TabNavigatorProps): JSX.Element {
   const contentStyle = { backgroundColor: theme.white } as const;
 
   return (
-    <NativeTabs tintColor={theme.primary} minimizeBehavior="onScrollDown">
+    <NativeTabs
+      tintColor={theme.primary}
+      minimizeBehavior="onScrollDown"
+      unstable_nativeProps={{ direction: isRtlLayout() ? "rtl" : "ltr" }}
+    >
       <NativeTabs.Trigger
         name="index"
         contentStyle={contentStyle}
