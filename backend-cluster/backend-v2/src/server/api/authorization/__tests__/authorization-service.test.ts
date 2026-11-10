@@ -681,6 +681,19 @@ describe("AuthorizationService", () => {
         ) as AuthorizationResource,
         needs: "admin",
       },
+      // w1/223: the ledger-wide account and staged-transaction reads named
+      // a bank connection the caller never named, as if none were linked.
+      ...[
+        AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_READ,
+        AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_READ,
+      ].map((action) => ({
+        action,
+        principal: admin,
+        resource: bankConnectionResource(
+          "alice/missing",
+        ) as AuthorizationResource,
+        needs: "admin",
+      })),
     ];
 
     it.each(cases)(
@@ -711,6 +724,27 @@ describe("AuthorizationService", () => {
           message: expect.stringMatching(
             new RegExp(`^\\w.* alice/missing requires ${needs} access to it$`),
           ),
+        });
+      },
+    );
+
+    it.each([
+      AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_READ,
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_READ,
+    ])(
+      "keeps the connection's concealment when %s names one",
+      async (action) => {
+        await expect(
+          new AuthorizationService({
+            check: async () => false,
+          }).authorizeOrThrow({
+            principal: admin,
+            action,
+            resource: bankConnectionResource("alice/missing", "pitm_1"),
+          }),
+        ).rejects.toMatchObject({
+          category: ErrorCategory.NOT_FOUND,
+          message: "Bank connection not found",
         });
       },
     );

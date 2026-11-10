@@ -92,7 +92,7 @@ export interface ILedgerGeneratedFileWriter {
 export interface ILedgerRepoService {
   getLatestCommit(params: {
     ledgerId: string;
-    identity: Identity;
+    identity: Identity | undefined;
     branchName?: string;
   }): Promise<LatestCommitResult>;
 
@@ -171,7 +171,7 @@ export class LedgerRepoService
 {
   async getLatestCommit(params: {
     ledgerId: string;
-    identity: Identity;
+    identity: Identity | undefined;
     branchName?: string;
   }): Promise<LatestCommitResult> {
     const { ledgerId, identity, branchName = "main" } = params;
@@ -184,7 +184,7 @@ export class LedgerRepoService
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
-      identity.userId,
+      identity?.userId,
     );
 
     const data = await unwrapFavaResponse(

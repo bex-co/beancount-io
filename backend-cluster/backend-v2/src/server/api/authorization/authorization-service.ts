@@ -103,6 +103,16 @@ interface ActionRequirement {
    * gone (w23/069).
    */
   readonly deniedToReader?: (ledgerId: string) => string;
+  /**
+   * A bank action that names no connection — every account or staged
+   * transaction in the ledger — conceals and refuses as the ledger does, as
+   * the connection list does (w1/194). Concealed as the connection's own,
+   * "Bank connection not found" read as "no bank is linked" (w1/223).
+   */
+  readonly ledgerWide?: Pick<
+    ActionRequirement,
+    "concealDenialAs" | "deniedToReader"
+  >;
 }
 
 const EVERY_CREDENTIAL = ["session", "oauth", "apikey"] as const;
@@ -637,6 +647,10 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: BANK_ADMIN_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: BANK_CONNECTION_CONCEALMENT,
+    ledgerWide: {
+      concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+      deniedToReader: requiresLedgerAdmin("Listing the bank accounts of"),
+    },
   },
   [AUTHORIZATION_ACTIONS.BANK_LINK_CREATE]: {
     relationships: [
@@ -735,6 +749,12 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: BANK_TRANSACTION_READ_CREDENTIAL,
     auditClass: "read",
     concealDenialAs: BANK_CONNECTION_CONCEALMENT,
+    ledgerWide: {
+      concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+      deniedToReader: requiresLedgerAdmin(
+        "Listing the staged bank transactions of",
+      ),
+    },
   },
   [AUTHORIZATION_ACTIONS.BANK_TRANSACTION_CATEGORIES_SUGGEST]: {
     relationships: [
@@ -965,10 +985,24 @@ function hintFor(
   return undefined;
 }
 
+/** The requirement as it applies to `resource`, ledger-wide when it names no connection. */
+function requirementFor(
+  requirement: ActionRequirement,
+  resource: unknown,
+): ActionRequirement {
+  if (!requirement.ledgerWide || typeof resource !== "string") {
+    return requirement;
+  }
+  const bank = parseBankConnectionResource(resource);
+  return bank && bank.plaidItemIds.length === 0
+    ? { ...requirement, ...requirement.ledgerWide }
+    : requirement;
+}
+
 export class AuthorizationDeniedError extends DomainError {
   constructor(decision: Extract<AuthorizationDecision, { allowed: false }>) {
     const requirement = isAuthorizationAction(decision.action)
-      ? ACTION_REQUIREMENTS[decision.action]
+      ? requirementFor(ACTION_REQUIREMENTS[decision.action], decision.resource)
       : undefined;
     const concealment = requirement?.concealDenialAs;
     const concealed =
@@ -1256,7 +1290,11 @@ export class AuthorizationService implements IAuthorizationService {
                 }
               : undefined;
         const readerMessage = readerLedger
-          ? await this.deniedToReader(requirement, userId, readerLedger)
+          ? await this.deniedToReader(
+              requirementFor(requirement, input.resource),
+              userId,
+              readerLedger,
+            )
           : undefined;
         return deny(
           readerMessage ? "insufficient_relationship" : "relationship_denied",
