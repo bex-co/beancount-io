@@ -241,9 +241,13 @@ function valueRecord(
 // The account itself or a descendant under a `:` boundary. fava `account_balance`
 // does this too; `interval_totals` uses raw `str.startswith`, and we deliberately
 // break from that so `Expenses:Transport` never counts `Expenses:Transportation`
-// (w21/180), matching Reports and account detail.
+// (w21/180), matching Reports and account detail. An empty prefix is the root
+// and names every account, as `startswith("")` did in fava; the boundary rule
+// made it match none, so totals without an account read as all zeros (w1/191).
 function matchesAccountOrChild(account: string, prefixes: string[]): boolean {
-  return prefixes.some((p) => account === p || account.startsWith(`${p}:`));
+  return prefixes.some(
+    (p) => p === "" || account === p || account.startsWith(`${p}:`),
+  );
 }
 
 /**

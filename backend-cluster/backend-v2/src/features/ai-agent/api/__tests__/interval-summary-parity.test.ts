@@ -424,4 +424,54 @@ describe("interval summaries through actual report adapters", () => {
       await f.close();
     }
   });
+
+  /**
+   * w1/191. An omitted or empty accountName reaches the ledger service as the
+   * root prefix "", which it now reads as every account (the engine's own
+   * test pins that). Every surface sends the same request and returns the
+   * all-account rows rather than refusing.
+   */
+  it.each([
+    ["omitted", {}],
+    ["empty", { accountName: "" }],
+  ])(
+    "asks for every account when accountName is %s",
+    async (_kind, accountName) => {
+      const everyAccount: Intervals = [
+        {
+          date: march,
+          balance: {},
+          account_balances: {
+            "Assets:Bank:Checking": { USD: "-500" },
+            "Expenses:Food": { USD: "500" },
+          },
+        },
+      ];
+      const f = await fixture(everyAccount);
+      const { accountName: _named, ...rest } = params;
+      const query = { ...rest, ...accountName };
+      try {
+        await expectSummary(f, query, {
+          currency: "USD",
+          intervals: [
+            {
+              period: march,
+              total: 0,
+              byAccount: [
+                { account: "Assets:Bank:Checking", balance: -500 },
+                { account: "Expenses:Food", balance: 500 },
+              ],
+            },
+          ],
+        });
+        // GraphQL's accountName is required, so it can only send "".
+        await expectRaw(f, { ...query, accountName: "" }, everyAccount);
+        for (const [, , sent] of f.getLedgerIntervalTotals.mock.calls)
+          expect(sent).toMatchObject({ account_name: "" });
+        expect(f.getLedgerIntervalTotals).toHaveBeenCalledTimes(5);
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });

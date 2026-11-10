@@ -177,6 +177,20 @@ describe("intervalTotals matches on account boundaries (w21/180)", () => {
     );
     expect(rows.every((r) => Object.keys(r.balance).length === 0)).toBe(true);
   });
+
+  // w1/191: an omitted accountName arrives as "", which matched nothing.
+  it("counts every account for the empty (root) prefix", () => {
+    const rows = intervalTotals(ledger, "month", [""], "USD", usdMap);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].account_balances).toEqual({
+      "Expenses:Transport": { USD: "40" },
+      "Expenses:Transport:Bus": { USD: "5" },
+      "Expenses:Transportation": { USD: "60" },
+      "Assets:Cash": { USD: "-105" },
+    });
+    // Balanced transactions net to zero across every account.
+    expect(rows[0].balance).toEqual({});
+  });
 });
 
 describe("intervalTotals (periodic flows)", () => {
