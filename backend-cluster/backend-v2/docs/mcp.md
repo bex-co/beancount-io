@@ -1338,7 +1338,11 @@ means zero rows.
 
 There is no query-length ceiling to write around: the query travels in a
 POST body end to end, so bulk `OR` chains and long literals run as written
-on every surface.
+on every surface. What is bounded is how deep the engine would recurse: a run
+of one operator at one parenthesis level is at most 500 long (an `OR` list of
+up to 501 comparisons), and a query holds at most 2,000 operators. Past those
+the query is refused with `BAD_USER_INPUT`; write a longer list as
+`x IN (…)`, which has no such limit (w1/213).
 
 When an older ledger service omits count metadata, or reports an unknown count,
 the text begins `BQL result — row count unavailable` and preserves the readable

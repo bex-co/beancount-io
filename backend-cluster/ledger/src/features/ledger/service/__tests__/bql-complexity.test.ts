@@ -18,16 +18,41 @@ describe("measureBqlComplexity", () => {
       measureBqlComplexity(
         "SELECT account, sum(position) WHERE account ~ 'Assets' AND year = 2024 GROUP BY account ORDER BY account",
       ),
-      // `~`, `AND` and `=`, all in the one WHERE expression.
-    ).toEqual({ maxChain: 3, maxUnaryRun: 0, totalOperators: 3 });
+      // `~`, `AND` and `=`: three operators, but no class runs longer than one.
+    ).toEqual({ maxChain: 1, maxUnaryRun: 0, totalOperators: 3 });
   });
 
   it("counts a flat AND chain by its length", () => {
-    // 3 `AND` plus the 4 `=` comparisons they join.
+    // The run of 3 `AND`s; the 4 `=` comparisons they join are each their own
+    // one-operator run, so they count toward the total only (w1/213).
     expect(measureBqlComplexity(chainOf(3))).toMatchObject({
-      maxChain: 7,
+      maxChain: 3,
       totalOperators: 7,
     });
+  });
+
+  // w1/213: a k-term OR of comparisons counted 2k−1 and was refused at about
+  // 250 terms, though the engine parses 1,500 of them in milliseconds.
+  it("counts an OR list of comparisons by its ORs alone", () => {
+    const terms = (n: number) =>
+      "SELECT account WHERE " +
+      Array.from({ length: n }, (_, i) => `account = 'Expenses:QA${i}'`).join(
+        " OR ",
+      );
+    expect(measureBqlComplexity(terms(300))).toMatchObject({
+      maxChain: 299,
+      totalOperators: 599,
+    });
+    expect(bqlComplexityRefusal(terms(300))).toBeUndefined();
+    expect(bqlComplexityRefusal(terms(MAX_OPERATOR_CHAIN + 2))).toMatch(
+      /use `x IN \(…\)`/,
+    );
+  });
+
+  it("restarts a tighter run at each looser operator", () => {
+    expect(
+      measureBqlComplexity("SELECT 1 + 2 + 3 * 4 * 5 + 6 = 7 AND 8 = 9"),
+    ).toMatchObject({ maxChain: 3, totalOperators: 8 });
   });
 
   it("counts consecutive unary operators as a run", () => {
@@ -68,13 +93,15 @@ describe("measureBqlComplexity", () => {
 
   it("does not carry a chain across a parenthesis level or a clause", () => {
     expect(
-      measureBqlComplexity("SELECT 1 WHERE (1=1 AND 1=1) OR (1=1 AND 1=1)"),
-    ).toMatchObject({ maxChain: 3 });
+      measureBqlComplexity(
+        "SELECT 1 WHERE (1=1 AND 1=1 AND 1=1) AND (1=1 AND 1=1 AND 1=1)",
+      ),
+    ).toMatchObject({ maxChain: 2 });
     expect(
       measureBqlComplexity(
-        "SELECT 1 WHERE 1=1 AND 1=1 GROUP BY 1 ORDER BY 1=1 AND 1=1",
+        "SELECT 1 WHERE 1=1 AND 1=1 AND 1=1 GROUP BY 1 ORDER BY 1=1 AND 1=1 AND 1=1",
       ),
-    ).toMatchObject({ maxChain: 3 });
+    ).toMatchObject({ maxChain: 2 });
   });
 
   it("scores two-character operators once", () => {
@@ -108,7 +135,8 @@ describe("bqlComplexityRefusal", () => {
   });
 
   it("refuses a chain over the limit, naming the limit", () => {
-    const refusal = bqlComplexityRefusal(chainOf(MAX_OPERATOR_CHAIN));
+    expect(bqlComplexityRefusal(chainOf(MAX_OPERATOR_CHAIN))).toBeUndefined();
+    const refusal = bqlComplexityRefusal(chainOf(MAX_OPERATOR_CHAIN + 1));
     expect(refusal).toContain(String(MAX_OPERATOR_CHAIN));
     expect(refusal).toMatch(/chains \d+ operators/);
   });

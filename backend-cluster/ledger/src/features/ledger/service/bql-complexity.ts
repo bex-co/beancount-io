@@ -27,8 +27,8 @@
  */
 
 /**
- * Longest chain of binary operators allowed at one parenthesis level, and
- * longest run of consecutive unary operators.
+ * Longest run of one class of binary operator allowed at one parenthesis
+ * level, and longest run of consecutive unary operators.
  *
  * Measured headroom: the engine survives chains in the low thousands and
  * traps above that. Ordinary BQL — including generated queries — stays in the
@@ -59,6 +59,37 @@ const OPERATOR_START = new Set([
 ]);
 /** Two-character operators, matched before their single-character prefixes. */
 const TWO_CHAR_OPERATORS = new Set(["||", "<=", ">=", "!=", "<>", "=="]);
+/**
+ * Binary operators by precedence class, loosest first. A chain is a run of
+ * one class at one level: `a = 1 OR b = 2 OR …` is one long OR chain of short
+ * comparisons, and the engine recurses on the OR run, not on every operator
+ * in it — a 1,500-term OR of comparisons parses in milliseconds, where 1,000
+ * flat `AND`s of the same class trap (w1/213).
+ */
+const OPERATOR_CLASS: Readonly<Record<string, number>> = {
+  OR: 0,
+  AND: 1,
+  "=": 2,
+  "==": 2,
+  "!=": 2,
+  "<>": 2,
+  "<": 2,
+  ">": 2,
+  "<=": 2,
+  ">=": 2,
+  "~": 2,
+  IN: 2,
+  LIKE: 2,
+  MATCH: 2,
+  IS: 2,
+  "||": 3,
+  "+": 3,
+  "-": 3,
+  "*": 4,
+  "/": 4,
+  "%": 4,
+};
+const CLASS_COUNT = 5;
 /** Keyword operators that join two operands. */
 const BINARY_KEYWORDS = new Set(["AND", "OR", "IN", "LIKE", "MATCH", "IS"]);
 /** Keyword operators that take one operand. */
@@ -88,7 +119,7 @@ const CLAUSE_KEYWORDS = new Set([
 ]);
 
 export interface BqlComplexity {
-  /** Longest binary-operator chain at any single parenthesis level. */
+  /** Longest run of one class of binary operator at any parenthesis level. */
   maxChain: number;
   /** Longest run of consecutive unary operators. */
   maxUnaryRun: number;
@@ -107,10 +138,12 @@ export interface BqlComplexity {
  * the engine's job.
  */
 export function measureBqlComplexity(query: string): BqlComplexity {
-  // One counter per open parenthesis: `(` pushes a fresh chain, `)` pops back
-  // to the enclosing one. Nesting itself is rustledger's 128-level cap to
-  // police; what matters here is how long any one level grows.
-  const chains: number[] = [0];
+  // One set of class counters per open parenthesis: `(` pushes a fresh set,
+  // `)` pops back to the enclosing one. Nesting itself is rustledger's
+  // 128-level cap to police; what matters here is how long any one level's
+  // run of one operator class grows.
+  const fresh = () => new Array<number>(CLASS_COUNT).fill(0);
+  const chains: number[][] = [fresh()];
   let maxChain = 0;
   let maxUnaryRun = 0;
   let unaryRun = 0;
@@ -120,11 +153,17 @@ export function measureBqlComplexity(query: string): BqlComplexity {
   // by a real operand.
   let afterOperand = false;
 
-  const countBinary = (): void => {
+  const countBinary = (operator: string): void => {
     totalOperators += 1;
-    const level = chains.length - 1;
-    chains[level] = (chains[level] as number) + 1;
-    maxChain = Math.max(maxChain, chains[level] as number);
+    const counters = chains[chains.length - 1] as number[];
+    const cls = OPERATOR_CLASS[operator] ?? 2;
+    // A looser operator closes every tighter run before it: each comparison
+    // in an OR list is its own short chain.
+    for (let tighter = cls + 1; tighter < CLASS_COUNT; tighter += 1) {
+      counters[tighter] = 0;
+    }
+    counters[cls] = (counters[cls] as number) + 1;
+    maxChain = Math.max(maxChain, counters[cls] as number);
     unaryRun = 0;
     afterOperand = false;
   };
@@ -153,7 +192,7 @@ export function measureBqlComplexity(query: string): BqlComplexity {
     }
 
     if (ch === "(") {
-      chains.push(0);
+      chains.push(fresh());
       i += 1;
       afterOperand = false;
       continue;
@@ -170,7 +209,7 @@ export function measureBqlComplexity(query: string): BqlComplexity {
 
     if (ch === ",") {
       // An argument separator restarts the chain inside the current level.
-      chains[chains.length - 1] = 0;
+      chains[chains.length - 1] = fresh();
       i += 1;
       afterOperand = false;
       continue;
@@ -193,11 +232,11 @@ export function measureBqlComplexity(query: string): BqlComplexity {
       while (i < query.length && WORD.test(query[i] as string)) i += 1;
       const word = query.slice(start, i).toUpperCase();
       if (BINARY_KEYWORDS.has(word)) {
-        countBinary();
+        countBinary(word);
       } else if (UNARY_KEYWORDS.has(word)) {
         countUnary();
       } else if (CLAUSE_KEYWORDS.has(word)) {
-        chains[chains.length - 1] = 0;
+        chains[chains.length - 1] = fresh();
         unaryRun = 0;
         afterOperand = false;
       } else {
@@ -212,7 +251,7 @@ export function measureBqlComplexity(query: string): BqlComplexity {
       const pair = query.slice(i, i + 2);
       if (TWO_CHAR_OPERATORS.has(pair)) {
         i += 2;
-        countBinary();
+        countBinary(pair);
         continue;
       }
       i += 1;
@@ -221,7 +260,7 @@ export function measureBqlComplexity(query: string): BqlComplexity {
       if ((ch === "-" || ch === "+") && !afterOperand) {
         countUnary();
       } else {
-        countBinary();
+        countBinary(ch);
       }
       continue;
     }
@@ -243,7 +282,7 @@ export function measureBqlComplexity(query: string): BqlComplexity {
 export function bqlComplexityRefusal(query: string): string | undefined {
   const { maxChain, maxUnaryRun, totalOperators } = measureBqlComplexity(query);
   if (maxChain > MAX_OPERATOR_CHAIN) {
-    return `Query refused: an expression chains ${maxChain} operators, over the limit of ${MAX_OPERATOR_CHAIN}. Split it into smaller expressions.`;
+    return `Query refused: an expression chains ${maxChain} operators, over the limit of ${MAX_OPERATOR_CHAIN}. Split it into smaller expressions; for a long OR list of comparisons, use \`x IN (…)\`.`;
   }
   if (maxUnaryRun > MAX_OPERATOR_CHAIN) {
     return `Query refused: an expression applies ${maxUnaryRun} consecutive unary operators, over the limit of ${MAX_OPERATOR_CHAIN}.`;
