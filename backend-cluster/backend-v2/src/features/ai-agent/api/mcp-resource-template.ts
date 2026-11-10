@@ -66,6 +66,22 @@ export class QueryResourceTemplate extends UriTemplate {
         "Resource fragments are not supported",
         "Drop the `#` fragment; a resource URI takes a path and an optional query only.",
       );
+    // `URLSearchParams` keeps an invalid `%XX` literally and maps invalid UTF-8
+    // to U+FFFD, so a truncated or double-encoded filter read as a different
+    // value and answered an empty success; the path refuses the same input
+    // above (w1/201, w23/231).
+    for (const pair of url.search.slice(1).split("&")) {
+      const [rawName, ...rest] = pair.split("=");
+      try {
+        decodeURIComponent(rawName.replace(/\+/g, " "));
+        decodeURIComponent(rest.join("=").replace(/\+/g, " "));
+      } catch {
+        refuseUri(
+          `Invalid URI encoding in resource parameter ${rawName}`,
+          "Percent-encode each query value as UTF-8 (`encodeURIComponent`) and read it again.",
+        );
+      }
+    }
     for (const [name, value] of url.searchParams) {
       if (!this.queryNames.includes(name) || name in variables) {
         refuseUri(

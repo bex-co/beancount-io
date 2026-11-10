@@ -346,6 +346,13 @@ describe("a malformed resource URI", () => {
       `${RESOURCE_SCHEME}://alice/main/files/%E0%A4`,
       "Invalid URI encoding in resource path",
     ],
+    // w1/201: a query value kept its invalid `%XX` literally and answered an
+    // empty success, where the same input in a path was refused.
+    [`${TRIAL}?time=%ZZ`, "Invalid URI encoding in resource parameter time"],
+    [
+      `${RESOURCE_SCHEME}://alice/main/journal?account=%E0%A4%A`,
+      "Invalid URI encoding in resource parameter account",
+    ],
   ])("refuses %s as a coded, hinted BAD_USER_INPUT", async (uri, message) => {
     const getFilesContent = contentOf("main.beancount", "");
     const { client, close } = await connect(ctx(getFilesContent));
