@@ -16,10 +16,16 @@ describe("resolveEntryHash", () => {
     expect(() => resolveEntryHash({ entryHash: "a", entry_hash: "b" })).toThrow(
       BadUserInputError,
     );
+    // w1/187: the sentence reads as English and keeps "not two different".
+    expect(() => resolveEntryHash({ entryHash: "a", entry_hash: "b" })).toThrow(
+      "Pass entryHash or entry_hash (as list output spells it), not two different hashes.",
+    );
   });
 
   it("refuses a missing hash naming the alias", () => {
     expect(() => resolveEntryHash({})).toThrow(BadUserInputError);
-    expect(() => resolveEntryHash({})).toThrow(/entry_hash/);
+    expect(() => resolveEntryHash({})).toThrow(
+      "entryHash is required (entry_hash, as list output spells it, also works).",
+    );
   });
 });

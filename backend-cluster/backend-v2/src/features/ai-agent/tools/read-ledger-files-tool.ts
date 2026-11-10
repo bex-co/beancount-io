@@ -85,12 +85,12 @@ export type ReadLedgerFilesOutput = z.infer<typeof readLedgerFilesOutputSchema>;
 const START_LINE_NAMES = {
   snake: "start_line",
   camel: "startLine",
-  what: "start lines",
+  what: "start line",
 } as const;
 const END_LINE_NAMES = {
   snake: "end_line",
   camel: "endLine",
-  what: "end lines",
+  what: "end line",
 } as const;
 
 /**
@@ -106,9 +106,9 @@ function resolveLineRangeTwin(
   const { snake, camel } = values;
   if (snake !== undefined && camel !== undefined && snake !== camel) {
     throw new BadUserInputError(
-      `${path}: pass ${names.snake} or ${names.camel}, not two different ${names.what}.`,
+      `${path}: pass ${names.snake} or ${names.camel}, not two different ${names.what}s.`,
       names.snake,
-      `Pass one ${names.what} under either spelling.`,
+      `Pass the ${names.what} under one spelling, or give both the same value.`,
     );
   }
   return snake ?? camel;

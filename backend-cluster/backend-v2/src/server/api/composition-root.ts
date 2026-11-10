@@ -111,6 +111,7 @@ import {
   resourceTemplateFor,
   type ListedMcpResource,
 } from "@/features/ai-agent/api/mcp-resources";
+import { withRequiredQueryNames } from "@/features/ai-agent/api/mcp-resource-template";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import { buildInstructions } from "@/features/ai-agent/api/mcp-context";
 import {
@@ -1194,7 +1195,7 @@ function makeMcpResourceHandler(
         // beside the right code, and the message stays unprefixed so the
         // client's own `McpError` adds the one prefix (w2/m28:t003).
         return refuseMcpRequest(
-          err,
+          withRequiredQueryNames(err, descriptor.queryNames ?? [], variables),
           "MCP resource read failed",
           { resource: descriptor.name },
           config,

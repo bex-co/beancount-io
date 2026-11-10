@@ -395,6 +395,97 @@ describe("a malformed resource URI", () => {
 });
 
 /**
+ * w1/187. A bare read of a template whose query name is required said what zod
+ * says about nothing: "expected number, received NaN" for a coerced number and
+ * "expected string, received undefined" for a string. It names the missing
+ * name instead, as `temp-assets/download-url` already did.
+ */
+describe("a bare read of a required query name", () => {
+  const reads = {
+    getPullRequestDetails: jest.fn(),
+    getCollaboratorPermission: jest.fn(),
+    suggestCategories: jest.fn(),
+  };
+  const adminCtx = () => {
+    const base = ctx(contentOf("main.beancount", ""));
+    return {
+      ...base,
+      identity: {
+        ...base.identity,
+        scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
+      },
+      pullRequestWorkflow: reads,
+      collaboratorsWorkflow: reads,
+      llmService: reads,
+    } as unknown as McpRequestContext;
+  };
+  afterEach(() => {
+    // Every refusal lands before the read reaches its workflow.
+    expect(reads.getPullRequestDetails).not.toHaveBeenCalled();
+    expect(reads.getCollaboratorPermission).not.toHaveBeenCalled();
+    expect(reads.suggestCategories).not.toHaveBeenCalled();
+  });
+  const refusalFor = async (uri: string) => {
+    const { client, close } = await connect(adminCtx());
+    try {
+      return await client
+        .readResource({ uri })
+        .then(() => undefined)
+        .catch((caught: unknown) => caught as McpError);
+    } finally {
+      await close();
+    }
+  };
+
+  it.each([
+    [`${RESOURCE_SCHEME}://alice/main/pull-request`, "prNumber is required"],
+    [`${RESOURCE_SCHEME}://alice/main/commit-details`, "sha is required"],
+    [
+      `${RESOURCE_SCHEME}://alice/main/collaborators/permission`,
+      "collaborator is required",
+    ],
+    [
+      `${RESOURCE_SCHEME}://alice/main/narration-transactions`,
+      "narration is required",
+    ],
+    [`${RESOURCE_SCHEME}://social/profile`, "username is required"],
+    [
+      `${RESOURCE_SCHEME}://alice/main/import/suggest-categories`,
+      "transactions is required",
+    ],
+    [
+      `${RESOURCE_SCHEME}://assets/download-url?filename=a.pdf`,
+      "ledgerRepoId is required",
+    ],
+    [
+      `${RESOURCE_SCHEME}://assets/download-url`,
+      "ledgerRepoId, filename are required",
+    ],
+  ])("refuses %s naming the missing name", async (uri, message) => {
+    const error = await refusalFor(uri);
+    expect(error?.code).toBe(JSON_RPC_INVALID_PARAMS);
+    expect(error?.data).toMatchObject({
+      code: "BAD_USER_INPUT",
+      message,
+      hint: expect.stringContaining("resources/templates/list"),
+    });
+  });
+
+  it("keeps zod's words for a name that is present but wrong", async () => {
+    const error = await refusalFor(
+      `${RESOURCE_SCHEME}://alice/main/pull-request?prNumber=abc`,
+    );
+    expect(error?.data).toMatchObject({
+      code: "BAD_USER_INPUT",
+      message: expect.stringMatching(/^prNumber: /),
+    });
+    expect((error?.data as { message: string }).message).not.toContain(
+      "is required",
+    );
+  });
+});
+
+/**
  * w5/041. The SDK parsed the URI with `new URL()` before consulting any
  * template, so a string that is not a URI at all threw a bare `TypeError`:
  * `-32603 Invalid URL` with no `data`. A URI in another scheme parsed, matched

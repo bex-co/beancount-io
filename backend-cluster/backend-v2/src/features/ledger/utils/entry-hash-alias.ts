@@ -18,13 +18,13 @@ export function resolveEntryHash(input: {
     entryHash !== entryHashSnake
   ) {
     throw new BadUserInputError(
-      "Pass entryHash or entry_hash (the entry_hash list output returns), not two different hashes.",
+      "Pass entryHash or entry_hash (as list output spells it), not two different hashes.",
     );
   }
   const resolved = entryHash ?? entryHashSnake;
   if (resolved === undefined) {
     throw new BadUserInputError(
-      "entryHash is required — the entry_hash list output returns works too.",
+      "entryHash is required (entry_hash, as list output spells it, also works).",
     );
   }
   return resolved;

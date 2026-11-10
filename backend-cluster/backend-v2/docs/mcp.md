@@ -900,8 +900,10 @@ needs `prNumber`, `commit-details` needs `sha`, `social/profile` needs
 `asset-download-url` needs `ledgerRepoId`, `temp-assets/download-url`
 needs the object key, `suggest-categories` needs `transactions`,
 `narration-transactions` needs `narration`.
-Reading one bare refuses with `BAD_USER_INPUT` naming the missing name;
-add it and read again (w23/107).
+Reading one bare refuses with `BAD_USER_INPUT` naming the missing name — for
+example `prNumber is required` (w1/187); add it and read again (w23/107). A
+name that is present but malformed keeps the validator's own message, prefixed
+with the name.
 
 Ledger-scoped templates start with `beancount://{owner}/{name}/`. The following table
 lists the accounting and bank suffixes; replace the braces with your ledger and resource values.

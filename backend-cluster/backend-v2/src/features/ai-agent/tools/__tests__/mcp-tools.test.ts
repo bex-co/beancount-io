@@ -319,6 +319,21 @@ describe("executeReadLedgerFiles", () => {
       error: expect.stringContaining(
         "main.bean: pass start_line or startLine, not two different start lines.",
       ),
+      // w1/187: a singular hint, not "Pass one start lines".
+      errorHint:
+        "Pass the start line under one spelling, or give both the same value.",
+    });
+    const splitEnd = await executeReadLedgerFiles(ctx, {
+      files: [{ path: "main.bean", end_line: 2, endLine: 3 }],
+    });
+    expect(splitEnd).toMatchObject({
+      ok: false,
+      errorCode: "BAD_USER_INPUT",
+      error: expect.stringContaining(
+        "main.bean: pass end_line or endLine, not two different end lines.",
+      ),
+      errorHint:
+        "Pass the end line under one spelling, or give both the same value.",
     });
     expect(ledgerRepo.getFilesContent).toHaveBeenCalledTimes(1);
   });

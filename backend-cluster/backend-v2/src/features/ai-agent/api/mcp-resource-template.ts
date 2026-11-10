@@ -2,6 +2,7 @@ import {
   UriTemplate,
   type Variables,
 } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";
+import { ZodError } from "zod";
 import { BadUserInputError } from "@/shared/errors";
 import { envelopeFromThrown, McpRequestFailure } from "./mcp-errors";
 
@@ -78,6 +79,40 @@ export class QueryResourceTemplate extends UriTemplate {
     }
     return variables;
   }
+}
+
+/**
+ * A read that left off a query name its template requires, refused as such
+ * (w1/187). Zod's own words for an absent name are "expected string, received
+ * undefined", or "expected number, received NaN" once a coerced number has
+ * read nothing, so a refusal of a top-level name the URI did not carry
+ * becomes "`<name>` is required". Any other failure passes through unchanged.
+ */
+export function withRequiredQueryNames(
+  error: unknown,
+  queryNames: readonly string[],
+  variables: Variables,
+): unknown {
+  if (!(error instanceof ZodError)) return error;
+  const missing = [
+    ...new Set(
+      error.issues
+        .map((issue) => issue.path)
+        .filter((path) => path.length === 1)
+        .map(([name]) => name)
+        .filter(
+          (name): name is string =>
+            typeof name === "string" &&
+            queryNames.includes(name) &&
+            !(name in variables),
+        ),
+    ),
+  ];
+  if (missing.length === 0) return error;
+  return new BadUserInputError(
+    `${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} required`,
+    missing[0],
+  );
 }
 
 export function queryTemplate(
