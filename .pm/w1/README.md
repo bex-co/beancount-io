@@ -99,6 +99,7 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [211](./211.md) — GraphQL bank mutations take no `dryRun`, while MCP and REST preview all five (MCP QA 2026-11-09)
 - [212](./212.md) — A blank commit message writes a blank commit; an empty one defaults differently on MCP and REST (MCP QA 2026-11-09)
 - [213](./213.md) — Bulk OR chains of comparisons are refused at about 250 terms, though the doc says they run (MCP QA 2026-11-09)
+- [214](./214.md) — A setup that lists the same account twice silently keeps only the last entry (MCP QA 2026-11-09)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
