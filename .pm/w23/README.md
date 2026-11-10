@@ -96,4 +96,3 @@
 - [x] [227](./done/227.md) — `importStagedBankTransactions` retry after a lost reply: pin the error and document or reword it
 - [x] [228](./done/228.md) — `docs/mcp.md`: short agent happy-path recipe after "Connect a client"
 
-- [ ] [231](./231.md) — probe whether `resources/read` templates refuse unknown query keys and invalid percent-encoding (sibling of `w1/201`)
