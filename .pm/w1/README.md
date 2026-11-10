@@ -94,6 +94,9 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [206](./206.md) — Two MCP refusal details point clients the wrong way: FORBIDDEN hint and invalid-bearer 401 (MCP QA 2026-11-09)
 - [207](./207.md) — reconcile-account's Verify step assumes a failing assertion still writes (MCP QA 2026-11-09)
 - [208](./208.md) — An unknown short plugin name is accepted: "Plugin not found" is dropped as a document error (MCP QA 2026-11-09)
+- [209](./209.md) — A renamed-option error (E7004) has no file, line or code (MCP QA 2026-11-09)
+- [210](./210.md) — GraphQL file writes skip the bean-check gate and have no preview — needs an owner decision on the dashboard editor first (MCP QA 2026-11-09)
+- [211](./211.md) — GraphQL bank mutations take no `dryRun`, while MCP and REST preview all five (MCP QA 2026-11-09)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
