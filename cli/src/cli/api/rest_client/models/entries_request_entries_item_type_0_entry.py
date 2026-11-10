@@ -30,7 +30,8 @@ class EntriesRequestEntriesItemType0Entry:
         narration (None | str | Unset):
         tags (list[str] | None | Unset):
         links (list[str] | None | Unset):
-        meta (EntriesRequestEntriesItemType0EntryMetaType0 | None | Unset):
+        meta (EntriesRequestEntriesItemType0EntryMetaType0 | None | Unset): Metadata written beneath the directive;
+            every value is a string, written quoted as given
     """
 
     date: str

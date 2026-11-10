@@ -84,6 +84,9 @@ files need no import rewrites (decision: keep `foundation/rustledger`, not
   cache, lock, safe-repo-path, async-context
 - `parity/` — retired dual-target parity harness + `COVERAGE.md` historical record
 - `scripts/` — `verify-rustledger.ts` (live WASM checks, `yarn verify:rustledger`),
+  `journal-round-trip.ts` (every typed directive's journal JSON written back
+  through `entryInputToText` and read again, metadata included; a type that
+  loses it fails by name),
   `rustledger-shadow/` fixtures + Python oracle, `bql-oracle/` (stock beanquery
   0.2.0 answers replayed by `verify:rustledger`; a BQL change that the engine now
   refuses or rewords fails it unless `allowlist.json` documents it — see its

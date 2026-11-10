@@ -45,7 +45,7 @@
 - [x] **m40** — [Run what the served text tells an agent to run](./done/m40/README.md) (10 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 3; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/224`, `w1/226`, `w1/230`
 - [x] **m41** — [Diff the report engine against stock beancount in a release gate](./done/m41/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 4; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/229`
 - [x] **m42** — [Name the commit every write makes, and let an agent undo it](./done/m42/README.md) (10 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 5; user request via /pmx, 2026-11-10; user routed to w23; source `w1/228`
-- [ ] **m43** — [Accept directive metadata on every typed entry and gate the journal round trip](./m43/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 6; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/233`
+- [x] **m43** — [Accept directive metadata on every typed entry and gate the journal round trip](./done/m43/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 6; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/233`
 
 ## Dropped
 

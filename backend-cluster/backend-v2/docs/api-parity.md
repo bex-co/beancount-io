@@ -295,6 +295,23 @@ surface's twin in `structured-entry-parity.test.ts`,
 `id-handoff-matrix.test.ts` registers `revertCommit.sha` against the results
 that return it. The user-facing recipe is [Undo a change](mcp.md#undo-a-change).
 
+## Directive metadata and unchanged edits (w23/m43)
+
+`addLedgerEntries` and its REST and GraphQL twins take string-valued `meta` on
+every typed directive but a budget (`open`, `close`, `commodity`, `price`,
+`balance`, `note`, `event`, `document`, `pad` and the transaction), with one
+description on each surface (`DIRECTIVE_META_DESCRIPTION`). A value that is not
+a string and a key the parser reserves are refused before anything is written.
+`directive meta via %s` in `structured-entry-parity.test.ts` drives each type
+through REST, GraphQL and MCP; `entry-build.test.ts` and `entry-tokens.test.ts`
+in the ledger package pin the rendering and the key check per type; and
+`scripts/journal-round-trip.ts`, run by `yarn verify:rustledger` against the
+live engine, feeds the journal's JSON for every directive type back through
+the renderer and requires the second journal to equal the first, so a type that
+loses its metadata fails by name. `updateEntrySource` with the entry's own text
+returns `unchanged: true`, no `commit` and no written file on every surface
+(`unchanged entry edit via %s` in `source-slice-parity.test.ts`).
+
 ## Argument limits (w23/m22, w23/m23)
 
 One boundary guard refuses the same hostile argument values on all three

@@ -255,6 +255,8 @@ interface AppliedReplace {
   startLine: number;
   /** The block as stored, line endings and trimmed newlines included. */
   stored: string;
+  /** The file before the replacement: equal to `content` when nothing changes. */
+  previous: string;
 }
 
 /**
@@ -285,6 +287,7 @@ function makeReplaceTransform(
         newContent,
         replacementLineEnding(current, slice.startLine, slice.endLine),
       ),
+      previous: current,
     });
     return content;
   };
@@ -434,6 +437,8 @@ export type UpdateSliceResult = TouchedFiles &
     entryHash: string;
     preview: SlicePreview;
     newSha256sum: string;
+    /** The edit leaves the file's bytes as they were: nothing was committed (w23/m43). */
+    unchanged: boolean;
     /**
      * The entry's public ID after the commit, re-read from the fresh
      * post-commit parse — the input `entryHash` is stale the moment the commit
@@ -1333,6 +1338,9 @@ export class LedgerJournalService implements ILedgerJournalService {
             ) ?? servedSliceText(applied.current.stored)),
       ),
       newEntryHash,
+      unchanged:
+        applied.current !== undefined &&
+        applied.current.content === applied.current.previous,
       preview: [
         {
           path: found.file,

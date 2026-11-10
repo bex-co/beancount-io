@@ -9560,6 +9560,42 @@
             "title": "Date",
             "description": "Date of the directive"
           },
+          "meta": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {},
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta",
+            "description": "Metadata of the directive"
+          },
           "account": {
             "type": "string",
             "title": "Account",
@@ -14485,6 +14521,12 @@
             "type": "string",
             "title": "New Sha256Sum",
             "description": "SHA256 hash of the updated entry source"
+          },
+          "unchanged": {
+            "type": "boolean",
+            "title": "Unchanged",
+            "description": "True when the edit leaves the file's bytes as they were: nothing is written and no commit is made.",
+            "default": false
           },
           "new_entry_hash": {
             "type": "string",

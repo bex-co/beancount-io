@@ -62,17 +62,36 @@ type TransactionInput = {
   meta?: Record<string, string>;
 };
 
-type CommodityInput = { date: string; currency: string };
+type CommodityInput = {
+  date: string;
+  currency: string;
+  /** String-valued metadata written beneath the directive (w23/m43). */
+  meta?: Record<string, string>;
+};
 
-type PriceInput = { date: string; currency: string; amount: AmountInput };
+type PriceInput = {
+  date: string;
+  currency: string;
+  amount: AmountInput;
+  /** String-valued metadata written beneath the directive (w23/m43). */
+  meta?: Record<string, string>;
+};
 
-type NoteInput = { date: string; content: string; account: string };
+type NoteInput = {
+  date: string;
+  content: string;
+  account: string;
+  /** String-valued metadata written beneath the directive (w23/m43). */
+  meta?: Record<string, string>;
+};
 
 type BalanceInput = {
   date: string;
   account: string;
   amount: AmountInput;
   tolerance?: string;
+  /** String-valued metadata written beneath the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
 /** The booking methods beancount parses on `open`; tracks the IDL enum. */
@@ -83,9 +102,16 @@ type OpenInput = {
   account: string;
   currencies?: string[];
   booking?: BookingMethod;
+  /** String-valued metadata written beneath the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
-type CloseInput = { date: string; account: string };
+type CloseInput = {
+  date: string;
+  account: string;
+  /** String-valued metadata written beneath the directive (w23/m43). */
+  meta?: Record<string, string>;
+};
 
 type PadInput = {
   date: string;
@@ -97,6 +123,8 @@ type PadInput = {
   sourceAccount?: string;
   /** Twin (w23/140): alias of sourceAccount; folded before the writer runs. */
   source_account?: string;
+  /** String-valued metadata written beneath the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
 type DocumentInput = {
@@ -105,12 +133,16 @@ type DocumentInput = {
   filename: string;
   tags?: string[];
   links?: string[];
+  /** String-valued metadata written beneath the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
 type EventInput = {
   date: string;
   type: string;
   description: string;
+  /** String-valued metadata written beneath the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
 type BudgetInput = {
@@ -201,7 +233,7 @@ function normalizeEntryKeyTwins(
 ): CanonicalLedgerEntryInput[] {
   return inputs.map((input, index) => {
     if (input.type === "pad") {
-      const { date, account, sourceAccount, source_account } = input.entry;
+      const { sourceAccount, source_account, ...rest } = input.entry;
       const source = resolveEntryKeyTwin({
         where: `entry ${index}`,
         field: "source account",
@@ -216,7 +248,7 @@ function normalizeEntryKeyTwins(
           `entry ${index}: sourceAccount is required — source_account works too.`,
         );
       }
-      return { type: "pad", entry: { date, account, sourceAccount: source } };
+      return { type: "pad", entry: { ...rest, sourceAccount: source } };
     }
     if (input.type === "transaction") {
       const postings = input.entry.postings.map((posting, postingIndex) => {
@@ -308,6 +340,7 @@ type CanonicalPadInput = {
   date: string;
   account: string;
   sourceAccount: string;
+  meta?: Record<string, string>;
 };
 type CanonicalLedgerEntryInput =
   | Exclude<LedgerEntryInput, { type: "pad" } | { type: "transaction" }>
@@ -546,12 +579,16 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     // enforces this again at the trust boundary, but refusing here names the
     // entry before any file is read or committed, on every surface at once.
     inputs.forEach((input, index) => {
-      if (input.type !== "transaction") return;
       // Metadata values are strings. REST and MCP refuse anything else in
       // their schemas; GraphQL's JSON object took a posting `qn: 7`, rendered
       // `qn: undefined undefined`, and wrote typed metadata no other surface
-      // accepts (w1/220).
-      assertStringMeta(index, "meta", input.entry.meta);
+      // accepts (w1/220). Every directive may carry it (w23/m43).
+      assertStringMeta(
+        index,
+        "meta",
+        "meta" in input.entry ? input.entry.meta : undefined,
+      );
+      if (input.type !== "transaction") return;
       input.entry.postings.forEach((posting, postingIndex) =>
         assertStringMeta(index, `postings[${postingIndex}].meta`, posting.meta),
       );
@@ -801,6 +838,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         const item: Commodity = {
           date: input.entry.date,
           currency: input.entry.currency,
+          meta: input.entry.meta ?? undefined,
         };
         return { type: "commodity", item, filename };
       }
@@ -813,6 +851,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
             number: entry.amount.number,
             currency: entry.amount.currency,
           },
+          meta: entry.meta ?? undefined,
         };
         return { type: "price", item, filename };
       }
@@ -821,6 +860,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           date: input.entry.date,
           account: input.entry.account,
           comment: input.entry.content,
+          meta: input.entry.meta ?? undefined,
         };
         return { type: "note", item, filename };
       }
@@ -830,6 +870,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           account: input.entry.account,
           amount: input.entry.amount,
           tolerance: input.entry.tolerance ?? undefined,
+          meta: input.entry.meta ?? undefined,
         };
         return { type: "balance", item, filename };
       }
@@ -840,6 +881,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           // The Fava contract requires the array; absent renders bare (w23/106).
           currencies: input.entry.currencies ?? [],
           booking: input.entry.booking ?? undefined,
+          meta: input.entry.meta ?? undefined,
         };
         return { type: "open", item, filename };
       }
@@ -847,6 +889,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         const item: Close = {
           date: input.entry.date,
           account: input.entry.account,
+          meta: input.entry.meta ?? undefined,
         };
         return { type: "close", item, filename };
       }
@@ -855,6 +898,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           date: input.entry.date,
           account: input.entry.account,
           sourceAccount: input.entry.sourceAccount,
+          meta: input.entry.meta ?? undefined,
         };
         return { type: "pad", item, filename };
       }
@@ -888,6 +932,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
             filename: entry.filename,
             tags: entry.tags ?? undefined,
             links: entry.links ?? undefined,
+            meta: entry.meta ?? undefined,
           },
           filename,
         };
@@ -897,6 +942,7 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           date: input.entry.date,
           type: input.entry.type,
           description: input.entry.description,
+          meta: input.entry.meta ?? undefined,
         };
         return { type: "event", item, filename };
       }

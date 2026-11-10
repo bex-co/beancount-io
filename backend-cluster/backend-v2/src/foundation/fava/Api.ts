@@ -1054,6 +1054,11 @@ export interface DocumentCreate {
    */
   date: string;
   /**
+   * Meta
+   * Metadata of the directive
+   */
+  meta?: Record<string, string | number | boolean | null> | null;
+  /**
    * Account
    * Account the document is attached to
    */
@@ -3320,6 +3325,12 @@ export interface UpdateSourceSliceResponse {
    * SHA256 hash of the updated entry source
    */
   new_sha256sum: string;
+  /**
+   * Unchanged
+   * True when the edit leaves the file's bytes as they were: nothing is written and no commit is made.
+   * @default false
+   */
+  unchanged?: boolean;
   /**
    * New Entry Hash
    * The entry's public ID after the commit, re-read from the fresh post-commit parse.

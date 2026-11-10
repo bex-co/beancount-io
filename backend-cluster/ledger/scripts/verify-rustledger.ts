@@ -54,6 +54,7 @@ import { singleFileRepoFactory } from "./single-file-repo";
 import { verifyBqlOracle } from "./bql-oracle/replay-bql-oracle";
 import { verifyReportOracle } from "./bql-oracle/replay-report-oracle";
 import { verifyServedBql } from "./served-bql/replay-served-bql";
+import { verifyJournalRoundTrip } from "./journal-round-trip";
 import { assertEntryTokens } from "@/features/ledger/utils/entry-tokens";
 import {
   checkTransactionBalance,
@@ -923,6 +924,7 @@ async function main(): Promise<void> {
   await verifyTransactionLookups();
   await verifyBalanceSheetCurrentEarnings();
   await verifyWindowedPlaintextExport();
+  await verifyJournalRoundTrip();
 
   const paddedSnapshot = await parseLedgerFiles(
     PAD_FILES,

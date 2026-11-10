@@ -536,6 +536,47 @@ describe("LedgerJournalService", () => {
       );
     });
 
+    // w23/m43: the ledger service decides from the file bytes. A checksum that
+    // equals the request's does not make an edit a no-op (a comment kept beside
+    // the entry is not in it), and a ledger service that predates the field
+    // reports a change.
+    it.each([
+      ["reports the ledger's unchanged", { unchanged: true }, true, []],
+      [
+        "does not infer it from the checksum",
+        { unchanged: false },
+        false,
+        ["main.bean"],
+      ],
+      ["treats an absent flag as a change", {}, false, ["main.bean"]],
+    ])("%s", async (_name, flag, expected, files) => {
+      mockUpdateSourceSlice.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            message: "Updated",
+            entry_hash: "hash-new",
+            new_sha256sum: "oldsum",
+            new_entry_hash: "hash-new",
+            files: ["main.bean"],
+            ...flag,
+          },
+        },
+      });
+
+      const result = await service.updateSourceSlice({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        entryHash: "hash-old",
+        sha256sum: "oldsum",
+        newContent: "x",
+      });
+
+      expect(result.unchanged).toBe(expected);
+      expect(result.files).toEqual(files);
+      if (expected) expect(result.message).toMatch(/^No change/);
+    });
+
     // A slice edit can add directives, so the ledger service holds it to the
     // limit — and the mobile app, exempt by product policy, must say so.
     it("forwards the directive-limit exemption for a mobile edit", async () => {

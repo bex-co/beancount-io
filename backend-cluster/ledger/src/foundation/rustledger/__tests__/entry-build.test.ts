@@ -360,6 +360,75 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
       expect(out).toContain(line);
   });
 
+  // w23/m43: every typed directive carries its own metadata, quoted as given.
+  // Removing the metadata mapping for any one type turns its row red.
+  it.each([
+    ["open", { date: "2026-01-01", account: "Assets:Cash" }],
+    ["close", { date: "2026-12-31", account: "Assets:Cash" }],
+    ["commodity", { date: "2026-01-01", currency: "AAPL" }],
+    [
+      "price",
+      {
+        date: "2026-01-02",
+        currency: "AAPL",
+        amount: { number: "190.5", currency: "USD" },
+      },
+    ],
+    [
+      "balance",
+      {
+        date: "2026-01-03",
+        account: "Assets:Cash",
+        amount: { number: "10", currency: "USD" },
+      },
+    ],
+    ["note", { date: "2026-01-04", account: "Assets:Cash", content: "hello" }],
+    ["event", { date: "2026-01-05", type: "location", description: "Paris" }],
+    [
+      "document",
+      {
+        date: "2026-01-06",
+        account: "Assets:Cash",
+        filename: "docs/receipt.pdf",
+      },
+    ],
+    [
+      "pad",
+      {
+        date: "2026-01-07",
+        account: "Assets:Cash",
+        sourceAccount: "Equity:Opening-Balances",
+      },
+    ],
+  ])(
+    "renders the metadata of a %s directive, quoted and escaped",
+    (type, entry) => {
+      const out = entryInputToText({
+        type,
+        entry: {
+          ...entry,
+          meta: { price: "00123", note: 'say "hi" \\ back', due: "2026-01-31" },
+        },
+      } as unknown as Parameters<typeof entryInputToText>[0]);
+      const [header, ...metaLines] = out.trimEnd().split("\n");
+      expect(header).toContain(entry.date);
+      expect(metaLines).toEqual([
+        '  price: "00123"',
+        '  note: "say \\"hi\\" \\\\ back"',
+        '  due: "2026-01-31"',
+      ]);
+    },
+  );
+
+  it("writes no metadata lines for a directive that has none", () => {
+    expect(
+      entryInputToText({
+        type: "commodity",
+        entry: { date: "2026-01-01", currency: "AAPL" },
+      }),
+    ).toBe("2026-01-01 commodity AAPL\n\n");
+  });
+
   it("renders a custom directive that carries no values", () => {
     expect(
       entryInputToText({
@@ -660,7 +729,7 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
         booking: "FIFO",
       },
     });
-    expect(out).toContain('open Assets:Broker');
+    expect(out).toContain("open Assets:Broker");
     expect(out).toContain('"FIFO"');
   });
 

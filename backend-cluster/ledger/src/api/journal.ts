@@ -137,6 +137,7 @@ export function setJournalHandler(router: Router): void {
       entry_hash: result.entryHash,
       new_entry_hash: result.newEntryHash,
       new_sha256sum: result.newSha256sum,
+      unchanged: result.unchanged,
       files: result.files,
       errors_before: result.validation.errorsBefore,
       errors_after: result.validation.errorsAfter,

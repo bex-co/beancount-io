@@ -4,6 +4,7 @@ import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
 import {
   BALANCE_TOLERANCE_DESCRIPTION,
+  DIRECTIVE_META_DESCRIPTION,
   OPEN_BOOKING_DESCRIPTION,
   PAD_SOURCE_DESCRIPTION,
   POSTING_COST_DESCRIPTION,
@@ -94,6 +95,12 @@ const postingSchema = z.strictObject({
     .openapi({ description: POSTING_META_DESCRIPTION }),
 });
 
+/** A directive's own metadata: string values, the same words on every surface (w23/m43). */
+const directiveMeta = () =>
+  nullToUndefined(z.record(z.string(), z.string()))
+    .optional()
+    .openapi({ description: DIRECTIVE_META_DESCRIPTION });
+
 /**
  * The directive shapes, one per Beancount directive v1 can insert. Mirrors the
  * GraphQL mutation's input union field for field, because both feed the same
@@ -116,7 +123,7 @@ const entrySchema = z.discriminatedUnion(
         postings: z.array(postingSchema),
         tags: nullToUndefined(z.array(z.string())),
         links: nullToUndefined(z.array(z.string())),
-        meta: nullToUndefined(z.record(z.string(), z.string())),
+        meta: directiveMeta(),
       }),
     }),
     z.strictObject({
@@ -130,11 +137,16 @@ const entrySchema = z.discriminatedUnion(
             "Valid currencies for the account; omit for a bare open line",
         }),
         booking: nullToUndefined(bookingSchema),
+        meta: directiveMeta(),
       }),
     }),
     z.strictObject({
       type: z.literal("close"),
-      entry: z.strictObject({ date: dateSchema, account: z.string() }),
+      entry: z.strictObject({
+        date: dateSchema,
+        account: z.string(),
+        meta: directiveMeta(),
+      }),
     }),
     z.strictObject({
       type: z.literal("pad"),
@@ -150,6 +162,7 @@ const entrySchema = z.discriminatedUnion(
         source_account: nullToUndefined(z.string()).optional().openapi({
           description: "Alias of sourceAccount. One of the two is required.",
         }),
+        meta: directiveMeta(),
       }),
     }),
     z.strictObject({
@@ -161,6 +174,7 @@ const entrySchema = z.discriminatedUnion(
         tolerance: nullToUndefined(z.string()).optional().openapi({
           description: BALANCE_TOLERANCE_DESCRIPTION,
         }),
+        meta: directiveMeta(),
       }),
     }),
     z.strictObject({
@@ -169,11 +183,16 @@ const entrySchema = z.discriminatedUnion(
         date: dateSchema,
         currency: z.string(),
         amount: amountSchema,
+        meta: directiveMeta(),
       }),
     }),
     z.strictObject({
       type: z.literal("commodity"),
-      entry: z.strictObject({ date: dateSchema, currency: z.string() }),
+      entry: z.strictObject({
+        date: dateSchema,
+        currency: z.string(),
+        meta: directiveMeta(),
+      }),
     }),
     z.strictObject({
       type: z.literal("note"),
@@ -181,6 +200,7 @@ const entrySchema = z.discriminatedUnion(
         date: dateSchema,
         account: z.string(),
         content: z.string(),
+        meta: directiveMeta(),
       }),
     }),
     z.strictObject({
@@ -200,6 +220,7 @@ const entrySchema = z.discriminatedUnion(
         filename: z.string(),
         tags: nullToUndefined(z.array(z.string())),
         links: nullToUndefined(z.array(z.string())),
+        meta: directiveMeta(),
       }),
     }),
     z.strictObject({
@@ -208,6 +229,7 @@ const entrySchema = z.discriminatedUnion(
         date: dateSchema,
         type: z.string(),
         description: z.string(),
+        meta: directiveMeta(),
       }),
     }),
   ],

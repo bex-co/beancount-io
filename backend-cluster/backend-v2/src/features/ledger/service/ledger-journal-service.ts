@@ -159,6 +159,11 @@ export type UpdateSliceResult = TouchedFiles &
     newSha256sum: string;
     /** The entry's public ID after the commit, re-read post-commit (w2/m26). */
     newEntryHash: string;
+    /**
+     * The edit leaves the entry's text as it was: nothing is written, no
+     * commit is made and `files` is empty (w23/m43).
+     */
+    unchanged: boolean;
   };
 
 export type JournalQueryParams = {
@@ -554,15 +559,23 @@ export class LedgerJournalService
       ),
       "update source slice",
     );
+    // The ledger service compares the file before and after; one that predates
+    // the field reported every edit as a change.
+    const unchanged = data.unchanged === true;
     return {
-      message: data.message,
+      message: unchanged
+        ? dryRun
+          ? "Would change nothing: the entry already holds this text"
+          : "No change: the entry already holds this text; nothing was written"
+        : data.message,
       dryRun: dryRun ?? false,
       // The entry's NEW content-derived hash (the ledger service resolves it
       // from the committed content), not an echo of the request.
       entryHash: data.entry_hash,
       newSha256sum: data.new_sha256sum,
       newEntryHash: data.new_entry_hash,
-      files: dryRun ? [] : (data.files ?? []),
+      unchanged,
+      files: dryRun || unchanged ? [] : (data.files ?? []),
       ...(data.commit && { commit: data.commit }),
       preview: (data.preview ?? []).map((file) => ({
         path: file.path,

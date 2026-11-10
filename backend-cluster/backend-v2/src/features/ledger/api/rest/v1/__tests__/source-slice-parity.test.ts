@@ -71,7 +71,7 @@ const operations = {
     inputType: "UpdateSourceSliceInput",
     path: "",
     method: "PUT",
-    fields: "message entryHash newSha256sum newEntryHash",
+    fields: "message entryHash newSha256sum newEntryHash unchanged",
   },
 } as const;
 type Operation = keyof typeof operations;
@@ -191,6 +191,8 @@ async function fixture(caller = identity) {
   const updateSourceSlice = jest.fn(
     async (_owner, _name, body: Ref & { new_content: string }) => {
       validate(body);
+      // The ledger service compares the file before and after (w23/m43).
+      const unchanged = slices.get(body.entry_hash) === body.new_content;
       refuseBreaking(body, "update");
       // The ledger service's commit-boundary check (w0/m6): the replacement
       // would take a free ledger past its directive limit.
@@ -208,6 +210,7 @@ async function fixture(caller = identity) {
           message: `Would update entry ${body.entry_hash}`,
           entry_hash: "entry1-updated",
           new_sha256sum: hash(body.new_content),
+          unchanged,
           new_entry_hash: "entry1-updated",
           files: ["2026/imports.bean"],
           preview: [{ path: "2026/imports.bean", text: body.new_content }],
@@ -222,6 +225,7 @@ async function fixture(caller = identity) {
         message: "Updated",
         entry_hash: "entry1-updated",
         new_sha256sum: hash(body.new_content),
+        unchanged,
         new_entry_hash: "entry1-updated",
         files: ["2026/imports.bean"],
         ...(state.commit && { commit: state.commit }),
@@ -375,6 +379,59 @@ const args = (operation: Operation, stale = false) =>
           : {}),
       };
 
+/**
+ * w23/m43: an edit whose text is the entry's own writes nothing. The ledger
+ * service answers with the checksum the caller read, and every surface says so
+ * instead of reporting "Updated" and listing the file it did not rewrite.
+ */
+describe.each(["rest", "gql", "mcp"])(
+  "unchanged entry edit via %s",
+  (surface) => {
+    it.each([false, true])(
+      "reports an identical text as unchanged (dry run: %s)",
+      async (dry) => {
+        const f = await fixture();
+        try {
+          const result = await f.call(
+            surface,
+            "update",
+            dry
+              ? { ...args("update"), newContent: original, dryRun: true }
+              : { ...args("update"), newContent: original },
+          );
+          expect(result.success).toBe(true);
+          expect(f.slices.get("entry1")).toBe(original);
+          expect(result.result).toMatchObject({
+            unchanged: true,
+            message: dry
+              ? "Would change nothing: the entry already holds this text"
+              : "No change: the entry already holds this text; nothing was written",
+          });
+          expect(result.result).not.toHaveProperty("commit");
+          if (surface === "mcp") {
+            expect(result.result).toMatchObject({ wrote: [] });
+            expect((result.result as { summary: string }).summary).toMatch(
+              /^(Would change nothing|No change): entry entry1 already holds this text/,
+            );
+          }
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("still reports a real change as changed", async () => {
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, "update", args("update"));
+        expect(result.result).toMatchObject({ unchanged: false });
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
 describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
   describe.each(Object.keys(operations) as Operation[])("%s", (operation) => {
     it.each([identity, { ...identity, ledgerScope: undefined }])(
@@ -397,6 +454,7 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
               entryHash: "entry1-updated",
               newSha256sum: hash("; replacement café\n"),
               newEntryHash: "entry1-updated",
+              unchanged: false,
             };
             // REST echoes dryRun with its preview; MCP spells the echo
             // dry_run; GraphQL keeps its narrow selections (w23/m7/t003).
@@ -610,6 +668,7 @@ describe.each(["rest", "gql", "mcp"])(
               entryHash: "entry1-updated",
               newSha256sum: hash(replacement),
               newEntryHash: "entry1-updated",
+              unchanged: false,
               ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
               preview: [{ path: "2026/imports.bean", text: replacement }],
             };

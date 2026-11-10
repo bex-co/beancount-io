@@ -237,6 +237,37 @@ describe("assertEntryTokens", () => {
     );
   });
 
+  // w23/m43: a directive's own metadata keys are held to the same rule.
+  it.each([
+    ["open", { account: "Assets:Cash" }],
+    ["close", { account: "Assets:Cash" }],
+    ["commodity", { currency: "AAPL" }],
+    ["price", { currency: "AAPL", amount: { number: "1", currency: "USD" } }],
+    [
+      "balance",
+      { account: "Assets:Cash", amount: { number: "1", currency: "USD" } },
+    ],
+    ["note", { account: "Assets:Cash", comment: "x" }],
+    ["event", { type: "location", description: "Paris" }],
+    ["document", { account: "Assets:Cash", filename: "a.pdf" }],
+    [
+      "pad",
+      { account: "Assets:Cash", sourceAccount: "Equity:Opening-Balances" },
+    ],
+  ])("checks the metadata keys of a %s directive", (type, item) => {
+    const row = (meta: Record<string, string>) => ({
+      type,
+      item: { date: "2026-01-01", ...item, meta },
+    });
+    expect(() => assertEntryTokens([row({ source: "bank" })])).not.toThrow();
+    expect(() => assertEntryTokens([row({ filename: "a.pdf" })])).toThrow(
+      'entry 0: meta.filename "filename" is not a valid metadata key: it is reserved by the parser',
+    );
+    expect(() => assertEntryTokens([row({ "bad key": "x" })])).toThrow(
+      /meta\.bad key/,
+    );
+  });
+
   it("still accepts keys that only start with a reserved name", () => {
     expect(() =>
       assertEntryTokens([txn({ meta: { filenames: "a", "lineno-2": "b" } })]),

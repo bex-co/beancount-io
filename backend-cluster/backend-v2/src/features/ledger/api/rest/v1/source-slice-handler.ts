@@ -7,6 +7,7 @@ import {
   DRY_RUN_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
+import { UNCHANGED_EDIT_DESCRIPTION } from "@/features/ledger/utils/entry-field-descriptions";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { MAX_BULK_ENTRIES } from "@/features/ledger/utils/bulk-entries-cap";
 import type { ReportedProjection } from "@/features/ledger/utils/bean-check-errors";
@@ -106,6 +107,7 @@ export const deleteSlicesResult = z.object({
 });
 export const updateSliceResult = deleteSliceResult.extend({
   newSha256sum: z.string(),
+  unchanged: z.boolean().describe(UNCHANGED_EDIT_DESCRIPTION),
   newEntryHash: z
     .string()
     .describe(

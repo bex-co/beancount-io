@@ -202,9 +202,11 @@ export const SOURCE_SLICE_EXECUTORS = {
       // The service returns the new hash in `entryHash` too, so the old one
       // comes from the request (w23/007).
       (written) =>
-        written.dryRun
-          ? `Would update entry ${entryHash} (new hash ${written.newEntryHash})`
-          : `Updated entry ${entryHash} (new hash ${written.newEntryHash})`,
+        written.unchanged
+          ? `${written.dryRun ? "Would change nothing" : "No change"}: entry ${entryHash} already holds this text`
+          : written.dryRun
+            ? `Would update entry ${entryHash} (new hash ${written.newEntryHash})`
+            : `Updated entry ${entryHash} (new hash ${written.newEntryHash})`,
       (written) => [written.newEntryHash],
     );
   },

@@ -35,6 +35,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
         valid (bool): True only when the write adds no bean-check error. A dry run returns the new errors instead of
             refusing, so gate on this, not on the status.
         new_sha_256_sum (str):
+        unchanged (bool): True when the edit leaves the entry's text as it was: nothing was written and no commit was
+            made.
         new_entry_hash (str): The entry's public ID after the commit, re-read post-commit — use it for the next edit,
             not the request's entryHash.
         commit (str | Unset): The sha of the commit this write made; absent on a preview or a read.
@@ -49,6 +51,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
     new_errors: list[PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200NewErrorsItem]
     valid: bool
     new_sha_256_sum: str
+    unchanged: bool
     new_entry_hash: str
     commit: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -78,6 +81,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
 
         new_sha_256_sum = self.new_sha_256_sum
 
+        unchanged = self.unchanged
+
         new_entry_hash = self.new_entry_hash
 
         commit = self.commit
@@ -95,6 +100,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
                 "newErrors": new_errors,
                 "valid": valid,
                 "newSha256sum": new_sha_256_sum,
+                "unchanged": unchanged,
                 "newEntryHash": new_entry_hash,
             }
         )
@@ -143,6 +149,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
 
         new_sha_256_sum = d.pop("newSha256sum")
 
+        unchanged = d.pop("unchanged")
+
         new_entry_hash = d.pop("newEntryHash")
 
         commit = d.pop("commit", UNSET)
@@ -157,6 +165,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
             new_errors=new_errors,
             valid=valid,
             new_sha_256_sum=new_sha_256_sum,
+            unchanged=unchanged,
             new_entry_hash=new_entry_hash,
             commit=commit,
         )

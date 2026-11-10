@@ -40,21 +40,36 @@ type TransactionInput = {
   meta?: Record<string, string>;
 };
 
-type CommodityInput = { date: string; currency: string };
+type CommodityInput = {
+  date: string;
+  currency: string;
+  /** String-valued metadata written under the directive (w23/m43). */
+  meta?: Record<string, string>;
+};
 
 type PriceInput = {
   date: string;
   currency: string;
   amount: AmountInput;
+  /** String-valued metadata written under the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
-type NoteInput = { date: string; content: string; account: string };
+type NoteInput = {
+  date: string;
+  content: string;
+  account: string;
+  /** String-valued metadata written under the directive (w23/m43). */
+  meta?: Record<string, string>;
+};
 
 type BalanceInput = {
   date: string;
   account: string;
   amount: AmountInput;
   tolerance?: string;
+  /** String-valued metadata written under the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
 /** The booking methods beancount parses on `open` (w23/m6/t009). */
@@ -66,11 +81,24 @@ type OpenInput = {
   // Optional (w23/106): stock beancount accepts a currency-less open.
   currencies?: string[];
   booking?: BookingMethod;
+  /** String-valued metadata written under the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
-type CloseInput = { date: string; account: string };
+type CloseInput = {
+  date: string;
+  account: string;
+  /** String-valued metadata written under the directive (w23/m43). */
+  meta?: Record<string, string>;
+};
 
-type PadInput = { date: string; account: string; sourceAccount: string };
+type PadInput = {
+  date: string;
+  account: string;
+  sourceAccount: string;
+  /** String-valued metadata written under the directive (w23/m43). */
+  meta?: Record<string, string>;
+};
 
 type DocumentInput = {
   date: string;
@@ -78,12 +106,16 @@ type DocumentInput = {
   filename: string;
   tags?: string[];
   links?: string[];
+  /** String-valued metadata written under the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
 type EventInput = {
   date: string;
   type: string;
   description: string;
+  /** String-valued metadata written under the directive (w23/m43). */
+  meta?: Record<string, string>;
 };
 
 type BudgetInput = {

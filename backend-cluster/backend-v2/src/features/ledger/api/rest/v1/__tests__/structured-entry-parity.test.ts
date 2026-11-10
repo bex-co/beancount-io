@@ -1359,6 +1359,90 @@ describe.each(["rest", "gql", "mcp"])("posting meta via %s", (surface) => {
   });
 });
 
+/**
+ * w23/m43: every typed directive carries its own metadata. The wire row the
+ * ledger service receives holds `meta` on each type, and a value that is not a
+ * string is refused before anything is written, as it is on a posting.
+ */
+const DIRECTIVES: [string, Record<string, unknown>][] = [
+  ["open", { account: "Assets:Cash" }],
+  ["close", { account: "Assets:Old" }],
+  ["commodity", { currency: "AAPL" }],
+  ["price", { currency: "AAPL", amount: { number: "190.5", currency: "USD" } }],
+  [
+    "balance",
+    { account: "Assets:Cash", amount: { number: "10", currency: "USD" } },
+  ],
+  ["note", { account: "Assets:Cash", content: "hello" }],
+  ["event", { type: "location", description: "Paris" }],
+  ["document", { account: "Assets:Cash", filename: "docs/receipt.pdf" }],
+  ["pad", { account: "Assets:Cash", sourceAccount: "Equity:Opening-Balances" }],
+];
+
+describe.each(["rest", "gql", "mcp"])("directive meta via %s", (surface) => {
+  it.each(DIRECTIVES)("writes a %s directive with meta", async (type, body) => {
+    const batch = [
+      {
+        type,
+        entry: { date, ...body, meta: { source: "bank", ref: "00123" } },
+      },
+    ] as unknown as LedgerEntryInput[];
+    const f = await fixture();
+    try {
+      const result = await f.call(surface, batch);
+      expect(result.success).toBe(true);
+      expect(f.committed).toHaveLength(1);
+      expect(f.committed[0]).toMatchObject({
+        type,
+        item: { meta: { source: "bank", ref: "00123" } },
+      });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it.each(DIRECTIVES)(
+    "leaves a %s directive without a meta key when none is sent",
+    async (type, body) => {
+      const batch = [
+        { type, entry: { date, ...body } },
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        expect((await f.call(surface, batch)).success).toBe(true);
+        expect(
+          (f.committed[0] as { item: Record<string, unknown> }).item.meta,
+        ).toBeUndefined();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(DIRECTIVES)(
+    "refuses a non-string meta value on a %s directive, writing nothing",
+    async (type, body) => {
+      const batch = [
+        { type, entry: { date, ...body, meta: { qn: 7 } } },
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        for (const opts of [{}, { dryRun: true, dry_run: true }]) {
+          const result = await f.call(surface, batch, opts);
+          expect(result.success).toBe(false);
+          expect(
+            JSON.stringify("errors" in result ? result.errors : result),
+          ).toContain("qn");
+        }
+        expect(f.write).not.toHaveBeenCalled();
+        expect(f.committed).toEqual([]);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+});
+
 describe.each(["rest", "gql", "mcp"])(
   "booking and tolerance via %s",
   (surface) => {

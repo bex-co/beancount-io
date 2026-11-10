@@ -1964,7 +1964,10 @@ Three tools reach the existing journal service:
   stale after the commit, so use `newEntryHash` for the next edit.
   `newContent` must be exactly one dated directive with its indented lines
   (comments may surround it); an `option`, `plugin` or `include` line, a
-  second entry, or nothing at all is refused as `BAD_USER_INPUT`.
+  second entry, or nothing at all is refused as `BAD_USER_INPUT`. Text that is
+  the entry's own, byte for byte, writes nothing: the result says
+  `unchanged: true` with a `No change` message, lists no file in `wrote` and
+  carries no `commit` (a preview says `Would change nothing`).
 - `deleteEntrySource`: `entryHash` and `sha256sum`; returns `message` and
   `entryHash`.
 - `deleteEntrySources`: `entries: [{entryHash, sha256sum}]`; returns `message`
@@ -2012,7 +2015,13 @@ per-unit market annotation (`@`), and `totalPrice` the whole-posting price
 lot, price says what one unit was worth. A posting takes at most one price —
 `price` with `totalPrice` is refused — and cost, like either price, needs
 units. Postings take string-valued `meta`, written beneath the posting line;
-posting `tags` and `links` are refused (w23/171). An `open` takes `booking` (`STRICT`,
+so does every directive but a budget — `open`, `close`, `commodity`, `price`,
+`balance`, `note`, `event`, `document`, `pad` and the transaction — written
+quoted as given, beneath the directive (a value that is not a string, or a key
+the parser reserves such as `filename` or `lineno`, is refused naming it). That
+is what lets an agent record the keys other tools read, such as a commodity's
+`price:` for bean-price or an open's `account:` for importers, without writing
+raw text. Posting `tags` and `links` are refused (w23/171). An `open` takes `booking` (`STRICT`,
 `FIFO`, `LIFO`, `NONE`); anything else is refused. A `balance` takes
 `tolerance`, a plain-decimal slack rendered `~`. A `pad` takes
 `sourceAccount`.

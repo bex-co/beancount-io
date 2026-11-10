@@ -648,7 +648,8 @@
                           "nullable": true,
                           "additionalProperties": {
                             "type": "string"
-                          }
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -703,6 +704,14 @@
                             null
                           ],
                           "description": "Booking method for the account"
+                        },
+                        "meta": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -736,6 +745,14 @@
                         },
                         "account": {
                           "type": "string"
+                        },
+                        "meta": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -780,6 +797,14 @@
                           "type": "string",
                           "nullable": true,
                           "description": "Alias of sourceAccount. One of the two is required."
+                        },
+                        "meta": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -837,6 +862,14 @@
                           "type": "string",
                           "nullable": true,
                           "description": "Explicit balance tolerance as a plain decimal"
+                        },
+                        "meta": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -890,6 +923,14 @@
                             "currency"
                           ],
                           "additionalProperties": false
+                        },
+                        "meta": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -924,6 +965,14 @@
                         },
                         "currency": {
                           "type": "string"
+                        },
+                        "meta": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -960,6 +1009,14 @@
                         },
                         "content": {
                           "type": "string"
+                        },
+                        "meta": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -1075,6 +1132,14 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "meta": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -1112,6 +1177,14 @@
                         },
                         "description": {
                           "type": "string"
+                        },
+                        "meta": {
+                          "type": "object",
+                          "nullable": true,
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "Metadata written beneath the directive; every value is a string, written quoted as given"
                         }
                       },
                       "required": [
@@ -12893,6 +12966,10 @@
                     "newSha256sum": {
                       "type": "string"
                     },
+                    "unchanged": {
+                      "type": "boolean",
+                      "description": "True when the edit leaves the entry's text as it was: nothing was written and no commit was made."
+                    },
                     "newEntryHash": {
                       "type": "string",
                       "description": "The entry's public ID after the commit, re-read post-commit — use it for the next edit, not the request's entryHash."
@@ -12908,6 +12985,7 @@
                     "newErrors",
                     "valid",
                     "newSha256sum",
+                    "unchanged",
                     "newEntryHash"
                   ]
                 }

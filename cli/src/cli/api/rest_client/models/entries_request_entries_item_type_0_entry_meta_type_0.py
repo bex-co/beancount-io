@@ -11,6 +11,8 @@ T = TypeVar("T", bound="EntriesRequestEntriesItemType0EntryMetaType0")
 
 @_attrs_define
 class EntriesRequestEntriesItemType0EntryMetaType0:
+    """Metadata written beneath the directive; every value is a string, written quoted as given"""
+
     additional_properties: dict[str, str] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

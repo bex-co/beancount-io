@@ -20,6 +20,7 @@ import type {
 } from "@/features/ledger/service/ledger-entry-service";
 import {
   BALANCE_TOLERANCE_DESCRIPTION,
+  DIRECTIVE_META_DESCRIPTION,
   OPEN_BOOKING_DESCRIPTION,
   PAD_SOURCE_DESCRIPTION,
   POSTING_COST_DESCRIPTION,
@@ -136,6 +137,12 @@ class AddLedgerEntryResponse {
   valid: boolean;
 }
 
+/** The `meta` field of every directive input: one set of options, one description. */
+const DIRECTIVE_META_FIELD = {
+  nullable: true,
+  description: DIRECTIVE_META_DESCRIPTION,
+} as const;
+
 @InputType()
 class LedgerAmountInput {
   @Field(() => String)
@@ -242,7 +249,7 @@ class LedgerTransactionInput {
   @Field(() => [String], { nullable: true })
   links?: string[];
 
-  @Field(() => GraphQLJSONObject, { nullable: true })
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
   meta?: Record<string, string>;
 }
 
@@ -253,6 +260,9 @@ class LedgerCommodityInput {
 
   @Field(() => String)
   currency: string;
+
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
+  meta?: Record<string, string>;
 }
 
 @InputType()
@@ -265,6 +275,9 @@ class LedgerPriceInput {
 
   @Field(() => LedgerAmountInput)
   amount: LedgerAmountInput;
+
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
+  meta?: Record<string, string>;
 }
 
 @InputType()
@@ -277,6 +290,9 @@ class LedgerNoteInput {
 
   @Field(() => String)
   account: string;
+
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
+  meta?: Record<string, string>;
 }
 
 @InputType()
@@ -295,6 +311,9 @@ class LedgerBalanceInput {
     description: BALANCE_TOLERANCE_DESCRIPTION,
   })
   tolerance?: string;
+
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
+  meta?: Record<string, string>;
 }
 
 @InputType()
@@ -316,6 +335,9 @@ class LedgerOpenInput {
     description: OPEN_BOOKING_DESCRIPTION,
   })
   booking?: BookingMethod;
+
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
+  meta?: Record<string, string>;
 }
 
 @InputType()
@@ -325,6 +347,9 @@ class LedgerCloseInput {
 
   @Field(() => String)
   account: string;
+
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
+  meta?: Record<string, string>;
 }
 
 @InputType()
@@ -348,6 +373,9 @@ class LedgerPadInput {
     description: "Alias of sourceAccount. One of the two is required.",
   })
   source_account?: string;
+
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
+  meta?: Record<string, string>;
 }
 
 @InputType()
@@ -366,6 +394,9 @@ class LedgerDocumentInput {
 
   @Field(() => [String], { nullable: true })
   links?: string[];
+
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
+  meta?: Record<string, string>;
 }
 
 @InputType()
@@ -393,6 +424,9 @@ class LedgerEventInput {
 
   @Field(() => String)
   description: string;
+
+  @Field(() => GraphQLJSONObject, DIRECTIVE_META_FIELD)
+  meta?: Record<string, string>;
 }
 
 /**

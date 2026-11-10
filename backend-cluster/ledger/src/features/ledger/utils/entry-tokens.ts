@@ -85,12 +85,13 @@ function rowTokens(row: {
 
   add("date", item.date, "date");
   add("account", item.account, "account");
+  // Every directive may carry metadata (w23/m43); its keys are tokens too.
+  addMetaKeys("meta", item.meta);
   switch (row.type) {
     case "transaction":
       add("flag", item.flag, "transaction flag");
       addAll("tags", item.tags, "tag");
       addAll("links", item.links, "link");
-      addMetaKeys("meta", item.meta);
       asList(item.postings).forEach((value, index) => {
         const posting = asItem(value);
         const field = `postings[${index}]`;

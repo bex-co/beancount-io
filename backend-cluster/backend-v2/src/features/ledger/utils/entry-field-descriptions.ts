@@ -22,6 +22,14 @@ export const POSTING_LINKS_DESCRIPTION =
 export const POSTING_META_DESCRIPTION =
   "Posting metadata, written beneath the posting";
 
+/** The `meta` of every directive but a posting (w23/m43); the same words on each surface. */
+export const DIRECTIVE_META_DESCRIPTION =
+  "Metadata written beneath the directive; every value is a string, written quoted as given";
+
+/** The `unchanged` flag of an entry edit's result (w23/m43); the same words on each surface. */
+export const UNCHANGED_EDIT_DESCRIPTION =
+  "True when the edit leaves the entry's text as it was: nothing was written and no commit was made.";
+
 export const OPEN_BOOKING_DESCRIPTION = "Booking method for the account";
 
 export const BALANCE_TOLERANCE_DESCRIPTION =

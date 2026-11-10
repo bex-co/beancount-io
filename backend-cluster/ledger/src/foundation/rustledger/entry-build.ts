@@ -124,6 +124,10 @@ function toTypedValue(value: CustomValueInput): TypedValueJson {
   }
 }
 
+/** A directive's or posting's own metadata, when the caller sent any (w23/m43). */
+const metaOf = (entry: { meta?: Record<string, string> }) =>
+  entry.meta ? { meta: { ...entry.meta } } : {};
+
 /**
  * Meta on the transaction input is `Record<string, string>`; beancount renders
  * each value as a quoted string via `write_metadata`. rustledger's
@@ -199,7 +203,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
               }
             : {}),
           ...(posting.flag ? { flag: posting.flag } : {}),
-          ...(posting.meta ? { meta: { ...posting.meta } } : {}),
+          ...metaOf(posting),
           // Total price has no engine representation (price is a bare
           // per-unit AmountValue); it rides a render-side extension the
           // sibling renderer reads back (w23/m6/t010).
@@ -212,7 +216,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
               }
             : {}),
         })),
-        ...(entry.meta ? { meta: { ...entry.meta } } : {}),
+        ...metaOf(entry),
       };
     }
     case "commodity":
@@ -220,6 +224,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         type: "commodity",
         date: input.entry.date,
         currency: input.entry.currency,
+        ...metaOf(input.entry),
       };
     case "price": {
       const { entry } = input;
@@ -231,6 +236,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
           number: toBeancountNumber(entry.amount.number),
           currency: entry.amount.currency,
         },
+        ...metaOf(entry),
       };
     }
     case "note":
@@ -239,6 +245,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         date: input.entry.date,
         account: input.entry.account,
         comment: input.entry.content,
+        ...metaOf(input.entry),
       };
     case "balance":
       return {
@@ -252,6 +259,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         ...(input.entry.tolerance
           ? { tolerance: toBeancountNumber(input.entry.tolerance) }
           : {}),
+        ...metaOf(input.entry),
       };
     case "open":
       return {
@@ -260,12 +268,14 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         account: input.entry.account,
         currencies: input.entry.currencies ?? [],
         ...(input.entry.booking ? { booking: input.entry.booking } : {}),
+        ...metaOf(input.entry),
       };
     case "close":
       return {
         type: "close",
         date: input.entry.date,
         account: input.entry.account,
+        ...metaOf(input.entry),
       };
     case "pad":
       return {
@@ -273,6 +283,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         date: input.entry.date,
         account: input.entry.account,
         source_account: input.entry.sourceAccount,
+        ...metaOf(input.entry),
       };
     case "custom": {
       const { entry } = input;
@@ -315,6 +326,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         path: entry.filename,
         ...(entry.tags ? { tags: entry.tags } : {}),
         ...(entry.links ? { links: entry.links } : {}),
+        ...metaOf(entry),
       };
     }
     case "event":
@@ -323,6 +335,7 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         date: input.entry.date,
         event_type: input.entry.type,
         value: input.entry.description,
+        ...metaOf(input.entry),
       };
   }
 }

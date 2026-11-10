@@ -12,6 +12,7 @@ import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
+import { UNCHANGED_EDIT_DESCRIPTION } from "@/features/ledger/utils/entry-field-descriptions";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import {
   ALLOW_INVALID_NAMES,
@@ -282,6 +283,9 @@ class UpdateSourceSliceResponse {
       "The entry's public ID after the commit — use it for the next edit, not entryHash.",
   })
   newEntryHash: string;
+
+  @Field(() => Boolean, { description: UNCHANGED_EDIT_DESCRIPTION })
+  unchanged: boolean;
 
   @Field(() => [SlicePreviewFile], {
     description: "Per-file affected text; populated on dry runs only",

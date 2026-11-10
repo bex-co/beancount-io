@@ -193,6 +193,44 @@ describe("source-slice dry runs (w23/m7/t003)", () => {
     expect(files["main.bean"]).toBe(MAIN_PRE);
   });
 
+  // w23/m43: the ledger service compares the file before and after, so an edit
+  // that changes nothing is reported as such, whether or not it commits, and one
+  // that changes only a comment stored beside the entry is not.
+  it.each([true, false])(
+    "reports an edit that leaves the file as it was as unchanged (dry run: %s)",
+    async (dryRun) => {
+      const svc = service();
+      const same = await svc.updateSourceSlice({
+        ledgerId: "alice/main",
+        userId: "user-1",
+        entryHash: OLD_ID,
+        sha256sum: sliceSha256(TXN_OLD),
+        newContent: TXN_OLD,
+        dryRun,
+      });
+      expect(same.unchanged).toBe(true);
+      expect(files["main.bean"]).toBe(MAIN_PRE);
+    },
+  );
+
+  it.each([true, false])(
+    "reports a real edit, and a comment-only one, as changed (dry run: %s)",
+    async (dryRun) => {
+      for (const newContent of [TXN_NEW, `${TXN_OLD}\n; kept beside it`]) {
+        files = { "main.bean": MAIN_PRE };
+        const updated = await service().updateSourceSlice({
+          ledgerId: "alice/main",
+          userId: "user-1",
+          entryHash: OLD_ID,
+          sha256sum: sliceSha256(TXN_OLD),
+          newContent,
+          dryRun,
+        });
+        expect(updated.unchanged).toBe(false);
+      }
+    },
+  );
+
   it("previews a delete without committing it", async () => {
     const svc = service();
     const deleted = await svc.deleteSourceSlice({

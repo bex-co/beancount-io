@@ -1,20 +1,20 @@
 # w23 · m43 — Accept directive metadata on every typed entry and gate the journal round trip
 
-**Worker:** worker1 **Goal:** Every directive type the journal returns metadata for can be written back through the typed entry tool with that metadata, and a round-trip test keeps it that way. **Status:** todo
+**Worker:** worker1 **Goal:** Every directive type the journal returns metadata for can be written back through the typed entry tool with that metadata, and a round-trip test keeps it that way. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Add string-valued meta to every non-transaction entry type | 50m | — |
-| t002 | Render directive meta through the serializer | 40m | t001 |
-| t003 | Write the journal round-trip gate | 50m | t002 |
-| t004 | Report a byte-identical updateEntrySource as a no-op | 25m | — |
-| t005 | Regenerate OpenAPI and the CLI pin; update the entry-tool docs | 30m | t002 |
-| t006 | Adoption surface | 20m | t003, t004, t005 |
-| t007 | Simplify | 20m | t006 |
-| t008 | Test coverage | 30m | t006 |
-| t009 | Closeout | 15m | t008 |
+| t001 | Add string-valued meta to every non-transaction entry type — **DONE** | 50m | — |
+| t002 | Render directive meta through the serializer — **DONE** | 40m | t001 |
+| t003 | Write the journal round-trip gate — **DONE** | 50m | t002 |
+| t004 | Report a byte-identical updateEntrySource as a no-op — **DONE** | 25m | — |
+| t005 | Regenerate OpenAPI and the CLI pin; update the entry-tool docs — **DONE** | 30m | t002 |
+| t006 | Adoption surface — **DONE** | 20m | t003, t004, t005 |
+| t007 | Simplify — **DONE** | 20m | t006 |
+| t008 | Test coverage — **DONE** | 30m | t006 |
+| t009 | Closeout — **DONE** | 15m | t008 |
 
 ## Definition of done
 
