@@ -151,8 +151,13 @@ const getStyles = (theme: ColorTheme) =>
     rowDim: {
       opacity: 0.4,
     },
+    // The glyph sits at the box's start edge, not its physical left: an icon
+    // font has no right-to-left letters, so a stretched Text aligned it left
+    // in Persian, against the file name with the 8 pt of the box left outside
+    // it (w22/011). `flex-start` follows the layout direction.
     rowIcon: {
       width: 28,
+      alignItems: "flex-start",
     },
     rowText: {
       flex: 1,
