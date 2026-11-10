@@ -1,6 +1,6 @@
 import { StaleDataBanner } from "@/components/stale-data-banner";
 import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
-import { isolatePath } from "@/common/bidi";
+import { isolateLtr, isolatePath } from "@/common/bidi";
 import { routeText } from "@/common/route-text";
 import {
   Pressable,
@@ -522,8 +522,12 @@ function NotificationsScreenImpl(): JSX.Element {
                             commit.author.date,
                             locale,
                           )}{" "}
+                          {/* Its leading digits otherwise join the date's
+                              right-to-left run in Persian (w22/010). */}
                           <Text style={styles.changeSha}>
-                            {formatShortSha(commit.sha, commit.shortSha)}
+                            {isolateLtr(
+                              formatShortSha(commit.sha, commit.shortSha),
+                            )}
                           </Text>
                         </Text>
                       </View>

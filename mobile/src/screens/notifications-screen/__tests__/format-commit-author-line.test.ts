@@ -81,3 +81,38 @@ describe("formatCommitAuthorLine and the time of day", () => {
     );
   });
 });
+
+// w22/010: in Persian the day sat beside the author and the rest of the date
+// after it, and the SHA appended to the line came apart in the same way.
+describe("formatCommitAuthorLine in a right-to-left language", () => {
+  const FSI = "\u2068";
+  const PDI = "\u2069";
+
+  it("keeps the author and the date as two runs, in order", () => {
+    const line = formatCommitAuthorLine("puncsky", SEPT_13, "fa", "UTC");
+    const moment = line.split(" · ")[1].slice(1, -1);
+    expect(line).toBe(`${FSI}puncsky${PDI} · ${FSI}${moment}${PDI}`);
+    // A Persian date, so its digits are the ones that used to attach to the name.
+    expect(/[\u06f0-\u06f9]/.test(moment)).toBe(true);
+  });
+
+  it("does the same for a Persian author in a left-to-right language", () => {
+    const line = formatCommitAuthorLine("پان", SEPT_13, "en", "UTC");
+    expect(line.startsWith(`${FSI}پان${PDI} · ${FSI}`)).toBe(true);
+    expect(line.endsWith(PDI)).toBe(true);
+  });
+
+  it("shows the author alone, unmarked, when the date is missing", () => {
+    expect(formatCommitAuthorLine("puncsky", null, "fa")).toBe("puncsky");
+  });
+
+  it("changes nothing in a left-to-right language with a Latin author", () => {
+    for (const locale of ["en", "de", "ru", "zh"]) {
+      expect(
+        /[\u2066-\u2069]/.test(
+          formatCommitAuthorLine("puncsky", SEPT_13, locale, "UTC"),
+        ),
+      ).toBe(false);
+    }
+  });
+});

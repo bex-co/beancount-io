@@ -60,6 +60,35 @@ describe("commitRowAccessibilityLabel", () => {
     ).toBe(true);
   });
 
+  // w22/010: the shown line isolates "author" and "date" in Persian; what is
+  // spoken is the plain text, with nothing for a screen reader to trip on.
+  it("is plain text in Persian, without direction marks", () => {
+    const label = commitRowAccessibilityLabel(
+      commit("0530ce7aaaaaaaa", "2026-10-21"),
+      "(no message)",
+      "fa",
+    );
+    expect(/[\u2066-\u2069]/.test(label)).toBe(false);
+    expect(label.startsWith("qa: mobile remove/append, QA Bot · ")).toBe(true);
+    expect(label.endsWith(", 0530ce7")).toBe(true);
+  });
+
+  it("shows the short SHA as one left-to-right token", () => {
+    // Its leading digits otherwise join the Persian date's run and come apart
+    // from the rest of the SHA (w22/010).
+    const source = fs
+      .readFileSync(
+        path.join(__dirname, "..", "notifications-screen.tsx"),
+        "utf8",
+      )
+      .replace(/\s+/g, "");
+    expect(
+      source.includes(
+        "<Textstyle={styles.changeSha}>{isolateLtr(formatShortSha(commit.sha,commit.shortSha),)}</Text>",
+      ),
+    ).toBe(true);
+  });
+
   it("is what the Notifications row announces and shows", () => {
     const source = fs
       .readFileSync(

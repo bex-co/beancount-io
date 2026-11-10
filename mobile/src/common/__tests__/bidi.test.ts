@@ -3,6 +3,7 @@ import path from "path";
 import {
   isolateAccountPath,
   isolateLtr,
+  isolateParts,
   isolatePath,
   isolateRtlSymbol,
   isolateSourceLine,
@@ -82,6 +83,47 @@ describe("isolateRtlSymbol", () => {
     for (const symbol of ["$", "€", "¥", "₹", "CHF", "zł", ""]) {
       expect(isolateRtlSymbol(symbol)).toBe(symbol);
     }
+  });
+});
+
+// w22/010: in Persian a commit's "author · date" put the day beside the author
+// and the rest of the date after it.
+describe("isolateParts", () => {
+  const FSI = "⁨";
+  const PDI = "⁩";
+
+  it("puts each part of a line with right-to-left letters in its own isolate", () => {
+    expect(isolateParts(["Tian Pan", "۸ سپتامبر ۲۰۱۷"], " · ")).toBe(
+      `${FSI}Tian Pan${PDI} · ${FSI}۸ سپتامبر ۲۰۱۷${PDI}`,
+    );
+  });
+
+  it("isolates the parts when only the first has right-to-left letters", () => {
+    // A Persian author in an English app: the date's digits would join the name.
+    expect(isolateParts(["پان", "13 Sep 2026"], " · ")).toBe(
+      `${FSI}پان${PDI} · ${FSI}13 Sep 2026${PDI}`,
+    );
+  });
+
+  it("keeps the order and text of the parts", () => {
+    const parts = ["Tian Pan", "۸ سپتامبر ۲۰۱۷", "21:14"];
+    expect(isolateParts(parts, " · ").replace(/[⁨⁩]/g, "")).toBe(
+      parts.join(" · "),
+    );
+  });
+
+  it("leaves a line in a left-to-right script exactly as it was", () => {
+    expect(isolateParts(["Tian Pan", "Sep 13, 2026, 12:00 PM"], " · ")).toBe(
+      "Tian Pan · Sep 13, 2026, 12:00 PM",
+    );
+    expect(isolateParts(["Tian Pan", "13. Sept. 2026"], " · ")).toBe(
+      "Tian Pan · 13. Sept. 2026",
+    );
+  });
+
+  it("has nothing to keep apart in a single part", () => {
+    expect(isolateParts(["پان"], " · ")).toBe("پان");
+    expect(isolateParts([], " · ")).toBe("");
   });
 });
 

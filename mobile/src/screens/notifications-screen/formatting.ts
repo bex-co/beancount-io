@@ -1,3 +1,4 @@
+import { isolateParts } from "../../common/bidi";
 import { formatMoment } from "../../common/date-format";
 import { errorHint, errorMessageWithHint } from "../../common/new-ledger-error";
 export type LedgerError = {
@@ -53,7 +54,10 @@ export function commitRowAccessibilityLabel(
 ): string {
   return [
     commit.subject || noMessage,
-    formatCommitAuthorLine(commit.author.name, commit.author.date, locale),
+    // Plain text: what is spoken needs no direction marks (w22/010).
+    commitAuthorParts(commit.author.name, commit.author.date, locale).join(
+      AUTHOR_SEPARATOR,
+    ),
     formatShortSha(commit.sha, commit.shortSha),
   ].join(", ");
 }
@@ -70,8 +74,23 @@ export function formatCommitAuthorLine(
   locale: string,
   timeZone?: string,
 ): string {
+  return isolateParts(
+    commitAuthorParts(name, date, locale, timeZone),
+    AUTHOR_SEPARATOR,
+  );
+}
+
+const AUTHOR_SEPARATOR = " · ";
+
+/** The author and, when the commit has a usable date, when it was made. */
+function commitAuthorParts(
+  name: string,
+  date: unknown,
+  locale: string,
+  timeZone?: string,
+): string[] {
   const moment = formatMoment(date, locale, timeZone);
-  return moment ? `${name} · ${moment}` : name;
+  return moment ? [name, moment] : [name];
 }
 
 const LIST_ITEM = /^\s*([-*+•] |\d+[.)] )/;

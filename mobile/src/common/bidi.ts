@@ -64,6 +64,23 @@ export function isolatePath(path: string): string {
   );
 }
 
+/**
+ * Parts of one line joined by `separator`, each kept as its own run. In a
+ * right-to-left line the digits of a localized date are weak characters and
+ * attach to whatever precedes them, so "Tian Pan · ۸ سپتامبر ۲۰۱۷" drew its day
+ * beside the author's name and the rest of the date after it, and a short SHA
+ * appended to that line came apart in the same way (w22/010). Each part goes
+ * in a first-strong isolate (U+2068 … U+2069), so its own text sets its
+ * direction and the parts read in order. A line with no Hebrew or Arabic-script
+ * letters is returned as it is, so the other twelve languages draw exactly
+ * what they drew before; a single part has nothing to be kept apart from.
+ */
+export function isolateParts(parts: string[], separator: string): string {
+  const line = parts.join(separator);
+  if (parts.length < 2 || !RTL_LETTERS.test(line)) return line;
+  return parts.map((part) => `⁨${part}⁩`).join(separator);
+}
+
 /** A string (to its closing quote), a comment, or a word of ledger source. */
 const SOURCE_TOKEN = /"(?:[^"\\]|\\.)*"?|;.*|[^\s"]+/gu;
 const ACCOUNT_TOKEN = /^[^\s":]+(?::[^\s":]+)+$/u;
