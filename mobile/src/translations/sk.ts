@@ -898,7 +898,7 @@ export const sk: Translations = {
   feedSourceBlog: "Blog",
   feedSourceRelease: "Vydanie",
   reportsThroughLatestMonth:
-    "Zobrazené do {{month}}, posledného mesiaca so záznamami.",
+    "Zobrazuje sa posledný mesiac so záznamami: {{month}}.",
   merchantTotalAtRates: "{{amount}} pri zapísaných kurzoch",
   merchantScheduledTotal: "{{amount}} naplánované",
   feedCommittedTo: "Commit do {{ledger}}",

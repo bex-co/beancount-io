@@ -888,8 +888,7 @@ export const uk: Translations = {
   feedSourceLedger: "Книга",
   feedSourceBlog: "Блог",
   feedSourceRelease: "Реліз",
-  reportsThroughLatestMonth:
-    "Показано до {{month}} — останнього місяця із записами.",
+  reportsThroughLatestMonth: "Показано останній місяць із записами: {{month}}",
   merchantTotalAtRates: "{{amount}} за записаними курсами",
   merchantScheduledTotal: "{{amount}} заплановано",
   feedCommittedTo: "Зміна в {{ledger}}",
