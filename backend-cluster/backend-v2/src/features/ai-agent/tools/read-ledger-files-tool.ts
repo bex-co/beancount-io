@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { logger } from "@/shared/logger";
-import { BadUserInputError } from "@/shared/errors";
+import { BadUserInputError, NotFoundError } from "@/shared/errors";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
@@ -175,7 +175,7 @@ export async function executeReadLedgerFiles(
       for (const { path, start_line, end_line } of requestedFiles) {
         const file = fileMap.get(path);
         if (file === undefined) {
-          throw new Error(`file not found: ${path}`);
+          throw new NotFoundError("File", path);
         }
         const raw = file.content;
         // A trailing newline ends the last line; it does not start another,

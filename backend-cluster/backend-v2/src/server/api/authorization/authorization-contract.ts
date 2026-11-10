@@ -1,5 +1,6 @@
 import type { Identity } from "@/server/api/identity";
 import { parseLedgerId } from "@/shared/str";
+import { BadUserInputError } from "@/shared/errors";
 
 /**
  * Transport-neutral domain actions understood by the centralized PDP.
@@ -196,7 +197,12 @@ export function bankConnectionResource(
   const itemIds = Array.isArray(plaidItemIds)
     ? [...new Set(plaidItemIds)].sort()
     : [plaidItemIds];
-  const items = itemIds.filter(Boolean).map(encodeURIComponent).join(",");
+  // A blank id names no connection. Dropping it authorized the request as the
+  // ledger-level resource instead (w1/189); no id at all is `[]`, not `""`.
+  if (itemIds.some((id) => id.trim() === "")) {
+    throw new BadUserInputError("itemId must not be empty", "itemId");
+  }
+  const items = itemIds.map(encodeURIComponent).join(",");
   return `bank_connection:${encodeURIComponent(ledgerId)}${
     items ? `?items=${items}` : ""
   }`;

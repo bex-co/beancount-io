@@ -403,6 +403,67 @@ describe("PlaidSyncService", () => {
       ).rejects.toThrow("Plaid Item not found");
     });
 
+    // w1/189: the log insert for an id that names no item violates its
+    // foreign key, and its SQL — user id included — replaced the refusal.
+    it("keeps the refusal when recording the failed sync fails", async () => {
+      mockPlaidItemModel.getById.mockResolvedValue(null);
+      mockPlaidSyncLogModel.create.mockRejectedValueOnce(
+        new Error(
+          'Failed query: insert into "plaid_sync_logs" params: user_test',
+        ),
+      );
+
+      const refusal = await service
+        .syncItemTransactions(
+          systemIdentity(userId),
+          itemId,
+          "manual",
+          "owner/ledger",
+        )
+        .catch((error: unknown) => error);
+      expect(refusal).toBeInstanceOf(BadUserInputError);
+      expect((refusal as Error).message).toBe("Plaid Item not found");
+      expect(mockPlaidSyncLogModel.create).toHaveBeenCalledTimes(1);
+    });
+
+    it("writes no sync log when a dry run fails", async () => {
+      mockPlaidItemModel.getById.mockResolvedValue({
+        ...mockItem,
+        status: "requires_reauth",
+      });
+
+      await expect(
+        service.syncItemTransactions(
+          systemIdentity(userId),
+          itemId,
+          "manual",
+          undefined,
+          true,
+        ),
+      ).rejects.toThrow("Cannot sync transactions");
+      expect(mockPlaidSyncLogModel.create).not.toHaveBeenCalled();
+    });
+
+    it("writes no sync log or item status when a dry run hits ITEM_LOGIN_REQUIRED", async () => {
+      mockPlaidItemModel.getById.mockResolvedValue({ ...mockItem });
+      mockPlaidAccountModel.getEnabledByItemId.mockResolvedValue([]);
+      mockPlaidClient.transactionsSync.mockRejectedValueOnce(
+        new Error("ITEM_LOGIN_REQUIRED"),
+      );
+
+      await expect(
+        service.syncItemTransactions(
+          systemIdentity(userId),
+          itemId,
+          "manual",
+          undefined,
+          true,
+        ),
+      ).rejects.toThrow("Transaction sync failed");
+      expect(mockPlaidSyncLogModel.create).not.toHaveBeenCalled();
+      expect(mockPlaidItemModel.updateForBinding).not.toHaveBeenCalled();
+    });
+
     it("should throw when user is unauthorized", async () => {
       mockPlaidItemModel.getById.mockResolvedValue({
         ...mockItem,

@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [189](./189.md) — An unexpected error that mentions "not found" reaches MCP callers unmasked (MCP QA 2026-11-08)
 - [190](./190.md) — Parsing an issued but never-uploaded temp asset is a 500, not "upload first" (MCP QA 2026-11-08)
 - [191](./191.md) — Interval totals without `accountName` return all-zero intervals (MCP QA 2026-11-08)
 - [192](./192.md) — BQL `FROM … CLEAR` is accepted and silently ignored (MCP QA 2026-11-08)

@@ -195,9 +195,9 @@ const MASKED_MESSAGE = "Internal server error";
  *
  * An unexpected error's message is written by whatever threw it, for whoever
  * reads logs: a `RangeError`'s "Invalid time value", a driver's SQL text. In
- * production it is replaced, with its category kept. A `DomainError`, a Zod
- * refusal, and a tool guard's own not-found keep their message, because those
- * were written for the caller. The full message still goes to the logger,
+ * production it is replaced, with its category kept. A `DomainError` (a tool
+ * guard's `NotFoundError` included) and a Zod refusal keep their message,
+ * because those were written for the caller. The full message still goes to the logger,
  * which is why this is an option and not the only behaviour.
  */
 export interface EnvelopeOptions {
@@ -294,24 +294,16 @@ export function envelopeFromThrown(
       hint: fallbackHintFor(ErrorCategory.BAD_USER_INPUT, options),
     };
   }
-  const category = categoryForMessage(raw);
+  // Anything else is unexpected, whatever its text says: a database error
+  // that quoted "Plaid Item not found" was once read as NOT_FOUND and so
+  // escaped the mask, SQL and user id included (w1/189). A guard that means
+  // NOT_FOUND throws `NotFoundError`.
+  const category = ErrorCategory.INTERNAL_SERVER_ERROR;
   return {
     code: category,
     message: unexpectedMessage(category, raw, options),
     hint: fallbackHintFor(category, options),
   };
-}
-
-/**
- * The category for a failure that arrived as prose only.
- *
- * A plain `Error` from a tool's own guard — `No such file in …` and friends —
- * still has to say something an agent can branch on.
- */
-function categoryForMessage(message: string): ErrorCategory {
-  return /no such file|not found/i.test(message)
-    ? ErrorCategory.NOT_FOUND
-    : ErrorCategory.INTERNAL_SERVER_ERROR;
 }
 
 /**
@@ -358,7 +350,7 @@ export function splitToolFailure(
   // A failure with no category of its own came from something other than a
   // `DomainError`, so it is the one kind the mask applies to.
   const uncoded = typeof errorCode !== "string";
-  const code = uncoded ? categoryForMessage(raw) : errorCode;
+  const code = uncoded ? ErrorCategory.INTERNAL_SERVER_ERROR : errorCode;
   const message = uncoded
     ? unexpectedMessage(code as ErrorCategory, raw, options)
     : raw;

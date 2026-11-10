@@ -311,12 +311,18 @@ describe("envelopeFromThrown", () => {
     expect(envelope.hint).toMatch(/allowInvalid/);
   });
 
-  it("reads a plain tool guard's not-found as NOT_FOUND", () => {
+  it("reads a tool guard's NotFoundError as NOT_FOUND", () => {
+    const envelope = envelopeFromThrown(new NotFoundError("File", "nope.bean"));
+    expect(envelope.code).toBe("NOT_FOUND");
+    expect(envelope.hint).toMatch(/listLedgerFiles/);
+  });
+
+  // w1/189: the category comes from the error's class, never its prose.
+  it("reads a plain error that says not found as unexpected", () => {
     const envelope = envelopeFromThrown(
       new Error("No such file in alice/main: nope.bean"),
     );
-    expect(envelope.code).toBe("NOT_FOUND");
-    expect(envelope.hint).toMatch(/listLedgerFiles/);
+    expect(envelope.code).toBe("INTERNAL_SERVER_ERROR");
   });
 
   it("reduces a Zod issue dump to the field that is wrong", () => {
@@ -358,8 +364,9 @@ describe("splitToolFailure", () => {
       ok: false,
       error: "No such file in alice/main: nope.bean",
     });
-    expect(envelope.code).toBe("NOT_FOUND");
-    expect(envelope.hint).toMatch(/listLedgerFiles/);
+    // Uncoded means no DomainError shaped it, whatever the text (w1/189).
+    expect(envelope.code).toBe("INTERNAL_SERVER_ERROR");
+    expect(envelope.hint).toMatch(/\S/);
   });
 
   /**
@@ -460,10 +467,10 @@ describe("production masking of unexpected errors", () => {
       ).message,
     ).toBe("Object storage is not configured");
     expect(
-      envelopeFromThrown(new Error("No such file in alice/main"), production),
+      envelopeFromThrown(new NotFoundError("File", "nope.bean"), production),
     ).toMatchObject({
       code: "NOT_FOUND",
-      message: "No such file in alice/main",
+      message: "File with ID 'nope.bean' not found",
     });
     expect(
       splitToolFailure(
@@ -477,12 +484,37 @@ describe("production masking of unexpected errors", () => {
     ).toBe("upstream refused the write");
     expect(
       splitToolFailure(
-        { ok: false, error: "main.bean: file not found" },
+        {
+          ok: false,
+          error: "File with ID 'main.bean' not found",
+          errorCode: "NOT_FOUND",
+        },
         production,
       ).envelope,
     ).toMatchObject({
       code: "NOT_FOUND",
-      message: "main.bean: file not found",
+      message: "File with ID 'main.bean' not found",
+    });
+  });
+
+  /**
+   * w1/189: a failed insert's SQL quoted "Plaid Item not found" from its
+   * parameters, was read as NOT_FOUND, and reached the caller verbatim with
+   * the user id in it.
+   */
+  it("masks an unexpected error whose text says not found", () => {
+    const sql =
+      'Failed query: insert into "plaid_sync_logs" values ($1) params: usr_1,,manual,failed,Plaid Item not found';
+    expect(envelopeFromThrown(new Error(sql), production)).toEqual({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Internal server error",
+      hint: expect.stringMatching(/\S/),
+    });
+    expect(
+      splitToolFailure({ ok: false, error: sql }, production).envelope,
+    ).toMatchObject({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Internal server error",
     });
   });
 });

@@ -1384,6 +1384,9 @@ Every argument is checked before the tool runs, on MCP and equally on REST and
 GraphQL, and a value that breaks one rule is refused as `BAD_USER_INPUT` naming
 the parameter. Nothing is stripped or truncated.
 
+- A bank id (`itemId`, `accountId`, `transactionIds`) may not be empty or
+  blank (w1/189); an optional account filter left empty still means every
+  account.
 - A string may not contain a NUL (U+0000) or an unpaired surrogate (text that
   is not valid Unicode). Ledger file text (`content`, `text`, `newContent`, and
   `files[]` `content`/`old_string`/`new_string`) may contain a NUL, because a
@@ -1464,7 +1467,7 @@ A `NOT_FOUND` on a bank connection, pull request, commit, branch, archive or use
 | `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                                                                                                                |
 | `SERVICE_UNAVAILABLE`    | `-32000` | A dependency is down, or the ledger did not answer before its deadline (30 seconds for a read, 90 for a write). Retry with backoff; the request is not the problem. After a timeout a write may already have committed: re-read the ledger before repeating it, or resend an entry write with the same `requestId` ([retry-safe entry writes](#retry-safe-entry-writes-requestid)). |
 | `CONFIGURATION_ERROR`    | `-32000` | The deployment is missing configuration. Nothing about the request will fix it.                                                                                                                          |
-| `INTERNAL_SERVER_ERROR`  | `-32000` | Server-side failure. Retry once; changing the request will not help.                                                                                                                                     |
+| `INTERNAL_SERVER_ERROR`  | `-32000` | Server-side failure. Retry once; changing the request will not help. In production its message is always `Internal server error`, whatever the failure said (w1/189).                                     |
 
 | Symptom                                           | Meaning and next step                                                                                                                                                                                                                                                                                     |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

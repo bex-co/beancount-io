@@ -1,6 +1,6 @@
 import { BANK_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import { type DbExecutor } from "@/drizzle/drizzle";
-import { assertNoNul, assertNoNulIn } from "@/shared/assert-no-nul";
+import { assertBankId, assertBankIds } from "../utils/assert-bank-id";
 import { type IModels } from "@/foundation/models";
 import { type IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import {
@@ -227,8 +227,9 @@ export class PlaidItemService implements IPlaidItemService {
     plaidItemIds: string | readonly string[] = [],
   ): Promise<{ ledgerRepoId: number }> {
     // The id reaches the policy evaluator and Postgres, neither of which can
-    // hold U+0000; refuse it as the caller's mistake, not an outage (w23/218).
-    assertNoNulIn([plaidItemIds].flat(), "itemId");
+    // hold U+0000, and an empty one would authorize as the whole ledger's bank
+    // resource; refuse both as the caller's mistake (w23/218, w1/189).
+    assertBankIds([plaidItemIds].flat(), "itemId");
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action,
@@ -289,7 +290,7 @@ export class PlaidItemService implements IPlaidItemService {
     ledgerId: string,
     accountId: string,
   ): Promise<{ account: PlaidAccount; item: PlaidItem; ledgerRepoId: number }> {
-    assertNoNul(accountId, "accountId");
+    assertBankId(accountId, "accountId");
     const { ledgerRepoId } = await this.authorizeBankAction(
       identity,
       action,
@@ -347,7 +348,7 @@ export class PlaidItemService implements IPlaidItemService {
     // Authorization runs before any lookup when the path names the ledger, so
     // a credential without bank authority is refused the same way whether or
     // not the id exists (w23/004).
-    assertNoNul(id, "itemId");
+    assertBankId(id, "itemId");
     let targetLedgerId = ledgerId;
     if (targetLedgerId === undefined) {
       const located = await this.models.plaidItem.getById(this.db, id);

@@ -373,6 +373,25 @@ describe("SourceBackedRelationshipEvaluator", () => {
     },
   );
 
+  // w1/189: dropping a blank id authorized it as the ledger-level resource.
+  it.each(["", "  ", ["pitm_1", ""]])(
+    "refuses the blank bank id in %j rather than dropping it",
+    (ids) => {
+      expect(() => bankConnectionResource("alice/main", ids)).toThrow(
+        expect.objectContaining({ category: ErrorCategory.BAD_USER_INPUT }),
+      );
+    },
+  );
+
+  it("still builds the ledger-level resource when no id is given", () => {
+    expect(bankConnectionResource("alice/main")).toBe(
+      "bank_connection:alice%2Fmain",
+    );
+    expect(bankConnectionResource("alice/main", [])).toBe(
+      "bank_connection:alice%2Fmain",
+    );
+  });
+
   it("keeps bank authority at the ledger-admin relationship", async () => {
     const { evaluator, repoGet } = makeEvaluator();
     repoGet.mockResolvedValueOnce({

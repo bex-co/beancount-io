@@ -68,74 +68,89 @@ async function refusal(call: () => Promise<unknown>) {
   return error as BadUserInputError;
 }
 
-describe("a NUL byte in a bank id is BAD_USER_INPUT (w23/218)", () => {
-  beforeEach(() => authorization.authorizeOrThrow.mockClear());
-
-  afterEach(() =>
-    expect(authorization.authorizeOrThrow).not.toHaveBeenCalled(),
-  );
-
-  it.each([
-    ["getItem", () => item.getItem(identity, NUL, LEDGER), "itemId"],
-    ["getItem without a ledger", () => item.getItem(identity, NUL), "itemId"],
-    ["getAccounts", () => item.getAccounts(identity, NUL, LEDGER), "itemId"],
+const callsWith = (BAD: string) =>
+  [
+    ["getItem", () => item.getItem(identity, BAD, LEDGER), "itemId"],
+    ["getItem without a ledger", () => item.getItem(identity, BAD), "itemId"],
+    ["getAccounts", () => item.getAccounts(identity, BAD, LEDGER), "itemId"],
     [
       "getUnsyncedTransactions",
-      () => item.getUnsyncedTransactions(identity, NUL, LEDGER),
+      () => item.getUnsyncedTransactions(identity, BAD, LEDGER),
       "accountId",
     ],
     [
       "suggestCategories",
-      () => item.suggestCategories(identity, LEDGER, NUL),
+      () => item.suggestCategories(identity, LEDGER, BAD),
       "accountId",
     ],
     [
       "updateAccountMapping",
-      () => item.updateAccountMapping(identity, NUL, "Assets:Cash", LEDGER),
+      () => item.updateAccountMapping(identity, BAD, "Assets:Cash", LEDGER),
       "accountId",
     ],
     [
       "updateAccountCurrency",
-      () => item.updateAccountCurrency(identity, NUL, "USD", LEDGER),
+      () => item.updateAccountCurrency(identity, BAD, "USD", LEDGER),
       "accountId",
     ],
     [
       "refreshItemStatus",
-      () => item.refreshItemStatus(identity, NUL, LEDGER),
+      () => item.refreshItemStatus(identity, BAD, LEDGER),
       "itemId",
     ],
-    ["unlinkItem", () => item.unlinkItem(identity, NUL, LEDGER), "itemId"],
+    ["unlinkItem", () => item.unlinkItem(identity, BAD, LEDGER), "itemId"],
     [
       "suggestAccountMapping",
-      () => item.suggestAccountMapping(identity, LEDGER, NUL),
+      () => item.suggestAccountMapping(identity, LEDGER, BAD),
       "itemId",
     ],
     [
       "syncItemTransactions",
-      () => sync.syncItemTransactions(identity, NUL, "manual", LEDGER),
+      () => sync.syncItemTransactions(identity, BAD, "manual", LEDGER),
       "itemId",
     ],
     [
       "getUnsyncedTransactionsForCategorization",
-      () => sync.getUnsyncedTransactionsForCategorization(identity, NUL),
+      () => sync.getUnsyncedTransactionsForCategorization(identity, BAD),
       "accountId",
     ],
     [
       "deleteTransactions",
-      () => sync.deleteTransactions(identity, LEDGER, ["ok", NUL]),
+      () => sync.deleteTransactions(identity, LEDGER, ["ok", BAD]),
       "transactionIds",
     ],
     [
       "submitTransactionsToLedger",
       () =>
         sync.submitTransactionsToLedger(identity, "alice", "main", [
-          { transactionId: NUL, targetAccount: "Expenses:Food" },
+          { transactionId: BAD, targetAccount: "Expenses:Food" },
         ]),
       "transactionIds",
     ],
-  ])("%s names %s", async (_name, call, field) => {
+  ] as const;
+
+describe.each([
+  ["a NUL byte", NUL, "NUL"],
+  // w1/189: an empty id was authorized as the ledger-level bank resource.
+  ["an empty id", "", "must not be empty"],
+  ["a blank id", "  ", "must not be empty"],
+])("%s in a bank id is BAD_USER_INPUT (w23/218)", (_kind, bad, says) => {
+  beforeEach(() => authorization.authorizeOrThrow.mockClear());
+
+  afterEach(() =>
+    expect(authorization.authorizeOrThrow).not.toHaveBeenCalled(),
+  );
+
+  // The two reads take accountId as an optional filter, where an empty value
+  // already means "no filter" — the dashboard sends one — so only a NUL or a
+  // blank id is refused there.
+  const optionalFilters = ["getUnsyncedTransactions", "suggestCategories"];
+  const calls = callsWith(bad).filter(
+    ([name]) => bad !== "" || !optionalFilters.includes(name),
+  );
+  it.each(calls)("%s names %s", async (_name, call, field) => {
     const error = await refusal(call);
     expect(error.message).toContain(field);
-    expect(error.message).toContain("NUL");
+    expect(error.message).toContain(says);
   });
 });

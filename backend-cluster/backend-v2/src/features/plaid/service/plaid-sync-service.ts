@@ -34,10 +34,11 @@ import {
   buildBeancountTransaction,
 } from "../utils/plaid-mapper";
 import { reconcileAccounts } from "../utils/reconcile-accounts";
-import { assertNoNul, assertNoNulIn } from "@/shared/assert-no-nul";
+import { assertBankId, assertBankIds } from "../utils/assert-bank-id";
 import { plaidImportId } from "../utils/plaid-constants";
 import type { PlaidAccount } from "../data/plaid-account-model";
 import type { PlaidTransaction } from "../data/plaid-transaction-model";
+import type { CreatePlaidSyncLogInput } from "../data/plaid-sync-log-model";
 
 const syncLogger = logger.child({ module: "plaid-sync-service" });
 
@@ -147,7 +148,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     ledgerId: string,
     plaidItemIds: string | readonly string[] = [],
   ): Promise<{ ledgerRepoId: number }> {
-    assertNoNulIn([plaidItemIds].flat(), "itemId"); // w23/218
+    assertBankIds([plaidItemIds].flat(), "itemId"); // w23/218, w1/189
     await this.authorization.authorizeOrThrow({
       principal,
       action,
@@ -190,6 +191,23 @@ export class PlaidSyncService implements IPlaidSyncService {
     }
   }
 
+  /**
+   * The record of a failed sync, never a replacement for its error (w1/189).
+   * An id that names no item violates the log's foreign key, and the insert's
+   * own SQL text — user id and all — used to replace "Plaid Item not found".
+   */
+  private async recordFailedSync(input: CreatePlaidSyncLogInput) {
+    try {
+      await this.models.plaidSyncLog.create(this.db, input);
+    } catch (logError) {
+      syncLogger.error("Failed to record a failed transaction sync", {
+        itemId: input.plaidItemId,
+        userId: input.userId,
+        error: logError,
+      });
+    }
+  }
+
   private async loadAuthorizedTransactionBatch(
     identity: Identity,
     action:
@@ -201,7 +219,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     transactions: PlaidTransaction[];
     accounts: ReadonlyMap<string, PlaidAccount>;
   }> {
-    assertNoNulIn(transactionIds, "transactionIds"); // w23/218
+    assertBankIds(transactionIds, "transactionIds"); // w23/218, w1/189
     // Authority first, against the route's ledger: a read-only credential is
     // FORBIDDEN before any lookup, instead of being told the transactions do
     // not exist (w23/024).
@@ -270,7 +288,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     ledgerId?: string,
     dryRun = false,
   ): Promise<PlaidSyncResult> {
-    assertNoNul(itemId, "itemId"); // w23/218
+    assertBankId(itemId, "itemId"); // w23/218, w1/189
     let authorizedLedgerId = ledgerId;
     if (!authorizedLedgerId) {
       const item = await this.models.plaidItem.getById(this.db, itemId);
@@ -605,21 +623,25 @@ export class PlaidSyncService implements IPlaidSyncService {
     } catch (error) {
       syncLogger.error("Transaction sync failed", { itemId, userId, error });
 
-      await this.models.plaidSyncLog.create(this.db, {
-        userId,
-        plaidItemId: itemId,
-        syncType,
-        startedAt,
-        status: "failed",
-        transactionsFetched: 0,
-        transactionsAdded: 0,
-        transactionsModified: 0,
-        transactionsRemoved: 0,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        completedAt: new Date(),
-      });
+      // A preview writes nothing, its failure record included (w1/189).
+      if (!dryRun) {
+        await this.recordFailedSync({
+          userId,
+          plaidItemId: itemId,
+          syncType,
+          startedAt,
+          status: "failed",
+          transactionsFetched: 0,
+          transactionsAdded: 0,
+          transactionsModified: 0,
+          transactionsRemoved: 0,
+          errorMessage: error instanceof Error ? error.message : String(error),
+          completedAt: new Date(),
+        });
+      }
 
       if (
+        !dryRun &&
         error instanceof Error &&
         error.message.includes("ITEM_LOGIN_REQUIRED")
       ) {
@@ -652,7 +674,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     identity: Identity,
     accountId: string,
   ): Promise<TransactionToCategorize[]> {
-    assertNoNul(accountId, "accountId"); // w23/218
+    assertBankId(accountId, "accountId"); // w23/218, w1/189
     const { userId } = identity;
     const account = await this.models.plaidAccount.getById(this.db, accountId);
     if (!account) {
