@@ -331,6 +331,15 @@ the principal inputs; inspect the schema before constructing a call.
 | `removeLedgerCollaborator`      | `collaborator`, optional `dry_run`; revokes access. A preview returns the would-be revocation. Commits echo `dry_run: false`.                                                                                                                                          | Admin      |
 | `leaveLedger`                   | Optional `dry_run`; removes the caller's own access. A preview returns the would-be self-removal. Commits echo `dry_run: false`.                                                                                                                                       | Admin      |
 | `setLedgerStar`                 | `starred`; stars or unstars a ledger for the caller. No `dry_run`: starring is an instantly reversible personal toggle, so there is nothing worth previewing.                                                                                                          | Write      |
+| `createLedger`                  | `name`, optional `description`, `private`, `template` or `setup`, `requestId`; creates a ledger. See [ledger lifecycle](#ledger-lifecycle). | Admin |
+| `previewLedgerSetup`            | `setup`; resolves a setup specification and bean-checks its files without creating anything. See [ledger lifecycle](#ledger-lifecycle). | Admin |
+| `createPullRequest`             | `title`, `description`, `clearCommitMessage`, `changes: [{ path, content }]`, optional `baseBranch` (default `main`); proposes the changes as a pull request. See [pull requests](#pull-requests). | Write |
+| `mergePullRequest`              | `prNumber`; merges an open pull request. See [pull requests](#pull-requests). | Write |
+| `rejectPullRequest`             | `prNumber`; closes an open pull request without merging. See [pull requests](#pull-requests). | Write |
+| `generateTempAssetUploadUrl`    | Optional `filename`, `mimeType`; issues an upload URL and `objectKey` for a statement or receipt. See [temporary asset upload and download](#temporary-asset-upload-and-download). | Write |
+| `parseFile`                     | `objectKey`, `fileFormat`; extracts statement rows from an uploaded file. See [parse uploaded statements](#parse-uploaded-statements). | Write |
+| `parseReceipt`                  | `objectKey`, optional `ledger`; extracts a receipt and recommends accounts. See [parse receipts and recommend accounts](#parse-receipts-and-recommend-accounts). | Write |
+| `insertReceiptTransaction`      | `receiptObjectKey`, `input`, optional `requestId`; stores the receipt and writes its transaction. See [insert receipt transactions](#insert-receipt-transactions). | Write |
 
 Tools with their own sections rather than a row here: `createLedger` and
 `previewLedgerSetup` (Ledger lifecycle), `createPullRequest`, `mergePullRequest`

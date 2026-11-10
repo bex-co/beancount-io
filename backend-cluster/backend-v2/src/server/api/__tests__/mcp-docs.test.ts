@@ -66,6 +66,19 @@ describe("docs/mcp.md describes the surface this server serves", () => {
       .filter((name) => !names.has(name));
     expect(unknown).toEqual([]);
   });
+
+  // w1/200: nine served tools had no row, so an agent reading the table
+  // never learned they existed.
+  it("gives every served tool a row in the Tools table", () => {
+    const start = DOC.indexOf("| Tool ");
+    const table = DOC.slice(start, DOC.indexOf("\n\n", start));
+    const rows = new Set(
+      [...table.matchAll(/^\| `([A-Za-z]+)`/gm)].map(([, name]) => name),
+    );
+    expect(
+      MCP_TOOLS.map((tool) => tool.name).filter((n) => !rows.has(n)),
+    ).toEqual([]);
+  });
 });
 
 describe("docs/mcp.md argument limits (w23/m23)", () => {
