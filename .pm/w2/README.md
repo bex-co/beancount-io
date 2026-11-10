@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [104 — Ledger Gallery stops at 50 matches and announces them as the whole result](./104.md) — dashboard QA 2026-11-10; `hasMore` from w23/m28 is unused
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains.
 
 - [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.
