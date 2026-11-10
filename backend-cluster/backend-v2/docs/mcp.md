@@ -323,7 +323,7 @@ the principal inputs; inspect the schema before constructing a call.
 | `setBankAccountCurrency`        | `accountId`, `currency`; sets a bank account's currency.                                                                                                                                                                                                               | Admin      |
 | `refreshBankConnection`         | `itemId`; re-reads a connection's health.                                                                                                                                                                                                                              | Admin      |
 | `unlinkBankConnection`          | `itemId`, optional `dry_run`; severs a linked bank.                                                                                                                                                                                                                    | Admin      |
-| `listBankConnections`           | `{}`; linked bank connections (`item_id`) and their accounts (`account_id`, mapping) — the `banks` and `bank-accounts` resources as a tool.                                                                                                                            | Admin      |
+| `listBankConnections`           | `{}`; linked bank connections and their accounts (with mapping) — the `banks` and `bank-accounts` resources as a tool. Each row's own `id` is what the bank tools take as `itemId` or `accountId`; the rows' `itemId` and `accountId` fields are Plaid's. | Admin      |
 | `listStagedBankTransactions`    | Optional `accountId`; transactions staged for import, with the ids `importStagedBankTransactions` and `discardStagedBankTransactions` take — the `bank-transactions/unsynced` resource as a tool.                                                                      | Read       |
 | `updateLedger`                  | `name`, `description`, `private`, optional `dry_run`; renames a ledger or changes its description or visibility. A preview returns the current→new diff, with a flip to public called out. Commits echo `dry_run: false`.                                              | Admin      |
 | `deleteLedger`                  | Optional `dry_run`; permanently deletes a ledger, including its history and linked-bank cleanup. A preview returns the destroy summary — identity, emptiness, size, and warnings. Commits echo `dry_run: false`.                                                       | Admin      |
@@ -676,10 +676,14 @@ After linking:
 
 1. Read the `banks` and `bank-accounts` resources, or call
    `listBankConnections`, to find connection IDs and ledger-account mappings.
-2. Call `syncBankTransactions` with `itemId` to pull bank transactions into
-   staging.
+   A connection's own `id` (pitm_…) and an account's own `id` (pacc_…) are
+   the ids the bank tools take; the rows' `itemId` and `accountId` fields are
+   Plaid's, and the tools answer them `NOT_FOUND` (w1/224).
+2. Call `syncBankTransactions` with the connection's `id` as `itemId` to pull
+   bank transactions into staging.
 3. Read `bank-transactions/unsynced` or call `listStagedBankTransactions`
-   (optionally with `accountId` to select one bank account). Select the
+   (optionally with an account's `id` as `accountId` to select one bank
+   account). Select the
    transactions and accounts to
    book; the suggestion resources can help categorize them.
 4. Call `importStagedBankTransactions` with
@@ -1202,7 +1206,7 @@ with the credential's scopes and ledger restriction.
 | `spending-report`    | `period` (`2026-08`, `last quarter`), `question`, `ledger`      | Answer spending questions without writing, showing the BQL behind every figure                                                                                                                                      |
 | `close-month`        | `month` (`YYYY-MM`), `ledger`                                   | Walk a month-end close and report unverified accounts and unpinned assertions instead of claiming a finished close                                                                                                  |
 | `reconcile-account`  | `account`, `period`, `statement` (CSV or pasted text), `ledger` | Classify every difference against one statement, then append missing entries and a balance assertion after confirmation                                                                                             |
-| `categorize-imports` | `item_id`, `ledger`                                             | Categorize staged bank transactions into existing accounts, flag duplicates, and submit after confirmation. Listing linked banks needs `ledger.admin`; otherwise pass `item_id` or work with what is already staged |
+| `categorize-imports` | `item_id`, `ledger`                                             | Categorize staged bank transactions into existing accounts, flag duplicates, and submit after confirmation. `item_id` is the connection's own `id` (pitm_…), not its Plaid `itemId`. Listing linked banks needs `ledger.admin`; otherwise pass `item_id` or work with what is already staged |
 
 `month` must be `YYYY-MM` and `ledger` must be `owner/name`; a malformed value is
 refused rather than folded into the playbook. A credential restricted to one

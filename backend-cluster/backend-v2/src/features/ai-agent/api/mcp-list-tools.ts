@@ -21,7 +21,7 @@ const toolLogger = logger.child({ module: "tool:list" });
 // --- listBankConnections ----------------------------------------------------
 
 export const listBankConnectionsDescription =
-  "List linked bank connections (item_id) and their accounts (account_id), the ids the bank sync, import, and connection tools take.";
+  "List linked bank connections and their accounts. The bank tools take a row's own `id`: a connection's `id` (pitm_…) as `itemId`, not its `itemId` field, which is Plaid's; an account's `id` (pacc_…) as `accountId`, not its `accountId` field.";
 
 export const listBankConnectionsInput = z.object({}).strict();
 
@@ -56,7 +56,7 @@ export async function executeListBankConnections(
 // --- listStagedBankTransactions ---------------------------------------------
 
 export const listStagedBankTransactionsDescription =
-  "List bank transactions staged for import. Each row's `transactionId` — not its `id` — is what importStagedBankTransactions and discardStagedBankTransactions take; optional accountId filter.";
+  "List bank transactions staged for import. Each row's `transactionId` — not its `id` — is what importStagedBankTransactions and discardStagedBankTransactions take; optional accountId filter, an account's `id` (pacc_…) from listBankConnections.";
 
 // bankAccountQuery is strict at the base since w23/112; no re-strict needed.
 export const listStagedBankTransactionsInput = bankAccountQuery;

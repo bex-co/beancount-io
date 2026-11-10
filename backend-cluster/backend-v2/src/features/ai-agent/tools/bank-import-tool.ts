@@ -110,7 +110,12 @@ function bankOperation<S extends z.ZodObject>(
 // Both spellings accepted (w23/m8/t002); executors resolve to the camelCase
 // id before the service so it never sees the alias.
 const itemIdFields = {
-  itemId: z.string().optional().describe("The linked bank's id."),
+  itemId: z
+    .string()
+    .optional()
+    .describe(
+      "The connection's `id` (pitm_…) from listBankConnections, not its `itemId` field, which is Plaid's.",
+    ),
   item_id: z.string().optional().describe("Alias of itemId; one is required."),
 };
 const ITEM_ID_NAMES = {
@@ -119,7 +124,12 @@ const ITEM_ID_NAMES = {
   what: "bank item ids",
 } as const;
 const accountIdFields = {
-  accountId: z.string().optional().describe("The linked bank account's id."),
+  accountId: z
+    .string()
+    .optional()
+    .describe(
+      "The account's `id` (pacc_…) from listBankConnections, not its `accountId` field, which is Plaid's.",
+    ),
   account_id: z
     .string()
     .optional()

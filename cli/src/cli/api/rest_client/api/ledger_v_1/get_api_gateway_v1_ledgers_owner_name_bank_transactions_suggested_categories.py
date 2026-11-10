@@ -115,7 +115,8 @@ def sync_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        account_id (str | Unset): Restrict to one bank account
+        account_id (str | Unset): Restrict to one bank account, by its `id` (pacc_…), not its
+            Plaid `accountId`
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -153,7 +154,8 @@ def sync(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        account_id (str | Unset): Restrict to one bank account
+        account_id (str | Unset): Restrict to one bank account, by its `id` (pacc_…), not its
+            Plaid `accountId`
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -186,7 +188,8 @@ async def asyncio_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        account_id (str | Unset): Restrict to one bank account
+        account_id (str | Unset): Restrict to one bank account, by its `id` (pacc_…), not its
+            Plaid `accountId`
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -222,7 +225,8 @@ async def asyncio(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        account_id (str | Unset): Restrict to one bank account
+        account_id (str | Unset): Restrict to one bank account, by its `id` (pacc_…), not its
+            Plaid `accountId`
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

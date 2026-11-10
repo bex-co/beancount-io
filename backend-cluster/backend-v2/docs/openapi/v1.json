@@ -18008,10 +18008,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "The linked bank's item id"
+              "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's"
             },
             "required": true,
-            "description": "The linked bank's item id",
+            "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's",
             "name": "itemId",
             "in": "path"
           }
@@ -18161,10 +18161,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "The linked bank's item id"
+              "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's"
             },
             "required": true,
-            "description": "The linked bank's item id",
+            "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's",
             "name": "itemId",
             "in": "path"
           },
@@ -18344,10 +18344,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "The linked bank's item id"
+              "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's"
             },
             "required": true,
-            "description": "The linked bank's item id",
+            "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's",
             "name": "itemId",
             "in": "path"
           }
@@ -18644,10 +18644,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "Restrict to one bank account"
+              "description": "Restrict to one bank account, by its `id` (pacc_…), not its Plaid `accountId`"
             },
             "required": false,
-            "description": "Restrict to one bank account",
+            "description": "Restrict to one bank account, by its `id` (pacc_…), not its Plaid `accountId`",
             "name": "accountId",
             "in": "query"
           }
@@ -18799,10 +18799,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "Restrict to one bank account"
+              "description": "Restrict to one bank account, by its `id` (pacc_…), not its Plaid `accountId`"
             },
             "required": false,
-            "description": "Restrict to one bank account",
+            "description": "Restrict to one bank account, by its `id` (pacc_…), not its Plaid `accountId`",
             "name": "accountId",
             "in": "query"
           }
@@ -18954,10 +18954,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "The linked bank's item id"
+              "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's"
             },
             "required": true,
-            "description": "The linked bank's item id",
+            "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's",
             "name": "itemId",
             "in": "path"
           }
@@ -19109,10 +19109,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "The linked bank's item id"
+              "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's"
             },
             "required": true,
-            "description": "The linked bank's item id",
+            "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's",
             "name": "itemId",
             "in": "path"
           },
@@ -19656,10 +19656,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "The linked bank's item id"
+              "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's"
             },
             "required": true,
-            "description": "The linked bank's item id",
+            "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's",
             "name": "itemId",
             "in": "path"
           },
@@ -19839,10 +19839,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "The linked bank's item id"
+              "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's"
             },
             "required": true,
-            "description": "The linked bank's item id",
+            "description": "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's",
             "name": "itemId",
             "in": "path"
           },
@@ -20028,10 +20028,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "The bank account's id"
+              "description": "The bank account's `id` (pacc_…) as `GET …/bank-accounts` lists it, not its `accountId` field, which is Plaid's"
             },
             "required": true,
-            "description": "The bank account's id",
+            "description": "The bank account's `id` (pacc_…) as `GET …/bank-accounts` lists it, not its `accountId` field, which is Plaid's",
             "name": "accountId",
             "in": "path"
           },
@@ -20214,10 +20214,10 @@
           {
             "schema": {
               "type": "string",
-              "description": "The bank account's id"
+              "description": "The bank account's `id` (pacc_…) as `GET …/bank-accounts` lists it, not its `accountId` field, which is Plaid's"
             },
             "required": true,
-            "description": "The bank account's id",
+            "description": "The bank account's `id` (pacc_…) as `GET …/bank-accounts` lists it, not its `accountId` field, which is Plaid's",
             "name": "accountId",
             "in": "path"
           },

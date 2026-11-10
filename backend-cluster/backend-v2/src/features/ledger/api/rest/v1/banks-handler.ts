@@ -27,17 +27,23 @@ import type { Identity } from "@/server/api/identity";
  */
 
 const itemPath = ledgerPathSchema.extend({
-  itemId: z.string().openapi({ description: "The linked bank's item id" }),
+  itemId: z.string().openapi({
+    description:
+      "The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId` field, which is Plaid's",
+  }),
 });
 const accountPath = ledgerPathSchema.extend({
-  accountId: z.string().openapi({ description: "The bank account's id" }),
+  accountId: z.string().openapi({
+    description:
+      "The bank account's `id` (pacc_…) as `GET …/bank-accounts` lists it, not its `accountId` field, which is Plaid's",
+  }),
 });
 export const bankAccountQuery = z
   .object({
-    accountId: z
-      .string()
-      .optional()
-      .openapi({ description: "Restrict to one bank account" }),
+    accountId: z.string().optional().openapi({
+      description:
+        "Restrict to one bank account, by its `id` (pacc_…), not its Plaid `accountId`",
+    }),
   })
   // Strict like its MCP twin and noPreviewQuery: an unknown key is a
   // mistyped filter, not an unfiltered list (w23/112).

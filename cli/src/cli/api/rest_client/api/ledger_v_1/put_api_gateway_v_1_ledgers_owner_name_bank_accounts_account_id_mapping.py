@@ -143,7 +143,8 @@ def sync_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        account_id (str): The bank account's id
+        account_id (str): The bank account's `id` (pacc_…) as `GET …/bank-accounts` lists it, not
+            its `accountId` field, which is Plaid's
         dry_run (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdMappingDryRun | Unset):
         dryRun (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdMappingDryRun | Unset):
         body (BankAccountMapping | Unset):
@@ -190,7 +191,8 @@ def sync(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        account_id (str): The bank account's id
+        account_id (str): The bank account's `id` (pacc_…) as `GET …/bank-accounts` lists it, not
+            its `accountId` field, which is Plaid's
         dry_run (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdMappingDryRun | Unset):
         dryRun (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdMappingDryRun | Unset):
         body (BankAccountMapping | Unset):
@@ -232,7 +234,8 @@ async def asyncio_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        account_id (str): The bank account's id
+        account_id (str): The bank account's `id` (pacc_…) as `GET …/bank-accounts` lists it, not
+            its `accountId` field, which is Plaid's
         dry_run (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdMappingDryRun | Unset):
         dryRun (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdMappingDryRun | Unset):
         body (BankAccountMapping | Unset):
@@ -277,7 +280,8 @@ async def asyncio(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        account_id (str): The bank account's id
+        account_id (str): The bank account's `id` (pacc_…) as `GET …/bank-accounts` lists it, not
+            its `accountId` field, which is Plaid's
         dry_run (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdMappingDryRun | Unset):
         dryRun (PutApiGatewayV1LedgersOwnerNameBankAccountsAccountIdMappingDryRun | Unset):
         body (BankAccountMapping | Unset):

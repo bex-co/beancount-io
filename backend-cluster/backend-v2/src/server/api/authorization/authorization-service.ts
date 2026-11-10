@@ -75,7 +75,7 @@ export const TEMP_ASSET_NOT_FOUND_HINT =
   "Re-check the objectKey from `generateTempAssetUploadUrl`: keys belong to the uploading user and expire.";
 
 export const BANK_CONNECTION_NOT_FOUND_HINT =
-  "Confirm the connection's item id with `listBankConnections`.";
+  "Confirm the id with `listBankConnections`: pass a connection's or an account's own `id`, pitm_… or pacc_…, not its Plaid `itemId` or `accountId`.";
 
 interface DenialConcealment {
   readonly reasons: readonly AuthorizationDenyReason[];

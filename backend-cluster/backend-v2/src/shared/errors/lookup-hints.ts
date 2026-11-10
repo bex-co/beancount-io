@@ -8,8 +8,10 @@
  * same sentence as MCP. Each one names where the id comes from and does not
  * reveal whether the resource exists for someone else.
  */
+// A connection's and an account's own `id` is what the bank tools take; the
+// `itemId` and `accountId` fields beside it are Plaid's ids (w1/224).
 export const BANK_NOT_FOUND_HINT =
-  "Use the `item_id` and `account_id` that `listBankConnections` returns.";
+  "Pass the row `id` that `listBankConnections` returns, pitm_… for a connection and pacc_… for an account, not its `itemId` or `accountId`, which are Plaid's own ids.";
 
 export const PULL_REQUEST_NOT_FOUND_HINT =
   "Pass the number of an existing pull request in this ledger; `beancount://{owner}/{name}/pull-request` reads one by number.";

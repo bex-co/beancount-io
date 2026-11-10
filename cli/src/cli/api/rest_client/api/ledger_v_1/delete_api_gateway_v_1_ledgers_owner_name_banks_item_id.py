@@ -133,7 +133,8 @@ def sync_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        item_id (str): The linked bank's item id
+        item_id (str): The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId`
+            field, which is Plaid's
         dry_run (DeleteApiGatewayV1LedgersOwnerNameBanksItemIdDryRun | Unset): Validate and report
             what would change, without changing anything.
         dryRun (DeleteApiGatewayV1LedgersOwnerNameBanksItemIdDryRun | Unset): Alias of dry_run, as
@@ -179,7 +180,8 @@ def sync(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        item_id (str): The linked bank's item id
+        item_id (str): The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId`
+            field, which is Plaid's
         dry_run (DeleteApiGatewayV1LedgersOwnerNameBanksItemIdDryRun | Unset): Validate and report
             what would change, without changing anything.
         dryRun (DeleteApiGatewayV1LedgersOwnerNameBanksItemIdDryRun | Unset): Alias of dry_run, as
@@ -220,7 +222,8 @@ async def asyncio_detailed(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        item_id (str): The linked bank's item id
+        item_id (str): The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId`
+            field, which is Plaid's
         dry_run (DeleteApiGatewayV1LedgersOwnerNameBanksItemIdDryRun | Unset): Validate and report
             what would change, without changing anything.
         dryRun (DeleteApiGatewayV1LedgersOwnerNameBanksItemIdDryRun | Unset): Alias of dry_run, as
@@ -264,7 +267,8 @@ async def asyncio(
     Args:
         owner (str): Ledger owner's username Example: alice.
         name (str): Ledger (repository) name Example: main-ledger.
-        item_id (str): The linked bank's item id
+        item_id (str): The linked bank's `id` (pitm_…) as `GET …/banks` lists it, not its `itemId`
+            field, which is Plaid's
         dry_run (DeleteApiGatewayV1LedgersOwnerNameBanksItemIdDryRun | Unset): Validate and report
             what would change, without changing anything.
         dryRun (DeleteApiGatewayV1LedgersOwnerNameBanksItemIdDryRun | Unset): Alias of dry_run, as

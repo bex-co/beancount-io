@@ -24,17 +24,35 @@ const LEDGER = "alice/main";
 
 const services = {
   plaidItem: {
-    getItems: jest
-      .fn()
-      .mockResolvedValue([{ id: "pitm_9f2", institutionName: "Bank A" }]),
-    getAccountsForLedger: jest
-      .fn()
-      .mockResolvedValue([
-        { id: "pacc_31c", itemId: "pitm_9f2", mappedAccount: null },
-      ]),
+    // The rows as the service returns them (w1/224): each carries its own
+    // `id` beside Plaid's `itemId` or `accountId`, and the tools take the
+    // former; staged rows are taken by Plaid's `transactionId`.
+    getItems: jest.fn().mockResolvedValue([
+      {
+        id: "pitm_9f2",
+        itemId: "plaid-item-9f2",
+        institutionName: "Bank A",
+      },
+    ]),
+    getAccountsForLedger: jest.fn().mockResolvedValue([
+      {
+        id: "pacc_31c",
+        plaidItemId: "pitm_9f2",
+        accountId: "plaid-account-31c",
+        ledgerAccount: null,
+      },
+    ]),
     getUnsyncedTransactions: jest.fn().mockResolvedValue([
-      { id: "ptxn_a1", accountId: "pacc_31c" },
-      { id: "ptxn_b2", accountId: "pacc_31c" },
+      {
+        id: "ptxn_a1",
+        transactionId: "plaid-tx-a1",
+        plaidAccountId: "pacc_31c",
+      },
+      {
+        id: "ptxn_b2",
+        transactionId: "plaid-tx-b2",
+        plaidAccountId: "pacc_31c",
+      },
     ]),
     updateAccountMapping: jest.fn().mockResolvedValue(true),
   },
@@ -98,15 +116,15 @@ it("finishes the bank flow through tools alone", async () => {
 
   // 3. Which transactions are staged, and drop them by the ids listed.
   const staged = (await call("listStagedBankTransactions", {})) as {
-    id: string;
+    transactionId: string;
   }[];
   await call("discardStagedBankTransactions", {
-    transaction_ids: staged.map((t) => t.id),
+    transaction_ids: staged.map((t) => t.transactionId),
   });
   expect(services.plaidSync.deleteTransactions).toHaveBeenCalledWith(
     identity,
     LEDGER,
-    ["ptxn_a1", "ptxn_b2"],
+    ["plaid-tx-a1", "plaid-tx-b2"],
     false,
   );
 
@@ -117,6 +135,19 @@ it("finishes the bank flow through tools alone", async () => {
   });
   expect(services.plaidItem.updateAccountMapping.mock.calls[0]).toContain(
     "pacc_31c",
+  );
+
+  // The ids the steps above took are the ones the tools' own text names.
+  const { tools } = await client.listTools();
+  const describe = (name: string) =>
+    JSON.stringify(tools.find((tool) => tool.name === name));
+  expect(describe("listBankConnections")).toContain("not its `itemId` field");
+  expect(describe("syncBankTransactions")).toContain(
+    "The connection's `id` (pitm_…)",
+  );
+  expect(describe("mapBankAccount")).toContain("The account's `id` (pacc_…)");
+  expect(describe("listStagedBankTransactions")).toContain(
+    "Each row's `transactionId` — not its `id`",
   );
 
   expect(readResource).not.toHaveBeenCalled();
