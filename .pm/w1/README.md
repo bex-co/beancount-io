@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [210](./210.md) — GraphQL file writes skip the bean-check gate and have no preview — needs an owner decision on the dashboard editor first (MCP QA 2026-11-09)
 - [211](./211.md) — GraphQL bank mutations take no `dryRun`, while MCP and REST preview all five (MCP QA 2026-11-09)
 - [212](./212.md) — A blank commit message writes a blank commit; an empty one defaults differently on MCP and REST (MCP QA 2026-11-09)
 - [213](./213.md) — Bulk OR chains of comparisons are refused at about 250 terms, though the doc says they run (MCP QA 2026-11-09)
@@ -100,6 +99,7 @@ Blocked notes live under [`blocked/`](./blocked/) with their reason and **Unbloc
 
 - [033](./blocked/033.md) — Slice-delete success precedes removal by minutes; a refetch resurrects the row — **blocked:** no async-apply code exists in this monorepo and the acceptance cannot be proven here. **Unblock:** hosted diagnosis naming the lagging layer, or a local full-stack repro. Cleared by the user (hosted access plus QA credentials).
 - [199](./blocked/199.md) — Confirm upstream path-parameter hardening on production after deploy — **blocked:** production still answers a malformed `entryHash` with `NOT_FOUND` (2026-11-10 probe), so `8a2e14649` is not deployed. **Unblock:** an operator deploy of backend-v2 at or after `a23eeb234` (includes `8a2e14649`), then the checks in the note. Cleared by the user.
+- [210](./blocked/210.md) — GraphQL file writes skip the bean-check gate and have no preview — **blocked:** gating them changes how the dashboard file editor saves a mid-edit invalid state. **Unblock:** the user picks (a) the editor passes `allowInvalid: true`, or (b) refuse-then-confirm. Cleared by the user.
 
 ## Absorbed CLI QA notes (m23–m27)
 
