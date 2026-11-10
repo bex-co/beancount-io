@@ -651,6 +651,86 @@ describe("AuthorizationService", () => {
     },
   );
 
+  // w1/194: a write to a ledger the caller cannot see answered FORBIDDEN while
+  // its reads answered NOT_FOUND, so a mistyped name read as missing authority.
+  describe("a write to a ledger the caller cannot see", () => {
+    const writer = identity("oauth", "usr_alice", ["ledger.write"]);
+    const admin = identity("oauth", "usr_alice", ["ledger.admin"]);
+    const cases = [
+      ...LEDGER_CONTENT_WRITE_ACTIONS.map((action) => ({
+        action,
+        principal: writer,
+        resource: ledgerResource("alice/missing") as AuthorizationResource,
+        needs: "write",
+      })),
+      ...[
+        AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
+        AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,
+        AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_STATUS_READ,
+      ].map((action) => ({
+        action,
+        principal: writer,
+        resource: ledgerResource("alice/missing") as AuthorizationResource,
+        needs: undefined,
+      })),
+      {
+        action: AUTHORIZATION_ACTIONS.BANK_CONNECTIONS_LIST,
+        principal: admin,
+        resource: bankConnectionResource(
+          "alice/missing",
+        ) as AuthorizationResource,
+        needs: "admin",
+      },
+    ];
+
+    it.each(cases)(
+      "conceals $action as Ledger not found",
+      async ({ action, principal, resource }) => {
+        await expect(
+          new AuthorizationService({
+            check: async () => false,
+          }).authorizeOrThrow({ principal, action, resource }),
+        ).rejects.toMatchObject({
+          category: ErrorCategory.NOT_FOUND,
+          message: "Ledger not found",
+        });
+      },
+    );
+
+    it.each(cases.filter(({ needs }) => needs !== undefined))(
+      "tells a reader that $action needs $needs access",
+      async ({ action, principal, resource, needs }) => {
+        const service = new AuthorizationService({
+          check: async ({ relation }) =>
+            relation === LEDGER_RELATIONSHIPS.READ_CONTENTS,
+        });
+        await expect(
+          service.authorizeOrThrow({ principal, action, resource }),
+        ).rejects.toMatchObject({
+          category: ErrorCategory.FORBIDDEN,
+          message: expect.stringMatching(
+            new RegExp(`^\\w.* alice/missing requires ${needs} access to it$`),
+          ),
+        });
+      },
+    );
+
+    it.each(LEDGER_CONTENT_WRITE_ACTIONS)(
+      "keeps a read-only credential's %s refusal FORBIDDEN",
+      async (action) => {
+        const relationships = { check: jest.fn(async () => false) };
+        await expect(
+          new AuthorizationService(relationships).authorizeOrThrow({
+            principal: identity("oauth", "usr_alice", ["ledger.read"]),
+            action,
+            resource: ledgerResource("alice/missing"),
+          }),
+        ).rejects.toMatchObject({ category: ErrorCategory.FORBIDDEN });
+        expect(relationships.check).not.toHaveBeenCalled();
+      },
+    );
+  });
+
   it("keeps concealing a denial when the reader check is unavailable", async () => {
     const service = new AuthorizationService({
       check: async ({ relation }) => {

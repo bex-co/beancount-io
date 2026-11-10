@@ -16,6 +16,8 @@ import {
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
+import { formatError } from "@/server/graphql/format-error";
+import { FavaApiError } from "@/foundation/fava/api-client";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
@@ -65,7 +67,7 @@ async function fixture(
       { content, sha: `sha-${index}-${path}` },
     ]),
   );
-  const state = { writable: true };
+  const state = { writable: true, exists: true, visible: true };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   const toPublic = (path: string) => {
     const entry = files.get(path);
@@ -115,13 +117,21 @@ async function fixture(
   });
   const fava = {
     getAdminClient: () => ({
-      ledgers: { getLedger: async () => envelope({ id: 42, private: true }) },
+      ledgers: {
+        getLedger: async () => {
+          if (!state.exists) throw new FavaApiError("Not Found", 404);
+          return envelope({ id: 42, private: true });
+        },
+      },
     }),
     getApiContext: async () => ({
       favaApiClient: {
         collaborators: {
-          getLedgerCollaboratorPermission: async () =>
-            envelope({ permission: state.writable ? "write" : "read" }),
+          getLedgerCollaboratorPermission: async () => {
+            // Not a collaborator: a private ledger the caller cannot see.
+            if (!state.visible) throw new FavaApiError("Not Found", 404);
+            return envelope({ permission: state.writable ? "write" : "read" });
+          },
         },
       },
     }),
@@ -265,9 +275,11 @@ async function fixture(
             body: JSON.stringify(args),
           },
         );
+        const body = await response.json();
         return {
           success: response.status === 200,
-          result: await response.json(),
+          result: body,
+          code: (body as { error?: { code?: string } }).error?.code,
         };
       }
       if (surface === "gql") {
@@ -297,9 +309,14 @@ async function fixture(
           variableValues: args,
           contextValue: { identity: caller, getCurrentIdentity: () => caller },
         });
+        const error = result.errors?.[0];
         return {
           success: !result.errors,
           result: result.data?.renameLedgerFile,
+          code: error
+            ? formatError(error.toJSON(), error).extensions?.code
+            : undefined,
+          message: error?.message,
         };
       }
       const result = await client.callTool({
@@ -309,9 +326,16 @@ async function fixture(
           ...(caller.ledgerScope ? {} : { ledger: "alice/main" }),
         },
       });
+      const failure = (
+        result.structuredContent as {
+          error?: { code?: string; message?: string };
+        }
+      )?.error;
       return {
         success: !result.isError,
         result: (result.structuredContent as { result?: unknown })?.result,
+        code: failure?.code,
+        message: failure?.message,
       };
     },
     deleteFile: async (
@@ -746,6 +770,45 @@ describe.each(["rest", "gql", "mcp"])("rename via %s", (surface) => {
     try {
       expect((await f.call(surface, "old.bean", "new.bean")).success).toBe(
         false,
+      );
+      expect(f.change).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+  // w1/194: a write to a ledger the caller cannot see answered FORBIDDEN while
+  // its reads answered NOT_FOUND, so a mistyped name read as missing authority.
+  it.each(["exists", "visible"] as const)(
+    "answers a rename as NOT_FOUND when the ledger fails %s",
+    async (fact) => {
+      const f = await fixture();
+      f.state[fact] = false;
+      try {
+        const outcome = await f.call(surface, "old.bean", "new.bean");
+        expect(outcome).toMatchObject({ success: false, code: "NOT_FOUND" });
+        if (surface === "rest")
+          expect(outcome.result).toMatchObject({
+            error: { message: "Ledger not found" },
+          });
+        else expect(outcome.message).toBe("Ledger not found");
+        expect(f.change).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  it("tells a read-only collaborator the rename needs write access", async () => {
+    const f = await fixture();
+    f.state.writable = false;
+    try {
+      const outcome = await f.call(surface, "old.bean", "new.bean");
+      expect(outcome).toMatchObject({ success: false, code: "FORBIDDEN" });
+      const message =
+        surface === "rest"
+          ? (outcome.result as { error: { message: string } }).error.message
+          : outcome.message;
+      expect(message).toBe(
+        "Changing the files of alice/main requires write access to it",
       );
       expect(f.change).not.toHaveBeenCalled();
     } finally {

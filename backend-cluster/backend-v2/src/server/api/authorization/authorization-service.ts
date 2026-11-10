@@ -25,6 +25,7 @@ import {
   isTrustedAnonymousPrincipal,
   isTrustedPlaidBackgroundPrincipal,
   LEDGER_RELATIONSHIPS,
+  ledgerResource,
   parseBankConnectionResource,
   parseAuthorizationResource,
   TEMP_ASSET_RELATIONSHIPS,
@@ -178,6 +179,9 @@ const USER_CONTROL_PLANE_CREDENTIAL: CredentialRequirement = {
 const requiresLedgerAdmin = (doing: string) => (ledgerId: string) =>
   `${doing} ${ledgerId} requires admin access to it`;
 
+const requiresLedgerWrite = (doing: string) => (ledgerId: string) =>
+  `${doing} ${ledgerId} requires write access to it`;
+
 const LEDGER_NOT_FOUND_CONCEALMENT: DenialConcealment = {
   reasons: ["relationship_denied", "unknown_resource"],
   category: ErrorCategory.NOT_FOUND,
@@ -223,6 +227,22 @@ const ledgerContentReadRequirement = (): ActionRequirement => ({
   credential: LEDGER_CONTENT_READ_CREDENTIAL,
   auditClass: "read",
   concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+});
+
+/**
+ * A write to a ledger's contents. A caller who cannot see the ledger — it is
+ * missing, or private to others — gets the concealed "Ledger not found" its
+ * reads give, not FORBIDDEN, which told an agent that mistyped a name that its
+ * credential lacked authority (w1/194). A reader is told it needs write
+ * access, as w23/069 did for admin operations; a credential's own scope or
+ * pin still refuses as FORBIDDEN before any of this.
+ */
+const ledgerContentWriteRequirement = (doing: string): ActionRequirement => ({
+  relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS)],
+  credential: LEDGER_CONTENT_WRITE_CREDENTIAL,
+  auditClass: "write",
+  concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+  deniedToReader: requiresLedgerWrite(doing),
 });
 
 /** The one executable policy catalog for protected application domains. */
@@ -384,20 +404,25 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: { methods: SESSION_ONLY },
     auditClass: "write",
   },
+  // A star needs only sight of the ledger, so its one relationship denial is
+  // a ledger the caller cannot see: concealed as its reads are (w1/194).
   [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_STATUS_READ]: {
     relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS)],
     credential: LEDGER_SOCIAL_READ_CREDENTIAL,
     auditClass: "read",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE]: {
     relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS)],
     credential: LEDGER_SOCIAL_WRITE_CREDENTIAL,
     auditClass: "write",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE]: {
     relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS)],
     credential: LEDGER_SOCIAL_WRITE_CREDENTIAL,
     auditClass: "write",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ]: {
     relationships: userRelationship(USER_RELATIONSHIPS.READ_LEDGERS),
@@ -415,41 +440,17 @@ const ACTION_REQUIREMENTS: Readonly<
   [AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ]: ledgerContentReadRequirement(),
   [AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_READ]:
     ledgerContentReadRequirement(),
-  [AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE]: {
-    relationships: [
-      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS),
-    ],
-    credential: LEDGER_CONTENT_WRITE_CREDENTIAL,
-    auditClass: "write",
-  },
-  [AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE]: {
-    relationships: [
-      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS),
-    ],
-    credential: LEDGER_CONTENT_WRITE_CREDENTIAL,
-    auditClass: "write",
-  },
-  [AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE]: {
-    relationships: [
-      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS),
-    ],
-    credential: LEDGER_CONTENT_WRITE_CREDENTIAL,
-    auditClass: "write",
-  },
-  [AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE]: {
-    relationships: [
-      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS),
-    ],
-    credential: LEDGER_CONTENT_WRITE_CREDENTIAL,
-    auditClass: "write",
-  },
-  [AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_REJECT]: {
-    relationships: [
-      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS),
-    ],
-    credential: LEDGER_CONTENT_WRITE_CREDENTIAL,
-    auditClass: "write",
-  },
+  [AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE]: ledgerContentWriteRequirement(
+    "Changing the files of",
+  ),
+  [AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE]:
+    ledgerContentWriteRequirement("Writing entries to"),
+  [AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE]:
+    ledgerContentWriteRequirement("Opening a pull request on"),
+  [AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE]:
+    ledgerContentWriteRequirement("Merging a pull request on"),
+  [AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_REJECT]:
+    ledgerContentWriteRequirement("Rejecting a pull request on"),
   [AUTHORIZATION_ACTIONS.LEDGER_CREATE]: {
     relationships: userRelationship(USER_RELATIONSHIPS.WRITE_LEDGERS),
     credential: USER_CONTROL_PLANE_CREDENTIAL,
@@ -601,6 +602,8 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "write" },
     auditClass: "write",
   },
+  // Listing names no connection, so the concealment is the ledger's own
+  // (w1/194); a reader is told the list needs admin access.
   [AUTHORIZATION_ACTIONS.BANK_CONNECTIONS_LIST]: {
     relationships: [
       relationship(
@@ -610,6 +613,8 @@ const ACTION_REQUIREMENTS: Readonly<
     ],
     credential: BANK_ADMIN_CREDENTIAL,
     auditClass: "admin",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+    deniedToReader: requiresLedgerAdmin("Listing the bank connections of"),
   },
   [AUTHORIZATION_ACTIONS.BANK_CONNECTION_READ]: {
     relationships: [
@@ -1163,10 +1168,20 @@ export class AuthorizationService implements IAuthorizationService {
       }
 
       if (!relationshipAllowed) {
-        const readerMessage =
-          group.resourceType === "ledger" && ledger
-            ? await this.deniedToReader(requirement, userId, ledger)
-            : undefined;
+        // A bank connection belongs to one ledger, so its reader check is
+        // that ledger's.
+        const readerLedger =
+          group.resourceType === "ledger"
+            ? ledger
+            : group.resourceType === "bank_connection" && parsedBankConnection
+              ? {
+                  raw: ledgerResource(parsedBankConnection.ledgerId),
+                  id: parsedBankConnection.ledgerId,
+                }
+              : undefined;
+        const readerMessage = readerLedger
+          ? await this.deniedToReader(requirement, userId, readerLedger)
+          : undefined;
         return deny(
           readerMessage ? "insufficient_relationship" : "relationship_denied",
           {

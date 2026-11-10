@@ -182,6 +182,18 @@ read collaborator — gets `FORBIDDEN` naming the authority it lacks, such as
 "Ledger not found" about a ledger it just read hides nothing and misleads it
 (w23/069). Leaving keeps its own refusals (w23/063).
 
+Content writes follow the same rule (w1/194): writing files or entries
+(which covers `appendLedgerText`, the entry-source edits, `renameLedgerFile`
+and `refreshManagedPrices`), opening, merging and rejecting pull requests,
+starring a ledger, and listing its bank connections. A caller who cannot see
+the ledger — it does not exist, or it is private to others — gets the
+concealed `NOT_FOUND` "Ledger not found" its reads give, not `FORBIDDEN`. A
+reader who cannot write gets `FORBIDDEN` naming the authority it lacks, such
+as "Changing the files of alice/main requires write access to it". A
+credential whose scope or ledger pin does not allow the write is refused as
+`FORBIDDEN` before any relationship is checked, so a read-only key never
+learns whether a ledger exists.
+
 ## Explicit file-write byte limits
 
 GraphQL `createLedgerFile` and `updateLedgerFile`, REST `PUT …/files/{path}`,
