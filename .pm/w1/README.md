@@ -89,6 +89,7 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - [223](./223.md) — Two access answers miss rules recent work set: latest commit on public ledgers, ledger-wide bank reads (MCP QA 2026-11-10)
 - [224](./224.md) — Bank tools take each row's `id`, but their text sends agents to `itemId`/`accountId` (MCP QA 2026-11-10)
 - [225](./225.md) — Refusals echo caller input unbounded, and one hint names a removed `replace` operation (MCP QA 2026-11-10)
+- [226](./226.md) — Served tool and template descriptions make three false claims (MCP QA 2026-11-10)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
