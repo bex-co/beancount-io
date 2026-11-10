@@ -293,6 +293,13 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
         version: "1.0.0",
       });
       expect(current.capabilities.tools).toBeDefined();
+      // Stateless and POST-only: no list-changed notification can ever be
+      // sent, so none is advertised (w1/196).
+      for (const primitive of ["tools", "resources", "prompts"] as const)
+        expect(current.capabilities[primitive]).toMatchObject({
+          listChanged: false,
+        });
+      expect(f.client.getServerCapabilities()?.tools?.listChanged).toBe(false);
       expect(current.instructions).toEqual(expect.any(String));
       const ancient = await f.client.request(
         request("initialize", {

@@ -918,7 +918,7 @@ export function assembleMcpRegistry(
         protocolVersion: SUPPORTED_PROTOCOL_VERSIONS.includes(requestedVersion)
           ? requestedVersion
           : LATEST_PROTOCOL_VERSION,
-        capabilities: sdkServer.getCapabilities(),
+        capabilities: withoutListChanged(sdkServer.getCapabilities()),
         serverInfo: { ...MCP_SERVER_INFO },
         instructions: buildInstructions(toolCtx.identity),
       };
@@ -1069,6 +1069,25 @@ function refusingUnknownArguments(schema: ZodTypeAny): ZodTypeAny {
 
 /** The catch-all template's name, in `resources/templates/list` and the logs. */
 const UNKNOWN_RESOURCE = "unknownResource";
+
+/**
+ * The capability set with every `listChanged` false (w1/196). The SDK sets it
+ * true as each primitive registers, but this endpoint is stateless and serves
+ * POST only — no session, and an authenticated GET is 405 — so it can never
+ * send `notifications/tools/list_changed` or its resource and prompt twins.
+ * Advertising them had a client wait for notifications instead of listing
+ * again.
+ */
+function withoutListChanged(
+  capabilities: InitializeResult["capabilities"],
+): InitializeResult["capabilities"] {
+  const out = { ...capabilities };
+  for (const key of ["tools", "resources", "prompts"] as const) {
+    const primitive = out[key];
+    if (primitive) out[key] = { ...primitive, listChanged: false };
+  }
+  return out;
+}
 
 /** Classify method parameter failures before any SDK or domain dispatch. */
 function refuseMcpParameters(error: unknown, hint: string): never {

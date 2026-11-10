@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [196](./196.md) — Stateless MCP endpoint advertises `listChanged: true` (MCP QA 2026-11-08)
 - [197](./197.md) — A text append rewrites a CRLF file to LF (MCP QA 2026-11-09)
 - [198](./198.md) — `archive-parity` times out under the full backend-v2 suite
 - [199](./199.md) — Confirm upstream path-parameter hardening on production after deploy (needs a backend-v2 deploy)
