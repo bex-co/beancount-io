@@ -379,6 +379,12 @@ describe("MCP prompts", () => {
       if (descriptor.name === "spending-report") {
         expect(text).toMatch(/read-only/i);
         expect(text).toMatch(/never estimate/i);
+        // w1/230: `cost(position)` left an `@`-priced EUR charge in EUR, so
+        // "what did I spend" came out as two currencies (w5/358 for the skill).
+        expect(text).toContain(
+          "use `sum(weight)` for an operating-currency total",
+        );
+        expect(text).not.toContain("use `cost(position)` for currency totals");
         continue;
       }
       expect(text).toMatch(/never invent an account/i);
