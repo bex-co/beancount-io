@@ -547,6 +547,19 @@ describe("bulk entries refuse tokens that would not lex as written", () => {
       "postings[0].units.currency",
       posting({ units: { number: "-0.01", currency: "USD\n2026" } }),
     ],
+    // w1/217: these four reached the file and failed as a parse error.
+    ["postings[0].meta.Bad", posting({ meta: { Bad: "x" } })],
+    [
+      "postings[0].cost.currency",
+      posting({ cost: { number: "1", currency: "usd" } }),
+    ],
+    [
+      "postings[0].totalPrice.currency",
+      posting({ totalPrice: { number: "1", currency: "usd" } }),
+    ],
+    // w1/217: written as nothing, with a success.
+    ["meta.filename", { meta: { filename: "receipt.pdf" } }],
+    ["postings[0].meta.lineno", posting({ meta: { lineno: "7" } })],
   ])("refuses %s before reading anything", async (field, overrides) => {
     const response = await post([transaction(overrides)]);
     const body = (await response.json()) as Record<string, any>;
@@ -576,6 +589,15 @@ describe("bulk entries refuse tokens that would not lex as written", () => {
       "account",
     ],
     ["commodity", { date: "2026-03-20", currency: "usd" }, "currency"],
+    [
+      "pad",
+      {
+        date: "2026-03-20",
+        account: "Assets:Cash",
+        sourceAccount: "equity:bad",
+      },
+      "sourceAccount",
+    ],
   ])("refuses a bad token in a %s", async (type, item, field) => {
     const response = await post([{ type, item }]);
     const body = (await response.json()) as Record<string, any>;

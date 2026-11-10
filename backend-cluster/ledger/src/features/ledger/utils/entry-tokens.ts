@@ -38,7 +38,10 @@ const TOKEN_RULES = {
   // sixth of `E`, so the slash must be followed by a letter.
   currency:
     /^(?:[A-Z](?:[A-Z0-9'._-]{0,22}[A-Z0-9])?|\/[A-Z](?:[A-Z0-9'._-]{0,21}[A-Z0-9])?)$/,
-  "metadata key": /^[a-z][A-Za-z0-9_-]*$/,
+  // Not `filename` or `lineno`: the parser sets them to where an entry is
+  // written, and the renderer hides them, so a caller's own committed as
+  // nothing with a success (w1/217).
+  "metadata key": /^(?!(?:filename|lineno)$)[a-z][A-Za-z0-9_-]*$/,
   account: ACCOUNT,
 } as const;
 
@@ -75,6 +78,10 @@ function rowTokens(row: {
     );
   const addAmount = (field: string, amount: unknown) =>
     add(`${field}.currency`, asItem(amount).currency, "currency");
+  const addMetaKeys = (field: string, meta: unknown) =>
+    Object.keys(asItem(meta)).forEach((key) =>
+      add(`${field}.${key}`, key, "metadata key"),
+    );
 
   add("date", item.date, "date");
   add("account", item.account, "account");
@@ -83,16 +90,22 @@ function rowTokens(row: {
       add("flag", item.flag, "transaction flag");
       addAll("tags", item.tags, "tag");
       addAll("links", item.links, "link");
-      Object.keys(asItem(item.meta)).forEach((key) =>
-        add(`meta.${key}`, key, "metadata key"),
-      );
+      addMetaKeys("meta", item.meta);
       asList(item.postings).forEach((value, index) => {
         const posting = asItem(value);
-        add(`postings[${index}].account`, posting.account, "account");
-        add(`postings[${index}].flag`, posting.flag, "flag");
-        if (posting.units) addAmount(`postings[${index}].units`, posting.units);
-        if (posting.price) addAmount(`postings[${index}].price`, posting.price);
+        const field = `postings[${index}]`;
+        add(`${field}.account`, posting.account, "account");
+        add(`${field}.flag`, posting.flag, "flag");
+        if (posting.units) addAmount(`${field}.units`, posting.units);
+        if (posting.price) addAmount(`${field}.price`, posting.price);
+        if (posting.totalPrice)
+          addAmount(`${field}.totalPrice`, posting.totalPrice);
+        if (posting.cost) addAmount(`${field}.cost`, posting.cost);
+        addMetaKeys(`${field}.meta`, posting.meta);
       });
+      break;
+    case "pad":
+      add("sourceAccount", item.sourceAccount, "account");
       break;
     case "commodity":
       add("currency", item.currency, "currency");
@@ -111,15 +124,29 @@ function rowTokens(row: {
       addAll("tags", item.tags, "tag");
       addAll("links", item.links, "link");
       break;
-    case "custom":
+    case "custom": {
+      // A budget arrives as `custom "budget"` with its account, interval and
+      // amount as values; a refusal names the field the caller sent.
+      const budget = item.type === "budget";
       asList(item.values).forEach((value, index) => {
         const custom = asItem(value);
         if (custom.kind === "account")
-          add(`values[${index}].value`, custom.value, "account");
+          add(
+            budget && index === 0 ? "account" : `values[${index}].value`,
+            custom.value,
+            "account",
+          );
         if (custom.kind === "amount")
-          add(`values[${index}].currency`, custom.currency, "currency");
+          add(
+            budget && index === 2
+              ? "amount.currency"
+              : `values[${index}].currency`,
+            custom.currency,
+            "currency",
+          );
       });
       break;
+    }
   }
   return tokens;
 }
@@ -134,7 +161,10 @@ export function assertEntryTokens(
         const why =
           value === "%" && (kind === "flag" || kind === "transaction flag")
             ? ': the ledger engine cannot read a "%" flag yet, and would drop the posting; use another flag'
-            : "";
+            : kind === "metadata key" &&
+                (value === "filename" || value === "lineno")
+              ? ": it is reserved by the parser, which sets it to where the entry is written; use another key"
+              : "";
         throw new BadUserInputError(
           `entry ${idx}: ${field} ${JSON.stringify(value)} is not a valid ${kind}${why}`,
           field,

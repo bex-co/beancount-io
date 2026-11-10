@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [217](./217.md) — Structured entries: some fields skip the token check, and `filename`/`lineno` meta is silently dropped (MCP QA 2026-11-10)
 - [218](./218.md) — REST write routes drop a preview flag sent in the part they don't read, so the "preview" commits (MCP QA 2026-11-10)
 - [219](./219.md) — REST file previews skip the sha check that the commit makes (MCP QA 2026-11-10)
 - [220](./220.md) — GraphQL entry writes diverge from MCP/REST in three small ways: posting meta types, preview error `code`, cross-surface `requestId` replay (MCP QA 2026-11-10)

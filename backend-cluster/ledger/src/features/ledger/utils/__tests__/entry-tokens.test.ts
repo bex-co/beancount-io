@@ -155,12 +155,122 @@ describe("assertEntryTokens", () => {
           type: "custom",
           item: {
             date: "2026-01-01",
-            type: "budget",
+            type: "autopay",
             values: [{ kind: "account", value: "Expenses:Food\n2026-01-01 *" }],
           },
         },
       ]),
     ).toThrow(/entry 0: values\[0\]\.value/);
+  });
+
+  // w1/217: these went unchecked, and the commit was refused only as a parse
+  // error, with a hint offering `allowInvalid` to write the unparseable text.
+  it.each([
+    ["postings[0].meta.Bad", txn({ postings: [{ meta: { Bad: "x" } }] })],
+    [
+      "postings[0].cost.currency",
+      txn({ postings: [{ cost: { number: "1", currency: "usd" } }] }),
+    ],
+    [
+      "postings[0].totalPrice.currency",
+      txn({ postings: [{ totalPrice: { number: "1", currency: "usd" } }] }),
+    ],
+    [
+      "sourceAccount",
+      {
+        type: "pad",
+        item: {
+          date: "2026-01-01",
+          account: "Assets:Cash",
+          sourceAccount: "equity:bad",
+        },
+      },
+    ],
+  ])("refuses an invalid %s, naming it", (field, row) => {
+    expect(() => assertEntryTokens([row])).toThrow(
+      new RegExp(`^entry 0: ${field.replace(/[[\].]/g, "\\$&")} "`),
+    );
+  });
+
+  it("accepts posting meta, cost, total price and a pad source account", () => {
+    expect(() =>
+      assertEntryTokens([
+        txn({
+          postings: [
+            {
+              account: "Assets:Broker",
+              units: { number: "1", currency: "ITOT" },
+              cost: { number: "90", currency: "USD" },
+              meta: { "lot-id": "a1" },
+            },
+            {
+              account: "Assets:Cash",
+              units: { number: "-1", currency: "ITOT" },
+              totalPrice: { number: "95", currency: "USD" },
+            },
+          ],
+        }),
+        {
+          type: "pad",
+          item: {
+            date: "2026-01-01",
+            account: "Assets:Cash",
+            sourceAccount: "Equity:Opening-Balances",
+          },
+        },
+      ]),
+    ).not.toThrow();
+  });
+
+  // w1/217: the renderer hides location keys, so these wrote no metadata line
+  // and reported success.
+  it.each([
+    ["meta.filename", txn({ meta: { filename: "receipt.pdf" } })],
+    ["meta.lineno", txn({ meta: { lineno: "7" } })],
+    [
+      "postings[0].meta.filename",
+      txn({ postings: [{ meta: { filename: "receipt.pdf" } }] }),
+    ],
+  ])("refuses the parser's reserved key %s", (field, row) => {
+    expect(() => assertEntryTokens([row])).toThrow(
+      `entry 0: ${field} "${field.split(".").at(-1)}" is not a valid metadata key: it is reserved by the parser`,
+    );
+  });
+
+  it("still accepts keys that only start with a reserved name", () => {
+    expect(() =>
+      assertEntryTokens([txn({ meta: { filenames: "a", "lineno-2": "b" } })]),
+    ).not.toThrow();
+  });
+
+  // w1/217 addendum: a budget reaches the ledger as `custom "budget"`, so the
+  // refusal named `values[0].value`, a path the caller never sent.
+  it.each([
+    [
+      "account",
+      [
+        { kind: "account", value: "Expenses" },
+        { kind: "text", value: "monthly" },
+        { kind: "amount", number: "100", currency: "USD" },
+      ],
+    ],
+    [
+      "amount.currency",
+      [
+        { kind: "account", value: "Expenses:Food" },
+        { kind: "text", value: "monthly" },
+        { kind: "amount", number: "100", currency: "usd" },
+      ],
+    ],
+  ])("names a budget's %s as the caller sent it", (field, values) => {
+    expect(() =>
+      assertEntryTokens([
+        {
+          type: "custom",
+          item: { date: "2026-01-01", type: "budget", values },
+        },
+      ]),
+    ).toThrow(new RegExp(`^entry 0: ${field.replace(".", "\\.")} "`));
   });
 });
 
