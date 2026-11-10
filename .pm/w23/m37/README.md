@@ -10,7 +10,7 @@
 | t002 | Test the claims against the served contract | 60m | t001 |
 | t003 | Correct the contradictions (w1/200, w1/203) | 40m | t002 |
 | t004 | Stop advertising listChanged on the stateless endpoint (w1/196) | 20m | t002 |
-| t005 | Adoption surface | 20m | t004 |
+| t005 | Adoption surface | 20m | t003, t004 |
 | t006 | Simplify | 20m | t005 |
 | t007 | Test coverage | 30m | t005 |
 | t008 | Closeout | 15m | t007 |
