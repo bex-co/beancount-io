@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [203](./203.md) — Journal filter `>N` compares absolute units, and the description doesn't say so (MCP QA 2026-11-09)
 - [204](./204.md) — Register `conversion=units` returns cost totals, and unknown conversions pass silently (MCP QA 2026-11-09)
 - [205](./205.md) — Owned-ledgers catalog and GraphQL `listLedgers` accept any page and limit (MCP QA 2026-11-09)
 - [206](./206.md) — Two MCP refusal details point clients the wrong way: FORBIDDEN hint and invalid-bearer 401 (MCP QA 2026-11-09)
