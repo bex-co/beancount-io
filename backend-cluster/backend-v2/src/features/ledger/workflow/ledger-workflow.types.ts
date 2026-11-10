@@ -174,6 +174,8 @@ export interface LedgerFileData {
   lastCommitSha?: string;
   lastCommitterDate?: string;
   lastAuthorDate?: string;
+  /** Written ledger files no loaded file includes (w1/227). */
+  notLoaded?: string[];
 }
 
 export interface DeleteLedgerCommand {

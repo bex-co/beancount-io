@@ -311,9 +311,15 @@ describe("MCP tool list", () => {
     // handlers already returned it, and a schema-validating client rejected
     // the result because the item was `additionalProperties: false`, so the
     // bytes are contract, not prose.
+    //
+    // 116 KB since w1/227 gave the three file tools an optional `notLoaded`
+    // list naming written ledger files that no loaded file includes:
+    // measured at 118,156 bytes. Bank tool text naming each row's own id
+    // (w1/224) had taken the list to just under 115 KB; the field, with a
+    // one-line description, is the contract the note asked for.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(115 * 1024);
+    expect(bytes).toBeLessThan(116 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the

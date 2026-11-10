@@ -16,7 +16,11 @@ import {
   REMOVE_INCLUDES_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
-import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
+import {
+  gateFileWrite,
+  unloadedLedgerFiles,
+  unloadedNotice,
+} from "@/features/ledger/utils/file-write-gate";
 import { staleFileConflict } from "@/features/ledger/utils/stale-file-conflict";
 import { normalizeAgentRepoPath } from "./agent-repo-path";
 import {
@@ -153,6 +157,12 @@ const editLedgerFilesOutputSchema = toolOutputSchema(
       .describe(
         "Unified diff per touched file for dry runs; empty on commits.",
       ),
+    notLoaded: z
+      .array(z.string())
+      .optional()
+      .describe(
+        "Written ledger files no loaded file includes, so not checked; present only when any.",
+      ),
   }),
 );
 export type EditLedgerFilesOutput = z.infer<typeof editLedgerFilesOutputSchema>;
@@ -162,6 +172,7 @@ type EditLedgerFilesResult = {
   count: number;
   operations: { operation: string; path: string }[];
   diff: { path: string; diff: string }[];
+  notLoaded?: string[];
   wrote: { path: string }[];
   entryHashes: string[];
   validation: {
@@ -298,6 +309,13 @@ function foldOperations(
     else operations.push({ operation: "update", path, content, sha });
   }
   return { operations, projected };
+}
+
+/** A write's summary, naming the files it wrote that nothing loads (w1/227). */
+function withUnloaded(summary: string, notLoaded: readonly string[]): string {
+  return notLoaded.length > 0
+    ? `${summary} ${unloadedNotice(notLoaded)}`
+    : summary;
 }
 
 export async function executeEditLedgerFiles(
@@ -475,17 +493,27 @@ export async function executeEditLedgerFiles(
           overlays(),
           true,
         );
+        const notLoaded = await unloadedLedgerFiles(
+          services,
+          identity,
+          ledgerId,
+          overlays(),
+        );
         // `diff` leads the payload so the serialized text content is the
         // diff followed by the one-line summary.
         return {
           diff,
-          summary: summarizeWrite(
-            `Dry run: ${operations.length} change(s) previewed (${ops.map((op) => op.path).join(", ")}) — not committed`,
-            validation,
+          summary: withUnloaded(
+            summarizeWrite(
+              `Dry run: ${operations.length} change(s) previewed (${ops.map((op) => op.path).join(", ")}) — not committed`,
+              validation,
+            ),
+            notLoaded,
           ),
           dry_run: true,
           count: operations.length,
           operations: ops,
+          ...(notLoaded.length > 0 && { notLoaded }),
           wrote: [],
           entryHashes: [],
           validation,
@@ -508,6 +536,12 @@ export async function executeEditLedgerFiles(
         ledgerId,
         overlays(),
         allowInvalid,
+      );
+      const notLoaded = await unloadedLedgerFiles(
+        services,
+        identity,
+        ledgerId,
+        overlays(),
       );
 
       const { validation } = await withPostWriteValidation(
@@ -545,14 +579,18 @@ export async function executeEditLedgerFiles(
       });
       const wrote = ops.map((op) => ({ path: op.path }));
       return {
-        summary: summarizeWrite(
-          `Committed ${operations.length} change(s) to ${ops.map((op) => op.path).join(", ")}`,
-          validation,
+        summary: withUnloaded(
+          summarizeWrite(
+            `Committed ${operations.length} change(s) to ${ops.map((op) => op.path).join(", ")}`,
+            validation,
+          ),
+          notLoaded,
         ),
         dry_run: false,
         count: operations.length,
         operations: ops,
         diff: [],
+        ...(notLoaded.length > 0 && { notLoaded }),
         wrote,
         entryHashes: [],
         validation,

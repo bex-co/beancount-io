@@ -13,7 +13,10 @@ import {
   REMOVE_INCLUDES_NAMES,
   resolveFlagAlias,
 } from "@/features/ledger/utils/flag-alias";
-import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
+import {
+  gateFileWrite,
+  unloadedLedgerFiles,
+} from "@/features/ledger/utils/file-write-gate";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { ledgerIdOf, ledgerPathSchema, removeIncludesBody } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
@@ -136,6 +139,10 @@ const commitAckSchema = z
     newErrors: z.array(
       z.strictObject({ message: z.string(), source: z.string().optional() }),
     ),
+    notLoaded: z.array(z.string()).optional().openapi({
+      description:
+        "Ledger files the change writes that no loaded file includes: their entries don't count and bean-check did not read them. Present only when there are any.",
+    }),
   })
   .openapi("FileCommitAck", {
     description:
@@ -261,8 +268,22 @@ export const FILE_ROUTES = [
             ALLOW_INVALID_NAMES,
           ),
       );
+      // A file nothing includes is checked by nothing; say so (w1/227).
+      const notLoaded = await unloadedLedgerFiles(
+        layers.services,
+        identity,
+        write.ledgerId,
+        [{ path: params.path, content: body.content }],
+      );
       if (!dryRun) await layers.services.ledgerRepo.changeFiles(write);
-      return { ok: true as const, path: params.path, dryRun, valid, newErrors };
+      return {
+        ok: true as const,
+        path: params.path,
+        dryRun,
+        valid,
+        newErrors,
+        ...(notLoaded.length > 0 && { notLoaded }),
+      };
     },
   }),
 

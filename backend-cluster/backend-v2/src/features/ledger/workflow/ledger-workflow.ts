@@ -44,6 +44,7 @@ import {
   mapToLedger,
   mapToLedgerFileContent,
 } from "@/features/ledger/utils/mappers";
+import { unloadedLedgerFiles } from "@/features/ledger/utils/file-write-gate";
 import {
   CreateLedgerCommand,
   UpdateLedgerCommand,
@@ -1066,7 +1067,13 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       (cause) => operationNotAllowedFromCause("create ledger file", cause),
     );
 
-    return mapToLedgerFileContent(data);
+    return this.withNotLoaded(
+      identity,
+      ledgerId,
+      input.path,
+      input.content,
+      mapToLedgerFileContent(data),
+    );
   }
 
   async updateLedgerFile({
@@ -1111,7 +1118,57 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       (cause) => operationNotAllowedFromCause("update ledger file", cause),
     );
 
-    return mapToLedgerFileContent(data);
+    return this.withNotLoaded(
+      identity,
+      ledgerId,
+      input.path,
+      input.content,
+      mapToLedgerFileContent(data),
+    );
+  }
+
+  /**
+   * The written file named in `notLoaded` when no loaded file includes it,
+   * as REST and MCP report it (w1/227). GraphQL content travels as base64.
+   */
+  private async withNotLoaded(
+    identity: Identity,
+    ledgerId: string,
+    path: string,
+    base64Content: string,
+    file: LedgerFileData,
+  ): Promise<LedgerFileData> {
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const notLoaded = await unloadedLedgerFiles(
+      {
+        ledgerRepo: {
+          projectedSourceFiles: async ({ overlays }) =>
+            unwrapFavaResponse(
+              (
+                await this.favaClientFactory.getPublicApiClient(
+                  ledgerId,
+                  identity.userId,
+                )
+              ).reports.getProjectedSourceFiles(ledgerOwner, ledgerName, {
+                files: overlays.map((overlay) => ({
+                  path: overlay.path,
+                  content: base64Content,
+                })),
+              }),
+              "list projected source files",
+            ),
+        },
+      },
+      identity,
+      ledgerId,
+      [
+        {
+          path,
+          content: Buffer.from(base64Content, "base64").toString("utf8"),
+        },
+      ],
+    );
+    return notLoaded.length > 0 ? { ...file, notLoaded } : file;
   }
 
   async deleteLedgerFile({

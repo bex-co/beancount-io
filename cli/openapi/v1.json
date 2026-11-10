@@ -363,6 +363,13 @@
               ],
               "additionalProperties": false
             }
+          },
+          "notLoaded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ledger files the change writes that no loaded file includes: their entries don't count and bean-check did not read them. Present only when there are any."
           }
         },
         "required": [

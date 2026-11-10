@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [227](./227.md) — File writes report "No new bean-check errors" for a `.bean` file nothing includes (MCP QA 2026-11-10)
 - [228](./228.md) — Idea: give agents the write primitives a hosted session keeps reaching for (commit sha in results, undo, account rename, move entries)
 - [229](./229.md) — Holdings and BQL price an asset from its `@` sale; statements and net worth say the price is missing — needs an owner decision on the price basis (MCP QA 2026-11-10)
 - [230](./230.md) — spending-report prompt still says "use cost(position) for currency totals" (MCP QA 2026-11-10)

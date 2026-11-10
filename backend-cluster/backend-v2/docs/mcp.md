@@ -592,6 +592,12 @@ nothing changes. A `dry_run` is refused the same way, as is a REST `PUT` or
 replaces whatever is there now, including changes you never saw. An
 `old_string` edit is guarded by its own text, which must still match.
 
+A `.bean` or `.beancount` file that the write creates or rewrites but no loaded
+file includes is named in `notLoaded`, and the summary says its entries don't
+count and were not checked. The write is neither refused nor the file included:
+add the `include` line to a loaded file yourself (w1/227). REST `PUT` and the
+GraphQL file create and update return the same `notLoaded`.
+
 Several items may name the same file. They apply in order, each exact-text
 replacement matching the text the items before it produced, and the file is
 committed once with the result, so the preview's diff is what lands. A path

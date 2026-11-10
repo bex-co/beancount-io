@@ -141,7 +141,7 @@ export interface ILedgerRepoService {
   projectedSourceFiles(params: {
     ledgerId: string;
     identity: Identity;
-    overlays: { path: string; content: string }[];
+    overlays: { path: string; content: string | null }[];
   }): Promise<string[]>;
 
   /**
@@ -616,7 +616,7 @@ export class LedgerRepoService
   async projectedSourceFiles(params: {
     ledgerId: string;
     identity: Identity;
-    overlays: { path: string; content: string }[];
+    overlays: { path: string; content: string | null }[];
   }): Promise<string[]> {
     const { ledgerId, identity, overlays } = params;
     await authorizeLedger(
@@ -637,7 +637,11 @@ export class LedgerRepoService
       favaApiClient.reports.getProjectedSourceFiles(ledgerOwner, ledgerName, {
         files: overlays.map((overlay) => ({
           path: overlay.path,
-          content: Buffer.from(overlay.content, "utf8").toString("base64"),
+          // `null` projects a deletion, as for the projected errors.
+          content:
+            overlay.content === null
+              ? null
+              : Buffer.from(overlay.content, "utf8").toString("base64"),
         })),
       }),
       "list projected source files",

@@ -317,6 +317,13 @@ export class LedgerFileContent {
 
   @Field(() => String, { nullable: true })
   lastAuthorDate?: string;
+
+  @Field(() => [String], {
+    nullable: true,
+    description:
+      "On a create or update: ledger files the write made that no loaded file includes. Their entries don't count and bean-check did not read them.",
+  })
+  notLoaded?: string[];
 }
 
 @ArgsType()
