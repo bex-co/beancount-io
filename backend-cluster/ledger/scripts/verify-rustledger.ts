@@ -4871,6 +4871,48 @@ async function main(): Promise<void> {
     "the earnings sum the CLEAR refusal names runs",
   );
 
+  // w1/208: the engine reports an unknown bare plugin as E8001 "Plugin not
+  // found", the code it also spends on a missing document; it was dropped
+  // with the document checks, so a typo silently turned the plugin off.
+  for (const [name, hint] of [
+    ["noduplicate", 'Did you mean "noduplicates"?'],
+    ["qa_nonexistent_plugin", null],
+  ] as const) {
+    const pluginFiles: FileMap = {
+      "main.bean": `plugin "${name}"\n2026-01-01 open Assets:Cash USD\n`,
+    };
+    const rawPlugin = await withLedger(pluginFiles, "main.bean", (ledger) =>
+      ledger.getErrors(),
+    );
+    assert(
+      rawPlugin.some(
+        (e) => e.code === "E8001" && e.message === `Plugin not found: "${name}"`,
+      ),
+      `raw engine still reports plugin "${name}" as E8001 Plugin not found (w1/208)`,
+    );
+    const checked = await parseLedgerFiles(pluginFiles, "main.bean", {
+      repoPaths: ["main.bean"],
+    } as never);
+    const reported = checked.errors.find((e) =>
+      e.message.startsWith(`Unknown plugin "${name}"`),
+    );
+    assert(
+      checked.valid === false &&
+        reported?.line === 1 &&
+        (reported?.hint ?? null) === hint,
+      `plugin "${name}" is reported unknown at its line${hint ? " with the nearest native plugin" : ""}`,
+    );
+  }
+  const knownPlugin = await parseLedgerFiles(
+    { "main.bean": 'plugin "noduplicates"\n2026-01-01 open Assets:Cash USD\n' },
+    "main.bean",
+    { repoPaths: ["main.bean"] } as never,
+  );
+  assert(
+    knownPlugin.errors.length === 0,
+    'a real native plugin ("noduplicates") still loads without an error',
+  );
+
   // The strict camp (w23/m14/t004): the engine still errors on a NULL argument
   // to these builtins where its siblings pass NULL through, and the
   // workaround the hint names runs.

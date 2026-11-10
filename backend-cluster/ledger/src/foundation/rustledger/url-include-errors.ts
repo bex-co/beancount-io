@@ -97,6 +97,8 @@ const GLOB_UNMATCHED = /^include pattern "(.*)" does not match any files$/u;
 const DUPLICATE_INCLUDE = /^Duplicate filename parsed: "(.*)"$/u;
 const PYTHON_PLUGIN =
   /^Python plugin "(.*)" requires the python-plugins feature$/u;
+/** A bare plugin name the engine does not know (w1/208). */
+const PLUGIN_NOT_FOUND = /^Plugin not found: "(.*)"$/u;
 
 /**
  * Put the engine's other include and plugin errors on the line they are
@@ -121,7 +123,8 @@ export function locateIncludeAndPluginErrors(
         !located(error) &&
         (GLOB_UNMATCHED.test(error.message) ||
           DUPLICATE_INCLUDE.test(error.message) ||
-          PYTHON_PLUGIN.test(error.message)),
+          PYTHON_PLUGIN.test(error.message) ||
+          PLUGIN_NOT_FOUND.test(error.message)),
     )
   ) {
     return errors;
@@ -150,7 +153,8 @@ export function locateIncludeAndPluginErrors(
     let place: { file: string; line: number } | null = null;
     const glob = GLOB_UNMATCHED.exec(error.message);
     const duplicate = DUPLICATE_INCLUDE.exec(error.message);
-    const plugin = PYTHON_PLUGIN.exec(error.message);
+    const plugin =
+      PYTHON_PLUGIN.exec(error.message) ?? PLUGIN_NOT_FOUND.exec(error.message);
     if (glob) {
       place = at(
         includes.find(

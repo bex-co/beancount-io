@@ -2,6 +2,8 @@ import type { BeancountError } from "@rustledger/wasm";
 
 const PYTHON_PLUGIN =
   /^Python plugin "(.*)" requires the python-plugins feature$/u;
+/** A bare name the engine has no native plugin for (w1/208). */
+const PLUGIN_NOT_FOUND = /^Plugin not found: "(.*)"$/u;
 const BUILTIN_PREFIX = "beancount.plugins.";
 
 /** The plugin modules Beancount ships under `beancount.plugins`. */
@@ -61,20 +63,33 @@ export function explainUnknownPlugins(
   errors: BeancountError[],
 ): BeancountError[] {
   return errors.map((error) => {
+    // A bare name the engine does not know: `plugin "noduplicate"` (w1/208).
+    const bare = PLUGIN_NOT_FOUND.exec(error.message)?.[1];
+    if (bare !== undefined) return unknownPlugin(error, bare, bare, "");
     const name = PYTHON_PLUGIN.exec(error.message)?.[1];
     if (name === undefined || !name.startsWith(BUILTIN_PREFIX)) return error;
     const module = name.slice(BUILTIN_PREFIX.length);
     if (BEANCOUNT_PLUGINS.includes(module)) return error;
-    const nearest = BEANCOUNT_PLUGINS.map(
-      (known) => [known, distance(module, known)] as const,
-    ).sort((left, right) => left[1] - right[1])[0];
-    return {
-      ...error,
-      message: `Unknown plugin "${name}": Beancount.io can't run this plugin`,
-      hint:
-        nearest !== undefined && nearest[1] <= 2
-          ? `Did you mean "${BUILTIN_PREFIX}${nearest[0]}"?`
-          : error.hint,
-    };
+    return unknownPlugin(error, name, module, BUILTIN_PREFIX);
   });
+}
+
+/** `name` is unknown; suggest the shipped module nearest `module`. */
+function unknownPlugin(
+  error: BeancountError,
+  name: string,
+  module: string,
+  prefix: string,
+): BeancountError {
+  const nearest = BEANCOUNT_PLUGINS.map(
+    (known) => [known, distance(module, known)] as const,
+  ).sort((left, right) => left[1] - right[1])[0];
+  return {
+    ...error,
+    message: `Unknown plugin "${name}": Beancount.io can't run this plugin`,
+    hint:
+      nearest !== undefined && nearest[1] <= 2
+        ? `Did you mean "${prefix}${nearest[0]}"?`
+        : error.hint,
+  };
 }

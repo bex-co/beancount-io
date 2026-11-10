@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [208](./208.md) — An unknown short plugin name is accepted: "Plugin not found" is dropped as a document error (MCP QA 2026-11-09)
 - [209](./209.md) — A renamed-option error (E7004) has no file, line or code (MCP QA 2026-11-09)
 - [210](./210.md) — GraphQL file writes skip the bean-check gate and have no preview — needs an owner decision on the dashboard editor first (MCP QA 2026-11-09)
 - [211](./211.md) — GraphQL bank mutations take no `dryRun`, while MCP and REST preview all five (MCP QA 2026-11-09)

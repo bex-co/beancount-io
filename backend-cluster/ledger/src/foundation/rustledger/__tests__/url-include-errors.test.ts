@@ -256,6 +256,18 @@ describe("locateIncludeAndPluginErrors", () => {
     expect(place(error!)).toEqual(["main.bean", 2]);
   });
 
+  // w1/208: an unknown bare plugin name had no line to open.
+  it("puts an unknown bare plugin on its plugin line in the entry point", () => {
+    const [error] = locateIncludeAndPluginErrors(
+      [engine('Plugin not found: "noduplicate"', "E8001")],
+      {
+        "main.bean": '2020-01-01 open Assets:Cash\nplugin "noduplicate"\n',
+      },
+      "main.bean",
+    );
+    expect(place(error!)).toEqual(["main.bean", 2]);
+  });
+
   it("leaves a located error, and one it cannot place, as it is", () => {
     const located = {
       ...engine('Duplicate filename parsed: "a.bean"'),

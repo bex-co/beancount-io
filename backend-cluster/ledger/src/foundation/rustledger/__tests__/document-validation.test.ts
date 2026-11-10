@@ -187,4 +187,18 @@ describe("reconcileDocumentErrors", () => {
       balance,
     ]);
   });
+
+  // w1/208: the engine spends E8001 on "Plugin not found" too, and this
+  // dropped it as a missing document whatever the inventory said.
+  it.each([undefined, ["main.bean"]])(
+    "keeps a plugin E8001 with repoPaths %j",
+    (repoPaths) => {
+      const plugin = fileNotFound("x", {
+        message: 'Plugin not found: "noduplicate"',
+        phase: "plugin",
+        file: null,
+      });
+      expect(reconcileDocumentErrors([plugin], repoPaths)).toEqual([plugin]);
+    },
+  );
 });

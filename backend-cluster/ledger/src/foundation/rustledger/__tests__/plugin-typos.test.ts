@@ -46,4 +46,31 @@ describe("explainUnknownPlugins", () => {
     const mine = error("my_plugins.rules");
     expect(explainUnknownPlugins([real, mine])).toEqual([real, mine]);
   });
+
+  // w1/208: a bare name the engine does not know came as E8001 "Plugin not
+  // found" and was dropped as a missing document, so the typo went unreported.
+  it("names an unknown bare plugin and suggests the native one it is near", () => {
+    const notFound = (name: string): BeancountError => ({
+      ...error(name),
+      code: "E8001",
+      message: `Plugin not found: "${name}"`,
+    });
+    const [typo, unknown] = explainUnknownPlugins([
+      notFound("noduplicate"),
+      notFound("qa_nonexistent_plugin"),
+    ]);
+    expect(typo).toMatchObject({
+      message:
+        'Unknown plugin "noduplicate": Beancount.io can\'t run this plugin',
+      hint: 'Did you mean "noduplicates"?',
+      code: "E8001",
+      file: "main.bean",
+      line: 3,
+    });
+    expect(unknown).toMatchObject({
+      message:
+        'Unknown plugin "qa_nonexistent_plugin": Beancount.io can\'t run this plugin',
+      hint: null,
+    });
+  });
 });

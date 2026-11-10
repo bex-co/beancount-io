@@ -43,9 +43,17 @@ import { getDirectiveSourceLocation } from "./plugins/provenance";
 const DOCUMENT_NOT_FOUND_CODE = "E8001";
 const DOCUMENT_ROOT_TAG = "[E7006]";
 
-/** The WASM's (always-failing) existence check for an explicit `document` file. */
+/**
+ * The WASM's (always-failing) existence check for an explicit `document`
+ * file. The engine also spends E8001 on `Plugin not found: "X"`, which this
+ * dropped as a document error, so a typo in a plugin name turned its checks
+ * off with nothing reported (w1/208); the message tells them apart.
+ */
 function isFileNotFound(error: BeancountError): boolean {
-  return error.code === DOCUMENT_NOT_FOUND_CODE;
+  return (
+    error.code === DOCUMENT_NOT_FOUND_CODE &&
+    /Document file not found: /u.test(error.message)
+  );
 }
 
 /** The WASM's (always-failing) `option "documents"` root check (code is null). */
