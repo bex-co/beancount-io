@@ -40,9 +40,14 @@ export function refuseUnauthenticated(
   ctx: Router.RouterContext,
   config: AppConfig,
 ): void {
+  // A bearer that was presented and rejected is `invalid_token` (RFC 6750
+  // §3.1), so the client knows to refresh or replace it rather than read the
+  // refusal as "no credential sent" (w1/206). No credential, or a browser
+  // session, keeps the plain challenge.
+  const rejectedBearer = /^Bearer\s+\S/i.test(ctx.get("Authorization"));
   ctx.set(
     "WWW-Authenticate",
-    `Bearer resource_metadata="${config.oauth.issuer}/.well-known/oauth-protected-resource"`,
+    `Bearer ${rejectedBearer ? 'error="invalid_token", ' : ""}resource_metadata="${config.oauth.issuer}/.well-known/oauth-protected-resource"`,
   );
   ctx.status = 401;
   ctx.body = { error: "unauthorized" };

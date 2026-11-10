@@ -13,6 +13,12 @@ import {
   renderErrorText,
 } from "../mcp-errors";
 import { favaApiErrorToDomainError } from "@/foundation/fava/error-to-domain";
+import {
+  AUTHORIZATION_ACTIONS,
+  AuthorizationService,
+  ledgerResource,
+  userResource,
+} from "@/server/api/authorization";
 import { FavaApiError } from "@/foundation/fava/api-client";
 import { runToolSafely } from "@/features/ai-agent/utils/run-tool";
 import {
@@ -638,5 +644,77 @@ describe("plan wording stays off MCP", () => {
       hint: "Upgrade your plan to add more.",
     };
     expect(envelopeFromThrown(error).hint).not.toMatch(PLAN_WORDING);
+  });
+});
+
+/**
+ * w1/206. Every FORBIDDEN carried one fallback — "check
+ * `beancount://{owner}/{name}/metadata` for your permission on the ledger" —
+ * so the account feed read with an API key, and another user's profile, were
+ * sent to a ledger that had nothing to do with either.
+ */
+describe("FORBIDDEN hints for denials no ledger is behind", () => {
+  const principal = (method: "apikey" | "oauth") => ({
+    userId: "usr_alice",
+    method,
+    scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
+    tokenId: "tok_1",
+  });
+  const refusal = async (
+    input: Parameters<AuthorizationService["authorizeOrThrow"]>[0],
+    allowed = true,
+  ) => {
+    const error = await new AuthorizationService({
+      check: async () => allowed,
+    })
+      .authorizeOrThrow(input)
+      .catch((caught: unknown) => caught);
+    return envelopeFromThrown(error, {
+      surface: "resource",
+      template: "x",
+    });
+  };
+
+  it("names the credentials the account feed accepts, for an API key", async () => {
+    const envelope = await refusal({
+      principal: principal("apikey") as never,
+      action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ,
+      resource: userResource("usr_alice"),
+    });
+    expect(envelope.code).toBe("FORBIDDEN");
+    expect(envelope.hint).toBe(
+      "This operation accepts a signed-in browser session or an OAuth connection.",
+    );
+    expect(envelope.hint).not.toContain("metadata");
+  });
+
+  it("says another user's profile is out of reach, not a ledger permission", async () => {
+    const envelope = await refusal(
+      {
+        principal: principal("oauth") as never,
+        action: AUTHORIZATION_ACTIONS.USER_PROFILE_READ,
+        resource: userResource("usr_bob"),
+      },
+      false,
+    );
+    expect(envelope.code).toBe("FORBIDDEN");
+    expect(envelope.hint).toBe(
+      "This operation reaches only the credential's own account.",
+    );
+  });
+
+  it("keeps the ledger pointer for a ledger write the credential lacks scope for", async () => {
+    const envelope = await refusal({
+      principal: {
+        ...principal("oauth"),
+        scopes: new Set(["ledger.read"]),
+      } as never,
+      action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      resource: ledgerResource("alice/main"),
+    });
+    expect(envelope.code).toBe("FORBIDDEN");
+    expect(envelope.hint).toBe(
+      'Use a credential that holds the "ledger.write" scope.',
+    );
   });
 });

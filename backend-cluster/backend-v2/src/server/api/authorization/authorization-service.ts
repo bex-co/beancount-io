@@ -826,56 +826,102 @@ export const authorizationActionAcceptsDelegatedCredential = (
 const isAuthorizationAction = (action: string): action is AuthorizationAction =>
   Object.prototype.hasOwnProperty.call(ACTION_REQUIREMENTS, action);
 
+/** The credentials an operation accepts, as a caller would name them. */
+const CREDENTIAL_NAMES: Record<string, string> = {
+  session: "a signed-in browser session",
+  oauth: "an OAuth connection",
+  apikey: "a personal API key",
+  system: "a server-side job",
+};
+
+/** "a or b", "a, b, or c" — the accepted credentials in a sentence. */
+function acceptedCredentials(methods: readonly string[]): string {
+  const names = methods
+    .filter((method) => method !== "system")
+    .map((method) => CREDENTIAL_NAMES[method] ?? method);
+  if (names.length <= 1) return names[0] ?? "a different credential";
+  return names.length === 2
+    ? `${names[0]} or ${names[1]}`
+    : `${names.slice(0, -1).join(", ")}, or ${names[names.length - 1]}`;
+}
+
+/** The next step for a credential pinned to a different ledger. */
+const OTHER_LEDGER_HINT =
+  "This credential is pinned to another ledger. Use a credential for this ledger, or one without a ledger pin.";
+
+/**
+ * Why the credential itself cannot do this, and what would (w1/206). Without
+ * the hint every such refusal carried MCP's FORBIDDEN fallback — "check
+ * `beancount://{owner}/{name}/metadata` for your permission on the ledger" —
+ * which points nowhere for an account feed read with an API key.
+ */
 const credentialDenial = (
   principal: AuthorizationPrincipal,
   requirement: CredentialRequirement,
   resource?: { type: AuthorizationResourceType; id: string },
-): string | undefined => {
+): { message: string; hint?: string } | undefined => {
   if (isTrustedAnonymousPrincipal(principal)) {
-    return requirement.allowAnonymous ? undefined : "Authentication required";
+    return requirement.allowAnonymous
+      ? undefined
+      : { message: "Authentication required" };
   }
   if (isTrustedPlaidBackgroundPrincipal(principal)) {
     return requirement.backgroundProvenance?.includes(principal.provenance)
       ? undefined
-      : "This background invocation cannot perform this operation";
+      : { message: "This background invocation cannot perform this operation" };
   }
   const identity = principal;
   if (!identityAssuranceIsValid(identity) || !identityUserId(identity)) {
-    return "Authorization denied";
+    return { message: "Authorization denied" };
   }
   if (!requirement.methods.includes(identity.method)) {
+    const hint = `This operation accepts ${acceptedCredentials(requirement.methods)}.`;
     const configuredMessage =
       requirement.denyMessageByMethod?.[identity.method];
-    if (configuredMessage) return configuredMessage;
+    if (configuredMessage) return { message: configuredMessage, hint };
     if (
       requirement.methods.length === 1 &&
       requirement.methods[0] === "session"
     ) {
-      return "This operation is reachable only from a browser session";
+      return {
+        message: "This operation is reachable only from a browser session",
+        hint,
+      };
     }
-    return "This credential type cannot perform this operation";
+    return {
+      message: "This credential type cannot perform this operation",
+      hint,
+    };
   }
   if (
     requirement.oauthFromAppOnly &&
     identity.method === "oauth" &&
     !isMobileOAuthClient(identity.oauthClientId)
   ) {
-    return (
-      requirement.denyMessageByMethod?.oauth ??
-      "This OAuth client cannot perform this operation"
-    );
+    return {
+      message:
+        requirement.denyMessageByMethod?.oauth ??
+        "This OAuth client cannot perform this operation",
+      hint: "This operation accepts the Beancount mobile app's sign-in or a signed-in browser session.",
+    };
   }
   if (
     requirement.capability !== undefined &&
     !identityHasCapability(identity, requirement.capability)
   ) {
-    return `This operation requires the "ledger.${requirement.capability}" scope`;
+    return {
+      message: `This operation requires the "ledger.${requirement.capability}" scope`,
+      hint: `Use a credential that holds the "ledger.${requirement.capability}" scope.`,
+    };
   }
   if (
     requirement.requireAccountWideCredential &&
     identity.ledgerScope !== undefined
   ) {
-    return "Reading the account feed requires an account-wide credential";
+    return {
+      message: "Reading the account feed requires an account-wide credential",
+      hint: "Use a credential without a ledger pin.",
+    };
   }
   if (
     requirement.enforceLedgerScope &&
@@ -889,10 +935,35 @@ const credentialDenial = (
           : resource.id,
       ))
   ) {
-    return "This credential is not authorized for this ledger";
+    return {
+      message: "This credential is not authorized for this ledger",
+      hint: OTHER_LEDGER_HINT,
+    };
   }
   return undefined;
 };
+
+/**
+ * The hint a refusal carries: the concealment's own, else what the decision
+ * says would be accepted, else — for another user's account, where no ledger
+ * is involved — that the operation reaches only the caller's own (w1/206).
+ * Anything else leaves the transport's category fallback in place.
+ */
+function hintFor(
+  decision: Extract<AuthorizationDecision, { allowed: false }>,
+  concealed: DenialConcealment | undefined,
+): string | undefined {
+  if (concealed) return concealed.hint;
+  if (decision.hint) return decision.hint;
+  if (
+    decision.failedResourceType === "user" &&
+    (decision.reason === "relationship_denied" ||
+      decision.reason === "insufficient_relationship")
+  ) {
+    return "This operation reaches only the credential's own account.";
+  }
+  return undefined;
+}
 
 export class AuthorizationDeniedError extends DomainError {
   constructor(decision: Extract<AuthorizationDecision, { allowed: false }>) {
@@ -923,7 +994,9 @@ export class AuthorizationDeniedError extends DomainError {
         ...(decision.failedResourceType && {
           resourceType: decision.failedResourceType,
         }),
-        ...(concealed?.hint !== undefined && { hint: concealed.hint }),
+        ...(hintFor(decision, concealed) !== undefined && {
+          hint: hintFor(decision, concealed),
+        }),
       },
     );
   }
@@ -999,6 +1072,7 @@ export class AuthorizationService implements IAuthorizationService {
       reason: AuthorizationDenyReason,
       options: {
         message?: string;
+        hint?: string;
         auditClass?: AuditClass;
         failedResourceType?: AuthorizationResourceType;
         ledgerId?: string;
@@ -1012,6 +1086,7 @@ export class AuthorizationService implements IAuthorizationService {
           resource: input.resource,
           reason,
           message: options.message ?? "Authorization denied",
+          ...(options.hint && { hint: options.hint }),
           ...(options.failedResourceType && {
             failedResourceType: options.failedResourceType,
           }),
@@ -1064,7 +1139,7 @@ export class AuthorizationService implements IAuthorizationService {
     }
     const auditLedgerId = ledger?.id ?? parsedBankConnection?.ledgerId;
 
-    const credentialMessage = credentialDenial(
+    const credentialRefusal = credentialDenial(
       input.principal,
       requirement.credential,
       ledger
@@ -1073,9 +1148,9 @@ export class AuthorizationService implements IAuthorizationService {
           ? { type: "bank_connection", id: bankConnection.id }
           : undefined,
     );
-    if (credentialMessage) {
+    if (credentialRefusal) {
       return deny("credential_not_permitted", {
-        message: credentialMessage,
+        ...credentialRefusal,
         auditClass: requirement.auditClass,
         ledgerId: auditLedgerId,
       });
@@ -1091,6 +1166,7 @@ export class AuthorizationService implements IAuthorizationService {
       return deny("credential_not_permitted", {
         message:
           "Forbidden - this credential is not authorized for this ledger",
+        hint: OTHER_LEDGER_HINT,
         auditClass: requirement.auditClass,
         failedResourceType: "ledger",
         ledgerId: auditLedgerId,

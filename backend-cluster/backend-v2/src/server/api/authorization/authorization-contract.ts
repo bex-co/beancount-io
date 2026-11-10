@@ -272,6 +272,8 @@ export type AuthorizationDecision =
       failedResourceType?: AuthorizationResourceType;
       /** Safe, actionable text for GraphQL, REST, and MCP clients. */
       message: string;
+      /** What would be accepted instead, when the denial can say (w1/206). */
+      hint?: string;
     };
 
 export interface AuthorizeInput {

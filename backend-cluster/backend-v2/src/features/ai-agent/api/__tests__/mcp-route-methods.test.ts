@@ -76,9 +76,16 @@ describe("MCP route: methods other than POST", () => {
   });
 
   /** Completes, or rejects — never hangs. Five seconds is far past a 405. */
-  async function requestWithin(method: string, ms = 5000) {
+  async function requestWithin(
+    method: string,
+    ms = 5000,
+    headers: Record<string, string> = {},
+  ) {
     const res = await Promise.race([
-      fetch(url, { method, headers: { Accept: "text/event-stream" } }),
+      fetch(url, {
+        method,
+        headers: { Accept: "text/event-stream", ...headers },
+      }),
       new Promise<never>((_, rej) =>
         setTimeout(
           () => rej(new Error(`${method} did not respond within ${ms}ms`)),
@@ -139,6 +146,31 @@ describe("MCP route: methods other than POST", () => {
     );
     expect(JSON.parse(body)).toEqual({ error: "unauthorized" });
   });
+
+  // w1/206: a presented bearer the gate rejects was challenged exactly like
+  // no credential at all; RFC 6750 §3.1 names it invalid_token.
+  it.each([
+    [
+      "no credential",
+      {},
+      'Bearer resource_metadata="https://beancount.io/.well-known/oauth-protected-resource"',
+    ],
+    [
+      "a rejected bearer",
+      { Authorization: "Bearer bcio_not_a_real_key" },
+      'Bearer error="invalid_token", resource_metadata="https://beancount.io/.well-known/oauth-protected-resource"',
+    ],
+  ])(
+    "challenges %s with the matching WWW-Authenticate",
+    async (_case, headers, challenge) => {
+      resolveIdentityMock.mockResolvedValue(undefined);
+      const { res, body } = await requestWithin("POST", 5000, headers);
+
+      expect(res.status).toBe(401);
+      expect(res.headers.get("www-authenticate")).toBe(challenge);
+      expect(JSON.parse(body)).toEqual({ error: "unauthorized" });
+    },
+  );
 
   it("returns 405 for an authenticated unpinned GET", async () => {
     resolveIdentityMock.mockResolvedValue({
