@@ -18,6 +18,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import {
   router,
@@ -269,6 +270,10 @@ function FileRow({
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
+  // A row's name and note keep their first native measurement when the text
+  // size changes while the screen is open (w22/008); keying only the Texts
+  // remounts them without touching the list's scroll or selection.
+  const { fontScale } = useWindowDimensions();
   const isDir = entry.type === "dir";
   const editable = !isDir && isOpenableTextEntry(entry);
   const isLink = entry.type === "symlink" || entry.type === "submodule";
@@ -315,12 +320,20 @@ function FileRow({
           />
         </View>
         <View style={styles.rowText}>
-          <Text style={styles.rowLabel} numberOfLines={1}>
+          <Text
+            key={`label-${fontScale}`}
+            style={styles.rowLabel}
+            numberOfLines={1}
+          >
             {entry.name}
           </Text>
           {/* A dimmed row said nothing of why it would not open (w21/771). */}
           {!tappable && (
-            <Text style={styles.rowNote} numberOfLines={1}>
+            <Text
+              key={`note-${fontScale}`}
+              style={styles.rowNote}
+              numberOfLines={1}
+            >
               {t("ledgerFileNotText")}
             </Text>
           )}

@@ -407,11 +407,40 @@ describe("read-only file notice live font-scale remeasurement", () => {
   });
 });
 
+describe("LegendItem live font-scale remeasurement", () => {
+  const { LegendItem } = load("common/d3/chart-chrome.tsx", {
+    "react-native": reactNative,
+    "@/common/hooks/use-theme-style": themeHooks,
+  });
+  const legend = (label: string): Node =>
+    render(LegendItem, { color: "#123456", label });
+  const text = (tree: Node) => findAll(tree, ofType("Text"))[0];
+
+  it("remounts the label at a new scale and restores it on the way back", () => {
+    const before = text(legend("Net Profit"));
+    fontScale = 3.12;
+    const enlarged = text(legend("Net Profit"));
+    fontScale = 1;
+    const restored = text(legend("Net Profit"));
+
+    expect(enlarged.props.key).not.toEqual(before.props.key);
+    expect(restored.props.key).toEqual(before.props.key);
+    expect(textOf(enlarged)).toBe("Net Profit");
+  });
+
+  it("keeps the label mounted when only its text changes", () => {
+    expect(text(legend("Income")).props.key).toEqual(
+      text(legend("Expenses")).props.key,
+    );
+  });
+});
+
 // Home's lower cards (w21/015): Spending's subtitle, Budget's rows and empty
 // line, and Latest Updates' rows clipped or left blank bands after a live
-// text-size change. Checked on the source, like the file editor above: the
-// cards run queries this runner cannot execute.
-const HOME_CARD_TEXTS: [string, string[]][] = [
+// text-size change. The Files rows and the Reports note (w22/008) did the same.
+// Checked on the source, like the file editor above: these screens run queries
+// this runner cannot execute.
+const KEYED_TEXTS: [string, string[]][] = [
   [
     "screens/home-screen/components/spending-card.tsx",
     // The subtitle, the empty text or the totals under the bars (w21/418), and
@@ -433,8 +462,17 @@ const HOME_CARD_TEXTS: [string, string[]][] = [
     // The commit message under a ledger row is a second metaText (w21/599).
     ["{styles.title}", "{styles.metaText}", "{styles.metaText}"],
   ],
+  [
+    // A file row's name, and the note a dimmed row adds under it (w22/008).
+    "screens/ledger-file-browser-screen/index.tsx",
+    ["{styles.rowLabel}", "{styles.rowNote}"],
+  ],
+  // "Showing through <month>…" under the range pills (w22/008).
+  ["screens/reports-screen/reports-screen.tsx", ["{styles.anchorNote}"]],
+  // Every chart legend entry shares this one Text (w22/008).
+  ["common/d3/chart-chrome.tsx", ["{styles.legendText}"]],
 ];
-for (const [file, styles] of HOME_CARD_TEXTS)
+for (const [file, styles] of KEYED_TEXTS)
   describe(`${file} live font-scale remeasurement`, () => {
     const source = ts.createSourceFile(
       file,

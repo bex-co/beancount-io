@@ -10,7 +10,7 @@ import {
 import { CardLoadFailure } from "@/components/card-load-failure";
 import { useReactiveVar } from "@apollo/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -93,6 +93,9 @@ const ReportsScreenImpl = (): JSX.Element => {
   const ledgerId = useLedgerGuard();
   const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
+  // The "Showing through …" note keeps its first native measurement across a
+  // live text-size change and clips at the screen edge (w22/008).
+  const { fontScale } = useWindowDimensions();
 
   const [timeRange, setTimeRange] = useState<TimeRange>("6M");
   const requestedRange = useReactiveVar(requestedReportsRange);
@@ -279,7 +282,7 @@ const ReportsScreenImpl = (): JSX.Element => {
         onChange={setTimeRange}
       />
       {staleAnchor !== null ? (
-        <Text style={styles.anchorNote}>
+        <Text key={`anchor-note-${fontScale}`} style={styles.anchorNote}>
           {t("reportsThroughLatestMonth", {
             month: formatLedgerMonth(staleAnchor, locale),
           })}

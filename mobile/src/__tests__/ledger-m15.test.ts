@@ -459,7 +459,8 @@ test("a Files row that cannot open says why (w21/771)", () => {
       'accessibilityHint={tappable?undefined:t("ledgerFileNotText")}',
     ) ||
     !screen.includes(
-      '{!tappable&&(<Textstyle={styles.rowNote}numberOfLines={1}>{t("ledgerFileNotText")}</Text>)}',
+      // The note is keyed on the live text size so it re-measures (w22/008).
+      '{!tappable&&(<Textkey={`note-${fontScale}`}style={styles.rowNote}numberOfLines={1}>{t("ledgerFileNotText")}</Text>)}',
     )
   )
     throw new Error("a dimmed row should say it cannot be opened");

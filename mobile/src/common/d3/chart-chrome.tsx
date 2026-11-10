@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { ErrorBoundary } from "react-error-boundary";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -122,6 +122,9 @@ export function LegendItem({
   mark?: "swatch" | "line";
 }): JSX.Element {
   const styles = useThemeStyle(getChromeStyles);
+  // The label keeps its first native measurement across a live text-size
+  // change and clips (w22/008); keying it remounts only the Text.
+  const { fontScale } = useWindowDimensions();
   return (
     <View style={styles.legendItem}>
       <View
@@ -130,7 +133,9 @@ export function LegendItem({
           { backgroundColor: color },
         ]}
       />
-      <Text style={styles.legendText}>{label}</Text>
+      <Text key={fontScale} style={styles.legendText}>
+        {label}
+      </Text>
     </View>
   );
 }
