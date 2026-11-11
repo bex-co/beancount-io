@@ -47,6 +47,33 @@ const zhBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.ungroupedColumn": {
+    message:
+      "“{column}”必须写在 {groupBy} 中，或放在 {sum}、{first} 等聚合函数内。",
+    description:
+      "Query error for a column that is neither in GROUP BY nor aggregated; {column} is the identifier, {groupBy}, {sum} and {first} are BQL keywords left untranslated",
+  },
+  "bql.errors.unknownFunction": {
+    message: "没有名为“{name}”的 BQL 函数。请检查拼写。",
+    description:
+      "Query error naming a BQL function that does not exist; {name} is the function name from the query",
+  },
+  "bql.errors.unknownTable": {
+    message:
+      "没有名为“{table}”的表。系统表以 # 开头，例如 {accounts} 或 {prices}。",
+    description:
+      "Query error naming a table that does not exist; {table} is the name from the query, {accounts} and {prices} are example system table names left untranslated",
+  },
+  "bql.errors.argumentCount_other": {
+    message: "{name}() 接受 {count} 个参数，而不是 {got} 个。",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.typeError": {
+    message: "某个值的类型不适用于此比较或函数。请检查列或函数返回的内容。",
+    description:
+      "Query error when a value has the wrong type for a comparison or function",
+  },
   "page.bql.query": {
     message: "查询",
     description: "Sidebar navigation label for the BQL query page",

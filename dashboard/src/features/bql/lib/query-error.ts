@@ -6,7 +6,7 @@ import { getErrorMessageKey } from "@/common/lib/errors/error-message";
  */
 export interface QueryErrorFeedback {
   key: string;
-  params?: Record<string, string>;
+  params?: Record<string, string | number>;
 }
 
 /**
@@ -36,6 +36,37 @@ const SYNTAX_ERROR_PATTERN =
 const FOUND_TOKEN_PATTERN =
   /\bsyntax error at position (\d{1,6}): found '([A-Za-z0-9_.,;()*=!~+-]{1,32})' expected\b/;
 
+/**
+ * The engine's refusal of a column that is neither grouped nor aggregated:
+ * `Bare column "position" is not grouped and not aggregated: …`.
+ */
+const UNGROUPED_COLUMN_PATTERN =
+  /\bBare column "([A-Za-z_][A-Za-z0-9_.]{0,63})" is not grouped and not aggregated\b/;
+
+/** `… no function matches "NOSUCHFN"`; the engine upper-cases the name. */
+const UNKNOWN_FUNCTION_PATTERN =
+  /\bno function matches "([A-Za-z_][A-Za-z0-9_]{0,63})"(?!\S)/;
+
+/** `… table '#nosuchtable' does not exist. Available system tables: …` */
+const UNKNOWN_TABLE_PATTERN =
+  /\btable '(#?[A-Za-z_][A-Za-z0-9_]{0,63})' does not exist\b/;
+
+/** `… invalid arguments for function LENGTH: expected 1 argument(s), got 2` */
+const ARGUMENT_COUNT_PATTERN =
+  /\binvalid arguments for function ([A-Za-z_][A-Za-z0-9_]{0,63}): expected (\d{1,3}) argument\(s\), got (\d{1,3})\b/;
+
+/** `… type error: EMPTY expects an inventory`; its detail is never shown. */
+const TYPE_ERROR_PATTERN = /\btype error:/;
+
+/** The engine's own words for these stay in the query language. */
+const BQL_TOKENS = {
+  groupBy: "GROUP BY",
+  sum: "sum()",
+  first: "first()",
+  accounts: "#accounts",
+  prices: "#prices",
+};
+
 const utf8 = new TextEncoder();
 
 /**
@@ -64,9 +95,10 @@ function characterAtByteOffset(
 }
 
 /**
- * Resolve a query error to editor feedback. A recognized unknown-column
- * diagnostic names the offending identifier and a parser diagnostic names the
- * unexpected token and where it is; everything else falls back to
+ * Resolve a query error to editor feedback. A recognized engine diagnostic —
+ * an unknown column, function or table, a parser error, an ungrouped column,
+ * a wrong argument count or a type error — is explained with only validated
+ * short identifiers and counts interpolated; everything else falls back to
  * the shared, generic mapping — raw server messages are never shown.
  */
 export function getQueryErrorFeedback(
@@ -102,7 +134,65 @@ export function getQueryErrorFeedback(
           params: { token: found[2], position: String(position) },
         };
       }
+      const ungrouped = UNGROUPED_COLUMN_PATTERN.exec(gqlError.message);
+      if (ungrouped) {
+        return {
+          key: "bql.errors.ungroupedColumn",
+          params: {
+            column: ungrouped[1],
+            groupBy: BQL_TOKENS.groupBy,
+            sum: BQL_TOKENS.sum,
+            first: BQL_TOKENS.first,
+          },
+        };
+      }
+      const fn = UNKNOWN_FUNCTION_PATTERN.exec(gqlError.message);
+      if (fn) {
+        // BQL function names are case-insensitive and written in lower case.
+        return {
+          key: "bql.errors.unknownFunction",
+          params: { name: fn[1].toLowerCase() },
+        };
+      }
+      const table = UNKNOWN_TABLE_PATTERN.exec(gqlError.message);
+      if (table) {
+        return {
+          key: "bql.errors.unknownTable",
+          params: {
+            table: table[1],
+            accounts: BQL_TOKENS.accounts,
+            prices: BQL_TOKENS.prices,
+          },
+        };
+      }
+      const args = ARGUMENT_COUNT_PATTERN.exec(gqlError.message);
+      if (args) {
+        return {
+          key: "bql.errors.argumentCount",
+          // A number: i18next picks a plural form only for a numeric count.
+          params: {
+            name: args[1].toLowerCase(),
+            count: Number(args[2]),
+            got: args[3],
+          },
+        };
+      }
+      if (TYPE_ERROR_PATTERN.test(gqlError.message)) {
+        return { key: "bql.errors.typeError" };
+      }
     }
   }
   return { key: getErrorMessageKey(error) };
+}
+
+/**
+ * Whether running the same query again could succeed. The engine refusing
+ * the query (BAD_USER_INPUT) answers the same way every time; a network or
+ * service failure may not (w2/111).
+ */
+export function isRetryableQueryError(error: unknown): boolean {
+  return !(
+    CombinedGraphQLErrors.is(error) &&
+    error.errors.some((item) => item.extensions?.code === "BAD_USER_INPUT")
+  );
 }

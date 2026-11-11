@@ -1,7 +1,7 @@
 import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 import { describe, expect, it } from "vitest";
 import enBql from "../../locales/en";
-import { getQueryErrorFeedback } from "../query-error";
+import { getQueryErrorFeedback, isRetryableQueryError } from "../query-error";
 
 function graphQLError(message: string, code: string) {
   return new CombinedGraphQLErrors({
@@ -62,7 +62,8 @@ describe("getQueryErrorFeedback", () => {
   it("keeps generic feedback for other bad-input diagnostics", () => {
     for (const message of [
       "Invalid BQL query: syntax error at 'FROM'",
-      "Invalid BQL query: Query execution error: type error: cannot compare values",
+      'Invalid BQL query: Query execution error: no function matches "<b>x</b>"',
+      "Invalid BQL query: Query execution error: invalid arguments for function LENGTH: expected one argument(s), got 2",
       "Invalid BQL query: syntax error at position 3: unexpected token '<img src=x>'",
       "Invalid BQL query: syntax error at position 3: unexpected token 'a'b'",
     ]) {
@@ -70,6 +71,77 @@ describe("getQueryErrorFeedback", () => {
         getQueryErrorFeedback(graphQLError(message, "BAD_USER_INPUT")),
       ).toEqual({ key: "common.errors.badUserInput" });
     }
+  });
+
+  // The engine already explains these mistakes newcomers make; the page
+  // showed only "information provided is invalid" (w2/111). These are the
+  // recorded production messages.
+  it.each([
+    [
+      'Invalid BQL query: Bare column "position" is not grouped and not aggregated: this query engine would silently report each group\'s first-row value. Add "position" to GROUP BY or wrap it in an aggregate',
+      {
+        key: "bql.errors.ungroupedColumn",
+        params: {
+          column: "position",
+          groupBy: "GROUP BY",
+          sum: "sum()",
+          first: "first()",
+        },
+      },
+    ],
+    [
+      'Invalid BQL query: Query execution error: no function matches "NOSUCHFN"',
+      { key: "bql.errors.unknownFunction", params: { name: "nosuchfn" } },
+    ],
+    [
+      "Invalid BQL query: Query execution error: evaluation error: table '#nosuchtable' does not exist. Available system tables: #accounts, #balances, #commodities",
+      {
+        key: "bql.errors.unknownTable",
+        params: {
+          table: "#nosuchtable",
+          accounts: "#accounts",
+          prices: "#prices",
+        },
+      },
+    ],
+    [
+      "Invalid BQL query: Query execution error: invalid arguments for function LENGTH: expected 1 argument(s), got 2",
+      {
+        key: "bql.errors.argumentCount",
+        params: { name: "length", count: 1, got: "2" },
+      },
+    ],
+    [
+      "Invalid BQL query: Query execution error: type error: EMPTY expects an inventory",
+      { key: "bql.errors.typeError" },
+    ],
+    [
+      "Invalid BQL query: Query execution error: type error: cannot compare values",
+      { key: "bql.errors.typeError" },
+    ],
+  ])("explains %s", (message, feedback) => {
+    expect(
+      getQueryErrorFeedback(graphQLError(message, "BAD_USER_INPUT")),
+    ).toEqual(feedback);
+  });
+
+  it("states argument counts as plural messages with a numeric count", () => {
+    expect(enBql["bql.errors.argumentCount_one"].message).toContain("{count}");
+    expect(enBql["bql.errors.argumentCount_other"].message).toContain(
+      "{count}",
+    );
+  });
+
+  it("offers a retry only when running the query again could succeed", () => {
+    expect(
+      isRetryableQueryError(
+        graphQLError(UNKNOWN_COLUMN_MESSAGE, "BAD_USER_INPUT"),
+      ),
+    ).toBe(false);
+    expect(
+      isRetryableQueryError(graphQLError("boom", "INTERNAL_SERVER_ERROR")),
+    ).toBe(true);
+    expect(isRetryableQueryError(new TypeError("Failed to fetch"))).toBe(true);
   });
 
   it("ignores the diagnostic shape outside BAD_USER_INPUT", () => {

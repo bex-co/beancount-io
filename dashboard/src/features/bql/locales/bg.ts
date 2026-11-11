@@ -50,6 +50,39 @@ const bgBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.ungroupedColumn": {
+    message:
+      "„{column}“ трябва да е в {groupBy} или в агрегатна функция като {sum} или {first}.",
+    description:
+      "Query error for a column that is neither in GROUP BY nor aggregated; {column} is the identifier, {groupBy}, {sum} and {first} are BQL keywords left untranslated",
+  },
+  "bql.errors.unknownFunction": {
+    message: "Няма BQL функция с име „{name}“. Проверете изписването.",
+    description:
+      "Query error naming a BQL function that does not exist; {name} is the function name from the query",
+  },
+  "bql.errors.unknownTable": {
+    message:
+      "Няма таблица с име „{table}“. Системните таблици започват с #, например {accounts} или {prices}.",
+    description:
+      "Query error naming a table that does not exist; {table} is the name from the query, {accounts} and {prices} are example system table names left untranslated",
+  },
+  "bql.errors.argumentCount_one": {
+    message: "{name}() приема {count} аргумент, а не {got}.",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.argumentCount_other": {
+    message: "{name}() приема {count} аргумента, а не {got}.",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.typeError": {
+    message:
+      "Стойност е от неподходящ тип за това сравнение или тази функция. Проверете какво връща колоната или функцията.",
+    description:
+      "Query error when a value has the wrong type for a comparison or function",
+  },
   "page.bql.query": {
     message: "Заявка",
     description: "Sidebar navigation label for the BQL query page",

@@ -13,6 +13,7 @@ export const PLURAL_BASE_KEYS = [
   "aiAgent.editApproval.appliedOperations",
   "aiAgent.ranQueries",
   "aiAgent.usedTools",
+  "bql.errors.argumentCount",
   "commits.loadedOlder",
   "common.moreItemsLoaded",
   "common.whatsNewUnread",

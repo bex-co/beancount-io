@@ -49,6 +49,49 @@ const ruBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.ungroupedColumn": {
+    message:
+      "Столбец «{column}» должен быть в {groupBy} или внутри агрегатной функции, например {sum} или {first}.",
+    description:
+      "Query error for a column that is neither in GROUP BY nor aggregated; {column} is the identifier, {groupBy}, {sum} and {first} are BQL keywords left untranslated",
+  },
+  "bql.errors.unknownFunction": {
+    message: "Функции BQL с именем «{name}» нет. Проверьте написание.",
+    description:
+      "Query error naming a BQL function that does not exist; {name} is the function name from the query",
+  },
+  "bql.errors.unknownTable": {
+    message:
+      "Таблицы с именем «{table}» нет. Системные таблицы начинаются с #, например {accounts} или {prices}.",
+    description:
+      "Query error naming a table that does not exist; {table} is the name from the query, {accounts} and {prices} are example system table names left untranslated",
+  },
+  "bql.errors.argumentCount_one": {
+    message: "{name}() принимает {count} аргумент, а не {got}.",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.argumentCount_few": {
+    message: "{name}() принимает {count} аргумента, а не {got}.",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.argumentCount_many": {
+    message: "{name}() принимает {count} аргументов, а не {got}.",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.argumentCount_other": {
+    message: "{name}() принимает {count} аргумента, а не {got}.",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.typeError": {
+    message:
+      "Значение имеет неподходящий тип для этого сравнения или функции. Проверьте, что возвращает столбец или функция.",
+    description:
+      "Query error when a value has the wrong type for a comparison or function",
+  },
   "page.bql.query": {
     message: "Запрос",
     description: "Sidebar navigation label for the BQL query page",

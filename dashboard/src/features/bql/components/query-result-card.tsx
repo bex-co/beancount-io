@@ -27,7 +27,10 @@ import { QueryResultExport } from "./query-result-export";
 import type { QueryShellQuery } from "@/graphql/definitions";
 import { usePendingAction } from "@/common/hooks/use-pending-action";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { getQueryErrorFeedback } from "../lib/query-error";
+import {
+  getQueryErrorFeedback,
+  isRetryableQueryError,
+} from "../lib/query-error";
 
 /** Height of an ordinary one-line row, and the starting guess for measurement. */
 const ROW_HEIGHT = 36;
@@ -378,19 +381,23 @@ export function QueryResultCard({
             <Alert variant="destructive">
               <AlertDescription className="flex flex-wrap items-center gap-2">
                 <span>{t(errorFeedback.key, errorFeedback.params)}</span>
-                {/* Re-runs this card's own query, not the editor's (w4/995). */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    runRetry(async () => {
-                      await onExecute(query);
-                    })
-                  }
-                  loading={retrying}
-                >
-                  {t("common.tryAgain")}
-                </Button>
+                {/* Re-runs this card's own query, not the editor's (w4/995).
+                    A query the engine refused fails the same way again, so
+                    only a network or service failure offers it (w2/111). */}
+                {isRetryableQueryError(error) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      runRetry(async () => {
+                        await onExecute(query);
+                      })
+                    }
+                    loading={retrying}
+                  >
+                    {t("common.tryAgain")}
+                  </Button>
+                )}
               </AlertDescription>
             </Alert>
           )}

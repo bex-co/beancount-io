@@ -46,6 +46,34 @@ const jaBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.ungroupedColumn": {
+    message:
+      "「{column}」は {groupBy} に含めるか、{sum} や {first} などの集計関数で囲む必要があります。",
+    description:
+      "Query error for a column that is neither in GROUP BY nor aggregated; {column} is the identifier, {groupBy}, {sum} and {first} are BQL keywords left untranslated",
+  },
+  "bql.errors.unknownFunction": {
+    message: "「{name}」という BQL 関数はありません。綴りを確認してください。",
+    description:
+      "Query error naming a BQL function that does not exist; {name} is the function name from the query",
+  },
+  "bql.errors.unknownTable": {
+    message:
+      "「{table}」という名前のテーブルはありません。システムテーブルは {accounts} や {prices} のように # で始まります。",
+    description:
+      "Query error naming a table that does not exist; {table} is the name from the query, {accounts} and {prices} are example system table names left untranslated",
+  },
+  "bql.errors.argumentCount_other": {
+    message: "{name}() の引数は {count} 個です（{got} 個ではありません）。",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.typeError": {
+    message:
+      "この比較または関数に対して値の型が正しくありません。列または関数が返す値を確認してください。",
+    description:
+      "Query error when a value has the wrong type for a comparison or function",
+  },
   "page.bql.query": {
     message: "クエリ",
     description: "Sidebar navigation label for the BQL query page",

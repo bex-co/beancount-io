@@ -50,6 +50,40 @@ const deBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.ungroupedColumn": {
+    message:
+      "„{column}“ muss in {groupBy} stehen oder in einer Aggregatfunktion wie {sum} oder {first}.",
+    description:
+      "Query error for a column that is neither in GROUP BY nor aggregated; {column} is the identifier, {groupBy}, {sum} and {first} are BQL keywords left untranslated",
+  },
+  "bql.errors.unknownFunction": {
+    message:
+      "Es gibt keine BQL-Funktion namens „{name}“. Prüfen Sie die Schreibweise.",
+    description:
+      "Query error naming a BQL function that does not exist; {name} is the function name from the query",
+  },
+  "bql.errors.unknownTable": {
+    message:
+      "Es gibt keine Tabelle namens „{table}“. Systemtabellen beginnen mit #, etwa {accounts} oder {prices}.",
+    description:
+      "Query error naming a table that does not exist; {table} is the name from the query, {accounts} and {prices} are example system table names left untranslated",
+  },
+  "bql.errors.argumentCount_one": {
+    message: "{name}() erwartet {count} Argument, nicht {got}.",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.argumentCount_other": {
+    message: "{name}() erwartet {count} Argumente, nicht {got}.",
+    description:
+      "Query error for a function called with the wrong number of arguments; {name} is the function, {count} the number it takes and {got} the number the query gave",
+  },
+  "bql.errors.typeError": {
+    message:
+      "Ein Wert hat den falschen Typ für diesen Vergleich oder diese Funktion. Prüfen Sie, was die Spalte oder Funktion zurückgibt.",
+    description:
+      "Query error when a value has the wrong type for a comparison or function",
+  },
   "page.bql.query": {
     message: "Abfrage",
     description: "Sidebar navigation label for the BQL query page",
