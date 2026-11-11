@@ -513,7 +513,8 @@ export function OpenAccountScreenComponent(): JSX.Element {
                   style={styles.prefixChevron}
                   name="chevron-down"
                   size={14}
-                  color={theme.black60}
+                  // The prefix button's only cue; black60 was 1.62:1 (w22/027).
+                  color={theme.black80}
                 />
               </TouchableOpacity>
               <View style={styles.inputDivider} />

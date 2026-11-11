@@ -186,7 +186,8 @@ export function BudgetHistoryRows({
         <Ionicons
           name={expanded ? "chevron-up" : "chevron-down"}
           size={16}
-          color={theme.black60}
+          // The toggle's only visual cue, so 3:1 (black60 was 1.62:1, w22/027).
+          color={theme.black80}
         />
       </TouchableOpacity>
 

@@ -418,7 +418,12 @@ const TransactionFiltersSheet = ({
                 accessibilityRole="button"
                 accessibilityLabel={t("clearAccount")}
               >
-                <Ionicons name="close-circle" size={20} color={theme.black60} />
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  // 3:1 on the sheet; black60 was 1.78:1 (w22/027).
+                  color={theme.controlBorder}
+                />
               </TouchableOpacity>
             ) : null}
           </View>

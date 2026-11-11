@@ -302,9 +302,10 @@ const AccountTableRow = memo(function AccountTableRow({
       style={styles.chevron}
       name={row.expanded ? "chevron-down" : directionalIcon("chevron-forward")}
       size={CHEVRON_SIZE}
-      // Dimmer than the label in both themes, so the chevron reads as a control
-      // rather than competing with the account name.
-      color={theme.black60}
+      // Lighter than the label's black90, so the chevron does not compete with
+      // the account name, but still 3:1 against its surface (WCAG 1.4.11): it is
+      // the only cue that the row expands. black60 was 1.62:1 (w22/027).
+      color={theme.black80}
     />
   ) : (
     <View style={styles.leaf} />
