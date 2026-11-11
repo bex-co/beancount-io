@@ -35,6 +35,12 @@ const esImporter: Record<string, TranslationEntry> = {
       "Este tipo de archivo no es compatible. Por favor, use un archivo CSV, PDF, OFX o imagen (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Los archivos de hoja de cálculo ({extension}) aún no son compatibles. En tu hoja de cálculo, guarda o exporta la hoja como CSV UTF-8 y sube ese archivo.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Leyendo tu archivo\u2026",
     description: "Loading message while parsing file",
@@ -182,6 +188,15 @@ const esImporter: Record<string, TranslationEntry> = {
     message:
       "Este CSV contiene caracteres que no son UTF-8 válido, así que importarlo cambiaría el texto de beneficiarios y descripciones. Vuelve a guardarlo como CSV UTF-8 desde tu banco o tu hoja de cálculo y sube ese archivo.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Este archivo está vacío",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "Este CSV no contiene nada que importar. Vuelve a exportar el extracto desde tu banco y sube el archivo nuevo.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

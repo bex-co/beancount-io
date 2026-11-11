@@ -32,6 +32,12 @@ const jaImporter: Record<string, TranslationEntry> = {
       "このファイル形式はサポートされていません。CSV、PDF、OFX、または画像ファイル（PNG、JPG）を使用してください。",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "表計算ファイル（{extension}）にはまだ対応していません。表計算アプリでシートを CSV UTF-8 として保存またはエクスポートし、そのファイルをアップロードしてください。",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "ファイルを読み込み中\u2026",
     description: "Loading message while parsing file",
@@ -179,6 +185,15 @@ const jaImporter: Record<string, TranslationEntry> = {
     message:
       "この CSV には有効な UTF-8 ではない文字が含まれているため、インポートすると支払先や説明のテキストが変わってしまいます。銀行または表計算アプリで CSV UTF-8 として保存し直し、そのファイルをアップロードしてください。",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "このファイルは空です",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "この CSV にはインポートする内容がありません。銀行から明細をもう一度エクスポートし、新しいファイルをアップロードしてください。",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

@@ -500,7 +500,7 @@ const jaCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "銀行明細、スプレッドシート、または領収書から{ledgerName}に取引を追加します。CSV、PDF、OFX、10MB以下の画像ファイルに対応しています。",
+      "銀行明細または領収書から{ledgerName}に取引を追加します。CSV、PDF、OFX、10MB以下の画像ファイルに対応しています。",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

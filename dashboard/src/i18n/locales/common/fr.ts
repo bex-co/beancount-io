@@ -510,7 +510,7 @@ const frCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Ajoutez des transactions à {ledgerName} à partir de relevés bancaires, tableurs ou reçus. Compatible avec CSV, PDF, OFX et images jusqu'à 10 Mo.",
+      "Ajoutez des transactions à {ledgerName} à partir de relevés bancaires ou reçus. Compatible avec CSV, PDF, OFX et images jusqu'à 10 Mo.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

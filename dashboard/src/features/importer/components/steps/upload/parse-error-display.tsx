@@ -7,7 +7,10 @@ import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { UpgradePromptLink } from "@/common/components/upgrade-prompt-link";
 import { getNextTier } from "@/common/lib/subscription/tier-config";
 import { isPremiumRequired } from "../../../utils/is-premium-required";
-import { CsvEncodingError } from "../../../utils/decode-csv-bytes";
+import {
+  CsvEmptyError,
+  CsvEncodingError,
+} from "../../../utils/decode-csv-bytes";
 import type { FileFormat } from "../../../types";
 
 interface ParseErrorDisplayProps {
@@ -207,6 +210,27 @@ function EncodingError({ onReset }: { onReset: () => void }) {
 }
 
 /**
+ * An empty CSV, such as a failed export: nothing to read, with or without AI
+ * (w2/128).
+ */
+function EmptyFileError({ onReset }: { onReset: () => void }) {
+  const { t } = useTranslations();
+
+  return (
+    <ErrorLayout onReset={onReset}>
+      <div role="alert" className="space-y-2">
+        <h3 className="text-lg font-semibold text-foreground">
+          {t("importer.error.emptyFile")}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          {t("importer.error.emptyFileDescription")}
+        </p>
+      </div>
+    </ErrorLayout>
+  );
+}
+
+/**
  * Parent component that routes to appropriate error display
  * based on error type
  */
@@ -220,6 +244,10 @@ export function ParseErrorDisplay({
 
   if (error instanceof CsvEncodingError) {
     return <EncodingError onReset={onReset} />;
+  }
+
+  if (error instanceof CsvEmptyError) {
+    return <EmptyFileError onReset={onReset} />;
   }
 
   if (isPremiumRequiredError) {

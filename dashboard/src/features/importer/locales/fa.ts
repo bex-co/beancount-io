@@ -35,6 +35,12 @@ const faImporter: Record<string, TranslationEntry> = {
       "این نوع فایل پشتیبانی نمی‌شود. لطفاً از فایل CSV، PDF، OFX یا تصویر (PNG، JPG) استفاده کنید.",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "فایل‌های صفحه‌گسترده ({extension}) هنوز پشتیبانی نمی‌شوند. در برنامهٔ صفحه‌گسترده، برگه را با قالب CSV UTF-8 ذخیره یا صادر کنید و همان فایل را بارگذاری کنید.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "در حال خواندن فایل شما\u2026",
     description: "Loading message while parsing file",
@@ -184,6 +190,15 @@ const faImporter: Record<string, TranslationEntry> = {
     message:
       "این CSV نویسه‌هایی دارد که UTF-8 معتبر نیستند، بنابراین وارد کردن آن متن دریافت‌کننده‌ها و توضیحات را تغییر می‌دهد. آن را دوباره از بانک یا برنامهٔ صفحه‌گسترده با قالب CSV UTF-8 ذخیره کنید و همان فایل را بارگذاری کنید.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "این فایل خالی است",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "این CSV چیزی برای وارد کردن ندارد. صورت‌حساب را دوباره از بانک خود صادر کنید و فایل تازه را بارگذاری کنید.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

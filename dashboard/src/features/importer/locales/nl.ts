@@ -35,6 +35,12 @@ const nlImporter: Record<string, TranslationEntry> = {
       "Dit bestandstype wordt niet ondersteund. Gebruik een CSV-, PDF-, OFX- of afbeeldingsbestand (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Spreadsheetbestanden ({extension}) worden nog niet ondersteund. Sla het blad in je spreadsheet-app op of exporteer het als CSV UTF-8 en upload dat bestand.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Uw bestand wordt gelezen\u2026",
     description: "Loading message while parsing file",
@@ -183,6 +189,15 @@ const nlImporter: Record<string, TranslationEntry> = {
     message:
       "Deze CSV bevat tekens die geen geldige UTF-8 zijn, dus importeren zou de tekst van begunstigden en omschrijvingen veranderen. Sla het bestand opnieuw op als CSV UTF-8 vanuit je bank of spreadsheet-app en upload dat bestand.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Dit bestand is leeg",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "Deze CSV bevat niets om te importeren. Exporteer het afschrift opnieuw bij je bank en upload het nieuwe bestand.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

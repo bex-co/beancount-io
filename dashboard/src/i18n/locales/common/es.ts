@@ -508,7 +508,7 @@ const esCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Agregue transacciones a {ledgerName} desde extractos bancarios, hojas de cálculo o recibos. Compatible con CSV, PDF, OFX e imágenes de hasta 10 MB.",
+      "Agregue transacciones a {ledgerName} desde extractos bancarios o recibos. Compatible con CSV, PDF, OFX e imágenes de hasta 10 MB.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

@@ -39,6 +39,12 @@ const enImporter: Record<string, TranslationEntry> = {
       "This file type isn't supported. Please use a CSV, PDF, OFX, or image file (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Spreadsheet files ({extension}) aren't supported yet. In your spreadsheet app, save or export the sheet as CSV UTF-8, then upload that file.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Reading your file\u2026",
     description: "Loading message while parsing file",
@@ -186,6 +192,15 @@ const enImporter: Record<string, TranslationEntry> = {
     message:
       "This CSV has characters that aren't valid UTF-8, so importing it would change your payee and description text. Save it again as CSV UTF-8 from your bank or spreadsheet app, then upload that file.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "This file is empty",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "There's nothing in this CSV to import. Export the statement from your bank again and upload the new file.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

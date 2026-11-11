@@ -513,7 +513,7 @@ const ukCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Додайте транзакції до {ledgerName} з банківських виписок, таблиць або чеків. Підтримує CSV, PDF, OFX та зображення до 10 МБ.",
+      "Додайте транзакції до {ledgerName} з банківських виписок або чеків. Підтримує CSV, PDF, OFX та зображення до 10 МБ.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

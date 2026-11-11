@@ -35,6 +35,12 @@ const frImporter: Record<string, TranslationEntry> = {
       "Ce type de fichier n'est pas pris en charge. Veuillez utiliser un fichier CSV, PDF, OFX ou image (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Les fichiers de tableur ({extension}) ne sont pas encore pris en charge. Dans votre tableur, enregistrez ou exportez la feuille au format CSV UTF-8, puis importez ce fichier.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Lecture de votre fichier\u2026",
     description: "Loading message while parsing file",
@@ -185,6 +191,15 @@ const frImporter: Record<string, TranslationEntry> = {
     message:
       "Ce CSV contient des caractères qui ne sont pas de l'UTF-8 valide : l'importer modifierait le texte des bénéficiaires et des descriptions. Enregistrez-le à nouveau au format CSV UTF-8 depuis votre banque ou votre tableur, puis importez ce fichier.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Ce fichier est vide",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "Ce CSV ne contient rien à importer. Exportez de nouveau le relevé depuis votre banque, puis importez le nouveau fichier.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

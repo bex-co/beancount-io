@@ -36,6 +36,12 @@ const caImporter: Record<string, TranslationEntry> = {
       "Aquest tipus de fitxer no és compatible. Utilitzeu un fitxer CSV, PDF, OFX o imatge (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Els fitxers de full de càlcul ({extension}) encara no són compatibles. Al full de càlcul, deseu o exporteu el full com a CSV UTF-8 i pengeu aquest fitxer.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Llegint el vostre fitxer\u2026",
     description: "Loading message while parsing file",
@@ -185,6 +191,15 @@ const caImporter: Record<string, TranslationEntry> = {
     message:
       "Aquest CSV conté caràcters que no són UTF-8 vàlid, de manera que importar-lo canviaria el text dels beneficiaris i les descripcions. Torneu-lo a desar com a CSV UTF-8 des del banc o del full de càlcul i pengeu aquest fitxer.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Aquest fitxer és buit",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "Aquest CSV no conté res per importar. Torneu a exportar l'extracte des del banc i pengeu el fitxer nou.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

@@ -9,7 +9,7 @@ import { useState, useCallback, useRef } from "react";
 import { useCSVParser } from "./use-csv-parser";
 import { useLLMParser } from "./use-llm-parser";
 import { detectFileFormat } from "../utils/file-format-detector";
-import { CsvEncodingError } from "../utils/decode-csv-bytes";
+import { CsvEmptyError, CsvEncodingError } from "../utils/decode-csv-bytes";
 import type { CSVParseResult, ParseStage, FileFormat } from "../types";
 
 export function useMultiStageParser() {
@@ -67,8 +67,9 @@ export function useMultiStageParser() {
         }
       } catch (err) {
         // Bytes in another encoding are not the AI's to guess either: the
-        // user re-saves the file as UTF-8 (w4/278).
-        if (err instanceof CsvEncodingError) {
+        // user re-saves the file as UTF-8 (w4/278). An empty file has
+        // nothing for it to read; the user exports it again (w2/128).
+        if (err instanceof CsvEncodingError || err instanceof CsvEmptyError) {
           setError(err);
           setStage("error");
           throw err;

@@ -505,7 +505,7 @@ const faCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "افزودن تراکنش‌ها به {ledgerName} از صورت‌حساب‌های بانکی، صفحات گسترده یا رسیدها. پشتیبانی از CSV، PDF، OFX و تصاویر تا 10 مگابایت.",
+      "افزودن تراکنش‌ها به {ledgerName} از صورت‌حساب‌های بانکی یا رسیدها. پشتیبانی از CSV، PDF، OFX و تصاویر تا 10 مگابایت.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

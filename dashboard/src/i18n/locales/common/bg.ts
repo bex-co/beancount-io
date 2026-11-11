@@ -505,7 +505,7 @@ const bgCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Добавете транзакции към {ledgerName} от банкови извлечения, електронни таблици или разписки. Поддържа CSV, PDF, OFX и изображения до 10 MB.",
+      "Добавете транзакции към {ledgerName} от банкови извлечения или разписки. Поддържа CSV, PDF, OFX и изображения до 10 MB.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

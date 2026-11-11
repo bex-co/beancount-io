@@ -512,7 +512,7 @@ const ruCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Добавьте транзакции в {ledgerName} из банковских выписок, таблиц или чеков. Поддерживает CSV, PDF, OFX и изображения до 10 МБ.",
+      "Добавьте транзакции в {ledgerName} из банковских выписок или чеков. Поддерживает CSV, PDF, OFX и изображения до 10 МБ.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

@@ -499,7 +499,7 @@ const koCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "은행 명세서, 스프레드시트, 또는 영수증에서 {ledgerName}에 거래를 추가합니다. CSV, PDF, OFX, 10MB 이하의 이미지 파일을 지원합니다.",
+      "은행 명세서 또는 영수증에서 {ledgerName}에 거래를 추가합니다. CSV, PDF, OFX, 10MB 이하의 이미지 파일을 지원합니다.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

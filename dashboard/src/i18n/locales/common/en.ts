@@ -504,7 +504,7 @@ const enCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Add transactions to {ledgerName} from bank statements, spreadsheets, or receipts. Supports CSV, PDF, OFX, and image files up to 10 MB.",
+      "Add transactions to {ledgerName} from bank statements or receipts. Supports CSV, PDF, OFX, and image files up to 10 MB.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

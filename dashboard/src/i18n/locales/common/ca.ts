@@ -509,7 +509,7 @@ const caCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Afegiu transaccions a {ledgerName} des d'extractes bancaris, fulls de càlcul o rebuts. Compatible amb CSV, PDF, OFX i imatges fins a 10 MB.",
+      "Afegiu transaccions a {ledgerName} des d'extractes bancaris o rebuts. Compatible amb CSV, PDF, OFX i imatges fins a 10 MB.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

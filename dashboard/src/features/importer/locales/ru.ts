@@ -35,6 +35,12 @@ const ruImporter: Record<string, TranslationEntry> = {
       "Этот тип файла не поддерживается. Пожалуйста, используйте CSV, PDF, OFX или изображение (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Файлы таблиц ({extension}) пока не поддерживаются. В табличном редакторе сохраните или экспортируйте лист как CSV UTF-8 и загрузите этот файл.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Чтение вашего файла\u2026",
     description: "Loading message while parsing file",
@@ -183,6 +189,15 @@ const ruImporter: Record<string, TranslationEntry> = {
     message:
       "В этом CSV есть символы, недопустимые в UTF-8, поэтому импорт изменил бы текст получателей и описаний. Сохраните файл заново как CSV UTF-8 в банке или табличном редакторе и загрузите его.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Файл пуст",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "В этом CSV нечего импортировать. Экспортируйте выписку из банка заново и загрузите новый файл.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

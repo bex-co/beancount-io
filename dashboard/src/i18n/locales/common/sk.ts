@@ -513,7 +513,7 @@ const skCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Pridajte transakcie do {ledgerName} z bankových výpisov, tabuliek alebo účteniek. Podporuje CSV, PDF, OFX a obrázky do 10 MB.",
+      "Pridajte transakcie do {ledgerName} z bankových výpisov alebo účteniek. Podporuje CSV, PDF, OFX a obrázky do 10 MB.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

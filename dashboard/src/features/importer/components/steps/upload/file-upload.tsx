@@ -13,6 +13,11 @@ interface FileUploadProps {
   onFileSelected?: (file: File) => void;
 }
 
+const ALLOWED_EXTENSIONS = ["csv", "pdf", "ofx", "qfx"];
+
+/** Workbooks a reader can re-save as CSV from the app that opened them. */
+const SPREADSHEET_EXTENSIONS = ["xlsx", "xlsm", "xls", "ods", "numbers"];
+
 const CSV_FORMAT_EXAMPLE = `Date,Payee,Description,Amount
 2025-12-01,Starbucks,Coffee Shop Purchase,-4.50
 2025-12-02,Walmart,Grocery Store,-45.67
@@ -23,6 +28,9 @@ export function FileUpload({ onParsed, onFileSelected }: FileUploadProps) {
   const hydrated = useHydrated();
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // A refused file is explained here, in the page, not in a blocking browser
+  // alert (w2/128).
+  const [rejection, setRejection] = useState<string | null>(null);
   const { parseFile, isLoading, error } = useCSVParser();
 
   const handleFile = useCallback(
@@ -30,19 +38,27 @@ export function FileUpload({ onParsed, onFileSelected }: FileUploadProps) {
       // Validate file size (10MB max for PDFs)
       const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
-        alert(t("importer.upload.fileSizeError"));
+        setRejection(t("importer.upload.fileSizeError"));
         return;
       }
 
       // Validate file type (accept multiple formats)
-      const allowedExtensions = ["csv", "pdf", "ofx", "qfx"];
-      const extension = file.name.split(".").pop()?.toLowerCase();
+      const extension = file.name.includes(".")
+        ? file.name.split(".").pop()?.toLowerCase()
+        : undefined;
       const isImage = file.type.startsWith("image/");
-      if (!isImage && (!extension || !allowedExtensions.includes(extension))) {
-        alert(t("importer.upload.unsupportedFormatError"));
+      if (!isImage && (!extension || !ALLOWED_EXTENSIONS.includes(extension))) {
+        setRejection(
+          extension && SPREADSHEET_EXTENSIONS.includes(extension)
+            ? t("importer.upload.spreadsheetFormatError", {
+                extension: `.${extension}`,
+              })
+            : t("importer.upload.unsupportedFormatError"),
+        );
         return;
       }
 
+      setRejection(null);
       setSelectedFile(file);
 
       // If onFileSelected is provided, use that instead of parsing
@@ -188,10 +204,10 @@ export function FileUpload({ onParsed, onFileSelected }: FileUploadProps) {
         </div>
       </div>
 
-      {error && (
+      {(rejection ?? error) && (
         <Alert variant="destructive" className="mt-4">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{rejection ?? error}</AlertDescription>
         </Alert>
       )}
 

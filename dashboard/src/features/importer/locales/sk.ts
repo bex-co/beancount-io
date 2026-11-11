@@ -35,6 +35,12 @@ const skImporter: Record<string, TranslationEntry> = {
       "Tento typ súboru nie je podporovaný. Prosím, použite súbor CSV, PDF, OFX alebo obrázok (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Tabuľkové súbory ({extension}) zatiaľ nie sú podporované. V tabuľkovom programe uložte alebo exportujte hárok ako CSV UTF-8 a nahrajte tento súbor.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Čítanie vášho súboru\u2026",
     description: "Loading message while parsing file",
@@ -182,6 +188,15 @@ const skImporter: Record<string, TranslationEntry> = {
     message:
       "Tento CSV obsahuje znaky, ktoré nie sú platné UTF-8, takže import by zmenil text príjemcov a popisov. Uložte ho znova ako CSV UTF-8 z banky alebo tabuľkového programu a nahrajte tento súbor.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Tento súbor je prázdny",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "Tento CSV neobsahuje nič na import. Exportujte výpis z banky znova a nahrajte nový súbor.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

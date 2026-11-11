@@ -506,7 +506,7 @@ const nlCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Voeg transacties toe aan {ledgerName} vanuit bankafschriften, spreadsheets of bonnetjes. Ondersteunt CSV, PDF, OFX en afbeeldingen tot 10 MB.",
+      "Voeg transacties toe aan {ledgerName} vanuit bankafschriften of bonnetjes. Ondersteunt CSV, PDF, OFX en afbeeldingen tot 10 MB.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

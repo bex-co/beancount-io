@@ -36,6 +36,12 @@ const deImporter: Record<string, TranslationEntry> = {
       "Dieser Dateityp wird nicht unterstützt. Bitte verwenden Sie eine CSV-, PDF-, OFX- oder Bilddatei (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Tabellendateien ({extension}) werden noch nicht unterstützt. Speichern oder exportieren Sie das Blatt in Ihrer Tabellen-App als CSV UTF-8 und laden Sie diese Datei hoch.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Ihre Datei wird gelesen\u2026",
     description: "Loading message while parsing file",
@@ -185,6 +191,15 @@ const deImporter: Record<string, TranslationEntry> = {
     message:
       "Diese CSV enthält Zeichen, die kein gültiges UTF-8 sind; ein Import würde Empfänger- und Beschreibungstexte verändern. Speichern Sie sie in Ihrer Bank- oder Tabellen-App erneut als CSV UTF-8 und laden Sie diese Datei hoch.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Diese Datei ist leer",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "Diese CSV enthält nichts zum Importieren. Exportieren Sie den Kontoauszug erneut bei Ihrer Bank und laden Sie die neue Datei hoch.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

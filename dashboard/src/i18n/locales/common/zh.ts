@@ -488,7 +488,7 @@ const zhCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "从银行对账单、电子表格或收据添加交易到 {ledgerName}。支持 CSV、PDF、OFX 和图像文件，最大 10 MB。",
+      "从银行对账单或收据添加交易到 {ledgerName}。支持 CSV、PDF、OFX 和图像文件，最大 10 MB。",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

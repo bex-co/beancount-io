@@ -35,6 +35,12 @@ const ptImporter: Record<string, TranslationEntry> = {
       "Este tipo de arquivo não é suportado. Por favor, use um arquivo CSV, PDF, OFX ou imagem (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Arquivos de planilha ({extension}) ainda não são suportados. No seu aplicativo de planilhas, salve ou exporte a planilha como CSV UTF-8 e envie esse arquivo.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Lendo seu arquivo\u2026",
     description: "Loading message while parsing file",
@@ -183,6 +189,15 @@ const ptImporter: Record<string, TranslationEntry> = {
     message:
       "Este CSV tem caracteres que não são UTF-8 válido, então importá-lo alteraria o texto de beneficiários e descrições. Salve-o novamente como CSV UTF-8 no seu banco ou aplicativo de planilhas e envie esse arquivo.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Este arquivo está vazio",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "Este CSV não tem nada para importar. Exporte o extrato do seu banco novamente e envie o novo arquivo.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

@@ -1,7 +1,11 @@
 import { useState, useCallback } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import type { ParsedRow, CSVParseResult } from "../types";
-import { CsvEncodingError, decodeCsvBytes } from "../utils/decode-csv-bytes";
+import {
+  CsvEmptyError,
+  CsvEncodingError,
+  decodeCsvBytes,
+} from "../utils/decode-csv-bytes";
 import {
   isValidRowFormat,
   detectHeaderRow,
@@ -335,10 +339,18 @@ export function useCSVParser() {
         reader.onload = (e) => {
           try {
             const bytes = new Uint8Array(e.target?.result as ArrayBuffer);
-            const result = parseCSV(decodeCsvBytes(bytes));
+            const text = decodeCsvBytes(bytes);
+            if (!text.trim()) throw new CsvEmptyError();
+            const result = parseCSV(text);
             setIsLoading(false);
             resolve(result);
           } catch (err) {
+            if (err instanceof CsvEmptyError) {
+              setError(t("importer.error.emptyFileDescription"));
+              setIsLoading(false);
+              reject(err);
+              return;
+            }
             if (err instanceof CsvEncodingError) {
               setError(t("importer.error.notUtf8Description"));
               setIsLoading(false);

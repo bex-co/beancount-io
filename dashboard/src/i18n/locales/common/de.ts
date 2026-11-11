@@ -507,7 +507,7 @@ const deCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Transaktionen zu {ledgerName} aus Kontoauszügen, Tabellen oder Belegen hinzufügen. Unterstützt CSV, PDF, OFX und Bilddateien bis 10 MB.",
+      "Transaktionen zu {ledgerName} aus Kontoauszügen oder Belegen hinzufügen. Unterstützt CSV, PDF, OFX und Bilddateien bis 10 MB.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {

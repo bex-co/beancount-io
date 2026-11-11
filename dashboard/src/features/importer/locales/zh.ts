@@ -32,6 +32,12 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "不支持此文件类型。请使用 CSV、PDF、OFX 或图像文件（PNG、JPG）。",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "暂不支持电子表格文件（{extension}）。请在电子表格应用中将工作表另存为或导出为 CSV UTF-8，然后上传该文件。",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "正在读取你的文件\u2026",
     description: "Loading message while parsing file",
@@ -177,6 +183,15 @@ const zhImporter: Record<string, TranslationEntry> = {
     message:
       "此 CSV 包含无效的 UTF-8 字符，导入会改变收款方和描述文本。请在银行或电子表格应用中重新另存为 CSV UTF-8，然后上传该文件。",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "此文件为空",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "此 CSV 中没有可导入的内容。请从银行重新导出对账单，然后上传新文件。",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message: "处理你的文件时发生服务器错误。请稍后几秒钟重试。",

@@ -35,6 +35,12 @@ const bgImporter: Record<string, TranslationEntry> = {
       "Този тип файл не се поддържа. Моля, използвайте CSV, PDF, OFX или изображение (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Файловете с таблици ({extension}) все още не се поддържат. В програмата за таблици запазете или експортирайте листа като CSV UTF-8 и качете този файл.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Четене на вашия файл\u2026",
     description: "Loading message while parsing file",
@@ -184,6 +190,15 @@ const bgImporter: Record<string, TranslationEntry> = {
     message:
       "Този CSV съдържа знаци, които не са валиден UTF-8, затова импортирането му би променило текста на получателите и описанията. Запазете го отново като CSV UTF-8 от банката или програмата за таблици и качете този файл.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Файлът е празен",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "В този CSV няма какво да се импортира. Експортирайте извлечението от банката отново и качете новия файл.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

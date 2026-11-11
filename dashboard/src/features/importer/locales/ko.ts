@@ -31,6 +31,12 @@ const koImporter: Record<string, TranslationEntry> = {
       "이 파일 형식은 지원되지 않습니다. CSV, PDF, OFX, 또는 이미지 파일(PNG, JPG)을 사용해 주세요.",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "스프레드시트 파일({extension})은 아직 지원되지 않습니다. 스프레드시트 앱에서 시트를 CSV UTF-8로 저장하거나 내보낸 뒤 그 파일을 업로드하세요.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "파일 읽는 중\u2026",
     description: "Loading message while parsing file",
@@ -178,6 +184,15 @@ const koImporter: Record<string, TranslationEntry> = {
     message:
       "이 CSV에는 유효한 UTF-8이 아닌 문자가 있어 가져오면 수취인과 설명 텍스트가 바뀝니다. 은행이나 스프레드시트 앱에서 CSV UTF-8로 다시 저장한 뒤 그 파일을 업로드하세요.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "빈 파일입니다",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "이 CSV에는 가져올 내용이 없습니다. 은행에서 명세서를 다시 내보낸 뒤 새 파일을 업로드하세요.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

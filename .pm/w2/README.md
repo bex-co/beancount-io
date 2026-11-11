@@ -76,7 +76,6 @@
 
 - [130 — Create Ledger checks the typed name, not the slug: a valid 100-character slug is refused and "___" is sent to be refused](./130.md) — dashboard QA 2026-11-11
 - [129 — New Entry accepts a 29-digit amount, then the ledger's refusal reads as "Some of the information provided is invalid"](./129.md) — dashboard QA 2026-11-10
-- [128 — Smart Import offers to spend AI tokens on an empty CSV, and refuses a spreadsheet through a blocking browser alert](./128.md) — dashboard QA 2026-11-10
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains.
 
 - [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.

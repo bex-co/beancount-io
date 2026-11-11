@@ -35,6 +35,12 @@ const ukImporter: Record<string, TranslationEntry> = {
       "Цей тип файлу не підтримується. Будь ласка, використовуйте CSV, PDF, OFX або зображення (PNG, JPG).",
     description: "Error message for unsupported file format",
   },
+  "importer.upload.spreadsheetFormatError": {
+    message:
+      "Файли таблиць ({extension}) поки не підтримуються. У табличному редакторі збережіть або експортуйте аркуш як CSV UTF-8 і завантажте цей файл.",
+    description:
+      "Refusal of a spreadsheet upload, with how to save it as CSV; {extension} is the file's extension such as .xlsx",
+  },
   "importer.upload.parsingFile": {
     message: "Читання вашого файлу\u2026",
     description: "Loading message while parsing file",
@@ -182,6 +188,15 @@ const ukImporter: Record<string, TranslationEntry> = {
     message:
       "Цей CSV містить символи, які не є коректним UTF-8, тож імпорт змінив би текст отримувачів і описів. Збережіть файл знову як CSV UTF-8 у банку чи табличному редакторі та завантажте його.",
     description: "How to re-save a CSV that is not UTF-8 text",
+  },
+  "importer.error.emptyFile": {
+    message: "Файл порожній",
+    description: "Title when an uploaded CSV is empty",
+  },
+  "importer.error.emptyFileDescription": {
+    message:
+      "У цьому CSV немає що імпортувати. Експортуйте виписку з банку знову й завантажте новий файл.",
+    description: "What to do when an uploaded CSV has nothing in it",
   },
   "importer.error.serverError": {
     message:

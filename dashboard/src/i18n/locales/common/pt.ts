@@ -509,7 +509,7 @@ const ptCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.import": {
     message:
-      "Adicione transações a {ledgerName} a partir de extratos bancários, planilhas ou recibos. Suporta CSV, PDF, OFX e imagens até 10 MB.",
+      "Adicione transações a {ledgerName} a partir de extratos bancários ou recibos. Suporta CSV, PDF, OFX e imagens até 10 MB.",
     description: "Description for import page",
   },
   "common.pageDescription.incomeStatement": {
