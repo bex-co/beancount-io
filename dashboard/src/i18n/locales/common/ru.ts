@@ -881,6 +881,24 @@ const ruCommon: Record<string, TranslationEntry> = {
       "Некоторые введённые данные недействительны. Проверьте их и попробуйте снова.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "Отменить введённое?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "Введённые данные не сохранены.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "Продолжить редактирование",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "Отменить",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "Будет записано как {value}",
     description:

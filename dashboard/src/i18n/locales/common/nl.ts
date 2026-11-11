@@ -875,6 +875,24 @@ const nlCommon: Record<string, TranslationEntry> = {
       "Sommige ingevoerde gegevens zijn ongeldig. Controleer ze en probeer het opnieuw.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "Wat je hebt ingevoerd weggooien?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "Je invoer is niet opgeslagen.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "Verder bewerken",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "Weggooien",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "Wordt geboekt als {value}",
     description:

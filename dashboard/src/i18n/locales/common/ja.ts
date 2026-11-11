@@ -867,6 +867,24 @@ const jaCommon: Record<string, TranslationEntry> = {
       "入力された情報の一部が無効です。確認してからもう一度お試しください。",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "入力内容を破棄しますか？",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "入力内容はまだ保存されていません。",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "編集を続ける",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "破棄",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "{value} として記録されます",
     description:

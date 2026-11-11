@@ -876,6 +876,24 @@ const deCommon: Record<string, TranslationEntry> = {
       "Einige Angaben sind ungültig. Bitte überprüfen Sie sie und versuchen Sie es erneut.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "Eingaben verwerfen?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "Ihre Eingaben wurden nicht gespeichert.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "Weiter bearbeiten",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "Verwerfen",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "Wird als {value} gebucht",
     description:

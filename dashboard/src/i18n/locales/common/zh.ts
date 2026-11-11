@@ -851,6 +851,24 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "部分输入信息无效，请检查后重试。",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "放弃已输入的内容？",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "你输入的内容尚未保存。",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "继续编辑",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "放弃",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "将记录为 {value}",
     description:

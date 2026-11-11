@@ -878,6 +878,24 @@ const esCommon: Record<string, TranslationEntry> = {
       "Parte de la información proporcionada no es válida. Revísala e inténtalo de nuevo.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "¿Descartar lo que escribiste?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "Lo que escribiste no se ha guardado.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "Seguir editando",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "Descartar",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "Se registrará como {value}",
     description:

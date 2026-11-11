@@ -881,6 +881,24 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Деякі введені дані недійсні. Перевірте їх і спробуйте ще раз.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "Скасувати введене?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "Введені дані не збережено.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "Продовжити редагування",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "Скасувати",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "Буде записано як {value}",
     description:

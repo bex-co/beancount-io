@@ -865,6 +865,24 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "입력한 정보 중 일부가 잘못되었습니다. 확인 후 다시 시도하세요.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "입력한 내용을 버릴까요?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "입력한 내용은 저장되지 않았습니다.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "계속 편집",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "버리기",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "{value}(으)로 기록됩니다",
     description:

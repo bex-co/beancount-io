@@ -58,6 +58,7 @@ import { todayIsoDate } from "@/common/components/ui/date-picker-utils";
 import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { budgetAmountForAccount, isUnderAccountRoot } from "./budget-utils";
+import { useDiscardDraftGuard } from "@/common/components/discard-draft-guard";
 
 const createBudgetSchema = (t: (key: string) => string) =>
   z.object({
@@ -216,13 +217,21 @@ export function AddBudgetDialog({
   // and neither Cancel, Escape nor the close button can dismiss it.
   const { submit, pending } = usePendingSubmit(form, onSubmit);
 
+  // Cancel, Close, Escape and an outside click ask before discarding typed
+  // input (w2/123); an untouched draft closes at once.
+  // Read during render: react-hook-form tracks only what a render reads.
+  const { requestLeave, confirmation } = useDiscardDraftGuard(
+    form.formState.isDirty,
+  );
+  const dismiss = () => {
+    resetForm();
+    onOpenChange(false);
+  };
+
   return (
     <Dialog
       open={open}
-      onOpenChange={(v) => {
-        if (!v) resetForm();
-        onOpenChange(v);
-      }}
+      onOpenChange={(v) => (v ? onOpenChange(true) : requestLeave(dismiss))}
     >
       {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
       <DialogContent
@@ -381,10 +390,7 @@ export function AddBudgetDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    resetForm();
-                    onOpenChange(false);
-                  }}
+                  onClick={() => requestLeave(dismiss)}
                 >
                   {t("common.cancel")}
                 </Button>
@@ -399,6 +405,7 @@ export function AddBudgetDialog({
             </fieldset>
           </form>
         </Form>
+        {confirmation}
       </DialogContent>
     </Dialog>
   );

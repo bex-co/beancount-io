@@ -151,9 +151,42 @@ describe("AddBudgetDialog", () => {
     );
     await user.type(screen.getByRole("spinbutton", { name: /amount/i }), "500");
     await user.click(screen.getByRole("button", { name: /cancel/i }));
+    // A typed draft asks before it is discarded (w2/123).
+    await user.click(screen.getByRole("button", { name: "Discard" }));
 
     expect(screen.getByTestId("account-combobox")).toHaveValue("");
     expect(screen.getByRole("spinbutton", { name: /amount/i })).toHaveValue("");
+  });
+
+  // One Escape threw away a typed budget (w2/123).
+  it("asks before Escape discards a typed amount, and keeps it on Keep editing", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(<AddBudgetDialog {...defaultProps} onOpenChange={onOpenChange} />);
+    const amount = screen.getByRole("spinbutton", { name: /amount/i });
+    await user.type(amount, "500");
+    await user.keyboard("{Escape}");
+
+    expect(
+      await screen.findByRole("dialog", { name: "Discard what you typed?" }),
+    ).toBeVisible();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Keep editing" }));
+    expect(screen.getByRole("spinbutton", { name: /amount/i })).toHaveValue(
+      "500",
+    );
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("closes an untouched draft on Escape without asking", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(<AddBudgetDialog {...defaultProps} onOpenChange={onOpenChange} />);
+    await user.keyboard("{Escape}");
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(
+      screen.queryByRole("dialog", { name: "Discard what you typed?" }),
+    ).toBeNull();
   });
 
   it("Add Budget button is disabled when form is invalid (empty account)", async () => {

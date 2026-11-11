@@ -83,7 +83,7 @@ const date = () => screen.getByPlaceholderText("MM/DD/YYYY");
 describe.each<[string, Dialog, string]>([
   ["Add Budget", AddBudgetDialog as Dialog, "Account"],
   ["Open Account", OpenAccountDialog as Dialog, "Account Name"],
-])("%s opening day", (_name, Dialog, accountLabel) => {
+])("%s opening day", (name, Dialog, accountLabel) => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
   });
@@ -115,6 +115,10 @@ describe.each<[string, Dialog, string]>([
     expect(date()).toHaveValue("10/23/2026");
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    // Add Budget asks before discarding a typed draft (w2/123).
+    if (name === "Add Budget") {
+      fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    }
     fireEvent.click(screen.getByRole("button", { name: "Start draft" }));
     expect(date()).toHaveValue("10/24/2026");
     expect(screen.getByLabelText(accountLabel)).toHaveValue("");

@@ -872,6 +872,24 @@ const faCommon: Record<string, TranslationEntry> = {
       "برخی از اطلاعات واردشده نامعتبر است. لطفاً بررسی کنید و دوباره تلاش کنید.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "نوشته‌هایتان دور ریخته شود؟",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "آنچه وارد کرده‌اید ذخیره نشده است.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "ادامه ویرایش",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "دور ریختن",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "به‌صورت {value} ثبت می‌شود",
     description:

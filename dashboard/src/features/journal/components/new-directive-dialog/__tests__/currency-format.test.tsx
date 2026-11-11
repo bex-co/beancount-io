@@ -169,3 +169,23 @@ describe("New Entry typed decimal comma", () => {
     expect(postings[0].units).toMatchObject({ number: "4.50" });
   });
 });
+
+/** New Entry asks before discarding a typed draft (w2/123). */
+describe("TransactionForm reports unsaved input", () => {
+  it("is clean when opened and dirty once something is typed", async () => {
+    vi.mocked(useMutation).mockReturnValue([
+      vi.fn(),
+      { loading: false },
+    ] as unknown as ReturnType<typeof useMutation>);
+    const onDirtyChange = vi.fn();
+    render(
+      <TransactionForm ledgerId="owner/ledger" onDirtyChange={onDirtyChange} />,
+    );
+    await waitFor(() => expect(onDirtyChange).toHaveBeenCalled());
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+    fireEvent.change(screen.getAllByRole("spinbutton")[0]!, {
+      target: { value: "12.34" },
+    });
+    await waitFor(() => expect(onDirtyChange).toHaveBeenLastCalledWith(true));
+  });
+});

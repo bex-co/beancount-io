@@ -22,18 +22,22 @@ import { track } from "@/common/analytics";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useOpenAccountSchema } from "@/common/hooks/use-open-account-schema";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
+import { useReportDirty } from "@/common/hooks/use-report-dirty";
 
 interface OpenAccountFormProps {
   ledgerId: string;
   onSuccess?: () => void;
   /** Reports a write in flight, so the dialog can hold its tabs and close. */
   onPendingChange?: (pending: boolean) => void;
+  /** Whether the form holds unsaved input (w2/123). */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export function OpenAccountForm({
   ledgerId,
   onSuccess,
   onPendingChange,
+  onDirtyChange,
 }: OpenAccountFormProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -91,6 +95,7 @@ export function OpenAccountForm({
   };
 
   const { submit, pending } = usePendingSubmit(form, onSubmit, onPendingChange);
+  useReportDirty(form.formState.isDirty, onDirtyChange);
 
   return (
     <Form {...form}>

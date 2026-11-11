@@ -38,12 +38,15 @@ import { ExactAmountInput } from "@/common/components/exact-amount-input";
 import { useAccountAvailability } from "./use-account-availability";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
 import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
+import { useReportDirty } from "@/common/hooks/use-report-dirty";
 
 interface BalanceFormProps {
   ledgerId: string;
   onSuccess?: () => void;
   /** Reports a write in flight, so the dialog can hold its tabs and close. */
   onPendingChange?: (pending: boolean) => void;
+  /** Whether the form holds unsaved input (w2/123). */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 // Zod validation schema factory. Required text is trimmed before its
@@ -75,6 +78,7 @@ export function BalanceForm({
   ledgerId,
   onSuccess,
   onPendingChange,
+  onDirtyChange,
 }: BalanceFormProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -159,6 +163,7 @@ export function BalanceForm({
   };
 
   const { submit, pending } = usePendingSubmit(form, onSubmit, onPendingChange);
+  useReportDirty(form.formState.isDirty, onDirtyChange);
 
   return (
     <Form {...form}>

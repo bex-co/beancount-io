@@ -874,6 +874,24 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Част от въведените данни са невалидни. Проверете ги и опитайте отново.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "Да се отхвърли ли въведеното?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "Въведеното не е запазено.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "Продължете редакцията",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "Отхвърли",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "Ще се запише като {value}",
     description:

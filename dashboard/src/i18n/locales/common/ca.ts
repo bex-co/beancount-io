@@ -880,6 +880,24 @@ const caCommon: Record<string, TranslationEntry> = {
       "Part de la informació proporcionada no és vàlida. Reviseu-la i torneu-ho a provar.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "Voleu descartar el que heu escrit?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "El que heu escrit no s’ha desat.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "Continua editant",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "Descarta",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "Es registrarà com a {value}",
     description:

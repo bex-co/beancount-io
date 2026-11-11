@@ -19,8 +19,9 @@ import { useLedgerWriteRefresh } from "@/common/hooks/use-apollo-cache";
 import { useWriteOutcome } from "@/common/hooks/use-write-outcome";
 import { useTranslations } from "@/common/hooks/use-translations";
 import type { JournalDirectiveAction } from "@/common/lib/ledger-action-search";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
+import { useDiscardDraftGuard } from "@/common/components/discard-draft-guard";
 
 const TABS = [
   { value: "transaction", label: "journal.transaction" },
@@ -75,10 +76,30 @@ export function NewDirectiveDialog({
   // it was submitted from, so a late success cannot close a later draft.
   const [session, setSession] = useState(0);
   const [wasOpen, setWasOpen] = useState(open);
+  // Which tabs hold unsaved input, and the exit waiting on Discard while any
+  // does: Close, Escape and an outside click all ask first (w2/123). A
+  // closed dialog unmounts its forms, so a new session starts clean.
+  const [dirtyTabs, setDirtyTabs] = useState<Record<string, boolean>>({});
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) setSession((current) => current + 1);
+    setDirtyTabs({});
   }
+  const dirty = Object.values(dirtyTabs).some(Boolean);
+  const reportDirty = useMemo(
+    () =>
+      Object.fromEntries(
+        TABS.map(({ value }) => [
+          value,
+          (next: boolean) =>
+            setDirtyTabs((current) =>
+              current[value] === next ? current : { ...current, [value]: next },
+            ),
+        ]),
+      ) as Record<(typeof TABS)[number]["value"], (dirty: boolean) => void>,
+    [],
+  );
+  const { requestLeave, confirmation } = useDiscardDraftGuard(dirty);
   const liveSession = useRef<number | null>(open ? session : null);
   useEffect(() => {
     liveSession.current = open ? session : null;
@@ -111,7 +132,14 @@ export function NewDirectiveDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      // Close, Escape and an outside click all arrive here. A successful
+      // write closes through onOpenChange directly: it discards nothing.
+      onOpenChange={(next) =>
+        next ? onOpenChange(true) : requestLeave(() => onOpenChange(false))
+      }
+    >
       <DialogContent
         busy={pending}
         className="!max-w-full sm:!max-w-[600px] lg:!max-w-[1000px] top-[2%] sm:top-[10%] translate-y-0 max-h-[96vh] sm:max-h-[85vh] flex flex-col"
@@ -135,7 +163,7 @@ export function NewDirectiveDialog({
           {/* Every form stays mounted while the dialog is open and the
               inactive ones are hidden, so switching type — by pointer or the
               tablist's arrow keys — keeps each unsaved draft (w4/256).
-              Closing the dialog still discards them all. */}
+              Closing the dialog asks before discarding them (w2/123). */}
           <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <DialogTitle className="min-w-0 shrink-0 text-left sm:shrink">
               {t("journal.newEntry")}
@@ -159,6 +187,7 @@ export function NewDirectiveDialog({
               ledgerId={ledgerId}
               onSuccess={handleSuccess}
               onPendingChange={setPending}
+              onDirtyChange={reportDirty.transaction}
             />
           </TabsContent>
 
@@ -172,6 +201,7 @@ export function NewDirectiveDialog({
               ledgerId={ledgerId}
               onSuccess={handleSuccess}
               onPendingChange={setPending}
+              onDirtyChange={reportDirty.balance}
             />
           </TabsContent>
 
@@ -185,6 +215,7 @@ export function NewDirectiveDialog({
               ledgerId={ledgerId}
               onSuccess={handleSuccess}
               onPendingChange={setPending}
+              onDirtyChange={reportDirty.note}
             />
           </TabsContent>
 
@@ -198,9 +229,11 @@ export function NewDirectiveDialog({
               ledgerId={ledgerId}
               onSuccess={handleSuccess}
               onPendingChange={setPending}
+              onDirtyChange={reportDirty.account}
             />
           </TabsContent>
         </Tabs>
+        {confirmation}
       </DialogContent>
     </Dialog>
   );

@@ -880,6 +880,24 @@ const frCommon: Record<string, TranslationEntry> = {
       "Certaines informations fournies ne sont pas valides. Veuillez les vérifier et réessayer.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "Abandonner votre saisie ?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "Votre saisie n’a pas été enregistrée.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "Continuer la modification",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "Abandonner",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "Enregistré comme {value}",
     description:

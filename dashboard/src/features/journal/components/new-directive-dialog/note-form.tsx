@@ -32,12 +32,15 @@ import { track } from "@/common/analytics";
 import { AccountAvailabilityNotice } from "./account-availability-notice";
 import { useAccountAvailability } from "./use-account-availability";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
+import { useReportDirty } from "@/common/hooks/use-report-dirty";
 
 interface NoteFormProps {
   ledgerId: string;
   onSuccess?: () => void;
   /** Reports a write in flight, so the dialog can hold its tabs and close. */
   onPendingChange?: (pending: boolean) => void;
+  /** Whether the form holds unsaved input (w2/123). */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 // Zod validation schema factory. Required text is trimmed before its
@@ -57,6 +60,7 @@ export function NoteForm({
   ledgerId,
   onSuccess,
   onPendingChange,
+  onDirtyChange,
 }: NoteFormProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -129,6 +133,7 @@ export function NoteForm({
   };
 
   const { submit, pending } = usePendingSubmit(form, onSubmit, onPendingChange);
+  useReportDirty(form.formState.isDirty, onDirtyChange);
 
   return (
     <Form {...form}>

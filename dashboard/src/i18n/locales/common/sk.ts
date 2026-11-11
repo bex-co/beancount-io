@@ -880,6 +880,24 @@ const skCommon: Record<string, TranslationEntry> = {
       "Niektoré zadané údaje sú neplatné. Skontrolujte ich a skúste to znova.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.discardDraftTitle": {
+    message: "Zahodiť, čo ste zadali?",
+    description:
+      "Title of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.discardDraftDescription": {
+    message: "Zadané údaje sa neuložili.",
+    description:
+      "Body of the confirmation before a dialog with unsaved input closes",
+  },
+  "common.keepEditing": {
+    message: "Pokračovať v úpravách",
+    description: "Button that keeps the dialog and its unsaved input open",
+  },
+  "common.discardDraft": {
+    message: "Zahodiť",
+    description: "Button that closes the dialog and discards its unsaved input",
+  },
   "common.amountRecordedAs": {
     message: "Zaznamená sa ako {value}",
     description:
