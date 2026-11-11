@@ -5,6 +5,7 @@ import ts from "typescript";
 import * as spacing from "../../../common/theme/spacing";
 import * as typography from "../../../common/theme/typography";
 import * as layout from "../header-layout";
+import * as menuWidth from "../../menu-button/menu-width";
 
 // Execute the real component bodies. Only native hosts and external state are
 // substituted; assertions inspect their rendered props, not source strings.
@@ -86,6 +87,7 @@ function loadComponent(file: string): any {
         );
       if (id === "./pending-action")
         return { createPendingMenuAction: () => ({ flush() {} }) };
+      if (id === "./menu-width") return menuWidth;
       if (id === "@/common/rtl") return { LEADING_TEXT_ALIGN: "left" };
       throw new Error(`Unexpected dependency: ${id}`);
     },

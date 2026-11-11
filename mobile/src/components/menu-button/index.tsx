@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { createPendingMenuAction } from "./pending-action";
+import { MENU_SCREEN_MARGIN, menuWidth } from "./menu-width";
 import { fontSizes, fontWeights } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ColorTheme } from "@/types/theme-props";
@@ -130,15 +131,22 @@ export const MenuButton = ({
   const openMenu = () => {
     anchorRef.current?.measureInWindow((x, y, width, height) => {
       const screen = Dimensions.get("window");
-      const menuWidth = Math.min(title ? 300 : 260, screen.width - 32);
+      const popoverWidth = menuWidth({
+        hasTitle: Boolean(title),
+        screenWidth: screen.width,
+        fontScale: screen.fontScale,
+      });
       const top = Math.min(y + height + 4, screen.height / 2);
       setMenuPos({
         top,
         right: Math.max(
           16,
-          Math.min(screen.width - (x + width), screen.width - menuWidth - 16),
+          Math.min(
+            screen.width - (x + width),
+            screen.width - popoverWidth - MENU_SCREEN_MARGIN,
+          ),
         ),
-        width: menuWidth,
+        width: popoverWidth,
         maxHeight: screen.height - top - 48,
       });
       setVisible(true);
