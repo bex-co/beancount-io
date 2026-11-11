@@ -108,8 +108,13 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "Назва має містити менше 100 символів",
+    message: "У веб-адресі назва може містити не більше 100 символів",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "Опис може містити не більше 2048 символів.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "Назва обов'язкова",

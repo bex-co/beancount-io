@@ -93,8 +93,13 @@ const enDashboardPage: Record<string, TranslationEntry> = {
     description: "Description of ledger management",
   },
   "page.dashboard.nameMaxLength": {
-    message: "Name must be less than 100 characters",
+    message: "Name can be at most 100 characters in its web address",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "The description can be at most 2048 characters.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "Name is required",

@@ -108,8 +108,13 @@ const faDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "نام باید کمتر از ۱۰۰ کاراکتر باشد",
+    message: "نام در نشانی وب حداکثر می‌تواند ۱۰۰ نویسه داشته باشد",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "توضیحات حداکثر می‌تواند ۲۰۴۸ نویسه داشته باشد.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "نام الزامی است",

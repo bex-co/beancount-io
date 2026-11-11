@@ -108,8 +108,13 @@ const skDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "Názov musí mať menej ako 100 znakov",
+    message: "Názov môže mať vo webovej adrese najviac 100 znakov",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "Popis môže mať najviac 2048 znakov.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "Názov je povinný",

@@ -108,8 +108,13 @@ const frDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "Le nom doit contenir moins de 100 caractères",
+    message: "Le nom peut compter au plus 100 caractères dans l'adresse web",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "La description peut contenir 2048 caractères au maximum.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "Le nom est requis",

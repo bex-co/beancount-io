@@ -108,8 +108,13 @@ const caDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "El nom ha de tenir menys de 100 caràcters",
+    message: "El nom pot tenir com a màxim 100 caràcters a l'adreça web",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "La descripció pot tenir com a màxim 2048 caràcters.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "El nom és obligatori",

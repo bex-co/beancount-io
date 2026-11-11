@@ -24,7 +24,13 @@ import { LimitIndicator } from "@/common/components/limit-indicator";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { useQuery } from "@apollo/client/react";
 import { ListLedgersDocument } from "@/graphql/definitions";
-import { slugifyLedgerName } from "@/common/lib/beancount/ledger-name";
+import {
+  LEDGER_DESCRIPTION_MAX,
+  ledgerDescriptionLength,
+  ledgerNameIssue,
+  slugifyLedgerName,
+} from "@/common/lib/beancount/ledger-name";
+import { LengthCounter } from "@/common/components/length-counter";
 import { cn } from "@/common/lib/utils/utils";
 
 /**
@@ -53,18 +59,23 @@ const createLedgerFormSchema = (t: (key: string) => string) =>
     name: z
       .string()
       .min(1, t("page.dashboard.nameRequired"))
-      .max(100, t("page.dashboard.nameMaxLength"))
+      // Spaces and punctuation are allowed as typed; the slug the server
+      // gets is what it judges (w2/130).
       .refine(
-        (val) => {
-          // Allow spaces and common characters for UX, but validate the slugified result
-          const slugified = slugifyLedgerName(val);
-          return slugified.length > 0;
-        },
-        {
-          message: t("page.dashboard.nameInvalid"),
-        },
-      ),
-    description: z.string().optional(),
+        (val) => ledgerNameIssue(val) !== "tooLong",
+        t("page.dashboard.nameMaxLength"),
+      )
+      .refine((val) => {
+        const issue = ledgerNameIssue(val);
+        return issue !== "empty" && issue !== "noLetterOrDigit";
+      }, t("page.dashboard.nameInvalid")),
+    description: z
+      .string()
+      .refine(
+        (val) => ledgerDescriptionLength(val) <= LEDGER_DESCRIPTION_MAX,
+        t("page.dashboard.descriptionMaxLength"),
+      )
+      .optional(),
     private: z.boolean().optional(),
     template: z.enum([LedgerTemplate.Starter, LedgerTemplate.Sample]),
   });
@@ -294,10 +305,15 @@ export function LedgerForm({
                   <Input
                     placeholder={t("page.dashboard.enterDescription")}
                     {...field}
+                    maxLength={LEDGER_DESCRIPTION_MAX}
                     disabled={isLoading}
                     className="transition-colors duration-200"
                   />
                 </FormControl>
+                <LengthCounter
+                  length={ledgerDescriptionLength(field.value ?? "")}
+                  max={LEDGER_DESCRIPTION_MAX}
+                />
                 <FormMessage className="text-destructive" />
               </FormItem>
             )}

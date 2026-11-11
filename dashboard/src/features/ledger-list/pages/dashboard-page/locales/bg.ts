@@ -108,8 +108,13 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "Името трябва да бъде по-малко от 100 символа",
+    message: "Името може да има най-много 100 знака в уеб адреса",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "Описанието може да е най-много 2048 знака.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "Името е задължително",

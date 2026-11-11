@@ -93,8 +93,13 @@ const koDashboardPage: Record<string, TranslationEntry> = {
     description: "Description of ledger management",
   },
   "page.dashboard.nameMaxLength": {
-    message: "이름은 100자 미만이어야 합니다",
+    message: "이름은 웹 주소에서 최대 100자까지 가능합니다",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "설명은 최대 2048자까지 입력할 수 있습니다.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "이름은 필수입니다",

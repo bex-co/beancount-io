@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -22,6 +22,7 @@ vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string, params?: Record<string, string>) =>
       params ? `${key} ${Object.values(params).join(" ")}` : key,
+    i18n: { language: "en" },
   }),
 }));
 
@@ -159,5 +160,49 @@ describe("Ledger Settings rename feedback (w3/566)", () => {
         "page.settings.ledgerNameTaken my-books",
       ),
     );
+  });
+
+  // The service judges the slug, so does the form (w2/130).
+  it.each(["___", "-_-"])(
+    "refuses %s, whose slug has no letter or digit",
+    async (name) => {
+      renderSettings();
+      await rename(name);
+
+      expect(
+        screen.getByText("page.dashboard.nameInvalid"),
+      ).toBeInTheDocument();
+      expect(save()).toBeDisabled();
+    },
+  );
+
+  it("renames to a 100-character slug typed with trailing punctuation", async () => {
+    renderSettings();
+    const user = await rename(`${"a".repeat(100)}!!`);
+
+    expect(screen.queryByText("page.dashboard.nameMaxLength")).toBeNull();
+    await user.click(save());
+    await waitFor(() => expect(updateLedger).toHaveBeenCalledTimes(1));
+    expect(updateLedger.mock.calls[0]![0].variables.name).toBe("a".repeat(100));
+  });
+
+  it("caps the description at the service's 2048 characters, with a count near it", () => {
+    renderSettings();
+    const description = screen.getByLabelText("page.settings.description");
+    expect(description).toHaveAttribute("maxLength", "2048");
+
+    fireEvent.change(description, { target: { value: "d".repeat(1800) } });
+    expect(screen.queryByText(/ \/ 2,048$/)).toBeNull();
+
+    fireEvent.change(description, { target: { value: "d".repeat(2040) } });
+    expect(screen.getByText("2,040 / 2,048")).toBeInTheDocument();
+    expect(save()).toBeEnabled();
+
+    // A paste maxLength does not stop, such as a prefilled value.
+    fireEvent.change(description, { target: { value: "d".repeat(2049) } });
+    expect(
+      screen.getByText("page.dashboard.descriptionMaxLength"),
+    ).toBeInTheDocument();
+    expect(save()).toBeDisabled();
   });
 });

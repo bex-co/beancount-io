@@ -107,8 +107,13 @@ const ruDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "Имя должно быть меньше 100 символов",
+    message: "В веб-адресе имя может содержать не более 100 символов",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "Описание может содержать не более 2048 символов.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "Имя обязательно",

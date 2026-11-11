@@ -108,8 +108,13 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "O nome deve ter menos de 100 caracteres",
+    message: "O nome pode ter no máximo 100 caracteres no endereço web",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "A descrição pode ter no máximo 2048 caracteres.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "Nome é obrigatório",

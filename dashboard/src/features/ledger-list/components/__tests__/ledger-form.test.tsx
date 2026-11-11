@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LedgerForm } from "../ledger-form";
 import { ledgerFormTranslations } from "../../ledger-form-translations";
@@ -281,11 +281,82 @@ describe("LedgerForm", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("Name must be less than 100 characters"),
+        screen.getByText(
+          "Name can be at most 100 characters in its web address",
+        ),
       ).toBeInTheDocument();
     });
 
     expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+
+  // The service judges the slug, so does the form (w2/130).
+  it("accepts a name whose slug is exactly 100 characters", async () => {
+    const user = userEvent.setup();
+    render(<LedgerForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
+
+    const nameInput = screen.getByLabelText("Ledger Name");
+    await user.tripleClick(nameInput);
+    await user.keyboard(`${"a".repeat(100)}  `);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(mockOnSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "a".repeat(100) }),
+      ),
+    );
+    expect(
+      screen.queryByText(
+        "Name can be at most 100 characters in its web address",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it.each(["___", "-_-"])(
+    "refuses %s, whose slug has no letter or digit, before sending it",
+    async (name) => {
+      const user = userEvent.setup();
+      render(<LedgerForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
+
+      const nameInput = screen.getByLabelText("Ledger Name");
+      await user.tripleClick(nameInput);
+      await user.keyboard(name);
+      await user.click(screen.getByRole("button", { name: "Save" }));
+
+      expect(
+        await screen.findByText(
+          "Use at least one Latin letter (A–Z) or digit: the name becomes the ledger's web address.",
+        ),
+      ).toBeInTheDocument();
+      expect(mockOnSubmit).not.toHaveBeenCalled();
+    },
+  );
+
+  it("caps the description at the service's 2048 characters", async () => {
+    const user = userEvent.setup();
+    render(<LedgerForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
+
+    const description = screen.getByLabelText("Description (Optional)");
+    expect(description).toHaveAttribute("maxLength", "2048");
+
+    // What maxLength does not stop, such as a value set by script.
+    fireEvent.change(description, { target: { value: "d".repeat(2049) } });
+    expect(screen.getByText("2,049 / 2,048")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(
+      await screen.findByText(
+        "The description can be at most 2048 characters.",
+      ),
+    ).toBeInTheDocument();
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+
+    fireEvent.change(description, { target: { value: "d".repeat(2048) } });
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() =>
+      expect(mockOnSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ description: "d".repeat(2048) }),
+      ),
+    );
   });
 
   it("should call onCancel when cancel button is clicked", async () => {

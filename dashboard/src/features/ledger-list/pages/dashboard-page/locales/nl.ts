@@ -108,11 +108,16 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
     description: "Validation error when name contains only special characters",
   },
   "page.dashboard.nameMaxLength": {
-    message: "De naam moet minder dan 100 tekens bevatten",
+    message: "De naam mag in het webadres hoogstens 100 tekens hebben",
     description: "Validation error when name exceeds limit",
   },
+  "page.dashboard.descriptionMaxLength": {
+    message: "De beschrijving mag hoogstens 2048 tekens hebben.",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
+  },
   "page.dashboard.nameRequired": {
-    message: "Naam is required",
+    message: "Naam is verplicht",
     description: "Validation error when name is missing",
   },
   "page.dashboard.noLedgersFound": {

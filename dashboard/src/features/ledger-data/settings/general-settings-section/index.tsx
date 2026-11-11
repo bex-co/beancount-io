@@ -28,9 +28,12 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { LedgerAdminPermission } from "@/common/components/ledger-permission/admin";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import {
-  MAX_LEDGER_NAME_LENGTH,
+  LEDGER_DESCRIPTION_MAX,
+  ledgerDescriptionLength,
+  ledgerNameIssue,
   slugifyLedgerName,
 } from "@/common/lib/beancount/ledger-name";
+import { LengthCounter } from "@/common/components/length-counter";
 
 /**
  * The ledger service's two rename refusals worth naming, recognized by its
@@ -96,18 +99,24 @@ export function GeneralSettingsSection({
       ),
     [ledgersData, ledgerOwner, ledger.name],
   );
+  const nameIssue = ledgerNameIssue(ledgerName.trim());
   const nameError = !ledgerName.trim()
     ? null
-    : !slug
-      ? t("page.dashboard.nameInvalid")
-      : slug.length > MAX_LEDGER_NAME_LENGTH
-        ? t("page.dashboard.nameMaxLength")
+    : nameIssue === "tooLong"
+      ? t("page.dashboard.nameMaxLength")
+      : nameIssue
+        ? t("page.dashboard.nameInvalid")
         : takenNames.has(slug)
           ? t("page.settings.ledgerNameTaken", { name: slug })
           : null;
+  const descriptionLength = ledgerDescriptionLength(ledgerDescription);
+  const descriptionError =
+    descriptionLength > LEDGER_DESCRIPTION_MAX
+      ? t("page.dashboard.descriptionMaxLength")
+      : null;
 
   const handleUpdateGeneral = async () => {
-    if (!ledgerId || nameError) return;
+    if (!ledgerId || nameError || descriptionError) return;
 
     const variables: {
       ledgerId: string;
@@ -234,9 +243,28 @@ export function GeneralSettingsSection({
             value={ledgerDescription}
             onChange={(e) => setLedgerDescription(e.target.value)}
             readOnly={!isAdmin}
+            maxLength={LEDGER_DESCRIPTION_MAX}
             rows={3}
             className="resize-none"
+            aria-invalid={descriptionError ? true : undefined}
+            aria-describedby={
+              descriptionError ? "ledger-description-error" : undefined
+            }
           />
+          {isAdmin && (
+            <LengthCounter
+              length={descriptionLength}
+              max={LEDGER_DESCRIPTION_MAX}
+            />
+          )}
+          {descriptionError && (
+            <p
+              id="ledger-description-error"
+              className="text-sm text-destructive"
+            >
+              {descriptionError}
+            </p>
+          )}
           {isAdmin && (
             <p className="text-sm text-muted-foreground">
               {t("page.settings.ledgerDescriptionDescription")}
@@ -252,7 +280,8 @@ export function GeneralSettingsSection({
                 !hasChanges ||
                 updatingLedger ||
                 !ledgerName.trim() ||
-                nameError !== null
+                nameError !== null ||
+                descriptionError !== null
               }
             >
               {updatingLedger ? (

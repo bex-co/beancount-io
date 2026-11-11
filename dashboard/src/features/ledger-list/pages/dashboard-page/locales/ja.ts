@@ -93,8 +93,13 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
     description: "Description of ledger management",
   },
   "page.dashboard.nameMaxLength": {
-    message: "名前は100文字未満でなければなりません",
+    message: "名前はウェブアドレスで最大100文字までです",
     description: "Validation error when name exceeds limit",
+  },
+  "page.dashboard.descriptionMaxLength": {
+    message: "説明は最大2048文字までです。",
+    description:
+      "Form validation for a ledger description past the service's 2048-character limit",
   },
   "page.dashboard.nameRequired": {
     message: "名前は必須です",

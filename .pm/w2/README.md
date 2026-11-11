@@ -74,7 +74,6 @@
 
 ## Inbox
 
-- [130 — Create Ledger checks the typed name, not the slug: a valid 100-character slug is refused and "___" is sent to be refused](./130.md) — dashboard QA 2026-11-11
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains.
 
 - [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.
