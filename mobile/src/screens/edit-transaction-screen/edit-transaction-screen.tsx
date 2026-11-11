@@ -677,6 +677,7 @@ export const EditTransactionScreen = (): JSX.Element => {
               accessibilityLabel={t("cancel")}
             >
               <Text
+                key={`cancel-${fontScale}`}
                 style={styles.cancelButton}
                 maxFontSizeMultiplier={headerActionMaxFontSizeMultiplier}
               >
@@ -696,6 +697,7 @@ export const EditTransactionScreen = (): JSX.Element => {
                   accessibilityState={{ disabled: saveDisabled }}
                 >
                   <Text
+                    key={`save-${fontScale}`}
                     style={
                       saveDisabled
                         ? styles.saveButtonDisabled
@@ -711,7 +713,9 @@ export const EditTransactionScreen = (): JSX.Element => {
         }}
       />
 
-      <Text style={styles.hint}>{t("editTransactionSource")}</Text>
+      <Text key={`hint-${fontScale}`} style={styles.hint}>
+        {t("editTransactionSource")}
+      </Text>
       {saveError ? (
         <InlineError style={styles.errorText} message={saveError} />
       ) : null}
@@ -725,7 +729,7 @@ export const EditTransactionScreen = (): JSX.Element => {
           </View>
         ) : contextUnavailable ? (
           <FadeInView>
-            <Text style={styles.loadErrorText}>
+            <Text key={`load-error-${fontScale}`} style={styles.loadErrorText}>
               {t("editTransactionLoadFailed")}
             </Text>
           </FadeInView>

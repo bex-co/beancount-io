@@ -788,6 +788,17 @@ const KEYED_TEXTS: [string, string[]][] = [
       "{styles.copy}",
     ],
   ],
+  // Edit Transaction: the header's Cancel and Save, the source hint and the load
+  // error (w22/030).
+  [
+    "screens/edit-transaction-screen/edit-transaction-screen.tsx",
+    [
+      "{styles.cancelButton}",
+      "{saveDisabled ? styles.saveButtonDisabled : styles.saveButton}",
+      "{styles.hint}",
+      "{styles.loadErrorText}",
+    ],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",
