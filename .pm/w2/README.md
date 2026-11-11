@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [122 — Smart Import books the same CSV twice without noticing](./122.md) — dashboard QA 2026-11-10; may need promotion to a milestone
 - [121 — Deleting a file that a `document` entry points at breaks the ledger and says only "File deleted successfully"](./121.md) — dashboard QA 2026-11-10
 - [120 — Typing "4,50" in an amount field records 450, silently, wherever the decimal separator and the browser's language differ](./120.md) — dashboard QA 2026-11-10; **major**
 - [119 — In German and other comma-decimal languages, the same balance is written two ways across the dashboard](./119.md) — dashboard QA 2026-11-10
