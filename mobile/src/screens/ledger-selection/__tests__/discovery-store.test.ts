@@ -303,7 +303,7 @@ describe("a retry from a failed first load", () => {
     ).toBe(true);
     expect(
       src.includes(
-        '{state.error&&state.items.length>0?(<Textstyle={styles.text}>{t("discoveryLoadError")}</Text>)',
+        '{state.error&&state.items.length>0?(<Textkey={`error-${fontScale}`}style={styles.text}>{t("discoveryLoadError")}</Text>)',
       ),
     ).toBe(true);
   });

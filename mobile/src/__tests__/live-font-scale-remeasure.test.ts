@@ -731,6 +731,24 @@ const KEYED_TEXTS: [string, string[]][] = [
       "{styles.line}",
     ],
   ],
+  // Browse ledgers: the three tab labels, a row's owner, name, description and
+  // visibility lines, and the empty, error and link Texts (w22/026).
+  [
+    "screens/ledger-selection/index.tsx",
+    [
+      "{styles.text}",
+      "{styles.titleOwner}",
+      "{styles.title}",
+      "{styles.title}",
+      "{styles.muted}",
+      "{styles.muted}",
+      "{styles.text}",
+      "{styles.link}",
+      "{styles.text}",
+      "{styles.link}",
+      "{styles.link}",
+    ],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",

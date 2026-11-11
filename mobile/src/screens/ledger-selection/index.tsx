@@ -246,7 +246,9 @@ export function LedgerSelectionScreen() {
             // that found nothing in your own ledgers is widened.
             onPress={() => setTab(value)}
           >
-            <Text style={styles.text}>{t(`discoveryTab_${value}`)}</Text>
+            <Text key={`tab-${fontScale}`} style={styles.text}>
+              {t(`discoveryTab_${value}`)}
+            </Text>
           </Pressable>
         ))}
       </View>
@@ -337,24 +339,39 @@ export function LedgerSelectionScreen() {
                     return (
                       <>
                         {owner ? (
-                          <Text style={styles.titleOwner}>{owner}</Text>
+                          <Text
+                            key={`owner-${fontScale}`}
+                            style={styles.titleOwner}
+                          >
+                            {owner}
+                          </Text>
                         ) : null}
-                        <Text style={styles.title}>{name}</Text>
+                        <Text key={`name-${fontScale}`} style={styles.title}>
+                          {name}
+                        </Text>
                       </>
                     );
                   })()}
                 </View>
               ) : (
-                <Text numberOfLines={1} style={styles.title}>
+                <Text
+                  key={`title-${fontScale}`}
+                  numberOfLines={1}
+                  style={styles.title}
+                >
                   {item.fullName}
                 </Text>
               )}
               {ledgerRowDescription(item.description) ? (
-                <Text numberOfLines={1} style={styles.muted}>
+                <Text
+                  key={`description-${fontScale}`}
+                  numberOfLines={1}
+                  style={styles.muted}
+                >
                   {item.description}
                 </Text>
               ) : null}
-              <Text style={styles.muted}>
+              <Text key={`visibility-${fontScale}`} style={styles.muted}>
                 {t(item.private ? "discoveryPrivate" : "discoveryPublic")}
                 {item.id === selected ? ` · ${t("discoveryCurrent")}` : ""}
               </Text>
@@ -412,7 +429,7 @@ export function LedgerSelectionScreen() {
                 size={40}
                 color={theme.black80}
               />
-              <Text style={styles.text}>
+              <Text key={`empty-${fontScale}`} style={styles.text}>
                 {t(
                   state.error
                     ? "discoveryLoadError"
@@ -431,7 +448,9 @@ export function LedgerSelectionScreen() {
                   onPress={() => setTab("explore")}
                   accessibilityRole="button"
                 >
-                  <Text style={styles.link}>{t("discoveryTab_explore")}</Text>
+                  <Text key={`explore-${fontScale}`} style={styles.link}>
+                    {t("discoveryTab_explore")}
+                  </Text>
                 </Pressable>
               ) : null}
             </View>
@@ -441,7 +460,9 @@ export function LedgerSelectionScreen() {
           <View style={styles.state}>
             {/* With rows above, the failure is told here, beside Retry. */}
             {state.error && state.items.length > 0 ? (
-              <Text style={styles.text}>{t("discoveryLoadError")}</Text>
+              <Text key={`error-${fontScale}`} style={styles.text}>
+                {t("discoveryLoadError")}
+              </Text>
             ) : null}
             {state.error ? (
               <Pressable
@@ -453,7 +474,9 @@ export function LedgerSelectionScreen() {
                     : store.load(tab, remoteQuery, true));
                 }}
               >
-                <Text style={styles.link}>{t("discoveryRetry")}</Text>
+                <Text key={`retry-${fontScale}`} style={styles.link}>
+                  {t("discoveryRetry")}
+                </Text>
               </Pressable>
             ) : null}
             {state.hasMore && !waitingForSearch ? (
@@ -466,7 +489,7 @@ export function LedgerSelectionScreen() {
                   void store.loadMore();
                 }}
               >
-                <Text style={styles.link}>
+                <Text key={`load-more-${fontScale}`} style={styles.link}>
                   {t(
                     state.loadingMore
                       ? "discoveryLoading"
