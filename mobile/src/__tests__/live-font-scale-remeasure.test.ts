@@ -471,6 +471,11 @@ const KEYED_TEXTS: [string, string[]][] = [
   ["screens/reports-screen/reports-screen.tsx", ["{styles.anchorNote}"]],
   // Every chart legend entry shares this one Text (w22/008).
   ["common/d3/chart-chrome.tsx", ["{styles.legendText}"]],
+  // The Accounts tab's "Account" and "Balance" column labels (w22/017).
+  [
+    "components/account-table/account-table.tsx",
+    ["{styles.columnLabel}", "{styles.columnLabelRight}"],
+  ],
 ];
 for (const [file, styles] of KEYED_TEXTS)
   describe(`${file} live font-scale remeasurement`, () => {

@@ -603,10 +603,16 @@ export function AccountTable({
       }}
       ListHeaderComponent={
         <View style={styles.columnHeader}>
-          <Text style={styles.columnLabel}>{t("account")}</Text>
+          {/* Each label is keyed on the live text scale so it re-measures
+              when the size changes while the tab is open (w22/017). */}
+          <Text key={`account-${fontScale}`} style={styles.columnLabel}>
+            {t("account")}
+          </Text>
           {/* The basis is each root's to state: roots that value holdings
               say so with their price date, cash-only ones say nothing. */}
-          <Text style={styles.columnLabelRight}>{t("balance")}</Text>
+          <Text key={`balance-${fontScale}`} style={styles.columnLabelRight}>
+            {t("balance")}
+          </Text>
         </View>
       }
       ListEmptyComponent={<Text style={styles.empty}>{t("noAccounts")}</Text>}
