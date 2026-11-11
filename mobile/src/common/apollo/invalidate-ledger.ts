@@ -2,8 +2,9 @@
  * One place that knows which queries derive from the ledger, so no screen has
  * to hand-maintain a `refetchQueries` array.
  *
- * Why this exists: the cache is a bare `InMemoryCache` with no `typePolicies`
- * (see `./cache.ts`), so root fields are keyed by field name + args and a write
+ * Why this exists: the cache has no `typePolicies` that normalize or invalidate
+ * anything (its one policy, in `./cache.ts`, only merges `getLedgerEntryContext`
+ * selections), so root fields are keyed by field name + args and a write
  * invalidates nothing implicitly. Nothing self-heals either — `(tabs)/_layout`
  * sets `lazy: false`, so all five tabs mount once and stay mounted, and
  * `network-only` only fires on mount.
