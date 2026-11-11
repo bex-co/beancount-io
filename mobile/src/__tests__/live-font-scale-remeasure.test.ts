@@ -588,6 +588,51 @@ const KEYED_TEXTS: [string, string[]][] = [
     "screens/referral-screen/components/invite-section.tsx",
     ["{styles.title}", "{styles.summary}"],
   ],
+  // Transaction detail: the hero's payee, note, date and badges, the error and
+  // plugin-copy notices, both section titles, the Details rows and the source
+  // and empty states (w22/022). Its amount is AmountText.
+  [
+    "screens/transaction-detail-screen/transaction-detail-screen.tsx",
+    [
+      "{styles.sourceSlice}",
+      "{styles.stateText}",
+      "{styles.stateText}",
+      "{styles.heroTitle}",
+      "{styles.heroSubtitle}",
+      "{styles.heroDate}",
+      "{styles.statusText}",
+      "{styles.noteText}",
+      "{styles.errorText}",
+      "{styles.errorAction}",
+      "{styles.errorAction}",
+      "{styles.copyNoticeText}",
+      "{styles.sectionTitle}",
+      "{styles.sectionTitle}",
+      "{styles.metadataLabel}",
+      "{styles.metadataLabel}",
+      "{styles.metadataLabel}",
+      "{styles.chipText}",
+      "{styles.chipText}",
+      "{styles.metadataLine}",
+    ],
+  ],
+  // The Entry Context card on that screen (w22/022).
+  [
+    "screens/transactions-screen/entry-context/index.tsx",
+    [
+      "{styles.contextLocation}",
+      "{styles.contextLocation}",
+      "{styles.emptyStateText}",
+      "{styles.contextHeaderText}",
+      "{styles.sectionTitle}",
+      "{styles.sourceText}",
+    ],
+  ],
+  // Its Balances before / after sections (w22/022).
+  [
+    "screens/transactions-screen/entry-context/balance-section.tsx",
+    ["{styles.balanceSectionHeaderText}", "{styles.balanceAccount}"],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",

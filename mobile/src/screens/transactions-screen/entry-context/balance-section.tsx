@@ -91,6 +91,7 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
     <View style={styles.balanceSection}>
       <View style={styles.balanceSectionHeader}>
         <Text
+          key={`title-${fontScale}`}
           style={styles.balanceSectionHeaderText}
           accessibilityRole="header"
         >
@@ -109,6 +110,7 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
             ]}
           >
             <Text
+              key={`account-${fontScale}`}
               style={styles.balanceAccount}
               numberOfLines={1}
               ellipsizeMode="middle"

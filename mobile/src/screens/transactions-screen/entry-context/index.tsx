@@ -8,6 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { fonts, fontSizes, fontWeights } from "@/common/theme";
@@ -190,6 +191,8 @@ export const EntryContext: React.FC<EntryContextProps> = ({
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
+  // Keys re-measure the Texts after a live text-size change (w22/022).
+  const { fontScale } = useWindowDimensions();
   const [isContextOpen, setIsContextOpen] = useState(false);
 
   // The detail screen already fetches this context to resolve the source
@@ -238,13 +241,17 @@ export const EntryContext: React.FC<EntryContextProps> = ({
     return <CardLoadFailure onRetry={retry} />;
   }
   const staleNote = entryError ? (
-    <Text style={styles.contextLocation}>{t("staleDataNotice")}</Text>
+    <Text key={`stale-${fontScale}`} style={styles.contextLocation}>
+      {t("staleDataNotice")}
+    </Text>
   ) : null;
 
   if (!entryContext) {
     return (
       <View style={styles.emptyState}>
-        <Text style={styles.emptyStateText}>{t("journalNoData")}</Text>
+        <Text key={`empty-${fontScale}`} style={styles.emptyStateText}>
+          {t("journalNoData")}
+        </Text>
       </View>
     );
   }
@@ -273,13 +280,14 @@ export const EntryContext: React.FC<EntryContextProps> = ({
       >
         <Ionicons name="code-slash-outline" size={20} color={theme.black80} />
         <View style={styles.contextHeaderCopy}>
-          <Text style={styles.contextHeaderText}>
+          <Text key={`header-${fontScale}`} style={styles.contextHeaderText}>
             {t("journalEntryContext")}
           </Text>
           {entryFilename && entryLineNumber ? (
             // Cut at the head, not the tail: the line number is what tells
             // two entries in one file apart (w21/433).
             <Text
+              key={`location-${fontScale}`}
               style={styles.contextLocation}
               numberOfLines={1}
               ellipsizeMode="head"
@@ -314,12 +322,20 @@ export const EntryContext: React.FC<EntryContextProps> = ({
           )}
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle} accessibilityRole="header">
+            <Text
+              key={`source-title-${fontScale}`}
+              style={styles.sectionTitle}
+              accessibilityRole="header"
+            >
               {t("journalSource")}
             </Text>
             <View style={styles.sourceContainer}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <Text style={styles.sourceText} selectable>
+                <Text
+                  key={`source-${fontScale}`}
+                  style={styles.sourceText}
+                  selectable
+                >
                   {entrySourceText(entryContext.slice || "")}
                 </Text>
               </ScrollView>

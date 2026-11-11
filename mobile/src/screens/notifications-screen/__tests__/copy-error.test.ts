@@ -47,11 +47,13 @@ describe("the texts a person may need to copy", () => {
       read(
         "transaction-detail-screen",
         "transaction-detail-screen.tsx",
-      ).includes("<Textstyle={styles.errorText}selectable>{error.message}"),
+      ).includes(
+        "<Textkey={`error-${fontScale}`}style={styles.errorText}selectable>{error.message}",
+      ),
     ).toBe(true);
     expect(
       read("transactions-screen", "entry-context", "index.tsx").includes(
-        "<Textstyle={styles.sourceText}selectable>",
+        "<Textkey={`source-${fontScale}`}style={styles.sourceText}selectable>",
       ),
     ).toBe(true);
   });

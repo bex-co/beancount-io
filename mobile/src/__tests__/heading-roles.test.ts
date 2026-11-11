@@ -71,7 +71,7 @@ describe("section and card titles are headings", () => {
       compact(
         "screens/transactions-screen/entry-context/balance-section.tsx",
       ).includes(
-        '<Textstyle={styles.balanceSectionHeaderText}accessibilityRole="header">{title}</Text>',
+        '<Textkey={`title-${fontScale}`}style={styles.balanceSectionHeaderText}accessibilityRole="header">{title}</Text>',
       ),
     ).toBe(true);
     const notifications = compact(

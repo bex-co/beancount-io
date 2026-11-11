@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -377,6 +378,8 @@ const TransactionDetailImpl = ({
   const toast = useToast();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
+  // Keys re-measure the Texts after a live text-size change (w22/022).
+  const { fontScale } = useWindowDimensions();
 
   const confirmWrite = useLedgerWrite();
   const stashed = useReactiveVar(
@@ -692,7 +695,11 @@ const TransactionDetailImpl = ({
             // The plugin's source has no parsed entry, only its written text
             // (w21/660): show that, and let a writer edit it.
             <View>
-              <Text style={styles.sourceSlice} selectable>
+              <Text
+                key={`source-slice-${fontScale}`}
+                style={styles.sourceSlice}
+                selectable
+              >
                 {sourceSlice}
               </Text>
               {canWrite && sha256sum ? (
@@ -701,12 +708,16 @@ const TransactionDetailImpl = ({
                   accessibilityRole="button"
                   accessibilityLabel={editLabel}
                 >
-                  <Text style={styles.stateText}>{editLabel}</Text>
+                  <Text key={`edit-${fontScale}`} style={styles.stateText}>
+                    {editLabel}
+                  </Text>
                 </Pressable>
               ) : null}
             </View>
           ) : (
-            <Text style={styles.stateText}>{t("journalNoData")}</Text>
+            <Text key={`no-data-${fontScale}`} style={styles.stateText}>
+              {t("journalNoData")}
+            </Text>
           )}
         </View>
       </SafeAreaView>
@@ -829,7 +840,9 @@ const TransactionDetailImpl = ({
               payee={entryRowTitle(entry)}
             />
           </View>
-          <Text style={styles.heroTitle}>{title}</Text>
+          <Text key={`hero-title-${fontScale}`} style={styles.heroTitle}>
+            {title}
+          </Text>
           <AmountText
             {...HERO_AMOUNT_FIT}
             style={[
@@ -842,7 +855,12 @@ const TransactionDetailImpl = ({
             {hero.text}
           </AmountText>
           {subtitle ? (
-            <Text style={styles.heroSubtitle}>{subtitle}</Text>
+            <Text
+              key={`hero-subtitle-${fontScale}`}
+              style={styles.heroSubtitle}
+            >
+              {subtitle}
+            </Text>
           ) : null}
           <View style={styles.heroMeta}>
             <Ionicons
@@ -852,16 +870,22 @@ const TransactionDetailImpl = ({
               size={16}
               color={theme.black80}
             />
-            <Text style={styles.heroDate}>{formattedDate}</Text>
+            <Text key={`hero-date-${fontScale}`} style={styles.heroDate}>
+              {formattedDate}
+            </Text>
             {heroBadges.map((badge) =>
               badge.tone === "warning" ? (
                 <View key={badge.key} style={styles.statusBadge}>
                   <View style={styles.statusDot} />
-                  <Text style={styles.statusText}>{badge.text}</Text>
+                  <Text key={`status-${fontScale}`} style={styles.statusText}>
+                    {badge.text}
+                  </Text>
                 </View>
               ) : (
                 <View key={badge.key} style={styles.noteBadge}>
-                  <Text style={styles.noteText}>{badge.text}</Text>
+                  <Text key={`note-${fontScale}`} style={styles.noteText}>
+                    {badge.text}
+                  </Text>
                 </View>
               ),
             )}
@@ -879,12 +903,17 @@ const TransactionDetailImpl = ({
                   size={16}
                   color={theme.error}
                 />
-                <Text style={styles.errorText} selectable>
+                <Text
+                  key={`error-${fontScale}`}
+                  style={styles.errorText}
+                  selectable
+                >
                   {error.message}
                 </Text>
               </View>
             ))}
             <Text
+              key={`error-action-${fontScale}`}
               style={styles.errorAction}
               accessibilityRole="button"
               onPress={() => openErrorInEditor(entryErrors[0]!)}
@@ -899,11 +928,15 @@ const TransactionDetailImpl = ({
           // its source and every other copy: say so, and open the source when
           // the ledger names it (w21/508).
           <View style={styles.copyNotice} testID="transaction-plugin-copy">
-            <Text style={styles.copyNoticeText}>
+            <Text
+              key={`copy-notice-${fontScale}`}
+              style={styles.copyNoticeText}
+            >
               {entry.flag === "P" ? t("paddingNotice") : t("pluginCopyNotice")}
             </Text>
             {generatedFrom ? (
               <Text
+                key={`copy-source-${fontScale}`}
                 style={styles.errorAction}
                 accessibilityRole="button"
                 onPress={() =>
@@ -923,7 +956,11 @@ const TransactionDetailImpl = ({
 
         {postingRows.length > 0 && (
           <>
-            <Text style={styles.sectionTitle} accessibilityRole="header">
+            <Text
+              key={`flow-title-${fontScale}`}
+              style={styles.sectionTitle}
+              accessibilityRole="header"
+            >
               {t("moneyFlow")}
             </Text>
             <View style={[styles.card, styles.flowCard]}>
@@ -948,7 +985,11 @@ const TransactionDetailImpl = ({
 
         {hasMetadata && (
           <>
-            <Text style={styles.sectionTitle} accessibilityRole="header">
+            <Text
+              key={`details-title-${fontScale}`}
+              style={styles.sectionTitle}
+              accessibilityRole="header"
+            >
               {t("details")}
             </Text>
             <View style={styles.card}>
@@ -963,11 +1004,21 @@ const TransactionDetailImpl = ({
                     style={styles.metadataIcon}
                   />
                   <View style={styles.metadataBody}>
-                    <Text style={styles.metadataLabel}>{t("tags")}</Text>
+                    <Text
+                      key={`tags-${fontScale}`}
+                      style={styles.metadataLabel}
+                    >
+                      {t("tags")}
+                    </Text>
                     <View style={styles.chipRow}>
                       {entry.tags.map((tag) => (
                         <View style={styles.chip} key={tag}>
-                          <Text style={styles.chipText}>#{tag}</Text>
+                          <Text
+                            key={`tag-${fontScale}`}
+                            style={styles.chipText}
+                          >
+                            #{tag}
+                          </Text>
                         </View>
                       ))}
                     </View>
@@ -990,11 +1041,21 @@ const TransactionDetailImpl = ({
                     style={styles.metadataIcon}
                   />
                   <View style={styles.metadataBody}>
-                    <Text style={styles.metadataLabel}>{t("links")}</Text>
+                    <Text
+                      key={`links-${fontScale}`}
+                      style={styles.metadataLabel}
+                    >
+                      {t("links")}
+                    </Text>
                     <View style={styles.chipRow}>
                       {entry.links.map((link) => (
                         <View style={styles.chip} key={link}>
-                          <Text style={styles.chipText}>^{link}</Text>
+                          <Text
+                            key={`link-${fontScale}`}
+                            style={styles.chipText}
+                          >
+                            ^{link}
+                          </Text>
                         </View>
                       ))}
                     </View>
@@ -1018,9 +1079,18 @@ const TransactionDetailImpl = ({
                     style={styles.metadataIcon}
                   />
                   <View style={styles.metadataBody}>
-                    <Text style={styles.metadataLabel}>{t("metadata")}</Text>
+                    <Text
+                      key={`metadata-${fontScale}`}
+                      style={styles.metadataLabel}
+                    >
+                      {t("metadata")}
+                    </Text>
                     {entryMeta.map((line) => (
-                      <Text style={styles.metadataLine} key={line} selectable>
+                      <Text
+                        style={styles.metadataLine}
+                        key={`${line}-${fontScale}`}
+                        selectable
+                      >
                         {line}
                       </Text>
                     ))}
