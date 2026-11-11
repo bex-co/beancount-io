@@ -49,6 +49,30 @@ const ruBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "Шаблон после ~ не является допустимым регулярным выражением. Проверьте скобки и экранирование.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "Этот движок запросов не умеет прибавлять или вычитать дни с помощью + или -. Используйте {dateAdd}, чтобы сдвинуть дату, и {dateDiff}, чтобы посчитать дни между двумя датами.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "Этот движок запросов не умеет соединять текст с помощью +. Объедините значения вне запроса.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "Столбец «{column}» здесь не поддерживается. Фильтруйте по дате, описанию или счёту записи.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "Столбец «{column}» должен быть в {groupBy} или внутри агрегатной функции, например {sum} или {first}.",

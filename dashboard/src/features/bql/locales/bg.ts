@@ -50,6 +50,30 @@ const bgBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "Шаблонът след ~ не е валиден регулярен израз. Проверете скобите и екраниранията.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "Тази машина за заявки не може да добавя или изважда дни с + или -. Използвайте {dateAdd}, за да преместите дата, и {dateDiff}, за да преброите дните между две дати.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "Тази машина за заявки не може да свързва текст с +. Комбинирайте стойностите извън заявката.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "Колоната „{column}“ не се поддържа тук. Филтрирайте по датата, описанието или сметката на записа.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "„{column}“ трябва да е в {groupBy} или в агрегатна функция като {sum} или {first}.",

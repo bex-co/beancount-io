@@ -50,6 +50,30 @@ const caBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "El patró després de ~ no és una expressió regular vàlida. Comproveu-ne els claudàtors i les seqüències d’escapament.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "Aquest motor de consultes no pot sumar ni restar dies amb + o -. Feu servir {dateAdd} per desplaçar una data i {dateDiff} per comptar els dies entre dues dates.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "Aquest motor de consultes no pot unir text amb +. Combineu els valors fora de la consulta.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "La columna «{column}» no s’admet aquí. Filtreu per la data, la descripció o el compte de l’apunt.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "«{column}» ha de figurar a {groupBy} o dins d’una funció d’agregació com {sum} o {first}.",

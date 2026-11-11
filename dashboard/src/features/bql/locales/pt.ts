@@ -50,6 +50,30 @@ const ptBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "O padrão após ~ não é uma expressão regular válida. Verifique os colchetes e os escapes.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "Este mecanismo de consultas não consegue somar ou subtrair dias com + ou -. Use {dateAdd} para deslocar uma data e {dateDiff} para contar os dias entre duas datas.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "Este mecanismo de consultas não consegue unir texto com +. Combine os valores fora da consulta.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "A coluna “{column}” não é suportada aqui. Filtre pela data, descrição ou conta do lançamento.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "“{column}” deve constar em {groupBy} ou dentro de uma função de agregação como {sum} ou {first}.",

@@ -125,6 +125,37 @@ describe("getQueryErrorFeedback", () => {
     ).toEqual(feedback);
   });
 
+  // The ledger's refusals of stock BQL it cannot run faithfully (w2/126),
+  // as production returns them.
+  it.each([
+    [
+      "Invalid BQL query: Date arithmetic with + and - is not supported by this query engine: it adds numbers only, while stock beanquery shifts dates by day counts. Spell it with date_add(date, days) and date_diff(first, second) instead.",
+      {
+        key: "bql.errors.dateArithmetic",
+        params: {
+          dateAdd: "date_add(date, days)",
+          dateDiff: "date_diff(first, second)",
+        },
+      },
+    ],
+    [
+      "Invalid BQL query: String concatenation with + is not supported by this query engine: it adds numbers only, while stock beanquery concatenates ('a' + 'b' → ab). BQL has no concat() spelling to rewrite to; concatenate outside the query instead.",
+      { key: "bql.errors.stringConcat" },
+    ],
+    [
+      "Invalid BQL query: The `id` column is not supported by this query engine: it projects positional ordinals where stock beanquery projects stable content hashes, so any `id` it returns silently mismatches stock.",
+      { key: "bql.errors.idColumn", params: { column: "id" } },
+    ],
+    [
+      "Invalid BQL query: Query execution error: type error: invalid regex: (",
+      { key: "bql.errors.invalidRegex" },
+    ],
+  ])("explains the refusal %s", (message, feedback) => {
+    expect(
+      getQueryErrorFeedback(graphQLError(message, "BAD_USER_INPUT")),
+    ).toEqual(feedback);
+  });
+
   it("states argument counts as plural messages with a numeric count", () => {
     expect(enBql["bql.errors.argumentCount_one"].message).toContain("{count}");
     expect(enBql["bql.errors.argumentCount_other"].message).toContain(

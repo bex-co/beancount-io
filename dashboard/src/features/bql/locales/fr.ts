@@ -50,6 +50,30 @@ const frBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "Le motif après ~ n’est pas une expression régulière valide. Vérifiez ses crochets et ses échappements.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "Ce moteur de requêtes ne peut pas ajouter ou retirer des jours avec + ou -. Utilisez {dateAdd} pour décaler une date et {dateDiff} pour compter les jours entre deux dates.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "Ce moteur de requêtes ne peut pas concaténer du texte avec +. Combinez les valeurs en dehors de la requête.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "La colonne « {column} » n’est pas prise en charge ici. Filtrez plutôt sur la date, le libellé ou le compte de l’écriture.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "« {column} » doit figurer dans {groupBy} ou dans une fonction d’agrégation comme {sum} ou {first}.",

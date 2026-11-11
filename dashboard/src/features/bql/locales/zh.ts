@@ -47,6 +47,27 @@ const zhBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message: "~ 后面的模式不是有效的正则表达式。请检查括号和转义符。",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "此查询引擎无法用 + 或 - 加减天数。请用 {dateAdd} 调整日期，用 {dateDiff} 计算两个日期之间的天数。",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message: "此查询引擎无法用 + 连接文本。请在查询之外组合这些值。",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message: "此处不支持“{column}”列。请改为按分录的日期、摘要或账户筛选。",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "“{column}”必须写在 {groupBy} 中，或放在 {sum}、{first} 等聚合函数内。",

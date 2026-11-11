@@ -49,6 +49,30 @@ const enBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "The pattern after ~ isn't a valid regular expression. Check its brackets and escapes.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "This query engine can't add or subtract days with + or -. Use {dateAdd} to shift a date and {dateDiff} to count the days between two.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "This query engine can't join text with +. Combine the values outside the query.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "The “{column}” column isn't supported here. Filter on the entry's date, narration or account instead.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "“{column}” must be listed in {groupBy} or wrapped in an aggregate such as {sum} or {first}.",

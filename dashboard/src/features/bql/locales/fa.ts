@@ -50,6 +50,30 @@ const faBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "الگوی پس از ~ یک عبارت باقاعده معتبر نیست. کروشه‌ها و نویسه‌های گریز آن را بررسی کنید.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "این موتور پرس‌وجو نمی‌تواند با + یا - روز اضافه یا کم کند. برای جابه‌جا کردن تاریخ از {dateAdd} و برای شمردن روزهای بین دو تاریخ از {dateDiff} استفاده کنید.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "این موتور پرس‌وجو نمی‌تواند متن را با + به هم بچسباند. مقدارها را بیرون از پرس‌وجو ترکیب کنید.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "ستون «{column}» در اینجا پشتیبانی نمی‌شود. به‌جای آن بر اساس تاریخ، شرح یا حساب ثبت فیلتر کنید.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "«{column}» باید در {groupBy} باشد یا درون یک تابع تجمیعی مانند {sum} یا {first} قرار گیرد.",

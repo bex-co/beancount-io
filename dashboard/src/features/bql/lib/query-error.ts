@@ -58,6 +58,20 @@ const ARGUMENT_COUNT_PATTERN =
 /** `… type error: EMPTY expects an inventory`; its detail is never shown. */
 const TYPE_ERROR_PATTERN = /\btype error:/;
 
+/**
+ * The ledger's refusals of stock BQL it cannot run faithfully, which name the
+ * replacement; the page showed only "information provided is invalid"
+ * (w2/126). A malformed `~` pattern also arrives as a `type error:`, so it is
+ * matched first.
+ */
+const INVALID_REGEX_PATTERN = /\btype error: invalid regex:/;
+const DATE_ARITHMETIC_PATTERN =
+  /\bDate arithmetic with \+ and - is not supported by this query engine\b/;
+const STRING_CONCAT_PATTERN =
+  /\bString concatenation with \+ is not supported by this query engine\b/;
+const ID_COLUMN_PATTERN =
+  /\bThe `id` column is not supported by this query engine\b/;
+
 /** The engine's own words for these stay in the query language. */
 const BQL_TOKENS = {
   groupBy: "GROUP BY",
@@ -177,8 +191,26 @@ export function getQueryErrorFeedback(
           },
         };
       }
+      if (INVALID_REGEX_PATTERN.test(gqlError.message)) {
+        return { key: "bql.errors.invalidRegex" };
+      }
       if (TYPE_ERROR_PATTERN.test(gqlError.message)) {
         return { key: "bql.errors.typeError" };
+      }
+      if (DATE_ARITHMETIC_PATTERN.test(gqlError.message)) {
+        return {
+          key: "bql.errors.dateArithmetic",
+          params: {
+            dateAdd: "date_add(date, days)",
+            dateDiff: "date_diff(first, second)",
+          },
+        };
+      }
+      if (STRING_CONCAT_PATTERN.test(gqlError.message)) {
+        return { key: "bql.errors.stringConcat" };
+      }
+      if (ID_COLUMN_PATTERN.test(gqlError.message)) {
+        return { key: "bql.errors.idColumn", params: { column: "id" } };
       }
     }
   }

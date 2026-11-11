@@ -50,6 +50,30 @@ const nlBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "Het patroon na ~ is geen geldige reguliere expressie. Controleer de haakjes en escapes.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "Deze query-engine kan geen dagen optellen of aftrekken met + of -. Gebruik {dateAdd} om een datum te verschuiven en {dateDiff} om de dagen tussen twee datums te tellen.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "Deze query-engine kan geen tekst samenvoegen met +. Combineer de waarden buiten de query.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "De kolom ‘{column}’ wordt hier niet ondersteund. Filter in plaats daarvan op de datum, omschrijving of rekening van de boeking.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "‘{column}’ moet in {groupBy} staan of in een aggregatiefunctie zoals {sum} of {first}.",

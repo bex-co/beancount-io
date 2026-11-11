@@ -50,6 +50,30 @@ const skBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "Vzor za ~ nie je platný regulárny výraz. Skontrolujte zátvorky a únikové znaky.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "Tento dotazovací nástroj nedokáže pripočítať ani odpočítať dni pomocou + alebo -. Na posun dátumu použite {dateAdd} a na spočítanie dní medzi dvoma dátumami {dateDiff}.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "Tento dotazovací nástroj nedokáže spájať text pomocou +. Hodnoty skombinujte mimo dotazu.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "Stĺpec „{column}“ tu nie je podporovaný. Namiesto toho filtrujte podľa dátumu, popisu alebo účtu záznamu.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "Stĺpec „{column}“ musí byť v {groupBy} alebo v agregačnej funkcii, napríklad {sum} alebo {first}.",

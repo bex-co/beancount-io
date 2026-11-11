@@ -45,6 +45,30 @@ const koBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "~ 뒤의 패턴은 올바른 정규식이 아닙니다. 괄호와 이스케이프를 확인하세요.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "이 쿼리 엔진은 + 또는 -로 날짜를 더하거나 뺄 수 없습니다. 날짜를 옮기려면 {dateAdd}, 두 날짜 사이의 일수를 세려면 {dateDiff}를 사용하세요.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "이 쿼리 엔진은 +로 텍스트를 이어 붙일 수 없습니다. 값은 쿼리 밖에서 합치세요.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "“{column}” 열은 여기에서 지원되지 않습니다. 대신 항목의 날짜, 적요, 계정으로 필터링하세요.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "“{column}”은(는) {groupBy}에 포함하거나 {sum} 또는 {first} 같은 집계 함수로 감싸야 합니다.",

@@ -50,6 +50,30 @@ const deBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "Das Muster nach ~ ist kein gültiger regulärer Ausdruck. Prüfen Sie Klammern und Escape-Zeichen.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "Diese Abfrage-Engine kann mit + oder - keine Tage addieren oder subtrahieren. Verwenden Sie {dateAdd}, um ein Datum zu verschieben, und {dateDiff}, um die Tage zwischen zwei Daten zu zählen.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "Diese Abfrage-Engine kann Text nicht mit + verbinden. Kombinieren Sie die Werte außerhalb der Abfrage.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "Die Spalte „{column}“ wird hier nicht unterstützt. Filtern Sie stattdessen nach Datum, Beschreibung oder Konto des Eintrags.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "„{column}“ muss in {groupBy} stehen oder in einer Aggregatfunktion wie {sum} oder {first}.",

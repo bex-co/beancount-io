@@ -72,6 +72,19 @@ describe("QueryResultCard engine diagnostics", () => {
       "round() takes 2 arguments, not 3.",
     ],
     [
+      "Date arithmetic with + and - is not supported by this query engine: it adds numbers only, while stock beanquery shifts dates by day counts. Spell it with date_add(date, days) and date_diff(first, second) instead.",
+      "This query engine can't add or subtract days with + or -. Use date_add(date, days) to shift a date and date_diff(first, second) to count the days between two.",
+    ],
+    [
+      "The `id` column is not supported by this query engine: it projects positional ordinals where stock beanquery projects stable content hashes.",
+      "The “id” column isn't supported here. Filter on the entry's date, narration or account instead.",
+    ],
+    [
+      // A malformed pattern is not a wrong-typed value (w2/126).
+      "Query execution error: type error: invalid regex: (",
+      "The pattern after ~ isn't a valid regular expression. Check its brackets and escapes.",
+    ],
+    [
       "Query execution error: type error: EMPTY expects an inventory",
       "A value has the wrong type for this comparison or function. Check what the column or function returns.",
     ],

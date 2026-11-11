@@ -46,6 +46,30 @@ const jaBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "~ の後のパターンは有効な正規表現ではありません。括弧とエスケープを確認してください。",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "このクエリエンジンでは + や - で日数を加算・減算できません。日付をずらすには {dateAdd}、2 つの日付の間の日数を数えるには {dateDiff} を使用してください。",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "このクエリエンジンでは + で文字列を連結できません。値はクエリの外で組み合わせてください。",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "「{column}」列はここではサポートされていません。代わりに仕訳の日付、摘要、勘定科目で絞り込んでください。",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "「{column}」は {groupBy} に含めるか、{sum} や {first} などの集計関数で囲む必要があります。",

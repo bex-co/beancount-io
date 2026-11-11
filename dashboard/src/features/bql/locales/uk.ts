@@ -49,6 +49,30 @@ const ukBql: Record<string, TranslationEntry> = {
     description:
       "Query error for a BQL parse failure; {token} is the unexpected token and {position} its 1-based character position in the query",
   },
+  "bql.errors.invalidRegex": {
+    message:
+      "Шаблон після ~ не є допустимим регулярним виразом. Перевірте дужки й екранування.",
+    description:
+      "Query error when the pattern after ~ is not a valid regular expression",
+  },
+  "bql.errors.dateArithmetic": {
+    message:
+      "Цей рушій запитів не вміє додавати чи віднімати дні за допомогою + або -. Використовуйте {dateAdd}, щоб зсунути дату, і {dateDiff}, щоб порахувати дні між двома датами.",
+    description:
+      "Query error for date arithmetic with + or -; {dateAdd} and {dateDiff} are BQL functions left untranslated",
+  },
+  "bql.errors.stringConcat": {
+    message:
+      "Цей рушій запитів не вміє з’єднувати текст за допомогою +. Об’єднайте значення поза запитом.",
+    description:
+      "Query error for joining text with +, which this query engine does not support",
+  },
+  "bql.errors.idColumn": {
+    message:
+      "Стовпець «{column}» тут не підтримується. Фільтруйте за датою, описом або рахунком запису.",
+    description:
+      "Query error for the id column, which this query engine does not support; {column} is the column name",
+  },
   "bql.errors.ungroupedColumn": {
     message:
       "Стовпець «{column}» має бути в {groupBy} або всередині агрегатної функції, наприклад {sum} чи {first}.",
