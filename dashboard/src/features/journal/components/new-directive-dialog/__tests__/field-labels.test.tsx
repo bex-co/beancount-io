@@ -71,7 +71,7 @@ describe("New Entry field labels (w3/498)", () => {
     ).toHaveValue("Assets:Cash");
     expect(
       screen.getByRole("spinbutton", { name: "Posting 2 amount" }),
-    ).toHaveValue(12.5);
+    ).toHaveValue("12.5");
   });
 
   it("numbers a posting added after the first two", async () => {

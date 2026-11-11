@@ -851,6 +851,17 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "部分输入信息无效，请检查后重试。",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "将记录为 {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "“{text}”可能是 {grouped} 或 {decimal}。请输入 {grouped} 或 {decimal}。",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "请用大写字母填写货币，例如 USD。",
     description:

@@ -880,6 +880,17 @@ const skCommon: Record<string, TranslationEntry> = {
       "Niektoré zadané údaje sú neplatné. Skontrolujte ich a skúste to znova.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Zaznamená sa ako {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "„{text}“ môže byť {grouped} alebo {decimal}. Zadajte {grouped} alebo {decimal}.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Menu napíšte veľkými písmenami, napríklad USD.",
     description:

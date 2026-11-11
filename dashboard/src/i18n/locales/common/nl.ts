@@ -875,6 +875,17 @@ const nlCommon: Record<string, TranslationEntry> = {
       "Sommige ingevoerde gegevens zijn ongeldig. Controleer ze en probeer het opnieuw.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Wordt geboekt als {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "‘{text}’ kan {grouped} of {decimal} zijn. Typ {grouped} of {decimal}.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Schrijf de valuta in hoofdletters, bijvoorbeeld USD.",
     description:

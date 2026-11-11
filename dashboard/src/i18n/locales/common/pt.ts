@@ -877,6 +877,17 @@ const ptCommon: Record<string, TranslationEntry> = {
       "Algumas informações fornecidas são inválidas. Verifique e tente novamente.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Será registrado como {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "“{text}” pode ser {grouped} ou {decimal}. Digite {grouped} ou {decimal}.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Escreva a moeda em letras maiúsculas, como USD.",
     description:

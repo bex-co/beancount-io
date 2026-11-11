@@ -135,3 +135,37 @@ describe("New Entry currency format", () => {
     await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1));
   });
 });
+
+/**
+ * A native number field in an English browser turned a typed `4,50` into 450
+ * and New Entry booked it (w2/120).
+ */
+describe("New Entry typed decimal comma", () => {
+  it("books 4,50 as 4.50, never 450", async () => {
+    const mutate = vi.fn().mockResolvedValue({
+      data: { bulkEntries: { success: true } },
+    });
+    vi.mocked(useMutation).mockReturnValue([
+      mutate,
+      { loading: false },
+    ] as unknown as ReturnType<typeof useMutation>);
+    render(<TransactionForm ledgerId="owner/ledger" />);
+    const accounts = screen.getAllByRole("textbox", { name: "Account" });
+    fireEvent.change(accounts[0]!, {
+      target: { value: "Expenses:Food:Coffee" },
+    });
+    fireEvent.change(accounts[1]!, { target: { value: "Assets:Cash" } });
+    fireEvent.change(screen.getAllByRole("spinbutton")[0]!, {
+      target: { value: "4,50" },
+    });
+    expect(screen.getByText("Recorded as 4.50")).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Create Transaction Entry" }),
+    );
+
+    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1));
+    const postings =
+      mutate.mock.calls[0]![0].variables.entries[0].transaction.postings;
+    expect(postings[0].units).toMatchObject({ number: "4.50" });
+  });
+});

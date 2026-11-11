@@ -865,6 +865,17 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "입력한 정보 중 일부가 잘못되었습니다. 확인 후 다시 시도하세요.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "{value}(으)로 기록됩니다",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "“{text}”은(는) {grouped} 또는 {decimal}일 수 있습니다. {grouped} 또는 {decimal}(으)로 입력하세요.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "통화는 USD처럼 대문자로 입력하세요.",
     description:

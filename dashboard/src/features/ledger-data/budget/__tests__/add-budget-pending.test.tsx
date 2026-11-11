@@ -123,7 +123,7 @@ describe.each([
     expect(screen.getByRole("button", { name: /cancel/i })).toBeDisabled();
     fireEvent.keyDown(amount(), { key: "Escape" });
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(amount()).toHaveValue(500);
+    expect(amount()).toHaveValue("500");
 
     await settle("success");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
@@ -147,7 +147,7 @@ describe.each([
     await settle("failure");
     expect(await screen.findByText("Connection problem")).toBeInTheDocument();
     expect(amount()).toBeEnabled();
-    expect(amount()).toHaveValue(500);
+    expect(amount()).toHaveValue("500");
     fireEvent.click(submitButton());
     await waitFor(() => expect(mutate).toHaveBeenCalledTimes(2));
   });
@@ -160,14 +160,14 @@ describe.each([
       screen.getByRole("button", { name: "navigate away", hidden: true }),
     );
     fireEvent.click(screen.getByRole("button", { name: "reopen" }));
-    expect(amount()).toHaveValue(null);
+    expect(amount()).toHaveValue("");
     expect(amount()).toBeDisabled();
 
     await settle("success");
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(amount()).toBeEnabled();
     fireEvent.change(amount(), { target: { value: "900" } });
-    expect(amount()).toHaveValue(900);
+    expect(amount()).toHaveValue("900");
     expect(mutate).toHaveBeenCalledTimes(1);
   });
 });

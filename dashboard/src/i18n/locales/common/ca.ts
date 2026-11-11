@@ -880,6 +880,17 @@ const caCommon: Record<string, TranslationEntry> = {
       "Part de la informació proporcionada no és vàlida. Reviseu-la i torneu-ho a provar.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Es registrarà com a {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "«{text}» pot ser {grouped} o {decimal}. Escriviu {grouped} o {decimal}.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Escriviu la moneda en majúscules, com ara USD.",
     description:

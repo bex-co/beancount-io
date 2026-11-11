@@ -79,7 +79,7 @@ describe("ExactAmountInput on a right-to-left page", () => {
     );
     fireEvent.change(amount(), { target: { value: "-12.50" } });
     expect(amount()).toHaveAttribute("dir", "ltr");
-    expect(amount()).toHaveValue(-12.5);
+    expect(amount()).toHaveValue("-12.50");
     expect((amount() as HTMLInputElement).value).toBe("-12.50");
   });
 

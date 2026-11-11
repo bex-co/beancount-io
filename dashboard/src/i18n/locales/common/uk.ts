@@ -881,6 +881,17 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Деякі введені дані недійсні. Перевірте їх і спробуйте ще раз.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Буде записано як {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "«{text}» може означати {grouped} або {decimal}. Введіть {grouped} або {decimal}.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Укажіть валюту великими латинськими літерами, наприклад USD.",
     description:

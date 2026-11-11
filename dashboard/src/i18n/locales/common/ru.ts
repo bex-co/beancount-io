@@ -881,6 +881,17 @@ const ruCommon: Record<string, TranslationEntry> = {
       "Некоторые введённые данные недействительны. Проверьте их и попробуйте снова.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Будет записано как {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "«{text}» может означать {grouped} или {decimal}. Введите {grouped} или {decimal}.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Укажите валюту заглавными латинскими буквами, например USD.",
     description:

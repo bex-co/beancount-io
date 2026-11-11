@@ -880,6 +880,17 @@ const enCommon: Record<string, TranslationEntry> = {
       "Some of the information provided is invalid. Please check and try again.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Recorded as {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "“{text}” could be {grouped} or {decimal}. Type {grouped} or {decimal}.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Write the currency in capital letters, such as USD.",
     description:

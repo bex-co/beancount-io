@@ -878,6 +878,17 @@ const esCommon: Record<string, TranslationEntry> = {
       "Parte de la información proporcionada no es válida. Revísala e inténtalo de nuevo.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Se registrará como {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "«{text}» puede ser {grouped} o {decimal}. Escribe {grouped} o {decimal}.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Escribe la moneda en mayúsculas, como USD.",
     description:

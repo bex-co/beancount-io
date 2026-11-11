@@ -200,7 +200,7 @@ describe("AddBudgetDialog acknowledgement versus the list read", () => {
     expect(await screen.findByText("Budget refused")).toBeInTheDocument();
     expect(onOpenChange).not.toHaveBeenCalled();
     expect(screen.getByRole("spinbutton", { name: /amount/i })).toHaveValue(
-      500,
+      "500",
     );
     expect(writes).toHaveLength(1);
   });

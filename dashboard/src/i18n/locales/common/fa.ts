@@ -872,6 +872,17 @@ const faCommon: Record<string, TranslationEntry> = {
       "برخی از اطلاعات واردشده نامعتبر است. لطفاً بررسی کنید و دوباره تلاش کنید.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "به‌صورت {value} ثبت می‌شود",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "«{text}» ممکن است {grouped} یا {decimal} باشد. {grouped} یا {decimal} را وارد کنید.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "واحد پول را با حروف بزرگ لاتین بنویسید، مانند USD.",
     description:

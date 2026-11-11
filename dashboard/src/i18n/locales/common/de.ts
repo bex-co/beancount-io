@@ -876,6 +876,17 @@ const deCommon: Record<string, TranslationEntry> = {
       "Einige Angaben sind ungültig. Bitte überprüfen Sie sie und versuchen Sie es erneut.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Wird als {value} gebucht",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "„{text}“ kann {grouped} oder {decimal} bedeuten. Geben Sie {grouped} oder {decimal} ein.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Schreiben Sie die Währung in Großbuchstaben, z. B. USD.",
     description:

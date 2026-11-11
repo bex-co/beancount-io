@@ -233,7 +233,7 @@ describe("Receipt Record", () => {
     );
     expect(field("Payee")).toHaveValue("Corrected Cafe");
     expect(field("Description")).toHaveValue("Team coffee");
-    expect(amount()).toHaveValue(18.75);
+    expect(amount()).toHaveValue("18.75");
     expect(field("Payee")).toBeEnabled();
     await waitFor(() => expect(record).toHaveFocus());
 

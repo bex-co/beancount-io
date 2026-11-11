@@ -867,6 +867,17 @@ const jaCommon: Record<string, TranslationEntry> = {
       "入力された情報の一部が無効です。確認してからもう一度お試しください。",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "{value} として記録されます",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "「{text}」は {grouped} とも {decimal} とも読めます。{grouped} または {decimal} と入力してください。",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "通貨は USD のように大文字で入力してください。",
     description:

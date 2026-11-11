@@ -275,7 +275,7 @@ describe("New Entry while a write is in flight", () => {
     await waitFor(() => expect(held).toHaveLength(2));
     await act(async () => {});
     expect(held).toHaveLength(2);
-    expect(amount).toHaveValue(1.23);
+    expect(amount).toHaveValue("1.23");
   });
 });
 
@@ -397,7 +397,7 @@ describe("New Entry focus while a write is in flight", () => {
 
     await failWrite();
     expect(amount).toHaveFocus();
-    expect(amount).toHaveValue(-1.23);
+    expect(amount).toHaveValue("-1.23");
   });
 });
 
@@ -502,7 +502,7 @@ describe("New Entry type switches", () => {
     fireEvent.mouseDown(screen.getByRole("tab", { name: "Balance" }));
     fireEvent.click(screen.getByRole("tab", { name: "Balance" }));
     await waitFor(
-      () => expect(screen.getByRole("spinbutton")).toHaveValue(49.7),
+      () => expect(screen.getByRole("spinbutton")).toHaveValue("49.70"),
       settle,
     );
   });

@@ -153,9 +153,7 @@ describe("AddBudgetDialog", () => {
     await user.click(screen.getByRole("button", { name: /cancel/i }));
 
     expect(screen.getByTestId("account-combobox")).toHaveValue("");
-    expect(screen.getByRole("spinbutton", { name: /amount/i })).toHaveValue(
-      null,
-    );
+    expect(screen.getByRole("spinbutton", { name: /amount/i })).toHaveValue("");
   });
 
   it("Add Budget button is disabled when form is invalid (empty account)", async () => {

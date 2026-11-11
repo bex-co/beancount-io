@@ -874,6 +874,17 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Част от въведените данни са невалидни. Проверете ги и опитайте отново.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.amountRecordedAs": {
+    message: "Ще се запише като {value}",
+    description:
+      "Shown under an amount field when the booked ledger decimal differs from what was typed, such as 4,50 recorded as 4.50; {value} is that decimal",
+  },
+  "common.amountAmbiguous": {
+    message:
+      "„{text}“ може да е {grouped} или {decimal}. Въведете {grouped} или {decimal}.",
+    description:
+      "Shown under an amount field when a lone separator before three digits could be a thousands group or a decimal; {text} is what was typed",
+  },
   "common.currencyFormat": {
     message: "Напишете валутата с главни букви, например USD.",
     description:
