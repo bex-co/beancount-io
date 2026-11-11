@@ -90,7 +90,7 @@ export function LimitIndicator({
           <div
             className={cn(
               "text-sm",
-              isAtLimit ? "text-destructive/90" : "text-muted-foreground",
+              isAtLimit ? "text-destructive" : "text-muted-foreground",
             )}
           >
             {used} / {max} {limitType}

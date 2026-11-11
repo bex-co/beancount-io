@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { LimitIndicator } from "../limit-indicator";
 import { TEST_LOCATION_HREF } from "@/test/mocks/router";
+import { textContrast } from "@/test/contrast";
 
 vi.mock("@/common/hooks/use-store-upgrade-key", () => ({
   useUpgradeChannel: () => ({ storeUpgradeKey: null, sellsHere: true }),
@@ -170,6 +171,27 @@ describe("LimitIndicator", () => {
 
       expect(screen.getByText(/near limit/)).toBeInTheDocument();
     });
+
+    // The at-limit count is body text on the card; at 90% opacity the dark
+    // theme put it at 4.3:1, below WCAG 1.4.3's 4.5:1 (w2/107).
+    it.each([":root", ".dark"] as const)(
+      "keeps the at-limit count at 4.5:1 or more (%s)",
+      async (theme) => {
+        render(
+          <LimitIndicator tier="FREE" used={10} max={10} limitType="ledgers" />,
+        );
+        const count = screen.getByText("10 / 10 ledgers");
+        const textClass = count.className
+          .split(/\s+/)
+          .find((name) => name.startsWith("text-destructive"));
+        expect(textClass).toBeDefined();
+        const card = screen.getByRole("alert").className.split(/\s+/);
+
+        expect(
+          await textContrast(textClass!, card, theme),
+        ).toBeGreaterThanOrEqual(4.5);
+      },
+    );
 
     it("should not show near limit message when at 100%", () => {
       render(
