@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { disclosureAccessibility } from "@/common/accessibility";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
@@ -114,6 +121,8 @@ export function BudgetHistoryRows({
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t, locale } = useTranslations();
+  // Each Text below is keyed on it to re-measure after a live size change.
+  const { fontScale } = useWindowDimensions();
   const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { deleteBudgetEntry, deleting } = useDeleteBudgetEntry(ledgerId);
@@ -171,7 +180,7 @@ export function BudgetHistoryRows({
         accessibilityLabel={t("budgetHistoryCount", { count: rows.length })}
         {...disclosureAccessibility(expanded, t)}
       >
-        <Text style={styles.toggleText}>
+        <Text key={`toggle-${fontScale}`} style={styles.toggleText}>
           {t("budgetHistoryCount", { count: rows.length })}
         </Text>
         <Ionicons
@@ -187,10 +196,10 @@ export function BudgetHistoryRows({
             key={keys.get(row)}
             style={[styles.row, row.isCurrent && styles.rowCurrent]}
           >
-            <Text style={styles.date}>
+            <Text key={`date-${fontScale}`} style={styles.date}>
               {formatLedgerDateShort(row.date, locale)}
             </Text>
-            <Text style={styles.interval}>
+            <Text key={`interval-${fontScale}`} style={styles.interval}>
               {t(intervalLabelKey(row.interval))}
             </Text>
             <AmountText style={styles.amount}>

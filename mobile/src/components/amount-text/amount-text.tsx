@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TextProps } from "react-native";
+import { StyleSheet, Text, TextProps, useWindowDimensions } from "react-native";
 import {
   amountMaxFontSizeMultiplier,
   amountStyle,
@@ -37,10 +37,17 @@ const styles = StyleSheet.create({
  * decimal point, and a Dynamic Type cap so amounts — which can't ellipsize
  * without lying — never scale out of their row. Size, weight, and color come
  * from the caller's style.
+ *
+ * Remounts on a live text-size change: iOS keeps a Text's native measurement
+ * while its props are unchanged, so an amount first measured at a smaller size
+ * would clip its lower edge after the change (mobile/AGENTS.md, w22/018). Keyed
+ * here once so no caller has to.
  */
 export function AmountText({ mono, style, ...rest }: AmountTextProps) {
+  const { fontScale } = useWindowDimensions();
   return (
     <Text
+      key={fontScale}
       maxFontSizeMultiplier={amountMaxFontSizeMultiplier}
       {...rest}
       style={[

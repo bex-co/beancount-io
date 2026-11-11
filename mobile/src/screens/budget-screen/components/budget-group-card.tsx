@@ -313,17 +313,19 @@ export function BudgetGroupCard({
         </View>
         <View style={styles.badgeRow}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>
+            <Text key={`interval-${fontScale}`} style={styles.badgeText}>
               {t(intervalLabelKey(group.interval))}
             </Text>
           </View>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{currency}</Text>
+            <Text key={`currency-${fontScale}`} style={styles.badgeText}>
+              {currency}
+            </Text>
           </View>
           {stats.startsOn !== null && (
             // Not yet in effect: neutral, never "Above target" (w21/101).
             <View style={[styles.statusBadge, { borderColor: theme.black60 }]}>
-              <Text style={styles.statusText}>
+              <Text key={`starts-on-${fontScale}`} style={styles.statusText}>
                 {t("budgetStartsOn", {
                   date: formatLedgerDate(stats.startsOn, locale),
                 })}
@@ -332,7 +334,7 @@ export function BudgetGroupCard({
           )}
           {stats.status !== null && (
             <View style={[styles.statusBadge, { borderColor: statusColor }]}>
-              <Text style={styles.statusText}>
+              <Text key={`status-${fontScale}`} style={styles.statusText}>
                 {t(STATUS_LABEL_KEYS[stats.status])}
               </Text>
             </View>
@@ -342,14 +344,18 @@ export function BudgetGroupCard({
 
       <View style={styles.stats}>
         <View style={styles.stat}>
-          <Text style={styles.statLabel}>{t("budget")}</Text>
+          <Text key={`budget-${fontScale}`} style={styles.statLabel}>
+            {t("budget")}
+          </Text>
           <AmountText style={styles.statValue}>
             {formatAmount(stats.budgetExact)}
           </AmountText>
         </View>
         {stats.actualExact !== null && (
           <View style={styles.stat}>
-            <Text style={styles.statLabel}>{t("budgetActual")}</Text>
+            <Text key={`actual-${fontScale}`} style={styles.statLabel}>
+              {t("budgetActual")}
+            </Text>
             <AmountText style={styles.statValue}>
               {formatSignedMoneyWithCurrency(
                 stats.actualExact,
@@ -362,7 +368,9 @@ export function BudgetGroupCard({
         )}
         {stats.varianceExact !== null && (
           <View style={styles.stat}>
-            <Text style={styles.statLabel}>{t("budgetVariance")}</Text>
+            <Text key={`variance-${fontScale}`} style={styles.statLabel}>
+              {t("budgetVariance")}
+            </Text>
             <AmountText style={[styles.statValue, { color: statusColor }]}>
               {formatSignedMoneyWithCurrency(
                 stats.varianceExact,

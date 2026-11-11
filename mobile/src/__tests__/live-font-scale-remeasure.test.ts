@@ -435,6 +435,32 @@ describe("LegendItem live font-scale remeasurement", () => {
   });
 });
 
+describe("AmountText live font-scale remeasurement", () => {
+  const { AmountText } = load("components/amount-text/amount-text.tsx", {
+    "react-native": reactNative,
+  });
+  const amount = (value: string): Node =>
+    render(AmountText, { style: { color: "red" }, children: value });
+
+  it("remounts at a new scale and restores its key on the way back", () => {
+    const before = amount("$12.00");
+    fontScale = 3.12;
+    const enlarged = amount("$12.00");
+    fontScale = 1;
+    const restored = amount("$12.00");
+
+    expect(enlarged.type).toBe("Text");
+    expect(enlarged.props.key).not.toEqual(before.props.key);
+    expect(restored.props.key).toEqual(before.props.key);
+    // Passed through as a prop, so it is not among the node's children.
+    expect(enlarged.props.children).toBe("$12.00");
+  });
+
+  it("keeps the amount mounted when only its value changes", () => {
+    expect(amount("$1.00").props.key).toEqual(amount("$2.00").props.key);
+  });
+});
+
 // Home's lower cards (w21/015): Spending's subtitle, Budget's rows and empty
 // line, and Latest Updates' rows clipped or left blank bands after a live
 // text-size change. The Files rows and the Reports note (w22/008) did the same.
@@ -471,6 +497,27 @@ const KEYED_TEXTS: [string, string[]][] = [
   ["screens/reports-screen/reports-screen.tsx", ["{styles.anchorNote}"]],
   // Every chart legend entry shares this one Text (w22/008).
   ["common/d3/chart-chrome.tsx", ["{styles.legendText}"]],
+  // A Budget card: the account title (keyed since w21/027), the interval and
+  // currency chips, the starts-on and status chips, and the Budget / Actual /
+  // Variance labels (w22/018). Their amounts are AmountText, keyed itself.
+  [
+    "screens/budget-screen/components/budget-group-card.tsx",
+    [
+      "{[styles.account, stacked && styles.accountStacked]}",
+      "{styles.badgeText}",
+      "{styles.badgeText}",
+      "{styles.statusText}",
+      "{styles.statusText}",
+      "{styles.statLabel}",
+      "{styles.statLabel}",
+      "{styles.statLabel}",
+    ],
+  ],
+  // The "N entries" toggle and each entry's date and interval (w22/018).
+  [
+    "screens/budget-screen/components/budget-history-rows.tsx",
+    ["{styles.toggleText}", "{styles.date}", "{styles.interval}"],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",
