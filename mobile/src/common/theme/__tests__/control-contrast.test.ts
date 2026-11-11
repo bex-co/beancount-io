@@ -15,6 +15,8 @@ import fs from "fs";
 import path from "path";
 import { contrastRatio, relativeLuminance } from "../color-utils";
 import { themes, type ThemeName } from "../palette";
+import { switchTrackProps } from "../switch-colors";
+import ts from "typescript";
 
 /** WCAG 1.4.11 — boundary of an interactive component vs adjacent color. */
 const NON_TEXT_BAR = 3;
@@ -187,5 +189,87 @@ describe("success and error as text", () => {
         .replace(/\s+/g, "")
         .includes("?theme.successText:theme.errorText;"),
     ).toBe(true);
+  });
+});
+
+// w22/036: a Switch's off state is a control boundary. React Native on iOS maps
+// `trackColor.false` to the native tint (the outline) and draws the off FILL from
+// `ios_backgroundColor`, which no call site set, so the fill was iOS's default
+// grey: 1.72:1 against white and 2.45:1 on the dark page.
+describe("the Switch's off track", () => {
+  for (const name of THEME_NAMES) {
+    const theme = themes[name].colorTheme;
+    const { trackColor, ios_backgroundColor } = switchTrackProps(theme);
+
+    it(`has a fill that reaches 3:1 on the page and on the control fill in ${name}`, () => {
+      expect(
+        contrastRatio(ios_backgroundColor, theme.white) >= NON_TEXT_BAR,
+      ).toBe(true);
+      expect(
+        contrastRatio(ios_backgroundColor, theme.controlFill) >= NON_TEXT_BAR,
+      ).toBe(true);
+    });
+
+    it(`draws its outline in the fill's colour in ${name}`, () => {
+      // On iOS `trackColor.false` is the outline: it must not be another colour.
+      expect(trackColor.false).toBe(ios_backgroundColor);
+    });
+
+    it(`keeps the thumb apart from the off track in ${name}`, () => {
+      // The merchant switch's thumb is `theme.white`, the page colour.
+      expect(
+        contrastRatio(theme.white, ios_backgroundColor) >= NON_TEXT_BAR,
+      ).toBe(true);
+    });
+
+    it(`keeps the on state the brand colour in ${name}`, () => {
+      expect(trackColor.true).toBe(theme.primary);
+    });
+  }
+
+  it("is set by every Switch in the app", () => {
+    const root = path.join(__dirname, "..", "..", "..");
+    const files = (dir: string): string[] =>
+      fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          return ["__tests__", "generated-graphql"].includes(entry.name)
+            ? []
+            : files(full);
+        }
+        return entry.name.endsWith(".tsx") ? [full] : [];
+      });
+    const unset: string[] = [];
+    let seen = 0;
+    for (const file of files(root)) {
+      const source = ts.createSourceFile(
+        file,
+        fs.readFileSync(file, "utf8"),
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TSX,
+      );
+      const visit = (node: ts.Node) => {
+        if (
+          (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
+          node.tagName.getText() === "Switch"
+        ) {
+          seen += 1;
+          const sets = node.attributes.properties.some(
+            (prop) =>
+              (ts.isJsxAttribute(prop) &&
+                prop.name.getText() === "ios_backgroundColor") ||
+              (ts.isJsxSpreadAttribute(prop) &&
+                prop.expression.getText().startsWith("switchTrackProps(")),
+          );
+          if (!sets) unset.push(path.relative(root, file));
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(source);
+    }
+    // The merchant Recurring toggle, New Ledger's Private and the text-input modal's.
+    expect(seen >= 3).toBe(true);
+    expect(unset).toEqual([]);
   });
 });

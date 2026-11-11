@@ -117,6 +117,8 @@ function screen(refreshFails: boolean, here = true) {
           return { useTheme: () => ({ colorTheme: {} }) };
         if (id === "@/common/vars")
           return { ledgerVar: () => events.push("select") };
+        if (id === "@/common/theme/switch-colors")
+          return { switchTrackProps: () => ({}) };
         if (id === "@/common/rtl") return {};
         if (id === "./ledger-name") return names;
         throw new Error(`Unexpected dependency: ${id}`);

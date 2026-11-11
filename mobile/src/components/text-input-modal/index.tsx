@@ -20,6 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { durations, useTheme } from "@/common/theme";
 import { easeStandard } from "@/common/theme/motion-easing";
+import { switchTrackProps } from "@/common/theme/switch-colors";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
 
@@ -289,6 +290,7 @@ export const TextInputModal: React.FC<TextInputModalProps> = ({
                   <Switch
                     value={toggle.value}
                     onValueChange={toggle.onValueChange}
+                    {...switchTrackProps(theme)}
                     accessibilityLabel={toggle.label}
                   />
                 </View>

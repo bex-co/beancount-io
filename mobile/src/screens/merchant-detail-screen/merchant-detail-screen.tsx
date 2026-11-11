@@ -22,6 +22,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { switchTrackProps } from "@/common/theme/switch-colors";
 import { contentColumn } from "@/common/content-column";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -695,7 +696,7 @@ function MerchantDetailBody({
           accessibilityHint={t("merchantsRecurringToggleHelper")}
           value={resolved.isRecurring}
           onValueChange={onToggleRecurring}
-          trackColor={{ false: theme.black20, true: theme.primary }}
+          {...switchTrackProps(theme)}
           thumbColor={theme.white}
         />
       </View>

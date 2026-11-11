@@ -33,6 +33,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
+import { switchTrackProps } from "@/common/theme/switch-colors";
 import { contentColumn } from "@/common/content-column";
 import { useLedgerDirectory } from "@/common/ledger-directory/ledger-directory-provider";
 import { ledgerVar } from "@/common/vars";
@@ -397,7 +398,7 @@ export function CreateLedgerScreen(): JSX.Element {
                 <Switch
                   value={value}
                   onValueChange={onChange}
-                  trackColor={{ false: theme.black20, true: theme.primary }}
+                  {...switchTrackProps(theme)}
                   accessibilityLabel={t("createLedgerPrivate")}
                 />
               )}
