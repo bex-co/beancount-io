@@ -247,27 +247,38 @@ export function AccountEntryRow({
 
       <View style={styles.middleColumn}>
         <View style={styles.middle}>
-          <Text style={styles.title} numberOfLines={stacked ? undefined : 1}>
+          <Text
+            key={`title-${fontScale}`}
+            style={styles.title}
+            numberOfLines={stacked ? undefined : 1}
+          >
             {title}
           </Text>
           {typeLabelKey && (
             <View style={styles.typeBadge}>
-              <Text style={styles.typeBadgeText}>{t(typeLabelKey)}</Text>
+              <Text key={`type-${fontScale}`} style={styles.typeBadgeText}>
+                {t(typeLabelKey)}
+              </Text>
             </View>
           )}
           {badge?.kind === "pending" && (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>!</Text>
+              <Text key={`pending-${fontScale}`} style={styles.badgeText}>
+                !
+              </Text>
             </View>
           )}
           {badge && badge.kind !== "pending" && (
             <View style={styles.typeBadge}>
-              <Text style={styles.typeBadgeText}>{flagLabel}</Text>
+              <Text key={`flag-${fontScale}`} style={styles.typeBadgeText}>
+                {flagLabel}
+              </Text>
             </View>
           )}
         </View>
         {detailText !== null ? (
           <Text
+            key={`detail-${fontScale}`}
             testID="account-entry-detail"
             style={styles.detail}
             numberOfLines={stacked ? undefined : 2}
@@ -298,7 +309,9 @@ export function AccountEntryRow({
           {changeText}
         </AmountText>
         {notInTotalText !== null ? (
-          <Text style={styles.balance}>{notInTotalText}</Text>
+          <Text key={`not-in-total-${fontScale}`} style={styles.balance}>
+            {notInTotalText}
+          </Text>
         ) : null}
         {costText !== null ? (
           <AmountText style={styles.balance}>{costText}</AmountText>

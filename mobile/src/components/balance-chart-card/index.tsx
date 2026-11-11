@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { FadeInView } from "@/components/crossfade";
 import { PressableScale } from "@/components/pressable-scale";
@@ -110,6 +110,8 @@ export function BalanceChartCard({
 }: BalanceChartCardProps): JSX.Element {
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
+  // Keys the caption to re-measure after a live text-size change (w22/023).
+  const { fontScale } = useWindowDimensions();
   const [range, setRange] = useState<TimeRange>("6M");
 
   if (loading) {
@@ -149,7 +151,10 @@ export function BalanceChartCard({
             accessibilityLabel={label}
             accessibilityHint={t("valuationDetailsHint")}
           >
-            <Text style={[styles.captionText, { color: theme.black80 }]}>
+            <Text
+              key={fontScale}
+              style={[styles.captionText, { color: theme.black80 }]}
+            >
               {label}
             </Text>
             <Ionicons

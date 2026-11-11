@@ -14,12 +14,13 @@ describe("the pending badge", () => {
       read("account-detail-screen", "components", "account-entry-row.tsx"),
       read("transaction-detail-screen", "components", "posting-row.tsx"),
     ]) {
-      expect(file.includes("<Text style={styles.badgeText}>!</Text>")).toBe(
-        true,
-      );
-      expect(file.includes("<Text style={styles.badgeText}>P</Text>")).toBe(
-        false,
-      );
+      // Any attributes before the style: the badge may carry a font-scale key.
+      const badge = (flag: string) =>
+        new RegExp(
+          `<Text[^>]*style=\\{styles\\.badgeText\\}>\\s*${flag}\\s*</Text>`,
+        );
+      expect(badge("!").test(file)).toBe(true);
+      expect(badge("P").test(file)).toBe(false);
     }
   });
 

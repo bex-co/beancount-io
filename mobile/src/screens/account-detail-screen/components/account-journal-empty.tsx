@@ -140,10 +140,14 @@ export function AccountJournalListEmpty({
   message: string;
 }): JSX.Element {
   const styles = useThemeStyle(getStyles);
+  // Keys the message to re-measure after a live text-size change (w22/023).
+  const { fontScale } = useWindowDimensions();
   if (loading) return <AccountJournalSkeleton />;
   return (
     <View style={styles.state}>
-      <Text style={styles.stateText}>{message}</Text>
+      <Text key={fontScale} style={styles.stateText}>
+        {message}
+      </Text>
     </View>
   );
 }

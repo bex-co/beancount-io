@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, {
   Path,
@@ -406,6 +412,9 @@ function ScrubHeader({
 }: ScrubHeaderProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { t, locale } = useTranslations();
+  // Keys the Texts to re-measure after a live text-size change (w22/023); the
+  // amounts key themselves.
+  const { fontScale } = useWindowDimensions();
   // A change that rounds to nothing is neither good nor bad (w21/237).
   const neutralColor = useTheme().colorTheme.black80;
 
@@ -499,7 +508,9 @@ function ScrubHeader({
           {changeText}
         </AmountText>
         {scrubLabel !== null && (
-          <Text style={styles.scrubLabel}>{`· ${scrubLabel}`}</Text>
+          <Text key={`scrub-${fontScale}`} style={styles.scrubLabel}>
+            {`· ${scrubLabel}`}
+          </Text>
         )}
       </View>
       {footnote !== undefined && (
@@ -532,6 +543,7 @@ function InteractiveLineChart({
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
+  const { fontScale } = useWindowDimensions();
   const swipeOwner = useHorizontalSwipeOwnerGesture();
 
   // Measured from the container, so an iPad rotation or Split View resize
@@ -899,7 +911,11 @@ function InteractiveLineChart({
               : undefined
           }
         >
-          {label !== undefined && <Text style={styles.label}>{label}</Text>}
+          {label !== undefined && (
+            <Text key={`label-${fontScale}`} style={styles.label}>
+              {label}
+            </Text>
+          )}
           <ScrubHeader
             footnote={footnote}
             labels={labels}
@@ -1024,7 +1040,10 @@ function InteractiveLineChart({
 
             {!hasSeries && (
               <View style={styles.placeholder} pointerEvents="none">
-                <Text style={styles.placeholderText}>
+                <Text
+                  key={`placeholder-${fontScale}`}
+                  style={styles.placeholderText}
+                >
                   {placeholder ?? t("notEnoughChartData")}
                 </Text>
               </View>

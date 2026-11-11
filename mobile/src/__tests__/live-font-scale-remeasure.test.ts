@@ -633,6 +633,45 @@ const KEYED_TEXTS: [string, string[]][] = [
     "screens/transactions-screen/entry-context/balance-section.tsx",
     ["{styles.balanceSectionHeaderText}", "{styles.balanceAccount}"],
   ],
+  // Account detail: the path, the Transactions title and the footer notes
+  // (w22/023). The totals and amounts are AmountText.
+  [
+    "screens/account-detail-screen/account-detail-screen.tsx",
+    [
+      "{styles.accountPath}",
+      "{styles.sectionTitle}",
+      "{styles.footerText}",
+      "{styles.footerText}",
+    ],
+  ],
+  // The Balance card's caption, shared by the account detail only (w22/023).
+  [
+    "components/balance-chart-card/index.tsx",
+    ["{[styles.captionText, { color: theme.black80 }]}"],
+  ],
+  // The line chart's scrub label, label and placeholder, shared with Home
+  // (w22/023).
+  [
+    "common/d3/interactive-line-chart.tsx",
+    ["{styles.scrubLabel}", "{styles.label}", "{styles.placeholderText}"],
+  ],
+  // An entry row's payee, badges, detail and not-in-total lines (w22/023).
+  [
+    "screens/account-detail-screen/components/account-entry-row.tsx",
+    [
+      "{styles.title}",
+      "{styles.typeBadgeText}",
+      "{styles.badgeText}",
+      "{styles.typeBadgeText}",
+      "{styles.detail}",
+      "{styles.balance}",
+    ],
+  ],
+  // The empty and error message of an account's journal (w22/023).
+  [
+    "screens/account-detail-screen/components/account-journal-empty.tsx",
+    ["{styles.stateText}"],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",

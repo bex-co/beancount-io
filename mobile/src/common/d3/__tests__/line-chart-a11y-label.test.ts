@@ -21,8 +21,10 @@ describe("a chart named only to a screen reader", () => {
       chart.includes("chartSummaryLabel(label??a11yLabel,a11ySeries)"),
     ).toBe(true);
     expect(
-      chart.includes("{label!==undefined&&<Textstyle={styles.label}>"),
+      chart.includes(
+        "{label!==undefined&&(<Textkey={`label-${fontScale}`}style={styles.label}>",
+      ),
     ).toBe(true);
-    expect(chart.includes("<Textstyle={styles.label}>{a11yLabel}")).toBe(false);
+    expect(chart.includes("style={styles.label}>{a11yLabel}")).toBe(false);
   });
 });

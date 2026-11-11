@@ -8,6 +8,7 @@ import {
   SectionList,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -133,6 +134,9 @@ const AccountDetailScreenImpl = ({
   const guest = useGuest();
   const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
+  // Keys re-measure the Texts after a live text-size change (w22/023); the
+  // memoized header rebuilds with it.
+  const { fontScale } = useWindowDimensions();
   // `.name` is the *resolved* theme — `themeVar` itself can hold "system", so
   // comparing that to "dark" gave every system-theme user the light indicator.
   const { colorTheme: theme, name: themeName } = useTheme();
@@ -557,6 +561,7 @@ const AccountDetailScreenImpl = ({
     () => (
       <>
         <Text
+          key={`path-${fontScale}`}
           style={styles.accountPath}
           accessibilityRole="header"
           accessibilityLabel={account}
@@ -590,7 +595,11 @@ const AccountDetailScreenImpl = ({
             onLabelPress={openValuation}
           />
         </View>
-        <Text style={styles.sectionTitle} accessibilityRole="header">
+        <Text
+          key={`transactions-${fontScale}`}
+          style={styles.sectionTitle}
+          accessibilityRole="header"
+        >
           {t("transactions")}
         </Text>
       </>
@@ -613,6 +622,7 @@ const AccountDetailScreenImpl = ({
       styles.accountPath,
       account,
       netWorthSign,
+      fontScale,
     ],
   );
 
@@ -666,13 +676,17 @@ const AccountDetailScreenImpl = ({
           isLoadingMore ? (
             <View style={styles.footer}>
               <ActivityIndicator color={theme.primary} />
-              <Text style={styles.footerText}>{t("loadingMore")}</Text>
+              <Text key={`loading-${fontScale}`} style={styles.footerText}>
+                {t("loadingMore")}
+              </Text>
             </View>
           ) : loadMoreFailed && hasMore ? (
             <LoadMoreFailed onRetry={() => void loadMore(true)} />
           ) : !hasMore && rows.length > 0 ? (
             <View style={styles.footer}>
-              <Text style={styles.footerText}>{t("noMoreEntries")}</Text>
+              <Text key={`no-more-${fontScale}`} style={styles.footerText}>
+                {t("noMoreEntries")}
+              </Text>
             </View>
           ) : null
         }
