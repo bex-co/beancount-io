@@ -232,6 +232,11 @@ const bgImporter: Record<string, TranslationEntry> = {
     message: "Ред",
     description: "Table header for row number column",
   },
+  "importer.preview.fieldError": {
+    message: "{field}: {message}",
+    description:
+      "Invalid preview row diagnostic: the localized column label, then its validation message",
+  },
   "importer.preview.date": {
     message: "Дата",
     description: "Table header for date column",

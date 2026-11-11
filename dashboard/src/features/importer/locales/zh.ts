@@ -213,6 +213,11 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "行",
     description: "Table header for row number column",
   },
+  "importer.preview.fieldError": {
+    message: "{field}：{message}",
+    description:
+      "Invalid preview row diagnostic: the localized column label, then its validation message",
+  },
   "importer.preview.date": {
     message: "日期",
     description: "Table header for date column",

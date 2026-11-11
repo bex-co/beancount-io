@@ -20,6 +20,15 @@ import { buildParsedRow, parseAmount } from "../../../utils/csv-validator";
 import { formatImportDateForDisplay } from "../../../utils/format-import-date";
 import type { ParsedRow } from "../../../types";
 
+// The header's own labels, so a diagnostic names its column in the reader's
+// language rather than by its form key (w2/105).
+const FIELD_LABEL_KEYS = {
+  date: "importer.preview.date",
+  payee: "importer.preview.payee",
+  description: "importer.preview.description_column",
+  amount: "importer.preview.amount",
+} as const satisfies Record<keyof EditableRowData, string>;
+
 interface EditablePreviewRowProps {
   row: ParsedRow;
   index: number;
@@ -271,8 +280,12 @@ export function EditablePreviewRow({
                 <div key={field} className="flex items-start gap-1">
                   <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
                   <span>
-                    <strong className="capitalize">{field}:</strong>{" "}
-                    {validationMessage(error?.message)}
+                    {t("importer.preview.fieldError", {
+                      field: t(
+                        FIELD_LABEL_KEYS[field as keyof EditableRowData],
+                      ),
+                      message: validationMessage(error?.message) ?? "",
+                    })}
                   </span>
                 </div>
               ))}

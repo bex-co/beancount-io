@@ -216,6 +216,11 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "행",
     description: "Table header for row number column",
   },
+  "importer.preview.fieldError": {
+    message: "{field}: {message}",
+    description:
+      "Invalid preview row diagnostic: the localized column label, then its validation message",
+  },
   "importer.preview.date": {
     message: "날짜",
     description: "Table header for date column",

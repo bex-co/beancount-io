@@ -47,9 +47,9 @@ describe("EditablePreviewRow initial diagnostics", () => {
     expect(
       screen.getAllByText("importer.validation.amountInvalid").length,
     ).toBeGreaterThan(0);
-    // The diagnostic row names the offending fields.
-    expect(screen.getByText("date:")).toBeInTheDocument();
-    expect(screen.getByText("amount:")).toBeInTheDocument();
+    // The diagnostic row has a line per offending field; the localized
+    // labels are covered by diagnostic-field-labels.test.tsx.
+    expect(screen.getAllByText("importer.preview.fieldError")).toHaveLength(2);
   });
 
   it("does not steal focus while validating on mount", async () => {

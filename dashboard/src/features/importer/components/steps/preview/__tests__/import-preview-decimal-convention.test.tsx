@@ -9,8 +9,15 @@ import type { CSVParseResult } from "../../../../types";
 // decision, or a comma-decimal file paints valid rows red (w3/644).
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
-    t: (key: string, options?: { field?: string; row?: number }) =>
-      options?.field ? `${options.field} ${options.row}` : key,
+    t: (
+      key: string,
+      options?: { field?: string; row?: number; message?: string },
+    ) =>
+      key === "importer.preview.fieldError"
+        ? `${options?.field}: ${options?.message}`
+        : options?.field
+          ? `${options.field} ${options.row}`
+          : key,
     i18n: { language: "en" },
   }),
 }));
@@ -107,7 +114,7 @@ describe("ImportPreviewTable amount column convention", () => {
     // Each refused row names it under its cell and in its diagnostic row.
     await waitFor(() => {
       expect(
-        screen.getAllByText("importer.validation.amountMixedDecimals"),
+        screen.getAllByText(/importer\.validation\.amountMixedDecimals$/),
       ).toHaveLength(4);
     });
     // A mixed row has no reading to show.
@@ -127,7 +134,7 @@ describe("ImportPreviewTable amount column convention", () => {
     // Only row 2 is still refused.
     await waitFor(() => {
       expect(
-        screen.getAllByText("importer.validation.amountMixedDecimals"),
+        screen.getAllByText(/importer\.validation\.amountMixedDecimals$/),
       ).toHaveLength(2);
     });
   });
