@@ -623,6 +623,11 @@ const enImporter: Record<string, TranslationEntry> = {
     message: "Invalid date format. Expected YYYY-MM-DD",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "Not a real calendar date. Check the month and day",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Payee is required",
     description: "Validation error for a missing import payee",

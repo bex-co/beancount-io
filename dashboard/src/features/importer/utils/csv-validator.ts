@@ -19,6 +19,12 @@ function isLeapYear(year: number): boolean {
 }
 
 /**
+ * Why `parseDate` rejected a date: not written `YYYY-MM-DD`, or written so
+ * but not on the calendar (`2026-02-30`, `2026-13-01`).
+ */
+export type DateParseFailureReason = "format" | "value";
+
+/**
  * Parse and validate a ledger calendar date (`YYYY-MM-DD`).
  *
  * Validation is pure Gregorian arithmetic (month length plus the leap rule) —
@@ -36,21 +42,26 @@ export function parseDate(dateStr: string): {
   valid: boolean;
   isoDate?: string;
   error?: string;
+  reason?: DateParseFailureReason;
 } {
   if (!isValidDateFormat(dateStr)) {
-    return { valid: false, error: "Invalid date format. Expected YYYY-MM-DD" };
+    return {
+      valid: false,
+      error: "Invalid date format. Expected YYYY-MM-DD",
+      reason: "format",
+    };
   }
 
   const [year, month, day] = dateStr.split("-").map(Number);
 
   if (year < 1 || month < 1 || month > 12) {
-    return { valid: false, error: "Invalid date value" };
+    return { valid: false, error: "Invalid date value", reason: "value" };
   }
 
   const maxDay =
     month === 2 && isLeapYear(year) ? 29 : DAYS_IN_MONTH[month - 1];
   if (day < 1 || day > maxDay) {
-    return { valid: false, error: "Invalid date value" };
+    return { valid: false, error: "Invalid date value", reason: "value" };
   }
 
   return { valid: true, isoDate: dateStr };

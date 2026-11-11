@@ -585,6 +585,11 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "無効な日付形式です。 YYYY-MM-DD予定",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "暦に存在しない日付です。月と日を確認してください",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "受取人は必須です",
     description: "Validation error for a missing import payee",

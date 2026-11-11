@@ -665,6 +665,11 @@ const esImporter: Record<string, TranslationEntry> = {
     message: "Formato de fecha no válido. Esperado AAAA-MM-DD",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "Esta fecha no existe en el calendario. Revisa el mes y el día",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Se requiere beneficiario",
     description: "Validation error for a missing import payee",

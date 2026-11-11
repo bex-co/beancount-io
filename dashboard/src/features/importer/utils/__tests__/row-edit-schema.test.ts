@@ -57,6 +57,23 @@ describe("row-edit-schema", () => {
         });
         expect(result.success).toBe(false);
       });
+
+      // A day written YYYY-MM-DD that the calendar lacks is not told to use
+      // YYYY-MM-DD; a misformatted one still is (w2/106).
+      it.each([
+        ["2026-02-30", "importer.validation.invalidDateValue"],
+        ["2026-04-31", "importer.validation.invalidDateValue"],
+        ["2026-13-01", "importer.validation.invalidDateValue"],
+        ["09/07/2026", "importer.validation.invalidDateFormat"],
+        ["2026-2-3", "importer.validation.invalidDateFormat"],
+      ])("reports %s as %s", (date, message) => {
+        const result = editableRowSchema.safeParse({ ...validRow, date });
+        expect(result.success).toBe(false);
+        const messages = result.error?.issues
+          .filter((issue) => issue.path.includes("date"))
+          .map((issue) => issue.message);
+        expect(messages).toEqual([message]);
+      });
     });
 
     describe("payee field", () => {

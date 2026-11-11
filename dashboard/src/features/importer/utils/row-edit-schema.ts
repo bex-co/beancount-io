@@ -32,8 +32,18 @@ export const createEditableRowSchema = ({
     date: z
       .string()
       .min(1, "importer.validation.dateRequired")
-      .refine((val: string) => parseDate(val).valid, {
-        message: "importer.validation.invalidDateFormat",
+      .superRefine((val: string, ctx) => {
+        const result = parseDate(val);
+        if (result.valid) return;
+        // A well-formed day that is not on the calendar is not a format
+        // mistake: `2026-02-30` already reads YYYY-MM-DD (w2/106).
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            result.reason === "value"
+              ? "importer.validation.invalidDateValue"
+              : "importer.validation.invalidDateFormat",
+        });
       }),
 
     payee: z
@@ -91,6 +101,7 @@ export type PreviewTableFormData = z.infer<typeof previewTableFormSchema>;
 export type ImporterValidationKey =
   | "importer.validation.dateRequired"
   | "importer.validation.invalidDateFormat"
+  | "importer.validation.invalidDateValue"
   | "importer.validation.payeeRequired"
   | "importer.validation.descriptionRequired"
   | "importer.validation.amountRequired"

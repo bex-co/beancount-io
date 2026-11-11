@@ -702,6 +702,11 @@ const ruImporter: Record<string, TranslationEntry> = {
     message: "Неверный формат даты. Ожидаемый ГГГГ-ММ-ДД",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "Такой даты нет в календаре. Проверьте месяц и день",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Необходимо указать получателя платежа.",
     description: "Validation error for a missing import payee",

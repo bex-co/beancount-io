@@ -667,6 +667,11 @@ const caImporter: Record<string, TranslationEntry> = {
     message: "Format de data no vàlid. S'esperava AAAA-MM-DD",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "Aquesta data no existeix al calendari. Comproveu el mes i el dia",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Cal el beneficiari",
     description: "Validation error for a missing import payee",

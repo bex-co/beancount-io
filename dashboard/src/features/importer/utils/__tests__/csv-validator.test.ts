@@ -89,6 +89,14 @@ describe("csv-validator", () => {
       expect(result.error).toBe("Invalid date value");
     });
 
+    it("tells a format mistake from a day the calendar lacks", () => {
+      expect(parseDate("09/07/2026").reason).toBe("format");
+      expect(parseDate("").reason).toBe("format");
+      expect(parseDate("2026-02-30").reason).toBe("value");
+      expect(parseDate("2026-13-01").reason).toBe("value");
+      expect(parseDate("2026-02-28").reason).toBeUndefined();
+    });
+
     it("should reject a zero month, a month past December, and day zero", () => {
       expect(parseDate("2024-00-10").error).toBe("Invalid date value");
       expect(parseDate("2024-13-10").error).toBe("Invalid date value");

@@ -668,6 +668,12 @@ const frImporter: Record<string, TranslationEntry> = {
     message: "Format de date invalide. Prévu AAAA-MM-JJ",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message:
+      "Cette date n’existe pas dans le calendrier. Vérifiez le mois et le jour",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Le bénéficiaire est requis",
     description: "Validation error for a missing import payee",

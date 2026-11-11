@@ -625,6 +625,11 @@ const faImporter: Record<string, TranslationEntry> = {
     message: "قالب تاریخ نامعتبر است. YYYY-MM-DD مورد انتظار",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "این تاریخ در تقویم وجود ندارد. ماه و روز را بررسی کنید",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "گیرنده پرداخت مورد نیاز است",
     description: "Validation error for a missing import payee",

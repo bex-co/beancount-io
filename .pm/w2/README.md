@@ -92,7 +92,6 @@
 - [109 — A renamed file shows as an empty section in commit diffs](./109.md) — dashboard QA 2026-11-10
 - [108 — Account searches find nothing when the text has a leading or trailing space](./108.md) — dashboard QA 2026-11-10
 - [107 — Error and warning alert text is below 4.5:1 contrast in dark mode](./107.md) — dashboard QA 2026-11-10; shared `alert.tsx` destructive variant
-- [106 — Import preview calls an impossible date a format error](./106.md) — dashboard QA 2026-11-10; dashboard counterpart of w5/330
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains.
 
 - [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.

@@ -583,6 +583,11 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "날짜 형식이 잘못되었습니다. 예상 YYYY-MM-DD",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "달력에 없는 날짜입니다. 월과 일을 확인하세요",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "수취인이 필요합니다",
     description: "Validation error for a missing import payee",

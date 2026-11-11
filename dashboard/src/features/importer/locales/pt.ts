@@ -664,6 +664,11 @@ const ptImporter: Record<string, TranslationEntry> = {
     message: "Formato de data inválido. Esperado AAAA-MM-DD",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "Esta data não existe no calendário. Verifique o mês e o dia",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "O beneficiário é obrigatório",
     description: "Validation error for a missing import payee",

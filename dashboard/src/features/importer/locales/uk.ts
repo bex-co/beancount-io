@@ -701,6 +701,11 @@ const ukImporter: Record<string, TranslationEntry> = {
     message: "Недійсний формат дати. Очікується РРРР-ММ-ДД",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "Такої дати немає в календарі. Перевірте місяць і день",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Потрібен одержувач",
     description: "Validation error for a missing import payee",

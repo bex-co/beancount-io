@@ -699,6 +699,11 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Neplatný formát dátumu. Očakáva sa RRRR-MM-DD",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "Tento dátum v kalendári neexistuje. Skontrolujte mesiac a deň",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Vyžaduje sa príjemca platby",
     description: "Validation error for a missing import payee",

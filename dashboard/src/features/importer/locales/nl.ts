@@ -627,6 +627,12 @@ const nlImporter: Record<string, TranslationEntry> = {
     message: "Ongeldig datumformaat. Verwacht JJJJ-MM-DD",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message:
+      "Deze datum bestaat niet in de kalender. Controleer de maand en de dag",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Begunstigde is vereist",
     description: "Validation error for a missing import payee",

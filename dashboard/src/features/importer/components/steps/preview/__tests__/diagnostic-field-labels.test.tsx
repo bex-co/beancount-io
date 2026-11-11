@@ -57,7 +57,7 @@ describe("Import preview diagnostic field labels", () => {
     await renderInvalidRow("zh");
     expect(await screen.findByText("金额：金额为必填项")).toBeInTheDocument();
     expect(
-      screen.getByText("日期：日期格式无效。预计年-月-日"),
+      screen.getByText("日期：日历上没有这一天。请检查月份和日期"),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Amount:|Date:/)).not.toBeInTheDocument();
   });
@@ -68,7 +68,9 @@ describe("Import preview diagnostic field labels", () => {
       await screen.findByText("Amount: Amount is required"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Date: Invalid date format. Expected YYYY-MM-DD"),
+      screen.getByText(
+        "Date: Not a real calendar date. Check the month and day",
+      ),
     ).toBeInTheDocument();
   });
 

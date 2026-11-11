@@ -628,6 +628,11 @@ const deImporter: Record<string, TranslationEntry> = {
     message: "Ungültiges Datumsformat. Voraussichtlich JJJJ-MM-TT",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "Dieses Datum gibt es im Kalender nicht. Prüfen Sie Monat und Tag",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Zahlungsempfänger ist erforderlich",
     description: "Validation error for a missing import payee",

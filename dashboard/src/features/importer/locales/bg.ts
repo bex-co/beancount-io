@@ -628,6 +628,11 @@ const bgImporter: Record<string, TranslationEntry> = {
     message: "Невалиден формат на датата. Очаква се ГГГГ-ММ-ДД",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "Такава дата не съществува в календара. Проверете месеца и деня",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "Изисква се получател",
     description: "Validation error for a missing import payee",

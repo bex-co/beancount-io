@@ -577,6 +577,11 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "日期格式无效。预计年-月-日",
     description: "Validation error for an invalid import date",
   },
+  "importer.validation.invalidDateValue": {
+    message: "日历上没有这一天。请检查月份和日期",
+    description:
+      "Validation error when a date is written YYYY-MM-DD but is not a calendar day, such as 2026-02-30",
+  },
   "importer.validation.payeeRequired": {
     message: "收款人为必填项",
     description: "Validation error for a missing import payee",

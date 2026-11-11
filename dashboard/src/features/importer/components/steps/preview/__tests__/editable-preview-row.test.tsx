@@ -41,7 +41,7 @@ describe("EditablePreviewRow initial diagnostics", () => {
 
     await waitFor(() => {
       expect(
-        screen.getAllByText("importer.validation.invalidDateFormat").length,
+        screen.getAllByText("importer.validation.invalidDateValue").length,
       ).toBeGreaterThan(0);
     });
     expect(
@@ -111,7 +111,12 @@ describe("EditablePreviewRow initial diagnostics", () => {
     expect(
       screen.queryByText("importer.validation.invalidDateFormat"),
     ).not.toBeInTheDocument();
-    expect(screen.queryByText("date:")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("importer.validation.invalidDateValue"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("importer.preview.fieldError"),
+    ).not.toBeInTheDocument();
   });
 });
 
