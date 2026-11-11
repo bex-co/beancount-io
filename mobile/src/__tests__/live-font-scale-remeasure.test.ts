@@ -518,6 +518,19 @@ const KEYED_TEXTS: [string, string[]][] = [
     "screens/budget-screen/components/budget-history-rows.tsx",
     ["{styles.toggleText}", "{styles.date}", "{styles.interval}"],
   ],
+  // The merchant detail header: name, count, cadence chip, date range and the
+  // Recurring title and helper (w22/019). Its totals are AmountText.
+  [
+    "screens/merchant-detail-screen/merchant-detail-screen.tsx",
+    [
+      "{styles.payeeName}",
+      "{styles.count}",
+      "{styles.chipText}",
+      "{styles.dateRange}",
+      "{styles.toggleTitle}",
+      "{styles.toggleHelper}",
+    ],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",

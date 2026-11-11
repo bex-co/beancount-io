@@ -9,6 +9,7 @@ import {
   Switch,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
@@ -280,6 +281,9 @@ function MerchantDetailBody({
   const insets = useSafeAreaInsets();
   const theme = useTheme().colorTheme;
   const { t, locale } = useTranslations();
+  // The header's Texts are keyed on it to re-measure after a live text-size
+  // change (mobile/AGENTS.md, w22/019).
+  const { fontScale } = useWindowDimensions();
   const today = useToday();
   const overrides = useReactiveVar(merchantRecurringOverridesVar);
   const { detections, enoughHistory } = usePayeeRecurrence(ledgerId);
@@ -605,11 +609,15 @@ function MerchantDetailBody({
           <AccountTypeIcon postings={[]} payee={payee} />
         </View>
         <View style={styles.headerText}>
-          <Text style={styles.payeeName} numberOfLines={2}>
+          <Text
+            key={`payee-${fontScale}`}
+            style={styles.payeeName}
+            numberOfLines={2}
+          >
             {payee}
           </Text>
           {stats ? (
-            <Text style={styles.count}>
+            <Text key={`count-${fontScale}`} style={styles.count}>
               {localizeDigits(
                 t("merchantsTransactionCount", {
                   count: stats.transactionCount,
@@ -624,7 +632,9 @@ function MerchantDetailBody({
       {resolved.isRecurring && cadenceKey ? (
         <View style={styles.chipRow}>
           <View style={styles.chip} testID="merchant-cadence-chip">
-            <Text style={styles.chipText}>{t(cadenceKey)}</Text>
+            <Text key={`cadence-${fontScale}`} style={styles.chipText}>
+              {t(cadenceKey)}
+            </Text>
           </View>
         </View>
       ) : null}
@@ -655,7 +665,7 @@ function MerchantDetailBody({
       ))}
 
       {stats?.firstDate && stats?.lastDate ? (
-        <Text style={styles.dateRange}>
+        <Text key={`range-${fontScale}`} style={styles.dateRange}>
           {merchantDateRangeText(
             stats.firstDate,
             stats.lastDate,
@@ -668,8 +678,10 @@ function MerchantDetailBody({
 
       <View style={styles.toggleRow}>
         <View style={styles.toggleCopy}>
-          <Text style={styles.toggleTitle}>{toggleTitle}</Text>
-          <Text style={styles.toggleHelper}>
+          <Text key={`toggle-${fontScale}`} style={styles.toggleTitle}>
+            {toggleTitle}
+          </Text>
+          <Text key={`helper-${fontScale}`} style={styles.toggleHelper}>
             {t("merchantsRecurringToggleHelper")}
           </Text>
         </View>
