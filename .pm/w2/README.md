@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [128 — Smart Import offers to spend AI tokens on an empty CSV, and refuses a spreadsheet through a blocking browser alert](./128.md) — dashboard QA 2026-11-10
 - [127 — Create File and Upload accept names the server refuses ("Q1: taxes", "a?b", "con.txt"), then show a generic error](./127.md) — dashboard QA 2026-11-10
 - [126 — The Query page hides the engine's own fix for unsupported BQL behind a generic error](./126.md) — dashboard QA 2026-11-10; may need promotion to a milestone
 - [125 — In Persian, counts across the ledger pages print Latin digits, sometimes beside Persian ones](./125.md) — dashboard QA 2026-11-10
