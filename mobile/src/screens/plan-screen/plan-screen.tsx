@@ -1,4 +1,11 @@
-import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useReactiveVar } from "@apollo/client";
 import { selectCardLoadState } from "@/common/apollo/card-load-state";
@@ -96,16 +103,32 @@ function PlanDetails({
 }) {
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
+  // Keys re-measure the Texts after a live text-size change (w22/025).
+  const { fontScale } = useWindowDimensions();
   return (
     <View style={styles.body}>
-      <Text style={styles.plan}>{t(card.planKey)}</Text>
-      {card.cycleKey && <Text style={styles.line}>{t(card.cycleKey)}</Text>}
-      {card.status && (
-        <Text style={styles.line}>{statusLine(card.status)}</Text>
+      <Text key={`plan-${fontScale}`} style={styles.plan}>
+        {t(card.planKey)}
+      </Text>
+      {card.cycleKey && (
+        <Text key={`cycle-${fontScale}`} style={styles.line}>
+          {t(card.cycleKey)}
+        </Text>
       )}
-      {card.sourceKey && <Text style={styles.line}>{t(card.sourceKey)}</Text>}
+      {card.status && (
+        <Text key={`status-${fontScale}`} style={styles.line}>
+          {statusLine(card.status)}
+        </Text>
+      )}
+      {card.sourceKey && (
+        <Text key={`source-${fontScale}`} style={styles.line}>
+          {t(card.sourceKey)}
+        </Text>
+      )}
       {card.managedOnKey && (
-        <Text style={styles.line}>{t(card.managedOnKey)}</Text>
+        <Text key={`managed-${fontScale}`} style={styles.line}>
+          {t(card.managedOnKey)}
+        </Text>
       )}
     </View>
   );

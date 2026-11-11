@@ -719,6 +719,18 @@ const KEYED_TEXTS: [string, string[]][] = [
     "screens/multi-postings-transaction/list-item.tsx",
     ["{styles.title}", "{[styles.content, !content && styles.placeholder]}"],
   ],
+  // The Plan screen: the plan name and its cycle, renewal, source and managed-on
+  // lines (w22/025).
+  [
+    "screens/plan-screen/plan-screen.tsx",
+    [
+      "{styles.plan}",
+      "{styles.line}",
+      "{styles.line}",
+      "{styles.line}",
+      "{styles.line}",
+    ],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",
