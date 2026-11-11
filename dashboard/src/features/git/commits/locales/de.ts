@@ -25,6 +25,16 @@ const deCommits: Record<string, TranslationEntry> = {
     message: "Keine Änderungen anzuzeigen",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "Datei ohne Änderungen umbenannt",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "Keine Zeilenänderungen anzuzeigen",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message:
       "Die Differenz konnte nicht gelesen werden. Sie ist möglicherweise fehlerhaft.",

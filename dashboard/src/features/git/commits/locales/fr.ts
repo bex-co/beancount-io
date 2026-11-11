@@ -25,6 +25,16 @@ const frCommits: Record<string, TranslationEntry> = {
     message: "Aucune modification à afficher",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "Fichier renommé sans modification",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "Aucune modification de ligne à afficher",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message:
       "La différence n'a pas pu être lue. Elle est peut-être mal formée.",

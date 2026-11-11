@@ -25,6 +25,16 @@ const zhCommits: Record<string, TranslationEntry> = {
     message: "没有可显示的变更",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "文件已重命名，内容未更改",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "没有可显示的行更改",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "无法读取差异内容，其格式可能有误。",
     description: "Error shown when commit diff content cannot be parsed",

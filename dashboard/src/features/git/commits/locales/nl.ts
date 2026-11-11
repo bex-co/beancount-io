@@ -25,6 +25,16 @@ const nlCommits: Record<string, TranslationEntry> = {
     message: "Geen wijzigingen om weer te geven",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "Bestand hernoemd zonder wijzigingen",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "Geen regelwijzigingen om te tonen",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "Het verschil kon niet worden gelezen. Het is mogelijk ongeldig.",
     description: "Error shown when commit diff content cannot be parsed",

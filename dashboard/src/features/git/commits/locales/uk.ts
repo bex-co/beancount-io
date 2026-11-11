@@ -25,6 +25,16 @@ const ukCommits: Record<string, TranslationEntry> = {
     message: "Немає змін для відображення",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "Файл перейменовано без змін",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "Немає змінених рядків для показу",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "Не вдалося прочитати різницю. Можливо, її формат пошкоджено.",
     description: "Error shown when commit diff content cannot be parsed",

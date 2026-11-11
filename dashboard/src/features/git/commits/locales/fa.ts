@@ -25,6 +25,16 @@ const faCommits: Record<string, TranslationEntry> = {
     message: "تغییری برای نمایش وجود ندارد",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "نام فایل بدون تغییر محتوا عوض شد",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "تغییری در خطوط برای نمایش وجود ندارد",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "تفاوت قابل پردازش نیست. ممکن است ناقص باشد.",
     description: "Error shown when commit diff content cannot be parsed",

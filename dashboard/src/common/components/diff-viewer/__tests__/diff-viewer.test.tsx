@@ -207,18 +207,21 @@ const focusCases = [
     kind: "deleted file",
     requested: deletedPath,
     displayed: deletedPath,
+    heading: deletedPath,
     diff: createDeletedDiff(),
   },
   {
     kind: "renamed old-path alias",
     requested: renamedPaths.old,
     displayed: renamedPaths.new,
+    heading: `${renamedPaths.old} → ${renamedPaths.new}`,
     diff: renameDiff,
   },
   {
     kind: "renamed new path",
     requested: renamedPaths.new,
     displayed: renamedPaths.new,
+    heading: `${renamedPaths.old} → ${renamedPaths.new}`,
     diff: renameDiff,
   },
 ];
@@ -320,7 +323,7 @@ describe("DiffViewer", () => {
 
   it.each(focusCases)(
     "waits for the virtual list before revealing a $kind and updating the current filename",
-    async ({ requested, displayed, diff }) => {
+    async ({ requested, displayed, heading, diff }) => {
       const focusRequest = { fileId: getDiffFileId(requested), token: 41 };
       const combined = `${createLargeDiff(500)}\n${diff}`;
       const { rerender } = render(
@@ -336,11 +339,13 @@ describe("DiffViewer", () => {
         }),
       );
       const list = screen.getByTestId("virtualized-diff");
-      const header = await within(list).findByText(displayed, { exact: true });
+      const header = await within(list).findByText(heading, { exact: true });
+      // The section id stays on the real (new) path; a rename's heading
+      // names both sides (w2/109).
       expect(header).toHaveAttribute("id", getDiffFileId(displayed));
-      // The active virtual header and the persistent filename both use the real path.
+      // The active virtual header and the persistent filename agree.
       await waitFor(() =>
-        expect(screen.getAllByText(displayed, { exact: true })).toHaveLength(2),
+        expect(screen.getAllByText(heading, { exact: true })).toHaveLength(2),
       );
       expect(
         screen.queryByText("/dev/null", { exact: true }),
@@ -787,5 +792,102 @@ describe("DiffViewer header tab separator", () => {
     } finally {
       scrollIntoView.mockRestore();
     }
+  });
+});
+
+/**
+ * A pure rename — what `renameLedgerFile` commits — showed only the new path
+ * over an empty body, with no sign it was a rename or what the old path was
+ * (w2/109). This is the recorded patch for that commit.
+ */
+describe("DiffViewer renamed and line-free files", () => {
+  const renamePatch = [
+    "diff --git a/main.bean b/main.bean",
+    "index 1111111..2222222 100644",
+    "--- a/main.bean",
+    "+++ b/main.bean",
+    "@@ -1,1 +1,1 @@",
+    '-include "qa-20261110/r2.bean"',
+    '+include "qa-20261110/r.bean"',
+    "diff --git a/qa-20261110/r2.bean b/qa-20261110/r.bean",
+    "similarity index 100%",
+    "rename from qa-20261110/r2.bean",
+    "rename to qa-20261110/r.bean",
+    "",
+  ].join("\n");
+  const heading = "qa-20261110/r2.bean → qa-20261110/r.bean";
+
+  it("names both paths and says the rename changed nothing (small diff)", () => {
+    render(<DiffViewer diff={renamePatch} />);
+    const section = document.getElementById(
+      getDiffFileId("qa-20261110/r.bean"),
+    );
+    expect(section).not.toBeNull();
+    expect(section?.firstElementChild).toHaveTextContent(heading);
+    expect(section).toHaveTextContent("File renamed without changes");
+    // The old path is not a section of its own, and an edited file has no note.
+    expect(
+      document.getElementById(getDiffFileId("qa-20261110/r2.bean")),
+    ).toBeNull();
+    const main = document.getElementById(getDiffFileId("main.bean"));
+    expect(main?.firstElementChild).toHaveTextContent(/^main\.bean$/);
+    expect(main).not.toHaveTextContent("File renamed without changes");
+    expect(main).not.toHaveTextContent("No line changes to show");
+  });
+
+  it("names both paths and says the rename changed nothing (virtual diff)", async () => {
+    render(
+      <DiffViewer
+        diff={`${createLargeDiff(500)}\n${renamePatch}`}
+        focusRequest={{
+          fileId: getDiffFileId("qa-20261110/r.bean"),
+          token: 109,
+        }}
+      />,
+    );
+    // 501 rows for large.bean, 3 for main.bean, then the rename's header.
+    await waitFor(() =>
+      expect(scrollToRow).toHaveBeenCalledWith({
+        index: 504,
+        align: "start",
+        behavior: "auto",
+      }),
+    );
+    const list = screen.getByTestId("virtualized-diff");
+    const header = await within(list).findByText(heading, { exact: true });
+    expect(header).toHaveAttribute("id", getDiffFileId("qa-20261110/r.bean"));
+    expect(header.nextElementSibling).toHaveTextContent(
+      "File renamed without changes",
+    );
+    // The persistent current-file bar names the rename too.
+    await waitFor(() =>
+      expect(screen.getAllByText(heading, { exact: true })).toHaveLength(2),
+    );
+  });
+
+  it("gives a mode-only change a body instead of nothing", () => {
+    render(
+      <DiffViewer
+        diff={[
+          "diff --git a/scripts/run.sh b/scripts/run.sh",
+          "old mode 100644",
+          "new mode 100755",
+          "",
+        ].join("\n")}
+      />,
+    );
+    const section = document.getElementById(getDiffFileId("scripts/run.sh"));
+    expect(section?.firstElementChild).toHaveTextContent(/^scripts\/run\.sh$/);
+    expect(section).toHaveTextContent("No line changes to show");
+  });
+
+  it("keeps an edited rename's lines and names both paths", () => {
+    render(<DiffViewer diff={renameDiff} />);
+    const section = document.getElementById(getDiffFileId(renamedPaths.new));
+    expect(section?.firstElementChild).toHaveTextContent(
+      `${renamedPaths.old} → ${renamedPaths.new}`,
+    );
+    expect(section).toHaveTextContent("2024-01-26 open Assets:Cash USD");
+    expect(section).not.toHaveTextContent("File renamed without changes");
   });
 });

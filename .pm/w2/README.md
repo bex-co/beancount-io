@@ -90,7 +90,6 @@
 - [112 — Entry Context hides the ledger's single-entry refusals behind "information provided is invalid"](./112.md) — dashboard QA 2026-11-10; dashboard counterpart of w21/620
 - [111 — The BQL editor hides five of the engine's actionable query errors behind "information provided is invalid"](./111.md) — dashboard QA 2026-11-10; follows w4/160 and w0/002
 - [110 — A file save that conflicts with another write tells the editor to refresh, which discards their edit](./110.md) — dashboard QA 2026-11-10
-- [109 — A renamed file shows as an empty section in commit diffs](./109.md) — dashboard QA 2026-11-10
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains.
 
 - [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.

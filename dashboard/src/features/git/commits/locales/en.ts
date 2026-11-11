@@ -25,6 +25,16 @@ const enCommits: Record<string, TranslationEntry> = {
     message: "No changes to display",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "File renamed without changes",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "No line changes to show",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "The diff could not be read. It may be malformed.",
     description: "Error shown when commit diff content cannot be parsed",

@@ -25,6 +25,16 @@ const skCommits: Record<string, TranslationEntry> = {
     message: "Žiadne zmeny na zobrazenie",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "Súbor bol premenovaný bez zmien",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "Žiadne zmeny riadkov na zobrazenie",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "Rozdiel sa nepodarilo prečítať. Môže mať nesprávny formát.",
     description: "Error shown when commit diff content cannot be parsed",

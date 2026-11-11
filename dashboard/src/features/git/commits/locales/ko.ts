@@ -25,6 +25,16 @@ const koCommits: Record<string, TranslationEntry> = {
     message: "표시할 변경사항이 없습니다",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "내용 변경 없이 파일 이름을 바꿨습니다",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "표시할 줄 변경 사항이 없습니다",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "차이를 읽을 수 없습니다. 형식이 잘못되었을 수 있습니다.",
     description: "Error shown when commit diff content cannot be parsed",

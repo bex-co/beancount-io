@@ -36,6 +36,7 @@ type ChangeType = HunkData["changes"][number];
 
 type FlattenedRow =
   | { type: "file-header"; data: FileData }
+  | { type: "file-note"; data: FileData }
   | { type: "hunk-line"; data: ChangeType };
 
 /**
@@ -53,6 +54,25 @@ function getDiffFilePath(file?: FileData): string {
   // Git uses /dev/null for the absent side of an added or deleted file.
   if (file?.newPath && file.newPath !== "/dev/null") return file.newPath;
   return file?.oldPath && file.oldPath !== "/dev/null" ? file.oldPath : "";
+}
+
+function isRenamed(file: FileData): boolean {
+  return (
+    Boolean(file.oldPath && file.newPath) &&
+    file.oldPath !== "/dev/null" &&
+    file.newPath !== "/dev/null" &&
+    file.oldPath !== file.newPath
+  );
+}
+
+/**
+ * A rename names both sides, `old → new`; the section id stays on the new
+ * path so links and rename-alias focus keep working (w2/109, w3/482).
+ */
+function getDiffFileHeading(file: FileData): string {
+  return isRenamed(file)
+    ? `${file.oldPath} → ${file.newPath}`
+    : getDiffFilePath(file);
 }
 
 export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
@@ -132,6 +152,7 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
 
     files.forEach((file) => {
       rows.push({ type: "file-header", data: file });
+      if (file.hunks.length === 0) rows.push({ type: "file-note", data: file });
 
       file.hunks.forEach((hunk) => {
         hunk.changes.forEach((change) => {
@@ -151,10 +172,10 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
     ) {
       const row = flattenedRows[index];
       if (row?.type === "file-header") {
-        return getDiffFilePath(row.data) || t("common.unknown");
+        return getDiffFileHeading(row.data) || t("common.unknown");
       }
     }
-    return getDiffFilePath(files[0]) || t("common.unknown");
+    return (files[0] && getDiffFileHeading(files[0])) || t("common.unknown");
   }, [files, firstVisibleRow, flattenedRows, t]);
 
   useLayoutEffect(() => {
@@ -238,6 +259,13 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
     }
   }, [focusRequest]);
 
+  // A file with no hunks — a pure rename, a mode-only or binary change —
+  // otherwise renders as a heading over nothing.
+  const emptyFileNote = (file: FileData) =>
+    isRenamed(file)
+      ? t("commits.renamedWithoutChanges")
+      : t("commits.noLineChanges");
+
   const isMalformedDiff =
     files.length === 0 ||
     files.every(
@@ -310,7 +338,19 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
                     style={style}
                     className="flex items-center border-b border-border bg-muted/60 px-3 font-mono text-xs font-semibold"
                   >
-                    {filename}
+                    {getDiffFileHeading(row.data) || filename}
+                  </div>
+                );
+              }
+
+              if (row.type === "file-note") {
+                return (
+                  <div
+                    {...ariaAttributes}
+                    style={style}
+                    className="px-3 text-xs leading-[22px] text-muted-foreground"
+                  >
+                    {emptyFileNote(row.data)}
                   </div>
                 );
               }
@@ -375,21 +415,28 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
                 className="border-b border-border last:border-b-0"
               >
                 <div className="sticky top-[var(--diff-sticky-offset,0px)] z-20 flex h-9 items-center border-b border-border bg-muted/95 px-3 font-mono text-xs font-semibold backdrop-blur">
-                  {filename}
+                  {getDiffFileHeading(file) || filename}
                 </div>
 
-                {/* Diff hunks */}
-                <Diff
-                  className="diff-source"
-                  viewType="unified"
-                  diffType={file.type}
-                  hunks={file.hunks}
-                  tokens={tokens}
-                >
-                  {(hunks: HunkData[]) =>
-                    hunks.map((hunk) => <Hunk key={hunk.content} hunk={hunk} />)
-                  }
-                </Diff>
+                {file.hunks.length === 0 ? (
+                  <p className="px-3 py-2 text-xs text-muted-foreground">
+                    {emptyFileNote(file)}
+                  </p>
+                ) : (
+                  <Diff
+                    className="diff-source"
+                    viewType="unified"
+                    diffType={file.type}
+                    hunks={file.hunks}
+                    tokens={tokens}
+                  >
+                    {(hunks: HunkData[]) =>
+                      hunks.map((hunk) => (
+                        <Hunk key={hunk.content} hunk={hunk} />
+                      ))
+                    }
+                  </Diff>
+                )}
               </div>
             );
           })}

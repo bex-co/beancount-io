@@ -25,6 +25,16 @@ const ruCommits: Record<string, TranslationEntry> = {
     message: "Нет изменений для отображения",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "Файл переименован без изменений",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "Нет изменённых строк для показа",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "Не удалось прочитать разницу. Возможно, её формат повреждён.",
     description: "Error shown when commit diff content cannot be parsed",

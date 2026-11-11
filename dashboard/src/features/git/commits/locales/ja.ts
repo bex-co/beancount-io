@@ -25,6 +25,16 @@ const jaCommits: Record<string, TranslationEntry> = {
     message: "表示する変更はありません",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "内容を変更せずにファイル名を変更しました",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "表示する行の変更はありません",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "差分を読み取れませんでした。形式が正しくない可能性があります。",
     description: "Error shown when commit diff content cannot be parsed",

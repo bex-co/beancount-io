@@ -25,6 +25,16 @@ const ptCommits: Record<string, TranslationEntry> = {
     message: "Nenhuma alteração para exibir",
     description: "Empty state when a commit has no diff content",
   },
+  "commits.renamedWithoutChanges": {
+    message: "Arquivo renomeado sem alterações",
+    description:
+      "Body of a diff file section for a file that was renamed with no content changes",
+  },
+  "commits.noLineChanges": {
+    message: "Nenhuma alteração de linha para mostrar",
+    description:
+      "Body of a diff file section with no text changes, such as a file-mode or binary change",
+  },
   "commits.diffParseError": {
     message: "Não foi possível ler a diferença. Ela pode estar malformada.",
     description: "Error shown when commit diff content cannot be parsed",
