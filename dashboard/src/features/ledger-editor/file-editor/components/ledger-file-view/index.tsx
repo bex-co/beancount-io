@@ -249,6 +249,9 @@ export default function LedgerFileView({
   const runDeleteFile = async (removeIncludes: boolean) => {
     if (!fileContent) return;
     const journey = { ledgerId, filePath };
+    // A deleted file can still be named by a `document` entry, which the
+    // server does not refuse; the ledger then reports it missing (w2/121).
+    const before = writeOutcome.snapshot();
 
     await deleteFileMutation({
       variables: {
@@ -289,16 +292,22 @@ export default function LedgerFileView({
           );
         };
         if (!stillCurrent()) {
+          void writeOutcome.report(before);
           refreshAfterWrite();
           return;
         }
         // Back to the parent folder, or the nearest one that survived: Git
-        // removes a folder with its last file (w4/1104).
-        const directory = await nearestSurvivingDirectory(
-          client,
-          journey.ledgerId,
-          getParentPath(journey.filePath),
-        );
+        // removes a folder with its last file (w4/1104). The error re-read
+        // runs beside it and before leaving: this view's queries end when it
+        // unmounts, and an aborted read would warn about nothing.
+        const [directory] = await Promise.all([
+          nearestSurvivingDirectory(
+            client,
+            journey.ledgerId,
+            getParentPath(journey.filePath),
+          ),
+          writeOutcome.report(before),
+        ]);
         refreshAfterWrite();
         if (!stillCurrent()) return;
         fileNavigate(journey.ledgerId, "dir", directory);
