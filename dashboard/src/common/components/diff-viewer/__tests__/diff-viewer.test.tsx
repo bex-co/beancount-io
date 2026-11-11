@@ -891,3 +891,71 @@ describe("DiffViewer renamed and line-free files", () => {
     expect(section).not.toHaveTextContent("File renamed without changes");
   });
 });
+
+/**
+ * A posting to an account with a Persian segment drew as
+ * `Assets:Qa:1.00 ……… ملی USD`: the Persian word, the spaces and the amount
+ * formed one right-to-left run inside the LTR line (w2/118). Each RTL word
+ * now sits in its own `<bdi>`, and the amount follows it outside.
+ */
+describe("DiffViewer right-to-left words in source", () => {
+  const POSTING = "  Assets:Qa:ملی                               1.00 USD";
+  const patch = (path: string, extra: string[] = []) =>
+    [
+      `diff --git a/${path} b/${path}`,
+      "index 1111111..2222222 100644",
+      `--- a/${path}`,
+      `+++ b/${path}`,
+      `@@ -1,1 +1,${2 + extra.length} @@`,
+      ' 2026-11-10 * "QA"',
+      `+${POSTING}`,
+      ...extra.map((line) => `+${line}`),
+      "",
+    ].join("\n");
+
+  const expectIsolated = (cell: Element) => {
+    expect(cell.textContent).toContain(POSTING.trim());
+    const bdis = Array.from(cell.querySelectorAll("bdi"));
+    expect(bdis.map((bdi) => bdi.textContent)).toEqual(["ملی"]);
+    // The amount is not inside the isolate.
+    expect(bdis[0]!.textContent).not.toContain("1.00");
+  };
+
+  it.each(["main.bean", "notes.txt"])(
+    "isolates the Persian segment in %s",
+    (path) => {
+      const { container } = render(<DiffViewer diff={patch(path)} />);
+      expectIsolated(container.querySelector(".diff-code-insert")!);
+    },
+  );
+
+  it("keeps highlighting while isolating", () => {
+    const { container } = render(<DiffViewer diff={patch("main.bean")} />);
+    const cell = container.querySelector(".diff-code-insert")!;
+    expect(cell.querySelector(".token")).not.toBeNull();
+  });
+
+  it("isolates the Persian segment in a virtualized diff", () => {
+    const padding = Array.from({ length: 600 }, (_, i) => `; padding ${i}`);
+    render(<DiffViewer diff={patch("main.bean", padding)} />);
+    const row = screen.getByText((_, element) =>
+      Boolean(
+        element?.tagName === "SPAN" &&
+        element.classList.contains("whitespace-pre") &&
+        element.textContent === POSTING,
+      ),
+    );
+    expectIsolated(row);
+  });
+
+  it("adds no element to a line without RTL letters", () => {
+    const { container } = render(<DiffViewer diff={mixedSourceDiff(false)} />);
+    const inserted = container.querySelector(".diff-code-insert")!;
+    // The added line holds Persian; the unchanged open line holds none.
+    expect(inserted.querySelector("bdi")).not.toBeNull();
+    const openLine = Array.from(
+      container.querySelectorAll(".diff-code-normal"),
+    ).find((cell) => cell.textContent?.includes("open Assets:Cash"));
+    expect(openLine?.querySelector("bdi")).toBeNull();
+  });
+});

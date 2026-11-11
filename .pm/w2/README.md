@@ -84,7 +84,6 @@
 - [121 — Deleting a file that a `document` entry points at breaks the ledger and says only "File deleted successfully"](./121.md) — dashboard QA 2026-11-10
 - [120 — Typing "4,50" in an amount field records 450, silently, wherever the decimal separator and the browser's language differ](./120.md) — dashboard QA 2026-11-10; **major**
 - [119 — In German and other comma-decimal languages, the same balance is written two ways across the dashboard](./119.md) — dashboard QA 2026-11-10
-- [118 — Source views draw an account with a Persian or Arabic segment in the wrong order: the amount lands inside the account path](./118.md) — dashboard QA 2026-11-10; dashboard counterpart of w21/780 and w21/865
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains.
 
 - [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.

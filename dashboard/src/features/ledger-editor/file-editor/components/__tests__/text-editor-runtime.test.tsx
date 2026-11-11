@@ -92,6 +92,9 @@ function monacoSurface() {
     },
     onDidDispose: (listener: () => void) => disposed.push(listener),
     onDidChangeModelContent: () => subscription,
+    // RTL isolation (rtl-isolation.ts); this README holds no RTL letters.
+    onDidChangeModel: () => subscription,
+    createDecorationsCollection: () => ({ set: vi.fn(), clear: vi.fn() }),
     onDidCompositionStart: () => subscription,
     onDidCompositionEnd: () => subscription,
     dispose: vi.fn(() => disposed.forEach((listener) => listener())),

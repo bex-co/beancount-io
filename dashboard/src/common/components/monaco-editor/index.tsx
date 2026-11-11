@@ -8,6 +8,7 @@ import Editor, {
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { isolateRtlText } from "./rtl-isolation";
 
 // The AMD runtime is shared across mounts, including a failed stylesheet.
 const failedStylesheets = new WeakSet<HTMLLinkElement>();
@@ -183,6 +184,7 @@ export const MonacoEditor = ({
   const handleMount: OnMount = (editor, monaco) => {
     syncReadOnlyState(editor, monaco);
     refreshValidationLayout(editor);
+    isolateRtlText(editor, monaco);
     onMount?.(editor, monaco);
   };
 

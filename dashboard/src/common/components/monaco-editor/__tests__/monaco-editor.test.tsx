@@ -62,6 +62,11 @@ function fakeEditor(surface: "editContext" | "textarea", readOnly: boolean) {
         };
       },
       onDidLayoutChange: () => ({ dispose: vi.fn() }),
+      // No model: RTL isolation (rtl-isolation.test.ts) has nothing to mark.
+      getModel: () => null,
+      createDecorationsCollection: () => ({ set: vi.fn(), clear: vi.fn() }),
+      onDidChangeModelContent: () => ({ dispose: vi.fn() }),
+      onDidChangeModel: () => ({ dispose: vi.fn() }),
       onDidDispose: (listener: Listener) => {
         disposeListeners.push(listener);
       },

@@ -1,6 +1,20 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { parseDiff, Diff, Hunk } from "react-diff-view";
-import type { FileData, HunkData } from "react-diff-view";
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { parseDiff, tokenize, Diff, Hunk } from "react-diff-view";
+import type {
+  FileData,
+  HunkData,
+  HunkTokens,
+  RenderToken,
+  TokenNode,
+} from "react-diff-view";
 import { List, useListRef } from "react-window";
 import {
   tokenizeBeancountDiff,
@@ -10,6 +24,7 @@ import {
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getDiffFileId, parseDiffFileId } from "./diff-file-id";
+import { hasRtlLetters, isolateRtlSource } from "@/common/lib/bidi/rtl-source";
 
 // Virtualization thresholds
 const VIRTUAL_SCROLL_THRESHOLD = 500; // Lines
@@ -74,6 +89,46 @@ function getDiffFileHeading(file: FileData): string {
     ? `${file.oldPath} → ${file.newPath}`
     : getDiffFilePath(file);
 }
+
+function hunksHaveRtlLetters(hunks: HunkData[]): boolean {
+  return hunks.some((hunk) =>
+    hunk.changes.some((change) => hasRtlLetters(change.content)),
+  );
+}
+
+/**
+ * react-diff-view's own token rendering, with each text run's RTL words in
+ * their own isolate: a Persian account segment otherwise drew the amount
+ * inside the account path (w2/118). The line keeps w4/226's LTR isolate.
+ */
+function renderIsolatedNode(node: TokenNode, key: number): ReactNode {
+  if (node.type === "text") {
+    return (
+      <Fragment key={key}>{isolateRtlSource(String(node.value))}</Fragment>
+    );
+  }
+  // Highlighter tokens carry their classes as an array, as the default
+  // renderer's `classnames` call accepts.
+  const names: unknown = node.className ?? node.properties?.className;
+  const className =
+    node.type === "mark"
+      ? `diff-code-mark diff-code-mark-${node.markType}`
+      : node.type === "edit"
+        ? "diff-code-edit"
+        : Array.isArray(names)
+          ? names.join(" ")
+          : (names as string | undefined);
+  return (
+    <span key={key} className={className}>
+      {node.value
+        ? isolateRtlSource(String(node.value))
+        : node.children?.map(renderIsolatedNode)}
+    </span>
+  );
+}
+
+const renderIsolatedToken: RenderToken = (token, _renderDefault, index) =>
+  renderIsolatedNode(token, index);
 
 export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
   const { t } = useTranslations();
@@ -140,6 +195,31 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
       }
     });
   }, [files, shouldHighlight]);
+
+  // A file with RTL letters renders through tokens, plain ones when it has
+  // no highlighting, so each line's RTL words can be isolated.
+  const renderedFiles = useMemo(
+    () =>
+      tokenizedFiles.map(({ file, tokens }) => {
+        if (!hunksHaveRtlLetters(file.hunks)) {
+          return { file, tokens, renderToken: undefined };
+        }
+        let lineTokens: HunkTokens | null = tokens;
+        if (!lineTokens) {
+          try {
+            lineTokens = tokenize(file.hunks);
+          } catch {
+            lineTokens = null;
+          }
+        }
+        return {
+          file,
+          tokens: lineTokens,
+          renderToken: lineTokens ? renderIsolatedToken : undefined,
+        };
+      }),
+    [tokenizedFiles],
+  );
 
   // Check if we should use virtual scrolling
   const shouldVirtualize = totalDiffLines > VIRTUAL_SCROLL_THRESHOLD;
@@ -387,7 +467,7 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
                   </span>
                   <span className="w-4 shrink-0">{prefix}</span>
                   <span className="flex-1 whitespace-pre">
-                    {change.content}
+                    {isolateRtlSource(change.content)}
                   </span>
                 </div>
               );
@@ -405,7 +485,7 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
 
       <div className="overflow-clip rounded-md border border-border">
         <div className="diff-viewer-container">
-          {tokenizedFiles.map(({ file, tokens }) => {
+          {renderedFiles.map(({ file, tokens, renderToken }) => {
             const filename = getDiffFilePath(file) || t("common.unknown");
 
             return (
@@ -429,6 +509,7 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
                     diffType={file.type}
                     hunks={file.hunks}
                     tokens={tokens}
+                    renderToken={renderToken}
                   >
                     {(hunks: HunkData[]) =>
                       hunks.map((hunk) => (

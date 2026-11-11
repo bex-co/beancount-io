@@ -254,6 +254,20 @@
   background: rgba(255, 235, 59, 0.05) !important;
 }
 
+/* Ledger source is left to right. Monaco draws every token part of a line
+   holding Hebrew or Arabic-script letters as its own right-to-left isolate,
+   so `Assets:Qa:` was drawn after the Persian segment and the amount landed
+   inside the account path. Each such part stays an isolate, but left to
+   right; the RTL words themselves (`rtl-isolation.ts` decorations) take their
+   direction from their own letters, over Monaco's inline style (w2/118). */
+.monaco-editor .view-line span[dir="rtl"] {
+  direction: ltr;
+}
+
+.monaco-editor .view-line .bidi-isolate {
+  unicode-bidi: plaintext !important;
+}
+
 /**
  * Global Scrollbar Styling
  * 
