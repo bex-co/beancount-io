@@ -21,7 +21,7 @@ export function PlaidPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        className="flex flex-col"
+        showOnMobile
         title={t("plaid.pageTitle")}
         description={t("plaid.management.connectionsSubtitle")}
       />

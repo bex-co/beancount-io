@@ -241,7 +241,8 @@ export default function LedgerBudgetPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <PageHeader
-          className="flex min-w-0 flex-col"
+          showOnMobile
+          className="min-w-0"
           title={t("page.budget.budget")}
           description={t("page.budget.budgetDescription")}
         />
