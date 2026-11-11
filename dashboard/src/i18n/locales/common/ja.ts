@@ -867,6 +867,37 @@ const jaCommon: Record<string, TranslationEntry> = {
       "入力された情報の一部が無効です。確認してからもう一度お試しください。",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "通貨は USD のように大文字で入力してください。",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "「{value}」は有効な通貨ではありません。通貨は USD のように大文字で入力してください。",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "「{value}」は有効な勘定科目名ではありません。",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "「{value}」は有効なタグではありません。",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "「{value}」は有効なリンクではありません。",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "「{value}」は有効なフラグではありません。",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "期間フィルターがこの台帳で解釈できる日付や期間ではありません。2026、2026-08、2026-Q3、month、または 2026-01 - 2026-06 のような範囲を試してください。",

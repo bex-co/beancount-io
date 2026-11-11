@@ -880,6 +880,37 @@ const skCommon: Record<string, TranslationEntry> = {
       "Niektoré zadané údaje sú neplatné. Skontrolujte ich a skúste to znova.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "Menu napíšte veľkými písmenami, napríklad USD.",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "„{value}“ nie je platná mena. Meny píšte veľkými písmenami, napríklad USD.",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "„{value}“ nie je platný názov účtu.",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "„{value}“ nie je platný štítok.",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "„{value}“ nie je platný odkaz.",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "„{value}“ nie je platný príznak.",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "Časový filter nie je dátum ani obdobie, ktorému táto kniha rozumie. Skúste 2026, 2026-08, 2026-Q3, month alebo rozsah ako 2026-01 - 2026-06.",

@@ -190,6 +190,46 @@ export function getNewLedgerErrorDetail(error: unknown): string | null {
   return null;
 }
 
+/**
+ * The ledger's refusal of a token a structured write would emit unquoted
+ * (w23/033): `entry 0: postings[0].units.currency "usd" is not a valid
+ * currency`. The value is the reader's own input, so it is shown; the field
+ * path never is (w2/114).
+ */
+const INVALID_TOKEN =
+  /\bentry \d+: \S+ ("(?:[^"\\]|\\.)*"|\S+) is not a valid (account|currency|tag|link|flag|transaction flag)(?=$|:)/;
+
+const INVALID_TOKEN_KEYS: Record<string, string> = {
+  account: "common.errors.invalidAccount",
+  currency: "common.errors.invalidCurrency",
+  tag: "common.errors.invalidTag",
+  link: "common.errors.invalidLink",
+  flag: "common.errors.invalidFlag",
+  "transaction flag": "common.errors.invalidFlag",
+};
+
+/** The catalog key and value of an invalid-token refusal, or null. */
+export function getInvalidTokenRefusal(
+  error: unknown,
+): { key: string; value: string } | null {
+  if (!CombinedGraphQLErrors.is(error)) return null;
+  for (const gqlError of error.errors) {
+    if (gqlError.extensions?.code !== "BAD_USER_INPUT") continue;
+    const match = INVALID_TOKEN.exec(gqlError.message);
+    if (!match) continue;
+    let value = match[1];
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (typeof parsed === "string") value = parsed;
+    } catch {
+      // An unquoted value is shown as written.
+    }
+    if (value.length > 100 || /\p{Cc}/u.test(value)) return null;
+    return { key: INVALID_TOKEN_KEYS[match[2]], value };
+  }
+  return null;
+}
+
 const FETCH_FAILURE_MESSAGES = [
   "failed to fetch", // Chromium
   "networkerror when attempting to fetch resource", // Firefox
@@ -223,8 +263,10 @@ export function useErrorMessage(): (error: unknown) => string {
   });
   return useCallback((error: unknown) => {
     const detail = getNewLedgerErrorDetail(error);
-    return detail
-      ? tRef.current("common.errors.wouldBreakLedger", { detail })
-      : tRef.current(getErrorMessageKey(error));
+    if (detail)
+      return tRef.current("common.errors.wouldBreakLedger", { detail });
+    const token = getInvalidTokenRefusal(error);
+    if (token) return tRef.current(token.key, { value: token.value });
+    return tRef.current(getErrorMessageKey(error));
   }, []);
 }

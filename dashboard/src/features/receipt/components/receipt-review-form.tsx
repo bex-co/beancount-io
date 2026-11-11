@@ -38,6 +38,7 @@ import type {
   ParsedReceipt,
   ReviewFormData,
 } from "../hooks/use-receipt-workflow";
+import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
 
 // Keep the receipt's `yyyy-MM-dd` date as that exact day, defaulting to today
 // when it's missing or invalid (e.g. the receipt had no printed date, so the
@@ -81,7 +82,13 @@ export function ReceiptReviewForm({
             (v) => isPositiveDecimalNumber(v),
             t("receipt.review.amountPositive"),
           ),
-        currency: z.string().min(1, t("receipt.review.currencyRequired")),
+        currency: z
+          .string()
+          .min(1, t("receipt.review.currencyRequired"))
+          .refine(
+            (val) => isCurrencyToken(val.trim()),
+            t("common.currencyFormat"),
+          ),
         expenseAccount: z
           .string()
           .min(1, t("receipt.review.expenseAccountRequired")),

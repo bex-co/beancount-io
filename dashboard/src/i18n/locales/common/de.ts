@@ -876,6 +876,37 @@ const deCommon: Record<string, TranslationEntry> = {
       "Einige Angaben sind ungültig. Bitte überprüfen Sie sie und versuchen Sie es erneut.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "Schreiben Sie die Währung in Großbuchstaben, z. B. USD.",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "„{value}“ ist keine gültige Währung. Schreiben Sie Währungen in Großbuchstaben, z. B. USD.",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "„{value}“ ist kein gültiger Kontoname.",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "„{value}“ ist kein gültiges Tag.",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "„{value}“ ist kein gültiger Link.",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "„{value}“ ist keine gültige Markierung.",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "Der Zeitfilter ist kein Datum oder Zeitraum, den dieses Hauptbuch versteht. Versuchen Sie 2026, 2026-08, 2026-Q3, month oder einen Bereich wie 2026-01 - 2026-06.",

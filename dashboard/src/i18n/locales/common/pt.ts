@@ -877,6 +877,37 @@ const ptCommon: Record<string, TranslationEntry> = {
       "Algumas informações fornecidas são inválidas. Verifique e tente novamente.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "Escreva a moeda em letras maiúsculas, como USD.",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "“{value}” não é uma moeda válida. Escreva as moedas em letras maiúsculas, como USD.",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "“{value}” não é um nome de conta válido.",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "“{value}” não é uma tag válida.",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "“{value}” não é um link válido.",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "“{value}” não é uma marcação válida.",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "O filtro de tempo não é uma data ou período que este livro entenda. Tente 2026, 2026-08, 2026-Q3, month ou um intervalo como 2026-01 - 2026-06.",

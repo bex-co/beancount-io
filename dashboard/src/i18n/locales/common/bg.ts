@@ -874,6 +874,37 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Част от въведените данни са невалидни. Проверете ги и опитайте отново.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "Напишете валутата с главни букви, например USD.",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "„{value}“ не е валидна валута. Пишете валутите с главни букви, например USD.",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "„{value}“ не е валидно име на сметка.",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "„{value}“ не е валиден етикет.",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "„{value}“ не е валидна връзка.",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "„{value}“ не е валиден флаг.",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "Филтърът за време не е дата или период, който тази книга разбира. Опитайте 2026, 2026-08, 2026-Q3, month или диапазон като 2026-01 - 2026-06.",

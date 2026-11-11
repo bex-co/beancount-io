@@ -60,6 +60,7 @@ import { AccountAvailabilityNotice } from "./account-availability-notice";
 import { ExactAmountInput } from "@/common/components/exact-amount-input";
 import { useAccountAvailability } from "./use-account-availability";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
+import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
 
 interface TransactionFormProps {
   ledgerId: string;
@@ -110,7 +111,14 @@ export function TransactionForm({
             (val) => val === "" || parseDecimalNumber(val) !== null,
             t("journal.amountMustBeNumber"),
           ),
-        currency: z.string().trim(),
+        // Blank takes the ledger's currency; anything typed must be one.
+        currency: z
+          .string()
+          .trim()
+          .refine(
+            (val) => val === "" || isCurrencyToken(val),
+            t("common.currencyFormat"),
+          ),
       }),
     [t],
   );

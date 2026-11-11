@@ -880,6 +880,37 @@ const enCommon: Record<string, TranslationEntry> = {
       "Some of the information provided is invalid. Please check and try again.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "Write the currency in capital letters, such as USD.",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "“{value}” isn't a valid currency. Write currencies in capital letters, such as USD.",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "“{value}” isn't a valid account name.",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "“{value}” isn't a valid tag.",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "“{value}” isn't a valid link.",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "“{value}” isn't a valid flag.",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "The Time filter isn't a date or period this ledger understands. Try 2026, 2026-08, 2026-Q3, month, or a range like 2026-01 - 2026-06.",

@@ -875,6 +875,37 @@ const nlCommon: Record<string, TranslationEntry> = {
       "Sommige ingevoerde gegevens zijn ongeldig. Controleer ze en probeer het opnieuw.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "Schrijf de valuta in hoofdletters, bijvoorbeeld USD.",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "‘{value}’ is geen geldige valuta. Schrijf valuta in hoofdletters, bijvoorbeeld USD.",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "‘{value}’ is geen geldige rekeningnaam.",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "‘{value}’ is geen geldige tag.",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "‘{value}’ is geen geldige link.",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "‘{value}’ is geen geldige markering.",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "Het tijdfilter is geen datum of periode die dit grootboek begrijpt. Probeer 2026, 2026-08, 2026-Q3, month of een bereik zoals 2026-01 - 2026-06.",

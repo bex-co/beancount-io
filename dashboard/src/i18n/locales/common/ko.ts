@@ -865,6 +865,37 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "입력한 정보 중 일부가 잘못되었습니다. 확인 후 다시 시도하세요.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "통화는 USD처럼 대문자로 입력하세요.",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "“{value}”은(는) 유효한 통화가 아닙니다. 통화는 USD처럼 대문자로 입력하세요.",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "“{value}”은(는) 유효한 계정 이름이 아닙니다.",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "“{value}”은(는) 유효한 태그가 아닙니다.",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "“{value}”은(는) 유효한 링크가 아닙니다.",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "“{value}”은(는) 유효한 플래그가 아닙니다.",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "기간 필터가 이 원장이 이해하는 날짜나 기간이 아닙니다. 2026, 2026-08, 2026-Q3, month 또는 2026-01 - 2026-06 같은 범위를 사용해 보세요.",

@@ -86,7 +86,6 @@
 - [116 — Add Budget's account list is announced as "Expenses:Groceries", an account that may not exist](./116.md) — dashboard QA 2026-11-10
 - [117 — Add Budget stores a positive income target, so the web Budget card treats it as a spending cap](./117.md) — dashboard QA 2026-11-10; dashboard counterpart of w4/039
 - [115 — Most ledger pages have no h1 below 768px, so screen-reader heading navigation finds nothing](./115.md) — dashboard QA 2026-11-10; keeps w4/228's visual design
-- [114 — A lowercase or malformed currency in New Entry is refused as "information provided is invalid"](./114.md) — dashboard QA 2026-11-10; dashboard counterpart of w21/659
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains.
 
 - [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.

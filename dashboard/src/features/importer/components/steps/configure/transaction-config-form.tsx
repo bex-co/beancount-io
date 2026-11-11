@@ -38,6 +38,7 @@ import {
 } from "../../../lib/import-config-draft";
 import { findImportCurrencyConflicts } from "../../../lib/import-currency-conflicts";
 import { useLedger } from "@/common/hooks/use-ledger";
+import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
 
 /** Row numbers a currency conflict names before eliding the rest. */
 const CONFLICT_ROWS_SHOWN = 5;
@@ -75,7 +76,11 @@ export function TransactionConfigForm({
             .min(1, t("importer.configure.sourceAccountRequired")),
           defaultCurrency: z
             .string()
-            .min(1, t("importer.configure.currencyRequired")),
+            .min(1, t("importer.configure.currencyRequired"))
+            .refine(
+              (val) => isCurrencyToken(val.trim()),
+              t("common.currencyFormat"),
+            ),
           transactions: z
             .array(
               z.object({

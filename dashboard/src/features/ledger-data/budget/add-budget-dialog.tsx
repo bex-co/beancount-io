@@ -55,6 +55,7 @@ import {
 } from "@/common/components/ledger-comboboxes";
 import { DatePicker } from "@/common/components/ui/date-picker";
 import { todayIsoDate } from "@/common/components/ui/date-picker-utils";
+import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
 
 const createBudgetSchema = (t: (key: string) => string) =>
   z.object({
@@ -62,7 +63,10 @@ const createBudgetSchema = (t: (key: string) => string) =>
     account: z.string().min(1, t("page.budget.budgetAccountRequired")),
     interval: z.nativeEnum(BudgetInterval),
     number: z.string().min(1, t("page.budget.budgetAmountRequired")),
-    currency: z.string().min(1, t("page.budget.budgetCurrencyRequired")),
+    currency: z
+      .string()
+      .min(1, t("page.budget.budgetCurrencyRequired"))
+      .refine((val) => isCurrencyToken(val.trim()), t("common.currencyFormat")),
   });
 
 type FormData = z.infer<ReturnType<typeof createBudgetSchema>>;

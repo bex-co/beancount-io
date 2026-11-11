@@ -7,6 +7,7 @@ import {
   getUnbalancedResidual,
   isBilledByStoreError,
   useErrorMessage,
+  getInvalidTokenRefusal,
 } from "../error-message";
 
 function graphQLError(code?: string): CombinedGraphQLErrors {
@@ -252,5 +253,71 @@ describe("would-break refusals", () => {
     expect(
       result.current(refusal({ code: "VALIDATION_FAILED", field: "entries" })),
     ).toBe("Validation failed. Please review your input and try again.");
+  });
+});
+
+/**
+ * The ledger names a token it cannot write unquoted (w23/033); the dialog
+ * showed "information provided is invalid" instead (w2/114).
+ */
+describe("getInvalidTokenRefusal", () => {
+  const badInput = (message: string, code = "BAD_USER_INPUT") =>
+    new CombinedGraphQLErrors({ errors: [{ message, extensions: { code } }] });
+
+  it.each([
+    [
+      'entry 0: postings[0].units.currency "usd" is not a valid currency',
+      { key: "common.errors.invalidCurrency", value: "usd" },
+    ],
+    [
+      'entry 0: amount.currency "U$D" is not a valid currency',
+      { key: "common.errors.invalidCurrency", value: "U$D" },
+    ],
+    [
+      'entry 0: tags[0] "a b" is not a valid tag',
+      { key: "common.errors.invalidTag", value: "a b" },
+    ],
+    [
+      'entry 1: flag "%" is not a valid transaction flag: the ledger engine cannot read a "%" flag yet, and would drop the posting; use another flag',
+      { key: "common.errors.invalidFlag", value: "%" },
+    ],
+  ])("reads %s", (message, expected) => {
+    expect(getInvalidTokenRefusal(badInput(message))).toEqual(expected);
+  });
+
+  it("leaves other codes, control characters and metadata keys generic", () => {
+    const usd =
+      'entry 0: postings[0].units.currency "usd" is not a valid currency';
+    expect(
+      getInvalidTokenRefusal(badInput(usd, "INTERNAL_SERVER_ERROR")),
+    ).toBeNull();
+    expect(
+      getInvalidTokenRefusal(
+        badInput(
+          'entry 0: amount.currency "\u001b[0m" is not a valid currency',
+        ),
+      ),
+    ).toBeNull();
+    expect(
+      getInvalidTokenRefusal(
+        badInput(
+          'entry 0: meta.filename "filename" is not a valid metadata key',
+        ),
+      ),
+    ).toBeNull();
+    expect(getInvalidTokenRefusal(new Error(usd))).toBeNull();
+  });
+
+  it("names the value in the reader's words, never the field path", () => {
+    const { result } = renderHook(() => useErrorMessage());
+    const message = result.current(
+      badInput(
+        'entry 0: postings[0].units.currency "usd" is not a valid currency',
+      ),
+    );
+    expect(message).toBe(
+      "“usd” isn't a valid currency. Write currencies in capital letters, such as USD.",
+    );
+    expect(message).not.toContain("postings");
   });
 });

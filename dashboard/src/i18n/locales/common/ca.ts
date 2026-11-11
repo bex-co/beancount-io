@@ -880,6 +880,37 @@ const caCommon: Record<string, TranslationEntry> = {
       "Part de la informació proporcionada no és vàlida. Reviseu-la i torneu-ho a provar.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "Escriviu la moneda en majúscules, com ara USD.",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "«{value}» no és una moneda vàlida. Escriviu les monedes en majúscules, com ara USD.",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "«{value}» no és un nom de compte vàlid.",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "«{value}» no és una etiqueta vàlida.",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "«{value}» no és un enllaç vàlid.",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "«{value}» no és una marca vàlida.",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "El filtre de temps no és una data o un període que aquest llibre entengui. Proveu 2026, 2026-08, 2026-Q3, month o un interval com 2026-01 - 2026-06.",

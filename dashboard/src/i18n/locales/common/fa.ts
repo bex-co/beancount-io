@@ -872,6 +872,37 @@ const faCommon: Record<string, TranslationEntry> = {
       "برخی از اطلاعات واردشده نامعتبر است. لطفاً بررسی کنید و دوباره تلاش کنید.",
     description: "Error shown for invalid client input (BAD_USER_INPUT)",
   },
+  "common.currencyFormat": {
+    message: "واحد پول را با حروف بزرگ لاتین بنویسید، مانند USD.",
+    description:
+      "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
+  },
+  "common.errors.invalidCurrency": {
+    message:
+      "«{value}» واحد پول معتبری نیست. واحدهای پول را با حروف بزرگ لاتین بنویسید، مانند USD.",
+    description:
+      "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAccount": {
+    message: "«{value}» نام حساب معتبری نیست.",
+    description:
+      "The ledger refused a write because an account name is not valid; {value} is the name as typed",
+  },
+  "common.errors.invalidTag": {
+    message: "«{value}» برچسب معتبری نیست.",
+    description:
+      "The ledger refused a write because a tag is not valid; {value} is the tag as typed",
+  },
+  "common.errors.invalidLink": {
+    message: "«{value}» پیوند معتبری نیست.",
+    description:
+      "The ledger refused a write because a link is not valid; {value} is the link as typed",
+  },
+  "common.errors.invalidFlag": {
+    message: "«{value}» نشان معتبری نیست.",
+    description:
+      "The ledger refused a write because a flag is not valid; {value} is the flag as typed",
+  },
   "common.errors.invalidTimeFilter": {
     message:
       "فیلتر زمان تاریخ یا دوره‌ای نیست که این دفتر بفهمد. 2026، 2026-08، 2026-Q3، month یا بازه‌ای مثل 2026-01 - 2026-06 را امتحان کنید.",

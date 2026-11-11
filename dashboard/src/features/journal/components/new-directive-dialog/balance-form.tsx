@@ -37,6 +37,7 @@ import { AccountAvailabilityNotice } from "./account-availability-notice";
 import { ExactAmountInput } from "@/common/components/exact-amount-input";
 import { useAccountAvailability } from "./use-account-availability";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
+import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
 
 interface BalanceFormProps {
   ledgerId: string;
@@ -58,7 +59,11 @@ const createBalanceSchema = (t: (key: string) => string) =>
         (val) => parseDecimalNumber(val) !== null,
         t("journal.amountMustBeNumber"),
       ),
-    currency: z.string().trim().min(1, t("journal.currencyRequired")),
+    currency: z
+      .string()
+      .trim()
+      .min(1, t("journal.currencyRequired"))
+      .refine(isCurrencyToken, t("common.currencyFormat")),
   });
 
 /**
