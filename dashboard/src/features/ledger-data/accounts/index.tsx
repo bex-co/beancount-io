@@ -453,19 +453,20 @@ export default function LedgerAccountsPage() {
     [data],
   );
 
+  // A pasted name often carries a space at either end; match on the name
+  // alone, while the field and URL keep exactly what was typed (w2/108).
+  const query = search.trim().toLowerCase();
   const filtered = useMemo(() => {
     return accounts.filter((a) => {
-      const matchesSearch = a.account
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const matchesSearch = a.account.toLowerCase().includes(query);
       const matchesType =
         typeFilter === ACCOUNT_TYPE_ALL ||
         getAccountType(a.account, accountTypes) === typeFilter;
       return matchesSearch && matchesType;
     });
-  }, [accountTypes, accounts, search, typeFilter]);
+  }, [accountTypes, accounts, query, typeFilter]);
 
-  const hasActiveFilters = search.length > 0 || typeFilter !== ACCOUNT_TYPE_ALL;
+  const hasActiveFilters = query.length > 0 || typeFilter !== ACCOUNT_TYPE_ALL;
 
   // The empty state's Clear leaves with its results; hand focus to the
   // search, as the field's own clear icon does, for the next query (w4/340).

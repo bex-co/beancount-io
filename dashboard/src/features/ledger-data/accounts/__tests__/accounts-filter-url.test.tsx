@@ -221,6 +221,36 @@ describe("accounts list filters in the URL", () => {
     viewport.isMobile = false;
   });
 
+  // A name pasted from a statement or spreadsheet often carries a space at
+  // either end; it found nothing (w2/108).
+  it("matches an account through spaces around the search, keeping the text", async () => {
+    const user = userEvent.setup();
+    const router = await mountAt("/ledger/alice/books/accounts");
+    await user.type(searchBox(), "  cash  ");
+    await waitFor(() => {
+      expect(router.state.location.search).toMatchObject({
+        search: "  cash  ",
+      });
+    });
+    expect(searchBox()).toHaveValue("  cash  ");
+    expect(accountNames()).toEqual([
+      "Assets:Cash",
+      "Expenses:Cash-Advance-Fees",
+    ]);
+
+    // A reload of that URL repeats the match.
+    await mountAt("/ledger/alice/books/accounts?search=%20%20cash%20%20");
+    expect(accountNames()).toEqual([
+      "Assets:Cash",
+      "Expenses:Cash-Advance-Fees",
+    ]);
+  });
+
+  it("treats a whitespace-only search as no search", async () => {
+    await mountAt("/ledger/alice/books/accounts?search=%20%20%20");
+    expect(accountNames()).toHaveLength(accounts.length);
+  });
+
   it.each([
     { isMobile: false, firstSearch: "Checking", nextSearch: "Cash" },
     { isMobile: true, firstSearch: "Checking", nextSearch: "Cash" },

@@ -361,6 +361,35 @@ describe("AccountCombobox", () => {
     });
   });
 
+  // A name pasted from a statement or spreadsheet often carries a space at
+  // either end; it offered no account (w2/108).
+  it("finds an account through spaces around the search", async () => {
+    render(
+      <SidebarProvider>
+        <AccountCombobox>
+          <button>Go to Account</button>
+        </AccountCombobox>
+      </SidebarProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: /go to account/i }));
+    await user.type(await screen.findByRole("combobox"), "  checking  ");
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole("option").map((option) => option.textContent),
+      ).toEqual(["Assets:Bank:Checking"]),
+    );
+    expect(screen.queryByText(/no accounts found/i)).not.toBeInTheDocument();
+    await user.keyboard("{Enter}");
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        params: expect.objectContaining({
+          accountName: "Assets:Bank:Checking",
+        }),
+      }),
+    );
+  });
+
   it("keeps keyboard focus in the picker through a retry (w4/274)", async () => {
     const refetch = vi.fn().mockResolvedValue({});
     mockUseQuery.mockReturnValue({

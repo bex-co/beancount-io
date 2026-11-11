@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from "@/common/components/ui/popover.tsx";
 import { Button } from "@/common/components/ui/button.tsx";
+import { defaultFilter } from "cmdk";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerAccountsDocument } from "@/graphql/definitions.ts";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -69,7 +70,14 @@ export function AccountCombobox({ children }: AccountComboboxProps) {
           align={isMobile ? "end" : "start"}
           collisionPadding={8}
         >
-          <Command label={t("component.accountCombobox.placeholder")}>
+          <Command
+            label={t("component.accountCombobox.placeholder")}
+            // A pasted name often carries a space at either end; rank on the
+            // name alone with cmdk's own scoring (w2/108).
+            filter={(value, search, keywords) =>
+              defaultFilter(value, search.trim(), keywords)
+            }
+          >
             <CommandInput
               ref={searchRef}
               placeholder={t("component.accountCombobox.placeholder")}
