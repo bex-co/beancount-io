@@ -76,7 +76,7 @@
 
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains — 2026-11-11: Claude works on the macOS checkout, but the candidates and Codex are only on the Linux runtime.
 
-- [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.
+- [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation — 2026-11-11: Claude works on the macOS checkout, but the candidates and Codex are only on the Linux runtime.
 - [103 — Realized-gains command missing from published minimum bea](./blocked/103.md) — Codex capability/fallback fix and fresh report pass; candidate release needs authenticated Claude validation.
 
 - [097 — Business presets lack loans, payroll and sales-tax liabilities, and owner draws](./blocked/097.md) — **blocked:** a `business@2` preset version and public API enum change; the owner decides its content
