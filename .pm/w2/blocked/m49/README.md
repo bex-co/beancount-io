@@ -49,3 +49,14 @@ routing is unchanged and audited, but does not cover that mixed-question miss.
 trigger controls, fix/rerun the full original cohort and ship the rebased
 candidate. **Who can clear it:** operator login, then worker. Candidate source
 is unshipped and main restored; t004–t007 still depend on t003.
+
+**Recheck 2026-11-11** — Claude Code on the macOS checkout is now
+authenticated: `claude auth status` reports a claude.ai login and a
+non-interactive `claude -p` turn answers. That clears the login half of this
+block on that machine only. The preserved per-lot candidate is in an unpushed
+worktree on the Linux runtime, not in that checkout or on origin. Codex there
+refuses its configured model for the signed-in ChatGPT account, so the
+both-client check still cannot run on one machine. **Unblock (updated):** push
+the candidate branch to origin so the authenticated checkout can measure the
+Claude trigger controls, or authenticate Claude on the Linux runtime; then
+continue as above. **Who can clear it:** the operator with the Linux runtime.
