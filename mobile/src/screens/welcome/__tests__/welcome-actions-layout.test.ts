@@ -202,7 +202,7 @@ describe("Welcome actions at every text size", () => {
     expect(destination).toBe("");
   });
 
-  for (const scale of [1, 1.235, 1.3, 2, 3.12]) {
+  for (const scale of [1, 1.235, 1.353, 1.786, 3.12]) {
     it(`never caps the action row's height at font scale ${scale}`, () => {
       fontScale = scale;
       const { buttons, row } = render();
@@ -228,7 +228,8 @@ describe("Welcome actions at every text size", () => {
   }
 
   it("keeps the side-by-side row at ordinary text sizes", () => {
-    for (const scale of [1, 1.235]) {
+    // Through xxxLarge (1.353), the largest ordinary size (w22/032).
+    for (const scale of [1, 1.235, 1.353]) {
       fontScale = scale;
       const { buttons, row } = render();
       expect(flattenStyle(row.props.style).flexDirection).toBe("row");
@@ -238,7 +239,8 @@ describe("Welcome actions at every text size", () => {
   });
 
   it("stacks full-width actions at accessibility text sizes", () => {
-    for (const scale of [1.3, 3.12]) {
+    // From AX1 (1.786) up.
+    for (const scale of [1.786, 3.12]) {
       fontScale = scale;
       const { buttons, row } = render();
       expect(flattenStyle(row.props.style).flexDirection).toBe("column");

@@ -16,12 +16,16 @@
 /**
  * Font scale at or above which a label+value row stacks.
  *
- * 1.3 is the first iOS Dynamic Type step past the largest *non*-accessibility
- * size (xxxLarge ≈ 1.235), so the default and every ordinary larger setting keep
- * the existing single-line geometry byte for byte, and only the accessibility
- * sizes (AX1 and up) switch to the stacked variant.
+ * React Native reports iOS Dynamic Type as these `fontScale`s
+ * (`RCTAccessibilityManager.mm`, which nothing in this app overrides): xxLarge
+ * 1.235, xxxLarge 1.353 — the largest *non*-accessibility size — and
+ * accessibility-medium (AX1) 1.786. 1.5 sits between the last two, so the default
+ * and every ordinary larger setting keep the existing single-line geometry byte
+ * for byte, and only the accessibility sizes (AX1 and up) switch to the stacked
+ * variant. It was 1.3, written as "the first step past xxxLarge ≈ 1.235" with the
+ * ladder one step off, which put xxxLarge on the stacked side (w22/032).
  */
-export const STACKED_LAYOUT_FONT_SCALE = 1.3;
+export const STACKED_LAYOUT_FONT_SCALE = 1.5;
 
 /**
  * Whether label+value rows should stack at this text size.
