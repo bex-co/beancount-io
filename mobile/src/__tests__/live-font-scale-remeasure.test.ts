@@ -672,6 +672,53 @@ const KEYED_TEXTS: [string, string[]][] = [
     "screens/account-detail-screen/components/account-journal-empty.tsx",
     ["{styles.stateText}"],
   ],
+  // Open Account: the header's Done, the field label, the prefix, the name
+  // preview and the Currency and Open date rows (w22/024).
+  [
+    "screens/open-account-screen/open-account-screen.tsx",
+    [
+      "{[styles.doneButton, !canSubmit && styles.doneButtonDisabled]}",
+      "{styles.fieldLabel}",
+      "{styles.prefixText}",
+      "{styles.preview}",
+      "{styles.label}",
+      "{styles.value}",
+      "{styles.label}",
+      "{styles.value}",
+    ],
+  ],
+  // Add Budget: the header's Done, a form row's label and value, the Amount
+  // label and the two help lines (w22/024).
+  [
+    "screens/add-budget-screen/add-budget-screen.tsx",
+    [
+      "{[styles.doneButton, !canSubmit && styles.doneButtonDisabled]}",
+      "{styles.label}",
+      "{[styles.value, muted && styles.valueMuted]}",
+      "{styles.label}",
+      "{styles.help}",
+      "{styles.help}",
+    ],
+  ],
+  // New Transaction: the header's Done, a posting's account (keyed since
+  // w21/029), sign and Auto tag, Add posting and the Remainder label (w22/024).
+  [
+    "screens/multi-postings-transaction/multi-postings-transaction-screen.tsx",
+    [
+      "{[styles.doneButton, (!canSave || saving || metaFailed) && styles.doneButtonDisabled]}",
+      "{[styles.postingAccount, !posting.account && styles.postingAccountPlaceholder]}",
+      "{[styles.signToggleText, { color: amountColor }]}",
+      "{[styles.postingAutoTag, autoToggle.selected && styles.postingAutoTagActive]}",
+      "{styles.addPostingText}",
+      "{styles.balanceLabel}",
+    ],
+  ],
+  // The Date / Payee / Narration rows of New Transaction, shared with the
+  // transaction filters (w22/024).
+  [
+    "screens/multi-postings-transaction/list-item.tsx",
+    ["{styles.title}", "{[styles.content, !content && styles.placeholder]}"],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",
@@ -700,13 +747,17 @@ for (const [file, styles] of KEYED_TEXTS)
         .filter(ts.isJsxAttribute)
         .find((attr) => attr.name.getText() === name)
         ?.initializer?.getText();
+    // A style array that prettier wraps across lines (and gives a trailing
+    // comma) is still the same style.
+    const squash = (text?: string) =>
+      text?.replace(/\s+/g, "").replace(/,(?=[\]})])/g, "");
 
     it("keys each of its texts on the live scale", () => {
       for (const style of styles) {
         const text = elements.find(
           (element) =>
             element.tagName.getText() === "Text" &&
-            attribute(element, "style") === style,
+            squash(attribute(element, "style")) === squash(style),
         );
         expect(Boolean(text)).toBe(true);
         expect((attribute(text!, "key") ?? "").includes("fontScale")).toBe(

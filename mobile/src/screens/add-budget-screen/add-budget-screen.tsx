@@ -23,6 +23,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -174,6 +175,8 @@ function FormRow({
 }: FormRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const chevronColor = useTheme().colorTheme.black60;
+  // Keys re-measure the Texts after a live text-size change (w22/024).
+  const { fontScale } = useWindowDimensions();
   return (
     <TouchableOpacity
       style={[styles.row, !first && styles.rowDivider]}
@@ -183,8 +186,11 @@ function FormRow({
       accessibilityLabel={label}
       accessibilityValue={{ text: spokenValue ?? value }}
     >
-      <Text style={styles.label}>{label}</Text>
+      <Text key={`label-${fontScale}`} style={styles.label}>
+        {label}
+      </Text>
       <Text
+        key={`value-${fontScale}`}
         style={[styles.value, muted && styles.valueMuted]}
         numberOfLines={1}
         ellipsizeMode="head"
@@ -205,6 +211,9 @@ function FormRow({
 
 function AddBudgetScreenImpl(): JSX.Element {
   const { t, locale } = useTranslations();
+  // Keys re-measure the Texts, the header's Done included, after a live
+  // text-size change (w22/024).
+  const { fontScale } = useWindowDimensions();
   const router = useRouter();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -407,6 +416,7 @@ function AddBudgetScreenImpl(): JSX.Element {
               accessibilityState={{ disabled: !canSubmit, busy: loading }}
             >
               <Text
+                key={fontScale}
                 style={[
                   styles.doneButton,
                   !canSubmit && styles.doneButtonDisabled,
@@ -451,7 +461,9 @@ function AddBudgetScreenImpl(): JSX.Element {
           />
 
           <View style={[styles.row, styles.rowDivider]}>
-            <Text style={styles.label}>{t("budgetAmount")}</Text>
+            <Text key={`amount-${fontScale}`} style={styles.label}>
+              {t("budgetAmount")}
+            </Text>
             <TextInput
               testID="add-budget-amount-input"
               accessibilityLabel={t("budgetAmount")}
@@ -492,9 +504,13 @@ function AddBudgetScreenImpl(): JSX.Element {
             message={t("budgetAmountInvalid")}
           />
         ) : null}
-        <Text style={styles.help}>{t("budgetAccountHelp")}</Text>
+        <Text key={`help-${fontScale}`} style={styles.help}>
+          {t("budgetAccountHelp")}
+        </Text>
         {existing ? (
-          <Text style={styles.help}>{t("budgetReplacesCurrent")}</Text>
+          <Text key={`replaces-${fontScale}`} style={styles.help}>
+            {t("budgetReplacesCurrent")}
+          </Text>
         ) : null}
         {closedAt !== undefined && (
           <InlineError

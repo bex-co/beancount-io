@@ -432,7 +432,10 @@ const PostingRow = ({
                 text: isNegative ? t("signMinus") : t("signPlus"),
               }}
             >
-              <Text style={[styles.signToggleText, { color: amountColor }]}>
+              <Text
+                key={`sign-${fontScale}`}
+                style={[styles.signToggleText, { color: amountColor }]}
+              >
                 {isNegative ? "−" : "+"}
               </Text>
             </TouchableOpacity>
@@ -467,6 +470,7 @@ const PostingRow = ({
               accessibilityState={{ selected: autoToggle.selected }}
             >
               <Text
+                key={`auto-${fontScale}`}
                 style={[
                   styles.postingAutoTag,
                   autoToggle.selected && styles.postingAutoTagActive,
@@ -486,6 +490,9 @@ const MultiPostingsTransactionScreenComponent = () => {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
+  // Keys re-measure the Texts, the header's Done included, after a live
+  // text-size change (w22/024).
+  const { fontScale } = useWindowDimensions();
   const router = useRouter();
   const toast = useToast();
   const confirmWrite = useLedgerWrite();
@@ -784,6 +791,7 @@ const MultiPostingsTransactionScreenComponent = () => {
               }}
             >
               <Text
+                key={fontScale}
                 style={[
                   styles.doneButton,
                   (!canSave || saving || metaFailed) &&
@@ -906,12 +914,19 @@ const MultiPostingsTransactionScreenComponent = () => {
               size={18}
               color={theme.primary}
             />
-            <Text style={styles.addPostingText}>{t("addPosting")}</Text>
+            <Text
+              key={`add-posting-${fontScale}`}
+              style={styles.addPostingText}
+            >
+              {t("addPosting")}
+            </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.balanceRow}>
-          <Text style={styles.balanceLabel}>{t("remainderLabel")}</Text>
+          <Text key={`remainder-${fontScale}`} style={styles.balanceLabel}>
+            {t("remainderLabel")}
+          </Text>
           {/* An unparsed amount counts as nothing, so the sum is not a
               verdict: neutral, never a green check (w21/031). */}
           <AmountText

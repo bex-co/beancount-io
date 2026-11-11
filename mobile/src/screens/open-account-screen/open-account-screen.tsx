@@ -12,6 +12,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -227,6 +228,9 @@ const OTHER_CURRENCY = "__other_currency__";
 
 export function OpenAccountScreenComponent(): JSX.Element {
   const { t, locale } = useTranslations();
+  // Keys re-measure the Texts, the header's Done included, after a live
+  // text-size change (w22/024).
+  const { fontScale } = useWindowDimensions();
   const router = useRouter();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -457,6 +461,7 @@ export function OpenAccountScreenComponent(): JSX.Element {
               accessibilityState={{ disabled: !canSubmit, busy: loading }}
             >
               <Text
+                key={fontScale}
                 style={[
                   styles.doneButton,
                   !canSubmit && styles.doneButtonDisabled,
@@ -477,7 +482,9 @@ export function OpenAccountScreenComponent(): JSX.Element {
       >
         <View style={styles.card}>
           <View style={styles.accountField}>
-            <Text style={styles.fieldLabel}>{t("account")}</Text>
+            <Text key={`account-${fontScale}`} style={styles.fieldLabel}>
+              {t("account")}
+            </Text>
             <View style={styles.accountInput}>
               <TouchableOpacity
                 testID="open-account-prefix-picker"
@@ -499,7 +506,7 @@ export function OpenAccountScreenComponent(): JSX.Element {
                 >
                   <Ionicons name={rootIcon.glyph} size={14} color={rootTone} />
                 </View>
-                <Text style={styles.prefixText}>
+                <Text key={`prefix-${fontScale}`} style={styles.prefixText}>
                   {ledgerRootName(rootPrefix, roots)}:
                 </Text>
                 <Ionicons
@@ -544,7 +551,9 @@ export function OpenAccountScreenComponent(): JSX.Element {
               />
             ) : null}
             {namePreview ? (
-              <Text style={styles.preview}>{namePreview}</Text>
+              <Text key={`preview-${fontScale}`} style={styles.preview}>
+                {namePreview}
+              </Text>
             ) : null}
           </View>
 
@@ -559,8 +568,10 @@ export function OpenAccountScreenComponent(): JSX.Element {
               text: currency || t("openAccountNoCurrency"),
             }}
           >
-            <Text style={styles.label}>{t("currency")}</Text>
-            <Text style={styles.value}>
+            <Text key={`currency-label-${fontScale}`} style={styles.label}>
+              {t("currency")}
+            </Text>
+            <Text key={`currency-value-${fontScale}`} style={styles.value}>
               {currency || t("openAccountNoCurrency")}
             </Text>
             <Ionicons
@@ -579,8 +590,12 @@ export function OpenAccountScreenComponent(): JSX.Element {
             accessibilityLabel={t("openDate")}
             accessibilityValue={{ text: getFormatDate(date) }}
           >
-            <Text style={styles.label}>{t("openDate")}</Text>
-            <Text style={styles.value}>{getFormatDate(date)}</Text>
+            <Text key={`date-label-${fontScale}`} style={styles.label}>
+              {t("openDate")}
+            </Text>
+            <Text key={`date-value-${fontScale}`} style={styles.value}>
+              {getFormatDate(date)}
+            </Text>
             <Ionicons
               style={styles.chevron}
               name={directionalIcon("chevron-forward")}

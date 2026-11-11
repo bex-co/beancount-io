@@ -1,4 +1,10 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
@@ -80,6 +86,8 @@ export const ListItem = ({
 }: ListItemProps) => {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
+  // Keys re-measure the Texts after a live text-size change (w22/024).
+  const { fontScale } = useWindowDimensions();
   return (
     <TouchableOpacity
       style={[styles.container, showDivider && styles.divider]}
@@ -91,8 +99,13 @@ export const ListItem = ({
       }
     >
       <View style={styles.textWrap}>
-        {title && <Text style={styles.title}>{title}</Text>}
+        {title && (
+          <Text key={`title-${fontScale}`} style={styles.title}>
+            {title}
+          </Text>
+        )}
         <Text
+          key={`content-${fontScale}`}
           style={[styles.content, !content && styles.placeholder]}
           numberOfLines={1}
           ellipsizeMode="middle"
