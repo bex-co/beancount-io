@@ -34,6 +34,30 @@ const ukGalleryPage: Record<string, TranslationEntry> = {
     description:
       "Polite status announcing the number of ledgers found by the completed search",
   },
+  "page.gallery.ledgersShownMoreAvailable_one": {
+    message: "Показано першу {count} книгу — є ще",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_few": {
+    message: "Показано перші {count} книги — є ще",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_many": {
+    message: "Показано перші {count} книг — є ще",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_other": {
+    message: "Показано перші {count} книги — є ще",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.showMoreLedgers": {
+    message: "Показати ще книги",
+    description: "Button that loads the next page of ledger search results",
+  },
   "page.gallery.failedToSearchLedgers": {
     message: "Не вдалося виконати пошук книг",
     description: "Error message when search fails",

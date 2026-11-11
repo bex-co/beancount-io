@@ -24,6 +24,20 @@ const nlGalleryPage: Record<string, TranslationEntry> = {
     description:
       "Polite status announcing the number of ledgers found by the completed search",
   },
+  "page.gallery.ledgersShownMoreAvailable_one": {
+    message: "Eerste {count} grootboek getoond — er zijn er meer",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_other": {
+    message: "Eerste {count} grootboeken getoond — er zijn er meer",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.showMoreLedgers": {
+    message: "Meer grootboeken tonen",
+    description: "Button that loads the next page of ledger search results",
+  },
   "page.gallery.failedToSearchLedgers": {
     message: "Grootboeken zoeken mislukt",
     description: "Error message when search fails",

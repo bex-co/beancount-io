@@ -29,6 +29,27 @@ const ptGalleryPage: Record<string, TranslationEntry> = {
     description:
       "Polite status announcing the number of ledgers found by the completed search",
   },
+  "page.gallery.ledgersShownMoreAvailable_one": {
+    message: "Mostrando {count} livro-razão — há mais disponíveis",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_many": {
+    message:
+      "Mostrando os primeiros {count} livros-razão — há mais disponíveis",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_other": {
+    message:
+      "Mostrando os primeiros {count} livros-razão — há mais disponíveis",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.showMoreLedgers": {
+    message: "Mostrar mais livros-razão",
+    description: "Button that loads the next page of ledger search results",
+  },
   "page.gallery.failedToSearchLedgers": {
     message: "Falha ao pesquisar livros-razão",
     description: "Error message when search fails",

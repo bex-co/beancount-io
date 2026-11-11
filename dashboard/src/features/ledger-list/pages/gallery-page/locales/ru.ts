@@ -34,6 +34,30 @@ const ruGalleryPage: Record<string, TranslationEntry> = {
     description:
       "Polite status announcing the number of ledgers found by the completed search",
   },
+  "page.gallery.ledgersShownMoreAvailable_one": {
+    message: "Показана первая {count} книга — есть ещё",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_few": {
+    message: "Показаны первые {count} книги — есть ещё",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_many": {
+    message: "Показаны первые {count} книг — есть ещё",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_other": {
+    message: "Показаны первые {count} книги — есть ещё",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.showMoreLedgers": {
+    message: "Показать ещё книги",
+    description: "Button that loads the next page of ledger search results",
+  },
   "page.gallery.failedToSearchLedgers": {
     message: "Не удалось выполнить поиск книг",
     description: "Error message when search fails",

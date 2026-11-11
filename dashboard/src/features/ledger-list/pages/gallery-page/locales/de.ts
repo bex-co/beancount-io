@@ -24,6 +24,21 @@ const deGalleryPage: Record<string, TranslationEntry> = {
     description:
       "Polite status announcing the number of ledgers found by the completed search",
   },
+  "page.gallery.ledgersShownMoreAvailable_one": {
+    message: "Das erste {count} Hauptbuch wird angezeigt – weitere verfügbar",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_other": {
+    message:
+      "Die ersten {count} Hauptbücher werden angezeigt – weitere verfügbar",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.showMoreLedgers": {
+    message: "Weitere Hauptbücher anzeigen",
+    description: "Button that loads the next page of ledger search results",
+  },
   "page.gallery.failedToSearchLedgers": {
     message: "Hauptbücher konnten nicht durchsucht werden",
     description: "Error message when search fails",

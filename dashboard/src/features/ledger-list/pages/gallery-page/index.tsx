@@ -24,7 +24,29 @@ import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { Button } from "@/common/components/ui/button";
+import { ContinuationControl } from "@/common/components/continuation-control";
 import { validateGallerySearch } from "./search";
+
+const GALLERY_PAGE_SIZE = 50;
+
+type GalleryLedger = SearchLedgersQuery["searchLedgers"][number];
+
+/** Pages after the first, for the one query they were requested for. */
+interface Continuation {
+  query: string;
+  extras: GalleryLedger[];
+  page: number;
+  hasMore: boolean;
+}
+
+function dedupeById(ledgers: GalleryLedger[]): GalleryLedger[] {
+  const seen = new Set<string>();
+  return ledgers.filter((ledger) => {
+    if (seen.has(ledger.id)) return false;
+    seen.add(ledger.id);
+    return true;
+  });
+}
 
 /**
  * Empty state component for gallery search
@@ -100,8 +122,74 @@ export default function GalleryPage() {
     !loading &&
     !currentError &&
     data?.searchLedgers !== undefined;
-  const searchResults =
+  const firstPage =
     searchIsSettled && data?.searchLedgers ? data.searchLedgers : [];
+
+  // SearchLedgers returns one page. A full page means more may follow, so
+  // the list offers Show More instead of calling the first page the whole
+  // result (w2/104). Pages, errors and pending requests belong to the query
+  // they were sent for and never leak into another search.
+  const [fetchPage] = useLazyQuery<
+    SearchLedgersQuery,
+    SearchLedgersQueryVariables
+  >(SearchLedgersDocument, { fetchPolicy: "network-only" });
+  const [continuation, setContinuation] = useState<Continuation | null>(null);
+  const [loadingMoreFor, setLoadingMoreFor] = useState<string | null>(null);
+  const [loadMoreFailure, setLoadMoreFailure] = useState<{
+    query: string;
+    error: unknown;
+  } | null>(null);
+  const loadMoreRequest = useRef(0);
+  const pages = continuation?.query === normalizedQuery ? continuation : null;
+  const searchResults = searchIsSettled
+    ? dedupeById([...firstPage, ...(pages?.extras ?? [])])
+    : [];
+  const hasMore =
+    searchIsSettled &&
+    (pages ? pages.hasMore : firstPage.length === GALLERY_PAGE_SIZE);
+  const loadingMore = searchIsSettled && loadingMoreFor === normalizedQuery;
+  const loadMoreError =
+    searchIsSettled && loadMoreFailure?.query === normalizedQuery
+      ? loadMoreFailure.error
+      : undefined;
+  // Once a later page loads, the control stays to report the end of the list.
+  const showContinuation =
+    searchResults.length > 0 &&
+    (hasMore || pages !== null || loadingMore || loadMoreError !== undefined);
+
+  const loadMore = async () => {
+    const query = normalizedQuery;
+    const page = (pages?.page ?? 1) + 1;
+    const requestId = ++loadMoreRequest.current;
+    setLoadingMoreFor(query);
+    setLoadMoreFailure(null);
+    try {
+      const result = await fetchPage({
+        variables: { q: query, limit: GALLERY_PAGE_SIZE, page },
+      });
+      if (requestId !== loadMoreRequest.current) return;
+      if (result.error) {
+        setLoadMoreFailure({ query, error: result.error });
+        return;
+      }
+      const ledgers = result.data?.searchLedgers ?? [];
+      setContinuation((current) => ({
+        query,
+        extras: [
+          ...(current?.query === query ? current.extras : []),
+          ...ledgers,
+        ],
+        page,
+        hasMore: ledgers.length === GALLERY_PAGE_SIZE,
+      }));
+    } catch (error) {
+      if (requestId === loadMoreRequest.current) {
+        setLoadMoreFailure({ query, error });
+      }
+    } finally {
+      if (requestId === loadMoreRequest.current) setLoadingMoreFor(null);
+    }
+  };
 
   // What the reader is looking at now, for a retry that settles later.
   const liveSearch = useRef({ query: normalizedQuery, open: isDropdownOpen });
@@ -164,7 +252,7 @@ export default function GalleryPage() {
       void searchLedgers({
         variables: {
           q: normalizedDebounced,
-          limit: 50,
+          limit: GALLERY_PAGE_SIZE,
         },
       });
     }
@@ -395,67 +483,100 @@ export default function GalleryPage() {
                       </div>
                     ) : isDropdownOpen ? (
                       <div
-                        ref={dropdownRef}
-                        id="ledger-search-listbox"
-                        role="listbox"
-                        className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground rounded-md border shadow-lg max-h-[300px] overflow-auto"
+                        className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground rounded-md border shadow-lg"
+                        onKeyDown={(e) => {
+                          // Show More sits outside the field; Escape there
+                          // dismisses the list as it does from the field.
+                          if (e.key !== "Escape") return;
+                          e.preventDefault();
+                          // Focus reopens the list, so close it after.
+                          inputRef.current?.focus();
+                          setIsDropdownOpen(false);
+                          setHighlightedIndex(-1);
+                        }}
                       >
-                        {queryIsEligible && !searchIsSettled ? (
-                          <div className="flex items-center justify-center py-8">
-                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : null}
+                        <div
+                          ref={dropdownRef}
+                          id="ledger-search-listbox"
+                          role="listbox"
+                          className="max-h-[300px] overflow-auto"
+                        >
+                          {queryIsEligible && !searchIsSettled ? (
+                            <div className="flex items-center justify-center py-8">
+                              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : null}
 
-                        {searchIsSettled && searchResults.length === 0 && (
-                          <div className="p-4 text-center text-sm text-muted-foreground">
-                            {t("page.gallery.noLedgersFound")}
-                          </div>
-                        )}
+                          {searchIsSettled && searchResults.length === 0 && (
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              {t("page.gallery.noLedgersFound")}
+                            </div>
+                          )}
 
-                        {normalizedQuery.length < 2 && (
-                          <div className="p-4 text-center text-sm text-muted-foreground">
-                            {t("collaboration.typeAtLeast2Characters")}
-                          </div>
-                        )}
+                          {normalizedQuery.length < 2 && (
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              {t("collaboration.typeAtLeast2Characters")}
+                            </div>
+                          )}
 
-                        {searchResults.length > 0 && (
-                          <div className="p-1">
-                            {searchResults.map((ledger, index) => (
-                              <div
-                                key={ledger.id}
-                                id={`ledger-search-option-${index}`}
-                                data-index={index}
-                                className={cn(
-                                  "flex items-center justify-between rounded-md px-3 py-2 cursor-pointer transition-colors",
-                                  highlightedIndex === index
-                                    ? "bg-accent text-accent-foreground"
-                                    : "hover:bg-accent/50",
-                                )}
-                                onClick={() => handleLedgerSelect(ledger.id)}
-                                onMouseMove={() => setHighlightedIndex(index)}
-                                role="option"
-                                aria-selected={highlightedIndex === index}
-                              >
-                                <div className="flex flex-col flex-1 min-w-0">
-                                  <span className="font-medium truncate">
-                                    {ledger.name}
-                                  </span>
-                                  {ledger.fullName &&
-                                    ledger.fullName !== ledger.name && (
-                                      <span className="text-sm text-muted-foreground truncate">
-                                        {ledger.fullName}
+                          {searchResults.length > 0 && (
+                            <div className="p-1">
+                              {searchResults.map((ledger, index) => (
+                                <div
+                                  key={ledger.id}
+                                  id={`ledger-search-option-${index}`}
+                                  data-index={index}
+                                  className={cn(
+                                    "flex items-center justify-between rounded-md px-3 py-2 cursor-pointer transition-colors",
+                                    highlightedIndex === index
+                                      ? "bg-accent text-accent-foreground"
+                                      : "hover:bg-accent/50",
+                                  )}
+                                  onClick={() => handleLedgerSelect(ledger.id)}
+                                  onMouseMove={() => setHighlightedIndex(index)}
+                                  role="option"
+                                  aria-selected={highlightedIndex === index}
+                                >
+                                  <div className="flex flex-col flex-1 min-w-0">
+                                    <span className="font-medium truncate">
+                                      {ledger.name}
+                                    </span>
+                                    {ledger.fullName &&
+                                      ledger.fullName !== ledger.name && (
+                                        <span className="text-sm text-muted-foreground truncate">
+                                          {ledger.fullName}
+                                        </span>
+                                      )}
+                                    {ledger.description && (
+                                      <span className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                                        {ledger.description}
                                       </span>
                                     )}
-                                  {ledger.description && (
-                                    <span className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                                      {ledger.description}
-                                    </span>
-                                  )}
+                                  </div>
+                                  <Search className="h-4 w-4 text-muted-foreground ml-2 shrink-0" />
                                 </div>
-                                <Search className="h-4 w-4 text-muted-foreground ml-2 shrink-0" />
-                              </div>
-                            ))}
-                          </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {/* A continuation is never a listbox child. */}
+                        {showContinuation && (
+                          <ContinuationControl
+                            className="flex flex-col items-center gap-2 border-t p-2"
+                            buttonClassName="w-full"
+                            hasMore={hasMore}
+                            loading={loadingMore}
+                            itemCount={searchResults.length}
+                            onLoadMore={loadMore}
+                            label={t("page.gallery.showMoreLedgers")}
+                            retryLabel={t("common.tryAgain")}
+                            errorMessage={
+                              loadMoreError
+                                ? `${t("page.gallery.failedToSearchLedgers")}: ${t(getErrorMessageKey(loadMoreError))}`
+                                : undefined
+                            }
+                            getEndFocusTarget={() => inputRef.current}
+                          />
                         )}
                       </div>
                     ) : null}
@@ -466,9 +587,13 @@ export default function GalleryPage() {
                       ? t("page.gallery.minimumSearchCharacters")
                       : searchIsSettled
                         ? searchResults.length > 0
-                          ? t("page.gallery.ledgersFound", {
-                              count: searchResults.length,
-                            })
+                          ? hasMore
+                            ? t("page.gallery.ledgersShownMoreAvailable", {
+                                count: searchResults.length,
+                              })
+                            : t("page.gallery.ledgersFound", {
+                                count: searchResults.length,
+                              })
                           : t("page.gallery.noMatchingLedgers", {
                               query: normalizedQuery,
                             })

@@ -24,6 +24,20 @@ const faGalleryPage: Record<string, TranslationEntry> = {
     description:
       "Polite status announcing the number of ledgers found by the completed search",
   },
+  "page.gallery.ledgersShownMoreAvailable_one": {
+    message: "نمایش {count} دفتر نخست — دفترهای بیشتری موجود است",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.ledgersShownMoreAvailable_other": {
+    message: "نمایش {count} دفتر نخست — دفترهای بیشتری موجود است",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.showMoreLedgers": {
+    message: "نمایش دفترهای بیشتر",
+    description: "Button that loads the next page of ledger search results",
+  },
   "page.gallery.failedToSearchLedgers": {
     message: "جستجوی دفاتر ناموفق بود",
     description: "Error message when search fails",

@@ -19,6 +19,15 @@ const jaGalleryPage: Record<string, TranslationEntry> = {
     description:
       "Polite status announcing the number of ledgers found by the completed search",
   },
+  "page.gallery.ledgersShownMoreAvailable_other": {
+    message: "最初の {count} 件の台帳を表示中。さらに台帳があります",
+    description:
+      "Polite status when the search shows its first loaded pages and more matching ledgers exist",
+  },
+  "page.gallery.showMoreLedgers": {
+    message: "さらに台帳を表示",
+    description: "Button that loads the next page of ledger search results",
+  },
   "page.gallery.failedToSearchLedgers": {
     message: "台帳の検索に失敗しました",
     description: "Error message when search fails",
