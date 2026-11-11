@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type en from "@/i18n/locales/en";
 import type { PluralBaseKey } from "@/i18n/plural-keys";
+import { formatNumber } from "@/common/lib/format/format-number";
 
 type TranslationParams = Record<string, string | number>;
 
@@ -82,6 +83,16 @@ export function useTranslations() {
     // i18next returns the plain string with interpolation already applied
     // Our locale files are structured as { key: string } where the string value
     // is already extracted from the { message, description } format by the extractMessages function
+    // A count reads in the language's own digits and grouping (`۱٬۰۴۴`,
+    // `1,044`), while plural selection still reads the number: i18next takes
+    // interpolated values from `replace` when it is given (w2/125).
+    const count = params?.count;
+    if (typeof count === "number" && Number.isFinite(count)) {
+      return i18nT(key, {
+        ...params,
+        replace: { ...params, count: formatNumber(count, true, i18n.language) },
+      });
+    }
     return i18nT(key, params);
   };
 

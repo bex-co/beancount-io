@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { AlertCircle, Bot, BookOpen } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { type UserLimits } from "@/common/hooks/use-user-limits";
-import { useQuotaNumberFormat } from "./use-quota-number-format";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 
 export function UsageOverview({
   limits,
@@ -22,7 +22,7 @@ export function UsageOverview({
   t: (key: string, params?: Record<string, string>) => string;
 }) {
   // App-locale counts; `toLocaleString()` would follow the browser locale.
-  const formatCount = useQuotaNumberFormat();
+  const formatCount = useFormatCount();
   const { ledgersUsed, ledgersMax } = limits;
   const isAiUnlimited = aiCfoTokensMax === -1;
   const isLedgersUnlimited = ledgersMax === -1;

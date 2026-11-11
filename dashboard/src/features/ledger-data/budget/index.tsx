@@ -21,6 +21,7 @@ import type { BudgetGroup } from "./types";
 import { useBudgetEntries } from "./use-budget-entries";
 import { groupBudgetEntries } from "./budget-utils";
 import { LedgerWritePermission } from "@/common/components/ledger-permission/write";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 
 function getLast12MonthsRange(): string {
   const end = new Date();
@@ -83,6 +84,7 @@ export default function LedgerBudgetPage() {
   });
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
   const { t } = useTranslations();
+  const formatCount = useFormatCount();
   const hydrated = useHydrated();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -305,9 +307,10 @@ export default function LedgerBudgetPage() {
                   aria-live="polite"
                 >
                   <span className="font-medium text-foreground">
-                    {filteredGroups.length}
+                    {formatCount(filteredGroups.length)}
                   </span>{" "}
-                  / {groups.length} {t("common.results").toLowerCase()}
+                  / {formatCount(groups.length)}{" "}
+                  {t("common.results").toLowerCase()}
                 </div>
               </div>
               <div className="grid gap-4 border-t bg-muted/20 p-4 lg:grid-cols-2">

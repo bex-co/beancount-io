@@ -44,7 +44,7 @@ import { describeTierQuota } from "./tier-quota-summary";
 import { CheckoutConfirmation } from "./checkout-confirmation";
 import { useCheckoutConfirmation } from "./use-checkout-confirmation";
 import { useBillingDateFormat, useMoneyFormat } from "./use-money-format";
-import { useQuotaNumberFormat } from "./use-quota-number-format";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 import {
   rememberReturnPath,
   takeReturnPath,
@@ -262,7 +262,7 @@ export function SubscriptionSection({
     quotasLoading;
 
   const formatMoney = useMoneyFormat();
-  const formatCount = useQuotaNumberFormat();
+  const formatCount = useFormatCount();
   const [checkoutReturnPath] = useState(() =>
     checkoutReturned ? takeReturnPath() : null,
   );

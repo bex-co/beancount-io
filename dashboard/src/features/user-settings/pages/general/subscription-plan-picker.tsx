@@ -23,7 +23,7 @@ import {
   type SubscriptionTier,
 } from "./stripe-config";
 import { useMoneyFormat } from "./use-money-format";
-import { useQuotaNumberFormat } from "./use-quota-number-format";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 import {
   aiTokensLine,
   collaboratorsLine,
@@ -96,7 +96,7 @@ export function PlanPicker({
   // Yearly first: it is the cheaper way to hold any paid plan (PRFAQ005).
   const [cycle, setCycle] = useState<BillingCycle>(DEFAULT_BILLING_CYCLE);
   const formatMoney = useMoneyFormat();
-  const formatCount = useQuotaNumberFormat();
+  const formatCount = useFormatCount();
 
   return (
     <div className="space-y-3">

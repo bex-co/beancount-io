@@ -9,7 +9,7 @@ import { useIsLedgerOwner } from "@/common/hooks/use-is-ledger-owner.ts";
 import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 import { cn } from "@/common/lib/utils/utils.ts";
 import { UpgradePromptLink } from "@/common/components/upgrade-prompt-link";
-import { useQuotaNumberFormat } from "@/features/user-settings/pages/general/use-quota-number-format";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 import { getNextTier } from "@/common/lib/subscription/tier-config";
 
 /**
@@ -34,7 +34,7 @@ export const DirectiveUsageIndicator = memo(
     const hidesBilling = useHidesBilling();
     const { limits, tier } = useUserLimits();
     const isOwner = useIsLedgerOwner();
-    const formatCount = useQuotaNumberFormat();
+    const formatCount = useFormatCount();
 
     const { data, loading } = useQuery(GetLedgerEntriesCountPerTypeDocument, {
       variables: { ledgerId },

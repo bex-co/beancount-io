@@ -66,7 +66,10 @@ vi.mock("@/common/hooks/use-local-storage-state", () => ({
 }));
 
 vi.mock("@/common/hooks/use-translations", () => ({
-  useTranslations: () => ({ t: (key: string) => key }),
+  useTranslations: () => ({
+    i18n: { language: "en" },
+    t: (key: string) => key,
+  }),
 }));
 
 vi.mock("@/common/components/authenticated", () => ({

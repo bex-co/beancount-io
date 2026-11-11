@@ -51,6 +51,7 @@ import {
 } from "@/common/lib/ledger-action-search";
 import { normalizeListSearchText } from "@/common/lib/list-search-params";
 import { LedgerAmount } from "@/common/components/ledger-amount";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 
 function getAccountType(account: string, accountTypes: string[]): string {
   return (
@@ -244,6 +245,7 @@ export function AccountRow({
   onClose,
 }: AccountRowProps) {
   const { t } = useTranslations();
+  const formatCount = useFormatCount();
   const isClosed = account.closedAt !== null;
 
   return (
@@ -281,7 +283,7 @@ export function AccountRow({
         {account.closedAt ?? "-"}
       </TableCell>
       <TableCell className="hidden whitespace-nowrap text-end text-sm tabular-nums @xl:table-cell">
-        {account.entryCount}
+        {formatCount(account.entryCount)}
       </TableCell>
       <TableCell className="hidden text-end text-sm @xl:table-cell">
         <BalanceCell balance={account.balance} />
@@ -302,6 +304,7 @@ export function AccountRow({
 
 export default function LedgerAccountsPage() {
   const { t } = useTranslations();
+  const formatCount = useFormatCount();
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/accounts",
   });
@@ -572,14 +575,14 @@ export default function LedgerAccountsPage() {
             </div>
             <div
               className="shrink-0 text-sm text-muted-foreground tabular-nums"
-              aria-label={`${filtered.length} / ${accounts.length} ${t("page.accounts.accounts")}`}
+              aria-label={`${formatCount(filtered.length)} / ${formatCount(accounts.length)} ${t("page.accounts.accounts")}`}
               aria-live="polite"
               title={t("page.accounts.accounts")}
             >
               <span className="font-medium text-foreground">
-                {filtered.length}
+                {formatCount(filtered.length)}
               </span>{" "}
-              / {accounts.length}
+              / {formatCount(accounts.length)}
             </div>
           </div>
         </div>

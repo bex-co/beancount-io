@@ -3,7 +3,7 @@ import { Badge } from "@/common/components/ui/badge";
 import { type UserTier } from "@/common/hooks/use-user-limits";
 import { planLabelKey } from "@/common/lib/subscription/tier-config";
 import { type TierQuota } from "@/common/hooks/use-all-tier-quotas";
-import { useQuotaNumberFormat } from "./use-quota-number-format";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 import { describeTierQuota } from "./tier-quota-summary";
 import { useMoneyFormat } from "./use-money-format";
 import type { PlanInterval } from "@/common/lib/subscription/plan-change";
@@ -38,7 +38,7 @@ export function CurrentPlanBanner({
   planBilling?: PlanBillingStatus | null;
   deferredStart?: boolean;
 }) {
-  const formatCount = useQuotaNumberFormat();
+  const formatCount = useFormatCount();
   const formatMoney = useMoneyFormat();
   const isFree = tier === "FREE";
   const isEnterprise = tier === "ENTERPRISE";

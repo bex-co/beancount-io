@@ -339,10 +339,35 @@ describe("useTranslations Hook - Interpolation Focus", () => {
       const { result } = renderHook(() => useTranslations());
       result.current.t("common.greeting", { name: "Alice", count: 3 });
 
+      // A numeric count also goes to `replace`, written in the language's
+      // digits, while plural selection reads the number (w2/125).
       expect(mockT).toHaveBeenCalledWith("common.greeting", {
         name: "Alice",
         count: 3,
+        replace: { name: "Alice", count: "3" },
       });
+    });
+
+    it("writes a count in the language's own digits and grouping", () => {
+      const { result } = renderHook(() => useTranslations());
+      mockI18n.language = "fa";
+      result.current.t("common.greeting", { count: 1044 });
+      expect(mockT).toHaveBeenLastCalledWith("common.greeting", {
+        count: 1044,
+        replace: { count: "۱٬۰۴۴" },
+      });
+      mockI18n.language = "en";
+      result.current.t("common.greeting", { count: 1044 });
+      expect(mockT).toHaveBeenLastCalledWith("common.greeting", {
+        count: 1044,
+        replace: { count: "1,044" },
+      });
+    });
+
+    it("leaves a non-numeric count and other numbers as given", () => {
+      const { result } = renderHook(() => useTranslations());
+      result.current.t("common.greeting", { year: 2026 });
+      expect(mockT).toHaveBeenLastCalledWith("common.greeting", { year: 2026 });
     });
   });
 
@@ -356,7 +381,10 @@ describe("useTranslations Hook - Interpolation Focus", () => {
 
       result.current.t("common.greeting", params);
 
-      expect(mockT).toHaveBeenCalledWith("common.greeting", params);
+      expect(mockT).toHaveBeenCalledWith("common.greeting", {
+        ...params,
+        replace: { ...params, count: "10" },
+      });
     });
 
     it("should pass undefined when no params provided", () => {

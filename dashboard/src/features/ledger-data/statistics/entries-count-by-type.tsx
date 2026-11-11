@@ -92,7 +92,8 @@ function EntriesCountTable({
       title={t("page.statistics.entriesCountByType")}
       description={t("page.statistics.entriesByTypeSummary", {
         entries: formatNum(totalCount),
-        types: entries.length,
+        // Both in the language's digits, not one of each (w2/125).
+        types: formatNum(entries.length),
       })}
     >
       <TableHeader>

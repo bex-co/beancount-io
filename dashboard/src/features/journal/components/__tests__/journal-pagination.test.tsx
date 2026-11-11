@@ -4,8 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { JournalPagination } from "../journal-pagination";
 
+const paginationLanguage = vi.hoisted(() => ({ current: "en" }));
+
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
+    i18n: { language: paginationLanguage.current },
     t: (key: string) => {
       const labels: Record<string, string> = {
         "common.paginationNav": "Pagination",
@@ -352,8 +355,29 @@ describe("JournalPagination", () => {
         />,
       );
 
-      // Should show page 1000 (last page)
-      expect(screen.getByRole("button", { name: "1000" })).toBeInTheDocument();
+      // Should show page 1000 (last page), grouped as the language writes it.
+      expect(screen.getByRole("button", { name: "1,000" })).toBeInTheDocument();
+    });
+
+    // Page numbers read in the language's digits (w2/125).
+    it("numbers Persian pages in Persian digits", () => {
+      paginationLanguage.current = "fa";
+      try {
+        render(
+          <JournalPagination
+            total={10000}
+            limit={10}
+            offset={0}
+            setOffset={setOffsetMock}
+          />,
+        );
+        expect(
+          screen.getByRole("button", { name: "۱٬۰۰۰" }),
+        ).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "۲" })).toBeInTheDocument();
+      } finally {
+        paginationLanguage.current = "en";
+      }
     });
 
     it("should handle limit of 1", () => {

@@ -32,6 +32,7 @@ import { QueryView } from "@/common/components/query-view";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { eventTypeLabel } from "./event-type-label";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 
 /**
  * Events page component
@@ -39,6 +40,7 @@ import { eventTypeLabel } from "./event-type-label";
  */
 export default function LedgerEventsPage() {
   const { t } = useTranslations();
+  const formatCount = useFormatCount();
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/events",
   });
@@ -220,8 +222,8 @@ export default function LedgerEventsPage() {
                 {/* Results Count */}
                 <div className="text-sm text-muted-foreground">
                   {t("page.events.eventsCount", {
-                    filtered: filteredEvents.length,
-                    total: events.length,
+                    filtered: formatCount(filteredEvents.length),
+                    total: formatCount(events.length),
                   })}
                 </div>
               </div>

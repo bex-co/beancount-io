@@ -24,6 +24,7 @@ import { ReportErrorState } from "@/common/components/state-components";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { getClickableRowProps } from "@/common/components/clickable-row";
 import { Amount } from "@/common/components/amount";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 
 interface DatasetTableProps {
   query: string;
@@ -56,6 +57,7 @@ function isNumericCell(value: unknown): boolean {
 export const DatasetTable = React.memo(
   ({ query, ledgerId, ariaLabel, rowsFilter }: DatasetTableProps) => {
     const { t } = useTranslations();
+    const formatCount = useFormatCount();
     const navigate = useNavigate();
 
     const { data, loading, error, refetch } = useQuery(QueryShellDocument, {
@@ -134,7 +136,7 @@ export const DatasetTable = React.memo(
                 {t("common.results")}
               </div>
               <div className="px-2 py-1 bg-muted rounded-md text-xs font-semibold text-muted-foreground">
-                {rows.length}{" "}
+                {formatCount(rows.length)}{" "}
                 {rows.length === 1 ? t("page.holdings.row") : t("common.rows")}
               </div>
             </div>
@@ -257,7 +259,16 @@ export const DatasetTable = React.memo(
           </div>
         </div>
       );
-    }, [data, handleExportCSV, ledgerId, navigate, t, rowsFilter, ariaLabel]);
+    }, [
+      data,
+      handleExportCSV,
+      ledgerId,
+      navigate,
+      t,
+      formatCount,
+      rowsFilter,
+      ariaLabel,
+    ]);
 
     const renderTextData = React.useMemo(() => {
       if (!data?.queryShell?.text) return null;

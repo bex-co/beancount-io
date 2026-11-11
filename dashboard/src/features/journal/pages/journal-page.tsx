@@ -51,9 +51,11 @@ import {
   type JournalDirectiveAction,
 } from "@/common/lib/ledger-action-search";
 import { normalizeListSearchOffset } from "@/common/lib/list-search-params";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 
 const JournalContent = () => {
   const { t } = useTranslations();
+  const formatCount = useFormatCount();
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/journal",
   });
@@ -321,7 +323,7 @@ const JournalContent = () => {
           <span className="font-medium tabular-nums text-foreground">
             {loading
               ? "…"
-              : `${firstVisibleEntry}–${lastVisibleEntry} / ${total}`}
+              : `${formatCount(firstVisibleEntry)}–${formatCount(lastVisibleEntry)} / ${formatCount(total)}`}
           </span>
         </div>
 

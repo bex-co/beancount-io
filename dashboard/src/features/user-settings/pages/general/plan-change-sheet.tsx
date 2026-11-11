@@ -55,7 +55,7 @@ import {
   type SubscriptionTier,
 } from "./stripe-config";
 import { useBillingDateFormat, useMoneyFormat } from "./use-money-format";
-import { useQuotaNumberFormat } from "./use-quota-number-format";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 import { approveBankPayment } from "./bank-approval";
 import {
   nextChargeLine,
@@ -155,7 +155,7 @@ export function PlanChangeSheet({
   const formatError = useErrorMessage();
   const formatMoney = useMoneyFormat();
   const formatDate = useBillingDateFormat();
-  const formatCount = useQuotaNumberFormat();
+  const formatCount = useFormatCount();
 
   const targetPriceId = target
     ? cyclePrice(target.tier, target.cycle).priceId

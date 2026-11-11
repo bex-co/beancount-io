@@ -20,7 +20,7 @@ import {
 import { describeTierQuota } from "./tier-quota-summary";
 import type { Translate } from "./plan-change-format";
 import { useBillingDateFormat, useMoneyFormat } from "./use-money-format";
-import { useQuotaNumberFormat } from "./use-quota-number-format";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 
 const REASONS: { value: CancellationReason; labelKey: string }[] = [
   {
@@ -81,7 +81,7 @@ export function CancelSheet({
 }) {
   const formatDate = useBillingDateFormat();
   const formatMoney = useMoneyFormat();
-  const formatCount = useQuotaNumberFormat();
+  const formatCount = useFormatCount();
   const reasonName = useId();
   const [reason, setReason] = useState<CancellationReason | null>(null);
 

@@ -13,7 +13,7 @@ export function majorUnits(amount: number, currency: string): number {
 
 /**
  * Formats an amount in the currency's minor unit in the **app** language,
- * like `useQuotaNumberFormat` does for counts.
+ * like `useFormatCount` does for counts.
  */
 export function useMoneyFormat(): (cents: number, currency?: string) => string {
   const { i18n } = useTranslations();

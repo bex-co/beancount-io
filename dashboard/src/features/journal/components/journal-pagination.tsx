@@ -17,6 +17,7 @@ import {
   PaginationPrevious,
 } from "@/common/components/ui/pagination";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 
 interface JournalPaginationProps {
   total: number;
@@ -44,6 +45,7 @@ export function JournalPagination({
   fallbackFocusRef,
 }: JournalPaginationProps) {
   const { t } = useTranslations();
+  const formatCount = useFormatCount();
   const containerRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<{
     offset: number;
@@ -114,7 +116,7 @@ export function JournalPagination({
           onClick={(event) => changePage(event, 0)}
           aria-disabled={loading || undefined}
         >
-          1
+          {formatCount(1)}
         </PaginationLink>
       </PaginationItem>,
     );
@@ -134,7 +136,7 @@ export function JournalPagination({
           onClick={(event) => changePage(event, (p - 1) * limit)}
           aria-disabled={loading || undefined}
         >
-          {p}
+          {formatCount(p)}
         </PaginationLink>
       </PaginationItem>,
     );
@@ -154,7 +156,7 @@ export function JournalPagination({
           onClick={(event) => changePage(event, (totalPages - 1) * limit)}
           aria-disabled={loading || undefined}
         >
-          {totalPages}
+          {formatCount(totalPages)}
         </PaginationLink>
       </PaginationItem>,
     );
@@ -177,9 +179,9 @@ export function JournalPagination({
       >
         {!loading && resultCount > 0
           ? t("common.showingResultsRange", {
-              first: offset + 1,
-              last: Math.min(offset + resultCount, total),
-              total,
+              first: formatCount(offset + 1),
+              last: formatCount(Math.min(offset + resultCount, total)),
+              total: formatCount(total),
             })
           : ""}
       </span>

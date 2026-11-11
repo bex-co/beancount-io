@@ -14,7 +14,7 @@ import {
   type Translate,
 } from "./plan-change-format";
 import { useBillingDateFormat, useMoneyFormat } from "./use-money-format";
-import { useQuotaNumberFormat } from "./use-quota-number-format";
+import { useFormatCount } from "@/common/hooks/use-format-count";
 
 const LIMIT_LABEL_KEYS: Record<string, string> = {
   maxLedgers: "userSettings.ledgers",
@@ -110,7 +110,7 @@ export function ScheduledChangeBody({
 }) {
   const formatMoney = useMoneyFormat();
   const formatDate = useBillingDateFormat();
-  const formatCount = useQuotaNumberFormat();
+  const formatCount = useFormatCount();
   const radioName = useId();
 
   const date = planChange.effectiveAt ? formatDate(planChange.effectiveAt) : "";
