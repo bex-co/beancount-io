@@ -33,6 +33,11 @@ const zhBudget: Record<string, TranslationEntry> = {
     message: "账户（例如 Expenses:Food:Groceries）",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message: "收入目标以负数金额保存，与 Beancount 记录收入的方式一致。",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "账户为必填项",
     description: "Validation error when account field is empty",

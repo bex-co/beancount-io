@@ -33,6 +33,12 @@ const frBudget: Record<string, TranslationEntry> = {
     message: "Compte (p. ex. Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "Les objectifs de revenus sont enregistrés en montants négatifs, comme Beancount enregistre les revenus.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "Le compte est requis",
     description: "Validation error when account field is empty",

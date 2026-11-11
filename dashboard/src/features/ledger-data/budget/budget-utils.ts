@@ -71,6 +71,30 @@ export function budgetGroupDirection(
   return parseBudgetAmount(group.amount).exact.startsWith("-") ? -1 : 1;
 }
 
+/** Whether `account` is `root` or beneath it; `IncomeTax` is not `Income`. */
+export function isUnderAccountRoot(account: string, root: string): boolean {
+  return Boolean(root) && (account === root || account.startsWith(`${root}:`));
+}
+
+/**
+ * The amount a new budget stores, from what was typed and its account. The
+ * card reads a negative budget as an income target and a positive one as a
+ * spending cap, so "3500" typed for Income:Salary was stored as a cap and a
+ * 4,000 salary read "Below target" (w2/117, as mobile's w4/039 and w21/302).
+ * A target on the ledger's income root (`name_income`, not the literal
+ * "Income") is stored negative and anything else positive, whatever sign was
+ * typed; a zero stays unsigned.
+ */
+export function budgetAmountForAccount(
+  number: string,
+  account: string,
+  incomeRoot: string,
+): string {
+  const magnitude = number.trim().replace(/^[+-]/, "");
+  if (!isPositiveDecimalNumber(magnitude)) return magnitude;
+  return isUnderAccountRoot(account, incomeRoot) ? `-${magnitude}` : magnitude;
+}
+
 function getBudgetFields(entry: BudgetEntry): BudgetFields | null {
   const account = typeof entry.values[0] === "string" ? entry.values[0] : "";
   const interval = typeof entry.values[1] === "string" ? entry.values[1] : "";

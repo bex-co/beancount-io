@@ -33,6 +33,12 @@ const skBudget: Record<string, TranslationEntry> = {
     message: "Účet (napr. Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "Ciele príjmov sa ukladajú ako záporné sumy, tak ako Beancount zaznamenáva príjmy.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "Účet je povinný",
     description: "Validation error when account field is empty",

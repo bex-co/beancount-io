@@ -12,6 +12,11 @@ import type { BulkEntriesMutationVariables } from "@/graphql/definitions";
 import { AddBudgetDialog } from "../add-budget-dialog";
 import { useBudgetEntries } from "../use-budget-entries";
 
+// The dialog reads the ledger's income root; these budgets use Expenses.
+vi.mock("@/common/hooks/use-ledger", () => ({
+  useLedger: () => ({ ledgerData: { options: { nameIncome: "Income" } } }),
+}));
+
 vi.mock("@/common/components/ledger-comboboxes/account-combobox", () => ({
   AccountCombobox: ({
     value,

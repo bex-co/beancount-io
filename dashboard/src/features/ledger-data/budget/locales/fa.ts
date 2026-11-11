@@ -33,6 +33,12 @@ const faBudget: Record<string, TranslationEntry> = {
     message: "حساب (مثلاً Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "اهداف درآمد به‌صورت مبلغ منفی ذخیره می‌شوند، همان‌طور که Beancount درآمد را ثبت می‌کند.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "حساب الزامی است",
     description: "Validation error when account field is empty",

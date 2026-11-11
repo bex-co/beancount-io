@@ -33,6 +33,12 @@ const caBudget: Record<string, TranslationEntry> = {
     message: "Compte (p. ex., Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "Els objectius d’ingressos es desen com a imports negatius, tal com Beancount registra els ingressos.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "El compte és obligatori",
     description: "Validation error when account field is empty",

@@ -10,6 +10,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BudgetInterval } from "@/graphql/definitions";
 import { AddBudgetDialog } from "../add-budget-dialog";
 
+// The dialog reads the ledger's income root; these budgets use Expenses.
+vi.mock("@/common/hooks/use-ledger", () => ({
+  useLedger: () => ({ ledgerData: { options: { nameIncome: "Income" } } }),
+}));
+
 /** Budget keeps a pending write's draft in front (w4/295). */
 const { mutate, deferred } = vi.hoisted(() => {
   const deferred: Array<{

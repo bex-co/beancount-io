@@ -2,6 +2,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { AddBudgetDialog } from "../add-budget-dialog";
 
+// The dialog reads the ledger's income root; these budgets use Expenses.
+vi.mock("@/common/hooks/use-ledger", () => ({
+  useLedger: () => ({ ledgerData: { options: { nameIncome: "Income" } } }),
+}));
+
 const { mutate } = vi.hoisted(() => ({ mutate: vi.fn() }));
 
 vi.mock("@apollo/client/react", () => ({

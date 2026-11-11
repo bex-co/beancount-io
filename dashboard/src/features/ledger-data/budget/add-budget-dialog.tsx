@@ -56,6 +56,8 @@ import {
 import { DatePicker } from "@/common/components/ui/date-picker";
 import { todayIsoDate } from "@/common/components/ui/date-picker-utils";
 import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
+import { useLedger } from "@/common/hooks/use-ledger";
+import { budgetAmountForAccount, isUnderAccountRoot } from "./budget-utils";
 
 const createBudgetSchema = (t: (key: string) => string) =>
   z.object({
@@ -103,6 +105,8 @@ export function AddBudgetDialog({
 }: AddBudgetDialogProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
+  // The ledger's own income root: a renamed one ("Revenue") counts too.
+  const incomeRoot = useLedger().ledgerData.options.nameIncome;
   const schema = useMemo(() => createBudgetSchema(t), [t]);
   const intervalLabels: Record<BudgetInterval, string> = useMemo(
     () => ({
@@ -171,7 +175,11 @@ export function AddBudgetDialog({
                   account: data.account,
                   interval: data.interval,
                   amount: {
-                    number: data.number,
+                    number: budgetAmountForAccount(
+                      data.number,
+                      data.account,
+                      incomeRoot,
+                    ),
                     currency: data.currency,
                   },
                 },
@@ -336,6 +344,14 @@ export function AddBudgetDialog({
                       <FormControl>
                         <ExactAmountInput placeholder="500" {...field} />
                       </FormControl>
+                      {isUnderAccountRoot(
+                        form.watch("account").trim(),
+                        incomeRoot,
+                      ) && (
+                        <FormDescription>
+                          {t("page.budget.budgetIncomeAmountHelp")}
+                        </FormDescription>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}

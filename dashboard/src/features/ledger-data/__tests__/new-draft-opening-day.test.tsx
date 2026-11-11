@@ -23,6 +23,10 @@ vi.mock("@apollo/client/react", () => ({
     loading: false,
   }),
 }));
+// Add Budget reads the ledger's income root.
+vi.mock("@/common/hooks/use-ledger", () => ({
+  useLedger: () => ({ ledgerData: { options: { nameIncome: "Income" } } }),
+}));
 vi.mock("@/common/lib/errors/error-message", () => ({
   useErrorMessage: () => () => "error",
 }));

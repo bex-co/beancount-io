@@ -33,6 +33,12 @@ const jaBudget: Record<string, TranslationEntry> = {
     message: "勘定科目（例：Expenses:Food:Groceries）",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "収益の目標は、Beancount が収益を記録するのと同じく負の金額で保存されます。",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "口座は必須です",
     description: "Validation error when account field is empty",

@@ -163,6 +163,12 @@ const enBudget: Record<string, TranslationEntry> = {
     message: "Account (e.g., Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "Income targets are stored as negative amounts, as Beancount records income.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetSelectInterval": {
     message: "Select interval",
     description: "Placeholder for interval select dropdown",

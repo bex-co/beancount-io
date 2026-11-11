@@ -33,6 +33,12 @@ const koBudget: Record<string, TranslationEntry> = {
     message: "계정 (예: Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "수입 목표는 Beancount가 수입을 기록하는 방식대로 음수 금액으로 저장됩니다.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "계정은 필수입니다",
     description: "Validation error when account field is empty",

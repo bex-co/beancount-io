@@ -33,6 +33,12 @@ const ukBudget: Record<string, TranslationEntry> = {
     message: "Рахунок (напр., Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "Цілі доходів зберігаються як від’ємні суми — так Beancount обліковує доходи.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "Рахунок обов'язковий",
     description: "Validation error when account field is empty",

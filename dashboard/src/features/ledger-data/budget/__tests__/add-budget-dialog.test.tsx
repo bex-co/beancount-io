@@ -4,6 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { AddBudgetDialog } from "../add-budget-dialog";
 
+// The dialog reads the ledger's income root; these budgets use Expenses.
+vi.mock("@/common/hooks/use-ledger", () => ({
+  useLedger: () => ({ ledgerData: { options: { nameIncome: "Income" } } }),
+}));
+
 vi.mock("@apollo/client/react", () => ({
   useApolloClient: () => ({ refetchQueries: async () => [] }),
   useMutation: vi.fn(),

@@ -33,6 +33,12 @@ const esBudget: Record<string, TranslationEntry> = {
     message: "Cuenta (p. ej., Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "Los objetivos de ingresos se guardan como importes negativos, igual que Beancount registra los ingresos.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "La cuenta es obligatoria",
     description: "Validation error when account field is empty",

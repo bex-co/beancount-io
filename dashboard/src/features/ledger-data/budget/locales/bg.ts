@@ -33,6 +33,12 @@ const bgBudget: Record<string, TranslationEntry> = {
     message: "Сметка (напр. Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "Целите за приходи се записват като отрицателни суми, както Beancount записва приходите.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "Сметката е задължителна",
     description: "Validation error when account field is empty",

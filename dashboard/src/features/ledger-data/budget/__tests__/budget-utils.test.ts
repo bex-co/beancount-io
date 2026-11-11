@@ -4,6 +4,7 @@ import {
   calculateBudgetForInterval,
   groupBudgetEntries,
   readSparseBalanceAmount,
+  budgetAmountForAccount,
 } from "../budget-utils";
 import type { BudgetEntry, BudgetHistoryEntry } from "../types";
 
@@ -265,5 +266,25 @@ describe("budgetGroupDirection", () => {
   it("reads a budget that was only ever zero as an expense cap", () => {
     expect(budgetGroupDirection(group(["0 USD"]))).toBe(1);
     expect(budgetGroupDirection(group(["0 USD", "0 USD"]))).toBe(1);
+  });
+});
+
+/** A new budget's stored sign comes from its account (w2/117). */
+describe("budgetAmountForAccount", () => {
+  it.each([
+    ["3500", "Income:Salary", "Income", "-3500"],
+    ["-3500", "Income:Salary", "Income", "-3500"],
+    ["+3500.50", "Income:Salary", "Income", "-3500.50"],
+    ["100", "Income", "Income", "-100"],
+    ["3500", "Revenue:Salary", "Revenue", "-3500"],
+    ["5000", "Expenses:Rent", "Income", "5000"],
+    ["-5000", "Expenses:Rent", "Income", "5000"],
+    ["+500", "Expenses:Rent", "Income", "500"],
+    ["3500", "IncomeTax:Refund", "Income", "3500"],
+    ["3500", "Income:Salary", "", "3500"],
+    ["0", "Income:Salary", "Income", "0"],
+    ["-0.00", "Income:Salary", "Income", "0.00"],
+  ])("stores %s for %s (root %j) as %s", (typed, account, root, stored) => {
+    expect(budgetAmountForAccount(typed, account, root)).toBe(stored);
   });
 });

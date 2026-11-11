@@ -33,6 +33,12 @@ const nlBudget: Record<string, TranslationEntry> = {
     message: "Rekening (bijv. Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
+  "page.budget.budgetIncomeAmountHelp": {
+    message:
+      "Inkomstendoelen worden als negatieve bedragen opgeslagen, zoals Beancount inkomsten boekt.",
+    description:
+      "Shown under Add Budget's amount for an account under the ledger's income root",
+  },
   "page.budget.budgetAccountRequired": {
     message: "Rekening is vereist",
     description: "Validation error when account field is empty",
