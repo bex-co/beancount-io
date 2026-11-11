@@ -5,6 +5,7 @@ import {
   StyleProp,
   ViewStyle,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ColorTheme } from "@/types/theme-props";
@@ -76,6 +77,11 @@ const getButtonStyles = (theme: ColorTheme) => {
 
 export const Button = (props: ButtonProps) => {
   const type = props.type || "primary";
+  // The label is keyed on it: iOS keeps a Text's native measurement while its
+  // props are unchanged, so a label first measured at a smaller size would clip
+  // after a live text-size change (mobile/AGENTS.md, w22/029). Keyed here once so
+  // no caller has to.
+  const { fontScale } = useWindowDimensions();
   const styles = useThemeStyle(getButtonStyles);
   // Tracked here rather than read from `Pressable`'s `({ pressed })` callback:
   // `PressableScale` animates the style prop, and Reanimated cannot resolve the
@@ -139,7 +145,9 @@ export const Button = (props: ButtonProps) => {
           style={styles.buttonLoading}
         />
       ) : null}
-      <Text style={buttonTextStyle}>{props.children}</Text>
+      <Text key={fontScale} style={buttonTextStyle}>
+        {props.children}
+      </Text>
     </PressableScale>
   );
 };

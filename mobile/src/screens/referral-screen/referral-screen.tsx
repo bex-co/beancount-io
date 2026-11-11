@@ -6,6 +6,7 @@ import {
   Share,
   Platform,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { Button } from "@/components";
 import * as Clipboard from "expo-clipboard";
@@ -92,6 +93,9 @@ export const ReferralScreen = () => {
   const { userId } = useSession();
   const toast = useToast();
   const { t } = useTranslations();
+  // Keys re-measure the Texts after a live text-size change (w22/029); the Share
+  // label is the Button's, which keys itself.
+  const { fontScale } = useWindowDimensions();
   const shareLink = buildReferralUrl(Platform.OS, userId);
   const styles = useThemeStyle(getStyles);
   return (
@@ -104,13 +108,21 @@ export const ReferralScreen = () => {
         <CommonMargin />
         <ReferralGiftIcon />
         <CommonMargin />
-        <Text style={styles.title}>{t("rewardSummary")}</Text>
+        <Text key={`title-${fontScale}`} style={styles.title}>
+          {t("rewardSummary")}
+        </Text>
         <CommonMargin />
-        <Text style={styles.summary}>{t("rewardDetail")}</Text>
+        <Text key={`summary-${fontScale}`} style={styles.summary}>
+          {t("rewardDetail")}
+        </Text>
         <CommonMargin />
         <CommonMargin />
         <View style={styles.shareLinkContainer}>
-          <Text numberOfLines={1} style={styles.shareLink}>
+          <Text
+            key={`link-${fontScale}`}
+            numberOfLines={1}
+            style={styles.shareLink}
+          >
             {shareLink}
           </Text>
           <TouchableOpacity
@@ -125,7 +137,9 @@ export const ReferralScreen = () => {
               });
             }}
           >
-            <Text style={styles.copy}>{t("copy")}</Text>
+            <Text key={`copy-${fontScale}`} style={styles.copy}>
+              {t("copy")}
+            </Text>
           </TouchableOpacity>
         </View>
         <CommonMargin />

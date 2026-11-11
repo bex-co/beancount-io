@@ -461,6 +461,34 @@ describe("AmountText live font-scale remeasurement", () => {
   });
 });
 
+describe("Button live font-scale remeasurement", () => {
+  const { Button } = load("components/button/index.tsx", {
+    "react-native": reactNative,
+    "@/common/hooks/use-theme-style": themeHooks,
+  });
+  const button = (label: string, type?: string): Node =>
+    render(Button, { type, children: label });
+  const labelOf = (tree: Node) => findAll(tree, ofType("Text"))[0];
+
+  it("remounts its label at a new scale and restores it on the way back", () => {
+    const before = labelOf(button("Share", "outline"));
+    fontScale = 3.12;
+    const enlarged = labelOf(button("Share", "outline"));
+    fontScale = 1;
+    const restored = labelOf(button("Share", "outline"));
+
+    expect(enlarged.props.key).not.toEqual(before.props.key);
+    expect(restored.props.key).toEqual(before.props.key);
+    expect(textOf(enlarged)).toBe("Share");
+  });
+
+  it("keeps the label mounted when only its words change", () => {
+    expect(labelOf(button("Apply")).props.key).toEqual(
+      labelOf(button("Done")).props.key,
+    );
+  });
+});
+
 // Home's lower cards (w21/015): Spending's subtitle, Budget's rows and empty
 // line, and Latest Updates' rows clipped or left blank bands after a live
 // text-size change. The Files rows and the Reports note (w22/008) did the same.
@@ -747,6 +775,17 @@ const KEYED_TEXTS: [string, string[]][] = [
       "{styles.text}",
       "{styles.link}",
       "{styles.link}",
+    ],
+  ],
+  // The Referral screen's title, blurb, link and Copy label; its Share label is
+  // the Button's (w22/029).
+  [
+    "screens/referral-screen/referral-screen.tsx",
+    [
+      "{styles.title}",
+      "{styles.summary}",
+      "{styles.shareLink}",
+      "{styles.copy}",
     ],
   ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
