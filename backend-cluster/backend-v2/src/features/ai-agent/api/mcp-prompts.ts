@@ -2,7 +2,7 @@ import { z } from "zod";
 import { BadUserInputError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import { assertLedgerSpelling, ledgerSelection } from "./mcp-ledger-selection";
-import { sameLedger } from "@/shared/str";
+import { canonicalLedgerId, sameLedger } from "@/shared/str";
 
 /**
  * The MCP `prompts` fragment (w2/008).
@@ -109,7 +109,9 @@ function ledgerLine(identity: Identity, requested: string | undefined): string {
   if (pin && requested && !sameLedger(requested, pin)) {
     return `Ledger: ${pin}. You asked for ${requested}, which is outside this credential's ledger restriction — every call below targets ${pin} or is refused.`;
   }
-  const selected = requested ?? pin;
+  // The canonical spelling, so the playbook does not carry `Alice/books`
+  // into every call it asks for (w1/234).
+  const selected = requested ? canonicalLedgerId(requested) : pin;
   if (selected) {
     return `Ledger: ${selected}. Pass \`ledger: "${selected}"\` on every ledger-targeted call, or omit it if your credential is pinned there.`;
   }

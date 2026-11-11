@@ -392,6 +392,15 @@ describe("MCP prompts", () => {
     }
   });
 
+  // w1/234: the playbook echoed `Alice/books` into every call it asked for.
+  it("passes on the canonical spelling of the ledger it was given", () => {
+    for (const descriptor of MCP_PROMPTS) {
+      const text = descriptor.build({ ledger: "Alice/personal" }, unpinned);
+      expect(text).toContain('Pass `ledger: "alice/personal"`');
+      expect(text).not.toContain("Alice/personal");
+    }
+  });
+
   it("tells a pinned credential its ledger and an unpinned one to select one", async () => {
     for (const descriptor of MCP_PROMPTS) {
       expect(descriptor.build({}, pinned)).toContain("alice/personal");
