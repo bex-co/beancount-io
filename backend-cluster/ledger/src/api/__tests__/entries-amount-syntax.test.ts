@@ -329,6 +329,7 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
 
   // w21/997: the engine holds 28 digits. At 29 it raises P0012, and a fraction
   // past 28 places is cut off, so neither is written.
+  // It is a decimal number, so the refusal names the digits (w2/129).
   it.each([
     ["9".repeat(29), `-${"9".repeat(29)}`],
     [`${"9".repeat(27)}.99`, `-${"9".repeat(27)}.99`],
@@ -337,8 +338,12 @@ describe("bulk entries refuse amounts that are not decimals (w3/641)", () => {
     "refuses %s as more than the engine's 28 digits",
     async (first, second) => {
       const response = await post([transaction(first, second)]);
+      const body = (await response.json()) as Record<string, any>;
 
       expect(response.status).toBe(400);
+      expect(body.error).toBe(
+        `entry 0: postings[0].units.number "${first}" has more than 28 significant digits`,
+      );
       expect(committed).toEqual([]);
     },
   );
@@ -782,9 +787,9 @@ describe("bulk entries dry run", () => {
         ],
       },
     });
-    expect(
-      (await post({ entries: [costed("2")], dryRun: true })).status,
-    ).toBe(200);
+    expect((await post({ entries: [costed("2")], dryRun: true })).status).toBe(
+      200,
+    );
     const refused = await post({ entries: [costed("3")], dryRun: true });
     expect(refused.status).toBe(400);
     expect(((await refused.json()) as { code: string }).code).toBe(

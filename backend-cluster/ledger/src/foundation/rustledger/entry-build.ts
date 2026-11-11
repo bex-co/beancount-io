@@ -70,15 +70,22 @@ function fitsEngineDecimal(raw: string): boolean {
   );
 }
 
-export function isDecimalNumber(value: unknown): boolean {
-  if (typeof value === "number") {
-    return Number.isFinite(value) && fitsEngineDecimal(String(value));
-  }
-  return (
-    typeof value === "string" &&
-    DECIMAL_NUMBER.test(value) &&
-    fitsEngineDecimal(value)
-  );
+/**
+ * Why an amount cannot be written, or `null` when it can. A number past the
+ * engine's digits is a decimal number all the same, so it says so: the
+ * refusal used to call 29 nines "not a decimal number" (w2/129).
+ */
+export function decimalNumberRefusal(value: unknown): string | null {
+  const raw =
+    typeof value === "number" && Number.isFinite(value)
+      ? String(value)
+      : typeof value === "string" && DECIMAL_NUMBER.test(value)
+        ? value
+        : null;
+  if (raw === null) return "is not a decimal number";
+  return fitsEngineDecimal(raw)
+    ? null
+    : `has more than ${MAX_DECIMAL_DIGITS} significant digits`;
 }
 
 /**

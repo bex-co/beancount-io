@@ -6,7 +6,10 @@ import {
 } from "@/server/auth";
 import { successResponse } from "@/server/envelope";
 import { checkDirectiveLimitForFileChanges } from "@/core/directive-limit";
-import { entryInputToText, isDecimalNumber } from "@/foundation/rustledger";
+import {
+  decimalNumberRefusal,
+  entryInputToText,
+} from "@/foundation/rustledger";
 import type { LedgerEntryInput } from "@/foundation/ledger-api-types/ledger-entry-input";
 import { BadUserInputError, UnbalancedTransactionError } from "@/shared/errors";
 import { ledgerIdOf, servicesForRequest } from "./service-context";
@@ -198,9 +201,10 @@ function rowNumbers(row: BulkEntryWire): Array<[string, unknown]> {
 function assertDecimalAmounts(rows: BulkEntryWire[]): void {
   rows.forEach((row, idx) => {
     for (const [field, value] of rowNumbers(row)) {
-      if (!isDecimalNumber(value)) {
+      const refusal = decimalNumberRefusal(value);
+      if (refusal) {
         throw new BadUserInputError(
-          `entry ${idx}: ${field} ${JSON.stringify(value)} is not a decimal number`,
+          `entry ${idx}: ${field} ${JSON.stringify(value)} ${refusal}`,
         );
       }
     }
