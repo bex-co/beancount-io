@@ -522,6 +522,39 @@ const koJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "이 편집기는 한 번에 항목 하나만 변경합니다. 추가된 항목을 지우거나 파일을 직접 편집하세요.",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "이 항목을 없애려면 “{delete}”를 사용하세요.",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message: "날짜 줄은 날짜 앞에 공백 없이 줄 맨 앞에서 시작해야 합니다.",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "각 분개 내역을 날짜 줄 아래에 들여 쓰세요.",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "“{keyword}” 줄은 장부를 설정하는 줄이므로 항목이 아니라 파일에 둡니다.",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "이 편집은 보이지 않는 제어 문자({code})를 추가합니다. 제거한 뒤 다시 저장하세요.",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "내 편집 복사",
     description: "Copies the unsaved Entry Context edit to the clipboard",

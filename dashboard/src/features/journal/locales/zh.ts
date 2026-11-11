@@ -525,6 +525,36 @@ const zhJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message: "此编辑器一次只能修改一条分录。请删除多出的分录，或改为编辑文件。",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "要删除此分录，请使用“{delete}”。",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message: "日期行必须从行首开始，日期前不能有空格。",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "请将每条过账记录缩进写在日期行下方。",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message: "“{keyword}”行用于配置账本，应写在文件中，而不是分录里。",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message: "此编辑会添加一个不可见的控制字符（{code}）。请将其删除后再保存。",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "复制我的编辑",
     description: "Copies the unsaved Entry Context edit to the clipboard",

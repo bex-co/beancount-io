@@ -88,7 +88,6 @@
 - [115 — Most ledger pages have no h1 below 768px, so screen-reader heading navigation finds nothing](./115.md) — dashboard QA 2026-11-10; keeps w4/228's visual design
 - [114 — A lowercase or malformed currency in New Entry is refused as "information provided is invalid"](./114.md) — dashboard QA 2026-11-10; dashboard counterpart of w21/659
 - [113 — Create File and Upload offer a case-only twin of an existing file, then say "refresh and try again"](./113.md) — dashboard QA 2026-11-10; dashboard counterpart of w21/770
-- [112 — Entry Context hides the ledger's single-entry refusals behind "information provided is invalid"](./112.md) — dashboard QA 2026-11-10; dashboard counterpart of w21/620
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains.
 
 - [102 — Close can leave its commit-message draft behind](./blocked/102.md) — Codex fix/rehearsal complete; candidate release needs authenticated Claude validation.

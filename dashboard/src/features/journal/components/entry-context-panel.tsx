@@ -55,6 +55,7 @@ import { usePendingAction } from "@/common/hooks/use-pending-action";
 import { useRefreshFailedToast } from "@/common/hooks/use-refresh-failed-toast";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { readEntrySourceLocation } from "@/features/journal/lib/entry-source-location";
+import { getSingleEntryRefusal } from "@/features/journal/lib/single-entry-refusal";
 
 export interface EntryContextPanelProps {
   entryHash: string;
@@ -624,8 +625,20 @@ export function EntryContextPanel({
       console.error("Failed to update entry:", saveError);
       // The slice is addressed by the hash this panel loaded; an edit made
       // elsewhere gives the entry a new one, so this save can only miss.
-      if (isStaleEntry(saveError)) setStaleDraft(newSource);
-      else toast.error(formatError(saveError));
+      if (isStaleEntry(saveError)) {
+        setStaleDraft(newSource);
+      } else {
+        const refusal = getSingleEntryRefusal(saveError);
+        toast.error(
+          refusal
+            ? t(refusal.key, {
+                // Names the Delete button as this language labels it.
+                delete: t("common.delete"),
+                ...refusal.params,
+              })
+            : formatError(saveError),
+        );
+      }
       throw saveError;
     }
   };

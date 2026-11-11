@@ -571,6 +571,40 @@ const skJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "Tento editor mení naraz iba jeden záznam. Odstráňte nadbytočný záznam alebo upravte priamo súbor.",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "Ak chcete tento záznam odstrániť, použite „{delete}“.",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message:
+      "Riadok s dátumom musí začínať na začiatku riadka, bez medzery pred dátumom.",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "Odsaďte každý zápis pod riadkom s dátumom.",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "Riadky „{keyword}“ nastavujú knihu a patria do súboru, nie do záznamu.",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "Táto úprava pridáva neviditeľný riadiaci znak ({code}). Odstráňte ho a uložte znova.",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "Kopírovať moju úpravu",
     description: "Copies the unsaved Entry Context edit to the clipboard",

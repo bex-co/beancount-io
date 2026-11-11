@@ -544,6 +544,40 @@ const faJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "این ویرایشگر هر بار فقط یک ثبت را تغییر می‌دهد. ثبت اضافه را حذف کنید یا به‌جای آن فایل را ویرایش کنید.",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "برای حذف این ثبت از «{delete}» استفاده کنید.",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message:
+      "خط تاریخ باید از ابتدای خط شروع شود و پیش از تاریخ فاصله‌ای نباشد.",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "هر ردیف حسابداری را زیر خط تاریخ آن با تورفتگی بنویسید.",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "خط‌های «{keyword}» دفتر را پیکربندی می‌کنند و جای آن‌ها در فایل است، نه در یک ثبت.",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "این ویرایش یک نویسه کنترلی نامرئی ({code}) اضافه می‌کند. آن را حذف کنید و دوباره ذخیره کنید.",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "کپی ویرایش من",
     description: "Copies the unsaved Entry Context edit to the clipboard",

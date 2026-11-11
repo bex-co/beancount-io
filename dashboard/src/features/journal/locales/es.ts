@@ -557,6 +557,40 @@ const esJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "Este editor cambia un asiento cada vez. Quita el asiento de más o edita el archivo.",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "Para quitar este asiento, usa «{delete}».",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message:
+      "La línea de la fecha debe empezar al principio de la línea, sin espacios antes de la fecha.",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "Sangra cada apunte bajo su línea de fecha.",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "Las líneas «{keyword}» configuran el libro y van en el archivo, no en un asiento.",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "Esta edición añade un carácter de control invisible ({code}). Quítalo y vuelve a guardar.",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "Copiar mi edición",
     description: "Copies the unsaved Entry Context edit to the clipboard",

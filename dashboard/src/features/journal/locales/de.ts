@@ -543,6 +543,40 @@ const deJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "Dieser Editor ändert jeweils nur einen Eintrag. Entfernen Sie den zusätzlichen Eintrag oder bearbeiten Sie stattdessen die Datei.",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "Um diesen Eintrag zu entfernen, verwenden Sie „{delete}“.",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message:
+      "Die Datumszeile muss am Zeilenanfang beginnen, ohne Leerzeichen vor dem Datum.",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "Rücken Sie jede Buchung unter ihrer Datumszeile ein.",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "„{keyword}“-Zeilen konfigurieren das Hauptbuch und gehören in die Datei, nicht in einen Eintrag.",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "Diese Bearbeitung fügt ein unsichtbares Steuerzeichen ({code}) ein. Entfernen Sie es und speichern Sie erneut.",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "Meine Bearbeitung kopieren",
     description: "Copies the unsaved Entry Context edit to the clipboard",

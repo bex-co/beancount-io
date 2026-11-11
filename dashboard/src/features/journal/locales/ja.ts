@@ -523,6 +523,39 @@ const jaJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "このエディターでは一度に 1 件の仕訳だけを変更できます。余分な仕訳を削除するか、ファイルを直接編集してください。",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "この仕訳を削除するには「{delete}」を使用してください。",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message: "日付の行は、日付の前に空白を入れず行頭から始める必要があります。",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "各仕訳明細は日付の行の下にインデントしてください。",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "「{keyword}」行は台帳を設定するもので、仕訳ではなくファイルに記述します。",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "この編集で目に見えない制御文字（{code}）が追加されます。削除してから保存し直してください。",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "編集内容をコピー",
     description: "Copies the unsaved Entry Context edit to the clipboard",

@@ -60,13 +60,16 @@ vi.mock("@/common/hooks/use-translations", async () => {
   const { default: german } = await import("@/i18n/locales/de");
   return {
     useTranslations: () => ({
-      t: (key: string, params?: { entry?: string }) => {
+      t: (key: string, params?: Record<string, string>) => {
         if (!mocks.language) {
           return params?.entry ? `${key} ${params.entry}` : key;
         }
         const messages = mocks.language === "en" ? english : german;
         const text = messages[key] ?? key;
-        return params?.entry ? text.replace("{entry}", params.entry) : text;
+        return text.replace(
+          /\{(\w+)\}/g,
+          (placeholder, name: string) => params?.[name] ?? placeholder,
+        );
       },
     }),
   };
@@ -1295,5 +1298,78 @@ describe("EntryContextDialog save after the entry changed elsewhere (w3/642)", (
     expect(writeText).toHaveBeenLastCalledWith(draft);
     expect(mocks.updateMutation.mock.calls.length).toBe(saves);
     expect(onSuccess).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The ledger refuses Entry Context text that is not exactly one dated entry,
+ * or that adds a control character, with English naming API fields and
+ * calls; the dialog showed "information provided is invalid" (w2/112).
+ */
+describe("EntryContextDialog single-entry refusals (w2/112)", () => {
+  beforeEach(() => {
+    mocks.canWrite = true;
+    mocks.language = "en";
+    mocks.mutationCallCount = 0;
+    mocks.contextData = {
+      entry: { meta: { filename: "main.bean", lineno: 42 } },
+      slice: '2024-01-01 * "Payee" "Narration"\n  Assets:Cash  -10 USD\n',
+      sha256sum: "abc123",
+      balances_before: null,
+      balances_after: null,
+    };
+    vi.mocked(toast.error).mockClear();
+  });
+
+  it.each([
+    [
+      "newContent holds 2 entries; edit them one at a time or use updateLedgerFiles",
+      "This editor changes one entry at a time. Remove the extra entry, or edit the file instead.",
+    ],
+    [
+      "newContent is empty; delete the entry instead of saving it blank",
+      "To remove this entry, use Delete.",
+    ],
+    [
+      "newContent holds no entry; remove the entry with deleteEntrySource instead",
+      "To remove this entry, use Delete.",
+    ],
+    [
+      "newContent must be one dated directive: Assets:Cash  -23.50 USD",
+      "Indent each posting under its date line.",
+    ],
+    [
+      "newContent contains the control character U+001B, which the ledger cannot store as text",
+      "This edit adds an invisible control character (U+001B). Remove it and save again.",
+    ],
+    [
+      '`option` configures the ledger and is not an entry; change it with updateLedgerFiles: option "title" "x"',
+      "“option” lines configure the ledger and belong in the file, not in an entry.",
+    ],
+  ])("explains %s and keeps the draft", async (message, explanation) => {
+    mocks.updateMutation.mockReset().mockRejectedValue(
+      new CombinedGraphQLErrors({
+        errors: [{ message, extensions: { code: "BAD_USER_INPUT" } }],
+      }),
+    );
+    render(
+      <EntryContextDialog
+        open
+        onOpenChange={vi.fn()}
+        entry={entry}
+        ledgerId="open_ledger/example"
+      />,
+    );
+    const source = screen.getByLabelText("entry-source");
+    const draft = `${(source as HTMLTextAreaElement).value}; my edit`;
+    fireEvent.change(source, { target: { value: draft } });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: en["common.save"] }),
+    );
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(explanation));
+    expect(toast.error).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("entry-source")).toHaveValue(draft);
   });
 });

@@ -541,6 +541,40 @@ const bgJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "Този редактор променя по един запис наведнъж. Премахнете допълнителния запис или редактирайте файла.",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "За да премахнете този запис, използвайте „{delete}“.",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message:
+      "Редът с датата трябва да започва от началото на реда, без интервал преди датата.",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "Отместете всяка проводка навътре под реда с датата.",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "Редовете „{keyword}“ настройват книгата; мястото им е във файла, а не в запис.",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "Тази редакция добавя невидим управляващ символ ({code}). Премахнете го и запазете отново.",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "Копирай моята редакция",
     description: "Copies the unsaved Entry Context edit to the clipboard",

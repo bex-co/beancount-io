@@ -542,6 +542,40 @@ const nlJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "Deze editor wijzigt één boeking tegelijk. Verwijder de extra boeking of bewerk in plaats daarvan het bestand.",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "Gebruik ‘{delete}’ om deze boeking te verwijderen.",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message:
+      "De datumregel moet aan het begin van de regel beginnen, zonder spatie vóór de datum.",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "Laat elke boekingsregel onder de datumregel inspringen.",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "‘{keyword}’-regels configureren het grootboek en horen in het bestand, niet in een boeking.",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "Deze bewerking voegt een onzichtbaar stuurteken ({code}) toe. Verwijder het en sla opnieuw op.",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "Mijn bewerking kopiëren",
     description: "Copies the unsaved Entry Context edit to the clipboard",

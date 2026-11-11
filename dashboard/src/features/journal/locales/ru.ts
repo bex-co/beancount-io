@@ -571,6 +571,40 @@ const ruJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "Этот редактор изменяет только одну запись за раз. Удалите лишнюю запись или отредактируйте файл.",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "Чтобы удалить эту запись, используйте «{delete}».",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message:
+      "Строка с датой должна начинаться с начала строки, без пробела перед датой.",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "Сделайте отступ для каждой проводки под строкой с датой.",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "Строки «{keyword}» настраивают книгу и должны быть в файле, а не в записи.",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "Эта правка добавляет невидимый управляющий символ ({code}). Удалите его и сохраните снова.",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "Скопировать мою правку",
     description: "Copies the unsaved Entry Context edit to the clipboard",

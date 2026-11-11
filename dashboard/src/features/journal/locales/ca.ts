@@ -556,6 +556,40 @@ const caJournal: Record<string, TranslationEntry> = {
     description:
       "Entry Context save refused because the entry changed elsewhere since it was opened",
   },
+  "journal.entryRefusal.oneAtATime": {
+    message:
+      "Aquest editor canvia un apunt cada vegada. Traieu l’apunt addicional o editeu el fitxer.",
+    description:
+      "Entry Context save refused because the edited source holds more than one entry",
+  },
+  "journal.entryRefusal.useDelete": {
+    message: "Per eliminar aquest apunt, feu servir «{delete}».",
+    description:
+      "Entry Context save refused because the edited source is empty or holds no entry; {delete} is the Delete button's label",
+  },
+  "journal.entryRefusal.dateIndented": {
+    message:
+      "La línia de la data ha de començar a l’inici de la línia, sense cap espai davant de la data.",
+    description:
+      "Entry Context save refused because the entry's date line starts with a space",
+  },
+  "journal.entryRefusal.indentPostings": {
+    message: "Sagneu cada apunt sota la línia de la data.",
+    description:
+      "Entry Context save refused because a posting line is not indented under the date line",
+  },
+  "journal.entryRefusal.notAnEntry": {
+    message:
+      "Les línies «{keyword}» configuren el llibre i van al fitxer, no en un apunt.",
+    description:
+      "Entry Context save refused because the source holds a ledger configuration line; {keyword} is option, plugin or include",
+  },
+  "journal.entryRefusal.controlCharacter": {
+    message:
+      "Aquesta edició afegeix un caràcter de control invisible ({code}). Traieu-lo i torneu a desar.",
+    description:
+      "Entry Context save refused because the edit adds a control character; {code} is its U+XXXX code point",
+  },
   "journal.copyMyEdit": {
     message: "Copia la meva edició",
     description: "Copies the unsaved Entry Context edit to the clipboard",
