@@ -491,18 +491,74 @@ function entrySliceForBlock(
   };
 }
 
-/** Resolve a marker-derived filename/line back to its exact raw source block. */
+/**
+ * One file's dated blocks as {@link EntrySlice}s, each hashed once: by start
+ * line, and by source SHA in file order (so a slice's index there is its
+ * `localOccurrence`). A batch that looked each entry up in turn split and
+ * hashed the whole file once per entry, and a 1,000-entry delete overran the
+ * write deadline (w1/237).
+ */
+export interface DatedBlockIndex {
+  readonly byStartLine: ReadonlyMap<number, EntrySlice>;
+  readonly bySha: ReadonlyMap<string, readonly EntrySlice[]>;
+}
+
+export function indexDatedBlocks(
+  file: string,
+  fileText: string,
+): DatedBlockIndex {
+  const byStartLine = new Map<number, EntrySlice>();
+  const bySha = new Map<string, EntrySlice[]>();
+  for (const block of splitIntoBlocks(fileText)) {
+    if (!block.isDated) continue;
+    const sha256 = sliceSha256(block.text);
+    const same = bySha.get(sha256) ?? [];
+    const slice: EntrySlice = {
+      file,
+      slice: block.text,
+      sha256,
+      startLine: block.startLine,
+      endLine: block.endLine,
+      localOccurrence: same.length,
+    };
+    same.push(slice);
+    bySha.set(sha256, same);
+    byStartLine.set(block.startLine, slice);
+  }
+  return { byStartLine, bySha };
+}
+
+/** Per-file {@link DatedBlockIndex}es for one FileMap, built on first use. */
+export type DatedBlockIndexes = Map<string, DatedBlockIndex>;
+
+function indexOf(
+  files: FileMap,
+  file: string,
+  indexes: DatedBlockIndexes,
+): DatedBlockIndex | undefined {
+  const fileText = files[file];
+  if (fileText === undefined) return undefined;
+  let index = indexes.get(file);
+  if (!index) {
+    index = indexDatedBlocks(file, fileText);
+    indexes.set(file, index);
+  }
+  return index;
+}
+
+/**
+ * Resolve a marker-derived filename/line back to its exact raw source block.
+ * Pass one `indexes` across a batch so each file is scanned once.
+ */
 export function entrySliceFromSourceLocation(
   files: FileMap,
   location: EntrySourceLocation,
+  indexes: DatedBlockIndexes = new Map(),
 ): EntrySlice | null {
-  const fileText = files[location.filename];
-  if (fileText === undefined) return null;
-  const startLine = location.lineno - 1;
-  const block = splitIntoBlocks(fileText).find(
-    (candidate) => candidate.isDated && candidate.startLine === startLine,
+  const slice = indexOf(files, location.filename, indexes)?.byStartLine.get(
+    location.lineno - 1,
   );
-  return block ? entrySliceForBlock(location.filename, fileText, block) : null;
+  return slice ? { ...slice } : null;
 }
 
 /**
@@ -516,15 +572,10 @@ export function findEntrySliceBySourceSha(
   sha256: string,
   localOccurrence: number,
 ): EntrySlice | null {
-  let occurrence = 0;
-  for (const block of splitIntoBlocks(fileText)) {
-    if (!block.isDated || sliceSha256(block.text) !== sha256) continue;
-    if (occurrence === localOccurrence) {
-      return entrySliceForBlock(file, fileText, block);
-    }
-    occurrence += 1;
-  }
-  return null;
+  const slice = indexDatedBlocks(file, fileText).bySha.get(sha256)?.[
+    localOccurrence
+  ];
+  return slice ? { ...slice } : null;
 }
 
 /**

@@ -30,9 +30,21 @@ jest.mock("@/foundation/rustledger", () => {
   };
 });
 
-jest.mock("@/foundation/rustledger/source-slice-worker", () => ({
-  findEntrySliceAsync: jest.fn(),
-}));
+jest.mock("@/foundation/rustledger/source-slice-worker", () => {
+  const findEntrySliceAsync = jest.fn();
+  return {
+    findEntrySliceAsync,
+    // A batch resolves each entry as the single lookup does (w1/237).
+    findEntrySlicesAsync: (
+      files: unknown,
+      entryPoint: unknown,
+      hashes: string[],
+    ) =>
+      Promise.all(
+        hashes.map((hash) => findEntrySliceAsync(files, entryPoint, hash)),
+      ),
+  };
+});
 
 const loadMock = loadCachedFileMapForRepo as jest.Mock;
 const commitMock = commitLedgerFiles as jest.Mock;

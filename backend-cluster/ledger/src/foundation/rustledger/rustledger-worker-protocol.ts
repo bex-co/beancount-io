@@ -32,14 +32,15 @@ export type RustledgerWorkerTask =
     }
   | {
       id: number;
-      kind: "find-entry-slice";
+      /** A batch, so one parse resolves every entry (w1/237). */
+      kind: "find-entry-slices";
       files: FileMap;
       entryPoint: string;
-      entryHash: string;
+      entryHashes: string[];
     };
 
 export type RustledgerWorkerValue =
-  LedgerSnapshot | QueryResult | number | number[] | EntrySlice | null;
+  LedgerSnapshot | QueryResult | number | number[] | (EntrySlice | null)[];
 
 export type RustledgerWorkerResponse =
   | { id: number; ok: true; value: RustledgerWorkerValue }

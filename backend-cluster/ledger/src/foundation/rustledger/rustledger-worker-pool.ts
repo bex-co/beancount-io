@@ -178,17 +178,17 @@ export class RustledgerWorkerPool {
     });
   }
 
-  public findEntrySlice(
+  public findEntrySlices(
     files: FileMap,
     entryPoint: string,
-    entryHash: string,
-  ): Promise<EntrySlice | null> {
-    return this.enqueue<EntrySlice | null>({
+    entryHashes: string[],
+  ): Promise<(EntrySlice | null)[]> {
+    return this.enqueue<(EntrySlice | null)[]>({
       id: this.nextTaskId,
-      kind: "find-entry-slice",
+      kind: "find-entry-slices",
       files,
       entryPoint,
-      entryHash,
+      entryHashes,
     });
   }
 

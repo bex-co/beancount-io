@@ -32,8 +32,9 @@ import {
   entryBalances,
   filterDirectivesAsync,
   matchesJournalDisplayFilters,
-  findEntrySliceBySourceSha,
   findEntrySliceAsync,
+  findEntrySlicesAsync,
+  indexDatedBlocks,
   formatFiscalYearEnd,
   getDirectiveSourceId,
   isGeneratedDirective,
@@ -52,7 +53,6 @@ import {
   failedBalanceDiffs,
   serializeDirective,
   sliceSha256,
-  splitIntoBlocks,
   TimeFilterParseError,
   AdvancedFilterParseError,
   type EntrySlice,
@@ -153,32 +153,30 @@ interface SliceTarget {
   matchCount: number;
 }
 
-/** Dated blocks in `fileText` whose source text hashes to `sha256`. */
-function countShaMatches(fileText: string, sha256: string): number {
-  let count = 0;
-  for (const block of splitIntoBlocks(fileText)) {
-    if (block.isDated && sliceSha256(block.text) === sha256) count += 1;
-  }
-  return count;
-}
-
 /**
  * A re-location target rooted in the LOCATE snapshot: the twin count MUST
  * come from `files` (the snapshot the slice was found in), never from fresh
  * content — counting at relocate time would bless whatever raced in (w23/m1).
+ * Pass one `indexes` across a batch, so each file is hashed once (w1/237).
  */
 function sliceTarget(
   files: FileMap,
   found: Pick<EntrySlice, "file" | "localOccurrence" | "startLine">,
   base: string,
   sha256sum: string,
+  indexes: Map<string, ReturnType<typeof indexDatedBlocks>> = new Map(),
 ): SliceTarget {
+  let index = indexes.get(found.file);
+  if (!index) {
+    index = indexDatedBlocks(found.file, files[found.file] ?? "");
+    indexes.set(found.file, index);
+  }
   return {
     base,
     localOccurrence: found.localOccurrence,
     sha256sum,
     startLine: found.startLine,
-    matchCount: countShaMatches(files[found.file] ?? "", sha256sum),
+    matchCount: index.bySha.get(sha256sum)?.length ?? 0,
   };
 }
 
@@ -196,29 +194,26 @@ const STALE_TARGET = "it has changed since it was loaded; refresh and retry";
  * matches the twin the caller did not address. Refusing beats silently
  * editing the wrong entry (w23/m1).
  */
-function relocateSlice(
+function relocateSlices(
   file: string,
   content: string,
-  target: SliceTarget,
-): EntrySlice {
-  if (countShaMatches(content, target.sha256sum) !== target.matchCount) {
-    throw new ConflictError("Entry", STALE_TARGET);
-  }
-  const found = findEntrySliceBySourceSha(
-    file,
-    content,
-    target.sha256sum,
-    target.localOccurrence,
-  );
-  if (found !== null) return found;
-
-  const blockAtOriginalLine = splitIntoBlocks(content).some(
-    (block) => block.isDated && block.startLine === target.startLine,
-  );
-  if (blockAtOriginalLine) {
-    throw new ConflictError("Entry", STALE_TARGET);
-  }
-  throw new NotFoundError("Entry", target.base);
+  targets: readonly SliceTarget[],
+): EntrySlice[] {
+  // The fresh content is hashed once for every target: per target, a batch
+  // of N cost N whole-file scans twice over (w1/237).
+  const { bySha, byStartLine } = indexDatedBlocks(file, content);
+  return targets.map((target) => {
+    const twins = bySha.get(target.sha256sum) ?? [];
+    if (twins.length !== target.matchCount) {
+      throw new ConflictError("Entry", STALE_TARGET);
+    }
+    const found = twins[target.localOccurrence];
+    if (found !== undefined) return { ...found };
+    if (byStartLine.has(target.startLine)) {
+      throw new ConflictError("Entry", STALE_TARGET);
+    }
+    throw new NotFoundError("Entry", target.base);
+  });
 }
 
 /**
@@ -234,10 +229,7 @@ function makeDeleteTransform(
     if (current === null) {
       throw new NotFoundError("Entry", targets[0]?.base ?? file);
     }
-    const located: EntrySlice[] = [];
-    for (const target of targets) {
-      located.push(await relocateSlice(file, current, target));
-    }
+    const located = relocateSlices(file, current, targets);
     let content = current;
     located
       .sort((a, b) => b.startLine - a.startLine)
@@ -273,7 +265,7 @@ function makeReplaceTransform(
 ): LedgerFileTransform {
   return async (current) => {
     if (current === null) throw new NotFoundError("Entry", target.base);
-    const slice = await relocateSlice(file, current, target);
+    const [slice] = relocateSlices(file, current, [target]);
     const content = replaceSliceInFile(
       current,
       slice.startLine,
@@ -611,16 +603,44 @@ export class LedgerJournalService implements ILedgerJournalService {
     entryHash: string,
     sha256sum: string,
   ): Promise<EntrySlice> {
-    const found = await findEntrySliceAsync(files, entryPoint, entryHash);
-    if (!found) throw entryNotResolvableError(entryHash, files, entryPoint);
-    assertNotManagedPricePath(found.file, managedPricePaths);
-    if (found.sha256 !== sha256sum) {
-      throw new ConflictError(
-        "Entry",
-        "it has changed since it was loaded; refresh and retry",
-      );
-    }
+    const [found] = await this.locateSlices(
+      files,
+      entryPoint,
+      managedPricePaths,
+      [{ entryHash, sha256sum }],
+    );
     return found;
+  }
+
+  /**
+   * {@link locateSlice} for a batch, from one parse: refused in order, all or
+   * nothing. Locating each in turn re-parsed the ledger per entry, so a
+   * 1,000-entry delete took 90 s and committed after its caller was told to
+   * retry (w1/237).
+   */
+  private async locateSlices(
+    files: FileMap,
+    entryPoint: string,
+    managedPricePaths: readonly string[],
+    requests: readonly { entryHash: string; sha256sum: string }[],
+  ): Promise<EntrySlice[]> {
+    const found = await findEntrySlicesAsync(
+      files,
+      entryPoint,
+      requests.map((request) => request.entryHash),
+    );
+    return requests.map(({ entryHash, sha256sum }, index) => {
+      const slice = found[index];
+      if (!slice) throw entryNotResolvableError(entryHash, files, entryPoint);
+      assertNotManagedPricePath(slice.file, managedPricePaths);
+      if (slice.sha256 !== sha256sum) {
+        throw new ConflictError(
+          "Entry",
+          "it has changed since it was loaded; refresh and retry",
+        );
+      }
+      return slice;
+    });
   }
 
   /** Resolve a journal ID through any TS-plugin rewrite to its source block ID. */
@@ -1152,18 +1172,15 @@ export class LedgerJournalService implements ILedgerJournalService {
 
     // Locate + validate every entry on the loaded snapshot (all-or-nothing) to
     // find which file each lives in and fast-fail on a stale load.
-    const located: EntrySlice[] = [];
-    for (const [index, entry] of entries.entries()) {
-      located.push(
-        await this.locateSlice(
-          files,
-          entryPoint,
-          managedPricePaths,
-          sourceHashes[index],
-          entry.sha256sum,
-        ),
-      );
-    }
+    const located = await this.locateSlices(
+      files,
+      entryPoint,
+      managedPricePaths,
+      entries.map((entry, index) => ({
+        entryHash: sourceHashes[index],
+        sha256sum: entry.sha256sum,
+      })),
+    );
 
     // Group targets by file (base + LOCAL occurrence per entry), DEDUPING by
     // resolved identity first: a double-submitted {entryHash, sha256sum} pair
@@ -1172,6 +1189,7 @@ export class LedgerJournalService implements ILedgerJournalService {
     // range on the second pass. Then one re-locating delete transform per file
     // — each re-locates + deletes bottom-to-top against fresh content.
     const byFile = new Map<string, SliceTarget[]>();
+    const indexes = new Map<string, ReturnType<typeof indexDatedBlocks>>();
     const seenTargets = new Set<string>();
     const deletedHashes: string[] = [];
     const preview: SlicePreview = [];
@@ -1187,6 +1205,7 @@ export class LedgerJournalService implements ILedgerJournalService {
         slice,
         base,
         entries[index].sha256sum,
+        indexes,
       );
       const list = byFile.get(slice.file);
       if (list) list.push(target);

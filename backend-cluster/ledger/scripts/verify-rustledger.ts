@@ -64,6 +64,7 @@ import { formatCellValue } from "@/foundation/rustledger/mappers";
 import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
+import { verifyBatchDeleteScale } from "./batch-delete-scale";
 import type { SerializableTreeNodePublic } from "@/foundation/ledger-api-types";
 import {
   accountBalanceSeries,
@@ -5256,6 +5257,9 @@ poptag #trip
 
   // w23/m40: run the BQL the hosted MCP surface tells agents to use.
   await verifyServedBql();
+
+  // w1/237: a 1,000-entry batch delete fits the write deadline.
+  await verifyBatchDeleteScale();
 
   console.log("\nAll rustledger engine checks passed.");
 }

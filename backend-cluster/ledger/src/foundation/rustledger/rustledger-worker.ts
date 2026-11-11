@@ -6,7 +6,7 @@ import {
 } from "./engine";
 import { filterDirectives } from "./directive-filter";
 import { engineInstanceHealthy } from "./engine-health";
-import { findEntrySliceWithFullLedger } from "./source-slice-resolver";
+import { findEntrySlicesWithFullLedger } from "./source-slice-resolver";
 import type {
   RustledgerWorkerResponse,
   RustledgerWorkerTask,
@@ -44,10 +44,10 @@ port.on("message", async (task: RustledgerWorkerTask) => {
     } else if (task.kind === "directive-count") {
       value = await countLedgerDirectivesInProcess(task.files, task.entryPoint);
     } else {
-      value = await findEntrySliceWithFullLedger(
+      value = await findEntrySlicesWithFullLedger(
         task.files,
         task.entryPoint,
-        task.entryHash,
+        task.entryHashes,
       );
     }
     response = { id: task.id, ok: true, value };

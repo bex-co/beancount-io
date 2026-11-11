@@ -93,17 +93,22 @@ describe("RustledgerWorkerPool", () => {
     await pool.close();
   });
 
-  it("resolves source slices in a bounded worker task", async () => {
+  // w1/237: a batch resolves in one task, so one parse serves every entry.
+  it("resolves a batch of source slices in one bounded worker task", async () => {
     const { pool, workers } = makePool();
     const files = { "main.bean": "2024-01-01 open Assets:Cash\n" };
-    const promise = pool.findEntrySlice(files, "main.bean", "entry-hash");
+    const promise = pool.findEntrySlices(files, "main.bean", [
+      "entry-hash",
+      "missing",
+    ]);
+    expect(workers.flatMap((worker) => worker.posted)).toHaveLength(1);
     const task = workers[0].posted[0];
     expect(task).toEqual(
       expect.objectContaining({
-        kind: "find-entry-slice",
+        kind: "find-entry-slices",
         files,
         entryPoint: "main.bean",
-        entryHash: "entry-hash",
+        entryHashes: ["entry-hash", "missing"],
       }),
     );
 
@@ -115,8 +120,8 @@ describe("RustledgerWorkerPool", () => {
       slice: files["main.bean"],
       localOccurrence: 0,
     };
-    workers[0].respond({ id: task.id, ok: true, value: slice });
-    await expect(promise).resolves.toEqual(slice);
+    workers[0].respond({ id: task.id, ok: true, value: [slice, null] });
+    await expect(promise).resolves.toEqual([slice, null]);
     await pool.close();
   });
 
