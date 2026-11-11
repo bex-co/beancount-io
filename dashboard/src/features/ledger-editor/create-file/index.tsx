@@ -41,6 +41,7 @@ import { useFolderNames } from "@/features/ledger-editor/shared/hooks/use-folder
 import { createFileNameIssue } from "./validate-create-file-name";
 import {
   existingNameFor,
+  pathRefusalOf,
   portableTwinOf,
 } from "../shared/lib/portable-path-key";
 
@@ -120,7 +121,9 @@ const CreateFilePage = () => {
                     existingNameFor(normalizedFilename, folder.names ?? []) ??
                     "",
                 })
-              : null;
+              : nameIssue === "portable"
+                ? t("ledgerEditor.portableFileName", { con: "con", nul: "nul" })
+                : null;
 
   const nameCheckShown = Boolean(folder.failure) || nameIssue === "unchecked";
 
@@ -198,10 +201,15 @@ const CreateFilePage = () => {
       // A twin the folder listing did not show yet (a nested path, or a
       // write since): refreshing cannot fix it, so say what it collides with.
       const twin = portableTwinOf(error);
+      const refusal = pathRefusalOf(error);
       toast.error(
         twin
           ? t("ledgerEditor.fileExistsAs", { name: twin })
-          : formatError(error),
+          : refusal?.kind === "fileAsFolder"
+            ? t("ledgerEditor.fileIsNotFolder", { name: refusal.name })
+            : refusal?.kind === "portable"
+              ? t("ledgerEditor.portableFileName", { con: "con", nul: "nul" })
+              : formatError(error),
       );
     } finally {
       savingRef.current = false;

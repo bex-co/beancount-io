@@ -28,6 +28,23 @@ const ruLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Загрузить файлы",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        'Избегайте < > : " | ? *, имён вроде {con} или {nul}, частей, оканчивающихся точкой или пробелом, и частей длиннее 255 байт',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} — файл, поэтому в нём не может быть других файлов",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "Чтобы загрузить, уберите файлы с именами, которые Windows не может сохранить",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "Уже есть в этой папке под именем {name}",
       description:

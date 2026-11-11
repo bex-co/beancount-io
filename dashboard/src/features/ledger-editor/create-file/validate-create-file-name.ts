@@ -1,4 +1,7 @@
-import { existingNameFor } from "../shared/lib/portable-path-key";
+import {
+  existingNameFor,
+  isPortablePath,
+} from "../shared/lib/portable-path-key";
 
 export type CreateFileNameIssue =
   | "empty"
@@ -8,6 +11,8 @@ export type CreateFileNameIssue =
   | "exists"
   /** The folder holds the name in another letter case or Unicode form. */
   | "twin"
+  /** A name a Windows checkout cannot store (w23/054, w2/127). */
+  | "portable"
   /** The folder's names are not known yet, so a clash cannot be ruled out. */
   | "unchecked"
   | null;
@@ -51,6 +56,7 @@ export function createFileNameIssue(
   const fullPath = dirPath ? `${dirPath}/${trimmed}` : trimmed;
   const pathIssue = createFilePathIssue(fullPath);
   if (pathIssue) return pathIssue;
+  if (!isPortablePath(fullPath)) return "portable";
   // Nested paths (a/b/c.bean) create into missing dirs; only a single
   // segment can collide with the current directory listing.
   if (trimmed.includes("/")) return null;

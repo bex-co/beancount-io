@@ -2,6 +2,8 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { describe, expect, it } from "vitest";
 import {
   existingNameFor,
+  isPortablePath,
+  pathRefusalOf,
   portablePathKey,
   portableTwinOf,
 } from "../portable-path-key";
@@ -70,5 +72,74 @@ describe("portable path key", () => {
       portableTwinOf(conflict("a already exists as b\u001b[0m")),
     ).toBeNull();
     expect(portableTwinOf(new Error("a already exists as b"))).toBeNull();
+  });
+});
+
+/**
+ * The server refuses a new name a Windows checkout cannot store (w23/054);
+ * the dashboard offered it and then said only "information provided is
+ * invalid" (w2/127). These are the server's own cases.
+ */
+describe("isPortablePath", () => {
+  it.each([
+    "qa-enc/a?b.txt",
+    "qa-enc/con.txt",
+    "qa-enc/trail.",
+    "trailing /space.txt",
+    "qa:up.txt",
+    "Q1: taxes.bean",
+    'say "hi".txt',
+    "a|b.txt",
+    "LPT1",
+    "line\u0007bell.txt",
+    "ab\u202ecd.txt",
+    `${"é".repeat(128)}.txt`,
+  ])("refuses %j", (path) => {
+    expect(isPortablePath(path)).toBe(false);
+  });
+
+  it.each([
+    "contacts.bean",
+    "console.bean",
+    "a#b.txt",
+    "a%b.txt",
+    "a b.txt",
+    "nested/folder/main.bean",
+    "مالی/ملی.bean",
+  ])("accepts %j", (path) => {
+    expect(isPortablePath(path)).toBe(true);
+  });
+});
+
+describe("pathRefusalOf", () => {
+  const refusal = (message: string, code: string) =>
+    new CombinedGraphQLErrors({ errors: [{ message, extensions: { code } }] });
+
+  it("reads a file used as a folder", () => {
+    expect(
+      pathRefusalOf(
+        refusal(
+          "File conflict: main.bean/qa-sub.txt cannot be created: main.bean is a file, not a folder",
+          "CONFLICT",
+        ),
+      ),
+    ).toEqual({ kind: "fileAsFolder", name: "main.bean" });
+  });
+
+  it.each([
+    'File path "qa-enc/a?b.txt" contains one of <>:"|?*, which Windows cannot store',
+    'File path "qa-enc/con.txt" uses the Windows device name "con.txt"',
+    'File path "qa-enc/trail." has a part ending in a dot or a space',
+  ])("reads the portable refusal %s", (message) => {
+    expect(pathRefusalOf(refusal(message, "BAD_USER_INPUT"))).toEqual({
+      kind: "portable",
+    });
+  });
+
+  it("leaves other refusals to the generic message", () => {
+    expect(
+      pathRefusalOf(refusal("Invalid file path", "BAD_USER_INPUT")),
+    ).toBeNull();
+    expect(pathRefusalOf(new Error("is a file, not a folder"))).toBeNull();
   });
 });

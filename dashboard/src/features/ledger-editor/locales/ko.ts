@@ -28,6 +28,23 @@ const koLedgerEditor: Record<string, { message: string; description: string }> =
       message: "파일 업로드",
       description: "Button label to upload files",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        '< > : " | ? *, {con}이나 {nul} 같은 이름, 마침표나 공백으로 끝나는 부분, 255바이트를 넘는 부분은 피하세요',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name}은(는) 파일이므로 다른 파일을 담을 수 없습니다",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "업로드하려면 Windows에서 저장할 수 없는 이름의 파일을 제거하세요",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "이 폴더에 {name}(으)로 이미 있습니다",
       description:

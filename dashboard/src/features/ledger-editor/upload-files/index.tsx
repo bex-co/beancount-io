@@ -31,6 +31,8 @@ import { useFolderNames } from "@/features/ledger-editor/shared/hooks/use-folder
 import { formatFileSize } from "../shared/lib/utils";
 import {
   existingNameFor,
+  isPortablePath,
+  pathRefusalOf,
   portableTwinOf,
 } from "../shared/lib/portable-path-key";
 
@@ -96,6 +98,7 @@ const UploadFilesPage = () => {
   const hydrated = useHydrated();
   const uploadSizeLimitId = useId();
   const uploadClashId = useId();
+  const uploadPortableId = useId();
   const folderCheckId = useId();
   /** Where the last upload stopped, and what it had already written. */
   const [uploadFailure, setUploadFailure] = useState<{
@@ -131,6 +134,12 @@ const UploadFilesPage = () => {
   const hasExistingFiles = selectedFiles.some(
     (file) => clashes.get(file) != null,
   );
+  // A name a Windows checkout cannot store is refused by the server (w2/127).
+  const isPortableName = (file: File) =>
+    isPortablePath(dirPath ? `${dirPath}/${file.name}` : file.name);
+  const hasNonPortableFiles = selectedFiles.some(
+    (file) => !isPortableName(file),
+  );
   // Until the folder's names arrive, any chosen file might clash.
   const awaitsFolderCheck = selectedFiles.length > 0 && folder.names === null;
   const folderCheckShown = Boolean(folder.failure) || awaitsFolderCheck;
@@ -142,6 +151,7 @@ const UploadFilesPage = () => {
     isUploading ||
     hasOversizedFiles ||
     hasExistingFiles ||
+    hasNonPortableFiles ||
     awaitsFolderCheck;
 
   /**
@@ -207,11 +217,16 @@ const UploadFilesPage = () => {
         });
       } catch (error) {
         const twin = portableTwinOf(error);
+        const refusal = pathRefusalOf(error);
         const failure = {
           fileName: file.name,
           reason: twin
             ? t("ledgerEditor.fileExistsAs", { name: twin })
-            : formatError(error),
+            : refusal?.kind === "fileAsFolder"
+              ? t("ledgerEditor.fileIsNotFolder", { name: refusal.name })
+              : refusal?.kind === "portable"
+                ? t("ledgerEditor.portableFileName", { con: "con", nul: "nul" })
+                : formatError(error),
           uploaded,
         };
         setUploadFailure(failure);
@@ -416,12 +431,14 @@ const UploadFilesPage = () => {
                   const isOversized = file.size > MAX_FILE_SIZE;
                   const existing = clashes.get(file) ?? null;
                   const exists = existing !== null;
+                  const nonPortable = !isPortableName(file);
                   return (
                     <div
                       key={file.name}
                       className={cn(
                         "flex items-center justify-between p-3 hover:bg-muted/50",
-                        (isOversized || exists) && "bg-destructive/5",
+                        (isOversized || exists || nonPortable) &&
+                          "bg-destructive/5",
                       )}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -435,6 +452,17 @@ const UploadFilesPage = () => {
                             <AlertCircle className="h-4 w-4" />
                             <span className="text-xs font-medium">
                               {t("ledgerEditor.exceedsFileSizeLimit")}
+                            </span>
+                          </div>
+                        )}
+                        {nonPortable && (
+                          <div className="flex items-center gap-1 text-destructive shrink-0">
+                            <AlertCircle className="h-4 w-4" />
+                            <span className="text-xs font-medium">
+                              {t("ledgerEditor.portableFileName", {
+                                con: "con",
+                                nul: "nul",
+                              })}
                             </span>
                           </div>
                         )}
@@ -516,6 +544,11 @@ const UploadFilesPage = () => {
                 {t("ledgerEditor.removeExistingFiles")}
               </p>
             )}
+            {hasNonPortableFiles && (
+              <p id={uploadPortableId} className="text-sm text-destructive">
+                {t("ledgerEditor.removeNonPortableFiles")}
+              </p>
+            )}
             <FolderNamesStatus
               id={folderCheckId}
               checking={awaitsFolderCheck}
@@ -532,6 +565,7 @@ const UploadFilesPage = () => {
                   [
                     hasOversizedFiles && uploadSizeLimitId,
                     hasExistingFiles && uploadClashId,
+                    hasNonPortableFiles && uploadPortableId,
                     folderCheckShown && folderCheckId,
                   ]
                     .filter(Boolean)

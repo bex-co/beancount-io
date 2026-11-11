@@ -28,6 +28,23 @@ const jaLedgerEditor: Record<string, { message: string; description: string }> =
       message: "ファイルをアップロード",
       description: "Button label to upload files",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        '< > : " | ? *、{con} や {nul} のような名前、ドットや空白で終わる部分、255 バイトを超える部分は使えません',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} はファイルのため、ほかのファイルを入れられません",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "アップロードするには、Windows が保存できない名前のファイルを外してください",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "このフォルダーに {name} として既に存在します",
       description:

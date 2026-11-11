@@ -78,6 +78,7 @@ async function setup({
   canWrite = true,
   failFirstSave = false,
   twinOnSave = null as string | null,
+  folderOnSave = null as string | null,
 } = {}) {
   access.canWrite = canWrite;
   const mutations: Array<Record<string, unknown>> = [];
@@ -115,6 +116,18 @@ async function setup({
             mutations.push(operation.variables);
             if (failFirstSave && mutations.length === 1) {
               observer.error(new Error("Synthetic connection failure"));
+              return;
+            }
+            if (folderOnSave) {
+              observer.next({
+                errors: [
+                  {
+                    message: `File conflict: ${String(operation.variables.path)} cannot be created: ${folderOnSave} is a file, not a folder`,
+                    extensions: { code: "CONFLICT" },
+                  },
+                ],
+              });
+              observer.complete();
               return;
             }
             if (twinOnSave) {
@@ -443,6 +456,42 @@ describe("Create File normalized targets through the real form and mutation", ()
       ),
     );
     expect(filename()).toHaveValue("Receipts/new.bean");
+  });
+
+  // A name a Windows checkout cannot store was offered with Save enabled,
+  // then refused as "information provided is invalid" (w2/127).
+  it.each(["a?b.txt", "con.txt", "trail."])(
+    "refuses %j before saving and says why",
+    async (name) => {
+      const { filename, save, mutations, localization } = await setup();
+      fireEvent.change(filename(), { target: { value: name } });
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        localization.i18n.t("ledgerEditor.portableFileName", {
+          con: "con",
+          nul: "nul",
+        }),
+      );
+      expect(save()).toBeDisabled();
+      fireEvent.click(save());
+      expect(mutations).toEqual([]);
+    },
+  );
+
+  it("says an existing file cannot hold others instead of advising a refresh", async () => {
+    const { filename, save, mutations, localization } = await setup({
+      folderOnSave: "main.bean",
+    });
+    fireEvent.change(filename(), { target: { value: "main.bean/qa-sub.txt" } });
+    await waitFor(() => expect(save()).toBeEnabled());
+    fireEvent.click(save());
+    await waitFor(() => expect(mutations).toHaveLength(1));
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        localization.i18n.t("ledgerEditor.fileIsNotFolder", {
+          name: "main.bean",
+        }),
+      ),
+    );
   });
 
   it("cancels a clean form without a draft prompt", async () => {

@@ -28,6 +28,22 @@ const enLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Upload Files",
       description: "Button label to upload files",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        'Avoid < > : " | ? *, names like {con} or {nul}, a part ending in a dot or space, and parts over 255 bytes',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} is a file, so it can't hold other files",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message: "Remove files whose names Windows can't store to upload",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "Already exists in this folder as {name}",
       description:

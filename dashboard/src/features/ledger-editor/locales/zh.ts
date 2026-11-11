@@ -27,6 +27,22 @@ const zhLedgerEditor: Record<string, { message: string; description: string }> =
       message: "上传文件",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        '请避免使用 < > : " | ? *、{con} 或 {nul} 之类的名称、以点或空格结尾的部分，以及超过 255 字节的部分',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} 是文件，不能包含其他文件",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message: "要上传，请移除名称无法在 Windows 中保存的文件",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "此文件夹中已有名为 {name} 的同名文件",
       description:

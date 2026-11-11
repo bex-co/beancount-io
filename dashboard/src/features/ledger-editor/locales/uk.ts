@@ -27,6 +27,23 @@ const ukLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Завантажити файли",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        'Уникайте < > : " | ? *, назв на зразок {con} чи {nul}, частин, що закінчуються крапкою чи пробілом, і частин понад 255 байтів',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} — файл, тому в ньому не може бути інших файлів",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "Щоб завантажити, приберіть файли з назвами, які Windows не може зберегти",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "Уже є в цій папці під назвою {name}",
       description:

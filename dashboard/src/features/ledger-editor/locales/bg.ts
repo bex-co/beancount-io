@@ -28,6 +28,23 @@ const bgLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Качване на файлове",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        'Избягвайте < > : " | ? *, имена като {con} или {nul}, част, завършваща с точка или интервал, и части над 255 байта',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} е файл, затова не може да съдържа други файлове",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "Премахнете файловете с имена, които Windows не може да съхрани, за да качите",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "Вече съществува в тази папка като {name}",
       description:

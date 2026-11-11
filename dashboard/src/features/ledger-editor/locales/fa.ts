@@ -28,6 +28,24 @@ const faLedgerEditor: Record<string, { message: string; description: string }> =
       message: "بارگذاری فایل‌ها",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        'از < > : " | ? *، نام‌هایی مانند {con} یا {nul}، بخشی که به نقطه یا فاصله ختم شود و بخش‌های بیش از ۲۵۵ بایت پرهیز کنید',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message:
+        "{name} یک فایل است و نمی‌تواند فایل‌های دیگری را در خود نگه دارد",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "برای بارگذاری، فایل‌هایی را که ویندوز نمی‌تواند نامشان را ذخیره کند حذف کنید",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "از قبل در این پوشه با نام {name} وجود دارد",
       description:

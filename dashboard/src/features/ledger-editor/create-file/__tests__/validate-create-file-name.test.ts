@@ -147,3 +147,19 @@ describe("createFileNameIssue portable twins (w2/113)", () => {
     expect(createFileNameIssue("main.bean", ["main.bean"])).toBe("exists");
   });
 });
+
+describe("createFileNameIssue portable names (w2/127)", () => {
+  it.each(["a?b.txt", "con.txt", "trail.", "Q1: taxes.bean"])(
+    "reports %j as a name the server cannot store",
+    (name) => {
+      expect(createFileNameIssue(name, [])).toBe("portable");
+    },
+  );
+
+  it.each(["contacts.bean", "console.bean", "a#b.txt", "a b.txt"])(
+    "accepts %j",
+    (name) => {
+      expect(createFileNameIssue(name, [])).toBeNull();
+    },
+  );
+});

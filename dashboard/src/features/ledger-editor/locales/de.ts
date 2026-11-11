@@ -28,6 +28,23 @@ const deLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Dateien hochladen",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        'Vermeiden Sie < > : " | ? *, Namen wie {con} oder {nul}, Teile, die auf einen Punkt oder ein Leerzeichen enden, und Teile über 255 Byte',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} ist eine Datei und kann keine anderen Dateien enthalten",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "Entfernen Sie Dateien, deren Namen Windows nicht speichern kann, um hochzuladen",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "Existiert in diesem Ordner bereits als {name}",
       description:

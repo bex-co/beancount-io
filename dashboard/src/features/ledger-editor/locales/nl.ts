@@ -28,6 +28,23 @@ const nlLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Bestanden uploaden",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        'Vermijd < > : " | ? *, namen zoals {con} of {nul}, een deel dat eindigt op een punt of spatie, en delen van meer dan 255 bytes',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} is een bestand en kan geen andere bestanden bevatten",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "Verwijder bestanden waarvan Windows de naam niet kan opslaan om te uploaden",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "Bestaat al in deze map als {name}",
       description:

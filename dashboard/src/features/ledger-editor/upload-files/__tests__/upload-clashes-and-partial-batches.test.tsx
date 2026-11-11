@@ -172,6 +172,23 @@ describe("Upload Files portable twins (w2/113)", () => {
   });
 });
 
+describe("Upload Files names the server cannot store (w2/127)", () => {
+  it("flags qa:up.txt before the upload and keeps it disabled", () => {
+    render(<UploadFilesPage />);
+    choose([file("qa:up.txt", "synthetic"), file("fine.txt", "synthetic")]);
+
+    expect(
+      screen.getByText(/^ledgerEditor\.portableFileName/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("ledgerEditor.removeNonPortableFiles"),
+    ).toBeInTheDocument();
+    expect(upload()).toBeDisabled();
+    fireEvent.click(upload());
+    expect(mutate).not.toHaveBeenCalled();
+  });
+});
+
 describe("Upload Files clashes, duplicates and partial batches (w3/563)", () => {
   it("flags a name the folder already has and keeps upload disabled", () => {
     render(<UploadFilesPage />);

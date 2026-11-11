@@ -28,6 +28,23 @@ const skLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Nahrať súbory",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        'Vyhnite sa < > : " | ? *, názvom ako {con} alebo {nul}, časti končiacej bodkou alebo medzerou a častiam dlhším ako 255 bajtov',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} je súbor, preto nemôže obsahovať ďalšie súbory",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "Ak chcete nahrávať, odstráňte súbory s názvami, ktoré Windows nedokáže uložiť",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "V tomto priečinku už existuje ako {name}",
       description:

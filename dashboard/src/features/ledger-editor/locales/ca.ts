@@ -28,6 +28,23 @@ const caLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Actualitzar fitxers",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.portableFileName": {
+      message:
+        'Eviteu < > : " | ? *, noms com {con} o {nul}, una part acabada en punt o espai i parts de més de 255 bytes',
+      description:
+        "A new file name the server refuses because a Windows checkout cannot store it (w23/054)",
+    },
+    "ledgerEditor.fileIsNotFolder": {
+      message: "{name} és un fitxer, així que no pot contenir altres fitxers",
+      description:
+        "A new path whose folder part is an existing file; {name} is that file",
+    },
+    "ledgerEditor.removeNonPortableFiles": {
+      message:
+        "Traieu els fitxers amb noms que Windows no pot desar per pujar-los",
+      description:
+        "Explains why Upload Files is disabled while a staged file has a name Windows cannot store",
+    },
     "ledgerEditor.fileExistsAs": {
       message: "Ja existeix en aquesta carpeta com a {name}",
       description:
