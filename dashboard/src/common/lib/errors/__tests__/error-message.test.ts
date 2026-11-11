@@ -281,6 +281,19 @@ describe("getInvalidTokenRefusal", () => {
       'entry 1: flag "%" is not a valid transaction flag: the ledger engine cannot read a "%" flag yet, and would drop the posting; use another flag',
       { key: "common.errors.invalidFlag", value: "%" },
     ],
+    // The ledger's amount refusals, before and since w2/129.
+    [
+      `entry 0: postings[0].units.number "${"9".repeat(29)}" is not a decimal number`,
+      { key: "common.errors.invalidAmount", value: "9".repeat(29) },
+    ],
+    [
+      `entry 0: postings[0].units.number "${"9".repeat(29)}" has more than 28 significant digits`,
+      { key: "common.errors.amountTooLong", value: "9".repeat(29) },
+    ],
+    [
+      'entry 0: amount.number "abc" is not a decimal number',
+      { key: "common.errors.invalidAmount", value: "abc" },
+    ],
   ])("reads %s", (message, expected) => {
     expect(getInvalidTokenRefusal(badInput(message))).toEqual(expected);
   });
@@ -319,5 +332,28 @@ describe("getInvalidTokenRefusal", () => {
       "“usd” isn't a valid currency. Write currencies in capital letters, such as USD.",
     );
     expect(message).not.toContain("postings");
+  });
+
+  it("says a 29-digit amount is too long, not that the input is invalid", () => {
+    const { result } = renderHook(() => useErrorMessage());
+    const nines = "9".repeat(29);
+    expect(
+      result.current(
+        badInput(
+          `entry 0: postings[0].units.number "${nines}" has more than 28 significant digits`,
+        ),
+      ),
+    ).toBe(
+      `“${nines}” has more than 28 digits. Amounts can have at most 28 digits.`,
+    );
+    expect(
+      result.current(
+        badInput(
+          `entry 0: postings[0].units.number "${nines}" is not a decimal number`,
+        ),
+      ),
+    ).toBe(
+      `“${nines}” isn't an amount the ledger can read. Write it as a number of at most 28 digits.`,
+    );
   });
 });

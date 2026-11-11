@@ -54,7 +54,10 @@ import {
   isEligiblePosting,
   postingCurrency,
 } from "./transaction-auto-balance";
-import { parseDecimalNumber } from "@/common/lib/beancount/decimal-number";
+import {
+  exceedsLedgerDigits,
+  parseDecimalNumber,
+} from "@/common/lib/beancount/decimal-number";
 import { isCompositionKey } from "@/common/lib/keyboard/is-composition-key";
 import { AccountAvailabilityNotice } from "./account-availability-notice";
 import { ExactAmountInput } from "@/common/components/exact-amount-input";
@@ -114,6 +117,10 @@ export function TransactionForm({
           .refine(
             (val) => val === "" || parseDecimalNumber(val) !== null,
             t("journal.amountMustBeNumber"),
+          )
+          .refine(
+            (val) => !exceedsLedgerDigits(val),
+            t("common.amountTooLong"),
           ),
         // Blank takes the ledger's currency; anything typed must be one.
         currency: z

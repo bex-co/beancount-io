@@ -58,6 +58,7 @@ import { todayIsoDate } from "@/common/components/ui/date-picker-utils";
 import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { budgetAmountForAccount, isUnderAccountRoot } from "./budget-utils";
+import { exceedsLedgerDigits } from "@/common/lib/beancount/decimal-number";
 import { useDiscardDraftGuard } from "@/common/components/discard-draft-guard";
 
 const createBudgetSchema = (t: (key: string) => string) =>
@@ -65,7 +66,10 @@ const createBudgetSchema = (t: (key: string) => string) =>
     date: z.iso.date(),
     account: z.string().min(1, t("page.budget.budgetAccountRequired")),
     interval: z.nativeEnum(BudgetInterval),
-    number: z.string().min(1, t("page.budget.budgetAmountRequired")),
+    number: z
+      .string()
+      .min(1, t("page.budget.budgetAmountRequired"))
+      .refine((val) => !exceedsLedgerDigits(val), t("common.amountTooLong")),
     currency: z
       .string()
       .min(1, t("page.budget.budgetCurrencyRequired"))

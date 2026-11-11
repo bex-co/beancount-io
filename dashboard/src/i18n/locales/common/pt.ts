@@ -911,11 +911,27 @@ const ptCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "Os valores podem ter no máximo 28 dígitos.",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "“{value}” não é uma moeda válida. Escreva as moedas em letras maiúsculas, como USD.",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message:
+      "“{value}” não é um valor válido. Escreva um número de no máximo 28 dígitos.",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message:
+      "“{value}” tem mais de 28 dígitos. Os valores podem ter no máximo 28 dígitos.",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "“{value}” não é um nome de conta válido.",

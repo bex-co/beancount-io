@@ -915,11 +915,26 @@ const ukCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "Сума може містити не більше 28 цифр.",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "«{value}» — неприпустима валюта. Указуйте валюти великими латинськими літерами, наприклад USD.",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message: "«{value}» — неприпустима сума. Введіть число не довше 28 цифр.",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message:
+      "«{value}» містить понад 28 цифр. Сума може містити не більше 28 цифр.",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "«{value}» — неприпустима назва рахунку.",

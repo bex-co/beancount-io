@@ -914,11 +914,27 @@ const enCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "Amounts can have at most 28 digits.",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "“{value}” isn't a valid currency. Write currencies in capital letters, such as USD.",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message:
+      "“{value}” isn't an amount the ledger can read. Write it as a number of at most 28 digits.",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message:
+      "“{value}” has more than 28 digits. Amounts can have at most 28 digits.",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "“{value}” isn't a valid account name.",

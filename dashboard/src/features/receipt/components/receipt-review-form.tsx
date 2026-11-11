@@ -32,7 +32,10 @@ import {
 } from "@/common/components/ledger-comboboxes";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
-import { isPositiveDecimalNumber } from "@/common/lib/beancount/decimal-number";
+import {
+  exceedsLedgerDigits,
+  isPositiveDecimalNumber,
+} from "@/common/lib/beancount/decimal-number";
 import { beancountString } from "@/common/lib/beancount/quoted-string";
 import type {
   ParsedReceipt,
@@ -81,7 +84,8 @@ export function ReceiptReviewForm({
           .refine(
             (v) => isPositiveDecimalNumber(v),
             t("receipt.review.amountPositive"),
-          ),
+          )
+          .refine((v) => !exceedsLedgerDigits(v), t("common.amountTooLong")),
         currency: z
           .string()
           .min(1, t("receipt.review.currencyRequired"))

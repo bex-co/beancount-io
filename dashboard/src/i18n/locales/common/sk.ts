@@ -914,11 +914,27 @@ const skCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "Sumy môžu mať najviac 28 číslic.",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "„{value}“ nie je platná mena. Meny píšte veľkými písmenami, napríklad USD.",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message:
+      "„{value}“ nie je platná suma. Zadajte číslo s najviac 28 číslicami.",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message:
+      "„{value}“ má viac ako 28 číslic. Sumy môžu mať najviac 28 číslic.",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "„{value}“ nie je platný názov účtu.",

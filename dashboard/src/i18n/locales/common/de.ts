@@ -910,11 +910,27 @@ const deCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "Beträge dürfen höchstens 28 Ziffern haben.",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "„{value}“ ist keine gültige Währung. Schreiben Sie Währungen in Großbuchstaben, z. B. USD.",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message:
+      "„{value}“ ist kein lesbarer Betrag. Geben Sie eine Zahl mit höchstens 28 Ziffern ein.",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message:
+      "„{value}“ hat mehr als 28 Ziffern. Beträge dürfen höchstens 28 Ziffern haben.",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "„{value}“ ist kein gültiger Kontoname.",

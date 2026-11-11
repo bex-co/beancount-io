@@ -908,11 +908,27 @@ const bgCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "Сумите могат да имат най-много 28 цифри.",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "„{value}“ не е валидна валута. Пишете валутите с главни букви, например USD.",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message:
+      "„{value}“ не е сума, която може да бъде прочетена. Въведете число с най-много 28 цифри.",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message:
+      "„{value}“ има повече от 28 цифри. Сумите могат да имат най-много 28 цифри.",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "„{value}“ не е валидно име на сметка.",

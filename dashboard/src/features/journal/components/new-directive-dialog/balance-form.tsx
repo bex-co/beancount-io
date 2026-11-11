@@ -24,7 +24,10 @@ import {
   type LedgerAmountInput,
 } from "@/graphql/definitions";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { parseDecimalNumber } from "@/common/lib/beancount/decimal-number";
+import {
+  exceedsLedgerDigits,
+  parseDecimalNumber,
+} from "@/common/lib/beancount/decimal-number";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 
 import {
@@ -61,7 +64,8 @@ const createBalanceSchema = (t: (key: string) => string) =>
       .refine(
         (val) => parseDecimalNumber(val) !== null,
         t("journal.amountMustBeNumber"),
-      ),
+      )
+      .refine((val) => !exceedsLedgerDigits(val), t("common.amountTooLong")),
     currency: z
       .string()
       .trim()

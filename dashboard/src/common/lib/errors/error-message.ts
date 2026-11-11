@@ -208,6 +208,15 @@ const INVALID_TOKEN_KEYS: Record<string, string> = {
   "transaction flag": "common.errors.invalidFlag",
 };
 
+/**
+ * The ledger's refusal of an amount: `entry 0: postings[0].units.number
+ * "999…" has more than 28 significant digits`, which before w2/129 it called
+ * "is not a decimal number". Either came back as the generic invalid-input
+ * toast, pointing at nothing.
+ */
+const INVALID_NUMBER =
+  /\bentry \d+: \S+ ("(?:[^"\\]|\\.)*"|\S+) (is not a decimal number|has more than \d+ significant digits)(?=$|[:;])/;
+
 /** The catalog key and value of an invalid-token refusal, or null. */
 export function getInvalidTokenRefusal(
   error: unknown,
@@ -215,9 +224,21 @@ export function getInvalidTokenRefusal(
   if (!CombinedGraphQLErrors.is(error)) return null;
   for (const gqlError of error.errors) {
     if (gqlError.extensions?.code !== "BAD_USER_INPUT") continue;
-    const match = INVALID_TOKEN.exec(gqlError.message);
-    if (!match) continue;
-    let value = match[1];
+    const token = INVALID_TOKEN.exec(gqlError.message);
+    const number = token ? null : INVALID_NUMBER.exec(gqlError.message);
+    const refusal = token
+      ? { raw: token[1], key: INVALID_TOKEN_KEYS[token[2]] }
+      : number
+        ? {
+            raw: number[1],
+            key:
+              number[2] === "is not a decimal number"
+                ? "common.errors.invalidAmount"
+                : "common.errors.amountTooLong",
+          }
+        : null;
+    if (!refusal) continue;
+    let value = refusal.raw;
     try {
       const parsed: unknown = JSON.parse(value);
       if (typeof parsed === "string") value = parsed;
@@ -225,7 +246,7 @@ export function getInvalidTokenRefusal(
       // An unquoted value is shown as written.
     }
     if (value.length > 100 || /\p{Cc}/u.test(value)) return null;
-    return { key: INVALID_TOKEN_KEYS[match[2]], value };
+    return { key: refusal.key, value };
   }
   return null;
 }

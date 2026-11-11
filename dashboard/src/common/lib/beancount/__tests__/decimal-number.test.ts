@@ -1,11 +1,39 @@
 import { describe, expect, it } from "vitest";
 import {
+  exceedsLedgerDigits,
   isPositiveDecimalNumber,
   negateDecimalNumber,
   parseDecimalNumber,
   sumDecimalFractions,
   sumDecimalNumbers,
 } from "../decimal-number";
+
+/** The ledger refuses past 28 digits, counted as it counts them (w2/129). */
+describe("exceedsLedgerDigits", () => {
+  it.each([
+    "9".repeat(29),
+    `-${"9".repeat(29)}`,
+    `${"9".repeat(27)}.99`,
+    `0.${"0".repeat(28)}1`,
+    "1e28",
+  ])("refuses %s", (text) => {
+    expect(exceedsLedgerDigits(text)).toBe(true);
+  });
+
+  it.each([
+    "9".repeat(28),
+    `-${"9".repeat(28)}`,
+    `${"9".repeat(26)}.99`,
+    `000${"9".repeat(28)}`,
+    `0.${"0".repeat(27)}1`,
+    "1e27",
+    "4.50",
+    "",
+    "abc",
+  ])("accepts %s, or leaves it to the number check", (text) => {
+    expect(exceedsLedgerDigits(text)).toBe(false);
+  });
+});
 
 describe("parseDecimalNumber", () => {
   it.each([

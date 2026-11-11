@@ -899,11 +899,27 @@ const koCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "금액은 최대 28자리까지 입력할 수 있습니다.",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "“{value}”은(는) 유효한 통화가 아닙니다. 통화는 USD처럼 대문자로 입력하세요.",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message:
+      "“{value}”은(는) 읽을 수 있는 금액이 아닙니다. 28자리 이내의 숫자로 입력하세요.",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message:
+      "“{value}”은(는) 28자리를 넘습니다. 금액은 최대 28자리까지 입력할 수 있습니다.",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "“{value}”은(는) 유효한 계정 이름이 아닙니다.",

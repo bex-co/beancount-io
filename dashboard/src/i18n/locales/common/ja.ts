@@ -901,11 +901,26 @@ const jaCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "金額は最大 28 桁までです。",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "「{value}」は有効な通貨ではありません。通貨は USD のように大文字で入力してください。",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message:
+      "「{value}」は読み取れる金額ではありません。28 桁以内の数値で入力してください。",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message: "「{value}」は 28 桁を超えています。金額は最大 28 桁までです。",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "「{value}」は有効な勘定科目名ではありません。",

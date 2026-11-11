@@ -58,6 +58,24 @@ export function parseDecimalNumber(text: string): string | null {
   return sign === "-" && !isZeroDigits(unsigned) ? `-${unsigned}` : unsigned;
 }
 
+/** The digits the ledger engine's Decimal holds (w21/997). */
+const LEDGER_DECIMAL_DIGITS = 28;
+
+/**
+ * True when the text is a decimal number the ledger would refuse for its
+ * length: past 28 digits, counted as the ledger counts them — leading zeros
+ * aside, every fraction digit. The ledger only says so after the form has
+ * been sent (w2/129); a form refuses it while it is typed, as mobile does.
+ */
+export function exceedsLedgerDigits(text: string): boolean {
+  const value = parseDecimalNumber(text);
+  if (value === null) return false;
+  const [whole = "", fraction = ""] = absDecimalNumber(value).split(".");
+  return (
+    whole.replace(/^0+/, "").length + fraction.length > LEDGER_DECIMAL_DIGITS
+  );
+}
+
 /** True when the text is a decimal number greater than zero. */
 export function isPositiveDecimalNumber(text: string): boolean {
   const value = parseDecimalNumber(text);

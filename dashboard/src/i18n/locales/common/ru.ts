@@ -915,11 +915,27 @@ const ruCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "Сумма может содержать не более 28 цифр.",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "«{value}» — недопустимая валюта. Указывайте валюты заглавными латинскими буквами, например USD.",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message:
+      "«{value}» — недопустимая сумма. Введите число не длиннее 28 цифр.",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message:
+      "«{value}» содержит больше 28 цифр. Сумма может содержать не более 28 цифр.",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "«{value}» — недопустимое имя счёта.",

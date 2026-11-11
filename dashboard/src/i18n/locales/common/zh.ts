@@ -885,10 +885,24 @@ const zhCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "金额最多只能有 28 位数字。",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message: "“{value}”不是有效的货币。请用大写字母填写货币，例如 USD。",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message: "“{value}”不是可读取的金额。请输入不超过 28 位数字的数值。",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message: "“{value}”超过 28 位数字。金额最多只能有 28 位数字。",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "“{value}”不是有效的账户名称。",

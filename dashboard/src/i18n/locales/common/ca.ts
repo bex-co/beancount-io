@@ -914,11 +914,27 @@ const caCommon: Record<string, TranslationEntry> = {
     description:
       "Form validation for a currency that is not in Beancount's commodity syntax, such as a lowercase usd",
   },
+  "common.amountTooLong": {
+    message: "Els imports poden tenir com a màxim 28 xifres.",
+    description: "Form validation for an amount past the ledger's 28 digits",
+  },
   "common.errors.invalidCurrency": {
     message:
       "«{value}» no és una moneda vàlida. Escriviu les monedes en majúscules, com ara USD.",
     description:
       "The ledger refused a write because a currency is not valid; {value} is the currency as typed",
+  },
+  "common.errors.invalidAmount": {
+    message:
+      "«{value}» no és un import vàlid. Escriviu-lo com un nombre de com a màxim 28 xifres.",
+    description:
+      "The ledger refused a write because an amount is not a number it can read; {value} is the amount as sent",
+  },
+  "common.errors.amountTooLong": {
+    message:
+      "«{value}» té més de 28 xifres. Els imports poden tenir com a màxim 28 xifres.",
+    description:
+      "The ledger refused a write because an amount has more than 28 digits; {value} is the amount as sent",
   },
   "common.errors.invalidAccount": {
     message: "«{value}» no és un nom de compte vàlid.",
