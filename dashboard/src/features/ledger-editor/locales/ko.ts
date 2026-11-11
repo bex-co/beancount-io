@@ -28,6 +28,11 @@ const koLedgerEditor: Record<string, { message: string; description: string }> =
       message: "파일 업로드",
       description: "Button label to upload files",
     },
+    "ledgerEditor.fileExistsAs": {
+      message: "이 폴더에 {name}(으)로 이미 있습니다",
+      description:
+        "A new file or upload whose name differs from an existing one only by letter case, Unicode form or an invisible character; {name} is the existing spelling",
+    },
   };
 
 export default {

@@ -5,6 +5,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -125,6 +126,51 @@ beforeEach(() => {
 });
 
 afterEach(cleanup);
+
+describe("Upload Files portable twins (w2/113)", () => {
+  it.each(["MAIN.BEAN", "Main.bean", "ma\u200bin.bean"])(
+    "names main.bean as the existing spelling of %j and keeps upload disabled",
+    (name) => {
+      render(<UploadFilesPage />);
+      choose([file(name, "synthetic")]);
+
+      expect(
+        screen.getByText("ledgerEditor.fileExistsAs main.bean"),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("ledgerEditor.fileAlreadyExists"),
+      ).not.toBeInTheDocument();
+      expect(upload()).toBeDisabled();
+      fireEvent.click(upload());
+      expect(mutate).not.toHaveBeenCalled();
+    },
+  );
+
+  it("names the twin the server refused instead of advising a refresh", async () => {
+    mutate.mockRejectedValueOnce(
+      new CombinedGraphQLErrors({
+        errors: [
+          {
+            message:
+              "File conflict: transactions/other.bean already exists as transactions/Other.bean",
+            extensions: { code: "CONFLICT" },
+          },
+        ],
+      }),
+    );
+    render(<UploadFilesPage />);
+    choose([file("other.bean", "synthetic")]);
+    fireEvent.click(upload());
+
+    expect(
+      await screen.findByText(
+        /ledgerEditor\.uploadStoppedAt other\.bean ledgerEditor\.fileExistsAs transactions\/Other\.bean/,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/the server refused it/)).not.toBeInTheDocument();
+    expect(stagedNames()).toEqual(["other.bean"]);
+  });
+});
 
 describe("Upload Files clashes, duplicates and partial batches (w3/563)", () => {
   it("flags a name the folder already has and keeps upload disabled", () => {

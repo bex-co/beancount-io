@@ -28,6 +28,11 @@ const jaLedgerEditor: Record<string, { message: string; description: string }> =
       message: "ファイルをアップロード",
       description: "Button label to upload files",
     },
+    "ledgerEditor.fileExistsAs": {
+      message: "このフォルダーに {name} として既に存在します",
+      description:
+        "A new file or upload whose name differs from an existing one only by letter case, Unicode form or an invisible character; {name} is the existing spelling",
+    },
   };
 
 export default {

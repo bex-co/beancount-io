@@ -28,6 +28,11 @@ const ruLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Загрузить файлы",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.fileExistsAs": {
+      message: "Уже есть в этой папке под именем {name}",
+      description:
+        "A new file or upload whose name differs from an existing one only by letter case, Unicode form or an invisible character; {name} is the existing spelling",
+    },
   };
 
 export default {

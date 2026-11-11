@@ -39,6 +39,10 @@ import { WriteAccessRequired } from "@/features/ledger-editor/shared/components/
 import { FolderNamesStatus } from "@/features/ledger-editor/shared/components/folder-names-status";
 import { useFolderNames } from "@/features/ledger-editor/shared/hooks/use-folder-names";
 import { createFileNameIssue } from "./validate-create-file-name";
+import {
+  existingNameFor,
+  portableTwinOf,
+} from "../shared/lib/portable-path-key";
 
 /**
  * Create File Page Component - GitHub-style file creation interface
@@ -110,7 +114,13 @@ const CreateFilePage = () => {
           ? t("ledgerEditor.gitFilePathNotAllowed")
           : nameIssue === "exists"
             ? t("ledgerEditor.fileAlreadyExists")
-            : null;
+            : nameIssue === "twin"
+              ? t("ledgerEditor.fileExistsAs", {
+                  name:
+                    existingNameFor(normalizedFilename, folder.names ?? []) ??
+                    "",
+                })
+              : null;
 
   const nameCheckShown = Boolean(folder.failure) || nameIssue === "unchecked";
 
@@ -185,7 +195,14 @@ const CreateFilePage = () => {
       navigateToTree();
     } catch (error) {
       console.error("Failed to create file:", error);
-      toast.error(formatError(error));
+      // A twin the folder listing did not show yet (a nested path, or a
+      // write since): refreshing cannot fix it, so say what it collides with.
+      const twin = portableTwinOf(error);
+      toast.error(
+        twin
+          ? t("ledgerEditor.fileExistsAs", { name: twin })
+          : formatError(error),
+      );
     } finally {
       savingRef.current = false;
       setIsSaving(false);

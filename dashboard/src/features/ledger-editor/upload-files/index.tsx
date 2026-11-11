@@ -29,6 +29,10 @@ import { WriteAccessRequired } from "@/features/ledger-editor/shared/components/
 import { FolderNamesStatus } from "@/features/ledger-editor/shared/components/folder-names-status";
 import { useFolderNames } from "@/features/ledger-editor/shared/hooks/use-folder-names";
 import { formatFileSize } from "../shared/lib/utils";
+import {
+  existingNameFor,
+  portableTwinOf,
+} from "../shared/lib/portable-path-key";
 
 // Maximum file size allowed (1MB)
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB in bytes
@@ -102,7 +106,18 @@ const UploadFilesPage = () => {
 
   // The folder's names: Gitea refuses to create a path that already exists.
   const folder = useFolderNames(ledgerId, dirPath);
-  const existingNames = useMemo(() => new Set(folder.names), [folder.names]);
+  // Each staged file's clash: the same name, or a letter-case or Unicode
+  // twin the server would refuse (w2/113).
+  const clashes = useMemo(
+    () =>
+      new Map(
+        selectedFiles.map((file) => [
+          file,
+          existingNameFor(file.name, folder.names ?? []),
+        ]),
+      ),
+    [selectedFiles, folder.names],
+  );
 
   const refreshDirectory = useRefreshDirectory(ledgerId, dirPath);
   const [createFileMutation] = useMutation<
@@ -113,8 +128,8 @@ const UploadFilesPage = () => {
   const hasOversizedFiles = selectedFiles.some(
     (file) => file.size > MAX_FILE_SIZE,
   );
-  const hasExistingFiles = selectedFiles.some((file) =>
-    existingNames.has(file.name),
+  const hasExistingFiles = selectedFiles.some(
+    (file) => clashes.get(file) != null,
   );
   // Until the folder's names arrive, any chosen file might clash.
   const awaitsFolderCheck = selectedFiles.length > 0 && folder.names === null;
@@ -191,9 +206,12 @@ const UploadFilesPage = () => {
           },
         });
       } catch (error) {
+        const twin = portableTwinOf(error);
         const failure = {
           fileName: file.name,
-          reason: formatError(error),
+          reason: twin
+            ? t("ledgerEditor.fileExistsAs", { name: twin })
+            : formatError(error),
           uploaded,
         };
         setUploadFailure(failure);
@@ -396,7 +414,8 @@ const UploadFilesPage = () => {
               <div className="border rounded-lg divide-y">
                 {selectedFiles.map((file, index) => {
                   const isOversized = file.size > MAX_FILE_SIZE;
-                  const exists = existingNames.has(file.name);
+                  const existing = clashes.get(file) ?? null;
+                  const exists = existing !== null;
                   return (
                     <div
                       key={file.name}
@@ -423,7 +442,11 @@ const UploadFilesPage = () => {
                           <div className="flex items-center gap-1 text-destructive shrink-0">
                             <AlertCircle className="h-4 w-4" />
                             <span className="text-xs font-medium">
-                              {t("ledgerEditor.fileAlreadyExists")}
+                              {existing === file.name
+                                ? t("ledgerEditor.fileAlreadyExists")
+                                : t("ledgerEditor.fileExistsAs", {
+                                    name: existing,
+                                  })}
                             </span>
                           </div>
                         )}

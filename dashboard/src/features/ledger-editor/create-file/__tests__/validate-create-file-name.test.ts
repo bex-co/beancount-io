@@ -134,3 +134,16 @@ describe("createFileNameIssue", () => {
     expect(createFileNameIssue("a/b/c.bean", ["main.bean"])).toBe(null);
   });
 });
+
+describe("createFileNameIssue portable twins (w2/113)", () => {
+  it.each(["Main.bean", "MAIN.BEAN", "ma\u200bin.bean", " Main.bean "])(
+    "reports %j beside main.bean as a twin, not a new name",
+    (name) => {
+      expect(createFileNameIssue(name, ["main.bean"])).toBe("twin");
+    },
+  );
+
+  it("still reports the exact name as existing", () => {
+    expect(createFileNameIssue("main.bean", ["main.bean"])).toBe("exists");
+  });
+});

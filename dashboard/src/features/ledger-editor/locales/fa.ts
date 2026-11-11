@@ -28,6 +28,11 @@ const faLedgerEditor: Record<string, { message: string; description: string }> =
       message: "بارگذاری فایل‌ها",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.fileExistsAs": {
+      message: "از قبل در این پوشه با نام {name} وجود دارد",
+      description:
+        "A new file or upload whose name differs from an existing one only by letter case, Unicode form or an invisible character; {name} is the existing spelling",
+    },
   };
 
 export default {

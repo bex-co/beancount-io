@@ -28,8 +28,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { base64Encode } from "@/common/lib/utils/encode";
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
+import { toast } from "sonner";
 import CreateFilePage from "../index";
 
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 vi.unmock("@/common/hooks/use-translations");
 vi.unmock("react-i18next");
 const access = vi.hoisted(() => ({ canWrite: true }));
@@ -75,6 +77,7 @@ async function setup({
   language = "en" as "en" | "de",
   canWrite = true,
   failFirstSave = false,
+  twinOnSave = null as string | null,
 } = {}) {
   access.canWrite = canWrite;
   const mutations: Array<Record<string, unknown>> = [];
@@ -112,6 +115,18 @@ async function setup({
             mutations.push(operation.variables);
             if (failFirstSave && mutations.length === 1) {
               observer.error(new Error("Synthetic connection failure"));
+              return;
+            }
+            if (twinOnSave) {
+              observer.next({
+                errors: [
+                  {
+                    message: `File conflict: ${String(operation.variables.path)} already exists as ${twinOnSave}`,
+                    extensions: { code: "CONFLICT" },
+                  },
+                ],
+              });
+              observer.complete();
               return;
             }
             observer.next({
@@ -393,6 +408,42 @@ describe("Create File normalized targets through the real form and mutation", ()
       expect(mutations).toEqual([]);
     },
   );
+
+  // A macOS or Windows clone keeps one of two names that differ only by
+  // letter case or an invisible character; the server refuses the second
+  // (w21/770), and the form offered it with Save enabled (w2/113).
+  it.each(["Main.bean", "MAIN.BEAN", "ma\u200bin.bean"])(
+    "names main.bean as the existing spelling of %j and keeps Save disabled",
+    async (name) => {
+      const { filename, save, mutations, localization } = await setup();
+      fireEvent.change(filename(), { target: { value: name } });
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        localization.i18n.t("ledgerEditor.fileExistsAs", {
+          name: "main.bean",
+        }),
+      );
+      expect(save()).toBeDisabled();
+      fireEvent.click(save());
+      expect(mutations).toEqual([]);
+    },
+  );
+
+  it("names the twin the server refused instead of advising a refresh", async () => {
+    const { filename, save, mutations, localization } = await setup({
+      twinOnSave: "receipts",
+    });
+    // A nested path is checked only by the server.
+    fireEvent.change(filename(), { target: { value: "Receipts/new.bean" } });
+    await waitFor(() => expect(save()).toBeEnabled());
+    fireEvent.click(save());
+    await waitFor(() => expect(mutations).toHaveLength(1));
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        localization.i18n.t("ledgerEditor.fileExistsAs", { name: "receipts" }),
+      ),
+    );
+    expect(filename()).toHaveValue("Receipts/new.bean");
+  });
 
   it("cancels a clean form without a draft prompt", async () => {
     const { localization, mutations } = await setup();

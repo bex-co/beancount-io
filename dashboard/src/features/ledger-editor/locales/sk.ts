@@ -28,6 +28,11 @@ const skLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Nahrať súbory",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.fileExistsAs": {
+      message: "V tomto priečinku už existuje ako {name}",
+      description:
+        "A new file or upload whose name differs from an existing one only by letter case, Unicode form or an invisible character; {name} is the existing spelling",
+    },
   };
 
 export default {

@@ -27,6 +27,11 @@ const ukLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Завантажити файли",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.fileExistsAs": {
+      message: "Уже є в цій папці під назвою {name}",
+      description:
+        "A new file or upload whose name differs from an existing one only by letter case, Unicode form or an invisible character; {name} is the existing spelling",
+    },
   };
 
 export default {

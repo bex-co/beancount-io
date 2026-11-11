@@ -28,6 +28,11 @@ const frLedgerEditor: Record<string, { message: string; description: string }> =
       message: "Téléverser des fichiers",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.fileExistsAs": {
+      message: "Existe déjà dans ce dossier sous le nom {name}",
+      description:
+        "A new file or upload whose name differs from an existing one only by letter case, Unicode form or an invisible character; {name} is the existing spelling",
+    },
   };
 
 export default {

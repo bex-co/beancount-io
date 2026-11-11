@@ -1,9 +1,13 @@
+import { existingNameFor } from "../shared/lib/portable-path-key";
+
 export type CreateFileNameIssue =
   | "empty"
   | "unsafe"
   | "emptySegment"
   | "git"
   | "exists"
+  /** The folder holds the name in another letter case or Unicode form. */
+  | "twin"
   /** The folder's names are not known yet, so a clash cannot be ruled out. */
   | "unchecked"
   | null;
@@ -51,5 +55,6 @@ export function createFileNameIssue(
   // segment can collide with the current directory listing.
   if (trimmed.includes("/")) return null;
   if (existingNames === null) return "unchecked";
-  return existingNames.includes(trimmed) ? "exists" : null;
+  const existing = existingNameFor(trimmed, existingNames);
+  return existing === null ? null : existing === trimmed ? "exists" : "twin";
 }

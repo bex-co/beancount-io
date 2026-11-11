@@ -27,6 +27,11 @@ const zhLedgerEditor: Record<string, { message: string; description: string }> =
       message: "上传文件",
       description: "Tooltip for upload files button",
     },
+    "ledgerEditor.fileExistsAs": {
+      message: "此文件夹中已有名为 {name} 的同名文件",
+      description:
+        "A new file or upload whose name differs from an existing one only by letter case, Unicode form or an invisible character; {name} is the existing spelling",
+    },
   };
 
 export default {
