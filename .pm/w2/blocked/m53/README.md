@@ -53,3 +53,14 @@ required before release/archival. **Unblock:** normal Claude login, combined
 candidate rebase/version bump, affected both-client checks and green release
 CI, then close t007. **Owner:** client login by owner, verification/shipping by
 worker. This replaces the obsolete Codex quota blocker.
+
+**Recheck 2026-11-11** — Claude Code on the macOS checkout is now
+authenticated: `claude auth status` reports a claude.ai login and a
+non-interactive `claude -p` turn answers. That clears the login half of this
+block on that machine only. The candidates t007 combines (102, 103, m48) exist
+only on the Linux runtime, not in that checkout or on origin. Codex there
+refuses its configured model for the signed-in ChatGPT account, so the
+both-client check still cannot run on one machine. **Unblock (updated):** push
+the candidate branches to origin so the authenticated checkout can run the
+Claude checks, or authenticate Claude on the Linux runtime; then continue as
+above. **Who can clear it:** the operator with the Linux runtime.
