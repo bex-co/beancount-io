@@ -60,3 +60,15 @@ a successful authenticated Claude model turn, then implement/verify t003; t004�
 t009 depend on it. **Owner:** operator for login, then worker. Codex is available.
 No partial implementation is parked, and the receipt feature has not been
 waived, silently dropped or claimed complete.
+
+**Recheck 2026-11-11** — Claude Code on the macOS checkout is now
+authenticated: `claude auth status` reports a claude.ai login and a
+non-interactive `claude -p` turn answers. That clears the login half of this
+block on that machine only. No candidate is parked for t003, but its
+before/after routing runs need both clients on the tree being changed, and
+Codex runs only on the Linux runtime. Codex there refuses its configured model
+for the signed-in ChatGPT account, so the both-client check still cannot run
+on one machine. **Unblock (updated):** put both clients on one runtime —
+authenticate Claude on the Linux runtime, or make Codex runnable on the macOS
+checkout — then implement and verify t003. **Who can clear it:** the operator
+with the Linux runtime.
