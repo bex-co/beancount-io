@@ -71,7 +71,6 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
-- [236](./236.md) — `renameLedgerFile` reports every pre-existing error in the moved file as new on commit; its preview says none (MCP QA 2026-11-10)
 - [237](./237.md) — A 1000-entry `deleteEntrySources` batch overruns the write deadline, commits, and says "retry" (MCP QA 2026-11-10)
 
 
