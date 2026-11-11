@@ -147,6 +147,31 @@ export const fractionDigitsOf = (
 };
 
 /**
+ * A source decimal in the reader's locale, with exactly the fraction digits
+ * it was written with: `10500.00` reads `10.500,00` in German and `0.0040`
+ * stays `0.0040`, never rounded to a currency's minor units or padded. For
+ * surfaces that show what the ledger holds (Accounts, Statistics, postings,
+ * period data), where Overview's rounding would hide digits (w4/120) but a
+ * raw `10500.00` reads as another number in German (w2/119). With
+ * `render_commas` off the decimal is the ledger's own, as `formatNumber`
+ * writes it regardless of locale. Takes a plain decimal string
+ * (`parseDecimalNumber`).
+ */
+export const formatSourceDecimal = (
+  value: string,
+  renderCommas: boolean,
+  locale: string,
+): string => {
+  if (!renderCommas) return value;
+  const digits = fractionDigitsOf(value);
+  return numberFormat(locale, {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+    useGrouping: renderCommas,
+  }).format(value);
+};
+
+/**
  * Format a quantity, keeping the digits the ledger sent.
  *
  * The digit budget comes from the source decimal, so nothing is invented and

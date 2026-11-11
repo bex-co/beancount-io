@@ -69,7 +69,10 @@ vi.mock("@/common/hooks/use-ledger", () => ({
 }));
 
 vi.mock("@/common/hooks/use-translations", () => ({
-  useTranslations: () => ({ t: (key: string) => key }),
+  useTranslations: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en" },
+  }),
 }));
 
 vi.mock("@/common/components/related-links", () => ({

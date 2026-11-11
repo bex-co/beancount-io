@@ -27,7 +27,7 @@ import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-d
 import { useBlocker, useRouter } from "@tanstack/react-router";
 import { EntryContextPanel } from "@/features/journal/components/entry-context-panel";
 import { hasActiveMonacoWidget } from "@/features/journal/components/entry-editor-escape";
-import { Amount } from "@/common/components/amount";
+import { LedgerAmount } from "@/common/components/ledger-amount";
 
 interface EntryContextDialogProps {
   open: boolean;
@@ -128,7 +128,10 @@ function GeneratedEntryPanel({
                 </TableCell>
                 <TableCell className="font-mono text-sm text-end py-2">
                   {posting.units && (
-                    <Amount>{`${posting.units.number} ${posting.units.currency}`}</Amount>
+                    <LedgerAmount
+                      number={posting.units.number}
+                      currency={posting.units.currency}
+                    />
                   )}
                 </TableCell>
               </TableRow>

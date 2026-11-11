@@ -138,7 +138,7 @@ describe("AccountRow balance states", () => {
       entryCount: 528,
     });
 
-    expect(within(balanceCell).getByText("-8123.35 USD")).toBeInTheDocument();
+    expect(within(balanceCell).getByText("-8,123.35 USD")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", {
         name: "Actions for Liabilities:US:Chase:Slate",

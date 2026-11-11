@@ -18,6 +18,7 @@ import type { SupportedLanguage } from "@/i18n/config";
 import LedgerAccountsPage from "../index";
 import en from "../locales/en";
 import fa from "../locales/fa";
+import { formatSourceDecimal } from "@/common/lib/format/format-number";
 
 vi.unmock("react-i18next");
 vi.unmock("@/common/hooks/use-translations");
@@ -167,7 +168,12 @@ describe("Accounts table identity", () => {
       }
       expect(within(table).getAllByRole("row")).toHaveLength(3);
       expect(within(table).getAllByRole("cell")).toHaveLength(14);
-      expect(within(table).getAllByText("250.00 USD")).toHaveLength(2);
+      // The balance in the reader's digits, as Overview writes it (w2/119).
+      expect(
+        within(table).getAllByText(
+          `${formatSourceDecimal("250.00", true, language)} USD`,
+        ),
+      ).toHaveLength(2);
       expect(
         within(table).getByText(labels["page.accounts.closed"].message),
       ).toBeInTheDocument();

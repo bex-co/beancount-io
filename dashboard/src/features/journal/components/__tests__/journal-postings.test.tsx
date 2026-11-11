@@ -21,6 +21,7 @@ import type { SupportedLanguage } from "@/i18n/config";
 import { JournalPostings } from "../journal-postings";
 import en from "../../locales/en";
 import de from "../../locales/de";
+import { formatSourceDecimal } from "@/common/lib/format/format-number";
 
 vi.unmock("react-i18next");
 vi.unmock("@/common/hooks/use-translations");
@@ -155,15 +156,20 @@ describe("JournalPostings cost and price details", () => {
       ],
       "fa",
     );
+    // Amounts read in Persian digits, as Overview writes them (w2/119); the
+    // subject here is their isolation.
     for (const text of [
-      "-4 VEA",
-      "148.59 USD",
-      "145.72 USD",
-      "-0.00020000 BTC",
-      "64504.600000 USD",
-      "0.000000000000 USD",
-      "33.71 USD",
-    ]) {
+      ["-4", "VEA"],
+      ["148.59", "USD"],
+      ["145.72", "USD"],
+      ["-0.00020000", "BTC"],
+      ["64504.600000", "USD"],
+      ["0.000000000000", "USD"],
+      ["33.71", "USD"],
+    ].map(
+      ([number, currency]) =>
+        `${formatSourceDecimal(number!, true, "fa")} ${currency}`,
+    )) {
       const amounts = screen.getAllByText(text, { exact: true });
       // Both responsive copies carry the same isolated financial text.
       expect(amounts).toHaveLength(2);
@@ -188,8 +194,8 @@ describe("JournalPostings cost and price details", () => {
 
   it("retains the cost-only disposal beside quantity and its actual account navigation", async () => {
     const { user, router } = await setup([bitcoinDisposal]);
-    expectNarrowDetail("Cost: 64504.60 USD");
-    expectDesktopAmount("64504.60 USD");
+    expectNarrowDetail("Cost: 64,504.60 USD");
+    expectDesktopAmount("64,504.60 USD");
     expect(screen.queryByText(/^Price:/)).not.toBeInTheDocument();
     expect(screen.getAllByText("-0.20 BTC", { exact: true })).toHaveLength(2);
     const link = screen.getByRole("link", { name: bitcoinDisposal.account });
@@ -202,24 +208,24 @@ describe("JournalPostings cost and price details", () => {
       router.history.back();
       await router.load();
     });
-    await waitFor(() => expectNarrowDetail("Cost: 64504.60 USD"));
+    await waitFor(() => expectNarrowDetail("Cost: 64,504.60 USD"));
     expect(
       screen.getByRole("link", { name: bitcoinDisposal.account }),
     ).toBeInTheDocument();
   });
 
   it.each([
-    ["en", en],
-    ["de", de],
+    ["en", en, "148.59", "145.72"],
+    ["de", de, "148,59", "145,72"],
   ] as const)(
     "labels both cost and price distinctly in actual %s translations",
-    async (language, labels) => {
+    async (language, labels, costNumber, priceNumber) => {
       await setup([veaDisposal], language, { ledgerName: "example" });
       const cost = expectNarrowDetail(
-        `${labels["journal.postingCost"].message}: 148.59 USD`,
+        `${labels["journal.postingCost"].message}: ${costNumber} USD`,
       );
       const price = expectNarrowDetail(
-        `${labels["journal.price"].message}: 145.72 USD`,
+        `${labels["journal.price"].message}: ${priceNumber} USD`,
       );
       expect(cost).not.toBe(price);
       const row = screen.getByRole("listitem");
@@ -229,8 +235,8 @@ describe("JournalPostings cost and price details", () => {
         within(row).getByRole("link", { name: veaDisposal.account }),
       ).toBeInTheDocument();
       expect(screen.getAllByText("-4 VEA", { exact: true })).toHaveLength(2);
-      expectDesktopAmount("148.59 USD");
-      expectDesktopAmount("145.72 USD");
+      expectDesktopAmount(`${costNumber} USD`);
+      expectDesktopAmount(`${priceNumber} USD`);
     },
   );
 

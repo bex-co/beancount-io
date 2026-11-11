@@ -365,20 +365,22 @@ describe("AccountLastEntries balance precision", () => {
     expect(screen.queryByText("4.01 ETH")).not.toBeInTheDocument();
   });
 
+  // Every digit stays; a large amount is grouped in the reader's locale, as
+  // Overview writes it (w2/119).
   it.each([
-    ["0.072", "BTC"],
-    ["0.00000001", "BTC"],
-    ["1234567.891234", "USD"],
-    ["-2.000005", "ETH"],
-  ])("keeps %s %s exact", (amount, currency) => {
+    ["0.072", "BTC", "0.072"],
+    ["0.00000001", "BTC", "0.00000001"],
+    ["1234567.891234", "USD", "1,234,567.891234"],
+    ["-2.000005", "ETH", "-2.000005"],
+  ])("keeps %s %s exact", (amount, currency, shown) => {
     renderBalance({ [currency]: amount });
-    expect(screen.getByText(`${amount} ${currency}`)).toBeInTheDocument();
+    expect(screen.getByText(`${shown} ${currency}`)).toBeInTheDocument();
   });
 
   it("labels each currency of a multi-unit balance", () => {
     renderBalance({ ETH: "4.00995", USD: "1200.50" });
     expect(screen.getByText("4.00995 ETH")).toBeInTheDocument();
-    expect(screen.getByText("1200.50 USD")).toBeInTheDocument();
+    expect(screen.getByText("1,200.50 USD")).toBeInTheDocument();
   });
 
   it("tells a computed zero apart from an absent balance", () => {

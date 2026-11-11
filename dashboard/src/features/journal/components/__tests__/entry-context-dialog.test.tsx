@@ -71,6 +71,7 @@ vi.mock("@/common/hooks/use-translations", async () => {
           (placeholder, name: string) => params?.[name] ?? placeholder,
         );
       },
+      i18n: { language: mocks.language ?? "en" },
     }),
   };
 });
@@ -586,33 +587,50 @@ describe("EntryContextDialog", () => {
         flag: "P",
         entry: generatedEntry,
         explanation: "journal.generatedEntryExplanation",
-        rows: [
-          ["Assets:Cash", "10.00 USD"],
-          ["Equity:Opening-Balances", "-10.00 USD"],
-        ],
+        // Amounts in the reader's language, every source digit kept (w2/119).
+        rows: {
+          en: [
+            ["Assets:Cash", "10.00 USD"],
+            ["Equity:Opening-Balances", "-10.00 USD"],
+          ],
+          de: [
+            ["Assets:Cash", "10,00 USD"],
+            ["Equity:Opening-Balances", "-10,00 USD"],
+          ],
+        },
       },
       {
         flag: "S",
         entry: stockOpeningEntry,
         explanation: "journal.generatedOpeningExplanation",
-        rows: [
-          ["Assets:Brokerage:ACME", "150 ACME"],
-          ["Equity:Opening-Balances", "-10230.00 USD"],
-        ],
+        rows: {
+          en: [
+            ["Assets:Brokerage:ACME", "150 ACME"],
+            ["Equity:Opening-Balances", "-10,230.00 USD"],
+          ],
+          de: [
+            ["Assets:Brokerage:ACME", "150 ACME"],
+            ["Equity:Opening-Balances", "-10.230,00 USD"],
+          ],
+        },
       },
       {
         flag: "C",
         entry: conversionEntry,
         explanation: "journal.generatedConversionExplanation",
-        rows: [["Equity:Conversions:Current", "0.01663 USD"]],
+        rows: {
+          en: [["Equity:Conversions:Current", "0.01663 USD"]],
+          de: [["Equity:Conversions:Current", "0,01663 USD"]],
+        },
       },
     ];
 
     for (const language of ["en", "de"] as const) {
       it.each(generatedCases)(
         `names the generated $flag table and its columns in ${language} without a source read`,
-        ({ entry: generated, explanation, rows }) => {
+        ({ entry: generated, explanation, rows: byLanguage }) => {
           mocks.language = language;
+          const rows = byLanguage[language];
           const messages = language === "en" ? en : de;
           render(
             <EntryContextDialog
@@ -769,9 +787,9 @@ describe("EntryContextDialog", () => {
       // All four supplied postings are shown.
       expect(screen.getAllByText("Assets:Brokerage:ACME")).toHaveLength(2);
       expect(screen.getByText("150 ACME")).toBeInTheDocument();
-      expect(screen.getByText("-10230.00 USD")).toBeInTheDocument();
+      expect(screen.getByText("-10,230.00 USD")).toBeInTheDocument();
       expect(screen.getByText("100 ACME")).toBeInTheDocument();
-      expect(screen.getByText("-8460.00 USD")).toBeInTheDocument();
+      expect(screen.getByText("-8,460.00 USD")).toBeInTheDocument();
     });
 
     it("offers a writer no source, edit or delete on a generated opening balance", () => {

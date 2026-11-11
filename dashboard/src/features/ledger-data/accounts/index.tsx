@@ -50,7 +50,7 @@ import {
   OPEN_ACCOUNT_ACTION_SEARCH,
 } from "@/common/lib/ledger-action-search";
 import { normalizeListSearchText } from "@/common/lib/list-search-params";
-import { Amount } from "@/common/components/amount";
+import { LedgerAmount } from "@/common/components/ledger-amount";
 
 function getAccountType(account: string, accountTypes: string[]): string {
   return (
@@ -135,9 +135,10 @@ function BalanceCell({
             compact ? "max-w-full break-all" : "whitespace-nowrap",
           )}
         >
-          <Amount>
-            {String(amount)} {currency}
-          </Amount>
+          <LedgerAmount
+            number={amount as string | number}
+            currency={currency}
+          />
         </span>
       ))}
     </div>

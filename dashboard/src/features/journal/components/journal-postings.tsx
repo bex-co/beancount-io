@@ -1,8 +1,7 @@
 import type { JournalTransaction } from "@/common/types/journal";
 import { Link } from "@tanstack/react-router";
-import { formatAmountWithCurrency } from "./journal-description/utils";
+import { LedgerAmount } from "@/common/components/ledger-amount";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { Amount } from "@/common/components/amount";
 
 interface JournalPostingsProps {
   directive: JournalTransaction;
@@ -47,35 +46,53 @@ export function JournalPostings({
               )}
               {posting.units && (
                 <span className="mt-0.5 block text-muted-foreground sm:hidden">
-                  <Amount>{formatAmountWithCurrency(posting.units)}</Amount>
+                  <LedgerAmount
+                    number={posting.units.number}
+                    currency={posting.units.currency}
+                  />
                 </span>
               )}
               {posting.cost && (
                 <span className="mt-0.5 block text-muted-foreground sm:hidden">
                   {t("journal.postingCost")}:{" "}
-                  <Amount>{formatAmountWithCurrency(posting.cost)}</Amount>
+                  <LedgerAmount
+                    number={posting.cost.number}
+                    currency={posting.cost.currency}
+                  />
                 </span>
               )}
               {posting.price && (
                 <span className="mt-0.5 block text-muted-foreground sm:hidden">
                   {t("journal.price")}:{" "}
-                  <Amount>{formatAmountWithCurrency(posting.price)}</Amount>
+                  <LedgerAmount
+                    number={posting.price.number}
+                    currency={posting.price.currency}
+                  />
                 </span>
               )}
             </span>
             <span className="w-20 sm:w-32 text-end font-mono text-xs sm:text-sm hidden sm:block">
               {posting.units && (
-                <Amount>{formatAmountWithCurrency(posting.units)}</Amount>
+                <LedgerAmount
+                  number={posting.units.number}
+                  currency={posting.units.currency}
+                />
               )}
             </span>
             <span className="w-20 sm:w-32 text-end font-mono text-xs sm:text-sm hidden sm:block">
               {posting.cost && (
-                <Amount>{formatAmountWithCurrency(posting.cost)}</Amount>
+                <LedgerAmount
+                  number={posting.cost.number}
+                  currency={posting.cost.currency}
+                />
               )}
             </span>
             <span className="w-20 sm:w-32 text-end font-mono text-xs sm:text-sm hidden sm:block">
               {posting.price && (
-                <Amount>{formatAmountWithCurrency(posting.price)}</Amount>
+                <LedgerAmount
+                  number={posting.price.number}
+                  currency={posting.price.currency}
+                />
               )}
             </span>
           </div>

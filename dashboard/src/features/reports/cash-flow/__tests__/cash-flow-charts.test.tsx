@@ -152,7 +152,7 @@ describe("Cash Flow chart period data", () => {
         .map((header) => header.textContent),
     ).toEqual(["page.accountReport.period", "USD", "EUR"]);
     expect(rows(table)).toEqual([
-      ["2026-01-01", "2500.00 USD", "-10.50 EUR"],
+      ["2026-01-01", "2,500.00 USD", "-10.50 EUR"],
       // A unit absent from a period is the chart's plotted zero.
       ["2026-02-01", "100.00 USD", "0 EUR"],
     ]);
@@ -177,8 +177,8 @@ describe("Cash Flow chart period data", () => {
     expect(rows(table)).toEqual([
       [
         "2026-01-01",
-        "page.cashFlow.operating: 3500.00 USD" +
-          "page.cashFlow.investing: -1000.00 USD" +
+        "page.cashFlow.operating: 3,500.00 USD" +
+          "page.cashFlow.investing: -1,000.00 USD" +
           "page.cashFlow.financing: 0 USD",
       ],
       [

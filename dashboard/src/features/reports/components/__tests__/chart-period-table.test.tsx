@@ -11,6 +11,7 @@ import { ChartPeriodTable } from "../chart-period-table";
 
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
+    i18n: { language: "en" },
     t: (key: string) =>
       ({
         "page.accountReport.period": "Period",
@@ -62,12 +63,12 @@ describe("ChartPeriodTable", () => {
         .getAllByRole("columnheader")
         .map((h) => h.textContent?.trim()),
     ).toEqual(["Period", "Amount"]);
-    expect(rows()).toEqual([["2026-02-28", "14598 USD"]]);
+    expect(rows()).toEqual([["2026-02-28", "14,598 USD"]]);
   });
 
   it("reads a negative period change as it is plotted", () => {
     renderTable([{ date: "2026-02-28", balance: { USD: "-4092" } }]);
-    expect(rows()).toEqual([["2026-02-28", "-4092 USD"]]);
+    expect(rows()).toEqual([["2026-02-28", "-4,092 USD"]]);
   });
 
   it("lists every unit of a multi-commodity period without summing them", () => {
@@ -78,7 +79,7 @@ describe("ChartPeriodTable", () => {
     const amounts = within(screen.getByRole("table")).getAllByRole("row")[1];
     const cell = within(amounts).getAllByRole("cell")[1];
     // Each unit on its own line, and no combined total anywhere.
-    expect(cell.textContent).toContain("14598 USD");
+    expect(cell.textContent).toContain("14,598 USD");
     expect(cell.textContent).toContain("150 ACME");
     expect(cell.textContent).not.toContain("14748");
   });
@@ -171,6 +172,6 @@ describe("ChartPeriodTable", () => {
         />
       </>,
     );
-    expect(rows()).toEqual([["2016-12-31", "6377.23 USD"]]);
+    expect(rows()).toEqual([["2016-12-31", "6,377.23 USD"]]);
   });
 });

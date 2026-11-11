@@ -86,8 +86,8 @@ describe("LineChart exact quantities", () => {
     expect(plotted[0]).toBe(plotted[1]);
 
     expect(await periodRows()).toEqual([
-      "2016-01-319007199254740993.125 TOK",
-      "2016-02-299007199254740993.250 TOK",
+      "2016-01-319,007,199,254,740,993.125 TOK",
+      "2016-02-299,007,199,254,740,993.250 TOK",
     ]);
     expect(tooltipText("2016-01-31", "TOK", plotted[0]!)).toContain(
       "TOK: 9,007,199,254,740,993.125",
@@ -100,8 +100,8 @@ describe("LineChart exact quantities", () => {
   it("negates the exact quantity for an inverted chart", async () => {
     render2(large, true);
     expect(await periodRows()).toEqual([
-      "2016-01-31-9007199254740993.125 TOK",
-      "2016-02-29-9007199254740993.250 TOK",
+      "2016-01-31-9,007,199,254,740,993.125 TOK",
+      "2016-02-29-9,007,199,254,740,993.250 TOK",
     ]);
     expect(tooltipText("2016-01-31", "TOK", -1)).toContain(
       "TOK: -9,007,199,254,740,993.125",

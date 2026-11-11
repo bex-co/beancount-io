@@ -22,6 +22,7 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { formatDecimalCell } from "@/common/lib/format/inventory-cell";
 import { StatisticsErrorState, StatisticsSection } from "./statistics-section";
+import { LedgerAmount } from "@/common/components/ledger-amount";
 
 /**
  * Format a balance map for display.
@@ -38,10 +39,9 @@ function formatBalance(balance: Record<string, unknown> | null): ReactNode {
   if (entries.length === 0) return "0";
 
   return entries.map(([currency, amount]) => (
-    <span
-      key={currency}
-      className="block"
-    >{`${formatDecimalCell(amount)} ${currency}`}</span>
+    <span key={currency} className="block">
+      <LedgerAmount number={formatDecimalCell(amount)} currency={currency} />
+    </span>
   ));
 }
 

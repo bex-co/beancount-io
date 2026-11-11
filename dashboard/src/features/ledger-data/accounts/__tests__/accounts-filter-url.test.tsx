@@ -129,7 +129,10 @@ vi.mock("@/common/hooks/use-apollo-cache", () => ({
 }));
 
 vi.mock("@/common/hooks/use-translations", () => ({
-  useTranslations: () => ({ t: (key: string) => key }),
+  useTranslations: () => ({
+    t: (key: string) => key,
+    i18n: { language: "en" },
+  }),
 }));
 
 vi.mock("../open-account-dialog", () => ({

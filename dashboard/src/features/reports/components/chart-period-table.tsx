@@ -6,8 +6,8 @@ import {
   TableRow,
 } from "@/common/components/ui/table";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { Amount } from "@/common/components/amount";
 import { ChartDataTable } from "./chart-data-table";
+import { LedgerAmount } from "@/common/components/ledger-amount";
 
 /** A plotted point: a date and whatever units it holds. */
 interface ChartPeriodPoint {
@@ -96,9 +96,10 @@ export function ChartPeriodTable({
                     {segments.map((item, segment) => (
                       <div key={segment} className="whitespace-nowrap">
                         {item.account && <span>{item.account}: </span>}
-                        <Amount>
-                          {String(item.values[index])} {unit}
-                        </Amount>
+                        <LedgerAmount
+                          number={item.values[index]!}
+                          currency={unit}
+                        />
                       </div>
                     ))}
                   </TableCell>
@@ -119,9 +120,10 @@ export function ChartPeriodTable({
                   ? "—"
                   : balances.map(([currency, value]) => (
                       <div key={currency} className="whitespace-nowrap">
-                        <Amount>
-                          {String(value)} {currency}
-                        </Amount>
+                        <LedgerAmount
+                          number={value as string | number}
+                          currency={currency}
+                        />
                       </div>
                     ))}
               </TableCell>

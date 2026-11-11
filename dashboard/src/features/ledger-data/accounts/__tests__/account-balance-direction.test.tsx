@@ -27,6 +27,8 @@ import { accountsActionSearchSchema } from "@/common/lib/ledger-action-search";
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
 import LedgerAccountsPage from "../index";
+import { formatSourceDecimal } from "@/common/lib/format/format-number";
+import { parseDecimalNumber } from "@/common/lib/beancount/decimal-number";
 
 vi.unmock("@/common/hooks/use-translations");
 vi.unmock("react-i18next");
@@ -57,12 +59,23 @@ vi.mock("../delete-account-dialog", () => ({
 }));
 
 const accountName = "Assets:بانک:جاری";
-const amounts = [
-  "-33.71 USD",
-  "+100.2500 EUR",
-  "0.0000000000000000000123456789 ETH",
-  "9007199254740993.0000000001 BTC",
-];
+/**
+ * Each balance as the reader's language writes it: grouped and in its digits,
+ * with every source digit kept (w2/119). The subject here is isolation; the
+ * formatting itself is pinned in `ledger-amount.test.tsx`.
+ */
+const amountsIn = (language: string) =>
+  (
+    [
+      ["-33.71", "USD"],
+      ["+100.2500", "EUR"],
+      ["0.0000000000000000000123456789", "ETH"],
+      ["9007199254740993.0000000001", "BTC"],
+    ] as const
+  ).map(
+    ([number, currency]) =>
+      `${formatSourceDecimal(parseDecimalNumber(number)!, true, language)} ${currency}`,
+  );
 const accounts = [
   {
     __typename: "LedgerAccountItem",
@@ -165,7 +178,7 @@ describe("account balance reading direction", () => {
       const { table, account, row } = await setup(language);
       const context = screen.getByTestId("reading-context");
       expect(context).toHaveAttribute("dir", language === "fa" ? "rtl" : "ltr");
-      for (const text of amounts) {
+      for (const text of amountsIn(language)) {
         const copies = within(row).getAllByText(text);
         expect(copies).toHaveLength(2);
         for (const amount of copies) {
@@ -195,7 +208,7 @@ describe("account balance reading direction", () => {
       expect(row).not.toHaveAttribute("role");
       expect(row).not.toHaveAttribute("tabindex");
       expect(within(row).getAllByRole("cell")[5].textContent).toBe(
-        amounts.join(""),
+        amountsIn(language).join(""),
       );
       const emptyRow = within(table)
         .getByRole("button", { name: "Assets:Empty" })
@@ -251,21 +264,21 @@ describe("compact Accounts balances", () => {
       expect(compact.parentElement?.querySelector("dt")).toHaveTextContent(
         language === "fa" ? "موجودی" : "Balance",
       );
-      expect(compact.textContent).toBe(amounts.join(""));
+      expect(compact.textContent).toBe(amountsIn(language).join(""));
       expect(
         account.compareDocumentPosition(compact) &
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
       const desktop = within(row).getAllByRole("cell")[5];
       expect(desktop).toHaveClass("hidden", "@xl:table-cell");
-      expect(desktop.textContent).toBe(amounts.join(""));
-      for (const text of amounts) {
+      expect(desktop.textContent).toBe(amountsIn(language).join(""));
+      for (const text of amountsIn(language)) {
         const compactAmount = within(compact).getByText(text);
         expect(compactAmount.closest('bdi[dir="ltr"]')?.textContent).toBe(text);
       }
       for (const [name, text] of [
         ["Assets:Empty", "-"],
-        ["Assets:Zero", "0.00 USD"],
+        ["Assets:Zero", `${formatSourceDecimal("0.00", true, language)} USD`],
         ["Income:Salary", language === "fa" ? "محاسبه نشده" : "Not computed"],
       ]) {
         const stateRow = within(table)
