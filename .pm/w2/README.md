@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [125 — In Persian, counts across the ledger pages print Latin digits, sometimes beside Persian ones](./125.md) — dashboard QA 2026-11-10
 - [124 — Billing's usage card counts AI tokens as "requests" in Japanese and Korean, and prints the Persian ledger count in Latin digits](./124.md) — dashboard QA 2026-11-10
 - [123 — New Entry and Add Budget throw away a typed draft on Escape, Close or one click outside](./123.md) — dashboard QA 2026-11-10
 - [122 — Smart Import books the same CSV twice without noticing](./122.md) — dashboard QA 2026-11-10; may need promotion to a milestone
