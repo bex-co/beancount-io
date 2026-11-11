@@ -100,7 +100,16 @@ export const ListItem = ({
     >
       <View style={styles.textWrap}>
         {title && (
-          <Text key={`title-${fontScale}`} style={styles.title}>
+          // A caption is a label: one line that shrinks to fit before it breaks.
+          // German "ZAHLUNGSEMPFÄNGER" is one 17-letter word, and at AX2 iOS
+          // broke it by character, leaving a lone "R" (w22/033).
+          <Text
+            key={`title-${fontScale}`}
+            style={styles.title}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
             {title}
           </Text>
         )}
