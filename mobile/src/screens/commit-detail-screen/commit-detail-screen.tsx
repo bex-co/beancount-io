@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -210,6 +211,8 @@ function SkeletonRows(): JSX.Element {
 
 function DiffLineView({ line }: { line: DiffLine }): JSX.Element {
   const styles = useThemeStyle(getStyles);
+  // Re-measures the line after a live text-size change (w22/020).
+  const { fontScale } = useWindowDimensions();
   const rowStyle =
     line.type === "added"
       ? styles.diffLineAdded
@@ -218,7 +221,7 @@ function DiffLineView({ line }: { line: DiffLine }): JSX.Element {
         : styles.diffLineContext;
   return (
     <View style={rowStyle}>
-      <Text style={styles.diffText} selectable>
+      <Text key={fontScale} style={styles.diffText} selectable>
         {isolateSourceLine(diffLineText(line.content))}
       </Text>
     </View>
@@ -234,6 +237,8 @@ function CommitDetailScreenImpl({
 }): JSX.Element {
   const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
+  // Keys re-measure the Texts after a live text-size change (w22/020).
+  const { fontScale } = useWindowDimensions();
 
   const { data, loading, error, refetch } = useGetCommitDetailsQuery({
     variables: { ledgerId, sha },
@@ -276,7 +281,9 @@ function CommitDetailScreenImpl({
             "failed" ? (
               <CardLoadFailure onRetry={() => refetch()} />
             ) : (
-              <Text style={styles.emptyText}>{t("commitDetailNoDiff")}</Text>
+              <Text key={`no-commit-${fontScale}`} style={styles.emptyText}>
+                {t("commitDetailNoDiff")}
+              </Text>
             )}
           </FadeInView>
         ) : (
@@ -286,13 +293,15 @@ function CommitDetailScreenImpl({
             <ScrollView contentContainerStyle={contentColumn}>
               {/* Summary */}
               <View style={styles.section}>
-                <Text style={styles.messageLine}>
+                <Text key={`message-${fontScale}`} style={styles.messageLine}>
                   {message.subject || t("commitNoMessage")}
                 </Text>
                 {message.body !== null && (
-                  <Text style={styles.messageBody}>{message.body}</Text>
+                  <Text key={`body-${fontScale}`} style={styles.messageBody}>
+                    {message.body}
+                  </Text>
                 )}
-                <Text style={styles.metaLine}>
+                <Text key={`meta-${fontScale}`} style={styles.metaLine}>
                   {t("commitDetailAuthor")}:{" "}
                   {formatCommitAuthorLine(
                     commit.author.name,
@@ -305,7 +314,11 @@ function CommitDetailScreenImpl({
 
               {/* Stats */}
               <View style={styles.section}>
-                <Text style={styles.sectionLabel} accessibilityRole="header">
+                <Text
+                  key={`stats-label-${fontScale}`}
+                  style={styles.sectionLabel}
+                  accessibilityRole="header"
+                >
                   {t("commitDetailStats")}
                 </Text>
                 {/* One element, so VoiceOver reads its words, not "+12" and
@@ -319,10 +332,10 @@ function CommitDetailScreenImpl({
                     count: commit.stats.deletions,
                   })}`}
                 >
-                  <Text style={styles.additions}>
+                  <Text key={`additions-${fontScale}`} style={styles.additions}>
                     +{commit.stats.additions}
                   </Text>
-                  <Text style={styles.deletions}>
+                  <Text key={`deletions-${fontScale}`} style={styles.deletions}>
                     −{commit.stats.deletions}
                   </Text>
                 </View>
@@ -334,6 +347,7 @@ function CommitDetailScreenImpl({
                 <>
                   <View style={styles.section}>
                     <Text
+                      key={`files-label-${fontScale}`}
                       style={styles.sectionLabel}
                       accessibilityRole="header"
                     >
@@ -353,18 +367,26 @@ function CommitDetailScreenImpl({
                       >
                         <View style={styles.fileRow}>
                           <Text
+                            key={`file-name-${fontScale}`}
                             style={styles.fileName}
                             numberOfLines={1}
                             ellipsizeMode="middle"
                           >
                             {isolatePath(f.filename)}
                           </Text>
-                          <Text style={styles.fileStats}>
+                          <Text
+                            key={`file-stats-${fontScale}`}
+                            style={styles.fileStats}
+                          >
                             +{f.additions} −{f.deletions}
                           </Text>
                         </View>
                         {f.status !== "modified" && (
-                          <Text style={styles.fileStatus} numberOfLines={1}>
+                          <Text
+                            key={`file-status-${fontScale}`}
+                            style={styles.fileStatus}
+                            numberOfLines={1}
+                          >
                             {fileStatusText(f, t)}
                           </Text>
                         )}
@@ -377,7 +399,11 @@ function CommitDetailScreenImpl({
 
               {/* Diff */}
               <View style={styles.section}>
-                <Text style={styles.sectionLabel} accessibilityRole="header">
+                <Text
+                  key={`diff-label-${fontScale}`}
+                  style={styles.sectionLabel}
+                  accessibilityRole="header"
+                >
                   {t("commitDetailDiff")}
                 </Text>
               </View>
@@ -407,7 +433,10 @@ function CommitDetailScreenImpl({
                       }
                       accessibilityRole="button"
                     >
-                      <Text style={styles.showMoreText}>
+                      <Text
+                        key={`show-more-${fontScale}`}
+                        style={styles.showMoreText}
+                      >
                         {t("commitDetailShowMore", {
                           count: nextDiffChunk(shown, diffLines.length),
                         })}
@@ -419,7 +448,7 @@ function CommitDetailScreenImpl({
                 // Outside the horizontal scroller, which sized the panel to
                 // its text: the empty state spans the row (w0/032).
                 <View style={styles.diffContainer}>
-                  <Text style={styles.emptyText}>
+                  <Text key={`no-diff-${fontScale}`} style={styles.emptyText}>
                     {t("commitDetailNoDiff")}
                   </Text>
                 </View>

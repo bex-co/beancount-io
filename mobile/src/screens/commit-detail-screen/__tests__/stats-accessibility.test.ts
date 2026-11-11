@@ -24,7 +24,7 @@ describe("commit detail's Stats row", () => {
   it("keeps its heading an element of its own", () => {
     expect(
       screen.includes(
-        '<Viewstyle={styles.section}><Textstyle={styles.sectionLabel}accessibilityRole="header">{t("commitDetailStats")}',
+        '<Viewstyle={styles.section}><Textkey={`stats-label-${fontScale}`}style={styles.sectionLabel}accessibilityRole="header">{t("commitDetailStats")}',
       ),
     ).toBe(true);
   });

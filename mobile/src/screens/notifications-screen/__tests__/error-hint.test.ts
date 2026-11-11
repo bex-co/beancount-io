@@ -56,7 +56,9 @@ describe("an error's fix hint", () => {
     expect(
       squash(
         read("screens/notifications-screen/notifications-screen.tsx"),
-      ).includes("<Textstyle={styles.errorHint}>{errorHint(err)}</Text>"),
+      ).includes(
+        "<Textkey={`error-hint-${fontScale}`}style={styles.errorHint}>{errorHint(err)}</Text>",
+      ),
     ).toBe(true);
     const editor = squash(read("screens/ledger-file-editor-screen/index.tsx"));
     expect(

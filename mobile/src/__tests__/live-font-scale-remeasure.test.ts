@@ -531,6 +531,46 @@ const KEYED_TEXTS: [string, string[]][] = [
       "{styles.toggleHelper}",
     ],
   ],
+  // Notifications: the two section titles, the ledger-error rows, the healthy
+  // and no-changes lines, Show more, every commit row and Show older (w22/020).
+  [
+    "screens/notifications-screen/notifications-screen.tsx",
+    [
+      "{styles.errorMessage}",
+      "{styles.errorHint}",
+      "{styles.errorLocation}",
+      "{styles.sectionHeader}",
+      "{styles.sectionHeader}",
+      "{styles.emptyText}",
+      "{styles.emptyText}",
+      "{styles.showMoreText}",
+      "{styles.changeMessage}",
+      "{styles.changeMeta}",
+      "{styles.olderText}",
+    ],
+  ],
+  // Commit detail: the summary, the three section labels, the stats, the file
+  // rows, Show more and every diff line (w22/020).
+  [
+    "screens/commit-detail-screen/commit-detail-screen.tsx",
+    [
+      "{styles.diffText}",
+      "{styles.emptyText}",
+      "{styles.emptyText}",
+      "{styles.messageLine}",
+      "{styles.messageBody}",
+      "{styles.metaLine}",
+      "{styles.sectionLabel}",
+      "{styles.sectionLabel}",
+      "{styles.sectionLabel}",
+      "{styles.additions}",
+      "{styles.deletions}",
+      "{styles.fileName}",
+      "{styles.fileStats}",
+      "{styles.fileStatus}",
+      "{styles.showMoreText}",
+    ],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",

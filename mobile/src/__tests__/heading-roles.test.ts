@@ -86,10 +86,11 @@ describe("section and card titles are headings", () => {
           .includes('accessibilityRole="header"'),
       ).toBe(true);
     }
-    // The second title ("Recent changes") shares the style and the role.
+    // The second title ("Recent changes") shares the style and the role. Each
+    // carries its own font-scale key (w22/020), so the key is left out here.
     expect(
       notifications.split(
-        '<Textstyle={styles.sectionHeader}accessibilityRole="header">',
+        'style={styles.sectionHeader}accessibilityRole="header">',
       ).length,
     ).toBe(3);
     expect(

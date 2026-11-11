@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -211,6 +212,8 @@ function ErrorRow({
   const styles = useThemeStyle(getStyles);
   const canFix = !!err.filename;
   const { t } = useTranslations();
+  // Keys re-measure the Texts after a live text-size change (w22/020).
+  const { fontScale } = useWindowDimensions();
   const toast = useToast();
   // A long press, or VoiceOver's actions rotor, copies the message with its
   // place (w21/432).
@@ -234,14 +237,23 @@ function ErrorRow({
   const inner = (
     <View style={styles.errorRow}>
       <View style={styles.errorContent}>
-        <Text style={styles.errorMessage} selectable={!canFix}>
+        <Text
+          key={`error-message-${fontScale}`}
+          style={styles.errorMessage}
+          selectable={!canFix}
+        >
           {err.message}
         </Text>
         {errorHint(err) && (
-          <Text style={styles.errorHint}>{errorHint(err)}</Text>
+          <Text key={`error-hint-${fontScale}`} style={styles.errorHint}>
+            {errorHint(err)}
+          </Text>
         )}
         {err.filename && (
-          <Text style={styles.errorLocation}>
+          <Text
+            key={`error-location-${fontScale}`}
+            style={styles.errorLocation}
+          >
             {isolatePath(formatErrorLocation(err))}
           </Text>
         )}
@@ -280,6 +292,8 @@ function ErrorRow({
 
 function NotificationsScreenImpl(): JSX.Element {
   const { t, locale } = useTranslations();
+  // Keys re-measure the Texts after a live text-size change (w22/020).
+  const { fontScale } = useWindowDimensions();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
 
@@ -414,7 +428,11 @@ function NotificationsScreenImpl(): JSX.Element {
             />
           }
         >
-          <Text style={styles.sectionHeader} accessibilityRole="header">
+          <Text
+            key={`errors-section-${fontScale}`}
+            style={styles.sectionHeader}
+            accessibilityRole="header"
+          >
             {t("notificationsErrorsSection")}
           </Text>
           <View style={styles.divider} />
@@ -434,7 +452,7 @@ function NotificationsScreenImpl(): JSX.Element {
                     size={18}
                     color={theme.success}
                   />
-                  <Text style={styles.emptyText}>
+                  <Text key={`healthy-${fontScale}`} style={styles.emptyText}>
                     {t("notificationsLedgerHealthy")}
                   </Text>
                 </View>
@@ -455,7 +473,10 @@ function NotificationsScreenImpl(): JSX.Element {
                       }
                       accessibilityRole="button"
                     >
-                      <Text style={styles.showMoreText}>
+                      <Text
+                        key={`show-more-${fontScale}`}
+                        style={styles.showMoreText}
+                      >
                         {t("notificationsShowMoreErrors", {
                           count: Math.min(
                             ERRORS_PAGE,
@@ -470,7 +491,11 @@ function NotificationsScreenImpl(): JSX.Element {
             </FadeInView>
           )}
 
-          <Text style={styles.sectionHeader} accessibilityRole="header">
+          <Text
+            key={`changes-section-${fontScale}`}
+            style={styles.sectionHeader}
+            accessibilityRole="header"
+          >
             {t("notificationsChangesSection")}
           </Text>
           <View style={styles.divider} />
@@ -487,7 +512,10 @@ function NotificationsScreenImpl(): JSX.Element {
                 <CardLoadFailure onRetry={() => refetchCommits()} />
               ) : commits.length === 0 ? (
                 <View style={styles.emptyRow}>
-                  <Text style={styles.emptyText}>
+                  <Text
+                    key={`no-changes-${fontScale}`}
+                    style={styles.emptyText}
+                  >
                     {t("notificationsNoChanges")}
                   </Text>
                 </View>
@@ -513,10 +541,17 @@ function NotificationsScreenImpl(): JSX.Element {
                       }
                     >
                       <View style={styles.changeContent}>
-                        <Text style={styles.changeMessage} numberOfLines={2}>
+                        <Text
+                          key={`change-message-${fontScale}`}
+                          style={styles.changeMessage}
+                          numberOfLines={2}
+                        >
                           {commit.subject || t("commitNoMessage")}
                         </Text>
-                        <Text style={styles.changeMeta}>
+                        <Text
+                          key={`change-meta-${fontScale}`}
+                          style={styles.changeMeta}
+                        >
                           {formatCommitAuthorLine(
                             commit.author.name,
                             commit.author.date,
@@ -561,7 +596,7 @@ function NotificationsScreenImpl(): JSX.Element {
                 disabled: loadingOlder,
               }}
             >
-              <Text style={styles.olderText}>
+              <Text key={`older-${fontScale}`} style={styles.olderText}>
                 {t("notificationsShowOlder")}
               </Text>
             </TouchableOpacity>
