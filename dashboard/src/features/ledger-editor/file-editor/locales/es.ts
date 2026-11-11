@@ -57,6 +57,37 @@ const esFileEditor: Record<string, { message: string; description: string }> = {
     message: "Archivo guardado exitosamente",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "Este archivo cambió desde que lo abrió, así que su edición no se guardó. Copie su edición, cargue la versión más reciente y aplíquela allí.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "Copiar mi edición",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "Cargar la más reciente",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "¿Reemplazar su edición por la versión más reciente?",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "El editor mostrará el archivo tal como está ahora. Su edición sin guardar se perderá si no la copió.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "Reemplazar mi edición",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "Plegar Todo",
     description: "Menu item to fold all sections in editor",

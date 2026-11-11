@@ -57,6 +57,37 @@ const caFileEditor: Record<string, { message: string; description: string }> = {
     message: "Fitxer guardat correctament",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "Aquest fitxer ha canviat des que l’heu obert, així que la vostra edició no s’ha desat. Copieu-la, carregueu la versió més recent i apliqueu-la-hi.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "Copia la meva edició",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "Carrega la més recent",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "Voleu substituir la vostra edició per la versió més recent?",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "L’editor mostrarà el fitxer tal com és ara. La vostra edició no desada es perdrà si no l’heu copiada.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "Substitueix la meva edició",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "Plegar tot",
     description: "Menu item to fold all sections in editor",

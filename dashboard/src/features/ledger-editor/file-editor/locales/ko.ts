@@ -54,6 +54,37 @@ const koFileEditor: Record<string, { message: string; description: string }> = {
     message: "파일이 성공적으로 저장되었습니다",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "파일을 연 뒤에 이 파일이 변경되어 편집 내용이 저장되지 않았습니다. 편집 내용을 복사한 다음 최신 버전을 불러와 그곳에 적용하세요.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "내 편집 내용 복사",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "최신 버전 불러오기",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "편집 내용을 최신 버전으로 바꿀까요?",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "편집기에 현재 상태의 파일이 표시됩니다. 복사하지 않았다면 저장하지 않은 편집 내용은 사라집니다.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "내 편집 내용 바꾸기",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "모두 접기",
     description: "Menu item to fold all sections in editor",

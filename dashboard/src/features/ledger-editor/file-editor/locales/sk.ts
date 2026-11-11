@@ -57,6 +57,37 @@ const skFileEditor: Record<string, { message: string; description: string }> = {
     message: "Súbor bol úspešne uložený",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "Tento súbor sa od otvorenia zmenil, preto sa vaša úprava neuložila. Skopírujte si úpravu, potom načítajte najnovšiu verziu a použite ju v nej.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "Kopírovať moju úpravu",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "Načítať najnovšiu",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "Nahradiť vašu úpravu najnovšou verziou?",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "Editor zobrazí súbor v aktuálnom stave. Neuložená úprava sa stratí, ak ste si ju neskopírovali.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "Nahradiť moju úpravu",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "Zbaliť všetko",
     description: "Menu item to fold all sections in editor",

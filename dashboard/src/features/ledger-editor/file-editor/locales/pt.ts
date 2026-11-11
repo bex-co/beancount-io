@@ -57,6 +57,37 @@ const ptFileEditor: Record<string, { message: string; description: string }> = {
     message: "Arquivo salvo com sucesso",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "Este arquivo mudou desde que você o abriu, então sua edição não foi salva. Copie sua edição, carregue a versão mais recente e aplique-a nela.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "Copiar minha edição",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "Carregar a mais recente",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "Substituir sua edição pela versão mais recente?",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "O editor mostrará o arquivo como está agora. Sua edição não salva será perdida, a menos que você a tenha copiado.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "Substituir minha edição",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "Recolher Tudo",
     description: "Menu item to fold all sections in editor",

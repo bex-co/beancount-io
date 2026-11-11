@@ -42,6 +42,7 @@ import {
 } from "./file-loading-error-views";
 import { FileContentView } from "./file-content-view";
 import { deleteRefusalIncluders } from "./delete-refusal";
+import { isSaveConflict } from "./save-conflict";
 
 type FileRevision = NonNullable<GetLedgerFileQuery["getLedgerFile"]>;
 
@@ -175,8 +176,10 @@ export default function LedgerFileView({
           sha: base.sha,
           message: t("ledgerEditor.updateFileCommit", { path: filePath }),
         },
+        // A conflict is the editor's to explain: it keeps the draft and
+        // offers to copy it or load the latest revision (w2/110).
         onError: (error) => {
-          toast.error(formatError(error));
+          if (!isSaveConflict(error)) toast.error(formatError(error));
         },
         // The write has landed, so say so now. Revalidating the ledger costs
         // another round trip, so the new-error check runs behind the success
@@ -203,6 +206,12 @@ export default function LedgerFileView({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // The file as it is now, for an editor whose save was overtaken.
+  const handleLoadLatest = async () => {
+    const result = await refetch();
+    return result.data?.getLedgerFile ?? undefined;
   };
 
   // One in-flight delete per file view: a second confirmation cannot
@@ -326,6 +335,7 @@ export default function LedgerFileView({
         filePath={filePath}
         fileContent={fileContent}
         onSave={handleSaveFile}
+        onLoadLatest={handleLoadLatest}
         onDelete={
           isRootLedgerFile(filePath) ? undefined : () => handleDeleteFile()
         }

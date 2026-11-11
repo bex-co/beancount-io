@@ -1,10 +1,22 @@
 import type { FileError } from "./text-editor-utils";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import type * as monaco from "monaco-editor";
+import { toast } from "sonner";
 import type { GetLedgerFileQuery } from "@/graphql/definitions";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { base64Decode } from "@/common/lib/utils/encode";
 import { cn } from "@/common/lib/utils/utils";
+import { useTranslations } from "@/common/hooks/use-translations";
+import { Alert, AlertDescription } from "@/common/components/ui/alert";
+import { Button } from "@/common/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/common/components/ui/dialog";
 import { getFilename } from "../../../shared/lib/utils";
 import { useNormalizedLineNumber } from "../../hooks/use-normalized-line-number";
 import LedgerFileBreadcrumb from "../../../shared/components/ledger-file-breadcrumb";
@@ -12,6 +24,7 @@ import { FileMetadataBar } from "../non-text-file-views";
 import { TextEditor } from "./text-editor";
 import { ViewModeActions } from "./file-view-mode";
 import { EditModeToolbar } from "./file-edit-mode";
+import { isSaveConflict } from "./save-conflict";
 
 type FileRevision = NonNullable<GetLedgerFileQuery["getLedgerFile"]>;
 
@@ -20,6 +33,8 @@ export interface TextFileViewProps {
   fileContent: FileRevision;
   /** Saves `content` against `base`, the revision it was edited from. */
   onSave: (content: string, base: FileRevision) => Promise<void>;
+  /** Reads the file as it is now, after a save another write overtook. */
+  onLoadLatest?: () => Promise<FileRevision | undefined>;
   /** Absent when the file cannot be deleted (the ledger's root main.bean). */
   onDelete?: () => void | Promise<void>;
   isSaving: boolean;
@@ -44,6 +59,7 @@ export const TextFileView = ({
   filePath,
   fileContent,
   onSave,
+  onLoadLatest,
   onDelete,
   isSaving,
   isEditMode,
@@ -53,6 +69,7 @@ export const TextFileView = ({
   onEnterEditMode,
   onExitEditMode,
 }: TextFileViewProps) => {
+  const { t } = useTranslations();
   const { canWrite } = useLedgerPermission();
   const canEdit = canWrite && !readOnly;
   // A URL request cannot enable editing for a content-sniffed preview.
@@ -98,6 +115,23 @@ export const TextFileView = ({
     () => (base.content ? base64Decode(base.content) : ""),
     [base.content],
   );
+
+  // A save another write overtook keeps its draft on its old base: saving
+  // again would be refused the same way (w2/110). The notice stays until the
+  // reader saves, discards, or loads the latest revision, which replaces the
+  // draft only once that revision has reached this view.
+  const [conflict, setConflict] = useState(false);
+  const [confirmLoadLatest, setConfirmLoadLatest] = useState(false);
+  const [loadingLatest, setLoadingLatest] = useState(false);
+  const [adoptSha, setAdoptSha] = useState<string | null>(null);
+  if (adoptSha !== null && fileContent.sha === adoptSha) {
+    setAdoptSha(null);
+    setBase(fileContent);
+    setEditedContent(plainContent);
+    setConflict(false);
+    setConfirmLoadLatest(false);
+  }
+
   if (base.sha !== fileContent.sha || base.content !== fileContent.content) {
     const hasDraft = editedContent !== basePlain;
     if (readOnly || !requestedEditMode || !hasDraft) {
@@ -173,10 +207,12 @@ export const TextFileView = ({
           await onSave(contentToSave, base);
         }
         savedExitRef.current = true;
+        setConflict(false);
         onExitEditMode();
-      } catch {
+      } catch (error) {
         // Keep the draft and release the guard so the user can retry.
-        // Parent save handlers already surface the failure (toast).
+        // Parent save handlers surface other failures (toast).
+        if (isSaveConflict(error)) setConflict(true);
       } finally {
         saveInFlightRef.current = false;
         setSavePending(false);
@@ -195,7 +231,22 @@ export const TextFileView = ({
   const handleDiscardEdit = useCallback(() => {
     setBase(fileContent);
     setEditedContent(plainContent);
+    setConflict(false);
   }, [fileContent, plainContent]);
+
+  const handleLoadLatest = async () => {
+    if (loadingLatest) return;
+    setLoadingLatest(true);
+    try {
+      const latest = (await onLoadLatest?.()) ?? fileContent;
+      setAdoptSha(latest.sha);
+    } catch {
+      // The refresh-failed toast reports it; the draft and notice stay.
+      setConfirmLoadLatest(false);
+    } finally {
+      setLoadingLatest(false);
+    }
+  };
 
   const handleEditorContentChange = useCallback(
     (value: string) => {
@@ -234,6 +285,78 @@ export const TextFileView = ({
           )}
         </div>
       </div>
+      {effectiveEditMode && conflict && (
+        <Alert variant="destructive" className="mb-2 sm:mb-4">
+          <AlertDescription className="space-y-3">
+            <p>{t("ledgerEditor.saveConflict")}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                // A refused copy must say so before the reader chooses Load
+                // latest, which replaces the draft.
+                onClick={() =>
+                  void navigator.clipboard.writeText(editedContent).then(
+                    () => toast.success(t("common.copied")),
+                    () => toast.error(t("common.copyFailed")),
+                  )
+                }
+              >
+                {t("ledgerEditor.copyMyEdit")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setConfirmLoadLatest(true)}
+              >
+                {t("ledgerEditor.loadLatest")}
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+      <Dialog
+        open={confirmLoadLatest}
+        onOpenChange={(open) => !open && setConfirmLoadLatest(false)}
+      >
+        <DialogContent
+          className="sm:max-w-md"
+          busy={loadingLatest || adoptSha !== null}
+          onCloseAutoFocus={(event) => {
+            // Loading the latest revision removes the notice that opened
+            // this; the editor is where the reader continues.
+            if (conflict) return;
+            event.preventDefault();
+            editorRef.current?.focus();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{t("ledgerEditor.loadLatestTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("ledgerEditor.loadLatestDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setConfirmLoadLatest(false)}
+              disabled={loadingLatest || adoptSha !== null}
+              className="w-full sm:w-auto"
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleLoadLatest()}
+              loading={loadingLatest || adoptSha !== null}
+              className="w-full sm:w-auto"
+            >
+              {t("ledgerEditor.loadLatestConfirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex flex-col flex-1 min-h-0">
         <div
           className={cn(

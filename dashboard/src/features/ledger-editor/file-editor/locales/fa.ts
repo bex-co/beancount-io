@@ -55,6 +55,37 @@ const faFileEditor: Record<string, { message: string; description: string }> = {
     message: "فایل با موفقیت ذخیره شد",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "این فایل از زمانی که آن را باز کردید تغییر کرده است، بنابراین ویرایش شما ذخیره نشد. ویرایش خود را کپی کنید، سپس جدیدترین نسخه را بارگیری کنید و آن را در آنجا اعمال کنید.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "کپی ویرایش من",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "بارگیری جدیدترین نسخه",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "ویرایش شما با جدیدترین نسخه جایگزین شود؟",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "ویرایشگر فایل را به شکل فعلی آن نشان می‌دهد. ویرایش ذخیره‌نشده شما از بین می‌رود، مگر اینکه آن را کپی کرده باشید.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "جایگزینی ویرایش من",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "جمع کردن همه",
     description: "Menu item to fold all sections in editor",

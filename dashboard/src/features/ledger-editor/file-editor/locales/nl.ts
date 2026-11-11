@@ -58,6 +58,37 @@ const nlFileEditor: Record<string, { message: string; description: string }> = {
     message: "Bestand succesvol opgeslagen",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "Dit bestand is gewijzigd sinds u het opende, dus uw bewerking is niet opgeslagen. Kopieer uw bewerking, laad daarna de nieuwste versie en breng de bewerking daar opnieuw aan.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "Mijn bewerking kopiëren",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "Nieuwste laden",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "Uw bewerking vervangen door de nieuwste versie?",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "De editor toont het bestand zoals het nu is. Uw niet-opgeslagen bewerking gaat verloren als u die niet hebt gekopieerd.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "Mijn bewerking vervangen",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "Alles inklappen",
     description: "Menu item to fold all sections in editor",

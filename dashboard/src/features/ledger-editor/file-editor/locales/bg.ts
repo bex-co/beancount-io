@@ -57,6 +57,37 @@ const bgFileEditor: Record<string, { message: string; description: string }> = {
     message: "Файлът е запазен успешно",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "Файлът е променен, откакто го отворихте, затова редакцията ви не беше запазена. Копирайте я, след това заредете най-новата версия и я приложете там.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "Копирай редакцията ми",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "Зареди най-новата",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "Да се замени ли редакцията ви с най-новата версия?",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "Редакторът ще покаже файла в сегашния му вид. Незапазената ви редакция ще бъде загубена, освен ако не сте я копирали.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "Замени редакцията ми",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "Сгъване на всички",
     description: "Menu item to fold all sections in editor",

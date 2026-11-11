@@ -58,6 +58,37 @@ const frFileEditor: Record<string, { message: string; description: string }> = {
     message: "Fichier enregistré avec succès",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "Ce fichier a changé depuis que vous l’avez ouvert : votre modification n’a donc pas été enregistrée. Copiez-la, puis chargez la dernière version et appliquez-la dessus.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "Copier ma modification",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "Charger la dernière version",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "Remplacer votre modification par la dernière version ?",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "L’éditeur affichera le fichier tel qu’il est maintenant. Votre modification non enregistrée sera perdue si vous ne l’avez pas copiée.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "Remplacer ma modification",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "Replier tout",
     description: "Menu item to fold all sections in editor",

@@ -21,6 +21,8 @@ export interface FileContentViewProps {
   fileContent: FileRevision;
   /** Saves `content` against `base`, the revision it was edited from. */
   onSave: (content: string, base: FileRevision) => Promise<void>;
+  /** Reads the file as it is now, after a save another write overtook. */
+  onLoadLatest?: () => Promise<FileRevision | undefined>;
   /** Absent when the file cannot be deleted (the ledger's root main.bean). */
   onDelete?: () => void | Promise<void>;
   isSaving: boolean;
@@ -42,6 +44,7 @@ export function FileContentView({
   filePath,
   fileContent,
   onSave,
+  onLoadLatest,
   onDelete,
   isSaving,
   isEditMode: isEditModeInput,
@@ -116,6 +119,7 @@ export function FileContentView({
       filePath={filePath}
       fileContent={fileContent}
       onSave={onSave}
+      onLoadLatest={onLoadLatest}
       onDelete={onDelete}
       isSaving={isSaving}
       isEditMode={isEditModeInput}

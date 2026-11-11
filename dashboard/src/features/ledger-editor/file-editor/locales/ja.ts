@@ -55,6 +55,37 @@ const jaFileEditor: Record<string, { message: string; description: string }> = {
     message: "ファイルが正常に保存されました",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "開いた後にこのファイルが変更されたため、編集は保存されませんでした。編集内容をコピーしてから最新版を読み込み、そこに反映してください。",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "編集内容をコピー",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "最新版を読み込む",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "編集内容を最新版で置き換えますか？",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "エディターには現在のファイルが表示されます。コピーしていない場合、保存していない編集内容は失われます。",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "編集内容を置き換える",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "すべて折りたたむ",
     description: "Menu item to fold all sections in editor",

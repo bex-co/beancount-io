@@ -53,6 +53,37 @@ const zhFileEditor: Record<string, { message: string; description: string }> = {
     message: "文件保存成功",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "此文件在你打开后已被修改，因此你的编辑未保存。请先复制你的编辑，再加载最新版本并在其中重新修改。",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "复制我的编辑",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "加载最新版本",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "用最新版本替换你的编辑？",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "编辑器将显示文件的当前内容。如果你没有复制，未保存的编辑将会丢失。",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "替换我的编辑",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "全部折叠",
     description: "Menu item to fold all sections in editor",

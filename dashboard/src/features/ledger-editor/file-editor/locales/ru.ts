@@ -56,6 +56,37 @@ const ruFileEditor: Record<string, { message: string; description: string }> = {
     message: "Файл успешно сохранён",
     description: "Success message when file is saved",
   },
+  "ledgerEditor.saveConflict": {
+    message:
+      "Файл изменился с тех пор, как вы его открыли, поэтому ваша правка не сохранена. Скопируйте правку, затем загрузите последнюю версию и внесите её туда.",
+    description:
+      "Inline notice when a file save was refused because another write changed the file since it was opened",
+  },
+  "ledgerEditor.copyMyEdit": {
+    message: "Скопировать мою правку",
+    description:
+      "Copies the unsaved file edit to the clipboard after a conflicting save",
+  },
+  "ledgerEditor.loadLatest": {
+    message: "Загрузить последнюю",
+    description:
+      "Opens a confirmation to replace the unsaved edit with the file's latest revision",
+  },
+  "ledgerEditor.loadLatestTitle": {
+    message: "Заменить вашу правку последней версией?",
+    description:
+      "Title of the confirmation before replacing the unsaved edit with the latest revision",
+  },
+  "ledgerEditor.loadLatestDescription": {
+    message:
+      "В редакторе будет показан файл в текущем виде. Несохранённая правка пропадёт, если вы её не скопировали.",
+    description:
+      "Explains that loading the latest revision replaces the unsaved edit",
+  },
+  "ledgerEditor.loadLatestConfirm": {
+    message: "Заменить мою правку",
+    description: "Confirms replacing the unsaved edit with the latest revision",
+  },
   "ledgerEditor.foldAll": {
     message: "Свернуть всё",
     description: "Menu item to fold all sections in editor",

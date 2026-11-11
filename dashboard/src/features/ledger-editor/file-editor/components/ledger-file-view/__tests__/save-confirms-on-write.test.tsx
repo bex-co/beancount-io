@@ -1,6 +1,7 @@
 import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import LedgerFileView from "../index";
 
 /**
@@ -126,6 +127,31 @@ describe("saving a file", () => {
     expect(toast.error).toHaveBeenCalledTimes(1);
     expect(toast.success).not.toHaveBeenCalled();
     expect(state.report).not.toHaveBeenCalled();
+    expect(state.refresh).not.toHaveBeenCalled();
+  });
+
+  // The editor explains a conflict in place, with the draft (w2/110); a
+  // toast telling the reader to refresh would also discard it.
+  it("leaves a conflicting save to the editor instead of a toast", async () => {
+    const conflict = new CombinedGraphQLErrors({
+      errors: [{ message: "conflict", extensions: { code: "CONFLICT" } }],
+    });
+    state.mutate.mockImplementation(async (options: MutateOptions) => {
+      options.onError?.(conflict);
+      throw conflict;
+    });
+
+    render(<LedgerFileView ledgerId="qa/books" filePath="main.bean" />);
+    let failure: unknown;
+    await act(async () => {
+      failure = await state.onSave!("; qa-20261102 edited\n", state.file).catch(
+        (error: unknown) => error,
+      );
+    });
+
+    expect(failure).toBe(conflict);
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(toast.success).not.toHaveBeenCalled();
     expect(state.refresh).not.toHaveBeenCalled();
   });
 
