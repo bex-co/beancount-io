@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [120 — Typing "4,50" in an amount field records 450, silently, wherever the decimal separator and the browser's language differ](./120.md) — dashboard QA 2026-11-10; **major**
 - [119 — In German and other comma-decimal languages, the same balance is written two ways across the dashboard](./119.md) — dashboard QA 2026-11-10
 - [118 — Source views draw an account with a Persian or Arabic segment in the wrong order: the amount lands inside the account path](./118.md) — dashboard QA 2026-11-10; dashboard counterpart of w21/780 and w21/865
 - [116 — Add Budget's account list is announced as "Expenses:Groceries", an account that may not exist](./116.md) — dashboard QA 2026-11-10
