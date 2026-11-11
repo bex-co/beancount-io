@@ -1,4 +1,7 @@
-import { selectLedgerFileEditorState } from "../select-editor-state";
+import {
+  coversEditorWithSkeleton,
+  selectLedgerFileEditorState,
+} from "../select-editor-state";
 
 const state = (overrides: {
   loading?: boolean;
@@ -67,5 +70,42 @@ describe("selectLedgerFileEditorState", () => {
   it("keeps showing content through a background refetch or later error", () => {
     expect(state({ loading: true, initialized: true })).toBe("content");
     expect(state({ hasError: true, initialized: true })).toBe("content");
+  });
+});
+
+// w22/028: the editor is a web view that draws nothing until it has booted. A
+// seeded session is `content` straight away, so the body was plain white until
+// the page said it was up; the skeleton now stays over the editor until then.
+describe("coversEditorWithSkeleton", () => {
+  it("covers a seeded editor until it says its page is up", () => {
+    expect(coversEditorWithSkeleton("content", false)).toBe(true);
+  });
+
+  it("uncovers the editor once it is ready", () => {
+    expect(coversEditorWithSkeleton("content", true)).toBe(false);
+  });
+
+  it("leaves the loading state to its own skeleton", () => {
+    expect(coversEditorWithSkeleton("loading", false)).toBe(false);
+  });
+
+  it("never covers an error or an unavailable file", () => {
+    for (const ready of [false, true]) {
+      expect(coversEditorWithSkeleton("error", ready)).toBe(false);
+      expect(coversEditorWithSkeleton("unavailable", ready)).toBe(false);
+    }
+  });
+
+  it("covers a genuinely empty file until the editor is up, then shows it", () => {
+    const empty = selectLedgerFileEditorState({
+      loading: false,
+      hasError: false,
+      hasData: true,
+      hasFile: true,
+      initialized: true,
+    });
+    expect(empty).toBe("content");
+    expect(coversEditorWithSkeleton(empty, false)).toBe(true);
+    expect(coversEditorWithSkeleton(empty, true)).toBe(false);
   });
 });

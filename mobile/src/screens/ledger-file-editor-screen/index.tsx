@@ -46,7 +46,7 @@ import { useUnsavedChangesGuard } from "@/common/hooks/use-unsaved-changes-guard
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { useLedgerGuard } from "@/components/ledger-guard";
 import { LoadingTile } from "@/components/loading-tile";
-import { FadeInView } from "@/components/crossfade";
+import { FadeInView, FadeOutView } from "@/components/crossfade";
 import {
   KeyboardAccessoryBar,
   KEYBOARD_ACCESSORY_BAR_HEIGHT,
@@ -93,7 +93,10 @@ import {
   fileBannerErrors,
   readOnlyNoticeColors,
 } from "./utils";
-import { selectLedgerFileEditorState } from "./select-editor-state";
+import {
+  coversEditorWithSkeleton,
+  selectLedgerFileEditorState,
+} from "./select-editor-state";
 import { viewErrorsMove } from "./view-errors-route";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 import { useRouteParams } from "@/common/hooks/use-route-params";
@@ -135,6 +138,15 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 16,
       paddingTop: 12,
       gap: 8,
+    },
+    // The skeleton over the editor while its web view boots (w22/028).
+    skeletonCover: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      backgroundColor: theme.white,
     },
     errorBanner: {
       borderBottomWidth: StyleSheet.hairlineWidth,
@@ -461,6 +473,8 @@ function LedgerFileEditorSession({
   });
 
   const [initialized, setInitialized] = useState(false);
+  // The editor's web view has booted and drawn the document (w22/028).
+  const [editorReady, setEditorReady] = useState(false);
   const [documentSpec, setDocumentSpec] = useState<EditorDocumentSpec>({
     value: "",
     epoch: 0,
@@ -674,6 +688,7 @@ function LedgerFileEditorSession({
   // counter at 0), so the draft goes back in under a new epoch, and the revision
   // tracker restarts with it (w21/342).
   const handleEditorReady = useCallback(async () => {
+    setEditorReady(true);
     const plan = recoveryRef.current.ready();
     if (!plan) return;
     const epoch = documentEpochRef.current + 1;
@@ -1132,6 +1147,9 @@ function LedgerFileEditorSession({
     hasFile: Boolean(fileData?.getLedgerFile),
     initialized,
   });
+  const skeletonTiles = SKELETON_WIDTHS.map((w, i) => (
+    <LoadingTile key={i} height={16} width={w} />
+  ));
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
@@ -1191,11 +1209,7 @@ function LedgerFileEditorSession({
 
       <View style={styles.editorWrapper}>
         {editorState === "loading" ? (
-          <View style={styles.skeletonWrap}>
-            {SKELETON_WIDTHS.map((w, i) => (
-              <LoadingTile key={i} height={16} width={w} />
-            ))}
-          </View>
+          <View style={styles.skeletonWrap}>{skeletonTiles}</View>
         ) : editorState === "error" ? (
           <FadeInView>
             <Text style={styles.loadErrorText}>
@@ -1260,6 +1274,14 @@ function LedgerFileEditorSession({
               dom={{ style: { flex: 1 }, hideKeyboardAccessoryView: true }}
             />
           </FadeInView>
+        ) : null}
+
+        {/* The editor above is a web view that draws nothing until it has booted;
+            the skeleton stays over it until it says so, then fades out. */}
+        {coversEditorWithSkeleton(editorState, editorReady) ? (
+          <FadeOutView fill style={[styles.skeletonWrap, styles.skeletonCover]}>
+            {skeletonTiles}
+          </FadeOutView>
         ) : null}
 
         {showAccessory && (

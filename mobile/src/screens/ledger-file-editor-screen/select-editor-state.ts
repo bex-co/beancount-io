@@ -13,6 +13,21 @@
 export type LedgerFileEditorState =
   "loading" | "error" | "unavailable" | "content";
 
+/**
+ * Whether the skeleton still covers the editor. A session is seeded (`content`)
+ * before the editor is up: it is a web view that must boot and run CodeMirror
+ * before it draws anything, so until its `onReady` the body would be plain white
+ * (w22/028). The editor is mounted under the skeleton for that interval, since
+ * mounting is what boots it. `loading` has its own skeleton; an error or an
+ * unavailable file never gets one.
+ */
+export function coversEditorWithSkeleton(
+  state: LedgerFileEditorState,
+  editorReady: boolean,
+): boolean {
+  return state === "content" && !editorReady;
+}
+
 export function selectLedgerFileEditorState(input: {
   /** The query is in flight. */
   loading: boolean;
