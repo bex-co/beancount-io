@@ -48,3 +48,37 @@ describe("Budget card title at large text sizes", () => {
     expect(source.includes("key={`account-${fontScale}`}")).toBe(true);
   });
 });
+
+/**
+ * The stat row is three `flex: 1` columns, a third of the card each. At AX2 a
+ * label wider than that ("Abweichung", "Отклонение", "Відхилення") broke by
+ * character ("Abweich" / "ung") and pushed its amount a line lower than the
+ * other two (w22/034). From the same stacking threshold the stats take a line
+ * each, label above amount, so a label has the card's whole width.
+ */
+describe("Budget card stats at large text sizes", () => {
+  it("lays the three stats out as a column from the shared threshold", () => {
+    expect(block("statsStacked").includes('flexDirection: "column"')).toBe(
+      true,
+    );
+    expect(
+      source.includes(
+        "<View style={[styles.stats, stacked && styles.statsStacked]}>",
+      ),
+    ).toBe(true);
+    // Budget, Actual and Variance each get the stacked variant.
+    expect(
+      source.split(
+        "<View style={[styles.stat, stacked && styles.statStacked]}>",
+      ).length,
+    ).toBe(4);
+    // A flex: 1 stat would collapse to nothing in the column.
+    expect(block("statStacked").includes("flex: 0")).toBe(true);
+  });
+
+  it("keeps three columns at ordinary sizes", () => {
+    for (const scale of [1, 1.235, 1.353]) {
+      expect(prefersStackedLayout(scale)).toBe(false);
+    }
+  });
+});

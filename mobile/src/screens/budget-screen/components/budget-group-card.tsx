@@ -146,6 +146,17 @@ const getStyles = (theme: ColorTheme) =>
     stat: {
       flex: 1,
     },
+    // From the stacking threshold the three columns would each be a third of the
+    // card, and a long label ("Abweichung", "Отклонение") broke by character
+    // there (w22/034): the stats take a line each instead, label above amount.
+    statsStacked: {
+      flexDirection: "column",
+      gap: space.sm,
+    },
+    // A flex: 1 stat would collapse to nothing in the column.
+    statStacked: {
+      flex: 0,
+    },
     statLabel: {
       fontSize: fontSizes.xs,
       color: theme.black80,
@@ -342,8 +353,8 @@ export function BudgetGroupCard({
         </View>
       </View>
 
-      <View style={styles.stats}>
-        <View style={styles.stat}>
+      <View style={[styles.stats, stacked && styles.statsStacked]}>
+        <View style={[styles.stat, stacked && styles.statStacked]}>
           <Text key={`budget-${fontScale}`} style={styles.statLabel}>
             {t("budget")}
           </Text>
@@ -352,7 +363,7 @@ export function BudgetGroupCard({
           </AmountText>
         </View>
         {stats.actualExact !== null && (
-          <View style={styles.stat}>
+          <View style={[styles.stat, stacked && styles.statStacked]}>
             <Text key={`actual-${fontScale}`} style={styles.statLabel}>
               {t("budgetActual")}
             </Text>
@@ -367,7 +378,7 @@ export function BudgetGroupCard({
           </View>
         )}
         {stats.varianceExact !== null && (
-          <View style={styles.stat}>
+          <View style={[styles.stat, stacked && styles.statStacked]}>
             <Text key={`variance-${fontScale}`} style={styles.statLabel}>
               {t("budgetVariance")}
             </Text>
