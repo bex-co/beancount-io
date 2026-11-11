@@ -60,3 +60,14 @@ candidate is **not shipped** and main's product files are restored.
 **Unblock:** authenticate Claude and complete the original cohort plus affected
 Codex regressions on the rebased candidate, run checks and ship it; then finish
 t004 before t005–t008. **Who can clear it:** operator login, then worker.
+
+**Recheck 2026-11-11** — Claude Code on the macOS checkout is now
+authenticated: `claude auth status` reports a claude.ai login and a
+non-interactive `claude -p` turn answers. That clears the login half of this
+block on that machine only. The preserved close candidate is not in that
+checkout or on origin; it exists only on the Linux runtime. Codex there
+refuses its configured model for the signed-in ChatGPT account, so the
+both-client check still cannot run on one machine. **Unblock (updated):** push
+the candidate branch to origin so the authenticated checkout can run the
+Claude cohort, or authenticate Claude on the Linux runtime; then continue as
+above. **Who can clear it:** the operator with the Linux runtime.
