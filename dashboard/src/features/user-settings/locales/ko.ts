@@ -532,15 +532,15 @@ const koUserSettings: Record<string, TranslationEntry> = {
     description: "Instructions in change name dialog",
   },
   "userSettings.aiCfoUsage": {
-    message: "AI 요청",
+    message: "AI 토큰",
     description: "Label for AI CFO usage section",
   },
   "userSettings.aiCfoUsageCount": {
-    message: "이번 달 {used} / {max} 요청 사용됨",
+    message: "이번 달 {used} / {max} 토큰 사용됨",
     description: "AI CFO usage count display",
   },
   "userSettings.aiCfoUsageUnlimited": {
-    message: "이번 달 {used} 요청 사용됨 (무제한)",
+    message: "이번 달 {used} 토큰 사용됨 (무제한)",
     description: "AI CFO usage display for unlimited tier",
   },
   "userSettings.aiCfoUsageUnavailable": {

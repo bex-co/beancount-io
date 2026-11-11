@@ -536,15 +536,15 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     description: "Instructions in change name dialog",
   },
   "userSettings.aiCfoUsage": {
-    message: "AIリクエスト",
+    message: "AIトークン",
     description: "Label for AI CFO usage section",
   },
   "userSettings.aiCfoUsageCount": {
-    message: "今月 {used} / {max} リクエスト使用済み",
+    message: "今月 {used} / {max} トークン使用済み",
     description: "AI CFO usage count display",
   },
   "userSettings.aiCfoUsageUnlimited": {
-    message: "今月 {used} リクエスト使用済み（無制限）",
+    message: "今月 {used} トークン使用済み（無制限）",
     description: "AI CFO usage display for unlimited tier",
   },
   "userSettings.aiCfoUsageUnavailable": {

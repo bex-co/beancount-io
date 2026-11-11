@@ -132,8 +132,10 @@ export function UsageOverview({
               {isLedgersUnlimited
                 ? t("userSettings.unlimited")
                 : t("userSettings.ledgerUsageCount", {
-                    used: String(ledgersUsed),
-                    max: String(ledgersMax),
+                    // In the app language's digits, as the AI counts beside
+                    // it are (w2/124).
+                    used: formatCount(ledgersUsed),
+                    max: formatCount(ledgersMax),
                   })}
             </span>
           </div>

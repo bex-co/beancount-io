@@ -337,6 +337,25 @@ describe("Usage Overview - app language", () => {
     },
   );
 
+  // The ledger count used Latin digits beside Persian AI counts (w2/124).
+  it.each([
+    ["fa", "۶/۲۰"],
+    ["en", "6/20"],
+  ])("writes the ledger count in the %s app language", (language, count) => {
+    mockAppLanguage.current = language;
+    render(
+      <UsageOverview
+        limits={{ ...limits, ledgersUsed: 6, ledgersMax: 20 }}
+        aiCfoTokensUsed={12489}
+        aiCfoTokensMax={2000000}
+        t={t}
+      />,
+    );
+    expect(
+      screen.getByText(`userSettings.ledgerUsageCount ${count}`),
+    ).toBeInTheDocument();
+  });
+
   it("formats unlimited AI usage in the app language", () => {
     mockAppLanguage.current = "de";
     render(
