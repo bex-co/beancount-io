@@ -6,6 +6,11 @@ import { TransactionConfigForm } from "../transaction-config-form";
 import type { ParsedRow } from "../../../../types";
 import type { ImportConfigDraft } from "../../../../lib/import-config-draft";
 
+// The duplicate check reads the ledger; these rows are new (w2/122).
+vi.mock("../../../../hooks/use-import-duplicates", () => ({
+  useImportDuplicates: () => new Set<string>(),
+}));
+
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string, params?: Record<string, unknown>) =>

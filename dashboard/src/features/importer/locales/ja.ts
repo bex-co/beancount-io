@@ -223,6 +223,17 @@ const jaImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "{date} に台帳に記録済み",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} 行が台帳に既にある仕訳と一致したため、選択を外しました。それでも取り込む場合は選択してください。",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "日付",
     description: "Table header for date column",

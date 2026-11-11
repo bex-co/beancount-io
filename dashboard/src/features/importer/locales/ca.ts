@@ -248,6 +248,29 @@ const caImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "Ja és al llibre el {date}",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} fila coincideix amb un apunt que ja és al llibre i s’ha deixat sense seleccionar. Seleccioneu-la per importar-la igualment.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_many": {
+    message:
+      "{count} files coincideixen amb apunts que ja són al llibre i s’han deixat sense seleccionar. Seleccioneu-les per importar-les igualment.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} files coincideixen amb apunts que ja són al llibre i s’han deixat sense seleccionar. Seleccioneu-les per importar-les igualment.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "Data",
     description: "Table header for date column",

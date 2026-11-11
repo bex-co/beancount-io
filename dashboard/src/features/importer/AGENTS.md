@@ -87,6 +87,7 @@ Preview. It clears on a new upload or reset/finish — never via localStorage.
   rows, and nothing is sent until the reader picks the matching currency,
   deselects them, or edits the amount. One import posts one currency; there is
   no conversion. AI-parsed rows arrive as bare numbers, without symbol evidence.
+- Configure flags rows the ledger already holds (`lib/import-duplicates.ts`, `hooks/use-import-duplicates.ts`): once a source account and currency are chosen it reads that account's transactions over the file's days, and a row with an existing transaction on the same day posting the same amount and currency to the source account is marked "Already in the ledger" and starts unselected, matched one for one. Only a change in what is flagged moves a checkbox, so the reader can still import a flagged row (w2/122).
 - Submit writes `parseAmount(...).decimal` — the exact normalized decimal, with
   the cell's digits (`(12.50)` → `-12.50`, comma-decimal `-1.000` → `-1000`) —
   never the raw token, which the ledger refuses or reads as another number.

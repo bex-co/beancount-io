@@ -245,6 +245,29 @@ const ptImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "Já está no livro em {date}",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} linha corresponde a um lançamento que já está no livro e ficou desmarcada. Marque-a para importá-la mesmo assim.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_many": {
+    message:
+      "{count} linhas correspondem a lançamentos que já estão no livro e ficaram desmarcadas. Marque-as para importá-las mesmo assim.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} linhas correspondem a lançamentos que já estão no livro e ficaram desmarcadas. Marque-as para importá-las mesmo assim.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "Data",
     description: "Table header for date column",

@@ -7,6 +7,11 @@ import { LocalizationProvider } from "@/i18n/provider";
 import type { ParsedRow } from "../../../../types";
 import { TransactionConfigForm } from "../transaction-config-form";
 
+// The duplicate check reads the ledger; these rows are new (w2/122).
+vi.mock("../../../../hooks/use-import-duplicates", () => ({
+  useImportDuplicates: () => new Set<string>(),
+}));
+
 vi.unmock("react-i18next");
 vi.unmock("@/common/hooks/use-translations");
 

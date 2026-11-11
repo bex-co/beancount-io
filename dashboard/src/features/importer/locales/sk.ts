@@ -254,6 +254,35 @@ const skImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "Už je v knihe k {date}",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} riadok sa zhoduje so záznamom, ktorý už je v knihe, a nie je vybraný. Ak ho chcete aj tak importovať, vyberte ho.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_few": {
+    message:
+      "{count} riadky sa zhodujú so záznamami, ktoré už sú v knihe, a nie sú vybrané. Ak ich chcete aj tak importovať, vyberte ich.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_many": {
+    message:
+      "{count} riadka sa zhoduje so záznamami, ktoré už sú v knihe, a nie sú vybrané. Ak ich chcete aj tak importovať, vyberte ich.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} riadkov sa zhoduje so záznamami, ktoré už sú v knihe, a nie sú vybrané. Ak ich chcete aj tak importovať, vyberte ich.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "Dátum",
     description: "Table header for date column",

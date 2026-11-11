@@ -218,6 +218,17 @@ const zhImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "已于 {date} 记入账本",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} 行与账本中已有的分录一致，已取消选择。如仍要导入，请选择它们。",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "日期",
     description: "Table header for date column",

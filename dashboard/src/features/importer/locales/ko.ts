@@ -221,6 +221,17 @@ const koImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "{date}에 이미 장부에 있음",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count}개 행이 장부에 이미 있는 항목과 일치하여 선택 해제했습니다. 그래도 가져오려면 선택하세요.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "날짜",
     description: "Table header for date column",

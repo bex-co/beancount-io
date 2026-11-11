@@ -236,6 +236,23 @@ const faImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "از قبل در {date} در دفتر هست",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} ردیف با ثبتی که از قبل در دفتر هست مطابقت دارد و انتخاب نشد. برای وارد کردن آن در هر صورت، انتخابش کنید.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} ردیف با ثبت‌هایی که از قبل در دفتر هستند مطابقت دارند و انتخاب نشدند. برای وارد کردن آن‌ها در هر صورت، انتخابشان کنید.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "تاریخ",
     description: "Table header for date column",

@@ -39,6 +39,7 @@ import {
 import { findImportCurrencyConflicts } from "../../../lib/import-currency-conflicts";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
+import { useImportDuplicates } from "../../../hooks/use-import-duplicates";
 
 /** Row numbers a currency conflict names before eliding the rest. */
 const CONFLICT_ROWS_SHOWN = 5;
@@ -275,6 +276,41 @@ export function TransactionConfigForm({
     watchedTransactions,
     watchedCurrency,
   );
+
+  // Rows the ledger already holds start unselected, so a re-upload or an
+  // overlapping statement is not booked twice (w2/122); the reader can still
+  // select one. Only a change in what is flagged moves a checkbox, so a
+  // choice the reader makes afterwards stands.
+  const duplicateIds = useImportDuplicates(
+    ledgerId,
+    watchedTransactions,
+    form.watch("sourceAccount"),
+    watchedCurrency,
+  );
+  const duplicatesKey = [...duplicateIds].sort().join("\n");
+  const flaggedRef = useRef(new Set<string>());
+  const autoUnselectedRef = useRef(new Set<string>());
+  useEffect(() => {
+    const previous = flaggedRef.current;
+    const current = new Set(duplicatesKey ? duplicatesKey.split("\n") : []);
+    flaggedRef.current = current;
+    form.getValues("transactions").forEach((txn, index) => {
+      if (current.has(txn.id) && !previous.has(txn.id) && txn.selected) {
+        autoUnselectedRef.current.add(txn.id);
+        form.setValue(`transactions.${index}.selected`, false, {
+          shouldDirty: true,
+        });
+      } else if (
+        !current.has(txn.id) &&
+        autoUnselectedRef.current.delete(txn.id) &&
+        !txn.selected
+      ) {
+        form.setValue(`transactions.${index}.selected`, true, {
+          shouldDirty: true,
+        });
+      }
+    });
+  }, [duplicatesKey, form]);
   const listRows = (rows: number[]) =>
     new Intl.ListFormat(i18n.language, { type: "unit", style: "short" }).format(
       [
@@ -384,7 +420,15 @@ export function TransactionConfigForm({
               <h3 id={targetsHeadingId} className="text-sm font-medium mb-3">
                 {t("importer.configure.assignTargetAccounts")}
               </h3>
+              {duplicateIds.size > 0 && (
+                <p role="status" className="text-sm text-muted-foreground">
+                  {t("importer.configure.duplicatesFound", {
+                    count: duplicateIds.size,
+                  })}
+                </p>
+              )}
               <AccountMappingTable
+                duplicateIds={duplicateIds}
                 labelledBy={targetsHeadingId}
                 control={form.control}
                 ledgerId={ledgerId}

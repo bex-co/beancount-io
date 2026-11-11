@@ -245,6 +245,29 @@ const esImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "Ya está en el libro el {date}",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} fila coincide con un asiento que ya está en el libro y se dejó sin seleccionar. Selecciónala para importarla de todos modos.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_many": {
+    message:
+      "{count} filas coinciden con asientos que ya están en el libro y se dejaron sin seleccionar. Selecciónalas para importarlas de todos modos.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} filas coinciden con asientos que ya están en el libro y se dejaron sin seleccionar. Selecciónalas para importarlas de todos modos.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "Fecha",
     description: "Table header for date column",

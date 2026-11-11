@@ -237,6 +237,23 @@ const bgImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "Вече е в книгата на {date}",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} ред съвпада със запис, който вече е в книгата, и не е избран. Изберете го, за да го импортирате въпреки това.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} реда съвпадат със записи, които вече са в книгата, и не са избрани. Изберете ги, за да ги импортирате въпреки това.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "Дата",
     description: "Table header for date column",

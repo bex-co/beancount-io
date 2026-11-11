@@ -10,6 +10,11 @@ import { toast } from "sonner";
 import { TransactionConfigForm } from "../transaction-config-form";
 import type { ParsedRow } from "../../../../types";
 
+// The duplicate check reads the ledger; these rows are new (w2/122).
+vi.mock("../../../../hooks/use-import-duplicates", () => ({
+  useImportDuplicates: () => new Set<string>(),
+}));
+
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string, params?: Record<string, unknown>) =>

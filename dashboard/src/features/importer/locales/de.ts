@@ -238,6 +238,23 @@ const deImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "Bereits am {date} im Hauptbuch",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} Zeile entspricht einem Eintrag, der bereits im Hauptbuch steht, und wurde abgewählt. Wählen Sie sie aus, um sie trotzdem zu importieren.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} Zeilen entsprechen Einträgen, die bereits im Hauptbuch stehen, und wurden abgewählt. Wählen Sie sie aus, um sie trotzdem zu importieren.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "Datum",
     description: "Table header for date column",

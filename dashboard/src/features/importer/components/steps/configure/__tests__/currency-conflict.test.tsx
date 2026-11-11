@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TransactionConfigForm } from "../transaction-config-form";
 import type { ParsedRow } from "../../../../types";
 
+// The duplicate check reads the ledger; these rows are new (w2/122).
+vi.mock("../../../../hooks/use-import-duplicates", () => ({
+  useImportDuplicates: () => new Set<string>(),
+}));
+
 /**
  * A bank file's `€-1.25` was prepared as -1.25 USD: the symbol was stripped to
  * read the number, and every selected row took the one Currency (w4/m44).

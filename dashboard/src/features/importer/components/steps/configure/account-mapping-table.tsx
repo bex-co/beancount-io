@@ -73,6 +73,8 @@ interface AccountMappingTableProps {
   disabled?: boolean;
   /** The id of the visible heading that names the table (w4/319). */
   labelledBy?: string;
+  /** Rows the ledger already holds (w2/122). */
+  duplicateIds?: ReadonlySet<string>;
 }
 
 type AmountFilter = "all" | "positive" | "negative";
@@ -86,6 +88,7 @@ export function AccountMappingTable({
   onDraftChange,
   disabled = false,
   labelledBy,
+  duplicateIds,
 }: AccountMappingTableProps) {
   const { t, i18n } = useTranslations();
   const formatError = useErrorMessage();
@@ -370,7 +373,19 @@ export function AccountMappingTable({
                         ? formatImportDateForDisplay(txn.date, i18n.language)
                         : ""}
                     </TableCell>
-                    <TableCell className="text-sm">{txn.payee || ""}</TableCell>
+                    <TableCell className="text-sm">
+                      {txn.payee || ""}
+                      {duplicateIds?.has(txn.id) && (
+                        <span className="mt-0.5 block text-xs font-medium text-muted-foreground">
+                          {t("importer.configure.alreadyInLedger", {
+                            date: formatImportDateForDisplay(
+                              txn.date,
+                              i18n.language,
+                            ),
+                          })}
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm">
                       {txn.description || ""}
                     </TableCell>

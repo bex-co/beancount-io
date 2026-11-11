@@ -248,6 +248,29 @@ const frImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "Déjà dans le grand livre le {date}",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} ligne correspond à une écriture déjà présente dans le grand livre et a été désélectionnée. Sélectionnez-la pour l’importer quand même.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_many": {
+    message:
+      "{count} lignes correspondent à des écritures déjà présentes dans le grand livre et ont été désélectionnées. Sélectionnez-les pour les importer quand même.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} lignes correspondent à des écritures déjà présentes dans le grand livre et ont été désélectionnées. Sélectionnez-les pour les importer quand même.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "Date",
     description: "Table header for date column",

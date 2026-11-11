@@ -254,6 +254,35 @@ const ukImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "Уже в книзі на {date}",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} рядок збігається із записом, який уже є в книзі, і його не вибрано. Виберіть його, щоб усе одно імпортувати.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_few": {
+    message:
+      "{count} рядки збігаються із записами, які вже є в книзі, і їх не вибрано. Виберіть їх, щоб усе одно імпортувати.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_many": {
+    message:
+      "{count} рядків збігаються із записами, які вже є в книзі, і їх не вибрано. Виберіть їх, щоб усе одно імпортувати.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} рядка збігаються із записами, які вже є в книзі, і їх не вибрано. Виберіть їх, щоб усе одно імпортувати.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "Дата",
     description: "Table header for date column",

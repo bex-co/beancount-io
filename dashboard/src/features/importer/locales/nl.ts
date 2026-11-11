@@ -236,6 +236,23 @@ const nlImporter: Record<string, TranslationEntry> = {
     description:
       "Invalid preview row diagnostic: the localized column label, then its validation message",
   },
+  "importer.configure.alreadyInLedger": {
+    message: "Al in het grootboek op {date}",
+    description:
+      "Shown under an import row that matches an existing transaction on the same day, source account, amount and currency; {date} is the row's date",
+  },
+  "importer.configure.duplicatesFound_one": {
+    message:
+      "{count} rij komt overeen met een boeking die al in het grootboek staat en is niet geselecteerd. Selecteer haar om haar toch te importeren.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
+  "importer.configure.duplicatesFound_other": {
+    message:
+      "{count} rijen komen overeen met boekingen die al in het grootboek staan en zijn niet geselecteerd. Selecteer ze om ze toch te importeren.",
+    description:
+      "Status above the import table counting rows that match existing entries and were left unselected",
+  },
   "importer.preview.date": {
     message: "Datum",
     description: "Table header for date column",

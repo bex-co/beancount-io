@@ -5,6 +5,11 @@ import { TransactionConfigForm } from "../transaction-config-form";
 import { useCSVParser } from "../../../../hooks/use-csv-parser";
 import { useImportSubmit } from "../../../../hooks/use-import-submit";
 
+// The duplicate check reads the ledger; these rows are new (w2/122).
+vi.mock("../../../../hooks/use-import-duplicates", () => ({
+  useImportDuplicates: () => new Set<string>(),
+}));
+
 // The post-write error check (w3/640) has its own suite.
 vi.mock("@/common/hooks/use-write-outcome", () => ({
   useWriteOutcome: () => ({ snapshot: () => null, report: async () => false }),
