@@ -49,3 +49,14 @@ prices. New 20/29 assertions have no Claude run; authentication is unavailable.
 Codex cases and ship the rebased candidate, then close t005. **Who can clear
 it:** operator login, then worker. Source is preserved in an unpushed isolated
 worktree and main restored; t006–t009 remain dependent.
+
+**Recheck 2026-11-11** — Claude Code on the macOS checkout is now
+authenticated: `claude auth status` reports a claude.ai login and a
+non-interactive `claude -p` turn answers. That clears the login half of this
+block on that machine only. The preserved candidate is in an unpushed worktree
+on the Linux runtime, not in that checkout or on origin. Codex there refuses
+its configured model for the signed-in ChatGPT account, so the both-client
+check still cannot run on one machine. **Unblock (updated):** push the
+candidate branch to origin so the authenticated checkout can verify the
+expanded cohort on Claude, or authenticate Claude on the Linux runtime; then
+continue as above. **Who can clear it:** the operator with the Linux runtime.
