@@ -20,7 +20,7 @@ describe("the Invite Friends row", () => {
   it("does not make its title a stop of its own", () => {
     expect(
       source.includes(
-        '<Textstyle={styles.title}accessible={false}importantForAccessibility="no">{t("inviteFriends")}</Text>',
+        '<Textkey={`title-${fontScale}`}style={styles.title}accessible={false}importantForAccessibility="no">{t("inviteFriends")}</Text>',
       ),
     ).toBe(true);
   });

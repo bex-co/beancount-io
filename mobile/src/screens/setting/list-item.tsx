@@ -1,5 +1,11 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,6 +36,8 @@ export const ListItemHorizontal = ({
   busy = false,
 }: ListItemHorizontalProps) => {
   const theme = useTheme().colorTheme;
+  // Keys re-measure the Texts after a live text-size change (w22/021).
+  const { fontScale } = useWindowDimensions();
   const styles = useThemeStyle((theme: ColorTheme) =>
     StyleSheet.create({
       container: {
@@ -96,14 +104,19 @@ export const ListItemHorizontal = ({
       <View style={styles.topRow}>
         <View style={styles.titleContainer}>
           {typeof title === "string" ? (
-            <Text style={destructive ? styles.titleDestructive : styles.title}>
+            <Text
+              key={`title-${fontScale}`}
+              style={destructive ? styles.titleDestructive : styles.title}
+            >
               {title}
             </Text>
           ) : (
             <View>{title}</View>
           )}
           {description && (
-            <Text style={styles.secondaryText}>{description}</Text>
+            <Text key={`description-${fontScale}`} style={styles.secondaryText}>
+              {description}
+            </Text>
           )}
         </View>
       </View>
@@ -119,7 +132,9 @@ export const ListItemHorizontal = ({
       {content && (
         <View style={styles.bottomRow}>
           {typeof content === "string" ? (
-            <Text style={styles.secondaryText}>{content}</Text>
+            <Text key={`content-${fontScale}`} style={styles.secondaryText}>
+              {content}
+            </Text>
           ) : (
             content
           )}
@@ -156,6 +171,7 @@ export const ListItemHorizontal = ({
 };
 
 export const SectionHeader = ({ title }: { title: string }) => {
+  const { fontScale } = useWindowDimensions();
   const styles = useThemeStyle((theme: ColorTheme) =>
     StyleSheet.create({
       container: {
@@ -172,7 +188,7 @@ export const SectionHeader = ({ title }: { title: string }) => {
   );
   return (
     <View style={styles.container}>
-      <Text style={styles.title} accessibilityRole="header">
+      <Text key={fontScale} style={styles.title} accessibilityRole="header">
         {title}
       </Text>
     </View>
@@ -193,6 +209,7 @@ export const SecondaryButton = ({
   /** An action is under way: the button is dimmed and ignores presses. */
   busy?: boolean;
 }) => {
+  const { fontScale } = useWindowDimensions();
   const styles = useThemeStyle((theme: ColorTheme) =>
     StyleSheet.create({
       container: {
@@ -233,7 +250,9 @@ export const SecondaryButton = ({
         accessibilityState={{ disabled: busy, busy }}
       >
         {icon}
-        <Text style={styles.text}>{title}</Text>
+        <Text key={fontScale} style={styles.text}>
+          {title}
+        </Text>
       </TouchableOpacity>
     </View>
   );

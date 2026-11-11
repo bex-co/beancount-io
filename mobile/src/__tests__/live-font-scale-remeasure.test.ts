@@ -571,6 +571,23 @@ const KEYED_TEXTS: [string, string[]][] = [
       "{styles.showMoreText}",
     ],
   ],
+  // Settings: a row's title, subtitle and content, the section titles and the
+  // secondary button (w22/021).
+  [
+    "screens/setting/list-item.tsx",
+    [
+      "{destructive ? styles.titleDestructive : styles.title}",
+      "{styles.secondaryText}",
+      "{styles.secondaryText}",
+      "{styles.title}",
+      "{styles.text}",
+    ],
+  ],
+  // The Invite Friends block above Settings (w22/021).
+  [
+    "screens/referral-screen/components/invite-section.tsx",
+    ["{styles.title}", "{styles.summary}"],
+  ],
   // The Accounts tab's "Account" and "Balance" column labels (w22/017).
   [
     "components/account-table/account-table.tsx",

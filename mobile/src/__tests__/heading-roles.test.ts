@@ -59,7 +59,7 @@ describe("section and card titles are headings", () => {
     // Settings' section headers (Support, About, …) share one component.
     expect(
       compactRead("screens/setting/list-item.tsx").includes(
-        '<Textstyle={styles.title}accessibilityRole="header">{title}</Text>',
+        '<Textkey={fontScale}style={styles.title}accessibilityRole="header">{title}</Text>',
       ),
     ).toBe(true);
   });

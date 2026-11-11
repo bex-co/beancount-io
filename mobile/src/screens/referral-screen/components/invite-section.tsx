@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import { useTheme } from "@/common/theme";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { contentPadding, onePx } from "@/common/screen-util";
@@ -64,6 +70,8 @@ export function InviteSection(): JSX.Element | null {
   const styles = getStyles(theme);
   const router = useRouter();
   const { t } = useTranslations();
+  // Keys re-measure the Texts after a live text-size change (w22/021).
+  const { fontScale } = useWindowDimensions();
   useReactiveVar(serverUrlOverrideVar);
   // The link shared is the hosted service's sign-up page, carrying the user's
   // id: on a self-hosted server it invites to another service and publishes an
@@ -75,6 +83,7 @@ export function InviteSection(): JSX.Element | null {
       {/* The button below is named by this title and its summary, so the title is
           not a focus stop of its own (it was read twice, w21/488). */}
       <Text
+        key={`title-${fontScale}`}
         style={styles.title}
         accessible={false}
         importantForAccessibility="no"
@@ -91,7 +100,9 @@ export function InviteSection(): JSX.Element | null {
         }}
       >
         <View style={styles.summaryContainer}>
-          <Text style={styles.summary}>{t("inviteSummary")}</Text>
+          <Text key={`summary-${fontScale}`} style={styles.summary}>
+            {t("inviteSummary")}
+          </Text>
         </View>
         <View style={styles.imageContainer}>
           <GiftIcon />
