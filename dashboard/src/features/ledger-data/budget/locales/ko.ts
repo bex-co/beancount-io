@@ -30,7 +30,7 @@ const koBudget: Record<string, TranslationEntry> = {
     description: "Help text under the account field in the add-budget dialog",
   },
   "page.budget.budgetAccountPlaceholder": {
-    message: "Expenses:Groceries",
+    message: "계정 (예: Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
   "page.budget.budgetAccountRequired": {

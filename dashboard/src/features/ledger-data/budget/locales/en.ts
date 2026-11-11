@@ -160,7 +160,7 @@ const enBudget: Record<string, TranslationEntry> = {
     description: "Form label for budget currency field",
   },
   "page.budget.budgetAccountPlaceholder": {
-    message: "Expenses:Groceries",
+    message: "Account (e.g., Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
   "page.budget.budgetSelectInterval": {

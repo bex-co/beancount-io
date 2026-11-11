@@ -112,4 +112,61 @@ describe("Combobox form field identity", () => {
     await user.click(screen.getByText("Currency"));
     expect(currency).toHaveFocus();
   });
+
+  // Add Budget's placeholder was a bare example, and the popup and its list
+  // took it as their name: both were announced as "Expenses:Groceries", an
+  // account that may not exist (w2/116).
+  it("names a labelled field's popup and list after its label", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <label htmlFor="budget-account">Account</label>
+        <Combobox
+          id="budget-account"
+          options={[
+            { value: "Assets:Bank:Checking", label: "Assets:Bank:Checking" },
+            {
+              value: "Expenses:Food:Groceries",
+              label: "Expenses:Food:Groceries",
+            },
+          ]}
+          value=""
+          onValueChange={vi.fn()}
+          placeholder="Expenses:Groceries"
+        />
+      </>,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Account" }));
+    expect(
+      await screen.findByRole("dialog", { name: "Account" }),
+    ).toBeVisible();
+    expect(screen.getByRole("listbox", { name: "Account" })).toBeVisible();
+    expect(
+      screen.queryByRole("dialog", { name: "Expenses:Groceries" }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("listbox", { name: "Expenses:Groceries" }),
+    ).toBeNull();
+  });
+
+  it("falls back to the placeholder for a field with no label", async () => {
+    const user = userEvent.setup();
+    render(
+      <Combobox
+        options={[{ value: "USD", label: "USD" }]}
+        value=""
+        onValueChange={vi.fn()}
+        placeholder="Currency (e.g., USD)"
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox"));
+    expect(
+      await screen.findByRole("listbox", { name: "Currency (e.g., USD)" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("dialog", { name: "Currency (e.g., USD)" }),
+    ).toBeVisible();
+  });
 });

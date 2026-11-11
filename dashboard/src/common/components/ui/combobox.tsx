@@ -69,6 +69,15 @@ export function Combobox({
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  // The popup and its list are named like the field: by its label when it
+  // has one, else by its placeholder. Add Budget's placeholder is a bare
+  // example, so both were announced as "Expenses:Groceries" (w2/116).
+  const [fieldLabel, setFieldLabel] = React.useState<string | null>(null);
+  React.useLayoutEffect(() => {
+    if (!open) return;
+    setFieldLabel(inputRef.current?.labels?.[0]?.textContent?.trim() || null);
+  }, [open]);
+  const popupName = fieldLabel ?? defaultPlaceholder;
   // The value an explicit selection (or Enter) just committed. Focus stays in
   // the input afterwards (w4/255), so the next blur — Tab onward — must not
   // commit it a second time; any new typing clears it.
@@ -292,9 +301,8 @@ export function Combobox({
         <PopoverContent
           className="p-0"
           // Radix gives this popup role="dialog"; without a name assistive
-          // technology announces an unnamed dialog next to a named field. The
-          // field's own placeholder is the identity a reader already has.
-          aria-label={defaultPlaceholder}
+          // technology announces an unnamed dialog next to a named field.
+          aria-label={popupName}
           style={{
             width: popoverWidth ? `${popoverWidth}px` : undefined,
             // Never extend past the space Radix measured between the anchor and
@@ -330,7 +338,7 @@ export function Combobox({
           <div
             id={listboxId}
             role="listbox"
-            aria-label={defaultPlaceholder}
+            aria-label={popupName}
             className="overflow-x-hidden overflow-y-auto p-1"
             style={{
               maxHeight:

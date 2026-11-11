@@ -30,7 +30,7 @@ const faBudget: Record<string, TranslationEntry> = {
     description: "Help text under the account field in the add-budget dialog",
   },
   "page.budget.budgetAccountPlaceholder": {
-    message: "Expenses:Groceries",
+    message: "حساب (مثلاً Expenses:Food:Groceries)",
     description: "Placeholder for budget account input",
   },
   "page.budget.budgetAccountRequired": {
