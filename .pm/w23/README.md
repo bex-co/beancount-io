@@ -104,3 +104,4 @@
 - [x] [232](./done/232.md) — REST and GraphQL refuse the owner-case variant of a pinned ledger that MCP admits (found by the m38 audit; from source, repro unverified)
 - [x] [233](./done/233.md) — a file-write gate reads an unreadable baseline as "no errors", so every existing error reads as new (found by the m39 review; from source)
 - [x] [234](./done/234.md) — REST and GraphQL rename return no validation block; MCP's rename does (found by the m39 review)
+- [ ] [235](./235.md) — the read-only QA token has two spellings (`QA_MCP_READ_ONLY_TOKEN` in the tooling, `QA_MCP_TOKEN_READONLY` in m31's Unblock line, which also puts keys on argv); check 5 and the read-only journey skip silently (found by MCP QA 2026-11-11)
