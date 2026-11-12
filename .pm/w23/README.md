@@ -105,3 +105,4 @@
 - [x] [233](./done/233.md) — a file-write gate reads an unreadable baseline as "no errors", so every existing error reads as new (found by the m39 review; from source)
 - [x] [234](./done/234.md) — REST and GraphQL rename return no validation block; MCP's rename does (found by the m39 review)
 - [ ] [235](./235.md) — the read-only QA token has two spellings (`QA_MCP_READ_ONLY_TOKEN` in the tooling, `QA_MCP_TOKEN_READONLY` in m31's Unblock line, which also puts keys on argv); check 5 and the read-only journey skip silently (found by MCP QA 2026-11-11)
+- [ ] [236](./236.md) — `entries-count` excludes managed price feed directives (Price 846 vs 936 in the journal and BQL, by design, ADR 015 §9) but the description and `docs/mcp.md` do not say so (found by MCP QA 2026-11-11)
