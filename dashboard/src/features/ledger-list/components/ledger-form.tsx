@@ -32,6 +32,15 @@ import {
 } from "@/common/lib/beancount/ledger-name";
 import { LengthCounter } from "@/common/components/length-counter";
 import { cn } from "@/common/lib/utils/utils";
+import { Combobox } from "@/common/components/ui/combobox";
+import type { CreateLedgerFormValues } from "../hooks/use-create-ledger";
+import {
+  LEDGER_CURRENCIES,
+  SERVER_DEFAULT_CURRENCY,
+  browserLocales,
+  defaultLedgerCurrency,
+  isLedgerCurrency,
+} from "../lib/ledger-currency";
 
 /**
  * Generate a default ledger name that doesn't conflict with existing ledgers.
@@ -55,34 +64,46 @@ function generateDefaultLedgerName(existingNames: string[]): string {
 }
 
 const createLedgerFormSchema = (t: (key: string) => string) =>
-  z.object({
-    name: z
-      .string()
-      .min(1, t("page.dashboard.nameRequired"))
-      // Spaces and punctuation are allowed as typed; the slug the server
-      // gets is what it judges (w2/130).
-      .refine(
-        (val) => ledgerNameIssue(val) !== "tooLong",
-        t("page.dashboard.nameMaxLength"),
-      )
-      .refine((val) => {
-        const issue = ledgerNameIssue(val);
-        return issue !== "empty" && issue !== "noLetterOrDigit";
-      }, t("page.dashboard.nameInvalid")),
-    description: z
-      .string()
-      .refine(
-        (val) => ledgerDescriptionLength(val) <= LEDGER_DESCRIPTION_MAX,
-        t("page.dashboard.descriptionMaxLength"),
-      )
-      .optional(),
-    private: z.boolean().optional(),
-    template: z.enum([LedgerTemplate.Starter, LedgerTemplate.Sample]),
-  });
+  z
+    .object({
+      name: z
+        .string()
+        .min(1, t("page.dashboard.nameRequired"))
+        // Spaces and punctuation are allowed as typed; the slug the server
+        // gets is what it judges (w2/130).
+        .refine(
+          (val) => ledgerNameIssue(val) !== "tooLong",
+          t("page.dashboard.nameMaxLength"),
+        )
+        .refine((val) => {
+          const issue = ledgerNameIssue(val);
+          return issue !== "empty" && issue !== "noLetterOrDigit";
+        }, t("page.dashboard.nameInvalid")),
+      description: z
+        .string()
+        .refine(
+          (val) => ledgerDescriptionLength(val) <= LEDGER_DESCRIPTION_MAX,
+          t("page.dashboard.descriptionMaxLength"),
+        )
+        .optional(),
+      private: z.boolean().optional(),
+      template: z.enum([LedgerTemplate.Starter, LedgerTemplate.Sample]),
+      currency: z.string(),
+    })
+    // Only a Starter shows and sends the currency (w3/m62).
+    .refine(
+      (values) =>
+        values.template !== LedgerTemplate.Starter ||
+        isLedgerCurrency(values.currency),
+      {
+        message: t("page.dashboard.ledgerCurrencyInvalid"),
+        path: ["currency"],
+      },
+    );
 
 interface LedgerFormProps {
   initialData?: Partial<CreateLedgerMutationVariables>;
-  onSubmit: (data: CreateLedgerMutationVariables) => void | Promise<void>;
+  onSubmit: (data: CreateLedgerFormValues) => void | Promise<void>;
   isLoading?: boolean;
   onCancel?: () => void;
   hideLimitIndicator?: boolean;
@@ -99,8 +120,8 @@ export function LedgerForm({
   onCancel,
   hideLimitIndicator = false,
 }: LedgerFormProps) {
-  const { t } = useTranslations();
-  const { limits, tier, isAtLedgerLimit } = useUserLimits();
+  const { t, i18n } = useTranslations();
+  const { limits, tier, isAtLedgerLimit, defaultCurrency } = useUserLimits();
 
   const ledgerFormSchema = useMemo(() => createLedgerFormSchema(t), [t]);
   type LedgerFormData = z.infer<typeof ledgerFormSchema>;
@@ -119,8 +140,40 @@ export function LedgerForm({
       description: initialData?.description || "",
       private: initialData?.private ?? true,
       template: initialData?.template ?? LedgerTemplate.Starter,
+      currency: SERVER_DEFAULT_CURRENCY,
     },
   });
+
+  // Prefill the currency once the profile is known (w3/m62): the saved
+  // preference, else the browser region's currency, else USD. Browser locales
+  // are read after mount, so server and client render the same first frame;
+  // a currency the customer picked is never replaced.
+  useEffect(() => {
+    if (!isCreate || form.getFieldState("currency").isDirty) return;
+    form.setValue(
+      "currency",
+      defaultLedgerCurrency({
+        saved: defaultCurrency,
+        locales: browserLocales(),
+      }),
+    );
+  }, [isCreate, defaultCurrency, form]);
+
+  const currencyOptions = useMemo(() => {
+    let names: Intl.DisplayNames | undefined;
+    try {
+      names = new Intl.DisplayNames([i18n.language], { type: "currency" });
+    } catch {
+      names = undefined;
+    }
+    return LEDGER_CURRENCIES.map((code) => {
+      const name = names?.of(code);
+      return {
+        value: code,
+        label: name && name !== code ? `${code} — ${name}` : code,
+      };
+    });
+  }, [i18n.language]);
 
   // Populate default ledger name when creating a new ledger
   useEffect(() => {
@@ -139,6 +192,7 @@ export function LedgerForm({
 
   // Watch fields for dynamic UI updates
   const isPrivate = form.watch("private");
+  const template = form.watch("template");
   const ledgerName = form.watch("name");
 
   // Calculate slugified name for preview
@@ -158,12 +212,20 @@ export function LedgerForm({
     // Slugify the name before sending to API to match backend validation
     const slugified = slugifyLedgerName(data.name);
 
-    const submitData: CreateLedgerMutationVariables = {
+    const submitData: CreateLedgerFormValues = {
       name: slugified,
       description: data.description || undefined,
       private: data.private,
       ...(isCreate && data.template !== LedgerTemplate.Starter
         ? { template: data.template }
+        : {}),
+      // Only a Starter takes a currency, and USD is what the server writes
+      // without one: leaving it out sends CreateLedger unchanged, which
+      // older servers accept (w3/m62, see useCreateLedger).
+      ...(isCreate &&
+      data.template === LedgerTemplate.Starter &&
+      data.currency !== SERVER_DEFAULT_CURRENCY
+        ? { currency: data.currency }
         : {}),
     };
     await onSubmit(submitData);
@@ -293,6 +355,38 @@ export function LedgerForm({
             />
           ) : null}
 
+          {isCreate && template === LedgerTemplate.Starter ? (
+            <FormField
+              control={form.control}
+              name="currency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground">
+                    {t("page.dashboard.ledgerCurrency")}
+                  </FormLabel>
+                  <FormControl>
+                    <Combobox
+                      options={currencyOptions}
+                      value={field.value}
+                      onValueChange={(value) =>
+                        form.setValue("currency", value, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
+                      allowCustom={false}
+                      disabled={isLoading}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-muted-foreground text-sm">
+                    {t("page.dashboard.ledgerCurrencyDescription")}
+                  </FormDescription>
+                  <FormMessage className="text-destructive" />
+                </FormItem>
+              )}
+            />
+          ) : null}
+
           <FormField
             control={form.control}
             name="description"
@@ -391,7 +485,11 @@ export function LedgerForm({
               }
               data-testid="ledger-form-submit"
             >
-              {isLoading ? t("common.saving") : t("common.save")}
+              {isLoading
+                ? t("common.saving")
+                : isCreate
+                  ? t("page.dashboard.createLedger")
+                  : t("common.save")}
             </Button>
           </div>
         </form>

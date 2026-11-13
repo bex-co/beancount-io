@@ -59,13 +59,15 @@ import {
 } from "@/common/components/ui/alert-dialog";
 import {
   ListLedgersDocument,
-  CreateLedgerDocument,
   UpdateLedgerDocument,
   DeleteLedgerDocument,
   GetCurrentUserDocument,
   type ListLedgersQuery,
-  type CreateLedgerMutationVariables,
 } from "@/graphql/definitions";
+import {
+  useCreateLedger,
+  type CreateLedgerFormValues,
+} from "@/features/ledger-list/hooks/use-create-ledger";
 import { LedgerForm } from "@/features/ledger-list/components/ledger-form";
 import { toast } from "sonner";
 import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
@@ -319,12 +321,10 @@ export function DashboardSidebar() {
     error,
     refetch,
   } = useQuery(ListLedgersDocument, { fetchPolicy: "cache-and-network" });
-  const [createLedgerMutation, { loading: createLoading }] = useMutation(
-    CreateLedgerDocument,
-    {
-      refetchQueries: [ListLedgersDocument, GetCurrentUserDocument],
-    },
-  );
+  const [createLedgerMutation, { loading: createLoading }] = useCreateLedger([
+    ListLedgersDocument,
+    GetCurrentUserDocument,
+  ]);
   const [updateLedgerMutation, { loading: updateLoading }] = useMutation(
     UpdateLedgerDocument,
     {
@@ -353,9 +353,9 @@ export function DashboardSidebar() {
 
   const ledgers = data?.listLedgers || [];
 
-  const handleCreateLedger = async (data: CreateLedgerMutationVariables) => {
+  const handleCreateLedger = async (data: CreateLedgerFormValues) => {
     try {
-      const result = await createLedgerMutation({ variables: data });
+      const result = await createLedgerMutation(data);
       setIsCreateDialogOpen(false);
       toast.success(t("page.dashboard.ledgerCreatedSuccess"));
 

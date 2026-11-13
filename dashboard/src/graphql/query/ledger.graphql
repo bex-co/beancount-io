@@ -29,6 +29,41 @@ mutation CreateLedger(
   }
 }
 
+# w3/m62: a Starter in a currency other than USD. Kept apart from CreateLedger,
+# because a server validates the whole document: one that declares `currency`
+# is refused by a server older than the argument even when no currency is
+# sent, so every other creation keeps sending CreateLedger unchanged.
+mutation CreateLedgerInCurrency(
+  $name: String!
+  $private: Boolean
+  $description: String
+  $currency: String!
+) {
+  createLedger(
+    name: $name
+    private: $private
+    description: $description
+    currency: $currency
+  ) {
+    updatedAt
+    sshUrl
+    size
+    private
+    name
+    id
+    fullName
+    empty
+    createdAt
+    httpUrl
+    description
+    permissions {
+      admin
+      pull
+      push
+    }
+  }
+}
+
 mutation UpdateLedger(
   $ledgerId: String!
   $name: String

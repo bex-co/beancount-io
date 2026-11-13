@@ -1,13 +1,13 @@
 # w3 · m62 — Ledger creation: a prefilled Currency field, backward compatible
 
-**Worker:** worker3 **Goal:** the dashboard and native creation forms keep today's single form and gain one Currency field, prefilled for the user, so a Starter ledger opens in the right operating currency; app versions already installed keep creating exactly the ledger they create today. **Status:** todo (t001 done)
+**Worker:** worker3 **Goal:** the dashboard and native creation forms keep today's single form and gain one Currency field, prefilled for the user, so a Starter ledger opens in the right operating currency; app versions already installed keep creating exactly the ledger they create today. **Status:** todo (t001, t002 done)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
 | t001 | Accept an optional `currency` on ledger creation across REST, GraphQL, and MCP — **DONE** | 90m | — |
-| t002 | Dashboard: a prefilled Currency field on the create form | 90m | t001 |
+| t002 | Dashboard: a prefilled Currency field on the create form — **DONE** | 90m | t001 |
 | t003 | Native: a prefilled Currency field on the create screen | 90m | t001 |
 | t004 | Adoption surface | 30m | t002, t003 |
 | t005 | Simplify | 20m | t004 |

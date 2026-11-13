@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "@tanstack/react-router";
 import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 import { ChevronsUpDown, Check, Plus, LayoutGrid, User } from "lucide-react";
-import { useQuery, useMutation } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
 import {
   ListLedgersDocument,
-  CreateLedgerDocument,
   GetCurrentUserDocument,
-  type CreateLedgerMutationVariables,
 } from "@/graphql/definitions";
+import {
+  useCreateLedger,
+  type CreateLedgerFormValues,
+} from "@/features/ledger-list/hooks/use-create-ledger";
 import {
   Popover,
   PopoverContent,
@@ -130,12 +132,10 @@ function LedgerAuthenticatedSwitcher({
   // ledgers stay listed if only a refresh fails.
   const readFailed = Boolean(error) && !data && !loading;
   const searchRef = React.useRef<HTMLInputElement>(null);
-  const [createLedgerMutation, { loading: createLoading }] = useMutation(
-    CreateLedgerDocument,
-    {
-      refetchQueries: [ListLedgersDocument, GetCurrentUserDocument],
-    },
-  );
+  const [createLedgerMutation, { loading: createLoading }] = useCreateLedger([
+    ListLedgersDocument,
+    GetCurrentUserDocument,
+  ]);
 
   const ledgers = data?.listLedgers || [];
   const groupedLedgers = groupLedgersByOwner(ledgers);
@@ -187,9 +187,9 @@ function LedgerAuthenticatedSwitcher({
     closeMobileDrawer();
   };
 
-  const handleCreateLedger = async (data: CreateLedgerMutationVariables) => {
+  const handleCreateLedger = async (data: CreateLedgerFormValues) => {
     try {
-      const result = await createLedgerMutation({ variables: data });
+      const result = await createLedgerMutation(data);
       setIsCreateDialogOpen(false);
       setOpen(false);
       closeMobileDrawer();

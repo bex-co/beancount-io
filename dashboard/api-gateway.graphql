@@ -310,6 +310,7 @@ type UserProfileResponse {
   id: String!
   email: String!
   locale: String!
+  defaultCurrency: String
   firstName: String
   lastName: String
   emailReportStatus: ReportStatus
@@ -1444,7 +1445,7 @@ type Mutation {
   consumeCliAuthSession(deviceCode: String!): ConsumeCliAuthSessionResponse!
 
   """Create a new ledger for the current user"""
-  createLedger(name: String!, description: String, private: Boolean, template: LedgerTemplate): Ledger!
+  createLedger(name: String!, description: String, private: Boolean, template: LedgerTemplate, currency: String): Ledger!
 
   """Update a specific ledger"""
   updateLedger(name: String, description: String, private: Boolean, ledgerId: String!): Ledger!

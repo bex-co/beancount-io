@@ -50,7 +50,7 @@ export type AccountJournalQueryInput = {
   directiveTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   /** Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned. */
   documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
+  /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
   filter?: InputMaybe<Scalars['String']['input']>;
   /** Optional shared report-stream AccountFilter (URL ?account=). Distinct from the required target `account`. */
   filterAccount?: InputMaybe<Scalars['String']['input']>;
@@ -122,6 +122,8 @@ export type AddEntryResponse = {
 
 export type AddLedgerEntryResponse = {
   __typename: 'AddLedgerEntryResponse';
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
   dryRun: Scalars['Boolean']['output'];
   /** The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit */
   entryHashes: Array<Scalars['String']['output']>;
@@ -160,6 +162,8 @@ export type AppendDirectiveTextResponse = {
   __typename: 'AppendDirectiveTextResponse';
   /** Files whose directives were not in date order, so these were appended at the end */
   appendedUnsorted: Array<Scalars['String']['output']>;
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
   /** Directives parsed out of the text */
   count: Scalars['Float']['output'];
   /** Unified diff per touched file; populated on dry runs only */
@@ -467,6 +471,8 @@ export type DeleteCollaboratorResponse = {
 
 export type DeleteLedgerFileResponse = {
   __typename: 'DeleteLedgerFileResponse';
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
   path: Scalars['String']['output'];
 };
 
@@ -501,6 +507,8 @@ export type DeleteMultiSourceSlicesInput = {
 
 export type DeleteMultiSourceSlicesResponse = {
   __typename: 'DeleteMultiSourceSlicesResponse';
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
   deletedCount: Scalars['Int']['output'];
   dryRun: Scalars['Boolean']['output'];
   errorsAfter: Scalars['Float']['output'];
@@ -536,6 +544,8 @@ export type DeleteSourceSliceInput = {
 
 export type DeleteSourceSliceResponse = {
   __typename: 'DeleteSourceSliceResponse';
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
   dryRun: Scalars['Boolean']['output'];
   entryHash: Scalars['String']['output'];
   errorsAfter: Scalars['Float']['output'];
@@ -561,6 +571,8 @@ export type DirectiveTextDiff = {
 
 export type DirectiveTextError = {
   __typename: 'DirectiveTextError';
+  /** The engine's stable error code, such as E3001 */
+  code: Maybe<Scalars['String']['output']>;
   message: Scalars['String']['output'];
   source: Maybe<Scalars['String']['output']>;
 };
@@ -774,6 +786,8 @@ export type IncomeStatementData = {
 
 export type InsertReceiptResult = {
   __typename: 'InsertReceiptResult';
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
   /** The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty when it could not be resolved after the commit */
   entryHashes: Array<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
@@ -870,7 +884,7 @@ export type JournalQueryInput = {
   directiveTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   /** Document subtype filter: narrows documents only — other directive families pass through. Combine with directiveTypes to restrict the families returned. */
   documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
-  /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
+  /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
   filter?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
@@ -968,6 +982,8 @@ export type LedgerBalanceInput = {
   account: Scalars['String']['input'];
   amount: LedgerAmountInput;
   date: Scalars['String']['input'];
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
   /** Explicit balance tolerance as a plain decimal */
   tolerance?: InputMaybe<Scalars['String']['input']>;
 };
@@ -982,6 +998,8 @@ export type LedgerBudgetInput = {
 export type LedgerCloseInput = {
   account: Scalars['String']['input'];
   date: Scalars['String']['input'];
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
 };
 
 export type LedgerCollaborator = {
@@ -1010,6 +1028,8 @@ export type LedgerCommitUser = {
 export type LedgerCommodityInput = {
   currency: Scalars['String']['input'];
   date: Scalars['String']['input'];
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
 };
 
 export type LedgerCostInput = {
@@ -1035,6 +1055,8 @@ export type LedgerDocumentInput = {
   date: Scalars['String']['input'];
   filename: Scalars['String']['input'];
   links?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
@@ -1056,17 +1078,23 @@ export enum LedgerEntryType {
 export type LedgerEventInput = {
   date: Scalars['String']['input'];
   description: Scalars['String']['input'];
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
   type: Scalars['String']['input'];
 };
 
 export type LedgerFileContent = {
   __typename: 'LedgerFileContent';
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
   content: Maybe<Scalars['String']['output']>;
   encoding: Maybe<Scalars['String']['output']>;
   lastAuthorDate: Maybe<Scalars['String']['output']>;
   lastCommitSha: Maybe<Scalars['String']['output']>;
   lastCommitterDate: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  /** On a create or update: ledger files the write made that no loaded file includes. Their entries don't count and bean-check did not read them. */
+  notLoaded: Maybe<Array<Scalars['String']['output']>>;
   path: Scalars['String']['output'];
   sha: Scalars['String']['output'];
   size: Scalars['Float']['output'];
@@ -1091,6 +1119,8 @@ export type LedgerNoteInput = {
   account: Scalars['String']['input'];
   content: Scalars['String']['input'];
   date: Scalars['String']['input'];
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
 };
 
 export type LedgerOpenInput = {
@@ -1100,6 +1130,8 @@ export type LedgerOpenInput = {
   /** Valid currencies for the account; omit for a bare open line */
   currencies?: InputMaybe<Array<Scalars['String']['input']>>;
   date: Scalars['String']['input'];
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
 };
 
 /** Whether an account's opening balance is unknown, zero, or known */
@@ -1141,6 +1173,8 @@ export type LedgerOverview = {
 export type LedgerPadInput = {
   account: Scalars['String']['input'];
   date: Scalars['String']['input'];
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
   /** Account to pad from */
   sourceAccount?: InputMaybe<Scalars['String']['input']>;
   /** Alias of sourceAccount. One of the two is required. */
@@ -1172,6 +1206,8 @@ export type LedgerPriceInput = {
   amount: LedgerAmountInput;
   currency: Scalars['String']['input'];
   date: Scalars['String']['input'];
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
 };
 
 export type LedgerSetupAccountInput = {
@@ -1252,6 +1288,7 @@ export type LedgerTransactionInput = {
   date: Scalars['String']['input'];
   flag: Scalars['String']['input'];
   links?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Metadata written beneath the directive; every value is a string, written quoted as given */
   meta?: InputMaybe<Scalars['JSONObject']['input']>;
   narration?: InputMaybe<Scalars['String']['input']>;
   payee?: InputMaybe<Scalars['String']['input']>;
@@ -1355,7 +1392,7 @@ export type Mutation = {
   createApiKey: MintedApiKeyType;
   /** Initiate a CLI authentication session. Returns the device code the CLI polls with and the user code to display for the person to enter in the browser. */
   createCliAuthSession: CreateCliAuthSessionResponse;
-  /** Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin. */
+  /** Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. currency sets a STARTER ledger's operating currency (default USD). Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin. */
   createLedger: Ledger;
   /** Create a new file in a specific ledger */
   createLedgerFile: LedgerFileContent;
@@ -1419,6 +1456,8 @@ export type Mutation = {
   resetPassword: ResetPasswordResponse;
   /** Resumes your subscription. Requires a full signed-in session. */
   resumeSubscription: SubscriptionActionResult;
+  /** Undo one commit of a specific ledger as a new commit; refused when a later commit changed any file it touched */
+  revertLedgerCommit: RevertLedgerCommitResponse;
   /** Revoke an API key, effective on its next use */
   revokeApiKey: ApiKeyType;
   /** Send a password reset link to the user's email */
@@ -1547,6 +1586,7 @@ export type MutationCreateCliAuthSessionArgs = {
 
 
 export type MutationCreateLedgerArgs = {
+  currency?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   private?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1639,6 +1679,8 @@ export type MutationDeleteMultipleLedgerEntrySourceSlicesArgs = {
 
 
 export type MutationDeletePlaidTransactionsArgs = {
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   ledgerId: Scalars['String']['input'];
   transactionIds: Array<Scalars['String']['input']>;
 };
@@ -1705,6 +1747,8 @@ export type MutationParseReceiptArgs = {
 
 
 export type MutationReconcilePlaidAccountsArgs = {
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   itemId: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
 };
@@ -1758,6 +1802,15 @@ export type MutationResumeSubscriptionArgs = {
 };
 
 
+export type MutationRevertLedgerCommitArgs = {
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
+  ledgerId: Scalars['String']['input'];
+  message?: InputMaybe<Scalars['String']['input']>;
+  sha: Scalars['String']['input'];
+};
+
+
 export type MutationRevokeApiKeyArgs = {
   id: Scalars['String']['input'];
 };
@@ -1805,6 +1858,8 @@ export type MutationStarLedgerArgs = {
 
 
 export type MutationSubmitPlaidTransactionsToLedgerArgs = {
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   filename?: InputMaybe<Scalars['String']['input']>;
   ledgerId: Scalars['String']['input'];
   transactions: Array<PlaidTransactionSubmitInput>;
@@ -1812,6 +1867,8 @@ export type MutationSubmitPlaidTransactionsToLedgerArgs = {
 
 
 export type MutationSyncPlaidTransactionsArgs = {
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   itemId: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
 };
@@ -1823,6 +1880,8 @@ export type MutationUnfollowUserArgs = {
 
 
 export type MutationUnlinkPlaidItemArgs = {
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
   itemId: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
 };
@@ -1961,9 +2020,12 @@ export type PlaidAccountReconcileResult = {
   __typename: 'PlaidAccountReconcileResult';
   /** Accounts Plaid now shares that we had not stored yet */
   addedCount: Scalars['Float']['output'];
+  dryRun: Maybe<Scalars['Boolean']['output']>;
   /** Stored accounts Plaid no longer shares; these were deleted along with their transactions */
   removedCount: Scalars['Float']['output'];
   success: Scalars['Boolean']['output'];
+  wouldAdd: Maybe<Array<PlaidReconcileAccountChange>>;
+  wouldDelete: Maybe<Array<PlaidReconcileAccountChange>>;
 };
 
 export type PlaidAccountType = {
@@ -2002,11 +2064,21 @@ export type PlaidAccountWithInstitutionType = {
   updatedAt: Scalars['DateTimeISO']['output'];
 };
 
+export type PlaidDeletePreviewRow = {
+  __typename: 'PlaidDeletePreviewRow';
+  amount: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  transactionId: Scalars['String']['output'];
+};
+
 export type PlaidDeleteResult = {
   __typename: 'PlaidDeleteResult';
   deletedCount: Scalars['Float']['output'];
+  dryRun: Maybe<Scalars['Boolean']['output']>;
   message: Maybe<Scalars['String']['output']>;
+  preview: Maybe<Array<PlaidDeletePreviewRow>>;
   success: Scalars['Boolean']['output'];
+  wouldDeleteCount: Maybe<Scalars['Float']['output']>;
 };
 
 export type PlaidItemType = {
@@ -2036,21 +2108,37 @@ export type PlaidLinkToken = {
   linkToken: Scalars['String']['output'];
 };
 
+export type PlaidReconcileAccountChange = {
+  __typename: 'PlaidReconcileAccountChange';
+  accountId: Scalars['String']['output'];
+  accountName: Scalars['String']['output'];
+  ledgerAccount: Maybe<Scalars['String']['output']>;
+  mask: Maybe<Scalars['String']['output']>;
+};
+
 export type PlaidSubmitResult = {
   __typename: 'PlaidSubmitResult';
   addedCount: Scalars['Float']['output'];
+  dryRun: Maybe<Scalars['Boolean']['output']>;
   message: Maybe<Scalars['String']['output']>;
+  preview: Maybe<Array<Scalars['JSONObject']['output']>>;
   success: Scalars['Boolean']['output'];
+  wouldAddCount: Maybe<Scalars['Float']['output']>;
 };
 
 export type PlaidSyncResult = {
   __typename: 'PlaidSyncResult';
+  dryRun: Maybe<Scalars['Boolean']['output']>;
   message: Maybe<Scalars['String']['output']>;
+  morePagesAvailable: Maybe<Scalars['Boolean']['output']>;
   success: Scalars['Boolean']['output'];
   transactionsAdded: Scalars['Float']['output'];
   transactionsFetched: Scalars['Float']['output'];
   transactionsModified: Scalars['Float']['output'];
   transactionsRemoved: Scalars['Float']['output'];
+  wouldAdd: Maybe<Scalars['Float']['output']>;
+  wouldModify: Maybe<Scalars['Float']['output']>;
+  wouldRemove: Maybe<Scalars['Float']['output']>;
 };
 
 export type PlaidTransactionSubmitInput = {
@@ -2085,7 +2173,7 @@ export type PlaidTransactionType = {
 
 export type PlaintextJournalQueryInput = {
   account?: InputMaybe<Scalars['String']['input']>;
-  /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
+  /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
   filter?: InputMaybe<Scalars['String']['input']>;
   /** Entries per page, 1 to 1000; omitted, every entry. */
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -2277,9 +2365,9 @@ export type PullRequestDetails = {
 
 export type PullRequestResult = {
   __typename: 'PullRequestResult';
-  /** The created PR's actual base ref, read back — never a default */
+  /** The pull request's base branch, read back from the repository — never a default */
   baseBranch: Maybe<Scalars['String']['output']>;
-  /** The created PR's actual head ref, read back — never a default */
+  /** The pull request's head branch, read back from the repository — never a default */
   headBranch: Maybe<Scalars['String']['output']>;
   message: Maybe<Scalars['String']['output']>;
   prNumber: Maybe<Scalars['Int']['output']>;
@@ -2337,7 +2425,7 @@ export type Query = {
   getLedgerDirContent: Array<LedgerFileContent>;
   /** Get documents from a specific ledger with optional filtering */
   getLedgerDocuments: Array<Document>;
-  /** Get the count of entries per type */
+  /** Get the count of entries per type. Managed price feed directives are not counted, because the plan limit reads this count; the journal and BQL do include them, so Price here can be lower than their count. */
   getLedgerEntriesCountPerType: Array<EntriesByType>;
   /** Get context for a specific journal entry */
   getLedgerEntryContext: EntryContext;
@@ -2372,7 +2460,7 @@ export type Query = {
   getLedgerPayeeTransactions: Maybe<Transaction>;
   /** Get the payees of a specific ledger */
   getLedgerPayees: Array<Scalars['String']['output']>;
-  /** Get plaintext journal in beancount format */
+  /** Get plaintext journal in beancount format. The text holds the ledger's transactions, balance assertions and pads only, with no open, close, commodity, price, event, note, document or custom directives, so it is not a copy of the ledger: read the ledger's source files or its archive for that. */
   getLedgerPlaintextJournal: PlaintextJournalResponse;
   /** Count postings per account over the filtered Statistics report stream */
   getLedgerPostingsPerAccount: Array<PostingsPerAccount>;
@@ -3069,13 +3157,23 @@ export type RegisterRow = {
 
 export type RenameLedgerFileResponse = {
   __typename: 'RenameLedgerFileResponse';
+  checkError: Maybe<Scalars['String']['output']>;
+  /** Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why. */
+  checked: Maybe<Scalars['Boolean']['output']>;
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
   dryRun: Scalars['Boolean']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
   message: Scalars['String']['output'];
+  newErrors: Array<SliceWriteError>;
   newPath: Scalars['String']['output'];
   oldPath: Scalars['String']['output'];
   /** Per-file rewritten include lines; populated on dry runs only */
   preview: Array<RenamePreviewFile>;
   updatedIncludes: Array<Scalars['String']['output']>;
+  /** True only when the write adds no bean-check error; gate a preview on this. */
+  valid: Scalars['Boolean']['output'];
 };
 
 export type RenamePreviewFile = {
@@ -3117,6 +3215,36 @@ export type ResetPasswordResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type RevertLedgerCommitResponse = {
+  __typename: 'RevertLedgerCommitResponse';
+  checkError: Maybe<Scalars['String']['output']>;
+  /** Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why. */
+  checked: Maybe<Scalars['Boolean']['output']>;
+  /** The sha of the revert commit; absent on a preview, and when another commit landed in between. */
+  commit: Maybe<Scalars['String']['output']>;
+  dryRun: Scalars['Boolean']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
+  /** Each file the commit touched, and what the revert does to it. */
+  files: Array<RevertedFile>;
+  /** The revert's own commit message. */
+  message: Scalars['String']['output'];
+  newErrors: Array<SliceWriteError>;
+  /** The full sha of the commit the revert undoes. */
+  sha: Scalars['String']['output'];
+  /** The first line of that commit's message. */
+  subject: Scalars['String']['output'];
+  /** True only when the write adds no bean-check error; gate a preview on this. */
+  valid: Scalars['Boolean']['output'];
+};
+
+export type RevertedFile = {
+  __typename: 'RevertedFile';
+  /** What the revert does to the file: created, updated or deleted. */
+  change: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+};
+
 /** A plan change that takes effect at the end of the paid period. Nothing is charged until then. */
 export type ScheduledPlanChange = {
   __typename: 'ScheduledPlanChange';
@@ -3152,8 +3280,8 @@ export type SignUpResponse = {
   expireAt: Scalars['String']['output'];
   sessionId: Scalars['String']['output'];
   /** Set only on a self-hosted deployment, where sign-up needs no email verification: the account already exists and this is its session token (also set as the auth cookie). Absent means the code in the email must be verified with verifySignUpOtp. */
-  token?: Maybe<Scalars['String']['output']>;
-  tokenExpireAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  token: Maybe<Scalars['String']['output']>;
+  tokenExpireAt: Maybe<Scalars['DateTimeISO']['output']>;
 };
 
 export type SlicePreviewFile = {
@@ -3164,6 +3292,8 @@ export type SlicePreviewFile = {
 
 export type SliceWriteError = {
   __typename: 'SliceWriteError';
+  /** The engine's stable error code, such as E3001 */
+  code: Maybe<Scalars['String']['output']>;
   message: Scalars['String']['output'];
   source: Maybe<Scalars['String']['output']>;
 };
@@ -3301,6 +3431,8 @@ export type TempAssetUploadUrl = {
   __typename: 'TempAssetUploadUrl';
   expiresIn: Scalars['Float']['output'];
   objectKey: Scalars['String']['output'];
+  /** Headers the PUT must send; present when mimeType was given, which the URL signs. */
+  uploadHeaders: Maybe<Scalars['JSONObject']['output']>;
   uploadUrl: Scalars['String']['output'];
 };
 
@@ -3363,6 +3495,8 @@ export type UpdateSourceSliceInput = {
 
 export type UpdateSourceSliceResponse = {
   __typename: 'UpdateSourceSliceResponse';
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
   dryRun: Scalars['Boolean']['output'];
   entryHash: Scalars['String']['output'];
   errorsAfter: Scalars['Float']['output'];
@@ -3374,6 +3508,8 @@ export type UpdateSourceSliceResponse = {
   newSha256sum: Scalars['String']['output'];
   /** Per-file affected text; populated on dry runs only */
   preview: Array<SlicePreviewFile>;
+  /** True when the edit leaves the entry's text as it was: nothing was written and no commit was made. */
+  unchanged: Scalars['Boolean']['output'];
   /** True only when the write adds no bean-check error; gate a preview on this. */
   valid: Scalars['Boolean']['output'];
 };
@@ -4007,7 +4143,7 @@ export type SignInMutation = { signIn: { __typename: 'TokenAuthResponse', token:
 export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCurrentUserQuery = { userProfile: { __typename: 'UserProfileResponse', locale: string, lastName: string | null, id: string, firstName: string | null, emailReportStatus: ReportStatus | null, email: string, username: string | null, tier: string, hasEverSubscribed: boolean, limits: { __typename: 'UserLimits', ledgersUsed: number, ledgersMax: number, collaboratorsPerLedgerMax: number, maxDirectives: number } } | null };
+export type GetCurrentUserQuery = { userProfile: { __typename: 'UserProfileResponse', locale: string, defaultCurrency: string | null, lastName: string | null, id: string, firstName: string | null, emailReportStatus: ReportStatus | null, email: string, username: string | null, tier: string, hasEverSubscribed: boolean, limits: { __typename: 'UserLimits', ledgersUsed: number, ledgersMax: number, collaboratorsPerLedgerMax: number, maxDirectives: number } } | null };
 
 export type GetAiCfoUsageQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -4085,7 +4221,7 @@ export type SignUpMutationVariables = Exact<{
 }>;
 
 
-export type SignUpMutation = { signUp: { __typename: 'SignUpResponse', sessionId: string, expireAt: string, token?: string | null, tokenExpireAt?: string | null } };
+export type SignUpMutation = { signUp: { __typename: 'SignUpResponse', sessionId: string, expireAt: string, token: string | null, tokenExpireAt: string | null } };
 
 export type VerifySignUpOtpMutationVariables = Exact<{
   sessionId: Scalars['String']['input'];
@@ -4313,6 +4449,16 @@ export type CreateLedgerMutationVariables = Exact<{
 
 
 export type CreateLedgerMutation = { createLedger: { __typename: 'Ledger', updatedAt: string, sshUrl: string, size: number, private: boolean, name: string, id: string, fullName: string, empty: boolean, createdAt: string, httpUrl: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null } };
+
+export type CreateLedgerInCurrencyMutationVariables = Exact<{
+  name: Scalars['String']['input'];
+  private?: InputMaybe<Scalars['Boolean']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  currency: Scalars['String']['input'];
+}>;
+
+
+export type CreateLedgerInCurrencyMutation = { createLedger: { __typename: 'Ledger', updatedAt: string, sshUrl: string, size: number, private: boolean, name: string, id: string, fullName: string, empty: boolean, createdAt: string, httpUrl: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null } };
 
 export type UpdateLedgerMutationVariables = Exact<{
   ledgerId: Scalars['String']['input'];
@@ -4636,7 +4782,7 @@ export const FollowUserDocument = {"kind":"Document","definitions":[{"kind":"Ope
 export const UnfollowUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnfollowUser"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"username"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unfollowUser"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"username"},"value":{"kind":"Variable","name":{"kind":"Name","value":"username"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"isFollowing"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]} as unknown as DocumentNode<UnfollowUserMutation, UnfollowUserMutationVariables>;
 export const IsAuthenticatedDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"IsAuthenticated"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userProfile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<IsAuthenticatedQuery, IsAuthenticatedQueryVariables>;
 export const SignInDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SignIn"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"password"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"signIn"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}},{"kind":"Argument","name":{"kind":"Name","value":"password"},"value":{"kind":"Variable","name":{"kind":"Name","value":"password"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}}]}}]}}]} as unknown as DocumentNode<SignInMutation, SignInMutationVariables>;
-export const GetCurrentUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetCurrentUser"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userProfile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"locale"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"emailReportStatus"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"tier"}},{"kind":"Field","name":{"kind":"Name","value":"hasEverSubscribed"}},{"kind":"Field","name":{"kind":"Name","value":"limits"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ledgersUsed"}},{"kind":"Field","name":{"kind":"Name","value":"ledgersMax"}},{"kind":"Field","name":{"kind":"Name","value":"collaboratorsPerLedgerMax"}},{"kind":"Field","name":{"kind":"Name","value":"maxDirectives"}}]}}]}}]}}]} as unknown as DocumentNode<GetCurrentUserQuery, GetCurrentUserQueryVariables>;
+export const GetCurrentUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetCurrentUser"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userProfile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"locale"}},{"kind":"Field","name":{"kind":"Name","value":"defaultCurrency"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"emailReportStatus"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"tier"}},{"kind":"Field","name":{"kind":"Name","value":"hasEverSubscribed"}},{"kind":"Field","name":{"kind":"Name","value":"limits"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ledgersUsed"}},{"kind":"Field","name":{"kind":"Name","value":"ledgersMax"}},{"kind":"Field","name":{"kind":"Name","value":"collaboratorsPerLedgerMax"}},{"kind":"Field","name":{"kind":"Name","value":"maxDirectives"}}]}}]}}]}}]} as unknown as DocumentNode<GetCurrentUserQuery, GetCurrentUserQueryVariables>;
 export const GetAiCfoUsageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetAiCfoUsage"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"aiCfoUsage"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"aiCfoTokensUsed"}},{"kind":"Field","name":{"kind":"Name","value":"aiCfoTokensMax"}}]}}]}}]} as unknown as DocumentNode<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>;
 export const SignInWithOneTimeTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SignInWithOneTimeToken"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"token"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"signInWithOneTimeToken"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"token"},"value":{"kind":"Variable","name":{"kind":"Name","value":"token"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}}]}}]}}]} as unknown as DocumentNode<SignInWithOneTimeTokenMutation, SignInWithOneTimeTokenMutationVariables>;
 export const RefreshTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RefreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"refreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}}]}}]}}]} as unknown as DocumentNode<RefreshTokenMutation, RefreshTokenMutationVariables>;
@@ -4676,6 +4822,7 @@ export const ListPublicKeysDocument = {"kind":"Document","definitions":[{"kind":
 export const GetPublicKeyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetPublicKey"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"keyId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getPublicKey"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"keyId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"keyId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"key"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"fingerprint"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastUsedAt"}}]}}]}}]} as unknown as DocumentNode<GetPublicKeyQuery, GetPublicKeyQueryVariables>;
 export const GetLedgerAssetDownloadUrlDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetLedgerAssetDownloadUrl"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerRepoId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"filename"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getLedgerAssetDownloadUrl"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ledgerRepoId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerRepoId"}}},{"kind":"Argument","name":{"kind":"Name","value":"filename"},"value":{"kind":"Variable","name":{"kind":"Name","value":"filename"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"downloadUrl"}}]}}]}}]} as unknown as DocumentNode<GetLedgerAssetDownloadUrlQuery, GetLedgerAssetDownloadUrlQueryVariables>;
 export const CreateLedgerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateLedger"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"private"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"description"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"template"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"LedgerTemplate"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createLedger"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}},{"kind":"Argument","name":{"kind":"Name","value":"private"},"value":{"kind":"Variable","name":{"kind":"Name","value":"private"}}},{"kind":"Argument","name":{"kind":"Name","value":"description"},"value":{"kind":"Variable","name":{"kind":"Name","value":"description"}}},{"kind":"Argument","name":{"kind":"Name","value":"template"},"value":{"kind":"Variable","name":{"kind":"Name","value":"template"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"sshUrl"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"private"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"fullName"}},{"kind":"Field","name":{"kind":"Name","value":"empty"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"httpUrl"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"permissions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"admin"}},{"kind":"Field","name":{"kind":"Name","value":"pull"}},{"kind":"Field","name":{"kind":"Name","value":"push"}}]}}]}}]}}]} as unknown as DocumentNode<CreateLedgerMutation, CreateLedgerMutationVariables>;
+export const CreateLedgerInCurrencyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateLedgerInCurrency"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"private"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"description"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"currency"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createLedger"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}},{"kind":"Argument","name":{"kind":"Name","value":"private"},"value":{"kind":"Variable","name":{"kind":"Name","value":"private"}}},{"kind":"Argument","name":{"kind":"Name","value":"description"},"value":{"kind":"Variable","name":{"kind":"Name","value":"description"}}},{"kind":"Argument","name":{"kind":"Name","value":"currency"},"value":{"kind":"Variable","name":{"kind":"Name","value":"currency"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"sshUrl"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"private"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"fullName"}},{"kind":"Field","name":{"kind":"Name","value":"empty"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"httpUrl"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"permissions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"admin"}},{"kind":"Field","name":{"kind":"Name","value":"pull"}},{"kind":"Field","name":{"kind":"Name","value":"push"}}]}}]}}]}}]} as unknown as DocumentNode<CreateLedgerInCurrencyMutation, CreateLedgerInCurrencyMutationVariables>;
 export const UpdateLedgerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateLedger"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"name"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"private"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"description"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateLedger"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}},{"kind":"Argument","name":{"kind":"Name","value":"name"},"value":{"kind":"Variable","name":{"kind":"Name","value":"name"}}},{"kind":"Argument","name":{"kind":"Name","value":"private"},"value":{"kind":"Variable","name":{"kind":"Name","value":"private"}}},{"kind":"Argument","name":{"kind":"Name","value":"description"},"value":{"kind":"Variable","name":{"kind":"Name","value":"description"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"fullName"}},{"kind":"Field","name":{"kind":"Name","value":"httpUrl"}},{"kind":"Field","name":{"kind":"Name","value":"sshUrl"}},{"kind":"Field","name":{"kind":"Name","value":"private"}},{"kind":"Field","name":{"kind":"Name","value":"empty"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"permissions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"admin"}},{"kind":"Field","name":{"kind":"Name","value":"pull"}},{"kind":"Field","name":{"kind":"Name","value":"push"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateLedgerMutation, UpdateLedgerMutationVariables>;
 export const DeleteLedgerDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteLedger"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteLedger"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ledgerId"}}]}}]}}]} as unknown as DocumentNode<DeleteLedgerMutation, DeleteLedgerMutationVariables>;
 export const ListLedgersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListLedgers"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"page"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"listLedgers"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}},{"kind":"Argument","name":{"kind":"Name","value":"page"},"value":{"kind":"Variable","name":{"kind":"Name","value":"page"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"fullName"}},{"kind":"Field","name":{"kind":"Name","value":"httpUrl"}},{"kind":"Field","name":{"kind":"Name","value":"sshUrl"}},{"kind":"Field","name":{"kind":"Name","value":"private"}},{"kind":"Field","name":{"kind":"Name","value":"empty"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"permissions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"admin"}},{"kind":"Field","name":{"kind":"Name","value":"pull"}},{"kind":"Field","name":{"kind":"Name","value":"push"}}]}}]}}]}}]} as unknown as DocumentNode<ListLedgersQuery, ListLedgersQueryVariables>;

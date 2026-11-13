@@ -105,7 +105,9 @@ describe("LedgerForm", () => {
 
     // Check for buttons
     expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Create Ledger" }),
+    ).toBeInTheDocument();
   });
 
   it("should describe the Starter as empty books in every locale (w3/648)", () => {
@@ -161,7 +163,7 @@ describe("LedgerForm", () => {
     // Private is true by default, no need to click
 
     // Submit form
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       // Name should be slugified before submission
@@ -181,7 +183,7 @@ describe("LedgerForm", () => {
     await user.tripleClick(nameInput);
     await user.keyboard("Sample Book");
     await user.click(screen.getByRole("radio", { name: /Sample ledger/i }));
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
@@ -234,7 +236,7 @@ describe("LedgerForm", () => {
     await user.keyboard("My Ledger");
 
     // Submit form
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       // Name should be slugified before submission
@@ -261,7 +263,7 @@ describe("LedgerForm", () => {
     await user.tripleClick(nameInput);
     await user.keyboard(" "); // Replace selection with a space
     await user.keyboard("{Backspace}"); // Delete the space
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(screen.getByText("Name is required")).toBeInTheDocument();
@@ -277,7 +279,7 @@ describe("LedgerForm", () => {
     // Fill with name exceeding 100 characters
     const longName = "a".repeat(101);
     await user.type(screen.getByLabelText("Ledger Name"), longName);
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(
@@ -298,7 +300,7 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard(`${"a".repeat(100)}  `);
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() =>
       expect(mockOnSubmit).toHaveBeenCalledWith(
@@ -321,7 +323,7 @@ describe("LedgerForm", () => {
       const nameInput = screen.getByLabelText("Ledger Name");
       await user.tripleClick(nameInput);
       await user.keyboard(name);
-      await user.click(screen.getByRole("button", { name: "Save" }));
+      await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
       expect(
         await screen.findByText(
@@ -342,7 +344,7 @@ describe("LedgerForm", () => {
     // What maxLength does not stop, such as a value set by script.
     fireEvent.change(description, { target: { value: "d".repeat(2049) } });
     expect(screen.getByText("2,049 / 2,048")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
     expect(
       await screen.findByText(
         "The description can be at most 2048 characters.",
@@ -351,7 +353,7 @@ describe("LedgerForm", () => {
     expect(mockOnSubmit).not.toHaveBeenCalled();
 
     fireEvent.change(description, { target: { value: "d".repeat(2048) } });
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
     await waitFor(() =>
       expect(mockOnSubmit).toHaveBeenCalledWith(
         expect.objectContaining({ description: "d".repeat(2048) }),
@@ -398,7 +400,7 @@ describe("LedgerForm", () => {
       screen.getByRole("button", { name: "Saving..." }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Save" }),
+      screen.queryByRole("button", { name: "Create Ledger" }),
     ).not.toBeInTheDocument();
   });
 
@@ -409,7 +411,7 @@ describe("LedgerForm", () => {
     render(<LedgerForm onSubmit={asyncOnSubmit} onCancel={mockOnCancel} />);
 
     await user.type(screen.getByLabelText("Ledger Name"), "Test");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(asyncOnSubmit).toHaveBeenCalled();
@@ -445,7 +447,7 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard("!@#$%^");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(
@@ -465,7 +467,7 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard("我的账本");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(screen.getByText(/at least one Latin letter/)).toBeInTheDocument();
@@ -512,7 +514,7 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard("my_ledger_2024");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
@@ -531,7 +533,7 @@ describe("LedgerForm", () => {
     const nameInput = screen.getByLabelText("Ledger Name");
     await user.tripleClick(nameInput);
     await user.keyboard("budget-2024");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
@@ -798,7 +800,7 @@ describe("LedgerForm", () => {
       await user.tripleClick(nameInput);
       await user.keyboard("custom-ledger");
 
-      await user.click(screen.getByRole("button", { name: "Save" }));
+      await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
       await waitFor(() => {
         expect(mockOnSubmit).toHaveBeenCalledWith({

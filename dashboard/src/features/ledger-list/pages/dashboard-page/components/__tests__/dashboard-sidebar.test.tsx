@@ -9,6 +9,7 @@ import {
   ListLedgersDocument,
   GetCurrentUserDocument,
   CreateLedgerDocument,
+  CreateLedgerInCurrencyDocument,
   UpdateLedgerDocument,
   DeleteLedgerDocument,
   type ListLedgersQuery,
@@ -194,7 +195,10 @@ describe("DashboardSidebar", () => {
     vi.mocked(apolloClient.useMutation).mockImplementation(((
       document: unknown,
     ): unknown => {
-      if (document === CreateLedgerDocument) {
+      if (
+        document === CreateLedgerDocument ||
+        document === CreateLedgerInCurrencyDocument
+      ) {
         return createMockMutationTuple<CreateLedgerMutation>(
           mockCreateMutation,
         );
@@ -411,7 +415,7 @@ describe("DashboardSidebar", () => {
       const nameInput = await screen.findByLabelText("Ledger Name");
       await user.tripleClick(nameInput);
       await user.keyboard(name);
-      await user.click(screen.getByRole("button", { name: "Save" }));
+      await user.click(screen.getByTestId("ledger-form-submit"));
       return user;
     }
     it("creates the ledger, toasts, closes the dialog, and navigates to it", async () => {

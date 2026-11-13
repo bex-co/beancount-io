@@ -29,6 +29,7 @@ mutation SignIn($email: String!, $password: String!) {
 query GetCurrentUser {
   userProfile {
     locale
+    defaultCurrency
     lastName
     id
     firstName

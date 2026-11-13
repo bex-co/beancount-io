@@ -27,6 +27,8 @@ export function useUserLimits() {
   const userProfile = data?.userProfile;
   const tier = (userProfile?.tier as UserTier) || "FREE";
   const limits: UserLimits | null = userProfile?.limits || null;
+  // The saved currency preference new ledgers start in (w3/m62).
+  const defaultCurrency = userProfile?.defaultCurrency ?? null;
 
   // Helper booleans. -1 is an unlimited allowance, which no count reaches
   // (w4/313); a finite cap, zero included, is reached at its value.
@@ -44,6 +46,7 @@ export function useUserLimits() {
   return {
     tier,
     limits,
+    defaultCurrency,
     isLoading: loading,
     error,
     refetch,

@@ -1,5 +1,4 @@
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useMutation } from "@apollo/client/react";
 import {
   Card,
   CardContent,
@@ -7,11 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
+import { ListLedgersDocument } from "@/graphql/definitions";
 import {
-  ListLedgersDocument,
-  CreateLedgerDocument,
-  type CreateLedgerMutationVariables,
-} from "@/graphql/definitions";
+  useCreateLedger,
+  type CreateLedgerFormValues,
+} from "@/features/ledger-list/hooks/use-create-ledger";
 import { LedgerForm } from "@/features/ledger-list/components/ledger-form";
 import { toast } from "sonner";
 import { decodeLedgerId } from "@/common/lib/utils/encode";
@@ -30,16 +29,13 @@ function WelcomeContent() {
   const navigate = useNavigate();
   const { oauthUid, oauthScope } = getRouteApi("/auth/welcome").useSearch();
 
-  const [createLedgerMutation, { loading: createLoading }] = useMutation(
-    CreateLedgerDocument,
-    {
-      refetchQueries: [ListLedgersDocument],
-    },
-  );
+  const [createLedgerMutation, { loading: createLoading }] = useCreateLedger([
+    ListLedgersDocument,
+  ]);
 
-  const handleCreateLedger = async (data: CreateLedgerMutationVariables) => {
+  const handleCreateLedger = async (data: CreateLedgerFormValues) => {
     try {
-      const result = await createLedgerMutation({ variables: data });
+      const result = await createLedgerMutation(data);
       toast.success(t("page.welcome.ledgerCreatedSuccess"));
 
       // Navigate to the newly created ledger
