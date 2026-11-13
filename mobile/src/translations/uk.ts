@@ -830,6 +830,12 @@ export const uk: Translations = {
   createLedgerTemplateSample: "Приклад",
   createLedgerTemplateSampleHint:
     "Приклади транзакцій, щоб дослідити застосунок.",
+  createLedgerCurrency: "Валюта",
+  createLedgerCurrencyHint:
+    "Валюта, у якій звітує книга. Рахунки можуть містити й інші валюти.",
+  createLedgerCurrencyInvalid: "Укажіть код валюти, наприклад USD або EUR.",
+  createLedgerCurrencyUnsupported:
+    "Цей сервер ще не вміє задавати валюту. Виберіть USD або оновіть сервер.",
   ledgerOwnerLimitReached:
     "Ця книга досягла ліміту власника в {{limit}} записів. Збільшити його може лише власник.",
   createLedgerPlanLimit:

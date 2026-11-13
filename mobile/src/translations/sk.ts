@@ -838,6 +838,12 @@ export const sk: Translations = {
   createLedgerTemplateSample: "Ukážka",
   createLedgerTemplateSampleHint:
     "Ukážkové transakcie na preskúmanie aplikácie.",
+  createLedgerCurrency: "Mena",
+  createLedgerCurrencyHint:
+    "Mena, v ktorej kniha vykazuje. Účty môžu obsahovať aj iné meny.",
+  createLedgerCurrencyInvalid: "Zadajte kód meny, napríklad USD alebo EUR.",
+  createLedgerCurrencyUnsupported:
+    "Tento server zatiaľ nevie nastaviť menu. Vyberte USD alebo aktualizujte server.",
   ledgerOwnerLimitReached:
     "Táto kniha dosiahla limit vlastníka {{limit}} záznamov. Zvýšiť ho môže iba vlastník.",
   createLedgerPlanLimit:

@@ -837,6 +837,12 @@ export const fr: Translations = {
   createLedgerTemplateSample: "Exemple",
   createLedgerTemplateSampleHint:
     "Transactions d'exemple pour explorer l'application.",
+  createLedgerCurrency: "Devise",
+  createLedgerCurrencyHint:
+    "La devise dans laquelle vos livres sont présentés. Les comptes peuvent contenir d’autres devises.",
+  createLedgerCurrencyInvalid: "Choisissez un code de devise comme USD ou EUR.",
+  createLedgerCurrencyUnsupported:
+    "Ce serveur ne peut pas encore définir de devise. Choisissez USD ou mettez le serveur à jour.",
   ledgerOwnerLimitReached:
     "Ce grand livre a atteint la limite de {{limit}} écritures de son propriétaire. Seul le propriétaire peut l’augmenter.",
   createLedgerPlanLimit:

@@ -821,6 +821,12 @@ export const nl: Translations = {
   createLedgerTemplateSample: "Voorbeeld",
   createLedgerTemplateSampleHint:
     "Voorbeeldtransacties om de app te verkennen.",
+  createLedgerCurrency: "Valuta",
+  createLedgerCurrencyHint:
+    "De valuta waarin je boeken rapporteren. Rekeningen kunnen ook andere valuta bevatten.",
+  createLedgerCurrencyInvalid: "Kies een valutacode zoals USD of EUR.",
+  createLedgerCurrencyUnsupported:
+    "Deze server kan nog geen valuta instellen. Kies USD of werk de server bij.",
   ledgerOwnerLimitReached:
     "Dit grootboek heeft de limiet van {{limit}} boekingen van de eigenaar bereikt. Alleen de eigenaar kan die verhogen.",
   createLedgerPlanLimit:

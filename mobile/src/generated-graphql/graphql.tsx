@@ -84,6 +84,16 @@ export type CreateLedgerFileMutationVariables = Exact<{
 
 export type CreateLedgerFileMutation = { createLedgerFile: { name: string, path: string, sha: string, size: number, type: string } };
 
+export type CreateLedgerInCurrencyMutationVariables = Exact<{
+  name: string;
+  private?: boolean | null | undefined;
+  description?: string | null | undefined;
+  currency: string;
+}>;
+
+
+export type CreateLedgerInCurrencyMutation = { createLedger: { id: string, name: string, fullName: string, description: string | null, private: boolean, empty: boolean, size: number, createdAt: string, permissions: { admin: boolean, pull: boolean, push: boolean } | null } };
+
 export type CurrentUserFieldsFragment = { id: string, email: string, firstName: string | null, lastName: string | null, username: string | null };
 
 export type CurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
@@ -110,6 +120,11 @@ export type UpdateUsernameMutationVariables = Exact<{
 
 
 export type UpdateUsernameMutation = { updateUsername: { id: string, email: string, firstName: string | null, lastName: string | null, username: string | null } };
+
+export type CurrentUserDefaultCurrencyQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CurrentUserDefaultCurrencyQuery = { userProfile: { id: string, defaultCurrency: string | null } | null };
 
 export type DeleteAccountMutationVariables = Exact<{ [key: string]: never; }>;
 
@@ -887,6 +902,59 @@ export function useCreateLedgerFileMutation(baseOptions?: Apollo.MutationHookOpt
 export type CreateLedgerFileMutationHookResult = ReturnType<typeof useCreateLedgerFileMutation>;
 export type CreateLedgerFileMutationResult = Apollo.MutationResult<CreateLedgerFileMutation>;
 export type CreateLedgerFileMutationOptions = Apollo.BaseMutationOptions<CreateLedgerFileMutation, CreateLedgerFileMutationVariables>;
+export const CreateLedgerInCurrencyDocument = gql`
+    mutation CreateLedgerInCurrency($name: String!, $private: Boolean, $description: String, $currency: String!) {
+  createLedger(
+    name: $name
+    private: $private
+    description: $description
+    currency: $currency
+  ) {
+    id
+    name
+    fullName
+    description
+    private
+    empty
+    size
+    createdAt
+    permissions {
+      admin
+      pull
+      push
+    }
+  }
+}
+    `;
+export type CreateLedgerInCurrencyMutationFn = Apollo.MutationFunction<CreateLedgerInCurrencyMutation, CreateLedgerInCurrencyMutationVariables>;
+
+/**
+ * __useCreateLedgerInCurrencyMutation__
+ *
+ * To run a mutation, you first call `useCreateLedgerInCurrencyMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateLedgerInCurrencyMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createLedgerInCurrencyMutation, { data, loading, error }] = useCreateLedgerInCurrencyMutation({
+ *   variables: {
+ *      name: // value for 'name'
+ *      private: // value for 'private'
+ *      description: // value for 'description'
+ *      currency: // value for 'currency'
+ *   },
+ * });
+ */
+export function useCreateLedgerInCurrencyMutation(baseOptions?: Apollo.MutationHookOptions<CreateLedgerInCurrencyMutation, CreateLedgerInCurrencyMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateLedgerInCurrencyMutation, CreateLedgerInCurrencyMutationVariables>(CreateLedgerInCurrencyDocument, options);
+      }
+export type CreateLedgerInCurrencyMutationHookResult = ReturnType<typeof useCreateLedgerInCurrencyMutation>;
+export type CreateLedgerInCurrencyMutationResult = Apollo.MutationResult<CreateLedgerInCurrencyMutation>;
+export type CreateLedgerInCurrencyMutationOptions = Apollo.BaseMutationOptions<CreateLedgerInCurrencyMutation, CreateLedgerInCurrencyMutationVariables>;
 export const CurrentUserDocument = gql`
     query CurrentUser {
   userProfile {
@@ -1039,6 +1107,49 @@ export function useUpdateUsernameMutation(baseOptions?: Apollo.MutationHookOptio
 export type UpdateUsernameMutationHookResult = ReturnType<typeof useUpdateUsernameMutation>;
 export type UpdateUsernameMutationResult = Apollo.MutationResult<UpdateUsernameMutation>;
 export type UpdateUsernameMutationOptions = Apollo.BaseMutationOptions<UpdateUsernameMutation, UpdateUsernameMutationVariables>;
+export const CurrentUserDefaultCurrencyDocument = gql`
+    query CurrentUserDefaultCurrency {
+  userProfile {
+    id
+    defaultCurrency
+  }
+}
+    `;
+
+/**
+ * __useCurrentUserDefaultCurrencyQuery__
+ *
+ * To run a query within a React component, call `useCurrentUserDefaultCurrencyQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCurrentUserDefaultCurrencyQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCurrentUserDefaultCurrencyQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useCurrentUserDefaultCurrencyQuery(baseOptions?: Apollo.QueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>(CurrentUserDefaultCurrencyDocument, options);
+      }
+export function useCurrentUserDefaultCurrencyLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>(CurrentUserDefaultCurrencyDocument, options);
+        }
+// @ts-ignore
+export function useCurrentUserDefaultCurrencySuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>): Apollo.UseSuspenseQueryResult<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>;
+export function useCurrentUserDefaultCurrencySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>): Apollo.UseSuspenseQueryResult<CurrentUserDefaultCurrencyQuery | undefined, CurrentUserDefaultCurrencyQueryVariables>;
+export function useCurrentUserDefaultCurrencySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>(CurrentUserDefaultCurrencyDocument, options);
+        }
+export type CurrentUserDefaultCurrencyQueryHookResult = ReturnType<typeof useCurrentUserDefaultCurrencyQuery>;
+export type CurrentUserDefaultCurrencyLazyQueryHookResult = ReturnType<typeof useCurrentUserDefaultCurrencyLazyQuery>;
+export type CurrentUserDefaultCurrencySuspenseQueryHookResult = ReturnType<typeof useCurrentUserDefaultCurrencySuspenseQuery>;
+export type CurrentUserDefaultCurrencyQueryResult = Apollo.QueryResult<CurrentUserDefaultCurrencyQuery, CurrentUserDefaultCurrencyQueryVariables>;
 export const DeleteAccountDocument = gql`
     mutation deleteAccount {
   deleteAccount

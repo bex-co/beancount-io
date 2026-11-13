@@ -35,7 +35,7 @@ input AccountJournalQueryInput {
   """
   documentSubtypes: [String!]
   """
-  Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
+  Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
   """
   filter: String
   """
@@ -110,6 +110,8 @@ type AddEntryResponse {
 }
 
 type AddLedgerEntryResponse {
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
   dryRun: Boolean!
   """
   The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty on a dry run, or when it could not be resolved after the commit
@@ -151,6 +153,8 @@ type AppendDirectiveTextResponse {
   Files whose directives were not in date order, so these were appended at the end
   """
   appendedUnsorted: [String!]!
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
   """Directives parsed out of the text"""
   count: Float!
   """Unified diff per touched file; populated on dry runs only"""
@@ -463,6 +467,8 @@ type DeleteCollaboratorResponse {
 }
 
 type DeleteLedgerFileResponse {
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
   path: String!
 }
 
@@ -499,6 +505,8 @@ input DeleteMultiSourceSlicesInput {
 }
 
 type DeleteMultiSourceSlicesResponse {
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
   deletedCount: Int!
   dryRun: Boolean!
   errorsAfter: Float!
@@ -536,6 +544,8 @@ input DeleteSourceSliceInput {
 }
 
 type DeleteSourceSliceResponse {
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
   dryRun: Boolean!
   entryHash: String!
   errorsAfter: Float!
@@ -560,6 +570,8 @@ type DirectiveTextDiff {
 }
 
 type DirectiveTextError {
+  """The engine's stable error code, such as E3001"""
+  code: String
   message: String!
   source: String
 }
@@ -755,6 +767,8 @@ type IncomeStatementData {
 }
 
 type InsertReceiptResult {
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
   """
   The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty when it could not be resolved after the commit
   """
@@ -867,7 +881,7 @@ input JournalQueryInput {
   """
   documentSubtypes: [String!]
   """
-  Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
+  Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
   """
   filter: String
   limit: Float = 20
@@ -965,6 +979,10 @@ input LedgerBalanceInput {
   account: String!
   amount: LedgerAmountInput!
   date: String!
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
+  meta: JSONObject
   """Explicit balance tolerance as a plain decimal"""
   tolerance: String
 }
@@ -979,6 +997,10 @@ input LedgerBudgetInput {
 input LedgerCloseInput {
   account: String!
   date: String!
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
+  meta: JSONObject
 }
 
 type LedgerCollaborator {
@@ -1004,6 +1026,10 @@ type LedgerCommitUser {
 input LedgerCommodityInput {
   currency: String!
   date: String!
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
+  meta: JSONObject
 }
 
 input LedgerCostInput {
@@ -1028,6 +1054,10 @@ input LedgerDocumentInput {
   date: String!
   filename: String!
   links: [String!]
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
+  meta: JSONObject
   tags: [String!]
 }
 
@@ -1051,16 +1081,26 @@ enum LedgerEntryType {
 input LedgerEventInput {
   date: String!
   description: String!
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
+  meta: JSONObject
   type: String!
 }
 
 type LedgerFileContent {
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
   content: String
   encoding: String
   lastAuthorDate: String
   lastCommitSha: String
   lastCommitterDate: String
   name: String!
+  """
+  On a create or update: ledger files the write made that no loaded file includes. Their entries don't count and bean-check did not read them.
+  """
+  notLoaded: [String!]
   path: String!
   sha: String!
   size: Float!
@@ -1083,6 +1123,10 @@ input LedgerNoteInput {
   account: String!
   content: String!
   date: String!
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
+  meta: JSONObject
 }
 
 input LedgerOpenInput {
@@ -1092,6 +1136,10 @@ input LedgerOpenInput {
   """Valid currencies for the account; omit for a bare open line"""
   currencies: [String!]
   date: String!
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
+  meta: JSONObject
 }
 
 """Whether an account's opening balance is unknown, zero, or known"""
@@ -1131,6 +1179,10 @@ type LedgerOverview {
 input LedgerPadInput {
   account: String!
   date: String!
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
+  meta: JSONObject
   """Account to pad from"""
   sourceAccount: String
   """Alias of sourceAccount. One of the two is required."""
@@ -1170,6 +1222,10 @@ input LedgerPriceInput {
   amount: LedgerAmountInput!
   currency: String!
   date: String!
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
+  meta: JSONObject
 }
 
 input LedgerSetupAccountInput {
@@ -1255,6 +1311,9 @@ input LedgerTransactionInput {
   date: String!
   flag: String!
   links: [String!]
+  """
+  Metadata written beneath the directive; every value is a string, written quoted as given
+  """
   meta: JSONObject
   narration: String
   payee: String
@@ -1431,13 +1490,17 @@ type Mutation {
   """
   createCliAuthSession(client: CliAuthClientInfoInput): CreateCliAuthSessionResponse!
   """
-  Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin.
+  Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. currency sets a STARTER ledger's operating currency (default USD). Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin.
   """
   createLedger(
+    """
+    Operating currency of a STARTER ledger, an ISO 4217 code such as EUR; omitted or null keeps USD. Refused with template SAMPLE or a setup (set setup.operatingCurrency instead).
+    """
+    currency: String
     description: String
     name: String!
     """
-    true or omitted keeps the ledger visible only to its owner and collaborators; false makes it public, readable by anyone.
+    true or omitted keeps the ledger visible only to its owner and collaborators; false makes it public: its transactions, balances, files and full commit history, including every earlier version of each file and each commit's author name and email become readable by anyone with the link and by search engines.
     """
     private: Boolean
     """
@@ -1521,7 +1584,14 @@ type Mutation {
   """
   deleteMultipleLedgerEntrySourceSlices(input: DeleteMultiSourceSlicesInput!, ledgerId: String!): DeleteMultiSourceSlicesResponse!
   """Delete pending (unsynced) Plaid transactions from the review list"""
-  deletePlaidTransactions(ledgerId: String!, transactionIds: [String!]!): PlaidDeleteResult!
+  deletePlaidTransactions(
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    ledgerId: String!
+    transactionIds: [String!]!
+  ): PlaidDeleteResult!
   """Delete a specific public key by ID"""
   deletePublicKey(keyId: Float!): DeletePublicKeyResponse!
   """Deny the pending CLI authentication request a user code names."""
@@ -1588,7 +1658,14 @@ type Mutation {
   """
   Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select.
   """
-  reconcilePlaidAccounts(itemId: String!, ledgerId: String!): PlaidAccountReconcileResult!
+  reconcilePlaidAccounts(
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    itemId: String!
+    ledgerId: String!
+  ): PlaidAccountReconcileResult!
   """
   Make every managed price feed the ledger includes due now, re-fetch each, and return the same records as getLedgerManagedPrices. Never touches the repository; a failed re-fetch keeps the last validated revision and reports its error. Requires write capability on the ledger.
   """
@@ -1622,6 +1699,24 @@ type Mutation {
   resetPassword(newPassword: String!, token: String!): ResetPasswordResponse!
   """Resumes your subscription. Requires a full signed-in session."""
   resumeSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
+  """
+  Undo one commit of a specific ledger as a new commit; refused when a later commit changed any file it touched
+  """
+  revertLedgerCommit(
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    ledgerId: String!
+    """
+    The revert commit's message; defaults to `Revert "<subject>"` and the sha it reverts.
+    """
+    message: String
+    """
+    The commit to undo: a sha that a write result returned or the commits read lists, or a branch name for its latest commit.
+    """
+    sha: String!
+  ): RevertLedgerCommitResponse!
   """Revoke an API key, effective on its next use"""
   revokeApiKey(id: String!): ApiKeyType!
   """Send a password reset link to the user's email"""
@@ -1638,6 +1733,10 @@ type Mutation {
   starLedger(ledgerId: String!): StarLedgerResponse!
   """Submit Plaid transactions with user-reviewed target accounts to ledger"""
   submitPlaidTransactionsToLedger(
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
     """
     Existing ledger file to write the transactions to; defaults to main.bean
     """
@@ -1646,14 +1745,28 @@ type Mutation {
     transactions: [PlaidTransactionSubmitInput!]!
   ): PlaidSubmitResult!
   """Manually sync transactions for a specific Plaid Item"""
-  syncPlaidTransactions(itemId: String!, ledgerId: String!): PlaidSyncResult!
+  syncPlaidTransactions(
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    itemId: String!
+    ledgerId: String!
+  ): PlaidSyncResult!
   """Unfollow a user"""
   unfollowUser(
     """Username to follow"""
     username: String!
   ): FollowUserResponse!
   """Unlink a Plaid Item (remove from Plaid and delete from database)"""
-  unlinkPlaidItem(itemId: String!, ledgerId: String!): Boolean!
+  unlinkPlaidItem(
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    itemId: String!
+    ledgerId: String!
+  ): Boolean!
   """Unstar a specific ledger"""
   unstarLedger(ledgerId: String!): StarLedgerResponse!
   """Update a specific ledger"""
@@ -1666,7 +1779,7 @@ type Mutation {
     ledgerId: String!
     name: String
     """
-    true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is.
+    true makes the ledger visible only to its owner and collaborators; false makes it public: its transactions, balances, files and full commit history, including every earlier version of each file and each commit's author name and email become readable by anyone with the link and by search engines; omitted leaves it as it is.
     """
     private: Boolean
   ): Ledger!
@@ -1764,11 +1877,14 @@ type PlaidAccountMappingSuggestion {
 type PlaidAccountReconcileResult {
   """Accounts Plaid now shares that we had not stored yet"""
   addedCount: Float!
+  dryRun: Boolean
   """
   Stored accounts Plaid no longer shares; these were deleted along with their transactions
   """
   removedCount: Float!
   success: Boolean!
+  wouldAdd: [PlaidReconcileAccountChange!]
+  wouldDelete: [PlaidReconcileAccountChange!]
 }
 
 type PlaidAccountType {
@@ -1805,10 +1921,19 @@ type PlaidAccountWithInstitutionType {
   updatedAt: DateTimeISO!
 }
 
+type PlaidDeletePreviewRow {
+  amount: String!
+  name: String!
+  transactionId: String!
+}
+
 type PlaidDeleteResult {
   deletedCount: Float!
+  dryRun: Boolean
   message: String
+  preview: [PlaidDeletePreviewRow!]
   success: Boolean!
+  wouldDeleteCount: Float
 }
 
 type PlaidItemType {
@@ -1835,19 +1960,34 @@ type PlaidLinkToken {
   linkToken: String!
 }
 
+type PlaidReconcileAccountChange {
+  accountId: String!
+  accountName: String!
+  ledgerAccount: String
+  mask: String
+}
+
 type PlaidSubmitResult {
   addedCount: Float!
+  dryRun: Boolean
   message: String
+  preview: [JSONObject!]
   success: Boolean!
+  wouldAddCount: Float
 }
 
 type PlaidSyncResult {
+  dryRun: Boolean
   message: String
+  morePagesAvailable: Boolean
   success: Boolean!
   transactionsAdded: Float!
   transactionsFetched: Float!
   transactionsModified: Float!
   transactionsRemoved: Float!
+  wouldAdd: Float
+  wouldModify: Float
+  wouldRemove: Float
 }
 
 input PlaidTransactionSubmitInput {
@@ -1888,7 +2028,7 @@ type PlaidTransactionType {
 input PlaintextJournalQueryInput {
   account: String
   """
-  Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
+  Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
   """
   filter: String
   """Entries per page, 1 to 1000; omitted, every entry."""
@@ -2081,9 +2221,13 @@ type PullRequestDetails {
 }
 
 type PullRequestResult {
-  """The created PR's actual base ref, read back — never a default"""
+  """
+  The pull request's base branch, read back from the repository — never a default
+  """
   baseBranch: String
-  """The created PR's actual head ref, read back — never a default"""
+  """
+  The pull request's head branch, read back from the repository — never a default
+  """
   headBranch: String
   message: String
   prNumber: Int
@@ -2197,7 +2341,9 @@ type Query {
   getLedgerDirContent(dirPath: String, ledgerId: String!): [LedgerFileContent!]!
   """Get documents from a specific ledger with optional filtering"""
   getLedgerDocuments(account: String, filter: String, ledgerId: String!, time: String): [Document!]!
-  """Get the count of entries per type"""
+  """
+  Get the count of entries per type. Managed price feed directives are not counted, because the plan limit reads this count; the journal and BQL do include them, so Price here can be lower than their count.
+  """
   getLedgerEntriesCountPerType(account: String, filter: String, ledgerId: String!, time: String): [EntriesByType!]!
   """Get context for a specific journal entry"""
   getLedgerEntryContext(
@@ -2290,7 +2436,9 @@ type Query {
   getLedgerPayeeTransactions(ledgerId: String!, payee: String!): Transaction
   """Get the payees of a specific ledger"""
   getLedgerPayees(ledgerId: String!): [String!]!
-  """Get plaintext journal in beancount format"""
+  """
+  Get plaintext journal in beancount format. The text holds the ledger's transactions, balance assertions and pads only, with no open, close, commodity, price, event, note, document or custom directives, so it is not a copy of the ledger: read the ledger's source files or its archive for that.
+  """
   getLedgerPlaintextJournal(ledgerId: String!, query: PlaintextJournalQueryInput): PlaintextJournalResponse!
   """Count postings per account over the filtered Statistics report stream"""
   getLedgerPostingsPerAccount(account: String, filter: String, ledgerId: String!, time: String): [PostingsPerAccount!]!
@@ -2527,13 +2675,27 @@ type RegisterRow {
 }
 
 type RenameLedgerFileResponse {
+  checkError: String
+  """
+  Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why.
+  """
+  checked: Boolean
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
   dryRun: Boolean!
+  errorsAfter: Float!
+  errorsBefore: Float!
   message: String!
+  newErrors: [SliceWriteError!]!
   newPath: String!
   oldPath: String!
   """Per-file rewritten include lines; populated on dry runs only"""
   preview: [RenamePreviewFile!]!
   updatedIncludes: [String!]!
+  """
+  True only when the write adds no bean-check error; gate a preview on this.
+  """
+  valid: Boolean!
 }
 
 type RenamePreviewFile {
@@ -2570,6 +2732,40 @@ type ResetPasswordResponse {
   success: Boolean!
 }
 
+type RevertLedgerCommitResponse {
+  checkError: String
+  """
+  Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why.
+  """
+  checked: Boolean
+  """
+  The sha of the revert commit; absent on a preview, and when another commit landed in between.
+  """
+  commit: String
+  dryRun: Boolean!
+  errorsAfter: Float!
+  errorsBefore: Float!
+  """Each file the commit touched, and what the revert does to it."""
+  files: [RevertedFile!]!
+  """The revert's own commit message."""
+  message: String!
+  newErrors: [SliceWriteError!]!
+  """The full sha of the commit the revert undoes."""
+  sha: String!
+  """The first line of that commit's message."""
+  subject: String!
+  """
+  True only when the write adds no bean-check error; gate a preview on this.
+  """
+  valid: Boolean!
+}
+
+type RevertedFile {
+  """What the revert does to the file: created, updated or deleted."""
+  change: String!
+  path: String!
+}
+
 """
 A plan change that takes effect at the end of the paid period. Nothing is charged until then.
 """
@@ -2601,6 +2797,11 @@ type SerializableTreeNode {
 type SignUpResponse {
   expireAt: String!
   sessionId: String!
+  """
+  Set only on a self-hosted deployment, where sign-up needs no email verification: the account already exists and this is its session token (also set as the auth cookie). Absent means the code in the email must be verified with verifySignUpOtp.
+  """
+  token: String
+  tokenExpireAt: DateTimeISO
 }
 
 type SlicePreviewFile {
@@ -2609,6 +2810,8 @@ type SlicePreviewFile {
 }
 
 type SliceWriteError {
+  """The engine's stable error code, such as E3001"""
+  code: String
   message: String!
   source: String
 }
@@ -2746,6 +2949,10 @@ type TempAssetDownloadUrl {
 type TempAssetUploadUrl {
   expiresIn: Float!
   objectKey: String!
+  """
+  Headers the PUT must send; present when mimeType was given, which the URL signs.
+  """
+  uploadHeaders: JSONObject
   uploadUrl: String!
 }
 
@@ -2805,6 +3012,8 @@ input UpdateSourceSliceInput {
 }
 
 type UpdateSourceSliceResponse {
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
   dryRun: Boolean!
   entryHash: String!
   errorsAfter: Float!
@@ -2818,6 +3027,10 @@ type UpdateSourceSliceResponse {
   newSha256sum: String!
   """Per-file affected text; populated on dry runs only"""
   preview: [SlicePreviewFile!]!
+  """
+  True when the edit leaves the entry's text as it was: nothing was written and no commit was made.
+  """
+  unchanged: Boolean!
   """
   True only when the write adds no bean-check error; gate a preview on this.
   """

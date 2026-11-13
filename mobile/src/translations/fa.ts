@@ -804,6 +804,12 @@ export const fa: Translations = {
   createLedgerTemplateStarterHint: "دفترکل خالی با سرفصل‌های استاندارد.",
   createLedgerTemplateSample: "نمونه",
   createLedgerTemplateSampleHint: "تراکنش‌های نمونه برای کاوش در برنامه.",
+  createLedgerCurrency: "ارز",
+  createLedgerCurrencyHint:
+    "ارزی که گزارش‌های دفتر با آن نمایش داده می‌شود. حساب‌ها همچنان می‌توانند ارزهای دیگری داشته باشند.",
+  createLedgerCurrencyInvalid: "یک کد ارز مانند USD یا EUR انتخاب کنید.",
+  createLedgerCurrencyUnsupported:
+    "این سرور هنوز نمی‌تواند ارز را تعیین کند. USD را انتخاب کنید یا سرور را به‌روزرسانی کنید.",
   ledgerOwnerLimitReached:
     "این دفترکل به سقف {{limit}} ورودی مالک خود رسیده است. فقط مالک می‌تواند آن را افزایش دهد.",
   createLedgerPlanLimit:

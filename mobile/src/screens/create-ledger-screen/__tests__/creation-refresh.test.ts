@@ -3,10 +3,22 @@ import path from "path";
 import vm from "vm";
 import ts from "typescript";
 import * as names from "../ledger-name";
+import * as currency from "../ledger-currency";
+import * as unsupported from "../../../common/graphql-unsupported";
+
+type Values = { template: "STARTER" | "SAMPLE"; currency: string };
 
 // Run the real submission handler, replacing only UI/form hosts and its IO.
-function screen(refreshFails: boolean, here = true) {
+function screen(
+  refreshFails: boolean,
+  here = true,
+  {
+    values = { template: "STARTER", currency: "USD" } as Values,
+    olderServer = false,
+  } = {},
+) {
   const events: string[] = [];
+  const sent: { document: string; variables: unknown }[] = [];
   let submit: () => Promise<void> = async () => {};
   const created = {
     id: "new",
@@ -61,11 +73,13 @@ function screen(refreshFails: boolean, here = true) {
                     name: "new",
                     description: "",
                     private: true,
-                    template: "STARTER",
+                    ...values,
                   });
                 return submit;
               },
-              setError: () => events.push("form-error"),
+              setError: (field: string) => events.push(`form-error:${field}`),
+              setValue: () => {},
+              getFieldState: () => ({ isDirty: false }),
               trigger: async () => true,
               watch: () => "new",
               formState: { errors: {}, isSubmitting: false },
@@ -75,13 +89,40 @@ function screen(refreshFails: boolean, here = true) {
           return {
             LedgerTemplate: { Sample: "SAMPLE" },
             useCreateLedgerMutation: () => [
-              async () => {
+              async ({ variables }: { variables: object }) => {
+                // Copied out of the sandbox's realm, so deep equality holds.
+                sent.push({
+                  document: "CreateLedger",
+                  variables: { ...variables },
+                });
                 events.push("created");
                 return { data: { createLedger: created } };
               },
               { loading: false },
             ],
+            useCreateLedgerInCurrencyMutation: () => [
+              async ({ variables }: { variables: object }) => {
+                sent.push({
+                  document: "CreateLedgerInCurrency",
+                  variables: { ...variables },
+                });
+                if (olderServer)
+                  throw new Error(
+                    'Unknown argument "currency" on field "Mutation.createLedger".',
+                  );
+                events.push("created");
+                return { data: { createLedger: created } };
+              },
+              { loading: false },
+            ],
+            useCurrentUserDefaultCurrencyQuery: () => ({ data: undefined }),
           };
+        if (id === "expo-localization")
+          return {
+            getLocales: () => [{ currencyCode: "USD", regionCode: "US" }],
+          };
+        if (id === "@/common/graphql-unsupported") return unsupported;
+        if (id === "./ledger-currency") return currency;
         if (id === "@/common/ledger-directory/ledger-directory-provider")
           return {
             useLedgerDirectory: () => ({
@@ -126,7 +167,7 @@ function screen(refreshFails: boolean, here = true) {
     },
   );
   exports.CreateLedgerScreen!();
-  return { submit, events };
+  return { submit, events, sent };
 }
 
 describe("ledger creation directory refresh", () => {
@@ -155,5 +196,66 @@ describe("ledger creation directory refresh", () => {
       "refresh-settled",
       "toast",
     ]);
+  });
+});
+
+// w3/m62: only a non-USD Starter sends the document that declares `currency`;
+// everything else is the CreateLedger request installed apps already send.
+describe("ledger creation currency", () => {
+  it("sends CreateLedger unchanged for a USD Starter", async () => {
+    const { submit, sent } = screen(false);
+    await submit();
+    expect(sent).toEqual([
+      {
+        document: "CreateLedger",
+        variables: { name: "new", private: true, description: undefined },
+      },
+    ]);
+  });
+
+  it("sends CreateLedgerInCurrency for another currency", async () => {
+    const { submit, sent, events } = screen(false, true, {
+      values: { template: "STARTER", currency: "EUR" },
+    });
+    await submit();
+    expect(sent).toEqual([
+      {
+        document: "CreateLedgerInCurrency",
+        variables: {
+          name: "new",
+          private: true,
+          description: undefined,
+          currency: "EUR",
+        },
+      },
+    ]);
+    expect(events[0]).toBe("created");
+  });
+
+  it("keeps a Sample on CreateLedger whatever the hidden currency says", async () => {
+    const { submit, sent } = screen(false, true, {
+      values: { template: "SAMPLE", currency: "EUR" },
+    });
+    await submit();
+    expect(sent).toEqual([
+      {
+        document: "CreateLedger",
+        variables: {
+          name: "new",
+          private: true,
+          description: undefined,
+          template: "SAMPLE",
+        },
+      },
+    ]);
+  });
+
+  it("says so on the field when an older server refuses the currency", async () => {
+    const { submit, events } = screen(false, true, {
+      values: { template: "STARTER", currency: "EUR" },
+      olderServer: true,
+    });
+    await submit();
+    expect(events).toEqual(["form-error:currency"]);
   });
 });

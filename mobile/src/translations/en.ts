@@ -837,6 +837,12 @@ export const en = {
   createLedgerTemplateSample: "Sample",
   createLedgerTemplateSampleHint:
     "Example transactions so you can explore the app.",
+  createLedgerCurrency: "Currency",
+  createLedgerCurrencyHint:
+    "The currency your books report in. Accounts can still hold other currencies.",
+  createLedgerCurrencyInvalid: "Choose a currency code like USD or EUR.",
+  createLedgerCurrencyUnsupported:
+    "This server can't set a currency yet. Choose USD, or update the server.",
   ledgerOwnerLimitReached:
     "This ledger has reached its owner's limit of {{limit}} entries. Only the owner can raise it.",
   createLedgerPlanLimit:

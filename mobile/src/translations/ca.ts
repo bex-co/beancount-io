@@ -836,6 +836,12 @@ export const ca: Translations = {
   createLedgerTemplateSample: "Mostra",
   createLedgerTemplateSampleHint:
     "Transaccions d'exemple per explorar l'aplicació.",
+  createLedgerCurrency: "Moneda",
+  createLedgerCurrencyHint:
+    "La moneda en què es presenten els teus llibres. Els comptes poden contenir altres monedes.",
+  createLedgerCurrencyInvalid: "Tria un codi de moneda com USD o EUR.",
+  createLedgerCurrencyUnsupported:
+    "Aquest servidor encara no pot definir una moneda. Tria USD o actualitza el servidor.",
   ledgerOwnerLimitReached:
     "Aquest llibre ha assolit el límit de {{limit}} assentaments del propietari. Només el propietari el pot augmentar.",
   createLedgerPlanLimit:

@@ -740,6 +740,11 @@ export const zh: Translations = {
   createLedgerTemplateStarterHint: "带标准科目的空白账本。",
   createLedgerTemplateSample: "示例",
   createLedgerTemplateSampleHint: "含示例交易，便于探索应用。",
+  createLedgerCurrency: "货币",
+  createLedgerCurrencyHint: "账本报表使用的货币。账户仍可持有其他货币。",
+  createLedgerCurrencyInvalid: "请选择货币代码，例如 USD 或 EUR。",
+  createLedgerCurrencyUnsupported:
+    "此服务器尚不支持设置货币。请选择 USD，或更新服务器。",
   ledgerOwnerLimitReached:
     "此账本已达到所有者的 {{limit}} 条记录上限。只有所有者可以提高上限。",
   createLedgerPlanLimit: "你已达到{{plan}}的账本上限（{{limit}}）。",

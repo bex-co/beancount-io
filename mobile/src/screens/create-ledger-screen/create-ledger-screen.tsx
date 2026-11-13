@@ -1,5 +1,6 @@
 import { revalidateOnEdit } from "./revalidate-on-edit";
 import { useEffect, useMemo } from "react";
+import * as Localization from "expo-localization";
 import {
   ActivityIndicator,
   Platform,
@@ -20,8 +21,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   LedgerTemplate,
+  useCreateLedgerInCurrencyMutation,
   useCreateLedgerMutation,
+  useCurrentUserDefaultCurrencyQuery,
 } from "@/generated-graphql/graphql";
+import { isUnsupportedDocumentError } from "@/common/graphql-unsupported";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
@@ -51,12 +55,19 @@ import {
   slugifyLedgerName,
   tierLimitDetail,
 } from "./ledger-name";
+import {
+  SERVER_DEFAULT_CURRENCY,
+  currencyToSend,
+  defaultLedgerCurrency,
+  isLedgerCurrency,
+} from "./ledger-currency";
 
 type FormValues = {
   name: string;
   description: string;
   private: boolean;
   template: "STARTER" | "SAMPLE";
+  currency: string;
 };
 
 const getStyles = (theme: ColorTheme) =>
@@ -156,32 +167,56 @@ export function CreateLedgerScreen(): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { ledgers, loading: directoryLoading, refresh } = useLedgerDirectory();
   const [createLedger, { loading }] = useCreateLedgerMutation();
+  const [createLedgerInCurrency, { loading: currencyLoading }] =
+    useCreateLedgerInCurrencyMutation();
+  // w3/m62: a server that predates the saved preference rejects this query;
+  // the currency then comes from the device alone.
+  const { data: savedCurrencyData } = useCurrentUserDefaultCurrencyQuery({
+    errorPolicy: "ignore",
+  });
+  const savedCurrency = savedCurrencyData?.userProfile?.defaultCurrency ?? null;
+  const prefilledCurrency = useMemo(() => {
+    const locale = Localization.getLocales()[0];
+    return defaultLedgerCurrency({
+      saved: savedCurrency,
+      nativeCurrency: locale?.currencyCode,
+      region: locale?.regionCode,
+    });
+  }, [savedCurrency]);
   const toast = useToast();
   const isHere = useIsHere();
 
   const schema = useMemo(
     () =>
-      z.object({
-        name: z
-          .string()
-          .min(1, t("createLedgerNameRequired"))
-          // Checked on the slug, as the server does (w21/992).
-          .refine(ledgerNameWithinLimit, {
-            message: t("createLedgerNameMaxLength"),
-          })
-          // A name with no letter or digit is refused here, as the server
-          // would (w21/547).
-          .refine(isNewLedgerName, {
-            message: t("createLedgerNameInvalid"),
-          }),
-        description: z
-          .string()
-          .refine((value) => [...value].length <= LEDGER_DESCRIPTION_MAX, {
-            message: t("createLedgerDescriptionMaxLength"),
-          }),
-        private: z.boolean(),
-        template: z.enum(["STARTER", "SAMPLE"]),
-      }),
+      z
+        .object({
+          name: z
+            .string()
+            .min(1, t("createLedgerNameRequired"))
+            // Checked on the slug, as the server does (w21/992).
+            .refine(ledgerNameWithinLimit, {
+              message: t("createLedgerNameMaxLength"),
+            })
+            // A name with no letter or digit is refused here, as the server
+            // would (w21/547).
+            .refine(isNewLedgerName, {
+              message: t("createLedgerNameInvalid"),
+            }),
+          description: z
+            .string()
+            .refine((value) => [...value].length <= LEDGER_DESCRIPTION_MAX, {
+              message: t("createLedgerDescriptionMaxLength"),
+            }),
+          private: z.boolean(),
+          template: z.enum(["STARTER", "SAMPLE"]),
+          currency: z.string(),
+        })
+        // Only a Starter shows and sends the currency (w3/m62).
+        .refine(
+          (values) =>
+            values.template !== "STARTER" || isLedgerCurrency(values.currency),
+          { message: t("createLedgerCurrencyInvalid"), path: ["currency"] },
+        ),
     [t],
   );
 
@@ -197,6 +232,7 @@ export function CreateLedgerScreen(): JSX.Element {
     setError,
     trigger,
     watch,
+    getFieldState,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -205,8 +241,16 @@ export function CreateLedgerScreen(): JSX.Element {
       description: "",
       private: true,
       template: "STARTER",
+      currency: SERVER_DEFAULT_CURRENCY,
     },
   });
+
+  // Prefill once the saved preference is known; a currency the user typed is
+  // never replaced (w3/m62).
+  useEffect(() => {
+    if (getFieldState("currency").isDirty) return;
+    setValue("currency", prefilledCurrency);
+  }, [prefilledCurrency, getFieldState, setValue]);
 
   // A field that shows an error re-checks itself as it is edited (w21/238).
   const edited = (name: keyof FormValues, onChange: (text: string) => void) =>
@@ -226,22 +270,33 @@ export function CreateLedgerScreen(): JSX.Element {
   }, [directoryLoading, existingNames.join("|")]);
 
   const nameValue = watch("name");
+  const templateValue = watch("template");
   const slugPreview = ledgerSlugPreview(nameValue ?? "");
-  const busy = loading || isSubmitting;
+  const busy = loading || currencyLoading || isSubmitting;
 
   const onSubmit = handleSubmit(async (values) => {
     const name = slugifyLedgerName(values.name);
+    const currency = currencyToSend(values);
+    const common = {
+      name,
+      private: values.private,
+      description: values.description.trim() || undefined,
+    };
     try {
-      const result = await createLedger({
-        variables: {
-          name,
-          private: values.private,
-          description: values.description.trim() || undefined,
-          ...(values.template === "SAMPLE"
-            ? { template: LedgerTemplate.Sample }
-            : {}),
-        },
-      });
+      // Without a currency, CreateLedger goes out exactly as before the field
+      // existed, so older servers keep accepting it (w3/m62).
+      const result = currency
+        ? await createLedgerInCurrency({
+            variables: { ...common, currency },
+          })
+        : await createLedger({
+            variables: {
+              ...common,
+              ...(values.template === "SAMPLE"
+                ? { template: LedgerTemplate.Sample }
+                : {}),
+            },
+          });
       const id = result.data?.createLedger?.id;
       if (!id) {
         setError("root", { message: t("createLedgerGenericError") });
@@ -266,6 +321,12 @@ export function CreateLedgerScreen(): JSX.Element {
       // another copy of it (w21/242).
       router.dismissTo("/(app)/(tabs)");
     } catch (error) {
+      // A server older than the field refused the document before creating
+      // anything: say so on the field rather than creating a USD ledger.
+      if (currency && isUnsupportedDocumentError(error)) {
+        setError("currency", { message: t("createLedgerCurrencyUnsupported") });
+        return;
+      }
       const kind = classifyCreateLedgerError(error);
       if (kind === "conflict") {
         setError("name", { message: t("createLedgerNameConflict") });
@@ -456,6 +517,40 @@ export function CreateLedgerScreen(): JSX.Element {
             )}
           />
         </View>
+
+        {templateValue === "STARTER" ? (
+          <View style={styles.card}>
+            <View style={styles.row}>
+              <Text style={styles.label}>{t("createLedgerCurrency")}</Text>
+              <Controller
+                control={control}
+                name="currency"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    value={value}
+                    onChangeText={edited("currency", (text) =>
+                      onChange(text.toUpperCase()),
+                    )}
+                    onBlur={onBlur}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    maxLength={3}
+                    style={styles.input}
+                    accessibilityLabel={t("createLedgerCurrency")}
+                    accessibilityHint={t("createLedgerCurrencyHint")}
+                  />
+                )}
+              />
+              <Text style={styles.hint}>{t("createLedgerCurrencyHint")}</Text>
+            </View>
+            {errors.currency?.message ? (
+              <InlineError
+                style={styles.error}
+                message={errors.currency.message}
+              />
+            ) : null}
+          </View>
+        ) : null}
 
         {errors.root?.message ? (
           <InlineError style={styles.formError} message={errors.root.message} />

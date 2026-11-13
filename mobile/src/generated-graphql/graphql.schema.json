@@ -306,7 +306,7 @@
           },
           {
             "name": "filter",
-            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -916,6 +916,18 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "commit",
+            "description": "The sha of the commit this write made; absent on a preview or a read.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "dryRun",
             "description": null,
             "args": [],
@@ -1303,6 +1315,18 @@
                   }
                 }
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "commit",
+            "description": "The sha of the commit this write made; absent on a preview or a read.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -3840,6 +3864,18 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "commit",
+            "description": "The sha of the commit this write made; absent on a preview or a read.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "path",
             "description": null,
             "args": [],
@@ -4055,6 +4091,18 @@
         "description": null,
         "isOneOf": null,
         "fields": [
+          {
+            "name": "commit",
+            "description": "The sha of the commit this write made; absent on a preview or a read.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "deletedCount",
             "description": null,
@@ -4340,6 +4388,18 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "commit",
+            "description": "The sha of the commit this write made; absent on a preview or a read.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "dryRun",
             "description": null,
             "args": [],
@@ -4567,6 +4627,18 @@
         "description": null,
         "isOneOf": null,
         "fields": [
+          {
+            "name": "code",
+            "description": "The engine's stable error code, such as E3001",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "message",
             "description": null,
@@ -6712,6 +6784,18 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "commit",
+            "description": "The sha of the commit this write made; absent on a preview or a read.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "entryHashes",
             "description": "The hash each committed entry now carries, in request order, for getLedgerEntryContext and the source-slice update and delete; empty when it could not be resolved after the commit",
             "args": [],
@@ -7635,7 +7719,7 @@
           },
           {
             "name": "filter",
-            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -8606,6 +8690,18 @@
             "deprecationReason": null
           },
           {
+            "name": "meta",
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "tolerance",
             "description": "Explicit balance tolerance as a plain decimal",
             "type": {
@@ -8732,6 +8828,18 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "meta",
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -8948,6 +9056,18 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "meta",
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -9230,6 +9350,18 @@
             "deprecationReason": null
           },
           {
+            "name": "meta",
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "tags",
             "description": null,
             "type": {
@@ -9372,6 +9504,18 @@
             "deprecationReason": null
           },
           {
+            "name": "meta",
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "type",
             "description": null,
             "type": {
@@ -9398,6 +9542,18 @@
         "description": null,
         "isOneOf": null,
         "fields": [
+          {
+            "name": "commit",
+            "description": "The sha of the commit this write made; absent on a preview or a read.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "content",
             "description": null,
@@ -9469,6 +9625,26 @@
                 "name": "String",
                 "kind": "SCALAR",
                 "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "notLoaded",
+            "description": "On a create or update: ledger files the write made that no loaded file includes. Their entries don't count and bean-check did not read them.",
+            "args": [],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL",
+                "ofType": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
               }
             },
             "isDeprecated": false,
@@ -9734,6 +9910,18 @@
             "defaultValue": null,
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "meta",
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "interfaces": null,
@@ -9806,6 +9994,18 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "meta",
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -10310,6 +10510,18 @@
             "deprecationReason": null
           },
           {
+            "name": "meta",
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "sourceAccount",
             "description": "Account to pad from",
             "type": {
@@ -10540,6 +10752,18 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "meta",
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -11153,7 +11377,7 @@
           },
           {
             "name": "meta",
-            "description": null,
+            "description": "Metadata written beneath the directive; every value is a string, written quoted as given",
             "type": {
               "kind": "SCALAR",
               "name": "JSONObject",
@@ -12564,8 +12788,20 @@
           },
           {
             "name": "createLedger",
-            "description": "Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin.",
+            "description": "Create a new ledger for the current user. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. currency sets a STARTER ledger's operating currency (default USD). Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: use a credential without a pin.",
             "args": [
+              {
+                "name": "currency",
+                "description": "Operating currency of a STARTER ledger, an ISO 4217 code such as EUR; omitted or null keeps USD. Refused with template SAMPLE or a setup (set setup.operatingCurrency instead).",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
               {
                 "name": "description",
                 "description": null,
@@ -12596,7 +12832,7 @@
               },
               {
                 "name": "private",
-                "description": "true or omitted keeps the ledger visible only to its owner and collaborators; false makes it public, readable by anyone.",
+                "description": "true or omitted keeps the ledger visible only to its owner and collaborators; false makes it public: its transactions, balances, files and full commit history, including every earlier version of each file and each commit's author name and email become readable by anyone with the link and by search engines.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Boolean",
@@ -13392,6 +13628,30 @@
             "description": "Delete pending (unsynced) Plaid transactions from the review list",
             "args": [
               {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "ledgerId",
                 "description": null,
                 "type": {
@@ -13946,6 +14206,30 @@
             "description": "Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select.",
             "args": [
               {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "itemId",
                 "description": null,
                 "type": {
@@ -14430,6 +14714,91 @@
             "deprecationReason": null
           },
           {
+            "name": "revertLedgerCommit",
+            "description": "Undo one commit of a specific ledger as a new commit; refused when a later commit changed any file it touched",
+            "args": [
+              {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "ledgerId",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "message",
+                "description": "The revert commit's message; defaults to `Revert \"<subject>\"` and the sha it reverts.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sha",
+                "description": "The commit to undo: a sha that a write result returned or the commits read lists, or a branch name for its latest commit.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "RevertLedgerCommitResponse",
+                "kind": "OBJECT",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "revokeApiKey",
             "description": "Revoke an API key, effective on its next use",
             "args": [
@@ -14825,6 +15194,30 @@
             "description": "Submit Plaid transactions with user-reviewed target accounts to ledger",
             "args": [
               {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filename",
                 "description": "Existing ledger file to write the transactions to; defaults to main.bean",
                 "type": {
@@ -14893,6 +15286,30 @@
             "name": "syncPlaidTransactions",
             "description": "Manually sync transactions for a specific Plaid Item",
             "args": [
+              {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
               {
                 "name": "itemId",
                 "description": null,
@@ -14975,6 +15392,30 @@
             "name": "unlinkPlaidItem",
             "description": "Unlink a Plaid Item (remove from Plaid and delete from database)",
             "args": [
+              {
+                "name": "dryRun",
+                "description": "Run every check and return the preview without committing",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "dry_run",
+                "description": "Alias of dryRun, as MCP spells it.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
               {
                 "name": "itemId",
                 "description": null,
@@ -15123,7 +15564,7 @@
               },
               {
                 "name": "private",
-                "description": "true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is.",
+                "description": "true makes the ledger visible only to its owner and collaborators; false makes it public: its transactions, balances, files and full commit history, including every earlier version of each file and each commit's author name and email become readable by anyone with the link and by search engines; omitted leaves it as it is.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Boolean",
@@ -16167,6 +16608,18 @@
             "deprecationReason": null
           },
           {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "removedCount",
             "description": "Stored accounts Plaid no longer shares; these were deleted along with their transactions",
             "args": [],
@@ -16193,6 +16646,46 @@
                 "name": "Boolean",
                 "kind": "SCALAR",
                 "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "wouldAdd",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL",
+                "ofType": {
+                  "name": "PlaidReconcileAccountChange",
+                  "kind": "OBJECT",
+                  "ofType": null
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "wouldDelete",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL",
+                "ofType": {
+                  "name": "PlaidReconcileAccountChange",
+                  "kind": "OBJECT",
+                  "ofType": null
+                }
               }
             },
             "isDeprecated": false,
@@ -16606,6 +17099,66 @@
       },
       {
         "kind": "OBJECT",
+        "name": "PlaidDeletePreviewRow",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "amount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "transactionId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "PlaidDeleteResult",
         "description": null,
         "isOneOf": null,
@@ -16627,6 +17180,18 @@
             "deprecationReason": null
           },
           {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "message",
             "description": null,
             "args": [],
@@ -16634,6 +17199,26 @@
               "kind": "SCALAR",
               "name": "String",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "preview",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL",
+                "ofType": {
+                  "name": "PlaidDeletePreviewRow",
+                  "kind": "OBJECT",
+                  "ofType": null
+                }
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -16650,6 +17235,18 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "wouldDeleteCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -16918,6 +17515,74 @@
       },
       {
         "kind": "OBJECT",
+        "name": "PlaidReconcileAccountChange",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "accountId",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "accountName",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "ledgerAccount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "mask",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "PlaidSubmitResult",
         "description": null,
         "isOneOf": null,
@@ -16939,6 +17604,18 @@
             "deprecationReason": null
           },
           {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "message",
             "description": null,
             "args": [],
@@ -16946,6 +17623,26 @@
               "kind": "SCALAR",
               "name": "String",
               "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "preview",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL",
+                "ofType": {
+                  "name": "JSONObject",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -16965,6 +17662,18 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "wouldAddCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -16979,12 +17688,36 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "message",
             "description": null,
             "args": [],
             "type": {
               "kind": "SCALAR",
               "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "morePagesAvailable",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
               "ofType": null
             },
             "isDeprecated": false,
@@ -17066,6 +17799,42 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "wouldAdd",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "wouldModify",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "wouldRemove",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -17377,7 +18146,7 @@
           },
           {
             "name": "filter",
-            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
+            "description": "Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or \"quoted\" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:\"Assets:Bank:Checking\"`, `date:\"2026\"` — there are no escape sequences.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -18880,7 +19649,7 @@
         "fields": [
           {
             "name": "baseBranch",
-            "description": "The created PR's actual base ref, read back — never a default",
+            "description": "The pull request's base branch, read back from the repository — never a default",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -18892,7 +19661,7 @@
           },
           {
             "name": "headBranch",
-            "description": "The created PR's actual head ref, read back — never a default",
+            "description": "The pull request's head branch, read back from the repository — never a default",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -20312,7 +21081,7 @@
           },
           {
             "name": "getLedgerEntriesCountPerType",
-            "description": "Get the count of entries per type",
+            "description": "Get the count of entries per type. Managed price feed directives are not counted, because the plan limit reads this count; the journal and BQL do include them, so Price here can be lower than their count.",
             "args": [
               {
                 "name": "account",
@@ -21406,7 +22175,7 @@
           },
           {
             "name": "getLedgerPlaintextJournal",
-            "description": "Get plaintext journal in beancount format",
+            "description": "Get plaintext journal in beancount format. The text holds the ledger's transactions, balance assertions and pads only, with no open, close, commodity, price, event, note, document or custom directives, so it is not a copy of the ledger: read the ledger's source files or its archive for that.",
             "args": [
               {
                 "name": "ledgerId",
@@ -24387,6 +25156,42 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "checkError",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "checked",
+            "description": "Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "commit",
+            "description": "The sha of the commit this write made; absent on a preview or a read.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "dryRun",
             "description": null,
             "args": [],
@@ -24395,6 +25200,38 @@
               "name": null,
               "ofType": {
                 "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsAfter",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsBefore",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
                 "kind": "SCALAR",
                 "ofType": null
               }
@@ -24413,6 +25250,30 @@
                 "name": "String",
                 "kind": "SCALAR",
                 "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "newErrors",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "SliceWriteError",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
               }
             },
             "isDeprecated": false,
@@ -24493,6 +25354,22 @@
                     "ofType": null
                   }
                 }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "valid",
+            "description": "True only when the write adds no bean-check error; gate a preview on this.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
               }
             },
             "isDeprecated": false,
@@ -24788,6 +25665,258 @@
       },
       {
         "kind": "OBJECT",
+        "name": "RevertLedgerCommitResponse",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "checkError",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "checked",
+            "description": "Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "commit",
+            "description": "The sha of the revert commit; absent on a preview, and when another commit landed in between.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "dryRun",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsAfter",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "errorsBefore",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Float",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "files",
+            "description": "Each file the commit touched, and what the revert does to it.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "RevertedFile",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "message",
+            "description": "The revert's own commit message.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "newErrors",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "SliceWriteError",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sha",
+            "description": "The full sha of the commit the revert undoes.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "subject",
+            "description": "The first line of that commit's message.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "valid",
+            "description": "True only when the write adds no bean-check error; gate a preview on this.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "RevertedFile",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "change",
+            "description": "What the revert does to the file: created, updated or deleted.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "path",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "ScheduledPlanChange",
         "description": "A plan change that takes effect at the end of the paid period. Nothing is charged until then.",
         "isOneOf": null,
@@ -25059,6 +26188,30 @@
             },
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "token",
+            "description": "Set only on a self-hosted deployment, where sign-up needs no email verification: the account already exists and this is its session token (also set as the auth cookie). Absent means the code in the email must be verified with verifySignUpOtp.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tokenExpireAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTimeISO",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -25116,6 +26269,18 @@
         "description": null,
         "isOneOf": null,
         "fields": [
+          {
+            "name": "code",
+            "description": "The engine's stable error code, such as E3001",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "message",
             "description": null,
@@ -26240,6 +27405,18 @@
             "deprecationReason": null
           },
           {
+            "name": "uploadHeaders",
+            "description": "Headers the PUT must send; present when mimeType was given, which the URL signs.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "uploadUrl",
             "description": null,
             "args": [],
@@ -26780,6 +27957,18 @@
         "isOneOf": null,
         "fields": [
           {
+            "name": "commit",
+            "description": "The sha of the commit this write made; absent on a preview or a read.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "dryRun",
             "description": null,
             "args": [],
@@ -26934,6 +28123,22 @@
                     "ofType": null
                   }
                 }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "unchanged",
+            "description": "True when the edit leaves the entry's text as it was: nothing was written and no commit was made.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
               }
             },
             "isDeprecated": false,

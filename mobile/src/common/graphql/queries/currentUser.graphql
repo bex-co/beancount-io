@@ -32,3 +32,13 @@ mutation UpdateUsername($username: String!) {
     ...CurrentUserFields
   }
 }
+
+# w3/m62: the saved currency a new ledger opens with. Separate for the same
+# reason as CurrentUserAvatar: a server that predates the field rejects the
+# query, and the create screen then prefills from the device alone.
+query CurrentUserDefaultCurrency {
+  userProfile {
+    id
+    defaultCurrency
+  }
+}

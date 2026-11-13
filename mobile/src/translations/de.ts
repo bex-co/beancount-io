@@ -835,6 +835,13 @@ export const de: Translations = {
   createLedgerTemplateStarterHint: "Leeres Hauptbuch mit Standard-Kontenplan.",
   createLedgerTemplateSample: "Beispiel",
   createLedgerTemplateSampleHint: "Beispielbuchungen zum Erkunden der App.",
+  createLedgerCurrency: "Währung",
+  createLedgerCurrencyHint:
+    "Die Währung, in der Ihre Bücher berichten. Konten können weiterhin andere Währungen enthalten.",
+  createLedgerCurrencyInvalid:
+    "Wählen Sie einen Währungscode wie USD oder EUR.",
+  createLedgerCurrencyUnsupported:
+    "Dieser Server kann noch keine Währung festlegen. Wählen Sie USD oder aktualisieren Sie den Server.",
   ledgerOwnerLimitReached:
     "Dieses Hauptbuch hat das Limit seines Eigentümers von {{limit}} Einträgen erreicht. Nur der Eigentümer kann es erhöhen.",
   createLedgerPlanLimit:

@@ -835,6 +835,12 @@ export const es: Translations = {
   createLedgerTemplateSample: "Ejemplo",
   createLedgerTemplateSampleHint:
     "Transacciones de ejemplo para explorar la app.",
+  createLedgerCurrency: "Moneda",
+  createLedgerCurrencyHint:
+    "La moneda en la que se presentan tus libros. Las cuentas pueden contener otras monedas.",
+  createLedgerCurrencyInvalid: "Elige un código de moneda como USD o EUR.",
+  createLedgerCurrencyUnsupported:
+    "Este servidor aún no puede definir una moneda. Elige USD o actualiza el servidor.",
   ledgerOwnerLimitReached:
     "Este libro ha alcanzado el límite de {{limit}} asientos de su propietario. Solo el propietario puede aumentarlo.",
   createLedgerPlanLimit:

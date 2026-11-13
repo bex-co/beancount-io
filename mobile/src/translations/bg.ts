@@ -814,6 +814,12 @@ export const bg: Translations = {
   createLedgerTemplateSample: "Примерна",
   createLedgerTemplateSampleHint:
     "Примерни транзакции, за да разгледате приложението.",
+  createLedgerCurrency: "Валута",
+  createLedgerCurrencyHint:
+    "Валутата, в която се отчитат книгите. Сметките могат да съдържат и други валути.",
+  createLedgerCurrencyInvalid: "Изберете код на валута като USD или EUR.",
+  createLedgerCurrencyUnsupported:
+    "Този сървър все още не може да задава валута. Изберете USD или обновете сървъра.",
   ledgerOwnerLimitReached:
     "Тази книга достигна лимита на собственика от {{limit}} записа. Само собственикът може да го увеличи.",
   createLedgerPlanLimit:
