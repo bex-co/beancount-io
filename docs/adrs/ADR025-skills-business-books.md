@@ -1,4 +1,4 @@
-# ADR 025: Business books in the customer skill suite
+# ADR025: Business books in the customer skill suite
 
 - Status: Proposed
 - Date: 2026-10-26

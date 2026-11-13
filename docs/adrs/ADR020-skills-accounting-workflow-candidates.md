@@ -1,4 +1,4 @@
-# ADR 0020: Accounting skill candidates to learn from
+# ADR020: Accounting skill candidates to learn from
 
 - Status: Proposed
 - Date: 2026-09-27

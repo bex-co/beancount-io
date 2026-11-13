@@ -1,4 +1,4 @@
-# ADR 018: Managed price includes in the `bea` CLI
+# ADR018: Managed price includes in the `bea` CLI
 
 - Status: Done (implementation and authentication amendment reviewed 2026-09-27). Accepted 2026-09-19, documenting the design shipped as `.pm` milestone w1/m29 (commits `4ed7e101`…`358ba4dc`).
 - Decision owner: CLI (`cli/`)

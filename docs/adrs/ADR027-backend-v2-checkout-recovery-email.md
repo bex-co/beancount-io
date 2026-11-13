@@ -1,4 +1,4 @@
-# ADR 0027: Checkout recovery — one short email, one modest code, once per person
+# ADR027: Checkout recovery — one short email, one modest code, once per person
 
 - Status: Accepted — implemented in [w0/m9](../../.pm/w0/blocked/m9/README.md) (2026-11-08); live-mode verification waits on the owner's Stripe and SendGrid setup
 - Date: 2026-11-05

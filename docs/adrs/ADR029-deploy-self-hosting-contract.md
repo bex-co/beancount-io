@@ -1,4 +1,4 @@
-# ADR 0029: Self-hosting — what a self-hosted Beancount.io promises, and where it falls short today
+# ADR029: Self-hosting — what a self-hosted Beancount.io promises, and where it falls short today
 
 - Status: Proposed
 - Date: 2026-11-09

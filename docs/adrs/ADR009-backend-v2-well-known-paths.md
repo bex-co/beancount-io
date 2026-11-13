@@ -1,4 +1,4 @@
-# ADR: `.well-known` paths — one index for every one of them
+# ADR009: `.well-known` paths — one index for every one of them
 
 - Status: Done (path index and implementation reviewed 2026-09-27; `/.well-known/mcp-registry-auth` added 2026-10-03; `/.well-known/openai-apps-challenge` added 2026-10-13)
 - Date: 2026-08-25

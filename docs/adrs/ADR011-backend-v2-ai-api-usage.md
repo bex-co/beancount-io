@@ -1,4 +1,4 @@
-# ADR: AI API usage — three provider paths, explicit credentials per path
+# ADR011: AI API usage — three provider paths, explicit credentials per path
 
 - Status: Accepted — documents the as-built architecture plus decisions from the 2026-09-07 receipt-parse outage; open items tracked in [Follow-up](#follow-up-open)
 - Date: 2026-09-07

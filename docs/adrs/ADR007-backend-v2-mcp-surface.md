@@ -1,4 +1,4 @@
-# ADR 0007: The MCP surface — one stateless endpoint, and the rules that keep it honest
+# ADR007: The MCP surface — one stateless endpoint, and the rules that keep it honest
 
 - Status: Rejected (2026-09-27) — the ledger-pinning policy in D3/D11 is rejected for every credential type, OAuth grants and API keys alike, in favor of access to all authorized ledgers. The code still enforces pins; see [Rejection rationale](#rejection-rationale-2026-09-27). Cross-surface parity remains in [ADR 0008](./ADR008-backend-v2-surface-parity.md).
 - Date: 2026-08-24

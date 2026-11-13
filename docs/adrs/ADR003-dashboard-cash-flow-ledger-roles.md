@@ -1,4 +1,4 @@
-# ADR 003: Cash-Flow Classification Declared in the Ledger (`cash-flow-role`)
+# ADR003: Cash-Flow Classification Declared in the Ledger (`cash-flow-role`)
 
 - Status: Done (shipped as w4/m3; implementation reviewed 2026-09-27)
 - Date: 2026-08-25

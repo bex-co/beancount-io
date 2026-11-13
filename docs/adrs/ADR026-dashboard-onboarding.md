@@ -1,6 +1,6 @@
 
 
-# ADR 0026: Onboarding — from sign-up to the first useful result
+# ADR026: Onboarding — from sign-up to the first useful result
 
 - Status: Suspended (2026-11-12)
 - Date: 2026-11-08

@@ -1,4 +1,4 @@
-# ADR 014: One beancount-io release with Beancount CLI parity
+# ADR014: One beancount-io release with Beancount CLI parity
 
 - Status: Done — one distribution with a bundled subprocess helper and native command parity; implementation reviewed 2026-09-27. The correction to one distribution remains the accepted decision.
 - Decision owner: CLI (`cli/`)

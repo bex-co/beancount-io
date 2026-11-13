@@ -1,4 +1,4 @@
-# ADR 002: Mobile AI Assistant
+# ADR002: Mobile AI Assistant
 
 - Status: Accepted — P0/P1 implemented (`mobile/.pm/w1/done/m32/`) and shipped gated off; P2–P4 (approval cards, attachments, polish) and un-gating are frozen by owner decision (`mobile/.pm/DO_NOT_DO.md`). See [Implementation notes](#implementation-notes)
 - Date: 2026-08-18

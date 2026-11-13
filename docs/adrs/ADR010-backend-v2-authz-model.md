@@ -1,4 +1,4 @@
-# ADR: Authorization strategy — declarative OpenFGA model for the relationship ceiling, engine adoption behind named triggers
+# ADR010: Authorization strategy — declarative OpenFGA model for the relationship ceiling, engine adoption behind named triggers
 
 - Status: Accepted
 - Date: 2026-08-28

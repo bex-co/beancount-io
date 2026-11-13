@@ -1,4 +1,4 @@
-# ADR 001: Selling the beancount.io Plans in the Mobile Apps
+# ADR001: Selling the beancount.io Plans in the Mobile Apps
 
 - Status: Proposed (revived 2026-10-25) — the owner decided to sell the beancount.io plans in the iOS and Android apps. This revision replaces the 2026-07-27 design and ends the 2026-10-03 deferral. Nothing in it is implemented yet.
 - Date: 2026-07-27 (revised 2026-10-25)

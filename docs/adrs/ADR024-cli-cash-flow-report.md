@@ -1,4 +1,4 @@
-# ADR 024: CLI cash-flow report (`bea report cash-flow`)
+# ADR024: CLI cash-flow report (`bea report cash-flow`)
 
 - Status: Done (shipped as w21/m4; implementation reviewed 2026-10-25)
 - Date: 2026-10-25

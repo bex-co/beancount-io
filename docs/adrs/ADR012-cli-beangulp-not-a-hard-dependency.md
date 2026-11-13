@@ -1,4 +1,4 @@
-# ADR 012: Beangulp is not a hard dependency — no-code CSV import via `--csv`
+# ADR012: Beangulp is not a hard dependency — no-code CSV import via `--csv`
 
 - Status: Done — the optional Beangulp dependency and `--csv` / `--rules` / remembered-mapping design are implemented; reviewed 2026-09-27.
 - Date: 2026-09-08

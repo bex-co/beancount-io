@@ -1,4 +1,4 @@
-# ADR: Token introspection — one endpoint for three credential kinds
+# ADR017: Token introspection — one endpoint for three credential kinds
 
 - Status: Done (REST and GraphQL implementation reviewed 2026-09-27; the documented MCP exception is preserved)
 - Date: 2026-09-18

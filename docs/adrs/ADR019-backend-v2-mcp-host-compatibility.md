@@ -1,4 +1,4 @@
-# ADR 0019: MCP hosts — one endpoint for ChatGPT, Claude, Cursor, Copilot, and Muse, and what the authorization server must accept to let them in
+# ADR019: MCP hosts — one endpoint for ChatGPT, Claude, Cursor, Copilot, and Muse, and what the authorization server must accept to let them in
 
 - Status: Accepted (2026-10-06, after the facts were re-verified — see [Amendments](#2026-10-06--facts-re-verified-and-accepted)). D1–D8 are on `main` and deployed, and D9 is done at the edge. D3, D4, D6, and D8 were verified on production on 2026-10-08. The real-host sign-ins are still open — see [Implementation status](#implementation-status).
 - Date: 2026-09-25

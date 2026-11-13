@@ -1,4 +1,4 @@
-# ADR 013: Verified https redirect URIs for the native mobile client
+# ADR013: Verified https redirect URIs for the native mobile client
 
 - Status: Rejected (2026-10-03) — the mobile app keeps its custom-scheme redirects and the approve step stays for every client. See [Why it is not being done](#why-it-is-not-being-done).
 - Date: 2026-09-11

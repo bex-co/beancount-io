@@ -1,4 +1,4 @@
-# ADR 0008: Reaching GraphQL / REST / MCP parity
+# ADR008: Reaching GraphQL / REST / MCP parity
 
 - Status: Done — implemented in w1/m10, with subsequent documented MCP exceptions; implementation reviewed 2026-09-27. See [Completion review](#completion-review-2026-09-27).
 - Date: 2026-08-25

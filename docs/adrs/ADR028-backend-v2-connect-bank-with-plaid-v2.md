@@ -1,4 +1,4 @@
-# ADR 0028: Connect Bank with Plaid v2 — one connection per login, history-first categories, opt-in automatic import
+# ADR028: Connect Bank with Plaid v2 — one connection per login, history-first categories, opt-in automatic import
 
 - Status: Proposed
 - Date: 2026-11-10
