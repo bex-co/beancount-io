@@ -20,7 +20,7 @@ m42–m45 and note [238](./238.md) were materialized on 2026-11-13 from `/pm-bra
 
 ### Open
 
-- [ ] **m42** — [Bring an existing Beancount ledger to `bea` and a coding agent](./m42/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 1); user routed to w1
+- [ ] **m42** — [Bring an existing Beancount ledger to `bea` and a coding agent](./blocked/m42/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 1); user routed to w1 — **blocked:** all shipped except the Codex rehearsal; Codex cannot refresh its expired sign-in (`codex login`)
 - [ ] **m43** — [Rename an account across a hosted ledger in one previewed commit](./m43/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 2, from [228](./blocked/228.md)); user routed to w1
 - [ ] **m44** — [List entries with their source text in one call](./m44/README.md) (7 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 3, from [228](./blocked/228.md)); user routed to w1
 - [ ] **m45** — [Move entries to another file in one atomic commit](./m45/README.md) (9 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 4, from [228](./blocked/228.md)); user routed to w1

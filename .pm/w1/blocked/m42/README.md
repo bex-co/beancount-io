@@ -1,6 +1,6 @@
 # w1 · m42 — Bring an existing Beancount ledger to `bea` and a coding agent
 
-**Worker:** worker1 **Goal:** someone who already keeps a Beancount ledger, with their own root file name, `include` tree and plugins, installs `bea`, runs one documented command, and has a coding agent answer a question about that ledger in minutes, without a single ledger file changing. **Status:** in progress (t001–t005, t007–t009 done; t006 blocked on Codex sign-in; t010 waits on t006)
+**Worker:** worker1 **Goal:** someone who already keeps a Beancount ledger, with their own root file name, `include` tree and plugins, installs `bea`, runs one documented command, and has a coding agent answer a question about that ledger in minutes, without a single ledger file changing. **Status:** blocked (t001–t005, t007–t009 done; t006 blocked on Codex sign-in; t010 waits on t006)
 
 ## Tasks (in order)
 
@@ -20,6 +20,8 @@
 Re-sequenced 2026-11-13: Adoption surface (t007) now follows t005, and Closeout (t010) waits on t006. Adoption surface, Simplify and Test coverage do not need the Codex run, so only closing the milestone waits on it, as w1/m41 did with its production check.
 
 ## Blocked
+
+**Milestone blocked 2026-11-13.** Everything but the Codex rehearsal is shipped: the command (`fd8914559`, `fe2ff1284`), the skill branch (`8a645730b`), the guide (`76c9457aa`), the adoption surfaces (`d43412d0f`), Simplify (`d2faee550`) and Test coverage (`300b7bad7`). Closeout (t010) waits on t006, the only open task that can still change anything. **Unblock:** the user signs Codex in again (`codex login`). The worker then runs the guide's setup and question turns with Codex, records them in `docs/skills/existing-ledger-rehearsal.md`, and closes t006 and t010. **Who can clear it:** the user.
 
 - **t006 (2026-11-13)** — the Codex half of the rehearsal. Claude Code passed and is recorded in `docs/skills/existing-ledger-rehearsal.md`. Codex CLI 0.163.0 cannot refresh its expired sign-in on this host, and the Linux container route reuses that credential. **Unblock:** the user signs Codex in again (`codex login`); the worker then runs the guide's setup and question turns with Codex and records them. **Who can clear it:** the user.
 
@@ -44,7 +46,7 @@ On a synthetic ledger whose root is not `main.bean`, which `include`s other file
   - `bea doctor guidance` (`cli/src/cli/commands/doctor.py`) warns that `AGENTS.md` is missing and says "the beancount-init skill writes it", which is exactly the skill that refuses an existing ledger.
 - **Goal linkage:** **A2 — Frictionless onboarding**, for the largest group likely to adopt the project: people who already keep Beancount books. **A1** too, since the agent reads the ledger's real conventions instead of guessing.
 - **Expected outcome:** an existing Beancount user goes from `brew install bex-co/tap/bea` to an agent answering a question about their own ledger in a few minutes, and can confirm by checksum that nothing was rewritten. Signals: `bea` installs, `beancount-ask` invocations, time to first answer on a user's own ledger.
-- **Why now:** sixteen customer skills and `bea mcp` have shipped, but every path into them assumes a new ledger. Nothing here waits on a deploy or on blocked work. The third-party plugin dependency question stays with [w5/015](../../w5/blocked/015.md); this milestone only cites its current answer. Adoption surface is included because this adds a user-facing command, a skill branch and a guide.
+- **Why now:** sixteen customer skills and `bea mcp` have shipped, but every path into them assumes a new ledger. Nothing here waits on a deploy or on blocked work. The third-party plugin dependency question stays with [w5/015](../../../w5/blocked/015.md); this milestone only cites its current answer. Adoption surface is included because this adds a user-facing command, a skill branch and a guide.
 
 ## Out of scope
 
