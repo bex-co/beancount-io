@@ -63,7 +63,14 @@ on a designated QA ledger needed to reproduce bugs.
   account for a synthetic ledger, ideally one read/write key pinned to the
   ledger and one `ledger.read` key on the same ledger, both short-lived. The
   token lives in the repo-root `./.env` unless the user names another file; ask
-  for the variable names or file path, never for the value. Do not
+  for the variable names or file path, never for the value. The names are
+  `QA_MCP_TOKEN` and `QA_MCP_READ_ONLY_TOKEN`, spelled exactly:
+  `mcp:conformance` reads no other name for the read-only key (it prints a note
+  when `./.env` holds a near miss such as `QA_MCP_TOKEN_READONLY`, and a check
+  that needs it skips). `qa-mcp.mjs` reads only `QA_MCP_TOKEN`, so run the
+  read-only journey with the key relabelled in a pipe, off argv and off disk:
+  `--credentials-file <(sed -n 's/^QA_MCP_READ_ONLY_TOKEN=/QA_MCP_TOKEN=/p' .env)`.
+  Do not
   mint keys on, or point tools at, a personal account or ledger. Browser
   cookies from `qa-login.mjs` are not MCP credentials; the endpoint refuses
   them by design.

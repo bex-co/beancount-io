@@ -9,7 +9,7 @@
     },
     {
       "id": 2,
-      "prompt": "Run $qa-find-bugs-mcp boundaries writes w4 SHIP=1 DRY_RUN=1. QA_MCP_TOKEN and QA_MCP_READONLY_TOKEN are in my environment and pinned to qa/mcp-books.",
+      "prompt": "Run $qa-find-bugs-mcp boundaries writes w4 SHIP=1 DRY_RUN=1. QA_MCP_TOKEN and QA_MCP_READ_ONLY_TOKEN are in my environment and pinned to qa/mcp-books.",
       "expected_output": "Uses the bundled helper so the tokens never reach argv or a transcript, checks that the read-only key gets isError FORBIDDEN on every write and admin tool, that dry_run leaves the ledger unchanged in a fresh request and via REST, and that real writes persist with one commit. DRY_RUN allows disposable writes on the designated ledger but prevents board edits, commits and push.",
       "files": []
     },

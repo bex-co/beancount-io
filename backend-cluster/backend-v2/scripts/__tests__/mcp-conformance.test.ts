@@ -23,7 +23,7 @@ import { corsMiddleware } from "@/server/middleware/cors-middleware";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CHECKS, resolveTokens } from "../mcp-conformance";
+import { CHECKS, readOnlyTokenHint, resolveTokens } from "../mcp-conformance";
 
 const [
   checkUnauthenticated,
@@ -548,5 +548,76 @@ describe("resolveTokens", () => {
       token: undefined,
       readOnlyToken: undefined,
     });
+  });
+});
+
+// w23/235: the read-only credential has one name. A near miss in `.env` used to
+// read as "none supplied", so check 5 skipped without saying why.
+describe("readOnlyTokenHint", () => {
+  let dir: string;
+  let envFile: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "mcp-conformance-hint-"));
+    envFile = join(dir, ".env");
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  it("names the expected variable beside the near miss in .env, never a value", () => {
+    writeFileSync(
+      envFile,
+      "QA_MCP_TOKEN=bcio_secret_rw\nQA_MCP_TOKEN_READONLY=bcio_secret_ro\n",
+    );
+    const hint = readOnlyTokenHint({}, {}, envFile);
+    expect(hint).toContain("`QA_MCP_TOKEN_READONLY`");
+    expect(hint).toContain("`QA_MCP_READ_ONLY_TOKEN`");
+    expect(hint).not.toContain("bcio_");
+    expect(hint).not.toContain("secret");
+  });
+
+  it("catches the other spelling and one from the environment, each named once", () => {
+    writeFileSync(envFile, "QA_MCP_READONLY_TOKEN=bcio_secret_ro\n");
+    const hint = readOnlyTokenHint(
+      {},
+      {
+        QA_MCP_READONLY_TOKEN: "bcio_env_ro",
+        BEANCOUNT_MCP_TOKEN_READ_ONLY: "bcio_env_ro2",
+      },
+      envFile,
+    );
+    expect(hint).toContain("`QA_MCP_READONLY_TOKEN`");
+    expect(hint).toContain("`BEANCOUNT_MCP_TOKEN_READ_ONLY`");
+    expect(hint?.match(/QA_MCP_READONLY_TOKEN/g)).toHaveLength(1);
+    expect(hint).not.toContain("bcio_");
+  });
+
+  it("stays silent when the canonical variable is set, in .env or the environment", () => {
+    writeFileSync(
+      envFile,
+      "QA_MCP_TOKEN_READONLY=bcio_a\nQA_MCP_READ_ONLY_TOKEN=bcio_b\n",
+    );
+    expect(readOnlyTokenHint({}, {}, envFile)).toBeUndefined();
+    writeFileSync(envFile, "QA_MCP_TOKEN_READONLY=bcio_a\n");
+    expect(
+      readOnlyTokenHint({}, { QA_MCP_READ_ONLY_TOKEN: "bcio_b" }, envFile),
+    ).toBeUndefined();
+  });
+
+  it("stays silent when a flag supplies the credential", () => {
+    writeFileSync(envFile, "QA_MCP_TOKEN_READONLY=bcio_a\n");
+    expect(
+      readOnlyTokenHint({ readOnlyToken: "bcio_flag_ro" }, {}, envFile),
+    ).toBeUndefined();
+  });
+
+  it("ignores names that are not an MCP read-only credential", () => {
+    writeFileSync(
+      envFile,
+      "QA_MCP_TOKEN=bcio_rw\nREADONLY_MODE=1\nQA_MCP_URL=https://x\nDB_READ_ONLY=1\n",
+    );
+    expect(readOnlyTokenHint({}, {}, envFile)).toBeUndefined();
+  });
+
+  it("is silent without a .env file", () => {
+    expect(readOnlyTokenHint({}, {}, envFile)).toBeUndefined();
   });
 });

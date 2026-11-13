@@ -1604,7 +1604,11 @@ BEANCOUNT_MCP_TOKEN=… yarn mcp:conformance https://books.example.com
 The authenticated checks read `QA_MCP_TOKEN` (or `BEANCOUNT_MCP_TOKEN`) and
 `QA_MCP_READ_ONLY_TOKEN` from the repository root's `.env` first and the
 environment second, so the credential need not appear on the command line;
-`--token` and `--read-only-token` still override both (w1/188).
+`--token` and `--read-only-token` still override both (w1/188). The read-only
+variable has that one spelling: when it is unset but a name such as
+`QA_MCP_TOKEN_READONLY` or `QA_MCP_READONLY_TOKEN` is set, the command prints one
+line naming the variable it reads (never a value), and the checks that need the
+read-only credential skip (w23/235).
 
 The [conformance script](../scripts/mcp-conformance.ts) checks the unauthenticated
 challenge, discovery, method handling (`GET`, `DELETE`, `OPTIONS` and `PUT` must all be

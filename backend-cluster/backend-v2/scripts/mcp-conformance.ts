@@ -938,6 +938,41 @@ async function checkBrowserDiscovery(o: Options): Promise<CheckResult> {
 
 // --- runner ---------------------------------------------------------------
 
+function readEnvFile(envFile: string): NodeJS.Dict<string> {
+  return existsSync(envFile) ? parseEnv(readFileSync(envFile, "utf8")) : {};
+}
+
+/**
+ * One line when a worker's credential variable is a near miss (w23/235).
+ *
+ * The read-only credential has exactly one name, `QA_MCP_READ_ONLY_TOKEN`. A
+ * `.env` that spells it `QA_MCP_TOKEN_READONLY` or `QA_MCP_READONLY_TOKEN` is
+ * read as "no read-only credential", so check 5 skips and a skip looks like an
+ * ordinary "none supplied". This names the variable the checklist reads next to
+ * the one it found. It prints names only, never a value.
+ */
+export function readOnlyTokenHint(
+  flags: { readonly readOnlyToken?: string },
+  env: NodeJS.ProcessEnv,
+  envFile = REPO_ENV_FILE,
+): string | undefined {
+  if (flags.readOnlyToken) return undefined;
+  const fromFile = readEnvFile(envFile);
+  const [canonical] = READ_ONLY_TOKEN_VARIABLES;
+  if (fromFile[canonical] || env[canonical]) return undefined;
+  const nearMiss = (name: string) => {
+    const squashed = name.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return squashed.includes("MCP") && squashed.includes("READONLY");
+  };
+  const found = [
+    ...Object.keys(fromFile).filter(nearMiss),
+    ...Object.keys(env).filter(nearMiss),
+  ];
+  if (found.length === 0) return undefined;
+  const names = [...new Set(found)].map((name) => `\`${name}\``).join(", ");
+  return `note: ${names} is set, but the read-only credential is read only from \`${canonical}\`; the checks that need it will skip until it is set under that name.`;
+}
+
 /**
  * The credentials, kept off argv when the caller wants them off (w1/188).
  *
@@ -951,9 +986,7 @@ export function resolveTokens(
   env: NodeJS.ProcessEnv,
   envFile = REPO_ENV_FILE,
 ): { token?: string; readOnlyToken?: string } {
-  const fromFile = existsSync(envFile)
-    ? parseEnv(readFileSync(envFile, "utf8"))
-    : {};
+  const fromFile = readEnvFile(envFile);
   const first = (names: readonly string[]) => {
     for (const source of [fromFile, env]) {
       const name = names.find((candidate) => source[candidate]);
@@ -983,12 +1016,12 @@ function parseArgs(argv: string[]): Options {
     );
     process.exit(2);
   }
+  const flags = { token: flag("token"), readOnlyToken: flag("read-only-token") };
+  const hint = readOnlyTokenHint(flags, process.env);
+  if (hint) console.error(hint);
   return {
     baseUrl: baseUrl.replace(/\/+$/, ""),
-    ...resolveTokens(
-      { token: flag("token"), readOnlyToken: flag("read-only-token") },
-      process.env,
-    ),
+    ...resolveTokens(flags, process.env),
     ledger: flag("ledger"),
   };
 }
