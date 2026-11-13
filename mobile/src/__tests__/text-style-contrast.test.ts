@@ -189,9 +189,11 @@ const CASES: Case[] = [
     surface: { style: "container" },
   },
   {
+    // The selected row is the `controlSelected` tint, where the plain hint grey
+    // is 4.43:1 in light; its hint takes the body colour (w22/050).
     name: "New Ledger hints on the selected template",
     file: "screens/create-ledger-screen/create-ledger-screen.tsx",
-    text: "hint",
+    text: "templateHintSelected",
     surface: { style: "templateSelected" },
   },
 ];

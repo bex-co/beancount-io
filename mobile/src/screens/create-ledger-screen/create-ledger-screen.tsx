@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { Stack, router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useToast } from "@/common/hooks/use-toast";
 import { useIsHere } from "@/common/hooks/use-is-here";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -142,10 +143,33 @@ const getStyles = (theme: ColorTheme) =>
       minHeight: 72,
       paddingHorizontal: space.md,
       paddingVertical: space.sm,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.md,
+    },
+    templateText: {
+      flex: 1,
       gap: space.xs,
     },
+    // The selected row is the brand-green tint (`controlSelected`, as the drawer
+    // and the account picker use) plus a check mark: on `black10` the fill alone
+    // was a 1.10:1 step, and even the tint is only about 1.17:1, so the mark is
+    // what carries the state beyond colour (w22/050).
     templateSelected: {
-      backgroundColor: theme.black10,
+      backgroundColor: theme.controlSelected,
+    },
+    // The hint's grey (`black80`) is 4.74:1 on the old fill but only 4.43:1 on the
+    // tint, under the 4.5 bar for text, so the selected row's hint takes the
+    // body colour (`text-style-contrast.test.ts`).
+    templateHintSelected: {
+      color: theme.text01,
+    },
+    // Reserved on both rows, so choosing one does not rewrap the other's text.
+    templateCheck: {
+      width: 24,
+      height: 24,
+      alignItems: "center",
+      justifyContent: "center",
     },
     templateTitle: {
       color: theme.text01,
@@ -483,12 +507,33 @@ export function CreateLedgerScreen(): JSX.Element {
                   // (w21/142).
                   accessibilityHint={t("createLedgerTemplateStarterHint")}
                 >
-                  <Text style={styles.templateTitle}>
-                    {t("createLedgerTemplateStarter")}
-                  </Text>
-                  <Text style={styles.hint}>
-                    {t("createLedgerTemplateStarterHint")}
-                  </Text>
+                  <View style={styles.templateText}>
+                    <Text style={styles.templateTitle}>
+                      {t("createLedgerTemplateStarter")}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.hint,
+                        value === "STARTER"
+                          ? styles.templateHintSelected
+                          : null,
+                      ]}
+                    >
+                      {t("createLedgerTemplateStarterHint")}
+                    </Text>
+                  </View>
+                  <View style={styles.templateCheck}>
+                    {value === "STARTER" ? (
+                      <Ionicons
+                        name="checkmark"
+                        size={24}
+                        color={theme.primary}
+                        accessible={false}
+                        importantForAccessibility="no"
+                        accessibilityElementsHidden
+                      />
+                    ) : null}
+                  </View>
                 </Pressable>
                 <Pressable
                   onPress={() => onChange("SAMPLE")}
@@ -502,12 +547,31 @@ export function CreateLedgerScreen(): JSX.Element {
                   accessibilityLabel={t("createLedgerTemplateSample")}
                   accessibilityHint={t("createLedgerTemplateSampleHint")}
                 >
-                  <Text style={styles.templateTitle}>
-                    {t("createLedgerTemplateSample")}
-                  </Text>
-                  <Text style={styles.hint}>
-                    {t("createLedgerTemplateSampleHint")}
-                  </Text>
+                  <View style={styles.templateText}>
+                    <Text style={styles.templateTitle}>
+                      {t("createLedgerTemplateSample")}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.hint,
+                        value === "SAMPLE" ? styles.templateHintSelected : null,
+                      ]}
+                    >
+                      {t("createLedgerTemplateSampleHint")}
+                    </Text>
+                  </View>
+                  <View style={styles.templateCheck}>
+                    {value === "SAMPLE" ? (
+                      <Ionicons
+                        name="checkmark"
+                        size={24}
+                        color={theme.primary}
+                        accessible={false}
+                        importantForAccessibility="no"
+                        accessibilityElementsHidden
+                      />
+                    ) : null}
+                  </View>
                 </Pressable>
               </>
             )}

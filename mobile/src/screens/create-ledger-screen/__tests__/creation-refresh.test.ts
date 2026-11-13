@@ -162,6 +162,7 @@ function screen(
         if (id === "@/common/theme/switch-colors")
           return { switchTrackProps: () => ({}) };
         if (id === "@/common/rtl") return {};
+        if (id === "@expo/vector-icons") return { Ionicons: () => null };
         if (id === "./ledger-name") return names;
         throw new Error(`Unexpected dependency: ${id}`);
       },
