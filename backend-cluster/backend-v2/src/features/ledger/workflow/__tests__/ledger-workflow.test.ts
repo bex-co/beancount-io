@@ -20,6 +20,7 @@ import {
   ledgerResource,
   userResource,
 } from "@/server/api/authorization";
+import { MAKE_PUBLIC_WARNING } from "@/features/ledger/utils/ledger-visibility";
 
 jest.mock("@/features/plaid/utils/encryption", () => ({
   decryptToken: jest.fn().mockReturnValue("decrypted-access-token"),
@@ -410,9 +411,7 @@ describe("LedgerWorkflow", () => {
       });
 
       expect(result.preview?.private).toEqual({ from: true, to: false });
-      expect(result.preview?.warnings).toEqual([
-        "This would make the ledger public, readable by anyone.",
-      ]);
+      expect(result.preview?.warnings).toEqual([MAKE_PUBLIC_WARNING]);
     });
 
     it("authorizes before reading anything, like the commit", async () => {

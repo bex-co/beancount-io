@@ -100,3 +100,16 @@ it("says the plaintext journal is not a copy of the ledger", () => {
   expect(plaintext).toContain("not a copy of the ledger");
   expect(read("journal")).not.toContain("pads only");
 });
+
+// w23/241. The `private` argument of createLedger and updateLedger is where a
+// client's tool list says what `false` does; "readable by anyone" left out that
+// the ledger's whole commit history, with each author's name and email, goes
+// public with it.
+it("says making a ledger public exposes its commit history", () => {
+  for (const name of ["createLedger", "updateLedger"]) {
+    const tool = served.tools.get(name)!;
+    expect(tool).toContain("full commit history");
+    expect(tool).toContain("author name and email");
+    expect(tool).not.toContain("readable by anyone.");
+  }
+});

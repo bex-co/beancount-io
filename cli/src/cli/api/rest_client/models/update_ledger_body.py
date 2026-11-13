@@ -17,7 +17,9 @@ class UpdateLedgerBody:
         name (None | str | Unset): Lowercase letters, numbers, and underscores, joined by single hyphens.
         description (None | str | Unset): A short description shown with the ledger, up to 2048 characters.
         private (bool | None | Unset): true makes the ledger visible only to its owner and collaborators; false makes it
-            public, readable by anyone; omitted leaves it as it is.
+            public: its transactions, balances, files and full commit history, including every earlier version of each file
+            and each commit's author name and email become readable by anyone with the link and by search engines; omitted
+            leaves it as it is.
         dryRun (bool | None | Unset): Run every check and return the preview without committing
         dry_run (bool | None | Unset): Alias of dryRun, as MCP spells it.
     """

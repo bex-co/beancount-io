@@ -1883,7 +1883,7 @@
                   "private": {
                     "type": "boolean",
                     "nullable": true,
-                    "description": "true or omitted keeps the ledger visible only to its owner and collaborators; false makes it public, readable by anyone."
+                    "description": "true or omitted keeps the ledger visible only to its owner and collaborators; false makes it public: its transactions, balances, files and full commit history, including every earlier version of each file and each commit's author name and email become readable by anyone with the link and by search engines."
                   },
                   "template": {
                     "type": "string",
@@ -3137,7 +3137,7 @@
                   "private": {
                     "type": "boolean",
                     "nullable": true,
-                    "description": "true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is."
+                    "description": "true makes the ledger visible only to its owner and collaborators; false makes it public: its transactions, balances, files and full commit history, including every earlier version of each file and each commit's author name and email become readable by anyone with the link and by search engines; omitted leaves it as it is."
                   },
                   "dryRun": {
                     "type": "boolean",

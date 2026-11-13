@@ -24,7 +24,9 @@ class CreateLedgerBody:
         name (str): Lowercase letters, numbers, and underscores, joined by single hyphens.
         description (None | str | Unset): A short description shown with the ledger, up to 2048 characters.
         private (bool | None | Unset): true or omitted keeps the ledger visible only to its owner and collaborators;
-            false makes it public, readable by anyone.
+            false makes it public: its transactions, balances, files and full commit history, including every earlier
+            version of each file and each commit's author name and email become readable by anyone with the link and by
+            search engines.
         template (CreateLedgerBodyTemplateType1 | CreateLedgerBodyTemplateType2Type1 |
             CreateLedgerBodyTemplateType3Type1 | None | Unset): STARTER (the default) has options and accounts without
             transactions; SAMPLE has demonstration transactions.

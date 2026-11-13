@@ -21,6 +21,7 @@ import {
   NEW_LEDGER_NAME_PATTERN,
   newLedgerNameRule,
 } from "@/shared/ledger-slug";
+import { MAKE_PUBLIC_FIELD } from "@/features/ledger/utils/ledger-visibility";
 const name = z
   .string()
   .max(100)
@@ -110,7 +111,7 @@ export const ledgerCreateInput = z
       .boolean()
       .nullish()
       .describe(
-        "true or omitted keeps the ledger visible only to its owner and collaborators; false makes it public, readable by anyone.",
+        `true or omitted keeps the ledger visible only to its owner and collaborators; ${MAKE_PUBLIC_FIELD}.`,
       ),
     template: z
       .nativeEnum(LedgerTemplate)
@@ -146,7 +147,7 @@ export const ledgerUpdateInput = z
       .boolean()
       .nullish()
       .describe(
-        "true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is.",
+        `true makes the ledger visible only to its owner and collaborators; ${MAKE_PUBLIC_FIELD}; omitted leaves it as it is.`,
       ),
     ...dryRunBody,
   })

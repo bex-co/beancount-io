@@ -27,6 +27,7 @@ import {
   COMMIT_SHA_DESCRIPTION,
 } from "@/features/ledger/utils/commit-revert";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
+import { MAKE_PUBLIC_FIELD } from "@/features/ledger/utils/ledger-visibility";
 
 registerEnumType(LedgerTemplate, {
   name: "LedgerTemplate",
@@ -358,8 +359,7 @@ export class CreateLedgerInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    description:
-      "true or omitted keeps the ledger visible only to its owner and collaborators; false makes it public, readable by anyone.",
+    description: `true or omitted keeps the ledger visible only to its owner and collaborators; ${MAKE_PUBLIC_FIELD}.`,
   })
   private?: boolean;
 
@@ -407,8 +407,7 @@ export class UpdateLedgerInput {
 
   @Field(() => Boolean, {
     nullable: true,
-    description:
-      "true makes the ledger visible only to its owner and collaborators; false makes it public, readable by anyone; omitted leaves it as it is.",
+    description: `true makes the ledger visible only to its owner and collaborators; ${MAKE_PUBLIC_FIELD}; omitted leaves it as it is.`,
   })
   private?: boolean;
 

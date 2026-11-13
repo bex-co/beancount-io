@@ -145,6 +145,7 @@ import {
   type FileWriteGateServices,
 } from "@/features/ledger/utils/file-write-gate";
 import { runWriteWithValidation } from "@/features/ledger/utils/write-validation";
+import { MAKE_PUBLIC_WARNING } from "@/features/ledger/utils/ledger-visibility";
 import {
   commitSubject,
   defaultRevertMessage,
@@ -203,9 +204,7 @@ function previewLedgerUpdate(
   if (typeof input.private === "boolean") {
     preview.private = { from: current.private, to: input.private };
     if (current.private && !input.private) {
-      preview.warnings.push(
-        "This would make the ledger public, readable by anyone.",
-      );
+      preview.warnings.push(MAKE_PUBLIC_WARNING);
     }
   }
   return preview;

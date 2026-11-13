@@ -892,7 +892,10 @@ return a preview of the change instead of applying it.
   refused name, an outage — releases its `requestId`, so repeating it runs the
   creation again. A successful `requestId` is remembered for 24 hours.
 - `private` controls who can read the ledger. On create, an omitted or null
-  value keeps it private; `false` publishes it, readable by anyone.
+  value keeps it private; `false` publishes it: its transactions, balances,
+  files and full commit history, with each commit's author name and email,
+  become readable by anyone with the link and by search engines (w23/241). The
+  `dry_run` preview of that change carries the same words as a warning.
 - `updateLedger` accepts `ledger` and optional `name`, `description`, and `private`;
   an omitted field stays as it is.
 - A name another ledger holds is a `CONFLICT` on create or rename. So is a

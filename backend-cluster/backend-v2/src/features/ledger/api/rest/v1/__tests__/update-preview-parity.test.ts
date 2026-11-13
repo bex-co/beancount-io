@@ -16,6 +16,7 @@ import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
+import { MAKE_PUBLIC_WARNING } from "@/features/ledger/utils/ledger-visibility";
 
 const config = {
   api: { scopeEnforcement: "enforce" },
@@ -184,7 +185,7 @@ describe.each(["rest", "gql", "mcp"])(
           expect(result).not.toHaveProperty("dry_run");
         }
         expect((result?.preview as { warnings: string[] }).warnings).toContain(
-          "This would make the ledger public, readable by anyone.",
+          MAKE_PUBLIC_WARNING,
         );
       } finally {
         await f.close();
