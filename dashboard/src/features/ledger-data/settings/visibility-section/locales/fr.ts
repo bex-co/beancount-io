@@ -11,7 +11,7 @@ const frVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Toute personne disposant du lien, ainsi que les moteurs de recherche, pourra voir les transactions, soldes, fichiers et l'historique de ce grand livre.",
+      "Toute personne disposant du lien, ainsi que les moteurs de recherche, pourra voir les transactions, soldes, fichiers et l'historique complet des modifications de ce grand livre, y compris chaque version antérieure de chaque fichier ainsi que le nom et l'adresse e-mail de l'auteur de chaque modification.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -24,7 +24,7 @@ const frVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.publicLedgerDescription": {
     message:
-      "Votre grand livre est public. Toute personne disposant du lien peut le consulter.",
+      "Votre grand livre est public. Toute personne disposant du lien peut le consulter, y compris l'historique complet des modifications : chaque version antérieure de chaque fichier ainsi que le nom et l'adresse e-mail de l'auteur de chaque modification.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

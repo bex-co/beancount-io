@@ -11,7 +11,7 @@ const esVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Cualquiera con el enlace, y los buscadores, podrá ver las transacciones, los saldos, los archivos y el historial de este libro.",
+      "Cualquiera con el enlace, y los buscadores, podrá ver las transacciones, los saldos, los archivos y el historial completo de cambios de este libro, incluida cada versión anterior de cada archivo y el nombre y el correo electrónico del autor de cada cambio.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -23,7 +23,8 @@ const esVisibilitySection: Record<string, TranslationEntry> = {
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
-    message: "Su libro mayor es público. Cualquiera con el enlace puede verlo.",
+    message:
+      "Su libro mayor es público. Cualquiera con el enlace puede verlo, incluido el historial completo de cambios: cada versión anterior de cada archivo y el nombre y el correo electrónico del autor de cada cambio.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

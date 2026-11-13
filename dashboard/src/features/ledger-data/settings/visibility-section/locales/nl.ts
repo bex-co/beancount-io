@@ -11,7 +11,7 @@ const nlVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Iedereen met de link, en zoekmachines, kan dan de transacties, saldi, bestanden en geschiedenis van dit grootboek zien.",
+      "Iedereen met de link, en zoekmachines, kan dan de transacties, saldi, bestanden en volledige wijzigingsgeschiedenis van dit grootboek zien, inclusief elke eerdere versie van elk bestand en de naam en het e-mailadres van de auteur van elke wijziging.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -23,7 +23,8 @@ const nlVisibilitySection: Record<string, TranslationEntry> = {
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
-    message: "Uw grootboek is openbaar. Iedereen met de link kan het bekijken.",
+    message:
+      "Uw grootboek is openbaar. Iedereen met de link kan het bekijken, ook de volledige wijzigingsgeschiedenis: elke eerdere versie van elk bestand en de naam en het e-mailadres van de auteur van elke wijziging.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

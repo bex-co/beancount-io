@@ -11,7 +11,7 @@ const bgVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Всеки с връзката, както и търсачките, ще може да вижда транзакциите, салдата, файловете и историята на тази книга.",
+      "Всеки с връзката, както и търсачките, ще може да вижда транзакциите, салдата, файловете и цялата история на промените в тази книга, включително всяка предишна версия на всеки файл и името и имейла на автора на всяка промяна.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -23,7 +23,8 @@ const bgVisibilitySection: Record<string, TranslationEntry> = {
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
-    message: "Вашата книга е публична. Всеки с връзката може да я разглежда.",
+    message:
+      "Вашата книга е публична. Всеки с връзката може да я разглежда, включително цялата история на промените: всяка предишна версия на всеки файл и името и имейла на автора на всяка промяна.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

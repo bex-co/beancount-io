@@ -11,7 +11,7 @@ const ptVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Qualquer pessoa com o link, e os mecanismos de busca, poderá ver as transações, os saldos, os arquivos e o histórico deste livro.",
+      "Qualquer pessoa com o link, e os mecanismos de busca, poderá ver as transações, os saldos, os arquivos e o histórico completo de alterações deste livro, incluindo cada versão anterior de cada arquivo e o nome e o e-mail do autor de cada alteração.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -24,7 +24,7 @@ const ptVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.publicLedgerDescription": {
     message:
-      "Seu livro-razão é público. Qualquer pessoa com o link pode visualizá-lo.",
+      "Seu livro-razão é público. Qualquer pessoa com o link pode visualizá-lo, incluindo o histórico completo de alterações: cada versão anterior de cada arquivo e o nome e o e-mail do autor de cada alteração.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

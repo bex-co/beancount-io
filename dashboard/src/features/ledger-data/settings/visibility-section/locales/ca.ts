@@ -11,7 +11,7 @@ const caVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Qualsevol persona amb l'enllaç, i els cercadors, podran veure les transaccions, els saldos, els fitxers i l'historial d'aquest llibre.",
+      "Qualsevol persona amb l'enllaç, i els cercadors, podran veure les transaccions, els saldos, els fitxers i l'historial complet de canvis d'aquest llibre, incloent-hi cada versió anterior de cada fitxer i el nom i el correu electrònic de l'autor de cada canvi.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -24,7 +24,7 @@ const caVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.publicLedgerDescription": {
     message:
-      "El vostre llibre és públic. Qualsevol persona amb l'enllaç pot veure'l.",
+      "El vostre llibre és públic. Qualsevol persona amb l'enllaç pot veure'l, inclòs l'historial complet de canvis: cada versió anterior de cada fitxer i el nom i el correu electrònic de l'autor de cada canvi.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

@@ -11,7 +11,7 @@ const koVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "링크가 있는 누구나, 그리고 검색 엔진이 이 원장의 거래, 잔액, 파일 및 기록을 볼 수 있게 됩니다.",
+      "링크가 있는 누구나, 그리고 검색 엔진이 이 원장의 거래, 잔액, 파일 및 전체 변경 기록을 볼 수 있게 됩니다. 각 파일의 모든 이전 버전과 각 변경 작성자의 이름 및 이메일도 포함됩니다.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -23,7 +23,8 @@ const koVisibilitySection: Record<string, TranslationEntry> = {
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
-    message: "장부가 공개됩니다. 링크가 있는 누구나 볼 수 있습니다.",
+    message:
+      "장부가 공개되어 있습니다. 링크가 있는 누구나 볼 수 있으며, 전체 변경 기록(각 파일의 모든 이전 버전과 각 변경 작성자의 이름 및 이메일)도 볼 수 있습니다.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

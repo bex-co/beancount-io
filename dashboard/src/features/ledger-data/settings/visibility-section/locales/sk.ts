@@ -11,7 +11,7 @@ const skVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Ktokoľvek s odkazom aj vyhľadávače budú môcť vidieť transakcie, zostatky, súbory a históriu tejto knihy.",
+      "Ktokoľvek s odkazom aj vyhľadávače budú môcť vidieť transakcie, zostatky, súbory a celú históriu zmien tejto knihy vrátane každej predchádzajúcej verzie každého súboru a mena a e-mailovej adresy autora každej zmeny.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -23,7 +23,8 @@ const skVisibilitySection: Record<string, TranslationEntry> = {
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
-    message: "Vaša kniha je verejná. Ktokoľvek s odkazom ju môže vidieť.",
+    message:
+      "Vaša kniha je verejná. Ktokoľvek s odkazom ju môže vidieť vrátane celej histórie zmien: každej predchádzajúcej verzie každého súboru a mena a e-mailovej adresy autora každej zmeny.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

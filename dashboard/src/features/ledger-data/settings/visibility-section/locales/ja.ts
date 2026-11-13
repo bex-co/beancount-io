@@ -11,7 +11,7 @@ const jaVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "リンクを知っている人と検索エンジンが、この元帳の取引、残高、ファイル、履歴を閲覧できるようになります。",
+      "リンクを知っている人と検索エンジンが、この元帳の取引、残高、ファイル、完全な変更履歴を閲覧できるようになります。各ファイルの以前のすべてのバージョンと、各変更の作成者の名前とメールアドレスも含まれます。",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -23,7 +23,8 @@ const jaVisibilitySection: Record<string, TranslationEntry> = {
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
-    message: "元帳は公開されています。リンクがある人は誰でも閲覧できます。",
+    message:
+      "元帳は公開されています。リンクがある人は誰でも閲覧でき、完全な変更履歴（各ファイルの以前のすべてのバージョンと、各変更の作成者の名前とメールアドレス）も見られます。",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

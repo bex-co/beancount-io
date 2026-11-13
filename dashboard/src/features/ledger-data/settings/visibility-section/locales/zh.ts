@@ -11,7 +11,7 @@ const zhVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "任何拥有链接的人以及搜索引擎都将能够查看此账本的交易、余额、文件和历史记录。",
+      "任何拥有链接的人以及搜索引擎都将能够查看此账本的交易、余额、文件和完整的提交历史，包括每个文件的所有早期版本，以及每次提交的作者姓名和邮箱。",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -23,7 +23,8 @@ const zhVisibilitySection: Record<string, TranslationEntry> = {
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
-    message: "你的账本是公开的。任何拥有链接的人都可以查看它。",
+    message:
+      "你的账本是公开的。任何拥有链接的人都可以查看它，包括完整的提交历史：每个文件的所有早期版本，以及每次提交的作者姓名和邮箱。",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

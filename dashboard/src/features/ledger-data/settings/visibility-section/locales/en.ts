@@ -11,7 +11,7 @@ const enVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Anyone with the link, and search engines, will be able to see this ledger's transactions, balances, files and history.",
+      "Anyone with the link, and search engines, will be able to see this ledger's transactions, balances, files and full commit history — including every earlier version of each file, and each commit's author name and email.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -23,7 +23,8 @@ const enVisibilitySection: Record<string, TranslationEntry> = {
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
-    message: "Your ledger is public. Anyone with the link can view it.",
+    message:
+      "Your ledger is public. Anyone with the link can view it, including its full commit history: every earlier version of each file, and each commit's author name and email.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

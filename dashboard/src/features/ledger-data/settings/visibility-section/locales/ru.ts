@@ -11,7 +11,7 @@ const ruVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Любой, у кого есть ссылка, а также поисковые системы смогут видеть транзакции, остатки, файлы и историю этой книги.",
+      "Любой, у кого есть ссылка, а также поисковые системы смогут видеть транзакции, остатки, файлы и полную историю изменений этой книги, включая каждую прежнюю версию каждого файла, а также имя и адрес электронной почты автора каждого изменения.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -24,7 +24,7 @@ const ruVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.publicLedgerDescription": {
     message:
-      "Ваша книга публичная. Любой пользователь со ссылкой может просматривать её.",
+      "Ваша книга публичная. Любой пользователь со ссылкой может просматривать её, включая полную историю изменений: каждую прежнюю версию каждого файла, а также имя и адрес электронной почты автора каждого изменения.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

@@ -11,7 +11,7 @@ const faVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "هر کسی که پیوند را داشته باشد، و موتورهای جستجو، می‌توانند تراکنش‌ها، مانده‌ها، فایل‌ها و تاریخچهٔ این دفتر را ببینند.",
+      "هر کسی که پیوند را داشته باشد، و موتورهای جستجو، می‌توانند تراکنش‌ها، مانده‌ها، فایل‌ها و تاریخچهٔ کامل تغییرات این دفتر را ببینند، از جمله هر نسخهٔ پیشین هر فایل و نام و ایمیل نویسندهٔ هر تغییر.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -24,7 +24,7 @@ const faVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.publicLedgerDescription": {
     message:
-      "دفتر شما عمومی است. هر کسی با داشتن لینک می‌تواند آن را مشاهده کند.",
+      "دفتر شما عمومی است. هر کسی با داشتن لینک می‌تواند آن را مشاهده کند، از جمله تاریخچهٔ کامل تغییرات: هر نسخهٔ پیشین هر فایل و نام و ایمیل نویسندهٔ هر تغییر.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

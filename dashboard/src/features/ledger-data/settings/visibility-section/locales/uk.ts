@@ -11,7 +11,7 @@ const ukVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Будь-хто з посиланням, а також пошукові системи зможуть бачити транзакції, залишки, файли й історію цієї книги.",
+      "Будь-хто з посиланням, а також пошукові системи зможуть бачити транзакції, залишки, файли й повну історію змін цієї книги, зокрема кожну попередню версію кожного файлу, а також ім'я та адресу електронної пошти автора кожної зміни.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -23,7 +23,8 @@ const ukVisibilitySection: Record<string, TranslationEntry> = {
     description: "Label when ledger is public",
   },
   "page.settings.publicLedgerDescription": {
-    message: "Ваша книга публічна. Будь-хто з посиланням може її переглядати.",
+    message:
+      "Ваша книга публічна. Будь-хто з посиланням може її переглядати, зокрема повну історію змін: кожну попередню версію кожного файлу, а також ім'я та адресу електронної пошти автора кожної зміни.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {

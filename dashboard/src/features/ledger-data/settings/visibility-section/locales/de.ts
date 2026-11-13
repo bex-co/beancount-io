@@ -11,7 +11,7 @@ const deVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.makePublicDescription": {
     message:
-      "Alle mit dem Link sowie Suchmaschinen können dann die Buchungen, Salden, Dateien und den Verlauf dieses Hauptbuchs sehen.",
+      "Alle mit dem Link sowie Suchmaschinen können dann die Buchungen, Salden, Dateien und den vollständigen Änderungsverlauf dieses Hauptbuchs sehen – einschließlich jeder früheren Version jeder Datei sowie Name und E-Mail-Adresse des Autors jeder Änderung.",
     description: "What becomes visible when a private ledger is made public",
   },
   "page.settings.makePublic": {
@@ -24,7 +24,7 @@ const deVisibilitySection: Record<string, TranslationEntry> = {
   },
   "page.settings.publicLedgerDescription": {
     message:
-      "Ihr Hauptbuch ist öffentlich. Jeder mit dem Link kann es ansehen.",
+      "Ihr Hauptbuch ist öffentlich. Jeder mit dem Link kann es ansehen, auch den vollständigen Änderungsverlauf: jede frühere Version jeder Datei sowie Name und E-Mail-Adresse des Autors jeder Änderung.",
     description: "Description for public ledger state",
   },
   "page.settings.embedCode": {
