@@ -73,3 +73,17 @@ it("does not call a merged or rejected pull request created", () => {
     expect(served.tools.get(name)).not.toContain("The created PR's");
   }
 });
+
+// w23/236. `entries-count` leaves out managed price feed directives (the plan
+// limit reads it, ADR 015 §9) while `listLedgerEntries` and BQL count them, so
+// its Price figure is lower on a ledger with a feed. The description is where an
+// agent reconciling the two totals learns why.
+it("says entries-count leaves out managed price feeds", () => {
+  const template = [...served.templates.values()].find((t) =>
+    t.includes("/entries-count"),
+  )!;
+  expect(template).toContain("Managed price feed directives");
+  expect(template).toContain("are not counted");
+  expect(template).toContain("the plan limit reads this count");
+  expect(template).toContain("listLedgerEntries and BQL do include them");
+});

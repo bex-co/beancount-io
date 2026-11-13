@@ -601,7 +601,8 @@ export class LedgerDataQueryResolver {
 
   @AllowAnonymous()
   @Query(() => [EntriesByType], {
-    description: "Get the count of entries per type",
+    description:
+      "Get the count of entries per type. Managed price feed directives are not counted, because the plan limit reads this count; the journal and BQL do include them, so Price here can be lower than their count.",
   })
   async getLedgerEntriesCountPerType(
     @Arg("ledgerId", () => String) ledgerId: string,

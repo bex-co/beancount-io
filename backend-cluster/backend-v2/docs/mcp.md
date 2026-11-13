@@ -1053,6 +1053,16 @@ on `postings-per-account` selects matching entries and counts every posting on
 those entries, including counterpart accounts; zero-count accounts are omitted
 and rows are sorted by account name.
 
+`entries-count` leaves out managed price feed directives, the `price` entries a
+`https://beancount.io/prices/<ALIAS>` include supplies: the plan limit reads this
+report, and a feed must not look like it consumed the directive allowance
+(ADR 015 §9). `listLedgerEntries`, the journal and BQL do include them, so on a
+ledger with a feed the Price count here, and the sum over the twelve types, is
+lower than their count of price directives and than the unfiltered
+`listLedgerEntries` `total`; every other type agrees. The `entriesCount` that
+`checkLedger` returns is this same report, and GraphQL's
+`getLedgerEntriesCountPerType` says the same in its description (w23/236).
+
 By default (`shape=summary`) REST and MCP return each statement as totals
 and the nonzero accounts behind them, in one stated `currency`. Whatever the
 other currencies hold is not added in, but it is not hidden either: when the

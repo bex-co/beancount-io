@@ -319,7 +319,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     segment: "entries-count",
     summary: "Count entries per directive type",
     description:
-      "How many transactions, opens, balances, and so on the ledger holds.",
+      "How many transactions, opens, balances, and so on the ledger holds. Managed price feed directives (a `price` include such as https://beancount.io/prices/BTCUSD) are not counted, because the plan limit reads this count; listLedgerEntries and BQL do include them, so Price here can be lower than their count.",
     query: filterQuery,
     uriPath: "",
     fetch: (s, { ledgerId, identity, query }) =>

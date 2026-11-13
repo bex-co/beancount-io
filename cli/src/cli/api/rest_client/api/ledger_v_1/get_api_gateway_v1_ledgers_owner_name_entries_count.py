@@ -117,7 +117,10 @@ def sync_detailed(
 ) -> Response[Any | V1Error]:
     """Count entries per directive type
 
-     How many transactions, opens, balances, and so on the ledger holds.
+     How many transactions, opens, balances, and so on the ledger holds. Managed price feed directives (a
+    `price` include such as https://beancount.io/prices/BTCUSD) are not counted, because the plan limit
+    reads this count; listLedgerEntries and BQL do include them, so Price here can be lower than their
+    count.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -169,7 +172,10 @@ def sync(
 ) -> Any | V1Error | None:
     """Count entries per directive type
 
-     How many transactions, opens, balances, and so on the ledger holds.
+     How many transactions, opens, balances, and so on the ledger holds. Managed price feed directives (a
+    `price` include such as https://beancount.io/prices/BTCUSD) are not counted, because the plan limit
+    reads this count; listLedgerEntries and BQL do include them, so Price here can be lower than their
+    count.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -216,7 +222,10 @@ async def asyncio_detailed(
 ) -> Response[Any | V1Error]:
     """Count entries per directive type
 
-     How many transactions, opens, balances, and so on the ledger holds.
+     How many transactions, opens, balances, and so on the ledger holds. Managed price feed directives (a
+    `price` include such as https://beancount.io/prices/BTCUSD) are not counted, because the plan limit
+    reads this count; listLedgerEntries and BQL do include them, so Price here can be lower than their
+    count.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -266,7 +275,10 @@ async def asyncio(
 ) -> Any | V1Error | None:
     """Count entries per directive type
 
-     How many transactions, opens, balances, and so on the ledger holds.
+     How many transactions, opens, balances, and so on the ledger holds. Managed price feed directives (a
+    `price` include such as https://beancount.io/prices/BTCUSD) are not counted, because the plan limit
+    reads this count; listLedgerEntries and BQL do include them, so Price here can be lower than their
+    count.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
