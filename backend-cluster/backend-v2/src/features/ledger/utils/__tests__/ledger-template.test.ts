@@ -2,6 +2,7 @@ import {
   simpleLedgerTemplate,
   ledgerWithMultipleFilesTemplate,
   defaultLedgerTemplate,
+  starterLedgerTemplate,
 } from "../ledger-template";
 
 describe("ledger templates", () => {
@@ -82,6 +83,26 @@ describe("ledger templates", () => {
     it("should include prices.bean reference", () => {
       const mainBean = ledgerWithMultipleFilesTemplate["main.bean"];
       expect(mainBean).toContain('include "./prices.bean"');
+    });
+  });
+
+  // w3/m62: createLedger's `currency` re-denominates the Starter.
+  describe("starterLedgerTemplate", () => {
+    it("is the USD Starter when no currency is given", () => {
+      expect(starterLedgerTemplate()).toEqual(simpleLedgerTemplate);
+      expect(simpleLedgerTemplate["main.bean"]).toContain(
+        'option "operating_currency" "USD"',
+      );
+    });
+
+    it("changes only the operating currency for another code", () => {
+      const euro = starterLedgerTemplate("EUR");
+      expect(Object.keys(euro)).toEqual(Object.keys(simpleLedgerTemplate));
+      const before = simpleLedgerTemplate["main.bean"].split("\n");
+      const after = euro["main.bean"].split("\n");
+      expect(after).toHaveLength(before.length);
+      const changed = after.filter((line, i) => line !== before[i]);
+      expect(changed).toEqual(['option "operating_currency" "EUR"']);
     });
   });
 

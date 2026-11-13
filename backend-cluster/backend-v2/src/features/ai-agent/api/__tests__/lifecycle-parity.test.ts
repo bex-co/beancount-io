@@ -853,6 +853,46 @@ describe("ledger lifecycle through actual adapters and workflow", () => {
       }
     },
   );
+  // w3/m62: one optional argument, the same rules on every surface.
+  it.each(surfaces)(
+    "creates a Starter in the currency asked for via %s, and refuses it where it does not apply",
+    async (surface) => {
+      const f = await fixture();
+      try {
+        const created = await f.call(surface, "create", {
+          name: "euro",
+          currency: "EUR",
+        });
+        expect(created.failed).toBe(false);
+        const main = f.files.get("alice/euro")!["main.bean"];
+        expect(main).toContain('option "operating_currency" "EUR"');
+        expect(main.replace('"EUR"', '"USD"')).toBe(
+          defaultLedgerTemplate["main.bean"],
+        );
+        for (const [name, input] of [
+          ["lower", { currency: "eur" }],
+          ["unknown", { currency: "XXX" }],
+          ["sample", { currency: "EUR", template: "SAMPLE" }],
+          // This harness writes GraphQL arguments as JSON, which cannot spell
+          // an input object; GraphQL reaches the same workflow check, which
+          // ledger-workflow.test.ts covers.
+          ...(surface === "gql"
+            ? []
+            : ([
+                ["setup", { currency: "EUR", setup: { preset: "blank@1" } }],
+              ] as const)),
+        ] as const) {
+          const refused = await f.call(surface, "create", { name, ...input });
+          expect(refused.failed).toBe(true);
+          expect(refused.error?.message).toContain("currency");
+          expect(f.records.has(`alice/${name}`)).toBe(false);
+        }
+        expect(f.create).toHaveBeenCalledTimes(1);
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it.each(surfaces)(
     "creates both templates and updates repository state via %s",
     async (surface) => {
