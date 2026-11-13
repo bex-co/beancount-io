@@ -1,14 +1,19 @@
-"""The `AGENTS.md` / `CLAUDE.md` pair `bea init --agent-files` writes beside a new ledger (w21/1021).
+"""The `AGENTS.md` / `CLAUDE.md` pair `bea init` writes beside a ledger.
 
-The text is the template in the `beancount-init` skill
+`bea init --agent-files` writes `AGENTS_TEMPLATE` beside a new ledger
+(w21/1021); `bea init --existing` writes `EXISTING_TEMPLATE` beside a ledger
+bea did not create, from what `bea-engine describe` read out of it (w1/m42).
+Both texts are the templates in the `beancount-init` skill
 (`skills/beancount-init/references/agents-template.md`); `tests/test_init_agent_files.py`
-fails when the two drift. Files are created exclusively, so an existing one is
-never overwritten, even by a racing writer.
+and `tests/test_init_existing.py` fail when they drift. Files are created
+exclusively, so an existing one is never overwritten, even by a racing writer.
 """
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
+from typing import Any
 
 AGENTS_TEMPLATE = """\
 # Ledger instructions
@@ -31,7 +36,32 @@ itself).
   https://github.com/bex-co/beancount-io/tree/main/skills
 """
 
+EXISTING_TEMPLATE = """\
+# Ledger instructions
+
+This folder holds an existing Beancount ledger. The root file is
+`{root}`{files}. {destination}
+
+- Operating currency: {currencies}. Open accounts: {accounts}.
+- Plugins: {plugins}.
+- Propose every write first and wait for an explicit yes before changing
+  files.
+- After any change, run `{check}` from this folder. {baseline}
+- Import rules and per-source mappings live in the
+  `;; beancount-import config` block at the top of `{root}`, recorded
+  there when imports start.
+- Ledger workflow skills (init, add, trade, property, import,
+  importer-author, reconcile, migrate, ask, close, options, roll-forward,
+  accruals, invoices, report-pack, business-metrics):
+  https://github.com/bex-co/beancount-io/tree/main/skills
+"""
+
 CLAUDE_BRIDGE = "@AGENTS.md\n"
+
+#: How many included files and open accounts `AGENTS.md` names before it
+#: counts the rest and says how to list them.
+LISTED_FILES = 10
+LISTED_ACCOUNTS = 30
 
 
 def _create(path: Path, text: str) -> bool:
@@ -45,14 +75,101 @@ def _create(path: Path, text: str) -> bool:
 
 
 def write_agent_files(ledger: Path, currency: str, accounts: list[str]) -> dict[str, str]:
-    """Create `AGENTS.md` and the one-line `CLAUDE.md` bridge beside `ledger`.
+    """Create `AGENTS.md` and the one-line `CLAUDE.md` bridge beside a new `ledger`."""
+    agents = AGENTS_TEMPLATE.format(root=ledger.name, currency=currency, accounts=", ".join(accounts) or "none")
+    return _write_pair(ledger.parent, agents)
+
+
+def _write_pair(folder: Path, agents: str) -> dict[str, str]:
+    """Create `AGENTS.md`, then the bridge; never replace either.
 
     An existing `AGENTS.md` is left untouched and the bridge is not written
     unasked; an existing `CLAUDE.md` is never replaced. The result maps each
-    file to `created` or `kept`.
+    file to `created`, `kept` or `skipped`.
     """
-    folder = ledger.parent
-    agents = AGENTS_TEMPLATE.format(root=ledger.name, currency=currency, accounts=", ".join(accounts) or "none")
     if not _create(folder / "AGENTS.md", agents):
         return {"AGENTS.md": "kept", "CLAUDE.md": "skipped"}
     return {"AGENTS.md": "created", "CLAUDE.md": "created" if _create(folder / "CLAUDE.md", CLAUDE_BRIDGE) else "kept"}
+
+
+def beside_ledger_plugins(description: dict[str, Any]) -> list[str]:
+    """Plugins whose module is in the ledger's folder, so a check needs `PYTHONPATH=.` there."""
+    return [plugin["name"] for plugin in description["plugins"] if plugin["source"] == "beside-ledger"]
+
+
+def check_command(root: str, description: dict[str, Any]) -> str:
+    """The command `AGENTS.md` gives for checking this ledger from its folder."""
+    command = f"bea --file {_shell_word(root)} check"
+    return f"PYTHONPATH=. {command}" if beside_ledger_plugins(description) else command
+
+
+def existing_agents_text(description: dict[str, Any], *, today: str) -> str:
+    """`EXISTING_TEMPLATE` filled in from `bea-engine describe`'s answer."""
+    root = Path(description["root"]).name
+    files = description["files"]
+    if not files:
+        listed = ", which includes no other files"
+        destination = f"Put new entries in `{root}`."
+    else:
+        names = ", ".join(f"`{name}`" for name in files[:LISTED_FILES])
+        more = f", and {len(files) - LISTED_FILES} more" if len(files) > LISTED_FILES else ""
+        listed = f"; it includes {len(files)} other file{'s' if len(files) != 1 else ''}: {names}{more}"
+        destination = (
+            f"New entries go into `{root}` unless a write names an included file with `--into` "
+            f"(for example `--into {_shell_word(files[0])}`)."
+        )
+    currencies = ", ".join(description["operating_currencies"]) or 'none set (no `option "operating_currency"` line)'
+    accounts = description["open_accounts"]
+    if len(accounts) > LISTED_ACCOUNTS:
+        shown = ", ".join(accounts[:LISTED_ACCOUNTS])
+        account_text = (
+            f"{len(accounts)}, including {shown} "
+            f"(run `bea --file {_shell_word(root)} list open --limit {len(accounts)}` for all)"
+        )
+    else:
+        account_text = ", ".join(accounts) or "none"
+    plugin_names = [plugin["name"] for plugin in description["plugins"]]
+    plugins = ", ".join(f"`{name}`" for name in plugin_names) or "none"
+    beside = beside_ledger_plugins(description)
+    if beside:
+        tops = list(dict.fromkeys(name.split(".", 1)[0] for name in beside))
+        modules = ", ".join(f"`{top}`" for top in tops)
+        kind = "is a module" if len(tops) == 1 else "are modules"
+        plugins += f" ({modules} {kind} in this folder, loaded through `PYTHONPATH=.`)"
+    count = error_count(description)
+    unmeasured = any(not p["loaded"] and p["source"] == "beside-ledger" for p in description["plugins"])
+    if unmeasured:
+        # The plugin in this folder did not load here, so whatever it reports
+        # under `PYTHONPATH=.` was never counted: a number would mislead.
+        baseline = f"It reported errors when this file was written on {today}; a change must not add any."
+    elif count:
+        baseline = f"On {today} it reported {count} error{'s' if count != 1 else ''}; a change must not add any."
+    else:
+        baseline = "The root check must pass before anything counts as done."
+    return EXISTING_TEMPLATE.format(
+        root=root,
+        files=listed,
+        destination=destination,
+        currencies=currencies,
+        accounts=account_text,
+        plugins=plugins,
+        check=check_command(root, description),
+        baseline=baseline,
+    )
+
+
+def error_count(description: dict[str, Any]) -> int:
+    """The described load's errors, each plugin that did not load included: what `bea check` counts."""
+    return len(description["errors"]) + sum(1 for plugin in description["plugins"] if not plugin["loaded"])
+
+
+def write_existing_agent_files(description: dict[str, Any], *, today: str) -> dict[str, str]:
+    """Create the pair beside an existing ledger's root, describing that ledger."""
+    return _write_pair(Path(description["root"]).parent, existing_agents_text(description, today=today))
+
+
+def _shell_word(text: str) -> str:
+    """`text` as one shell word: bare when it is plainly safe, quoted otherwise."""
+    import shlex
+
+    return text if re.fullmatch(r"[A-Za-z0-9._/+-]+", text) else shlex.quote(text)

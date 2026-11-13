@@ -94,12 +94,14 @@ PLANS = {
         mode="isolated",
         setup=USAGE_SETUP,
         setup_skip=frozenset({3, 4}),
-        fence_setup={28: QUICK_START},
+        fence_setup={29: QUICK_START},
         expect={
-            5: (2, ["A query is required"]),
-            16: (0, ["Preview only.", "Updated 1 of 1 transactions"]),
+            # `init --existing` on the seeded ledger (w1/m42).
+            5: (0, ["AGENTS.md already exists; left unchanged"]),
+            6: (2, ["A query is required"]),
+            17: (0, ["Preview only.", "Updated 1 of 1 transactions"]),
             # The JSON automation transcript: the values agents copy (w1/127).
-            28: (
+            29: (
                 0,
                 [
                     '"valid": true',

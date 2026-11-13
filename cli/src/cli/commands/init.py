@@ -18,7 +18,7 @@ from typing import Annotated, Any, NamedTuple
 import typer
 
 from cli import context, output
-from cli.agent_guidance import write_agent_files
+from cli.agent_guidance import error_count, write_agent_files, write_existing_agent_files
 from cli.amounts import parse_decimal_number
 from cli.errors import AuthError, ConflictError, UsageError
 from cli.paths import expand_path
@@ -282,6 +282,100 @@ def _folds_case(directory: Path) -> bool:
     return False
 
 
+#: Ledger file suffixes a directory is searched for under `--existing`.
+_LEDGER_SUFFIXES = (".bean", ".beancount")
+
+
+def _existing_root(directory: Path) -> Path:
+    """The root ledger `--existing` describes: named outright, or the one a directory holds.
+
+    `--file` or a file argument names it. A directory uses bea's own discovery
+    (`main.bean`, then `main.beancount`), then its only top-level ledger file;
+    with several and no default name it is never guessed (w1/m42/t001).
+    """
+    from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS
+
+    ctx = context.current()
+    if ctx.file is not None:
+        if directory != Path("."):
+            raise UsageError("Choose either --file or an init directory, not both.")
+        candidate = expand_path(ctx.file, "--file").absolute()
+        source = "--file"
+    else:
+        target = expand_path(directory, "init directory").absolute()
+        source = "the init argument"
+        if target.is_dir():
+            for name in DEFAULT_ENTRY_FILE_FALLBACKS:
+                if os.path.lexists(target / name):
+                    candidate = target / name
+                    break
+            else:
+                found = sorted(
+                    entry
+                    for entry in target.iterdir()
+                    if entry.suffix in _LEDGER_SUFFIXES and entry.is_file() and not entry.name.startswith(".")
+                )
+                shown = _shell_path(str(target))
+                if not found:
+                    raise UsageError(
+                        f"No .bean or .beancount ledger in {target}. Name the root file: bea init --existing PATH."
+                    )
+                # A file another candidate includes is not a root; what is
+                # left is read from the include lines, not guessed.
+                included = {
+                    os.path.abspath(member)
+                    for entry in found
+                    for member in output.ledger_closure(entry)
+                    if os.path.abspath(member) != os.path.abspath(entry)
+                }
+                roots = [entry for entry in found if os.path.abspath(entry) not in included] or found
+                if len(roots) > 1:
+                    names = ", ".join(entry.name for entry in roots[:10])
+                    more = f", and {len(roots) - 10} more" if len(roots) > 10 else ""
+                    raise UsageError(
+                        f"{target} holds several ledger files that no other file includes ({names}{more}) and no "
+                        f"main.bean. Name the root: bea init --existing {shown}/{_shell_path(roots[0].name)}"
+                    )
+                candidate = roots[0]
+        else:
+            candidate = target
+    if not candidate.exists():
+        raise UsageError(f"No ledger file at '{candidate}' (from {source}). Nothing was written.")
+    if not candidate.is_file():
+        raise UsageError(f"Ledger path '{candidate}' (from {source}) is not a regular file. Nothing was written.")
+    return candidate
+
+
+def _init_existing(directory: Path) -> None:
+    """`bea init --existing`: describe a ledger bea did not create and write its agent files."""
+    from cli.engine import launch
+
+    ctx = context.current()
+    root = _existing_root(directory)
+    description = launch.helper_json(["describe", "--file", str(root)])
+    data: dict[str, Any] = {
+        **description,
+        "agent_files": write_existing_agent_files(description, today=datetime.date.today().isoformat()),
+    }
+    if ctx.json_output:
+        output.emit(data, target=output.file_target(root))
+        return
+    files = len(description["files"]) + 1
+    accounts = len(description["open_accounts"])
+    currencies = ", ".join(description["operating_currencies"]) or "no operating currency set"
+    output.success(
+        f"Read {root.name}: {files} file{'s' if files != 1 else ''}, {accounts} open "
+        f"account{'s' if accounts != 1 else ''}, {currencies}. No ledger file was changed."
+    )
+    _report_agent_files(data["agent_files"])
+    count = error_count(description)
+    if count:
+        output.note(
+            f"The ledger loads with {count} error{'s' if count != 1 else ''} today; AGENTS.md asks agents to add "
+            f"none. See them with: bea --file {_shell_path(str(root))} check"
+        )
+
+
 def _report_agent_files(result: dict[str, str]) -> None:
     """Say which agent files were written and which already existed."""
     made = [name for name, state in result.items() if state == "created"]
@@ -331,6 +425,14 @@ def init(
             "an existing file is never replaced",
         ),
     ] = False,
+    existing: Annotated[
+        bool,
+        typer.Option(
+            "--existing",
+            help="Set up a ledger bea did not create: describe it and write AGENTS.md and CLAUDE.md beside its "
+            "root; no ledger file is changed",
+        ),
+    ] = False,
 ) -> None:
     """Create main.bean with common accounts.
 
@@ -338,11 +440,30 @@ def init(
     bea --no-input init books --currency USD.
     Credit card debt uses a negative opening balance.
     New ledger files are private (0600 on POSIX); chmod explicitly to share.
+    With --existing, describe an existing ledger instead and write only its agent files.
     """
     from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS
     from cli.engine import launch
 
     ctx = context.current()
+    if existing:
+        new_ledger_options = {
+            "--currency": currency,
+            "--date": date,
+            "--opening-balance": opening_balance,
+            "--preset": preset,
+            "--title": title,
+            "--module": module,
+            "--property-name": property_name,
+        }
+        given = [name for name, value in new_ledger_options.items() if value is not None]
+        if given:
+            raise UsageError(
+                f"{', '.join(given)} only {'applies' if len(given) == 1 else 'apply'} to a new ledger; "
+                "--existing describes the ledger as it is. Nothing was written."
+            )
+        _init_existing(directory)
+        return
     if ctx.file is not None:
         if directory != Path("."):
             raise UsageError("Choose either --file or an init directory, not both.")
@@ -371,7 +492,11 @@ def init(
                 f"or --file {shlex.quote(str(file / 'main.bean'))} for a file target."
             )
         if file.exists() or file.is_symlink():
-            raise ConflictError(f"Already exists: {file}. Choose a new path; init never overwrites a ledger.")
+            raise ConflictError(
+                f"Already exists: {file}. Choose a new path; init never overwrites a ledger. "
+                f"To set up this ledger for bea and coding agents without changing it: "
+                f"bea init --existing {_shell_path(str(file))}"
+            )
         # Refuse shadowing a sibling default root ledger (cwd discovery prefers main.bean).
         default_names = {name.name for name in DEFAULT_ENTRY_FILE_FALLBACKS}
         if file.name in default_names or (file.name.casefold() in default_names and _folds_case(file.parent)):

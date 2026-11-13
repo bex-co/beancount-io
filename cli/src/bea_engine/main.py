@@ -64,6 +64,23 @@ def check(
 
 
 @app.command()
+def describe(
+    file: Annotated[Path, typer.Option("--file", "-f", help="Root ledger file to describe.")],
+) -> None:
+    """What a ledger is made of: its files, currencies, open accounts, plugins and errors.
+
+    Answers `{"root", "files", "operating_currencies", "open_accounts",
+    "plugins", "errors", "beancount_version"}` for `bea init --existing`
+    (w1/m42). A ledger with load errors still answers; each plugin says
+    whether it loaded and where its module would come from. Reads only.
+    """
+    with protocol.answering("describe") as answer:
+        from bea_engine.describing import describe as describe_ledger
+
+        answer.data = describe_ledger(_ledger(file))
+
+
+@app.command()
 def syntax(
     files: Annotated[list[Path], typer.Argument(help="Ledger files to parse.")],
 ) -> None:

@@ -908,7 +908,7 @@ def doctor_guidance(
     if not agents.is_file():
         findings.append(
             f"warning: {agents} is missing, so a coding agent cannot read this ledger's conventions. "
-            "Add one — the beancount-init skill writes it from a template."
+            f"Write one, describing this ledger as it is: bea init --existing {shlex.quote(ledger)}"
         )
     if claude.is_file() and not _claude_points_at_agents(claude):
         findings.append(

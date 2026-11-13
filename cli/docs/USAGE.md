@@ -571,6 +571,41 @@ such as `F` and internal punctuation such as `NT.TO` or `X_USD` work. A symbol
 ending in punctuation, including `_`, is refused with exit **2** before init
 creates a directory or ledger.
 
+### A ledger `bea` did not create
+
+`init` never overwrites a ledger. For books you already keep, `init --existing`
+reads the ledger as it is and writes only the agent files beside its root:
+
+```bash
+bea init --existing .                      # a folder: main.bean, main.beancount, or its one root file
+bea init --existing main.bean              # or name the root outright
+bea --file main.bean init --existing       # the same; both files written above are kept
+```
+
+A folder is searched like every other command searches the working directory
+(`main.bean`, then `main.beancount`), then for its one `.bean`/`.beancount`
+file that no other file there includes. With several such files it exits
+**2** and asks for the root; it never guesses. Options that only shape a new
+ledger (`--currency`, `--date`, `--opening-balance`, `--preset`, `--title`,
+`--module`, `--property-name`) exit **2** with `--existing`.
+
+The `AGENTS.md` it writes describes that ledger: its root and included files,
+that new entries go into the root unless a write names an included file with
+`--into`, its operating currencies and open accounts, its plugins, the
+check command, and whether the check passed when the file was written (a
+change must not add an error it did not have). A plugin whose module sits in
+the ledger's folder loads only through `PYTHONPATH`, because the engine never
+imports from the working directory; the check command then reads
+`PYTHONPATH=. bea --file ROOT check`.
+
+Nothing else changes: no ledger file is written, an existing `AGENTS.md` or
+`CLAUDE.md` is kept byte for byte (as with `--agent-files`), and no Git
+repository is created or staged. A ledger with errors still gets its files;
+the command says how many errors it loads with and exits **0**. In JSON mode
+`data` holds the root, `files`, `operating_currencies`, `open_accounts`,
+`plugins` (each with `loaded` and `source`: `beancount`, `beside-ledger` or
+`package`), `errors`, and `agent_files`.
+
 ## Checking, formatting, querying
 
 ```bash

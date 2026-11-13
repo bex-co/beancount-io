@@ -55,7 +55,7 @@ def test_missing_agents_md_warns(tmp_path: Path) -> None:
     proc = _bea(tmp_path, "doctor", "guidance", str(ledger))
     assert proc.returncode == 0, proc.stderr
     assert "AGENTS.md is missing" in proc.stdout
-    assert "beancount-init" in proc.stdout
+    assert f"bea init --existing {ledger}" in proc.stdout
     assert sorted(p.name for p in ledger.parent.iterdir()) == before
 
 

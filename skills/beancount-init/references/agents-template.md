@@ -18,6 +18,11 @@ import is how Claude Code picks `AGENTS.md` up.)
 no-overwrite rule. Use it when `bea` created the ledger; otherwise write the
 files from this template.
 
+For a ledger this skill did not create, `bea init --existing ROOT` writes the
+pair from the [existing-ledger text](#existing-ledger-agentsmd) below, filled in
+from the ledger itself, with the same no-overwrite rule. Never write that text
+by hand: its facts come from loading the ledger.
+
 Substitute into the template:
 
 - `{{CURRENCY}}` — the operating currency from Step 1.
@@ -53,4 +58,33 @@ One line, written only when `CLAUDE.md` does not already exist:
 
 ```markdown
 @AGENTS.md
+```
+
+## Existing-ledger `AGENTS.md`
+
+What `bea init --existing` writes. Each `{{…}}` is read from the loaded
+ledger: `{{FILES}}` lists the included files, `{{DESTINATION}}` says new
+entries go into the root unless a write names an included file with `--into`,
+`{{PLUGINS}}` notes a plugin module kept in the folder, `{{CHECK}}` gains
+`PYTHONPATH=.` when one is, and `{{BASELINE}}` states whether the check passed
+when the file was written.
+
+```markdown
+# Ledger instructions
+
+This folder holds an existing Beancount ledger. The root file is
+`{{ROOT}}`{{FILES}}. {{DESTINATION}}
+
+- Operating currency: {{CURRENCIES}}. Open accounts: {{ACCOUNTS}}.
+- Plugins: {{PLUGINS}}.
+- Propose every write first and wait for an explicit yes before changing
+  files.
+- After any change, run `{{CHECK}}` from this folder. {{BASELINE}}
+- Import rules and per-source mappings live in the
+  `;; beancount-import config` block at the top of `{{ROOT}}`, recorded
+  there when imports start.
+- Ledger workflow skills (init, add, trade, property, import,
+  importer-author, reconcile, migrate, ask, close, options, roll-forward,
+  accruals, invoices, report-pack, business-metrics):
+  https://github.com/bex-co/beancount-io/tree/main/skills
 ```
