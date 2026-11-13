@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { withAppMarker } from "@/common/site-url";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { fontSizes, fontWeights } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -52,6 +53,7 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.regular,
       color: theme.text01,
       lineHeight: 18,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     meta: {
       marginTop: 2,
@@ -59,6 +61,7 @@ const getStyles = (theme: ColorTheme) =>
     metaText: {
       fontSize: fontSizes.xs,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
   });
 

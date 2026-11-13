@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes } from "@/common/theme";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useToday } from "@/common/hooks/use-today";
@@ -41,6 +42,7 @@ const getStyles = (theme: ColorTheme) =>
     emptyText: {
       fontSize: fontSizes.md,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
   });
 

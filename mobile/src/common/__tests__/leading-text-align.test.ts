@@ -19,6 +19,10 @@ const SURFACES: [string, string][] = [
   ["screens/add-budget-screen/add-budget-screen.tsx", "error"],
   ["screens/referral-screen/components/invite-section.tsx", "title"],
   ["screens/referral-screen/components/invite-section.tsx", "summary"],
+  // Home's Latest Updates rows and the Recent Transactions empty line (w22/039).
+  ["screens/home-screen/components/feed-card.tsx", "title"],
+  ["screens/home-screen/components/feed-card.tsx", "metaText"],
+  ["screens/home-screen/components/recent-transactions-card.tsx", "emptyText"],
   // The Transactions filter sheet's section titles and its range error (w22/038).
   [
     "screens/transaction-filters-screen/transaction-filters-screen.tsx",
