@@ -1,0 +1,312 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1180" width="1440" height="1180" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR026: onboarding as built on 2026-11-09</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#cf222e"/>
+    </marker>
+  </defs>
+
+  <rect width="1440" height="1180" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" font-weight="600">ADR026 — onboarding as built (2026-11-09)</text>
+  <text x="30" y="58" fill="#57606a">Wireframe of today's paths to a first ledger after the 2026-11-07 revert. Screens are schematic; labels are the shipped English copy.</text>
+
+  <!-- Legend -->
+  <rect x="1020" y="26" width="14" height="14" rx="3" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="1040" y="38" fill="#57606a">screen</text>
+  <rect x="1095" y="26" width="14" height="14" rx="3" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="1115" y="38" fill="#57606a">creates a ledger</text>
+  <rect x="1215" y="26" width="14" height="14" rx="3" fill="#eef4ff" stroke="#3b6fd8"/>
+  <text x="1235" y="38" fill="#57606a">server step</text>
+  <rect x="1315" y="26" width="14" height="14" rx="3" fill="#fff0f0" stroke="#cf222e" stroke-dasharray="4 3"/>
+  <text x="1335" y="38" fill="#57606a">gap</text>
+
+  <!-- ============ Section 1: paths ============ -->
+  <text x="30" y="96" font-size="15" font-weight="600">1 · Paths to the first ledger</text>
+  <line x1="30" y1="106" x2="1410" y2="106" stroke="#d0d7de"/>
+
+  <!-- Lane A -->
+  <rect x="30" y="122" width="190" height="96" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="42" y="145" font-weight="600">A · Sign up directly</text>
+  <text x="42" y="163" fill="#57606a">/auth/sign-up, no next</text>
+  <text x="42" y="181" fill="#57606a">Most web newcomers</text>
+  <text x="42" y="199" fill="#57606a">who click "Sign up"</text>
+
+  <rect x="250" y="122" width="180" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="262" y="142" font-weight="600">Sign up</text>
+  <rect x="262" y="152" width="156" height="16" rx="3" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="268" y="164" fill="#8c959f" font-size="10">Email</text>
+  <rect x="262" y="173" width="156" height="16" rx="3" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="268" y="185" fill="#8c959f" font-size="10">Password</text>
+  <rect x="262" y="195" width="80" height="16" rx="3" fill="#57606a"/>
+  <text x="272" y="207" fill="#ffffff" font-size="10">Create account</text>
+
+  <rect x="470" y="122" width="150" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="482" y="142" font-weight="600">Email code</text>
+  <rect x="482" y="155" width="20" height="22" rx="3" fill="#ffffff" stroke="#d0d7de"/>
+  <rect x="506" y="155" width="20" height="22" rx="3" fill="#ffffff" stroke="#d0d7de"/>
+  <rect x="530" y="155" width="20" height="22" rx="3" fill="#ffffff" stroke="#d0d7de"/>
+  <rect x="554" y="155" width="20" height="22" rx="3" fill="#ffffff" stroke="#d0d7de"/>
+  <rect x="578" y="155" width="20" height="22" rx="3" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="482" y="200" fill="#57606a" font-size="10">no next → /auth/welcome</text>
+
+  <rect x="660" y="122" width="220" height="96" rx="6" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="672" y="142" font-weight="600">Welcome</text>
+  <text x="672" y="160" fill="#57606a">"Create Your First Ledger"</text>
+  <text x="672" y="178" fill="#57606a">single form, see section 2</text>
+  <text x="672" y="196" fill="#57606a">createLedger: name, template,</text>
+  <text x="672" y="210" fill="#57606a">description, private (no setup)</text>
+
+  <rect x="920" y="122" width="210" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="932" y="142" font-weight="600">Ledger overview</text>
+  <text x="932" y="160" fill="#57606a">"Set up your ledger"</text>
+  <text x="932" y="178" fill="#57606a">☐ Open an account</text>
+  <text x="932" y="196" fill="#57606a">☐ Add your first entry</text>
+  <text x="932" y="210" fill="#8c959f" font-size="10">hidden once there is activity</text>
+
+  <line x1="430" y1="170" x2="466" y2="170" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="620" y1="170" x2="656" y2="170" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="880" y1="170" x2="916" y2="170" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Lane B -->
+  <rect x="30" y="238" width="190" height="96" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="42" y="261" font-weight="600">B · Marketing "Sign in"</text>
+  <text x="42" y="279" fill="#57606a">beancount.io/ledger?utm_…</text>
+  <text x="42" y="297" fill="#57606a">then "Sign up" from the</text>
+  <text x="42" y="315" fill="#57606a">sign-in page</text>
+
+  <rect x="250" y="238" width="180" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="262" y="258" font-weight="600">Sign in</text>
+  <text x="262" y="276" fill="#57606a">requireAuth("/ledger")</text>
+  <text x="262" y="294" fill="#57606a">?next=/ledger?utm_…</text>
+  <text x="262" y="318" fill="#3b6fd8" font-size="11">Sign up →</text>
+
+  <rect x="470" y="238" width="150" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="482" y="258" font-weight="600">Sign up + code</text>
+  <text x="482" y="276" fill="#57606a">next is carried</text>
+  <text x="482" y="294" fill="#57606a">through (tested)</text>
+  <text x="482" y="318" fill="#57606a" font-size="10">register-otp: next wins</text>
+
+  <rect x="660" y="238" width="220" height="96" rx="6" fill="#fff0f0" stroke="#cf222e" stroke-dasharray="5 3"/>
+  <text x="672" y="258" font-weight="600">Ledger list (/ledger), empty</text>
+  <rect x="672" y="268" width="196" height="40" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="682" y="284" font-size="11">No ledgers found</text>
+  <text x="682" y="300" fill="#57606a" font-size="10">Create your first ledger to start…</text>
+  <rect x="672" y="312" width="86" height="16" rx="3" fill="#ffffff" stroke="#8c959f"/>
+  <text x="680" y="324" font-size="10">+ Create ledger</text>
+
+  <rect x="920" y="238" width="210" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="932" y="258" font-weight="600">"Create ledger" dialog</text>
+  <text x="932" y="276" fill="#57606a">the same single form</text>
+  <text x="932" y="294" fill="#57606a">inside a dialog</text>
+  <text x="932" y="318" fill="#57606a" font-size="10">only if the user finds the button</text>
+
+  <line x1="430" y1="286" x2="466" y2="286" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="620" y1="286" x2="656" y2="286" stroke="#cf222e" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <line x1="880" y1="286" x2="916" y2="286" stroke="#57606a" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <text x="1150" y="270" fill="#cf222e" font-weight="600">Never reaches welcome.</text>
+  <text x="1150" y="288" fill="#cf222e">/ledger does not redirect a</text>
+  <text x="1150" y="304" fill="#cf222e">user with no ledgers. ADR026</text>
+  <text x="1150" y="320" fill="#cf222e">decision, not built yet.</text>
+
+  <!-- Lane C -->
+  <rect x="30" y="354" width="190" height="96" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="42" y="377" font-weight="600">C · OAuth consent sign-up</text>
+  <text x="42" y="395" fill="#57606a">MCP clients and the native</text>
+  <text x="42" y="413" fill="#57606a">app's sign-up (web consent)</text>
+  <text x="42" y="431" fill="#57606a">withDefaultLedger: true</text>
+
+  <rect x="250" y="354" width="180" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="262" y="374" font-weight="600">Consent · sign up</text>
+  <text x="262" y="392" fill="#57606a">authorize the client,</text>
+  <text x="262" y="410" fill="#57606a">or create an account</text>
+  <text x="262" y="434" fill="#57606a" font-size="10">email, password, code</text>
+
+  <rect x="470" y="354" width="150" height="96" rx="6" fill="#eef4ff" stroke="#3b6fd8"/>
+  <text x="482" y="374" font-weight="600">Server</text>
+  <text x="482" y="392" fill="#57606a">createDefaultLedger</text>
+  <text x="482" y="410" fill="#57606a">on code verification</text>
+  <text x="482" y="434" fill="#57606a" font-size="10">failure never blocks sign-up</text>
+
+  <rect x="660" y="354" width="220" height="96" rx="6" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="672" y="374" font-weight="600">Ledger "Default"</text>
+  <text x="672" y="392" fill="#57606a">Starter chart, USD, private</text>
+  <text x="672" y="410" fill="#57606a">no title, currency, or</text>
+  <text x="672" y="428" fill="#57606a">starter choice offered</text>
+
+  <rect x="920" y="354" width="210" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="932" y="374" font-weight="600">Back to the client</text>
+  <text x="932" y="392" fill="#57606a">MCP: consent screen</text>
+  <text x="932" y="410" fill="#57606a">Native app: tab bar with</text>
+  <text x="932" y="428" fill="#57606a">"Default" selected</text>
+
+  <line x1="430" y1="402" x2="466" y2="402" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="620" y1="402" x2="656" y2="402" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="880" y1="402" x2="916" y2="402" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Lane D -->
+  <rect x="30" y="470" width="190" height="96" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="42" y="493" font-weight="600">D · Returning sign-in</text>
+  <text x="42" y="511" fill="#57606a">/auth/login</text>
+  <text x="42" y="529" fill="#57606a">(also "/" when signed in</text>
+  <text x="42" y="547" fill="#57606a">goes to /auth/welcome)</text>
+
+  <rect x="250" y="470" width="180" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="262" y="490" font-weight="600">Sign in</text>
+  <rect x="262" y="500" width="156" height="16" rx="3" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="268" y="512" fill="#8c959f" font-size="10">Email</text>
+  <rect x="262" y="521" width="156" height="16" rx="3" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="268" y="533" fill="#8c959f" font-size="10">Password</text>
+  <rect x="262" y="543" width="56" height="16" rx="3" fill="#57606a"/>
+  <text x="272" y="555" fill="#ffffff" font-size="10">Sign in</text>
+
+  <path d="M545,488 L590,518 L545,548 L500,518 Z" fill="#ffffff" stroke="#8c959f"/>
+  <text x="545" y="515" text-anchor="middle" font-size="11">next?</text>
+  <text x="545" y="529" text-anchor="middle" font-size="10" fill="#57606a">ledgers?</text>
+
+  <rect x="660" y="470" width="220" height="28" rx="5" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="672" y="489">next → that page (even /ledger)</text>
+  <rect x="660" y="504" width="220" height="28" rx="5" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="672" y="523">has a ledger → the default ledger</text>
+  <rect x="660" y="538" width="220" height="28" rx="5" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="672" y="557">no ledgers → Welcome</text>
+
+  <line x1="430" y1="518" x2="496" y2="518" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M590,518 C620,518 625,484 656,484" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="590" y1="518" x2="656" y2="518" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M590,518 C620,518 625,552 656,552" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Lane E -->
+  <rect x="30" y="586" width="190" height="96" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="42" y="609" font-weight="600">E · Another ledger later</text>
+  <text x="42" y="627" fill="#57606a">Web: sidebar or ledger</text>
+  <text x="42" y="645" fill="#57606a">switcher "Create ledger"</text>
+  <text x="42" y="663" fill="#57606a">Native: ledger drawer</text>
+
+  <rect x="250" y="586" width="180" height="96" rx="6" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="262" y="606" font-weight="600">Web dialog</text>
+  <text x="262" y="624" fill="#57606a">the welcome form, with</text>
+  <text x="262" y="642" fill="#57606a">Cancel and the plan's</text>
+  <text x="262" y="660" fill="#57606a">ledger-limit indicator</text>
+
+  <rect x="470" y="586" width="150" height="96" rx="6" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="482" y="606" font-weight="600">Native "New ledger"</text>
+  <text x="482" y="624" fill="#57606a">same four fields,</text>
+  <text x="482" y="642" fill="#57606a">"Create" in the header</text>
+  <text x="482" y="666" fill="#57606a" font-size="10">see section 2</text>
+
+  <rect x="660" y="586" width="220" height="96" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="672" y="606" font-weight="600">The new ledger</text>
+  <text x="672" y="624" fill="#57606a">Web: its overview</text>
+  <text x="672" y="642" fill="#57606a">Native: back to the tab bar</text>
+  <text x="672" y="660" fill="#57606a">with it selected (only a toast</text>
+  <text x="672" y="674" fill="#57606a">if the user left meanwhile)</text>
+
+  <line x1="620" y1="634" x2="656" y2="634" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M340,682 C340,705 770,705 770,686" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Agent / CLI note -->
+  <rect x="920" y="470" width="490" height="212" rx="6" fill="#eef4ff" stroke="#3b6fd8"/>
+  <text x="934" y="492" font-weight="600">Agents and the terminal (shipped, not a screen)</text>
+  <text x="934" y="514" fill="#57606a">REST / GraphQL / MCP createLedger take an optional setup:</text>
+  <text x="934" y="532" fill="#57606a">preset (8), modules (personal), title, operatingCurrency,</text>
+  <text x="934" y="550" fill="#57606a">historyStart, capabilities, accounts; plus requestId for retries.</text>
+  <text x="934" y="568" fill="#57606a">previewLedgerSetup shows the files and accounts without creating.</text>
+  <text x="934" y="594" fill="#57606a">bea init ./books --preset personal@1 --module investments@1</text>
+  <text x="934" y="612" fill="#57606a">bea cloud ledger create studio --preset freelance@1 --currency EUR</text>
+  <text x="934" y="638" fill="#1f2328">Neither web nor native screen sends setup today:</text>
+  <text x="934" y="656" fill="#1f2328">every hosted ledger made in an app is the USD Starter or Sample.</text>
+
+  <!-- ============ Section 2: the creation screens ============ -->
+  <text x="30" y="744" font-size="15" font-weight="600">2 · The creation screens</text>
+  <line x1="30" y1="754" x2="1410" y2="754" stroke="#d0d7de"/>
+
+  <!-- Web welcome card -->
+  <text x="30" y="780" fill="#57606a">Web · /auth/welcome (and the "Create ledger" dialog)</text>
+  <rect x="30" y="790" width="560" height="370" rx="10" fill="#ffffff" stroke="#8c959f"/>
+  <text x="310" y="824" text-anchor="middle" font-size="17" font-weight="600">Create Your First Ledger</text>
+  <text x="310" y="846" text-anchor="middle" fill="#57606a">Create a new Beancount ledger to start managing your finances.</text>
+
+  <text x="54" y="878" font-weight="600">Ledger Name</text>
+  <rect x="54" y="886" width="512" height="26" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="64" y="903">my-book</text>
+  <text x="54" y="928" fill="#57606a" font-size="11">Repository name: my-book</text>
+
+  <text x="54" y="954" font-weight="600">Template</text>
+  <rect x="54" y="962" width="250" height="58" rx="6" fill="#f3fbf5" stroke="#2f8f4e" stroke-width="1.5"/>
+  <circle cx="74" cy="982" r="9" fill="#eaeef2"/>
+  <text x="92" y="986" font-weight="600">Starter template</text>
+  <text x="92" y="1004" fill="#57606a" font-size="10">Empty books with a standard chart</text>
+  <text x="92" y="1015" fill="#57606a" font-size="10">of accounts.</text>
+  <rect x="316" y="962" width="250" height="58" rx="6" fill="#ffffff" stroke="#d0d7de"/>
+  <circle cx="336" cy="982" r="9" fill="#eaeef2"/>
+  <text x="354" y="986" font-weight="600">Sample ledger</text>
+  <text x="354" y="1004" fill="#57606a" font-size="10">A detailed multi-file ledger with</text>
+  <text x="354" y="1015" fill="#57606a" font-size="10">realistic sample activity.</text>
+
+  <text x="54" y="1044" font-weight="600">Description (Optional)</text>
+  <rect x="54" y="1052" width="512" height="24" rx="4" fill="#ffffff" stroke="#d0d7de"/>
+
+  <rect x="54" y="1088" width="34" height="18" rx="9" fill="#2f8f4e"/>
+  <circle cx="79" cy="1097" r="7" fill="#ffffff"/>
+  <text x="98" y="1101" font-weight="600">Private</text>
+  <text x="152" y="1101" fill="#57606a" font-size="11">Only you and collaborators can access</text>
+
+  <rect x="494" y="1120" width="72" height="28" rx="5" fill="#cf222e"/>
+  <text x="530" y="1138" text-anchor="middle" fill="#ffffff" font-weight="600">Save</text>
+  <text x="54" y="1138" fill="#cf222e" font-size="11">Button reads "Save", not "Create ledger" (w3/648's fix was lost in the revert)</text>
+
+  <!-- Native screen -->
+  <text x="630" y="780" fill="#57606a">Native · New ledger</text>
+  <rect x="630" y="790" width="300" height="370" rx="26" fill="#ffffff" stroke="#8c959f" stroke-width="1.5"/>
+  <rect x="736" y="800" width="88" height="6" rx="3" fill="#d0d7de"/>
+  <text x="652" y="836" fill="#3b6fd8">‹ Back</text>
+  <text x="780" y="836" text-anchor="middle" font-weight="600">New ledger</text>
+  <text x="908" y="836" text-anchor="end" fill="#2f8f4e" font-weight="600">Create</text>
+  <line x1="630" y1="848" x2="930" y2="848" stroke="#eaeef2"/>
+
+  <rect x="648" y="860" width="264" height="124" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="662" y="880" fill="#57606a" font-size="11">Name</text>
+  <text x="662" y="898">my-book</text>
+  <text x="662" y="914" fill="#57606a" font-size="10">Will be created as my-book</text>
+  <line x1="648" y1="922" x2="912" y2="922" stroke="#eaeef2"/>
+  <text x="662" y="940" fill="#57606a" font-size="11">Description</text>
+  <text x="662" y="955" fill="#8c959f" font-size="11">Optional</text>
+  <line x1="648" y1="962" x2="912" y2="962" stroke="#eaeef2"/>
+  <text x="662" y="978" fill="#57606a" font-size="11">Private</text>
+  <rect x="868" y="967" width="32" height="16" rx="8" fill="#2f8f4e"/>
+  <circle cx="892" cy="975" r="6" fill="#ffffff"/>
+
+  <text x="648" y="1008" fill="#57606a" font-size="11">Template</text>
+  <rect x="648" y="1016" width="264" height="120" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+  <rect x="649" y="1017" width="262" height="58" rx="9" fill="#eaeef2"/>
+  <text x="662" y="1038" font-weight="600">Starter</text>
+  <text x="662" y="1056" fill="#57606a" font-size="10">Empty books with a standard chart</text>
+  <text x="662" y="1068" fill="#57606a" font-size="10">of accounts.</text>
+  <line x1="648" y1="1076" x2="912" y2="1076" stroke="#eaeef2"/>
+  <text x="662" y="1098" font-weight="600">Sample</text>
+  <text x="662" y="1116" fill="#57606a" font-size="10">Example transactions so you can</text>
+  <text x="662" y="1128" fill="#57606a" font-size="10">explore the app.</text>
+
+  <!-- Gaps -->
+  <rect x="960" y="770" width="450" height="390" rx="8" fill="#fff0f0" stroke="#cf222e" stroke-dasharray="5 3"/>
+  <text x="978" y="796" font-size="14" font-weight="600" fill="#cf222e">Gaps against ADR026</text>
+  <text x="978" y="824" font-weight="600">1. Sign-up with next lands on an empty /ledger</text>
+  <text x="992" y="842" fill="#57606a">Path B never shows welcome. Decided, not built.</text>
+  <text x="978" y="870" font-weight="600">2. The web create button reads "Save"</text>
+  <text x="992" y="888" fill="#57606a">Native says "Create"; web lost the w3/648 rename.</text>
+  <text x="978" y="916" font-weight="600">3. Sample sits beside Starter as a peer choice</text>
+  <text x="992" y="934" fill="#57606a">Web and native: nothing says it is fictional,</text>
+  <text x="992" y="950" fill="#57606a">and ledger lists do not mark demo ledgers.</text>
+  <text x="978" y="978" font-weight="600">4. No situation, currency, title, or first account</text>
+  <text x="992" y="996" fill="#57606a">Every app-made ledger is the USD Starter, though</text>
+  <text x="992" y="1012" fill="#57606a">the API and CLI already accept a full setup.</text>
+  <text x="978" y="1040" font-weight="600">5. Consent sign-up offers no choice at all</text>
+  <text x="992" y="1058" fill="#57606a">"Default", USD, Starter (ADR026 open question 4).</text>
+  <text x="978" y="1086" font-weight="600">6. The next step ends at a two-item checklist</text>
+  <text x="992" y="1104" fill="#57606a">No "Record a transaction / Import / Verify a</text>
+  <text x="992" y="1120" fill="#57606a">balance" choice; language is English until switched.</text>
+  <text x="978" y="1148" fill="#8c959f" font-size="10">Sources: register-otp.tsx, login-page, welcome-page, ledger-form.tsx, create-ledger-screen.tsx</text>
+</svg>

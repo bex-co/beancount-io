@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 720" width="1440" height="720" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR026 section 5: language, formatting, and currency, before and after</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606a"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cf222e"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f8f4e"/></marker>
+  </defs>
+  <rect width="1440" height="720" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" fill="#1f2328" font-weight="600">ADR026 · 5 — Language, formatting, and currency</text>
+  <text x="30" y="58" font-size="12" fill="#57606a">What the product picks for a newcomer, and what it must never pick.</text>
+  <rect x="30" y="86" width="680" height="30" rx="6" fill="#eaeef2" stroke="#d0d7de" stroke-width="1"/>
+  <text x="44" y="106" font-size="13" fill="#1f2328" font-weight="600">Before — as built on 2026-11-09</text>
+  <rect x="730" y="86" width="680" height="30" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="744" y="106" font-size="13" fill="#2f8f4e" font-weight="600">After — ADR026 (illustrative, meets the record's requirements)</text>
+  <text x="30" y="130" font-size="12" fill="#1f2328" font-weight="600">Interface language (dashboard)</text>
+  <rect x="30" y="142" width="320" height="26" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="40" y="159" font-size="11" fill="#1f2328">1. ?lang= in the URL</text>
+  <rect x="30" y="176" width="320" height="26" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="40" y="193" font-size="11" fill="#1f2328">2. i18nextLng cookie (explicit choice)</text>
+  <rect x="30" y="210" width="320" height="26" rx="5" fill="#fff0f0" stroke="#cf222e" stroke-width="1"/>
+  <text x="40" y="227" font-size="11" fill="#1f2328">3. en — whatever the browser asks for</text>
+  <text x="30" y="258" font-size="11" fill="#cf222e">Registration stores locale = "en" for everyone.</text>
+  <text x="380" y="130" font-size="12" fill="#1f2328" font-weight="600">Currency of a new ledger</text>
+  <rect x="380" y="142" width="320" height="26" rx="5" fill="#fff0f0" stroke="#cf222e" stroke-width="1"/>
+  <text x="390" y="159" font-size="11" fill="#1f2328">1. Not asked in the app</text>
+  <rect x="380" y="176" width="320" height="26" rx="5" fill="#fff0f0" stroke="#cf222e" stroke-width="1"/>
+  <text x="390" y="193" font-size="11" fill="#1f2328">2. Every app-made ledger: USD Starter</text>
+  <rect x="380" y="210" width="320" height="26" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="390" y="227" font-size="11" fill="#1f2328">3. defaultCurrency exists, unused</text>
+  <text x="380" y="258" font-size="11" fill="#57606a">bea init prompts with USD.</text>
+  <text x="730" y="130" font-size="12" fill="#1f2328" font-weight="600">Interface language</text>
+  <rect x="730" y="142" width="320" height="26" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="740" y="159" font-size="11" fill="#1f2328">1. ?lang= in the URL</text>
+  <rect x="730" y="176" width="320" height="26" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="740" y="193" font-size="11" fill="#1f2328">2. i18nextLng cookie</text>
+  <rect x="730" y="210" width="320" height="26" rx="5" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="740" y="227" font-size="11" fill="#1f2328">3. account's saved locale</text>
+  <rect x="730" y="244" width="320" height="26" rx="5" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="740" y="261" font-size="11" fill="#1f2328">4. Accept-Language (new)</text>
+  <rect x="730" y="278" width="320" height="26" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="740" y="295" font-size="11" fill="#1f2328">5. en</text>
+  <text x="730" y="326" font-size="11" fill="#2f8f4e">Registration and settings save the chosen language.</text>
+  <text x="1080" y="130" font-size="12" fill="#1f2328" font-weight="600">Currency suggestion</text>
+  <rect x="1080" y="142" width="320" height="26" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="1090" y="159" font-size="11" fill="#1f2328">1. choice made in this flow</text>
+  <rect x="1080" y="176" width="320" height="26" rx="5" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="1090" y="193" font-size="11" fill="#1f2328">2. saved defaultCurrency</text>
+  <rect x="1080" y="210" width="320" height="26" rx="5" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="1090" y="227" font-size="11" fill="#1f2328">3. device currency (native)</text>
+  <rect x="1080" y="244" width="320" height="26" rx="5" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="1090" y="261" font-size="11" fill="#1f2328">4. browser or device region</text>
+  <rect x="1080" y="278" width="320" height="26" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="1090" y="295" font-size="11" fill="#1f2328">5. USD</text>
+  <text x="730" y="360" font-size="11" fill="#2f8f4e">In the creation form (illustrative)</text>
+  <rect x="730" y="368" width="680" height="92" rx="8" fill="#ffffff" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="746" y="392" font-size="11" fill="#57606a">Currency</text>
+  <rect x="746" y="400" width="120" height="26" rx="4" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="756" y="418" font-size="12" fill="#1f2328" font-weight="600">USD</text>
+  <text x="876" y="418" font-size="11" fill="#57606a">from your browser region (en-US)</text>
+  <rect x="1110" y="400" width="120" height="26" rx="13" fill="#ffffff" stroke="#3b6fd8" stroke-width="1"/>
+  <text x="1170" y="418" font-size="11" fill="#3b6fd8" font-weight="600" text-anchor="middle">Use CNY</text>
+  <text x="1240" y="418" font-size="11" fill="#57606a">from your time zone</text>
+  <text x="746" y="448" font-size="10" fill="#57606a">Never preselected from time zone alone; restated beside Create ledger.</text>
+  <rect x="30" y="490" width="680" height="196" rx="6" fill="#fff0f0" stroke="#cf222e" stroke-width="1" stroke-dasharray="5 3"/>
+  <text x="44" y="514" font-size="13" fill="#cf222e" font-weight="600">What is wrong today</text>
+  <text x="44" y="538" font-size="11" fill="#57606a">• A first visit is English whatever the browser asks for.</text>
+  <text x="44" y="558" font-size="11" fill="#57606a">• The language a person registers in is not saved.</text>
+  <text x="44" y="578" font-size="11" fill="#57606a">• The app never asks for a currency, so non-US newcomers get USD books.</text>
+  <text x="44" y="598" font-size="11" fill="#57606a">• The saved defaultCurrency (w3/m60) has no screen that reads or writes it</text>
+  <text x="54" y="618" font-size="11" fill="#57606a">since the 2026-11-07 revert.</text>
+  <rect x="730" y="490" width="680" height="196" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="744" y="514" font-size="13" fill="#2f8f4e" font-weight="600">ADR026 rules</text>
+  <text x="744" y="538" font-size="11" fill="#57606a">• Suggest, never decide: every inferred value is visible, labelled, editable.</text>
+  <text x="744" y="558" font-size="11" fill="#57606a">• Number and date format follow the full locale; never saved, never in files.</text>
+  <text x="744" y="578" font-size="11" fill="#57606a">• Never inferred: purpose, modules, tax facts, account names; currency never</text>
+  <text x="754" y="598" font-size="11" fill="#57606a">from language, IP address, email domain, or identity provider.</text>
+  <text x="744" y="618" font-size="11" fill="#57606a">• REST, GraphQL, MCP never infer. bea init prefills from LANG only when interactive.</text>
+</svg>

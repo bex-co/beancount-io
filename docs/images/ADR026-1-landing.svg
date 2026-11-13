@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 640" width="1440" height="640" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR026 section 1: sign-up and landing, before and after</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606a"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cf222e"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f8f4e"/></marker>
+  </defs>
+  <rect width="1440" height="640" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" fill="#1f2328" font-weight="600">ADR026 · 1 — Sign-up and landing</text>
+  <text x="30" y="58" font-size="12" fill="#57606a">Where a newcomer arrives after signing up or signing in.</text>
+  <rect x="30" y="86" width="680" height="30" rx="6" fill="#eaeef2" stroke="#d0d7de" stroke-width="1"/>
+  <text x="44" y="106" font-size="13" fill="#1f2328" font-weight="600">Before — as built on 2026-11-09</text>
+  <rect x="730" y="86" width="680" height="30" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="744" y="106" font-size="13" fill="#2f8f4e" font-weight="600">After — ADR026 (illustrative, meets the record's requirements)</text>
+  <text x="30" y="148" font-size="12" fill="#1f2328" font-weight="600">A · Sign up directly</text>
+  <text x="30" y="164" font-size="10" fill="#57606a">/auth/sign-up, no next</text>
+  <rect x="170" y="134" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="178" y="152" font-size="11" fill="#1f2328" font-weight="600">Sign up</text>
+  <text x="178" y="168" font-size="10" fill="#57606a">email, password</text>
+  <rect x="310" y="134" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="318" y="152" font-size="11" fill="#1f2328" font-weight="600">Email code</text>
+  <line x1="288" y1="157.0" x2="307" y2="157.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="450" y="134" width="118" height="46" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="458" y="152" font-size="11" fill="#1f2328" font-weight="600">Welcome</text>
+  <text x="458" y="168" font-size="10" fill="#57606a">first ledger</text>
+  <line x1="428" y1="157.0" x2="447" y2="157.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="590" y="134" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="598" y="152" font-size="11" fill="#1f2328" font-weight="600">Ledger overview</text>
+  <line x1="568" y1="157.0" x2="587" y2="157.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="30" y="224" font-size="12" fill="#1f2328" font-weight="600">B · Marketing “Sign in”</text>
+  <text x="30" y="240" font-size="10" fill="#57606a">/ledger?utm_… → Sign up</text>
+  <rect x="170" y="210" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="178" y="228" font-size="11" fill="#1f2328" font-weight="600">Sign in</text>
+  <text x="178" y="244" font-size="10" fill="#57606a">next=/ledger</text>
+  <rect x="310" y="210" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="318" y="228" font-size="11" fill="#1f2328" font-weight="600">Sign up + code</text>
+  <text x="318" y="244" font-size="10" fill="#57606a">next kept</text>
+  <line x1="288" y1="233.0" x2="307" y2="233.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="450" y="210" width="118" height="46" rx="6" fill="#fff0f0" stroke="#cf222e" stroke-width="1" stroke-dasharray="5 3"/>
+  <text x="458" y="228" font-size="11" fill="#1f2328" font-weight="600">/ledger, empty</text>
+  <text x="458" y="244" font-size="10" fill="#57606a">No ledgers found</text>
+  <line x1="428" y1="233.0" x2="447" y2="233.0" stroke="#cf222e" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <text x="592" y="226" font-size="11" fill="#cf222e" font-weight="600">Never reaches</text>
+  <text x="592" y="242" font-size="11" fill="#cf222e" font-weight="600">welcome</text>
+  <text x="30" y="314" font-size="12" fill="#1f2328" font-weight="600">C · Consent sign-up</text>
+  <text x="30" y="330" font-size="10" fill="#57606a">OAuth: MCP, native app</text>
+  <rect x="170" y="300" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="178" y="318" font-size="11" fill="#1f2328" font-weight="600">Consent sign-up</text>
+  <text x="178" y="334" font-size="10" fill="#57606a">withDefaultLedger</text>
+  <rect x="310" y="300" width="118" height="46" rx="6" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1"/>
+  <text x="318" y="318" font-size="11" fill="#1f2328" font-weight="600">Server</text>
+  <text x="318" y="334" font-size="10" fill="#57606a">createDefaultLedger</text>
+  <line x1="288" y1="323.0" x2="307" y2="323.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="450" y="300" width="118" height="46" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="458" y="318" font-size="11" fill="#1f2328" font-weight="600">“Default” ledger</text>
+  <text x="458" y="334" font-size="10" fill="#57606a">Starter, USD, private</text>
+  <line x1="428" y1="323.0" x2="447" y2="323.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="590" y="300" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="598" y="318" font-size="11" fill="#1f2328" font-weight="600">Back to client</text>
+  <line x1="568" y1="323.0" x2="587" y2="323.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="30" y="404" font-size="12" fill="#1f2328" font-weight="600">D · Returning sign-in</text>
+  <text x="30" y="420" font-size="10" fill="#57606a">/auth/login</text>
+  <rect x="170" y="390" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="178" y="408" font-size="11" fill="#1f2328" font-weight="600">Sign in</text>
+  <path d="M352,393 L386,413 L352,433 L318,413 Z" fill="#ffffff" stroke="#8c959f"/>
+  <text x="352" y="417" font-size="10" fill="#1f2328" text-anchor="middle">next?</text>
+  <line x1="288" y1="413" x2="315" y2="413" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="430" y="376" width="190" height="22" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="438" y="391" font-size="10" fill="#1f2328">next → that page</text>
+  <path d="M386,413 C406,413 410,387 427,387" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="430" y="402" width="190" height="22" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="438" y="417" font-size="10" fill="#1f2328">default ledger</text>
+  <path d="M386,413 C406,413 410,413 427,413" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="430" y="428" width="190" height="22" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="438" y="443" font-size="10" fill="#1f2328">no ledgers → Welcome</text>
+  <path d="M386,413 C406,413 410,439 427,439" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="730" y="148" font-size="12" fill="#1f2328" font-weight="600">A · Sign up directly</text>
+  <text x="730" y="164" font-size="10" fill="#57606a">/auth/sign-up, no next</text>
+  <rect x="870" y="134" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="878" y="152" font-size="11" fill="#1f2328" font-weight="600">Sign up</text>
+  <text x="878" y="168" font-size="10" fill="#57606a">email, password</text>
+  <rect x="1010" y="134" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="1018" y="152" font-size="11" fill="#1f2328" font-weight="600">Email code</text>
+  <line x1="988" y1="157.0" x2="1007" y2="157.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1150" y="134" width="118" height="46" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="1158" y="152" font-size="11" fill="#1f2328" font-weight="600">Welcome</text>
+  <text x="1158" y="168" font-size="10" fill="#57606a">first ledger</text>
+  <line x1="1128" y1="157.0" x2="1147" y2="157.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1290" y="134" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="1298" y="152" font-size="11" fill="#1f2328" font-weight="600">Ledger overview</text>
+  <line x1="1268" y1="157.0" x2="1287" y2="157.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="730" y="224" font-size="12" fill="#1f2328" font-weight="600">B · Marketing “Sign in”</text>
+  <text x="730" y="240" font-size="10" fill="#57606a">/ledger?utm_… → Sign up</text>
+  <rect x="870" y="210" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="878" y="228" font-size="11" fill="#1f2328" font-weight="600">Sign in</text>
+  <text x="878" y="244" font-size="10" fill="#57606a">next=/ledger</text>
+  <rect x="1010" y="210" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="1018" y="228" font-size="11" fill="#1f2328" font-weight="600">Sign up + code</text>
+  <text x="1018" y="244" font-size="10" fill="#57606a">next kept</text>
+  <line x1="988" y1="233.0" x2="1007" y2="233.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1150" y="210" width="118" height="46" rx="6" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1"/>
+  <text x="1158" y="228" font-size="11" fill="#1f2328" font-weight="600">/ledger</text>
+  <text x="1158" y="244" font-size="10" fill="#57606a">0 ledgers → redirect</text>
+  <line x1="1128" y1="233.0" x2="1147" y2="233.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1290" y="210" width="118" height="46" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="1298" y="228" font-size="11" fill="#1f2328" font-weight="600">Welcome</text>
+  <text x="1298" y="244" font-size="10" fill="#57606a">?next=/ledger</text>
+  <line x1="1268" y1="233.0" x2="1287" y2="233.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="870" y="276" font-size="10" fill="#2f8f4e">after creating: follow next if it is inside the app, else open the new ledger</text>
+  <text x="730" y="314" font-size="12" fill="#1f2328" font-weight="600">C · Consent sign-up</text>
+  <text x="730" y="330" font-size="10" fill="#57606a">OAuth: MCP, native app</text>
+  <rect x="870" y="300" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="878" y="318" font-size="11" fill="#1f2328" font-weight="600">Consent sign-up</text>
+  <text x="878" y="334" font-size="10" fill="#57606a">withDefaultLedger</text>
+  <rect x="1010" y="300" width="118" height="46" rx="6" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1"/>
+  <text x="1018" y="318" font-size="11" fill="#1f2328" font-weight="600">Server</text>
+  <text x="1018" y="334" font-size="10" fill="#57606a">createDefaultLedger</text>
+  <line x1="988" y1="323.0" x2="1007" y2="323.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1150" y="300" width="118" height="46" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="1158" y="318" font-size="11" fill="#1f2328" font-weight="600">“Default” ledger</text>
+  <text x="1158" y="334" font-size="10" fill="#57606a">Starter, USD, private</text>
+  <line x1="1128" y1="323.0" x2="1147" y2="323.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1290" y="300" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="1298" y="318" font-size="11" fill="#1f2328" font-weight="600">Back to client</text>
+  <line x1="1268" y1="323.0" x2="1287" y2="323.0" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="870" y="366" font-size="10" fill="#57606a">unchanged for now: whether it asks for a starter or currency is open question 4</text>
+  <text x="730" y="404" font-size="12" fill="#1f2328" font-weight="600">D · Returning sign-in</text>
+  <text x="730" y="420" font-size="10" fill="#57606a">/auth/login</text>
+  <rect x="870" y="390" width="118" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="878" y="408" font-size="11" fill="#1f2328" font-weight="600">Sign in</text>
+  <path d="M1052,393 L1086,413 L1052,433 L1018,413 Z" fill="#ffffff" stroke="#8c959f"/>
+  <text x="1052" y="417" font-size="10" fill="#1f2328" text-anchor="middle">next?</text>
+  <line x1="988" y1="413" x2="1015" y2="413" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1130" y="376" width="270" height="22" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="1138" y="391" font-size="10" fill="#1f2328">next → that page; /ledger with 0 ledgers → Welcome</text>
+  <path d="M1086,413 C1106,413 1110,387 1127,387" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1130" y="402" width="190" height="22" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="1138" y="417" font-size="10" fill="#1f2328">default ledger</text>
+  <path d="M1086,413 C1106,413 1110,413 1127,413" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1130" y="428" width="190" height="22" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="1138" y="443" font-size="10" fill="#1f2328">no ledgers → Welcome</text>
+  <path d="M1086,413 C1106,413 1110,439 1127,439" fill="none" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="30" y="500" width="680" height="116" rx="6" fill="#fff0f0" stroke="#cf222e" stroke-width="1" stroke-dasharray="5 3"/>
+  <text x="44" y="522" font-size="13" fill="#cf222e" font-weight="600">Problems</text>
+  <text x="44" y="544" font-size="11" fill="#57606a">• A visitor from the marketing site's sign-in link who signs up lands on an empty ledger list (B).</text>
+  <text x="44" y="561" font-size="11" fill="#57606a">• /ledger does not redirect a user with no ledgers; register-otp.tsx lets next win over welcome.</text>
+  <text x="44" y="578" font-size="11" fill="#57606a">• Sign-in (D) follows next to the same empty list when the account has no ledgers.</text>
+  <rect x="730" y="500" width="680" height="116" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="744" y="522" font-size="13" fill="#2f8f4e" font-weight="600">Change (decided in ADR026, not built)</text>
+  <text x="744" y="544" font-size="11" fill="#57606a">• The /ledger list sends a signed-in user with no ledgers to /auth/welcome, keeping next.</text>
+  <text x="744" y="561" font-size="11" fill="#57606a">• Welcome creates the ledger, then follows next when it points inside the ledger app.</text>
+  <text x="744" y="578" font-size="11" fill="#57606a">• One rule fixes every entry: sign-up, sign-in, bookmarks, and the marketing links.</text>
+</svg>

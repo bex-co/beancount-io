@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 700" width="1440" height="700" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR026 section 4: existing records and examples, before and after</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606a"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cf222e"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f8f4e"/></marker>
+  </defs>
+  <rect width="1440" height="700" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" fill="#1f2328" font-weight="600">ADR026 · 4 — Existing records and examples</text>
+  <text x="30" y="58" font-size="12" fill="#57606a">People who already keep books, and people who want to look before they commit.</text>
+  <rect x="30" y="86" width="680" height="30" rx="6" fill="#eaeef2" stroke="#d0d7de" stroke-width="1"/>
+  <text x="44" y="106" font-size="13" fill="#1f2328" font-weight="600">Before — as built on 2026-11-09</text>
+  <rect x="730" y="86" width="680" height="30" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="744" y="106" font-size="13" fill="#2f8f4e" font-weight="600">After — ADR026 (illustrative, meets the record's requirements)</text>
+  <text x="30" y="130" font-size="11" fill="#57606a">Today</text>
+  <rect x="30" y="140" width="680" height="54" rx="6" fill="#fff0f0" stroke="#cf222e" stroke-width="1" stroke-dasharray="5 3"/>
+  <text x="44" y="160" font-size="12" fill="#1f2328" font-weight="600">Explore</text>
+  <text x="170" y="160" font-size="11" fill="#1f2328">Pick “Sample” in the create form: a fictional ledger</text>
+  <text x="170" y="178" font-size="11" fill="#57606a">is created in your own list and counts toward your plan.</text>
+  <rect x="30" y="204" width="680" height="54" rx="6" fill="#fff0f0" stroke="#cf222e" stroke-width="1" stroke-dasharray="5 3"/>
+  <text x="44" y="224" font-size="12" fill="#1f2328" font-weight="600">Lists</text>
+  <text x="170" y="224" font-size="11" fill="#1f2328">Nothing marks a Sample ledger as fictional in the</text>
+  <text x="170" y="242" font-size="11" fill="#57606a">ledger list or switcher (bcio_demo is only inside the file).</text>
+  <rect x="30" y="268" width="680" height="54" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="44" y="288" font-size="12" fill="#1f2328" font-weight="600">Bring records</text>
+  <text x="170" y="288" font-size="11" fill="#1f2328">Create an empty ledger first, then open Import</text>
+  <text x="170" y="306" font-size="11" fill="#57606a">inside it; welcome never mentions importing.</text>
+  <rect x="30" y="332" width="680" height="54" rx="6" fill="#fff0f0" stroke="#cf222e" stroke-width="1" stroke-dasharray="5 3"/>
+  <text x="44" y="352" font-size="12" fill="#1f2328" font-weight="600">Local → hosted</text>
+  <text x="170" y="352" font-size="11" fill="#1f2328">No way to upload local books; `bea cloud ledger create`</text>
+  <text x="170" y="370" font-size="11" fill="#57606a">only creates empty or clones hosted → local.</text>
+  <text x="730" y="130" font-size="11" fill="#2f8f4e">Welcome offers three starting situations (illustrative)</text>
+  <rect x="730" y="140" width="216" height="70" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="744" y="166" font-size="13" fill="#1f2328" font-weight="600">Start new books</text>
+  <text x="744" y="186" font-size="10" fill="#57606a">the one question in section 2</text>
+  <rect x="958" y="140" width="216" height="70" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="972" y="166" font-size="13" fill="#1f2328" font-weight="600">Bring existing records</text>
+  <text x="972" y="186" font-size="10" fill="#57606a">Beancount files or a bank export</text>
+  <rect x="1186" y="140" width="216" height="70" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1"/>
+  <text x="1200" y="166" font-size="13" fill="#1f2328" font-weight="600">Explore an example</text>
+  <text x="1200" y="186" font-size="10" fill="#57606a">fictional · read-only · no sign-up</text>
+  <line x1="1066" y1="212" x2="1066" y2="242" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="958" y="246" width="216" height="86" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="970" y="266" font-size="10" fill="#1f2328">Importer with setup kept</text>
+  <text x="970" y="281" font-size="10" fill="#1f2328">Beancount: validate the</text>
+  <text x="970" y="296" font-size="10" fill="#1f2328">include graph, keep names, lots</text>
+  <text x="970" y="311" font-size="10" fill="#1f2328">Export: preview, then create</text>
+  <line x1="1294" y1="212" x2="1294" y2="242" stroke="#3b6fd8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="1186" y="246" width="224" height="86" rx="6" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1"/>
+  <text x="1198" y="266" font-size="10" fill="#1f2328">Example ledgers, marked</text>
+  <text x="1198" y="281" font-size="10" fill="#1f2328">“Example — fictional” on</text>
+  <text x="1198" y="296" font-size="10" fill="#1f2328">every report; not counted;</text>
+  <text x="1198" y="311" font-size="10" fill="#1f2328">“Use this structure” copies only accounts</text>
+  <rect x="730" y="350" width="680" height="46" rx="6" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+  <text x="744" y="378" font-size="11" fill="#1f2328">Terminal: bea cloud ledger create studio --from ./main.bean  → one private hosted copy (open question 5)</text>
+  <rect x="30" y="430" width="680" height="220" rx="6" fill="#fff0f0" stroke="#cf222e" stroke-width="1" stroke-dasharray="5 3"/>
+  <text x="44" y="454" font-size="13" fill="#cf222e" font-weight="600">What is wrong today</text>
+  <text x="44" y="478" font-size="11" fill="#57606a">• Learning and starting are mixed: a fictional ledger sits among real ones.</text>
+  <text x="44" y="498" font-size="11" fill="#57606a">• Someone with existing records must first create an unrelated empty ledger.</text>
+  <text x="44" y="518" font-size="11" fill="#57606a">• Local books cannot move to the dashboard without rebuilding them.</text>
+  <text x="44" y="538" font-size="11" fill="#57606a">• The example cannot be seen before signing up.</text>
+  <rect x="730" y="430" width="680" height="220" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="744" y="454" font-size="13" fill="#2f8f4e" font-weight="600">ADR026 decisions</text>
+  <text x="744" y="478" font-size="11" fill="#57606a">• Starting new, bringing records, and exploring are separate doors.</text>
+  <text x="744" y="498" font-size="11" fill="#57606a">• Real books never contain fiction; examples carry no customer data and</text>
+  <text x="754" y="518" font-size="11" fill="#57606a">no plan allowance, and copying from one takes structure only.</text>
+  <text x="744" y="538" font-size="11" fill="#57606a">• Bring records goes to the existing importer with the setup context kept.</text>
+  <text x="744" y="558" font-size="11" fill="#57606a">• Local to hosted is an explicit one-time transfer, never sync.</text>
+  <text x="744" y="578" font-size="11" fill="#57606a">• Open: what becomes of template SAMPLE (question 3); upload or SSH (question 5).</text>
+</svg>

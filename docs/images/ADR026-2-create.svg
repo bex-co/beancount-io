@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1560" width="1440" height="1560" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR026 section 2: creating the first ledger, before (top) and after (bottom)</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#57606a"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#cf222e"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2f8f4e"/></marker>
+  </defs>
+  <rect width="1440" height="1560" fill="#ffffff"/>
+  <text x="30" y="40" font-size="22" fill="#1f2328" font-weight="600">ADR026 · 2 — Creating the first ledger</text>
+  <text x="30" y="62" font-size="13" fill="#57606a">Top: today's form (2026-11-09). Bottom: the same form with two changes, decided 2026-11-13. Web and native.</text>
+  <rect x="30" y="84" width="1380" height="34" rx="6" fill="#eaeef2" stroke="#d0d7de" stroke-width="1"/>
+  <text x="46" y="107" font-size="15" fill="#1f2328" font-weight="600">Before</text>
+  <text x="117.6" y="107" font-size="12" fill="#57606a">as built on 2026-11-09: name, template, description, visibility; no setup is sent</text>
+  <text x="30" y="136" font-size="13" fill="#57606a">Web · /auth/welcome (also the “Create ledger” dialog)</text>
+  <rect x="30" y="146" width="640" height="500" rx="12" fill="#ffffff" stroke="#8c959f" stroke-width="1"/>
+  <text x="350.0" y="188" font-size="20" fill="#1f2328" font-weight="600" text-anchor="middle">Create Your First Ledger</text>
+  <text x="350.0" y="212" font-size="13" fill="#57606a" text-anchor="middle">Create a new Beancount ledger to start managing your finances.</text>
+  <text x="60" y="250" font-size="13" fill="#1f2328" font-weight="600">Ledger Name</text>
+  <rect x="60" y="258" width="580" height="34" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="72" y="280" font-size="14" fill="#1f2328">my-book</text>
+  <text x="60" y="312" font-size="12" fill="#57606a">Repository name: my-book</text>
+  <text x="60" y="346" font-size="13" fill="#1f2328" font-weight="600">Template</text>
+  <rect x="60" y="356" width="284" height="76" rx="8" fill="#f3fbf5" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="76" y="382" font-size="14" fill="#1f2328" font-weight="600">Starter template</text>
+  <text x="76" y="404" font-size="12" fill="#57606a">Empty books with a standard</text>
+  <text x="76" y="420" font-size="12" fill="#57606a">chart of accounts.</text>
+  <rect x="356" y="356" width="284" height="76" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="372" y="382" font-size="14" fill="#1f2328" font-weight="600">Sample ledger</text>
+  <text x="372" y="404" font-size="12" fill="#57606a">A detailed multi-file ledger</text>
+  <text x="372" y="420" font-size="12" fill="#57606a">with realistic sample activity.</text>
+  <text x="60" y="466" font-size="13" fill="#1f2328" font-weight="600">Description (Optional)</text>
+  <rect x="60" y="474" width="580" height="34" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <rect x="60" y="534" width="32" height="16" rx="8" fill="#2f8f4e" stroke="#2f8f4e" stroke-width="1"/>
+  <circle cx="84" cy="542" r="6" fill="#ffffff"/>
+  <text x="102" y="547" font-size="13" fill="#1f2328">Private · Only you and collaborators can access</text>
+  <rect x="540" y="586" width="100" height="28" rx="5" fill="#cf222e" stroke="#cf222e" stroke-width="1"/>
+  <text x="590.0" y="604" font-size="12" fill="#ffffff" font-weight="600" text-anchor="middle">Save</text>
+  <text x="700" y="136" font-size="13" fill="#57606a">Native · New ledger</text>
+  <rect x="700" y="146" width="320" height="500" rx="30" fill="#ffffff" stroke="#8c959f" stroke-width="1.5"/>
+  <rect x="810.0" y="156" width="100" height="6" rx="3" fill="#d0d7de" stroke="#d0d7de" stroke-width="1"/>
+  <text x="718" y="194" font-size="13" fill="#3b6fd8">‹ Back</text>
+  <text x="860.0" y="194" font-size="14" fill="#1f2328" font-weight="600" text-anchor="middle">New ledger</text>
+  <text x="1002" y="194" font-size="13" fill="#2f8f4e" font-weight="600" text-anchor="end">Create</text>
+  <line x1="700" y1="208" x2="1020" y2="208" stroke="#eaeef2"/>
+  <rect x="718" y="226" width="284" height="150" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="732" y="250" font-size="12" fill="#57606a">Name</text>
+  <text x="732" y="270" font-size="14" fill="#1f2328">my-book</text>
+  <text x="732" y="288" font-size="11" fill="#57606a">Will be created as my-book</text>
+  <text x="732" y="318" font-size="12" fill="#57606a">Description</text>
+  <text x="732" y="336" font-size="13" fill="#8c959f">Optional</text>
+  <text x="732" y="364" font-size="12" fill="#57606a">Private</text>
+  <rect x="948" y="352" width="32" height="16" rx="8" fill="#2f8f4e" stroke="#2f8f4e" stroke-width="1"/>
+  <circle cx="972" cy="360" r="6" fill="#ffffff"/>
+  <text x="718" y="406" font-size="12" fill="#57606a">Template</text>
+  <rect x="718" y="416" width="284" height="140" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <rect x="719" y="417" width="282" height="68" rx="9" fill="#eaeef2" stroke="#eaeef2" stroke-width="1"/>
+  <text x="732" y="442" font-size="14" fill="#1f2328" font-weight="600">Starter</text>
+  <text x="732" y="464" font-size="12" fill="#57606a">Empty books with a standard chart…</text>
+  <text x="732" y="514" font-size="14" fill="#1f2328" font-weight="600">Sample</text>
+  <text x="732" y="536" font-size="12" fill="#57606a">Example transactions so you can…</text>
+  <rect x="1050" y="146" width="360" height="500" rx="6" fill="#fff0f0" stroke="#cf222e" stroke-width="1" stroke-dasharray="5 3"/>
+  <text x="1068" y="176" font-size="15" fill="#cf222e" font-weight="600">What is wrong</text>
+  <text x="1068" y="206" font-size="13" fill="#1f2328">• Asks about our files (name,</text>
+  <text x="1078" y="228" font-size="13" fill="#1f2328">template), not the person.</text>
+  <text x="1068" y="250" font-size="13" fill="#1f2328">• Sample sits beside Starter;</text>
+  <text x="1078" y="272" font-size="13" fill="#1f2328">nothing says it is fictional.</text>
+  <text x="1068" y="294" font-size="13" fill="#1f2328">• No title, currency, or what to</text>
+  <text x="1078" y="316" font-size="13" fill="#1f2328">track: every ledger made in</text>
+  <text x="1078" y="338" font-size="13" fill="#1f2328">an app is the USD Starter.</text>
+  <text x="1068" y="360" font-size="13" fill="#1f2328">• Web says “Save”, native says</text>
+  <text x="1078" y="382" font-size="13" fill="#1f2328">“Create”.</text>
+  <text x="1068" y="404" font-size="13" fill="#1f2328">• The reverted 2026-11 attempt</text>
+  <text x="1078" y="426" font-size="13" fill="#1f2328">added steps and a second</text>
+  <text x="1078" y="448" font-size="13" fill="#1f2328">field (purpose, then modules)</text>
+  <text x="1078" y="470" font-size="13" fill="#1f2328">that confused people.</text>
+  <rect x="30" y="686" width="1380" height="34" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="46" y="709" font-size="15" fill="#2f8f4e" font-weight="600">After</text>
+  <text x="109.0" y="709" font-size="12" fill="#57606a">decided 2026-11-13 (not built): today's form with two changes — a prefilled Currency, and a multi-select instead of Template</text>
+  <text x="30" y="738" font-size="13" fill="#2f8f4e">Web · /auth/welcome (also the “Create ledger” dialog)</text>
+  <rect x="30" y="748" width="640" height="690" rx="12" fill="#ffffff" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="350.0" y="790" font-size="20" fill="#1f2328" font-weight="600" text-anchor="middle">Create Your First Ledger</text>
+  <text x="350.0" y="814" font-size="13" fill="#57606a" text-anchor="middle">Create a new Beancount ledger to start managing your finances.</text>
+  <text x="60" y="852" font-size="13" fill="#1f2328" font-weight="600">Ledger Name</text>
+  <rect x="60" y="860" width="580" height="34" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="72" y="882" font-size="14" fill="#1f2328">my-book</text>
+  <text x="60" y="914" font-size="12" fill="#57606a">Repository name: my-book</text>
+  <text x="60" y="948" font-size="13" fill="#1f2328" font-weight="600">Currency</text>
+  <rect x="134" y="935" width="40" height="18" rx="9" fill="#2f8f4e" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="154" y="948" font-size="11" fill="#ffffff" font-weight="600" text-anchor="middle">NEW</text>
+  <rect x="60" y="958" width="160" height="34" rx="5" fill="#f3fbf5" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="72" y="980" font-size="14" fill="#1f2328" font-weight="600">EUR</text>
+  <text x="204" y="980" font-size="12" fill="#57606a" text-anchor="end">▾</text>
+  <text x="234" y="980" font-size="12" fill="#57606a">from your browser region</text>
+  <text x="60" y="1028" font-size="13" fill="#1f2328" font-weight="600">What do you want to keep track of?</text>
+  <rect x="304" y="1015" width="40" height="18" rx="9" fill="#2f8f4e" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="324" y="1028" font-size="11" fill="#ffffff" font-weight="600" text-anchor="middle">NEW</text>
+  <text x="60" y="1046" font-size="12" fill="#57606a">Choose any.</text>
+  <rect x="60" y="1058" width="157.3" height="28" rx="14.0" fill="#f3fbf5" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="74" y="1077.0" font-size="13" fill="#2f8f4e" font-weight="600">✓ Everyday spending</text>
+  <rect x="225.3" y="1058" width="115.9" height="28" rx="14.0" fill="#f3fbf5" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="239.3" y="1077.0" font-size="13" fill="#2f8f4e" font-weight="600">✓ Investments</text>
+  <rect x="349.20000000000005" y="1058" width="157.3" height="28" rx="14.0" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="363.20000000000005" y="1077.0" font-size="13" fill="#1f2328">+ A rental property</text>
+  <rect x="60" y="1096" width="219.4" height="28" rx="14.0" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="74" y="1115.0" font-size="13" fill="#1f2328">+ Freelance or side business</text>
+  <rect x="287.4" y="1096" width="102.1" height="28" rx="14.0" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="301.4" y="1115.0" font-size="13" fill="#1f2328">+ A company</text>
+  <rect x="397.5" y="1096" width="205.60000000000002" height="28" rx="14.0" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="411.5" y="1115.0" font-size="13" fill="#1f2328">+ Money shared with others</text>
+  <rect x="60" y="1134" width="143.5" height="28" rx="14.0" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="74" y="1153.0" font-size="13" fill="#1f2328">+ A club or group</text>
+  <text x="60" y="1186" font-size="12" fill="#3b6fd8">Just looking? Create a sample ledger with fictional data →</text>
+  <text x="60" y="1222" font-size="13" fill="#1f2328" font-weight="600">Description (Optional)</text>
+  <rect x="60" y="1230" width="580" height="34" rx="5" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <rect x="60" y="1288" width="32" height="16" rx="8" fill="#2f8f4e" stroke="#2f8f4e" stroke-width="1"/>
+  <circle cx="84" cy="1296" r="6" fill="#ffffff"/>
+  <text x="102" y="1301" font-size="13" fill="#1f2328">Private · Only you and collaborators can access</text>
+  <rect x="500" y="1342" width="140" height="28" rx="5" fill="#2f8f4e" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="570.0" y="1360" font-size="12" fill="#ffffff" font-weight="600" text-anchor="middle">Create ledger</text>
+  <text x="700" y="738" font-size="13" fill="#2f8f4e">Native · New ledger</text>
+  <rect x="700" y="748" width="320" height="690" rx="30" fill="#ffffff" stroke="#8c959f" stroke-width="1.5"/>
+  <rect x="810.0" y="758" width="100" height="6" rx="3" fill="#d0d7de" stroke="#d0d7de" stroke-width="1"/>
+  <text x="718" y="796" font-size="13" fill="#3b6fd8">‹ Back</text>
+  <text x="860.0" y="796" font-size="14" fill="#1f2328" font-weight="600" text-anchor="middle">New ledger</text>
+  <text x="1002" y="796" font-size="13" fill="#2f8f4e" font-weight="600" text-anchor="end">Create</text>
+  <line x1="700" y1="810" x2="1020" y2="810" stroke="#eaeef2"/>
+  <rect x="718" y="828" width="284" height="212" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="732" y="852" font-size="12" fill="#57606a">Name</text>
+  <text x="732" y="872" font-size="14" fill="#1f2328">my-book</text>
+  <text x="732" y="890" font-size="11" fill="#57606a">Will be created as my-book</text>
+  <line x1="718" y1="902" x2="1002" y2="902" stroke="#eaeef2"/>
+  <text x="732" y="924" font-size="12" fill="#57606a">Currency</text>
+  <rect x="796" y="911" width="40" height="18" rx="9" fill="#2f8f4e" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="816" y="924" font-size="11" fill="#ffffff" font-weight="600" text-anchor="middle">NEW</text>
+  <text x="732" y="944" font-size="14" fill="#1f2328" font-weight="600">EUR</text>
+  <text x="772" y="944" font-size="11" fill="#57606a">from your region</text>
+  <text x="988" y="938" font-size="18" fill="#8c959f" text-anchor="end">›</text>
+  <line x1="718" y1="956" x2="1002" y2="956" stroke="#eaeef2"/>
+  <text x="732" y="978" font-size="12" fill="#57606a">Description</text>
+  <text x="732" y="996" font-size="13" fill="#8c959f">Optional</text>
+  <text x="732" y="1026" font-size="12" fill="#57606a">Private</text>
+  <rect x="948" y="1014" width="32" height="16" rx="8" fill="#2f8f4e" stroke="#2f8f4e" stroke-width="1"/>
+  <circle cx="972" cy="1022" r="6" fill="#ffffff"/>
+  <text x="718" y="1068" font-size="12" fill="#57606a">What do you want to keep track of?</text>
+  <rect x="936" y="1055" width="40" height="18" rx="9" fill="#2f8f4e" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="956" y="1068" font-size="11" fill="#ffffff" font-weight="600" text-anchor="middle">NEW</text>
+  <rect x="718" y="1078" width="284" height="280" rx="10" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <text x="732" y="1104" font-size="13" fill="#1f2328" font-weight="600">Everyday spending</text>
+  <text x="986" y="1104" font-size="15" fill="#2f8f4e" font-weight="600" text-anchor="end">✓</text>
+  <line x1="718" y1="1118" x2="1002" y2="1118" stroke="#eaeef2"/>
+  <text x="732" y="1144" font-size="13" fill="#1f2328" font-weight="600">Investments</text>
+  <text x="986" y="1144" font-size="15" fill="#2f8f4e" font-weight="600" text-anchor="end">✓</text>
+  <line x1="718" y1="1158" x2="1002" y2="1158" stroke="#eaeef2"/>
+  <text x="732" y="1184" font-size="13" fill="#1f2328">A rental property</text>
+  <line x1="718" y1="1198" x2="1002" y2="1198" stroke="#eaeef2"/>
+  <text x="732" y="1224" font-size="13" fill="#1f2328">Freelance or side business</text>
+  <line x1="718" y1="1238" x2="1002" y2="1238" stroke="#eaeef2"/>
+  <text x="732" y="1264" font-size="13" fill="#1f2328">A company</text>
+  <line x1="718" y1="1278" x2="1002" y2="1278" stroke="#eaeef2"/>
+  <text x="732" y="1304" font-size="13" fill="#1f2328">Money shared with others</text>
+  <line x1="718" y1="1318" x2="1002" y2="1318" stroke="#eaeef2"/>
+  <text x="732" y="1344" font-size="13" fill="#1f2328">A club or group</text>
+  <text x="718" y="1384" font-size="12" fill="#3b6fd8">Just looking? Create a sample</text>
+  <text x="718" y="1402" font-size="12" fill="#3b6fd8">ledger with fictional data →</text>
+  <rect x="1050" y="748" width="360" height="690" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="1068" y="778" font-size="15" fill="#2f8f4e" font-weight="600">Only two changes</text>
+  <text x="1068" y="808" font-size="13" fill="#1f2328">1. Currency: a new field under the</text>
+  <text x="1078" y="830" font-size="13" fill="#1f2328">name, prefilled from the saved</text>
+  <text x="1078" y="852" font-size="13" fill="#1f2328">preference or the region and</text>
+  <text x="1078" y="874" font-size="13" fill="#1f2328">labelled with its source.</text>
+  <text x="1068" y="896" font-size="13" fill="#1f2328">2. What do you want to keep track</text>
+  <text x="1078" y="918" font-size="13" fill="#1f2328">of? replaces Template. Everyday</text>
+  <text x="1078" y="940" font-size="13" fill="#1f2328">spending is preselected.</text>
+  <text x="1068" y="962" font-size="13" fill="#1f2328"></text>
+  <text x="1068" y="984" font-size="13" fill="#1f2328">Also: the web button says</text>
+  <text x="1068" y="1006" font-size="13" fill="#1f2328">“Create ledger”; Sample moves</text>
+  <text x="1068" y="1028" font-size="13" fill="#1f2328">to a link under the choices.</text>
+  <text x="1068" y="1050" font-size="13" fill="#1f2328"></text>
+  <text x="1068" y="1072" font-size="13" fill="#1f2328">Same fields, same order, one</text>
+  <text x="1068" y="1094" font-size="13" fill="#1f2328">ledger. Defaults: one click.</text>
+  <rect x="1068" y="1138" width="324" height="150" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1" stroke-dasharray="5 3"/>
+  <text x="1082" y="1162" font-size="13" fill="#3b6fd8" font-weight="600">Tapping “A company”</text>
+  <text x="1082" y="1184" font-size="12" fill="#57606a">clears the other choices: a</text>
+  <text x="1082" y="1202" font-size="12" fill="#57606a">company keeps its own ledger.</text>
+  <text x="1082" y="1220" font-size="12" fill="#57606a">The form then shows:</text>
+  <text x="1082" y="1246" font-size="12" fill="#1f2328">A company's books are kept apart</text>
+  <text x="1082" y="1264" font-size="12" fill="#1f2328">from personal money.</text>
+  <rect x="30" y="1454" width="1380" height="92" rx="6" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1"/>
+  <text x="48" y="1480" font-size="13" fill="#1f2328">Mapping: Everyday + Investments / Rental / Freelance → personal@1 with modules · one of those alone → portfolio@1, rental@1, or freelance@1 · nothing → blank@1.</text>
+  <text x="48" y="1502" font-size="13" fill="#1f2328">A company, money shared with others, a club → business@1, shared-expenses@1, community@1; these choices are exclusive, so every answer creates one ledger.</text>
+  <text x="48" y="1524" font-size="13" fill="#1f2328">Not added: account preview, first account, opening balance, per-preset questions. The name is also sent as the title; the address stays the name's slug.</text>
+</svg>
