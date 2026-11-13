@@ -19,6 +19,11 @@ const SURFACES: [string, string][] = [
   ["screens/add-budget-screen/add-budget-screen.tsx", "error"],
   ["screens/referral-screen/components/invite-section.tsx", "title"],
   ["screens/referral-screen/components/invite-section.tsx", "summary"],
+  // The shared text-input modal: title, message, toggle label, error (w22/040).
+  ["components/text-input-modal/index.tsx", "title"],
+  ["components/text-input-modal/index.tsx", "message"],
+  ["components/text-input-modal/index.tsx", "toggleLabel"],
+  ["components/text-input-modal/index.tsx", "inputError"],
   // Home's Latest Updates rows and the Recent Transactions empty line (w22/039).
   ["screens/home-screen/components/feed-card.tsx", "title"],
   ["screens/home-screen/components/feed-card.tsx", "metaText"],

@@ -23,6 +23,7 @@ import { easeStandard } from "@/common/theme/motion-easing";
 import { switchTrackProps } from "@/common/theme/switch-colors";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -63,11 +64,13 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: "600",
       color: theme.text01,
       marginBottom: 8,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     message: {
       fontSize: 14,
       color: theme.black80,
       lineHeight: 20,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     inputContainer: {
       paddingHorizontal: 20,
@@ -123,11 +126,13 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       fontSize: 14,
       color: theme.text01,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     inputError: {
       marginTop: 8,
       fontSize: 13,
       color: theme.error,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     confirmButtonDisabled: {
       color: theme.black40,
