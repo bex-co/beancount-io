@@ -149,6 +149,16 @@ $after = Get-ChildItem -Recurse -Include *.beancount, *.py | ForEach-Object { (G
   [the installation guide](installation.md#3-confirm-the-agents-see-them),
   then start a new session.
 
+## Tested with
+
+On 2026-11-13 on macOS, Claude Code 2.1.322 with a workspace install took the
+setup prompt to `beancount-init`'s existing-ledger branch and answered the
+February question with 119.35 USD through `beancount-ask`, running `bea` with
+`PYTHONPATH=.` as the written `AGENTS.md` says. Every ledger checksum was
+unchanged. It ran the checkout's `bea`, since no release has `init --existing`
+yet. Codex has not been run yet, and the PowerShell block has not been run.
+See the [rehearsal record](existing-ledger-rehearsal.md).
+
 ## Next
 
 Record an entry with `beancount-add`, import a bank export with
