@@ -9,7 +9,7 @@
 - Replaces: PRFAQ001 (Start a ledger that fits your life and work), ADR021 (Ledger creation experience), and the 2026-10-26 ADR026 (Locale, language, and currency defaults). Those three described one journey from three angles, disagreed on which governed, and drifted from the code; they are deleted. Number 021 stays unused, like 004–006.
 - Scope: everything between a visitor deciding to try Beancount.io and their first useful financial result: sign-up and where it lands, creating the first ledger, the shared setup contract every client and agent uses, the starter catalog, language and currency defaults, and the first steps after creation. This record adds no roadmap items; only `/pm` writes the board.
 
-> **Suspended 2026-11-12 by the owner.** The design, especially the creation form in [section 2](#2-creating-the-first-ledger), is not yet good enough to build. Until a new owner decision revives this record, do not schedule work from it. Still in effect: what is already shipped (the setup specification, preview, catalog, and idempotent create on REST, GraphQL, and MCP; `bea init` and `bea cloud ledger create` presets; the profile `defaultCurrency`) and today's single creation form. The decisions marked "not built" below, including the zero-ledger landing and the multi-select form, are paused, not approved.
+> **Suspended 2026-11-12 by the owner.** The design, especially the creation form in [section 2](#2-creating-the-first-ledger), is not yet good enough to build. Until a new owner decision revives this record, do not schedule work from it. Still in effect: what is already shipped (the setup specification, preview, catalog, and idempotent create on REST, GraphQL, and MCP; `bea init` and `bea cloud ledger create` presets; the profile `defaultCurrency`) and today's single creation form, which since 2026-11-12 carries a prefilled Currency field ([w3/m62](../../.pm/w3/README.md)). The decisions marked "not built" below, including the zero-ledger landing and the multi-select form, are paused, not approved.
 
 ## Context
 
@@ -190,11 +190,11 @@ When step 4 applies and the browser's time zone maps to a different currency, st
 | Private default ledger at consent sign-up; Starter without example money | Shipped (`80e3b7cd`, `2d754ae2`) |
 | `defaultCurrency` on the profile | Shipped (w3/m60) |
 | Guided creation screens on web and native | Shipped 2026-11-01, reverted 2026-11-07; single form today |
-| Web create button labelled **Create ledger** | Lost in the revert: the restored form says **Save** again (native says **Create**) |
+| Web create button labelled **Create ledger** | Lost in the revert, restored with w3/m62 |
 | Zero-ledger landing on welcome | Not built |
 | Next step after creation | Not built |
 | Language from `Accept-Language`, saved `locale`, CLI locale prefill | Not built |
-| Currency suggestion on screen | Reverted with the guided screens |
+| Currency suggestion on screen | Reverted with the guided screens. Since w3/m62 the single form has one Currency field for Starter, prefilled from the saved `defaultCurrency`, then the device or browser region, then USD, with no source label or time-zone candidate. `createLedger` takes an optional `currency`; a request without it is unchanged |
 | Sign-up currency for the default ledger | Not built |
 | Local-to-hosted `--from`, example experience before sign-up | Not built |
 

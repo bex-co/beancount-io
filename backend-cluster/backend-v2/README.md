@@ -594,7 +594,10 @@ or MCP `createLedger` uses the **STARTER** template by default (also for an omit
 or null template). Starter includes options and account scaffolding, with no
 transactions or opening balances. Choose **SAMPLE** for a populated demonstration
 ledger. Template changes apply only to newly created ledgers; existing books are
-not rewritten.
+not rewritten. An optional `currency` (an ISO 4217 code such as `EUR`) sets a
+Starter's operating currency; without it the Starter is in `USD`, exactly as
+before the argument existed. It is refused with `SAMPLE` or a `setup`, which
+takes `setup.operatingCurrency` instead (w3/m62).
 
 ### OpenAI-compatible model proxy
 

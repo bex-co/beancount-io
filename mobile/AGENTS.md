@@ -200,6 +200,8 @@ The Apollo cache is persisted and restored before first render, so the client's 
 
 `src/generated-graphql/` is produced by `yarn codegen` (config in `codegen.ts`, `apollo.config.json`) and ignored by ESLint. Re-run codegen after schema changes; never hand-edit.
 
+A store build talks to servers older than itself: the hosted API before its deploy, and self-hosted servers nobody has upgraded. A server validates the whole document before running it, so adding a field or an argument to an existing document breaks it on every older server, even when the variable is null. Put the addition in its own document and send it only when the request needs it, keeping the old document byte-for-byte for every other case; recognise a refusal with `isUnsupportedDocumentError` (`src/common/graphql-unsupported.ts`) and fall back or say what the server cannot do. Check both documents against `src/common/__tests__/fixtures/older-server.schema.graphql`, which stays apart from the regenerated snapshot. Examples: the errors read (w21/591), and `CreateLedgerInCurrency`, sent only for a Starter in a currency other than USD (w3/m62). Deploy the backend before releasing an app that sends a new document.
+
 ### Screens
 
 Screens live in `src/screens/<name>/` and are mounted from a route file under `app/`. Use `SafeAreaView` for spacing.
