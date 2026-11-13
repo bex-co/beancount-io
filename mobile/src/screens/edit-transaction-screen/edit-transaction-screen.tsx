@@ -28,6 +28,7 @@ import { useUnsavedChangesGuard } from "@/common/hooks/use-unsaved-changes-guard
 import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useSession } from "@/common/hooks/use-session";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { ColorTheme } from "@/types/theme-props";
 import {
   GetLedgerEntryContextDocument,
@@ -92,6 +93,7 @@ const getStyles = (theme: ColorTheme) =>
       paddingTop: 12,
       paddingBottom: 8,
       lineHeight: 18,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     editorWrapper: {
       flex: 1,
@@ -115,6 +117,7 @@ const getStyles = (theme: ColorTheme) =>
       lineHeight: 18,
       paddingHorizontal: 16,
       paddingBottom: 8,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     accessoryWrapper: {
       position: "absolute",

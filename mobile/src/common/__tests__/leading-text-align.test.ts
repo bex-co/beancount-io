@@ -19,6 +19,9 @@ const SURFACES: [string, string][] = [
   ["screens/add-budget-screen/add-budget-screen.tsx", "error"],
   ["screens/referral-screen/components/invite-section.tsx", "title"],
   ["screens/referral-screen/components/invite-section.tsx", "summary"],
+  // Edit Transaction's instruction line and its save error (w22/049).
+  ["screens/edit-transaction-screen/edit-transaction-screen.tsx", "hint"],
+  ["screens/edit-transaction-screen/edit-transaction-screen.tsx", "errorText"],
   // The valuation sheet's title beside Done and each holding beside its price
   // date (w22/047).
   ["components/valuation-sheet/index.tsx", "title"],
