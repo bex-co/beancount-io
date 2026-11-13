@@ -144,9 +144,6 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.error,
       textAlign: "center",
     },
-    // The shared Button has no disabled look; here it matters, because an
-    // untouched form is the common state and Save must read as unavailable.
-    saveDisabled: { opacity: 0.4 },
     skeletonAvatar: { borderRadius: AVATAR_SIZE / 2 },
     skeletonCard: { gap: space.sm },
   });
@@ -201,16 +198,14 @@ function ProfileFooter({
       {rootError ? (
         <InlineError style={styles.formError} message={rootError} />
       ) : null}
-      <View style={!canSave && !isSubmitting ? styles.saveDisabled : null}>
-        <Button
-          testID="profile-save"
-          onPress={onSave}
-          disabled={!canSave}
-          loading={isSubmitting}
-        >
-          {t("save")}
-        </Button>
-      </View>
+      <Button
+        testID="profile-save"
+        onPress={onSave}
+        disabled={!canSave}
+        loading={isSubmitting}
+      >
+        {t("save")}
+      </Button>
     </View>
   );
 }

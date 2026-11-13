@@ -72,6 +72,13 @@ const getButtonStyles = (theme: ColorTheme) => {
     buttonLoading: {
       marginEnd: 8,
     },
+    // The sighted cue for an action that is not available, at the strength the
+    // app's other unavailable controls use (Profile and Edit Transaction's
+    // Save, the star button while it waits). Without it a disabled Apply in
+    // the filter sheet read as live while tapping it did nothing (w22/037).
+    buttonDisabled: {
+      opacity: 0.4,
+    },
   });
 };
 
@@ -88,6 +95,10 @@ export const Button = (props: ButtonProps) => {
   // callback form. The colors below are unchanged either way.
   const [pressed, setPressed] = useState(false);
 
+  // A loading button is busy, not unavailable: it keeps full strength and its
+  // spinner, which is the cue (Profile's Save while it submits).
+  const dimmed = Boolean(props.disabled) && !props.loading;
+
   const buttonStyle = useMemo(() => {
     switch (type) {
       case "primary":
@@ -96,6 +107,7 @@ export const Button = (props: ButtonProps) => {
           styles.buttonBase,
           styles.buttonPrimary,
           pressed && styles.buttonPrimaryPressed,
+          dimmed && styles.buttonDisabled,
         ];
       case "outline":
         return [
@@ -103,9 +115,10 @@ export const Button = (props: ButtonProps) => {
           styles.buttonBase,
           styles.buttonOutline,
           pressed && styles.buttonOutlinePressed,
+          dimmed && styles.buttonDisabled,
         ];
     }
-  }, [styles, type, props.style, pressed]);
+  }, [styles, type, props.style, pressed, dimmed]);
 
   const handlePressIn = useCallback(() => setPressed(true), []);
   const handlePressOut = useCallback(() => setPressed(false), []);

@@ -489,6 +489,53 @@ describe("Button live font-scale remeasurement", () => {
   });
 });
 
+// A disabled Button reads as unavailable (w22/037): the filter sheet's Apply was
+// pixel-identical with and without a valid range, and only the inline error said
+// why tapping it did nothing. A loading Button is busy, not unavailable.
+describe("Button disabled look", () => {
+  const { Button } = load("components/button/index.tsx", {
+    "react-native": reactNative,
+    "@/common/hooks/use-theme-style": themeHooks,
+  });
+  const flatStyle = (style: unknown): Record<string, unknown> =>
+    Array.isArray(style)
+      ? Object.assign({}, ...style.map(flatStyle))
+      : style && typeof style === "object"
+        ? (style as Record<string, unknown>)
+        : {};
+  const opacityOf = (props: Record<string, unknown>) =>
+    flatStyle(render(Button, { children: "Apply", ...props }).props.style)
+      .opacity;
+
+  it("dims a disabled button, whichever type it is", () => {
+    expect(opacityOf({ disabled: true })).toBe(0.4);
+    expect(opacityOf({ disabled: true, type: "outline" })).toBe(0.4);
+  });
+
+  it("leaves an enabled button at full strength", () => {
+    expect(opacityOf({})).toBe(undefined);
+    expect(opacityOf({ disabled: false, type: "outline" })).toBe(undefined);
+  });
+
+  it("keeps a loading button at full strength, disabled or not", () => {
+    expect(opacityOf({ loading: true })).toBe(undefined);
+    expect(opacityOf({ loading: true, disabled: true })).toBe(undefined);
+  });
+
+  it("still tells a screen reader it is disabled, dimmed or loading", () => {
+    // Read field by field: the object is built inside the vm context, so a
+    // deep comparison with a literal from this one never matches.
+    const state = (props: Record<string, unknown>) => {
+      const { disabled, busy } = render(Button, { children: "Apply", ...props })
+        .props.accessibilityState;
+      return [disabled, busy];
+    };
+    expect(state({ disabled: true })).toEqual([true, false]);
+    expect(state({ loading: true })).toEqual([true, true]);
+    expect(state({})).toEqual([false, false]);
+  });
+});
+
 // Home's lower cards (w21/015): Spending's subtitle, Budget's rows and empty
 // line, and Latest Updates' rows clipped or left blank bands after a live
 // text-size change. The Files rows and the Reports note (w22/008) did the same.
