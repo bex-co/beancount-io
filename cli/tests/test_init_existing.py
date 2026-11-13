@@ -373,3 +373,15 @@ def test_a_long_chart_points_at_a_query_that_lists_every_open_account(tmp_path: 
     )
     assert listed.returncode == 0, listed.stderr
     assert len(json.loads(listed.stdout)["data"]["rows"]) == 34
+
+
+def test_a_root_whose_path_the_loader_would_expand_is_refused(tmp_path: Path) -> None:
+    # Beancount expands `$VAR` in the root path, so it would describe another
+    # ledger than the one the agent files land beside; plain `init` refuses it too.
+    books = tmp_path / "vars"
+    books.mkdir()
+    (books / "$HOME.bean").write_text("2025-01-01 open Assets:Cash\n")
+    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 2, run.stdout
+    assert "'$'" in run.stderr or "$HOME" in run.stderr
+    assert not (books / "AGENTS.md").exists()

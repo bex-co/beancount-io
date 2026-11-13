@@ -1,6 +1,6 @@
 # w1 · m42 — Bring an existing Beancount ledger to `bea` and a coding agent
 
-**Worker:** worker1 **Goal:** someone who already keeps a Beancount ledger, with their own root file name, `include` tree and plugins, installs `bea`, runs one documented command, and has a coding agent answer a question about that ledger in minutes, without a single ledger file changing. **Status:** in progress (t001–t005, t007, t008 done; t006 blocked on Codex sign-in)
+**Worker:** worker1 **Goal:** someone who already keeps a Beancount ledger, with their own root file name, `include` tree and plugins, installs `bea`, runs one documented command, and has a coding agent answer a question about that ledger in minutes, without a single ledger file changing. **Status:** in progress (t001–t005, t007–t009 done; t006 blocked on Codex sign-in; t010 waits on t006)
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Rehearse the guide on Claude Code and Codex from a fresh install — **BLOCKED** (Codex sign-in; Claude Code passed) | 45m | t005 |
 | t007 | Adoption surface — **DONE** | 30m | t005 |
 | t008 | Simplify — **DONE** | 15m | t007 |
-| t009 | Test coverage | 45m | t007, t008 |
+| t009 | Test coverage — **DONE** | 45m | t007, t008 |
 | t010 | Closeout | 15m | t006, t009 |
 
 Re-sequenced 2026-11-13: Adoption surface (t007) now follows t005, and Closeout (t010) waits on t006. Adoption surface, Simplify and Test coverage do not need the Codex run, so only closing the milestone waits on it, as w1/m41 did with its production check.
