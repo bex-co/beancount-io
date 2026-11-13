@@ -649,7 +649,7 @@ def _output_ledger_members(ledger: Path) -> list[Path]:
             if directory in searched:
                 continue
             searched.add(directory)
-            for candidate in _ledger_candidates(directory):
+            for candidate in ledger_candidates(directory):
                 if opened >= 64:
                     return members
                 try:
@@ -678,7 +678,7 @@ def _output_ledger_members(ledger: Path) -> list[Path]:
     return members
 
 
-def _ledger_candidates(directory: Path) -> list[Path]:
+def ledger_candidates(directory: Path) -> list[Path]:
     """The ledger files in a directory, `.bean` first, whatever case their suffix is spelled in.
 
     `glob("*.bean")` matches case-sensitively on POSIX, even on a

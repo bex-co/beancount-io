@@ -19,16 +19,16 @@ import typer
 
 from cli import context, existing_report, output
 from cli.agent_guidance import (
+    baseline_errors,
     beside_ledger_plugins,
     check_command,
-    error_count,
     write_agent_files,
     write_existing_agent_files,
 )
 from cli.amounts import parse_decimal_number
 from cli.errors import AuthError, ConflictError, UsageError
 from cli.paths import expand_path
-from cli.utils import inert_text, parse_date
+from cli.utils import inert_text, parse_date, shell_path
 
 # Must match `bea_engine.initiating.ACCOUNTS` — the engine builds the template;
 # the frontend only uses this list to validate interactive opening balances.
@@ -228,37 +228,6 @@ def _opening_amount(value: str) -> Decimal:
         raise typer.BadParameter(str(exc)) from exc
 
 
-_ANY_CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]")
-
-
-def _quoted(path: str) -> str:
-    """One shell word for `path`; a control byte is rebuilt by `printf` from its octal escape.
-
-    The hint is replayed from a pipe, where Click strips ANSI sequences from
-    what it prints, and on a terminal a raw control would repaint the screen
-    (w5/887). `shlex.quote` alone keeps the byte, so the line named another
-    path or acted on the terminal. The spelling is plain ASCII.
-    """
-    if not _ANY_CONTROL.search(path):
-        return shlex.quote(path)
-    spelled = "".join(
-        "".join(f"\\{byte:03o}" for byte in char.encode())
-        if _ANY_CONTROL.fullmatch(char)
-        else {"\\": "\\\\", "%": "%%"}.get(char, char)
-        for char in path
-    )
-    return f'"$(printf {shlex.quote(spelled)})"'
-
-
-def _shell_path(shown: str) -> str:
-    """Quote a path for a copy-pasteable command, leaving a leading `~` for the shell to expand."""
-    if shown == "~":
-        return shown
-    if shown.startswith("~/"):
-        return "~/" + _quoted(shown[2:])
-    return _quoted(shown)
-
-
 def _in_working_directory(file: Path) -> bool:
     """Whether `file` is the `main.bean` a bare `bea` run here would discover.
 
@@ -288,68 +257,63 @@ def _folds_case(directory: Path) -> bool:
     return False
 
 
-#: Ledger file suffixes a directory is searched for under `--existing`.
-_LEDGER_SUFFIXES = (".bean", ".beancount")
-
-
 def _existing_root(directory: Path) -> Path:
     """The root ledger `--existing` describes: named outright, or the one a directory holds.
 
-    `--file` or a file argument names it. A directory uses bea's own discovery
-    (`main.bean`, then `main.beancount`), then its only top-level ledger file;
-    with several and no default name it is never guessed (w1/m42/t001).
+    `--file` or a file argument names it; a directory goes through
+    `_root_in_directory`. Never guessed (w1/m42/t001).
     """
-    from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS
-
     ctx = context.current()
     if ctx.file is not None:
         if directory != Path("."):
             raise UsageError("Choose either --file or an init directory, not both.")
-        candidate = expand_path(ctx.file, "--file").absolute()
-        source = "--file"
+        candidate, source = expand_path(ctx.file, "--file").absolute(), "--file"
     else:
         target = expand_path(directory, "init directory").absolute()
+        candidate = _root_in_directory(target) if target.is_dir() else target
         source = "the init argument"
-        if target.is_dir():
-            for name in DEFAULT_ENTRY_FILE_FALLBACKS:
-                if os.path.lexists(target / name):
-                    candidate = target / name
-                    break
-            else:
-                found = sorted(
-                    entry
-                    for entry in target.iterdir()
-                    if entry.suffix in _LEDGER_SUFFIXES and entry.is_file() and not entry.name.startswith(".")
-                )
-                shown = _shell_path(str(target))
-                if not found:
-                    raise UsageError(
-                        f"No .bean or .beancount ledger in {target}. Name the root file: bea init --existing PATH."
-                    )
-                # A file another candidate includes is not a root; what is
-                # left is read from the include lines, not guessed.
-                included = {
-                    os.path.abspath(member)
-                    for entry in found
-                    for member in output.ledger_closure(entry)
-                    if os.path.abspath(member) != os.path.abspath(entry)
-                }
-                roots = [entry for entry in found if os.path.abspath(entry) not in included] or found
-                if len(roots) > 1:
-                    names = ", ".join(entry.name for entry in roots[:10])
-                    more = f", and {len(roots) - 10} more" if len(roots) > 10 else ""
-                    raise UsageError(
-                        f"{target} holds several ledger files that no other file includes ({names}{more}) and no "
-                        f"main.bean. Name the root: bea init --existing {shown}/{_shell_path(roots[0].name)}"
-                    )
-                candidate = roots[0]
-        else:
-            candidate = target
     if not candidate.exists():
         raise UsageError(f"No ledger file at '{candidate}' (from {source}). Nothing was written.")
     if not candidate.is_file():
         raise UsageError(f"Ledger path '{candidate}' (from {source}) is not a regular file. Nothing was written.")
+    # As plain `init` does: the loader expands `$VAR` in a root path, so it
+    # would describe another ledger than the one the agent files sit beside.
+    context.refuse_expanding_ledger_path(str(candidate))
     return candidate
+
+
+#: How many root candidates a refusal names before it counts the rest.
+_LISTED_ROOTS = 10
+
+
+def _root_in_directory(target: Path) -> Path:
+    """bea's own default names, else the one ledger file there that no other file includes."""
+    from cli.config import default_entry
+
+    default = default_entry(target)
+    if default is not None:
+        return default
+    # Suffixes in any case (w5/865); a hidden file is never a root here.
+    found = [entry for entry in output.ledger_candidates(target) if entry.is_file() and not entry.name.startswith(".")]
+    if not found:
+        raise UsageError(f"No .bean or .beancount ledger in {target}. Name the root file: bea init --existing PATH.")
+    # A file another candidate includes is not a root; what is left is read
+    # from the include lines, not guessed.
+    included = {
+        os.path.abspath(member)
+        for entry in found
+        for member in output.ledger_closure(entry)
+        if os.path.abspath(member) != os.path.abspath(entry)
+    }
+    roots = [entry for entry in found if os.path.abspath(entry) not in included] or found
+    if len(roots) > 1:
+        names = ", ".join(entry.name for entry in roots[:_LISTED_ROOTS])
+        more = f", and {len(roots) - _LISTED_ROOTS} more" if len(roots) > _LISTED_ROOTS else ""
+        raise UsageError(
+            f"{target} holds several ledger files that no other file includes ({names}{more}) and no main.bean. "
+            f"Name the root: bea init --existing {shell_path(str(target))}/{shell_path(roots[0].name)}"
+        )
+    return roots[0]
 
 
 def _init_existing(directory: Path) -> None:
@@ -360,9 +324,9 @@ def _init_existing(directory: Path) -> None:
     root = _existing_root(directory)
     description = launch.helper_json(["describe", "--file", str(root)])
     if beside_ledger_plugins(description):
-        check = f"cd {_shell_path(str(root.parent))} && {check_command(root.name, description)}"
+        check = f"cd {shell_path(str(root.parent))} && {check_command(root.name, pythonpath=True)}"
     else:
-        check = f"bea --file {_shell_path(str(root))} check"
+        check = f"bea --file {shell_path(str(root))} check"
     items = existing_report.attention(description, check)
     data: dict[str, Any] = {
         **description,
@@ -380,12 +344,10 @@ def _init_existing(directory: Path) -> None:
         f"account{'s' if accounts != 1 else ''}, {currencies}. No ledger file was changed."
     )
     _report_agent_files(data["agent_files"])
-    count = error_count(description)
-    # Unless a plugin kept beside the ledger did not load: the report says how
-    # to load it, and what the ledger reports then was not measured here.
-    if count and not any(
-        not plugin["loaded"] and plugin["source"] == "beside-ledger" for plugin in description["plugins"]
-    ):
+    # None when a plugin kept beside the ledger did not load: the report says
+    # how to load it, and what the ledger reports then was not measured here.
+    count = baseline_errors(description)
+    if count:
         output.note(
             f"The ledger loads with {count} error{'s' if count != 1 else ''} today; AGENTS.md asks agents to add none."
         )
@@ -513,7 +475,7 @@ def init(
             raise ConflictError(
                 f"Already exists: {file}. Choose a new path; init never overwrites a ledger. "
                 f"To set up this ledger for bea and coding agents without changing it: "
-                f"bea init --existing {_shell_path(str(file))}"
+                f"bea init --existing {shell_path(str(file))}"
             )
         # Refuse shadowing a sibling default root ledger (cwd discovery prefers main.bean).
         default_names = {name.name for name in DEFAULT_ENTRY_FILE_FALLBACKS}
@@ -639,13 +601,13 @@ def init(
             shown = str(file)
         # Use the same target in every hint. A custom filename needs --file,
         # as does BEA_FILE overriding discovery after the suggested cd.
-        bea = f"bea --file {_shell_path(shown)}" if os.environ.get("BEA_FILE") or file.name != "main.bean" else "bea"
+        bea = f"bea --file {shell_path(shown)}" if os.environ.get("BEA_FILE") or file.name != "main.bean" else "bea"
         if bea != "bea":
             next_command = f"{bea} check"
         elif _in_working_directory(file):
             next_command = "bea check"
         else:
-            next_command = f"cd {_shell_path(shown.rpartition('/')[0])} && bea check"
+            next_command = f"cd {shell_path(shown.rpartition('/')[0])} && bea check"
         typer.echo(f"Next: {next_command}")
         if accounts:
             # The preset builder opens accounts the day before the boundary when it posts an opening balance.

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -17,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from cli.agent_guidance import EXISTING_TEMPLATE
-from tests.report_helpers import CLI_ROOT, bea, run_env
+from tests.report_helpers import CLI_ROOT, _run, bea, run_env
 
 SKILL_TEMPLATE = CLI_ROOT.parent / "skills" / "beancount-init" / "references" / "agents-template.md"
 
@@ -73,6 +74,8 @@ def test_a_multi_file_ledger_is_described_as_it_is_and_left_unchanged(tmp_path: 
     assert "run `bea --file household.beancount check` from this folder. The root check must pass" in agents
     assert (books / "CLAUDE.md").read_text() == "@AGENTS.md\n"
     assert "Read household.beancount: 3 files, 2 open accounts, EUR. No ledger file was changed." in run.stdout
+    # A clean ledger needs no attention and claims no errors.
+    assert "Needs attention" not in run.stdout and "error" not in run.stderr
     # Exactly the two agent files were added: no cache, bytecode or Git state.
     assert sorted(p.name for p in books.iterdir()) == [
         "2025.bean",
@@ -81,13 +84,6 @@ def test_a_multi_file_ledger_is_described_as_it_is_and_left_unchanged(tmp_path: 
         "accounts.bean",
         "household.beancount",
     ]
-
-
-def test_a_folder_resolves_to_the_one_file_nothing_else_includes(tmp_path: Path) -> None:
-    books = _books(tmp_path)
-    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
-    assert run.returncode == 0, run.stderr
-    assert "`household.beancount`" in (books / "AGENTS.md").read_text()
 
 
 def test_a_folder_with_two_roots_is_refused_and_nothing_is_written(tmp_path: Path) -> None:
@@ -109,6 +105,16 @@ def test_bea_default_names_win_in_a_folder(tmp_path: Path) -> None:
         "The root file is\n`main.bean`, which includes no other files. Put new entries in `main.bean`."
         in (books / "AGENTS.md").read_text()
     )
+
+
+def test_the_global_file_option_names_the_root(tmp_path: Path) -> None:
+    books = _books(tmp_path)
+    (books / "other.beancount").write_text('option "title" "Other"\n')
+    run = bea(["--no-input", "--file", str(books / "household.beancount"), "init", "--existing"], tmp_path)
+    assert run.returncode == 0, run.stderr
+    assert "`household.beancount`; it includes 2 other files" in (books / "AGENTS.md").read_text()
+    both = bea(["--no-input", "--file", str(books / "household.beancount"), "init", "--existing", str(books)], tmp_path)
+    assert both.returncode == 2 and "Choose either --file or an init directory" in both.stderr
 
 
 def test_file_and_directory_targets_are_refused_by_name(tmp_path: Path) -> None:
@@ -163,11 +169,10 @@ def test_a_ledger_with_errors_gets_its_files_and_a_count(tmp_path: Path) -> None
 
 
 def _bea_with_pythonpath(tmp_path: Path, cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    """`bea` run from `cwd` with `PYTHONPATH=.` added, as AGENTS.md tells agents to."""
     env = run_env(tmp_path)
-    env["PYTHONPATH"] = f"{env['PYTHONPATH']}:."
-    return subprocess.run(
-        [sys.executable, "-m", "cli.main", *args], env=env, cwd=cwd, capture_output=True, text=True, timeout=300
-    )
+    env["PYTHONPATH"] = f"{env['PYTHONPATH']}{os.pathsep}."
+    return _run([sys.executable, "-m", "cli.main", *args], env, cwd)
 
 
 def test_a_plugin_kept_beside_the_ledger_puts_pythonpath_in_the_check(tmp_path: Path) -> None:
@@ -218,7 +223,7 @@ def test_json_names_the_ledger_and_what_happened_to_each_file(tmp_path: Path) ->
     assert data["files"] == ["2025.bean", "accounts.bean"]
     assert data["operating_currencies"] == ["EUR"]
     assert data["open_accounts"] == ["Assets:Bank:Checking", "Equity:Opening"]
-    assert data["plugins"] == [] and data["errors"] == []
+    assert data["plugins"] == [] and data["errors"] == [] and data["attention"] == []
     assert data["agent_files"] == {"AGENTS.md": "created", "CLAUDE.md": "created"}
 
 
@@ -310,15 +315,6 @@ def test_the_text_report_lists_every_problem_with_its_next_step(tmp_path: Path) 
     assert report[-1].startswith("    Next: see every error with cd ")
 
 
-def test_a_clean_ledger_needs_no_attention(tmp_path: Path) -> None:
-    books = _books(tmp_path)
-    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
-    assert run.returncode == 0, run.stderr
-    assert "Needs attention" not in run.stdout and "error" not in run.stderr
-    run = bea(["--no-input", "--json", "init", "--existing", str(books)], tmp_path)
-    assert json.loads(run.stdout)["data"]["attention"] == []
-
-
 def test_a_plugin_that_raises_is_reported_as_failing_while_running(tmp_path: Path) -> None:
     books = tmp_path / "raising"
     books.mkdir()
@@ -330,3 +326,50 @@ def test_a_plugin_that_raises_is_reported_as_failing_while_running(tmp_path: Pat
     assert env_run.returncode == 0, env_run.stderr
     items = json.loads(env_run.stdout)["data"]["attention"]
     assert [(item["kind"], item["subject"]) for item in items] == [("plugin-failed", "boom")]
+
+
+def test_errors_keep_their_location_when_the_folder_name_holds_a_colon(tmp_path: Path) -> None:
+    # Locations come from the loader's records, never from splitting a
+    # rendered "file:line: message", so a folder named "Books: 2024" is whole.
+    books = tmp_path / "Books: 2024"
+    books.mkdir()
+    (books / "main.bean").write_text('option "booking_algorithm" "FIFO"\n2025-01-01 open Assets:Cash\n')
+    run = bea(["--no-input", "--json", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    data = json.loads(run.stdout)["data"]
+    assert data["errors"] == [
+        {
+            "file": str(books / "main.bean"),
+            "line": 1,
+            "message": "Invalid option: 'booking_algorithm'",
+            "option": "booking_algorithm",
+        }
+    ]
+    assert [(item["kind"], item["location"]) for item in data["attention"]] == [("option-unknown", "main.bean:1")]
+
+
+def test_a_plugin_on_the_first_line_after_a_bom_is_located(tmp_path: Path) -> None:
+    books = tmp_path / "bom"
+    books.mkdir()
+    (books / "main.bean").write_bytes(b'\xef\xbb\xbfplugin "no_such_package.plugin"\n2025-01-01 open Assets:Cash\n')
+    run = bea(["--no-input", "--json", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    plugin = json.loads(run.stdout)["data"]["plugins"][0]
+    assert (plugin["file"], plugin["line"]) == (str(books / "main.bean"), 1)
+
+
+def test_a_long_chart_points_at_a_query_that_lists_every_open_account(tmp_path: Path) -> None:
+    books = tmp_path / "big"
+    books.mkdir()
+    opens = "".join(f"2025-01-01 open Assets:Bank:A{n:02d}\n" for n in range(35))
+    (books / "main.bean").write_text(opens + "2025-06-01 close Assets:Bank:A00\n")
+    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    agents = (books / "AGENTS.md").read_text()
+    query = 'bea --file main.bean query "SELECT account FROM #accounts WHERE close IS NULL"'
+    assert "Open accounts: 34, including Assets:Bank:A01" in agents and f"(run `{query}` for all)" in agents
+    listed = bea(
+        ["--file", str(books / "main.bean"), "--json", "query", query.split("query ", 1)[1].strip('"')], tmp_path
+    )
+    assert listed.returncode == 0, listed.stderr
+    assert len(json.loads(listed.stdout)["data"]["rows"]) == 34

@@ -78,7 +78,7 @@ doing money arithmetic, and a float would silently round.
 
 | command                             | answers                                                    |
 | ----------------------------------- | ---------------------------------------------------------- |
-| `describe --file PATH`              | `{"root", "files", "operating_currencies", "open_accounts", "plugins", "errors", "unknown_options", "beancount_version"}` for `bea init --existing`; each plugin says whether it `loaded` and its `source` (`beancount`, `beside-ledger`, `package`); never fails for ledger errors |
+| `describe --file PATH`              | `{"root", "files", "operating_currencies", "open_accounts", "plugins", "errors", "beancount_version"}` for `bea init --existing`; each plugin has its `file`/`line`, whether it `loaded`, and its `source` (`beancount`, `beside-ledger`, `package`); each error is `{file, line, message, option}`; never fails for ledger errors |
 | `check --file PATH`                 | `{"valid": true, "errors": []}`; with `--documents-only`, a failed plugin answers `{"valid": false, "errors": [...], "plugin_failures": [...]}` |
 | `query --file PATH --query BQL`     | the query's columns and rows                               |
 | `list --file PATH --type TYPE`      | `{"items": [...], "truncated": false, "errors": []}`       |

@@ -619,9 +619,11 @@ Nothing else changes: no ledger file is written, an existing `AGENTS.md` or
 repository is created or staged. A ledger with errors still gets its files;
 the command says how many errors it loads with and exits **0**. In JSON mode
 `data` holds the root, `files`, `operating_currencies`, `open_accounts`,
-`plugins` (each with `loaded` and `source`: `beancount`, `beside-ledger` or
-`package`), `errors`, `unknown_options`, `attention` (each item's `kind`,
-`location`, `subject`, `message` and `next`), and `agent_files`.
+`plugins` (each with its `file` and `line`, `loaded`, and `source`:
+`beancount`, `beside-ledger` or `package`), `errors` (each with `file`,
+`line`, `message`, and `option` when it is an option Beancount does not
+know), `attention` (each item's `kind`, `location`, `subject`, `message` and
+`next`), and `agent_files`.
 
 ## Checking, formatting, querying
 

@@ -27,9 +27,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-_PLUGIN_LINE = re.compile(r'^plugin\s+"((?:[^"\\]|\\.)*)"')
-_IMPORT_FAILURE = re.compile(r'^Error importing "([^"]+)":')
-_RUN_FAILURE = re.compile(r'^Error applying plugin "([^"]+)":')
 _UNKNOWN_OPTION = re.compile(r"^Invalid option: '([^']*)'$")
 
 
@@ -38,7 +35,7 @@ def describe(file: Path) -> dict[str, Any]:
     from beancount.core.data import Close, Open
 
     from bea_engine.managed_load import data_type_errors
-    from bea_engine.query import format_error, is_plugin_failure
+    from bea_engine.query import format_error, plugin_directive, plugin_failure
     from fava.core.loader import load_file
 
     loaded = load_file(str(file))
@@ -49,24 +46,18 @@ def describe(file: Path) -> dict[str, Any]:
     files = sorted(Path(path) for path in options.get("include") or () if Path(path) != file)
     opened = {str(entry.account) for entry in entries if isinstance(entry, Open)}
     closed = {str(entry.account) for entry in entries if isinstance(entry, Close)}
-    failures: dict[str, tuple[str, str]] = {}
+    failures: dict[str, tuple[bool, str]] = {}
+    others: list[Any] = []
     for error in errors:
-        message = getattr(error, "message", "")
-        if not isinstance(message, str):
-            continue
-        for pattern, kind in ((_IMPORT_FAILURE, "import"), (_RUN_FAILURE, "run")):
-            match = pattern.match(message)
-            if match is not None:
-                failures.setdefault(match[1], (kind, format_error(error, ledger_file=file)))
-    locations = _plugin_locations([file, *files])
+        failure = plugin_failure(error)
+        if failure is None:
+            others.append(error)
+        else:
+            failures.setdefault(failure[1], (failure[0], format_error(error, ledger_file=file)))
+    # Beancount keeps only the root's options, so only its `plugin` lines count.
     plugins = [
-        _plugin(name, locations.get(name), failures.get(name), folder) for name, _config in options.get("plugin") or ()
-    ]
-    others = [error for error in errors if not is_plugin_failure(error)]
-    unknown = [
-        {"name": match[1], "location": format_error(error, ledger_file=file).split(": Invalid option", 1)[0]}
-        for error in others
-        if isinstance(getattr(error, "message", None), str) and (match := _UNKNOWN_OPTION.match(error.message))
+        _plugin(name, plugin_directive(file, name, config), failures.get(name), folder)
+        for name, config in options.get("plugin") or ()
     ]
     others += data_type_errors(entries, options)
     from beancount import __version__ as beancount_version
@@ -77,12 +68,24 @@ def describe(file: Path) -> dict[str, Any]:
         "operating_currencies": [str(value) for value in options.get("operating_currency") or ()],
         "open_accounts": sorted(opened - closed),
         "plugins": plugins,
-        "errors": [format_error(error, ledger_file=file) for error in others],
-        # A subset of `errors`: options this Beancount does not know, which is
-        # how a Beancount 2 option removed in Beancount 3 reads.
-        "unknown_options": unknown,
+        "errors": [_error(error, format_error(error, ledger_file=file), file) for error in others],
         "beancount_version": beancount_version,
     }
+
+
+def _error(error: Any, formatted: str, root: Path) -> dict[str, Any]:
+    """One loader error as `{file, line, message, option}`, read from the error, not its rendering.
+
+    `option` names an option this Beancount does not know, which is how a
+    Beancount 2 option removed in Beancount 3 reads.
+    """
+    source = getattr(error, "source", None) or {}
+    filename, line = str(source.get("filename") or root), int(source.get("lineno") or 0)
+    prefix = f"{source.get('filename', '<ledger>')}:{source.get('lineno', 0)}: "
+    message = formatted.removeprefix(prefix)
+    raw = getattr(error, "message", None)
+    match = _UNKNOWN_OPTION.match(raw) if isinstance(raw, str) else None
+    return {"file": filename, "line": line, "message": message, "option": match[1] if match else None}
 
 
 def _relative(path: Path, folder: Path) -> str:
@@ -92,38 +95,24 @@ def _relative(path: Path, folder: Path) -> str:
         return str(path)
 
 
-def _plugin_locations(files: list[Path]) -> dict[str, str]:
-    """`file:line` of each plugin's first `plugin` line, read from the loaded files."""
-    found: dict[str, str] = {}
-    for path in files:
-        try:
-            lines = path.read_text(encoding="utf-8-sig").splitlines()
-        except (OSError, UnicodeDecodeError):
-            continue
-        for number, line in enumerate(lines, start=1):
-            match = _PLUGIN_LINE.match(line)
-            if match is not None:
-                found.setdefault(match[1], f"{path}:{number}")
-    return found
-
-
-def _plugin(name: str, location: str | None, failure: tuple[str, str] | None, folder: Path) -> dict[str, Any]:
+def _plugin(
+    name: str, location: tuple[str, int] | None, failure: tuple[bool, str] | None, folder: Path
+) -> dict[str, Any]:
     top = name.split(".", 1)[0]
-    beside = _beside_ledger(top, folder)
     if top == "beancount":
         source = "beancount"
-    elif beside or _loaded_from(top, folder):
+    elif _beside_ledger(top, folder) or _loaded_from(top, folder):
         source = "beside-ledger"
     else:
         source = "package"
     return {
         "name": name,
-        "location": location,
+        "file": location[0] if location else None,
+        "line": location[1] if location else None,
         "loaded": failure is None,
         "source": source,
-        "directory": str(folder) if source == "beside-ledger" else None,
         "error": failure[1] if failure is not None else None,
-        "failed_while_running": failure is not None and failure[0] == "run",
+        "failed_while_running": failure is not None and failure[0],
     }
 
 

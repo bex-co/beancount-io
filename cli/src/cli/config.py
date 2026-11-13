@@ -13,6 +13,18 @@ DEFAULT_ENTRY_FILE = Path("main.bean")
 DEFAULT_ENTRY_FILE_FALLBACKS = (Path("main.bean"), Path("main.beancount"))
 
 
+def default_entry(directory: Path = Path(".")) -> Path | None:
+    """The root ledger bea finds in `directory`: `main.bean`, then `main.beancount`.
+
+    Present, not just a file: a dangling `main.bean` link or a `main.bean`
+    directory must not fall through to an older `main.beancount` (w5/295).
+    """
+    for name in DEFAULT_ENTRY_FILE_FALLBACKS:
+        if os.path.lexists(directory / name):
+            return directory / name
+    return None
+
+
 def _xdg_home(variable: str, default: Path) -> Path:
     """An XDG base directory, ignoring a relative value as the spec requires.
 

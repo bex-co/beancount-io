@@ -131,7 +131,7 @@ class RunContext:
         Cwd discovery prefers `./main.bean`, then `./main.beancount` when the
         `.bean` name is absent.
         """
-        from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS
+        from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS, default_entry
 
         candidate = expand_path(self.file, "--file") if self.file is not None else None
         source = "--file"
@@ -144,12 +144,7 @@ class RunContext:
             # `main.bean` directory fell through to an older `main.beancount`,
             # silently, and writes landed there while `init` refused the same
             # entry as an existing ledger (w5/295).
-            for name in DEFAULT_ENTRY_FILE_FALLBACKS:
-                if os.path.lexists(name):
-                    candidate, source = name, "the working directory"
-                    break
-            else:
-                candidate, source = DEFAULT_ENTRY_FILE, "the working directory"
+            candidate, source = default_entry() or DEFAULT_ENTRY_FILE, "the working directory"
 
         if is_descriptor_path(candidate):
             # A ledger needs a stable path for its includes and cache; a

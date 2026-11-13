@@ -3154,10 +3154,16 @@ _PLUGIN_FAILURE = re.compile(r'^Error (importing|applying plugin) "([^"]+)":\s*(
 _TXN_LOCATION = re.compile(r"Transaction\(meta=\{'filename': '([^']*)', 'lineno': (\d+)")
 
 
+def plugin_failure(error: Any) -> tuple[bool, str] | None:
+    """`(while_running, plugin name)` for a plugin that could not be imported or raised; else None."""
+    message = getattr(error, "message", error)
+    match = _PLUGIN_FAILURE.match(message) if isinstance(message, str) else None
+    return (match[1] == "applying plugin", match[2]) if match is not None else None
+
+
 def is_plugin_failure(error: Any) -> bool:
     """Whether a loader error is a plugin that could not be imported or raised while running."""
-    message = getattr(error, "message", error)
-    return isinstance(message, str) and _PLUGIN_FAILURE.match(message) is not None
+    return plugin_failure(error) is not None
 
 
 def format_error(error: Any, ledger_file: Path | str | None = None) -> str:
@@ -3360,7 +3366,7 @@ def _plugin_message(message: str, ledger_file: Path | str | None, source: Any) -
             # Bundled plugins such as currency_accounts take a configuration
             # string, and the raw TypeError never said so (w5/400).
             text += f' This plugin needs a configuration string: plugin "{name}" "CONFIG".'
-    location = _plugin_directive(ledger_file, name, config)
+    location = plugin_directive(ledger_file, name, config)
     if location is None:
         return f"<ledger>:0: {text}"
     return f"{location[0]}:{location[1]}: {text}"
@@ -3395,7 +3401,7 @@ def _exception_summary(traceback_text: str) -> str:
     return " ".join(block) if block else traceback_text.strip()
 
 
-def _plugin_directive(
+def plugin_directive(
     ledger_file: Path | str | None, name: str, config: Any = _UNKNOWN_CONFIG
 ) -> tuple[str, int] | None:
     """The `file, line` of the `plugin "name"` directive in the ledger source.
@@ -3408,7 +3414,8 @@ def _plugin_directive(
     directive = re.compile(rf"""^\s*plugin\s+"{re.escape(name)}"(?:\s+"((?:[^"\\]|\\.)*)")?""")
     try:
         # From bytes: `read_text` would turn a lone `\r` into an extra line.
-        lines = Path(ledger_file).read_bytes().decode("utf-8", errors="replace").split("\n")
+        # A BOM is not whitespace, so a directive on line 1 would be missed.
+        lines = Path(ledger_file).read_bytes().decode("utf-8", errors="replace").removeprefix("\ufeff").split("\n")
     except OSError:
         return None
     first: tuple[str, int] | None = None
