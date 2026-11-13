@@ -8,6 +8,7 @@ import {
 } from "@/common/components/ui/table";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { useFormatPercent } from "@/common/hooks/use-format-percent";
 import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { ChartDataTable } from "../../../components/chart-data-table";
 
@@ -25,6 +26,7 @@ export function DistributionDataTable({
 }) {
   const { t } = useTranslations();
   const formatNum = useFormatNumber();
+  const formatPercent = useFormatPercent();
   if (data.length === 0) return null;
   const total = data.reduce((sum, item) => sum + Math.abs(item.value), 0);
   return (
@@ -68,10 +70,7 @@ export function DistributionDataTable({
                 t("page.statistics.percentageNotApplicable")
               ) : (
                 <Amount>
-                  {formatNum(
-                    Number(((Math.abs(item.value) / total) * 100).toFixed(2)),
-                  )}
-                  %
+                  {formatPercent(Math.abs(item.value) / total, 2, 0)}
                 </Amount>
               )}
             </TableCell>

@@ -74,7 +74,6 @@
 
 ## Inbox
 
-- [133 — In Persian, Overview share-of-total and two chart tooltips write the percent sign (and tooltip digits) in Latin](./133.md) — dashboard counterpart of w22/042; use the `Intl` percent formatter Statistics already uses
 
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains — 2026-11-11: Claude works on the macOS checkout, but the candidates and Codex are only on the Linux runtime.
 

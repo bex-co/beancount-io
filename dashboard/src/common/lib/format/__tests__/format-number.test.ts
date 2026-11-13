@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   currencyMinorDigits,
   formatNumber,
+  formatPercent,
   fractionDigitsOf,
 } from "../format-number";
 
@@ -184,5 +185,27 @@ describe("ISO 4217 minor units", () => {
 
   it("leaves a commodity that is not an ISO currency alone", () => {
     expect(currencyMinorDigits("BTC")).toBe(undefined);
+  });
+});
+
+/** A share in the language's digits and percent sign (w2/133). */
+describe("formatPercent", () => {
+  it.each([
+    ["fa", 0.3422, 2, undefined, "۳۴٫۲۲٪"],
+    ["en", 0.3422, 2, undefined, "34.22%"],
+    ["en", 0.5, 2, 0, "50%"],
+    ["fa", 0.342, 1, undefined, "۳۴٫۲٪"],
+    ["en", 0, 1, undefined, "0.0%"],
+  ])("writes %s %s at %s digits", (locale, ratio, max, min, expected) => {
+    expect(formatPercent(ratio, locale, max, min)).toBe(expected);
+  });
+
+  it("follows the language's own spacing", () => {
+    expect(formatPercent(0.3422, "de", 2)).toBe(
+      new Intl.NumberFormat("de", {
+        style: "percent",
+        minimumFractionDigits: 2,
+      }).format(0.3422),
+    );
   });
 });

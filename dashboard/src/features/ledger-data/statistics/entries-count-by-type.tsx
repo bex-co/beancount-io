@@ -15,6 +15,7 @@ import {
 } from "@/graphql/definitions";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useFormatPercent } from "@/common/hooks/use-format-percent";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
@@ -80,11 +81,7 @@ function EntriesCountTable({
     .map((entry) => ({ ...entry, label: directiveTypeLabel(entry.type, t) }))
     .sort((a, b) => collator.compare(a.label, b.label));
   const totalCount = entries.reduce((sum, entry) => sum + entry.number, 0);
-  const formatPercentage = new Intl.NumberFormat(i18n.language, {
-    style: "percent",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
+  const formatPercent = useFormatPercent();
 
   return (
     <StatisticsSection
@@ -116,7 +113,7 @@ function EntriesCountTable({
           const percentage =
             totalCount === 0
               ? null
-              : formatPercentage.format(entry.number / totalCount);
+              : formatPercent(entry.number / totalCount, 1);
           return (
             <TableRow key={entry.type}>
               <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">

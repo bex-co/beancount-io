@@ -44,6 +44,25 @@ export const formatNumber = (
   );
 };
 
+/**
+ * A share written the language's way — `۳۴٫۲۲٪` in Persian, `34,22 %` in
+ * German, `34.22%` in English — from the ratio (0.3422), not the percentage.
+ * A literal `%` after formatted digits gave Persian digits a Latin sign, and a
+ * chart's own `toFixed` gave Latin digits (w2/133).
+ */
+export function formatPercent(
+  ratio: number,
+  locale: string,
+  maximumFractionDigits: number,
+  minimumFractionDigits = maximumFractionDigits,
+): string {
+  return numberFormat(locale, {
+    style: "percent",
+    minimumFractionDigits,
+    maximumFractionDigits,
+  }).format(ratio);
+}
+
 /** The most fraction digits Intl formats (ECMA-402 2023); a double gets 20. */
 const MAX_STRING_FRACTION_DIGITS = 100;
 

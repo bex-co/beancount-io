@@ -8,6 +8,7 @@ import type {
 import type { SerializableTreeNode } from "@/graphql/definitions";
 import { getTreeMapColors } from "@/common/lib/chart/color";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { useFormatPercent } from "@/common/hooks/use-format-percent";
 
 interface HierarchyTreeMapProps {
   data: SerializableTreeNode;
@@ -63,6 +64,7 @@ export function HierarchyTreeMap({
   currency = "USD",
 }: HierarchyTreeMapProps) {
   const formatNum = useFormatNumber();
+  const formatPercent = useFormatPercent();
   const chartOption = useMemo((): EChartsOption => {
     if (!initialData) {
       return {
@@ -175,16 +177,16 @@ export function HierarchyTreeMap({
           }
           const { name, value } = params;
           const numValue = typeof value === "number" ? value : 0;
-          const percentage =
-            totalValue !== 0
-              ? ((Math.abs(numValue) / Math.abs(totalValue)) * 100).toFixed(1)
-              : "0.0";
+          const percentage = formatPercent(
+            totalValue !== 0 ? Math.abs(numValue) / Math.abs(totalValue) : 0,
+            1,
+          );
 
           const formattedValue = formatNum(Math.round(numValue * 100) / 100);
 
-          // Fava-style tooltip: "{value} USD ({percentage}%) <em>{account}</em>"
+          // Fava-style tooltip: "{value} USD ({percentage}) <em>{account}</em>"
           return `<div style="padding: 6px 8px; font-size: 13px;">
-            ${formattedValue} ${currency} (${percentage}%)
+            ${formattedValue} ${currency} (${percentage})
             <br/><em style="color: var(--muted-foreground); font-style: italic;">${name}</em>
           </div>`;
         }) as TooltipComponentFormatterCallback<TooltipComponentFormatterCallbackParams>,
@@ -263,7 +265,7 @@ export function HierarchyTreeMap({
       animationDuration: 1000,
       animationEasing: "cubicOut",
     };
-  }, [initialData, title, inverse, currency, formatNum]);
+  }, [initialData, title, inverse, currency, formatNum, formatPercent]);
   return (
     <div className={className}>
       <ReactECharts option={chartOption} style={styles} />

@@ -7,6 +7,7 @@ import {
 } from "@/common/components/ui/card";
 import { ReactECharts } from "@/common/components/react-echarts";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { useFormatPercent } from "@/common/hooks/use-format-percent";
 import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import type { DistributionItem } from "../../lib/overview-utils";
@@ -27,6 +28,7 @@ export function DistributionPie({
   const isDark = useIsDarkTheme();
   const titleId = useId();
   const formatNum = useFormatNumber();
+  const formatPercent = useFormatPercent();
 
   const option = {
     tooltip: {
@@ -43,8 +45,9 @@ export function DistributionPie({
         const name = p.data.account ?? p.name ?? "";
         // The slice's own decimal, not the plotted double (w4/m53).
         const amount = p.data.exact;
-        const percent = p.percent ?? 0;
-        return `${name}: ${formatNum(amount, undefined, fractionDigitsOf(amount))} (${percent}%)`;
+        // ECharts gives the share as a percentage, rounded to two places.
+        const percent = formatPercent((p.percent ?? 0) / 100, 2, 0);
+        return `${name}: ${formatNum(amount, undefined, fractionDigitsOf(amount))} (${percent})`;
       },
     },
     legend: { bottom: 0, type: "scroll" as const, show: false },
