@@ -14,8 +14,9 @@ const SUPPORTED: ReadonlySet<string> = new Set(currencies.supportedCurrencies);
 const REGION_CURRENCY: Readonly<Record<string, string>> =
   currencies.regionCurrency;
 
-export const isLedgerCurrency = (code: string | null | undefined) =>
-  !!code && SUPPORTED.has(code);
+export const isLedgerCurrency = (
+  code: string | null | undefined,
+): code is string => !!code && SUPPORTED.has(code);
 
 /**
  * The currency the screen opens with: the saved profile preference, then the
@@ -31,9 +32,9 @@ export function defaultLedgerCurrency({
   nativeCurrency?: string | null;
   region?: string | null;
 }): string {
-  if (isLedgerCurrency(saved)) return saved!;
+  if (isLedgerCurrency(saved)) return saved;
   const native = nativeCurrency?.toUpperCase();
-  if (isLedgerCurrency(native)) return native!;
+  if (isLedgerCurrency(native)) return native;
   const regionCurrency = region ? REGION_CURRENCY[region.toUpperCase()] : "";
   if (isLedgerCurrency(regionCurrency)) return regionCurrency;
   return SERVER_DEFAULT_CURRENCY;

@@ -2,6 +2,7 @@ import { useReactiveVar } from "@apollo/client";
 import { sessionVar } from "@/common/vars";
 import {
   useCurrentUserAvatarQuery,
+  useCurrentUserDefaultCurrencyQuery,
   useCurrentUserQuery,
 } from "@/generated-graphql/graphql";
 import { userDisplayName } from "@/common/user-display";
@@ -10,6 +11,8 @@ import { isUnsupportedDocumentError } from "@/common/graphql-unsupported";
 // Servers whose schema rejected `avatarUrl`. A rejected query is never
 // cached, so without this every mount would ask again and fail again.
 const serversWithoutAvatars = new Set<string>();
+// Servers whose schema rejected `defaultCurrency` (w3/m62), for the same reason.
+const serversWithoutDefaultCurrency = new Set<string>();
 
 /** The signed-in account's profile, shared by the drawer, Settings and the
  * Profile screen through one cached query. */
@@ -44,4 +47,23 @@ export function useCurrentUser() {
     error,
     refetch,
   };
+}
+
+/**
+ * The saved currency a new ledger opens with (w3/m62), or null where none is
+ * saved or the server predates the field. Its own query, so an older server
+ * refuses only this read, and only once.
+ */
+export function useSavedDefaultCurrency(): string | null {
+  const session = useReactiveVar(sessionVar);
+  const server = session?.serverUrl ?? "";
+  const { data } = useCurrentUserDefaultCurrencyQuery({
+    skip: !session || serversWithoutDefaultCurrency.has(server),
+    onError: (error) => {
+      if (session && isUnsupportedDocumentError(error)) {
+        serversWithoutDefaultCurrency.add(server);
+      }
+    },
+  });
+  return data?.userProfile?.defaultCurrency ?? null;
 }

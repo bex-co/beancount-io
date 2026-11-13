@@ -18,7 +18,7 @@ import type { IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { decryptToken } from "@/features/plaid/utils/encryption";
 import { logger } from "@/shared/logger";
 import { ValidationError } from "@/shared/errors";
-import { setupCurrencies } from "@/features/ledger/setup";
+import { isSupportedCurrency } from "@/features/ledger/setup";
 import type { Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
@@ -328,7 +328,7 @@ export class AccountService implements IAccountService {
     if (
       defaultCurrency !== undefined &&
       defaultCurrency !== null &&
-      !setupCurrencies.supportedCurrencies.includes(defaultCurrency)
+      !isSupportedCurrency(defaultCurrency)
     ) {
       throw new ValidationError(
         "defaultCurrency",

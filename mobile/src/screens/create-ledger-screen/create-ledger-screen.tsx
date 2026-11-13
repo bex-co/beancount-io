@@ -23,8 +23,8 @@ import {
   LedgerTemplate,
   useCreateLedgerInCurrencyMutation,
   useCreateLedgerMutation,
-  useCurrentUserDefaultCurrencyQuery,
 } from "@/generated-graphql/graphql";
+import { useSavedDefaultCurrency } from "@/common/hooks/use-current-user";
 import { isUnsupportedDocumentError } from "@/common/graphql-unsupported";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -167,14 +167,10 @@ export function CreateLedgerScreen(): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { ledgers, loading: directoryLoading, refresh } = useLedgerDirectory();
   const [createLedger, { loading }] = useCreateLedgerMutation();
-  const [createLedgerInCurrency, { loading: currencyLoading }] =
-    useCreateLedgerInCurrencyMutation();
-  // w3/m62: a server that predates the saved preference rejects this query;
-  // the currency then comes from the device alone.
-  const { data: savedCurrencyData } = useCurrentUserDefaultCurrencyQuery({
-    errorPolicy: "ignore",
-  });
-  const savedCurrency = savedCurrencyData?.userProfile?.defaultCurrency ?? null;
+  const [createLedgerInCurrency] = useCreateLedgerInCurrencyMutation();
+  // w3/m62: null on a server that predates the saved preference, and the
+  // currency then comes from the device alone.
+  const savedCurrency = useSavedDefaultCurrency();
   const prefilledCurrency = useMemo(() => {
     const locale = Localization.getLocales()[0];
     return defaultLedgerCurrency({
@@ -272,7 +268,7 @@ export function CreateLedgerScreen(): JSX.Element {
   const nameValue = watch("name");
   const templateValue = watch("template");
   const slugPreview = ledgerSlugPreview(nameValue ?? "");
-  const busy = loading || currencyLoading || isSubmitting;
+  const busy = loading || isSubmitting;
 
   const onSubmit = handleSubmit(async (values) => {
     const name = slugifyLedgerName(values.name);

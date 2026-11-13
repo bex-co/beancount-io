@@ -23,8 +23,12 @@ let profileResult: { data?: { userProfile: Profile | null }; loading: boolean };
 let avatarResult: { data?: { userProfile: { avatarUrl: string } } };
 let profileOptions: QueryOptions;
 let avatarOptions: QueryOptions;
+let currencyResult: {
+  data?: { userProfile: { defaultCurrency: string | null } };
+};
+let currencyOptions: QueryOptions;
 
-function loadHook(): () => any {
+function loadModule(): Record<string, any> {
   const exports: Record<string, any> = {};
   const source = ts.transpileModule(
     fs.readFileSync(path.join(__dirname, "../use-current-user.ts"), "utf8"),
@@ -48,12 +52,18 @@ function loadHook(): () => any {
             avatarOptions = options;
             return options.skip ? {} : avatarResult;
           },
+          useCurrentUserDefaultCurrencyQuery: (options: QueryOptions) => {
+            currencyOptions = options;
+            return options.skip ? {} : currencyResult;
+          },
         };
       throw new Error(`Unexpected dependency: ${id}`);
     },
   });
-  return exports.useCurrentUser;
+  return exports;
 }
+
+const loadHook = (): (() => any) => loadModule().useCurrentUser;
 
 const ada: Profile = {
   id: "usr_ada",
@@ -165,5 +175,48 @@ describe("useCurrentUser", () => {
     });
     useCurrentUser();
     expect(avatarOptions.skip).toBe(true);
+  });
+});
+
+// w3/m62: the create screen's saved currency, read on its own like the avatar.
+describe("useSavedDefaultCurrency", () => {
+  beforeEach(() => {
+    session = { serverUrl: "https://beancount.io/" };
+    currencyResult = { data: { userProfile: { defaultCurrency: "EUR" } } };
+  });
+
+  it("returns the saved currency, or null when none is saved", () => {
+    const { useSavedDefaultCurrency } = loadModule();
+    expect(useSavedDefaultCurrency()).toBe("EUR");
+    currencyResult = { data: { userProfile: { defaultCurrency: null } } };
+    expect(useSavedDefaultCurrency()).toBe(null);
+  });
+
+  it("asks for nothing without a session", () => {
+    session = null;
+    const { useSavedDefaultCurrency } = loadModule();
+    expect(useSavedDefaultCurrency()).toBe(null);
+    expect(currencyOptions.skip).toBe(true);
+  });
+
+  it("stops asking a server that rejected the field, and only that server", () => {
+    const { useSavedDefaultCurrency } = loadModule();
+    useSavedDefaultCurrency();
+    currencyOptions.onError!({
+      graphQLErrors: [{ message: 'Cannot query field "defaultCurrency"' }],
+    });
+    expect(useSavedDefaultCurrency()).toBe(null);
+    expect(currencyOptions.skip).toBe(true);
+    session = { serverUrl: "https://ledger.example.test/" };
+    useSavedDefaultCurrency();
+    expect(currencyOptions.skip).toBe(false);
+  });
+
+  it("keeps asking after a network failure", () => {
+    const { useSavedDefaultCurrency } = loadModule();
+    useSavedDefaultCurrency();
+    currencyOptions.onError!({ graphQLErrors: [] });
+    useSavedDefaultCurrency();
+    expect(currencyOptions.skip).toBe(false);
   });
 });

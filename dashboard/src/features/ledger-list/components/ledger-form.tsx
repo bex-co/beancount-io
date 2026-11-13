@@ -38,6 +38,7 @@ import {
   LEDGER_CURRENCIES,
   SERVER_DEFAULT_CURRENCY,
   browserLocales,
+  currencyToSend,
   defaultLedgerCurrency,
   isLedgerCurrency,
 } from "../lib/ledger-currency";
@@ -164,7 +165,7 @@ export function LedgerForm({
     try {
       names = new Intl.DisplayNames([i18n.language], { type: "currency" });
     } catch {
-      names = undefined;
+      // A language Intl cannot name currencies in: show the codes alone.
     }
     return LEDGER_CURRENCIES.map((code) => {
       const name = names?.of(code);
@@ -212,22 +213,20 @@ export function LedgerForm({
     // Slugify the name before sending to API to match backend validation
     const slugified = slugifyLedgerName(data.name);
 
-    const submitData: CreateLedgerFormValues = {
+    const base = {
       name: slugified,
       description: data.description || undefined,
       private: data.private,
-      ...(isCreate && data.template !== LedgerTemplate.Starter
-        ? { template: data.template }
-        : {}),
-      // Only a Starter takes a currency, and USD is what the server writes
-      // without one: leaving it out sends CreateLedger unchanged, which
-      // older servers accept (w3/m62, see useCreateLedger).
-      ...(isCreate &&
-      data.template === LedgerTemplate.Starter &&
-      data.currency !== SERVER_DEFAULT_CURRENCY
-        ? { currency: data.currency }
-        : {}),
     };
+    const currency = isCreate ? currencyToSend(data) : undefined;
+    const submitData: CreateLedgerFormValues = currency
+      ? { ...base, currency }
+      : {
+          ...base,
+          ...(isCreate && data.template !== LedgerTemplate.Starter
+            ? { template: data.template }
+            : {}),
+        };
     await onSubmit(submitData);
   };
 

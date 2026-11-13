@@ -35,9 +35,9 @@ import { decryptToken } from "@/features/plaid/utils/encryption";
 import {
   defaultLedgerTemplate,
   ledgerWithMultipleFilesTemplate,
-  starterTemplateIn,
+  starterLedgerTemplate,
 } from "@/features/ledger/utils/ledger-template";
-import { setupCurrencies } from "@/features/ledger/setup";
+import { isSupportedCurrency } from "@/features/ledger/setup";
 import { parseLedgerId } from "@/shared/str";
 import { lock, LOCK_KEYS } from "@/shared/lock";
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
@@ -696,7 +696,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
           "currency applies to a STARTER ledger only; a setup takes setup.operatingCurrency and SAMPLE stays in USD",
         );
       }
-      if (!setupCurrencies.supportedCurrencies.includes(input.currency)) {
+      if (!isSupportedCurrency(input.currency)) {
         throw new ValidationError(
           "currency",
           `Unsupported currency "${input.currency}"; use an ISO 4217 code a new ledger can take`,
@@ -708,7 +708,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       : input.template === LedgerTemplate.SAMPLE
         ? ledgerWithMultipleFilesTemplate
         : input.currency != null
-          ? starterTemplateIn(input.currency)
+          ? starterLedgerTemplate(input.currency)
           : defaultLedgerTemplate;
     // ADR026: a setup's files are validated before the ledger service is
     // called, so a new ledger never starts with a bean-check error (w23/048).

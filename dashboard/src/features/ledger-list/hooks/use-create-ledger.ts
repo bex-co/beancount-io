@@ -6,10 +6,16 @@ import {
   type CreateLedgerMutationVariables,
 } from "@/graphql/definitions";
 
-/** What the create form submits: CreateLedger's variables, plus a currency. */
-export type CreateLedgerFormValues = CreateLedgerMutationVariables & {
-  currency?: string;
-};
+/**
+ * What the create form submits: CreateLedger's variables, or a Starter's
+ * currency in place of a template (`currencyToSend` decides which).
+ */
+export type CreateLedgerFormValues =
+  | (CreateLedgerMutationVariables & { currency?: undefined })
+  | (Omit<CreateLedgerMutationVariables, "template"> & {
+      currency: string;
+      template?: never;
+    });
 
 /**
  * Create a ledger with the document its values need (w3/m62). Without a
@@ -26,21 +32,17 @@ export function useCreateLedger(refetchQueries: DocumentNode[]) {
     { refetchQueries },
   );
 
-  const createLedger = async ({
-    currency,
-    ...variables
-  }: CreateLedgerFormValues) => {
-    if (!currency) return createBasic({ variables });
-    const result = await createInCurrency({
-      variables: {
-        name: variables.name,
-        private: variables.private,
-        description: variables.description,
-        currency,
-      },
-    });
-    return result;
-  };
+  const createLedger = ({ currency, ...variables }: CreateLedgerFormValues) =>
+    currency
+      ? createInCurrency({
+          variables: {
+            name: variables.name,
+            private: variables.private,
+            description: variables.description,
+            currency,
+          },
+        })
+      : createBasic({ variables });
 
   return [
     createLedger,

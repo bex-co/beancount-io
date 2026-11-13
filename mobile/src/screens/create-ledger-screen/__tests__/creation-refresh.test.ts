@@ -115,13 +115,14 @@ function screen(
               },
               { loading: false },
             ],
-            useCurrentUserDefaultCurrencyQuery: () => ({ data: undefined }),
           };
         if (id === "expo-localization")
           return {
             getLocales: () => [{ currencyCode: "USD", regionCode: "US" }],
           };
         if (id === "@/common/graphql-unsupported") return unsupported;
+        if (id === "@/common/hooks/use-current-user")
+          return { useSavedDefaultCurrency: () => null };
         if (id === "./ledger-currency") return currency;
         if (id === "@/common/ledger-directory/ledger-directory-provider")
           return {

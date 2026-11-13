@@ -1,9 +1,12 @@
-export const simpleLedgerTemplate: Record<string, string> = {
+/** The STARTER files in an operating currency, USD unless asked (w3/m62). */
+export const starterLedgerTemplate = (
+  currency = "USD",
+): Record<string, string> => ({
   "main.bean": `
 * Options
 
 option "title" "Example Beancount file"
-option "operating_currency" "USD"
+option "operating_currency" "${currency}"
 option "inferred_tolerance_default" "*:0.001"
 
 * Accounts
@@ -45,7 +48,10 @@ option "inferred_tolerance_default" "*:0.001"
 
 * Transactions
 `,
-};
+});
+
+export const simpleLedgerTemplate: Record<string, string> =
+  starterLedgerTemplate();
 
 export const ledgerWithMultipleFilesTemplate: Record<string, string> = {
   "main.bean": `
@@ -6840,16 +6846,3 @@ include "./commodities.bean"
 
 export const defaultLedgerTemplate: Record<string, string> =
   simpleLedgerTemplate;
-
-/** The STARTER template with another operating currency (w3/m62). */
-export function starterTemplateIn(currency: string): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(defaultLedgerTemplate).map(([path, content]) => [
-      path,
-      content.replace(
-        'option "operating_currency" "USD"',
-        `option "operating_currency" "${currency}"`,
-      ),
-    ]),
-  );
-}

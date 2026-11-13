@@ -1,9 +1,9 @@
 import { ValidationError } from "@/shared/errors";
 import {
+  isSupportedCurrency,
   moduleById,
   presetById,
   setupCatalog,
-  setupCurrencies,
   type CapabilityState,
   type ModuleId,
   type OpeningState,
@@ -211,7 +211,7 @@ export function previewLedgerSetup(
   }
 
   const operatingCurrency = setup.operatingCurrency ?? "USD";
-  if (!setupCurrencies.supportedCurrencies.includes(operatingCurrency)) {
+  if (!isSupportedCurrency(operatingCurrency)) {
     fail(`Unsupported operating currency "${operatingCurrency}"`);
   }
 
@@ -311,7 +311,7 @@ export function previewLedgerSetup(
       selection.currency !== undefined &&
       selection.currency !== operatingCurrency
     ) {
-      if (!setupCurrencies.supportedCurrencies.includes(selection.currency)) {
+      if (!isSupportedCurrency(selection.currency)) {
         fail(
           `Unsupported currency "${selection.currency}" for "${selection.name}"`,
         );

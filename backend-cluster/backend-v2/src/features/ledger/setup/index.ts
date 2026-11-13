@@ -94,6 +94,10 @@ export interface SetupCurrencies {
 
 export const setupCatalog = catalogJson as unknown as SetupCatalog;
 export const setupCurrencies = currenciesJson as unknown as SetupCurrencies;
+
+/** Whether a new ledger can take this ISO 4217 code as a currency. */
+export const isSupportedCurrency = (code: string): boolean =>
+  setupCurrencies.supportedCurrencies.includes(code);
 export const setupFixtures = fixturesJson.fixtures;
 
 export const presetById = (id: string): SetupPreset | undefined =>

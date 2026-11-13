@@ -1,3 +1,4 @@
+import { LedgerTemplate } from "@/graphql/definitions";
 import currencies from "./ledger-currencies.json";
 
 /**
@@ -17,8 +18,9 @@ export const SERVER_DEFAULT_CURRENCY = "USD";
 const SUPPORTED = new Set(LEDGER_CURRENCIES);
 const REGION_CURRENCY = currencies.regionCurrency as Record<string, string>;
 
-export const isLedgerCurrency = (code: string | null | undefined) =>
-  !!code && SUPPORTED.has(code);
+export const isLedgerCurrency = (
+  code: string | null | undefined,
+): code is string => !!code && SUPPORTED.has(code);
 
 /** The region subtag of a BCP 47 tag (`en-GB` → `GB`), never its language. */
 function regionOf(locale: string): string | undefined {
@@ -42,14 +44,28 @@ export function defaultLedgerCurrency({
   saved?: string | null;
   locales?: readonly string[];
 }): string {
-  if (isLedgerCurrency(saved)) return saved!;
-  for (const locale of locales) {
-    const region = regionOf(locale);
-    const currency = region ? REGION_CURRENCY[region] : undefined;
-    if (currency && SUPPORTED.has(currency)) return currency;
-    if (region) break;
-  }
-  return SERVER_DEFAULT_CURRENCY;
+  if (isLedgerCurrency(saved)) return saved;
+  const region = locales.map(regionOf).find(Boolean);
+  const currency = region ? REGION_CURRENCY[region] : undefined;
+  return isLedgerCurrency(currency) ? currency : SERVER_DEFAULT_CURRENCY;
+}
+
+/**
+ * The currency a creation sends, or undefined to send CreateLedger exactly as
+ * before the field existed: only a Starter takes one, and USD is what the
+ * server writes anyway (w3/m62, see useCreateLedger).
+ */
+export function currencyToSend({
+  template,
+  currency,
+}: {
+  template: LedgerTemplate;
+  currency: string;
+}): string | undefined {
+  return template === LedgerTemplate.Starter &&
+    currency !== SERVER_DEFAULT_CURRENCY
+    ? currency
+    : undefined;
 }
 
 /** The browser's preferred locales, empty where there is no browser. */
