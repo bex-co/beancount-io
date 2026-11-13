@@ -122,6 +122,19 @@ describe("parseDirectiveText", () => {
       "pushtag trip\n2026-01-02 open Assets:Cash",
       "line 1: `pushtag` takes one #tag",
     ],
+    // w23/237: the lexer's metadata key needs two characters.
+    [
+      'pushmeta k: "x"\n2026-01-02 open Assets:Cash\npopmeta k:',
+      'line 1: a metadata key needs at least two characters: pushmeta k: "x"',
+    ],
+    [
+      "2026-01-02 open Assets:Cash\npopmeta k:",
+      "line 2: a metadata key needs at least two characters: popmeta k:",
+    ],
+    [
+      'pushmeta 1k: "x"\n2026-01-02 open Assets:Cash',
+      'line 1: `pushmeta` takes a metadata key: pushmeta 1k: "x"',
+    ],
   ])("refuses an unbalanced or malformed stack: %p", (text, message) => {
     expect(() => parseDirectiveText(text)).toThrow(message);
   });

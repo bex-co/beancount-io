@@ -91,8 +91,15 @@ class TagStack {
       }
       return true;
     }
-    const pair = /^([a-z][A-Za-z0-9_-]*):\s*(.*)$/.exec(body);
-    if (!pair) refuse(`\`${keyword}\` takes a metadata key`);
+    const pair = /^([a-z][A-Za-z0-9_-]+):\s*(.*)$/.exec(body);
+    if (!pair) {
+      // The lexer's key needs two characters: a lone `k:` is not one (w23/237).
+      refuse(
+        /^[a-z]:/.test(body)
+          ? "a metadata key needs at least two characters"
+          : `\`${keyword}\` takes a metadata key`,
+      );
+    }
     const [, key, value] = pair!;
     if (keyword === "pushmeta") {
       if (!value) refuse("`pushmeta` needs a value");
@@ -132,7 +139,7 @@ class TagStack {
     const keys = new Set(
       lines
         .slice(head + 1)
-        .map((line) => /^\s+([a-z][A-Za-z0-9_-]*):/.exec(line)?.[1]),
+        .map((line) => /^\s+([a-z][A-Za-z0-9_-]+):/.exec(line)?.[1]),
     );
     for (const [key, { value }] of this.meta) {
       if (!keys.has(key)) annotated.push(`  ${key}: ${value}`);

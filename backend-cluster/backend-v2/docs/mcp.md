@@ -2035,8 +2035,9 @@ lot, price says what one unit was worth. A posting takes at most one price —
 units. Postings take string-valued `meta`, written beneath the posting line;
 so does every directive but a budget — `open`, `close`, `commodity`, `price`,
 `balance`, `note`, `event`, `document`, `pad` and the transaction — written
-quoted as given, beneath the directive (a value that is not a string, or a key
-the parser reserves such as `filename` or `lineno`, is refused naming it). That
+quoted as given, beneath the directive (a value that is not a string, a key
+the parser reserves such as `filename` or `lineno`, or a key shorter than two
+characters such as `k`, is refused naming it). That
 is what lets an agent record the keys other tools read, such as a commodity's
 `price:` for bean-price or an open's `account:` for importers, without writing
 raw text. Posting `tags` and `links` are refused (w23/171). An `open` takes `booking` (`STRICT`,

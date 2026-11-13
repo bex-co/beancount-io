@@ -40,8 +40,10 @@ const TOKEN_RULES = {
     /^(?:[A-Z](?:[A-Z0-9'._-]{0,22}[A-Z0-9])?|\/[A-Z](?:[A-Z0-9'._-]{0,21}[A-Z0-9])?)$/,
   // Not `filename` or `lineno`: the parser sets them to where an entry is
   // written, and the renderer hides them, so a caller's own committed as
-  // nothing with a success (w1/217).
-  "metadata key": /^(?!(?:filename|lineno)$)[a-z][A-Za-z0-9_-]*$/,
+  // nothing with a success (w1/217). Two characters at least: the lexer's key
+  // is `[a-z][A-Za-z0-9_-]+`, so a lone `k:` is `Invalid token` and, past this
+  // guard, surfaced late as an unnamed parse error (w23/237).
+  "metadata key": /^(?!(?:filename|lineno)$)[a-z][A-Za-z0-9_-]+$/,
   account: ACCOUNT,
 } as const;
 
@@ -165,7 +167,11 @@ export function assertEntryTokens(
             : kind === "metadata key" &&
                 (value === "filename" || value === "lineno")
               ? ": it is reserved by the parser, which sets it to where the entry is written; use another key"
-              : "";
+              : kind === "metadata key" &&
+                  typeof value === "string" &&
+                  /^[a-z]$/.test(value)
+                ? ": a metadata key needs at least two characters"
+                : "";
         throw new BadUserInputError(
           `entry ${idx}: ${field} ${JSON.stringify(value)} is not a valid ${kind}${why}`,
           field,

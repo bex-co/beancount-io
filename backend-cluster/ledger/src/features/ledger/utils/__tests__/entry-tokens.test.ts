@@ -237,6 +237,39 @@ describe("assertEntryTokens", () => {
     );
   });
 
+  // w23/237: the lexer's key is `[a-z][A-Za-z0-9_-]+`, so a lone `k:` is an
+  // `Invalid token`. It used to pass this guard and fail after the write as an
+  // unnamed parse error citing a line of the would-be file; now it is refused
+  // up front, by field, with the reason.
+  it.each([
+    ["meta.k", txn({ meta: { k: "v" } })],
+    ["postings[0].meta.k", txn({ postings: [{ meta: { k: "v" } }] })],
+    [
+      "meta.k",
+      {
+        type: "open",
+        item: { date: "2026-01-01", account: "Assets:Cash", meta: { k: "v" } },
+      },
+    ],
+  ])("refuses the one-character key %s, saying why", (field, row) => {
+    expect(() => assertEntryTokens([row])).toThrow(
+      `entry 0: ${field} "k" is not a valid metadata key: a metadata key needs at least two characters`,
+    );
+  });
+
+  it("keeps two-character keys valid and gives a lone capital no length hint", () => {
+    expect(() =>
+      assertEntryTokens([txn({ meta: { kk: "v", n1: "x", "a-": "y" } })]),
+    ).not.toThrow();
+    let message = "";
+    try {
+      assertEntryTokens([txn({ meta: { K: "v" } })]);
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toBe('entry 0: meta.K "K" is not a valid metadata key');
+  });
+
   // w23/m43: a directive's own metadata keys are held to the same rule.
   it.each([
     ["open", { account: "Assets:Cash" }],
