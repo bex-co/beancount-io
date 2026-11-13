@@ -215,6 +215,7 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black80,
       marginTop: 8,
       marginBottom: 8,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     errorBanner: {
       borderWidth: 1,

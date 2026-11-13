@@ -27,6 +27,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.xs,
       fontWeight: fontWeights.medium,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     balanceRow: {
       flexDirection: "row",

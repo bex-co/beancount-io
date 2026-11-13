@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { fonts, fontSizes, fontWeights } from "@/common/theme";
 import { useTheme, useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import {
   GetLedgerEntryContextQuery,
   useGetLedgerEntryContextQuery,
@@ -101,6 +102,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     contextLocation: {
       marginTop: 4,
@@ -120,6 +122,7 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.medium,
       color: theme.black80,
       marginBottom: 8,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     balancesContainer: {
       backgroundColor: theme.white,

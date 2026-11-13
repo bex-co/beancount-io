@@ -19,6 +19,18 @@ const SURFACES: [string, string][] = [
   ["screens/add-budget-screen/add-budget-screen.tsx", "error"],
   ["screens/referral-screen/components/invite-section.tsx", "title"],
   ["screens/referral-screen/components/invite-section.tsx", "summary"],
+  // The transaction detail's section title and the Entry Context card's headings
+  // (w22/041); the card is also Edit Transaction's.
+  [
+    "screens/transaction-detail-screen/transaction-detail-screen.tsx",
+    "sectionTitle",
+  ],
+  ["screens/transactions-screen/entry-context/index.tsx", "contextHeaderText"],
+  ["screens/transactions-screen/entry-context/index.tsx", "sectionTitle"],
+  [
+    "screens/transactions-screen/entry-context/balance-section.tsx",
+    "balanceSectionHeaderText",
+  ],
   // The shared text-input modal: title, message, toggle label, error (w22/040).
   ["components/text-input-modal/index.tsx", "title"],
   ["components/text-input-modal/index.tsx", "message"],
