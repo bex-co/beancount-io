@@ -249,7 +249,10 @@ describe("roundedShares", () => {
       )
       .replace(/\s+/g, "");
     expect(card.includes("constshares=roundedShares(items);")).toBe(true);
-    expect(card.includes('{printed===null?"":`${printed}%`}')).toBe(true);
+    // Written in the language's digits and sign (w22/042).
+    expect(
+      card.includes('{printed===null?"":formatPercentWhole(printed)}'),
+    ).toBe(true);
     expect(
       card.includes(
         "breakdownRowAccessibilityValue(amountText,printed,t,shareOf,)",

@@ -22,7 +22,10 @@ import {
   useTheme,
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
+import {
+  formatPercentWhole,
+  formatSignedMoneyWithCurrency,
+} from "@/common/number-utils";
 import { AmountText } from "@/components/amount-text";
 import { DashboardCard } from "@/components/dashboard-card";
 import { LoadingTile } from "@/components/loading-tile";
@@ -361,7 +364,7 @@ export function CategoryBreakdown({
           />
         </View>
         <Text style={styles.pctLabel}>
-          {printed === null ? "" : `${printed}%`}
+          {printed === null ? "" : formatPercentWhole(printed)}
         </Text>
       </View>
     );

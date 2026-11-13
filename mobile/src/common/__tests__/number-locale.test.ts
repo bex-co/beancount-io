@@ -1,6 +1,10 @@
-import { setNumberLocale } from "../number-locale";
+import fs from "fs";
+import path from "path";
+import { percentSign, setNumberLocale } from "../number-locale";
 import { labelRowAmount } from "../currency-util";
+import { formatChangePercent } from "../d3/change-percent";
 import {
+  formatPercentWhole,
   formatExactUnits,
   formatMoneyWithCurrency,
   formatShortMoneyWithCurrency,
@@ -74,5 +78,56 @@ describe("full amounts in the app language", () => {
     expect(formatSignedMoneyWithCode(-1234.5, "CAD")).toBe("-1.234,50 CAD");
     expect(labelRowAmount("1,234.50", "USD")).toBe("1.234,50 $");
     expect(labelRowAmount("1,234.50", "CAD")).toBe("1.234,50 CAD");
+  });
+});
+
+// w22/042: Reports' category shares printed a Latin "100%" under Persian-digit
+// amounts, and the chart change row ended in a Latin "%" after Persian digits;
+// the translated sentences already wrote "٪" (w21/991).
+describe("percentages in the app language", () => {
+  afterEach(() => setNumberLocale("en"));
+
+  it("keeps the percent sign everywhere but Persian", () => {
+    for (const locale of ["en", "zh", "de", "es", "fr", "ru", "uk"]) {
+      setNumberLocale(locale);
+      expect(percentSign()).toBe("%");
+    }
+    setNumberLocale("fa");
+    expect(percentSign()).toBe("\u066a");
+  });
+
+  it("writes a whole share in the language's digits and sign", () => {
+    expect(formatPercentWhole(100)).toBe("100%");
+    setNumberLocale("de");
+    expect(formatPercentWhole(38)).toBe("38%");
+    setNumberLocale("fa");
+    expect(formatPercentWhole(100)).toBe("۱۰۰٪");
+    expect(formatPercentWhole(0)).toBe("۰٪");
+  });
+
+  it("writes the chart change row's percentage the same way", () => {
+    expect(formatChangePercent(0.63).text).toBe("+0.63%");
+    setNumberLocale("de");
+    expect(formatChangePercent(-12.5).text).toBe("-12,50%");
+    setNumberLocale("fa");
+    expect(formatChangePercent(0.63).text).toBe("+۰٫۶۳٪");
+    expect(formatChangePercent(-1234.5).text).toBe("-۱٬۲۳۴٫۵۰٪");
+  });
+
+  it("is what the Reports breakdown row prints, not a literal percent sign", () => {
+    const source = fs.readFileSync(
+      path.join(
+        __dirname,
+        "..",
+        "..",
+        "screens",
+        "reports-screen",
+        "components",
+        "category-breakdown.tsx",
+      ),
+      "utf8",
+    );
+    expect(source.includes("formatPercentWhole(printed)")).toBe(true);
+    expect(source.includes("`${printed}%`")).toBe(false);
   });
 });

@@ -4,7 +4,11 @@ import {
   isFiatCurrency,
 } from "./currency-util";
 import { localizeDigits } from "./date-format";
-import { currencyAfterNumber, localizeAmount } from "./number-locale";
+import {
+  currencyAfterNumber,
+  localizeAmount,
+  percentSign,
+} from "./number-locale";
 import { absDecimal, parseDecimal, roundDecimal } from "./decimal-number";
 
 const SHORT_NUMBER_SUFFIXES = [
@@ -242,6 +246,13 @@ const groupEnglish = (value: number, digits = 2): string => {
 /** `groupEnglish` written in the app language (w21/882). */
 export const groupThousands = (value: number, digits = 2): string =>
   localizeAmount(groupEnglish(value, digits));
+
+/**
+ * A whole percentage as the app language writes it: "100%" in English,
+ * "۱۰۰٪" in Persian, digits and sign alike (w22/042).
+ */
+export const formatPercentWhole = (value: number): string =>
+  `${groupThousands(value, 0)}${percentSign()}`;
 
 // Sign prefix + grouped absolute amount, shared by the money and units
 // formatters. The sign is always a prefix; only what labels the amount differs.

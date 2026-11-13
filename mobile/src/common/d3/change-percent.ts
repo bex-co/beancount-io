@@ -1,3 +1,4 @@
+import { percentSign } from "../number-locale";
 import { groupThousands } from "../number-utils";
 
 /**
@@ -34,7 +35,7 @@ export function formatChangePercent(pct: number): {
   const rounded = Math.round(pct * 100) / 100 + 0;
   const sign = rounded > 0 ? "+" : rounded < 0 ? "-" : "";
   return {
-    text: `${sign}${groupThousands(rounded, 2)}%`,
+    text: `${sign}${groupThousands(rounded, 2)}${percentSign()}`,
     flat: rounded === 0,
   };
 }

@@ -10,6 +10,8 @@ type NumberStyle = {
   currencyAfter: boolean;
   /** Whether the language writes its own digits (Persian). */
   localDigits: boolean;
+  /** The percent sign: Persian writes ٪ (U+066A), the rest %. */
+  percent: string;
 };
 
 const EN: NumberStyle = {
@@ -18,6 +20,7 @@ const EN: NumberStyle = {
   minGroupDigits: 1,
   currencyAfter: false,
   localDigits: false,
+  percent: "%",
 };
 
 const comma = (
@@ -30,6 +33,7 @@ const comma = (
   minGroupDigits,
   currencyAfter,
   localDigits: false,
+  percent: "%",
 });
 
 /**
@@ -51,6 +55,7 @@ const NUMBER_STYLES: Record<string, NumberStyle> = {
     minGroupDigits: 1,
     currencyAfter: false,
     localDigits: true,
+    percent: "\u066a",
   },
   fr: comma(" ", true),
   nl: comma(".", false),
@@ -73,6 +78,13 @@ const activeStyle = (): NumberStyle => NUMBER_STYLES[base(activeLocale)] ?? EN;
 
 /** Whether the app language writes the currency after the number. */
 export const currencyAfterNumber = (): boolean => activeStyle().currencyAfter;
+
+/**
+ * The percent sign in the app language. Persian already writes `٪` in its
+ * translated sentences (w21/991); the percentages the app draws itself took a
+ * literal `%` (w22/042).
+ */
+export const percentSign = (): string => activeStyle().percent;
 
 /**
  * An English-formatted unsigned amount ("1,234.50") written in the app
