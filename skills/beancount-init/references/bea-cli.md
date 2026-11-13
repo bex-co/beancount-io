@@ -366,6 +366,7 @@ Each note gives the `bea` versions it describes. Delete a note once the
 suite's minimum version no longer needs it.
 
 - **`init --agent-files` (after 0.3.1).** `bea init --agent-files` writes the ledger's `AGENTS.md` and `CLAUDE.md` bridge from the agents template; on 0.3.1 write them from the template reference.
+- **`init --existing` (after 0.3.1).** `bea init --existing ROOT` describes a ledger bea did not create and writes its `AGENTS.md` and `CLAUDE.md`, changing no ledger file; 0.3.1 lacks it, so beancount-init's existing-ledger branch offers `bea upgrade` and writes no agent files there.
 - **`report budget` (after 0.3.1).** `bea report budget` and `report … --format csv` first ship in the release after 0.3.1; on 0.3.1 read budgets with BQL over `custom "budget"` entries and say the figures are hand-computed.
 - **Minimum 0.3.1.** Migration overlap imports rely on `bea import` matching
   `import-id-2`, which first ships in 0.3.1.

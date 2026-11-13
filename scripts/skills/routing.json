@@ -192,6 +192,25 @@
       "why": "init's optional Fava setup."
     },
     {
+      "id": "init-existing-books-here",
+      "prompt": "I already keep my finances in a Beancount ledger in this folder. Set things up so you can work with it.",
+      "expected": "beancount-init",
+      "confusable": [
+        "beancount-migrate",
+        "beancount-ask"
+      ],
+      "why": "Books already kept in Beancount, prepared for an agent without changing them (the existing-ledger branch)."
+    },
+    {
+      "id": "init-existing-years-of-fava",
+      "prompt": "I've run bean-check and Fava on ~/finance/household.beancount for years. Get my coding agent ready to help with those books.",
+      "expected": "beancount-init",
+      "confusable": [
+        "beancount-migrate"
+      ],
+      "why": "An existing Beancount root the user names; nothing is converted from another tool."
+    },
+    {
       "id": "migrate-mint",
       "prompt": "Mint shut down and I have a CSV export of all my transactions. Move my history into beancount.",
       "expected": "beancount-migrate",
@@ -236,6 +255,15 @@
         "beancount-init"
       ],
       "why": "Migration composes init; the history is the point."
+    },
+    {
+      "id": "migrate-not-yet-beancount",
+      "prompt": "My books aren't in Beancount yet; they're a QuickBooks export. Start a ledger from that history.",
+      "expected": "beancount-migrate",
+      "confusable": [
+        "beancount-init"
+      ],
+      "why": "Another tool's export becomes a new ledger; the existing-ledger branch is only for books already in Beancount."
     },
     {
       "id": "options-sell-csp",
@@ -1253,6 +1281,15 @@
         "beancount-business-metrics"
       ],
       "why": "A spending breakdown is a question, not burn or runway."
+    },
+    {
+      "id": "ask-existing-books-question",
+      "prompt": "I already keep my books in Beancount here. What did I spend on dining in October?",
+      "expected": "beancount-ask",
+      "confusable": [
+        "beancount-init"
+      ],
+      "why": "A question about books already kept; mentioning the existing ledger does not ask for setup."
     },
     {
       "id": "report-pack-not-metrics",

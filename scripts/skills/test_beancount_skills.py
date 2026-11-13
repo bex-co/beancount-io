@@ -1728,6 +1728,28 @@ class TestBeaRecipes(unittest.TestCase):
         self.assertEqual(self.target.read_text().count("^option-1"), 2)
         self.recipe("check")
 
+    def test_existing_ledger_recipe_describes_the_books_and_changes_none(self):
+        # beancount-init's existing-ledger branch (w1/m42): the root names its
+        # include, the decoy main.bean one level up is never read, and no
+        # ledger byte changes.
+        before = {path: path.read_bytes() for path in self.books.rglob("*") if path.is_file()}
+        if self.published:
+            # 0.3.1 has no --existing; the skill checks `init --help` first.
+            refused = self.recipe("init-existing", succeeds=False)
+            self.assertIn("--existing", refused.stderr)
+            self.assertFalse((self.books / "AGENTS.md").exists())
+            return
+        data = self.recipe("init-existing")
+        self.assertEqual({path: path.read_bytes() for path in before}, before)
+        self.assertEqual(data["agent_files"], {"AGENTS.md": "created", "CLAUDE.md": "created"})
+        self.assertEqual(data["files"], ["transactions/2026.bean"])
+        self.assertEqual(data["attention"], [])
+        agents = (self.books / "AGENTS.md").read_text()
+        self.assertIn("`household.beancount`", agents)
+        self.assertIn("`--into transactions/2026.bean`", agents)
+        self.assertEqual((self.books / "CLAUDE.md").read_text(), "@AGENTS.md\n")
+        self.assertEqual(self.recipe("init-existing")["agent_files"], {"AGENTS.md": "kept", "CLAUDE.md": "skipped"})
+
     def test_historical_init_open_batch_and_assertion_need_no_date_rewrite(self):
         directory = self.root / "migration"
         self.values.update(directory=str(directory), currency="USD", open_date="2022-12-31")

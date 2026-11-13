@@ -1,6 +1,6 @@
 ---
 name: beancount-init
-description: Scaffold a new local Beancount ledger with bea init and validation, with optional Fava browser setup when requested. Use for setting up a new ledger or initializing a bookkeeping repository. Skip importing history (beancount-migrate), bank exports, edits to a populated ledger, or ledgers hosted on Beancount.io.
+description: Scaffold a new local Beancount ledger with bea init and validation, with optional Fava browser setup when requested; or set up books already kept in Beancount for coding agents without changing them. Use for setting up a new ledger, initializing a bookkeeping repository, or preparing an existing Beancount ledger for an agent. Skip importing another tool's export (beancount-migrate), bank exports, edits to a populated ledger, questions about a ledger (beancount-ask), or ledgers hosted on Beancount.io.
 license: MIT-0
 metadata:
   openclaw:
@@ -35,7 +35,8 @@ metadata:
 Part of the [Beancount.io](https://beancount.io/) ledger skill suite.
 
 Scaffold a fresh ledger in the current working directory with one `bea`
-installation for create and validate.
+installation for create and validate, or set up a ledger the user already
+keeps so a coding agent can work on it (the existing-ledger branch).
 
 Run the steps in order. Stop if a preflight check fails — partial scaffolding
 is worse than no scaffolding.
@@ -53,8 +54,15 @@ Local ledger files only. For a ledger hosted on Beancount.io, stop this skill an
 
 Run `pwd && ls -A` to see the working directory.
 
+**Existing ledger.** When the user says they already keep Beancount books
+(set the agent up for them, use my existing ledger, bring my books), or the
+folder already holds `.bean`/`.beancount` files and the user did not ask for a
+new ledger beside them, follow [Existing ledger](#existing-ledger) instead of
+the steps below. It never creates a ledger and never changes a ledger file.
+
 **Hard-refuse** if any of these already exist: `main.bean`, `pyproject.toml`,
-`Makefile`. Print which ones are present and stop. Do not overwrite.
+`Makefile`. Print which ones are present and stop. Do not overwrite. When the
+present file is a ledger, offer the existing-ledger branch instead.
 
 If the directory contains other files but none of those markers, warn once and
 ask for confirmation before continuing.
@@ -235,3 +243,42 @@ Print:
   a trade (beancount-trade).
 
 Keep the report tight — one short line per item.
+
+## Existing ledger
+
+For books the user already keeps. Read-only on the ledger: only `AGENTS.md`
+and `CLAUDE.md` may be created, and only when absent.
+
+1. **Root.** The ledger's root is the file that includes the others. Use the
+   one the user names. Otherwise `bea init --existing` finds it in a folder
+   (`main.bean`, `main.beancount`, or the one file nothing else there
+   includes) and refuses, naming the candidates, when there are several; then
+   ask the user which is the root. Never pick one yourself.
+2. **Capability.** Check `bea` as `references/bea-cli.md` describes, then
+   check that `bea init --help` lists `--existing`. Published `bea` 0.3.1
+   does not: say the existing-ledger setup needs a newer `bea`, offer
+   `bea upgrade`, run the check recipe on the root so the user sees the
+   ledger's state, and stop. Do not write `AGENTS.md` by hand; its facts come
+   from loading the ledger.
+3. **Run it** from the ledger's folder, with the root bound to `ledger`
+   (the recipe below). It changes no ledger file. It writes `AGENTS.md` and
+   the `@AGENTS.md` `CLAUDE.md` only when each is absent (`data.agent_files`
+   says `created`, `kept` or `skipped`) and exits 0 even when the ledger has
+   errors.
+4. **Report.** Show the user the root and file count, which agent files were
+   written or kept, and each `data.attention` item as its `location`,
+   `message` and `next`. Do not act on those next steps; removing a plugin or
+   an option is the user's decision. When an item is `plugin-beside-ledger`,
+   run later `bea` commands from the ledger's folder with `PYTHONPATH=.`, as
+   the written `AGENTS.md` says.
+5. **Git.** Report whether the folder is a Git repository (`git rev-parse
+   --is-inside-work-tree`). Never run `git init` in it and never stage.
+
+<!-- recipe: init-existing -->
+```sh
+bea --json --no-input init --existing "$ledger"
+```
+
+Next steps: ask a question about the ledger (beancount-ask), record an entry
+(beancount-add), or import a bank export (beancount-import).
+
