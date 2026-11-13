@@ -96,6 +96,8 @@
 
 - [x] **m61** — [Retry-safe entry writes: one `requestId` contract across REST, GraphQL, and MCP](./done/m61/README.md) (8 tasks) ← promoted 003 (owner decision 2026-11-02)
 
+- [ ] **m62** — [Ledger creation: a prefilled Currency field, backward compatible](./m62/README.md) (7 tasks) ← user request via /pmx, 2026-11-12; user routed to w3
+
 ## Inbox
 
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
