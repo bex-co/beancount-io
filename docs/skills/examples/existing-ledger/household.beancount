@@ -1,0 +1,10 @@
+; Synthetic household books for the existing-ledger guide (docs/skills/existing-ledger.md).
+; The root is not main.bean, the entries live in included files, and a
+; plugin module is kept beside the ledger, as long-running books often are.
+option "title" "Household books"
+option "operating_currency" "USD"
+
+plugin "household_rules"
+
+include "accounts.beancount"
+include "2026/*.beancount"

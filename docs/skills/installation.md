@@ -61,7 +61,7 @@ codex exec --skip-git-repo-check "List the names of the skills available to you 
 
 In an interactive session, Claude Code lists skills with `/skills` and runs one with `/beancount-ask`. In Codex, mention a skill as `$beancount-ask`. Both agents also pick a skill on their own when your request matches its description.
 
-Next: get a first answer from a sample ledger with the [first-query walkthrough](first-query.md), then complete a synthetic month with the [first-month guide](first-month.md). The latter uses the same `bea` and includes [verified Claude Code and Codex rehearsals](first-month-rehearsal.md).
+Next: get a first answer from a sample ledger with the [first-query walkthrough](first-query.md), then complete a synthetic month with the [first-month guide](first-month.md). Already keep Beancount books? [Bring an existing ledger](existing-ledger.md) instead. The latter uses the same `bea` and includes [verified Claude Code and Codex rehearsals](first-month-rehearsal.md).
 
 For investment and property accounts, follow the [first-year investor guide](first-year-investor.md), with its [tested runtimes and current limitations](first-year-rehearsal.md).
 

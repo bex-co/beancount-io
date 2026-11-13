@@ -1309,6 +1309,108 @@ class TestFirstQueryWalkthrough(unittest.TestCase):
         self.assertEqual(rows[0][0], "Expenses:Food:Groceries")
 
 
+EXISTING_LEDGER_DOC = DOCS / "existing-ledger.md"
+EXISTING_LEDGER_EXAMPLE = DOCS / "examples" / "existing-ledger"
+
+
+def guide_block(doc: str, heading: str, language: str = "sh") -> str:
+    """The first `language` fence under the `## heading` section of a guide."""
+    section = re.search(rf"^## {re.escape(heading)}\n(.*?)(?=^## |\Z)", doc, re.MULTILINE | re.DOTALL)
+    assert section is not None, f"missing section {heading!r}"
+    fence = re.search(rf"```{language}\n(.*?)\n```", section.group(1), re.DOTALL)
+    assert fence is not None, f"no {language} fence under {heading!r}"
+    return fence.group(1)
+
+
+class TestExistingLedgerGuide(unittest.TestCase):
+    """docs/skills/existing-ledger.md, run as written on its synthetic books (w1/m42/t005).
+
+    Every shell step a reader types runs in one script, with the reader's home
+    and data directories under a scratch folder and the suite checkout where
+    the installation guide puts it. Only the agent turns are skipped.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = EXISTING_LEDGER_DOC.read_text(encoding="utf-8")
+
+    def test_the_documented_answer_is_an_independent_sum_of_the_fixture(self):
+        total = Decimal(0)
+        in_february = False
+        for path in sorted(EXISTING_LEDGER_EXAMPLE.rglob("*.beancount")):
+            for line in path.read_text(encoding="utf-8").splitlines():
+                header = re.match(r"(\d{4}-\d{2}-\d{2}) [*!]", line)
+                if header:
+                    in_february = header.group(1).startswith("2026-02-")
+                    continue
+                posting = re.match(r"\s+Expenses:Groceries\s+(-?\d+\.\d+) USD", line)
+                if in_february and posting:
+                    total += Decimal(posting.group(1))
+        self.assertEqual(total, Decimal("119.35"))
+        self.assertIn(f"**{total} USD**", self.doc)
+
+    def test_the_guide_runs_as_written_and_changes_no_ledger_file(self):
+        ci_check = load("ci_check", "ci-check.py")
+        with contextlib.redirect_stderr(io.StringIO()):
+            try:
+                bea = ci_check.find_bea()
+            except SystemExit:
+                self.skipTest("bea is not available")
+        # Absolute, so the `bea` shim on PATH below cannot run itself.
+        bea[0] = shutil.which(bea[0]) or bea[0]
+        if shutil.which("shasum") is None or shutil.which("git") is None:
+            self.skipTest(NOT_THIS_PLATFORM + "needs shasum and git")
+        with scratch_dir() as tmp:
+            home = Path(tmp) / "home"
+            data = home / ".local" / "share"
+            data.mkdir(parents=True)
+            (data / "beancount-io").symlink_to(SCRIPTS_DIR.parents[1], target_is_directory=True)
+            shim = Path(tmp) / "bin"
+            shim.mkdir()
+            (shim / "bea").write_text("#!/bin/sh\nexec " + " ".join(shlex.quote(part) for part in bea) + ' "$@"\n')
+            (shim / "bea").chmod(0o755)
+            script = "\n".join(
+                [
+                    "set -e",
+                    guide_block(self.doc, "1. Install"),
+                    guide_block(self.doc, "2. Copy the sample books and record their checksums"),
+                    guide_block(self.doc, "3. Let bea read the ledger"),
+                    "echo '--- ask'",
+                    guide_block(self.doc, "4. Ask the agent about your books"),
+                    "echo '--- confirm'",
+                    guide_block(self.doc, "5. Confirm nothing changed"),
+                ]
+            )
+            env = ci_check.env_without_global_bean_tools({
+                "HOME": str(home),
+                "BEA_CONFIG_DIR": str(Path(tmp) / "bea-config"),
+                "XDG_CACHE_HOME": str(Path(tmp) / "cache"),
+            })
+            for name in ("XDG_DATA_HOME", "BEA_FILE", "PYTHONPATH", "BEA_ENGINE_PYTHON"):
+                env.pop(name, None)
+            env["PATH"] = f"{shim}{os.pathsep}{env['PATH']}"
+            result = subprocess.run(
+                ["bash", "-c", script], cwd=tmp, env=env, capture_output=True, text=True, timeout=300
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            books = home / "beancount-existing-ledger"
+            out = result.stdout
+            self.assertIn("ready", out.splitlines()[0])
+            expected = guide_block(self.doc, "3. Let bea read the ledger", "text").splitlines()
+            for line in expected[:4]:
+                self.assertIn(line, out)
+            self.assertIn(expected[4].split(": cd ")[0], out)
+            answer = json.loads(out.split("--- ask\n", 1)[1].split("--- confirm", 1)[0])
+            self.assertEqual(answer["data"]["rows"][0][0][0]["units"], {"number": "119.35", "currency": "USD"})
+            confirm = out.split("--- confirm\n", 1)[1]
+            self.assertIn("unchanged", confirm)
+            self.assertTrue(all(line.startswith("??") for line in confirm.splitlines()[1:] if line.strip()))
+            agents = (books / "AGENTS.md").read_text(encoding="utf-8")
+            self.assertIn("run `PYTHONPATH=. bea --file household.beancount check` from this folder", agents)
+            self.assertEqual((books / "CLAUDE.md").read_text(encoding="utf-8"), "@AGENTS.md\n")
+            self.assertFalse((books / "__pycache__").exists())
+
+
 class TestDedupConvention(unittest.TestCase):
     def test_the_lot_example_hashes_to_the_id_bea_writes(self):
         # bea hashes a source posting's lot with its units (w5/349); the

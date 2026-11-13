@@ -1,0 +1,12 @@
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Liabilities:Card:Visa USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Groceries USD
+2026-01-01 open Expenses:Dining USD
+2026-01-01 open Expenses:Housing:Rent USD
+2026-01-01 open Expenses:Travel USD
+2026-01-01 open Equity:OpeningBalances USD
+
+2026-01-01 * "Opening balance"
+  Assets:Bank:Checking  4000.00 USD
+  Equity:OpeningBalances

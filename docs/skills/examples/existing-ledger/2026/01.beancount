@@ -1,0 +1,21 @@
+2026-01-02 * "Landlord" "January rent"
+  Expenses:Housing:Rent  1800.00 USD
+  Assets:Bank:Checking
+
+2026-01-09 * "Green Market" "Weekly groceries"
+  Expenses:Groceries  86.40 USD
+  Liabilities:Card:Visa
+
+2026-01-15 * "Employer" "Salary"
+  Income:Salary  -3200.00 USD
+  Assets:Bank:Checking
+
+2026-01-23 * "Green Market" "Weekly groceries"
+  Expenses:Groceries  92.15 USD
+  Liabilities:Card:Visa
+
+2026-01-28 * "Harbor Bistro" "Dinner"
+  Expenses:Dining  54.00 USD
+  Liabilities:Card:Visa
+
+2026-01-31 balance Assets:Bank:Checking  5400.00 USD

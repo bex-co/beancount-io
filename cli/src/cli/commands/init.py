@@ -381,7 +381,11 @@ def _init_existing(directory: Path) -> None:
     )
     _report_agent_files(data["agent_files"])
     count = error_count(description)
-    if count:
+    # Unless a plugin kept beside the ledger did not load: the report says how
+    # to load it, and what the ledger reports then was not measured here.
+    if count and not any(
+        not plugin["loaded"] and plugin["source"] == "beside-ledger" for plugin in description["plugins"]
+    ):
         output.note(
             f"The ledger loads with {count} error{'s' if count != 1 else ''} today; AGENTS.md asks agents to add none."
         )

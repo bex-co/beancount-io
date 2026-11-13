@@ -593,7 +593,9 @@ The `AGENTS.md` it writes describes that ledger: its root and included files,
 that new entries go into the root unless a write names an included file with
 `--into`, its operating currencies and open accounts, its plugins, the
 check command, and whether the check passed when the file was written (a
-change must not add an error it did not have). A plugin whose module sits in
+change must not add an error it did not have). When a plugin kept beside the
+ledger did not load, that baseline was never measured, so `AGENTS.md` says to
+run the check before the first change instead. A plugin whose module sits in
 the ledger's folder loads only through `PYTHONPATH`, because the engine never
 imports from the working directory; the check command then reads
 `PYTHONPATH=. bea --file ROOT check`.

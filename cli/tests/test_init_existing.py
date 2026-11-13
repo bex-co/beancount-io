@@ -183,8 +183,8 @@ def test_a_plugin_kept_beside_the_ledger_puts_pythonpath_in_the_check(tmp_path: 
     agents = (books / "AGENTS.md").read_text()
     assert "`localplug` is a module in this folder, loaded through `PYTHONPATH=.`" in agents
     assert "run `PYTHONPATH=. bea --file household.beancount check` from this folder" in agents
-    # It never loaded here, so its own findings were never counted.
-    assert "It reported errors when this file was written" in agents
+    # It never loaded here, so what the PYTHONPATH check reports was never measured.
+    assert "Run it before the first change; afterwards it must report no error it did not report then." in agents
     (books / "AGENTS.md").unlink()
     (books / "CLAUDE.md").unlink()
     loaded = _bea_with_pythonpath(tmp_path, books, "--no-input", "--json", "init", "--existing")
@@ -195,6 +195,17 @@ def test_a_plugin_kept_beside_the_ledger_puts_pythonpath_in_the_check(tmp_path: 
     # The check command AGENTS.md gives passes as written.
     check = _bea_with_pythonpath(tmp_path, books, "--file", "household.beancount", "check")
     assert check.returncode == 0, check.stderr
+
+
+def test_an_unloaded_plugin_beside_the_ledger_is_not_counted_as_the_ledger_s_errors(tmp_path: Path) -> None:
+    books = _books(tmp_path, root='plugin "localplug"\n' + ROOT)
+    (books / "localplug.py").write_text(PLUGIN)
+    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    # The report gives the PYTHONPATH command; no error count is claimed for a
+    # ledger that loads clean under it.
+    assert "loads with" not in run.stderr
+    assert "Plugin `localplug` is the module `localplug` in this folder" in run.stdout
 
 
 def test_json_names_the_ledger_and_what_happened_to_each_file(tmp_path: Path) -> None:

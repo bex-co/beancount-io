@@ -139,9 +139,9 @@ def existing_agents_text(description: dict[str, Any], *, today: str) -> str:
     count = error_count(description)
     unmeasured = any(not p["loaded"] and p["source"] == "beside-ledger" for p in description["plugins"])
     if unmeasured:
-        # The plugin in this folder did not load here, so whatever it reports
-        # under `PYTHONPATH=.` was never counted: a number would mislead.
-        baseline = f"It reported errors when this file was written on {today}; a change must not add any."
+        # The plugin in this folder did not load here, so what the check
+        # above reports (it sets `PYTHONPATH=.`) was never measured.
+        baseline = "Run it before the first change; afterwards it must report no error it did not report then."
     elif count:
         baseline = f"On {today} it reported {count} error{'s' if count != 1 else ''}; a change must not add any."
     else:

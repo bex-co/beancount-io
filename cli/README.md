@@ -108,6 +108,11 @@ the [import guide](https://github.com/bex-co/beancount-io/blob/main/cli/docs/IMP
 for your first month end to end, follow the
 [tutorial](https://github.com/bex-co/beancount-io/blob/main/cli/docs/TUTORIAL.md).
 
+Already keep a Beancount ledger? `bea init --existing PATH` reads it, writes an
+`AGENTS.md` beside it for coding agents, lists what needs attention (plugins
+and options Beancount 3 does not load), and changes no ledger file. See
+[bring an existing ledger](https://github.com/bex-co/beancount-io/blob/main/docs/skills/existing-ledger.md).
+
 ## Command map
 
 | Command | Purpose |

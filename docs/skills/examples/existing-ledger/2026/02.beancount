@@ -1,0 +1,23 @@
+2026-02-02 * "Landlord" "February rent"
+  Expenses:Housing:Rent  1800.00 USD
+  Assets:Bank:Checking
+
+2026-02-06 * "Green Market" "Weekly groceries"
+  Expenses:Groceries  78.25 USD
+  Liabilities:Card:Visa
+
+2026-02-11 * "Coastline Rail" "Train to the coast"
+  Expenses:Travel  64.00 USD
+  Liabilities:Card:Visa
+
+2026-02-15 * "Employer" "Salary"
+  Income:Salary  -3200.00 USD
+  Assets:Bank:Checking
+
+2026-02-20 * "Corner Grocer" "Groceries"
+  Expenses:Groceries  41.10 USD
+  Liabilities:Card:Visa
+
+2026-02-25 * "Visa" "Card payment"
+  Liabilities:Card:Visa  432.80 USD
+  Assets:Bank:Checking
