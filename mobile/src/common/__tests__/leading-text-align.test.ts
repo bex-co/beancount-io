@@ -19,6 +19,15 @@ const SURFACES: [string, string][] = [
   ["screens/add-budget-screen/add-budget-screen.tsx", "error"],
   ["screens/referral-screen/components/invite-section.tsx", "title"],
   ["screens/referral-screen/components/invite-section.tsx", "summary"],
+  // The Transactions filter sheet's section titles and its range error (w22/038).
+  [
+    "screens/transaction-filters-screen/transaction-filters-screen.tsx",
+    "sectionTitle",
+  ],
+  [
+    "screens/transaction-filters-screen/transaction-filters-screen.tsx",
+    "rangeError",
+  ],
 ];
 
 function styleBlocks(source: string, name: string): string[] {

@@ -1,5 +1,6 @@
 import { useGuest } from "@/common/guest/guest-context";
 import { isolateAccountPath } from "@/common/bidi";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 import { useState } from "react";
 import {
   Pressable,
@@ -71,6 +72,7 @@ const getStyles = (theme: ColorTheme) =>
       textTransform: "uppercase",
       paddingHorizontal: 16,
       marginBottom: 10,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     chipRow: {
       flexDirection: "row",
@@ -119,6 +121,7 @@ const getStyles = (theme: ColorTheme) =>
       marginTop: 8,
       fontSize: fontSizes.sm,
       color: theme.error,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     accountRow: {
       flexDirection: "row",

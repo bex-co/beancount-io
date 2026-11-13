@@ -110,6 +110,7 @@ function loadScreen(): () => any {
       if (id === "@expo/vector-icons") return { Ionicons: "Icon" };
       if (id === "@/common/bidi")
         return { isolateAccountPath: (p: string) => p };
+      if (id === "@/common/rtl") return { LEADING_TEXT_ALIGN: "left" };
       if (id === "@/common/guest/guest-context")
         return { useGuest: () => null };
       if (id === "@/common/format-util")
