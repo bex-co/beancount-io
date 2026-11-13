@@ -63,7 +63,7 @@ function AlertDialogHeader({
 }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn("flex flex-col gap-2 text-center sm:text-start", className)}
       {...props}
     />
   );

@@ -148,7 +148,7 @@ export function NewDirectiveDialog({
         }}
       >
         <VisuallyHidden>
-          <DialogDescription className="text-left">
+          <DialogDescription className="text-start">
             {t("journal.createNewJournalEntry")}
           </DialogDescription>
         </VisuallyHidden>
@@ -165,7 +165,7 @@ export function NewDirectiveDialog({
               tablist's arrow keys — keeps each unsaved draft (w4/256).
               Closing the dialog asks before discarding them (w2/123). */}
           <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <DialogTitle className="min-w-0 shrink-0 text-left sm:shrink">
+            <DialogTitle className="min-w-0 shrink-0 text-start sm:shrink">
               {t("journal.newEntry")}
             </DialogTitle>
             <TabsList className="grid w-full grid-cols-4 sm:w-auto sm:shrink-0">
