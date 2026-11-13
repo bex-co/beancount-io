@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [133 — In Persian, Overview share-of-total and two chart tooltips write the percent sign (and tooltip digits) in Latin](./133.md) — dashboard counterpart of w22/042; use the `Intl` percent formatter Statistics already uses
 - [132 — In Persian, every dialog's title sits on the physical left and the close button covers RTL-started dialogs](./132.md) — shared `Dialog`/`AlertDialog`/`Sheet` primitives use `sm:text-left`/`right-4`; dashboard counterpart of w22/040–041
 - [131 — The Make public confirmation says "history" but not commit authors' emails or earlier file versions](./131.md) — dashboard copy, 15 locales; the API preview already says it (w23/241)
 
