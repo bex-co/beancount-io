@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [134 — Create Ledger, Open Account, and the SSH and API key dialogs still close on Escape and lose typed input](./134.md) — the w2/123 discard guard and AGENTS rule reached only New Entry and Add Budget; Create Ledger and SSH key also lack `busy`
 
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains — 2026-11-11: Claude works on the macOS checkout, but the candidates and Codex are only on the Linux runtime.
 
