@@ -104,7 +104,7 @@
 - [x] [232](./done/232.md) — REST and GraphQL refuse the owner-case variant of a pinned ledger that MCP admits (found by the m38 audit; from source, repro unverified)
 - [x] [233](./done/233.md) — a file-write gate reads an unreadable baseline as "no errors", so every existing error reads as new (found by the m39 review; from source)
 - [x] [234](./done/234.md) — REST and GraphQL rename return no validation block; MCP's rename does (found by the m39 review)
-- [ ] [235](./235.md) — the read-only QA token has two spellings (`QA_MCP_READ_ONLY_TOKEN` in the tooling, `QA_MCP_TOKEN_READONLY` in m31's Unblock line, which also puts keys on argv); check 5 and the read-only journey skip silently (found by MCP QA 2026-11-11)
+- [x] [235](./done/235.md) — the read-only QA token has two spellings (`QA_MCP_READ_ONLY_TOKEN` in the tooling, `QA_MCP_TOKEN_READONLY` in m31's Unblock line, which also puts keys on argv); check 5 and the read-only journey skip silently (found by MCP QA 2026-11-11)
 - [ ] [236](./236.md) — `entries-count` excludes managed price feed directives (Price 846 vs 936 in the journal and BQL, by design, ADR 015 §9) but the description and `docs/mcp.md` do not say so (found by MCP QA 2026-11-11)
 - [ ] [237](./237.md) — a one-character metadata key (`k`) passes the typed-entry token check and is refused late as `parse error: unexpected input (main.bean:90)`, where `Key` is refused up front by name; the published schema advertises no key pattern (found by MCP QA 2026-11-11)
 - [ ] [238](./238.md) — `addLedgerEntries` writes a `document`'s tags and links with no separator (`#t1#t2^l1^l2`), where stock beancount and the same tool's transactions use spaces; 20 of 21 typed variants match stock byte for byte (found by MCP QA 2026-11-11)
