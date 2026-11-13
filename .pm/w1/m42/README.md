@@ -1,12 +1,12 @@
 # w1 · m42 — Bring an existing Beancount ledger to `bea` and a coding agent
 
-**Worker:** worker1 **Goal:** someone who already keeps a Beancount ledger, with their own root file name, `include` tree and plugins, installs `bea`, runs one documented command, and has a coding agent answer a question about that ledger in minutes, without a single ledger file changing. **Status:** todo
+**Worker:** worker1 **Goal:** someone who already keeps a Beancount ledger, with their own root file name, `include` tree and plugins, installs `bea`, runs one documented command, and has a coding agent answer a question about that ledger in minutes, without a single ledger file changing. **Status:** in progress (t001 done)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Write the existing-ledger contract | 30m | — |
+| t001 | Write the existing-ledger contract — **DONE** | 30m | — |
 | t002 | `bea` writes agent files for a ledger it did not create | 75m | t001 |
 | t003 | Report what in an existing ledger needs attention before an agent uses it | 60m | t001 |
 | t004 | `beancount-init` adopts an existing ledger without changing it | 60m | t002, t003 |
