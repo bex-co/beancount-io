@@ -20,6 +20,19 @@ import {
   type VarianceStatus,
 } from "./budget-selectors";
 
+/**
+ * "2 entries" for a budget card's history toggle, in the language's digits: `t`
+ * prints the count in Latin digits, so Persian read "2 مورد" under amounts and
+ * axis ticks in Persian digits (w22/043).
+ */
+export function historyCountLabel(
+  count: number,
+  t: (key: string, params?: Record<string, unknown>) => string,
+  locale: string,
+): string {
+  return localizeDigits(t("budgetHistoryCount", { count }), locale);
+}
+
 /** Translation key for a directive's cadence, e.g. "monthly" → budgetIntervalMonthly. */
 const INTERVAL_LABEL_KEYS: Record<string, string> = {
   daily: "budgetIntervalDaily",

@@ -28,6 +28,7 @@ import { journalRowKeys } from "@/screens/transactions-screen/utils/merge-journa
 import { useDeleteBudgetEntry } from "@/screens/budget-screen/hooks/use-delete-budget-entry";
 import { selectBudgetEntryActions } from "@/screens/budget-screen/selectors/select-budget-write-actions";
 import {
+  historyCountLabel,
   intervalAdjectiveKey,
   intervalLabelKey,
 } from "@/screens/budget-screen/selectors/budget-labels";
@@ -177,11 +178,11 @@ export function BudgetHistoryRows({
         onPress={() => setExpanded((value) => !value)}
         accessibilityRole="button"
         // Named by its text alone: the chevron glyph read as "U+F…" (w21/141).
-        accessibilityLabel={t("budgetHistoryCount", { count: rows.length })}
+        accessibilityLabel={historyCountLabel(rows.length, t, locale)}
         {...disclosureAccessibility(expanded, t)}
       >
         <Text key={`toggle-${fontScale}`} style={styles.toggleText}>
-          {t("budgetHistoryCount", { count: rows.length })}
+          {historyCountLabel(rows.length, t, locale)}
         </Text>
         <Ionicons
           name={expanded ? "chevron-up" : "chevron-down"}
