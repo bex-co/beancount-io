@@ -33,7 +33,7 @@
 - [x] **m28** — [Give every paginated read one has-more envelope](./done/m28/README.md) (9 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 2
 - [x] **m29** — [Add preview-commit, stale-hash and filter journeys to the agent eval](./done/m29/README.md) (8 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 3; hosted baseline waived by owner 2026-11-07
 - [x] **m30** — [Make every MCP failure carry an actionable hint](./done/m30/README.md) (7 tasks) ← `/pm-brainstorm w23` 2026-11-07, proposal 4
-- [ ] **m31** — [Validate every MCP tool result against its published outputSchema](./blocked/m31/README.md) (8 tasks) ← promoted from `w23/230`; `/pm-brainstorm for w23` 2026-11-08, proposal 1 — **blocked:** live `mcp:conformance` check 17 needs the `597aa09dc` fix deployed to production
+- [x] **m31** — [Validate every MCP tool result against its published outputSchema](./done/m31/README.md) (8 tasks) ← promoted from `w23/230`; `/pm-brainstorm for w23` 2026-11-08, proposal 1
 - [x] **m32** — [Make the MCP endpoint answer every HTTP verb and header consistently](./done/m32/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 2; absorbs `w23/229`
 - [x] **m33** — [Make every tool, parameter and recipe the docs and hints name resolve](./done/m33/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 3
 - [x] **m34** — [Make a ledger timeout tell the agent what happened and how to retry](./done/m34/README.md) (8 tasks) ← `/pm-brainstorm for w23` 2026-11-08, proposal 4; from `w23/done/209`
