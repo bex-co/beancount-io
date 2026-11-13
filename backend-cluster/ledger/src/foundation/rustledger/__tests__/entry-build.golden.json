@@ -13,6 +13,6 @@
   "close": "2024-01-01 close Assets:Checking\n\n",
   "event": "2024-01-01 event \"location\" \"Paris, France\"\n\n",
   "document": "2024-01-01 document Assets:Cash \"/path/to/doc.pdf\"\n\n",
-  "document_tags_links": "2024-01-01 document Assets:Cash \"/path/to/doc.pdf\" #taga#tagb^link1\n\n",
+  "document_tags_links": "2024-01-01 document Assets:Cash \"/path/to/doc.pdf\" #taga #tagb ^link1\n\n",
   "budget": "2024-01-01 custom \"budget\" Expenses:Food \"monthly\" 500.00 USD\n\n"
 }

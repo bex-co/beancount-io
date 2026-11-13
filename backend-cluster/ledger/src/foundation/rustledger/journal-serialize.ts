@@ -675,9 +675,8 @@ function renderPositionString(posting: PostingJson): string {
   // Total price rides a render-side extension like posting tags (w23/m6/t010).
   // Both set renders both, which the engine bean-check refuses — the typed
   // API refuses the combination before it ever gets here.
-  const totalPrice = (
-    posting as PostingJson & { totalPrice?: AmountValue }
-  ).totalPrice;
+  const totalPrice = (posting as PostingJson & { totalPrice?: AmountValue })
+    .totalPrice;
   if (totalPrice) {
     str += ` @@ ${totalPrice.number} ${totalPrice.currency}`;
   }
@@ -722,13 +721,18 @@ function padEnd(value: string, width: number): string {
   return value.length >= width ? value : value.padEnd(width);
 }
 
-/** Sorted `#tag`/`^link` suffix, matching `sorted(tags)` then `sorted(links)`. */
+/**
+ * Sorted `#tag`/`^link` suffix, matching `sorted(tags)` then `sorted(links)`,
+ * space-separated as `printer.format_entry` writes them (`#t1 #t2 ^l1 ^l2`; an
+ * unspaced `#t1#t2^l1^l2` reads back the same but is not the module's
+ * byte-identical contract, w23/238).
+ */
 function tagsLinksSuffix(tags: string[], links: string[]): string {
   const parts = [
     ...[...tags].sort().map((tag) => `#${tag}`),
     ...[...links].sort().map((link) => `^${link}`),
   ];
-  return parts.join("");
+  return parts.join(" ");
 }
 
 function renderTransaction(

@@ -47,7 +47,7 @@ const FIXTURE = [
   '  by: "me"',
   '2026-01-04 event "location" "Paris"',
   '  tz: "CET"',
-  '2026-01-05 document Assets:Cash "docs/receipt.pdf"',
+  '2026-01-05 document Assets:Cash "docs/receipt.pdf" #q1 #scan ^batch-7 ^batch-8',
   '  kind: "receipt"',
   "2026-01-06 pad Assets:Cash Equity:Opening",
   '  why: "opening"',
@@ -129,6 +129,9 @@ function toInput(row: Row): LedgerEntryInput {
           ...base,
           account: text("account"),
           filename: text("filename"),
+          // Tags and links read back as the same sets once rendered (w23/238).
+          ...(Array.isArray(row.tags) ? { tags: row.tags as string[] } : {}),
+          ...(Array.isArray(row.links) ? { links: row.links as string[] } : {}),
         },
       };
     case "Pad":
