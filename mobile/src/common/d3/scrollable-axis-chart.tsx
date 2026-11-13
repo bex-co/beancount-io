@@ -1,8 +1,15 @@
 import { ReactNode, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GestureDetector } from "react-native-gesture-handler";
-import Svg, { Line, Text as SvgText } from "react-native-svg";
+import Svg, {
+  Defs,
+  Line,
+  LinearGradient,
+  Rect,
+  Stop,
+  Text as SvgText,
+} from "react-native-svg";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { formatShortMoneyWithCurrency } from "@/common/number-utils";
@@ -160,6 +167,44 @@ export function ScrollableAxisChart({
               importantForAccessibility="no-hide-descendants"
               style={[styles.clipCue, { left: axisWidth, height: chartHeight }]}
             >
+              {/* The card's own fill: solid over the cue's first stretch, so the tail of
+                  a clipped label stays hidden, and gone by its far side, so the
+                  first column's label stays readable and no box shows against
+                  the card (w22/044). */}
+              <Svg style={StyleSheet.absoluteFill}>
+                <Defs>
+                  <LinearGradient
+                    id="clip-cue-fade"
+                    x1="0"
+                    y1="0"
+                    x2="1"
+                    y2="0"
+                  >
+                    <Stop
+                      offset="0"
+                      stopColor={theme.controlFill}
+                      stopOpacity="1"
+                    />
+                    <Stop
+                      offset="0.4"
+                      stopColor={theme.controlFill}
+                      stopOpacity="1"
+                    />
+                    <Stop
+                      offset="1"
+                      stopColor={theme.controlFill}
+                      stopOpacity="0"
+                    />
+                  </LinearGradient>
+                </Defs>
+                <Rect
+                  x="0"
+                  y="0"
+                  width="100%"
+                  height="100%"
+                  fill="url(#clip-cue-fade)"
+                />
+              </Svg>
               <Ionicons name="chevron-back" size={16} color={theme.text01} />
             </View>
           ) : null}

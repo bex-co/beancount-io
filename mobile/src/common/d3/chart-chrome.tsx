@@ -39,15 +39,16 @@ export const getChromeStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       ...LTR_PLOT,
     },
-    // The scroll cue pinned to the plot's start edge (w21/1015).
+    // The scroll cue pinned to the plot's start edge (w21/1015). It draws no
+    // fill of its own: the fade behind its chevron is painted in the card's
+    // fill (`controlFill`), because a strip in the page's base colour read as a
+    // box on the card, light and dark (w22/044).
     clipCue: {
       position: "absolute",
       top: 0,
       width: 18,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: theme.white,
-      opacity: 0.85,
     },
     placeholder: {
       alignItems: "center",
