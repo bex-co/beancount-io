@@ -130,7 +130,10 @@ def sync_detailed(
 ) -> Response[Any | V1Error]:
     """Read Beancount journal text with account, time, and expression filters
 
-     Read Beancount journal text with account, time, and expression filters
+     Read Beancount journal text with account, time, and expression filters. The text holds the ledger's
+    transactions, balance assertions and pads only, with no open, close, commodity, price, event, note,
+    document or custom directives, so it is not a copy of the ledger: read the ledger's source files or
+    its archive for that.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -184,7 +187,10 @@ def sync(
 ) -> Any | V1Error | None:
     """Read Beancount journal text with account, time, and expression filters
 
-     Read Beancount journal text with account, time, and expression filters
+     Read Beancount journal text with account, time, and expression filters. The text holds the ledger's
+    transactions, balance assertions and pads only, with no open, close, commodity, price, event, note,
+    document or custom directives, so it is not a copy of the ledger: read the ledger's source files or
+    its archive for that.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -233,7 +239,10 @@ async def asyncio_detailed(
 ) -> Response[Any | V1Error]:
     """Read Beancount journal text with account, time, and expression filters
 
-     Read Beancount journal text with account, time, and expression filters
+     Read Beancount journal text with account, time, and expression filters. The text holds the ledger's
+    transactions, balance assertions and pads only, with no open, close, commodity, price, event, note,
+    document or custom directives, so it is not a copy of the ledger: read the ledger's source files or
+    its archive for that.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -285,7 +294,10 @@ async def asyncio(
 ) -> Any | V1Error | None:
     """Read Beancount journal text with account, time, and expression filters
 
-     Read Beancount journal text with account, time, and expression filters
+     Read Beancount journal text with account, time, and expression filters. The text holds the ledger's
+    transactions, balance assertions and pads only, with no open, close, commodity, price, event, note,
+    document or custom directives, so it is not a copy of the ledger: read the ledger's source files or
+    its archive for that.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

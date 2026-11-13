@@ -694,12 +694,13 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
     const takesSubtypeFilters = SUBTYPE_QUERY_KEYS.some(
       (key) => key in read.query.shape,
     );
+    const described = "description" in read ? read.description : read.summary;
     return {
       name: read.name,
       title: read.summary,
       description: takesSubtypeFilters
-        ? `${read.summary}. Subtype filters are JSON-encoded string arrays. Each narrows only its own directive family and passes other families through — combine with directiveTypes to restrict the families returned.`
-        : read.summary,
+        ? `${described}. Subtype filters are JSON-encoded string arrays. Each narrows only its own directive family and passes other families through — combine with directiveTypes to restrict the families returned.`
+        : described,
       mimeType: "application/json",
       uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,
       // The one journal read enumerated in `resources/list` (w2/m27:t004):

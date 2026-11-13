@@ -1015,6 +1015,14 @@ Quote values holding a colon, a space, or a leading digit —
 sequences. An unparseable filter is refused with `BAD_USER_INPUT` naming the
 fix (quote the value, drop a stray `#`/`^` after a colon), never silently
 treated as match-all or match-none.
+Plaintext journal's text holds the ledger's transactions, balance assertions and
+pads only, the same text the dashboard's Export journal downloads: no `open`,
+`close`, `commodity`, `price`, `event`, `note`, `document` or `custom`
+directives. It is not a copy of the ledger, and its `total` is not
+`listLedgerEntries`'s: a ledger's prices, and with them every market valuation,
+its commodity declarations, events, custom directives, closes and real open dates
+are absent. Read `source-files` (or `readLedgerFiles`), or the archive, for a full
+copy (w23/239).
 Plaintext journal returns `{ "content": "...", "total": N, "truncated": … }`
 and takes `limit` (1–1,000 entries) and `offset`. Every page keeps the
 ledger's option header, so each one parses on its own; but a page past the

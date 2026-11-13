@@ -13,6 +13,7 @@ import { IContext } from "@/server/graphql/context";
 import { GraphQLJSONObject } from "graphql-scalars";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
+import { PLAINTEXT_JOURNAL_SCOPE } from "@/features/ledger/utils/plaintext-journal-scope";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
 import {
   resolveFilterAccount,
@@ -308,7 +309,7 @@ export class LedgerJournalQueryResolver {
 
   @AllowAnonymous()
   @Query(() => PlaintextJournalResponse, {
-    description: "Get plaintext journal in beancount format",
+    description: `Get plaintext journal in beancount format. ${PLAINTEXT_JOURNAL_SCOPE}`,
   })
   async getLedgerPlaintextJournal(
     @Arg("ledgerId", () => String) ledgerId: string,

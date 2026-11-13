@@ -87,3 +87,16 @@ it("says entries-count leaves out managed price feeds", () => {
   expect(template).toContain("the plan limit reads this count");
   expect(template).toContain("listLedgerEntries and BQL do include them");
 });
+
+// w23/239. The plaintext journal holds transactions, balance assertions and
+// pads only; an agent that takes "journal text" for a copy of the ledger loses
+// its prices, commodities, events and closes. The MCP resource says what the
+// export is, and the other journal reads do not claim it.
+it("says the plaintext journal is not a copy of the ledger", () => {
+  const read = (path: string) =>
+    [...served.templates.values()].find((t) => t.includes(`/${path}{`))!;
+  const plaintext = read("plaintext-journal");
+  expect(plaintext).toContain("transactions, balance assertions and pads only");
+  expect(plaintext).toContain("not a copy of the ledger");
+  expect(read("journal")).not.toContain("pads only");
+});

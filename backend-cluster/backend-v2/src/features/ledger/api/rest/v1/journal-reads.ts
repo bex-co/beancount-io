@@ -12,6 +12,7 @@ import {
 } from "@/features/ledger/service/ledger-journal-service";
 import type { ServiceLayer } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
+import { PLAINTEXT_JOURNAL_SCOPE } from "@/features/ledger/utils/plaintext-journal-scope";
 
 // Strict (w23/m12/t002): unknown keys are mistyped filters, not unfiltered reads.
 const filters = z
@@ -161,6 +162,7 @@ export const JOURNAL_READS = [
     name: "ledgerPlaintextJournal",
     summary:
       "Read Beancount journal text with account, time, and expression filters",
+    description: `Read Beancount journal text with account, time, and expression filters. ${PLAINTEXT_JOURNAL_SCOPE}`,
     query: plaintextJournalQuery,
     /**
      * A whole ledger's text is a context blowup for an agent (w23/044), so

@@ -130,7 +130,7 @@ export const REPORT_ROUTES = [
       method: "get",
       path: `/api-gateway/v1/ledgers/{owner}/{name}/${read.segment}`,
       summary: read.summary,
-      description: read.summary,
+      description: "description" in read ? read.description : read.summary,
       params: ledgerPathSchema,
       query: read.query,
       pagedRead: read.name,

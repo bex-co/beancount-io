@@ -13,6 +13,7 @@ import {
   listLedgerResources,
 } from "@/features/ai-agent/api/mcp-resources";
 import { JOURNAL_READS } from "@/features/ledger/api/rest/v1/journal-reads";
+import { PLAINTEXT_JOURNAL_SCOPE } from "@/features/ledger/utils/plaintext-journal-scope";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "../identity";
@@ -180,8 +181,10 @@ describe("journal template descriptions (w23/142)", () => {
     expect(byName.get("ledgerSourceFiles")).toBe(
       "List the ledger's source files",
     );
+    // The plaintext journal takes no subtype filters, so none rides on it, but
+    // it states what its text holds (w23/239) after the bare summary.
     expect(byName.get("ledgerPlaintextJournal")).toBe(
-      "Read Beancount journal text with account, time, and expression filters",
+      `Read Beancount journal text with account, time, and expression filters. ${PLAINTEXT_JOURNAL_SCOPE}`,
     );
   });
 });

@@ -75,6 +75,38 @@ describe("plaintextExportDirectives", () => {
     ]);
   });
 
+  // w23/239: the published descriptions of the plaintext journal say it holds
+  // transactions, balance assertions and pads only
+  // (`backend-v2/.../plaintext-journal-scope.ts`, `docs/mcp.md`). This pins the
+  // scope they describe: every other directive type is left out, so widening
+  // the export fails here and sends the author to correct that sentence.
+  it("keeps transactions, balances and pads and no other directive type", () => {
+    const types = [
+      "transaction",
+      "balance",
+      "pad",
+      "open",
+      "close",
+      "commodity",
+      "price",
+      "event",
+      "query",
+      "note",
+      "document",
+      "custom",
+    ];
+    const each = types.map((type) =>
+      type === "transaction"
+        ? txn("*", "kept")
+        : ({ type, date: "2016-01-01" } as unknown as DirectiveJson),
+    );
+    const kept = plaintextExportDirectives(each, {
+      windowed: false,
+      ledger: new Set(each),
+    }).map((directive) => directive.type);
+    expect(kept.sort()).toEqual(["balance", "pad", "transaction"]);
+  });
+
   // w21/745: since the API accepts any capital-letter flag (w21/652), these
   // are entries the user wrote, and they were left out of the export.
   it("exports a transaction written with a flag journal.py reserves", () => {

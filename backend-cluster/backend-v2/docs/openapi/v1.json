@@ -9408,7 +9408,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/plaintext-journal": {
       "get": {
         "summary": "Read Beancount journal text with account, time, and expression filters",
-        "description": "Read Beancount journal text with account, time, and expression filters",
+        "description": "Read Beancount journal text with account, time, and expression filters. The text holds the ledger's transactions, balance assertions and pads only, with no open, close, commodity, price, event, note, document or custom directives, so it is not a copy of the ledger: read the ledger's source files or its archive for that.",
         "tags": [
           "Ledger v1"
         ],
