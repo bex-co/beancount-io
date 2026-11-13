@@ -105,6 +105,7 @@ const getStyles = (theme: ColorTheme) =>
       marginTop: 4,
       marginBottom: 8,
       paddingHorizontal: 16,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     footer: {
       flexDirection: "row",

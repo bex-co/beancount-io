@@ -19,6 +19,8 @@ const SURFACES: [string, string][] = [
   ["screens/add-budget-screen/add-budget-screen.tsx", "error"],
   ["screens/referral-screen/components/invite-section.tsx", "title"],
   ["screens/referral-screen/components/invite-section.tsx", "summary"],
+  // The account detail's "Transactions" title over the mirrored rows (w22/045).
+  ["screens/account-detail-screen/account-detail-screen.tsx", "sectionTitle"],
   // The transaction detail's section title and the Entry Context card's headings
   // (w22/041); the card is also Edit Transaction's.
   [
