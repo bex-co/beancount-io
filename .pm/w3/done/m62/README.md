@@ -1,6 +1,6 @@
 # w3 · m62 — Ledger creation: a prefilled Currency field, backward compatible
 
-**Worker:** worker3 **Goal:** the dashboard and native creation forms keep today's single form and gain one Currency field, prefilled for the user, so a Starter ledger opens in the right operating currency; app versions already installed keep creating exactly the ledger they create today. **Status:** todo (t001–t006 done)
+**Worker:** worker3 **Goal:** the dashboard and native creation forms keep today's single form and gain one Currency field, prefilled for the user, so a Starter ledger opens in the right operating currency; app versions already installed keep creating exactly the ledger they create today. **Status:** done
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Adoption surface — **DONE** | 30m | t002, t003 |
 | t005 | Simplify — **DONE** | 20m | t004 |
 | t006 | Test coverage — **DONE** | 45m | t004 |
-| t007 | Closeout | 10m | t005, t006 |
+| t007 | Closeout — **DONE** | 10m | t005, t006 |
 
 ## Definition of done
 
@@ -24,7 +24,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** owner request 2026-11-12 after [ADR026](../../../docs/adrs/ADR026-dashboard-onboarding.md) was suspended: keep the single form and support only a default currency, compatible with installed mobile apps. The two-step flow and its currency suggestion ([m60](../done/m60/README.md)) were reverted in `336b3cf4d` (dashboard) and `6dc73928d` (mobile); their `currency-suggestion` modules and `setup-currencies.json` are the starting point for t002–t003, trimmed to the order above.
+- **Source:** owner request 2026-11-12 after [ADR026](../../../../docs/adrs/ADR026-dashboard-onboarding.md) was suspended: keep the single form and support only a default currency, compatible with installed mobile apps. The two-step flow and its currency suggestion ([m60](../m60/README.md)) were reverted in `336b3cf4d` (dashboard) and `6dc73928d` (mobile); their `currency-suggestion` modules and `setup-currencies.json` are the starting point for t002–t003, trimmed to the order above.
 - **Goal linkage:** A2 — Frictionless onboarding: a newcomer outside the United States gets a first ledger in their own currency without editing `main.bean` or learning the setup specification.
 - **Expected outcome:** fewer new Starter ledgers whose operating currency is changed by hand after creation; non-USD Starter ledgers created from web and native.
 - **Why now:** the API already validates currencies and stores `defaultCurrency`; the owner wants this slice without reviving ADR026. Adoption surface is included because the form and the API change are user- and agent-facing.
