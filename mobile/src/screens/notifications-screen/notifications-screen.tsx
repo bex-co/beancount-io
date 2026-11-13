@@ -84,6 +84,7 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 16,
       paddingTop: 20,
       paddingBottom: 8,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     showMore: {
       paddingHorizontal: 16,

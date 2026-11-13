@@ -19,6 +19,13 @@ const SURFACES: [string, string][] = [
   ["screens/add-budget-screen/add-budget-screen.tsx", "error"],
   ["screens/referral-screen/components/invite-section.tsx", "title"],
   ["screens/referral-screen/components/invite-section.tsx", "summary"],
+  // Notifications' section headers and the commit detail's message, author line
+  // and section labels (w22/046).
+  ["screens/notifications-screen/notifications-screen.tsx", "sectionHeader"],
+  ["screens/commit-detail-screen/commit-detail-screen.tsx", "sectionLabel"],
+  ["screens/commit-detail-screen/commit-detail-screen.tsx", "messageLine"],
+  ["screens/commit-detail-screen/commit-detail-screen.tsx", "messageBody"],
+  ["screens/commit-detail-screen/commit-detail-screen.tsx", "metaLine"],
   // The account detail's "Transactions" title over the mirrored rows (w22/045).
   ["screens/account-detail-screen/account-detail-screen.tsx", "sectionTitle"],
   // The transaction detail's section title and the Entry Context card's headings

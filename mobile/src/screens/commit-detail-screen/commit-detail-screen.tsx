@@ -80,6 +80,7 @@ const getStyles = (theme: ColorTheme) =>
       letterSpacing: letterSpacing(0.5),
       paddingHorizontal: 16,
       paddingBottom: 8,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     divider: {
       height: StyleSheet.hairlineWidth,
@@ -93,6 +94,7 @@ const getStyles = (theme: ColorTheme) =>
       lineHeight: 22,
       paddingHorizontal: 16,
       paddingBottom: 4,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     messageBody: {
       fontSize: 15,
@@ -100,12 +102,14 @@ const getStyles = (theme: ColorTheme) =>
       lineHeight: 22,
       paddingHorizontal: 16,
       paddingBottom: 8,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     metaLine: {
       fontSize: 13,
       color: theme.black80,
       paddingHorizontal: 16,
       paddingBottom: 4,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     statsRow: {
       flexDirection: "row",
