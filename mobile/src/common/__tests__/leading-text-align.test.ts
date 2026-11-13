@@ -19,6 +19,10 @@ const SURFACES: [string, string][] = [
   ["screens/add-budget-screen/add-budget-screen.tsx", "error"],
   ["screens/referral-screen/components/invite-section.tsx", "title"],
   ["screens/referral-screen/components/invite-section.tsx", "summary"],
+  // The valuation sheet's title beside Done and each holding beside its price
+  // date (w22/047).
+  ["components/valuation-sheet/index.tsx", "title"],
+  ["components/valuation-sheet/index.tsx", "holding"],
   // Notifications' section headers and the commit detail's message, author line
   // and section labels (w22/046).
   ["screens/notifications-screen/notifications-screen.tsx", "sectionHeader"],

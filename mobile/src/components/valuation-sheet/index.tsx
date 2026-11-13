@@ -53,6 +53,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: 18,
       fontWeight: "600",
       color: theme.text01,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     close: {
       fontSize: 16,
@@ -71,6 +72,7 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       fontSize: 16,
       color: theme.text01,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     detail: {
       flexShrink: 1,
