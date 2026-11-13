@@ -519,7 +519,12 @@ own files together, so a mixed change is now one commit per kind.
 ```
 
 It parses the text into directives and refuses anything that is not one —
-prose, a diff, JSON — before writing. It also refuses `option`, `plugin` and
+prose, a diff, JSON — before writing. That check is a line classifier, narrower
+than Beancount's grammar: it reads `YYYY-MM-DD` dates and a quoted string on one
+line, so `2026/11/12 event "x" "y"` (a date stock accepts) and a narration that
+runs onto a second line are refused as "not a Beancount directive", with a hint
+naming the way out (`updateLedgerFiles`, which takes both; `addLedgerEntries` for
+a narration with a line break). It also refuses `option`, `plugin` and
 `include` lines with `BAD_USER_INPUT` naming the line: they reconfigure the
 whole ledger rather than record an entry, so change them deliberately with
 `updateLedgerFiles`. `pushtag`/`poptag` and `pushmeta`/`popmeta` around
@@ -542,7 +547,15 @@ include that already covers it needs nothing (w23/062). The same applies to
 `addLedgerEntries`. A file whose own directives are out of date order gets
 them appended, and says so in `appendedUnsorted`.
 
-Before committing, it bean-checks the projected ledger. New errors are a
+Before committing, it bean-checks the projected ledger. The ledger's check is
+stock beancount's, plus the three refusals stock makes that the engine does not
+(w23/240): an unquoted booking method (`open Assets:Stock ABC STRICT`, where the
+grammar wants `"STRICT"`), a second `commodity` directive for one currency, and
+a metadata key repeated on one transaction or one posting. Each is reported at
+its line like any bean-check error. Stock tests a repeat by object identity, so
+it accepts a repeated `TRUE`, a repeated one-character string or a repeated
+account name, and so does the ledger; a repeated key on an `open` or
+`commodity` is accepted by both. New errors are a
 refusal — `UNBALANCED` when a transaction does not balance — unless
 `allowInvalid` records them deliberately. `dry_run` returns the unified diff
 and the projected errors without committing, with `valid: false` when there are

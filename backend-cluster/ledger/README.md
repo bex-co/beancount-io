@@ -196,6 +196,42 @@ supported form (`SELECT date, account, amount, discrepancy FROM balances`).
 Reported upstream as rustledger/rustledger#2823; drop the enrichment when the
 engine fills the column (w23/m19).
 
+## Validation: stock errors the engine does not raise
+
+Three things stock `bean-check` refuses load without an error in the pinned
+engine (`@rustledger/wasm` 0.24.0), so `src/foundation/rustledger/stock-syntax-errors.ts`
+reports them at their line, in the same error list `checkLedger`, the post-write
+report and the write gates read (w23/240):
+
+| Code | Construct | Stock's message |
+| --- | --- | --- |
+| `SYNTAX` | an unquoted booking method on `open` (`open Assets:Stock ABC STRICT`) | `syntax error, unexpected CURRENCY` |
+| `DUPLICATE_COMMODITY` | a second `commodity` directive for a currency, on the later one | `Duplicate commodity directives for 'ZZZ'` |
+| `DUPLICATE_METADATA` | one metadata key twice on a transaction, or on a posting, at the transaction's line | `Duplicate metadata field on entry`, `Duplicate posting metadata field` |
+
+The scan is syntactic and abstains on doubt: it reads one block's own lines (a
+line inside a multi-line string is never a key), and a line that does not have a
+rule's exact shape is left alone. It mirrors stock's quirks rather than
+tightening them. A bare word after a currency list is the error, but
+`open Assets:Stock STRICT` is a currency named STRICT. Stock checks only
+transactions for a repeated key, and it records a repeat only when the second
+value is not the same Python object as the first, so a repeated `TRUE`, a
+repeated one-character string, an empty value or a repeated account name is
+accepted, where a repeated `"ab"`, number, date or currency is the error; a
+string with a backslash is left alone. Checked against stock 3.2.3 on 1,000
+random cases and the repository's 120 ledger fixtures with no difference.
+
+`yarn verify:rustledger` pins each construct: it fails when the raw engine
+starts to reject one, which is the cue to delete that rule. The first is
+already a parse error in `@rustledger/wasm` 1.0.0-rc.18; the other two still
+load there. Moving to that release also changes the engine's API
+(`Ledger.fromFiles` becomes `ParsedLedger`), so it is not a drop-in bump.
+
+The write-side tools differ in the other direction: `appendLedgerText` is a line
+classifier and refuses a `YYYY/MM/DD` date and a quoted string that spans lines,
+which stock and `updateLedgerFiles` accept. It says so in the refusal's hint
+(`backend-v2/docs/mcp.md`).
+
 ## BQL `meta` dialects
 
 The `meta` column reports dtype `object` on both tables at every

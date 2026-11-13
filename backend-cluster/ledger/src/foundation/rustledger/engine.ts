@@ -61,6 +61,7 @@ import { sellGainsErrors } from "./sell-gains";
 import { reconcileLeafOnlyErrors } from "./leafonly";
 import { duplicateEntryErrors, locateDuplicateErrors } from "./noduplicates";
 import { midCurrencyToleranceErrors } from "./balance-tolerance-syntax";
+import { stockSyntaxErrors } from "./stock-syntax-errors";
 import { reconcileNounusedErrors } from "./nounused";
 import { reconcileOneCommodityErrors } from "./one-commodity";
 import { reconcileUniquePriceErrors } from "./unique-prices";
@@ -822,6 +823,9 @@ async function parseLedgerFilesUncached(
   errors = locateDuplicateErrors(errors, files, entryPoint);
   errors = [...errors, ...duplicateEntryErrors(files, entryPoint)];
   errors = [...errors, ...midCurrencyToleranceErrors(files, entryPoint)];
+  // Stock refuses an unquoted booking method, a second commodity directive and
+  // a metadata key repeated on a transaction or posting; rustledger loads them.
+  errors = [...errors, ...stockSyntaxErrors(files, entryPoint)];
   errors = [...errors, ...coherentCostErrors(directives, files, entryPoint)];
   errors = [...errors, ...sellGainsErrors(directives, files, entryPoint)];
   // The engine validates before its plugins add close_tree's closes, and its

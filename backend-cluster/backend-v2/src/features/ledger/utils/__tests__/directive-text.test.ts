@@ -170,6 +170,44 @@ describe("parseDirectiveText", () => {
     );
   });
 
+  // w23/240: stock Beancount reads both of these and `updateLedgerFiles` takes
+  // them; this tool's classifier does not, so the refusal names the way out.
+  it.each([
+    [
+      '2026/11/12 event "x" "y"',
+      /line 1: not a Beancount directive: 2026\/11\/12 event/,
+      "YYYY-MM-DD",
+    ],
+    [
+      '2026-11-12 * "line one\nline two"\n  Assets:Cash 1 USD\n  Equity:O',
+      /line 2: not a Beancount directive: line two"/,
+      "addLedgerEntries",
+    ],
+  ])(
+    "hints at the way out of a valid construct it cannot read: %p",
+    (text, message, hint) => {
+      expect.hasAssertions();
+      expect(() => parseDirectiveText(text)).toThrow(message);
+      try {
+        parseDirectiveText(text);
+      } catch (error) {
+        expect((error as BadUserInputError).metadata).toMatchObject({
+          field: "text",
+          hint: expect.stringContaining(hint),
+        });
+      }
+    },
+  );
+
+  it("gives no hint for text that is not directives at all", () => {
+    expect.hasAssertions();
+    try {
+      parseDirectiveText("+++ b/main.bean");
+    } catch (error) {
+      expect((error as BadUserInputError).metadata).not.toHaveProperty("hint");
+    }
+  });
+
   it("refuses an indented line with no directive above it", () => {
     expect(() => parseDirectiveText("  Expenses:Food 10.00 USD")).toThrow(
       /line 1: indented line has no directive above it/,

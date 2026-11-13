@@ -208,6 +208,44 @@ function directiveHead(
   return null;
 }
 
+/** Whether `lines` end inside a quoted string (`"` escapes with a backslash; `;` outside one starts a comment). */
+function endsInsideString(lines: readonly string[]): boolean {
+  let inside = false;
+  for (const line of lines) {
+    for (let i = 0; i < line.length; i += 1) {
+      const ch = line[i];
+      if (inside) {
+        if (ch === "\\") i += 1;
+        else if (ch === '"') inside = false;
+      } else if (ch === '"') {
+        inside = true;
+      } else if (ch === ";") {
+        break;
+      }
+    }
+  }
+  return inside;
+}
+
+/**
+ * Two things stock Beancount reads that this tool's line classifier does not
+ * (w23/240): a `YYYY/MM/DD` date, and a quoted string that spans lines, whose
+ * second line starts at column 0. `updateLedgerFiles` takes both; naming the way
+ * out is the difference between a dead end and a retry.
+ */
+function notADirectiveHint(
+  line: string,
+  open: readonly string[] | undefined,
+): string | undefined {
+  if (/^\d{4}\/\d{2}\/\d{2}[ \t]/.test(line)) {
+    return "Beancount accepts a YYYY/MM/DD date, but this tool reads only YYYY-MM-DD: write the date with dashes, or edit the file with `updateLedgerFiles`.";
+  }
+  if (open && endsInsideString(open)) {
+    return "A quoted string cannot span lines in appended text. Put it on one line, or add the entry with `addLedgerEntries` or edit the file with `updateLedgerFiles`, which accept a multi-line string.";
+  }
+  return undefined;
+}
+
 const isBlank = (line: string) => line.trim().length === 0;
 /** An org-mode heading, which Beancount reads as a section title. */
 const ORG_HEADING = /^\*+\s/;
@@ -274,6 +312,8 @@ export function parseDirectiveText(text: string): ParsedDirective[] {
     if (!head) {
       throw new BadUserInputError(
         `line ${index + 1}: not a Beancount directive: ${line.trim()}`,
+        "text",
+        notADirectiveHint(line, current?.lines),
       );
     }
     const keyword = /^([a-z]+)\b/.exec(line)?.[1];

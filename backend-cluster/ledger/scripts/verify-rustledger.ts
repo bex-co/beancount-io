@@ -1550,6 +1550,87 @@ async function main(): Promise<void> {
     !validTolerance.errors.some((e) => e.code === "TOLERANCE"),
     "the valid balance tolerance spelling stays clean",
   );
+  // w23/240: stock refuses these three and the engine (0.24.0) loads them, so
+  // the snapshot reports each at its line. The raw-engine assertions say when
+  // the engine catches up: delete that rule from `stock-syntax-errors.ts`.
+  const stockLedger = (body: string): Record<string, string> => ({
+    "main.beancount": [
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Equity:O USD",
+      body,
+      "",
+    ].join("\n"),
+  });
+  const cashTxn = (...meta: string[]) =>
+    ['2026-01-02 * "x"', ...meta, "  Assets:Cash 1 USD", "  Equity:O -1 USD"];
+  const stockRefused: Array<[string, string, string, number]> = [
+    [
+      "an unquoted booking method",
+      "2026-01-02 open Assets:Stock ABC STRICT",
+      "SYNTAX",
+      3,
+    ],
+    [
+      "a second commodity directive",
+      "2026-01-02 commodity ZZZ\n2026-02-01 commodity ZZZ",
+      "DUPLICATE_COMMODITY",
+      4,
+    ],
+    [
+      "a metadata key repeated on a transaction",
+      cashTxn('  k1: "ab"', '  k1: "cd"').join("\n"),
+      "DUPLICATE_METADATA",
+      3,
+    ],
+    [
+      "a metadata key repeated on a posting",
+      [
+        '2026-01-02 * "x"',
+        "  Assets:Cash 1 USD",
+        '    k1: "ab"',
+        '    k1: "cd"',
+        "  Equity:O -1 USD",
+      ].join("\n"),
+      "DUPLICATE_METADATA",
+      3,
+    ],
+  ];
+  for (const [label, body, code, line] of stockRefused) {
+    const files = stockLedger(body);
+    const raw = await rawValidate(files, "main.beancount");
+    assert(
+      raw.valid,
+      `the raw engine still loads ${label}, so the stock-syntax rule is load-bearing`,
+    );
+    const reported = await parseLedgerFiles(files, "main.beancount");
+    assert(
+      reported.errors.some(
+        (e) => e.code === code && e.line === line && e.severity === "error",
+      ),
+      `${label} is reported at its line, as stock refuses it`,
+    );
+  }
+  const stockAccepted = await parseLedgerFiles(
+    stockLedger(
+      [
+        '2026-01-02 open Assets:Stock ABC "STRICT"',
+        "2026-01-02 open Assets:Other STRICT",
+        "2026-01-02 commodity ZZZ",
+        "2026-01-02 commodity YYY",
+        ...cashTxn('  k1: "a"', '  k1: "a"', "  k2: TRUE", "  k2: TRUE"),
+        '2026-01-03 open Assets:Meta USD\n  k1: "ab"\n  k1: "cd"',
+      ].join("\n"),
+    ),
+    "main.beancount",
+  );
+  assert(
+    !stockAccepted.errors.some((e) =>
+      ["SYNTAX", "DUPLICATE_COMMODITY", "DUPLICATE_METADATA"].includes(
+        e.code ?? "",
+      ),
+    ),
+    "what stock accepts stays clean: a quoted or lone STRICT, distinct commodities, a repeated TRUE or one-character value, a repeated key on an open",
+  );
   // w23/199: a run of trailing terminators is empty statements stock
   // tolerates; every `;` has to go or the bare `FROM postings` tail resolves
   // as a column.
