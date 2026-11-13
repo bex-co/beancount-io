@@ -16,8 +16,14 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - **Production payment tests:** by user decision on 2026-10-18, each milestone ends with a real payment test in production. It uses the QA account from `beancount-io/.env` and two 100%-off coupons, before closeout.
 - **Not on the board:** PRFAQ005's stage 3, its growth experiments, waits for four weeks of stage 1–2 metrics.
 
+m42–m45 and note [238](./238.md) were materialized on 2026-11-13 from `/pm-brainstorm for w1` items 1–5, routed by the user via `/pmx`. m43, m44 and m45 carry the three write primitives [228](./blocked/228.md) left undecided (account rename, an atomic move between files, bulk source reads), so that note's unblock condition is now met. **Suggested order:** m42 and note 238 are independent of the rest; m44 before m45. The hosted checks in m43/t006 and m45/t005 wait on a backend-v2 deploy and on [w23/242](../w23/242.md) (`revertCommit` answers `INTERNAL_SERVER_ERROR` in production).
+
 ### Open
 
+- [ ] **m42** — [Bring an existing Beancount ledger to `bea` and a coding agent](./m42/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 1); user routed to w1
+- [ ] **m43** — [Rename an account across a hosted ledger in one previewed commit](./m43/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 2, from [228](./blocked/228.md)); user routed to w1
+- [ ] **m44** — [List entries with their source text in one call](./m44/README.md) (7 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 3, from [228](./blocked/228.md)); user routed to w1
+- [ ] **m45** — [Move entries to another file in one atomic commit](./m45/README.md) (9 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 4, from [228](./blocked/228.md)); user routed to w1
 - [x] **m41** — [Saving a file answers as soon as the write lands](./done/m41/README.md) (8 tasks) ← user report 2026-11-02: saving `main.bean` takes 5–10s; measured about 2s, gated on a serial `GetLedgerErrors` and two extra whole-file transfers
 - [x] **m38** — [One MCP tool per operation, so the ChatGPT app directory accepts every tool](./done/m38/README.md) (11 tasks) ← OpenAI Plugins dashboard scan 2026-10-18: seven grouped tools flagged for operations "not individually exposed"; reverses ADR 0008 D3 — **top priority** (directory listing)
 - [x] **m39** — [Reach yearly billing from inside the product](./done/m39/README.md) (14 tasks) ← PRFAQ005 stage 1, user request 2026-10-17: server-side change preview, charging at the previewed amount, in-place bank authentication, a Billing tab with "Pay yearly", the Checkout confirmation and the $143.88 Premium yearly price, without breaking the pricing page's checkout
@@ -71,6 +77,7 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 
 ## Inbox
 
+- [238](./238.md) — Current-state docs miscount the customer skills; the PyPI page says "eight" (45m, A3)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
