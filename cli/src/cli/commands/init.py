@@ -17,12 +17,18 @@ from typing import Annotated, Any, NamedTuple
 
 import typer
 
-from cli import context, output
-from cli.agent_guidance import error_count, write_agent_files, write_existing_agent_files
+from cli import context, existing_report, output
+from cli.agent_guidance import (
+    beside_ledger_plugins,
+    check_command,
+    error_count,
+    write_agent_files,
+    write_existing_agent_files,
+)
 from cli.amounts import parse_decimal_number
 from cli.errors import AuthError, ConflictError, UsageError
 from cli.paths import expand_path
-from cli.utils import parse_date
+from cli.utils import inert_text, parse_date
 
 # Must match `bea_engine.initiating.ACCOUNTS` — the engine builds the template;
 # the frontend only uses this list to validate interactive opening balances.
@@ -353,8 +359,14 @@ def _init_existing(directory: Path) -> None:
     ctx = context.current()
     root = _existing_root(directory)
     description = launch.helper_json(["describe", "--file", str(root)])
+    if beside_ledger_plugins(description):
+        check = f"cd {_shell_path(str(root.parent))} && {check_command(root.name, description)}"
+    else:
+        check = f"bea --file {_shell_path(str(root))} check"
+    items = existing_report.attention(description, check)
     data: dict[str, Any] = {
         **description,
+        "attention": items,
         "agent_files": write_existing_agent_files(description, today=datetime.date.today().isoformat()),
     }
     if ctx.json_output:
@@ -371,9 +383,11 @@ def _init_existing(directory: Path) -> None:
     count = error_count(description)
     if count:
         output.note(
-            f"The ledger loads with {count} error{'s' if count != 1 else ''} today; AGENTS.md asks agents to add "
-            f"none. See them with: bea --file {_shell_path(str(root))} check"
+            f"The ledger loads with {count} error{'s' if count != 1 else ''} today; AGENTS.md asks agents to add none."
         )
+    for line in existing_report.render(items, check):
+        # Paths and plugin names come from the user's files (w5/887).
+        typer.echo(inert_text(line))
 
 
 def _report_agent_files(result: dict[str, str]) -> None:

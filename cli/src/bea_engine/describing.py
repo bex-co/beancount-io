@@ -30,6 +30,7 @@ from typing import Any
 _PLUGIN_LINE = re.compile(r'^plugin\s+"((?:[^"\\]|\\.)*)"')
 _IMPORT_FAILURE = re.compile(r'^Error importing "([^"]+)":')
 _RUN_FAILURE = re.compile(r'^Error applying plugin "([^"]+)":')
+_UNKNOWN_OPTION = re.compile(r"^Invalid option: '([^']*)'$")
 
 
 def describe(file: Path) -> dict[str, Any]:
@@ -62,6 +63,11 @@ def describe(file: Path) -> dict[str, Any]:
         _plugin(name, locations.get(name), failures.get(name), folder) for name, _config in options.get("plugin") or ()
     ]
     others = [error for error in errors if not is_plugin_failure(error)]
+    unknown = [
+        {"name": match[1], "location": format_error(error, ledger_file=file).split(": Invalid option", 1)[0]}
+        for error in others
+        if isinstance(getattr(error, "message", None), str) and (match := _UNKNOWN_OPTION.match(error.message))
+    ]
     others += data_type_errors(entries, options)
     from beancount import __version__ as beancount_version
 
@@ -72,6 +78,9 @@ def describe(file: Path) -> dict[str, Any]:
         "open_accounts": sorted(opened - closed),
         "plugins": plugins,
         "errors": [format_error(error, ledger_file=file) for error in others],
+        # A subset of `errors`: options this Beancount does not know, which is
+        # how a Beancount 2 option removed in Beancount 3 reads.
+        "unknown_options": unknown,
         "beancount_version": beancount_version,
     }
 

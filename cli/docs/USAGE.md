@@ -598,13 +598,28 @@ the ledger's folder loads only through `PYTHONPATH`, because the engine never
 imports from the working directory; the check command then reads
 `PYTHONPATH=. bea --file ROOT check`.
 
+It then lists what needs attention before an agent works on the ledger, each
+item at its `file:line` with one next step:
+
+- a plugin under `beancount.` that this Beancount does not ship (Beancount 2
+  plugins Beancount 3 dropped): remove or replace the line;
+- a plugin module in the ledger's folder: run bea there with `PYTHONPATH=.`;
+- a plugin from a package the managed engine does not include: no `bea`
+  command installs third-party packages, so the plugin does not run under
+  bea while the rest of the ledger loads;
+- a plugin that imports but fails while running;
+- an option this Beancount does not know (a Beancount 2 option removed or
+  renamed in Beancount 3);
+- every other error, the first five shown, with the check command for all.
+
 Nothing else changes: no ledger file is written, an existing `AGENTS.md` or
 `CLAUDE.md` is kept byte for byte (as with `--agent-files`), and no Git
 repository is created or staged. A ledger with errors still gets its files;
 the command says how many errors it loads with and exits **0**. In JSON mode
 `data` holds the root, `files`, `operating_currencies`, `open_accounts`,
 `plugins` (each with `loaded` and `source`: `beancount`, `beside-ledger` or
-`package`), `errors`, and `agent_files`.
+`package`), `errors`, `unknown_options`, `attention` (each item's `kind`,
+`location`, `subject`, `message` and `next`), and `agent_files`.
 
 ## Checking, formatting, querying
 

@@ -227,3 +227,95 @@ def test_the_existing_template_is_the_skills_template() -> None:
     assert fenced is not None
     skill_text = re.sub(r"\{\{([A-Z]+)\}\}", lambda m: "{" + m[1].lower() + "}", fenced.group(1))
     assert skill_text == EXISTING_TEMPLATE
+
+
+# --- The report (w1/m42/t003) -------------------------------------------------
+
+V2_ROOT = """\
+option "operating_currency" "USD"
+option "booking_algorithm" "FIFO"
+plugin "beancount.plugins.unrealized" "Unrealized"
+plugin "localplug"
+plugin "no_such_package.plugin"
+2025-01-01 open Assets:Cash USD
+2025-01-02 * "Unopened"
+  Expenses:Nope  1 USD
+  Assets:Cash
+"""
+
+
+def _v2_books(tmp_path: Path) -> Path:
+    books = tmp_path / "old"
+    books.mkdir()
+    (books / "ledger.beancount").write_text(V2_ROOT)
+    (books / "localplug.py").write_text(PLUGIN)
+    return books
+
+
+def test_each_problem_gets_its_location_and_one_next_step(tmp_path: Path) -> None:
+    books = _v2_books(tmp_path)
+    before = _digests(books)
+    run = bea(["--no-input", "--json", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    assert _digests(books) == before
+    items = json.loads(run.stdout)["data"]["attention"]
+    by_kind = {item["kind"]: item for item in items}
+    assert [item["kind"] for item in items] == [
+        "plugin-not-in-beancount",
+        "plugin-beside-ledger",
+        "plugin-package-missing",
+        "option-unknown",
+        "error",
+    ]
+    assert by_kind["plugin-not-in-beancount"]["location"] == "ledger.beancount:3"
+    assert "Remove the plugin line" in by_kind["plugin-not-in-beancount"]["next"]
+    beside = by_kind["plugin-beside-ledger"]
+    assert beside["location"] == "ledger.beancount:4" and beside["subject"] == "localplug"
+    assert beside["next"].endswith("&& PYTHONPATH=. bea --file ledger.beancount check")
+    package = by_kind["plugin-package-missing"]
+    assert package["location"] == "ledger.beancount:5" and "`no_such_package`" in package["message"]
+    assert "No bea command installs third-party packages" in package["message"]
+    option = by_kind["option-unknown"]
+    assert (option["location"], option["subject"]) == ("ledger.beancount:2", "booking_algorithm")
+    # The unknown option is reported once, as an option, not again as an error.
+    assert "Expenses:Nope" in by_kind["error"]["message"] and by_kind["error"]["location"] == "ledger.beancount:7"
+    # Nothing was installed: the package still cannot be imported by the engine.
+    data = json.loads(run.stdout)["data"]
+    assert not next(p for p in data["plugins"] if p["name"] == "no_such_package.plugin")["loaded"]
+
+
+def test_the_text_report_lists_every_problem_with_its_next_step(tmp_path: Path) -> None:
+    books = _v2_books(tmp_path)
+    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    lines = run.stdout.splitlines()
+    start = lines.index("Needs attention before an agent works on this ledger:")
+    report = lines[start + 1 :]
+    assert report[0].startswith(
+        "  ledger.beancount:3: Plugin `beancount.plugins.unrealized` is not part of Beancount 3"
+    )
+    assert report[1].startswith("    Next: Remove the plugin line")
+    assert sum(line.startswith("    Next: ") for line in report) == 5
+    assert report[-1].startswith("    Next: see every error with cd ")
+
+
+def test_a_clean_ledger_needs_no_attention(tmp_path: Path) -> None:
+    books = _books(tmp_path)
+    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    assert "Needs attention" not in run.stdout and "error" not in run.stderr
+    run = bea(["--no-input", "--json", "init", "--existing", str(books)], tmp_path)
+    assert json.loads(run.stdout)["data"]["attention"] == []
+
+
+def test_a_plugin_that_raises_is_reported_as_failing_while_running(tmp_path: Path) -> None:
+    books = tmp_path / "raising"
+    books.mkdir()
+    (books / "main.bean").write_text('plugin "boom"\n2025-01-01 open Assets:Cash\n')
+    (books / "boom.py").write_text(
+        '__plugins__ = ["boom"]\n\n\ndef boom(entries, options):\n    raise RuntimeError("x")\n'
+    )
+    env_run = _bea_with_pythonpath(tmp_path, books, "--no-input", "--json", "init", "--existing")
+    assert env_run.returncode == 0, env_run.stderr
+    items = json.loads(env_run.stdout)["data"]["attention"]
+    assert [(item["kind"], item["subject"]) for item in items] == [("plugin-failed", "boom")]
