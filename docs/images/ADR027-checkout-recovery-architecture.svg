@@ -60,7 +60,7 @@
   <text x="336" y="404" font-size="13" font-weight="600">features/stripe/operations/checkout-recovery-email.ts</text>
   <text x="336" y="430" font-weight="600">1  Eligible? (D2)</text>
   <text x="500" y="430">user with email · plan current, not retired</text>
-  <text x="500" y="448">never paid · not unsubscribed</text>
+  <text x="500" y="448">never paid, Stripe or app store</text>
   <text x="336" y="474" font-weight="600">2  Paid since? (D5)</text>
   <text x="500" y="474">paid subscription, or a later session</text>
   <text x="500" y="492">complete or open → skip</text>
@@ -79,7 +79,7 @@
 
   <rect x="590" y="650" width="250" height="60" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
   <text x="606" y="674" font-size="13" font-weight="600">foundation/sendgrid.ts</text>
-  <text x="606" y="696" fill="#9a6700">+ asm group · suppression lookup</text>
+  <text x="606" y="696" fill="#9a6700">+ asm unsubscribe group on send</text>
 
   <!-- Stripe and SendGrid -->
   <rect x="900" y="115" width="350" height="175" rx="8" fill="#f6f8fa" stroke="#8c959f"/>
@@ -103,7 +103,7 @@
   <rect x="900" y="640" width="350" height="70" rx="8" fill="#f6f8fa" stroke="#8c959f"/>
   <text x="916" y="664" font-size="13" font-weight="600">SendGrid</text>
   <text x="916" y="684" fill="#9a6700">+ unsubscribe group for this email (D6)</text>
-  <text x="916" y="702" fill="#57606a" font-style="italic">suppressed address → ineligible</text>
+  <text x="916" y="702" fill="#57606a" font-style="italic">drops the mail for anyone who left the group</text>
 
   <!-- Flow arrows -->
   <line x1="270" y1="162" x2="318" y2="162" stroke="#57606a" marker-end="url(#arrow)"/>

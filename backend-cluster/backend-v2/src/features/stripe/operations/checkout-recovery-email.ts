@@ -33,7 +33,10 @@ export interface CheckoutRecoveryDeps {
   models: Pick<IModels, "user" | "sentBillingEmail" | "storeSubscription">;
   db: DbExecutor;
   sendgrid: ISendGrid;
-  /** The email's SendGrid unsubscribe group. */
+  /**
+   * The email's SendGrid unsubscribe group. SendGrid drops the mail for
+   * anyone who left it, so the operation never looks the address up.
+   */
   groupId: number;
 }
 
@@ -41,8 +44,7 @@ type RecoveryIneligibility =
   | "no-recipient"
   | "unknown-plan"
   | "paid-before"
-  | "back-in-checkout"
-  | "unsubscribed";
+  | "back-in-checkout";
 
 export type RecoveryEligibility =
   | {
@@ -65,10 +67,10 @@ const ineligible = (reason: RecoveryIneligibility): RecoveryEligibility => ({
 });
 
 /**
- * Whether an expired session earns the recovery email (ADR027 D2, D5, D6).
- * Read-only: nothing is claimed, created or sent. The cheap checks run
- * first and the SendGrid lookup last. A provider failure propagates, so the
- * webhook is redelivered rather than an email skipped or sent on a guess.
+ * Whether an expired session earns the recovery email (ADR027 D2, D5).
+ * Read-only: nothing is claimed, created or sent. A provider failure
+ * propagates, so the webhook is redelivered rather than an email skipped or
+ * sent on a guess. Unsubscribes are SendGrid's to enforce at send (D6).
  */
 export async function recoveryEligibility(
   deps: CheckoutRecoveryDeps,
@@ -87,9 +89,6 @@ export async function recoveryEligibility(
   if (await hasPaidBefore(deps, userId)) return ineligible("paid-before");
   if (await isBackInCheckout(stripe, session, userId)) {
     return ineligible("back-in-checkout");
-  }
-  if (await deps.sendgrid.isSuppressed(user.email, deps.groupId)) {
-    return ineligible("unsubscribed");
   }
   return { eligible: true, userId, email: user.email, plan };
 }

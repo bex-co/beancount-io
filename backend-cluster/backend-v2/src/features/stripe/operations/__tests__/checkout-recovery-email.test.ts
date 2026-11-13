@@ -75,7 +75,7 @@ function setup({ sendFails = 0 } = {}) {
       },
     },
     db: {} as DbExecutor,
-    sendgrid: { isSuppressed: jest.fn(async () => false), sendMail },
+    sendgrid: { sendMail },
     groupId: 7,
   } as unknown as CheckoutRecoveryDeps;
   const send = (expired = session()) =>

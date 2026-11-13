@@ -40,7 +40,8 @@ Checkout sessions expire after 90 minutes with Stripe recovery on. On
 app store) and has not opened Checkout again gets one short recovery email, ever,
 with a single-use 20% code (ADR027). It needs the Stripe coupon
 `checkout-recovery-20` and the SendGrid unsubscribe group 38671, both pinned in
-`SUBSCRIPTION_CONFIG` beside the price IDs.
+`SUBSCRIPTION_CONFIG` beside the price IDs. SendGrid drops the email for anyone
+who left that group, so the API key needs only Mail Send.
 
 The retired `beancount-web-dev` tenant and `STRIPE_DEV_*` variables are ignored;
 no fake-paid script replaces them. Keep isolated Stripe testing outside live

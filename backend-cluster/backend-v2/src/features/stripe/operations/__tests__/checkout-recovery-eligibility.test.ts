@@ -1,6 +1,5 @@
 import type Stripe from "stripe";
 import type { DbExecutor } from "@/drizzle/drizzle";
-import { ServiceUnavailableError } from "@/shared/errors";
 import {
   BILLING_CLIENT_ID,
   SUBSCRIPTION_CONFIG,
@@ -32,7 +31,6 @@ function setup({
   subscriptions = [] as { status: string }[],
   storeRows = [] as object[],
   later = [] as Later[],
-  suppressed = false,
 } = {}) {
   const list = jest.fn(() =>
     (async function* () {
@@ -45,7 +43,6 @@ function setup({
       }
     })(),
   );
-  const isSuppressed = jest.fn(async () => suppressed);
   const deps = {
     stripe: {
       getStripeInstance: jest.fn(() => ({
@@ -66,15 +63,15 @@ function setup({
       sentBillingEmail: { claim: jest.fn(), release: jest.fn() },
     },
     db: {} as DbExecutor,
-    sendgrid: { isSuppressed },
+    sendgrid: {},
     groupId: 7,
   } as unknown as CheckoutRecoveryDeps;
   const check = (session: Stripe.Checkout.Session = expired) =>
     recoveryEligibility(deps, session, BILLING_CLIENT_ID);
-  return { check, list, isSuppressed, deps };
+  return { check, list, deps };
 }
 
-describe("recoveryEligibility (ADR027 D2, D5, D6)", () => {
+describe("recoveryEligibility (ADR027 D2, D5)", () => {
   it("accepts a first-time customer who left and did not come back", async () => {
     const { check } = setup();
 
@@ -113,7 +110,6 @@ describe("recoveryEligibility (ADR027 D2, D5, D6)", () => {
       { later: [{ id: "cs_2", status: "open", userId: "usr_alice" }] },
       "back-in-checkout",
     ],
-    ["the user unsubscribed", { suppressed: true }, "unsubscribed"],
   ])("refuses when %s", async (_label, options, reason) => {
     const { check } = setup(options);
 
@@ -176,22 +172,11 @@ describe("recoveryEligibility (ADR027 D2, D5, D6)", () => {
     });
   });
 
-  it("asks SendGrid last, and only when everything else holds", async () => {
-    const { check, isSuppressed } = setup({
-      subscriptions: [{ status: "active" }],
-    });
-
-    await check();
-
-    expect(isSuppressed).not.toHaveBeenCalled();
-  });
-
   it("lets a provider failure through, so the webhook is redelivered", async () => {
     const { check, deps } = setup();
-    (deps.sendgrid.isSuppressed as jest.Mock).mockRejectedValue(
-      new ServiceUnavailableError("Email suppression lookup", 5),
-    );
+    const outage = new Error("Stripe is unavailable");
+    (deps.stripe.listSubscriptions as jest.Mock).mockRejectedValue(outage);
 
-    await expect(check()).rejects.toBeInstanceOf(ServiceUnavailableError);
+    await expect(check()).rejects.toBe(outage);
   });
 });

@@ -64,7 +64,6 @@ Handle `checkout.session.expired` only when all of these hold:
 - the session's plan is a current, non-retired price in `SUBSCRIPTION_CONFIG`;
 - the user has never had a paid subscription: no `paid_customers` binding with any non-free subscription, current or ended;
 - the user has no paid subscription now and no Checkout session that completed or is still open since the expired one was created (see D5);
-- the address is not suppressed in this email's SendGrid unsubscribe group (D6);
 - no recovery email has ever gone to this user (D4).
 
 Any failed check acknowledges the event with `processed: false`, the way the handler treats every other ignored event.
@@ -102,7 +101,7 @@ A payment that lands in the seconds between this check and the send is not preve
 
 Owner decision (2026-11-08): this is a reminder about a purchase the signed-in customer started, sent once to their own account address. It is not list marketing, so it is not gated on promotional consent, and sessions do not set `consent_collection`. Stripe's consent checkbox would not cover most customers anyway: it works only when both the business and the customer are in the US.
 
-The risk is that the code makes the email arguably commercial: under CAN-SPAM's primary-purpose test, and under EU and UK e-privacy rules for someone who never bought. The mitigations are the once-per-person rule (D4), the three-line format with no other offer (D7), and a working opt-out. The email carries a one-click unsubscribe (List-Unsubscribe header plus a footer link) through a SendGrid unsubscribe group dedicated to this email. That needs `asm` support in `ISendGrid.sendMail`. Before claiming, the operation looks the address up in that group's suppressions, so an unsubscribed customer gets neither an email nor a code (D2).
+The risk is that the code makes the email arguably commercial: under CAN-SPAM's primary-purpose test, and under EU and UK e-privacy rules for someone who never bought. The mitigations are the once-per-person rule (D4), the three-line format with no other offer (D7), and a working opt-out. The email carries a one-click unsubscribe (List-Unsubscribe header plus a footer link) through a SendGrid unsubscribe group dedicated to this email. That needs `asm` support in `ISendGrid.sendMail`. SendGrid drops a message sent in the group to anyone who left it, so the operation does not look the address up first. An unsubscribed customer still uses up their one claim and a code nobody receives, which is harmless: the code is single-use, unguessable, and expires in 48 hours. A pre-send lookup was shipped and removed (2026-11-13). It needed the Suppressions read scope, which the production key, restricted to sending mail, does not have. Every expired session failed with a 403 and was redelivered for three days, to protect only that one unused code.
 
 ### D7. The email
 
@@ -122,7 +121,7 @@ The plan name uses `planName`, and "first month" or "first year" follows the pla
 - Every Checkout session lasts 90 minutes instead of 24 hours.
 - Each eligible customer gets at most one discount through this path, only on a first purchase, worth at most 20% of one billing period.
 - Measurement comes from Stripe: emails sent (promotion codes with `source: "checkout-recovery"`), redemptions (`times_redeemed`), and recovered sessions (`recovered_from`). No new analytics table.
-- Customers who have paid before, or who unsubscribed, get no email. That is deliberate and caps the reach.
+- Customers who have paid before, or who unsubscribed, get no email. That is deliberate and caps the reach. For someone who unsubscribed, the claim and a code are spent without an email, and the `source: "checkout-recovery"` code count includes them.
 - Sending without promotional consent is an owner decision that carries the legal risk named in D6.
 
 ## API parity
@@ -136,8 +135,8 @@ No customer-facing capability is added. Checkout creation stays GraphQL-only und
 | `expires_at`, `after_expiration.recovery` on session creation | `features/stripe/service/subscription-service.ts` |
 | `checkout.session.expired` case calling the operation | `features/stripe/api/stripe-webhook-handler.ts` |
 | Eligibility, then claim, promotion code, render, send, with release and deactivation on failure | new `features/stripe/operations/checkout-recovery-email.ts` |
-| Coupon ID and SendGrid group ID in billing config | `features/stripe/service/stripe.ts`, `config/config.ts`, `.env.example` |
-| `asm` passthrough and a suppression lookup for the group | `foundation/sendgrid.ts` |
+| Coupon ID and SendGrid group ID, pinned in `SUBSCRIPTION_CONFIG` | `features/stripe/service/stripe.ts` |
+| `asm` passthrough for the group | `foundation/sendgrid.ts` |
 | Enable `checkout.session.expired` on the live webhook endpoint | Stripe Dashboard (owner) |
 
 Tests cover each D2 ineligibility, the once-per-user key across two expired sessions, release-and-deactivate on a failed send, the paid-meanwhile and back-in-Checkout skips, the recovered session keeping `metadata.userId`, and the rendered body staying within three lines. The handler drops test-mode events, so end-to-end verification needs a live-mode session on an owner account.
