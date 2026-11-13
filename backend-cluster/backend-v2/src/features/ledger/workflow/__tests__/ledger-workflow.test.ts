@@ -863,6 +863,146 @@ describe("LedgerWorkflow", () => {
         expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
       });
     });
+
+    describe("starter currency (w3/m62)", () => {
+      const created = {
+        data: {
+          success: true,
+          data: {
+            id: 1,
+            name: "euro-ledger",
+            full_name: "testuser/euro-ledger",
+            description: null,
+            private: true,
+            empty: true,
+            size: 0,
+            created_at: "2024-01-01T00:00:00Z",
+            updated_at: "2024-01-01T00:00:00Z",
+          },
+        },
+      };
+      const createdFiles = () =>
+        mockFavaApiClient.ledgers.createLedger.mock.calls[0][0].files as Record<
+          string,
+          string
+        >;
+
+      beforeEach(() => {
+        mockFavaApiClient.ledgers.listUserLedgers.mockResolvedValue({
+          data: { success: true, data: [] },
+        });
+        mockFavaApiClient.ledgers.createLedger.mockResolvedValue(created);
+      });
+
+      it("keeps a request without currency on today's USD starter, byte for byte", async () => {
+        await workflow.createLedger({
+          identity: IDENTITY,
+          input: { name: "euro-ledger", currency: null },
+        });
+        expect(createdFiles()).toEqual(defaultLedgerTemplate);
+        expect(createdFiles()["main.bean"]).toContain(
+          'option "operating_currency" "USD"',
+        );
+      });
+
+      it("re-denominates only the operating currency of the starter", async () => {
+        await workflow.createLedger({
+          identity: IDENTITY,
+          input: { name: "euro-ledger", currency: "EUR" },
+        });
+        const main = createdFiles()["main.bean"];
+        expect(main).toContain('option "operating_currency" "EUR"');
+        expect(main).not.toContain("USD");
+        expect(main.replace('"EUR"', '"USD"')).toBe(
+          defaultLedgerTemplate["main.bean"],
+        );
+      });
+
+      it.each(["usd", "XXX", "EURO", ""])(
+        "refuses unsupported currency %p and creates nothing",
+        async (currency) => {
+          await expect(
+            workflow.createLedger({
+              identity: IDENTITY,
+              input: { name: "euro-ledger", currency },
+            }),
+          ).rejects.toMatchObject({
+            category: "VALIDATION_FAILED",
+            metadata: { field: "currency" },
+          });
+          expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
+        },
+      );
+
+      it.each([
+        ["SAMPLE", { template: LedgerTemplate.SAMPLE }],
+        ["a setup", { setup: { preset: "personal@1" as const } }],
+      ])("refuses currency with %s", async (_label, extra) => {
+        await expect(
+          workflow.createLedger({
+            identity: IDENTITY,
+            input: { name: "euro-ledger", currency: "EUR", ...extra },
+          }),
+        ).rejects.toMatchObject({
+          category: "VALIDATION_FAILED",
+          metadata: { field: "currency" },
+        });
+        expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
+      });
+
+      it("answers a retry recorded before the field existed with the original ledger", async () => {
+        const records = new Map<string, string>();
+        const store = {
+          getStrict: jest.fn(async (key: string) => records.get(key)),
+          setStrict: jest.fn(),
+          delStrict: jest.fn(),
+        };
+        const withStore = new LedgerWorkflow(
+          favaClientFactory as never,
+          giteaClientFactory as never,
+          plaidClient as never,
+          stripe as never,
+          ledgerDataService as never,
+          models as never,
+          db as never,
+          { gitea: { hostName: "gitea", httpPort: 3000 } } as never,
+          authorization as never,
+          store as never,
+        );
+        const original = { id: "testuser/euro-ledger", name: "euro-ledger" };
+        records.set(
+          `ledger:create_request:user:${USER_ID}:id:req-old`,
+          JSON.stringify({
+            requestHash: JSON.stringify({
+              name: "euro-ledger",
+              description: null,
+              private: null,
+              template: null,
+              setup: null,
+            }),
+            status: "done",
+            ledger: original,
+          }),
+        );
+        await expect(
+          withStore.createLedger({
+            identity: IDENTITY,
+            input: { name: "euro-ledger", requestId: "req-old" },
+          }),
+        ).resolves.toEqual(original);
+        await expect(
+          withStore.createLedger({
+            identity: IDENTITY,
+            input: {
+              name: "euro-ledger",
+              requestId: "req-old",
+              currency: "EUR",
+            },
+          }),
+        ).rejects.toMatchObject({ metadata: { field: "requestId" } });
+        expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe("deleteLedger", () => {

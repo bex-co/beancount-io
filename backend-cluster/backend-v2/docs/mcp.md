@@ -337,7 +337,7 @@ the principal inputs; inspect the schema before constructing a call.
 | `removeLedgerCollaborator`      | `collaborator`, optional `dry_run`; revokes access. A preview returns the would-be revocation. Commits echo `dry_run: false`.                                                                                                                                          | Admin      |
 | `leaveLedger`                   | Optional `dry_run`; removes the caller's own access. A preview returns the would-be self-removal. Commits echo `dry_run: false`.                                                                                                                                       | Admin      |
 | `setLedgerStar`                 | `starred`; stars or unstars a ledger for the caller. No `dry_run`: starring is an instantly reversible personal toggle, so there is nothing worth previewing.                                                                                                          | Write      |
-| `createLedger`                  | `name`, optional `description`, `private`, `template` or `setup`, `requestId`; creates a ledger. See [ledger lifecycle](#ledger-lifecycle). | Admin |
+| `createLedger`                  | `name`, optional `description`, `private`, `template` or `setup`, `currency`, `requestId`; creates a ledger. See [ledger lifecycle](#ledger-lifecycle). | Admin |
 | `previewLedgerSetup`            | `setup`; resolves a setup specification and bean-checks its files without creating anything. See [ledger lifecycle](#ledger-lifecycle). | Admin |
 | `createPullRequest`             | `title`, `description`, `clearCommitMessage`, `changes: [{ path, content }]`, optional `baseBranch` (default `main`); proposes the changes as a pull request. See [pull requests](#pull-requests). | Write |
 | `mergePullRequest`              | `prNumber`; merges an open pull request. See [pull requests](#pull-requests). | Write |
@@ -884,6 +884,14 @@ return a preview of the change instead of applying it.
   uses the authenticated account and accepts no `ledger` selector; a
   ledger-pinned credential is refused with `FORBIDDEN` — use a credential
   without a ledger pin to create ledgers.
+- `createLedger` also accepts `currency`, an ISO 4217 code that becomes a
+  starter ledger's `operating_currency`; omitted or null keeps `USD`, so a
+  request without it creates exactly the starter files it always did. It is
+  refused with a `currency` validation error when it is not a supported code
+  (the list the profile's `defaultCurrency` is checked against), with `template:
+  SAMPLE` (the demonstration ledger stays in `USD`), or with `setup` (use
+  `setup.operatingCurrency`). Creation never reads the profile
+  `defaultCurrency`; clients prefill the field from it.
 - `createLedger` also accepts `requestId` (1–200 characters) for safe retries.
   Repeating a creation with the same `requestId` and the same inputs returns
   the ledger the first call created instead of creating a second one; reusing

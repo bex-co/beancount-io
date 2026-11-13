@@ -383,6 +383,14 @@ export class CreateLedgerInput {
   })
   @IsOptional()
   requestId?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "Operating currency of a STARTER ledger, an ISO 4217 code such as EUR; omitted or null keeps USD. Refused with template SAMPLE or a setup (set setup.operatingCurrency instead).",
+  })
+  @IsOptional()
+  currency?: string;
 }
 
 @ArgsType()

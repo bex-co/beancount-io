@@ -32,6 +32,8 @@ export interface CreateLedgerCommand {
   setup?: LedgerSetup | null;
   /** Client-generated idempotency identifier for creation retries (ADR026). */
   requestId?: string | null;
+  /** A STARTER ledger's operating currency; omitted keeps USD (w3/m62). */
+  currency?: string | null;
 }
 
 export interface UpdateLedgerCommand {

@@ -110,9 +110,10 @@ def sync_detailed(
 
      Create a ledger for the authenticated user under existing administrative account authority and tier
     limits. STARTER (the default, including null) contains options and accounts without transactions or
-    opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged.
-    Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin,
-    where the creating credential could never see, use, or delete it.
+    opening balances; SAMPLE contains demonstration transactions. currency sets a STARTER ledger's
+    operating currency (default USD). Existing ledgers are unchanged. Refused with FORBIDDEN for a
+    ledger-pinned credential: a created ledger would land outside the pin, where the creating credential
+    could never see, use, or delete it.
 
     Args:
         body (CreateLedgerBody | Unset):
@@ -145,9 +146,10 @@ def sync(
 
      Create a ledger for the authenticated user under existing administrative account authority and tier
     limits. STARTER (the default, including null) contains options and accounts without transactions or
-    opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged.
-    Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin,
-    where the creating credential could never see, use, or delete it.
+    opening balances; SAMPLE contains demonstration transactions. currency sets a STARTER ledger's
+    operating currency (default USD). Existing ledgers are unchanged. Refused with FORBIDDEN for a
+    ledger-pinned credential: a created ledger would land outside the pin, where the creating credential
+    could never see, use, or delete it.
 
     Args:
         body (CreateLedgerBody | Unset):
@@ -175,9 +177,10 @@ async def asyncio_detailed(
 
      Create a ledger for the authenticated user under existing administrative account authority and tier
     limits. STARTER (the default, including null) contains options and accounts without transactions or
-    opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged.
-    Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin,
-    where the creating credential could never see, use, or delete it.
+    opening balances; SAMPLE contains demonstration transactions. currency sets a STARTER ledger's
+    operating currency (default USD). Existing ledgers are unchanged. Refused with FORBIDDEN for a
+    ledger-pinned credential: a created ledger would land outside the pin, where the creating credential
+    could never see, use, or delete it.
 
     Args:
         body (CreateLedgerBody | Unset):
@@ -208,9 +211,10 @@ async def asyncio(
 
      Create a ledger for the authenticated user under existing administrative account authority and tier
     limits. STARTER (the default, including null) contains options and accounts without transactions or
-    opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged.
-    Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin,
-    where the creating credential could never see, use, or delete it.
+    opening balances; SAMPLE contains demonstration transactions. currency sets a STARTER ledger's
+    operating currency (default USD). Existing ledgers are unchanged. Refused with FORBIDDEN for a
+    ledger-pinned credential: a created ledger would land outside the pin, where the creating credential
+    could never see, use, or delete it.
 
     Args:
         body (CreateLedgerBody | Unset):

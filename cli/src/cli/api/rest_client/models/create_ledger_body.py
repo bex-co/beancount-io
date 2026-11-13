@@ -32,6 +32,8 @@ class CreateLedgerBody:
             transactions; SAMPLE has demonstration transactions.
         setup (CreateLedgerBodySetupType0 | None | Unset):
         request_id (None | str | Unset):
+        currency (None | str | Unset): Operating currency of a STARTER ledger, an ISO 4217 code such as EUR; omitted or
+            null keeps USD. Refused with template SAMPLE or a setup (set setup.operatingCurrency instead).
     """
 
     name: str
@@ -46,6 +48,7 @@ class CreateLedgerBody:
     ) = UNSET
     setup: CreateLedgerBodySetupType0 | None | Unset = UNSET
     request_id: None | str | Unset = UNSET
+    currency: None | str | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.create_ledger_body_setup_type_0 import CreateLedgerBodySetupType0  # noqa: PLC0415
@@ -90,6 +93,12 @@ class CreateLedgerBody:
         else:
             request_id = self.request_id
 
+        currency: None | str | Unset
+        if isinstance(self.currency, Unset):
+            currency = UNSET
+        else:
+            currency = self.currency
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -107,6 +116,8 @@ class CreateLedgerBody:
             field_dict["setup"] = setup
         if request_id is not UNSET:
             field_dict["requestId"] = request_id
+        if currency is not UNSET:
+            field_dict["currency"] = currency
 
         return field_dict
 
@@ -209,6 +220,15 @@ class CreateLedgerBody:
 
         request_id = _parse_request_id(d.pop("requestId", UNSET))
 
+        def _parse_currency(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        currency = _parse_currency(d.pop("currency", UNSET))
+
         create_ledger_body = cls(
             name=name,
             description=description,
@@ -216,6 +236,7 @@ class CreateLedgerBody:
             template=template,
             setup=setup,
             request_id=request_id,
+            currency=currency,
         )
 
         return create_ledger_body

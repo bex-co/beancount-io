@@ -121,6 +121,12 @@ export const ledgerCreateInput = z
       ),
     setup: ledgerSetupInput.nullish(),
     requestId: z.string().min(1).max(CREATE_REQUEST_ID_MAX).nullish(),
+    currency: z
+      .string()
+      .nullish()
+      .describe(
+        "Operating currency of a STARTER ledger, an ISO 4217 code such as EUR; omitted or null keeps USD. Refused with template SAMPLE or a setup (set setup.operatingCurrency instead).",
+      ),
   })
   .strict();
 export const ledgerPreviewInput = z
@@ -249,7 +255,7 @@ export const LEDGER_LIFECYCLE_ROUTES = [
     operationId: "createLedger",
     summary: "Create a ledger",
     description:
-      "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin, where the creating credential could never see, use, or delete it.",
+      "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. currency sets a STARTER ledger's operating currency (default USD). Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin, where the creating credential could never see, use, or delete it.",
     body: ledgerCreateInput,
     responses: { 200: json("Created ledger", ledgerResultSchema) },
     handler: async ({ layers }, { identity, body, ctx }) =>

@@ -6840,3 +6840,16 @@ include "./commodities.bean"
 
 export const defaultLedgerTemplate: Record<string, string> =
   simpleLedgerTemplate;
+
+/** The STARTER template with another operating currency (w3/m62). */
+export function starterTemplateIn(currency: string): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(defaultLedgerTemplate).map(([path, content]) => [
+      path,
+      content.replace(
+        'option "operating_currency" "USD"',
+        `option "operating_currency" "${currency}"`,
+      ),
+    ]),
+  );
+}

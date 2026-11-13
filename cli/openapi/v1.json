@@ -1850,7 +1850,7 @@
       "post": {
         "operationId": "createLedger",
         "summary": "Create a ledger",
-        "description": "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin, where the creating credential could never see, use, or delete it.",
+        "description": "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER (the default, including null) contains options and accounts without transactions or opening balances; SAMPLE contains demonstration transactions. currency sets a STARTER ledger's operating currency (default USD). Existing ledgers are unchanged. Refused with FORBIDDEN for a ledger-pinned credential: a created ledger would land outside the pin, where the creating credential could never see, use, or delete it.",
         "tags": [
           "Ledger v1"
         ],
@@ -2003,6 +2003,11 @@
                     "nullable": true,
                     "minLength": 1,
                     "maxLength": 200
+                  },
+                  "currency": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Operating currency of a STARTER ledger, an ISO 4217 code such as EUR; omitted or null keeps USD. Refused with template SAMPLE or a setup (set setup.operatingCurrency instead)."
                   }
                 },
                 "required": [

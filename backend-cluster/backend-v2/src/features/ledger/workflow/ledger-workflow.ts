@@ -35,7 +35,9 @@ import { decryptToken } from "@/features/plaid/utils/encryption";
 import {
   defaultLedgerTemplate,
   ledgerWithMultipleFilesTemplate,
+  starterTemplateIn,
 } from "@/features/ledger/utils/ledger-template";
+import { setupCurrencies } from "@/features/ledger/setup";
 import { parseLedgerId } from "@/shared/str";
 import { lock, LOCK_KEYS } from "@/shared/lock";
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
@@ -684,11 +686,30 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         `requestId must be 1-${CREATE_REQUEST_ID_MAX} characters`,
       );
     }
+    // w3/m62: `currency` only re-denominates the STARTER template. Omitted,
+    // the request creates exactly what it did before the field existed, so
+    // installed clients that never send it are unaffected.
+    if (input.currency != null) {
+      if (input.setup || input.template === LedgerTemplate.SAMPLE) {
+        throw new ValidationError(
+          "currency",
+          "currency applies to a STARTER ledger only; a setup takes setup.operatingCurrency and SAMPLE stays in USD",
+        );
+      }
+      if (!setupCurrencies.supportedCurrencies.includes(input.currency)) {
+        throw new ValidationError(
+          "currency",
+          `Unsupported currency "${input.currency}"; use an ISO 4217 code a new ledger can take`,
+        );
+      }
+    }
     const files = input.setup
       ? buildLedgerFiles(input.setup)
       : input.template === LedgerTemplate.SAMPLE
         ? ledgerWithMultipleFilesTemplate
-        : defaultLedgerTemplate;
+        : input.currency != null
+          ? starterTemplateIn(input.currency)
+          : defaultLedgerTemplate;
     // ADR026: a setup's files are validated before the ledger service is
     // called, so a new ledger never starts with a bean-check error (w23/048).
     if (input.setup) {
@@ -735,6 +756,9 @@ export class LedgerWorkflow implements ILedgerWorkflow {
                 private: input.private ?? null,
                 template: input.template ?? null,
                 setup: input.setup ?? null,
+                // Only when sent, so a request without it keeps the hash it
+                // had before the field existed (w3/m62).
+                ...(input.currency != null ? { currency: input.currency } : {}),
               }),
             }
           : null;
