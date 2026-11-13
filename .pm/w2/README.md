@@ -74,6 +74,7 @@
 
 ## Inbox
 
+- [132 — In Persian, every dialog's title sits on the physical left and the close button covers RTL-started dialogs](./132.md) — shared `Dialog`/`AlertDialog`/`Sheet` primitives use `sm:text-left`/`right-4`; dashboard counterpart of w22/040–041
 - [131 — The Make public confirmation says "history" but not commit authors' emails or earlier file versions](./131.md) — dashboard copy, 15 locales; the API preview already says it (w23/241)
 
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains — 2026-11-11: Claude works on the macOS checkout, but the candidates and Codex are only on the Linux runtime.
