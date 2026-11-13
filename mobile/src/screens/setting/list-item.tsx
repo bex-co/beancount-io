@@ -44,6 +44,11 @@ export const ListItemHorizontal = ({
         backgroundColor: theme.white,
         paddingVertical: 12,
         minHeight: 64,
+        // The icon and the chevron are pinned to the middle of that minimum
+        // height, so a title-only row (Plan, Help Center, Log out) centres its
+        // one line there too instead of hugging the top (w22/048). A row with
+        // a second line is already about the minimum, so it barely moves.
+        justifyContent: "center",
       },
       topRow: {
         flexDirection: "row",
