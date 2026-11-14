@@ -1,0 +1,36 @@
+# w23 · m44 — Get every MCP result to text-only and tools-only hosts in full
+
+**Worker:** worker1 **Goal:** An agent on any MCP host gets every row, id and next step it needs. That holds whether the host hands the model only `content` (claude.ai), only tools (ChatGPT), or `structuredContent` (Claude Code), and a QA check keeps the channels from drifting apart again. **Status:** todo
+
+## Tasks (in order)
+
+| id | title | est | depends_on |
+| -- | ----- | --- | ---------- |
+| t001 | Verify the text-block fix on claude.ai against the deployed revision | 30m | — |
+| t002 | Check text against structuredContent in the MCP QA helper and contract replay | 45m | — |
+| t003 | Page listStagedBankTransactions on every surface | 60m | — |
+| t004 | Put a resource's page signal where a text-only reader sees it | 45m | — |
+| t005 | Put the hint in the message of resource and prompt refusals | 30m | — |
+| t006 | Close the resource-only gaps t001 finds | 60m | t001 |
+| t007 | Adoption surface | 20m | t002, t003, t004, t005, t006 |
+| t008 | Simplify | 20m | t007 |
+| t009 | Test coverage | 30m | t007 |
+| t010 | Closeout | 15m | t009 |
+
+## Definition of done
+
+- On claude.ai, against a recorded deployed revision, an agent reads the rows of `getLedgerContext`, `listLedgerFiles` and `listStagedBankTransactions` (or a synthetic ledger's equivalent with a payload over 400 characters) from the text block alone.
+- `qa-contract-replay.mjs` fails when any replayed tool's text block carries less than its `structuredContent`.
+- `listStagedBankTransactions` returns a bounded page with a `page` signal to an agent following its description, on MCP, REST and GraphQL alike, while the dashboard's Bank Sync page still lists every staged row.
+- A paginated resource whose body is a bare array says whether more remains in content a text-only reader receives.
+- A resource or prompt refusal's JSON-RPC `message` carries its hint.
+- Every resource a served prompt tells an agent to read names a tool that does the same, or the prompt says what to do without it; any tool twin t006 adds keeps REST/GraphQL/MCP parity.
+- `yarn test` passes in backend-v2.
+
+## Source + Goal linkage
+
+- **Source:** A user report (2026-11-08): on claude.ai, `listStagedBankTransactions` answered `42 items` and `listBankConnections` answered `ok`, so the weekly bank-import routine could not see a transaction id. The root cause shipped in `f58c89d64`: a payload over 400 characters reached the text block as its summary line alone. The 2026-11-13 review of the rest of the MCP surface found the remaining side channels this milestone closes.
+- **Goal linkage:** A1 — Agent-native accounting. The MCP endpoint is how hosted agents keep a ledger, and claude.ai and ChatGPT are the hosts most users reach it from.
+- **Expected outcome:** A claude.ai or ChatGPT user can run bank import, review and close-month playbooks end to end, with the same ids and next steps a Claude Code user gets. A future change that moves data into a side channel fails QA before it ships.
+- **Why now:** The fix that made text blocks carry the payload also exposes their size. `listStagedBankTransactions` has no limit, so a first bank sync with months of history now arrives whole in the text block. Our QA used Claude Code, which reads `structuredContent`, so the summary-only text shipped in September and went unnoticed until a user hit it.
+- **Adoption surface:** included. The work changes what agents receive and what `docs/mcp.md`, the served prompts and the server instructions promise.

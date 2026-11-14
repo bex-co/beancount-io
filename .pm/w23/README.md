@@ -46,6 +46,7 @@
 - [x] **m41** — [Diff the report engine against stock beancount in a release gate](./done/m41/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 4; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/229`
 - [x] **m42** — [Name the commit every write makes, and let an agent undo it](./done/m42/README.md) (10 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 5; user request via /pmx, 2026-11-10; user routed to w23; source `w1/228`
 - [x] **m43** — [Accept directive metadata on every typed entry and gate the journal round trip](./done/m43/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 6; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/233`
+- [ ] **m44** — [Get every MCP result to text-only and tools-only hosts in full](./m44/README.md) (10 tasks) ← user report 2026-11-08 (claude.ai connector showed only summaries; root cause fixed in `f58c89d64`) and the 2026-11-13 MCP channel review
 
 ## Dropped
 
@@ -112,3 +113,4 @@
 - [x] [240](./done/240.md) — hosted bean-check differs from stock beancount on 5 of ~90 constructs: the engine accepts an unquoted booking method, duplicate `commodity` directives and duplicate metadata keys; `appendLedgerText` refuses slash dates and multi-line strings (found by MCP QA 2026-11-11)
 - [x] [241](./done/241.md) — the API's make-public preview warns only "readable by anyone"; the dashboard's confirmation names files and history, and commit history exposes each author's email (found by MCP QA 2026-11-11)
 - [ ] [242](./242.md) — `revertCommit` answers `INTERNAL_SERVER_ERROR` for every existing commit on MCP, REST and GraphQL on production after the 2026-11-12 deploy (unknown sha is a clean `NOT_FOUND`, a read-only key `FORBIDDEN`); `yarn mcp:conformance` has no check for it (found by MCP QA 2026-11-12)
+- [ ] [243](./243.md) — `readLedgerFiles` returns a whole file when no range is given, and since `f58c89d64` that file also lands in the text block; decide on a bound that cannot lead to a truncated write-back (found in the 2026-11-13 MCP channel review)
