@@ -22,6 +22,29 @@ export interface RenameAccountInput {
   allowInvalid?: boolean;
 }
 
+/**
+ * One bank-account mapping that posts into this ledger (w1/m43/t003). `name`
+ * is the bank account as its owner sees it, given only for the caller's own
+ * connections: another member's bank is never named to the caller.
+ */
+export interface LedgerBankMapping {
+  id: string;
+  plaidItemId: string;
+  ledgerAccount: string;
+  name: string | null;
+}
+
+/** The ledger's bank mappings, every member's, and how to point them elsewhere. */
+export interface LedgerBankMappings {
+  list(params: {
+    ledgerId: string;
+    identity: Identity;
+  }): Promise<LedgerBankMapping[]>;
+  remap(
+    changes: { id: string; plaidItemId: string; ledgerAccount: string }[],
+  ): Promise<void>;
+}
+
 export interface RenameAccountResult {
   message: string;
   from: string;
@@ -30,6 +53,17 @@ export interface RenameAccountResult {
   accounts: { from: string; to: string }[];
   /** Each loaded file the rename changes, with every line it rewrites. */
   files: { path: string; changes: AccountRenameChange[] }[];
+  /**
+   * Each bank mapping that named a renamed account. `updated` is false on a
+   * preview, and on a commit whose mapping update failed: that mapping still
+   * names the old account, and `message` says so.
+   */
+  bankMappings: {
+    plaidAccount: string | null;
+    from: string;
+    to: string;
+    updated: boolean;
+  }[];
   validation: WriteValidation;
   dryRun: boolean;
   /** The commit a real write made (w23/m42); absent on a preview. */
@@ -58,6 +92,8 @@ export class AccountRenameWorkflow {
   constructor(
     private readonly ledgerRepo: RepoDeps,
     private readonly ledgerData: Pick<ILedgerDataService, "getErrors">,
+    /** Absent in a composition without bank connections: nothing to carry along. */
+    private readonly bankMappings?: LedgerBankMappings,
   ) {}
 
   async renameAccount({
@@ -130,12 +166,24 @@ export class AccountRenameWorkflow {
       overlays,
       dryRun || allowInvalid,
     );
+    // Read before the commit, so a preview lists what the commit will move.
+    const mappings = (
+      (await this.bankMappings?.list({ ledgerId, identity })) ?? []
+    ).flatMap((mapping) => {
+      const { ledgerAccount } = mapping;
+      if (ledgerAccount !== from && !ledgerAccount.startsWith(`${from}:`)) {
+        return [];
+      }
+      return [{ ...mapping, renamed: to + ledgerAccount.slice(from.length) }];
+    });
     const lines = changed.reduce(
       (count, file) => count + file.renamed.changes.length,
       0,
     );
     const summary = `${from} to ${to}: ${lines} line${lines === 1 ? "" : "s"} in ${changed.length} file${changed.length === 1 ? "" : "s"}`;
     let commit: string | undefined;
+    let mappingsUpdated = false;
+    let mappingFailure = "";
     if (!dryRun) {
       ({ commit } = await this.ledgerRepo.changeGeneratedFiles({
         ledgerId,
@@ -153,15 +201,43 @@ export class AccountRenameWorkflow {
         files: changed.length,
         lines,
       });
+      if (mappings.length > 0) {
+        try {
+          await this.bankMappings!.remap(
+            mappings.map((mapping) => ({
+              id: mapping.id,
+              plaidItemId: mapping.plaidItemId,
+              ledgerAccount: mapping.renamed,
+            })),
+          );
+          mappingsUpdated = true;
+        } catch (error) {
+          // The commit stands; say plainly which mappings it left behind, so
+          // the next bank sync does not post to an account that is gone.
+          this.logger.error("Bank mappings not updated after rename", {
+            ledgerId,
+            error,
+          });
+          mappingFailure = `; ${mappings.length} bank mapping${mappings.length === 1 ? " still names" : "s still name"} ${from}: map ${mappings.length === 1 ? "it" : "them"} to ${to} with mapBankAccount`;
+        }
+      }
     }
     return {
-      message: dryRun ? `Would rename ${summary}` : `Renamed ${summary}`,
+      message: dryRun
+        ? `Would rename ${summary}`
+        : `Renamed ${summary}${mappingFailure}`,
       from,
       to,
       accounts,
       files: changed.map((file) => ({
         path: file.path,
         changes: file.renamed.changes,
+      })),
+      bankMappings: mappings.map((mapping) => ({
+        plaidAccount: mapping.name,
+        from: mapping.ledgerAccount,
+        to: mapping.renamed,
+        updated: mappingsUpdated,
       })),
       validation,
       dryRun,

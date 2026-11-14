@@ -42,6 +42,13 @@ function fixture(
     lossy?: string[];
     projectedErrors?: BeanError[];
     baselineErrors?: BeanError[];
+    mappings?: {
+      id: string;
+      plaidItemId: string;
+      ledgerAccount: string;
+      name: string | null;
+    }[];
+    remapFails?: boolean;
   } = {},
 ) {
   const files = new Map(
@@ -83,9 +90,17 @@ function fixture(
   const ledgerData = {
     getErrors: jest.fn(async () => options.baselineErrors ?? []),
   };
+  const mappings = options.mappings ?? [];
+  const bankMappings = {
+    list: jest.fn(async () => mappings),
+    remap: jest.fn(async (_changes: unknown[]) => {
+      if (options.remapFails) throw new Error("db down");
+    }),
+  };
   const workflow = new AccountRenameWorkflow(
     ledgerRepo as never,
     ledgerData as never,
+    bankMappings,
   );
   const rename = (input: {
     from: string;
@@ -94,7 +109,7 @@ function fixture(
     allowInvalid?: boolean;
   }) =>
     workflow.renameAccount({ identity: IDENTITY, ledgerId: LEDGER_ID, input });
-  return { ledgerRepo, ledgerData, rename };
+  return { ledgerRepo, ledgerData, bankMappings, rename };
 }
 
 describe("AccountRenameWorkflow (w1/m43)", () => {
@@ -256,5 +271,119 @@ describe("AccountRenameWorkflow (w1/m43)", () => {
       rename({ from: "Assets:Bank:Checking", to: "Assets:Bank:Main" }),
     ).rejects.toThrow(/2026.bean is not valid UTF-8/);
     expect(ledgerRepo.changeGeneratedFiles).not.toHaveBeenCalled();
+  });
+
+  describe("bank mappings (t003)", () => {
+    const MAPPINGS = [
+      {
+        id: "pacc_1",
+        plaidItemId: "pi_1",
+        ledgerAccount: "Assets:Bank:Checking",
+        name: "Chase Checking ••1234",
+      },
+      {
+        id: "pacc_2",
+        plaidItemId: "pi_2",
+        ledgerAccount: "Assets:Bank:Checking:Joint",
+        name: null,
+      },
+      {
+        id: "pacc_3",
+        plaidItemId: "pi_1",
+        ledgerAccount: "Assets:Bank:CheckingOld",
+        name: "Chase Old",
+      },
+      {
+        id: "pacc_4",
+        plaidItemId: "pi_1",
+        ledgerAccount: "Liabilities:Card",
+        name: "Chase Card",
+      },
+    ];
+
+    it("lists the mappings a preview would move and moves nothing", async () => {
+      const { bankMappings, rename } = fixture({ mappings: MAPPINGS });
+      const result = await rename({
+        from: "Assets:Bank:Checking",
+        to: "Assets:Bank:Main",
+        dryRun: true,
+      });
+      expect(result.bankMappings).toEqual([
+        {
+          plaidAccount: "Chase Checking ••1234",
+          from: "Assets:Bank:Checking",
+          to: "Assets:Bank:Main",
+          updated: false,
+        },
+        {
+          plaidAccount: null,
+          from: "Assets:Bank:Checking:Joint",
+          to: "Assets:Bank:Main:Joint",
+          updated: false,
+        },
+      ]);
+      expect(bankMappings.remap).not.toHaveBeenCalled();
+    });
+
+    it("moves each mapping of the account or one under it after the commit", async () => {
+      const { ledgerRepo, bankMappings, rename } = fixture({
+        mappings: MAPPINGS,
+      });
+      const result = await rename({
+        from: "Assets:Bank:Checking",
+        to: "Assets:Bank:Main",
+      });
+      expect(bankMappings.remap).toHaveBeenCalledWith([
+        {
+          id: "pacc_1",
+          plaidItemId: "pi_1",
+          ledgerAccount: "Assets:Bank:Main",
+        },
+        {
+          id: "pacc_2",
+          plaidItemId: "pi_2",
+          ledgerAccount: "Assets:Bank:Main:Joint",
+        },
+      ]);
+      // After the files committed, never before.
+      expect(
+        ledgerRepo.changeGeneratedFiles.mock.invocationCallOrder[0],
+      ).toBeLessThan(bankMappings.remap.mock.invocationCallOrder[0]);
+      expect(result.bankMappings.every((mapping) => mapping.updated)).toBe(
+        true,
+      );
+      expect(result.message).toBe(
+        "Renamed Assets:Bank:Checking to Assets:Bank:Main: 5 lines in 3 files",
+      );
+    });
+
+    it("reports the mappings a failed update left behind, and keeps the commit", async () => {
+      const { rename } = fixture({ mappings: MAPPINGS, remapFails: true });
+      const result = await rename({
+        from: "Assets:Bank:Checking",
+        to: "Assets:Bank:Main",
+      });
+      expect(result.commit).toBe("c0ffee");
+      expect(result.bankMappings.map((mapping) => mapping.updated)).toEqual([
+        false,
+        false,
+      ]);
+      expect(result.message).toMatch(
+        /; 2 bank mappings still name Assets:Bank:Checking: map them to Assets:Bank:Main with mapBankAccount$/,
+      );
+    });
+
+    it("does not touch mappings when the rename is refused", async () => {
+      const { bankMappings, rename } = fixture({
+        mappings: MAPPINGS,
+        projectedErrors: [{ message: "new error" }],
+      });
+      await expect(
+        rename({ from: "Assets:Bank:Checking", to: "Assets:Bank:Main" }),
+      ).rejects.toMatchObject({
+        category: "VALIDATION_FAILED",
+      });
+      expect(bankMappings.remap).not.toHaveBeenCalled();
+    });
   });
 });
