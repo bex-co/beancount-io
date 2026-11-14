@@ -96,7 +96,7 @@ const CATEGORY_HINTS: Record<ErrorCategory, string> = {
   [ErrorCategory.VALIDATION_FAILED]:
     "Fix the named field and call again; `tools/list` publishes each tool's input schema.",
   [ErrorCategory.CONFLICT]:
-    "Re-read the current state and retry with fresh values — `getEntryContext` returns the entry's current `sha256sum`.",
+    "Re-read the current state and retry with fresh values — `getEntryContext` returns the entry's current `sha256sum`, and `listLedgerEntries` with `include_source` returns a page of them.",
   [ErrorCategory.RATE_LIMITED]:
     "Wait `retryAfter` seconds before the next call. Reads have a much larger budget than writes; batch writes rather than looping.",
   [ErrorCategory.INTERNAL_SERVER_ERROR]:

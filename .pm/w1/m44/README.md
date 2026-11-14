@@ -1,6 +1,6 @@
 # w1 · m44 — List entries with their source text in one call
 
-**Worker:** worker1 **Goal:** an agent that needs the source of N entries before editing or deleting them gets each entry's text, location and `sha256sum` from one `listLedgerEntries` page, on MCP, REST and GraphQL, instead of one `getEntryContext` call per entry. **Status:** in progress (t001–t003 done)
+**Worker:** worker1 **Goal:** an agent that needs the source of N entries before editing or deleting them gets each entry's text, location and `sha256sum` from one `listLedgerEntries` page, on MCP, REST and GraphQL, instead of one `getEntryContext` call per entry. **Status:** in progress (t001–t004 done)
 
 ## Tasks (in order)
 
@@ -9,7 +9,7 @@
 | t001 | Journal reads can include each entry's source slice — **DONE** | 60m | — |
 | t002 | `include_source` on MCP, REST and GraphQL, with parity rows — **DONE** | 45m | t001 |
 | t003 | Describe the flag in the tool, the docs and the size budget — **DONE** | 20m | t002 |
-| t004 | Adoption surface | 20m | t003 |
+| t004 | Adoption surface — **DONE** | 20m | t003 |
 | t005 | Simplify | 15m | t004 |
 | t006 | Test coverage | 30m | t004, t005 |
 | t007 | Closeout | 10m | t006 |
