@@ -1438,6 +1438,11 @@ export interface JournalBalancePublic {
    * Explicit tolerance from a `~` annotation
    */
   tolerance?: string | null;
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1468,6 +1473,11 @@ export interface JournalClosePublic {
    * Account of the directive
    */
   account: string;
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1498,6 +1508,11 @@ export interface JournalCommodityPublic {
    * Currency
    */
   currency: string;
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1561,6 +1576,11 @@ export interface JournalCustomPublic {
    * Custom values
    */
   values: (string | number | boolean | null)[];
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1608,6 +1628,11 @@ export interface JournalDocumentPublic {
    * @uniqueItems true
    */
   links?: string[];
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1643,6 +1668,11 @@ export interface JournalEventPublic {
    * Description of the event
    */
   description: string;
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1678,6 +1708,11 @@ export interface JournalNotePublic {
    * Note comment
    */
   comment: string;
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1718,6 +1753,11 @@ export interface JournalOpenPublic {
    * Booking method for the account
    */
   booking?: string | null;
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1753,6 +1793,11 @@ export interface JournalPadPublic {
    * Source account of the pad
    */
   source_account: string;
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1813,6 +1858,11 @@ export interface JournalPricePublic {
   currency: string;
   /** Price amount */
   amount: JournalAmountPublic;
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -1909,6 +1959,11 @@ export interface JournalTransactionPublic {
    * Present and true only when the engine could not book the transaction (for example a sale with no matching lot). It is listed so it can be opened and fixed, but no balance counts it.
    */
   not_booked?: boolean;
+  /**
+   * Source
+   * With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise.
+   */
+  source?: JournalEntrySourcePublic | null;
 }
 
 /**
@@ -3899,6 +3954,33 @@ export interface SuccessResponseLedgerChangeFilesResult {
    */
   success?: boolean;
   data: LedgerChangeFilesResult;
+}
+
+/**
+ * JournalEntrySourcePublic
+ * An entry's own source text and where it starts (w1/m44)
+ */
+export interface JournalEntrySourcePublic {
+  /**
+   * Path
+   * Repository path of the file the entry is written in
+   */
+  path: string;
+  /**
+   * Lineno
+   * 1-based line the entry starts on
+   */
+  lineno: number;
+  /**
+   * Text
+   * The entry's source text, as getContext returns it in slice
+   */
+  text: string;
+  /**
+   * Sha256Sum
+   * Checksum of text, as getContext returns it; source-slice edits and deletes take it
+   */
+  sha256sum: string;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -6308,6 +6390,12 @@ export class Api<
          * Filter custom subtypes: budget (B)
          */
         custom_subtypes?: CustomSubtype[] | null;
+        /**
+         * Include Source
+         * Attach each returned entry's source slice; pages are capped at 200 entries
+         * @default false
+         */
+        include_source?: boolean;
       },
       params: RequestParams = {},
     ) =>

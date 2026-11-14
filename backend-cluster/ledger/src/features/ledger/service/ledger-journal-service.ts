@@ -324,6 +324,15 @@ export type JournalResult = {
   is_empty: boolean;
 };
 
+/** An entry's own source text and where it starts, as `include_source` attaches it. */
+export type JournalEntrySource = {
+  path: string;
+  /** 1-based line the entry starts on. */
+  lineno: number;
+  text: string;
+  sha256sum: string;
+};
+
 export type EntryContextResult = {
   entry: Record<string, unknown>;
   balances_before?: Record<string, string[]> | null;
@@ -449,7 +458,16 @@ export type JournalQueryParams = {
   customSubtypes?: CustomSubtype[];
   limit?: number;
   offset?: number;
+  /**
+   * Attach each returned entry's source slice — `{path, lineno, text,
+   * sha256sum}`, the text and checksum `getContext` returns — so a caller
+   * can edit or delete N entries without N context reads (w1/m44).
+   */
+  includeSource?: boolean;
 };
+
+/** The most entries one journal page may carry with their source attached. */
+export const MAX_SOURCE_PAGE = 200;
 
 export type AccountJournalQueryParams = {
   /** Journal target account (route /account/{name}). */
@@ -866,18 +884,61 @@ export class LedgerJournalService implements ILedgerJournalService {
     const total = items.length;
     const offset = query?.offset ?? 0;
     const limit = query?.limit ?? 20;
+    if (query?.includeSource && limit > MAX_SOURCE_PAGE) {
+      throw new BadUserInputError(
+        `include_source returns at most ${MAX_SOURCE_PAGE} entries per page; ask for limit ${MAX_SOURCE_PAGE} or fewer and page with offset.`,
+      );
+    }
+    const page = items.slice(offset, offset + limit);
     return {
       total,
-      data: items.slice(offset, offset + limit) as unknown as Record<
-        string,
-        unknown
-      >[],
+      data: (query?.includeSource
+        ? await this.withSource(ledgerId, userId, page)
+        : page) as unknown as Record<string, unknown>[],
       // Result-level, not ledger-level: a filter matching nothing on a
       // non-empty ledger answers total 0 with is_empty true, while an
       // out-of-range page over matches elsewhere keeps total and reports
       // false (w23/111).
       is_empty: total === 0,
     };
+  }
+
+  /**
+   * The page with each entry's source slice, resolved in one batch over one
+   * file map (w1/237). An entry with no editable source — a plugin's or a
+   * pad's copy, or a managed price include's read-only line — gets `null`,
+   * as `getContext` offers it no edit (w21/443, ADR 015).
+   */
+  private async withSource(
+    ledgerId: string,
+    userId: string | undefined,
+    page: JournalItem[],
+  ): Promise<(JournalItem & { source: JournalEntrySource | null })[]> {
+    if (page.length === 0) return [];
+    const { files, entryPoint, managedPrices } = await this.loadFileMap(
+      ledgerId,
+      userId,
+    );
+    const found = await findEntrySlicesAsync(
+      files,
+      entryPoint,
+      page.map((item) => String(item.entry_hash)),
+    );
+    return page.map((item, index) => {
+      const slice = found[index];
+      return {
+        ...item,
+        source:
+          slice && managedPriceSourceFor(slice.file, managedPrices) === null
+            ? {
+                path: slice.file,
+                lineno: slice.startLine + 1,
+                text: slice.slice,
+                sha256sum: slice.sha256,
+              }
+            : null,
+      };
+    });
   }
 
   async getContext(params: {

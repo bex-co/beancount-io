@@ -177,6 +177,12 @@ export type JournalQueryParams = {
   customSubtypes?: readonly string[] | null;
   limit?: number;
   offset?: number;
+  /**
+   * Attach each entry's source slice (`{path, lineno, text, sha256sum}`, as
+   * getEntryContext returns it), or null where it has no editable source;
+   * pages are capped at 200 entries (w1/m44).
+   */
+  includeSource?: boolean;
 };
 
 export type AccountJournalQueryParams = {
@@ -297,6 +303,8 @@ export class LedgerJournalService
         time: query?.time || undefined,
         ...page,
         ...kinds,
+        // Only when asked: the ledger answers unchanged without it.
+        ...(query?.includeSource && { include_source: true }),
       }),
       "get ledger journal entries",
     );

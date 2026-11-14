@@ -6010,6 +6010,18 @@
               "title": "Custom Subtypes"
             },
             "description": "Filter custom subtypes: budget (B)"
+          },
+          {
+            "name": "include_source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "description": "Attach each returned entry's source slice; pages are capped at 200 entries",
+              "title": "Include Source"
+            },
+            "description": "Attach each returned entry's source slice; pages are capped at 200 entries"
           }
         ],
         "responses": {
@@ -10523,6 +10535,18 @@
             ],
             "title": "Tolerance",
             "description": "Explicit tolerance from a `~` annotation"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -10590,6 +10614,18 @@
             "type": "string",
             "title": "Account",
             "description": "Account of the directive"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -10656,6 +10692,18 @@
             "type": "string",
             "title": "Currency",
             "description": "Currency"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -10788,6 +10836,18 @@
             "type": "array",
             "title": "Values",
             "description": "Custom values"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -10878,6 +10938,18 @@
             "uniqueItems": true,
             "title": "Links",
             "description": "Entry links"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -10950,6 +11022,18 @@
             "type": "string",
             "title": "Description",
             "description": "Description of the event"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -11022,6 +11106,18 @@
             "type": "string",
             "title": "Comment",
             "description": "Note comment"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -11116,6 +11212,18 @@
             ],
             "title": "Booking",
             "description": "Booking method for the account"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -11187,6 +11295,18 @@
             "type": "string",
             "title": "Source Account",
             "description": "Source account of the pad"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -11345,6 +11465,18 @@
           "amount": {
             "$ref": "#/components/schemas/JournalAmountPublic",
             "description": "Price amount"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -11531,6 +11663,18 @@
             "type": "boolean",
             "title": "Not Booked",
             "description": "Present and true only when the engine could not book the transaction (for example a sale with no matching lot). It is listed so it can be opened and fixed, but no balance counts it."
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JournalEntrySourcePublic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "With include_source: the entry's source slice, or null when it has no editable source (a plugin's or a pad's copy, a managed price line). Absent otherwise."
           }
         },
         "type": "object",
@@ -15794,6 +15938,39 @@
           "data"
         ],
         "title": "SuccessResponse[LedgerChangeFilesResult]"
+      },
+      "JournalEntrySourcePublic": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "description": "Repository path of the file the entry is written in"
+          },
+          "lineno": {
+            "type": "integer",
+            "title": "Lineno",
+            "description": "1-based line the entry starts on"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "The entry's source text, as getContext returns it in slice"
+          },
+          "sha256sum": {
+            "type": "string",
+            "title": "Sha256Sum",
+            "description": "Checksum of text, as getContext returns it; source-slice edits and deletes take it"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "lineno",
+          "text",
+          "sha256sum"
+        ],
+        "title": "JournalEntrySourcePublic",
+        "description": "An entry's own source text and where it starts (w1/m44)"
       }
     },
     "securitySchemes": {

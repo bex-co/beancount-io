@@ -39,6 +39,7 @@ export function setJournalHandler(router: Router): void {
           DocumentSubtype[] | undefined,
         customSubtypes: listQuery(ctx.query.custom_subtypes) as
           CustomSubtype[] | undefined,
+        includeSource: boolQuery(ctx.query.include_source),
       },
     });
     ctx.body = successResponse({
