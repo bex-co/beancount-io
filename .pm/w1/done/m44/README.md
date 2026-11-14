@@ -25,7 +25,7 @@
 
 ## Source + Goal linkage
 
-- **Source:** [w1/228](../../blocked/228.md) (from `/qa-find-bugs-mcp`, 2026-11-10): "Collecting the source of 8 entries took 8 `getEntryContext` calls, because `listLedgerEntries` returns no source text." `/pm-brainstorm for w1`, 2026-11-13, item 3; routed by the user via `/pmx` the same day.
+- **Source:** [w1/228](../../done/228.md) (from `/qa-find-bugs-mcp`, 2026-11-10): "Collecting the source of 8 entries took 8 `getEntryContext` calls, because `listLedgerEntries` returns no source text." `/pm-brainstorm for w1`, 2026-11-13, item 3; routed by the user via `/pmx` the same day.
 - **Goal linkage:** **A1 — Agent-native accounting:** bulk edits and deletes stop costing one round trip, and one rate-limit unit, per entry.
 - **Expected outcome:** a bulk edit of N entries takes two calls instead of N+1. Signals: calls per bulk-edit task in MCP QA, fewer `RATE_LIMITED` answers on bulk work.
 - **Why now:** it is the smallest of w1/228's three primitives, and [m45](../../m45/README.md) needs the same hash and `sha256sum` for every entry it moves. The ledger service already resolves a batch of slices from one parse (`findEntrySlicesWithFullLedger`, w1/237), so the cost is bounded. Adoption surface is included because a tool parameter and its docs change for every connecting agent.
