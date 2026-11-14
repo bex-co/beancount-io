@@ -13,19 +13,20 @@
  * shadows the platform's own variable. With no usable source the answer is
  * `unknown`.
  */
-export const UNKNOWN_REVISION = "unknown";
+const UNKNOWN_REVISION = "unknown";
 
 const REVISION_SOURCES = ["BEANCOUNT_REVISION", "RENDER_GIT_COMMIT"] as const;
 const REVISION_PATTERN = /^[0-9a-f]{7,40}$/;
+
+const isRevision = (value: string | undefined): value is string =>
+  value !== undefined && REVISION_PATTERN.test(value);
 
 export function parseRevision(
   env: Readonly<Record<string, string | undefined>>,
 ): string {
   for (const name of REVISION_SOURCES) {
     const candidate = env[name]?.trim().toLowerCase();
-    if (candidate !== undefined && REVISION_PATTERN.test(candidate)) {
-      return candidate;
-    }
+    if (isRevision(candidate)) return candidate;
   }
   return UNKNOWN_REVISION;
 }
@@ -37,9 +38,7 @@ export function parseRevision(
  * a config that carries none, as a test's partial one does.
  */
 export function publishedRevision(revision: string | undefined): string {
-  return revision !== undefined && REVISION_PATTERN.test(revision)
-    ? revision
-    : UNKNOWN_REVISION;
+  return isRevision(revision) ? revision : UNKNOWN_REVISION;
 }
 
 /**
@@ -49,6 +48,5 @@ export function publishedRevision(revision: string | undefined): string {
 export function shortRevision(
   revision: string | undefined,
 ): string | undefined {
-  const published = publishedRevision(revision);
-  return published === UNKNOWN_REVISION ? undefined : published.slice(0, 7);
+  return isRevision(revision) ? revision.slice(0, 7) : undefined;
 }

@@ -1,9 +1,4 @@
-import {
-  parseRevision,
-  publishedRevision,
-  shortRevision,
-  UNKNOWN_REVISION,
-} from "./revision";
+import { parseRevision, publishedRevision, shortRevision } from "./revision";
 
 const SHA = "2144cdbb2e6f0a1b3c4d5e6f708192a3b4c5d6e7";
 const OTHER_SHA = "57d7aaa13f0123456789abcdef0123456789abcd";
@@ -27,7 +22,6 @@ describe("parseRevision", () => {
   });
 
   it("is `unknown` when nothing is set", () => {
-    expect(parseRevision({})).toBe(UNKNOWN_REVISION);
     expect(parseRevision({})).toBe("unknown");
   });
 
@@ -68,7 +62,7 @@ describe("parseRevision", () => {
 
   it("accepts a short sha of seven characters and a full one of forty", () => {
     expect(parseRevision({ BEANCOUNT_REVISION: "2144cdb" })).toBe("2144cdb");
-    expect(parseRevision({ BEANCOUNT_REVISION: SHA })).toHaveLength(40);
+    expect(parseRevision({ BEANCOUNT_REVISION: SHA })).toBe(SHA);
   });
 });
 

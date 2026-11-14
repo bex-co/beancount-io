@@ -700,6 +700,12 @@ describe("which build is this? (w22/m11)", () => {
       authorization: string | undefined;
     }
 
+    /** Every fake deployment a test starts, closed after the test whatever it asserted. */
+    const open: Array<() => Promise<void>> = [];
+    afterEach(async () => {
+      await Promise.all(open.splice(0).map((close) => close()));
+    });
+
     /** A deployment that answers the two requests as told. */
     async function deployment(answers: {
       manifest: { status: number; body: string };
@@ -712,25 +718,23 @@ describe("which build is this? (w22/m11)", () => {
           method: req.method ?? "",
           authorization: req.headers.authorization,
         });
-        const answer =
-          req.url === "/.well-known/mcp.json" ? answers.manifest : answers.initialize;
+        const isManifest = req.url === "/.well-known/mcp.json";
+        const answer = isManifest ? answers.manifest : answers.initialize;
         res.statusCode = answer?.status ?? 404;
-        const contentType =
-          req.url === "/.well-known/mcp.json"
+        res.setHeader(
+          "content-type",
+          isManifest
             ? "application/json"
-            : (answers.initialize?.contentType ?? "text/event-stream");
-        res.setHeader("content-type", contentType);
+            : (answers.initialize?.contentType ?? "text/event-stream"),
+        );
         res.end(answer?.body ?? "");
         req.resume();
       });
       await new Promise<void>((resolve) => fake.listen(0, "127.0.0.1", resolve));
+      open.push(() => new Promise<void>((resolve) => fake.close(() => resolve())));
       const address = fake.address();
       if (!address || typeof address === "string") throw new Error("no address");
-      return {
-        baseUrl: `http://127.0.0.1:${address.port}`,
-        seen,
-        close: () => new Promise<void>((resolve) => fake.close(() => resolve())),
-      };
+      return { baseUrl: `http://127.0.0.1:${address.port}`, seen };
     }
 
     const sse = (version: string) =>
@@ -747,14 +751,12 @@ describe("which build is this? (w22/m11)", () => {
       const d = await deployment({
         manifest: { status: 200, body: manifestWith(SHA) },
       });
-      try {
-        const sources = await observeRevision({ baseUrl: d.baseUrl });
 
-        expect(sources).toEqual({ manifest: SHA, initialize: undefined });
-        expect(d.seen.map((r) => r.path)).toEqual(["/.well-known/mcp.json"]);
-      } finally {
-        await d.close();
-      }
+      expect(await observeRevision({ baseUrl: d.baseUrl })).toEqual({
+        manifest: SHA,
+        initialize: undefined,
+      });
+      expect(d.seen.map((r) => r.path)).toEqual(["/.well-known/mcp.json"]);
     });
 
     it("asks initialize with the credential and reads the build suffix", async () => {
@@ -762,18 +764,14 @@ describe("which build is this? (w22/m11)", () => {
         manifest: { status: 200, body: manifestWith(SHA) },
         initialize: { status: 200, body: sse("1.0.0+2144cdb") },
       });
-      try {
-        const sources = await observeRevision({ baseUrl: d.baseUrl, token: "bcio_test" });
 
-        expect(sources).toEqual({ manifest: SHA, initialize: "2144cdb" });
-        const handshake = d.seen.find((r) => r.path === "/api-gateway/mcp");
-        expect(handshake).toMatchObject({
-          method: "POST",
-          authorization: "Bearer bcio_test",
-        });
-      } finally {
-        await d.close();
-      }
+      expect(
+        await observeRevision({ baseUrl: d.baseUrl, token: "bcio_test" }),
+      ).toEqual({ manifest: SHA, initialize: "2144cdb" });
+      expect(d.seen.find((r) => r.path === "/api-gateway/mcp")).toMatchObject({
+        method: "POST",
+        authorization: "Bearer bcio_test",
+      });
     });
 
     it("reads a plain JSON initialize answer, and a version with no build as an empty suffix", async () => {
@@ -789,28 +787,42 @@ describe("which build is this? (w22/m11)", () => {
           }),
         },
       });
-      try {
-        expect(await observeRevision({ baseUrl: d.baseUrl, token: "t" })).toEqual({
-          manifest: "unknown",
-          initialize: "",
-        });
-      } finally {
-        await d.close();
-      }
+
+      expect(await observeRevision({ baseUrl: d.baseUrl, token: "t" })).toEqual({
+        manifest: "unknown",
+        initialize: "",
+      });
     });
+
+    it.each(["1.0.0+", "1.0.0+main", "1.0.0+abcdef", "1.0.0+2144CDB"])(
+      "does not take a suffix that is not a commit (%s) for a build",
+      async (version) => {
+        // The replay requires 7 to 40 lower-case hex characters, so this does too.
+        const d = await deployment({
+          manifest: { status: 200, body: manifestWith(SHA) },
+          initialize: { status: 200, body: sse(version) },
+        });
+
+        expect(
+          (await observeRevision({ baseUrl: d.baseUrl, token: "t" })).initialize,
+        ).toBe("");
+      },
+    );
 
     it.each([
       ["a missing manifest", { status: 404, body: "not found" }],
       ["a manifest that is not JSON", { status: 200, body: "<html>" }],
-      ["a manifest with no revision field", { status: 200, body: JSON.stringify({ version: "1.0.0" }) }],
+      [
+        "a manifest with no revision field",
+        { status: 200, body: JSON.stringify({ version: "1.0.0" }) },
+      ],
       ["a revision that is not a string", { status: 200, body: manifestWith(42) }],
     ])("reports no manifest revision for %s", async (_label, manifest) => {
       const d = await deployment({ manifest });
-      try {
-        expect((await observeRevision({ baseUrl: d.baseUrl })).manifest).toBeUndefined();
-      } finally {
-        await d.close();
-      }
+
+      expect(
+        (await observeRevision({ baseUrl: d.baseUrl })).manifest,
+      ).toBeUndefined();
     });
 
     it("reports no handshake build when initialize refuses the credential", async () => {
@@ -818,13 +830,10 @@ describe("which build is this? (w22/m11)", () => {
         manifest: { status: 200, body: manifestWith(SHA) },
         initialize: { status: 401, body: "{}" },
       });
-      try {
-        expect(
-          (await observeRevision({ baseUrl: d.baseUrl, token: "bad" })).initialize,
-        ).toBeUndefined();
-      } finally {
-        await d.close();
-      }
+
+      expect(
+        (await observeRevision({ baseUrl: d.baseUrl, token: "bad" })).initialize,
+      ).toBeUndefined();
     });
 
     it("never throws when nothing is listening", async () => {

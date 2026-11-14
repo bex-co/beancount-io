@@ -93,7 +93,10 @@ import {
   TOKEN_INTROSPECTION_V1_ROUTES,
 } from "@/features/apikeys/api/token-introspection-rest";
 import { setSitemapHandler } from "@/features/sitemap/api/sitemap-handler";
-import { setWellKnownRoutes } from "@/features/well-known/api/well-known-route";
+import {
+  MCP_CONTRACT_VERSION,
+  setWellKnownRoutes,
+} from "@/features/well-known/api/well-known-route";
 import {
   setMcpArchiveRoute,
   setMcpRoute,
@@ -518,16 +521,20 @@ function publishToolSecuritySchemes(server: McpServer): void {
 
 /**
  * The server identity both the constructor and the `initialize` override
- * answer. The version is `1.0.0`, which moves only when the server's contract
- * does, plus the running commit as semver build metadata (`1.0.0+2144cdb`) when
- * the deployment knows it, so a client learns which build it reached from the
- * handshake alone. Without a known commit it is exactly `1.0.0`.
+ * answer. The version is the contract version, which moves only when the
+ * server's contract does, plus the running commit as semver build metadata
+ * (`1.0.0+2144cdb`) when the deployment knows it, so a client learns which build
+ * it reached from the handshake alone. Without a known commit it is exactly the
+ * contract version.
  */
 function mcpServerInfo(revision: string | undefined) {
   const build = shortRevision(revision);
   return {
     name: "beancount-mcp",
-    version: build === undefined ? "1.0.0" : `1.0.0+${build}`,
+    version:
+      build === undefined
+        ? MCP_CONTRACT_VERSION
+        : `${MCP_CONTRACT_VERSION}+${build}`,
   };
 }
 
@@ -542,7 +549,8 @@ export function assembleMcpRegistry(
   toolCtx: McpRequestContext,
   config: AppConfig,
 ): McpServer {
-  const server = new McpServer(mcpServerInfo(config.revision), {
+  const serverInfo = mcpServerInfo(config.revision);
+  const server = new McpServer(serverInfo, {
     instructions: buildInstructions(toolCtx.identity),
   });
 
@@ -934,7 +942,7 @@ export function assembleMcpRegistry(
           ? requestedVersion
           : LATEST_PROTOCOL_VERSION,
         capabilities: withoutListChanged(sdkServer.getCapabilities()),
-        serverInfo: mcpServerInfo(config.revision),
+        serverInfo: { ...serverInfo },
         instructions: buildInstructions(toolCtx.identity),
       };
     },

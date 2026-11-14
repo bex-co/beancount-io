@@ -1037,15 +1037,16 @@ const MARK: Record<Outcome, string> = { pass: "PASS", fail: "FAIL", skip: "SKIP"
  */
 export interface RevisionSources {
   /**
-   * `revision` from `/.well-known/mcp.json`: a commit, `unknown`, or
-   * `undefined` when the document is unreachable or has no such field (a
-   * deployment that predates it).
+   * `revision` from `/.well-known/mcp.json`, exactly as served (a commit,
+   * `unknown`, or any other string), or `undefined` when the document is
+   * unreachable or has no such field (a deployment that predates it).
    */
   readonly manifest: string | undefined;
   /**
-   * The `+<build>` suffix of the `initialize` answer's `serverInfo.version`:
-   * the build, `""` when the version carries none, `undefined` when it was not
-   * asked (the call needs a credential) or did not answer.
+   * The commit in the `+<build>` suffix of the `initialize` answer's
+   * `serverInfo.version`; `""` when the version carries no suffix, or one that is
+   * not a commit; `undefined` when it was not asked (the call needs a
+   * credential) or did not answer.
    */
   readonly initialize: string | undefined;
 }
@@ -1055,22 +1056,21 @@ const isCommit = (value: string | undefined): value is string =>
 
 /** The line or lines this run prints about the build it reached. */
 export function describeRevision({ manifest, initialize }: RevisionSources): string[] {
-  const knownManifest = isCommit(manifest);
-  const handshakeSaysBuild = initialize !== undefined && initialize !== "";
-
-  if (knownManifest) {
+  // `initialize` is `""` or `undefined` when the handshake names no build, so its
+  // truthiness is "the handshake names a build".
+  if (isCommit(manifest)) {
     if (initialize === undefined) {
       return [
         `revision: ${manifest} (from /.well-known/mcp.json; initialize needs a credential, so it was not asked)`,
       ];
     }
-    if (initialize !== "" && manifest.startsWith(initialize)) {
+    if (initialize && manifest.startsWith(initialize)) {
       return [`revision: ${manifest} (/.well-known/mcp.json and initialize agree)`];
     }
     return [
       `revision: ${manifest} (from /.well-known/mcp.json)`,
       `WARNING: initialize reports ${
-        handshakeSaysBuild ? `+${initialize}` : "no build"
+        initialize ? `+${initialize}` : "no build"
       }, which is not that commit. The two disagree: a cache or a proxy in front may be serving an older build.`,
     ];
   }
@@ -1078,7 +1078,7 @@ export function describeRevision({ manifest, initialize }: RevisionSources): str
   if (manifest === "unknown") {
     return [
       "revision: unknown (the deployment was given no commit; docs/mcp.md says how to supply one)",
-      ...(handshakeSaysBuild
+      ...(initialize
         ? [
             `WARNING: initialize reports +${initialize}, but /.well-known/mcp.json says unknown. The two disagree.`,
           ]
@@ -1087,14 +1087,13 @@ export function describeRevision({ manifest, initialize }: RevisionSources): str
   }
 
   // No usable value in the manifest: it is unreachable, or predates the field.
-  if (handshakeSaysBuild) {
-    return [
-      `revision: +${initialize} (from initialize only; /.well-known/mcp.json reported none)`,
-    ];
-  }
-  return [
-    "revision: not reported (/.well-known/mcp.json has no revision: an older deployment, or the document is unreachable)",
-  ];
+  return initialize
+    ? [
+        `revision: +${initialize} (from initialize only; /.well-known/mcp.json reported none)`,
+      ]
+    : [
+        "revision: not reported (/.well-known/mcp.json has no revision: an older deployment, or the document is unreachable)",
+      ];
 }
 
 /** Reads the two places a deployment can name its commit. Never throws. */
@@ -1124,7 +1123,11 @@ export async function observeRevision(o: Options): Promise<RevisionSources> {
         | undefined;
       const version = result?.serverInfo?.version;
       if (typeof version === "string") {
-        initialize = version.includes("+") ? version.slice(version.indexOf("+") + 1) : "";
+        // Only a commit counts as a build, as in the replay: another suffix is
+        // not something to print as if it were one.
+        const plus = version.indexOf("+");
+        const build = plus === -1 ? "" : version.slice(plus + 1);
+        initialize = isCommit(build) ? build : "";
       }
     }
   }
