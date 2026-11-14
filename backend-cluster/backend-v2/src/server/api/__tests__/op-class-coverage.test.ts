@@ -107,10 +107,11 @@ describe("op-class coverage", () => {
     // (PRFAQ005), browser-session billing; 66 since w1/m40 added
     // `cancelScheduledPlanChange`, its undo; 68 since w4/m31 added the
     // recovery request and email-code password sign-in ceremonies; 69 since
-    // w23/m42 added `revertLedgerCommit`, the undo of one commit.
+    // w23/m42 added `revertLedgerCommit`, the undo of one commit; 70 since
+    // w1/m43 added `renameLedgerAccount` on all three surfaces.
     expect(
       graphqlOps.filter((op) => op.startsWith("GQL Mutation.")).length,
-    ).toBe(69);
+    ).toBe(70);
   });
 
   it("gives every GraphQL root field exactly one explicit access mode", () => {
@@ -254,7 +255,8 @@ describe("op-class coverage", () => {
     // tools become three each, so 43 here. w3/m53 adds the 44th,
     // previewLedgerSetup, the read-only twin of createLedger's setup input.
     // w23/m42 adds the 45th, revertCommit, the undo of one commit.
-    expect(tools).toHaveLength(45);
+    // w1/m43 adds the 46th, renameAccount.
+    expect(tools).toHaveLength(46);
 
     // Resources are counted apart on purpose. They do not compete for tool
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can

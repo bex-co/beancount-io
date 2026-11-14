@@ -11388,6 +11388,347 @@
         }
       }
     },
+    "/api-gateway/v1/ledgers/{owner}/{name}/rename-account": {
+      "post": {
+        "summary": "Rename an account",
+        "description": "Rename an account and every account under it across the ledger's loaded files in one commit: account tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the commit unless allowInvalid. revertCommit undoes the commit. dryRun previews without committing: the changed lines and bank mappings.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "description": "The account to rename; every account under it is renamed too."
+                  },
+                  "to": {
+                    "type": "string",
+                    "description": "The new name; it must stay under the same root."
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Alias of dryRun, as MCP spells it."
+                  },
+                  "allowInvalid": {
+                    "type": "boolean",
+                    "description": "Commit even when the rename adds bean-check errors the ledger did not have."
+                  },
+                  "allow_invalid": {
+                    "type": "boolean",
+                    "description": "Alias of allowInvalid."
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Renamed account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean"
+                    },
+                    "from": {
+                      "type": "string"
+                    },
+                    "to": {
+                      "type": "string"
+                    },
+                    "accounts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "from": {
+                            "type": "string"
+                          },
+                          "to": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "from",
+                          "to"
+                        ]
+                      },
+                      "description": "Accounts renamed, descendants included."
+                    },
+                    "files": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "changes": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "line": {
+                                  "type": "integer"
+                                },
+                                "before": {
+                                  "type": "string"
+                                },
+                                "after": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "line",
+                                "before",
+                                "after"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "changes"
+                        ]
+                      },
+                      "description": "Each loaded file the rename changes, with every line it rewrites."
+                    },
+                    "bankMappings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "plaidAccount": {
+                            "type": "string",
+                            "nullable": true,
+                            "description": "The caller's own bank account; null for another member's."
+                          },
+                          "from": {
+                            "type": "string"
+                          },
+                          "to": {
+                            "type": "string"
+                          },
+                          "updated": {
+                            "type": "boolean",
+                            "description": "False on a preview, and when the update after the commit failed."
+                          }
+                        },
+                        "required": [
+                          "plaidAccount",
+                          "from",
+                          "to",
+                          "updated"
+                        ]
+                      },
+                      "description": "Bank mappings moved."
+                    },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the commit this write made; absent on a preview or a read."
+                    },
+                    "errorsBefore": {
+                      "type": "integer"
+                    },
+                    "errorsAfter": {
+                      "type": "integer"
+                    },
+                    "newErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "valid": {
+                      "type": "boolean",
+                      "description": "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on the status."
+                    },
+                    "checked": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ],
+                      "description": "Present, as false, when bean-check could not run, so the other fields say nothing; `checkError` says why."
+                    },
+                    "checkError": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "dryRun",
+                    "from",
+                    "to",
+                    "accounts",
+                    "files",
+                    "bankMappings",
+                    "errorsBefore",
+                    "errorsAfter",
+                    "newErrors",
+                    "valid"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api-gateway/v1/ledgers/{owner}/{name}/revert-commit": {
       "post": {
         "summary": "Revert a commit",

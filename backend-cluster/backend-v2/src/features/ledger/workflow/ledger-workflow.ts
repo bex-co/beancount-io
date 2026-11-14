@@ -109,6 +109,11 @@ import {
   type Identity,
   type OperationClass,
 } from "@/server/api/identity";
+import type {
+  AccountRenameWorkflow,
+  RenameAccountInput,
+  RenameAccountResult,
+} from "@/features/ledger/workflow/account-rename-workflow";
 import {
   AUTHORIZATION_ACTIONS,
   anonymousPrincipal,
@@ -288,6 +293,15 @@ export interface ILedgerWorkflow {
     ledgerId: string;
     input: RenameLedgerFileCommand;
   }): Promise<RenameLedgerFileResult>;
+  /**
+   * Rename one account, and every account under it, across the ledger's
+   * loaded files in one commit; bank mappings follow (w1/m43).
+   */
+  renameAccount(params: {
+    identity: Identity;
+    ledgerId: string;
+    input: RenameAccountInput;
+  }): Promise<RenameAccountResult>;
   /**
    * Undo one commit as a new commit: each file it touched is set back to its
    * parent's contents, or refused when a later commit changed it (w23/m42).
@@ -524,6 +538,12 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     private readonly createIdempotencyStore?: Pick<
       CacheHelper,
       "getStrict" | "setStrict" | "delStrict"
+    >,
+    /** The rename reads and commits through the repo service (w1/m43); a
+     * composition without it has no rename. */
+    private readonly accountRename?: Pick<
+      AccountRenameWorkflow,
+      "renameAccount"
     >,
   ) {}
 
@@ -1342,6 +1362,17 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         },
       },
     };
+  }
+
+  async renameAccount(params: {
+    identity: Identity;
+    ledgerId: string;
+    input: RenameAccountInput;
+  }): Promise<RenameAccountResult> {
+    if (!this.accountRename) {
+      throw new Error("Account rename is not wired in this composition");
+    }
+    return this.accountRename.renameAccount(params);
   }
 
   async renameLedgerFile({

@@ -1,6 +1,11 @@
 import { logger } from "@/shared/logger";
 import { BadUserInputError, NotFoundError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  ledgerResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 import type {
   ILedgerGeneratedFileWriter,
   ILedgerRepoService,
@@ -14,6 +19,10 @@ import {
   renameAccountInText,
   renamedAccounts,
 } from "@/features/ledger/utils/account-rename";
+
+/** What the rename does, as REST, GraphQL and MCP describe it (w1/m43). */
+export const RENAME_ACCOUNT_DESCRIPTION =
+  "Rename an account and every account under it across the ledger's loaded files in one commit: account tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the commit unless allowInvalid. revertCommit undoes the commit.";
 
 export interface RenameAccountInput {
   from: string;
@@ -92,6 +101,10 @@ export class AccountRenameWorkflow {
   constructor(
     private readonly ledgerRepo: RepoDeps,
     private readonly ledgerData: Pick<ILedgerDataService, "getErrors">,
+    private readonly authorization: Pick<
+      IAuthorizationService,
+      "authorizeOrThrow"
+    >,
     /** Absent in a composition without bank connections: nothing to carry along. */
     private readonly bankMappings?: LedgerBankMappings,
   ) {}
@@ -106,6 +119,13 @@ export class AccountRenameWorkflow {
     input: RenameAccountInput;
   }): Promise<RenameAccountResult> {
     const { from, to, dryRun = false, allowInvalid = false } = input;
+    // Write authority first: a read-only credential is FORBIDDEN, whatever
+    // else is wrong with the request.
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      resource: ledgerResource(ledgerId),
+    });
     assertRenamable(from, to);
     // The files the ledger actually loads: an account in a file nothing
     // includes counts nowhere, so it is not part of the ledger to rename.

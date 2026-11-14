@@ -133,6 +133,24 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
     proofs: SLICE_PARITY,
     differential: ONE_PROJECTION_CALL,
   },
+  // A rename projects bean-check over every file it would rewrite (w1/m43).
+  renameAccount: {
+    kind: "projection",
+    proofs: [
+      {
+        file: `${REST_V1}/rename-account-parity.test.ts`,
+        test: "previews a breaking rename as invalid without allowInvalid, committing nothing",
+      },
+      {
+        file: `${REST_V1}/rename-account-parity.test.ts`,
+        test: "still refuses the commit of a breaking rename unless allowInvalid, committing nothing",
+      },
+    ],
+    differential: {
+      reason:
+        "preview and commit run one workflow path through the same gateFileWrite projection, proved on all three surfaces by the parity suite named above",
+    },
+  },
   // A move projects bean-check over the files it would leave, with the moved
   // file's errors carried to its new path; it was a summary until w1/236.
   renameLedgerFile: {

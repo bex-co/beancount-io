@@ -1,5 +1,6 @@
 import { legacyEntryRoute } from "./legacy-entry-handler";
 import { SOURCE_SLICE_ROUTES } from "./source-slice-handler";
+import { renameAccountRoute } from "./rename-account-handler";
 import { renameFileRoute } from "./rename-handler";
 import { revertCommitRoute } from "./revert-handler";
 import { receiptInsertRoute } from "./receipt-insert-handler";
@@ -64,6 +65,7 @@ const V1_SCOPED_ROUTES: Parameters<typeof registerV1Routes>[2] = [
   ...REPORT_ROUTES,
   ...FILE_ROUTES,
   renameFileRoute,
+  renameAccountRoute,
   revertCommitRoute,
   ...ENTRY_ROUTES,
   legacyEntryRoute,

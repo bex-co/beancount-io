@@ -20,6 +20,11 @@ import {
   renameFileResult,
 } from "@/features/ledger/api/rest/v1/rename-handler";
 import {
+  RENAME_ACCOUNT_DESCRIPTION,
+  renameAccountInput,
+  renameAccountResult,
+} from "@/features/ledger/api/rest/v1/rename-account-handler";
+import {
   revertCommitInput,
   revertCommitResult,
 } from "@/features/ledger/api/rest/v1/revert-handler";
@@ -326,6 +331,10 @@ const addLedgerEntriesInput = entriesBodySchema
   .strict();
 const renameLedgerFileInput = renameFileInput
   .omit({ dryRun: true })
+  .extend({ ledger: ledgerSelection, ...dryRunInput })
+  .strict();
+const renameAccountToolInput = renameAccountInput
+  .omit({ dryRun: true, dry_run: true })
   .extend({ ledger: ledgerSelection, ...dryRunInput })
   .strict();
 const revertCommitToolInput = revertCommitInput
@@ -699,6 +708,55 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     inputSchema: SOURCE_SLICE_OPERATION_SCHEMAS.delete_many,
     outputSchema: SOURCE_SLICE_OPERATION_OUTPUTS.delete_many,
     execute: SOURCE_SLICE_EXECUTORS.delete_many,
+  },
+  {
+    name: "renameAccount",
+    title: "Rename Account",
+    annotations: DESTRUCTIVE,
+    description: `${RENAME_ACCOUNT_DESCRIPTION} Pinned credentials can omit ledger. dry_run previews without committing: the changed lines and bank mappings.`,
+    inputSchema: renameAccountToolInput,
+    outputSchema: mcpOutputSchema(
+      toolOutputSchema(
+        withWriteOutcome({
+          ...withoutFlatVerdict(withoutDryRun(renameAccountResult.shape)),
+          dry_run: z.boolean(),
+        }),
+      ),
+    ),
+    execute: async (context, input) => {
+      const { ledger, ...args } = renameAccountToolInput.parse(input);
+      const ledgerId = resolveMcpLedger(context, ledger);
+      const { validation, ...written } =
+        await context.ledgerWorkflow.renameAccount({
+          identity: context.identity,
+          ledgerId,
+          input: {
+            from: args.from,
+            to: args.to,
+            dryRun: resolveFlagAlias(
+              { primary: args.dry_run, legacy: args.dryRun },
+              DRY_RUN_NAMES,
+            ),
+            allowInvalid: resolveFlagAlias(
+              { primary: args.allow_invalid, legacy: args.allowInvalid },
+              ALLOW_INVALID_NAMES,
+            ),
+          },
+        });
+      // The workflow spells the echo dryRun; MCP publishes dry_run (w23/m7/t004).
+      const { dryRun, ...result } = written;
+      return {
+        ok: true,
+        result: {
+          summary: summarizeWrite(written.message, validation),
+          ...result,
+          dry_run: dryRun,
+          wrote: dryRun ? [] : written.files.map(({ path }) => ({ path })),
+          entryHashes: [],
+          validation,
+        },
+      };
+    },
   },
   {
     name: "renameLedgerFile",

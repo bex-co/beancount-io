@@ -2,6 +2,7 @@ import {
   ArgsType,
   Field,
   InputType,
+  Int,
   ObjectType,
   registerEnumType,
 } from "type-graphql";
@@ -536,6 +537,96 @@ export class RenameLedgerFileInput {
 }
 
 @ArgsType()
+export class RenameLedgerAccountInput {
+  @Field(() => String, {
+    description:
+      "The account to rename; every account under it is renamed too.",
+  })
+  from: string;
+
+  @Field(() => String, {
+    description: "The new name; it must stay under the same root.",
+  })
+  to: string;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: PREVIEW_FLAG_DESCRIPTION,
+  })
+  dryRun?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of dryRun, as MCP spells it.",
+  })
+  dry_run?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "Commit even when the rename adds bean-check errors the ledger did not have.",
+  })
+  allowInvalid?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of allowInvalid.",
+  })
+  allow_invalid?: boolean;
+}
+
+@ObjectType()
+export class RenamedAccount {
+  @Field(() => String)
+  from: string;
+
+  @Field(() => String)
+  to: string;
+}
+
+@ObjectType()
+export class AccountRenameLine {
+  @Field(() => Int, { description: "1-based line of the file." })
+  line: number;
+
+  @Field(() => String)
+  before: string;
+
+  @Field(() => String)
+  after: string;
+}
+
+@ObjectType()
+export class AccountRenameFile {
+  @Field(() => String)
+  path: string;
+
+  @Field(() => [AccountRenameLine])
+  changes: AccountRenameLine[];
+}
+
+@ObjectType()
+export class AccountRenameBankMapping {
+  @Field(() => String, {
+    nullable: true,
+    description: "The caller's own bank account; null for another member's.",
+  })
+  plaidAccount: string | null;
+
+  @Field(() => String)
+  from: string;
+
+  @Field(() => String)
+  to: string;
+
+  @Field(() => Boolean, {
+    description:
+      "False on a preview, and when the update after the commit failed.",
+  })
+  updated: boolean;
+}
+
+@ArgsType()
 export class RevertLedgerCommitInput {
   @Field(() => String, { description: REVERT_SHA_DESCRIPTION })
   sha: string;
@@ -768,6 +859,36 @@ class WriteVerdict {
 
   @Field(() => String, { nullable: true })
   checkError?: string;
+}
+
+@ObjectType()
+export class RenameLedgerAccountResponse extends WriteVerdict {
+  @Field(() => String)
+  message: string;
+
+  @Field(() => Boolean)
+  dryRun: boolean;
+
+  @Field(() => String)
+  from: string;
+
+  @Field(() => String)
+  to: string;
+
+  @Field(() => [RenamedAccount])
+  accounts: RenamedAccount[];
+
+  @Field(() => [AccountRenameFile])
+  files: AccountRenameFile[];
+
+  @Field(() => [AccountRenameBankMapping])
+  bankMappings: AccountRenameBankMapping[];
+
+  @Field(() => String, {
+    nullable: true,
+    description: COMMIT_SHA_DESCRIPTION,
+  })
+  commit?: string;
 }
 
 @ObjectType()

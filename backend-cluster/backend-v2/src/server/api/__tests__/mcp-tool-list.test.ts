@@ -324,9 +324,15 @@ describe("MCP tool list", () => {
     // tool is the larger part (its input and its write outcome); the sha is one
     // optional string with a short description on each write result, which is
     // how an agent that only calls tools learns what to pass to revertCommit.
+    //
+    // 128 KB since w1/m43 added renameAccount: measured at 130,013 bytes
+    // (+7.7 KB). Nearly all of it is the shared write outcome (the validation
+    // object and the error item) every write tool publishes, plus the changed
+    // lines and bank mappings a reviewer of the rename needs; its prose was
+    // cut to one paragraph shared with REST and GraphQL.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(124 * 1024);
+    expect(bytes).toBeLessThan(128 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the
@@ -363,6 +369,8 @@ describe("MCP tool list", () => {
     ["deleteEntrySource", "preview"],
     ["deleteEntrySources", "preview"],
     ["renameLedgerFile", "preview"],
+    // w1/m43: a rename's preview is every line it would change.
+    ["renameAccount", "files"],
     // w23/m42: the preview of an undo is the list of files it would restore.
     ["revertCommit", "files"],
     // w23/m13/t002: lifecycle previews join the same dialect.
@@ -456,6 +464,7 @@ describe("MCP tool list", () => {
   // behind a rename, receipt promotion, bank sync, or personal toggle.
   it.each([
     "renameLedgerFile",
+    "renameAccount",
     "revertCommit",
     "insertReceiptTransaction",
     "syncBankTransactions",

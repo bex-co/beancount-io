@@ -1,5 +1,6 @@
 import { AccountRenameWorkflow } from "../account-rename-workflow";
 import type { Identity } from "@/server/api/identity";
+import { ForbiddenError } from "@/shared/errors";
 
 /** w1/m43/t002 — the rename reads the loaded files, gates the projection, and commits once. */
 
@@ -49,6 +50,7 @@ function fixture(
       name: string | null;
     }[];
     remapFails?: boolean;
+    forbidden?: boolean;
   } = {},
 ) {
   const files = new Map(
@@ -97,9 +99,15 @@ function fixture(
       if (options.remapFails) throw new Error("db down");
     }),
   };
+  const authorization = {
+    authorizeOrThrow: jest.fn(async () => {
+      if (options.forbidden) throw new ForbiddenError("ledger.files.write");
+    }),
+  };
   const workflow = new AccountRenameWorkflow(
     ledgerRepo as never,
     ledgerData as never,
+    authorization as never,
     bankMappings,
   );
   const rename = (input: {
@@ -216,6 +224,14 @@ describe("AccountRenameWorkflow (w1/m43)", () => {
   ])("refuses %s before reading anything", async (_case, from, to, message) => {
     const { ledgerRepo, rename } = fixture();
     await expect(rename({ from, to })).rejects.toThrow(message);
+    expect(ledgerRepo.projectedSourceFiles).not.toHaveBeenCalled();
+  });
+
+  it("answers FORBIDDEN before judging the request for a credential without write", async () => {
+    const { ledgerRepo, rename } = fixture({ forbidden: true });
+    await expect(
+      rename({ from: "Assets:Bank:Checking", to: "not valid" }),
+    ).rejects.toMatchObject({ category: "FORBIDDEN" });
     expect(ledgerRepo.projectedSourceFiles).not.toHaveBeenCalled();
   });
 

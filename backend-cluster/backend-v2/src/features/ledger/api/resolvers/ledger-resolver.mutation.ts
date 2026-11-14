@@ -1,9 +1,14 @@
 import { Arg, Args, Ctx, Mutation, Resolver } from "type-graphql";
 import { Authenticated } from "@/server/graphql/authenticated";
+import { RENAME_ACCOUNT_DESCRIPTION } from "@/features/ledger/workflow/account-rename-workflow";
 import { IContext } from "@/server/graphql/context";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { resolveCommitMessage } from "@/features/ledger/utils/commit-message-alias";
-import { withResolvedPreview } from "@/features/ledger/utils/flag-alias";
+import {
+  ALLOW_INVALID_NAMES,
+  resolveFlagAlias,
+  withResolvedPreview,
+} from "@/features/ledger/utils/flag-alias";
 import { DELETE_INCLUDE_GUARD_DESCRIPTION } from "@/features/ledger/utils/include-references";
 
 /**
@@ -31,6 +36,8 @@ import {
   CreateLedgerFileInput,
   UpdateLedgerFileInput,
   DeleteLedgerFileInput,
+  RenameLedgerAccountInput,
+  RenameLedgerAccountResponse,
   RenameLedgerFileInput,
   RevertLedgerCommitInput,
   DeleteLedgerInput,
@@ -161,6 +168,30 @@ export class LedgerMutationResolver {
       identity: ctx.getCurrentIdentity(),
       ledgerId,
       input: withResolvedMessage(withResolvedPreview(input)),
+    });
+    return { ...result, ...flattenValidation(validation) };
+  }
+
+  @Authenticated()
+  @Mutation(() => RenameLedgerAccountResponse, {
+    description: `${RENAME_ACCOUNT_DESCRIPTION} dryRun previews without committing: the changed lines and bank mappings.`,
+  })
+  async renameLedgerAccount(
+    @Arg("ledgerId", () => String) ledgerId: string,
+    @Args() input: RenameLedgerAccountInput,
+    @Ctx() ctx: IContext,
+  ): Promise<RenameLedgerAccountResponse> {
+    const { allow_invalid, allowInvalid, ...rest } = withResolvedPreview(input);
+    const { validation, ...result } = await this.workflow.renameAccount({
+      identity: ctx.getCurrentIdentity(),
+      ledgerId,
+      input: {
+        ...rest,
+        allowInvalid: resolveFlagAlias(
+          { primary: allow_invalid, legacy: allowInvalid },
+          ALLOW_INVALID_NAMES,
+        ),
+      },
     });
     return { ...result, ...flattenValidation(validation) };
   }

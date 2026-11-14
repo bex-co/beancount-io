@@ -25,7 +25,10 @@ import { type ILedgerDataService } from "@/features/ledger/service/ledger-data-s
 import { type ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { type ILedgerShellService } from "@/features/ledger/service/ledger-shell-service";
 import { type ILedgerPublicKeyService } from "@/features/ledger/service/ledger-public-key-service";
-import { type ILedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
+import {
+  type ILedgerGeneratedFileWriter,
+  type ILedgerRepoService,
+} from "@/features/ledger/service/ledger-repo-service";
 import { type ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { type ILedgerCollaboratorsWorkflow } from "@/features/ledger/workflow/ledger-collaborators-workflow";
 import { type ILedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
@@ -98,7 +101,8 @@ export interface ServiceLayer {
   ledgerJournal: ILedgerJournalService;
   ledgerShell: ILedgerShellService;
   ledgerPublicKey: ILedgerPublicKeyService;
-  ledgerRepo: ILedgerRepoService;
+  /** Also the internal writer: the rename and the append commit generated text (w1/m43). */
+  ledgerRepo: ILedgerRepoService & ILedgerGeneratedFileWriter;
   plaidItem: IPlaidItemService;
   plaidSync: IPlaidSyncService;
   featureUsage: IFeatureUsageService;

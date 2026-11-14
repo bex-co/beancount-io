@@ -1,3 +1,5 @@
+import { AccountRenameWorkflow } from "@/features/ledger/workflow/account-rename-workflow";
+import { PlaidLedgerBankMappings } from "@/features/plaid/service/plaid-ledger-bank-mappings";
 import { createLedgerPinResolver } from "@/features/ledger/utils/ledger-pin-resolver";
 import { configureLedgerPinResolver } from "@/server/api/identity";
 import { createDirectiveLimitPreview } from "@/features/ledger/operations/directive-limit-preview";
@@ -292,6 +294,16 @@ export function buildWorkflowLayer(input: {
     input.config,
     input.services.authorization,
     input.clients.cacheHelper,
+    new AccountRenameWorkflow(
+      input.services.ledgerRepo,
+      input.services.ledgerData,
+      input.services.authorization,
+      new PlaidLedgerBankMappings(
+        input.clients.favaClientFactory,
+        input.database.models,
+        input.database.db,
+      ),
+    ),
   );
   const ledgerCollaborators = new LedgerCollaboratorsWorkflow(
     input.clients.favaClientFactory,
