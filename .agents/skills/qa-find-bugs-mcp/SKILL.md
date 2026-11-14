@@ -84,7 +84,8 @@ on a designated QA ledger needed to reproduce bugs.
   they ran.
 - `yarn mcp:conformance <base-url> [--ledger owner/name]` inside
   `backend-cluster/backend-v2/` runs ADR 0007's checklist and only observes;
-  run it first against the target and treat a failed check as a candidate.
+  run it first against the target and treat a failed check as a candidate. It also prints
+  the target's `revision:`; record it, as the QA contract asks.
   It reads `QA_MCP_TOKEN` and `QA_MCP_READ_ONLY_TOKEN` from the repo-root
   `./.env` (preferred) or the environment, so never pass `--token` or
   `--read-only-token`: those flags put the credential on argv. An unpinned
