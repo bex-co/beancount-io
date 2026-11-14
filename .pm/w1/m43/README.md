@@ -1,6 +1,6 @@
 # w1 · m43 — Rename an account across a hosted ledger in one previewed commit
 
-**Worker:** worker1 **Goal:** an agent or app renaming `Assets:Bank:Checking` to `Assets:Bank:Main` on a hosted ledger makes one call on REST, GraphQL or MCP. It previews every line that would change, then commits once; every directive that named the account, or an account under it, now names the new one; bank-account mappings follow; and the commit can be undone with `revertCommit`. **Status:** in progress (t001–t005 done)
+**Worker:** worker1 **Goal:** an agent or app renaming `Assets:Bank:Checking` to `Assets:Bank:Main` on a hosted ledger makes one call on REST, GraphQL or MCP. It previews every line that would change, then commits once; every directive that named the account, or an account under it, now names the new one; bank-account mappings follow; and the commit can be undone with `revertCommit`. **Status:** in progress (t001–t005, t007 done)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | `renameAccount` on MCP, REST and GraphQL, with parity rows — **DONE** | 75m | t002, t003 |
 | t005 | Document the operation and record the new tool for directory review — **DONE** | 30m | t004 |
 | t006 | Rename and undo on the hosted endpoint after the deploy | 30m | t005, t009 |
-| t007 | Adoption surface | 30m | t005 |
+| t007 | Adoption surface — **DONE** | 30m | t005 |
 | t008 | Simplify | 15m | t007 |
 | t009 | Test coverage | 45m | t007, t008 |
 | t010 | Closeout | 15m | t006, t009 |
