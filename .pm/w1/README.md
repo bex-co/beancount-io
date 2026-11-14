@@ -77,7 +77,7 @@ m42–m45 and note [238](./done/238.md) were materialized on 2026-11-13 from `/p
 
 ## Inbox
 
-- [241](./241.md) — Port the CLI off typer's private click so typer 0.29+ can install (1–2h, A2; follow-up to the 239 stopgap)
+- [241](./blocked/241.md) — Port the CLI off typer's private click so typer 0.29+ can install (A2; follow-up to the 239 stopgap) — **blocked:** typer 0.29 rewrote its parameter core; owner decides between keeping the cap and a multi-hour port milestone
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
