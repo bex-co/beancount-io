@@ -79,6 +79,7 @@ m42–m45 and note [238](./238.md) were materialized on 2026-11-13 from `/pm-bra
 
 - [238](./238.md) — Current-state docs miscount the customer skills; the PyPI page says "eight" (45m, A3)
 - [239](./239.md) — A fresh install of `bea` from `main` cannot start: `typer._click` is gone in typer 0.29 (30–60m, A2; CI (cli) installation jobs red since 2026-11-10)
+- [240](./240.md) — CI (backend parity) is red since oidc-provider 9.15.0: the CIMD draft acknowledgement is stale (30–60m, A1)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
