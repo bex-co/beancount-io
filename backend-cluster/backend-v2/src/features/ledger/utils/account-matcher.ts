@@ -36,6 +36,11 @@ const REFUSED =
 /** ASCII the account lexer takes inside one token. */
 const TOKEN_ASCII = /^[A-Za-z0-9:-]$/;
 
+/** Whether `value` is a Beancount-valid account name (`account.is_valid`). */
+export function isValidAccountName(value: string): boolean {
+  return ACCOUNT_RE.test(value);
+}
+
 /**
  * Whether the value is spelled as an account name: beancount-valid, one
  * of the ledger's roots, or loader-accepted like a non-Latin leaf.

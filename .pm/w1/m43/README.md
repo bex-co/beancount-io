@@ -1,13 +1,13 @@
 # w1 · m43 — Rename an account across a hosted ledger in one previewed commit
 
-**Worker:** worker1 **Goal:** an agent or app renaming `Assets:Bank:Checking` to `Assets:Bank:Main` on a hosted ledger makes one call on REST, GraphQL or MCP. It previews every line that would change, then commits once; every directive that named the account, or an account under it, now names the new one; bank-account mappings follow; and the commit can be undone with `revertCommit`. **Status:** in progress (t001 done)
+**Worker:** worker1 **Goal:** an agent or app renaming `Assets:Bank:Checking` to `Assets:Bank:Main` on a hosted ledger makes one call on REST, GraphQL or MCP. It previews every line that would change, then commits once; every directive that named the account, or an account under it, now names the new one; bank-account mappings follow; and the commit can be undone with `revertCommit`. **Status:** in progress (t001, t002 done)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Write the rename contract — **DONE** | 30m | — |
-| t002 | Rename workflow: a lexer-aware rewrite of every loaded file, gated and committed once | 90m | t001 |
+| t002 | Rename workflow: a lexer-aware rewrite of every loaded file, gated and committed once — **DONE** | 90m | t001 |
 | t003 | Bank-account mappings follow the rename | 45m | t002 |
 | t004 | `renameAccount` on MCP, REST and GraphQL, with parity rows | 75m | t002, t003 |
 | t005 | Document the operation and record the new tool for directory review | 30m | t004 |
