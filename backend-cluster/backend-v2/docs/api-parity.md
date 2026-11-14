@@ -848,3 +848,19 @@ that cannot write, `VALIDATION_FAILED` for new bean-check errors without
 `rename-account-parity.test.ts` runs the real adapters and the real workflow
 over a fake repository through each surface. MCP nests the verdict under
 `validation`, as every MCP write does.
+
+## Entries with their source text (w1/m44)
+
+`listLedgerEntries`, REST `GET …/journal` and GraphQL `getLedgerJournal`
+take `include_source` (or `includeSource`): each returned entry then carries
+`source` — `path`, the 1-based `lineno` it starts on, its `text` and its
+`sha256sum`, the same text and checksum `getEntryContext` returns, so
+`updateEntrySource` and `deleteEntrySources` can act on a page of entries
+without one context read per entry. An entry with no editable source (a
+plugin's or a pad's copy, a managed price line) has `source: null`. A page
+with source is at most 200 entries (`BAD_USER_INPUT` naming the cap above
+it); the two spellings disagreeing is `BAD_USER_INPUT` before any ledger
+read; without the flag the response is unchanged. The ledger service
+resolves the page in one batch over one file map. `journal-parity.test.ts`
+covers the forwarding, the absent flag and the conflict on all three
+surfaces.
