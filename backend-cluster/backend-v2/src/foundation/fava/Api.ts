@@ -3983,6 +3983,98 @@ export interface JournalEntrySourcePublic {
   sha256sum: string;
 }
 
+/**
+ * MoveSourceSlicesRequest
+ * Move entries into another file in one commit (w1/m45).
+ */
+export interface MoveSourceSlicesRequest {
+  /**
+   * Entries
+   * Entries to move
+   */
+  entries: DeleteMultiSourceSliceItem[];
+  /** Move the entries even when that would add bean-check errors (NEW_LEDGER_ERRORS), instead of refusing it. */
+  allowInvalid?: boolean;
+  /**
+   * Dry Run
+   * Run every check and return the preview without committing
+   */
+  dryRun?: boolean;
+  /**
+   * To Path
+   * Repository path of the .bean/.beancount file to move the entries into; created when absent.
+   */
+  to_path: string;
+  /**
+   * Include From
+   * A loaded file that gains include "<to_path>" when the target is not already reached; without it an unreached target is refused.
+   */
+  include_from?: string | null;
+}
+
+/**
+ * MoveSourceSlicesResponse
+ * Response schema for deleting multiple source slices.
+ */
+export interface MoveSourceSlicesResponse {
+  /**
+   * Message
+   * Success message
+   */
+  message: string;
+  /**
+   * Files
+   * Each ledger file the write rewrote, once.
+   */
+  files?: string[];
+  /**
+   * Preview
+   * Each moved slice at the path it moved from.
+   */
+  preview?: SourceSlicePreviewFile[];
+  /**
+   * Errors Before
+   * Bean-check errors the ledger had before the write; warnings excluded.
+   */
+  errors_before: number;
+  /**
+   * Errors After
+   * Bean-check errors the projection has after the write; warnings excluded.
+   */
+  errors_after: number;
+  /**
+   * New Errors
+   * Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal.
+   */
+  new_errors: BeancountErrorPublic[];
+  /**
+   * Commit
+   * The sha of the commit the write made; absent on a preview.
+   */
+  commit?: string | null;
+  /**
+   * Moved Hashes
+   * Hashes of the moved entries, in ledger order
+   */
+  moved_hashes: string[];
+  /**
+   * Include Added
+   * Whether include_from gained the target's include line
+   */
+  include_added: boolean;
+}
+
+/** SuccessResponse[MoveSourceSlicesResponse] */
+export interface SuccessResponseMoveSourceSlicesResponse {
+  /**
+   * Success
+   * @default true
+   */
+  success?: boolean;
+  /** Response schema for deleting multiple source slices. */
+  data: MoveSourceSlicesResponse;
+}
+
 export type QueryParamsType = Record<string | number, any>;
 export type ResponseFormat = keyof Omit<Body, "body" | "bodyUsed">;
 
@@ -6637,6 +6729,31 @@ export class Api<
       >({
         path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/source-slices`,
         method: "DELETE",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Move entries into another file in one commit: each slice leaves its file and is appended, byte for byte and in ledger order, to to_path (created when absent); include_from gains the include line when the target is not reached.
+     *
+     * @tags journal
+     * @name MoveSourceSlices
+     * @summary Move Source Slices
+     * @request POST:/journal/{owner}/{repo_name}/move-source-slices
+     * @secure
+     */
+    moveSourceSlices: (
+      owner: string,
+      repoName: string,
+      data: MoveSourceSlicesRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<SuccessResponseMoveSourceSlicesResponse, ErrorResponse>({
+        path: `/journal/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/move-source-slices`,
+        method: "POST",
         body: data,
         secure: true,
         type: ContentType.Json,

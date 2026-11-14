@@ -1,3 +1,5 @@
+import { assertSafeRepoPath } from "@/shared/safe-repo-path";
+import { posix } from "node:path";
 import { parseLedgerId } from "@/shared/str";
 import { entryCount } from "@/features/ledger/utils/entry-count";
 import {
@@ -417,6 +419,17 @@ export type DeleteSliceResult = {
 export type DeleteMultiSlicesResult = {
   message: string;
   deletedHashes: string[];
+  preview: SlicePreview;
+} & TouchedFiles &
+  CommitSha &
+  ReportedProjection;
+
+export type MoveSlicesResult = {
+  message: string;
+  movedHashes: string[];
+  /** Whether `includeFrom` gained the target's `include` line. */
+  includeAdded: boolean;
+  /** Each moved slice, at the path it moved from. */
   preview: SlicePreview;
 } & TouchedFiles &
   CommitSha &
@@ -1309,6 +1322,173 @@ export class LedgerJournalService implements ILedgerJournalService {
       deletedHashes,
       files: [...byFile.keys()],
       preview,
+      validation,
+      ...commit,
+    };
+  }
+
+  /**
+   * Move entries into another file in one commit (w1/m45; contract in
+   * `.pm/w1/m45/done/t001.md`): each slice leaves its file through the batch
+   * delete's re-locating transform and is appended, byte for byte and in
+   * ledger order, to `toPath` (created when absent). `includeFrom`, a loaded
+   * file, gains `include "<toPath>"` when the target is not already reached;
+   * without it an unreached target is refused, as appending to an unloaded
+   * file is (w23/035), since the entries would count nowhere.
+   */
+  async moveSourceSlices(params: {
+    ledgerId: string;
+    userId: string;
+    entries: { entryHash: string; sha256sum: string }[];
+    toPath: string;
+    includeFrom?: string;
+    allowInvalid?: boolean;
+    dryRun?: boolean;
+  }): Promise<MoveSlicesResult> {
+    const {
+      ledgerId,
+      userId,
+      entries,
+      toPath,
+      includeFrom,
+      allowInvalid,
+      dryRun,
+    } = params;
+    if (entries.length === 0) {
+      throw new BadUserInputError(
+        "entries must name at least one entry",
+        "entries",
+      );
+    }
+    assertSafeRepoPath(toPath, "toPath");
+    if (!/\.(bean|beancount)$/u.test(toPath)) {
+      throw new BadUserInputError(
+        `toPath ${toPath} is not a ledger file; name a .bean or .beancount file`,
+        "toPath",
+      );
+    }
+    const loaded = await this.loadFileMap(ledgerId, userId);
+    const { files, entryPoint, repoPaths, managedPricePaths, sourceFiles } =
+      loaded;
+    const reached = sourceFiles.includes(toPath);
+    if (includeFrom !== undefined) {
+      assertSafeRepoPath(includeFrom, "includeFrom");
+      if (!sourceFiles.includes(includeFrom)) {
+        throw new BadUserInputError(
+          `includeFrom ${includeFrom} is not a file the ledger loads; name one, such as ${entryPoint}`,
+          "includeFrom",
+        );
+      }
+    } else if (!reached) {
+      throw new BadUserInputError(
+        `${toPath} is not included by the ledger (${entryPoint} does not reach it), so moved entries would count nowhere; pass includeFrom (for example ${entryPoint}) to add its include in the same commit`,
+        "toPath",
+      );
+    }
+    const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
+    const sourceIds = sourceEntryIds(snapshot.directives);
+    const sourceHashes = entries.map(
+      (entry) => sourceIds.get(entry.entryHash) ?? entry.entryHash,
+    );
+    const located = await this.locateSlices(
+      files,
+      entryPoint,
+      managedPricePaths,
+      entries.map((entry, index) => ({
+        entryHash: sourceHashes[index],
+        sha256sum: entry.sha256sum,
+      })),
+    );
+    const already = located.find((slice) => slice.file === toPath);
+    if (already) {
+      throw new BadUserInputError(
+        `an entry already lives in ${toPath}; move only entries from other files`,
+        "toPath",
+      );
+    }
+
+    // Group by file, de-duplicated by resolved identity, as the batch delete.
+    const byFile = new Map<string, SliceTarget[]>();
+    const indexes = new Map<string, ReturnType<typeof indexDatedBlocks>>();
+    const seen = new Set<string>();
+    const moved: { hash: string; slice: EntrySlice }[] = [];
+    located.forEach((slice, index) => {
+      const identity = `${slice.file}\u0000${slice.sha256}\u0000${slice.localOccurrence}`;
+      if (seen.has(identity)) return;
+      seen.add(identity);
+      moved.push({ hash: entries[index].entryHash, slice });
+      const target = sliceTarget(
+        files,
+        slice,
+        parseEntryId(sourceHashes[index]).base,
+        entries[index].sha256sum,
+        indexes,
+      );
+      const list = byFile.get(slice.file);
+      if (list) list.push(target);
+      else byFile.set(slice.file, [target]);
+    });
+    // Ledger order: by loaded-file order, then line.
+    const order = (file: string) => {
+      const at = sourceFiles.indexOf(file);
+      return at === -1 ? Number.MAX_SAFE_INTEGER : at;
+    };
+    moved.sort(
+      (a, b) =>
+        order(a.slice.file) - order(b.slice.file) ||
+        a.slice.startLine - b.slice.startLine,
+    );
+    const block = moved
+      .map(({ slice }) => slice.slice.replace(/\n+$/u, ""))
+      .join("\n\n");
+
+    const transforms = new Map<string, LedgerFileTransform>(
+      [...byFile.entries()].map(
+        ([file, targets]) =>
+          [file, makeDeleteTransform(file, targets)] as const,
+      ),
+    );
+    transforms.set(toPath, (current) => {
+      if (current === null || current.trim() === "") return `${block}\n`;
+      return `${current.replace(/\n*$/u, "")}\n\n${block}\n`;
+    });
+    const includeAdded = includeFrom !== undefined && !reached;
+    if (includeAdded) {
+      const target = posix.relative(posix.dirname(includeFrom!), toPath);
+      const line = `include "${target}"`;
+      const prior = transforms.get(includeFrom!);
+      transforms.set(includeFrom!, async (current) => {
+        const content = (
+          prior ? await prior(current) : (current ?? "")
+        ).replace(/\n*$/u, "");
+        return content === "" ? `${line}\n` : `${content}\n${line}\n`;
+      });
+    }
+
+    const validation = await this.projectWriteErrors(
+      loaded,
+      transforms,
+      "move",
+      allowInvalid,
+    );
+    let commit: CommitSha = {};
+    if (!dryRun) {
+      commit = await this.commitTransforms(
+        ledgerId,
+        userId,
+        transforms,
+        `Move ${entryCount(moved.length)} to ${toPath}`,
+      );
+    }
+    return {
+      message: `${dryRun ? "Would move" : "Moved"} ${entryCount(moved.length)} to ${toPath}${includeAdded ? `; ${includeFrom} ${dryRun ? "would include" : "now includes"} it` : ""}`,
+      movedHashes: moved.map(({ hash }) => hash),
+      includeAdded,
+      files: [...transforms.keys()],
+      preview: moved.map(({ slice }) => ({
+        path: slice.file,
+        text: slice.slice,
+      })),
       validation,
       ...commit,
     };

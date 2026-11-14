@@ -216,4 +216,39 @@ export function setJournalHandler(router: Router): void {
       ...(dryRun ? { preview: result.preview } : {}),
     });
   });
+
+  // operationId: moveSourceSlices — wire {message, moved_hashes, include_added, files, preview, errors_before, errors_after, new_errors, commit?} (w1/m45)
+  router.post(`${base}/move-source-slices`, authMiddleware, async (ctx) => {
+    const { journal } = servicesForRequest(ctx);
+    const body = (ctx.request.body ?? {}) as {
+      entries?: { entry_hash: string; sha256sum: string }[];
+      to_path?: string;
+      include_from?: string | null;
+      allowInvalid?: boolean | null;
+      dryRun?: boolean | null;
+    };
+    const result = await journal.moveSourceSlices({
+      ledgerId: ledgerIdOf(ctx),
+      userId: "",
+      entries: (body.entries ?? []).map((e) => ({
+        entryHash: e.entry_hash,
+        sha256sum: e.sha256sum,
+      })),
+      toPath: body.to_path ?? "",
+      ...(body.include_from ? { includeFrom: body.include_from } : {}),
+      allowInvalid: body.allowInvalid === true,
+      dryRun: body.dryRun === true,
+    });
+    ctx.body = successResponse({
+      message: result.message,
+      moved_hashes: result.movedHashes,
+      include_added: result.includeAdded,
+      files: result.files,
+      preview: result.preview,
+      errors_before: result.validation.errorsBefore,
+      errors_after: result.validation.errorsAfter,
+      new_errors: result.validation.newErrors,
+      ...(result.commit ? { commit: result.commit } : {}),
+    });
+  });
 }

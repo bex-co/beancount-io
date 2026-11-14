@@ -114,10 +114,7 @@ export class BadUserInputError extends DomainError {
  * batch, so they omit it (w23/087).
  */
 export class UnbalancedTransactionError extends DomainError {
-  constructor(
-    message: string,
-    details: { residual: string; entry?: number },
-  ) {
+  constructor(message: string, details: { residual: string; entry?: number }) {
     super(ErrorCategory.BAD_USER_INPUT, message, {
       code: "UNBALANCED",
       details,
@@ -146,12 +143,13 @@ export class LedgerNameReservedError extends DomainError {
 }
 
 /** Which write a {@link NewLedgerErrorsError} refused. */
-export type LedgerWriteAction = "add" | "update" | "delete";
+export type LedgerWriteAction = "add" | "update" | "delete" | "move";
 
 const LEDGER_WRITE_SUBJECT: Record<LedgerWriteAction, string> = {
   add: "adding these entries",
   update: "this edit",
   delete: "this deletion",
+  move: "moving these entries",
 };
 
 /**

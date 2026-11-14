@@ -7530,6 +7530,76 @@
           }
         }
       }
+    },
+    "/journal/{owner}/{repo_name}/move-source-slices": {
+      "post": {
+        "tags": [
+          "journal"
+        ],
+        "summary": "Move Source Slices",
+        "description": "Move entries into another file in one commit: each slice leaves its file and is appended, byte for byte and in ledger order, to to_path (created when absent); include_from gains the include line when the target is not reached.",
+        "operationId": "moveSourceSlices",
+        "security": [
+          {
+            "HTTPBasic": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Owner"
+            }
+          },
+          {
+            "name": "repo_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Repo Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveSourceSlicesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_MoveSourceSlicesResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -15971,6 +16041,147 @@
         ],
         "title": "JournalEntrySourcePublic",
         "description": "An entry's own source text and where it starts (w1/m44)"
+      },
+      "MoveSourceSlicesRequest": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/DeleteMultiSourceSliceItem"
+            },
+            "type": "array",
+            "title": "Entries",
+            "description": "Entries to move"
+          },
+          "allowInvalid": {
+            "type": "boolean",
+            "description": "Move the entries even when that would add bean-check errors (NEW_LEDGER_ERRORS), instead of refusing it."
+          },
+          "dryRun": {
+            "type": "boolean",
+            "title": "Dry Run",
+            "description": "Run every check and return the preview without committing"
+          },
+          "to_path": {
+            "type": "string",
+            "title": "To Path",
+            "description": "Repository path of the .bean/.beancount file to move the entries into; created when absent."
+          },
+          "include_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Include From",
+            "description": "A loaded file that gains include \"<to_path>\" when the target is not already reached; without it an unreached target is refused."
+          }
+        },
+        "type": "object",
+        "required": [
+          "entries",
+          "to_path"
+        ],
+        "title": "MoveSourceSlicesRequest",
+        "description": "Move entries into another file in one commit (w1/m45)."
+      },
+      "MoveSourceSlicesResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Success message"
+          },
+          "files": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Files",
+            "description": "Each ledger file the write rewrote, once."
+          },
+          "preview": {
+            "items": {
+              "$ref": "#/components/schemas/SourceSlicePreviewFile"
+            },
+            "type": "array",
+            "title": "Preview",
+            "description": "Each moved slice at the path it moved from."
+          },
+          "errors_before": {
+            "type": "integer",
+            "title": "Errors Before",
+            "description": "Bean-check errors the ledger had before the write; warnings excluded."
+          },
+          "errors_after": {
+            "type": "integer",
+            "title": "Errors After",
+            "description": "Bean-check errors the projection has after the write; warnings excluded."
+          },
+          "new_errors": {
+            "items": {
+              "$ref": "#/components/schemas/BeancountErrorPublic"
+            },
+            "type": "array",
+            "title": "New Errors",
+            "description": "Errors the write adds to the ledger; empty when it adds none. Reported even when allowInvalid suppresses the refusal."
+          },
+          "commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit",
+            "description": "The sha of the commit the write made; absent on a preview."
+          },
+          "moved_hashes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Moved Hashes",
+            "description": "Hashes of the moved entries, in ledger order"
+          },
+          "include_added": {
+            "type": "boolean",
+            "title": "Include Added",
+            "description": "Whether include_from gained the target's include line"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "moved_hashes",
+          "errors_before",
+          "errors_after",
+          "new_errors",
+          "include_added"
+        ],
+        "title": "MoveSourceSlicesResponse",
+        "description": "Response schema for deleting multiple source slices."
+      },
+      "SuccessResponse_MoveSourceSlicesResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/MoveSourceSlicesResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[MoveSourceSlicesResponse]"
       }
     },
     "securitySchemes": {
