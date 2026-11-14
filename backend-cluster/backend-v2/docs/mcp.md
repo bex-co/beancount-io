@@ -822,6 +822,20 @@ After linking:
 5. Call `discardStagedBankTransactions` with `transactionIds` to remove
    unwanted staged transactions.
 
+To book a whole backlog to one account, repeat one `targetAccount`. The import
+takes its target per row on REST and GraphQL as on MCP and has no "default
+target" argument; the dashboard's Bank Sync table does the same for a selection
+with its *Set for selected* control. Read a page of `listStagedBankTransactions`
+(a `limit` of at most 100) and send one `importStagedBankTransactions` whose
+`transactions` carry each row's `transactionId` (not its `id`) and the same
+`targetAccount`, an account the ledger already has, such as
+`Expenses:Uncategorized`. Leave `sourceAccount` out, so each row is booked from
+the account its bank account maps to, and preview the call with `dry_run: true`
+first. Imported rows leave the staging list, so read page 1 again and repeat
+until a page comes back with fewer rows than `limit`. A row that should go
+elsewhere, because a suggestion or you picked a better account, keeps its own
+`targetAccount` in the same call.
+
 An import whose reply was lost has still landed, and sending it again is
 refused with `BAD_USER_INPUT` ("already synced to ledger", or "already in the
 ledger" when the staged row was re-created) rather than written twice. The
