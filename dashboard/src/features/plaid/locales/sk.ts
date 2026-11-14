@@ -672,6 +672,155 @@ const skPlaid: Record<string, TranslationEntry> = {
     description:
       "Notice shown when selected rows fall outside the active filters - they are still submitted or deleted - interpolation: {count} - form for counts like 0 and 5 or more",
   },
+  "plaid.transactionReview.setForSelected": {
+    message: "Nastaviť pre vybrané",
+    description:
+      "Button in the Target account column header that gives every selected transaction the same target account",
+  },
+  "plaid.transactionReview.setForSelectedNoSelection": {
+    message:
+      "Najprv vyberte transakcie, aby ste im mohli nastaviť cieľový účet.",
+    description:
+      "Reason shown (tooltip and screen-reader text) while the Set for selected button is disabled because no transaction is selected",
+  },
+  "plaid.transactionReview.bulkTitle": {
+    message: "Nastaviť cieľový účet pre {count} vybraných transakcií",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkTitle_one": {
+    message: "Nastaviť cieľový účet pre {count} vybranú transakciu",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkTitle_few": {
+    message: "Nastaviť cieľový účet pre {count} vybrané transakcie",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkTitle_many": {
+    message: "Nastaviť cieľový účet pre {count} vybranej transakcie",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkTitle_other": {
+    message: "Nastaviť cieľový účet pre {count} vybraných transakcií",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote": {
+    message:
+      "{count} z nich je skrytých aktuálnymi filtrami a nastaví sa tiež.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkHiddenNote_one": {
+    message: "{count} z nich je skrytá aktuálnymi filtrami a nastaví sa tiež.",
+    description:
+      "Note in the Set for selected panel when a selected row falls outside the active filters - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkHiddenNote_few": {
+    message: "{count} z nich sú skryté aktuálnymi filtrami a nastavia sa tiež.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote_many": {
+    message:
+      "{count} z nich je skrytých aktuálnymi filtrami a nastaví sa tiež.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote_other": {
+    message:
+      "{count} z nich je skrytých aktuálnymi filtrami a nastaví sa tiež.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting": {
+    message: "Nahradiť aj {count} už nastavených cieľových účtov",
+    description:
+      "Switch label in the Set for selected panel; off keeps targets already set (AI Fill or hand-picked) - interpolation: {count} is how many selected rows already have a target (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_one": {
+    message: "Nahradiť aj {count} už nastavený cieľový účet",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_few": {
+    message: "Nahradiť aj {count} už nastavené cieľové účty",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_many": {
+    message: "Nahradiť aj {count} už nastaveného cieľového účtu",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_other": {
+    message: "Nahradiť aj {count} už nastavených cieľových účtov",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet": {
+    message: "{count} transakcií dostane tento účet.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkWillSet_one": {
+    message: "{count} transakcia dostane tento účet.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkWillSet_few": {
+    message: "{count} transakcie dostanú tento účet.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet_many": {
+    message: "{count} transakcie dostane tento účet.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet_other": {
+    message: "{count} transakcií dostane tento účet.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkApply": {
+    message: "Použiť",
+    description:
+      "Button in the Set for selected panel that gives the selected transactions the chosen target account",
+  },
+  "plaid.transactionReview.toast.targetAccountSet": {
+    message: "Cieľový účet nastavený",
+    description:
+      "Toast title after the Set for selected panel has applied an account",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription": {
+    message: "{count} transakcií teraz patrí na účet {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} (base key for pluralization)",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_one": {
+    message: "{count} transakcia teraz patrí na účet {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - singular form",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_few": {
+    message: "{count} transakcie teraz patria na účet {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_many": {
+    message: "{count} transakcie teraz patrí na účet {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_other": {
+    message: "{count} transakcií teraz patrí na účet {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
   "plaid.transactionReview.selectFilePlaceholder": {
     message: "Vyberte, do ktorého súboru importovať",
     description: "Placeholder for the target ledger file picker",

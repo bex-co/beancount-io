@@ -571,6 +571,78 @@ const jaPlaid: Record<string, TranslationEntry> = {
     description:
       "Notice shown when selected rows fall outside the active filters - they are still submitted or deleted - interpolation: {count} - the only form; this language has no plural inflection",
   },
+  "plaid.transactionReview.setForSelected": {
+    message: "選択分に設定",
+    description:
+      "Button in the Target account column header that gives every selected transaction the same target account",
+  },
+  "plaid.transactionReview.setForSelectedNoSelection": {
+    message: "先に取引を選択して、対象口座を設定してください。",
+    description:
+      "Reason shown (tooltip and screen-reader text) while the Set for selected button is disabled because no transaction is selected",
+  },
+  "plaid.transactionReview.bulkTitle": {
+    message: "選択した{count}件の取引の対象口座を設定",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkTitle_other": {
+    message: "選択した{count}件の取引の対象口座を設定",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote": {
+    message:
+      "そのうち{count}件は現在のフィルターで非表示ですが、同様に設定されます。",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkHiddenNote_other": {
+    message:
+      "そのうち{count}件は現在のフィルターで非表示ですが、同様に設定されます。",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting": {
+    message: "設定済みの対象口座{count}件も置き換える",
+    description:
+      "Switch label in the Set for selected panel; off keeps targets already set (AI Fill or hand-picked) - interpolation: {count} is how many selected rows already have a target (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_other": {
+    message: "設定済みの対象口座{count}件も置き換える",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet": {
+    message: "{count}件の取引にこの口座が設定されます。",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkWillSet_other": {
+    message: "{count}件の取引にこの口座が設定されます。",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkApply": {
+    message: "適用",
+    description:
+      "Button in the Set for selected panel that gives the selected transactions the chosen target account",
+  },
+  "plaid.transactionReview.toast.targetAccountSet": {
+    message: "対象口座を設定しました",
+    description:
+      "Toast title after the Set for selected panel has applied an account",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription": {
+    message: "{count}件の取引の対象口座を{account}に設定しました。",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} (base key for pluralization)",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_other": {
+    message: "{count}件の取引の対象口座を{account}に設定しました。",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
   "plaid.transactionReview.selectFilePlaceholder": {
     message: "インポート先のファイルを選択",
     description: "Placeholder for the target ledger file picker",

@@ -642,6 +642,135 @@ const esPlaid: Record<string, TranslationEntry> = {
     description:
       "Notice shown when selected rows fall outside the active filters - they are still submitted or deleted - interpolation: {count} - plural form",
   },
+  "plaid.transactionReview.setForSelected": {
+    message: "Establecer para la selección",
+    description:
+      "Button in the Target account column header that gives every selected transaction the same target account",
+  },
+  "plaid.transactionReview.setForSelectedNoSelection": {
+    message:
+      "Seleccione primero las transacciones para establecer su cuenta de destino.",
+    description:
+      "Reason shown (tooltip and screen-reader text) while the Set for selected button is disabled because no transaction is selected",
+  },
+  "plaid.transactionReview.bulkTitle": {
+    message:
+      "Establecer la cuenta de destino para {count} transacciones seleccionadas",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkTitle_one": {
+    message:
+      "Establecer la cuenta de destino para {count} transacción seleccionada",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkTitle_many": {
+    message:
+      "Establecer la cuenta de destino para {count} transacciones seleccionadas",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkTitle_other": {
+    message:
+      "Establecer la cuenta de destino para {count} transacciones seleccionadas",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote": {
+    message:
+      "{count} de ellas están ocultas por los filtros actuales y también se establecerán.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkHiddenNote_one": {
+    message:
+      "{count} de ellas está oculta por los filtros actuales y también se establecerá.",
+    description:
+      "Note in the Set for selected panel when a selected row falls outside the active filters - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkHiddenNote_many": {
+    message:
+      "{count} de ellas están ocultas por los filtros actuales y también se establecerán.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote_other": {
+    message:
+      "{count} de ellas están ocultas por los filtros actuales y también se establecerán.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting": {
+    message: "Reemplazar también {count} cuentas de destino ya establecidas",
+    description:
+      "Switch label in the Set for selected panel; off keeps targets already set (AI Fill or hand-picked) - interpolation: {count} is how many selected rows already have a target (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_one": {
+    message: "Reemplazar también {count} cuenta de destino ya establecida",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_many": {
+    message: "Reemplazar también {count} cuentas de destino ya establecidas",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_other": {
+    message: "Reemplazar también {count} cuentas de destino ya establecidas",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet": {
+    message: "{count} transacciones recibirán esta cuenta.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkWillSet_one": {
+    message: "{count} transacción recibirá esta cuenta.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkWillSet_many": {
+    message: "{count} transacciones recibirán esta cuenta.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet_other": {
+    message: "{count} transacciones recibirán esta cuenta.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkApply": {
+    message: "Aplicar",
+    description:
+      "Button in the Set for selected panel that gives the selected transactions the chosen target account",
+  },
+  "plaid.transactionReview.toast.targetAccountSet": {
+    message: "Cuenta de destino establecida",
+    description:
+      "Toast title after the Set for selected panel has applied an account",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription": {
+    message: "{count} transacciones ahora van a {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} (base key for pluralization)",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_one": {
+    message: "{count} transacción ahora va a {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - singular form",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_many": {
+    message: "{count} transacciones ahora van a {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_other": {
+    message: "{count} transacciones ahora van a {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
   "plaid.transactionReview.selectFilePlaceholder": {
     message: "Elige en qué archivo importar",
     description: "Placeholder for the target ledger file picker",

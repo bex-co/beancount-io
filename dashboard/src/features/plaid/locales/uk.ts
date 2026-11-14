@@ -672,6 +672,156 @@ const ukPlaid: Record<string, TranslationEntry> = {
     description:
       "Notice shown when selected rows fall outside the active filters - they are still submitted or deleted - interpolation: {count} - form for fractional counts",
   },
+  "plaid.transactionReview.setForSelected": {
+    message: "Задати для вибраних",
+    description:
+      "Button in the Target account column header that gives every selected transaction the same target account",
+  },
+  "plaid.transactionReview.setForSelectedNoSelection": {
+    message: "Спершу виберіть транзакції, щоб задати їм цільовий рахунок.",
+    description:
+      "Reason shown (tooltip and screen-reader text) while the Set for selected button is disabled because no transaction is selected",
+  },
+  "plaid.transactionReview.bulkTitle": {
+    message: "Задати цільовий рахунок для {count} вибраних транзакцій",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkTitle_one": {
+    message: "Задати цільовий рахунок для {count} вибраної транзакції",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkTitle_few": {
+    message: "Задати цільовий рахунок для {count} вибраних транзакцій",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkTitle_many": {
+    message: "Задати цільовий рахунок для {count} вибраних транзакцій",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkTitle_other": {
+    message: "Задати цільовий рахунок для {count} вибраних транзакцій",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote": {
+    message:
+      "{count} із них приховано поточними фільтрами, їх також буде задано.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkHiddenNote_one": {
+    message:
+      "{count} із них приховано поточними фільтрами, її також буде задано.",
+    description:
+      "Note in the Set for selected panel when a selected row falls outside the active filters - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkHiddenNote_few": {
+    message:
+      "{count} із них приховано поточними фільтрами, їх також буде задано.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote_many": {
+    message:
+      "{count} із них приховано поточними фільтрами, їх також буде задано.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote_other": {
+    message:
+      "{count} із них приховано поточними фільтрами, їх також буде задано.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting": {
+    message: "Замінити також {count} уже заданих цільових рахунків",
+    description:
+      "Switch label in the Set for selected panel; off keeps targets already set (AI Fill or hand-picked) - interpolation: {count} is how many selected rows already have a target (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_one": {
+    message: "Замінити також {count} уже заданий цільовий рахунок",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_few": {
+    message: "Замінити також {count} уже задані цільові рахунки",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_many": {
+    message: "Замінити також {count} уже заданих цільових рахунків",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_other": {
+    message: "Замінити також {count} уже заданих цільових рахунків",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet": {
+    message: "{count} транзакцій отримають цей рахунок.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkWillSet_one": {
+    message: "{count} транзакція отримає цей рахунок.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkWillSet_few": {
+    message: "{count} транзакції отримають цей рахунок.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet_many": {
+    message: "{count} транзакцій отримають цей рахунок.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet_other": {
+    message: "{count} транзакцій отримають цей рахунок.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkApply": {
+    message: "Застосувати",
+    description:
+      "Button in the Set for selected panel that gives the selected transactions the chosen target account",
+  },
+  "plaid.transactionReview.toast.targetAccountSet": {
+    message: "Цільовий рахунок задано",
+    description:
+      "Toast title after the Set for selected panel has applied an account",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription": {
+    message: "{count} транзакцій тепер належать до рахунку {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} (base key for pluralization)",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_one": {
+    message: "{count} транзакція тепер належить до рахунку {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - singular form",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_few": {
+    message: "{count} транзакції тепер належать до рахунку {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_many": {
+    message: "{count} транзакцій тепер належать до рахунку {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_other": {
+    message: "{count} транзакцій тепер належать до рахунку {account}.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
   "plaid.transactionReview.selectFilePlaceholder": {
     message: "Виберіть, у який файл імпортувати",
     description: "Placeholder for the target ledger file picker",

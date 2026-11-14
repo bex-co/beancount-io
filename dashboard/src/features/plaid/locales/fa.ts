@@ -607,6 +607,104 @@ const faPlaid: Record<string, TranslationEntry> = {
     description:
       "Notice shown when selected rows fall outside the active filters - they are still submitted or deleted - interpolation: {count} - plural form",
   },
+  "plaid.transactionReview.setForSelected": {
+    message: "تنظیم برای انتخاب‌شده‌ها",
+    description:
+      "Button in the Target account column header that gives every selected transaction the same target account",
+  },
+  "plaid.transactionReview.setForSelectedNoSelection": {
+    message: "ابتدا تراکنش‌ها را انتخاب کنید تا حساب مقصد آن‌ها را تنظیم کنید.",
+    description:
+      "Reason shown (tooltip and screen-reader text) while the Set for selected button is disabled because no transaction is selected",
+  },
+  "plaid.transactionReview.bulkTitle": {
+    message: "تنظیم حساب مقصد برای {count} تراکنش انتخاب‌شده",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkTitle_one": {
+    message: "تنظیم حساب مقصد برای {count} تراکنش انتخاب‌شده",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkTitle_other": {
+    message: "تنظیم حساب مقصد برای {count} تراکنش انتخاب‌شده",
+    description:
+      "Heading of the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkHiddenNote": {
+    message:
+      "{count} مورد از آن‌ها با فیلترهای فعلی پنهان شده‌اند و آن‌ها هم تنظیم می‌شوند.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkHiddenNote_one": {
+    message:
+      "{count} مورد از آن‌ها با فیلترهای فعلی پنهان شده است و آن هم تنظیم می‌شود.",
+    description:
+      "Note in the Set for selected panel when a selected row falls outside the active filters - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkHiddenNote_other": {
+    message:
+      "{count} مورد از آن‌ها با فیلترهای فعلی پنهان شده‌اند و آن‌ها هم تنظیم می‌شوند.",
+    description:
+      "Note in the Set for selected panel when selected rows fall outside the active filters - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting": {
+    message: "همچنین {count} حساب مقصد از پیش تنظیم‌شده جایگزین شود",
+    description:
+      "Switch label in the Set for selected panel; off keeps targets already set (AI Fill or hand-picked) - interpolation: {count} is how many selected rows already have a target (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_one": {
+    message: "همچنین {count} حساب مقصد از پیش تنظیم‌شده جایگزین شود",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkReplaceExisting_other": {
+    message: "همچنین {count} حساب مقصد از پیش تنظیم‌شده جایگزین شود",
+    description:
+      "Switch label in the Set for selected panel - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkWillSet": {
+    message: "{count} تراکنش به این حساب اختصاص می‌یابد.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} (base key for pluralization)",
+  },
+  "plaid.transactionReview.bulkWillSet_one": {
+    message: "{count} تراکنش به این حساب اختصاص می‌یابد.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - singular form",
+  },
+  "plaid.transactionReview.bulkWillSet_other": {
+    message: "{count} تراکنش به این حساب اختصاص می‌یابد.",
+    description:
+      "Summary in the Set for selected panel of how many rows Apply will change - interpolation: {count} - plural form",
+  },
+  "plaid.transactionReview.bulkApply": {
+    message: "اعمال",
+    description:
+      "Button in the Set for selected panel that gives the selected transactions the chosen target account",
+  },
+  "plaid.transactionReview.toast.targetAccountSet": {
+    message: "حساب مقصد تنظیم شد",
+    description:
+      "Toast title after the Set for selected panel has applied an account",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription": {
+    message: "{count} تراکنش اکنون به {account} می‌رود.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} (base key for pluralization)",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_one": {
+    message: "{count} تراکنش اکنون به {account} می‌رود.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - singular form",
+  },
+  "plaid.transactionReview.toast.targetAccountSetDescription_other": {
+    message: "{count} تراکنش اکنون به {account} می‌رود.",
+    description:
+      "Toast description after Set for selected - interpolation: {count}, {account} - plural form",
+  },
   "plaid.transactionReview.selectFilePlaceholder": {
     message: "انتخاب کنید در کدام فایل وارد شود",
     description: "Placeholder for the target ledger file picker",
