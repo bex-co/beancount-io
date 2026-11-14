@@ -152,6 +152,10 @@ describe("a ledger file nothing includes", () => {
         const result = await f.mcp(ORPHAN, dryRun);
         expect(result.notLoaded).toEqual([ORPHAN]);
         expect(result.summary).toContain(NOTICE);
+        // w1/m45: an agent splitting a ledger is pointed at the one-commit move.
+        expect(result.summary).toContain(
+          "Include it from a loaded file; to move existing entries into a new file, moveEntrySources with includeFrom does both in one commit.",
+        );
       } finally {
         await f.close();
       }

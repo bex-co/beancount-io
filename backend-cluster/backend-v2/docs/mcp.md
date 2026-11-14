@@ -714,7 +714,9 @@ A `.bean` or `.beancount` file that the write creates or rewrites but no loaded
 file includes is named in `notLoaded`, and the summary says its entries don't
 count and were not checked. The write is neither refused nor the file included:
 add the `include` line to a loaded file yourself (w1/227). REST `PUT` and the
-GraphQL file create and update return the same `notLoaded`.
+GraphQL file create and update return the same `notLoaded`. To split existing
+entries into a new file, `moveEntrySources` with `includeFrom` moves them and
+adds the include in one commit, so no orphan is ever committed (w1/m45).
 
 Several items may name the same file. They apply in order, each exact-text
 replacement matching the text the items before it produced, and the file is

@@ -162,8 +162,11 @@ export async function unloadedLedgerFiles(
   }
 }
 
-/** The sentence a write's summary adds for {@link unloadedLedgerFiles}. */
+/**
+ * The sentences a write's summary adds for {@link unloadedLedgerFiles}: what
+ * an orphan means, and the one-commit way to split a ledger (w1/m45).
+ */
 export function unloadedNotice(paths: readonly string[]): string {
   const one = paths.length === 1;
-  return `${paths.join(", ")} ${one ? "is" : "are"} not included by any loaded file: ${one ? "its" : "their"} entries don't count and were not checked.`;
+  return `${paths.join(", ")} ${one ? "is" : "are"} not included by any loaded file: ${one ? "its" : "their"} entries don't count and were not checked. Include ${one ? "it" : "them"} from a loaded file; to move existing entries into a new file, moveEntrySources with includeFrom does both in one commit.`;
 }

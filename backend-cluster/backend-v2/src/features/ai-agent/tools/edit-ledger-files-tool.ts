@@ -687,7 +687,7 @@ function fileOperation<F extends z.ZodType>(
 export const LEDGER_FILE_OPERATIONS = {
   create: fileOperation(
     z.object({ path: filePath, content: fullContent }).strict(),
-    "Create new text files in one atomic commit; each file gets plain UTF-8 content.",
+    "Create new text files in one atomic commit; each file gets plain UTF-8 content. To move existing entries into a new file, use moveEntrySources.",
     (file) => ({ operation: "create", ...file }),
   ),
   update: fileOperation(
