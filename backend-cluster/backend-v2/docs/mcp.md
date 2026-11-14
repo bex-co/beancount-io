@@ -1831,7 +1831,10 @@ A test in [`well-known-route.test.ts`](../src/features/well-known/api/__tests__/
 fails if its name or remote URL drifts from what `/.well-known/mcp.json`
 advertises. The listing's `version` is its own lifecycle: it moves with every
 listing edit (see below) and is not compared with the manifest's or the MCP
-`serverInfo` version, which only change when the server's contract does.
+`serverInfo` version, which only change when the server's contract does. (A
+deployment that knows its commit appends it to the `serverInfo` version as
+`+<commit>` build metadata and reports it as the manifest's `revision`; neither
+is the contract version.)
 
 The registry grants the `io.beancount/*` namespace to whoever proves control of
 `beancount.io`. The backend can prove it over HTTP: `MCP_REGISTRY_AUTH_PROOF`

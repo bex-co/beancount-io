@@ -29,3 +29,26 @@ export function parseRevision(
   }
   return UNKNOWN_REVISION;
 }
+
+/**
+ * A revision as a public surface may print it: the value if it is one
+ * `parseRevision` would accept, `unknown` for anything else. `config.revision`
+ * already is one; this is the second lock on the door, and it also answers for
+ * a config that carries none, as a test's partial one does.
+ */
+export function publishedRevision(revision: string | undefined): string {
+  return revision !== undefined && REVISION_PATTERN.test(revision)
+    ? revision
+    : UNKNOWN_REVISION;
+}
+
+/**
+ * The seven characters a semver build suffix carries (`1.0.0+2144cdb`), or
+ * `undefined` when the revision is not known.
+ */
+export function shortRevision(
+  revision: string | undefined,
+): string | undefined {
+  const published = publishedRevision(revision);
+  return published === UNKNOWN_REVISION ? undefined : published.slice(0, 7);
+}

@@ -1,4 +1,9 @@
-import { parseRevision, UNKNOWN_REVISION } from "./revision";
+import {
+  parseRevision,
+  publishedRevision,
+  shortRevision,
+  UNKNOWN_REVISION,
+} from "./revision";
 
 const SHA = "2144cdbb2e6f0a1b3c4d5e6f708192a3b4c5d6e7";
 const OTHER_SHA = "57d7aaa13f0123456789abcdef0123456789abcd";
@@ -64,5 +69,42 @@ describe("parseRevision", () => {
   it("accepts a short sha of seven characters and a full one of forty", () => {
     expect(parseRevision({ BEANCOUNT_REVISION: "2144cdb" })).toBe("2144cdb");
     expect(parseRevision({ BEANCOUNT_REVISION: SHA })).toHaveLength(40);
+  });
+});
+
+describe("publishedRevision", () => {
+  it("passes a value parseRevision would accept", () => {
+    expect(publishedRevision(SHA)).toBe(SHA);
+    expect(publishedRevision("2144cdb")).toBe("2144cdb");
+  });
+
+  it.each([
+    ["no value", undefined],
+    ["unknown", "unknown"],
+    ["an empty string", ""],
+    ["free text", "<script>alert(1)</script>"],
+    [
+      "upper case, which parseRevision would already have lowercased",
+      SHA.toUpperCase(),
+    ],
+    ["a short value", "abc"],
+  ])(
+    "answers unknown for %s, so a surface never prints it",
+    (_label, value) => {
+      expect(publishedRevision(value)).toBe("unknown");
+    },
+  );
+});
+
+describe("shortRevision", () => {
+  it("is the first seven characters of a known revision", () => {
+    expect(shortRevision(SHA)).toBe("2144cdb");
+    expect(shortRevision("2144cdb")).toBe("2144cdb");
+  });
+
+  it("is undefined when the revision is not known", () => {
+    expect(shortRevision(undefined)).toBeUndefined();
+    expect(shortRevision("unknown")).toBeUndefined();
+    expect(shortRevision("main")).toBeUndefined();
   });
 });

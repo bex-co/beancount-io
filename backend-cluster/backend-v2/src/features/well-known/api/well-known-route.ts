@@ -1,6 +1,7 @@
 import Router from "@koa/router";
 import { toJSONSchema } from "zod";
 import type { AppConfig } from "@/config/config";
+import { publishedRevision } from "@/config/revision";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import {
   MCP_RESOURCES,
@@ -32,6 +33,10 @@ function mcpManifest(config: AppConfig) {
     name: "beancount",
     displayName: "Beancount.io MCP Server",
     version: "1.0.0",
+    // The git commit this deployment runs, or "unknown" when it was given none:
+    // `version` above moves only with the server's contract, so this is how a
+    // client tells which build it reached.
+    revision: publishedRevision(config.revision),
     description:
       "Talk to your Beancount ledger from Claude, Cursor, and any MCP client.",
     endpoint: `${publicOrigin}/api-gateway/mcp`,

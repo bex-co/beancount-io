@@ -52,6 +52,7 @@ import type {
 import { z, type ZodTypeAny } from "zod";
 
 import type { AppConfig } from "@/config/config";
+import { shortRevision } from "@/config/revision";
 import type { AppLayers } from "@/foundation/composition";
 import { BadUserInputError, NotFoundError } from "@/shared/errors";
 import { assertNoNulDeep } from "@/shared/assert-no-nul";
@@ -516,23 +517,34 @@ function publishToolSecuritySchemes(server: McpServer): void {
 }
 
 /**
+ * The server identity both the constructor and the `initialize` override
+ * answer. The version is `1.0.0`, which moves only when the server's contract
+ * does, plus the running commit as semver build metadata (`1.0.0+2144cdb`) when
+ * the deployment knows it, so a client learns which build it reached from the
+ * handshake alone. Without a known commit it is exactly `1.0.0`.
+ */
+function mcpServerInfo(revision: string | undefined) {
+  const build = shortRevision(revision);
+  return {
+    name: "beancount-mcp",
+    version: build === undefined ? "1.0.0" : `1.0.0+${build}`,
+  };
+}
+
+/**
  * Assemble the one MCP registry for a caller.
  *
  * Per tool call, not per session: the scope gate runs inside the handler, so a
  * grant narrowed or revoked mid-session takes effect on the very next call —
  * the same reasoning that moved `authorizeLedger` into every tool in w1/m19.
  */
-/** The server identity both the constructor and the `initialize` override answer. */
-const MCP_SERVER_INFO = { name: "beancount-mcp", version: "1.0.0" } as const;
-
 export function assembleMcpRegistry(
   toolCtx: McpRequestContext,
   config: AppConfig,
 ): McpServer {
-  const server = new McpServer(
-    { ...MCP_SERVER_INFO },
-    { instructions: buildInstructions(toolCtx.identity) },
-  );
+  const server = new McpServer(mcpServerInfo(config.revision), {
+    instructions: buildInstructions(toolCtx.identity),
+  });
 
   publishToolSecuritySchemes(server);
 
@@ -922,7 +934,7 @@ export function assembleMcpRegistry(
           ? requestedVersion
           : LATEST_PROTOCOL_VERSION,
         capabilities: withoutListChanged(sdkServer.getCapabilities()),
-        serverInfo: { ...MCP_SERVER_INFO },
+        serverInfo: mcpServerInfo(config.revision),
         instructions: buildInstructions(toolCtx.identity),
       };
     },
