@@ -1,6 +1,6 @@
 # w22 · m10 — Bank Sync: set one target account for every selected staged row
 
-**Worker:** worker1 **Goal:** clearing a Bank Sync backlog takes one action instead of one account picker per row **Status:** todo (t001, t002, t003, t005, t006, t007 done; t004 blocked)
+**Worker:** worker1 **Goal:** clearing a Bank Sync backlog takes one action instead of one account picker per row **Status:** blocked (t001, t002, t003, t005, t006, t007 done; t004 blocked, t008 waits on it)
 
 ## Tasks (in order)
 
@@ -36,12 +36,13 @@
 
 ## Blocked
 
-**t004 (browser check) — blocked 2026-11-14.** The milestone itself stays live: every other task can proceed, and only the browser check and the Closeout that depends on it wait.
+**Milestone parked 2026-11-14.** Every task that does not need a browser has shipped. What is left is t004 (the browser check), which is blocked, and t008 (Closeout), which depends on it; so the milestone as a whole waits on the condition below. (t004 was blocked first, earlier the same day, while the other tasks proceeded.)
 
 - **Blocker (outside the repository):** the check cannot run in the environment the worker has. (1) It needs a signed-in dashboard session, and `QA_EMAIL` and `QA_PASSWORD` are not set. (2) It needs a ledger with a connected bank and staged (unsynced) transactions, which in practice means a Plaid sandbox connection on the QA account. (3) It needs a browser for headless Playwright, and the Chrome that Playwright launches is not installed (`npx playwright install chrome` would add it).
-- **Baseline already shipped:** t001 in `b2ef6d073`; t002 and t003 in `85b9753f4`. The control, its 15 locales, and 8 component tests are on `main`. Five mutations of the component (Apply always overwrites, Apply reaches only visible rows, Apply reaches unselected rows, the control not disabled with nothing selected, the panel left open after Apply) each fail those tests, and `yarn format:check`, `yarn lint`, `yarn test`, and `yarn build` passed from `dashboard/`. The component tests drive the real review table with the real popover and checkbox, but a jsdom run cannot show layout.
+- **Baseline already shipped:** t001 in `b2ef6d073`; t002 and t003 in `85b9753f4`; t005 in `493bb6f4e`; t006 in `39f0b8734`; t007 in `ea4b11b81`. The control (now `bulk-target-popover.tsx`), its 15 locales, the same-target recipe in `backend-v2/docs/mcp.md`, and 15 component tests are on `main`. Five mutations of the component (Apply always overwrites, Apply reaches only visible rows, Apply reaches unselected rows, the control not disabled with nothing selected, the panel left open after Apply) each fail those tests, and `yarn format:check`, `yarn lint`, `yarn test`, and `yarn build` passed from `dashboard/`. The component tests drive the real review table with the real popover and checkbox, but a jsdom run cannot show layout.
 - **Still to confirm in a browser:** one Apply gives every selected row, including one a filter hides, the target, and Submit succeeds in one action; a row edited after Apply keeps its own account; and the panel renders correctly in Persian (RTL). t003 moved the RTL check here: the panel uses logical properties only (`me-1`, `justify-end`, and a checkbox instead of the shared Switch, whose thumb moves with a physical translate and has no RTL variant).
 - **Unblock:** the owner supplies `QA_EMAIL` and `QA_PASSWORD` for a dashboard account whose ledger has a connected Plaid sandbox bank with at least four staged transactions across two accounts (so a filter can hide some), and installs the Playwright browser; then run the dashboard QA workflow (`.agents/skills/qa-find-bugs-dashboard/SKILL.md`) over t004's steps.
 - **Who can clear it:** the repository owner (credentials, the Plaid sandbox connection, the browser install).
 - **Dependencies retargeted so independent work proceeds:** t005 (Adoption surface) now depends on t003 instead of t004, because it does not need the browser check; t006 and t007 keep depending on t005; t008 (Closeout) depends on t004 as well as t006 and t007, so the milestone cannot close until the browser check has run.
 - **Next verification step:** once the inputs exist, run t004 and set its status back to `todo` through `/pm unblock`.
+- **When unblocked, the remaining work is** t004, then t008 (Closeout). t004 also takes over what jsdom cannot show: the Persian (RTL) layout, the hover tooltip on the disabled control, and how a screen reader announces its reason (the first two were fixed in t006 and are not verified in a browser). t008 must not run until the definition of done holds.
