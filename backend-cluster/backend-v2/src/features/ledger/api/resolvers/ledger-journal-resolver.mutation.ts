@@ -24,7 +24,8 @@ import {
   MOVE_ENTRIES_DESCRIPTION,
   MOVE_INCLUDE_FROM_DESCRIPTION,
   MOVE_TO_PATH_DESCRIPTION,
-} from "@/features/ledger/utils/move-entries-description";
+  moveEntriesParams,
+} from "@/features/ledger/utils/move-entries";
 import { SliceWriteError } from "./ledger-resolver.types";
 
 @InputType()
@@ -479,20 +480,7 @@ export class LedgerJournalMutationResolver {
       await this.journalService.moveSourceSlices({
         ledgerId,
         identity: ctx.getCurrentIdentity(),
-        entries: input.entries.map((e) => ({
-          entryHash: resolveEntryHash(e),
-          sha256sum: e.sha256sum,
-        })),
-        toPath: input.toPath,
-        includeFrom: input.includeFrom ?? undefined,
-        allowInvalid: resolveFlagAlias(
-          { primary: input.allow_invalid, legacy: input.allowInvalid },
-          ALLOW_INVALID_NAMES,
-        ),
-        dryRun: resolveFlagAlias(
-          { primary: input.dry_run, legacy: input.dryRun },
-          DRY_RUN_NAMES,
-        ),
+        ...moveEntriesParams(input),
       });
     return {
       ...result,

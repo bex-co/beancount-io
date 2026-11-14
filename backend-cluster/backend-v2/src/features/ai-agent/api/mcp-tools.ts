@@ -25,7 +25,7 @@ import {
   renameAccountResult,
 } from "@/features/ledger/api/rest/v1/rename-account-handler";
 import { RENAME_ACCOUNT_DESCRIPTION } from "@/features/ledger/utils/account-rename";
-import { MOVE_ENTRIES_DESCRIPTION } from "@/features/ledger/utils/move-entries-description";
+import { MOVE_ENTRIES_DESCRIPTION } from "@/features/ledger/utils/move-entries";
 import {
   revertCommitInput,
   revertCommitResult,

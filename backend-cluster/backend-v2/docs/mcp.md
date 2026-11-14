@@ -423,8 +423,10 @@ would make that client reject the whole preview.
 `moveEntrySources` (REST `POST …/entries/move`, GraphQL
 `moveLedgerEntrySources`) moves entries into another ledger file in one
 commit. Each entry's source text leaves its file byte for byte and is appended
-to `toPath` in ledger order (by loaded file, then line), after a blank line;
-`toPath` is created when absent. Entries are addressed as the entry-source
+to `toPath` in ledger order (by file path, then line), after a blank line and
+in `toPath`'s own line ending; `toPath` is created when absent. The include
+line goes after `includeFrom`'s last `include`, or at its end when it has none,
+and a new `toPath` must be a portable name, as `createLedgerFiles` requires. Entries are addressed as the entry-source
 edits address them, `entries: [{entryHash, sha256sum}]` under either hash
 spelling, and `listLedgerEntries` with `include_source` returns both for a
 whole page. At most 1000 entries move per call.

@@ -17,7 +17,8 @@ import {
   MOVE_ENTRIES_DESCRIPTION,
   MOVE_INCLUDE_FROM_DESCRIPTION,
   MOVE_TO_PATH_DESCRIPTION,
-} from "@/features/ledger/utils/move-entries-description";
+  moveEntriesParams,
+} from "@/features/ledger/utils/move-entries";
 // Both spellings accepted (w23/m3/t001); handlers resolve to `entryHash`
 // before the service so the wire contract never sees the alias. The
 // description (not `required`) carries the one-identifier rule:
@@ -215,20 +216,7 @@ export const SOURCE_SLICE_ROUTES = [
         .moveSourceSlices({
           identity,
           ledgerId: ledgerIdOf(params),
-          entries: body.entries.map((entry) => ({
-            entryHash: resolveEntryHash(entry),
-            sha256sum: entry.sha256sum,
-          })),
-          toPath: body.toPath,
-          includeFrom: body.includeFrom,
-          allowInvalid: resolveFlagAlias(
-            { primary: body.allow_invalid, legacy: body.allowInvalid },
-            ALLOW_INVALID_NAMES,
-          ),
-          dryRun: resolveFlagAlias(
-            { primary: body.dry_run, legacy: body.dryRun },
-            DRY_RUN_NAMES,
-          ),
+          ...moveEntriesParams(body),
         })
         .then(forRest),
   }),

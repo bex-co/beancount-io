@@ -1,4 +1,13 @@
-import { assertSafeRepoPath } from "@/shared/safe-repo-path";
+import {
+  assertPortableRepoPath,
+  assertSafeRepoPath,
+} from "@/shared/safe-repo-path";
+import { addIncludes } from "@/features/ledger/utils/routed-includes";
+import {
+  lineEndingOf,
+  withLineEnding,
+  withoutTrailingNewlines,
+} from "@/features/ledger/utils/line-ending";
 import { posix } from "node:path";
 import { parseLedgerId } from "@/shared/str";
 import { entryCount } from "@/features/ledger/utils/entry-count";
@@ -24,6 +33,7 @@ import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-fact
 import type { DirectiveJson, FileMap } from "@rustledger/wasm";
 import {
   accountJournalItems,
+  BEAN_FILE_RE,
   buildEntryIdMap,
   buildScaledPriceMap,
   clampDirectives,
@@ -1243,61 +1253,11 @@ export class LedgerJournalService implements ILedgerJournalService {
   }): Promise<DeleteMultiSlicesResult> {
     const { ledgerId, userId, entries, allowInvalid, dryRun } = params;
     const loaded = await this.loadFileMap(ledgerId, userId);
-    const { files, entryPoint, repoPaths, managedPricePaths } = loaded;
-    const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
-    const sourceIds = sourceEntryIds(snapshot.directives);
-    const sourceHashes = entries.map(
-      (entry) => sourceIds.get(entry.entryHash) ?? entry.entryHash,
+    const { removed, transforms } = await this.planSliceRemoval(
+      loaded,
+      entries,
     );
-
-    // Locate + validate every entry on the loaded snapshot (all-or-nothing) to
-    // find which file each lives in and fast-fail on a stale load.
-    const located = await this.locateSlices(
-      files,
-      entryPoint,
-      managedPricePaths,
-      entries.map((entry, index) => ({
-        entryHash: sourceHashes[index],
-        sha256sum: entry.sha256sum,
-      })),
-    );
-
-    // Group targets by file (base + LOCAL occurrence per entry), DEDUPING by
-    // resolved identity first: a double-submitted {entryHash, sha256sum} pair
-    // resolves to the same block, and applying the same line-range deletion
-    // twice (bottom-to-top) would delete whatever content shifted into the
-    // range on the second pass. Then one re-locating delete transform per file
-    // — each re-locates + deletes bottom-to-top against fresh content.
-    const byFile = new Map<string, SliceTarget[]>();
-    const indexes = new Map<string, ReturnType<typeof indexDatedBlocks>>();
-    const seenTargets = new Set<string>();
-    const deletedHashes: string[] = [];
-    const preview: SlicePreview = [];
-    located.forEach((slice, index) => {
-      const { base } = parseEntryId(sourceHashes[index]);
-      const identity = `${slice.file}\u0000${slice.sha256}\u0000${slice.localOccurrence}`;
-      if (seenTargets.has(identity)) return;
-      seenTargets.add(identity);
-      deletedHashes.push(entries[index].entryHash);
-      preview.push({ path: slice.file, text: slice.slice });
-      const target: SliceTarget = sliceTarget(
-        files,
-        slice,
-        base,
-        entries[index].sha256sum,
-        indexes,
-      );
-      const list = byFile.get(slice.file);
-      if (list) list.push(target);
-      else byFile.set(slice.file, [target]);
-    });
-
-    const transforms = new Map(
-      [...byFile.entries()].map(
-        ([file, fileEntries]) =>
-          [file, makeDeleteTransform(file, fileEntries)] as const,
-      ),
-    );
+    const deletedHashes = removed.map(({ hash }) => hash);
 
     const validation = await this.projectWriteErrors(
       loaded,
@@ -1320,10 +1280,79 @@ export class LedgerJournalService implements ILedgerJournalService {
         ? `Would delete ${entryCount(deletedHashes.length)}`
         : `Deleted ${entryCount(deletedHashes.length)} successfully`,
       deletedHashes,
-      files: [...byFile.keys()],
-      preview,
+      files: [...transforms.keys()],
+      preview: removed.map(({ slice }) => ({
+        path: slice.file,
+        text: slice.slice,
+      })),
       validation,
       ...commit,
+    };
+  }
+
+  /**
+   * Remove entries' source blocks, as the batch delete and the move both do:
+   * resolve each hash through any plugin rewrite, locate and checksum every
+   * slice on one snapshot (all-or-nothing, fast-failing on a stale load), and
+   * build one re-locating delete transform per file.
+   *
+   * Pairs are de-duplicated by resolved identity first: a double-submitted
+   * {entryHash, sha256sum} resolves to the same block, and applying the same
+   * line-range deletion twice (bottom-to-top) would delete whatever content
+   * shifted into the range on the second pass. Each file's transform then
+   * re-locates and deletes bottom-to-top against fresh content.
+   */
+  private async planSliceRemoval(
+    loaded: LoadedLedgerWithManagedPrices,
+    entries: readonly { entryHash: string; sha256sum: string }[],
+  ): Promise<{
+    /** Each removed entry once, as the caller named it, in request order. */
+    removed: { hash: string; slice: EntrySlice }[];
+    transforms: Map<string, LedgerFileTransform>;
+  }> {
+    const { files, entryPoint, repoPaths, managedPricePaths } = loaded;
+    const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
+    const sourceIds = sourceEntryIds(snapshot.directives);
+    const sourceHashes = entries.map(
+      (entry) => sourceIds.get(entry.entryHash) ?? entry.entryHash,
+    );
+    const located = await this.locateSlices(
+      files,
+      entryPoint,
+      managedPricePaths,
+      entries.map((entry, index) => ({
+        entryHash: sourceHashes[index],
+        sha256sum: entry.sha256sum,
+      })),
+    );
+    const byFile = new Map<string, SliceTarget[]>();
+    const indexes = new Map<string, ReturnType<typeof indexDatedBlocks>>();
+    const seen = new Set<string>();
+    const removed: { hash: string; slice: EntrySlice }[] = [];
+    located.forEach((slice, index) => {
+      const identity = `${slice.file}\u0000${slice.sha256}\u0000${slice.localOccurrence}`;
+      if (seen.has(identity)) return;
+      seen.add(identity);
+      removed.push({ hash: entries[index].entryHash, slice });
+      const target = sliceTarget(
+        files,
+        slice,
+        parseEntryId(sourceHashes[index]).base,
+        entries[index].sha256sum,
+        indexes,
+      );
+      const list = byFile.get(slice.file);
+      if (list) list.push(target);
+      else byFile.set(slice.file, [target]);
+    });
+    return {
+      removed,
+      transforms: new Map(
+        [...byFile.entries()].map(
+          ([file, targets]) =>
+            [file, makeDeleteTransform(file, targets)] as const,
+        ),
+      ),
     };
   }
 
@@ -1361,15 +1390,14 @@ export class LedgerJournalService implements ILedgerJournalService {
       );
     }
     assertSafeRepoPath(toPath, "toPath");
-    if (!/\.(bean|beancount)$/u.test(toPath)) {
+    if (!BEAN_FILE_RE.test(toPath)) {
       throw new BadUserInputError(
         `toPath ${toPath} is not a ledger file; name a .bean or .beancount file`,
         "toPath",
       );
     }
     const loaded = await this.loadFileMap(ledgerId, userId);
-    const { files, entryPoint, repoPaths, managedPricePaths, sourceFiles } =
-      loaded;
+    const { entryPoint, repoPaths, sourceFiles } = loaded;
     const reached = sourceFiles.includes(toPath);
     if (includeFrom !== undefined) {
       assertSafeRepoPath(includeFrom, "includeFrom");
@@ -1385,84 +1413,46 @@ export class LedgerJournalService implements ILedgerJournalService {
         "toPath",
       );
     }
-    const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
-    const sourceIds = sourceEntryIds(snapshot.directives);
-    const sourceHashes = entries.map(
-      (entry) => sourceIds.get(entry.entryHash) ?? entry.entryHash,
+    if (!repoPaths.includes(toPath)) assertPortableRepoPath(toPath, "toPath");
+    const { removed, transforms } = await this.planSliceRemoval(
+      loaded,
+      entries,
     );
-    const located = await this.locateSlices(
-      files,
-      entryPoint,
-      managedPricePaths,
-      entries.map((entry, index) => ({
-        entryHash: sourceHashes[index],
-        sha256sum: entry.sha256sum,
-      })),
-    );
-    const already = located.find((slice) => slice.file === toPath);
-    if (already) {
+    if (removed.some(({ slice }) => slice.file === toPath)) {
       throw new BadUserInputError(
         `an entry already lives in ${toPath}; move only entries from other files`,
         "toPath",
       );
     }
 
-    // Group by file, de-duplicated by resolved identity, as the batch delete.
-    const byFile = new Map<string, SliceTarget[]>();
-    const indexes = new Map<string, ReturnType<typeof indexDatedBlocks>>();
-    const seen = new Set<string>();
-    const moved: { hash: string; slice: EntrySlice }[] = [];
-    located.forEach((slice, index) => {
-      const identity = `${slice.file}\u0000${slice.sha256}\u0000${slice.localOccurrence}`;
-      if (seen.has(identity)) return;
-      seen.add(identity);
-      moved.push({ hash: entries[index].entryHash, slice });
-      const target = sliceTarget(
-        files,
-        slice,
-        parseEntryId(sourceHashes[index]).base,
-        entries[index].sha256sum,
-        indexes,
-      );
-      const list = byFile.get(slice.file);
-      if (list) list.push(target);
-      else byFile.set(slice.file, [target]);
-    });
-    // Ledger order: by loaded-file order, then line.
-    const order = (file: string) => {
-      const at = sourceFiles.indexOf(file);
-      return at === -1 ? Number.MAX_SAFE_INTEGER : at;
-    };
-    moved.sort(
+    // Ledger order: by file path (the loaded files' order), then line.
+    const fileOrder = new Map(sourceFiles.map((file, at) => [file, at]));
+    const order = (file: string) =>
+      fileOrder.get(file) ?? Number.MAX_SAFE_INTEGER;
+    const moved = [...removed].sort(
       (a, b) =>
         order(a.slice.file) - order(b.slice.file) ||
         a.slice.startLine - b.slice.startLine,
     );
     const block = moved
-      .map(({ slice }) => slice.slice.replace(/\n+$/u, ""))
+      .map(({ slice }) => withoutTrailingNewlines(slice.slice))
       .join("\n\n");
 
-    const transforms = new Map<string, LedgerFileTransform>(
-      [...byFile.entries()].map(
-        ([file, targets]) =>
-          [file, makeDeleteTransform(file, targets)] as const,
-      ),
-    );
+    // After a blank line, in the target's own line ending (w21/673).
     transforms.set(toPath, (current) => {
-      if (current === null || current.trim() === "") return `${block}\n`;
-      return `${current.replace(/\n*$/u, "")}\n\n${block}\n`;
+      if (current === null || current.trim() === "")
+        return `${withLineEnding(block, "\n")}\n`;
+      const eol = lineEndingOf(current);
+      return `${withoutTrailingNewlines(current)}${eol}${eol}${withLineEnding(block, eol)}${eol}`;
     });
     const includeAdded = includeFrom !== undefined && !reached;
-    if (includeAdded) {
-      const target = posix.relative(posix.dirname(includeFrom!), toPath);
-      const line = `include "${target}"`;
-      const prior = transforms.get(includeFrom!);
-      transforms.set(includeFrom!, async (current) => {
-        const content = (
-          prior ? await prior(current) : (current ?? "")
-        ).replace(/\n*$/u, "");
-        return content === "" ? `${line}\n` : `${content}\n${line}\n`;
-      });
+    if (includeFrom !== undefined && !reached) {
+      const target = posix.relative(posix.dirname(includeFrom), toPath);
+      const prior = transforms.get(includeFrom);
+      // Escaped, in the file's line ending, after its last include (w23/062).
+      transforms.set(includeFrom, async (current) =>
+        addIncludes(prior ? await prior(current) : (current ?? ""), [target]),
+      );
     }
 
     const validation = await this.projectWriteErrors(

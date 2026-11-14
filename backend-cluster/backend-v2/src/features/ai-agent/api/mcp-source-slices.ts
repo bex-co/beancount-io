@@ -10,6 +10,7 @@ import {
   updateSliceResult,
 } from "@/features/ledger/api/rest/v1/source-slice-handler";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
+import { moveEntriesParams } from "@/features/ledger/utils/move-entries";
 import {
   ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
@@ -293,39 +294,19 @@ export const SOURCE_SLICE_EXECUTORS = {
     );
   },
   move: (context: McpRequestContext, input: unknown) => {
-    const {
-      ledger,
-      entries,
-      toPath,
-      includeFrom,
-      allowInvalid,
-      allow_invalid,
-      dry_run,
-      dryRun,
-    } = SOURCE_SLICE_OPERATION_SCHEMAS.move.parse(input);
+    const { ledger, ...args } =
+      SOURCE_SLICE_OPERATION_SCHEMAS.move.parse(input);
     const ledgerId = resolveMcpLedger(context, ledger);
-    const dryPreview =
-      resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES) ===
-      true;
+    const params = moveEntriesParams(args);
     return validated(
       context,
       ledgerId,
-      dryPreview,
+      params.dryRun,
       () =>
         context.services.ledgerJournal.moveSourceSlices({
           identity: context.identity,
           ledgerId,
-          entries: entries.map((entry) => ({
-            entryHash: resolveEntryHash(entry),
-            sha256sum: entry.sha256sum,
-          })),
-          toPath,
-          includeFrom,
-          allowInvalid: resolveFlagAlias(
-            { primary: allow_invalid, legacy: allowInvalid },
-            ALLOW_INVALID_NAMES,
-          ),
-          dryRun: dryPreview,
+          ...params,
         }),
       (written) => written.message,
       (written) => written.movedHashes,

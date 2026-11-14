@@ -216,6 +216,29 @@ describe("moveSourceSlices (w1/m45)", () => {
     expect(files["years/2026.bean"].trimEnd()).toBe('include "08.bean"');
   });
 
+  it("appends in the target's own line ending, and places the include after the last one (w1/m45/t007)", async () => {
+    files["2026.bean"] = "; this year\r\n; second line\r\n";
+    await move();
+    expect(files["2026.bean"]).toBe(
+      `; this year\r\n; second line\r\n\r\n${CAKE.replace(/\n/g, "\r\n")}\r\n\r\n${TEA.replace(/\n/g, "\r\n")}\r\n`,
+    );
+    files = { "main.bean": `${MAIN}; footer\n`, "2026.bean": "" };
+    await move({ toPath: "2026/09.bean", includeFrom: "main.bean" });
+    const lines = files["main.bean"].split("\n");
+    // Beside main.bean's other include, not after its footer.
+    expect(lines[lines.indexOf('include "2026.bean"') + 1]).toBe(
+      'include "2026/09.bean"',
+    );
+    expect(lines.at(-2)).toBe("; footer");
+  });
+
+  it("refuses a new target name that is not portable, as file creation does", async () => {
+    await expect(
+      move({ toPath: 'a "b".bean', includeFrom: "main.bean" }),
+    ).rejects.toThrow(/Windows cannot store/);
+    expect(commitMock).not.toHaveBeenCalled();
+  });
+
   it("previews without committing", async () => {
     const result = await move({
       dryRun: true,

@@ -20,3 +20,13 @@ export function appendBlock(current: string, block: string): string {
   const eol = lineEndingOf(current);
   return `${current}${eol}${withLineEnding(block, eol)}`;
 }
+
+/**
+ * `text` without its trailing line endings. Scans back from the end only: a
+ * `/\n*$/` replace scans the whole file, ~45 ms on a 15 MB one (w1/m45).
+ */
+export function withoutTrailingNewlines(text: string): string {
+  let end = text.length;
+  while (end > 0 && (text[end - 1] === "\n" || text[end - 1] === "\r")) end--;
+  return text.slice(0, end);
+}

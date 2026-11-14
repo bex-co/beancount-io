@@ -50,7 +50,8 @@ export const UNDECODABLE_SOURCE = "\0";
  * commit shared by every entry point.
  */
 
-const BEAN_FILE_RE = /\.(bean|beancount)$/;
+/** A path the loader reads as a ledger file. */
+export const BEAN_FILE_RE = /\.(bean|beancount)$/;
 const TREE_PAGE_LIMIT = 100;
 /** Keep one cache miss from flooding Gitea with repository-content requests. */
 export const GITEA_FILE_FETCH_CONCURRENCY = 8;
