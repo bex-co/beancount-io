@@ -23,6 +23,12 @@ Production verification (t006) runs after Test coverage so it checks the revisio
 
 **Milestone blocked 2026-11-13.** Everything but the hosted check is shipped and green: the workflow, bank mappings, the three surfaces with parity proof, the docs, adoption surfaces, Simplify and Test coverage. **Unblock:** backend-v2 deployed at or after `0b532b6e3`, plus [w23/242](../../../w23/242.md) deployed for the undo step. Then the worker runs t006 and closes t010. **Who can clear it:** the operator (deploy).
 
+**Update 2026-11-13 (evening):**
+- **Deploy half: cleared.** Production now serves `renameAccount`. [w23/242](../../../w23/242.md) records `tools/list` at 46 tools after that deploy, and a `renameAccount` preview-and-commit round trip on the disposable QA ledger that an inverse rename restored byte for byte.
+- **Undo half: not cleared.** `revertCommit` still answers `INTERNAL_SERVER_ERROR` on MCP and REST for both commits that round trip made.
+
+**Remaining unblock:** w23/242 fixed and deployed. Then the worker runs t006 (preview, commit and `revertCommit` undo, with the deployed revision) and closes t010. **Who can clear it:** whoever fixes and deploys w23/242.
+
 ## Definition of done
 
 - On REST, GraphQL and MCP, renaming an account on a multi-file synthetic ledger with `dry_run` returns every changed line per file and writes nothing; the same call without `dry_run` makes exactly one commit and returns its `commit` sha.
