@@ -1645,9 +1645,13 @@ The signal rides beside the result, in one shape on every surface:
 | Surface      | Where                                                                                           |
 | ------------ | ----------------------------------------------------------------------------------------------- |
 | MCP tool     | `structuredContent.page`, next to `ok` and `result`                                             |
-| MCP resource | the content's `_meta.page`                                                                      |
+| MCP resource | the content's `_meta.page`, and a second content item `{"page": …}` (`application/json`)      |
 | REST         | `X-Has-More`, `X-Total-Count` (only when the total is known) and `Link: <…>; rel="next"`        |
 | GraphQL      | the response's `extensions.page`, keyed by each field's response key (its alias, if it has one) |
+
+A resource's first content item stays byte-identical to the REST body; the
+second carries only the signal, so a host that shows content text and not
+`_meta` still learns whether more remains.
 
 The `page` object holds `returned` (entries in this page), `hasMore`, and, when
 they apply, `limit`, `offset` or `page` (where this page began), `total` (the

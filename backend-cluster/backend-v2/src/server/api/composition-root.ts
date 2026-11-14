@@ -1204,11 +1204,29 @@ function makeMcpResourceHandler(
       try {
         await gateMcpCall(opId, toolCtx, config);
         const result = await descriptor.read(toolCtx, variables);
+        if (typeof result === "string")
+          return {
+            contents: [
+              { uri: uri.href, mimeType: descriptor.mimeType, text: result },
+            ],
+          };
+        // A paginated read's signal rides in `_meta`, which a host that shows
+        // only content text never sees, and a bare-array body cannot say
+        // whether more remains. So it also travels as a second content item;
+        // the first stays byte-identical to the REST body (w23/m44/t004).
+        const page = (result._meta as { page?: unknown } | undefined)?.page;
         return {
           contents: [
-            typeof result === "string"
-              ? { uri: uri.href, mimeType: descriptor.mimeType, text: result }
-              : { uri: uri.href, ...result },
+            { uri: uri.href, ...result },
+            ...(page === undefined
+              ? []
+              : [
+                  {
+                    uri: uri.href,
+                    mimeType: "application/json",
+                    text: JSON.stringify({ page }),
+                  },
+                ]),
           ],
         };
       } catch (err) {

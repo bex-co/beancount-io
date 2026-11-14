@@ -214,6 +214,17 @@ describe("catalog adapters", () => {
         uri: "beancount://catalog/ledgers?page=2&limit=1",
       });
       expect(resource.contents[0]._meta).toEqual({ page: expected });
+      // A host that shows only content text sees the signal too, in a second
+      // item, while the first stays byte-identical to the REST body (t004).
+      expect((resource.contents[0] as { text: string }).text).toBe(
+        await response.text(),
+      );
+      expect(resource.contents[1]).toEqual({
+        uri: "beancount://catalog/ledgers?page=2&limit=1",
+        mimeType: "application/json",
+        text: JSON.stringify({ page: expected }),
+      });
+      expect(resource.contents).toHaveLength(2);
       const tool = await f.client.callTool({
         name: "listLedgers",
         arguments: { page: 2, limit: 1 },
