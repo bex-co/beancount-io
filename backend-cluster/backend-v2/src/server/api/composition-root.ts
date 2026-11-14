@@ -123,7 +123,10 @@ import {
   type McpErrorEnvelope,
   type McpHintSurface,
 } from "@/features/ai-agent/api/mcp-errors";
-import { renderToolText } from "@/features/ai-agent/api/mcp-result-text";
+import {
+  renderToolText,
+  withStructuredContent,
+} from "@/features/ai-agent/api/mcp-result-text";
 
 import {
   gqlOpId,
@@ -1243,10 +1246,22 @@ function toolFailureResult(
    */
   rest: Record<string, unknown> = {},
 ): CallToolResult {
+  const structuredContent = { ...rest, ok: false, error: { ...envelope } };
   return {
     isError: true,
-    content: [{ type: "text" as const, text: renderErrorText(envelope) }],
-    structuredContent: { ...rest, ok: false, error: { ...envelope } },
+    // The serialized envelope follows the readable lines: it is the only
+    // place a text-only client finds `newLedgerErrors`, `limitOwner`, or the
+    // payload a refusal attached.
+    content: [
+      {
+        type: "text" as const,
+        text: withStructuredContent(
+          renderErrorText(envelope),
+          structuredContent,
+        ),
+      },
+    ],
+    structuredContent,
     _meta: { "beancount/tool": tool },
   };
 }
@@ -1295,20 +1310,22 @@ function makeMcpToolHandler(
           );
           return toolFailureResult(descriptor.name, envelope, rest);
         }
-        // Text is what a person would read; the structured channel keeps the
-        // full typed payload (w2/m28:t001).
+        // Text leads with what a person would read and then carries the same
+        // payload as the structured channel, because some clients hand the
+        // model only the text (w2/m28:t001).
+        const structuredContent = withPageSignal(
+          descriptor.name,
+          input as Record<string, unknown>,
+          result as Record<string, unknown>,
+        );
         return {
           content: [
             {
               type: "text" as const,
-              text: renderToolText(descriptor.name, result),
+              text: renderToolText(descriptor.name, result, structuredContent),
             },
           ],
-          structuredContent: withPageSignal(
-            descriptor.name,
-            input as Record<string, unknown>,
-            result as Record<string, unknown>,
-          ),
+          structuredContent,
         };
       } catch (err) {
         // A throw that got past the tool's own boundary — the per-call gate's

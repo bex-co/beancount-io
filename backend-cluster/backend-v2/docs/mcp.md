@@ -1411,8 +1411,19 @@ enumerates ledgers and source files.
 
 ### The result envelope
 
-The text block is what a person would read and `structuredContent` is what a
-program parses. `runBqlQuery` leads its text block with the canonical row count
+The text block leads with what a person would read, and `structuredContent` is
+what a program parses. Both carry the whole result, because some clients hand
+the model only the text block (claude.ai's connector does). Every tool's text
+block except `runBqlQuery`'s is a lead line followed by `structuredContent`
+serialized as compact JSON on the last line. The lead line is, for example, a
+count (`42 items`, `12 files`, `1000 rows (truncated)`), a write's `summary`,
+or `<tool>: ok`. A failure leads with `CODE: message`, `Hint: …` and, when
+present, `Retry after: Ns`; its last line carries the same envelope, including
+`newLedgerErrors`, `limitOwner`, and any payload the refusal attached. A
+paginated read's last line includes its `page` signal. Older servers ended a
+long success at the lead line and left the data in `structuredContent` only.
+
+`runBqlQuery` leads its text block with the canonical row count
 from the same query execution, followed by the rendered table. Multiline cells
 and directive postings do not add result rows. `structuredContent.result`
 remains the exact rendered string, including embedded and trailing newlines, up

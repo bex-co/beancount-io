@@ -155,39 +155,71 @@ describe("renderToolText", () => {
     ).toBe("1000 rows (truncated)");
   });
 
-  it("counts a list payload rather than reprinting it when it is long", () => {
-    const ledgers = Array.from({ length: 40 }, (_, i) => ({
-      fullName: `alice/ledger-${i}`,
-      description: "a ledger with a description long enough to matter",
+  /** The text block's last line, parsed: what a text-only client receives. */
+  const carried = (text: string): unknown =>
+    JSON.parse(text.split("\n").at(-1) ?? "");
+
+  it("counts a long list and still carries every row, for a client that reads only text", () => {
+    // A text-only client (claude.ai's connector) used to get "42 items" and
+    // nothing else: no transactionId to import, discard or refresh with.
+    const staged = Array.from({ length: 42 }, (_, i) => ({
+      id: `pbtx_${i}`,
+      transactionId: `txn_${i}`,
+      date: "2026-11-08",
+      name: `PAYEE ${i}`,
+      amount: 12.34 + i,
     }));
-    const text = renderToolText("listLedgers", { ok: true, result: ledgers });
-    expect(text).toBe("40 items");
+    const envelope = { ok: true, result: staged };
+    const text = renderToolText("listStagedBankTransactions", envelope);
+    expect(text.split("\n")[0]).toBe("42 items");
+    expect(carried(text)).toEqual(envelope);
+    for (const row of staged) expect(text).toContain(row.transactionId);
   });
 
-  it("repeats a short payload under the summary, where reading it is free", () => {
-    const text = renderToolText("generateTempAssetUploadUrl", {
+  it("carries an object payload that has no count to lead with", () => {
+    const envelope = {
       ok: true,
-      result: { objectKey: "tmp/usr_1/a.png" },
-    });
-    expect(text.split("\n")[1]).toBe('{"objectKey":"tmp/usr_1/a.png"}');
+      result: {
+        connections: [{ id: "pitm_1", institutionName: "First Bank" }],
+        accounts: [{ id: "pacc_1", itemId: "pitm_1", mask: "0001" }],
+      },
+    };
+    const text = renderToolText("listBankConnections", envelope);
+    expect(text.split("\n")[0]).toBe("listBankConnections: ok");
+    expect(carried(text)).toEqual(envelope);
   });
 
   it("counts the one collection a payload wraps", () => {
-    expect(
-      renderToolText("listLedgerFiles", {
-        ok: true,
-        result: {
-          files: Array.from({ length: 12 }, (_, i) => ({
-            path: `a-reasonably-long-file-name-${i}.bean`,
-          })),
-        },
-      }),
-    ).toBe("12 files");
+    const envelope = {
+      ok: true,
+      result: {
+        files: Array.from({ length: 12 }, (_, i) => ({
+          path: `a-reasonably-long-file-name-${i}.bean`,
+        })),
+      },
+    };
+    const text = renderToolText("listLedgerFiles", envelope);
+    expect(text.split("\n")[0]).toBe("12 files");
+    expect(carried(text)).toEqual(envelope);
+  });
+
+  it("carries a multiline string payload past its first line", () => {
+    const envelope = { ok: true, result: "first line\nsecond line" };
+    const text = renderToolText("someTextTool", envelope);
+    expect(text.split("\n")[0]).toBe("first line");
+    expect(carried(text)).toEqual(envelope);
   });
 
   it("says something rather than nothing for a payload it cannot summarize", () => {
-    expect(renderToolText("deleteAccount", { ok: true, result: true })).toBe(
-      "deleteAccount: true",
-    );
+    const text = renderToolText("deleteAccount", { ok: true, result: true });
+    expect(text).toBe('deleteAccount: true\n{"ok":true,"result":true}');
+  });
+
+  it("carries what structuredContent carries beside the result, such as a page signal", () => {
+    const result = { ok: true, result: [{ fullName: "alice/a" }] };
+    const structured = { ...result, page: { returned: 1, hasMore: true } };
+    const text = renderToolText("listLedgers", result, structured);
+    expect(text.split("\n")[0]).toBe("1 item");
+    expect(carried(text)).toEqual(structured);
   });
 });

@@ -3,36 +3,38 @@ import { BQL_ROW_COUNT, BQL_TRUNCATED } from "../tools/bql-result-metadata";
 /**
  * What a tool result looks like as *text* (w2/m28:t001).
  *
- * MCP gives a tool two channels, and before this they carried the same bytes:
+ * MCP gives a tool two channels. Before w2/m28 they carried the same bytes:
  * `content` held `JSON.stringify(envelope)` and `structuredContent` held the
  * envelope. So a BQL result — a text table the server had already rendered —
  * reached the model as `{"ok":true,"result":"   account   balance\n-------"}`,
  * escapes and all, and an empty result reached it as `""`, which says nothing
  * about whether the query was wrong or the ledger simply had no match.
  *
- * The split this module draws: `content` is what a person would read, and
- * `structuredContent` stays the full typed payload a program parses. Text
- * therefore leads with the fact an agent needs to branch on — how many rows,
- * what was written — and repeats the payload only when repeating it is cheap.
+ * Text therefore leads with the fact an agent needs to branch on — how many
+ * rows, what was written — and then carries the data itself. It must carry
+ * all of it: a client may hand the model only `content`. claude.ai's connector
+ * does, so when a long payload was cut down to its summary line, an agent saw
+ * `42 items` from `listStagedBankTransactions` and `listBankConnections: ok`,
+ * with no row, id or amount to act on, while a client that reads
+ * `structuredContent` saw everything. MCP asks the same of a tool that returns
+ * structured content: also return it serialized in a text block.
  */
-
-/**
- * Longest payload worth repeating under the summary line.
- *
- * Above it the text block would just be a second copy of `structuredContent`,
- * paid for in the model's context window for no gain: a client that wants the
- * data reads the structured channel, which is typed and published in
- * `tools/list`.
- */
-const SHORT_PAYLOAD_LIMIT = 400;
 
 /** The text block for a successful tool result. */
-export function renderToolText(toolName: string, result: unknown): string {
+export function renderToolText(
+  toolName: string,
+  result: unknown,
+  /**
+   * What the call's `structuredContent` carries, when it is not `result`
+   * itself: a paginated read adds its has-more signal beside `result`.
+   */
+  structured: unknown = result,
+): string {
   const payload = (result as { result?: unknown } | null)?.result;
 
   // The one tool whose payload is already prose: `runBqlQuery` returns the
   // rendered table, so wrapping it in JSON only escaped the newlines that
-  // made it a table in the first place.
+  // made it a table in the first place. The table is the whole payload.
   if (toolName === "runBqlQuery" && typeof payload === "string") {
     return renderBqlTable(
       payload,
@@ -41,12 +43,23 @@ export function renderToolText(toolName: string, result: unknown): string {
     );
   }
 
-  const summary = summaryLine(toolName, payload);
-  // Only structured payloads are worth repeating: a scalar is already in the
-  // summary line, and printing it twice is noise wearing the shape of data.
-  if (typeof payload !== "object" || payload === null) return summary;
-  const json = JSON.stringify(payload);
-  return json.length <= SHORT_PAYLOAD_LIMIT ? `${summary}\n${json}` : summary;
+  return withStructuredContent(summaryLine(toolName, payload), structured);
+}
+
+/**
+ * A result's lead line(s), then its `structuredContent` serialized on one line.
+ *
+ * Every tool result's text block ends this way, failures included, except
+ * `runBqlQuery`'s, whose table is already the whole payload. So a client that
+ * reads only text still receives every field a client of the structured
+ * channel does. Compact JSON escapes every newline inside a value, so the
+ * last line is always the whole payload and parses on its own.
+ */
+export function withStructuredContent(
+  lead: string,
+  structured: unknown,
+): string {
+  return `${lead}\n${JSON.stringify(structured)}`;
 }
 
 /**
@@ -84,7 +97,8 @@ function renderBqlTable(
  *
  * Deliberately small: the cases below are the shapes the MCP tools actually
  * return, and a shape with nothing summarizable says so rather than inventing
- * a sentence the payload does not support.
+ * a sentence the payload does not support. It leads the payload; it never
+ * stands in for it.
  */
 function summaryLine(toolName: string, payload: unknown): string {
   if (payload === undefined || payload === null) return `${toolName}: ok`;

@@ -97,10 +97,14 @@ describe("addLedgerEntries", () => {
           hint: "residual 5.00 USD; add a posting or pass allowInvalid: true",
         },
       });
-      // The text half says the same thing, in the words a person would use.
-      expect((result.content as { text: string }[])[0].text).toBe(
-        "UNBALANCED: Transaction does not balance\nHint: residual 5.00 USD; add a posting or pass allowInvalid: true",
-      );
+      // The text half says the same thing in the words a person would use,
+      // then carries the envelope for a client that reads only text.
+      const lines = (result.content as { text: string }[])[0].text.split("\n");
+      expect(lines.slice(0, -1)).toEqual([
+        "UNBALANCED: Transaction does not balance",
+        "Hint: residual 5.00 USD; add a posting or pass allowInvalid: true",
+      ]);
+      expect(JSON.parse(lines.at(-1) ?? "")).toEqual(result.structuredContent);
     } finally {
       await client.close();
       await server.close();
