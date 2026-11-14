@@ -46,7 +46,7 @@
 - [x] **m41** — [Diff the report engine against stock beancount in a release gate](./done/m41/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 4; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/229`
 - [x] **m42** — [Name the commit every write makes, and let an agent undo it](./done/m42/README.md) (10 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 5; user request via /pmx, 2026-11-10; user routed to w23; source `w1/228`
 - [x] **m43** — [Accept directive metadata on every typed entry and gate the journal round trip](./done/m43/README.md) (9 tasks) ← `/pm-brainstorm more for w23` 2026-11-10, proposal 6; user request via /pmx, 2026-11-10; user routed to w23; absorbs `w1/233`
-- [ ] **m44** — [Get every MCP result to text-only and tools-only hosts in full](./m44/README.md) (10 tasks) ← user report 2026-11-08 (claude.ai connector showed only summaries; root cause fixed in `f58c89d64`) and the 2026-11-13 MCP channel review
+- [ ] **m44** — [Get every MCP result to text-only and tools-only hosts in full](./blocked/m44/README.md) (10 tasks) ← user report 2026-11-08 (claude.ai connector showed only summaries; root cause fixed in `f58c89d64`) and the 2026-11-13 MCP channel review — **blocked:** t001 needs a claude.ai sign-in and t002 a fresh QA MCP key, both from the owner
 
 ## Dropped
 

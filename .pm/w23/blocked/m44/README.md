@@ -1,6 +1,6 @@
 # w23 · m44 — Get every MCP result to text-only and tools-only hosts in full
 
-**Worker:** worker1 **Goal:** An agent on any MCP host gets every row, id and next step it needs. That holds whether the host hands the model only `content` (claude.ai), only tools (ChatGPT), or `structuredContent` (Claude Code), and a QA check keeps the channels from drifting apart again. **Status:** todo (t003, t004, t005 done; t001, t002 blocked)
+**Worker:** worker1 **Goal:** An agent on any MCP host gets every row, id and next step it needs. That holds whether the host hands the model only `content` (claude.ai), only tools (ChatGPT), or `structuredContent` (Claude Code), and a QA check keeps the channels from drifting apart again. **Status:** blocked (t003, t004, t005 done; t001, t002, t006 blocked; t007–t010 wait on them)
 
 ## Tasks (in order)
 
@@ -24,6 +24,8 @@
   - **Unblock:** a claude.ai sign-in on the QA account in the headed Playwright browser. Only the owner can do this. Then run steps 3 and 4. t006 depends on the answer; t002–t005 proceed without it.
 - **t002** (blocked 2026-11-13). The check shipped in `b8e931fb0`. `qa-contract-replay.mjs` has a `channel` row, the fake deployment's `summary` mode fails it while every other row passes, and making `textCarries` always pass turns three tests red. What remains is the acceptance check "a replay against the current server passes". It cannot run here because the repository-root `.env` `QA_MCP_TOKEN` has expired (production answers `401`).
   - **Unblock:** a fresh short-lived `bcio_` key for the QA account in `./.env` as `QA_MCP_TOKEN`. Only the owner can mint one. Then run `node .agents/skills/qa-shared/scripts/qa-contract-replay.mjs` and confirm `| channel | ok |`.
+- **t006** (blocked 2026-11-13). It depends on t001: whether claude.ai's model can read a resource unprompted decides between fixing only the served prompts and adding tool twins for the resource-only reads. **Unblock:** t001 is cleared.
+- **Milestone** (blocked 2026-11-13). Every open task is blocked or waits on a blocked one. t007 (Adoption surface) needs t002 and t006, and t008–t010 follow it. t003, t004 and t005 shipped (`e195dfe96`, `cd4180907`, `e5877a8ec`). **Unblock:** t001's sign-in and t002's fresh QA key above, both from the owner. Then run t001, t006 and the live replay, and close with t007–t010.
 
 ## Definition of done
 
