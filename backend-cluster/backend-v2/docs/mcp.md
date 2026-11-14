@@ -417,7 +417,44 @@ published `outputSchema` declares all three, and a client that validates
 `structuredContent` against it accepts the result; a key the schema omitted
 would make that client reject the whole preview.
 
-`renameLedgerFile` and `revertCommit` preview like the file tools: it projects bean-check over
+### Renaming an account (w1/m43)
+
+`renameAccount` (REST `POST …/rename-account`, GraphQL `renameLedgerAccount`)
+renames one account, and every account under it, across the files the ledger
+loads, in one commit. It changes account tokens outside strings and comments,
+on whole names: renaming `Assets:Check` leaves `Assets:Checking` alone, and
+`Assets:Check:Old` becomes `<to>:Old`. Payees, narrations, string metadata,
+`note` text and comments keep the old name, and a file the ledger does not load
+is not touched.
+
+It refuses, writing nothing:
+
+- an invalid `from` or `to`, or the same account twice (`BAD_USER_INPUT`);
+- a `to` under another root, such as `Assets:` to `Liabilities:`
+  (`BAD_USER_INPUT`); that is a reclassification that changes how reports read
+  the account, not a rename;
+- a `to`, or any name a descendant would take, that the ledger already uses
+  (`BAD_USER_INPUT`), because renaming onto it would merge two accounts;
+- a `from` no loaded file names (`NOT_FOUND`, with a hint to read the ledger's
+  accounts first);
+- a credential that cannot write the ledger's files (`FORBIDDEN`);
+- a rename that adds a bean-check error the ledger did not have
+  (`VALIDATION_FAILED`), unless `allowInvalid`.
+
+`dry_run` returns what the commit would do: `accounts` (each `from`/`to` pair,
+descendants included), `files` (each changed line, `before` and `after`),
+`bankMappings` and `validation`. A commit returns the same plus `commit`;
+`revertCommit` on that sha undoes it.
+
+Bank-account mappings that name a renamed account move with it, for every
+member of the ledger, after the files commit: otherwise the next sync would
+post to an account that no longer exists. The result names only the caller's
+own bank accounts; another member's mapping appears with `plaidAccount: null`.
+If updating the mappings fails, the commit stands, each mapping says
+`updated: false`, and the message names how many still point at the old
+account, to fix with `mapBankAccount`.
+
+`renameLedgerFile`, `renameAccount` and `revertCommit` preview like the file tools: it projects bean-check over
 the files the move would leave, and the moved file's own errors go with it to
 its new path, so renaming a file that carries errors reports none as new in the
 preview and in the commit alike. The bank tools and the lifecycle and

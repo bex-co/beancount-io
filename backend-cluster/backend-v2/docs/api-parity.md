@@ -184,7 +184,7 @@ read collaborator — gets `FORBIDDEN` naming the authority it lacks, such as
 
 Content writes follow the same rule (w1/194): writing files or entries
 (which covers `appendLedgerText`, the entry-source edits, `renameLedgerFile`,
-`revertCommit` and `refreshManagedPrices`), opening, merging and rejecting pull requests,
+`renameAccount`, `revertCommit` and `refreshManagedPrices`), opening, merging and rejecting pull requests,
 starring a ledger, and listing its bank connections. A caller who cannot see
 the ledger — it does not exist, or it is private to others — gets the
 concealed `NOT_FOUND` "Ledger not found" its reads give, not `FORBIDDEN`. A
@@ -282,8 +282,9 @@ way: `checked: false`, nothing refused on it.
 ## The commit a write made, and undoing it (w23/m42)
 
 Every write that makes a commit returns its sha as `commit` on REST, GraphQL
-and MCP: the file writes, `appendLedgerText`, `renameLedgerFile`, bulk entries,
-the entry-source edits and deletes, receipt insertion and `revertCommit`. A
+and MCP: the file writes, `appendLedgerText`, `renameLedgerFile`, `renameAccount`,
+bulk entries, the entry-source edits and deletes, receipt insertion and
+`revertCommit`. A
 preview has none, and a write that landed but lost its answer names none rather
 than a wrong sha. `revertCommit` (REST `POST …/revert-commit`, GraphQL
 `revertLedgerCommit`) sets each file a commit touched back to its parent's
@@ -831,3 +832,19 @@ over HTTP, GraphQL (root and nested), and an MCP client through the real
 workflow and PDP. It compares all ten fields with non-default values and an
 empty operating-currency list, and checks revoked access, a widened pin, and
 a ledger-service outage. The legacy `ledgerMeta` projection is unchanged.
+
+## Renaming an account (w1/m43)
+
+`renameAccount` (REST `POST …/rename-account`, GraphQL `renameLedgerAccount`)
+takes `from` and `to`, renames that account and every account under it across
+the ledger's loaded files in one commit, and moves the bank mappings that name
+it. The surfaces agree on the inputs (`dryRun`/`dry_run`,
+`allowInvalid`/`allow_invalid`), the result (`accounts`, `files` with each
+changed line, `bankMappings`, the verdict, and `commit` on a real write), the
+refusals (`BAD_USER_INPUT` for an invalid name, another root or a merge,
+`NOT_FOUND` for an account no loaded file names, `FORBIDDEN` for a credential
+that cannot write, `VALIDATION_FAILED` for new bean-check errors without
+`allowInvalid`) and the preview, which reports new errors without refusing.
+`rename-account-parity.test.ts` runs the real adapters and the real workflow
+over a fake repository through each surface. MCP nests the verdict under
+`validation`, as every MCP write does.
