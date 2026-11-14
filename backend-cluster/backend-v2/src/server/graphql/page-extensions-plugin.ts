@@ -25,6 +25,10 @@ export const PAGED_GRAPHQL_FIELDS: Record<
   }
 > = {
   listLedgers: { read: "accessibleLedgers", query: own },
+  getUnsyncedPlaidTransactions: {
+    read: "bankUnsyncedTransactions",
+    query: own,
+  },
   listUserOwnedLedgers: { read: "ownedLedgers", query: own },
   searchLedgers: { read: "searchLedgers", query: own },
   getLedgerJournal: { read: "ledgerJournal", query: nested },

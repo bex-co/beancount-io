@@ -128,13 +128,19 @@ describe("listStagedBankTransactions", () => {
         name: "listStagedBankTransactions",
         arguments: accountId ? { accountId } : {},
       });
+      const rows = await readJson(client, path);
+      // Without `limit` the tool returns every row and says nothing remains.
       expect(result.structuredContent).toEqual({
         ok: true,
-        result: await readJson(client, path),
+        result: rows,
+        page: { returned: (rows as unknown[]).length, page: 1, hasMore: false },
       });
       expect(
         services.plaidItem.getUnsyncedTransactions,
-      ).toHaveBeenNthCalledWith(1, identity, accountId, LEDGER);
+      ).toHaveBeenNthCalledWith(1, identity, accountId, LEDGER, {
+        page: undefined,
+        limit: undefined,
+      });
       await close();
     },
   );

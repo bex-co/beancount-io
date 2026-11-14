@@ -1,4 +1,5 @@
 import { assertNoNul } from "@/shared/assert-no-nul";
+import { assertPageArgs } from "@/shared/page-info";
 import { isUtf8 } from "buffer";
 import {
   assertNoPortableTwin,
@@ -455,28 +456,6 @@ interface CreateRequestRecord {
   requestHash: string;
   status: "in-progress" | "done";
   ledger?: LedgerData;
-}
-
-/**
- * `page` and `limit` held to one bound on every catalog list (w1/205): the
- * owned-ledgers and account catalogs accepted `limit=0`, `limit=1000` and
- * `page=-1` and echoed them back, while search and REST refused them.
- */
-function assertPageArgs(args: { page?: number | null; limit?: number | null }) {
-  const page = args.page ?? undefined;
-  if (page !== undefined && (!Number.isSafeInteger(page) || page < 1)) {
-    throw new BadUserInputError("page must be a positive integer", "page");
-  }
-  const limit = args.limit ?? undefined;
-  if (
-    limit !== undefined &&
-    (!Number.isSafeInteger(limit) || limit < 1 || limit > 100)
-  ) {
-    throw new BadUserInputError(
-      "limit must be an integer from 1 to 100",
-      "limit",
-    );
-  }
 }
 
 /**

@@ -1,4 +1,5 @@
 import { z } from "@/shared/zod-openapi-setup";
+import { paginationSchema } from "@/server/rest/v1-schemas";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { booleanQuery } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
@@ -47,6 +48,16 @@ export const bankAccountQuery = z
   })
   // Strict like its MCP twin and noPreviewQuery: an unknown key is a
   // mistyped filter, not an unfiltered list (w23/112).
+  .strict();
+
+/**
+ * The staging area's read: the account filter plus a page. Omitting `limit`
+ * returns every staged row, which the dashboard's Bank Sync table relies on;
+ * an agent pages with `limit` so a first sync of months of history does not
+ * arrive as one result.
+ */
+export const unsyncedTransactionsQuery = bankAccountQuery
+  .extend(paginationSchema.shape)
   .strict();
 
 const dryRunQuery = z
@@ -159,13 +170,15 @@ export const BANK_ROUTES = [
     description:
       "Transactions pulled from the bank that have not been written into the ledger.",
     params: ledgerPathSchema,
-    query: bankAccountQuery,
+    query: unsyncedTransactionsQuery,
+    pagedRead: "bankUnsyncedTransactions",
     responses: { 200: json("Unsynced transactions") },
     handler: async ({ layers }, { identity, params, query }) =>
       layers.services.plaidItem.getUnsyncedTransactions(
         callerOf(identity),
         query.accountId,
         ledgerIdOf(params),
+        { page: query.page, limit: query.limit },
       ),
   }),
   v1Route({

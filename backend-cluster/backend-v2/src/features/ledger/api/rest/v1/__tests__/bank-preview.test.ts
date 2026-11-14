@@ -261,6 +261,7 @@ describe("REST bank spelling", () => {
       expect.anything(),
       "acc_1",
       expect.anything(),
+      { page: undefined, limit: undefined },
     );
     const refused = await fetch(
       `${server.url}${ledger}/bank-transactions/unsynced?account_id=acc_1`,

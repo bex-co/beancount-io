@@ -85,7 +85,8 @@ export class PlaidTransactionPostgresModel implements IPlaidTransactionModel {
           eq(plaidTransactions.syncedToLedger, false),
         ),
       )
-      .orderBy(desc(plaidTransactions.date));
+      // The id breaks date ties, so a page holds the same rows on every read.
+      .orderBy(desc(plaidTransactions.date), desc(plaidTransactions.id));
 
     return result.map((row) => this.toPlainObject(row));
   }
@@ -107,7 +108,8 @@ export class PlaidTransactionPostgresModel implements IPlaidTransactionModel {
           eq(plaidTransactions.syncedToLedger, false),
         ),
       )
-      .orderBy(desc(plaidTransactions.date));
+      // The id breaks date ties, so a page holds the same rows on every read.
+      .orderBy(desc(plaidTransactions.date), desc(plaidTransactions.id));
 
     return result.map((row) => this.toPlainObject(row));
   }

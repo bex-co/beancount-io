@@ -94,6 +94,9 @@ const SIGNALS: Record<string, Signal> = {
     });
   },
   // Page-and-limit reads that cannot count what is left.
+  // Staged bank transactions: the tool and the resource are the same read.
+  listStagedBankTransactions: numberedArray(),
+  bankUnsyncedTransactions: numberedArray(),
   listLedgers: numberedArray(),
   accessibleLedgers: numberedArray(),
   ownedLedgers: numberedArray(),

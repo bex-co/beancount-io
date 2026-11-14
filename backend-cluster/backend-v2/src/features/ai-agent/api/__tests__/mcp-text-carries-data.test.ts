@@ -104,7 +104,12 @@ describe("MCP text block carries what structuredContent carries", () => {
     const { text, lead, carried } = textOf(result);
     expect(lead).toEqual(["42 items"]);
     expect(carried).toEqual(result.structuredContent);
-    expect(carried).toEqual({ ok: true, result: staged });
+    // The page signal rides along: a text-only host learns nothing remains.
+    expect(carried).toEqual({
+      ok: true,
+      result: staged,
+      page: { returned: 42, page: 1, hasMore: false },
+    });
     for (const row of staged) {
       expect(text).toContain(`"transactionId":"${row.transactionId}"`);
     }

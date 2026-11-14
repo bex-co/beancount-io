@@ -1,3 +1,5 @@
+import { BadUserInputError } from "@/shared/errors";
+
 /**
  * The one has-more rule for every paginated read (w23/m28).
  *
@@ -75,4 +77,33 @@ export function numberedPage(input: {
     hasMore,
     ...(hasMore && { nextPage: page + 1 }),
   };
+}
+
+/** The largest page any `page`/`limit` read serves. */
+const PAGE_LIMIT_MAX = 100;
+
+/**
+ * `page` and `limit` held to one bound on every numbered list (w1/205): the
+ * owned-ledgers and account catalogs accepted `limit=0`, `limit=1000` and
+ * `page=-1` and echoed them back, while search and REST refused them. Checked
+ * in the service, so GraphQL refuses what REST's and MCP's schemas refuse.
+ */
+export function assertPageArgs(args: {
+  page?: number | null;
+  limit?: number | null;
+}) {
+  const page = args.page ?? undefined;
+  if (page !== undefined && (!Number.isSafeInteger(page) || page < 1)) {
+    throw new BadUserInputError("page must be a positive integer", "page");
+  }
+  const limit = args.limit ?? undefined;
+  if (
+    limit !== undefined &&
+    (!Number.isSafeInteger(limit) || limit < 1 || limit > PAGE_LIMIT_MAX)
+  ) {
+    throw new BadUserInputError(
+      `limit must be an integer from 1 to ${PAGE_LIMIT_MAX}`,
+      "limit",
+    );
+  }
 }

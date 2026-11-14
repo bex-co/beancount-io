@@ -332,7 +332,7 @@ the principal inputs; inspect the schema before constructing a call.
 | `refreshBankConnection`         | `itemId`; re-reads a connection's health.                                                                                                                                                                                                                                                                                                                                                                                 | Admin      |
 | `unlinkBankConnection`          | `itemId`, optional `dry_run`; severs a linked bank.                                                                                                                                                                                                                                                                                                                                                                       | Admin      |
 | `listBankConnections`           | `{}`; linked bank connections and their accounts (with mapping) — the `banks` and `bank-accounts` resources as a tool. Each row's own `id` is what the bank tools take as `itemId` or `accountId`; the rows' `itemId` and `accountId` fields are Plaid's.                                                                                                                                                                 | Admin      |
-| `listStagedBankTransactions`    | Optional `accountId`; transactions staged for import, with the ids `importStagedBankTransactions` and `discardStagedBankTransactions` take — the `bank-transactions/unsynced` resource as a tool.                                                                                                                                                                                                                         | Read       |
+| `listStagedBankTransactions`    | Optional `accountId`, `page`, `limit` (at most 100); transactions staged for import, newest first, with the ids `importStagedBankTransactions` and `discardStagedBankTransactions` take — the `bank-transactions/unsynced` resource as a tool. Omit `limit` for every row; after importing or discarding a page, read page 1 again.                                                                                       | Read       |
 | `updateLedger`                  | `name`, `description`, `private`, optional `dry_run`; renames a ledger or changes its description or visibility. A preview returns the current→new diff, with a flip to public called out. Commits echo `dry_run: false`.                                                                                                                                                                                                 | Admin      |
 | `deleteLedger`                  | Optional `dry_run`; permanently deletes a ledger, including its history and linked-bank cleanup. A preview returns the destroy summary — identity, emptiness, size, and warnings. Commits echo `dry_run: false`.                                                                                                                                                                                                          | Admin      |
 | `setLedgerCollaborator`         | `collaborator`, optional `permission` (read, write, or admin; omitted uses the repository default), `dry_run`; grants or changes access. A preview returns the would-be grant, current→requested. Commits echo `dry_run: false`.                                                                                                                                                                                          | Admin      |
@@ -811,7 +811,9 @@ After linking:
    bank transactions into staging.
 3. Read `bank-transactions/unsynced` or call `listStagedBankTransactions`
    (optionally with an account's `id` as `accountId` to select one bank
-   account). Select the
+   account, and a `limit` of at most 100 to read a large staging area in
+   pages; imported and discarded rows leave the list, so read page 1 again
+   after each import rather than the next page). Select the
    transactions and accounts to
    book; the suggestion resources can help categorize them.
 4. Call `importStagedBankTransactions` with
@@ -1101,7 +1103,7 @@ lists the accounting and bank suffixes; replace the braces with your ledger and 
 | Analysis without required arguments (10) | `overview`, `documents`, `trial-balance`, `holdings`, `capital-gains`, `interval-totals`, `account-last-entries`, `entries-count`, `postings-per-account`, `account-directives` |
 | Analysis with required arguments (6)     | `account-report/{accountName}`, `register/{account}`, `payee-transactions/{payee}`, `narration-transactions{?narration}`, `payee-accounts/{payee}`, `entry-context/{entryHash}` |
 | Bank connections and accounts (4)        | `banks`, `banks/{itemId}`, `banks/{itemId}/accounts`, `bank-accounts`                                                                                                           |
-| Bank staging and suggestions (3)         | `bank-transactions/unsynced{?accountId}`, `bank-transactions/suggested-categories{?accountId}`, `banks/{itemId}/suggested-mapping`                                              |
+| Bank staging and suggestions (3)         | `bank-transactions/unsynced{?accountId,page,limit}`, `bank-transactions/suggested-categories{?accountId}`, `banks/{itemId}/suggested-mapping`                                              |
 | File contents (1)                        | `files/{+path}`                                                                                                                                                                 |
 
 The file template uses reserved expansion, `{+path}`, so nested paths work:
@@ -1662,11 +1664,15 @@ and the next page is empty.
 | plaintext journal                             | `offset`/`limit` | exact (`truncated`)       |
 | feed                                          | `offset`/`limit` | exact (`total`)           |
 | `listLedgers`, owned and searched ledgers     | `page`/`limit`   | "the page came back full" |
+| staged bank transactions                      | `page`/`limit`   | "the page came back full" |
 | commits, collaborators, public keys           | `page`/`limit`   | "the page came back full" |
 | followers, following, starred ledgers         | `page`/`limit`   | "the page came back full" |
 
-`listLedgers` called with neither `page` nor `limit` returns every ledger and
-reports `hasMore: false`. The three ledger lists called with a `page` past the
+`listLedgers` and `listStagedBankTransactions` called with neither `page` nor
+`limit` return every row and report `hasMore: false`; the dashboard's Bank
+Sync table reads the staging area that way. Importing or discarding staged
+rows removes them from the list, so an agent that acts on one page reads
+page 1 again rather than the next page. The three ledger lists called with a `page` past the
 first but no `limit` carry no signal: send a `limit`. Public keys exist on
 REST and GraphQL only. Followers, following and starred lists keep their
 `total`, which counts only the entries returned in that page.

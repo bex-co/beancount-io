@@ -970,7 +970,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     inputSchema: listStagedBankTransactionsInput.extend({
       ledger: ledgerSelection,
     }),
-    outputSchema: mcpOutputSchema(listStagedBankTransactionsOutput),
+    outputSchema: mcpOutputSchema(listStagedBankTransactionsOutput).extend({
+      page: pageInfoSchema.optional(),
+    }),
     execute: withLedger(executeListStagedBankTransactions),
   },
   {

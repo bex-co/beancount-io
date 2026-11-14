@@ -145,7 +145,7 @@ describe("bank import on MCP", () => {
       "banks/{itemId}",
       "banks/{itemId}/accounts",
       "bank-accounts",
-      "bank-transactions/unsynced{?accountId}",
+      "bank-transactions/unsynced{?accountId,page,limit}",
       "bank-transactions/suggested-categories{?accountId}",
       "banks/{itemId}/suggested-mapping",
     ]) {

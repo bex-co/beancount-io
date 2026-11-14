@@ -15,11 +15,17 @@ def _get_kwargs(
     name: str,
     *,
     account_id: str | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
     params["accountId"] = account_id
+
+    params["page"] = page
+
+    params["limit"] = limit
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -106,6 +112,8 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     account_id: str | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """List transactions not yet in the ledger
 
@@ -116,6 +124,8 @@ def sync_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account_id (str | Unset): Restrict to one bank account, by its `id` (pacc_…), not its
             Plaid `accountId`
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -129,6 +139,8 @@ def sync_detailed(
         owner=owner,
         name=name,
         account_id=account_id,
+        page=page,
+        limit=limit,
     )
 
     response = client.get_httpx_client().request(
@@ -144,6 +156,8 @@ def sync(
     *,
     client: AuthenticatedClient,
     account_id: str | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Any | V1Error | None:
     """List transactions not yet in the ledger
 
@@ -154,6 +168,8 @@ def sync(
         name (str): Ledger (repository) name Example: main-ledger.
         account_id (str | Unset): Restrict to one bank account, by its `id` (pacc_…), not its
             Plaid `accountId`
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -168,6 +184,8 @@ def sync(
         name=name,
         client=client,
         account_id=account_id,
+        page=page,
+        limit=limit,
     ).parsed
 
 
@@ -177,6 +195,8 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     account_id: str | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """List transactions not yet in the ledger
 
@@ -187,6 +207,8 @@ async def asyncio_detailed(
         name (str): Ledger (repository) name Example: main-ledger.
         account_id (str | Unset): Restrict to one bank account, by its `id` (pacc_…), not its
             Plaid `accountId`
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -200,6 +222,8 @@ async def asyncio_detailed(
         owner=owner,
         name=name,
         account_id=account_id,
+        page=page,
+        limit=limit,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -213,6 +237,8 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     account_id: str | Unset = UNSET,
+    page: int | Unset = UNSET,
+    limit: int | Unset = UNSET,
 ) -> Any | V1Error | None:
     """List transactions not yet in the ledger
 
@@ -223,6 +249,8 @@ async def asyncio(
         name (str): Ledger (repository) name Example: main-ledger.
         account_id (str | Unset): Restrict to one bank account, by its `id` (pacc_…), not its
             Plaid `accountId`
+        page (int | Unset): 1-based page number Example: 1.
+        limit (int | Unset): Page size, at most 100 Example: 20.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -238,5 +266,7 @@ async def asyncio(
             name=name,
             client=client,
             account_id=account_id,
+            page=page,
+            limit=limit,
         )
     ).parsed

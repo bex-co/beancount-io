@@ -84,19 +84,32 @@ export class PlaidQueryResolver {
   @Authenticated()
   @Query(() => [PlaidTransactionType], {
     description:
-      "Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted",
+      "Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted. Pass limit (at most 100) and page to read them in pages; omit limit for every row.",
   })
   async getUnsyncedPlaidTransactions(
     @Arg("ledgerId", () => String) ledgerId: string,
     @Arg("accountId", () => String, { nullable: true })
     accountId: string | undefined,
     @Ctx() ctx: IContext,
+    // Number, like the catalog lists: the service refuses a non-integer as
+    // BAD_USER_INPUT, the code REST and MCP give it (w23/m36).
+    @Arg("page", () => Number, {
+      nullable: true,
+      description: "1-based page number",
+    })
+    page?: number | null,
+    @Arg("limit", () => Number, {
+      nullable: true,
+      description: "Page size, at most 100; omit for every row",
+    })
+    limit?: number | null,
   ): Promise<PlaidTransactionType[]> {
     const identity = ctx.getCurrentIdentity();
     return this.plaidItemService.getUnsyncedTransactions(
       identity,
       accountId,
       ledgerId,
+      { page, limit },
     );
   }
 

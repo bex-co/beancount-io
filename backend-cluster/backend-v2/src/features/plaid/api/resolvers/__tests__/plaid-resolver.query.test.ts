@@ -223,8 +223,28 @@ describe("PlaidQueryResolver", () => {
         expect.objectContaining({ userId: "user_test" }),
         "pacc_1",
         "owner/ledger",
+        { page: undefined, limit: undefined },
       );
       expect(result).toBe(expected);
+    });
+
+    it("passes page and limit through to the service", async () => {
+      mockPlaidItemService.getUnsyncedTransactions.mockResolvedValue([]);
+
+      await resolver.getUnsyncedPlaidTransactions(
+        "owner/ledger",
+        undefined,
+        ctx,
+        2,
+        25,
+      );
+
+      expect(mockPlaidItemService.getUnsyncedTransactions).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: "user_test" }),
+        undefined,
+        "owner/ledger",
+        { page: 2, limit: 25 },
+      );
     });
 
     it("should delegate with accountId undefined for a ledger-wide fetch", async () => {
@@ -240,6 +260,7 @@ describe("PlaidQueryResolver", () => {
         expect.objectContaining({ userId: "user_test" }),
         undefined,
         "owner/ledger",
+        { page: undefined, limit: undefined },
       );
     });
   });

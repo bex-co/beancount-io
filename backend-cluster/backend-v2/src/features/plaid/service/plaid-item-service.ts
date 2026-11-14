@@ -1,4 +1,5 @@
 import { BANK_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
+import { assertPageArgs } from "@/shared/page-info";
 import { type DbExecutor } from "@/drizzle/drizzle";
 import { assertBankId, assertBankIds } from "../utils/assert-bank-id";
 import { type IModels } from "@/foundation/models";
@@ -121,6 +122,22 @@ export type PlaidUnlinkResult =
       }>;
     };
 
+/**
+ * A page of the staging area: `limit` rows starting at page `page` (1-based).
+ * Without `limit` every staged row comes back, which is what the dashboard's
+ * Bank Sync table reads, and `page` alone selects nothing.
+ */
+export interface StagedPage {
+  page?: number | null;
+  limit?: number | null;
+}
+
+function pageOf<T>(rows: T[], { page, limit }: StagedPage): T[] {
+  if (limit === undefined || limit === null) return rows;
+  const start = ((page ?? 1) - 1) * limit;
+  return rows.slice(start, start + limit);
+}
+
 export interface IPlaidItemService {
   getItems(identity: Identity, ledgerId: string): Promise<PlaidItemResult[]>;
   /**
@@ -147,6 +164,7 @@ export interface IPlaidItemService {
     identity: Identity,
     accountId: string | undefined,
     ledgerId: string,
+    paging?: StagedPage,
   ): Promise<PlaidTransactionResult[]>;
   suggestCategories(
     identity: Identity,
@@ -558,7 +576,9 @@ export class PlaidItemService implements IPlaidItemService {
     identity: Identity,
     accountId: string | undefined,
     ledgerId: string,
+    paging: StagedPage = {},
   ): Promise<PlaidTransactionResult[]> {
+    assertPageArgs(paging);
     const { transactions, accountsById } =
       await this.getUnsyncedTransactionsForScope(
         identity,
@@ -567,7 +587,7 @@ export class PlaidItemService implements IPlaidItemService {
         accountId,
       );
 
-    return transactions.map((tx) => {
+    return pageOf(transactions, paging).map((tx) => {
       const account = accountsById.get(tx.plaidAccountId);
       return {
         id: tx.id,

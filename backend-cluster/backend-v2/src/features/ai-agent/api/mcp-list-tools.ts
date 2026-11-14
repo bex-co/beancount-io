@@ -1,6 +1,6 @@
 import { INCLUDE_SOURCE_DESCRIPTION } from "@/features/ledger/utils/include-source-description";
 import { z } from "zod";
-import { bankAccountQuery } from "@/features/ledger/api/rest/v1/banks-handler";
+import { unsyncedTransactionsQuery } from "@/features/ledger/api/rest/v1/banks-handler";
 import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
 import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
 import { logger } from "@/shared/logger";
@@ -57,10 +57,10 @@ export async function executeListBankConnections(
 // --- listStagedBankTransactions ---------------------------------------------
 
 export const listStagedBankTransactionsDescription =
-  "List bank transactions staged for import. Each row's `transactionId` — not its `id` — is what importStagedBankTransactions and discardStagedBankTransactions take; optional accountId filter, an account's `id` (pacc_…) from listBankConnections.";
+  "List bank transactions staged for import, newest first. Each row's `transactionId` — not its `id` — is what importStagedBankTransactions and discardStagedBankTransactions take; optional accountId filter, an account's `id` (pacc_…) from listBankConnections. Pass `limit` (at most 100) to read a large staging area in pages; `page.hasMore` says whether more remain. Imported and discarded rows leave the list, so after acting on a page read page 1 again rather than the next page. Omit `limit` for every staged row.";
 
-// bankAccountQuery is strict at the base since w23/112; no re-strict needed.
-export const listStagedBankTransactionsInput = bankAccountQuery;
+// Strict at the base (w23/112), with the shared page and limit.
+export const listStagedBankTransactionsInput = unsyncedTransactionsQuery;
 
 export const listStagedBankTransactionsOutput = toolOutputSchema(
   z.array(z.unknown()),
@@ -71,14 +71,23 @@ export async function executeListStagedBankTransactions(
   input: z.infer<typeof listStagedBankTransactionsInput>,
 ) {
   const { services, identity, ledgerId } = ctx;
-  const { accountId } = listStagedBankTransactionsInput.parse(input);
+  const { accountId, page, limit } =
+    listStagedBankTransactionsInput.parse(input);
   return runToolSafely({
     logger: toolLogger,
     message: "Listing staged bank transactions failed",
     context: { tool: "listStagedBankTransactions" },
     // The `bankUnsyncedTransactions` resource's call, with its account filter.
     execute: () =>
-      services.plaidItem.getUnsyncedTransactions(identity, accountId, ledgerId),
+      services.plaidItem.getUnsyncedTransactions(
+        identity,
+        accountId,
+        ledgerId,
+        {
+          page,
+          limit,
+        },
+      ),
   });
 }
 

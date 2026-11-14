@@ -7,6 +7,7 @@ import { z } from "@/shared/zod-openapi-setup";
 
 import { MCP_RESOURCES } from "@/features/ai-agent/api/mcp-resources";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
+import { BANK_ROUTES } from "@/features/ledger/api/rest/v1/banks-handler";
 import { COLLABORATOR_ROUTES } from "@/features/ledger/api/rest/v1/collaborators-handler";
 import { LEDGER_ROUTES } from "@/features/ledger/api/rest/v1/ledgers-handler";
 import { PUBLIC_KEY_ROUTES } from "@/features/ledger/api/rest/v1/public-keys-handler";
@@ -44,6 +45,7 @@ describe("every paginated read carries the signal", () => {
     ...SOCIAL_V1_ROUTES,
     ...COLLABORATOR_ROUTES,
     ...PUBLIC_KEY_ROUTES,
+    ...BANK_ROUTES,
   ] as readonly {
     path: string;
     query?: unknown;

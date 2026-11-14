@@ -3,7 +3,10 @@ import { feedQuery } from "@/features/gitea/feed/api/feed-route";
 import { suggestCategoriesQuery } from "@/features/llm/api/suggest-categories-route";
 import { tempAssetDownloadQuery } from "@/features/s3/api/temp-asset-routes";
 import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
-import { bankAccountQuery } from "@/features/ledger/api/rest/v1/banks-handler";
+import {
+  bankAccountQuery,
+  unsyncedTransactionsQuery,
+} from "@/features/ledger/api/rest/v1/banks-handler";
 import { publicProfileQuery } from "@/features/gitea/user-profile/api/public-profile-route";
 import {
   SOCIAL_READS,
@@ -356,15 +359,20 @@ const bankResources: readonly McpResourceDescriptor[] = [
       "Transactions pulled from a bank that have not been written into the ledger — what `importStagedBankTransactions` writes.",
     mimeType: "application/json",
     uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/bank-transactions/unsynced`,
-    queryNames: Object.keys(bankAccountQuery.shape),
-    read: async (ctx, { owner, name, ...query }) =>
-      JSON.stringify(
+    queryNames: Object.keys(unsyncedTransactionsQuery.shape),
+    read: async (ctx, { owner, name, ...query }) => {
+      const parsed = unsyncedTransactionsQuery.parse(query);
+      return pagedResourceContent(
+        "bankUnsyncedTransactions",
+        parsed,
         await ctx.services.plaidItem.getUnsyncedTransactions(
           ctx.identity,
-          bankAccountQuery.parse(query).accountId,
+          parsed.accountId,
           resolveLedgerId(ctx, { owner, name }),
+          { page: parsed.page, limit: parsed.limit },
         ),
-      ),
+      );
+    },
   },
   {
     name: "bankSuggestedCategories",
