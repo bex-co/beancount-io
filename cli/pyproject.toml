@@ -93,6 +93,14 @@ dev = [
     "pytest-xdist>=3.6",
 ]
 
+[tool.uv]
+# Build dev and test venvs on uv's standalone CPython, never a system one.
+# Tests deliberately segfault the engine (upstream Beancount crashes on `100/0`);
+# on macOS a framework build such as Homebrew's runs as Python.app, so every
+# such crash pops a "Python quit unexpectedly" dialog. Explicit interpreter
+# paths are still honored, so the Homebrew formula's python@3.12 is unaffected.
+python-preference = "only-managed"
+
 [tool.ruff]
 target-version = "py312"
 line-length = 120

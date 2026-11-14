@@ -24,6 +24,20 @@ from cli import context
 CLI_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _uv_python_install_dir() -> str | None:
+    """Where uv keeps its standalone CPythons, resolved before any test moves `XDG_DATA_HOME`."""
+    if configured := os.environ.get("UV_PYTHON_INSTALL_DIR"):
+        return configured
+    try:
+        found = subprocess.run(["uv", "python", "dir"], capture_output=True, text=True, check=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return found.stdout.strip() or None
+
+
+UV_PYTHON_INSTALL_DIR = _uv_python_install_dir()
+
+
 @pytest.fixture
 def tmp_path(tmp_path: Path) -> Path:
     """Keep the four-level ledger-root search inside this test's own workspace.
@@ -112,6 +126,12 @@ def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[
     # nothing installed there, `cli.engine.launch` falls through to running the
     # helper out of this checkout instead of provisioning one.
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdg-data"))
+    # uv looks for its standalone CPythons under `XDG_DATA_HOME` too. Keep it on
+    # the real ones: with `python-preference = "only-managed"` (pyproject.toml), a
+    # nested `uv run --project` would otherwise see the checkout's venv as foreign
+    # and rebuild it in the middle of the suite.
+    if UV_PYTHON_INSTALL_DIR:
+        monkeypatch.setenv("UV_PYTHON_INSTALL_DIR", UV_PYTHON_INSTALL_DIR)
     for name in ("BEA_FILE", "BEA_TOKEN", "CI", "BEA_ENGINE_PYTHON", "BEA_ENGINE_DIR"):
         monkeypatch.delenv(name, raising=False)
     # No test may reach the real index. The notifier is off by default and its
