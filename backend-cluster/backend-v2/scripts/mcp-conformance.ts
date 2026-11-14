@@ -1028,6 +1028,109 @@ function parseArgs(argv: string[]): Options {
 
 const MARK: Record<Outcome, string> = { pass: "PASS", fail: "FAIL", skip: "SKIP" };
 
+// --- which build is this? --------------------------------------------------
+
+/**
+ * What a deployment says about the commit it runs, from the two places that can.
+ * Neither is a conformance check: the run only observes, and a deployment that
+ * was given no commit is not a failing one.
+ */
+export interface RevisionSources {
+  /**
+   * `revision` from `/.well-known/mcp.json`: a commit, `unknown`, or
+   * `undefined` when the document is unreachable or has no such field (a
+   * deployment that predates it).
+   */
+  readonly manifest: string | undefined;
+  /**
+   * The `+<build>` suffix of the `initialize` answer's `serverInfo.version`:
+   * the build, `""` when the version carries none, `undefined` when it was not
+   * asked (the call needs a credential) or did not answer.
+   */
+  readonly initialize: string | undefined;
+}
+
+const isCommit = (value: string | undefined): value is string =>
+  value !== undefined && /^[0-9a-f]{7,40}$/.test(value);
+
+/** The line or lines this run prints about the build it reached. */
+export function describeRevision({ manifest, initialize }: RevisionSources): string[] {
+  const knownManifest = isCommit(manifest);
+  const handshakeSaysBuild = initialize !== undefined && initialize !== "";
+
+  if (knownManifest) {
+    if (initialize === undefined) {
+      return [
+        `revision: ${manifest} (from /.well-known/mcp.json; initialize needs a credential, so it was not asked)`,
+      ];
+    }
+    if (initialize !== "" && manifest.startsWith(initialize)) {
+      return [`revision: ${manifest} (/.well-known/mcp.json and initialize agree)`];
+    }
+    return [
+      `revision: ${manifest} (from /.well-known/mcp.json)`,
+      `WARNING: initialize reports ${
+        handshakeSaysBuild ? `+${initialize}` : "no build"
+      }, which is not that commit. The two disagree: a cache or a proxy in front may be serving an older build.`,
+    ];
+  }
+
+  if (manifest === "unknown") {
+    return [
+      "revision: unknown (the deployment was given no commit; docs/mcp.md says how to supply one)",
+      ...(handshakeSaysBuild
+        ? [
+            `WARNING: initialize reports +${initialize}, but /.well-known/mcp.json says unknown. The two disagree.`,
+          ]
+        : []),
+    ];
+  }
+
+  // No usable value in the manifest: it is unreachable, or predates the field.
+  if (handshakeSaysBuild) {
+    return [
+      `revision: +${initialize} (from initialize only; /.well-known/mcp.json reported none)`,
+    ];
+  }
+  return [
+    "revision: not reported (/.well-known/mcp.json has no revision: an older deployment, or the document is unreachable)",
+  ];
+}
+
+/** Reads the two places a deployment can name its commit. Never throws. */
+export async function observeRevision(o: Options): Promise<RevisionSources> {
+  let manifest: string | undefined;
+  const manifestResponse = await probe(`${o.baseUrl}/.well-known/mcp.json`);
+  if (manifestResponse.ok && manifestResponse.status === 200) {
+    try {
+      const revision = (JSON.parse(manifestResponse.body) as { revision?: unknown })
+        .revision;
+      if (typeof revision === "string") manifest = revision;
+    } catch {
+      // Not JSON: nothing to report, and not this script's business to judge.
+    }
+  }
+
+  let initialize: string | undefined;
+  if (o.token) {
+    const answer = await probe(`${o.baseUrl}${MCP_PATH}`, {
+      method: "POST",
+      headers: jsonRpcHeaders(o.token),
+      body: INITIALIZE,
+    });
+    if (answer.ok && answer.status === 200) {
+      const result = parseRpc(answer.body)?.result as
+        | { serverInfo?: { version?: unknown } }
+        | undefined;
+      const version = result?.serverInfo?.version;
+      if (typeof version === "string") {
+        initialize = version.includes("+") ? version.slice(version.indexOf("+") + 1) : "";
+      }
+    }
+  }
+  return { manifest, initialize };
+}
+
 /**
  * The checklist, in order. Exported so tests can drive an individual check
  * against a server they stand up themselves — the pass paths for checks 3–5
@@ -1059,7 +1162,11 @@ export type { CheckResult, Options, Outcome };
 
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
-  console.log(`MCP conformance — ${options.baseUrl}\n`);
+  console.log(`MCP conformance — ${options.baseUrl}`);
+  // Which build the checks below ran against: an evaluation record needs it, and
+  // it is read-only, so it never changes the verdict.
+  for (const line of describeRevision(await observeRevision(options))) console.log(line);
+  console.log("");
 
   const results: CheckResult[] = [];
   // Sequential on purpose: several checks re-probe the endpoint, and a readable

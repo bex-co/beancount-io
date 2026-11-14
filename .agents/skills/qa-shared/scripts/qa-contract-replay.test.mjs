@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { format, nested, RULES, textCarries } from "./qa-contract-replay.mjs";
+import { format, nested, RULES, revisionLine, textCarries } from "./qa-contract-replay.mjs";
 
 const script = fileURLToPath(new URL("./qa-contract-replay.mjs", import.meta.url));
 const token = "bcio_synthetic_replay_test_value_0123456789";
@@ -21,7 +21,7 @@ function depthOf(value) {
 }
 
 /** A server that keeps the contract (`strict`) or accepts everything (`lax`). */
-function fakeDeployment(mode) {
+function fakeDeployment(mode, version = "9.9.9") {
   // "shared" keeps every other contract but charges previews to the write bucket (60/min).
   // "summary" keeps every other contract but cuts each text block to its lead line.
   const strict = mode === "strict" || mode === "shared" || mode === "summary";
@@ -51,7 +51,7 @@ function fakeDeployment(mode) {
         response.writeHead(200, { "content-type": "text/event-stream" });
         response.end(`data: ${JSON.stringify({ jsonrpc: "2.0", id: message.id, result })}\n\n`);
       };
-      if (message.method === "initialize") return sse({ serverInfo: { name: "fake", version: "9.9.9" } });
+      if (message.method === "initialize") return sse({ serverInfo: { name: "fake", version } });
       if (message.method === "tools/list")
         return sse({ tools: [{ name: "addLedgerEntries", outputSchema: { valid: true } }] });
       const { name, arguments: args } = message.params;
@@ -107,8 +107,8 @@ function fakeDeployment(mode) {
   return { server, seen };
 }
 
-async function replay(mode, { env = { QA_MCP_TOKEN: token }, extra = [] } = {}) {
-  const { server, seen } = fakeDeployment(mode);
+async function replay(mode, { env = { QA_MCP_TOKEN: token }, extra = [], version } = {}) {
+  const { server, seen } = fakeDeployment(mode, version);
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   const { port } = server.address();
@@ -142,6 +142,37 @@ test("a deployment that keeps the contract passes every probe on all three surfa
   assert.match(stdout, /\| array \| ok \| ok \| — \|/);
   assert.match(stdout, /0 mismatch/);
   assert.ok(seen.every((s) => s.auth === `Bearer ${token}`));
+});
+
+test("the record carries a revision line beside the server line", async () => {
+  const known = await replay("strict", { version: "1.0.0+2144cdb" });
+  assert.equal(known.code, 0, known.stdout + known.stderr);
+  assert.match(known.stdout, /server: fake 1\.0\.0\+2144cdb\nrevision: 2144cdb \(from serverInfo\.version\)\n/);
+
+  const unnamed = await replay("strict");
+  assert.equal(unnamed.code, 0, unnamed.stdout + unnamed.stderr);
+  assert.match(unnamed.stdout, /server: fake 9\.9\.9\nrevision: unknown \(serverInfo\.version names no build/);
+});
+
+test("revisionLine: a build is a 7 to 40 character hex suffix after the plus, anything else is unknown", () => {
+  const full = "2144cdbb2e6f0a1b3c4d5e6f708192a3b4c5d6e7";
+  assert.equal(revisionLine({ version: "1.0.0+2144cdb" }), "revision: 2144cdb (from serverInfo.version)");
+  assert.equal(revisionLine({ version: `1.0.0+${full}` }), `revision: ${full} (from serverInfo.version)`);
+  for (const version of [
+    "1.0.0",
+    "1.0.0+",
+    "1.0.0+abcdef", // six characters
+    `1.0.0+${full}0`, // forty-one
+    "1.0.0+main",
+    "1.0.0+2144CDB", // not lower case: the server never sends it
+    "1.0.0+unknown",
+    undefined,
+    null,
+    42,
+  ]) {
+    assert.match(revisionLine({ version }), /^revision: unknown \(serverInfo\.version names no build/, String(version));
+  }
+  assert.match(revisionLine(undefined), /^revision: unknown/);
 });
 
 test("every tool result's text block is checked against its structuredContent", async () => {

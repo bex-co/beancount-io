@@ -23,7 +23,13 @@ import { corsMiddleware } from "@/server/middleware/cors-middleware";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CHECKS, readOnlyTokenHint, resolveTokens } from "../mcp-conformance";
+import {
+  CHECKS,
+  describeRevision,
+  observeRevision,
+  readOnlyTokenHint,
+  resolveTokens,
+} from "../mcp-conformance";
 
 const [
   checkUnauthenticated,
@@ -619,5 +625,213 @@ describe("readOnlyTokenHint", () => {
 
   it("is silent without a .env file", () => {
     expect(readOnlyTokenHint({}, {}, envFile)).toBeUndefined();
+  });
+});
+
+describe("which build is this? (w22/m11)", () => {
+  const SHA = "2144cdbb2e6f0a1b3c4d5e6f708192a3b4c5d6e7";
+
+  describe("describeRevision", () => {
+    it("names the commit and says the two sources agree", () => {
+      expect(
+        describeRevision({ manifest: SHA, initialize: "2144cdb" }),
+      ).toEqual([
+        `revision: ${SHA} (/.well-known/mcp.json and initialize agree)`,
+      ]);
+    });
+
+    it("says initialize was not asked when there is no credential", () => {
+      const lines = describeRevision({ manifest: SHA, initialize: undefined });
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toContain(`revision: ${SHA}`);
+      expect(lines[0]).toContain("needs a credential");
+    });
+
+    it("flags a handshake that names another build", () => {
+      const lines = describeRevision({ manifest: SHA, initialize: "57d7aaa" });
+
+      expect(lines[0]).toBe(`revision: ${SHA} (from /.well-known/mcp.json)`);
+      expect(lines[1]).toMatch(/^WARNING: initialize reports \+57d7aaa/);
+      expect(lines[1]).toContain("disagree");
+    });
+
+    it("flags a handshake that names no build when the manifest names one", () => {
+      const lines = describeRevision({ manifest: SHA, initialize: "" });
+
+      expect(lines[1]).toMatch(/^WARNING: initialize reports no build/);
+    });
+
+    it("prints unknown without a warning when both sources say so", () => {
+      for (const initialize of [undefined, ""]) {
+        const lines = describeRevision({ manifest: "unknown", initialize });
+        expect(lines).toHaveLength(1);
+        expect(lines[0]).toMatch(/^revision: unknown/);
+        expect(lines[0]).not.toMatch(/WARNING/);
+      }
+    });
+
+    it("flags a handshake that names a build when the manifest says unknown", () => {
+      const lines = describeRevision({ manifest: "unknown", initialize: "2144cdb" });
+
+      expect(lines[0]).toMatch(/^revision: unknown/);
+      expect(lines[1]).toMatch(/^WARNING: initialize reports \+2144cdb/);
+    });
+
+    it("falls back to the handshake when the manifest has no usable revision", () => {
+      for (const manifest of [undefined, "main", ""]) {
+        expect(describeRevision({ manifest, initialize: "2144cdb" })).toEqual([
+          "revision: +2144cdb (from initialize only; /.well-known/mcp.json reported none)",
+        ]);
+      }
+    });
+
+    it("says not reported when neither source names a build", () => {
+      const lines = describeRevision({ manifest: undefined, initialize: undefined });
+
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toMatch(/^revision: not reported/);
+    });
+  });
+
+  describe("observeRevision", () => {
+    interface Seen {
+      path: string;
+      method: string;
+      authorization: string | undefined;
+    }
+
+    /** A deployment that answers the two requests as told. */
+    async function deployment(answers: {
+      manifest: { status: number; body: string };
+      initialize?: { status: number; body: string; contentType?: string };
+    }) {
+      const seen: Seen[] = [];
+      const fake = http.createServer((req, res) => {
+        seen.push({
+          path: req.url ?? "",
+          method: req.method ?? "",
+          authorization: req.headers.authorization,
+        });
+        const answer =
+          req.url === "/.well-known/mcp.json" ? answers.manifest : answers.initialize;
+        res.statusCode = answer?.status ?? 404;
+        const contentType =
+          req.url === "/.well-known/mcp.json"
+            ? "application/json"
+            : (answers.initialize?.contentType ?? "text/event-stream");
+        res.setHeader("content-type", contentType);
+        res.end(answer?.body ?? "");
+        req.resume();
+      });
+      await new Promise<void>((resolve) => fake.listen(0, "127.0.0.1", resolve));
+      const address = fake.address();
+      if (!address || typeof address === "string") throw new Error("no address");
+      return {
+        baseUrl: `http://127.0.0.1:${address.port}`,
+        seen,
+        close: () => new Promise<void>((resolve) => fake.close(() => resolve())),
+      };
+    }
+
+    const sse = (version: string) =>
+      `event: message\ndata: ${JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        result: { serverInfo: { name: "beancount-mcp", version } },
+      })}\n\n`;
+
+    const manifestWith = (revision: unknown) =>
+      JSON.stringify({ name: "beancount", version: "1.0.0", revision });
+
+    it("reads only the public manifest when there is no credential", async () => {
+      const d = await deployment({
+        manifest: { status: 200, body: manifestWith(SHA) },
+      });
+      try {
+        const sources = await observeRevision({ baseUrl: d.baseUrl });
+
+        expect(sources).toEqual({ manifest: SHA, initialize: undefined });
+        expect(d.seen.map((r) => r.path)).toEqual(["/.well-known/mcp.json"]);
+      } finally {
+        await d.close();
+      }
+    });
+
+    it("asks initialize with the credential and reads the build suffix", async () => {
+      const d = await deployment({
+        manifest: { status: 200, body: manifestWith(SHA) },
+        initialize: { status: 200, body: sse("1.0.0+2144cdb") },
+      });
+      try {
+        const sources = await observeRevision({ baseUrl: d.baseUrl, token: "bcio_test" });
+
+        expect(sources).toEqual({ manifest: SHA, initialize: "2144cdb" });
+        const handshake = d.seen.find((r) => r.path === "/api-gateway/mcp");
+        expect(handshake).toMatchObject({
+          method: "POST",
+          authorization: "Bearer bcio_test",
+        });
+      } finally {
+        await d.close();
+      }
+    });
+
+    it("reads a plain JSON initialize answer, and a version with no build as an empty suffix", async () => {
+      const d = await deployment({
+        manifest: { status: 200, body: manifestWith("unknown") },
+        initialize: {
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            result: { serverInfo: { version: "1.0.0" } },
+          }),
+        },
+      });
+      try {
+        expect(await observeRevision({ baseUrl: d.baseUrl, token: "t" })).toEqual({
+          manifest: "unknown",
+          initialize: "",
+        });
+      } finally {
+        await d.close();
+      }
+    });
+
+    it.each([
+      ["a missing manifest", { status: 404, body: "not found" }],
+      ["a manifest that is not JSON", { status: 200, body: "<html>" }],
+      ["a manifest with no revision field", { status: 200, body: JSON.stringify({ version: "1.0.0" }) }],
+      ["a revision that is not a string", { status: 200, body: manifestWith(42) }],
+    ])("reports no manifest revision for %s", async (_label, manifest) => {
+      const d = await deployment({ manifest });
+      try {
+        expect((await observeRevision({ baseUrl: d.baseUrl })).manifest).toBeUndefined();
+      } finally {
+        await d.close();
+      }
+    });
+
+    it("reports no handshake build when initialize refuses the credential", async () => {
+      const d = await deployment({
+        manifest: { status: 200, body: manifestWith(SHA) },
+        initialize: { status: 401, body: "{}" },
+      });
+      try {
+        expect(
+          (await observeRevision({ baseUrl: d.baseUrl, token: "bad" })).initialize,
+        ).toBeUndefined();
+      } finally {
+        await d.close();
+      }
+    });
+
+    it("never throws when nothing is listening", async () => {
+      // Port 1 is reserved; connecting is refused at once.
+      await expect(
+        observeRevision({ baseUrl: "http://127.0.0.1:1", token: "t" }),
+      ).resolves.toEqual({ manifest: undefined, initialize: undefined });
+    });
   });
 });

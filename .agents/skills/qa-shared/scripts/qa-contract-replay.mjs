@@ -140,6 +140,23 @@ export const BUCKET_PREVIEWS = 70;
 /** One more than the longest string any non-file argument may carry. */
 export const LONG_STRING = "x".repeat(1048577);
 
+/**
+ * The build the endpoint named in its `initialize` answer, as one line for the
+ * record. A deployment that knows its commit appends it to `serverInfo.version`
+ * as semver build metadata (`1.0.0+2144cdb`); one that was given none, or that
+ * predates the field, shows no build and reads as `unknown`. `.pm/DO_NOT_DO.md`
+ * asks real-client evaluation to record the deployed revision it observed, and
+ * this is the line to copy.
+ */
+export function revisionLine(serverInfo) {
+  const version = String(serverInfo?.version ?? "");
+  const plus = version.indexOf("+");
+  const build = plus === -1 ? "" : version.slice(plus + 1);
+  return /^[0-9a-f]{7,40}$/.test(build)
+    ? `revision: ${build} (from serverInfo.version)`
+    : "revision: unknown (serverInfo.version names no build: the deployment was given no commit, or predates the field)";
+}
+
 export function format(results) {
   const surfaces = ["MCP", "REST", "GraphQL"];
   const rows = Object.keys(RULES).map((key) => {
@@ -382,6 +399,7 @@ async function main() {
 
   console.log(`deployment: ${base.origin}`);
   console.log(`server: ${serverInfo.name} ${serverInfo.version}`);
+  console.log(revisionLine(serverInfo));
   console.log(`fingerprint: ${JSON.stringify(fingerprint)}`);
   console.log(`ledger: ${ledger}`);
   console.log(`${format(results)}\n`);
