@@ -48,6 +48,26 @@ export function resolveFlagAlias(
  * single `dryRun`, the alias key dropped (w23/m13/t007). REST and MCP
  * handlers pass their whole body; both spellings keep working alike.
  */
+/**
+ * A write's two flags, each read under either spelling: `dryRun` and
+ * `allowInvalid` as REST and GraphQL spell them, `dry_run` and
+ * `allow_invalid` as MCP does (w1/m43).
+ */
+export function writeFlagsInput(body: {
+  dry_run?: boolean | null;
+  dryRun?: boolean | null;
+  allow_invalid?: boolean | null;
+  allowInvalid?: boolean | null;
+}): { dryRun: boolean; allowInvalid: boolean } {
+  return {
+    ...previewFlagInput(body),
+    allowInvalid: resolveFlagAlias(
+      { primary: body.allow_invalid, legacy: body.allowInvalid },
+      ALLOW_INVALID_NAMES,
+    ),
+  };
+}
+
 export function previewFlagInput(body: {
   dry_run?: boolean | null;
   dryRun?: boolean | null;

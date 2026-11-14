@@ -1,18 +1,12 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
-import {
-  ALLOW_INVALID_NAMES,
-  DRY_RUN_NAMES,
-  resolveFlagAlias,
-} from "@/features/ledger/utils/flag-alias";
+import { writeFlagsInput } from "@/features/ledger/utils/flag-alias";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 import { flattenValidation } from "@/features/ledger/utils/bean-check-errors";
 import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
-import { RENAME_ACCOUNT_DESCRIPTION } from "@/features/ledger/workflow/account-rename-workflow";
+import { RENAME_ACCOUNT_DESCRIPTION } from "@/features/ledger/utils/account-rename";
 import { ledgerPathSchema, ledgerIdOf, writeVerdictShape } from "./schemas";
-
-export { RENAME_ACCOUNT_DESCRIPTION };
 
 export const renameAccountInput = z
   .object({
@@ -88,7 +82,7 @@ export const renameAccountRoute = v1Route({
   method: "post",
   path: "/api-gateway/v1/ledgers/{owner}/{name}/rename-account",
   summary: "Rename an account",
-  description: `${RENAME_ACCOUNT_DESCRIPTION} dryRun previews without committing: the changed lines and bank mappings.`,
+  description: `${RENAME_ACCOUNT_DESCRIPTION} dryRun previews without committing: the changed lines and bank mappings. POST …/revert-commit undoes the commit.`,
   params: ledgerPathSchema,
   query: z.object({}).strict(),
   body: renameAccountInput,
@@ -98,18 +92,7 @@ export const renameAccountRoute = v1Route({
       .renameAccount({
         identity,
         ledgerId: ledgerIdOf(params),
-        input: {
-          from: body.from,
-          to: body.to,
-          dryRun: resolveFlagAlias(
-            { primary: body.dry_run, legacy: body.dryRun },
-            DRY_RUN_NAMES,
-          ),
-          allowInvalid: resolveFlagAlias(
-            { primary: body.allow_invalid, legacy: body.allowInvalid },
-            ALLOW_INVALID_NAMES,
-          ),
-        },
+        input: { from: body.from, to: body.to, ...writeFlagsInput(body) },
       })
       .then(({ validation, ...result }) => ({
         ...result,

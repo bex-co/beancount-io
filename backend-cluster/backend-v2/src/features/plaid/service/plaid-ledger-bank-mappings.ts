@@ -5,9 +5,9 @@ import type { Identity } from "@/server/api/identity";
 import { parseLedgerId } from "@/shared/str";
 import type { IModels } from "@/foundation/models/types";
 import type {
+  ILedgerBankMappings,
   LedgerBankMapping,
-  LedgerBankMappings,
-} from "@/features/ledger/workflow/account-rename-workflow";
+} from "@/features/ledger/workflow/account-rename-workflow.types";
 
 /**
  * The bank-account mappings of one ledger, every member's (w1/m43/t003).
@@ -17,7 +17,7 @@ import type {
  * an account that no longer exists. The caller sees their own mappings by
  * name; another member's only as a mapping, never by its bank account name.
  */
-export class PlaidLedgerBankMappings implements LedgerBankMappings {
+export class PlaidLedgerBankMappings implements ILedgerBankMappings {
   constructor(
     private readonly favaClientFactory: IFavaClientFactory,
     private readonly models: Pick<IModels, "plaidItem" | "plaidAccount">,
@@ -46,13 +46,13 @@ export class PlaidLedgerBankMappings implements LedgerBankMappings {
     );
     const mappings: LedgerBankMapping[] = [];
     for (const item of items) {
+      const own = item.userId === identity.userId;
       const accounts = await this.models.plaidAccount.getByItemId(
         this.db,
         item.id,
       );
       for (const account of accounts) {
         if (!account.ledgerAccount) continue;
-        const own = item.userId === identity.userId;
         mappings.push({
           id: account.id,
           plaidItemId: item.id,
@@ -66,9 +66,7 @@ export class PlaidLedgerBankMappings implements LedgerBankMappings {
     return mappings;
   }
 
-  async remap(
-    changes: { id: string; plaidItemId: string; ledgerAccount: string }[],
-  ): Promise<void> {
+  async remap(changes: Omit<LedgerBankMapping, "name">[]): Promise<void> {
     await this.db.transaction(async (tx) => {
       for (const change of changes) {
         await this.models.plaidAccount.updateForItem(

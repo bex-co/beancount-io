@@ -385,7 +385,7 @@ describe("AccountRenameWorkflow (w1/m43)", () => {
         false,
       ]);
       expect(result.message).toMatch(
-        /; 2 bank mappings still name Assets:Bank:Checking: map them to Assets:Bank:Main with mapBankAccount$/,
+        /; 2 bank mappings still name Assets:Bank:Checking: map them to Assets:Bank:Main again$/,
       );
     });
 

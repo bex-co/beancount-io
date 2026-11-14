@@ -445,8 +445,10 @@ export class LedgerRepoService
     refuseDanglingDeletes(dangling);
   }
 
-  // Excluded from ILedgerRepoService: only composition injects this capability
-  // into the append workflow. Generated merges retain all other write guards.
+  // Excluded from ILedgerRepoService: only composition hands this capability
+  // to the internal writers (the append and account-rename workflows), through
+  // the service layer's typed `ledgerRepo`. Generated merges retain all other
+  // write guards; only the explicit-upload size and path checks are skipped.
   async changeGeneratedFiles(
     params: FileChangesParams,
   ): Promise<FileChangesResult> {

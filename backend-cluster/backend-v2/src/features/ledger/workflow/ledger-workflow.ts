@@ -110,10 +110,10 @@ import {
   type OperationClass,
 } from "@/server/api/identity";
 import type {
-  AccountRenameWorkflow,
+  IAccountRenameWorkflow,
   RenameAccountInput,
   RenameAccountResult,
-} from "@/features/ledger/workflow/account-rename-workflow";
+} from "@/features/ledger/workflow/account-rename-workflow.types";
 import {
   AUTHORIZATION_ACTIONS,
   anonymousPrincipal,
@@ -541,10 +541,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     >,
     /** The rename reads and commits through the repo service (w1/m43); a
      * composition without it has no rename. */
-    private readonly accountRename?: Pick<
-      AccountRenameWorkflow,
-      "renameAccount"
-    >,
+    private readonly accountRename?: IAccountRenameWorkflow,
   ) {}
 
   private async authorizeContent(

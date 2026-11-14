@@ -109,6 +109,8 @@ async function fixture(
       ledgerRepo as never,
       ledgerData as never,
       authorization as never,
+      // No bank connections on this ledger.
+      { list: async () => [], remap: async () => {} },
     ),
   );
   resolver = new LedgerMutationResolver(workflow);

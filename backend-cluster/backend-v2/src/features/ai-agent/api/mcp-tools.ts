@@ -5,6 +5,7 @@ import {
   ALLOW_INVALID_NAMES,
   DRY_RUN_NAMES,
   resolveFlagAlias,
+  writeFlagsInput,
 } from "@/features/ledger/utils/flag-alias";
 import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
@@ -20,10 +21,10 @@ import {
   renameFileResult,
 } from "@/features/ledger/api/rest/v1/rename-handler";
 import {
-  RENAME_ACCOUNT_DESCRIPTION,
   renameAccountInput,
   renameAccountResult,
 } from "@/features/ledger/api/rest/v1/rename-account-handler";
+import { RENAME_ACCOUNT_DESCRIPTION } from "@/features/ledger/utils/account-rename";
 import {
   revertCommitInput,
   revertCommitResult,
@@ -713,7 +714,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "renameAccount",
     title: "Rename Account",
     annotations: DESTRUCTIVE,
-    description: `${RENAME_ACCOUNT_DESCRIPTION} Pinned credentials can omit ledger. dry_run previews without committing: the changed lines and bank mappings.`,
+    description: `${RENAME_ACCOUNT_DESCRIPTION} Pinned credentials can omit ledger. dry_run previews without committing: the changed lines and bank mappings. revertCommit undoes the commit.`,
     inputSchema: renameAccountToolInput,
     outputSchema: mcpOutputSchema(
       toolOutputSchema(
@@ -726,32 +727,20 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     execute: async (context, input) => {
       const { ledger, ...args } = renameAccountToolInput.parse(input);
       const ledgerId = resolveMcpLedger(context, ledger);
-      const { validation, ...written } =
+      const { validation, dryRun, ...result } =
         await context.ledgerWorkflow.renameAccount({
           identity: context.identity,
           ledgerId,
-          input: {
-            from: args.from,
-            to: args.to,
-            dryRun: resolveFlagAlias(
-              { primary: args.dry_run, legacy: args.dryRun },
-              DRY_RUN_NAMES,
-            ),
-            allowInvalid: resolveFlagAlias(
-              { primary: args.allow_invalid, legacy: args.allowInvalid },
-              ALLOW_INVALID_NAMES,
-            ),
-          },
+          input: { from: args.from, to: args.to, ...writeFlagsInput(args) },
         });
-      // The workflow spells the echo dryRun; MCP publishes dry_run (w23/m7/t004).
-      const { dryRun, ...result } = written;
       return {
         ok: true,
         result: {
-          summary: summarizeWrite(written.message, validation),
+          summary: summarizeWrite(result.message, validation),
           ...result,
+          // The workflow spells the echo dryRun; MCP publishes dry_run (w23/m7/t004).
           dry_run: dryRun,
-          wrote: dryRun ? [] : written.files.map(({ path }) => ({ path })),
+          wrote: dryRun ? [] : result.files.map(({ path }) => ({ path })),
           entryHashes: [],
           validation,
         },

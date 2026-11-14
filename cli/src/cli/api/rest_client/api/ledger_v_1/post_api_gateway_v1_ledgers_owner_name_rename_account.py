@@ -123,8 +123,8 @@ def sync_detailed(
      Rename an account and every account under it across the ledger's loaded files in one commit: account
     tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an
     invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the
-    commit unless allowInvalid. revertCommit undoes the commit. dryRun previews without committing: the
-    changed lines and bank mappings.
+    commit unless allowInvalid. dryRun previews without committing: the changed lines and bank mappings.
+    POST …/revert-commit undoes the commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -164,8 +164,8 @@ def sync(
      Rename an account and every account under it across the ledger's loaded files in one commit: account
     tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an
     invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the
-    commit unless allowInvalid. revertCommit undoes the commit. dryRun previews without committing: the
-    changed lines and bank mappings.
+    commit unless allowInvalid. dryRun previews without committing: the changed lines and bank mappings.
+    POST …/revert-commit undoes the commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -200,8 +200,8 @@ async def asyncio_detailed(
      Rename an account and every account under it across the ledger's loaded files in one commit: account
     tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an
     invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the
-    commit unless allowInvalid. revertCommit undoes the commit. dryRun previews without committing: the
-    changed lines and bank mappings.
+    commit unless allowInvalid. dryRun previews without committing: the changed lines and bank mappings.
+    POST …/revert-commit undoes the commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -239,8 +239,8 @@ async def asyncio(
      Rename an account and every account under it across the ledger's loaded files in one commit: account
     tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an
     invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the
-    commit unless allowInvalid. revertCommit undoes the commit. dryRun previews without committing: the
-    changed lines and bank mappings.
+    commit unless allowInvalid. dryRun previews without committing: the changed lines and bank mappings.
+    POST …/revert-commit undoes the commit.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
