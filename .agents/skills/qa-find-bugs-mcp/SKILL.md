@@ -117,7 +117,9 @@ It writes nothing. The
 last line must parse to `structuredContent`, and `runBqlQuery`'s text must be
 its table. Failures are listed under the table by tool name. A
 mismatch on a rule newer than the deployment is a deploy lag: check the commit
-that introduced the rule before filing it. It targets the hosted endpoint
+that introduced the rule before filing it, against the `revision:` line the replay
+prints (`git merge-base --is-ancestor <commit> <revision>` exits 0 when the
+deployment has it; `unknown` means it names no commit). It targets the hosted endpoint
 (`--base`); do not stand up a second stack for it.
 
 ## Sweep whole journeys

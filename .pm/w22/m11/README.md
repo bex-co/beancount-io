@@ -1,6 +1,6 @@
 # w22 · m11 — Every deployment says which commit it runs
 
-**Worker:** worker1 **Goal:** an agent or maintainer can tell in one call which build a deployment is running, so "is the fix live?" no longer means provoking an error **Status:** todo (t001, t002, t003, t004 done)
+**Worker:** worker1 **Goal:** an agent or maintainer can tell in one call which build a deployment is running, so "is the fix live?" no longer means provoking an error **Status:** todo (t001, t002, t003, t004, t005 done)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | Report it on `serverInfo.version` and in `/.well-known/mcp.json` — **DONE**               | 45m | t001       |
 | t003 | Wire it into the local builds and say why bex cannot use a build arg — **DONE**           | 30m | t001       |
 | t004 | `yarn mcp:conformance` and the QA contract replay print the revision — **DONE**           | 30m | t002       |
-| t005 | Document the fields and tell QA runs to record the revision                    | 20m | t004       |
+| t005 | Document the fields and tell QA runs to record the revision — **DONE**                    | 20m | t004       |
 | t006 | Adoption surface                                                               | 25m | t003, t005 |
 | t007 | Simplify                                                                       | 25m | t006       |
 | t008 | Test coverage                                                                  | 45m | t006       |

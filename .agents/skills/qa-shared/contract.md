@@ -19,6 +19,14 @@ use ledger contents and independent calculations as controls.
 - Read root and owning-package `AGENTS.md`, plus nested guidance for the code you
   investigate. Record branch, HEAD, initial dirty files, target server, client
   build, account role, and chosen ledger. A local client may use production APIs.
+- Record the revision the target server runs. For the hosted MCP endpoint,
+  `yarn mcp:conformance <url>` (from `backend-cluster/backend-v2/`) and the
+  contract replay each print a `revision:` line; for another client, read
+  `revision` from the deployment's `/.well-known/mcp.json`. `unknown` or no
+  `revision` at all means the deployment names no commit, and the record says
+  exactly that. `.pm/DO_NOT_DO.md` requires real-client MCP evaluation to record
+  the deployed revision, and a finding, or a deployment-lag disposition, is only
+  as good as knowing which build it came from.
 - Use a supplied target; otherwise use `https://beancount.io`. Use
   `QA_EMAIL` / `QA_PASSWORD` for a dedicated QA login. Prefer a ledger with
   synthetic data. The anonymous public control is
@@ -148,7 +156,7 @@ Use one record per reproduced bug:
 
 ```text
 Title / Severity: blocker | major | minor
-Environment: server, client build/HEAD, device/browser, role, synthetic ledger
+Environment: server and its revision, client build/HEAD, device/browser, role, synthetic ledger
 Repro: exact route and numbered user actions; repeat result
 Expected / Actual: observable values and states
 Evidence: verified paths; sanitized request + response or console excerpt
