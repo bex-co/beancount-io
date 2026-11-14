@@ -6,13 +6,14 @@
 // (./.env first, then the environment), sent only as a header, and scrubbed
 // from everything printed. Probes never write: previews are dry runs, and the
 // optional commit probes send an entry the server must refuse.
-import { parseArgs, parseEnv } from "node:util";
+import { isDeepStrictEqual, parseArgs, parseEnv } from "node:util";
 import { existsSync, readFileSync } from "node:fs";
 
 const USAGE = `usage: qa-contract-replay.mjs [options]
 
 Replays the contracts in backend-cluster/backend-v2/docs/mcp.md (the preview
-rule and the argument limits) on MCP, REST and GraphQL.
+rule, the argument limits, and the result envelope's text block) on MCP, REST
+and GraphQL.
 
 options
   --base URL          deployment origin (default https://beancount.io; http only on loopback)
@@ -92,7 +93,47 @@ export const RULES = {
     rule: "previews past the write budget (60/min) leave the write bucket alone, so the commit is still refused UNBALANCED, not RATE_LIMITED",
     expect: (o) => o.code === "UNBALANCED",
   },
+  channel: {
+    rule: "every tool result's text block carries its structuredContent: the last line parses to it (runBqlQuery's text is its table), so a host that reads only text misses nothing",
+    expect: (o) => o.code === "OK",
+  },
 };
+
+/**
+ * Why a tool result's text block carries less than its `structuredContent`,
+ * or null when it carries all of it.
+ *
+ * Hosts differ in which channel they hand the model: claude.ai's connector
+ * reads only `content`, while Claude Code shows `structuredContent`. A text
+ * block cut down to a summary line ("42 items") therefore looks fine from one
+ * client and empty from the other, which is how it shipped once unnoticed.
+ */
+export function textCarries(tool, result) {
+  const structured = result?.structuredContent;
+  if (structured === undefined) return null;
+  const text = (result.content ?? [])
+    .filter((block) => block?.type === "text")
+    .map((block) => block.text)
+    .join("\n");
+  if (!text) return "no text block";
+  const lines = text.split("\n");
+  if (tool === "runBqlQuery" && typeof structured.result === "string") {
+    // The lead line is the row count; the table follows, minus its final newline.
+    const table = structured.result.replace(/\n$/, "");
+    if (table.trim() === "" || lines.slice(1).join("\n") === table) return null;
+    return "the text is not the table";
+  }
+  const last = lines.at(-1);
+  let parsed;
+  try {
+    parsed = JSON.parse(last);
+  } catch {
+    return `the last line is not JSON: "${last.slice(0, 40)}"`;
+  }
+  return isDeepStrictEqual(parsed, structured)
+    ? null
+    : "the last line differs from structuredContent";
+}
 
 /** One more than the write budget a preview must not spend; below the preview bucket (180/min). */
 export const BUCKET_PREVIEWS = 70;
@@ -195,9 +236,16 @@ async function main() {
       return { error: { message: redact(response.text.slice(0, 200)) } };
     }
   };
+  // Every tool result is also checked for what its text block carries.
+  const channel = { checked: 0, failures: [] };
   const mcpTool = async (name, args) => {
     const reply = await mcp("tools/call", { name, arguments: args });
     const result = reply.result ?? {};
+    if (reply.result) {
+      channel.checked += 1;
+      const why = textCarries(name, result);
+      if (why) channel.failures.push(`${name}: ${why}`);
+    }
     const structured = result.structuredContent ?? {};
     if (reply.error)
       return { code: reply.error.data?.code ?? "JSONRPC", message: String(reply.error.message ?? "") };
@@ -251,6 +299,11 @@ async function main() {
   record("MCP", "array", await mcpTool("listLedgerEntries", { ledger, directiveTypes: new Array(10001).fill("open") }));
   record("MCP", "depth", await mcpTool("getLedgerContext", { ledger, extra: nested(40) }));
   record("MCP", "preview", await mcpTool("appendLedgerText", { ledger, text, dry_run: true }));
+  // Two successes for the channel check: a payload well past 400 characters,
+  // the size at which the text block once stopped at its summary line, and
+  // the one tool whose text is a table rather than JSON.
+  await mcpTool("getLedgerContext", { ledger });
+  await mcpTool("runBqlQuery", { ledger, query: "BALANCES" });
   if (values["commit-probes"])
     record("MCP", "commit", await mcpTool("appendLedgerText", { ledger, text }));
 
@@ -318,12 +371,23 @@ async function main() {
     record("MCP", "bucket", limited ?? (await mcpTool("appendLedgerText", { ledger, text: "2020-01-03 * \"unbalanced\"\n  Assets:ReplayProbe  1 USD\n" })));
   }
 
+  const { failures } = channel;
+  record(
+    "MCP",
+    "channel",
+    failures.length === 0
+      ? { code: "OK", message: "" }
+      : { code: "MISMATCH", message: failures.join("; ") },
+  );
+
   console.log(`deployment: ${base.origin}`);
   console.log(`server: ${serverInfo.name} ${serverInfo.version}`);
   console.log(`fingerprint: ${JSON.stringify(fingerprint)}`);
   console.log(`ledger: ${ledger}`);
   console.log(`${format(results)}\n`);
   for (const key of Object.keys(RULES)) console.log(`- ${key}: ${RULES[key].rule}`);
+  console.log(`\nchannel: ${channel.checked} tool result(s) checked`);
+  for (const failure of failures) console.log(`- ${redact(failure)}`);
   const bad = results.filter((r) => !r.ok);
   console.log(`\n${results.length} probes, ${bad.length} mismatch(es)`);
   if (bad.length > 0)

@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { format, nested, RULES } from "./qa-contract-replay.mjs";
+import { format, nested, RULES, textCarries } from "./qa-contract-replay.mjs";
 
 const script = fileURLToPath(new URL("./qa-contract-replay.mjs", import.meta.url));
 const token = "bcio_synthetic_replay_test_value_0123456789";
@@ -23,7 +23,8 @@ function depthOf(value) {
 /** A server that keeps the contract (`strict`) or accepts everything (`lax`). */
 function fakeDeployment(mode) {
   // "shared" keeps every other contract but charges previews to the write bucket (60/min).
-  const strict = mode === "strict" || mode === "shared";
+  // "summary" keeps every other contract but cuts each text block to its lead line.
+  const strict = mode === "strict" || mode === "shared" || mode === "summary";
   const seen = [];
   let writeBucket = 0;
   const server = http.createServer(async (request, response) => {
@@ -54,20 +55,33 @@ function fakeDeployment(mode) {
       if (message.method === "tools/list")
         return sse({ tools: [{ name: "addLedgerEntries", outputSchema: { valid: true } }] });
       const { name, arguments: args } = message.params;
-      if (name === "listLedgers")
-        return sse({ structuredContent: { ok: true, result: { ledgers: [{ ledger: "qa/mcp-agent-eval" }] } } });
+      // A tool result as the server writes it: a lead line, then the
+      // structured envelope serialized on the last line (unless "summary").
+      const tool = (structured) => {
+        const failed = structured.ok === false;
+        const lead = failed ? `${structured.error.code}: ${structured.error.message}\nHint: x` : `${name}: ok`;
+        const text = mode === "summary" ? lead : `${lead}\n${JSON.stringify(structured)}`;
+        return sse({ ...(failed && { isError: true }), content: [{ type: "text", text }], structuredContent: structured });
+      };
+      if (name === "listLedgers") return tool({ ok: true, result: { ledgers: [{ ledger: "qa/mcp-agent-eval" }] } });
+      if (name === "runBqlQuery") {
+        const table = "account\n-----------\nAssets:Cash\n";
+        return sse({ content: [{ type: "text", text: `1 row\n${table.trimEnd()}` }], structuredContent: { ok: true, result: table } });
+      }
       const why = strict ? refusal(args) : null;
-      if (why) return sse({ isError: true, structuredContent: { ok: false, error: { code: "BAD_USER_INPUT", message: why } } });
+      if (why) return tool({ ok: false, error: { code: "BAD_USER_INPUT", message: why } });
       if (strict && Object.values(args).some((v) => Array.isArray(v) && v.length > 10000))
-        return sse({ isError: true, structuredContent: { ok: false, error: { code: "BAD_USER_INPUT", message: "at most 10000 members" } } });
+        return tool({ ok: false, error: { code: "BAD_USER_INPUT", message: "at most 10000 members" } });
       if (name === "appendLedgerText" && (mode === "shared" || !args.dry_run)) {
         writeBucket += 1;
         if (mode === "shared" && writeBucket > 60)
-          return sse({ isError: true, structuredContent: { ok: false, error: { code: "RATE_LIMITED", message: "slow down" } } });
+          return tool({ ok: false, error: { code: "RATE_LIMITED", message: "slow down" } });
       }
       if (name === "appendLedgerText" && !args.dry_run && strict)
-        return sse({ isError: true, structuredContent: { ok: false, error: { code: "UNBALANCED", message: "x" } } });
-      return sse({ structuredContent: { ok: true, result: { validation: { valid: !strict } } } });
+        return tool({ ok: false, error: { code: "UNBALANCED", message: "x" } });
+      if (name === "getLedgerContext")
+        return tool({ ok: true, result: { accounts: Array.from({ length: 40 }, (_, i) => `Expenses:Category${i}`) } });
+      return tool({ ok: true, result: { validation: { valid: !strict } } });
     }
     if (request.method === "GET" && url.pathname.endsWith("/journal")) {
       if (strict && request.url.includes("%00")) return json(400, bad("NUL"));
@@ -128,6 +142,49 @@ test("a deployment that keeps the contract passes every probe on all three surfa
   assert.match(stdout, /\| array \| ok \| ok \| — \|/);
   assert.match(stdout, /0 mismatch/);
   assert.ok(seen.every((s) => s.auth === `Bearer ${token}`));
+});
+
+test("every tool result's text block is checked against its structuredContent", async () => {
+  const { stdout } = await replay("strict");
+  assert.match(stdout, /\| channel \| ok \| — \| — \|/);
+  assert.match(stdout, /channel: 8 tool result\(s\) checked/);
+});
+
+test("a deployment whose text blocks stop at a summary line fails the channel row and names the tools", async () => {
+  const { code, stdout } = await replay("summary");
+  assert.equal(code, 1);
+  assert.match(stdout, /\| channel \| MISMATCH \(MISMATCH/);
+  assert.match(stdout, /- getLedgerContext: the last line is not JSON: "getLedgerContext: ok"/);
+  // The table-shaped runBqlQuery text is not mistaken for a summary.
+  assert.doesNotMatch(stdout, /- runBqlQuery:/);
+  // Every other contract row still passes: only the channel failed.
+  assert.match(stdout, /\| nul \| ok \| ok \| ok \|/);
+});
+
+test("textCarries: the last line must be the structured envelope", () => {
+  const structured = { ok: true, result: [{ transactionId: "txn_1" }] };
+  const full = { content: [{ type: "text", text: `1 item\n${JSON.stringify(structured)}` }], structuredContent: structured };
+  assert.equal(textCarries("listStagedBankTransactions", full), null);
+  const summary = { content: [{ type: "text", text: "42 items" }], structuredContent: structured };
+  assert.match(textCarries("listStagedBankTransactions", summary), /not JSON/);
+  const stale = { content: [{ type: "text", text: `1 item\n${JSON.stringify({ ok: true, result: [] })}` }], structuredContent: structured };
+  assert.match(textCarries("listStagedBankTransactions", stale), /differs/);
+  assert.match(textCarries("x", { content: [], structuredContent: structured }), /no text block/);
+  // A refusal leads with readable lines and still ends with its envelope.
+  const refusal = { ok: false, error: { code: "NOT_FOUND", message: "m", hint: "h", newLedgerErrors: "e (main.bean:3)" } };
+  const refused = { isError: true, content: [{ type: "text", text: `NOT_FOUND: m\nHint: h\n${JSON.stringify(refusal)}` }], structuredContent: refusal };
+  assert.equal(textCarries("addLedgerEntries", refused), null);
+  // A JSON-RPC error has no structured content to carry.
+  assert.equal(textCarries("x", {}), null);
+});
+
+test("textCarries: runBqlQuery's text is its table after the row count", () => {
+  const table = "account\n-------\nAssets:Cash\n";
+  const bql = (text) => ({ content: [{ type: "text", text }], structuredContent: { ok: true, result: table } });
+  assert.equal(textCarries("runBqlQuery", bql(`1 row\n${table.trimEnd()}`)), null);
+  assert.match(textCarries("runBqlQuery", bql("1 row")), /not the table/);
+  const empty = { content: [{ type: "text", text: "0 rows" }], structuredContent: { ok: true, result: "" } };
+  assert.equal(textCarries("runBqlQuery", empty), null);
 });
 
 test("a deployment that accepts a hostile value fails and names the rule and surface", async () => {
