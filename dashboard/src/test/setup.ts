@@ -1,8 +1,13 @@
 import "@testing-library/jest-dom/vitest";
-import { vi } from "vitest";
+import { afterAll, vi } from "vitest";
+import { settleDeferredUnmount } from "./settle-deferred-unmount";
 
 // Mock DOM-specific globals only in DOM environments
 if (typeof window !== "undefined") {
+  // Radix queues a timer when a dialog or popover unmounts; let it fire before
+  // the last test file's jsdom goes away, not after (see the helper).
+  afterAll(settleDeferredUnmount);
+
   // Mock localStorage with proper typing
   const localStorageMock: Storage = {
     getItem: vi.fn(),
