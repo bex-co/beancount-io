@@ -274,6 +274,19 @@ from .post_api_gateway_v1_ledgers_owner_name_directives_text_response_200_new_er
 from .post_api_gateway_v1_ledgers_owner_name_directives_text_response_200_wrote_item import (
     PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200WroteItem,
 )
+from .post_api_gateway_v1_ledgers_owner_name_entries_move_body import PostApiGatewayV1LedgersOwnerNameEntriesMoveBody
+from .post_api_gateway_v1_ledgers_owner_name_entries_move_body_entries_item import (
+    PostApiGatewayV1LedgersOwnerNameEntriesMoveBodyEntriesItem,
+)
+from .post_api_gateway_v1_ledgers_owner_name_entries_move_response_200 import (
+    PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200,
+)
+from .post_api_gateway_v1_ledgers_owner_name_entries_move_response_200_new_errors_item import (
+    PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200NewErrorsItem,
+)
+from .post_api_gateway_v1_ledgers_owner_name_entries_move_response_200_preview_item import (
+    PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200PreviewItem,
+)
 from .post_api_gateway_v1_ledgers_owner_name_entries_response_200 import (
     PostApiGatewayV1LedgersOwnerNameEntriesResponse200,
 )
@@ -669,6 +682,11 @@ __all__ = (
     "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200DiffItem",
     "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200NewErrorsItem",
     "PostApiGatewayV1LedgersOwnerNameDirectivesTextResponse200WroteItem",
+    "PostApiGatewayV1LedgersOwnerNameEntriesMoveBody",
+    "PostApiGatewayV1LedgersOwnerNameEntriesMoveBodyEntriesItem",
+    "PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200",
+    "PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200NewErrorsItem",
+    "PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200PreviewItem",
     "PostApiGatewayV1LedgersOwnerNameEntriesResponse200",
     "PostApiGatewayV1LedgersOwnerNameEntriesResponse200NewErrorsItem",
     "PostApiGatewayV1LedgersOwnerNameEntriesResponse200PreviewItem",

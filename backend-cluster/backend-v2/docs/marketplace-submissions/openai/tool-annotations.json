@@ -693,6 +693,26 @@
       ]
     },
     {
+      "name": "moveEntrySources",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "justifications": {
+        "readOnlyHint": "Commits the selected entries' removal from their files, their append to the target file, and optionally an include line.",
+        "destructiveHint": "Rewrites existing ledger files: the entries' text leaves the files that held it, even though revertCommit can undo the commit.",
+        "idempotentHint": "Repeating identical arguments after a successful move finds the entries already in the target and is refused instead of moving them again.",
+        "openWorldHint": "Can target a publicly visible ledger/repository; the static hint covers that allowed path as well as private targets."
+      },
+      "behaviorEvidence": [
+        "src/features/ai-agent/api/mcp-tools.ts",
+        "src/features/ai-agent/api/mcp-source-slices.ts",
+        "src/features/ledger/api/rest/v1/__tests__/move-entry-sources-parity.test.ts"
+      ]
+    },
+    {
       "name": "renameLedgerFile",
       "annotations": {
         "readOnlyHint": false,

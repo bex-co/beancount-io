@@ -12,7 +12,7 @@ export const MAX_BULK_ENTRIES = 1000;
 /** Refuse an over-cap batch before any work, naming the cap and the fix. */
 export function assertBulkEntriesSize(
   entries: readonly unknown[],
-  verb: "added" | "deleted",
+  verb: "added" | "deleted" | "moved",
 ): void {
   if (entries.length > MAX_BULK_ENTRIES) {
     throw new BadUserInputError(

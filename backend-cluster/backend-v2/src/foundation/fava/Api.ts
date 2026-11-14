@@ -4014,7 +4014,7 @@ export interface MoveSourceSlicesRequest {
 
 /**
  * MoveSourceSlicesResponse
- * Response schema for deleting multiple source slices.
+ * Response schema for moving source slices into another file.
  */
 export interface MoveSourceSlicesResponse {
   /**
@@ -4071,7 +4071,7 @@ export interface SuccessResponseMoveSourceSlicesResponse {
    * @default true
    */
   success?: boolean;
-  /** Response schema for deleting multiple source slices. */
+  /** Response schema for moving source slices into another file. */
   data: MoveSourceSlicesResponse;
 }
 

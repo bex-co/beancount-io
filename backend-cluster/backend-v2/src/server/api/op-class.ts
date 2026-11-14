@@ -1300,6 +1300,8 @@ const LEDGER_WRITE_ACTION_BY_VERB = {
   "Mutation.renameLedgerFile": AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
   // Rewrites every loaded file that names the account (w1/m43).
   "Mutation.renameLedgerAccount": AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+  // Creates the target file and can add its include line (w1/m45).
+  "Mutation.moveLedgerEntrySources": AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
   // Undoing a commit writes the files it touched, so it is a file write.
   "Mutation.revertLedgerCommit": AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
   // Not a content write, but it spends an upstream fetch shared across every
@@ -1362,6 +1364,13 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.deleteMultipleLedgerEntrySourceSlices",
     rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/entry-source/delete-many",
     mcp: "deleteEntrySources",
+  },
+  {
+    verb: "Mutation.moveLedgerEntrySources",
+    class: "write" as const,
+    gql: "Mutation.moveLedgerEntrySources",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/entries/move",
+    mcp: "moveEntrySources",
   },
   {
     verb: "Mutation.updateLedgerEntrySourceSlice",

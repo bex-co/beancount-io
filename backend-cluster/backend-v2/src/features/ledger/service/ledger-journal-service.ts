@@ -152,6 +152,20 @@ export type DeleteMultiSlicesResult = {
   CommitSha &
   ReportedWrite;
 
+export type MoveSlicesResult = {
+  message: string;
+  dryRun: boolean;
+  /** The moved entries' hashes, each once, in ledger order (w1/m45). */
+  movedHashes: string[];
+  toPath: string;
+  /** Whether includeFrom gained (on a preview, would gain) toPath's include line. */
+  includeAdded: boolean;
+  /** Each moved entry's text at the file it leaves. */
+  preview: SlicePreview;
+} & TouchedFiles &
+  CommitSha &
+  ReportedWrite;
+
 export type UpdateSliceResult = TouchedFiles &
   CommitSha &
   ReportedWrite & {
@@ -248,6 +262,23 @@ export interface ILedgerJournalService {
     /** Run every check and commit nothing (w23/m7/t003). */
     dryRun?: boolean;
   }): Promise<DeleteMultiSlicesResult>;
+
+  /**
+   * Move entries' source into another file, with its include line when asked,
+   * in one commit (w1/m45). Creating a file is file-write authority, so it is
+   * authorized as `ledger.files.write`, as the file tools are.
+   */
+  moveSourceSlices(params: {
+    ledgerId: string;
+    identity: Identity;
+    entries: { entryHash: string; sha256sum: string }[];
+    toPath: string;
+    includeFrom?: string;
+    /** Commit even when the move adds bean-check errors. */
+    allowInvalid?: boolean;
+    /** Run every check and commit nothing. */
+    dryRun?: boolean;
+  }): Promise<MoveSlicesResult>;
 
   updateSourceSlice(params: {
     ledgerId: string;
@@ -509,6 +540,60 @@ export class LedgerJournalService
       message: data.message,
       dryRun: dryRun ?? false,
       deletedCount: data.deleted_hashes.length,
+      files: dryRun ? [] : (data.files ?? []),
+      ...(data.commit && { commit: data.commit }),
+      preview: (data.preview ?? []).map((file) => ({
+        path: file.path,
+        text: file.text,
+      })),
+      validation: toReportedProjection(data),
+    };
+  }
+
+  async moveSourceSlices(params: {
+    ledgerId: string;
+    identity: Identity;
+    entries: { entryHash: string; sha256sum: string }[];
+    toPath: string;
+    includeFrom?: string;
+    allowInvalid?: boolean;
+    dryRun?: boolean;
+  }): Promise<MoveSlicesResult> {
+    const {
+      ledgerId,
+      identity,
+      entries,
+      toPath,
+      includeFrom,
+      allowInvalid,
+      dryRun,
+    } = params;
+    const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
+      ledgerId,
+      identity,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+    );
+    assertBulkEntriesSize(entries, "moved");
+
+    const data = await unwrapFavaResponse(
+      favaApiClient.journal.moveSourceSlices(ledgerOwner, ledgerName, {
+        entries: entries.map((e) => ({
+          entry_hash: e.entryHash,
+          sha256sum: e.sha256sum,
+        })),
+        to_path: toPath,
+        ...(includeFrom !== undefined && { include_from: includeFrom }),
+        ...((allowInvalid || dryRun) && { allowInvalid: true }),
+        ...(dryRun && { dryRun: true }),
+      }),
+      "move source slices",
+    );
+    return {
+      message: data.message,
+      dryRun: dryRun ?? false,
+      movedHashes: data.moved_hashes,
+      toPath,
+      includeAdded: data.include_added,
       files: dryRun ? [] : (data.files ?? []),
       ...(data.commit && { commit: data.commit }),
       preview: (data.preview ?? []).map((file) => ({

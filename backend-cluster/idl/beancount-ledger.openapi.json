@@ -16164,7 +16164,7 @@
           "include_added"
         ],
         "title": "MoveSourceSlicesResponse",
-        "description": "Response schema for deleting multiple source slices."
+        "description": "Response schema for moving source slices into another file."
       },
       "SuccessResponse_MoveSourceSlicesResponse_": {
         "properties": {

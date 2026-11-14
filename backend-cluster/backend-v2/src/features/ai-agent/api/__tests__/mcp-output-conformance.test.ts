@@ -205,6 +205,8 @@ const SHARED_SCHEMA_ONLY: Record<string, string> = {
   renameLedgerFile: "move workflow; needs a ledgerWorkflow stub (t003)",
   renameAccount:
     "rename workflow; its preview's validation is driven through the real handler in rename-account-parity.test.ts",
+  moveEntrySources:
+    "source-slice executor; its preview's validation is driven through the real handler in move-entry-sources-parity.test.ts",
   revertCommit: "revert workflow; needs a ledgerWorkflow and git host stub",
   insertReceiptTransaction: "receipt workflow; needs a workflow stub (t003)",
   syncBankTransactions: "bank workflow; needs a bank stub (t003)",

@@ -13276,6 +13276,300 @@
         }
       }
     },
+    "/api-gateway/v1/ledgers/{owner}/{name}/entries/move": {
+      "post": {
+        "summary": "Move entries into another file",
+        "description": "Move entries into another ledger file in one commit: each entry's source text leaves its file byte for byte and is appended to toPath in ledger order. listLedgerEntries with include_source returns each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds a bean-check error (VALIDATION_FAILED, unless allowInvalid). `dryRun` previews without committing: each moved entry's text and file. POST …/revert-commit undoes the commit.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(?!\\.{1,2}$)[A-Za-z0-9_.-]+(?![\\s\\S])",
+              "description": "Ledger owner's username",
+              "example": "alice"
+            },
+            "required": true,
+            "description": "Ledger owner's username",
+            "name": "owner",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9_-]{1,100}(?![\\s\\S])",
+              "description": "Ledger (repository) name",
+              "example": "main-ledger"
+            },
+            "required": true,
+            "description": "Ledger (repository) name",
+            "name": "name",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "entries": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "entryHash": {
+                          "type": "string",
+                          "description": "The entry's hash. One of entryHash/entry_hash is required."
+                        },
+                        "entry_hash": {
+                          "type": "string",
+                          "description": "Alias of entryHash, as list output spells it."
+                        },
+                        "sha256sum": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "sha256sum"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 1000
+                  },
+                  "allowInvalid": {
+                    "type": "boolean",
+                    "description": "Commit even when the write would add bean-check errors (VALIDATION_FAILED with newLedgerErrors), instead of refusing it."
+                  },
+                  "allow_invalid": {
+                    "type": "boolean",
+                    "description": "Alias of allowInvalid."
+                  },
+                  "dryRun": {
+                    "type": "boolean",
+                    "description": "Run every check and return the preview without committing"
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "description": "Alias of dryRun, as MCP spells it."
+                  },
+                  "toPath": {
+                    "type": "string",
+                    "description": "Repository path of the .bean or .beancount file the entries move into; created when absent."
+                  },
+                  "includeFrom": {
+                    "type": "string",
+                    "description": "A file the ledger loads that gains include \"<toPath>\" (relative to it) when toPath is not loaded yet. Without it, an unloaded toPath is refused."
+                  }
+                },
+                "required": [
+                  "entries",
+                  "toPath"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Moved entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "dryRun": {
+                      "type": "boolean"
+                    },
+                    "movedHashes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "The moved entries' hashes, each once, in ledger order."
+                    },
+                    "toPath": {
+                      "type": "string"
+                    },
+                    "includeAdded": {
+                      "type": "boolean",
+                      "description": "Whether includeFrom gained toPath's include line (on a preview, would gain it)."
+                    },
+                    "preview": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "path",
+                          "text"
+                        ]
+                      },
+                      "description": "Each moved entry's text at the file it leaves."
+                    },
+                    "commit": {
+                      "type": "string",
+                      "description": "The sha of the commit this write made; absent on a preview or a read."
+                    },
+                    "errorsBefore": {
+                      "type": "integer"
+                    },
+                    "errorsAfter": {
+                      "type": "integer"
+                    },
+                    "newErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "valid": {
+                      "type": "boolean",
+                      "description": "True only when the write adds no bean-check error. A dry run returns the new errors instead of refusing, so gate on this, not on the status."
+                    }
+                  },
+                  "required": [
+                    "message",
+                    "dryRun",
+                    "movedHashes",
+                    "toPath",
+                    "includeAdded",
+                    "preview",
+                    "errorsBefore",
+                    "errorsAfter",
+                    "newErrors",
+                    "valid"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "The action needs a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the permission this business action requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change conflicts with the resource's current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The server failed; the request may be retried",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "A dependency is unavailable; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source": {
       "put": {
         "summary": "Update an entry source slice",

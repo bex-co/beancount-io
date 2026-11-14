@@ -160,14 +160,16 @@ export class ValidationError extends DomainError {
 
 /**
  * Which write a {@link NewLedgerErrorsError} refused: Beancount text, structured
- * entries (w0/m2), or a source-slice edit or delete (w21/m1). The ledger
- * service names the last two in `details.action`.
+ * entries (w0/m2), a source-slice edit or delete (w21/m1), or a move of
+ * entries into another file (w1/m45). The ledger service names the slice
+ * writes in `details.action`.
  */
 export type NewLedgerErrorsWrite =
   | "text"
   | "entries"
   | "update"
   | "delete"
+  | "move"
   | "files";
 
 const NEW_LEDGER_ERRORS_WORDING: Record<
@@ -214,6 +216,13 @@ const NEW_LEDGER_ERRORS_WORDING: Record<
     valid: "entry can be deleted",
     invalid: "deletion leaves text that is not valid Beancount",
     fix: "Fix what depends on the entry first, or pass `allowInvalid: true` to delete it anyway.",
+  },
+  move: {
+    field: "entries",
+    subject: "moving these entries",
+    valid: "entries can be moved",
+    invalid: "move leaves text that is not valid Beancount",
+    fix: "Fix what the move would break first, or pass `allowInvalid: true` to move them anyway.",
   },
 };
 

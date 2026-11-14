@@ -2,9 +2,11 @@ import { z } from "zod";
 import {
   deleteSliceInput,
   deleteSlicesInput,
+  moveSlicesInput,
   updateSliceInput,
   deleteSliceResult,
   deleteSlicesResult,
+  moveSlicesResult,
   updateSliceResult,
 } from "@/features/ledger/api/rest/v1/source-slice-handler";
 import { resolveEntryHash } from "@/features/ledger/utils/entry-hash-alias";
@@ -54,6 +56,9 @@ export const SOURCE_SLICE_OPERATION_SCHEMAS = {
     .omit({ dryRun: true })
     .extend({ ledger: ledgerSelection, ...dryRunInput }),
   delete_many: deleteSlicesInput
+    .omit({ dryRun: true })
+    .extend({ ledger: ledgerSelection, ...dryRunInput }),
+  move: moveSlicesInput
     .omit({ dryRun: true })
     .extend({ ledger: ledgerSelection, ...dryRunInput }),
 } as const;
@@ -109,6 +114,14 @@ export const SOURCE_SLICE_OPERATION_OUTPUTS = {
     toolOutputSchema(
       withWriteOutcome({
         ...withoutFlatProjection(withoutDryRun(deleteSlicesResult.shape)),
+        ...dryRunOutput,
+      }),
+    ),
+  ),
+  move: mcpOutputSchema(
+    toolOutputSchema(
+      withWriteOutcome({
+        ...withoutFlatProjection(withoutDryRun(moveSlicesResult.shape)),
         ...dryRunOutput,
       }),
     ),
@@ -277,6 +290,45 @@ export const SOURCE_SLICE_EXECUTORS = {
       },
       // A hash sent twice deletes one entry; it is reported once (w23/042).
       () => [...new Set(resolved.map((entry) => entry.entryHash))],
+    );
+  },
+  move: (context: McpRequestContext, input: unknown) => {
+    const {
+      ledger,
+      entries,
+      toPath,
+      includeFrom,
+      allowInvalid,
+      allow_invalid,
+      dry_run,
+      dryRun,
+    } = SOURCE_SLICE_OPERATION_SCHEMAS.move.parse(input);
+    const ledgerId = resolveMcpLedger(context, ledger);
+    const dryPreview =
+      resolveFlagAlias({ primary: dry_run, legacy: dryRun }, DRY_RUN_NAMES) ===
+      true;
+    return validated(
+      context,
+      ledgerId,
+      dryPreview,
+      () =>
+        context.services.ledgerJournal.moveSourceSlices({
+          identity: context.identity,
+          ledgerId,
+          entries: entries.map((entry) => ({
+            entryHash: resolveEntryHash(entry),
+            sha256sum: entry.sha256sum,
+          })),
+          toPath,
+          includeFrom,
+          allowInvalid: resolveFlagAlias(
+            { primary: allow_invalid, legacy: allowInvalid },
+            ALLOW_INVALID_NAMES,
+          ),
+          dryRun: dryPreview,
+        }),
+      (written) => written.message,
+      (written) => written.movedHashes,
     );
   },
 };

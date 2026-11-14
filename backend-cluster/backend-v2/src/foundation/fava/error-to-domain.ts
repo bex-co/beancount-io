@@ -154,12 +154,15 @@ export function favaApiErrorToDomainError(
     const named =
       (typeof details?.detail === "string" && details.detail) || message;
     const count = typeof details?.count === "number" ? details.count : 1;
-    // The ledger names the write: "add" for structured entries, "update" or
-    // "delete" for source-slice writes (w21/m1). Anything else — an older
-    // ledger service sends none — reads as the structured add it used to be.
+    // The ledger names the write: "add" for structured entries, "update",
+    // "delete" or "move" for source-slice writes (w21/m1, w1/m45). Anything
+    // else — an older ledger service sends none — reads as the structured add
+    // it used to be.
     const action = details?.action;
     return new NewLedgerErrorsError(
-      action === "update" || action === "delete" ? action : "entries",
+      action === "update" || action === "delete" || action === "move"
+        ? action
+        : "entries",
       count,
       named,
       // The ledger joins the errors into one string without codes, so the

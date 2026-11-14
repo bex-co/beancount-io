@@ -330,9 +330,14 @@ describe("MCP tool list", () => {
     // object and the error item) every write tool publishes, plus the changed
     // lines and bank mappings a reviewer of the rename needs; its prose was
     // cut to one paragraph shared with REST and GraphQL.
+    //
+    // 134 KB since w1/m45 added moveEntrySources: the tool is 4,433 bytes, in
+    // line with deleteEntrySources (3,990), and most of it is again the shared
+    // write outcome. Its prose was cut to one paragraph shared with REST and
+    // GraphQL; m44's include_source option had taken the list to ~130.8 KB.
     const { tools } = await listToolsRaw();
     const bytes = Buffer.byteLength(JSON.stringify(tools), "utf8");
-    expect(bytes).toBeLessThan(128 * 1024);
+    expect(bytes).toBeLessThan(134 * 1024);
   });
 
   // w23/173: the schema keeps both spellings of an alias pair optional (the
@@ -368,6 +373,8 @@ describe("MCP tool list", () => {
     ["updateEntrySource", "preview"],
     ["deleteEntrySource", "preview"],
     ["deleteEntrySources", "preview"],
+    // w1/m45: a move's preview is each moved entry's text at its old file.
+    ["moveEntrySources", "preview"],
     ["renameLedgerFile", "preview"],
     // w1/m43: a rename's preview is every line it would change.
     ["renameAccount", "files"],
@@ -465,6 +472,7 @@ describe("MCP tool list", () => {
   it.each([
     "renameLedgerFile",
     "renameAccount",
+    "moveEntrySources",
     "revertCommit",
     "insertReceiptTransaction",
     "syncBankTransactions",

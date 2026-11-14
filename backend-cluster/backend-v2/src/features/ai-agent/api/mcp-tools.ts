@@ -25,6 +25,7 @@ import {
   renameAccountResult,
 } from "@/features/ledger/api/rest/v1/rename-account-handler";
 import { RENAME_ACCOUNT_DESCRIPTION } from "@/features/ledger/utils/account-rename";
+import { MOVE_ENTRIES_DESCRIPTION } from "@/features/ledger/utils/move-entries-description";
 import {
   revertCommitInput,
   revertCommitResult,
@@ -709,6 +710,15 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     inputSchema: SOURCE_SLICE_OPERATION_SCHEMAS.delete_many,
     outputSchema: SOURCE_SLICE_OPERATION_OUTPUTS.delete_many,
     execute: SOURCE_SLICE_EXECUTORS.delete_many,
+  },
+  {
+    name: "moveEntrySources",
+    title: "Move Entry Sources",
+    annotations: DESTRUCTIVE,
+    description: `${MOVE_ENTRIES_DESCRIPTION} dry_run previews without committing. revertCommit undoes the commit.`,
+    inputSchema: SOURCE_SLICE_OPERATION_SCHEMAS.move,
+    outputSchema: SOURCE_SLICE_OPERATION_OUTPUTS.move,
+    execute: SOURCE_SLICE_EXECUTORS.move,
   },
   {
     name: "renameAccount",

@@ -133,6 +133,21 @@ const WRITE_PREVIEW_RULES: Record<string, Entry> = {
     proofs: SLICE_PARITY,
     differential: ONE_PROJECTION_CALL,
   },
+  // A move projects bean-check over the files it leaves, the target and the
+  // include line together, in the ledger's one gate (w1/m45).
+  moveEntrySources: {
+    kind: "projection",
+    proofs: [
+      {
+        file: `${REST_V1}/move-entry-sources-parity.test.ts`,
+        test: "previews a breaking move as invalid, and refuses its commit unless allowInvalid",
+      },
+    ],
+    differential: {
+      reason:
+        "preview and commit are one ledger call through the same projectWriteErrors gate, the preview differing only by dryRun; the parity suite above proves both on all three surfaces",
+    },
+  },
   // A rename projects bean-check over every file it would rewrite (w1/m43).
   renameAccount: {
     kind: "projection",
