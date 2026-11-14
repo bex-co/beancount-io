@@ -1,6 +1,6 @@
 # w22 · m11 — Every deployment says which commit it runs
 
-**Worker:** worker1 **Goal:** an agent or maintainer can tell in one call which build a deployment is running, so "is the fix live?" no longer means provoking an error **Status:** todo (t001, t002, t003, t004, t005, t006, t007, t008 done)
+**Worker:** worker1 **Goal:** an agent or maintainer can tell in one call which build a deployment is running, so "is the fix live?" no longer means provoking an error **Status:** done
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Adoption surface — **DONE**                                                               | 25m | t003, t005 |
 | t007 | Simplify — **DONE**                                                                       | 25m | t006       |
 | t008 | Test coverage — **DONE**                                                                  | 45m | t006       |
-| t009 | Closeout                                                                       | 15m | t007, t008 |
+| t009 | Closeout — **DONE**                                                            | 15m | t007, t008 |
 
 ## Definition of done
 
