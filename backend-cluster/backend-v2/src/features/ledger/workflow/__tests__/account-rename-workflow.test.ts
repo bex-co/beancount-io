@@ -1,6 +1,6 @@
 import { AccountRenameWorkflow } from "../account-rename-workflow";
 import type { Identity } from "@/server/api/identity";
-import { ForbiddenError } from "@/shared/errors";
+import { ConflictError, ForbiddenError } from "@/shared/errors";
 
 /** w1/m43/t002 — the rename reads the loaded files, gates the projection, and commits once. */
 
@@ -51,6 +51,8 @@ function fixture(
     }[];
     remapFails?: boolean;
     forbidden?: boolean;
+    /** A file changed between the read and the commit. */
+    stale?: boolean;
   } = {},
 ) {
   const files = new Map(
@@ -84,9 +86,15 @@ function fixture(
           content?: string | null;
           sha?: string | null;
         }[];
-      }) => ({
-        commit: "c0ffee",
-      }),
+      }) => {
+        if (options.stale) {
+          throw new ConflictError(
+            "File",
+            "2026.bean changed since it was read",
+          );
+        }
+        return { commit: "c0ffee" };
+      },
     ),
   };
   const ledgerData = {
@@ -233,6 +241,24 @@ describe("AccountRenameWorkflow (w1/m43)", () => {
       rename({ from: "Assets:Bank:Checking", to: "not valid" }),
     ).rejects.toMatchObject({ category: "FORBIDDEN" });
     expect(ledgerRepo.projectedSourceFiles).not.toHaveBeenCalled();
+  });
+
+  it("refuses the whole rename when a file changed since the read, moving no mapping", async () => {
+    const { bankMappings, rename } = fixture({
+      stale: true,
+      mappings: [
+        {
+          id: "pacc_1",
+          plaidItemId: "pi_1",
+          ledgerAccount: "Assets:Bank:Checking",
+          name: "Chase",
+        },
+      ],
+    });
+    await expect(
+      rename({ from: "Assets:Bank:Checking", to: "Assets:Bank:Main" }),
+    ).rejects.toMatchObject({ category: "CONFLICT" });
+    expect(bankMappings.remap).not.toHaveBeenCalled();
   });
 
   it("refuses a rename onto an account the ledger already uses", async () => {
