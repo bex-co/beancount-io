@@ -101,6 +101,12 @@ describe("well-known routes", () => {
     );
   });
 
+  it("serves the manifest cacheable for an hour, which docs/mcp.md says can show the previous build's revision after a deploy", async () => {
+    const response = await fetch(`${origin}/.well-known/mcp.json`);
+
+    expect(response.headers.get("cache-control")).toBe("public, max-age=3600");
+  });
+
   it("declares the resource surface too, not only tools", async () => {
     const response = await fetch(`${origin}/.well-known/mcp.json`);
     const body = (await response.json()) as {

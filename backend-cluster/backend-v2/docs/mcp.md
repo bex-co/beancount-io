@@ -1780,7 +1780,10 @@ places:
 
 A deployment that was given no commit says `"revision": "unknown"` and a plain
 `1.0.0`; one that predates the field has no `revision` in its manifest and a plain
-`1.0.0` too. To learn whether a fix is live, run
+`1.0.0` too. The manifest is cacheable for an hour (`Cache-Control: public,
+max-age=3600`), so right after a deploy a cache or a proxy in front can still show
+the previous build's `revision`; the `initialize` answer is a `POST` and is not
+cached, so trust it when the two differ. To learn whether a fix is live, run
 `git merge-base --is-ancestor <fix commit> <revision>` in a checkout: it exits 0
 when the deployed build contains the fix.
 
