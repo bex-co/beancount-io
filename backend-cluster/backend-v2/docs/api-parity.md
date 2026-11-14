@@ -183,8 +183,8 @@ read collaborator — gets `FORBIDDEN` naming the authority it lacks, such as
 (w23/069). Leaving keeps its own refusals (w23/063).
 
 Content writes follow the same rule (w1/194): writing files or entries
-(which covers `appendLedgerText`, the entry-source edits, `renameLedgerFile`,
-`renameAccount`, `revertCommit` and `refreshManagedPrices`), opening, merging and rejecting pull requests,
+(which covers `appendLedgerText`, the entry-source edits, `moveEntrySources`,
+`renameLedgerFile`, `renameAccount`, `revertCommit` and `refreshManagedPrices`), opening, merging and rejecting pull requests,
 starring a ledger, and listing its bank connections. A caller who cannot see
 the ledger — it does not exist, or it is private to others — gets the
 concealed `NOT_FOUND` "Ledger not found" its reads give, not `FORBIDDEN`. A
@@ -283,7 +283,7 @@ way: `checked: false`, nothing refused on it.
 
 Every write that makes a commit returns its sha as `commit` on REST, GraphQL
 and MCP: the file writes, `appendLedgerText`, `renameLedgerFile`, `renameAccount`,
-bulk entries, the entry-source edits and deletes, receipt insertion and
+bulk entries, the entry-source edits, deletes and moves, receipt insertion and
 `revertCommit`. A
 preview has none, and a write that landed but lost its answer names none rather
 than a wrong sha. `revertCommit` (REST `POST …/revert-commit`, GraphQL
@@ -848,6 +848,27 @@ that cannot write, `VALIDATION_FAILED` for new bean-check errors without
 `rename-account-parity.test.ts` runs the real adapters and the real workflow
 over a fake repository through each surface. MCP nests the verdict under
 `validation`, as every MCP write does.
+
+## Moving entries to another file (w1/m45)
+
+`moveEntrySources` (REST `POST …/entries/move`, GraphQL
+`moveLedgerEntrySources`) takes `entries` (`{entryHash or entry_hash,
+sha256sum}`, at most 1000), `toPath` and optional `includeFrom`, and moves the
+entries' source text into `toPath` in one commit, adding its include line to
+`includeFrom` when the ledger does not load `toPath` yet. The surfaces agree on
+the inputs (`dryRun`/`dry_run`, `allowInvalid`/`allow_invalid`), the result
+(`movedHashes`, `toPath`, `includeAdded`, `preview` with each moved entry's text
+at the file it leaves, the verdict, and `commit` on a real write), the
+authorization (`ledger.files.write`, since the move can create a file) and the
+refusals: `BAD_USER_INPUT` for an unloaded `toPath` without `includeFrom` and
+the other path errors, `CONFLICT` for a stale `sha256sum` of any entry,
+`FORBIDDEN` for a credential that cannot write, and `VALIDATION_FAILED` for new
+bean-check errors without `allowInvalid`, named as a move. The ledger service
+judges both paths, so every surface refuses the same ones. A preview reports new
+errors without refusing. `move-entry-sources-parity.test.ts` runs the real
+adapters, the real journal service and the real authorization through each
+surface. MCP nests the verdict under `validation` and adds `wrote` and
+`entryHashes`, as every MCP write does.
 
 ## Entries with their source text (w1/m44)
 

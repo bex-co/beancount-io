@@ -400,10 +400,10 @@ five lifecycle mutations (`updateLedger`, `deleteLedger`,
 ### The preview rule
 
 A preview never refuses for new bean-check errors; only the commit does.
-The eight tools that project a write through bean-check (`appendLedgerText`,
+The nine tools that project a write through bean-check (`appendLedgerText`,
 `addLedgerEntries`, `createLedgerFiles`, `updateLedgerFiles`,
 `deleteLedgerFiles`, `updateEntrySource`, `deleteEntrySource`,
-`deleteEntrySources`) answer a `dry_run` with success, the diff or per-file
+`deleteEntrySources`, `moveEntrySources`) answer a `dry_run` with success, the diff or per-file
 text, `newErrors`, and `valid`. `valid` is `true` only when bean-check ran and
 the write adds no error, so an agent approves a preview only when `valid` is
 `true`, then re-issues the identical call with `dry_run: false`. The same call
@@ -417,6 +417,58 @@ engine's stable error `code` (for example `E1001`) when it has one. The
 published `outputSchema` declares all three, and a client that validates
 `structuredContent` against it accepts the result; a key the schema omitted
 would make that client reject the whole preview.
+
+### Moving entries to another file (w1/m45)
+
+`moveEntrySources` (REST `POST …/entries/move`, GraphQL
+`moveLedgerEntrySources`) moves entries into another ledger file in one
+commit. Each entry's source text leaves its file byte for byte and is appended
+to `toPath` in ledger order (by loaded file, then line), after a blank line;
+`toPath` is created when absent. Entries are addressed as the entry-source
+edits address them, `entries: [{entryHash, sha256sum}]` under either hash
+spelling, and `listLedgerEntries` with `include_source` returns both for a
+whole page. At most 1000 entries move per call.
+
+Entries in a file the ledger does not load would count nowhere, so an unloaded
+`toPath` needs `includeFrom`: a file the ledger loads, which gains
+`include "<toPath>"`, relative to its own folder, in the same commit. When
+`toPath` is already loaded, no include line is added.
+
+It refuses, writing nothing:
+
+- no entries, or a `toPath` that is not a `.bean` or `.beancount` repository
+  path (`BAD_USER_INPUT`);
+- an unloaded `toPath` without `includeFrom`, or an `includeFrom` the ledger
+  does not load (`BAD_USER_INPUT`, naming `includeFrom` as the fix);
+- an entry that already lives in `toPath` (`BAD_USER_INPUT`);
+- a stale `sha256sum` for any listed entry (`CONFLICT`): the whole move is
+  refused, not the rest of it;
+- an entry in a managed price include (`OPERATION_NOT_ALLOWED`);
+- a credential that cannot write the ledger's files (`FORBIDDEN`);
+- a move that adds a bean-check error the ledger did not have
+  (`VALIDATION_FAILED`, naming each new error), unless `allowInvalid`.
+
+`dry_run` returns `preview` (each moved entry's text at the file it leaves),
+`movedHashes`, `includeAdded` and `validation`. A commit returns the same plus
+`commit`, and `revertCommit` on that sha undoes it. An entry's hash is its
+text, so a moved entry keeps its hash unless an identical entry elsewhere
+changes its position among its twins.
+
+#### Recipe: split a ledger by year
+
+1. List the year's transactions with their source, a page at a time:
+   `listLedgerEntries` with `time: "2025"`, `directiveTypes: ["Transaction"]`,
+   `include_source: true` and `limit: 200`, then `offset: 200` and so on until
+   `total` is reached. Keep each entry's `entry_hash` and `source.sha256sum`;
+   skip an entry whose `source` is `null` (a plugin's or a pad's copy).
+2. Preview the move: `moveEntrySources` with those `entries`,
+   `toPath: "2025.bean"`, `includeFrom: "main.bean"` and `dry_run: true`.
+   Go on only when `validation.valid` is `true`.
+3. Repeat the call without `dry_run`. It returns `commit`; `main.bean` now
+   ends with `include "2025.bean"`.
+4. For more than 1000 entries, move the rest in further calls. `2025.bean` is
+   loaded after the first, so they need no `includeFrom`.
+5. To undo a move, call `revertCommit` with its `commit` sha.
 
 ### Renaming an account (w1/m43)
 

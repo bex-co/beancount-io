@@ -1,6 +1,6 @@
 # w1 · m45 — Move entries to another file in one atomic commit
 
-**Worker:** worker1 **Goal:** an agent splitting or reorganizing a hosted ledger ("put August in `2026/08.bean`") moves a set of entries into another file, creating it and adding its `include` when asked, in one previewed commit. The ledger's balances and errors are exactly what they were, and no intermediate state with an orphan file or a broken balance assertion is ever committed. **Status:** in progress (t001–t003 done)
+**Worker:** worker1 **Goal:** an agent splitting or reorganizing a hosted ledger ("put August in `2026/08.bean`") moves a set of entries into another file, creating it and adding its `include` when asked, in one previewed commit. The ledger's balances and errors are exactly what they were, and no intermediate state with an orphan file or a broken balance assertion is ever committed. **Status:** in progress (t001–t004 done)
 
 ## Tasks (in order)
 
@@ -9,7 +9,7 @@
 | t001 | Write the move contract — **DONE** | 30m | — |
 | t002 | Move workflow: delete the slices, append to the target and include it, gated and committed once — **DONE** | 75m | t001 |
 | t003 | `moveEntrySources` on MCP, REST and GraphQL, with parity rows — **DONE** | 60m | t002 |
-| t004 | Document the operation, add a split-by-year recipe, and record the new tool for directory review | 30m | t003 |
+| t004 | Document the operation, add a split-by-year recipe, and record the new tool for directory review — **DONE** | 30m | t003 |
 | t005 | Move and undo on the hosted endpoint after the deploy | 30m | t004, t008 |
 | t006 | Adoption surface | 30m | t004 |
 | t007 | Simplify | 15m | t006 |
