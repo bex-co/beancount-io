@@ -30,6 +30,21 @@ describe("config", () => {
     expect(config.env).toBe("test");
   });
 
+  it("reports the running revision from the environment, and `unknown` without one", async () => {
+    delete process.env.BEANCOUNT_REVISION;
+    delete process.env.RENDER_GIT_COMMIT;
+    expect((await import("./config")).config.revision).toBe("unknown");
+
+    jest.resetModules();
+    process.env.BEANCOUNT_REVISION = "  2144CDBB2E6F  ";
+    expect((await import("./config")).config.revision).toBe("2144cdbb2e6f");
+
+    jest.resetModules();
+    delete process.env.BEANCOUNT_REVISION;
+    process.env.RENDER_GIT_COMMIT = "57d7aaa13";
+    expect((await import("./config")).config.revision).toBe("57d7aaa13");
+  });
+
   it("should have correct server defaults", () => {
     expect(config.server.trustedProxyHops).toBe(1);
     expect(config.server.port).toBe(4104);

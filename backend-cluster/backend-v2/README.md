@@ -142,6 +142,13 @@ step: `signUp` creates the account and returns the session `token` directly
 user to the unlimited tier, and billing is never asked for a user's plan. Email addresses are
 not verified, and recovery mail still needs `SEND_GRID_API_KEY`.
 
+`BEANCOUNT_REVISION` names the git commit a deployment runs, so a client can tell
+which build it is talking to. It is parsed once into `config.revision`
+(`src/config/revision.ts`): the first of `BEANCOUNT_REVISION` and
+`RENDER_GIT_COMMIT` (which Render-compatible platforms set at runtime) that is 7–40
+hexadecimal characters, lowercased; anything else, including the literal
+`unknown`, counts as unset, and with no usable value the revision is `unknown`.
+
 Production OAuth requires `OAUTH_JWKS`, a complete private P-256/ES256 signing
 JWKS provided by the deployment secret manager. It must never be committed or
 copied into `.env.example`. When it is absent or malformed, OAuth endpoints
