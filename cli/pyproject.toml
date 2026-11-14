@@ -7,7 +7,7 @@ license = { text = "MIT AND GPL-2.0-only" }
 requires-python = ">=3.12"
 dependencies = [
     # Native forwarding customizes Typer's vendored Click parser.
-    "typer>=0.27.0",
+    "typer>=0.27.0,<0.29",
     "httpx>=0.27",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",

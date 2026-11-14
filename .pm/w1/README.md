@@ -78,7 +78,7 @@ m42–m45 and note [238](./238.md) were materialized on 2026-11-13 from `/pm-bra
 ## Inbox
 
 - [238](./238.md) — Current-state docs miscount the customer skills; the PyPI page says "eight" (45m, A3)
-- [239](./239.md) — A fresh install of `bea` from `main` cannot start: `typer._click` is gone in typer 0.29 (30–60m, A2; CI (cli) installation jobs red since 2026-11-10)
+- [241](./241.md) — Port the CLI off typer's private click so typer 0.29+ can install (1–2h, A2; follow-up to the 239 stopgap)
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.
