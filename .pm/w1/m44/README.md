@@ -1,6 +1,6 @@
 # w1 · m44 — List entries with their source text in one call
 
-**Worker:** worker1 **Goal:** an agent that needs the source of N entries before editing or deleting them gets each entry's text, location and `sha256sum` from one `listLedgerEntries` page, on MCP, REST and GraphQL, instead of one `getEntryContext` call per entry. **Status:** in progress (t001–t005 done)
+**Worker:** worker1 **Goal:** an agent that needs the source of N entries before editing or deleting them gets each entry's text, location and `sha256sum` from one `listLedgerEntries` page, on MCP, REST and GraphQL, instead of one `getEntryContext` call per entry. **Status:** in progress (t001–t006 done)
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Describe the flag in the tool, the docs and the size budget — **DONE** | 20m | t002 |
 | t004 | Adoption surface — **DONE** | 20m | t003 |
 | t005 | Simplify — **DONE** | 15m | t004 |
-| t006 | Test coverage | 30m | t004, t005 |
+| t006 | Test coverage — **DONE** | 30m | t004, t005 |
 | t007 | Closeout | 10m | t006 |
 
 ## Definition of done
