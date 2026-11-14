@@ -1,6 +1,6 @@
 # w23 · m44 — Get every MCP result to text-only and tools-only hosts in full
 
-**Worker:** worker1 **Goal:** An agent on any MCP host gets every row, id and next step it needs. That holds whether the host hands the model only `content` (claude.ai), only tools (ChatGPT), or `structuredContent` (Claude Code), and a QA check keeps the channels from drifting apart again. **Status:** todo
+**Worker:** worker1 **Goal:** An agent on any MCP host gets every row, id and next step it needs. That holds whether the host hands the model only `content` (claude.ai), only tools (ChatGPT), or `structuredContent` (Claude Code), and a QA check keeps the channels from drifting apart again. **Status:** todo (t001 blocked)
 
 ## Tasks (in order)
 
@@ -16,6 +16,12 @@
 | t008 | Simplify | 20m | t007 |
 | t009 | Test coverage | 30m | t007 |
 | t010 | Closeout | 15m | t009 |
+
+## Blocked
+
+- **t001** (blocked 2026-11-13). The remaining check needs someone signed in to claude.ai: whether claude.ai's model can read a `beancount://` resource unprompted, plus recording t001's results in `docs/mcp.md`. The Playwright browser runs `--isolated`, so the earlier sign-in ended when the browser closed.
+  - **Already verified on 2026-11-13.** Production runs `f58c89d64`: a tool refusal now ends with the serialized envelope line that commit added (for example, `readLedgerFiles` on a missing path). On claude.ai, with the Beancount.io connector, `getLedgerContext` on the QA ledger `puncsky/mcp-agent-eval` reached the model as `getLedgerContext: ok` followed by the full JSON, and the model listed its 5 payees and 12 accounts. Before the fix it saw only `getLedgerContext: ok`.
+  - **Unblock:** a claude.ai sign-in on the QA account in the headed Playwright browser. Only the owner can do this. Then run steps 3 and 4. t006 depends on the answer; t002–t005 proceed without it.
 
 ## Definition of done
 
