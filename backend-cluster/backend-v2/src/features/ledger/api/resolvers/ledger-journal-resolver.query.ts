@@ -1,3 +1,4 @@
+import { INCLUDE_SOURCE_DESCRIPTION } from "@/features/ledger/utils/include-source-description";
 import {
   Arg,
   Ctx,
@@ -87,6 +88,18 @@ class JournalQueryInput {
 
   @Field(() => Number, { nullable: true, defaultValue: 0 })
   offset?: number;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: INCLUDE_SOURCE_DESCRIPTION,
+  })
+  includeSource?: boolean;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description: "Alias of includeSource, as REST and MCP spell it.",
+  })
+  include_source?: boolean;
 
   @Field(() => [String], { nullable: true })
   directiveTypes?: string[];

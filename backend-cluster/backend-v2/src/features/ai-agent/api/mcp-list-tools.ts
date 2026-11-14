@@ -1,3 +1,4 @@
+import { INCLUDE_SOURCE_DESCRIPTION } from "@/features/ledger/utils/include-source-description";
 import { z } from "zod";
 import { bankAccountQuery } from "@/features/ledger/api/rest/v1/banks-handler";
 import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
@@ -89,7 +90,7 @@ export async function executeListStagedBankTransactions(
  * BQL's `id` is a directive index, and file reads have no entries.
  */
 export const listLedgerEntriesDescription =
-  "List journal entries, each with the entry_hash getEntryContext, updateEntrySource, and deleteEntrySource take. Narrows by account, filter, time, directiveTypes, and the transactionSubtypes, documentSubtypes, and customSubtypes filters (each narrows only its own directive family); pages with limit and offset; total counts every match. Same data as the journal resource.";
+  "List journal entries, each with the entry_hash getEntryContext, updateEntrySource, and deleteEntrySource take; include_source adds each entry's text and sha256sum, so a bulk edit needs no getEntryContext call. Narrows by account, filter, time, directiveTypes, and the transactionSubtypes, documentSubtypes, and customSubtypes filters (each narrows only its own directive family); pages with limit and offset; total counts every match. Same data as the journal resource.";
 
 export const listLedgerEntriesInput = z.object({
   account: z.string().optional().describe("Account filter, e.g. Assets:Bank."),
@@ -142,6 +143,11 @@ export const listLedgerEntriesInput = z.object({
     .min(0)
     .optional()
     .describe("Entries to skip; defaults to 0."),
+  include_source: z.boolean().optional().describe(INCLUDE_SOURCE_DESCRIPTION),
+  includeSource: z
+    .boolean()
+    .optional()
+    .describe("Alias of include_source, as GraphQL spells it."),
 });
 
 export const listLedgerEntriesOutput = toolOutputSchema(

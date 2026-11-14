@@ -9244,6 +9244,34 @@
           {
             "schema": {
               "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Attach each entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries per page with it."
+            },
+            "required": false,
+            "description": "Attach each entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries per page with it.",
+            "name": "include_source",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ],
+              "description": "Alias of include_source."
+            },
+            "required": false,
+            "description": "Alias of include_source.",
+            "name": "includeSource",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
               "description": "JSON-encoded directive kinds to include, e.g. [\"Transaction\"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event, Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-window `open` directives, which the time clamp preserves as context in every window."
             },
             "required": false,

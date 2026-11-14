@@ -1,3 +1,7 @@
+import {
+  INCLUDE_SOURCE_NAMES,
+  resolveFlagAlias,
+} from "@/features/ledger/utils/flag-alias";
 import { parseLedgerId } from "@/shared/str";
 import { unwrapFavaResponse } from "@/foundation/fava";
 import type { Identity } from "@/server/api/identity";
@@ -180,9 +184,11 @@ export type JournalQueryParams = {
   /**
    * Attach each entry's source slice (`{path, lineno, text, sha256sum}`, as
    * getEntryContext returns it), or null where it has no editable source;
-   * pages are capped at 200 entries (w1/m44).
+   * pages are capped at 200 entries (w1/m44). Either spelling; resolved here
+   * once for every surface.
    */
-  includeSource?: boolean;
+  include_source?: boolean | null;
+  includeSource?: boolean | null;
 };
 
 export type AccountJournalQueryParams = {
@@ -304,7 +310,10 @@ export class LedgerJournalService
         ...page,
         ...kinds,
         // Only when asked: the ledger answers unchanged without it.
-        ...(query?.includeSource && { include_source: true }),
+        ...(resolveFlagAlias(
+          { primary: query?.include_source, legacy: query?.includeSource },
+          INCLUDE_SOURCE_NAMES,
+        ) && { include_source: true }),
       }),
       "get ledger journal entries",
     );

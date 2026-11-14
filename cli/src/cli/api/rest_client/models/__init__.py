@@ -162,6 +162,9 @@ from .get_api_gateway_v1_ledgers_owner_name_holdings_group_by import GetApiGatew
 from .get_api_gateway_v1_ledgers_owner_name_interval_totals_shape import (
     GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape,
 )
+from .get_api_gateway_v1_ledgers_owner_name_journal_include_source import (
+    GetApiGatewayV1LedgersOwnerNameJournalIncludeSource,
+)
 from .get_api_gateway_v1_ledgers_owner_name_managed_prices_response_200_item import (
     GetApiGatewayV1LedgersOwnerNameManagedPricesResponse200Item,
 )
@@ -606,6 +609,7 @@ __all__ = (
     "GetApiGatewayV1LedgersOwnerNameCollaboratorsResponse200ItemPermission",
     "GetApiGatewayV1LedgersOwnerNameHoldingsGroupBy",
     "GetApiGatewayV1LedgersOwnerNameIntervalTotalsShape",
+    "GetApiGatewayV1LedgersOwnerNameJournalIncludeSource",
     "GetApiGatewayV1LedgersOwnerNameManagedPricesResponse200Item",
     "GetApiGatewayV1LedgersOwnerNameManagedPricesResponse200ItemFreshness",
     "GetApiGatewayV1LedgersOwnerNameManagedPricesResponse200ItemIncludedFromItem",

@@ -1,5 +1,6 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { booleanQuery } from "@/server/rest/v1-schemas";
+import { INCLUDE_SOURCE_DESCRIPTION } from "@/features/ledger/utils/include-source-description";
 import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
 import {
   resolveFilterAccount,
@@ -99,6 +100,13 @@ const customSubtypesQuery = jsonStringArrayQuery
 const journalQuerySchema = filters.extend({
   limit: z.coerce.number().int().min(1).max(1000).optional(),
   offset: z.coerce.number().int().min(0).optional(),
+  include_source: booleanQuery.openapi({
+    description: INCLUDE_SOURCE_DESCRIPTION,
+  }),
+  // Twin: the camel spelling, accepted on every surface.
+  includeSource: booleanQuery.openapi({
+    description: "Alias of include_source.",
+  }),
   // The journal service normalizes and validates these for every surface.
   directiveTypes: directiveTypesQuery(jsonStringArrayQuery.optional()),
   transactionSubtypes: transactionSubtypesQuery,

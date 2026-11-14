@@ -15,6 +15,12 @@ import { BadUserInputError } from "@/shared/errors";
  */
 export const DRY_RUN_NAMES = { primary: "dry_run", legacy: "dryRun" } as const;
 
+/** The journal's source-slice flag (w1/m44), same positional convention. */
+export const INCLUDE_SOURCE_NAMES = {
+  primary: "include_source",
+  legacy: "includeSource",
+} as const;
+
 /** The commit-despite-errors twin, same positional convention. */
 export const ALLOW_INVALID_NAMES = {
   primary: "allow_invalid",

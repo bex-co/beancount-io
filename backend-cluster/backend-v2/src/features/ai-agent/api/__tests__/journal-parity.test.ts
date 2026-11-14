@@ -993,3 +993,87 @@ describe("journal directive kinds", () => {
     }
   });
 });
+
+describe("include_source on every surface (w1/m44)", () => {
+  const source = {
+    path: "2026/café.bean",
+    lineno: 3,
+    text: '2026-01-02 * "café"\n  Expenses:Café  9007199254740993.12 USD\n  Assets:Bank',
+    sha256sum: "a".repeat(64),
+  };
+
+  it.each([
+    ["include_source", "include_source"],
+    ["includeSource", "includeSource"],
+  ])(
+    "forwards %s to the ledger and returns each entry's source unchanged",
+    async (restName, mcpName) => {
+      const f = await fixture();
+      try {
+        f.journal.getJournal.mockResolvedValue(
+          envelope({
+            total: 1,
+            items: [{ ...entry, source }],
+            is_empty: false,
+          }),
+        );
+        const rest = await (await f.rest(`journal?${restName}=true`)).json();
+        const gql = await f.gql(
+          'getLedgerJournal(ledgerId: "alice/main", query: { includeSource: true }) { data }',
+        );
+        const tool = await f.tool({ [mcpName]: true });
+        const mcp = (tool.structuredContent as { result: { data: unknown[] } })
+          .result;
+        for (const data of [
+          (rest as { data: unknown[] }).data,
+          (gql.data?.getLedgerJournal as { data: unknown[] }).data,
+          mcp.data,
+        ]) {
+          expect(data).toEqual([{ ...entry, source }]);
+        }
+        // Each surface asked the ledger for the source, once, by its wire name.
+        expect(f.journal.getJournal).toHaveBeenCalledTimes(3);
+        for (const [, , ledgerQuery] of f.journal.getJournal.mock.calls) {
+          expect(ledgerQuery).toMatchObject({ include_source: true });
+        }
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("asks the ledger for no source when no surface sends the flag", async () => {
+    const f = await fixture();
+    try {
+      await f.rest("journal");
+      await f.gql('getLedgerJournal(ledgerId: "alice/main") { total }');
+      await f.tool({});
+      for (const [, , ledgerQuery] of f.journal.getJournal.mock.calls) {
+        expect(ledgerQuery).not.toHaveProperty("include_source");
+      }
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses the two spellings disagreeing, on every surface", async () => {
+    const f = await fixture();
+    try {
+      const rest = await f.rest(
+        "journal?include_source=true&includeSource=false",
+      );
+      expect(rest.status).toBe(400);
+      const gql = await f.gql(
+        'getLedgerJournal(ledgerId: "alice/main", query: { includeSource: true, include_source: false }) { total }',
+      );
+      expect(
+        formatError(gql.errors![0].toJSON(), gql.errors![0]).extensions?.code,
+      ).toBe("BAD_USER_INPUT");
+      const tool = await f.tool({ include_source: true, includeSource: false });
+      expect(tool.isError).toBe(true);
+      expect(f.journal.getJournal).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});

@@ -6,6 +6,9 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.get_api_gateway_v1_ledgers_owner_name_journal_include_source import (
+    GetApiGatewayV1LedgersOwnerNameJournalIncludeSource,
+)
 from ...models.v1_error import V1Error
 from ...types import UNSET, Response, Unset
 
@@ -19,6 +22,8 @@ def _get_kwargs(
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
+    include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
+    includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
     document_subtypes: str | Unset = UNSET,
@@ -41,6 +46,18 @@ def _get_kwargs(
     else:
         json_offset = offset
     params["offset"] = json_offset
+
+    json_include_source: str | Unset = UNSET
+    if not isinstance(include_source, Unset):
+        json_include_source = include_source.value
+
+    params["include_source"] = json_include_source
+
+    json_includeSource: str | Unset = UNSET
+    if not isinstance(includeSource, Unset):
+        json_includeSource = includeSource.value
+
+    params["includeSource"] = json_includeSource
 
     params["directiveTypes"] = directive_types
 
@@ -139,6 +156,8 @@ def sync_detailed(
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
+    include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
+    includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
     document_subtypes: str | Unset = UNSET,
@@ -160,6 +179,13 @@ def sync_detailed(
             transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
+        include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
+            entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext
+            returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no
+            editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries
+            per page with it.
+        includeSource (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Alias of
+            include_source.
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
             Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
@@ -190,6 +216,8 @@ def sync_detailed(
         time=time,
         limit=limit,
         offset=offset,
+        include_source=include_source,
+        includeSource=includeSource,
         directive_types=directive_types,
         transaction_subtypes=transaction_subtypes,
         document_subtypes=document_subtypes,
@@ -213,6 +241,8 @@ def sync(
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
+    include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
+    includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
     document_subtypes: str | Unset = UNSET,
@@ -234,6 +264,13 @@ def sync(
             transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
+        include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
+            entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext
+            returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no
+            editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries
+            per page with it.
+        includeSource (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Alias of
+            include_source.
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
             Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
@@ -265,6 +302,8 @@ def sync(
         time=time,
         limit=limit,
         offset=offset,
+        include_source=include_source,
+        includeSource=includeSource,
         directive_types=directive_types,
         transaction_subtypes=transaction_subtypes,
         document_subtypes=document_subtypes,
@@ -282,6 +321,8 @@ async def asyncio_detailed(
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
+    include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
+    includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
     document_subtypes: str | Unset = UNSET,
@@ -303,6 +344,13 @@ async def asyncio_detailed(
             transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
+        include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
+            entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext
+            returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no
+            editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries
+            per page with it.
+        includeSource (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Alias of
+            include_source.
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
             Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
@@ -333,6 +381,8 @@ async def asyncio_detailed(
         time=time,
         limit=limit,
         offset=offset,
+        include_source=include_source,
+        includeSource=includeSource,
         directive_types=directive_types,
         transaction_subtypes=transaction_subtypes,
         document_subtypes=document_subtypes,
@@ -354,6 +404,8 @@ async def asyncio(
     time: str | Unset = UNSET,
     limit: int | Unset = UNSET,
     offset: int | None | Unset = UNSET,
+    include_source: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
+    includeSource: GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset = UNSET,
     directive_types: str | Unset = UNSET,
     transaction_subtypes: str | Unset = UNSET,
     document_subtypes: str | Unset = UNSET,
@@ -375,6 +427,13 @@ async def asyncio(
             transactions alone.
         limit (int | Unset):
         offset (int | None | Unset):
+        include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
+            entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext
+            returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no
+            editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries
+            per page with it.
+        includeSource (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Alias of
+            include_source.
         directive_types (str | Unset): JSON-encoded directive kinds to include, e.g.
             ["Transaction"]: any of Transaction, Balance, Commodity, Close, Custom, Document, Event,
             Note, Open, Pad, Price, in any case. Omitted, every kind is returned — including pre-
@@ -407,6 +466,8 @@ async def asyncio(
             time=time,
             limit=limit,
             offset=offset,
+            include_source=include_source,
+            includeSource=includeSource,
             directive_types=directive_types,
             transaction_subtypes=transaction_subtypes,
             document_subtypes=document_subtypes,
