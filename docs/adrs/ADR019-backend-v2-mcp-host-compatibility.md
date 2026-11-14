@@ -283,7 +283,7 @@ The table below names where each decision lives; the one after it gives its stat
 | D3 | `clientDefaults.application_type` in `src/features/oauth/api/oidc-route.ts`; Discourse states `"web"` in `buildStaticOAuthClients` (`src/features/oauth/data/config.ts`) |
 | D4 | `redirect_uri` and `client_name` on `GET /api-gateway/oauth/interaction/:uid`; `dashboard/src/features/oauth/pages/consent.tsx` renders them, with copy in every locale |
 | D5 | `oauthLifetimes`, `shouldRotateRefreshToken`, and the TTLs in `config.ts`; the grant re-save in `oidc-route.ts` extended from the mobile client to every non-static client and capped at one year; the README lifetime table |
-| D6 | `features.clientIdMetadataDocument: { enabled: true, ack: "draft-02" }` in `oidc-route.ts` |
+| D6 | `features.clientIdMetadataDocument: { enabled: true, ack: "draft-03" }` in `oidc-route.ts` (draft-02 until 2026-11-13; see the re-acknowledgement below) |
 | D7 | The three list tools in `src/features/ai-agent/api/mcp-tools.ts` with their `VERB_TABLE` bindings; the `tools/list` size gate; the pointer in ADR 0008's Amendments |
 | D8 | Host fixtures in `oidc-route.test.ts`; metadata checks in `scripts/mcp-conformance.ts` |
 | D9 | Edge-rule review for `/.well-known/*`, `/api-gateway/oauth/*`, and `/api-gateway/mcp` |
@@ -473,3 +473,28 @@ External (read 2026-09-25):
 - VS Code — [redirect URIs registered, and the busy-port mismatch (microsoft/vscode#278512)](https://github.com/microsoft/vscode/issues/278512)
 - Meta Muse, third-party reporting — [Does Meta Muse support MCP?](https://www.aiagentslibrary.com/blog/meta-muse-mcp/); [How to submit an MCP server to Muse](https://manufact.com/blog/submit-mcp-server-to-muse); [Muse Connector Platform](https://cellcog.ai/blog/muse-connector-platform/); [an integrator's Muse OAuth notes (vectorize-io/hindsight#4684)](https://github.com/vectorize-io/hindsight/pull/4684); [a Muse spike noting US-only access (ima-jin/imajin-ai#2250)](https://github.com/ima-jin/imajin-ai/issues/2250)
 - RFC 8252 (§7.1 private-use schemes, §7.3 loopback ports, §8.6 client impersonation), RFC 9207 (`iss`), RFC 8707 (`resource`)
+
+## Re-acknowledgement: CIMD draft-03 on oidc-provider 9.15.0 (2026-11-13, w1/240)
+
+oidc-provider 9.15.0 moved the experimental CIMD feature to draft-03, and
+without an acknowledgement for it the provider refuses to construct. That
+broke every `CI (backend parity)` run, because backend-v2 resolves the newest
+9.x. The installed 9.12.2 and 9.15.0 differ as follows for CIMD
+(`lib/helpers/client_id_metadata_document.js`, `lib/views/interaction.js`):
+
+- A metadata-document URL whose path is `/` is not a CIMD client id.
+- A `client_id` equal to the issuer is refused.
+- A document listing a forbidden method in `token_endpoint_auth_methods_supported`
+  is refused, as `token_endpoint_auth_method` already was.
+- Document validation failures now answer `invalid_client` rather than
+  `invalid_client_metadata`.
+- The default interaction view no longer shows a CIMD client's `logo_uri`.
+
+None of these changes what D6 relies on. Claude's and ChatGPT's client ids are
+path-bearing HTTPS URLs on their own domains with `none` authentication, and
+the consent page (D8) is ours, not the default view. The deployment
+acknowledges draft-03, and `package.json` requires `oidc-provider` ^9.15.0
+so a fresh install cannot fall back to a draft-02 build. The OAuth suite
+(146 tests, including the test that pins the acknowledgement to the installed
+draft) passes on 9.15.0.
+

@@ -106,7 +106,7 @@ export function selectOAuthResource(
 }
 
 /** The CIMD draft this deployment has reviewed (ADR 019 D6). */
-export const CIMD_DRAFT = "draft-02";
+export const CIMD_DRAFT = "draft-03";
 
 /**
  * The domain publishing a CIMD client's metadata, or null for any other client.
