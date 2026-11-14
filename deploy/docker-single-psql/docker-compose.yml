@@ -26,6 +26,10 @@ x-backend-image: &backend-image
   build:
     context: ../../backend-cluster/backend-v2
     dockerfile: Dockerfile
+    args:
+      # The commit the image reports on /.well-known/mcp.json; see
+      # BEANCOUNT_REVISION in .env.example.
+      REVISION: ${BEANCOUNT_REVISION:-unknown}
   image: beancount-io/backend-v2:${BEANCOUNT_IMAGE_TAG:-selfhosted}
 
 networks:

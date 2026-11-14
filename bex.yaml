@@ -69,6 +69,9 @@ services:
     type: web
     runtime: docker
     rootDir: backend-cluster/backend-v2
+    # The commit this service runs reaches it at runtime, not as a build
+    # argument (Docker builds here get none): it reads RENDER_GIT_COMMIT where
+    # the platform sets it, else BEANCOUNT_REVISION. See deploy/bex/README.md.
     plan: starter
     # No healthCheckPath on purpose: /healthz is a DEEP check that 500s when
     # any dependency (including Gitea) is unreachable. As a platform probe it

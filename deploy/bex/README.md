@@ -127,6 +127,21 @@ that the page logged no errors. It then deletes the account, unless you pass
 unless you pass `--require-self-host`. Exit code 0 means passed or skipped, 1 a
 check failed, 2 it could not run.
 
+### Which commit is running
+
+The API reports the commit it runs on its `/.well-known/mcp.json` (`revision`) and
+in the MCP `initialize` answer (`serverInfo.version`, as `1.0.0+<first 7
+characters>`); `unknown` means it was given none. On bex the commit has to arrive
+at runtime: a bex build takes no build arguments, so the `REVISION` build
+argument that the compose builds under `deploy/` use stays `unknown` here. The API
+reads `RENDER_GIT_COMMIT` where the platform sets it, and `BEANCOUNT_REVISION`
+otherwise (7–40 hexadecimal characters; anything else counts as not given).
+
+This repository cannot show that bex sets `RENDER_GIT_COMMIT`, so check a fresh
+deploy: if `revision` reads `unknown`, set `BEANCOUNT_REVISION` on the
+`beancount-api` service to the commit you deployed (the `commitId` of step 2
+above) and deploy it again.
+
 ## After the first deploy
 
 The deploy asks for nothing. Every secret is generated (`AUTH_SECRET`,

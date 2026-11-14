@@ -21,6 +21,10 @@ cd deploy/dev-sandbox
 ./up.sh          # builds + starts everything; idempotent, re-run any time
 ```
 
+To have the backend report which commit it runs (`revision` on
+`/.well-known/mcp.json`), run `BEANCOUNT_REVISION=$(git rev-parse HEAD) ./up.sh`;
+without it the image reports `unknown`.
+
 `up.sh` creates `.env` from `.env.example` on first run (generated secrets,
 your LAN IP for the Gitea clone URL), brings up compose, provisions Gitea and
 the database, writes `backend-cluster/agent-box/.dev.vars` with the shared

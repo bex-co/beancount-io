@@ -13,6 +13,10 @@ docker compose up -d --build    # builds dashboard, backend-v2, ledger images
 ./post-docker-compose-up-build.sh
 ```
 
+To have the backend report which commit it runs (`revision` on
+`/.well-known/mcp.json`), build with `BEANCOUNT_REVISION=$(git rev-parse HEAD) docker compose up -d --build`; without it the image reports
+`unknown`.
+
 The post script is idempotent: it creates the Gitea admin user (from
 `FAVA_API_ADMIN_USER` / `FAVA_API_ADMIN_PASSWORD` in `.env`) and applies
 backend-v2's database migrations. Re-run it any time.

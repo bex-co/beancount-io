@@ -51,6 +51,10 @@ docker compose up -d --build
 docker compose ps --all
 ```
 
+The backend image reports the commit it was built from on `/.well-known/mcp.json`
+(`revision`) and in the MCP `initialize` answer. Give it when you build,
+`BEANCOUNT_REVISION=$(git rev-parse HEAD) docker compose up -d --build`; without it the image reports `unknown`.
+
 Three one-shot services should finish with exit code 0, in this order:
 
 - `postgres-init` provisions the two roles and databases on the shared server.

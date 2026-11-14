@@ -52,6 +52,11 @@ docker compose up -d --build
 docker compose ps --all
 ```
 
+The backend image reports the commit it was built from on `/.well-known/mcp.json`
+(`revision`) and in the MCP `initialize` answer, so a client can tell which build
+it reached. Give it when you build, `BEANCOUNT_REVISION=$(git rev-parse HEAD) docker compose up -d --build`; without it the image reports
+`unknown`. Updating from a newer checkout, build again with the new commit.
+
 Two one-shot services should finish with exit code 0:
 
 - `gitea-init` creates the Gitea administrator idempotently.
