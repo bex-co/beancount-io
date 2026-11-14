@@ -1,12 +1,12 @@
 # w22 · m10 — Bank Sync: set one target account for every selected staged row
 
-**Worker:** worker1 **Goal:** clearing a Bank Sync backlog takes one action instead of one account picker per row **Status:** todo
+**Worker:** worker1 **Goal:** clearing a Bank Sync backlog takes one action instead of one account picker per row **Status:** todo (t001 done)
 
 ## Tasks (in order)
 
 | id   | title                                                             | est | depends_on |
 | ---- | ----------------------------------------------------------------- | --- | ---------- |
-| t001 | Pure helper: apply one target account to the selected rows        | 30m | —          |
+| t001 | Pure helper: apply one target account to the selected rows — **DONE**        | 30m | —          |
 | t002 | "Set for selected" control in the Bank Sync review table          | 45m | t001       |
 | t003 | Translate the new control into all 15 dashboard locales           | 30m | t002       |
 | t004 | Browser check: select all, set the target, submit once            | 45m | t003       |
