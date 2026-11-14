@@ -162,9 +162,9 @@ Remove the old install **before** installing by another method — two copies of
 
 Install the complete suite from one public ClawHub plugin entry,
 **[`@puncsky/beancount-io`](https://clawhub.ai/plugins/@puncsky/beancount-io)**,
-published at version **0.4.0**. That package lags the Claude Code/Codex suite
-(**0.4.19**, fourteen skills): it carries the thirteen workflows that existed at
-0.4.0 and not `beancount-invoices`, until a ClawHub release under the
+published at version **0.4.0**. That package lags the Claude Code/Codex suite:
+it carries the thirteen workflows that existed at 0.4.0, not `beancount-invoices`,
+`beancount-report-pack` or `beancount-business-metrics`, until a ClawHub release under the
 [publishing contract](suite-distribution.md) brings it to parity. Its workflows
 keep their names, instructions and sibling references.
 

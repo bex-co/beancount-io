@@ -1,7 +1,8 @@
 # Beancount.io suite distribution
 
-One Beancount.io package carries the thirteen customer workflows, their original
-skill names and their shared references. Claude Code and Codex retain their
+One Beancount.io package carries the customer workflows, their original skill
+names and their shared references; its published ClawHub release, 0.4.0,
+carries the thirteen that existed then. Claude Code and Codex retain their
 existing [whole-suite plugin installs](installation.md#plugin-both-clients).
 Subsequent ClawHub releases target **`@puncsky/beancount-io`** as a single
 `bundle-plugin`; the thirteen individual listings are retired through owner

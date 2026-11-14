@@ -16,7 +16,7 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - **Production payment tests:** by user decision on 2026-10-18, each milestone ends with a real payment test in production. It uses the QA account from `beancount-io/.env` and two 100%-off coupons, before closeout.
 - **Not on the board:** PRFAQ005's stage 3, its growth experiments, waits for four weeks of stage 1–2 metrics.
 
-m42–m45 and note [238](./238.md) were materialized on 2026-11-13 from `/pm-brainstorm for w1` items 1–5, routed by the user via `/pmx`. m43, m44 and m45 carry the three write primitives [228](./blocked/228.md) left undecided (account rename, an atomic move between files, bulk source reads), so that note's unblock condition is now met. **Suggested order:** m42 and note 238 are independent of the rest; m44 before m45. The hosted checks in m43/t006 and m45/t005 wait on a backend-v2 deploy and on [w23/242](../w23/242.md) (`revertCommit` answers `INTERNAL_SERVER_ERROR` in production).
+m42–m45 and note [238](./done/238.md) were materialized on 2026-11-13 from `/pm-brainstorm for w1` items 1–5, routed by the user via `/pmx`. m43, m44 and m45 carry the three write primitives [228](./blocked/228.md) left undecided (account rename, an atomic move between files, bulk source reads), so that note's unblock condition is now met. **Suggested order:** m42 and note 238 are independent of the rest; m44 before m45. The hosted checks in m43/t006 and m45/t005 wait on a backend-v2 deploy and on [w23/242](../w23/242.md) (`revertCommit` answers `INTERNAL_SERVER_ERROR` in production).
 
 ### Open
 
@@ -77,7 +77,6 @@ m42–m45 and note [238](./238.md) were materialized on 2026-11-13 from `/pm-bra
 
 ## Inbox
 
-- [238](./238.md) — Current-state docs miscount the customer skills; the PyPI page says "eight" (45m, A3)
 - [241](./241.md) — Port the CLI off typer's private click so typer 0.29+ can install (1–2h, A2; follow-up to the 239 stopgap)
 
 

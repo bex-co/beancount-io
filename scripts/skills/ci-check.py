@@ -703,6 +703,120 @@ def check_plugin_version_bump(base_ref: str) -> None:
     print(f"OK plugin version diff ({old} -> {new})")
 
 
+# Passages that describe the customer suite as it is today (w1/238). A count
+# qualifying "skills" or "workflows" must equal the inventory, and a stated
+# Claude Code/Codex suite version must equal plugin.json. Sections under a
+# dated heading (YYYY-MM-DD in it or a parent heading) are evidence of their
+# date, and a count in a paragraph that names a version or a date describes
+# that release; neither is checked. A list takes the version or date its lead
+# paragraph names.
+CURRENT_STATE_DOCS = (
+    "README.md",
+    "cli/README.md",
+    "skills/README.md",
+    "docs/skills/installation.md",
+    "docs/skills/suite-distribution.md",
+)
+NUMBER_WORDS = {
+    word: value
+    for value, word in enumerate(
+        "zero one two three four five six seven eight nine ten eleven twelve"
+        " thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty"
+        " twenty-one twenty-two twenty-three twenty-four twenty-five".split()
+    )
+}
+SUITE_COUNT = re.compile(
+    r"\b(\d+|" + "|".join(sorted(NUMBER_WORDS, key=len, reverse=True)) + r")(?:\*\*)?"
+    r"\s+(?:[`\w*.-]+\s+){0,2}?(?:skills|workflows)\b",
+    re.IGNORECASE,
+)
+SUITE_VERSION = re.compile(
+    r"\b(?:Claude Code/Codex|repository) (?:suite|plugin)\W{0,4}(?:is at\s+)?\**(\d+\.\d+\.\d+)"
+)
+DATED_HEADING = re.compile(r"\d{4}-\d{2}-\d{2}")
+NAMED_RELEASE = re.compile(r"(?<![\w.])v?\d+\.\d+\.\d+(?!\.?\d)|\b\d{4}-\d{2}-\d{2}\b")
+
+
+def doc_paragraphs(text: str) -> list[tuple[list[tuple[int, str]], bool, str]]:
+    """Each prose paragraph outside code fences: its numbered lines, whether a
+    dated heading covers it, and the text a release name may sit in."""
+    paragraphs: list[tuple[list[tuple[int, str]], bool, str]] = []
+    headings: list[tuple[int, str]] = []
+    current: list[tuple[int, str]] = []
+    fenced = False
+    lead = ""
+
+    def flush() -> None:
+        nonlocal current, lead
+        if current:
+            joined = " ".join(line for _, line in current)
+            is_list = current[0][1].lstrip().startswith(("- ", "* ", "1. "))
+            dated = any(DATED_HEADING.search(title) for _, title in headings)
+            paragraphs.append((current, dated, f"{lead} {joined}" if is_list else joined))
+            if not is_list:
+                lead = joined
+        current = []
+
+    for number, line in enumerate(text.split("\n"), 1):
+        if line.lstrip().startswith("```"):
+            flush()
+            fenced = not fenced
+            continue
+        if fenced:
+            continue
+        heading = re.match(r"^(#+)\s+(.*)", line)
+        if heading:
+            flush()
+            lead = ""
+            level = len(heading.group(1))
+            headings = [h for h in headings if h[0] < level] + [(level, heading.group(2))]
+        elif line.strip():
+            current.append((number, line))
+        else:
+            flush()
+    flush()
+    return paragraphs
+
+
+def check_suite_counts() -> None:
+    inventory = len(list(SKILLS_DIR.glob("*/SKILL.md")))
+    try:
+        version = json.loads((REPO_ROOT / "plugin.json").read_text(encoding="utf-8"))["version"]
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError) as error:
+        fail(f"plugin.json: cannot read the suite version ({error})")
+    for rel in CURRENT_STATE_DOCS:
+        path = REPO_ROOT / rel
+        if not path.is_file():
+            fail(f"{rel}: current-state suite document is missing; update CURRENT_STATE_DOCS if it moved")
+        for lines, dated, context in doc_paragraphs(path.read_text(encoding="utf-8")):
+            if dated:
+                continue
+            text = " ".join(line for _, line in lines)
+
+            def line_of(offset: int) -> int:
+                for number, line in lines:
+                    if offset <= len(line):
+                        return number
+                    offset -= len(line) + 1
+                return lines[-1][0]
+
+            names_release = bool(NAMED_RELEASE.search(context))
+            for match in SUITE_COUNT.finditer(text):
+                word = match.group(1).lower()
+                count = int(word) if word.isdigit() else NUMBER_WORDS[word]
+                if count != inventory and not names_release:
+                    fail(
+                        f"{rel}:{line_of(match.start())}: {match.group(0)!r} describes the suite, which has {inventory} skills"
+                        " (drop the count, or name the release it describes)"
+                    )
+            for match in SUITE_VERSION.finditer(text):
+                if match.group(1) != version:
+                    fail(
+                        f"{rel}:{line_of(match.start())}: states suite version {match.group(1)}, but plugin.json is {version}"
+                    )
+    print(f"OK current-state suite counts ({inventory} skills, suite {version})")
+
+
 def check_catalog_groups() -> None:
     """Keep the customer suite together and contributor tools out of its group."""
     try:
@@ -738,6 +852,7 @@ def main() -> None:
     check_plugin_manifests()
     check_plugin_version_bump(os.environ.get("SKILLS_BASE_REF", ""))
     check_catalog_groups()
+    check_suite_counts()
     print("All skills CI checks passed.")
 
 

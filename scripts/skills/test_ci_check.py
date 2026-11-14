@@ -858,6 +858,91 @@ class TestOracleAndIsolation(unittest.TestCase):
                 ci_check.check_no_redundant_installs()
 
 
+class TestSuiteCounts(unittest.TestCase):
+    """w1/238: current-state passages state today's suite count and version."""
+
+    def setUp(self):
+        scratch = SCRIPTS_DIR / "tmp"
+        scratch.mkdir(exist_ok=True)
+        temporary = tempfile.TemporaryDirectory(dir=scratch)
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        skills = self.root / "skills"
+        for name in ("beancount-add", "beancount-ask"):
+            (skills / name).mkdir(parents=True)
+            (skills / name / "SKILL.md").write_text("---\nname: x\n---\n")
+        (self.root / "plugin.json").write_text(json.dumps({"version": "0.2.0"}))
+        for rel in ci_check.CURRENT_STATE_DOCS:
+            path = self.root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("# Doc\n\nThe two `beancount-*` ledger skills run on `bea`.\n")
+        patches = mock.patch.multiple(ci_check, REPO_ROOT=self.root, SKILLS_DIR=skills)
+        patches.start()
+        self.addCleanup(patches.stop)
+
+    def write(self, rel: str, text: str) -> None:
+        (self.root / rel).write_text(text)
+
+    def check(self) -> str:
+        error = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+            try:
+                ci_check.check_suite_counts()
+            except SystemExit:
+                pass
+        return error.getvalue()
+
+    def test_todays_count_passes(self):
+        self.assertEqual(self.check(), "")
+
+    def test_a_stale_count_fails_naming_the_file_and_line(self):
+        self.write("cli/README.md", "# CLI\n\nSome intro.\n\nThe eight\n`beancount-*` ledger skills run here.\n")
+        self.assertIn("cli/README.md:5: 'eight `beancount-*` ledger skills'", self.check())
+        self.assertIn("which has 2 skills", self.check())
+
+    def test_a_new_skill_makes_every_old_count_stale(self):
+        (self.root / "skills/beancount-close").mkdir()
+        (self.root / "skills/beancount-close/SKILL.md").write_text("---\nname: x\n---\n")
+        self.assertIn("README.md:3: 'two `beancount-*` ledger skills'", self.check())
+
+    def test_numerals_and_qualifiers_count_too(self):
+        for phrase in ("3 skills", "**3** customer workflows", "three Beancount.io workflows"):
+            with self.subTest(phrase=phrase):
+                self.write("README.md", f"# R\n\nIt has {phrase}.\n")
+                self.assertIn("README.md:3:", self.check())
+
+    def test_dated_sections_and_named_releases_are_evidence(self):
+        self.write(
+            "docs/skills/suite-distribution.md",
+            "# Distribution\n\n## Release status — 2026-10-22 UTC\n\nAll thirteen skills passed.\n\n"
+            "### Follow-up\n\nStill thirteen workflows here.\n\n"
+            "## Hosts\n\nThe ClawHub release 0.4.0 carries thirteen workflows.\n\n"
+            "Hermes **v0.22.4** checked the complete suite:\n\n- it reports all thirteen skills' metadata.\n",
+        )
+        self.assertEqual(self.check(), "")
+
+    def test_an_undated_section_after_a_dated_one_is_checked(self):
+        self.write(
+            "docs/skills/suite-distribution.md",
+            "# D\n\n## Status — 2026-10-22\n\nthirteen skills.\n\n## Today\n\nThe suite has thirteen skills.\n",
+        )
+        self.assertIn("suite-distribution.md:9:", self.check())
+
+    def test_code_fences_are_not_prose(self):
+        self.write("skills/README.md", "# S\n\n```text\nnine skills installed\n```\n")
+        self.assertEqual(self.check(), "")
+
+    def test_a_stated_suite_version_must_match_plugin_json(self):
+        self.write("docs/skills/installation.md", "# I\n\nIt lags the Claude Code/Codex suite\n(**0.1.9**): it is older.\n")
+        self.assertIn("installation.md:3: states suite version 0.1.9, but plugin.json is 0.2.0", self.check())
+        self.write("docs/skills/installation.md", "# I\n\nThe Claude Code/Codex suite (**0.2.0**) is current.\n")
+        self.assertEqual(self.check(), "")
+
+    def test_a_missing_current_state_doc_is_named(self):
+        (self.root / "skills/README.md").unlink()
+        self.assertIn("skills/README.md: current-state suite document is missing", self.check())
+
+
 class TestRawAppendMatcher(unittest.TestCase):
     def flagged(self, line: str) -> bool:
         return bool(

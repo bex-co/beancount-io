@@ -37,7 +37,7 @@ bea engine enable beangulp    # then: bea import --ofx … / bea ingest …
 bea engine enable beanprice   # then: bea price …  (not bea add price)
 ```
 
-`bea import --csv` and `bea add price` work without those features; `bea import --ofx` needs Beangulp. The eight
+`bea import --csv` and `bea add price` work without those features; `bea import --ofx` needs Beangulp. The
 `beancount-*` ledger skills for Claude Code and Codex run on this single `bea`
 installation and never ask you to install Beancount separately — see the
 [skills installation guide](https://github.com/bex-co/beancount-io/blob/main/docs/skills/installation.md)
