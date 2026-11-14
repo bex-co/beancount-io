@@ -1,6 +1,6 @@
 # w22 · m10 — Bank Sync: set one target account for every selected staged row
 
-**Worker:** worker1 **Goal:** clearing a Bank Sync backlog takes one action instead of one account picker per row **Status:** todo (t001, t002, t003, t005, t006 done; t004 blocked)
+**Worker:** worker1 **Goal:** clearing a Bank Sync backlog takes one action instead of one account picker per row **Status:** todo (t001, t002, t003, t005, t006, t007 done; t004 blocked)
 
 ## Tasks (in order)
 
@@ -12,7 +12,7 @@
 | t004 | Browser check: select all, set the target, submit once            | 45m | t003       |
 | t005 | Adoption surface — **DONE**                                                  | 25m | t003       |
 | t006 | Simplify — **DONE**                                                          | 25m | t005       |
-| t007 | Test coverage                                                     | 45m | t005       |
+| t007 | Test coverage — **DONE**                                                     | 45m | t005       |
 | t008 | Closeout                                                          | 15m | t004, t006, t007 |
 
 ## Definition of done

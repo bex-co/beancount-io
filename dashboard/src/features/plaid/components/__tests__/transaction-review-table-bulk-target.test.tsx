@@ -6,6 +6,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { TransactionReviewTable } from "../transaction-review-table";
 import {
   useUnsyncedTransactions,
@@ -14,6 +15,12 @@ import {
   useSubmitPlaidTransactions,
   useDeletePlaidTransactions,
 } from "../../hooks/use-plaid-accounts";
+
+const { mockToast } = vi.hoisted(() => ({ mockToast: vi.fn() }));
+
+vi.mock("@/common/hooks/use-toast", () => ({
+  useToast: () => ({ toast: mockToast }),
+}));
 
 vi.mock("../../hooks/use-plaid-accounts", () => ({
   useUnsyncedTransactions: vi.fn(),
@@ -338,5 +345,158 @@ describe("TransactionReviewTable Set for selected", () => {
       ).toBeGreaterThan(0),
     );
     expect(submitTransactions).not.toHaveBeenCalled();
+  });
+
+  it("tells the reader what was set in a toast", async () => {
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+    selectAll();
+
+    const panel = await openPanel();
+    chooseInPanel(panel, UNCATEGORIZED);
+    await apply(panel);
+
+    expect(mockToast).toHaveBeenCalledWith({
+      title: "Target account set",
+      description: `4 transactions now go to ${UNCATEGORIZED}.`,
+    });
+  });
+
+  it("starts fresh every time it opens: no account chosen, the replace option off", async () => {
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+    selectAll();
+    fireEvent.change(rowTargetInputs()[0], {
+      target: { value: "Expenses:Dining" },
+    });
+
+    let panel = await openPanel();
+    chooseInPanel(panel, UNCATEGORIZED);
+    fireEvent.click(
+      within(panel).getByRole("checkbox", { name: /also replace/i }),
+    );
+    fireEvent.click(within(panel).getByRole("button", { name: /cancel/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+
+    panel = await openPanel();
+    expect(within(panel).getByTestId("account-combobox")).toHaveValue("");
+    expect(
+      within(panel).getByRole("checkbox", { name: /also replace/i }),
+    ).not.toBeChecked();
+    expect(
+      within(panel).queryByText(/will get this account/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("offers to replace only when a selected row already has a target, and says how many", async () => {
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+    selectAll();
+
+    let panel = await openPanel();
+    expect(
+      within(panel).getByRole("checkbox", {
+        name: /also replace 0 target/i,
+      }),
+    ).toBeDisabled();
+    fireEvent.click(within(panel).getByRole("button", { name: /cancel/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+
+    fireEvent.change(rowTargetInputs()[0], {
+      target: { value: "Expenses:Dining" },
+    });
+    panel = await openPanel();
+    expect(
+      within(panel).getByRole("checkbox", {
+        name: /also replace 1 target/i,
+      }),
+    ).toBeEnabled();
+  });
+
+  it("counts only the rows Apply would change when replacing, not rows already on that account", async () => {
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+    selectAll();
+    fireEvent.change(rowTargetInputs()[0], {
+      target: { value: UNCATEGORIZED },
+    });
+    fireEvent.change(rowTargetInputs()[1], {
+      target: { value: "Expenses:Dining" },
+    });
+
+    const panel = await openPanel();
+    chooseInPanel(panel, UNCATEGORIZED);
+    expect(
+      within(panel).getByText(/2 transactions will get this account/i),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      within(panel).getByRole("checkbox", { name: /also replace/i }),
+    );
+    expect(
+      within(panel).getByText(/3 transactions will get this account/i),
+    ).toBeInTheDocument();
+    await apply(panel);
+
+    expect(rowTargets()).toEqual([
+      UNCATEGORIZED,
+      UNCATEGORIZED,
+      UNCATEGORIZED,
+      UNCATEGORIZED,
+    ]);
+  });
+
+  it("passes the selected and the hidden counts to the panel, with no hidden note when nothing is hidden", async () => {
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+    selectRow(0);
+
+    let panel = await openPanel();
+    expect(
+      within(panel).getByText(
+        /set the target account for 1 selected transaction/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(panel).queryByText(/hidden by the current filters/i),
+    ).not.toBeInTheDocument();
+    fireEvent.click(within(panel).getByRole("button", { name: /cancel/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+
+    // Four selected; the search hides only "Airline".
+    selectAll();
+    search("o");
+    panel = await openPanel();
+    expect(
+      within(panel).getByText(
+        /1 of them (is|are) hidden by the current filters/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("names the dialog by its visible heading", async () => {
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+    selectAll();
+
+    await openPanel();
+
+    expect(
+      screen.getByRole("dialog", {
+        name: /set the target account for 4 selected transactions/i,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows why the control is unavailable when the disabled button is hovered", async () => {
+    const user = userEvent.setup();
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+
+    // A disabled button takes no pointer events, so the hover lands on its wrapper.
+    await user.hover(setForSelectedButton().parentElement as HTMLElement);
+
+    expect(await screen.findByRole("tooltip")).toHaveTextContent(
+      /select transactions first to set their target account/i,
+    );
   });
 });
