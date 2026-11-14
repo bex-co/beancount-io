@@ -12,6 +12,7 @@
 - [x] **m6** — [Backend parity for holdings, register, and capital-gains](./done/m6/README.md) (7 tasks) ← promoted from `w22/003` 2026-10-25
 - [x] **m8** — [Self-hosted deployments: no verification page, no plan limits](./done/m8/README.md) (7 tasks) ← self-host request 2026-11-07
 - [x] **m9** — [One-click "Deploy to bex" for the self-hosted stack](./done/m9/README.md) (8 tasks) ← deploy-badge request 2026-11-07
+- [ ] **m10** — [Bank Sync: set one target account for every selected staged row](./m10/README.md) (8 tasks) ← promoted from `w22/051` 2026-11-14 (user report 2026-11-08); user routed to w22 via /pmx
 
 ## Dropped
 
