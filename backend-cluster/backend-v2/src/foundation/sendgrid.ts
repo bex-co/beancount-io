@@ -24,6 +24,16 @@ type Mail = {
    * List-Unsubscribe headers and drops it for anyone who left the group.
    */
   asm?: { groupId: number };
+  /**
+   * Turn off the open pixel and link rewriting that the SendGrid account
+   * applies to every mail by default, so the links stay the URLs we wrote.
+   */
+  untracked?: boolean;
+};
+
+const UNTRACKED: MailDataRequired["trackingSettings"] = {
+  clickTracking: { enable: false, enableText: false },
+  openTracking: { enable: false },
 };
 
 type TemplateMailParams = {
@@ -57,6 +67,7 @@ export class SendGrid implements ISendGrid {
       templateId: data.templateId,
       dynamicTemplateData: data.dynamicTemplateData,
       ...(data.asm && { asm: { groupId: data.asm.groupId } }),
+      ...(data.untracked && { trackingSettings: UNTRACKED }),
     } as MailDataRequired;
 
     for (let i = this.opts.retryLimit; i > 0; i -= 1) {

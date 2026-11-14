@@ -28,10 +28,24 @@ describe("SendGrid", () => {
       expect(send.mock.calls[0][0].asm).toEqual({ groupId: 42 });
     });
 
-    it("leaves the request unchanged without a group", async () => {
+    it("leaves the request unchanged without a group or tracking choice", async () => {
       await new SendGrid(opts).sendMail({ to: "a@example.com", text: "t" });
 
       expect(send.mock.calls[0][0]).not.toHaveProperty("asm");
+      expect(send.mock.calls[0][0]).not.toHaveProperty("trackingSettings");
+    });
+
+    it("turns off the account's open pixel and link rewriting when untracked", async () => {
+      await new SendGrid(opts).sendMail({
+        to: "a@example.com",
+        text: "t",
+        untracked: true,
+      });
+
+      expect(send.mock.calls[0][0].trackingSettings).toEqual({
+        clickTracking: { enable: false, enableText: false },
+        openTracking: { enable: false },
+      });
     });
   });
 });

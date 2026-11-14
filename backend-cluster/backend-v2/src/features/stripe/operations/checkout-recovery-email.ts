@@ -206,6 +206,7 @@ export async function emailCheckoutRecovery(
       html: renderCheckoutRecoveryHtml(params),
       text: renderCheckoutRecoveryText(params),
       asm: { groupId: deps.groupId },
+      untracked: true,
     });
   } catch (error) {
     if (codeId) {

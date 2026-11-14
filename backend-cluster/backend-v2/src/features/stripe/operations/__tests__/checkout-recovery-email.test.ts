@@ -113,10 +113,13 @@ describe("emailCheckoutRecovery (ADR027 D3, D4, D7)", () => {
       subject: string;
       text: string;
       asm: object;
+      untracked?: boolean;
     };
     expect(mail.to).toBe("alice@example.com");
     expect(mail.subject).toBe("Your Premium plan is still waiting");
     expect(mail.asm).toEqual({ groupId: 7 });
+    // No pixel, and the link is the recovery URL, not a tracking redirect.
+    expect(mail.untracked).toBe(true);
     expect(mail.text).toContain("K7QX2M9P for 20% off your first year");
     expect(mail.text).toContain(
       "Finish checkout: https://checkout.stripe.com/r/live_1",

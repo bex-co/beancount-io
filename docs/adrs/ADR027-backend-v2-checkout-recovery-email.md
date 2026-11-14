@@ -105,7 +105,7 @@ The risk is that the code makes the email arguably commercial: under CAN-SPAM's 
 
 ### D7. The email
 
-English, plain, three lines of body, no images, no tracking pixels. Subject and body:
+English, plain, three lines of body, no images, no tracking pixels. The SendGrid account turns on open and click tracking for every mail, which adds a pixel and rewrites each link through a SendGrid redirect. This email turns both off per message (`untracked`), so the button is the recovery URL itself. The first live email went out tracked; that was fixed on 2026-11-14. Subject and body:
 
 > **Subject:** Your Premium plan is still waiting
 >
@@ -136,7 +136,7 @@ No customer-facing capability is added. Checkout creation stays GraphQL-only und
 | `checkout.session.expired` case calling the operation | `features/stripe/api/stripe-webhook-handler.ts` |
 | Eligibility, then claim, promotion code, render, send, with release and deactivation on failure | new `features/stripe/operations/checkout-recovery-email.ts` |
 | Coupon ID and SendGrid group ID, pinned in `SUBSCRIPTION_CONFIG` | `features/stripe/service/stripe.ts` |
-| `asm` passthrough for the group | `foundation/sendgrid.ts` |
+| `asm` passthrough for the group, and per-message tracking off | `foundation/sendgrid.ts` |
 | Enable `checkout.session.expired` on the live webhook endpoint | Stripe Dashboard (owner) |
 
 Tests cover each D2 ineligibility, the once-per-user key across two expired sessions, release-and-deactivate on a failed send, the paid-meanwhile and back-in-Checkout skips, the recovered session keeping `metadata.userId`, and the rendered body staying within three lines. The handler drops test-mode events, so end-to-end verification needs a live-mode session on an owner account.
