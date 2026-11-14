@@ -103,7 +103,6 @@ const journalQuerySchema = filters.extend({
   include_source: booleanQuery.openapi({
     description: INCLUDE_SOURCE_DESCRIPTION,
   }),
-  // Twin: the camel spelling, accepted on every surface.
   includeSource: booleanQuery.openapi({
     description: "Alias of include_source.",
   }),

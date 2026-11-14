@@ -181,12 +181,7 @@ export type JournalQueryParams = {
   customSubtypes?: readonly string[] | null;
   limit?: number;
   offset?: number;
-  /**
-   * Attach each entry's source slice (`{path, lineno, text, sha256sum}`, as
-   * getEntryContext returns it), or null where it has no editable source;
-   * pages are capped at 200 entries (w1/m44). Either spelling; resolved here
-   * once for every surface.
-   */
+  /** `INCLUDE_SOURCE_DESCRIPTION`; either spelling, resolved here once for every surface. */
   include_source?: boolean | null;
   includeSource?: boolean | null;
 };

@@ -180,8 +180,8 @@ def sync_detailed(
         limit (int | Unset):
         offset (int | None | Unset):
         include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
-            entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext
-            returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no
+            entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context
+            returns, ready for the entry-source update and deletes. null where an entry has no
             editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries
             per page with it.
         includeSource (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Alias of
@@ -265,8 +265,8 @@ def sync(
         limit (int | Unset):
         offset (int | None | Unset):
         include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
-            entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext
-            returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no
+            entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context
+            returns, ready for the entry-source update and deletes. null where an entry has no
             editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries
             per page with it.
         includeSource (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Alias of
@@ -345,8 +345,8 @@ async def asyncio_detailed(
         limit (int | Unset):
         offset (int | None | Unset):
         include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
-            entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext
-            returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no
+            entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context
+            returns, ready for the entry-source update and deletes. null where an entry has no
             editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries
             per page with it.
         includeSource (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Alias of
@@ -428,8 +428,8 @@ async def asyncio(
         limit (int | Unset):
         offset (int | None | Unset):
         include_source (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Attach each
-            entry's source as {path, lineno, text, sha256sum}, the text and checksum getEntryContext
-            returns, ready for updateEntrySource and deleteEntrySources; null where an entry has no
+            entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context
+            returns, ready for the entry-source update and deletes. null where an entry has no
             editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries
             per page with it.
         includeSource (GetApiGatewayV1LedgersOwnerNameJournalIncludeSource | Unset): Alias of

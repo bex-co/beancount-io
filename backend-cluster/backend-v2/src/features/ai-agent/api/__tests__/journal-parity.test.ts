@@ -1002,12 +1002,9 @@ describe("include_source on every surface (w1/m44)", () => {
     sha256sum: "a".repeat(64),
   };
 
-  it.each([
-    ["include_source", "include_source"],
-    ["includeSource", "includeSource"],
-  ])(
+  it.each(["include_source", "includeSource"])(
     "forwards %s to the ledger and returns each entry's source unchanged",
-    async (restName, mcpName) => {
+    async (name) => {
       const f = await fixture();
       try {
         f.journal.getJournal.mockResolvedValue(
@@ -1017,11 +1014,11 @@ describe("include_source on every surface (w1/m44)", () => {
             is_empty: false,
           }),
         );
-        const rest = await (await f.rest(`journal?${restName}=true`)).json();
+        const rest = await (await f.rest(`journal?${name}=true`)).json();
         const gql = await f.gql(
           'getLedgerJournal(ledgerId: "alice/main", query: { includeSource: true }) { data }',
         );
-        const tool = await f.tool({ [mcpName]: true });
+        const tool = await f.tool({ [name]: true });
         const mcp = (tool.structuredContent as { result: { data: unknown[] } })
           .result;
         for (const data of [

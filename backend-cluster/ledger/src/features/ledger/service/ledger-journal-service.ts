@@ -324,15 +324,6 @@ export type JournalResult = {
   is_empty: boolean;
 };
 
-/** An entry's own source text and where it starts, as `include_source` attaches it. */
-export type JournalEntrySource = {
-  path: string;
-  /** 1-based line the entry starts on. */
-  lineno: number;
-  text: string;
-  sha256sum: string;
-};
-
 export type EntryContextResult = {
   entry: Record<string, unknown>;
   balances_before?: Record<string, string[]> | null;
@@ -570,10 +561,8 @@ export class LedgerJournalService implements ILedgerJournalService {
   ) {}
 
   private async loadSnapshot(ledgerId: string, userId: string | undefined) {
-    const { files, entryPoint, repoPaths } = await this.loadFileMap(
-      ledgerId,
-      userId,
-    );
+    const { files, entryPoint, repoPaths, managedPricePaths } =
+      await this.loadFileMap(ledgerId, userId);
     const snapshot = await parseLedgerFiles(files, entryPoint, { repoPaths });
     // The WASM does not surface `name_*` overrides; recover the real report root
     // names (and the derived clamp account names) from the raw entry-point source
@@ -588,7 +577,16 @@ export class LedgerJournalService implements ILedgerJournalService {
     const fiscalYearEnd = formatFiscalYearEnd(
       parseFavaOptions(snapshot.directives).fiscal_year_end,
     );
-    return { ...snapshot, reportAccounts, fiscalYearEnd };
+    // The file map rides along, so a read that also needs source text
+    // (`includeSource`) slices the same revision it parsed (w1/m44).
+    return {
+      ...snapshot,
+      reportAccounts,
+      fiscalYearEnd,
+      files,
+      entryPoint,
+      managedPricePaths,
+    };
   }
 
   /** Load the ledger's raw FileMap + entry point from Gitea (source-slice needs the text). */
@@ -839,6 +837,11 @@ export class LedgerJournalService implements ILedgerJournalService {
     query?: JournalQueryParams;
   }): Promise<JournalResult> {
     const { ledgerId, userId, query } = params;
+    if (query?.includeSource && (query.limit ?? 20) > MAX_SOURCE_PAGE) {
+      throw new BadUserInputError(
+        `include_source returns at most ${MAX_SOURCE_PAGE} entries per page; ask for limit ${MAX_SOURCE_PAGE} or fewer and page with offset.`,
+      );
+    }
     const snapshot = await this.loadSnapshot(ledgerId, userId);
 
     // Assign occurrence-disambiguated entry IDs over the FULL unfiltered stream
@@ -884,16 +887,11 @@ export class LedgerJournalService implements ILedgerJournalService {
     const total = items.length;
     const offset = query?.offset ?? 0;
     const limit = query?.limit ?? 20;
-    if (query?.includeSource && limit > MAX_SOURCE_PAGE) {
-      throw new BadUserInputError(
-        `include_source returns at most ${MAX_SOURCE_PAGE} entries per page; ask for limit ${MAX_SOURCE_PAGE} or fewer and page with offset.`,
-      );
-    }
     const page = items.slice(offset, offset + limit);
     return {
       total,
       data: (query?.includeSource
-        ? await this.withSource(ledgerId, userId, page)
+        ? await this.withSource(snapshot, page)
         : page) as unknown as Record<string, unknown>[],
       // Result-level, not ledger-level: a filter matching nothing on a
       // non-empty ledger answers total 0 with is_empty true, while an
@@ -904,35 +902,43 @@ export class LedgerJournalService implements ILedgerJournalService {
   }
 
   /**
-   * The page with each entry's source slice, resolved in one batch over one
-   * file map (w1/237). An entry with no editable source — a plugin's or a
-   * pad's copy, or a managed price include's read-only line — gets `null`,
-   * as `getContext` offers it no edit (w21/443, ADR 015).
+   * The page with each entry's source slice, by the rule the source-slice
+   * writers use: a journal ID resolves through any TS-plugin rewrite to its
+   * source block (`sourceEntryIds`), so a rewritten entry has the source its
+   * edit would take. A plugin's or a pad's copy and a managed price include's
+   * read-only line get `null`, as `getContext` offers them no edit (w21/443,
+   * ADR 015). One batch over the snapshot's own file map (w1/237).
    */
   private async withSource(
-    ledgerId: string,
-    userId: string | undefined,
+    snapshot: Awaited<ReturnType<LedgerJournalService["loadSnapshot"]>>,
     page: JournalItem[],
-  ): Promise<(JournalItem & { source: JournalEntrySource | null })[]> {
+  ) {
     if (page.length === 0) return [];
-    const { files, entryPoint, managedPrices } = await this.loadFileMap(
-      ledgerId,
-      userId,
+    const publicIds = buildEntryIdMap(snapshot.directives);
+    const copies = new Set(
+      snapshot.directives
+        .filter((directive) => isGeneratedDirective(directive))
+        .map((directive) => publicIds.get(directive)),
     );
+    const sourceIds = sourceEntryIds(snapshot.directives);
+    const lookups = page
+      .map((item) => String(item.entry_hash))
+      .filter((id) => !copies.has(id));
     const found = await findEntrySlicesAsync(
-      files,
-      entryPoint,
-      page.map((item) => String(item.entry_hash)),
+      snapshot.files,
+      snapshot.entryPoint,
+      lookups.map((id) => sourceIds.get(id) ?? id),
     );
-    return page.map((item, index) => {
-      const slice = found[index];
+    const slices = new Map(lookups.map((id, index) => [id, found[index]]));
+    return page.map((item) => {
+      const slice = slices.get(String(item.entry_hash));
       return {
         ...item,
         source:
-          slice && managedPriceSourceFor(slice.file, managedPrices) === null
+          slice && !snapshot.managedPricePaths.includes(slice.file)
             ? {
                 path: slice.file,
-                lineno: slice.startLine + 1,
+                lineno: slice.startLine + 1, // 1-based
                 text: slice.slice,
                 sha256sum: slice.sha256,
               }

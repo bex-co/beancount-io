@@ -23,7 +23,10 @@ jest.mock("@/foundation/rustledger/source-slice-worker", () => ({
   findEntrySlicesAsync: jest.fn(),
 }));
 
-import { parseLedgerFiles } from "@/foundation/rustledger";
+import {
+  markGeneratedDirective,
+  parseLedgerFiles,
+} from "@/foundation/rustledger";
 
 const txn = (date: string, narration: string) =>
   ({
@@ -122,10 +125,43 @@ describe("getJournal includeSource (w1/m44)", () => {
     expect(result.data.map((item) => item.source)).toEqual([null, null]);
   });
 
-  it("refuses a page larger than the source cap, naming it", async () => {
+  it("never looks up a plugin's or a pad's copy: its source is null", async () => {
+    const copy = txn("2026-01-04", "Insurance (2/12)");
+    markGeneratedDirective(copy);
+    (parseLedgerFiles as jest.Mock).mockResolvedValue({
+      directives: [...DIRECTIVES, copy],
+      errors: [],
+      options: { title: "Books", operating_currencies: ["USD"] },
+    });
+    (findEntrySlicesAsync as jest.Mock).mockImplementation(
+      async (_files: unknown, _entryPoint: unknown, hashes: string[]) =>
+        hashes.map((hash) => ({
+          file: "main.bean",
+          slice: hash,
+          sha256: `sha-${hash}`,
+          startLine: 0,
+          endLine: 1,
+          localOccurrence: 0,
+        })),
+    );
+    const result = await journal({ includeSource: true });
+    const asked = (findEntrySlicesAsync as jest.Mock).mock
+      .calls[0][2] as string[];
+    expect(asked).toHaveLength(2);
+    expect(result.data.map((item) => item.source === null)).toEqual([
+      true,
+      false,
+      false,
+    ]);
+    // Its file map is the snapshot's own: loaded once for the whole read.
+    expect(loadCachedFileMapForRepo).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses a page larger than the source cap before reading the ledger", async () => {
     await expect(
       journal({ includeSource: true, limit: MAX_SOURCE_PAGE + 1 }),
     ).rejects.toThrow(`at most ${MAX_SOURCE_PAGE} entries per page`);
+    expect(parseLedgerFiles).not.toHaveBeenCalled();
     await expect(
       journal({ limit: MAX_SOURCE_PAGE + 1 }),
     ).resolves.toBeDefined();
