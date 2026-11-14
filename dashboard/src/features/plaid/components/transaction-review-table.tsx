@@ -47,29 +47,18 @@ import {
   type FilterOption,
 } from "./transaction-filter-select";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/common/components/ui/popover";
-import { Label } from "@/common/components/ui/label";
-import {
   Loader2,
   Upload,
   AlertCircle,
-  ListChecks,
   Sparkles,
   Search,
   Trash2,
 } from "lucide-react";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useToast } from "@/common/hooks/use-toast";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { Amount } from "@/common/components/amount";
-import {
-  applyTargetAccount,
-  countSelectedTargets,
-  type TargetApplyMode,
-} from "../utils/apply-target-account";
+import { BulkTargetPopover } from "./bulk-target-popover";
 
 const SKELETON_ROWS = 5;
 
@@ -115,14 +104,6 @@ export function TransactionReviewTable({
   const [accountFilters, setAccountFilters] = useState<string[]>([]);
   /** Empty means "let the backend decide", which writes to main.bean. */
   const [targetFile, setTargetFile] = useState("");
-  /** The "Set for selected" panel: its account, and whether it also replaces
-   * targets that are already set. Both start fresh each time it opens. */
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [bulkAccount, setBulkAccount] = useState("");
-  const [bulkReplace, setBulkReplace] = useState(false);
-  const bulkMode: TargetApplyMode = bulkReplace ? "overwrite" : "fill-blank";
-  const bulkReasonId = useId();
-  const bulkReplaceId = useId();
   const { toast } = useToast();
 
   const getSourceAccount = (transaction: {
@@ -201,37 +182,6 @@ export function TransactionReviewTable({
         variant: "destructive",
       });
     }
-  };
-
-  const handleBulkOpenChange = (open: boolean) => {
-    setBulkOpen(open);
-    if (open) {
-      setBulkAccount("");
-      setBulkReplace(false);
-    }
-  };
-
-  /** Acts on every selected row, filtered out or not, exactly as Submit does.
-   * The per-row pickers stay editable afterwards. */
-  const handleApplyBulkTarget = () => {
-    const { targets, applied } = applyTargetAccount(
-      selectedIds,
-      targetAccounts,
-      bulkAccount,
-      bulkMode,
-    );
-    setTargetAccounts(targets);
-    setBulkOpen(false);
-    toast({
-      title: t("plaid.transactionReview.toast.targetAccountSet"),
-      description: t(
-        "plaid.transactionReview.toast.targetAccountSetDescription",
-        {
-          count: applied,
-          account: bulkAccount,
-        },
-      ),
-    });
   };
 
   const handleSubmit = async () => {
@@ -573,20 +523,6 @@ export function TransactionReviewTable({
     visibleSelectedCount > 0 &&
     visibleSelectedCount < filteredTransactions.length;
 
-  // What the "Set for selected" panel promises and what Apply then does come
-  // from the same helper, so the two cannot disagree.
-  const { filled: selectedWithTarget } = countSelectedTargets(
-    selectedIds,
-    targetAccounts,
-  );
-  const bulkPreview = applyTargetAccount(
-    selectedIds,
-    targetAccounts,
-    bulkAccount,
-    bulkMode,
-  );
-  const nothingSelected = selectedIds.size === 0;
-
   return (
     <Card>
       <CardHeader>
@@ -768,105 +704,13 @@ export function TransactionReviewTable({
                   <div className="flex items-center justify-between">
                     <span>{t("plaid.transactionReview.targetAccount")}</span>
                     <div className="flex items-center gap-1">
-                      <Popover
-                        open={bulkOpen}
-                        onOpenChange={handleBulkOpenChange}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-xs"
-                            disabled={nothingSelected}
-                            title={
-                              nothingSelected
-                                ? t(
-                                    "plaid.transactionReview.setForSelectedNoSelection",
-                                  )
-                                : undefined
-                            }
-                            aria-describedby={
-                              nothingSelected ? bulkReasonId : undefined
-                            }
-                          >
-                            <ListChecks className="me-1 h-3 w-3" />
-                            {t("plaid.transactionReview.setForSelected")}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="w-80 space-y-3">
-                          <p className="text-sm font-medium">
-                            {t("plaid.transactionReview.bulkTitle", {
-                              count: selectedIds.size,
-                            })}
-                          </p>
-                          {hiddenSelectedCount > 0 && (
-                            <p className="text-xs text-muted-foreground">
-                              {t("plaid.transactionReview.bulkHiddenNote", {
-                                count: hiddenSelectedCount,
-                              })}
-                            </p>
-                          )}
-                          <AccountCombobox
-                            ledgerId={ledgerId}
-                            value={bulkAccount}
-                            onValueChange={setBulkAccount}
-                            placeholder={t(
-                              "plaid.transactionReview.selectAccountPlaceholder",
-                            )}
-                          />
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              id={bulkReplaceId}
-                              checked={bulkReplace}
-                              onCheckedChange={(checked) =>
-                                setBulkReplace(checked === true)
-                              }
-                              disabled={selectedWithTarget === 0}
-                            />
-                            <Label htmlFor={bulkReplaceId}>
-                              {t(
-                                "plaid.transactionReview.bulkReplaceExisting",
-                                {
-                                  count: selectedWithTarget,
-                                },
-                              )}
-                            </Label>
-                          </div>
-                          {bulkAccount !== "" && (
-                            <p
-                              className="text-xs text-muted-foreground"
-                              role="status"
-                            >
-                              {t("plaid.transactionReview.bulkWillSet", {
-                                count: bulkPreview.applied,
-                              })}
-                            </p>
-                          )}
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setBulkOpen(false)}
-                            >
-                              {t("common.cancel")}
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={handleApplyBulkTarget}
-                              disabled={bulkPreview.applied === 0}
-                            >
-                              {t("plaid.transactionReview.bulkApply")}
-                            </Button>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      {nothingSelected && (
-                        <span id={bulkReasonId} className="sr-only">
-                          {t(
-                            "plaid.transactionReview.setForSelectedNoSelection",
-                          )}
-                        </span>
-                      )}
+                      <BulkTargetPopover
+                        ledgerId={ledgerId}
+                        selectedIds={selectedIds}
+                        targetAccounts={targetAccounts}
+                        hiddenSelectedCount={hiddenSelectedCount}
+                        onApply={setTargetAccounts}
+                      />
                       <Button
                         onClick={handleAICategorize}
                         disabled={aiLoading || transactions.length === 0}

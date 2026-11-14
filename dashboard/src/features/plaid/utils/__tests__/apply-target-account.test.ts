@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyTargetAccount,
-  countSelectedTargets,
+  countSelectedWithTarget,
 } from "../apply-target-account";
 
 const UNCATEGORIZED = "Expenses:Uncategorized";
@@ -27,7 +27,6 @@ describe("applyTargetAccount", () => {
       d: UNCATEGORIZED,
     });
     expect(result.applied).toBe(2);
-    expect(result.kept).toBe(2);
   });
 
   it("treats an empty stored target as blank", () => {
@@ -40,7 +39,6 @@ describe("applyTargetAccount", () => {
 
     expect(result.targets.get("a")).toBe(UNCATEGORIZED);
     expect(result.applied).toBe(1);
-    expect(result.kept).toBe(0);
   });
 
   it("overwrite replaces existing targets too", () => {
@@ -56,10 +54,9 @@ describe("applyTargetAccount", () => {
     expect(result.targets.get("a")).toBe(UNCATEGORIZED);
     expect(result.targets.get("b")).toBe(UNCATEGORIZED);
     expect(result.applied).toBe(2);
-    expect(result.kept).toBe(0);
   });
 
-  it("counts a row already holding the chosen account as kept, not applied", () => {
+  it("does not count a row already holding the chosen account as applied", () => {
     const result = applyTargetAccount(
       new Set(["a", "b"]),
       new Map([["a", UNCATEGORIZED]]),
@@ -68,7 +65,6 @@ describe("applyTargetAccount", () => {
     );
 
     expect(result.applied).toBe(1);
-    expect(result.kept).toBe(1);
   });
 
   it("leaves rows outside the selection exactly as they were", () => {
@@ -122,7 +118,6 @@ describe("applyTargetAccount", () => {
           a: "Expenses:Dining",
         });
         expect(result.applied).toBe(0);
-        expect(result.kept).toBe(2);
       }
     },
   );
@@ -151,23 +146,20 @@ describe("applyTargetAccount", () => {
     );
 
     expect(result.applied).toBe(0);
-    expect(result.kept).toBe(0);
     expect(result.targets.get("a")).toBe("Expenses:Dining");
   });
 });
 
-describe("countSelectedTargets", () => {
-  it("splits the selection into rows with and without a target", () => {
+describe("countSelectedWithTarget", () => {
+  it("counts only selected rows that already have a target", () => {
     const targets = new Map([
       ["a", "Expenses:Dining"],
       ["b", ""],
       ["outside-selection", "Expenses:Travel"],
     ]);
 
-    expect(countSelectedTargets(new Set(["a", "b", "c"]), targets)).toEqual({
-      blank: 2,
-      filled: 1,
-    });
+    expect(countSelectedWithTarget(new Set(["a", "b", "c"]), targets)).toBe(1);
+    expect(countSelectedWithTarget(new Set(), targets)).toBe(0);
   });
 
   it("agrees with what each mode would then change", () => {
@@ -176,15 +168,15 @@ describe("countSelectedTargets", () => {
       ["b", "Expenses:Groceries"],
     ]);
     const selection = new Set(["a", "b", "c"]);
-    const { blank, filled } = countSelectedTargets(selection, targets);
+    const filled = countSelectedWithTarget(selection, targets);
 
     expect(
       applyTargetAccount(selection, targets, UNCATEGORIZED, "fill-blank")
         .applied,
-    ).toBe(blank);
+    ).toBe(selection.size - filled);
     expect(
       applyTargetAccount(selection, targets, UNCATEGORIZED, "overwrite")
         .applied,
-    ).toBe(blank + filled);
+    ).toBe(selection.size);
   });
 });
