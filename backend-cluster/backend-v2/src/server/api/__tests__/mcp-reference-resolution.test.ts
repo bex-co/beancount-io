@@ -59,6 +59,8 @@ const ALLOWED_DOC_NAMES: Record<string, string> = {
   deleteLedgerFile: "the GraphQL mutation, cited beside REST DELETE",
   getLedgerFile: "the GraphQL query, cited for its exact-bytes behavior",
   queryShell: "the GraphQL query that shares the BQL producer",
+  renameLedgerAccount:
+    "the GraphQL mutation, cited beside REST as renameAccount's twin (w1/m43)",
 };
 
 /** Verbs every MCP tool name starts with. */
