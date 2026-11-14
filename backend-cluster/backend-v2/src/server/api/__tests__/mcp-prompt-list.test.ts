@@ -260,9 +260,10 @@ describe("MCP prompts", () => {
         message,
         hint: expect.any(String),
       });
-      // Exactly one prefix, added by the client on receipt.
+      // Exactly one prefix, added by the client on receipt, then the code and
+      // the hint, as a tool refusal's text leads.
       expect(error?.message).toBe(
-        `MCP error ${JSON_RPC_INVALID_PARAMS}: ${message}`,
+        `MCP error ${JSON_RPC_INVALID_PARAMS}: BAD_USER_INPUT: ${message}\nHint: ${(error?.data as { hint: string }).hint}`,
       );
     },
   );

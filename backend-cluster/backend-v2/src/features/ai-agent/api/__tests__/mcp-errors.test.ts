@@ -545,13 +545,17 @@ describe("JSON-RPC codes", () => {
    * why this is a plain Error carrying a numeric `code` and not the SDK's
    * `McpError`, whose constructor stamps the prefix on.
    */
-  it("leaves a resource failure's message unprefixed", () => {
+  it("gives a resource failure's message the code and hint, without the SDK prefix", () => {
     const failure = new McpRequestFailure({
       code: "NOT_FOUND",
       message: "No such file in alice/main: nope.bean",
       hint: "list them first",
     });
-    expect(failure.message).toBe("No such file in alice/main: nope.bean");
+    // A host that shows only the message reads what a tool refusal's text
+    // leads with (w23/m44/t005); the client adds the one `MCP error` prefix.
+    expect(failure.message).toBe(
+      "NOT_FOUND: No such file in alice/main: nope.bean\nHint: list them first",
+    );
     expect(failure.message).not.toMatch(/MCP error/);
     expect(failure.code).toBe(JSON_RPC_NOT_FOUND);
     expect(failure.data.hint).toBe("list them first");

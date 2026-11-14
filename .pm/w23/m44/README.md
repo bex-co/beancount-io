@@ -1,6 +1,6 @@
 # w23 · m44 — Get every MCP result to text-only and tools-only hosts in full
 
-**Worker:** worker1 **Goal:** An agent on any MCP host gets every row, id and next step it needs. That holds whether the host hands the model only `content` (claude.ai), only tools (ChatGPT), or `structuredContent` (Claude Code), and a QA check keeps the channels from drifting apart again. **Status:** todo (t003, t004 done; t001, t002 blocked)
+**Worker:** worker1 **Goal:** An agent on any MCP host gets every row, id and next step it needs. That holds whether the host hands the model only `content` (claude.ai), only tools (ChatGPT), or `structuredContent` (Claude Code), and a QA check keeps the channels from drifting apart again. **Status:** todo (t003, t004, t005 done; t001, t002 blocked)
 
 ## Tasks (in order)
 
@@ -10,7 +10,7 @@
 | t002 | Check text against structuredContent in the MCP QA helper and contract replay | 45m | — |
 | t003 | Page listStagedBankTransactions on every surface — **DONE** | 60m | — |
 | t004 | Put a resource's page signal where a text-only reader sees it — **DONE** | 45m | — |
-| t005 | Put the hint in the message of resource and prompt refusals | 30m | — |
+| t005 | Put the hint in the message of resource and prompt refusals — **DONE** | 30m | — |
 | t006 | Close the resource-only gaps t001 finds | 60m | t001 |
 | t007 | Adoption surface | 20m | t002, t003, t004, t005, t006 |
 | t008 | Simplify | 20m | t007 |

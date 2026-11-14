@@ -399,7 +399,10 @@ export class McpRequestFailure extends Error {
   readonly data: McpErrorEnvelope;
 
   constructor(envelope: McpErrorEnvelope) {
-    super(envelope.message);
+    // The same lines a tool refusal's text leads with: a host that shows only
+    // the JSON-RPC message still reads the code and what to do next, and
+    // `data` keeps the envelope for clients that branch on it (w23/m44/t005).
+    super(renderErrorText(envelope));
     this.name = "McpRequestFailure";
     this.code = jsonRpcCodeFor(envelope.code);
     this.data = envelope;

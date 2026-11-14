@@ -1684,7 +1684,9 @@ REST and GraphQL only. Followers, following and starred lists keep their
 ### Failure codes
 
 The same codes reach resource reads and prompt fetches, as the JSON-RPC error's
-`data`, with the message unprefixed so a client's SDK adds exactly one
+`data`. The message reads like a tool refusal's text, `CODE: message` then
+`Hint: …` (and `Retry after: Ns` when present), so a host that shows only the
+message still reads what to do next; a client's SDK adds exactly one
 `MCP error <n>:` prefix. That covers the two mistakes a client makes before any
 handler runs: a `beancount://` URI matching no template answers `NOT_FOUND`
 (`-32002`) with a hint naming `resources/templates/list`, and a malformed

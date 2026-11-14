@@ -375,9 +375,10 @@ describe("a malformed resource URI", () => {
         message,
         hint: expect.stringMatching(/\S/),
       });
-      // One prefix — the client's own.
+      // One prefix — the client's own — then the lines a tool refusal
+      // leads with, so a host that shows only the message reads the hint.
       expect(error?.message).toBe(
-        `MCP error ${JSON_RPC_INVALID_PARAMS}: ${message}`,
+        `MCP error ${JSON_RPC_INVALID_PARAMS}: BAD_USER_INPUT: ${message}\nHint: ${(error?.data as { hint: string }).hint}`,
       );
       expect(getFilesContent).not.toHaveBeenCalled();
     } finally {
@@ -547,7 +548,7 @@ describe("a resource URI the SDK refused before any template", () => {
         });
         // One prefix — the client's own — and not the SDK's "Invalid URL".
         expect(error?.message).toBe(
-          `MCP error ${JSON_RPC_INVALID_PARAMS}: Not a resource URI: ${uri}`,
+          `MCP error ${JSON_RPC_INVALID_PARAMS}: BAD_USER_INPUT: Not a resource URI: ${uri}\nHint: ${(error?.data as { hint: string }).hint}`,
         );
         expect(getFilesContent).not.toHaveBeenCalled();
       } finally {
@@ -624,7 +625,7 @@ describe("an unmatched resource URI", () => {
       // Exactly one prefix: the client's own. A server that threw the SDK's
       // `McpError` would have stamped the first.
       expect(error?.message).toBe(
-        `MCP error ${JSON_RPC_NOT_FOUND}: Resource with ID '${uri}' not found`,
+        `MCP error ${JSON_RPC_NOT_FOUND}: NOT_FOUND: Resource with ID '${uri}' not found\nHint: ${(error?.data as { hint: string }).hint}`,
       );
     } finally {
       await close();
