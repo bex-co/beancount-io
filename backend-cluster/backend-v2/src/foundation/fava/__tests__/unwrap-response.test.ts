@@ -104,6 +104,28 @@ describe("unwrapFavaResponse", () => {
     },
   );
 
+  // w1/m45: the ledger's state refusal (a managed price line is read-only)
+  // read as FORBIDDEN, which tells an agent it lacks access. Any other 403
+  // is still FORBIDDEN.
+  it("maps the ledger's operation-not-allowed 403 to OPERATION_NOT_ALLOWED", async () => {
+    const message =
+      "Operation 'edit managed price source' not allowed: prices/btc.bean is a managed price feed resolved from a URL include and is read-only; declare a price directive in your own ledger file to override it";
+    const refusal = (text: string) =>
+      unwrapFavaResponse(
+        Promise.reject(
+          new FavaApiError(text, 403, { success: false, error: text }),
+        ),
+        "move source slices",
+      ).catch((error: unknown) => error);
+    await expect(refusal(message)).resolves.toMatchObject({
+      category: "OPERATION_NOT_ALLOWED",
+      message,
+    });
+    await expect(refusal("Write access is required")).resolves.toMatchObject({
+      category: "FORBIDDEN",
+    });
+  });
+
   // w23/047: every 404 read "Ledger resource not found", so a stale entry
   // hash told an agent its ledger was gone.
   it.each([

@@ -57,6 +57,7 @@ beforeAll(async () => {
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const TEA = '2026-08-04 * "Tea"\n  Expenses:Food  4.00 USD\n  Assets:Cash';
 const CAKE = '2026-08-09 * "Cake"\n  Expenses:Food  4.00 USD\n  Assets:Cash';
+const BTC_PRICE = "2026-08-01 price BTC 60000 USD";
 const BALANCE_FAILED =
   "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD";
 
@@ -72,21 +73,36 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
   const slices = new Map([
     ["tea", TEA],
     ["cake", CAKE],
+    ["btc", BTC_PRICE],
   ]);
-  const loaded = ["main.bean", "2026.bean"];
+  const loaded = ["main.bean", "2026.bean", "prices/btc.bean"];
   const commits: MoveBody[] = [];
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   // The ledger service's move (w1/m45/t002), reduced to its contract.
   const moveSourceSlices = jest.fn(
     async (_owner: string, _name: string, body: MoveBody) => {
+      const reached = loaded.includes(body.to_path);
+      if (body.include_from && !loaded.includes(body.include_from)) {
+        const error = `includeFrom ${body.include_from} is not a file the ledger loads; name one, such as main.bean`;
+        throw new FavaApiError(error, 400, { error });
+      }
       for (const ref of body.entries) {
         const text = slices.get(ref.entry_hash);
+        if (ref.entry_hash === "btc") {
+          const error =
+            "Operation 'edit managed price source' not allowed: prices/btc.bean is a managed price feed resolved from a URL include and is read-only; declare a price directive in your own ledger file to override it";
+          throw new FavaApiError(error, 403, { error });
+        }
         if (text === undefined || hash(text) !== ref.sha256sum) {
           const error = `Entry ${ref.entry_hash} changed since it was read; read its source again`;
           throw new FavaApiError(error, 409, { error });
         }
       }
-      const reached = loaded.includes(body.to_path);
+      if (body.to_path === "main.bean") {
+        const error =
+          "an entry already lives in main.bean; move only entries from other files";
+        throw new FavaApiError(error, 400, { error });
+      }
       if (!reached && !body.include_from) {
         const error = `${body.to_path} is not included by the ledger (main.bean does not reach it), so moved entries would count nowhere; pass includeFrom (for example main.bean) to add its include in the same commit`;
         throw new FavaApiError(error, 400, { error });
@@ -222,13 +238,23 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
         message: error?.message,
       };
     }
+    // MCP's own spellings, unless the call already sends them (a twin test).
     const { dryRun, allowInvalid, ...others } = args;
+    const respell = (camel: unknown, snake: string) =>
+      camel === undefined
+        ? {}
+        : snake in others
+          ? {
+              [snake.replace(/_(\w)/g, (_m, c: string) => c.toUpperCase())]:
+                camel,
+            }
+          : { [snake]: camel };
     const result = await client.callTool({
       name: "moveEntrySources",
       arguments: {
         ...others,
-        ...(dryRun === undefined ? {} : { dry_run: dryRun }),
-        ...(allowInvalid === undefined ? {} : { allow_invalid: allowInvalid }),
+        ...respell(dryRun, "dry_run"),
+        ...respell(allowInvalid, "allow_invalid"),
       },
     });
     const structured = result.structuredContent as {
@@ -389,6 +415,68 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
         }),
       ).resolves.toMatchObject({ success: false, code: "CONFLICT" });
       expect(env.commits).toHaveLength(0);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it.each([
+    [
+      "an includeFrom the ledger does not load",
+      { ...MOVE, includeFrom: "nowhere.bean" },
+      "BAD_USER_INPUT",
+    ],
+    [
+      "a target an entry already lives in",
+      { entries: ENTRIES, toPath: "main.bean" },
+      "BAD_USER_INPUT",
+    ],
+    [
+      "an entry in a managed price include",
+      { ...MOVE, entries: [{ entryHash: "btc", sha256sum: hash(BTC_PRICE) }] },
+      "OPERATION_NOT_ALLOWED",
+    ],
+  ])(
+    "refuses %s by the same code, writing nothing",
+    async (_case, args, code) => {
+      const env = await fixture();
+      try {
+        await expect(env.call(surface, args)).resolves.toMatchObject({
+          success: false,
+          code,
+        });
+        expect(env.commits).toHaveLength(0);
+      } finally {
+        await env.close();
+      }
+    },
+  );
+
+  it("refuses more than 1000 entries before reaching the ledger", async () => {
+    const env = await fixture();
+    try {
+      const entries = Array.from({ length: 1001 }, () => ENTRIES[0]);
+      const refused = await env.call(surface, { ...MOVE, entries });
+      // REST refuses a body its schema rejects as VALIDATION_FAILED, as the
+      // batch delete's cap does (w23/103); the others read the service's cap.
+      expect(refused).toMatchObject({
+        success: false,
+        code: surface === "rest" ? "VALIDATION_FAILED" : "BAD_USER_INPUT",
+      });
+      expect(refused.message).toMatch(/1000/);
+      expect(env.moveSourceSlices).not.toHaveBeenCalled();
+    } finally {
+      await env.close();
+    }
+  });
+
+  it("refuses the two spellings of a flag disagreeing, before reaching the ledger", async () => {
+    const env = await fixture();
+    try {
+      await expect(
+        env.call(surface, { ...MOVE, dryRun: true, dry_run: false }),
+      ).resolves.toMatchObject({ success: false, code: "BAD_USER_INPUT" });
+      expect(env.moveSourceSlices).not.toHaveBeenCalled();
     } finally {
       await env.close();
     }

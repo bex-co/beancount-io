@@ -1,6 +1,6 @@
 # w1 · m45 — Move entries to another file in one atomic commit
 
-**Worker:** worker1 **Goal:** an agent splitting or reorganizing a hosted ledger ("put August in `2026/08.bean`") moves a set of entries into another file, creating it and adding its `include` when asked, in one previewed commit. The ledger's balances and errors are exactly what they were, and no intermediate state with an orphan file or a broken balance assertion is ever committed. **Status:** in progress (t001–t004, t006, t007 done)
+**Worker:** worker1 **Goal:** an agent splitting or reorganizing a hosted ledger ("put August in `2026/08.bean`") moves a set of entries into another file, creating it and adding its `include` when asked, in one previewed commit. The ledger's balances and errors are exactly what they were, and no intermediate state with an orphan file or a broken balance assertion is ever committed. **Status:** in progress (t001–t004, t006–t008 done)
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t005 | Move and undo on the hosted endpoint after the deploy | 30m | t004, t008 |
 | t006 | Adoption surface — **DONE** | 30m | t004 |
 | t007 | Simplify — **DONE** | 15m | t006 |
-| t008 | Test coverage | 45m | t006, t007 |
+| t008 | Test coverage — **DONE** | 45m | t006, t007 |
 | t009 | Closeout | 15m | t005, t008 |
 
 Production verification (t005) runs after Test coverage so it checks the revision that closes the milestone, as w1/m41 did.

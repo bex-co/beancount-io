@@ -6,6 +6,7 @@ import {
   InternalServerError,
   NewLedgerErrorsError,
   NotFoundError,
+  OperationNotAllowedError,
   PremiumRequiredError,
   RateLimitedError,
   ResourceLimitReachedError,
@@ -26,6 +27,13 @@ const UNBALANCED = "UNBALANCED";
 const NEW_LEDGER_ERRORS = "NEW_LEDGER_ERRORS";
 /** The ledger service's wording for a file write whose `sha` went stale. */
 const LEDGER_FILE_CONFLICT = /^Ledger file conflict:/i;
+/**
+ * The ledger service's `OperationNotAllowedError` wording. It travels as a
+ * bare 403 with no machine code, so it read as FORBIDDEN, telling an agent it
+ * lacked access when the ledger's own state refused the write: an edit, delete
+ * or move of a managed price line (w1/m45).
+ */
+const LEDGER_OPERATION_NOT_ALLOWED = /^Operation '(.+?)' not allowed: (.+)$/s;
 const RESOURCE_LIMIT_MESSAGE =
   /^(.*?) limit reached\. Maximum: (\d+), Current: (\d+)\./i;
 
@@ -170,6 +178,11 @@ export function favaApiErrorToDomainError(
       { hasParseError: /parse error/i.test(named) },
     );
   }
+
+  const notAllowed =
+    error.status === 403 ? LEDGER_OPERATION_NOT_ALLOWED.exec(message) : null;
+  if (notAllowed)
+    return new OperationNotAllowedError(notAllowed[1], notAllowed[2]);
 
   if (code === UNBALANCED) {
     const details = error.body?.details;
