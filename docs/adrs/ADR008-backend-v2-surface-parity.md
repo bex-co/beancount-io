@@ -1,6 +1,7 @@
 # ADR008: Reaching GraphQL / REST / MCP parity
 
-- Status: Done — implemented in w1/m10, with subsequent documented MCP exceptions; implementation reviewed 2026-09-27. See [Completion review](#completion-review-2026-09-27).
+- Status: Done
+- Status notes: Implemented in w1/m10, with subsequent documented MCP exceptions; implementation reviewed 2026-09-27. See [Completion review](#completion-review-2026-09-27).
 - Date: 2026-08-25
 - Decision owners: Backend (the verb table, the three surfaces, the drift guards)
 - Scope: how the 143 verbs in `src/server/api/op-class.ts`'s `VERB_TABLE` reach all three surfaces. Extends ADR 0006 D3 (one decision, three dialects) and D9 test 1 (parity is a test); ADR 0006 predates backend-v2's import into this repository and was never committed here, so its decisions are cited as the code and ADR 0007 restate them. MCP's transport contract stays in [ADR 0007](./ADR007-backend-v2-mcp-surface.md).

@@ -1,6 +1,7 @@
 # ADR013: Verified https redirect URIs for the native mobile client
 
-- Status: Rejected (2026-10-03) — the mobile app keeps its custom-scheme redirects and the approve step stays for every client. See [Why it is not being done](#why-it-is-not-being-done).
+- Status: Rejected
+- Status notes: Rejected 2026-10-03: the mobile app keeps its custom-scheme redirects and the approve step stays for every client. See [Why it is not being done](#why-it-is-not-being-done).
 - Date: 2026-09-11
 - Decision owners: Mobile (`mobile/`), Backend (`backend-cluster/backend-v2`), Dashboard (`dashboard/`)
 - Scope: whether `beancount-mobile` should redirect OAuth authorization responses to a claimed `https://` URL (iOS Universal Links, Android App Links) instead of the custom schemes `io.beancount.ios:/oauth/callback` and `io.beancount.android:/oauth/callback`, and whether that would let the dashboard drop the approve step.

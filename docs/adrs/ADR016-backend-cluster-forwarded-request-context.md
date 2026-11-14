@@ -1,6 +1,7 @@
 # ADR016: Forwarded request context between backend-v2 and the ledger service
 
-- Status: Done (accepted 2026-09-16; both services' implementations reviewed 2026-09-27).
+- Status: Done
+- Status notes: Accepted 2026-09-16; both services' implementations reviewed 2026-09-27.
 - Decision owner: backend-v2 (`backend-cluster/backend-v2`) and the ledger service (`backend-cluster/ledger`), jointly — the two ends of one wire format.
 
 ## Context

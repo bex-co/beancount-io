@@ -1,6 +1,6 @@
 # ADR028: Connect Bank with Plaid v2 — one connection per login, history-first categories, opt-in automatic import
 
-- Status: Proposed
+- Status: Draft
 - Date: 2026-11-10
 - Owners: Product, backend-v2, dashboard
 - Baseline: `main` at `c52b750fbd` (2026-11-09). Production builds backend-v2 from `main`, serves Plaid webhooks at `https://api.v3.beancount.io/api/plaid/webhook`, and has `PLAID_WEBHOOK_URL` set (owner confirmed 2026-11-10).

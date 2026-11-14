@@ -1,6 +1,7 @@
 # ADR011: AI API usage — three provider paths, explicit credentials per path
 
-- Status: Accepted — documents the as-built architecture plus decisions from the 2026-09-07 receipt-parse outage; open items tracked in [Follow-up](#follow-up-open)
+- Status: Proposed
+- Status notes: Proposed since 2026-11-14 (was Accepted). Documents the as-built architecture plus decisions from the 2026-09-07 receipt-parse outage; open items are tracked in [Follow-up](#follow-up-open).
 - Date: 2026-09-07
 - Decision owners: Backend (`backend-cluster/backend-v2`); Mobile for the client-side error surfacing
 - Scope: which features call which LLM provider through which code path, how each path resolves credentials, where spend and quota are gated, and what a provider failure looks like to callers. Motivated by an outage in which the Ask-AI assistant stayed healthy while every fallback-chain feature (receipt parse, file parse, category suggestions, Plaid AI, the mobile agent chat) failed with a masked error — because the paths share no credential resolution and nothing documented that. Related: ADR 0002 (mobile) for the mobile agent client, ADR 0010 for the authz PDP that gates every AI action.

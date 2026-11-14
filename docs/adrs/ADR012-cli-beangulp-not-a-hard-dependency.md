@@ -1,6 +1,7 @@
 # ADR012: Beangulp is not a hard dependency — no-code CSV import via `--csv`
 
-- Status: Done — the optional Beangulp dependency and `--csv` / `--rules` / remembered-mapping design are implemented; reviewed 2026-09-27.
+- Status: Done
+- Status notes: The optional Beangulp dependency and `--csv` / `--rules` / remembered-mapping design are implemented; reviewed 2026-09-27.
 - Date: 2026-09-08
 - Decision owners: CLI (`cli/`)
 - Scope: why the default `bea` installation does not depend on beangulp, and

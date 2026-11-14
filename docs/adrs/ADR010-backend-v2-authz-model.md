@@ -1,6 +1,7 @@
 # ADR010: Authorization strategy — declarative OpenFGA model for the relationship ceiling, engine adoption behind named triggers
 
-- Status: Accepted
+- Status: Proposed
+- Status notes: Proposed since 2026-11-14 (was Accepted): the shared neutral fixture matrix in [Follow-up](#follow-up-open) and the trigger T3 question in [Open questions](#open-questions) remain.
 - Date: 2026-08-28
 - Decision owners: Backend (`backend-cluster/backend-v2`)
 - Scope: the authorization semantics behind the centralized TypeScript policy decision point (PDP) in `backend-cluster/backend-v2/src/server/api/authorization/`, the declarative model under `backend-cluster/backend-v2/authz/`, where the OpenFGA boundary sits (relationship ceiling in the model, credential ceiling in code), whether and when to adopt an OpenFGA-compatible evaluation engine, and which engine if a trigger fires. Extends ADR 0006 (identity, scopes, op classes). No FGA engine is deployed.

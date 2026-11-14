@@ -1,6 +1,7 @@
 # ADR001: Selling the beancount.io Plans in the Mobile Apps
 
-- Status: Proposed (revived 2026-10-25) — the owner decided to sell the beancount.io plans in the iOS and Android apps. This revision replaces the 2026-07-27 design and ends the 2026-10-03 deferral. Nothing in it is implemented yet.
+- Status: Proposed
+- Status notes: Revived 2026-10-25: the owner decided to sell the beancount.io plans in the iOS and Android apps. This revision replaces the 2026-07-27 design and ends the 2026-10-03 deferral. The web half is built ([w7/m6](../../.pm/w7/blocked/m6/README.md), waiting on its browser check); the apps half ([w7/m8](../../.pm/w7/blocked/m8/README.md)) waits on store products.
 - Date: 2026-07-27 (revised 2026-10-25)
 - Decision owners: Mobile and Backend
 - Scope: plan purchase, plan changes, and plan limits on iOS and Android, and the Web and backend changes those require. Web billing through Stripe stays as [PRFAQ005](../prfaqs/PRFAQ005-plan-changes-and-yearly-billing.md) defines it.

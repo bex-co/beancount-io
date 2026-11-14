@@ -1,6 +1,7 @@
 # ADR009: `.well-known` paths — one index for every one of them
 
-- Status: Done (path index and implementation reviewed 2026-09-27; `/.well-known/mcp-registry-auth` added 2026-10-03; `/.well-known/openai-apps-challenge` added 2026-10-13)
+- Status: Done
+- Status notes: Path index and implementation reviewed 2026-09-27; `/.well-known/mcp-registry-auth` added 2026-10-03; `/.well-known/openai-apps-challenge` added 2026-10-13.
 - Date: 2026-08-25
 - Decision owners: Backend (`backend-cluster/backend-v2`)
 - Scope: every `/.well-known/*` path served by, proxied to, or referenced about Beancount.io. What exists today, who serves it, and every file that has to change together when a path is added or moved.

@@ -2,7 +2,8 @@
 
 # ADR026: Onboarding — from sign-up to the first useful result
 
-- Status: Suspended (2026-11-12)
+- Status: Draft
+- Status notes: Draft since 2026-11-14 (was Suspended 2026-11-12 by the owner): the design is not good enough to build yet, and nothing is scheduled from it until the owner moves it to Proposed.
 - Date: 2026-11-08
 - Owners: Product, dashboard, mobile, backend-v2, CLI
 - Baseline: source tree read on 2026-11-08

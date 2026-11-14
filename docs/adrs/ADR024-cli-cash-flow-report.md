@@ -1,6 +1,7 @@
 # ADR024: CLI cash-flow report (`bea report cash-flow`)
 
-- Status: Done (shipped as w21/m4; implementation reviewed 2026-10-25)
+- Status: Done
+- Status notes: Shipped as w21/m4; implementation reviewed 2026-10-25.
 - Date: 2026-10-25
 - Decision owners: CLI (engine read + command; no other package changes)
 - Scope: a native, offline `bea report cash-flow` with `--json` — which accounts form the operating/investing/financing sections, the period and multi-currency rules, and the JSON shape, mirroring the dashboard report's semantics.

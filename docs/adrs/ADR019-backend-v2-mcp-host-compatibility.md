@@ -1,6 +1,7 @@
 # ADR019: MCP hosts — one endpoint for ChatGPT, Claude, Cursor, Copilot, and Muse, and what the authorization server must accept to let them in
 
-- Status: Accepted (2026-10-06, after the facts were re-verified — see [Amendments](#2026-10-06--facts-re-verified-and-accepted)). D1–D8 are on `main` and deployed, and D9 is done at the edge. D3, D4, D6, and D8 were verified on production on 2026-10-08. The real-host sign-ins are still open — see [Implementation status](#implementation-status).
+- Status: Proposed
+- Status notes: Proposed since 2026-11-14 (was Accepted 2026-10-06, after the facts were re-verified — see [Amendments](#2026-10-06--facts-re-verified-and-accepted)). D1–D8 are on `main` and deployed, and D9 is done at the edge. D3, D4, D6, and D8 were verified on production on 2026-10-08. The real-host sign-ins are still open — see [Implementation status](#implementation-status).
 - Date: 2026-09-25
 - Decision owners: Backend (`backend-cluster/backend-v2`: OAuth provider, MCP surface), Dashboard (`dashboard/`: the consent page), Deploy (edge rules)
 - Scope: which third-party MCP hosts the `POST /api-gateway/mcp` endpoint serves, the credential path each one uses, what the authorization server must accept for each to register, sign in, and stay signed in, and which parts of the surface a host that only calls tools can reach. The transport stays [ADR 0007](./ADR007-backend-v2-mcp-surface.md); the tool/resource split stays [ADR 0008](./ADR008-backend-v2-surface-parity.md), amended by D7; the well-known paths stay [ADR 0009](./ADR009-backend-v2-well-known-paths.md).

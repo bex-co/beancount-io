@@ -1,13 +1,33 @@
 # ADR020: Accounting skill candidates to learn from
 
 - Status: Proposed
+- Status notes: Seven of ten candidates are on `main`; see [Implementation status](#implementation-status-2026-11-13).
 - Date: 2026-09-27
 - Decision owners: Customer-facing skills (`skills/`)
 - Scope: Candidate selection and adaptation rules for the Beancount.io customer skill suite. This record does not implement skills or change the roadmap board.
 
+## Implementation status (2026-11-13)
+
+Seven of the ten candidates are on `main`. Three are not built.
+
+| Priority | Candidate | State |
+| --- | --- | --- |
+| P0 | Reconciliation coverage preflight | On `main`: [`beancount-reconcile`](../../skills/beancount-reconcile/SKILL.md) runs a Coverage phase before Match. Still open: [w2/m48](../../.pm/w2/blocked/m48/README.md)'s cross-client eval gate (t004) and closeout. |
+| P0 | Close dependencies and review state | On `main`: [`beancount-close`](../../skills/beancount-close/SKILL.md) records each account as tied, partial, partly covered, unverified, or blocked. Its eval gate and closeout are the same open w2/m48 tasks. |
+| P1 | `beancount-roll-forward` | Shipped: [w3/m55](../../.pm/w3/done/m55/README.md). |
+| P1 | `beancount-accruals` | Shipped: [w3/m57](../../.pm/w3/done/m57/README.md). |
+| P1 | Variance explanation | Shipped: a `beancount-ask` recipe that `beancount-close` reuses ([w3/m56](../../.pm/w3/done/m56/README.md)). `bea report budget` covers budget against actual ([w21/m7](../../.pm/w21/done/m7/README.md)). |
+| P1 | Reconciliation exception register | Not built. [w3/m58](../../.pm/w3/blocked/m58/README.md) waits on w2/m48's closeout. |
+| P2 | `beancount-report-pack` | Shipped: [w21/m9](../../.pm/w21/done/m9/README.md). |
+| P2 | `beancount-report-review` | Not built. Nothing on the board. |
+| P2 | `beancount-business-metrics` | Shipped: [w21/m10](../../.pm/w21/done/m10/README.md). |
+| P3 | `beancount-investor-update` | Not built. Nothing on the board. |
+
+The record can close when w2/m48 and w3/m58 close, and when the owner either schedules `beancount-report-review` and `beancount-investor-update` or removes them from scope.
+
 ## Context
 
-Beancount.io already has eight customer skills covering initialization, importing, importer authoring, migration, reconciliation, ledger questions, options transactions, and month-end close. The opportunity is to turn checked ledger data into repeatable accounting workpapers without losing the suite's reproducibility and confirmation boundaries.
+When this record was written (2026-09-27), Beancount.io had eight customer skills covering initialization, importing, importer authoring, migration, reconciliation, ledger questions, options transactions, and month-end close. The opportunity is to turn checked ledger data into repeatable accounting workpapers without losing the suite's reproducibility and confirmation boundaries.
 
 The requested research list mixes spreadsheet tooling, accounting workflows, startup analysis, and fundraising writing. Popularity helps locate examples; it does not establish accounting correctness, skill usage, or compatibility with our runtime.
 

@@ -1,6 +1,7 @@
 # ADR007: The MCP surface — one stateless endpoint, and the rules that keep it honest
 
-- Status: Rejected (2026-09-27) — the ledger-pinning policy in D3/D11 is rejected for every credential type, OAuth grants and API keys alike, in favor of access to all authorized ledgers. The code still enforces pins; see [Rejection rationale](#rejection-rationale-2026-09-27). Cross-surface parity remains in [ADR 0008](./ADR008-backend-v2-surface-parity.md).
+- Status: Rejected
+- Status notes: Rejected 2026-09-27: the ledger-pinning policy in D3/D11 is rejected for every credential type, OAuth grants and API keys alike, in favor of access to all authorized ledgers. The code still enforces pins; see [Rejection rationale](#rejection-rationale-2026-09-27). Cross-surface parity remains in [ADR 0008](./ADR008-backend-v2-surface-parity.md).
 - Date: 2026-08-24
 - Decision owners: Backend (route, registry, transport, error translation), Deploy (routing, secrets, migrations)
 - Scope: `POST /api-gateway/mcp` — the Model Context Protocol endpoint an external agent connects to. What its address is, which HTTP methods it answers, which credentials reach it, how a refusal is phrased, and which deployment facts are part of its contract rather than tribal knowledge. Extends ADR 0006, which established the three-surface model; this ADR is about the third surface specifically. ADR 0006 was written before backend-v2 was imported into this repository and was never committed here; its decisions survive in the code this record cites (`composition-root.ts`, `identity.ts`, `op-class.ts`) and in ADR 0008.

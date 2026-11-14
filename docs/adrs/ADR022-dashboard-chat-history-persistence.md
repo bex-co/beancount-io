@@ -1,6 +1,7 @@
 # ADR022: Ask AI Chat History Persistence
 
-- Status: Proposed
+- Status: Draft
+- Status notes: Draft since 2026-11-14 (was Proposed): the [requirements to settle before implementation](#requirements-to-settle-before-implementation) are open, and nothing is scheduled from this record.
 - Date: 2026-08-17
 - Decision owners: Backend (persistence + endpoint), Dashboard (client)
 - Scope: Persisting the Ask AI conversations of the dashboard's two chat surfaces in `dashboard/src/features/ai-agent/pages/` (`agent/` and `sandbox-agent/`) — what survives reload/navigation, **which service owns the store**, and which mechanism to reuse.

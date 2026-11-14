@@ -1,6 +1,7 @@
 # ADR002: Mobile AI Assistant
 
-- Status: Accepted — P0/P1 implemented (`mobile/.pm/w1/done/m32/`) and shipped gated off; P2–P4 (approval cards, attachments, polish) and un-gating are frozen by owner decision (`mobile/.pm/DO_NOT_DO.md`). See [Implementation notes](#implementation-notes)
+- Status: Draft
+- Status notes: Draft since 2026-11-14 (was Accepted): P0/P1 are implemented (`mobile/.pm/w1/done/m32/`) and shipped gated off; P2–P4 (approval cards, attachments, polish) and un-gating are frozen by owner decision (`mobile/.pm/DO_NOT_DO.md`), so nothing is scheduled from this record until the owner lifts the freeze. See [Implementation notes](#implementation-notes).
 - Date: 2026-08-18
 - Decision owners: Mobile (client); Backend (no changes required)
 - Scope: Adding the platform's agent chat — "Ask Beancount.io" — to the mobile app: which endpoint and protocol to use, which client mechanism to adopt, how attachments and tool approvals work, and what stays out of scope.
