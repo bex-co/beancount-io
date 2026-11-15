@@ -188,6 +188,24 @@ def test_noop_apply_succeeds_without_writing(tmp_path: Path) -> None:
     assert "already matches" in again.output
 
 
+def test_noop_preview_says_already_matches(tmp_path: Path) -> None:
+    # w1/246: a preview that changes nothing reports noop, as --apply does.
+    ledger = _ledger(tmp_path)
+    before = ledger.read_bytes()
+    args = ["--file", str(ledger), "update", "transaction", "--id", "abc123", "--flag", "!"]
+    text = runner.invoke(app, args)
+    assert text.exit_code == 0, text.output
+    assert "already matches" in text.output
+    assert "Preview only" not in text.output
+    shown = runner.invoke(app, ["--json", *args])
+    assert shown.exit_code == 0, shown.output
+    data = json.loads(shown.output)["data"]
+    assert data["noop"] is True
+    assert data["written"] == 0
+    assert data["diff"] == ""
+    assert ledger.read_bytes() == before
+
+
 def test_repeating_an_applied_retarget_succeeds_without_writing(tmp_path: Path) -> None:
     # w1/244: once applied, the holding leg is gone; a repeat must be a no-op.
     ledger = _ledger(tmp_path)

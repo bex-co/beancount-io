@@ -1166,6 +1166,8 @@ def answer(
         snapshot = ledger_write.LedgerSnapshot.capture(file)
         original = snapshot.require_target(target)
         _, diff = plan_rewrite(list(entries), options, entry, changes, original, target)
+        if not diff:
+            return {**_planned_answer(changes, target, entry, diff, written=0, warnings=[]), "noop": True}
         return _planned_answer(
             changes, target, entry, diff, written=0, warnings=_notes(entry, options, changes, snapshot)
         )

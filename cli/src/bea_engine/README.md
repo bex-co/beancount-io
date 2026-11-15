@@ -189,7 +189,7 @@ validates the rewritten file as a whole — the write is refused when the ledger
 would no longer load, like `add` — and installs it through the same locked,
 atomic replace, answering `"written": 1`. An edit that lands while the write
 runs is refused as `conflict`. A request that changes nothing answers
-`"written": 0` with `"noop": true`.
+`"written": 0` with `"noop": true`, in preview and `--apply` alike.
 
 `--type transactions` carries `rows` of the single-row shape and answers one
 JSON object per row: `{"rows": [{"row", "id", "status", ...}], "diff", ...}`,
