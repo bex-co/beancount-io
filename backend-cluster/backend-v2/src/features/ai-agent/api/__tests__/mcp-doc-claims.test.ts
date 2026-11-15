@@ -14,6 +14,7 @@ import {
   MAX_STRUCTURED_BQL_ROWS,
 } from "../../tools/bql-query-tool";
 import { ENTRY_WRITE_ATTEMPTS } from "@/features/ledger/utils/entry-write-race";
+import { MAX_BQL_QUERY_BYTES } from "@/features/ledger/utils/bql-query-size-limit";
 import type { AppConfig } from "@/config/config";
 import type { McpRequestContext } from "../mcp-context";
 
@@ -152,6 +153,19 @@ const CLAIMS: Claim[] = [
         : ["MAX_STRUCTURED_BQL_ROWS / MAX_BQL_TEXT_BYTES"],
   },
   {
+    // w31/009: the guide said there was no query-length ceiling after
+    // MAX_BQL_QUERY_BYTES shipped; the served BQL tools state the same cap.
+    id: "a BQL query is at most 262144 bytes",
+    doc: "up to 262144 bytes (256 KiB of UTF-8) of query text",
+    violations: (s) => [
+      ...(MAX_BQL_QUERY_BYTES === 262_144 ? [] : ["MAX_BQL_QUERY_BYTES"]),
+      ...["runBqlQuery", "runBqlQueryStructured"].filter(
+        (name) =>
+          !s.tools.get(name)?.description?.includes("up to 262144 bytes"),
+      ),
+    ],
+  },
+  {
     id: "an entry write retries a lost race up to 3 attempts",
     doc: "commit on top of it, up to 3 attempts",
     violations: () =>
@@ -202,6 +216,8 @@ const STALE = [
   "`deleteLedger` accepts only `ledger`",
   // w1/232: a later page carries no balances from before it.
   "so each one loads on its own",
+  // w31/009: a BQL query is capped at MAX_BQL_QUERY_BYTES.
+  "There is no query-length ceiling to write around",
 ];
 
 let served: Served;

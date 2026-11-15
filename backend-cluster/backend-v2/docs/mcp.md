@@ -1578,13 +1578,18 @@ JSON table's rows (REST `text/plain` is the raw rendering). Errors throw
 rather than rendering empty, so `""` with `rowCount: 0` unambiguously
 means zero rows.
 
-There is no query-length ceiling to write around: the query travels in a
-POST body end to end, so bulk `OR` chains and long literals run as written
-on every surface. What is bounded is how deep the engine would recurse: a run
-of one operator at one parenthesis level is at most 500 long (an `OR` list of
-up to 501 comparisons), and a query holds at most 2,000 operators. Past those
-the query is refused with `BAD_USER_INPUT`; write a longer list as
-`x IN (…)`, which has no such limit (w1/213).
+The query travels in a POST body end to end, so it meets no URL-length
+ceiling: bulk `OR` chains and long literals run as written on every surface,
+up to 262144 bytes (256 KiB of UTF-8) of query text. A longer query is refused
+with `BAD_USER_INPUT` (`BQL query is N bytes, over the limit of 262144.`, hint
+`Split the query into smaller ones.`) before authorization, identically on
+REST, GraphQL and MCP. Within that size, what is bounded is how deep the
+engine would recurse: a run of one operator at one parenthesis level is at
+most 500 long (an `OR` list of up to 501 comparisons), and a query holds at
+most 2,000 operators. Past those the query is refused with `BAD_USER_INPUT`;
+write a longer list as `x IN (…)`, whose members are not operators, so the list
+is exempt from both operator limits (w1/213). It is not exempt from the byte
+cap: every member is query text and counts toward the 262144 bytes.
 
 When an older ledger service omits count metadata, or reports an unknown count,
 the text begins `BQL result — row count unavailable` and preserves the readable
@@ -1666,6 +1671,9 @@ the parameter. Nothing is stripped or truncated.
   ledger file stores it, but never an unpaired surrogate.
 - A string is at most 1048576 characters; ledger file text is at most 8388608
   characters (a ledger file itself is capped at 1 MiB).
+- A BQL `query` (`runBqlQuery`, `runBqlQueryStructured`) is at most 262144
+  bytes of UTF-8, tighter than the string limit; its operators are bounded too
+  (see [the result envelope](#the-result-envelope)).
 - An array has at most 10000 members.
 - Objects and arrays nest at most 32 levels.
 
