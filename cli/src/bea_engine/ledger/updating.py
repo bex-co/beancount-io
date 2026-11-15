@@ -1189,11 +1189,25 @@ def answer(
         _require_into(target, selected)
         snapshot = ledger_write.LedgerSnapshot.capture(file)
         original = snapshot.require_target(target)
-        _, diff = plan_rewrite(list(entries), options, entry, changes, original, target)
+        new_text, diff = plan_rewrite(list(entries), options, entry, changes, original, target)
         if not diff:
             return {**_planned_answer(changes, target, entry, diff, written=0, warnings=[]), "noop": True}
+        # The preview judges the edit as the apply will, as the batch preview
+        # does: a diff the apply refuses is a refusal now, not "repeat with
+        # --apply" (w1/259). The refusal still carries the diff it judged.
+        try:
+            warnings = _validate_text(target, snapshot, new_text, allow_errors=allow_errors)
+        except protocol.LedgerError as exc:
+            if exc.result is None:
+                exc.result = _planned_answer(changes, target, entry, diff, written=0, warnings=[])
+            raise
         return _planned_answer(
-            changes, target, entry, diff, written=0, warnings=_notes(entry, options, changes, snapshot)
+            changes,
+            target,
+            entry,
+            diff,
+            written=0,
+            warnings=[*warnings, *_notes(entry, options, changes, snapshot)],
         )
     with ledger_write.locked_graph(file, file, deciding=True) as snapshot:
         # Read under the locks: a queued bea writer's commit lands in this

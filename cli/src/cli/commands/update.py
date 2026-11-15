@@ -19,7 +19,7 @@ import typer
 from cli import context, output
 from cli.amounts import json_float_default
 from cli.completion import fixed_values
-from cli.errors import UsageError
+from cli.errors import BeaError, UsageError
 from cli.rows import parse_json, read_text
 from cli.single_value import SingleValueCommand
 from cli.utils import IntoPath, RawPath, inert_text
@@ -158,7 +158,15 @@ def update_transaction(
         request["tags"] = list(tag)
     if narration is not None:
         request["narration"] = narration
-    file, data = _update("transaction", request, into=into, apply=apply, allow_errors=allow_errors)
+    try:
+        file, data = _update("transaction", request, into=into, apply=apply, allow_errors=allow_errors)
+    except BeaError as exc:
+        # A preview the ledger refuses still shows the diff it judged, ahead
+        # of the refusal; `--json` keeps it in `error.result` (w1/259).
+        diff = exc.result.get("diff") if isinstance(exc.result, dict) else None
+        if diff and not context.current().json_output:
+            typer.echo(inert_text(str(diff)))
+        raise
     _rendered(data, file=file, apply=apply)
 
 

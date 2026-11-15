@@ -219,3 +219,32 @@ def test_repeating_an_applied_retarget_succeeds_without_writing(tmp_path: Path) 
     assert again.exit_code == 0, again.output
     assert "already matches" in again.output
     assert ledger.read_bytes() == applied
+
+
+def test_preview_refuses_an_edit_the_apply_would_refuse(tmp_path: Path) -> None:
+    # The preview judged nothing, so it said "repeat with --apply" for an edit
+    # the apply then refused; the batch preview already rejected it (w1/259).
+    ledger = _ledger(tmp_path)
+    result = runner.invoke(
+        app,
+        ["--file", str(ledger), "update", "transaction", "--id", "abc123", "--account", "Expenses:Nope"],
+    )
+    assert result.exit_code == 1, result.output
+    assert "Invalid reference to unknown account 'Expenses:Nope'" in result.output
+    assert "+  Expenses:Nope 9.99 USD" in result.output
+    assert "repeat with --apply" not in result.output
+    assert ledger.read_text() == LEDGER
+
+
+def test_json_preview_refusal_carries_the_diff(tmp_path: Path) -> None:
+    ledger = _ledger(tmp_path)
+    result = runner.invoke(
+        app,
+        ["--json", "--file", str(ledger), "update", "transaction", "--id", "abc123", "--account", "Expenses:Nope"],
+    )
+    assert result.exit_code == 1, result.output
+    error = json.loads(result.stderr)["error"]
+    assert any("Invalid reference to unknown account 'Expenses:Nope'" in line for line in error["details"])
+    assert error["result"]["written"] == 0
+    assert "+  Expenses:Nope 9.99 USD" in error["result"]["diff"]
+    assert ledger.read_text() == LEDGER

@@ -1835,7 +1835,10 @@ bea list transaction --flag '!'
 id shared by two rows is refused rather than guessed at. A bare `--account`
 retargets the queue's leg, while `OLD=NEW` names another leg. `--flag`,
 `--tag`, and `--narration` retouch the header. Every form previews a diff and
-writes only with `--apply`, and only the entry's own lines change.
+writes only with `--apply`, and only the entry's own lines change. The preview
+validates the edit as the apply does: one the ledger would refuse (an unknown
+account, say) prints its diff and the ledger error and exits **1**, and
+`--json` keeps the diff in `error.result`.
 
 Both update commands accept `--into FILE` to explicitly select the existing
 file the entries must belong to. Keep `--file` on the governing root;
