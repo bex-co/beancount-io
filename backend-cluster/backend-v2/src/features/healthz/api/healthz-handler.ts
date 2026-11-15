@@ -41,16 +41,23 @@ interface HealthResponse {
   };
 }
 
+const PROBE_TIMEOUT_MS = 5000;
+
 async function withTimeout<T>(
   fn: () => Promise<T>,
   timeoutMs: number,
 ): Promise<T> {
-  return Promise.race([
-    fn(),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout")), timeoutMs),
-    ),
-  ]);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("timeout")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** Thrown by HTTP probes so the warning can carry the upstream status. */
@@ -87,6 +94,22 @@ function describeHealthFailure(error: unknown): {
   return code ? { reason, code } : { reason };
 }
 
+/**
+ * What the response says about a failed probe. The endpoint is anonymous and
+ * public, and driver messages name internal hosts and addresses
+ * (`connect ECONNREFUSED 10.0.0.5:5432`), so the body carries only a status,
+ * `timeout`, or an error code; the full reason goes to the log.
+ */
+function publicFailure(error: unknown): string {
+  if (error instanceof HealthProbeHttpError) return error.message;
+  if (error instanceof Error && error.message === "timeout") return "timeout";
+  return (
+    errorCode(error) ??
+    errorCode((error as { cause?: unknown })?.cause) ??
+    "unavailable"
+  );
+}
+
 function errorCode(error: unknown): string | undefined {
   const code = (error as { code?: unknown } | null | undefined)?.code;
   return typeof code === "string" && code.length <= 64 ? code : undefined;
@@ -98,10 +121,9 @@ async function checkService(
 ): Promise<ServiceHealth> {
   const start = Date.now();
   try {
-    await withTimeout(fn, 5000);
+    await withTimeout(fn, PROBE_TIMEOUT_MS);
     return { status: "healthy", latency_ms: Date.now() - start };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     healthLogger.warn(`Health check failed for ${name}`, {
       service: name,
       ...describeHealthFailure(error),
@@ -109,10 +131,14 @@ async function checkService(
     return {
       status: "unhealthy",
       latency_ms: Date.now() - start,
-      error: errorMessage,
+      error: publicFailure(error),
     };
   }
 }
+
+// `/api-gateway/` is the prefix the public web host forwards to this service, so
+// uptime monitors reach the check there without knowing the API's own host.
+const HEALTHZ_PATHS = ["/healthz", "/api-gateway/healthz"] as const;
 
 /**
  * Set up health check endpoint
@@ -129,7 +155,7 @@ export function setHealthzHandler(
   layers: { database: DatabaseLayer; clients: ClientFactoryLayer },
   config: AppConfig,
 ): void {
-  router.get("/healthz", async (ctx) => {
+  const healthz: Router.Middleware = async (ctx) => {
     const [postgres, redis, ledger, gitea] = await Promise.all([
       checkService("postgres", async () => {
         await layers.database.db.execute(sql`SELECT 1`);
@@ -138,12 +164,16 @@ export function setHealthzHandler(
         await layers.clients.cacheHelper.getStrict("__healthz__");
       }),
       checkService("ledger", async () => {
-        const res = await fetch(`${config.favaApi.baseUrl}/healthz`);
+        const res = await fetch(`${config.favaApi.baseUrl}/healthz`, {
+          signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+        });
         if (!res.ok) throw new HealthProbeHttpError(res.status);
       }),
       checkService("gitea", async () => {
         const url = `${config.gitea.internalBaseUrl}/api/healthz`;
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+        });
         if (!res.ok) throw new HealthProbeHttpError(res.status);
       }),
     ]);
@@ -155,23 +185,25 @@ export function setHealthzHandler(
         AI_HEALTH_CHECK_CACHE_KEY,
       );
       if (cached) {
+        // The cached error is free text from the sandbox; the status says enough.
         aiFeature = {
           status: cached.status,
           latency_ms: cached.latency_ms,
           lastChecked: cached.lastChecked,
-          ...(cached.error && { error: cached.error }),
         };
       } else {
         aiFeature = { status: "unchecked", latency_ms: 0 };
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
       healthLogger.warn(
         "Failed to read AI health check cache",
         describeHealthFailure(error),
       );
-      aiFeature = { status: "unchecked", latency_ms: 0, error: errorMessage };
+      aiFeature = {
+        status: "unchecked",
+        latency_ms: 0,
+        error: publicFailure(error),
+      };
     }
 
     const strict = ctx.query.strict === "true";
@@ -188,33 +220,35 @@ export function setHealthzHandler(
 
     ctx.status = allHealthy ? 200 : 500;
     ctx.body = response;
-  });
+  };
 
-  // Register with OpenAPI documentation
-  registerRoute({
-    method: "get",
-    path: "/healthz",
-    summary: "Health check endpoint",
-    description:
-      "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea) and reads cached AI feature health. Returns 200 when infrastructure services are healthy, 500 when any is unhealthy. Use ?strict=true to also fail on unhealthy AI feature.",
-    tags: ["Health"],
-    responses: {
-      200: {
-        description: "All services are healthy",
-        content: {
-          "application/json": {
-            schema: healthCheckResponseSchema,
+  for (const path of HEALTHZ_PATHS) {
+    router.get(path, healthz);
+    registerRoute({
+      method: "get",
+      path,
+      summary: "Health check endpoint",
+      description:
+        "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea) and reads cached AI feature health. Returns 200 when infrastructure services are healthy, 500 when any is unhealthy. Use ?strict=true to also fail on unhealthy AI feature.",
+      tags: ["Health"],
+      responses: {
+        200: {
+          description: "All services are healthy",
+          content: {
+            "application/json": {
+              schema: healthCheckResponseSchema,
+            },
+          },
+        },
+        500: {
+          description: "One or more services are unhealthy",
+          content: {
+            "application/json": {
+              schema: healthCheckResponseSchema,
+            },
           },
         },
       },
-      500: {
-        description: "One or more services are unhealthy",
-        content: {
-          "application/json": {
-            schema: healthCheckResponseSchema,
-          },
-        },
-      },
-    },
-  });
+    });
+  }
 }

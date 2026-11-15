@@ -102,7 +102,12 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
   {
     opId: "REST GET /healthz",
     reason:
-      "Liveness probe with constant cost and no user data; the orchestrator calling it holds no credential of any kind.",
+      "Readiness probe with no user data: one query or request per dependency, each bounded at five seconds, and a body of statuses and error codes only. The orchestrator calling it holds no credential of any kind.",
+  },
+  {
+    opId: "REST GET /api-gateway/healthz",
+    reason:
+      "The `/healthz` probe under the prefix the public web host forwards to this service, for external uptime monitors, which hold no credential either. The default per-IP rate limit bounds its cost.",
   },
   {
     opId: "REST GET /metrics/backend",

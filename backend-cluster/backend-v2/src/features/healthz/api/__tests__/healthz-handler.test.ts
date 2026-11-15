@@ -45,13 +45,15 @@ describe("Healthz Handler", () => {
   });
 
   describe("setHealthzHandler", () => {
-    it("should register GET /healthz route", () => {
+    it("registers GET /healthz and GET /api-gateway/healthz", () => {
       setHealthzHandler(router, mockLayers, mockConfig);
 
       const routes = router.stack;
-      expect(routes).toHaveLength(1);
-      expect(routes[0].path).toBe("/healthz");
-      expect(routes[0].methods).toContain("GET");
+      expect(routes.map((r) => r.path)).toEqual([
+        "/healthz",
+        "/api-gateway/healthz",
+      ]);
+      for (const route of routes) expect(route.methods).toContain("GET");
     });
   });
 
@@ -62,9 +64,14 @@ describe("Healthz Handler", () => {
     let cacheGet: jest.Mock;
     const originalFetch = global.fetch;
 
-    async function runHealthz(query: Record<string, string> = {}) {
+    async function runHealthz(
+      query: Record<string, string> = {},
+      path = "/healthz",
+    ) {
       setHealthzHandler(router, mockLayers, mockConfig);
-      const handler = router.stack[0].stack[0];
+      const route = router.stack.find((layer) => layer.path === path);
+      if (!route) throw new Error(`no route for ${path}`);
+      const handler = route.stack[0];
       const ctx: any = { query, status: 404, body: undefined };
       await handler(ctx, async () => {});
       return ctx;
@@ -88,6 +95,24 @@ describe("Healthz Handler", () => {
     afterEach(() => {
       global.fetch = originalFetch;
       jest.useRealTimers();
+    });
+
+    it("answers the same deep check at /api-gateway/healthz", async () => {
+      const ctx = await runHealthz({}, "/api-gateway/healthz");
+
+      expect(ctx.status).toBe(200);
+      expect(ctx.body.status).toBe("healthy");
+      expect(dbExecute).toHaveBeenCalledTimes(1);
+      expect(getStrict).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("bounds each HTTP probe with an abort signal", async () => {
+      await runHealthz();
+
+      for (const [, init] of fetchMock.mock.calls) {
+        expect(init.signal).toBeInstanceOf(AbortSignal);
+      }
     });
 
     it("logs nothing when every probe succeeds", async () => {
@@ -138,8 +163,10 @@ describe("Healthz Handler", () => {
         return { ok: true, status: 200 };
       });
 
-      await runHealthz();
+      const ctx = await runHealthz();
 
+      expect(ctx.body.services.gitea.error).toBe("ECONNREFUSED");
+      expect(JSON.stringify(ctx.body)).not.toContain("10.0.0.5");
       expect(mockWarn).toHaveBeenCalledWith("Health check failed for gitea", {
         service: "gitea",
         reason: "fetch failed",
@@ -174,7 +201,7 @@ describe("Healthz Handler", () => {
 
       const ctx = await runHealthz();
 
-      expect(ctx.body.services.redis.error).toBe(longMessage);
+      expect(ctx.body.services.redis.error).toBe("unavailable");
       const [, meta] = mockWarn.mock.calls[0];
       expect(meta.service).toBe("redis");
       expect(meta.reason).not.toContain("\n");
@@ -197,7 +224,7 @@ describe("Healthz Handler", () => {
       expect(ctx.body.services.aiFeature).toEqual({
         status: "unchecked",
         latency_ms: 0,
-        error: "Connection is closed.\nretrying",
+        error: "ECONNRESET",
       });
       expect(mockWarn).toHaveBeenCalledTimes(1);
       expect(mockWarn).toHaveBeenCalledWith(
@@ -223,7 +250,6 @@ describe("Healthz Handler", () => {
         status: "unhealthy",
         latency_ms: 12,
         lastChecked: "2026-09-27T00:00:00.000Z",
-        error: "model unavailable",
       });
       expect(mockWarn).not.toHaveBeenCalled();
     });
