@@ -267,6 +267,10 @@ def _rendered_batch(data: dict[str, Any], *, file: Path, apply: bool) -> None:
     for row in data["rows"]:
         if row["status"] == "rejected":
             typer.echo(f"\n{row['reason']}")
+            # The ledger errors that refused the row, so the preview says
+            # what to fix before the rerun (w1/258).
+            for detail in row.get("details") or []:
+                typer.echo(f"  {detail}")
     diff = inert_text(str(data.get("diff") or ""))
     if diff:
         typer.echo(diff)

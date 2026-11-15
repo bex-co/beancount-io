@@ -27,7 +27,7 @@ from contextlib import ExitStack
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from bea_engine import protocol
 from bea_engine.ledger import reader
@@ -618,13 +618,34 @@ class _RowPlan:
     summary: list[str]
 
 
-def _row_reason(index: int, exc: Exception) -> str:
-    """`Row N: ...` for a row's failure.
+class _Rejection(NamedTuple):
+    """A rejected row's `Row N` reason and the located ledger errors behind it."""
 
-    The single-row refusals end in "Nothing was written", which a batch must
-    not repeat: its other rows may still write.
+    reason: str
+    details: list[str]
+
+
+_NOTHING_WRITTEN = re.compile(r";\s*nothing was written(?=[.;])|\s*\bNothing was written\.")
+
+
+def _batch_text(message: str) -> str:
+    """A refusal's text without its "nothing was written" claim.
+
+    The single-row refusals say it as `... Nothing was written.` and the
+    ledger's as `...; nothing was written.`; a batch must say neither, because
+    its other rows may still write (w1/258).
     """
-    return f"Row {index + 1}: {str(exc).removesuffix(' Nothing was written.')}"
+    return _NOTHING_WRITTEN.sub("", message).strip()
+
+
+def _row_reason(index: int, exc: Exception) -> str:
+    """`Row N: ...` for a row's failure."""
+    return f"Row {index + 1}: {_batch_text(str(exc))}"
+
+
+def _ledger_rejection(index: int, exc: protocol.LedgerError) -> _Rejection:
+    """A row the ledger refused, carrying the errors that refused it (w1/258)."""
+    return _Rejection(_row_reason(index, exc), list(exc.details))
 
 
 def _plan_rows(
@@ -634,7 +655,7 @@ def _plan_rows(
     file_lines: dict[Path, list[str]],
     *,
     into: Path | None = None,
-) -> tuple[list[_RowPlan], list[str], list[int], dict[int, str], bool]:
+) -> tuple[list[_RowPlan], list[str], list[int], dict[int, _Rejection], bool]:
     """Resolve and plan every row.
 
     Returns the plans, the `Row N` detail lines, the rejected 0-based indexes,
@@ -645,14 +666,14 @@ def _plan_rows(
     plans: list[_RowPlan] = []
     rejected: list[str] = []
     rejected_rows: list[int] = []
-    reasons: dict[int, str] = {}
+    reasons: dict[int, _Rejection] = {}
     schema_rejects = False
     seen: dict[tuple[str, int], int] = {}
 
     def refuse(index: int, reason: str, *, schema: bool = False) -> None:
         rejected.append(reason)
         rejected_rows.append(index)
-        reasons[index] = reason
+        reasons[index] = _Rejection(reason, [])
         nonlocal schema_rejects
         schema_rejects = schema_rejects or schema
 
@@ -745,7 +766,7 @@ def _validate_plans(
     snapshot: ledger_write.LedgerSnapshot,
     rejected: list[str],
     rejected_rows: list[int],
-    reasons: dict[int, str],
+    reasons: dict[int, _Rejection],
     *,
     allow_errors: bool,
 ) -> dict[Path, list[_RowPlan]]:
@@ -776,11 +797,10 @@ def _validate_plans(
                 try:
                     _validate_text(target, snapshot, single, allow_errors=allow_errors)
                 except protocol.LedgerError as exc:
-                    reason = _row_reason(plan.index, exc)
-                    rejected.append(reason)
-                    rejected.extend(exc.details)
+                    reasons[plan.index] = rejection = _ledger_rejection(plan.index, exc)
+                    rejected.append(rejection.reason)
+                    rejected.extend(rejection.details)
                     rejected_rows.append(plan.index)
-                    reasons[plan.index] = reason
                 else:
                     survivors.append(plan)
             if not survivors:
@@ -791,13 +811,10 @@ def _validate_plans(
             except protocol.LedgerError as exc:
                 together = ", ".join(f"row {plan.index + 1}" for plan in survivors)
                 for plan in survivors:
-                    reason = (
-                        f"Row {plan.index + 1}: valid alone, but {together} together "
-                        f"would leave the ledger invalid: {exc}"
-                    )
+                    reason = f"Row {plan.index + 1}: valid alone, but {together} fail together: {_batch_text(str(exc))}"
                     rejected.append(reason)
                     rejected_rows.append(plan.index)
-                    reasons[plan.index] = reason
+                    reasons[plan.index] = _Rejection(reason, list(exc.details))
                 rejected.extend(exc.details)
             else:
                 valid[target] = survivors
@@ -814,7 +831,7 @@ def _validate_cumulatively(
     snapshot: ledger_write.LedgerSnapshot,
     rejected: list[str],
     rejected_rows: list[int],
-    reasons: dict[int, str],
+    reasons: dict[int, _Rejection],
     *,
     allow_errors: bool,
 ) -> dict[Path, list[_RowPlan]]:
@@ -834,10 +851,9 @@ def _validate_cumulatively(
                 _validate_text(target, snapshot, combined, allow_errors=allow_errors, earlier=earlier)
             except protocol.LedgerError as exc:
                 for plan in valid[target]:
-                    reason = _row_reason(plan.index, exc)
-                    rejected.append(reason)
+                    reasons[plan.index] = _ledger_rejection(plan.index, exc)
+                    rejected.append(reasons[plan.index].reason)
                     rejected_rows.append(plan.index)
-                    reasons[plan.index] = reason
                 rejected.extend(exc.details)
                 continue
         kept[target] = valid[target]
@@ -848,7 +864,7 @@ def _validate_cumulatively(
 def _row_payload(
     rows: list[Any],
     plans: list[_RowPlan],
-    reasons: dict[int, str],
+    reasons: dict[int, _Rejection],
     file_texts: dict[Path, str],
     file_lines: dict[Path, list[str]],
     marks: dict[Path, bool],
@@ -859,7 +875,16 @@ def _row_payload(
     for index, item in enumerate(rows):
         raw_id = item.get("id") if isinstance(item, dict) else None
         if index in reasons:
-            payload.append({"row": index + 1, "id": raw_id, "status": "rejected", "reason": reasons[index]})
+            rejection = reasons[index]
+            payload.append(
+                {
+                    "row": index + 1,
+                    "id": raw_id,
+                    "status": "rejected",
+                    "reason": rejection.reason,
+                    "details": rejection.details,
+                }
+            )
             continue
         plan = by_index[index]
         if not plan.edits:
@@ -1077,10 +1102,9 @@ def _transactions(
                     )
                 except protocol.LedgerError as exc:
                     for plan in file_plans:
-                        reason = _row_reason(plan.index, exc)
-                        rejected.append(reason)
+                        reasons[plan.index] = _ledger_rejection(plan.index, exc)
+                        rejected.append(reasons[plan.index].reason)
                         rejected_rows.append(plan.index)
-                        reasons[plan.index] = reason
                     rejected.extend(exc.details)
                     continue
                 try:

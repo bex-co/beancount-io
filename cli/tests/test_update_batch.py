@@ -289,6 +289,68 @@ class TestEngineBatch:
             updating.answer(ledger, "transactions", {"rows": ROWS}, apply=True)
         assert ledger.read_text() == LEDGER
 
+    def test_a_ledger_rejected_row_says_why_on_preview_and_apply(self, tmp_path: Path) -> None:
+        # w1/258: the row carried only "would leave the ledger invalid; nothing
+        # was written", so the review queue could not be fixed from the preview.
+        ledger = _ledger(tmp_path)
+        rows = [{"id": "bbb", "account": "Expenses:Nope", "flag": "*"}]
+        cause = "Invalid reference to unknown account 'Expenses:Nope'"
+        preview = batch(ledger, rows)
+        assert preview.returncode == 0, preview.stdout
+        applied = batch(ledger, rows, "--apply")
+        assert applied.returncode == 1, applied.stdout
+        error = json.loads(applied.stdout)["error"]
+        for row in (json.loads(preview.stdout)["data"]["rows"][0], error["result"]["rows"][0]):
+            assert row["status"] == "rejected"
+            assert row["reason"] == "Row 1: The change would leave the ledger invalid."
+            assert len(row["details"]) == 1
+            assert cause in row["details"][0]
+            assert row["details"][0].startswith(f"{ledger}:")
+        assert not any("nothing was written" in line.lower() for line in error["details"])
+        assert ledger.read_text() == LEDGER
+
+    def test_rows_failing_together_carry_the_combined_errors(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        ledger = _ledger(tmp_path)
+        real_validate = updating._validate_text
+
+        def failing_together(target: Path, snapshot: Any, new_text: str, **kwargs: Any) -> list[str]:
+            if "Groceries 9.99" in new_text and "Dining 5.00" in new_text:
+                raise protocol.LedgerError(
+                    "The change would leave the ledger invalid; nothing was written.",
+                    details=[f"{target}:7: the pair never loads together"],
+                )
+            return real_validate(target, snapshot, new_text, **kwargs)
+
+        monkeypatch.setattr(updating, "_validate_text", failing_together)
+        data = updating.answer(ledger, "transactions", {"rows": ROWS}, apply=False)
+        for number, row in enumerate(data["rows"], start=1):
+            assert row["reason"] == (
+                f"Row {number}: valid alone, but row 1, row 2 fail together: The change would leave the ledger invalid."
+            )
+            assert row["details"] == [f"{ledger}:7: the pair never loads together"]
+
+    @pytest.mark.parametrize(
+        ("message", "expected"),
+        [
+            (
+                "No transaction with import-id or ref 'x' in this ledger. Nothing was written.",
+                "No transaction with import-id or ref 'x' in this ledger.",
+            ),
+            (
+                "The change would leave the ledger invalid; nothing was written.",
+                "The change would leave the ledger invalid.",
+            ),
+            (
+                "The ledger already has 2 error(s); nothing was written. Pass --allow-errors to write anyway.",
+                "The ledger already has 2 error(s). Pass --allow-errors to write anyway.",
+            ),
+        ],
+    )
+    def test_batch_reasons_never_claim_nothing_was_written(self, message: str, expected: str) -> None:
+        assert updating._row_reason(0, protocol.LedgerError(message)) == f"Row 1: {expected}"
+
 
 class TestBatchCommand:
     def test_json_preview_renders_table_and_diff(self, tmp_path: Path) -> None:
@@ -335,6 +397,18 @@ class TestBatchCommand:
         assert result.exit_code == 0, result.output
         assert "rejected" in result.output
         assert "Preview only. Fix the 1 rejected row, then preview again." in result.output
+        assert ledger.read_text() == LEDGER
+
+    def test_csv_preview_names_what_rejected_a_row(self, tmp_path: Path) -> None:
+        # w1/258: the preview named the row but not the ledger error behind it.
+        ledger = _ledger(tmp_path)
+        mapping = tmp_path / "map.csv"
+        mapping.write_text("id,account,flag\nbbb,Expenses:Nope,*\n")
+        result = runner.invoke(app, ["--file", str(ledger), "update", "transactions", "--from", str(mapping)])
+        assert result.exit_code == 0, result.output
+        assert "Row 1: The change would leave the ledger invalid.\n" in result.output
+        assert "Invalid reference to unknown account 'Expenses:Nope'" in result.output
+        assert "nothing was written" not in result.output.lower()
         assert ledger.read_text() == LEDGER
 
     def test_stdin_reads_json_and_csv(self, tmp_path: Path) -> None:
