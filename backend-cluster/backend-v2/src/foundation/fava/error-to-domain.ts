@@ -28,6 +28,12 @@ const NEW_LEDGER_ERRORS = "NEW_LEDGER_ERRORS";
 /** The ledger service's wording for a file write whose `sha` went stale. */
 const LEDGER_FILE_CONFLICT = /^Ledger file conflict:/i;
 /**
+ * The ledger service's wording for a create over a path that exists (its
+ * error middleware's `conflictMessage`), pinned by that package's tests.
+ */
+const LEDGER_FILE_EXISTS =
+  /^(.+) already exists; update it with its sha, or choose another path$/s;
+/**
  * The ledger service's `OperationNotAllowedError` wording. It travels as a
  * bare 403 with no machine code, so it read as FORBIDDEN, telling an agent it
  * lacked access when the ledger's own state refused the write: an edit, delete
@@ -116,6 +122,27 @@ export function ledgerNameExistsConflict(): ConflictError {
     // Without one, MCP falls back to the CONFLICT category's hint, which is
     // about re-reading an entry's hash — nothing to do with a name (w5/042).
     hint: "Choose a different ledger name. Your existing ledgers are listed by `listLedgers`.",
+  });
+}
+
+/**
+ * What a create over an existing path tells the caller. REST, GraphQL and MCP
+ * all reach it, so it names the overwrite on each surface in that surface's
+ * own words; an MCP tool it quotes must exist (pinned in the service tests).
+ */
+export const FILE_EXISTS_HINT =
+  "Creating is for a new file. To overwrite this one deliberately, update it: MCP `updateLedgerFiles` with `content`, GraphQL `updateLedgerFile`, or REST `PUT` with its `sha`. Or choose another path.";
+
+/**
+ * A create over a path that already exists, the same refusal whether the
+ * pre-check found the file or the commit did. A create that loses a race to
+ * another create of the same path passes the pre-check and is refused by the
+ * ledger at commit time; that refusal read the CONFLICT fallback about an
+ * entry's `sha256sum` (w31/008).
+ */
+export function fileExistsConflict(path: string): ConflictError {
+  return new ConflictError("File", `${path} already exists`, {
+    hint: FILE_EXISTS_HINT,
   });
 }
 
@@ -219,7 +246,9 @@ export function favaApiErrorToDomainError(
       return new ForbiddenError(message, "Ledger API");
     case 404:
       return notFoundFromUpstream(error.body?.error || "");
-    case 409:
+    case 409: {
+      const taken = LEDGER_FILE_EXISTS.exec(message);
+      if (taken) return fileExistsConflict(taken[1]);
       // A stale file `sha` (Gitea's version check, mapped by the ledger
       // service as `Ledger file conflict`). Without a hint the category
       // fallback names an entry `sha256sum`, which cannot satisfy it (w23/178).
@@ -229,6 +258,7 @@ export function favaApiErrorToDomainError(
         });
       }
       return new ConflictError("Ledger resource", message);
+    }
     // The ledger service refused the body: a batch inside this API's own caps
     // can outgrow it re-encoded. As a 5xx it read as "dependency down, retry"
     // to a caller that only had to split it (w23/074).

@@ -10,9 +10,16 @@ import {
   ServiceUnavailableError,
   UnauthenticatedError,
 } from "@/shared/errors";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { FavaApiError } from "../api-client";
+import { FILE_EXISTS_HINT, fileExistsConflict } from "../error-to-domain";
 import { unwrapFavaResponse } from "../unwrap-response";
 import type { ErrorResponse, HttpResponse } from "../Api";
+
+/** How the ledger service ends a create-over-existing refusal (w31/008). */
+const LEDGER_FILE_EXISTS_TAIL =
+  " already exists; update it with its sha, or choose another path";
 
 type Envelope<T> = { success?: boolean; data: T };
 
@@ -303,6 +310,40 @@ describe("unwrapFavaResponse", () => {
       message: expect.stringContaining(error),
       metadata: { hint: expect.stringContaining("current `sha`") },
     });
+  });
+
+  // w31/008: a create that loses a race to a create of the same path passes
+  // the pre-check and is refused at commit time with the ledger service's own
+  // wording. It read the entry `sha256sum` fallback; it is the pre-check's
+  // file-exists refusal.
+  it("maps the ledger's commit-time 'already exists' to the file-exists conflict (w31/008)", async () => {
+    const response = Promise.reject(
+      new FavaApiError("conflict", 409, {
+        success: false,
+        error: `sub/qa.bean${LEDGER_FILE_EXISTS_TAIL}`,
+      }),
+    );
+
+    const caught = await unwrapFavaResponse(response, "commit files").catch(
+      (e: unknown) => e,
+    );
+    expect(caught).toBeInstanceOf(ConflictError);
+    expect(caught).toEqual(fileExistsConflict("sub/qa.bean"));
+    expect(caught).toMatchObject({
+      message: "File conflict: sub/qa.bean already exists",
+      metadata: { hint: FILE_EXISTS_HINT },
+    });
+  });
+
+  it("pins the ledger service's 'already exists' wording it maps (w31/008)", () => {
+    const middleware = readFileSync(
+      path.resolve(
+        __dirname,
+        "../../../../../ledger/src/server/error-middleware.ts",
+      ),
+      "utf8",
+    );
+    expect(middleware).toContain(`\`\${path}${LEDGER_FILE_EXISTS_TAIL}\``);
   });
 
   it("leaves other 409s on the category fallback (w23/178)", async () => {

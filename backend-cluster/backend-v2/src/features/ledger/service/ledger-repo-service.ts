@@ -8,6 +8,7 @@ import { parseLedgerId } from "@/shared/str";
 import {
   FavaApiError,
   favaApiErrorToDomainError,
+  fileExistsConflict,
   unwrapFavaResponse,
 } from "@/foundation/fava";
 import { decodeFileContent } from "@/shared/file-content";
@@ -30,7 +31,6 @@ import { assertKeepsEntryPoint } from "@/features/ledger/utils/ledger-entry-poin
 import { assertExplicitFileContentSize } from "@/features/ledger/utils/explicit-file-size";
 import {
   BadUserInputError,
-  ConflictError,
   InternalServerError,
   NotFoundError,
 } from "@/shared/errors";
@@ -162,14 +162,6 @@ export interface ILedgerRepoService {
     locations: { path: string; line: number }[];
   }): Promise<(string | null)[]>;
 }
-
-/**
- * What a create over an existing path tells the caller. REST, GraphQL and MCP
- * all reach it, so it names the overwrite on each surface in that surface's
- * own words; an MCP tool it quotes must exist (pinned in the service tests).
- */
-export const FILE_EXISTS_HINT =
-  "Creating is for a new file. To overwrite this one deliberately, update it: MCP `updateLedgerFiles` with `content`, GraphQL `updateLedgerFile`, or REST `PUT` with its `sha`. Or choose another path.";
 
 export class LedgerRepoService
   extends AuthorizedLedgerService
@@ -544,9 +536,7 @@ export class LedgerRepoService
         );
         const taken = existing.find((file) => created.has(file.path));
         if (taken) {
-          throw new ConflictError("File", `${taken.path} already exists`, {
-            hint: FILE_EXISTS_HINT,
-          });
+          throw fileExistsConflict(taken.path);
         }
         for (const [path, sha] of versioned) {
           const current = existing.find((file) => file.path === path);

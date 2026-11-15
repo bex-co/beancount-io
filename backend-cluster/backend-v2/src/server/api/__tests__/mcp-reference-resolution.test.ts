@@ -198,6 +198,8 @@ describe("names the MCP surface cites resolve to something it publishes (w23/m33
     for (const file of [
       ...sourceFiles(path.join(SRC, "features")),
       ...sourceFiles(path.join(SRC, "shared")),
+      // The ledger-service error mapping writes hints too (w31/008).
+      ...sourceFiles(path.join(SRC, "foundation")),
     ]) {
       let text = readFileSync(file, "utf8");
       if (!/hint/i.test(text)) continue;

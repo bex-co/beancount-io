@@ -3,9 +3,15 @@ jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { graphql } from "graphql";
+import { buildSchema } from "type-graphql";
+import { HealthResolver } from "@/features/healthz/api/health-resolver";
+import { LedgerMutationResolver } from "@/features/ledger/api/resolvers/ledger-resolver.mutation";
 import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
-import { FavaApiError } from "@/foundation/fava";
+import { FavaApiError, FILE_EXISTS_HINT } from "@/foundation/fava";
+import { formatError } from "@/server/graphql/format-error";
+import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { AuthorizationService } from "@/server/api/authorization";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
@@ -38,8 +44,32 @@ const conflict = (message: string) =>
     details: null,
   } as never);
 
-async function fixture(answer: string) {
+let mutationResolver: LedgerMutationResolver;
+let schema: Awaited<ReturnType<typeof buildSchema>>;
+beforeAll(async () => {
+  schema = await buildSchema({
+    resolvers: [LedgerMutationResolver, HealthResolver],
+    container: {
+      get: (target) =>
+        target === LedgerMutationResolver
+          ? mutationResolver
+          : new HealthResolver(),
+    },
+    globalMiddlewares: [graphqlScopeMiddleware("enforce")],
+    validate: true,
+  });
+});
+
+/**
+ * `present` puts qa.bean in the ledger before the call, so a create meets
+ * the pre-check; otherwise it lands only as the commit is sent, the way a
+ * concurrent create of the same path wins the race (w31/008).
+ */
+async function fixture(answer: string, { present = false } = {}) {
   const changeLedgerFiles = jest.fn(async () => {
+    throw conflict(answer);
+  });
+  const createLedgerFile = jest.fn(async () => {
     throw conflict(answer);
   });
   const updateLedgerFile = jest.fn(async () => {
@@ -58,6 +88,7 @@ async function fixture(answer: string) {
       },
       ledgers: {
         changeLedgerFiles,
+        createLedgerFile,
         updateLedgerFile,
         deleteLedgerFile,
         // The stale case loses the race after the preview's own sha check
@@ -66,7 +97,7 @@ async function fixture(answer: string) {
           data: {
             success: true,
             data:
-              answer === STALE
+              answer === STALE || present
                 ? [{ path: "qa.bean", type: "file", sha: "old", content: "" }]
                 : [],
           },
@@ -95,6 +126,7 @@ async function fixture(answer: string) {
     config,
     authorization,
   );
+  mutationResolver = new LedgerMutationResolver(workflow);
   const rest = await startV1TestServer(
     { services } as unknown as AppLayers,
     config,
@@ -117,14 +149,55 @@ async function fixture(answer: string) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
       }),
-    create: () =>
-      client.callTool({
+    /** A create of qa.bean, refused, as each surface reports the refusal. */
+    refusedCreate: async (surface: Surface): Promise<Refusal> => {
+      if (surface === "rest") {
+        const response = await fetch(
+          `${rest.url}/api-gateway/v1/ledgers/alice/main/files/qa.bean`,
+          {
+            method: "PUT",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ content: "; qa\n" }),
+          },
+        );
+        expect(response.status).toBe(409);
+        const { error } = await response.json();
+        return {
+          code: error.code,
+          message: error.message,
+          hint: error.metadata?.hint,
+        };
+      }
+      if (surface === "gql") {
+        const result = await graphql({
+          schema,
+          source:
+            'mutation { createLedgerFile(ledgerId:"alice/main",path:"qa.bean",content:"OyBxYQo=") { path } }',
+          contextValue: {
+            identity,
+            getCurrentIdentity: () => identity,
+            platform: "web",
+          },
+        });
+        const [error] = result.errors ?? [];
+        const wire = formatError(error.toJSON(), error);
+        return {
+          code: wire.extensions?.code as string,
+          message: wire.message,
+          hint: wire.extensions?.hint as string | undefined,
+        };
+      }
+      const result = await client.callTool({
         name: "createLedgerFiles",
         arguments: {
           description: "add qa",
           files: [{ path: "qa.bean", content: "; qa\n" }],
         },
-      }),
+      });
+      expect(result.isError).toBe(true);
+      const { error } = result.structuredContent as { error: Refusal };
+      return { code: error.code, message: error.message, hint: error.hint };
+    },
     close: async () => {
       await client.close();
       await server.close();
@@ -141,19 +214,6 @@ describe("a write the ledger answers with 409", () => {
       expect(response.status).toBe(409);
       expect(await response.json()).toMatchObject({
         error: { code: "CONFLICT", message: expect.stringContaining(STALE) },
-      });
-    } finally {
-      await f.close();
-    }
-  });
-
-  it("is CONFLICT naming the file on an MCP create over an existing path", async () => {
-    const f = await fixture(TAKEN);
-    try {
-      const result = await f.create();
-      expect(result.isError).toBe(true);
-      expect(result.structuredContent).toMatchObject({
-        error: { code: "CONFLICT", message: expect.stringContaining(TAKEN) },
       });
     } finally {
       await f.close();
@@ -194,4 +254,52 @@ describe("a write the ledger answers with 409", () => {
       await f.close();
     }
   });
+});
+
+type Surface = "rest" | "gql" | "mcp";
+type Refusal = { code: string; message: string; hint?: string };
+const SURFACES: Surface[] = ["mcp", "rest", "gql"];
+
+// w31/008: the race's loser passes the pre-check, and the ledger refuses its
+// commit with TAKEN. That carried the CONFLICT fallback about an entry's
+// `sha256sum` on MCP and no hint on REST or GraphQL.
+describe("a create that loses a race to a create of the same path", () => {
+  it.each(SURFACES)(
+    "is CONFLICT with the file-exists hint via %s",
+    async (surface) => {
+      const f = await fixture(TAKEN);
+      try {
+        const refusal = await f.refusedCreate(surface);
+        expect(refusal).toEqual({
+          code: "CONFLICT",
+          message: expect.stringMatching(
+            /(^|: )File conflict: qa\.bean already exists$/,
+          ),
+          hint: FILE_EXISTS_HINT,
+        });
+        expect(refusal.hint).not.toMatch(/sha256sum|getEntryContext/);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  // GraphQL has no pre-check: every create over a file reaches the commit.
+  it.each(["mcp", "rest"] as Surface[])(
+    "reads exactly as a create over a file already there via %s",
+    async (surface) => {
+      const raced = await fixture(TAKEN);
+      const sequential = await fixture(TAKEN, { present: true });
+      try {
+        const lost = await raced.refusedCreate(surface);
+        expect(await sequential.refusedCreate(surface)).toEqual(lost);
+        // The sequential one never reached the commit.
+        expect(sequential.changeLedgerFiles).not.toHaveBeenCalled();
+        expect(raced.changeLedgerFiles).toHaveBeenCalled();
+      } finally {
+        await raced.close();
+        await sequential.close();
+      }
+    },
+  );
 });
