@@ -189,6 +189,8 @@ const STALE = [
   "instead of forty-three",
   "`AI edit: {description}`",
   "File, bank, rename, and lifecycle writes take no errors flag",
+  // w31/005: renameAccount takes allowInvalid.
+  "Bank, rename, and lifecycle writes take no errors flag",
   "MCP key creation advertises",
   "`deleteLedger` accepts only `ledger`",
   // w1/232: a later page carries no balances from before it.

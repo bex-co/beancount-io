@@ -395,25 +395,33 @@ On REST the flag goes where the route reads it: the JSON body, or the query
 on the bank writes. Sent in the other place, it is refused with
 `VALIDATION_FAILED` rather than ignored.
 
-The preview flag is offered on nineteen listed tools: the entry,
-file, slice, and rename writes, the five bank tools that move
-state (`sync`, `import`, `discard`, `reconcile`, `unlink`), and the
-five lifecycle mutations (`updateLedger`, `deleteLedger`,
-`setLedgerCollaborator`, `removeLedgerCollaborator`, `leaveLedger`).
+The preview flag is offered on twenty-two listed tools: the twelve
+ledger writes (`appendLedgerText`, `addLedgerEntries`,
+`createLedgerFiles`, `updateLedgerFiles`, `deleteLedgerFiles`,
+`updateEntrySource`, `deleteEntrySource`, `deleteEntrySources`,
+`moveEntrySources`, `renameAccount`, `renameLedgerFile`,
+`revertCommit`), the five bank tools that move state
+(`syncBankTransactions`, `importStagedBankTransactions`,
+`discardStagedBankTransactions`, `reconcileBankAccounts`,
+`unlinkBankConnection`), and the five lifecycle mutations
+(`updateLedger`, `deleteLedger`, `setLedgerCollaborator`,
+`removeLedgerCollaborator`, `leaveLedger`).
 
 ### The preview rule
 
 A preview never refuses for new bean-check errors; only the commit does.
-The nine tools that project a write through bean-check (`appendLedgerText`,
-`addLedgerEntries`, `createLedgerFiles`, `updateLedgerFiles`,
-`deleteLedgerFiles`, `updateEntrySource`, `deleteEntrySource`,
-`deleteEntrySources`, `moveEntrySources`) answer a `dry_run` with success, the diff or per-file
-text, `newErrors`, and `valid`. `valid` is `true` only when bean-check ran and
-the write adds no error, so an agent approves a preview only when `valid` is
-`true`, then re-issues the identical call with `dry_run: false`. The same call
-without `dry_run` is refused (`UNBALANCED` or `VALIDATION_FAILED`) unless
-`allowInvalid` records it deliberately. The same holds on REST (`dryRun`) and
-GraphQL, which carry `valid` next to `newErrors`. A preview also writes nothing.
+The ten tools that project a write through bean-check and refuse its commit
+(`appendLedgerText`, `addLedgerEntries`, `createLedgerFiles`,
+`updateLedgerFiles`, `deleteLedgerFiles`, `updateEntrySource`,
+`deleteEntrySource`, `deleteEntrySources`, `moveEntrySources`,
+`renameAccount`) answer a `dry_run` with success, the diff, per-file text or
+changed lines, `newErrors`, and `valid`. `valid` is `true` only when
+bean-check ran and the write adds no error, so an agent approves a preview
+only when `valid` is `true`, then re-issues the identical call with
+`dry_run: false`. The same call without `dry_run` is refused (`UNBALANCED` or
+`VALIDATION_FAILED`) unless `allowInvalid` records it deliberately. The same
+holds on REST (`dryRun`) and GraphQL, which carry `valid` next to `newErrors`.
+A preview also writes nothing.
 
 Each `newErrors` item is `{message, source?, code?}`: the message, the
 `file:line` of the offending directive when bean-check reports one, and the
@@ -421,6 +429,63 @@ engine's stable error `code` (for example `E1001`) when it has one. The
 published `outputSchema` declares all three, and a client that validates
 `structuredContent` against it accepts the result; a key the schema omitted
 would make that client reject the whole preview.
+
+`renameLedgerFile` and `revertCommit` project bean-check the same way but
+never refuse the commit for new errors: each reports the verdict, in the
+preview and in the commit alike, and takes no `allowInvalid`. A file rename
+projects over the files the move would leave, and the moved file's own errors
+go with it to its new path, so renaming a file that carries errors reports
+none as new. A revert projects over the files the undo would leave; it is
+refused for a conflict with a later commit, never for new errors. The bank
+tools and the lifecycle and collaborator tools preview a summary (a sync
+count, a destroy summary, a would-be grant), not a bean-check projection, so
+`valid` does not apply to them. The registry in
+`src/features/ai-agent/api/__tests__/write-preview-matrix.test.ts` classifies
+every tool with a preview flag and names the parity tests that prove the rule;
+adding a write tool with `dry_run` fails it until the tool is classified.
+`preview-commit-differential.test.ts` runs the file tools, the file rename and
+the revert twice on identical ledgers, once as a dry run and once as a commit,
+and fails when the verdicts differ; every projection tool has a case there or
+a written reason in the registry.
+The three config-only bank tools (`mapBankAccount`,
+`setBankAccountCurrency`, `refreshBankConnection`) publish no preview
+argument, and neither does `setLedgerStar` — starring is an instantly
+reversible personal toggle, so there is nothing worth previewing.
+The matching REST surface is the eleven write bodies (file `PUT` and
+`DELETE`, entries, directive text, the entry-source update, delete and
+delete-many, the entry move, the account and file renames, and the revert),
+the five bank-query routes, the five lifecycle bodies (ledger update and
+delete, collaborator set and remove, leave) — bodies take `dryRun`
+and each accepts the other spelling — and, accepting `false` and
+refusing `true`, the three config routes; the star routes refuse the
+key outright. GraphQL offers it on the nine write mutations (bulk entries,
+directive text, the three entry-source edits, the entry move, the account and
+file renames, and the revert), the five lifecycle mutations, and the five bank
+writes — sync, submit, delete, reconcile and unlink — whose results carry the
+same preview fields; the unlink mutation stays a `Boolean` and answers `true`
+from a preview that runs every check (w1/211). The errors flag is offered on the ten tools whose commit
+is refused for new errors: the entry writes, the entry-source edits and move,
+and the account rename on all three surfaces, while `createLedgerFiles`,
+`updateLedgerFiles` and `deleteLedgerFiles` take `allow_invalid` on MCP and
+REST. The bank and lifecycle writes, `renameLedgerFile` and `revertCommit` take
+no errors flag.
+
+#### Lifecycle preview shapes
+
+A lifecycle preview runs the commit's checks under the commit's
+authority and changes nothing; a commit echoes the flag off
+(`dry_run: false`) with no preview. `updateLedger` renders the
+current→new diff over the provided fields only, with a flip to
+public called out. `deleteLedger` renders the destroy summary —
+identity, emptiness, size, and warnings covering permanence and
+linked-bank cleanup. `setLedgerCollaborator` renders the would-be
+grant, current→requested, under the same plan-limit check the commit
+enforces, and says when the name may not belong to a known user.
+`removeLedgerCollaborator` and `leaveLedger` render the would-be
+revocation and self-removal, saying plainly when no current access
+could be confirmed. `setLedgerStar` takes no flag (above).
+`createLedger` keeps its separate `previewLedgerSetup` tool rather
+than the flag — the older precedent this milestone did not revisit.
 
 ### Moving entries to another file (w1/m45)
 
@@ -512,56 +577,6 @@ own bank accounts; another member's mapping appears with `plaidAccount: null`.
 If updating the mappings fails, the commit stands, each mapping says
 `updated: false`, and the message names how many still point at the old
 account, to fix with `mapBankAccount`.
-
-`renameLedgerFile`, `renameAccount` and `revertCommit` preview like the file tools: it projects bean-check over
-the files the move would leave, and the moved file's own errors go with it to
-its new path, so renaming a file that carries errors reports none as new in the
-preview and in the commit alike. The bank tools and the lifecycle and
-collaborator tools preview a summary (a sync count, a destroy summary, a
-would-be grant), not a bean-check projection, so `valid` does not apply to
-them. The registry in
-`src/features/ai-agent/api/__tests__/write-preview-matrix.test.ts` classifies
-every tool with a preview flag and names the parity tests that prove the rule;
-adding a write tool with `dry_run` fails it until the tool is classified.
-`preview-commit-differential.test.ts` runs the file tools and the rename twice
-on identical ledgers, once as a dry run and once as a commit, and fails when
-the verdicts differ; every projection tool has a case there or a written
-reason in the registry.
-The three config-only bank tools (`mapBankAccount`,
-`setBankAccountCurrency`, `refreshBankConnection`) publish no preview
-argument, and neither does `setLedgerStar` — starring is an instantly
-reversible personal toggle, so there is nothing worth previewing.
-The matching REST surface is the six write bodies, the five
-bank-query routes, the five lifecycle bodies (ledger update and
-delete, collaborator set and remove, leave) — bodies take `dryRun`
-and each accepts the other spelling — and, accepting `false` and
-refusing `true`, the three config routes; the star routes refuse the
-key outright. GraphQL offers it on the six write mutations, the
-five lifecycle mutations, and the five bank writes — sync, submit, delete,
-reconcile and unlink — whose results carry the same preview fields; the
-unlink mutation stays a `Boolean` and answers `true` from a preview that runs
-every check (w1/211). The errors flag is offered where a write
-can add bean-check errors: the entry and slice writes on all three
-surfaces, and `createLedgerFiles`, `updateLedgerFiles` and
-`deleteLedgerFiles` take `allow_invalid`. Bank, rename, and lifecycle writes
-take no errors flag.
-
-#### Lifecycle preview shapes
-
-A lifecycle preview runs the commit's checks under the commit's
-authority and changes nothing; a commit echoes the flag off
-(`dry_run: false`) with no preview. `updateLedger` renders the
-current→new diff over the provided fields only, with a flip to
-public called out. `deleteLedger` renders the destroy summary —
-identity, emptiness, size, and warnings covering permanence and
-linked-bank cleanup. `setLedgerCollaborator` renders the would-be
-grant, current→requested, under the same plan-limit check the commit
-enforces, and says when the name may not belong to a known user.
-`removeLedgerCollaborator` and `leaveLedger` render the would-be
-revocation and self-removal, saying plainly when no current access
-could be confirmed. `setLedgerStar` takes no flag (above).
-`createLedger` keeps its separate `previewLedgerSetup` tool rather
-than the flag — the older precedent this milestone did not revisit.
 
 ### Tools renamed on 2026-10-18
 

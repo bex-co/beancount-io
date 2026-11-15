@@ -226,7 +226,8 @@ function differentialCaseTools(): string[] {
   ];
 }
 
-function previewTools(): string[] {
+/** The MCP tools whose published input has an argument matching `flag`. */
+function toolsTaking(flag: RegExp): string[] {
   return (MCP_TOOLS as unknown as { name: string; inputSchema: unknown }[])
     .filter((tool) => {
       const schema = tool.inputSchema as {
@@ -234,10 +235,77 @@ function previewTools(): string[] {
         properties?: Record<string, unknown>;
       };
       const keys = Object.keys(schema?.shape ?? schema?.properties ?? {});
-      return keys.some((key) => /^dry_?run$/i.test(key));
+      return keys.some((key) => flag.test(key));
     })
     .map((tool) => tool.name)
     .sort();
+}
+
+const previewTools = () => toolsTaking(/^dry_?run$/i);
+
+/** The projection tools whose commit is refused for new errors, or only reports them. */
+function projectionTools(refusesCommit: boolean): string[] {
+  return Object.entries(WRITE_PREVIEW_RULES)
+    .filter(
+      ([, entry]) =>
+        entry.kind === "projection" && !entry.exception === refusesCommit,
+    )
+    .map(([tool]) => tool)
+    .sort();
+}
+
+/**
+ * docs/mcp.md with every run of whitespace folded, so a claim survives
+ * re-wrapping. It stated a preview-tool count the registry had outgrown twice
+ * (w23/m31/t005, w31/005), so the counts and names below are read from it and
+ * compared with this registry and the published tool inputs.
+ */
+const DOC = readFileSync(
+  join(FEATURES, "..", "..", "docs", "mcp.md"),
+  "utf8",
+).replace(/\s+/g, " ");
+
+const UNITS = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
+];
+const TENS = ["", "", "twenty", "thirty", "forty", "fifty"];
+
+/** A count as the document spells it: 22 is "twenty-two". */
+function spelled(count: number): string {
+  if (count < 20) return UNITS[count];
+  const tens = TENS[Math.floor(count / 10)];
+  return count % 10 === 0 ? tens : `${tens}-${UNITS[count % 10]}`;
+}
+
+/** The backticked names in a stretch of the document, sorted. */
+const namesIn = (text: string): string[] =>
+  [...text.matchAll(/`(\w+)`/g)].map(([, name]) => name).sort();
+
+/** The first sentence of the document `pattern` matches; it fails when none does. */
+function docSentence(pattern: RegExp): RegExpMatchArray {
+  const match = DOC.match(pattern);
+  if (!match)
+    throw new Error(`docs/mcp.md has no sentence matching ${pattern}`);
+  return match;
 }
 
 describe("the write-preview rule matrix (w23/m21)", () => {
@@ -305,5 +373,61 @@ describe("the write-preview rule matrix (w23/m21)", () => {
     ),
   )("%s previews a summary, for a stated reason: %s", (_tool, reason) => {
     expect(reason.length).toBeGreaterThan(10);
+  });
+});
+
+describe("docs/mcp.md states the preview matrix (w31/005)", () => {
+  it("counts and names every tool that takes dry_run", () => {
+    const [sentence, count, list] = docSentence(
+      /The preview flag is offered on ([a-z-]+) listed tools: ([^.]+)\./,
+    );
+    expect({ count, tools: namesIn(list) }).toEqual({
+      count: spelled(previewTools().length),
+      tools: previewTools(),
+    });
+    // Each group ("the five bank tools …") counts the names it lists.
+    const groups = [...sentence.matchAll(/the ([a-z-]+) [^(]*\(([^)]+)\)/g)];
+    expect(groups.length).toBeGreaterThan(1);
+    for (const [, word, names] of groups) {
+      expect(word).toBe(spelled(namesIn(names).length));
+    }
+  });
+
+  it("counts and names the projection tools whose commit is refused", () => {
+    const [, count, list] = docSentence(
+      /The ([a-z-]+) tools that project a write through bean-check and refuse its commit \(([^)]+)\)/,
+    );
+    expect({ count, tools: namesIn(list) }).toEqual({
+      count: spelled(projectionTools(true).length),
+      tools: projectionTools(true),
+    });
+  });
+
+  it("names the projection tools that report new errors instead", () => {
+    const [, list] = docSentence(
+      /((?:`\w+`(?:, | and ))*`\w+`) project bean-check the same way but never refuse the commit for new errors/,
+    );
+    expect(namesIn(list)).toEqual(projectionTools(false));
+  });
+
+  it("offers the errors flag on exactly the projection tools whose commit is refused", () => {
+    expect(toolsTaking(/^allow_?invalid$/i)).toEqual(projectionTools(true));
+    docSentence(
+      new RegExp(
+        `The errors flag is offered on the ${spelled(projectionTools(true).length)} tools whose commit is refused for new errors`,
+      ),
+    );
+  });
+
+  it("spells a count the way the document writes it", () => {
+    expect([9, 10, 12, 19, 20, 22, 47].map(spelled)).toEqual([
+      "nine",
+      "ten",
+      "twelve",
+      "nineteen",
+      "twenty",
+      "twenty-two",
+      "forty-seven",
+    ]);
   });
 });
