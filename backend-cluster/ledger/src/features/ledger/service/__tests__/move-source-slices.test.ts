@@ -1,7 +1,11 @@
 import { loadCachedFileMapForRepo } from "@/foundation/clients/load-cached-ledger-file-map";
 import { commitLedgerFiles } from "@/features/ledger/operations/commit-ledger-files";
 import { findEntrySliceAsync } from "@/foundation/rustledger/source-slice-worker";
-import { buildEntryIdMap, sliceSha256 } from "@/foundation/rustledger";
+import {
+  buildEntryIdMap,
+  sliceSha256,
+  splitIntoBlocks,
+} from "@/foundation/rustledger";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { NewLedgerErrorsError } from "@/shared/errors";
 import type { DirectiveJson } from "@rustledger/wasm";
@@ -291,5 +295,151 @@ describe("moveSourceSlices (w1/m45)", () => {
     const forced = await move({ allowInvalid: true });
     expect(commitMock).toHaveBeenCalledTimes(1);
     expect(forced.validation.newErrors).toHaveLength(1);
+  });
+});
+
+// w31/016: Beancount applies pushtag/pushmeta by position within their own
+// file, so an entry moved out of a scope as bare text lost the scope's tag or
+// metadata, and the hash reported for a tagged one no longer existed.
+describe("moveSourceSlices out of a pushtag/pushmeta scope (w31/016)", () => {
+  const PAYEE_A = [
+    '2026-09-02 * "PAYEE-A" "tagged by the scope"',
+    "  Expenses:Food:Coffee   3.00 USD",
+    "  Assets:Cash",
+  ].join("\n");
+  const PAYEE_B = [
+    '2026-09-03 * "PAYEE-B" "inline tag" #qa-r7-inline',
+    "  Expenses:Food:Coffee   4.00 USD",
+    "  Assets:Cash",
+  ].join("\n");
+  const PAYEE_C = [
+    '2026-09-04 * "PAYEE-C" "meta from the scope"',
+    "  Expenses:Food:Coffee   5.00 USD",
+    "  Assets:Cash",
+  ].join("\n");
+  const FIXTURE = [
+    "2026-01-01 open Expenses:Food:Coffee USD",
+    "2026-01-01 open Assets:Cash USD",
+    "",
+    "pushtag #qa-r7-trip",
+    PAYEE_A,
+    "poptag #qa-r7-trip",
+    "",
+    PAYEE_B,
+    "",
+    'pushmeta qa-r7-meta: "pm"',
+    PAYEE_C,
+    "popmeta qa-r7-meta:",
+    "",
+  ].join("\n");
+  const scoped = (day: string, payee: string, tags: string[], units: string) =>
+    ({
+      type: "transaction",
+      date: `2026-09-${day}`,
+      flag: "*",
+      payee,
+      narration: "n",
+      tags,
+      links: [],
+      postings: [
+        {
+          account: "Expenses:Food:Coffee",
+          units: { number: units, currency: "USD" },
+        },
+        { account: "Assets:Cash" },
+      ],
+    }) as DirectiveJson;
+  const A_D = scoped("02", "PAYEE-A", ["qa-r7-trip"], "3.00");
+  const B_D = scoped("03", "PAYEE-B", ["qa-r7-inline"], "4.00");
+  const C_D = scoped("04", "PAYEE-C", [], "5.00");
+  const ids = buildEntryIdMap([A_D, B_D, C_D]);
+  const TEXT = new Map([
+    [ids.get(A_D)!, PAYEE_A],
+    [ids.get(B_D)!, PAYEE_B],
+    [ids.get(C_D)!, PAYEE_C],
+  ]);
+  const entry = (directive: DirectiveJson, text: string) => ({
+    entryHash: ids.get(directive)!,
+    sha256sum: sliceSha256(text),
+  });
+
+  beforeEach(() => {
+    files = { "main.bean": FIXTURE };
+    sourceFiles = ["main.bean"];
+    findMock.mockImplementation(
+      async (fileMap: Record<string, string>, _e: unknown, hash: string) => {
+        const text = TEXT.get(hash);
+        const block = splitIntoBlocks(fileMap["main.bean"]).find(
+          (candidate) => candidate.text === text,
+        );
+        if (!block) return null;
+        return {
+          file: "main.bean",
+          slice: block.text,
+          sha256: sliceSha256(block.text),
+          startLine: block.startLine,
+          endLine: block.endLine,
+          localOccurrence: 0,
+        };
+      },
+    );
+    parseMock.mockImplementation(async () => ({
+      directives: [A_D, B_D, C_D],
+      errors: [],
+      sourceDetails: {},
+    }));
+  });
+
+  const moveScoped = (dryRun: boolean) =>
+    service().moveSourceSlices({
+      ledgerId: "alice/main",
+      userId: "user-1",
+      entries: [entry(A_D, PAYEE_A), entry(C_D, PAYEE_C), entry(B_D, PAYEE_B)],
+      toPath: "qa-moved.bean",
+      includeFrom: "main.bean",
+      dryRun,
+    });
+
+  const TAGGED_A = [
+    '2026-09-02 * "PAYEE-A" "tagged by the scope" #qa-r7-trip',
+    "  Expenses:Food:Coffee   3.00 USD",
+    "  Assets:Cash",
+  ].join("\n");
+  const META_C = [
+    '2026-09-04 * "PAYEE-C" "meta from the scope"',
+    '  qa-r7-meta: "pm"',
+    "  Expenses:Food:Coffee   5.00 USD",
+    "  Assets:Cash",
+  ].join("\n");
+
+  it("previews each scoped entry with its scope's tag or metadata written on, and an unscoped one byte for byte", async () => {
+    const result = await moveScoped(true);
+    expect(commitMock).not.toHaveBeenCalled();
+    expect(result.preview).toEqual([
+      { path: "main.bean", text: TAGGED_A },
+      { path: "main.bean", text: PAYEE_B },
+      { path: "main.bean", text: META_C },
+    ]);
+  });
+
+  it("commits the text the preview showed, and reports the hashes the moved entries keep", async () => {
+    const result = await moveScoped(false);
+    expect(commitMock).toHaveBeenCalledTimes(1);
+    expect(files["qa-moved.bean"]).toBe(
+      `${TAGGED_A}\n\n${PAYEE_B}\n\n${META_C}\n`,
+    );
+    // The scopes stay behind, now around nothing.
+    expect(files["main.bean"]).not.toContain("PAYEE-");
+    expect(files["main.bean"]).toContain("pushtag #qa-r7-trip");
+    expect(
+      files["main.bean"].trimEnd().endsWith('include "qa-moved.bean"'),
+    ).toBe(true);
+    // A pushed tag is part of an entry's hash and pushed metadata is not, so
+    // with both written on, each moved entry keeps the hash it had.
+    expect(result.movedHashes).toEqual([
+      ids.get(A_D),
+      ids.get(B_D),
+      ids.get(C_D),
+    ]);
   });
 });

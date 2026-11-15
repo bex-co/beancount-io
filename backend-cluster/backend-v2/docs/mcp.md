@@ -494,7 +494,8 @@ than the flag — the older precedent this milestone did not revisit.
 
 `moveEntrySources` (REST `POST …/entries/move`, GraphQL
 `moveLedgerEntrySources`) moves entries into another ledger file in one
-commit. Each entry's source text leaves its file byte for byte and is appended
+commit. Each entry's source text leaves its file byte for byte (an entry in a
+`pushtag` or `pushmeta` scope also gains that scope, below) and is appended
 to `toPath` in ledger order (by file path, then line), after a blank line and
 in `toPath`'s own line ending; `toPath` is created when absent. The include
 line goes after `includeFrom`'s last `include`, or at its end when it has none,
@@ -507,6 +508,24 @@ Entries in a file the ledger does not load would count nowhere, so an unloaded
 `toPath` needs `includeFrom`: a file the ledger loads, which gains
 `include "<toPath>"`, relative to its own folder, in the same commit. When
 `toPath` is already loaded, no include line is added.
+
+`pushtag` and `pushmeta` apply by position, and only within the file that
+holds them, so their statements stay behind when an entry inside their scope
+moves. The move writes that scope onto the entry instead (w31/016):
+
+- The pushed tags go on the header of a transaction, note or document, after
+  its last token and before its comment. Tags the entry already writes are
+  not repeated.
+- Each pushed metadata key goes on an indented line right under the header,
+  with its latest pushed value, unless the entry sets that key itself. This
+  applies to every directive, as the ledger engine reads `pushmeta`; stock
+  Beancount gives pushed metadata only to transactions.
+- An entry outside every scope moves byte for byte.
+
+A moved entry therefore keeps its tags, its metadata and its hash. A scoped
+entry's text and `sha256sum` change, though, so take the new `sha256sum` from
+`getEntryContext` or `listLedgerEntries` with `include_source` before editing
+it.
 
 It refuses, writing nothing:
 
@@ -522,11 +541,11 @@ It refuses, writing nothing:
 - a move that adds a bean-check error the ledger did not have
   (`VALIDATION_FAILED`, naming each new error), unless `allowInvalid`.
 
-`dry_run` returns `preview` (each moved entry's text at the file it leaves),
-`movedHashes`, `includeAdded` and `validation`. A commit returns the same plus
-`commit`, and `revertCommit` on that sha undoes it. An entry's hash is its
-text, so a moved entry keeps its hash unless an identical entry elsewhere
-changes its position among its twins.
+`dry_run` returns `preview` (each moved entry's file and the text `toPath`
+receives), `movedHashes`, `includeAdded` and `validation`. A commit returns the
+same plus `commit`, and `revertCommit` on that sha undoes it. An entry's hash
+is its text, so a moved entry keeps its hash unless an identical entry
+elsewhere changes its position among its twins.
 
 #### Recipe: split a ledger by year
 

@@ -65,7 +65,7 @@ import { LedgerDataService } from "@/features/ledger/service/ledger-data-service
 import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { verifyBatchDeleteScale } from "./batch-delete-scale";
-import { verifyEntryMove } from "./entry-move";
+import { verifyEntryMove, verifyScopedEntryMove } from "./entry-move";
 import type { SerializableTreeNodePublic } from "@/foundation/ledger-api-types";
 import {
   accountBalanceSeries,
@@ -5453,6 +5453,7 @@ poptag #trip
   // w1/237: a 1,000-entry batch delete fits the write deadline.
   await verifyBatchDeleteScale();
   await verifyEntryMove();
+  await verifyScopedEntryMove();
 
   console.log("\nAll rustledger engine checks passed.");
 }

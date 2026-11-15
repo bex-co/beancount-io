@@ -134,23 +134,85 @@ const TOP_LEVEL_KEYWORDS = new Set([
 /** A `YYYY-MM-DD` date anchored at the start of a line. */
 const DATE_PREFIX = /^\d{4}-\d{2}-\d{2}\b/;
 
-/** A `pushtag #tag` / `poptag #tag` directive line (beancount's tag stack). */
-const PUSH_POP_TAG_RE = /^(pushtag|poptag)[^\S\r\n]+#(\S+)/;
+/** A `pushtag`/`poptag`/`pushmeta`/`popmeta` statement's keyword. */
+const STACK_KEYWORD_RE = /^(pushtag|poptag|pushmeta|popmeta)[^\S\r\n]+/;
+/** The `#tag` a `pushtag`/`poptag` names. */
+const STACK_TAG_RE = /^#(\S+)/;
+/** The `key:` a `pushmeta`/`popmeta` names; the lexer's key has two characters at least (w23/237). */
+const STACK_KEY_RE = /^([a-z][A-Za-z0-9_-]+):/;
+
+/** `text` up to its comment or, outside a string, its first line ending. */
+function beforeComment(text: string): string {
+  let inside = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (inside) {
+      if (ch === "\\") i += 1;
+      else if (ch === '"') inside = false;
+    } else if (ch === '"') {
+      inside = true;
+    } else if (ch === ";" || ch === "\n") {
+      return text.slice(0, i);
+    }
+  }
+  return text;
+}
+
+/** The stacks open at one place in a file: tags in push order, each key's latest value. */
+interface PushScope {
+  readonly tags: readonly string[];
+  readonly meta: readonly (readonly [key: string, value: string])[];
+}
 
 /**
- * Apply a `pushtag`/`poptag` block to a file's tag stack. Returns whether the
- * block was one. `poptag` removes one occurrence (beancount's `list.remove`).
+ * A file's `pushtag` and `pushmeta` stacks, applied block by block in source
+ * order. Beancount reads both by position and only within the file that holds
+ * them: every file starts with empty stacks, so neither crosses an `include`.
  */
-function applyTagStackOp(blockText: string, activeTags: string[]): boolean {
-  const tagOp = PUSH_POP_TAG_RE.exec(blockText);
-  if (!tagOp) return false;
-  if (tagOp[1] === "pushtag") {
-    activeTags.push(tagOp[2]);
-  } else {
-    const index = activeTags.indexOf(tagOp[2]);
-    if (index !== -1) activeTags.splice(index, 1);
+class PushScopes {
+  /** The pushed tags, in push order; `poptag` removes one occurrence (beancount's `list.remove`). */
+  readonly tags: string[] = [];
+  /** Each pushed key's values, latest last; `popmeta` pops the latest. */
+  private readonly meta = new Map<string, string[]>();
+
+  /** Apply one block; false when it is not a stack statement. */
+  apply(blockText: string): boolean {
+    const statement = STACK_KEYWORD_RE.exec(blockText);
+    if (!statement) return false;
+    const keyword = statement[1];
+    const body = blockText.slice(statement[0].length);
+    if (keyword === "pushtag" || keyword === "poptag") {
+      const tag = STACK_TAG_RE.exec(body)?.[1];
+      if (tag === undefined) return true;
+      if (keyword === "pushtag") {
+        this.tags.push(tag);
+      } else {
+        const index = this.tags.indexOf(tag);
+        if (index !== -1) this.tags.splice(index, 1);
+      }
+      return true;
+    }
+    const key = STACK_KEY_RE.exec(body);
+    if (!key) return true;
+    const values = this.meta.get(key[1]);
+    if (keyword === "pushmeta") {
+      const value = beforeComment(body.slice(key[0].length)).trim();
+      if (values) values.push(value);
+      else this.meta.set(key[1], [value]);
+    } else if (values) {
+      values.pop();
+      if (values.length === 0) this.meta.delete(key[1]);
+    }
+    return true;
   }
-  return true;
+
+  /** What is open now, copied. */
+  snapshot(): PushScope {
+    return {
+      tags: [...this.tags],
+      meta: [...this.meta].map(([key, values]) => [key, values.at(-1) ?? ""]),
+    };
+  }
 }
 
 /**
@@ -165,7 +227,7 @@ function applyTagStackOp(blockText: string, activeTags: string[]): boolean {
  * the correct entry instead of a same-content sibling.
  *
  * `pushmeta`/`popmeta` inject METADATA, which {@link hashEntry} excludes
- * (`exclude_meta=True`), so they never affect this hash and are not tracked.
+ * (`exclude_meta=True`), so they never affect this hash.
  * Non-transaction directives are unaffected by `pushtag`.
  */
 function hashWithActiveTags(
@@ -400,9 +462,9 @@ export function buildSourceDetailsProbe(
     // Keyed by the header's last physical line: the marker must follow the
     // whole header, never land inside a multiline string literal (w4/m34).
     const markerByLine = new Map<number, string>();
-    const activeTags: string[] = [];
+    const scopes = new PushScopes();
     for (const block of splitIntoBlocks(source)) {
-      if (applyTagStackOp(block.text, activeTags)) continue;
+      if (scopes.apply(block.text)) continue;
       if (!block.isDated) continue;
       const marker = String(nextMarker);
       nextMarker += 1;
@@ -411,7 +473,7 @@ export function buildSourceDetailsProbe(
       detailsByMarker.set(marker, {
         filename: file,
         lineno: block.startLine + 1,
-        ...sourceSyntaxDetails(original.text, activeTags),
+        ...sourceSyntaxDetails(original.text, scopes.tags),
       });
     }
 
@@ -666,13 +728,13 @@ export function findEntrySlice(
     const blocks = splitIntoBlocks(fileText);
     // The file-level `pushtag` stack, reset per file (beancount parses each file
     // with fresh parser state, so pushed tags do NOT cross `include` boundaries).
-    const activeTags: string[] = [];
+    const scopes = new PushScopes();
     for (const block of blocks) {
-      if (applyTagStackOp(block.text, activeTags)) continue;
+      if (scopes.apply(block.text)) continue;
       if (!block.isDated) continue;
       const directives = parseBlock(block.text);
       const matched = directives.some(
-        (directive) => hashWithActiveTags(directive, activeTags) === base,
+        (directive) => hashWithActiveTags(directive, scopes.tags) === base,
       );
       if (!matched) continue;
       if (matchIndex === occurrence) {
@@ -728,10 +790,10 @@ export function buildEntrySourceDetailsMap(
   for (const file of includeTraversalOrder(files, entryPoint)) {
     const fileText = files[file];
     if (fileText === undefined) continue;
-    const activeTags: string[] = [];
+    const scopes = new PushScopes();
 
     for (const block of splitIntoBlocks(fileText)) {
-      if (applyTagStackOp(block.text, activeTags)) continue;
+      if (scopes.apply(block.text)) continue;
       if (!block.isDated) continue;
       if (
         options.syntaxOnly === true &&
@@ -741,14 +803,14 @@ export function buildEntrySourceDetailsMap(
       }
 
       for (const directive of parseBlock(block.text)) {
-        const base = hashWithActiveTags(directive, activeTags);
+        const base = hashWithActiveTags(directive, scopes.tags);
         const occurrence = occurrences.get(base) ?? 0;
         occurrences.set(base, occurrence + 1);
         details.set(entryIdFor(base, occurrence), {
           filename: file,
           lineno: block.startLine + 1,
           ...(directive.type === "document" || directive.type === "note"
-            ? sourceSyntaxDetails(block.text, activeTags)
+            ? sourceSyntaxDetails(block.text, scopes.tags)
             : {}),
         });
       }
@@ -880,6 +942,186 @@ export function servedReplacementSlice(
  */
 export function servedSliceText(stored: string): string {
   return stored.includes("\r\n") ? `${stored}\r` : stored;
+}
+
+/** Dated keywords; any other word after a date is a transaction's flag. */
+const DATED_KEYWORDS = new Set([
+  "open",
+  "close",
+  "commodity",
+  "price",
+  "balance",
+  "pad",
+  "note",
+  "document",
+  "event",
+  "custom",
+  "query",
+]);
+/** The directives besides transactions that Beancount gives pushed tags (`_finalize_tags_links`, w21/655). */
+const STACK_TAGGED_KEYWORDS = new Set(["note", "document"]);
+const DATED_HEADER_RE = /^\d{4}-\d{2}-\d{2}[^\S\r\n]+(\S+)/;
+const OWN_TAG_RE = /#([A-Za-z0-9\-_/.]+)/gu;
+const OWN_KEY_RE = /^([a-z][A-Za-z0-9_-]*):/;
+
+/** `line` without its strings' contents and its comment. */
+function codeOf(line: string, startsInside: boolean): string {
+  let inside = startsInside;
+  let code = "";
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (inside) {
+      if (ch === "\\") i += 1;
+      else if (ch === '"') inside = false;
+    } else if (ch === '"') {
+      inside = true;
+    } else if (ch === ";") {
+      break;
+    } else {
+      code += ch;
+    }
+  }
+  return code;
+}
+
+/** Where `line`'s last token ends, before any comment and trailing space. */
+function codeEnd(line: string, startsInside: boolean): number {
+  let inside = startsInside;
+  let end = 0;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (inside) {
+      if (ch === "\\") i += 1;
+      else if (ch === '"') inside = false;
+      end = i + 1;
+    } else if (ch === '"') {
+      inside = true;
+      end = i + 1;
+    } else if (ch === ";") {
+      break;
+    } else if (!/\s/u.test(ch)) {
+      end = i + 1;
+    }
+  }
+  return end;
+}
+
+/**
+ * An entry's text with the `pushtag`/`pushmeta` scope open at its place written
+ * onto it, so the entry means the same anywhere else (w31/016). Beancount
+ * applies both stacks by position and only within the file that holds them, so
+ * text taken out of a scope as it stands loses the scope's tags and metadata.
+ *
+ * - Pushed tags go on the header, after its last token and before its comment,
+ *   for a transaction, note or document (the directives Beancount tags from
+ *   the stack), skipping any the entry already writes.
+ * - Pushed metadata goes on indented lines right under the header, latest value
+ *   per key, for every directive (as the engine reads `pushmeta`), skipping a
+ *   key the entry sets itself, since its own value wins.
+ * - Anything else stays byte for byte, and an entry outside every scope is
+ *   returned unchanged.
+ */
+function withPushScope(slice: string, scope: PushScope): string {
+  const lines = slice.split("\n");
+  const keyword = DATED_HEADER_RE.exec(lines[0])?.[1];
+  if (keyword === undefined) return slice;
+  if (scope.tags.length === 0 && scope.meta.length === 0) return slice;
+  // The header ends where its strings do: a narration can span lines (w4/m34).
+  let header = 0;
+  let open = endsInsideString(lines[0], false);
+  while (open && header + 1 < lines.length) {
+    header += 1;
+    open = endsInsideString(lines[header], true);
+  }
+  if (open) return slice;
+
+  const ownTags = new Set<string>();
+  const readTags = (code: string) => {
+    for (const match of code.matchAll(OWN_TAG_RE)) ownTags.add(match[1]);
+  };
+  lines
+    .slice(0, header + 1)
+    .forEach((line, index) => readTags(codeOf(line, index > 0)));
+  // The entry's own metadata and tag lines run until its first posting.
+  const ownKeys = new Set<string>();
+  let indent: string | undefined;
+  let inside = false;
+  for (const line of lines.slice(header + 1)) {
+    const startsInside = inside;
+    inside = endsInsideString(line, startsInside);
+    if (startsInside) continue;
+    if (indent === undefined) indent = /^[ \t]+/u.exec(line)?.[0];
+    const trimmed = line.trim();
+    if (trimmed === "" || trimmed.startsWith(";")) continue;
+    const key = OWN_KEY_RE.exec(trimmed)?.[1];
+    if (key !== undefined) ownKeys.add(key);
+    else if (trimmed.startsWith("#") || trimmed.startsWith("^"))
+      readTags(codeOf(line, false));
+    else break;
+  }
+
+  const tagged =
+    STACK_TAGGED_KEYWORDS.has(keyword) || !DATED_KEYWORDS.has(keyword);
+  const tags = tagged
+    ? [...new Set(scope.tags)].filter((tag) => !ownTags.has(tag))
+    : [];
+  const meta = scope.meta.filter(([key]) => !ownKeys.has(key));
+  if (tags.length === 0 && meta.length === 0) return slice;
+  const last = lines[header];
+  if (tags.length > 0) {
+    const end = codeEnd(last, header > 0);
+    const written = tags.map((tag) => `#${tag}`).join(" ");
+    lines[header] = `${last.slice(0, end)} ${written}${last.slice(end)}`;
+  }
+  // In the entry's own line ending: a CRLF line keeps its `\r` after the split.
+  const cr = last.endsWith("\r") ? "\r" : "";
+  lines.splice(
+    header + 1,
+    0,
+    ...meta.map(
+      ([key, value]) =>
+        `${indent ?? "  "}${key}:${value === "" ? "" : ` ${value}`}${cr}`,
+    ),
+  );
+  return lines.join("\n");
+}
+
+/**
+ * Each slice's text with its place's push scope written onto it
+ * ({@link withPushScope}), in order, reading each file's stacks once.
+ */
+export function slicesWithPushScopes(
+  files: FileMap,
+  slices: readonly EntrySlice[],
+): string[] {
+  const startsByFile = new Map<string, number[]>();
+  for (const { file, startLine } of slices) {
+    const starts = startsByFile.get(file);
+    if (starts) starts.push(startLine);
+    else startsByFile.set(file, [startLine]);
+  }
+  const scopes = new Map<string, Map<number, PushScope>>();
+  for (const [file, starts] of startsByFile) {
+    const pending = [...new Set(starts)].sort((a, b) => a - b);
+    const at = new Map<number, PushScope>();
+    const stacks = new PushScopes();
+    let next = 0;
+    for (const block of splitIntoBlocks(files[file] ?? "")) {
+      while (next < pending.length && pending[next] <= block.startLine) {
+        at.set(pending[next], stacks.snapshot());
+        next += 1;
+      }
+      if (next === pending.length) break;
+      stacks.apply(block.text);
+    }
+    for (; next < pending.length; next += 1)
+      at.set(pending[next], stacks.snapshot());
+    scopes.set(file, at);
+  }
+  return slices.map((slice) => {
+    const scope = scopes.get(slice.file)?.get(slice.startLine);
+    return scope ? withPushScope(slice.slice, scope) : slice.slice;
+  });
 }
 
 /**

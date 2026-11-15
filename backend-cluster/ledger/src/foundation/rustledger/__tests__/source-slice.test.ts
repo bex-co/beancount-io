@@ -13,8 +13,10 @@ import {
   servedReplacementSlice,
   servedSliceText,
   sliceSha256,
+  slicesWithPushScopes,
   sourceDetailsFromProbe,
   splitIntoBlocks,
+  type EntrySlice,
 } from "../source-slice";
 import { entryIdFor, hashEntry } from "../entry-hash";
 import { bookedBlockParserFromModule } from "../booked-block-parser";
@@ -1127,5 +1129,222 @@ describe("entryBalances for an assertion on a parent account", () => {
     };
     const balances = entryBalances([sibling, assertion], hashEntry(assertion));
     expect(balances?.before["Assets:Bank"]).toEqual([]);
+  });
+});
+
+// w31/016: an entry moved out of its file keeps the pushtag/pushmeta scope its
+// place there gave it, since the push statements stay behind.
+describe("slicesWithPushScopes", () => {
+  /** The dated block whose first line starts with `head`, as the locator serves it. */
+  const sliceOf = (files: FileMap, file: string, head: string): EntrySlice => {
+    const block = splitIntoBlocks(files[file]).find((candidate) =>
+      candidate.text.startsWith(head),
+    );
+    if (!block) throw new Error(`no block starts with ${head}`);
+    return {
+      file,
+      slice: block.text,
+      sha256: sliceSha256(block.text),
+      startLine: block.startLine,
+      endLine: block.endLine,
+      localOccurrence: 0,
+    };
+  };
+  const moved = (files: FileMap, file: string, ...heads: string[]) =>
+    slicesWithPushScopes(
+      files,
+      heads.map((head) => sliceOf(files, file, head)),
+    );
+
+  it("writes a pushtag scope's tag and a pushmeta scope's metadata onto the entries inside them", () => {
+    const files: FileMap = {
+      "main.bean": [
+        "pushtag #qa-r7-trip",
+        '2026-09-02 * "PAYEE-A" "tagged by the scope"',
+        "  Expenses:Food:Coffee   3.00 USD",
+        "  Assets:Cash",
+        "poptag #qa-r7-trip",
+        "",
+        '2026-09-03 * "PAYEE-B" "inline tag" #qa-r7-inline',
+        "  Expenses:Food:Coffee   4.00 USD",
+        "  Assets:Cash",
+        "",
+        'pushmeta qa-r7-meta: "pm"',
+        '2026-09-04 * "PAYEE-C" "meta from the scope"',
+        "  Expenses:Food:Coffee   5.00 USD",
+        "  Assets:Cash",
+        "popmeta qa-r7-meta:",
+        "",
+      ].join("\n"),
+    };
+    const [a, b, c] = moved(
+      files,
+      "main.bean",
+      "2026-09-02",
+      "2026-09-03",
+      "2026-09-04",
+    );
+    expect(a).toBe(
+      [
+        '2026-09-02 * "PAYEE-A" "tagged by the scope" #qa-r7-trip',
+        "  Expenses:Food:Coffee   3.00 USD",
+        "  Assets:Cash",
+      ].join("\n"),
+    );
+    // Outside every scope: byte for byte.
+    expect(b).toBe(sliceOf(files, "main.bean", "2026-09-03").slice);
+    expect(c).toBe(
+      [
+        '2026-09-04 * "PAYEE-C" "meta from the scope"',
+        '  qa-r7-meta: "pm"',
+        "  Expenses:Food:Coffee   5.00 USD",
+        "  Assets:Cash",
+      ].join("\n"),
+    );
+  });
+
+  it("follows nested pushes, a re-pushed key's latest value, and each pop", () => {
+    const entry = (day: string) =>
+      `2026-09-${day} * "N${day}"\n    Expenses:Food   1.00 USD\n    Assets:Cash`;
+    const files: FileMap = {
+      "main.bean": [
+        "pushtag #outer",
+        "pushtag #inner",
+        'pushmeta trip: "Lyon" ; why it was pushed',
+        "pushmeta trip: 2026-09-01",
+        "pushmeta seen: TRUE",
+        entry("01"),
+        "popmeta trip:",
+        entry("02"),
+        "poptag #outer",
+        "popmeta seen:",
+        entry("03"),
+        "popmeta trip:",
+        "poptag #inner",
+        entry("04"),
+        "",
+      ].join("\n"),
+    };
+    const [first, second, third, fourth] = moved(
+      files,
+      "main.bean",
+      "2026-09-01",
+      "2026-09-02",
+      "2026-09-03",
+      "2026-09-04",
+    );
+    expect(first.split("\n").slice(0, 3)).toEqual([
+      '2026-09-01 * "N01" #outer #inner',
+      "    trip: 2026-09-01",
+      "    seen: TRUE",
+    ]);
+    expect(second.split("\n").slice(0, 3)).toEqual([
+      '2026-09-02 * "N02" #outer #inner',
+      '    trip: "Lyon"',
+      "    seen: TRUE",
+    ]);
+    expect(third.split("\n").slice(0, 2)).toEqual([
+      '2026-09-03 * "N03" #inner',
+      '    trip: "Lyon"',
+    ]);
+    expect(fourth).toBe(entry("04"));
+  });
+
+  it("keeps the entry's own tags and keys, and reads a posting's metadata as the posting's", () => {
+    const files: FileMap = {
+      "main.bean": [
+        "pushtag #trip",
+        "pushtag #work",
+        'pushmeta trip: "pushed"',
+        'pushmeta place: "pushed"',
+        '2026-09-02 * "Shop" "says #work in its narration" #trip',
+        '  trip: "own"',
+        "  Expenses:Food   1.00 USD",
+        '    place: "the posting\'s"',
+        "  Assets:Cash",
+        "popmeta place:",
+        "popmeta trip:",
+        "poptag #work",
+        "poptag #trip",
+        "",
+      ].join("\n"),
+    };
+    expect(moved(files, "main.bean", "2026-09-02")[0]).toBe(
+      [
+        '2026-09-02 * "Shop" "says #work in its narration" #trip #work',
+        '  place: "pushed"',
+        '  trip: "own"',
+        "  Expenses:Food   1.00 USD",
+        '    place: "the posting\'s"',
+        "  Assets:Cash",
+      ].join("\n"),
+    );
+  });
+
+  it("tags a note and a document, and gives every directive the metadata", () => {
+    const files: FileMap = {
+      "main.bean": [
+        "pushtag #trip",
+        'pushmeta trip: "Lyon"',
+        '2026-09-02 note Assets:Cash "counted the float"',
+        '2026-09-02 document Assets:Cash "receipts/lyon.pdf" ^lyon',
+        "2026-09-02 balance Assets:Cash  0.00 USD",
+        "2026-09-02 open Assets:Bank USD",
+        "popmeta trip:",
+        "poptag #trip",
+        "",
+      ].join("\n"),
+    };
+    expect(
+      moved(
+        files,
+        "main.bean",
+        "2026-09-02 note",
+        "2026-09-02 document",
+        "2026-09-02 balance",
+        "2026-09-02 open",
+      ),
+    ).toEqual([
+      '2026-09-02 note Assets:Cash "counted the float" #trip\n  trip: "Lyon"',
+      '2026-09-02 document Assets:Cash "receipts/lyon.pdf" ^lyon #trip\n  trip: "Lyon"',
+      '2026-09-02 balance Assets:Cash  0.00 USD\n  trip: "Lyon"',
+      '2026-09-02 open Assets:Bank USD\n  trip: "Lyon"',
+    ]);
+  });
+
+  it("puts the tag before the header's comment, after a narration that spans lines, in a CRLF entry's own line ending", () => {
+    const files: FileMap = {
+      "main.bean": [
+        "pushtag #trip",
+        'pushmeta trip: "Lyon"',
+        '2026-09-02 * "Shop" "two lines',
+        'of narration"   ; bought on the way',
+        "  Expenses:Food   1.00 USD",
+        "  Assets:Cash",
+        "popmeta trip:",
+        "poptag #trip",
+        "",
+      ].join("\r\n"),
+    };
+    expect(moved(files, "main.bean", "2026-09-02")[0]).toBe(
+      [
+        '2026-09-02 * "Shop" "two lines\r',
+        'of narration" #trip   ; bought on the way\r',
+        '  trip: "Lyon"\r',
+        "  Expenses:Food   1.00 USD\r",
+        "  Assets:Cash\r",
+      ].join("\n"),
+    );
+  });
+
+  it("reads each file's scopes on their own, as Beancount does", () => {
+    const files: FileMap = {
+      "main.bean": 'pushtag #trip\ninclude "other.bean"\npoptag #trip\n',
+      "other.bean":
+        '2026-09-02 * "Shop"\n  Expenses:Food   1.00 USD\n  Assets:Cash\n',
+    };
+    expect(moved(files, "other.bean", "2026-09-02")).toEqual([
+      sliceOf(files, "other.bean", "2026-09-02").slice,
+    ]);
   });
 });

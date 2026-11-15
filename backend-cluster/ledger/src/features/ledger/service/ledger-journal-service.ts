@@ -65,6 +65,7 @@ import {
   failedBalanceDiffs,
   serializeDirective,
   sliceSha256,
+  slicesWithPushScopes,
   TimeFilterParseError,
   AdvancedFilterParseError,
   type EntrySlice,
@@ -1360,7 +1361,10 @@ export class LedgerJournalService implements ILedgerJournalService {
    * Move entries into another file in one commit (w1/m45; contract in
    * `.pm/w1/m45/done/t001.md`): each slice leaves its file through the batch
    * delete's re-locating transform and is appended, byte for byte and in
-   * ledger order, to `toPath` (created when absent). `includeFrom`, a loaded
+   * ledger order, to `toPath` (created when absent). A slice inside its file's
+   * `pushtag`/`pushmeta` scope first gets that scope's tags and metadata
+   * written onto it, since the scope stays behind (w31/016); the preview shows
+   * the text the target receives. `includeFrom`, a loaded
    * file, gains `include "<toPath>"` when the target is not already reached;
    * without it an unreached target is refused, as appending to an unloaded
    * file is (w23/035), since the entries would count nowhere.
@@ -1434,9 +1438,11 @@ export class LedgerJournalService implements ILedgerJournalService {
         order(a.slice.file) - order(b.slice.file) ||
         a.slice.startLine - b.slice.startLine,
     );
-    const block = moved
-      .map(({ slice }) => withoutTrailingNewlines(slice.slice))
-      .join("\n\n");
+    const texts = slicesWithPushScopes(
+      loaded.files,
+      moved.map(({ slice }) => slice),
+    );
+    const block = texts.map(withoutTrailingNewlines).join("\n\n");
 
     // After a blank line, in the target's own line ending (w21/673).
     transforms.set(toPath, (current) => {
@@ -1475,9 +1481,9 @@ export class LedgerJournalService implements ILedgerJournalService {
       movedHashes: moved.map(({ hash }) => hash),
       includeAdded,
       files: [...transforms.keys()],
-      preview: moved.map(({ slice }) => ({
+      preview: moved.map(({ slice }, index) => ({
         path: slice.file,
-        text: slice.slice,
+        text: texts[index],
       })),
       validation,
       ...commit,

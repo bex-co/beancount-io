@@ -211,3 +211,151 @@ export async function verifyEntryMove(): Promise<void> {
     "✓ moving entries a balance assertion depends on into a new, included file keeps errors and balances, in one commit (w1/m45)",
   );
 }
+
+/** A journal row's identity and what its scope gave it. */
+type ScopedRow = SourcedRow & {
+  type: string;
+  payee?: string;
+  comment?: string;
+  tags?: string[];
+  meta?: Record<string, unknown> | null;
+};
+
+/**
+ * Moving entries out of a `pushtag`/`pushmeta` scope (w31/016): the push
+ * statements stay behind, so the move writes the scope onto each entry. On the
+ * live engine, every moved entry keeps its tags, its pushed metadata and its
+ * hash; `getContext` resolves each reported hash in the target; an unscoped
+ * entry's text is byte for byte; and the ledger's errors and balances are
+ * what they were.
+ */
+export async function verifyScopedEntryMove(): Promise<void> {
+  const tagged =
+    '2026-09-02 * "PAYEE-A" "tagged by the scope"\n  Expenses:Food   3.00 USD\n  Assets:Cash';
+  const inline =
+    '2026-09-03 * "PAYEE-B" "inline tag" #qa-inline\n  Expenses:Food   4.00 USD\n  Assets:Cash';
+  const withMeta =
+    '2026-09-04 * "PAYEE-C" "meta from the scope"\n  Expenses:Food   5.00 USD\n  Assets:Cash';
+  const files: Record<string, string> = {
+    "main.bean": [
+      'option "operating_currency" "USD"',
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Expenses:Food USD",
+      "",
+      "pushtag #qa-trip",
+      tagged,
+      '2026-09-02 note Assets:Cash "counted the float"',
+      "poptag #qa-trip",
+      "",
+      inline,
+      "",
+      'pushmeta qa-meta: "pm"',
+      withMeta,
+      "popmeta qa-meta:",
+      "",
+    ].join("\n"),
+  };
+  const { factory, commits } = committingRepo(files);
+  const journal = new LedgerJournalService(factory as never, {} as never);
+  const params = { ledgerId: "synthetic/scoped-move", userId: "usr_1" };
+  const rows = async (filter?: string) =>
+    (
+      await journal.getJournal({
+        ...params,
+        userId: undefined,
+        query: { includeSource: true, filter },
+      })
+    ).data as unknown as ScopedRow[];
+  // A note's journal row carries no tags; the tag filter reads them (w21/655).
+  const tripHashes = async () =>
+    (await rows("#qa-trip")).map((row) => row.entry_hash).sort();
+  const find = (list: ScopedRow[], label: string) => {
+    const row = list.find(
+      (item) => item.payee === label || item.comment === label,
+    );
+    if (!row?.source) fail(`no source for ${label}`);
+    return row;
+  };
+  const labels = ["PAYEE-A", "counted the float", "PAYEE-B", "PAYEE-C"];
+  const shape = (row: ScopedRow) => ({
+    hash: row.entry_hash,
+    tags: [...(row.tags ?? [])].sort(),
+    meta: row.meta?.["qa-meta"] ?? null,
+  });
+
+  const before = await ledgerState(files);
+  if (before.errors.length > 0)
+    fail(`the scoped fixture has errors: ${JSON.stringify(before.errors)}`);
+  const listed = await rows();
+  const was = labels.map((label) => shape(find(listed, label)));
+  const trip = await tripHashes();
+  if (
+    JSON.stringify(was.map(({ tags, meta }) => [tags, meta])) !==
+      JSON.stringify([
+        [["qa-trip"], null],
+        [[], null],
+        [["qa-inline"], null],
+        [[], "pm"],
+      ]) ||
+    JSON.stringify(trip) !==
+      JSON.stringify([was[0].hash, was[1].hash].sort())
+  )
+    fail(`the fixture reads ${JSON.stringify({ was, trip })}`);
+  const entries = labels.map((label) => {
+    const { entry_hash, source } = find(listed, label);
+    return { entryHash: entry_hash, sha256sum: source!.sha256sum };
+  });
+  const move = { ...params, entries, toPath: "moved.bean", includeFrom: "main.bean" };
+
+  const preview = await journal.moveSourceSlices({ ...move, dryRun: true });
+  const written = [
+    '2026-09-02 * "PAYEE-A" "tagged by the scope" #qa-trip\n  Expenses:Food   3.00 USD\n  Assets:Cash',
+    '2026-09-02 note Assets:Cash "counted the float" #qa-trip',
+    inline,
+    '2026-09-04 * "PAYEE-C" "meta from the scope"\n  qa-meta: "pm"\n  Expenses:Food   5.00 USD\n  Assets:Cash',
+  ];
+  if (
+    JSON.stringify(preview.preview.map(({ text }) => text)) !==
+    JSON.stringify(written)
+  )
+    fail(`the preview shows ${JSON.stringify(preview.preview)}`);
+  if (preview.validation.newErrors.length !== 0 || commits.length !== 0)
+    fail(`the preview is not clean: ${JSON.stringify(preview.validation)}`);
+
+  const result = await journal.moveSourceSlices(move);
+  if (files["moved.bean"] !== `${written.join("\n\n")}\n`)
+    fail(`the target holds:\n${files["moved.bean"]}`);
+  if (files["main.bean"].includes("PAYEE-"))
+    fail(`an entry is still in main.bean:\n${files["main.bean"]}`);
+  const now = await rows();
+  const is = labels.map((label) => shape(find(now, label)));
+  if (JSON.stringify(is) !== JSON.stringify(was))
+    fail(
+      `a moved entry changed: ${JSON.stringify(was)} -> ${JSON.stringify(is)}`,
+    );
+  if (JSON.stringify(await tripHashes()) !== JSON.stringify(trip))
+    fail(`#qa-trip now lists ${JSON.stringify(await tripHashes())}`);
+  if (
+    JSON.stringify(result.movedHashes) !==
+    JSON.stringify(was.map(({ hash }) => hash))
+  )
+    fail(`movedHashes ${JSON.stringify(result.movedHashes)}`);
+  for (const hash of result.movedHashes) {
+    const context = await journal.getContext({
+      ...params,
+      userId: undefined,
+      entryHash: hash,
+    });
+    if (!files["moved.bean"].includes(context.slice))
+      fail(`${hash} resolves outside moved.bean: ${context.slice}`);
+  }
+  const after = await ledgerState(files);
+  if (JSON.stringify(after) !== JSON.stringify(before))
+    fail(
+      `the ledger changed: ${JSON.stringify(before)} -> ${JSON.stringify(after)}`,
+    );
+
+  console.log(
+    "✓ entries moved out of a pushtag/pushmeta scope keep its tags, metadata and their hashes; an unscoped one moves byte for byte (w31/016)",
+  );
+}
