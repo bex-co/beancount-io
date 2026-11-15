@@ -42,7 +42,7 @@ All named dependencies are done. Current structural/fixture validation,
 The original DoD is satisfied with t008's documented compatibility exceptions;
 t013 and this milestone are archived through /pm done.
 
-Public results: [final verification](../../../../docs/skills/clawhub-rehearsal.md#final-current-version-verification--2026-10-22-utc).
+Public results: [final verification](../../../../docs/skills/evidence/clawhub-rehearsal.md#final-current-version-verification--2026-10-22-utc).
 Private metadata/native/default-search/byte/check evidence is retained under
 ignored scripts/skills/tmp/w6-m6-closeout-20261022/ in the shipping worktree
 and the original scope-contract scratch directory.
@@ -180,7 +180,7 @@ Fresh environment and account read-backs still show no GitHub publishing secret 
 
 The owner supplied an existing token through local ignored configuration. It was passed directly to GitHub's environment secret setter without printing or committing its value; no token was created by the assistant. Read-back verifies the secret metadata. The main-only environment approval was completed for the owner-authorized release, and [run 39372550698](https://github.com/bex-co/beancount-io/actions/runs/39372550698) succeeds, including credential cleanup.
 
-All eleven submissions return 1.0.0, initially `pending-publication`. Real clean-host installs subsequently pass for nine skills in OpenClaw 2026.10.5 and eight in Hermes v0.22.2. Options and property remain pending; Hermes additionally rejects init. The [public rehearsal](../../../../docs/skills/clawhub-rehearsal.md) records per-skill outcomes, exact commands, standalone references/licenses, strict verification limits, and the successful published `bea` 0.3.1 control. New install guidance names only exercised commands and states the current incomplete-suite limits. No model credential was imported and no agent first-query turn has run yet.
+All eleven submissions return 1.0.0, initially `pending-publication`. Real clean-host installs subsequently pass for nine skills in OpenClaw 2026.10.5 and eight in Hermes v0.22.2. Options and property remain pending; Hermes additionally rejects init. The [public rehearsal](../../../../docs/skills/evidence/clawhub-rehearsal.md) records per-skill outcomes, exact commands, standalone references/licenses, strict verification limits, and the successful published `bea` 0.3.1 control. New install guidance names only exercised commands and states the current incomplete-suite limits. No model credential was imported and no agent first-query turn has run yet.
 
 **Subsequent promotion:** by 05:35 UTC on Oct 20, options is public at 1.0.0 and both host installs pass without force (OpenClaw audit Review, Hermes SAFE). Verified totals are now ten/nine; property alone remains pending. [Complete skills CI](https://github.com/bex-co/beancount-io/actions/runs/39374976210) passes on the shipped documentation baseline `dec916039`. The task and milestone stay blocked on the remaining explicit conditions above.
 
@@ -196,7 +196,7 @@ Main adds `beancount-roll-forward` through active w3/m55 after the eleven-skill 
 
 ## Resume evidence — 2026-10-20
 
-The source inventory is now thirteen, including accruals and the later ask/close variance recipe. Suite 0.3.5 fixes catalog/version drift and the release checks' discovered valuation/recognition/identity gaps. Sixteen focused native Codex cases pass on `gpt-6.1-sol` with published bea 0.3.1; the former model's usage-limit failure is no longer a general Codex blocker. Claude Code now reports a weekly limit, so the changed instructions' Claude reruns and current routing/discovery remain pending. All thirteen final bundles dry-run successfully; Hermes allows twelve and retains init's documented policy conflict. Current owner reports show clean static analysis but absent remaining scanners for the two inspected pending versions, consistent with queued upstream prepublication work. See [t013](done/t013.md) and the [rehearsal](../../../../docs/skills/clawhub-rehearsal.md#thirteen-skill-release-preparation--2026-10-20) for exact evidence, limits and unblock conditions. No duplicate publication or new login was attempted.
+The source inventory is now thirteen, including accruals and the later ask/close variance recipe. Suite 0.3.5 fixes catalog/version drift and the release checks' discovered valuation/recognition/identity gaps. Sixteen focused native Codex cases pass on `gpt-6.1-sol` with published bea 0.3.1; the former model's usage-limit failure is no longer a general Codex blocker. Claude Code now reports a weekly limit, so the changed instructions' Claude reruns and current routing/discovery remain pending. All thirteen final bundles dry-run successfully; Hermes allows twelve and retains init's documented policy conflict. Current owner reports show clean static analysis but absent remaining scanners for the two inspected pending versions, consistent with queued upstream prepublication work. See [t013](done/t013.md) and the [rehearsal](../../../../docs/skills/evidence/clawhub-rehearsal.md#thirteen-skill-release-preparation--2026-10-20) for exact evidence, limits and unblock conditions. No duplicate publication or new login was attempted.
 
 
 ## Synchronization review cleared — 2026-10-21 UTC
@@ -206,14 +206,14 @@ The 04:23 UTC anonymous API/download check verifies all eleven accepted suite 0.
 A minimal native Claude Code 2.1.304 Sonnet request still returns first-party HTTP 429 `usage_limit_reached`, zero input/output tokens and the same weekly-limit message before inference. Thus t013 remains blocked on the current-source Claude and w3/m55–m57 adoption checks, followed by protected publication and current-content host verification. This is not an outstanding login or owner decision. The existing Codex evidence and recorded PDF first-open limitation remain unchanged. See [t013](done/t013.md) for current results and the exact unblock condition.
 
 
-Close/options 1.0.1 subsequently pass fresh native installs in both supported hosts with all 29 authored files matching per host. This completes individual install verification of the accepted eleven-skill release alongside the prior results; Hermes init retains its recorded exception. See the [registry rehearsal](../../../../docs/skills/clawhub-rehearsal.md#eleven-synchronization-updates-public--2026-10-21-utc) for audit labels and retained scanner findings. No current thirteen-skill release or new authenticated agent-query journey is claimed.
+Close/options 1.0.1 subsequently pass fresh native installs in both supported hosts with all 29 authored files matching per host. This completes individual install verification of the accepted eleven-skill release alongside the prior results; Hermes init retains its recorded exception. See the [registry rehearsal](../../../../docs/skills/evidence/clawhub-rehearsal.md#eleven-synchronization-updates-public--2026-10-21-utc) for audit labels and retained scanner findings. No current thirteen-skill release or new authenticated agent-query journey is claimed.
 
 
 ## Independent task-level progress — 2026-10-21 UTC
 
-The [current release preflight](../../../../docs/skills/clawhub-release-preflight-20261021.md) completes the fresh bundle equivalence, anonymous publication previews, thirteen-skill install/discovery, standalone Codex controls and protected-environment readiness portions of t013. Continue remaining substeps against their actual prerequisites; t013 remains open for the documented Claude/adoption, publication and current-host conditions.
+The [current release preflight](../../../../docs/skills/evidence/clawhub-release-preflight-20261021.md) completes the fresh bundle equivalence, anonymous publication previews, thirteen-skill install/discovery, standalone Codex controls and protected-environment readiness portions of t013. Continue remaining substeps against their actual prerequisites; t013 remains open for the documented Claude/adoption, publication and current-host conditions.
 
-The [variance follow-up](../../../../docs/skills/variance-release-controls-20261021.md)
+The [variance follow-up](../../../../docs/skills/evidence/variance-release-controls-20261021.md)
 adds the missing negative/bridge evals and corrects close's Report provenance
 and executed-arithmetic gap. Four current Codex controls and all local owning
 checks pass; suite 0.3.6 changes only close's body among the thirteen bundles.
@@ -246,7 +246,7 @@ documented normal scan/writeback per already-uploaded version; all nine return
 writtenBack false and no lastError. This is actual follow-through inside a
 blocked milestone, not new versions or a verdict override. Saved scan IDs,
 reports and limits are recorded in [t013](done/t013.md#publisher-scan-follow-through--2026-10-22-utc)
-and the [rehearsal](../../../../docs/skills/clawhub-rehearsal.md#publisher-side-scan-diagnosis--2026-10-22-utc).
+and the [rehearsal](../../../../docs/skills/evidence/clawhub-rehearsal.md#publisher-side-scan-diagnosis--2026-10-22-utc).
 Continue existing jobs and every independently promoted version; do not submit
 duplicate jobs. Public-byte/native-host verification and closeout remain open.
 
@@ -265,7 +265,7 @@ tests, structural/guidance validation, and actual native controls: six boundary
 cases, four fresh16/18 reconciliation cases with real confirmations, and two
 final init cases. Both reconciliation16 outcomes end green; both18 outcomes
 retain the diagnosed red assertion/residual-1.10. Original defects, CLI/cache
-failures and recovery limits are retained in the [dated evidence](../../../../docs/skills/scope-contract-controls-20261022.md).
+failures and recovery limits are retained in the [dated evidence](../../../../docs/skills/evidence/scope-contract-controls-20261022.md).
 
 All13 fingerprints differ from accepted0.3.7 content and pass explicit1.0.4 dry
 runs (119 authored files, map SHA256
@@ -314,7 +314,7 @@ job, verdict override or host bypass is performed.
 The milestone returns to the live tree because public promotion makes local
 verification actionable. The remaining four platform conditions stay recorded;
 they do not stop native tests for eligible targets. Close t013 only after every
-current-main listing and all written DoD hold. See the [release evidence](../../../../docs/skills/clawhub-rehearsal.md#protected-038-release--2026-10-22-utc).
+current-main listing and all written DoD hold. See the [release evidence](../../../../docs/skills/evidence/clawhub-rehearsal.md#protected-038-release--2026-10-22-utc).
 
 
 ## Current-version native verification — 2026-10-22, 02:49 UTC
@@ -355,7 +355,7 @@ repository worker verifies exact public owner/version/bytes and supported native
 installs, checks subsequent source changes and every DoD before closingt013.
 All eligible current-version/model checks above are complete; continue the full
 w6 queue audit before deciding whether any independent work remains. See the
-[dated follow-through](../../../../docs/skills/clawhub-rehearsal.md#current-version-follow-through--2026-10-22-0249-utc).
+[dated follow-through](../../../../docs/skills/evidence/clawhub-rehearsal.md#current-version-follow-through--2026-10-22-0249-utc).
 
 ## Blocked — remaining staged publication finalization, 2026-10-22 UTC
 

@@ -293,7 +293,7 @@ python3 "$VERIFY" verify --workspace "$BOOKS" --checkpoint unrelated --python "$
 
 ## Evidence and limits
 
-See the [recorded Claude Code and Codex rehearsals](importer-graduation-rehearsal.md)
+See the [recorded Claude Code and Codex rehearsals](evidence/importer-graduation-rehearsal.md)
 for all twelve checkpoints, reviewed golden files, timings, recovered command
 failures, and the targeted check of the sandbox cache setup. Both full journeys
 used published `bea` 0.3.1 and Beangulp 0.2.0 on macOS.

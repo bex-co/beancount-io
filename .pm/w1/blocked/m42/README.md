@@ -21,9 +21,9 @@ Re-sequenced 2026-11-13: Adoption surface (t007) now follows t005, and Closeout 
 
 ## Blocked
 
-**Milestone blocked 2026-11-13.** Everything but the Codex rehearsal is shipped: the command (`fd8914559`, `fe2ff1284`), the skill branch (`8a645730b`), the guide (`76c9457aa`), the adoption surfaces (`d43412d0f`), Simplify (`d2faee550`) and Test coverage (`300b7bad7`). Closeout (t010) waits on t006, the only open task that can still change anything. **Unblock:** the user signs Codex in again (`codex login`). The worker then runs the guide's setup and question turns with Codex, records them in `docs/skills/existing-ledger-rehearsal.md`, and closes t006 and t010. **Who can clear it:** the user.
+**Milestone blocked 2026-11-13.** Everything but the Codex rehearsal is shipped: the command (`fd8914559`, `fe2ff1284`), the skill branch (`8a645730b`), the guide (`76c9457aa`), the adoption surfaces (`d43412d0f`), Simplify (`d2faee550`) and Test coverage (`300b7bad7`). Closeout (t010) waits on t006, the only open task that can still change anything. **Unblock:** the user signs Codex in again (`codex login`). The worker then runs the guide's setup and question turns with Codex, records them in `docs/skills/evidence/existing-ledger-rehearsal.md`, and closes t006 and t010. **Who can clear it:** the user.
 
-- **t006 (2026-11-13)** — the Codex half of the rehearsal. Claude Code passed and is recorded in `docs/skills/existing-ledger-rehearsal.md`. Codex CLI 0.163.0 cannot refresh its expired sign-in on this host, and the Linux container route reuses that credential. **Unblock:** the user signs Codex in again (`codex login`); the worker then runs the guide's setup and question turns with Codex and records them. **Who can clear it:** the user.
+- **t006 (2026-11-13)** — the Codex half of the rehearsal. Claude Code passed and is recorded in `docs/skills/evidence/existing-ledger-rehearsal.md`. Codex CLI 0.163.0 cannot refresh its expired sign-in on this host, and the Linux container route reuses that credential. **Unblock:** the user signs Codex in again (`codex login`); the worker then runs the guide's setup and question turns with Codex and records them. **Who can clear it:** the user.
 
 ## Definition of done
 

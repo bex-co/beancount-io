@@ -155,8 +155,8 @@ ee7e0f517232fb619c72e49d7e648436bddc598e changes three of twelve files:
 validation probe import isolation and ClawHub installed-id/catalog aliases.
 The metadata parser, admission/installer and three guards are unchanged;
 these changes do not establish complete-suite admission or init-policy support.
-[Exact twelve-file hashes, change assessment and limits](hermes-compatibility-20261028.json)
-preserve the [prior comparison](hermes-compatibility-20261026.json).
+[Exact twelve-file hashes, change assessment and limits](evidence/hermes-compatibility-20261028.json)
+preserve the [prior comparison](evidence/hermes-compatibility-20261026.json).
 No new native install/scanner is run; the older rehearsal below remains the
 runtime evidence. Retired standalone040is not revived by alias improvements.
 No publisher input is pending; rerun only after a relevant supported change.
@@ -179,7 +179,7 @@ suite retain concrete restrictions:
 The fixture is a local Git repository of the generated suite, so this tests the
 native installer and its policy on the package bytes, not public ClawHub plugin
 ingestion. Hermes does not establish that registry route in this rehearsal.
-The [existing standalone results](clawhub-rehearsal.md#final-current-version-verification--2026-10-22-utc)
+The [existing standalone results](evidence/clawhub-rehearsal.md#final-current-version-verification--2026-10-22-utc)
 remain valid for twelve supported skills; init's policy restriction remains
 [w6/039](../../.pm/w6/blocked/039.md). Full Hermes suite admission awaits a
 compatible metadata contract and a policy path that permits the approved init
@@ -212,7 +212,7 @@ Future publication uses the suite.
 
 Legacy source-filter discovery note 040 is [dropped as superseded](../../.pm/w6/README.md#dropped)
 by this retired standalone route. Its failed native cohorts remain in the
-[historical rehearsal](clawhub-rehearsal.md#hermes-search-discovery); no upstream
+[historical rehearsal](evidence/clawhub-rehearsal.md#hermes-search-discovery); no upstream
 search fix is claimed. Full Hermes suite metadata/init admission remains open.
 
 ## Standalone listing retirement — 2026-10-22 UTC
@@ -549,7 +549,7 @@ Independent index conditions retain their own check dates and next triggers.
 
 ### Current Hermes compatibility source check — 2026-10-30 UTC
 
-Stable remainsv0.22.5. The [pinned twelve-file audit](hermes-compatibility-20261030.json)
+Stable remainsv0.22.5. The [pinned twelve-file audit](evidence/hermes-compatibility-20261030.json)
 finds six actual main-source changes, including plugin scanner v12. These cover
 bytecode/proc/public-client-key distinctions, other trusted repositories,
 config keys and reviewed-commit installation. The portable metadata string-map

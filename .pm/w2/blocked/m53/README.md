@@ -16,7 +16,7 @@
 
 ## Previous blocker
 
-- **t003 onward (2026-10-20)** — t001, t002, and t003's verifier are shipped, and the first-year journey passes end to end on Claude Code (all eight verifier checkpoints; evidence in [t003](done/t003.md) and `docs/skills/first-year-rehearsal.md`). t003's acceptance requires the Codex rehearsal too, and Codex returns its account usage-limit error until 2026-11-17, so t004–t007 wait behind it. **Unblock:** Codex usage returns (2026-11-17); rerun the identical journey prompts on Codex, record the outcome in the rehearsal doc, close t003, then t004 (adoption) starts. **Who can clear it:** the operator (Codex usage).
+- **t003 onward (2026-10-20)** — t001, t002, and t003's verifier are shipped, and the first-year journey passes end to end on Claude Code (all eight verifier checkpoints; evidence in [t003](done/t003.md) and `docs/skills/evidence/first-year-rehearsal.md`). t003's acceptance requires the Codex rehearsal too, and Codex returns its account usage-limit error until 2026-11-17, so t004–t007 wait behind it. **Unblock:** Codex usage returns (2026-11-17); rerun the identical journey prompts on Codex, record the outcome in the rehearsal doc, close t003, then t004 (adoption) starts. **Who can clear it:** the operator (Codex usage).
 
 ## Definition of done
 
