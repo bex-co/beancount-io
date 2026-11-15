@@ -1,130 +1,122 @@
 ---
 name: loopx
-description: Autonomously drain a `.pm` workstream item by item — triage every pending milestone, task, and inbox note, then implement and ship it, close it as already done, block it with an unblock condition, or delete it as invalid, and keep going until nothing actionable remains (do not stop early to ask the user to resume). Use when the user explicitly invokes $loopx or asks to loop, drain, or work through a whole workstream's backlog (e.g. `$loopx w1`). Sequential, not interval-based; do not use for a timed poll, a single task, or ordinary code edits.
+description: Autonomously drain a `.pm` workstream item by item, then keep listening for new work — the session orchestrates while each pending milestone or inbox note goes to a fresh-context worker that triages it and implements and ships it, closes it as already done, blocks it with an unblock condition, or deletes it as invalid; once drained, a zero-token background `git fetch` listener (up to 24 h, `--no-listen` to exit instead) wakes the loop when new items land on origin/main. Do not stop early to ask the user to resume. Use when the user explicitly invokes $loopx or asks to loop, drain, or work through a whole workstream's backlog (e.g. `$loopx w1`). Not for a single task, ordinary code edits, or a generic timed poll of something other than a `.pm` workstream.
 metadata: {"internal": true}
 ---
 
-# Task: Drain a `.pm` workstream item by item
+# Task: Drain a `.pm` workstream, then listen for more
 
-Usage: `/loopx <wN>`
+Usage: `/loopx <wN> [--no-listen]`
 
-`/loopx <wN>` — repeatedly pick the next **actionable pending item** in workstream `<wN>`, **triage** it, act on the outcome, `/ship` it, and continue until nothing actionable remains. An item is a pending **milestone**, a pending **task** inside a live milestone, or an open **inbox note**. Every item ends in exactly one of four places: implemented and shipped, closed as already done, moved to `blocked/` with the condition that would clear it, or deleted as invalid. Blocked items and their dependents are skipped automatically, without waiting for user input. This is a long-running autonomous loop over the `.pm` board; it composes `/pm` (the only writer to `.pm/`), your own implementation work, and `/ship`. It is sequential, not interval-based — for a timed poll use `/loop`. If you can name the next pick, keep looping — do not pause for a checkpoint or tell the user to re-run `/loopx`.
+`/loopx <wN>` repeats one cycle until an exit: pick the next **actionable pending item** in workstream `<wN>`, hand it to a **worker** with a fresh context, verify the outcome it claims against `origin/main`, and continue. An item is a pending **milestone** (with all of its tasks) or an open **inbox note**. When nothing is actionable, the loop does not end. It **listens**: a background process polls `origin/main` with exponential backoff, costs no model tokens, and wakes the loop when new items land. After 24 idle hours it stops. With `--no-listen`, drained means done.
 
-A pending item is a claim that the work is still wanted and still undone. Boards go stale: work lands through another item or a direct commit, a decision or a `DO_NOT_DO.md` rule retires the idea, the surface it targets gets removed or renamed. Never start implementing on the strength of a checkbox alone — every item earns its implementation by passing triage first.
+This session is the **orchestrator**. It owns the queue, the guard, the listener, and the verification. It does not read code or implement anything. Every item's triage, implementation, `/pm` moves, and `/ship` belong to the worker, whose full contract is [`worker.md`](worker.md). The split exists because each item needs its own context: a milestone's history is noise to the next one, and a session cannot clear itself. Fresh workers keep the orchestrator small, so it stays cheap even after a long idle wait has expired the prompt cache.
 
-Parse the target workstream from `$ARGUMENTS` (e.g. `w1`). If `$ARGUMENTS` is empty, **STOP** and ask which workstream to drain — never guess.
+Parse the workstream and the optional `--no-listen` from `$ARGUMENTS` (e.g. `w1`, `w1 --no-listen`). If no workstream is given, **STOP** and ask which one to drain. Never guess.
 
 ## Preconditions (verify once, up front)
 
 1. `git branch --show-current` is `main`. If not, STOP and ask (same rule as `/ship`).
-2. `git status` — note pre-existing uncommitted changes. Do not sweep unrelated changes into an item's ship; if the tree is dirty with work you didn't do, surface it and ask before starting.
+2. `git status`: note pre-existing uncommitted changes. Workers ship from this checkout, so if the tree is dirty with work you didn't do, surface it and ask before starting.
 3. The workstream `.pm/<wN>/README.md` exists. If not, STOP and report.
-4. Read `.pm/DO_NOT_DO.md` once. Every item you pick must respect it, and a conflict with it is a delete reason in triage.
-5. Arm the loop guard: `python3 scripts/loopx-guard.py start <wN>`. In Claude Code it is a `Stop` hook that refuses to let this session's turn end while `<wN>` still holds an actionable item, and it names the next pick when it does. It binds to the session that ran `start`: other sessions in the same checkout are never held to your loop, and the mark is dropped when your session ends. Codex has no `Stop` hook, so there `start` reports that nothing was armed and the exit rules below are the only enforcement. Only a genuine **Exit** clears it, so this is the one mechanism that survives your own judgement that you are finished.
+4. Read `.pm/DO_NOT_DO.md` once, so you recognize an item that conflicts with it when you pick it.
+5. Arm the loop guard: `python3 scripts/loopx-guard.py start <wN>` (append `--no-listen` when given). In Claude Code it is a `Stop` hook that refuses to let this session's turn end while `<wN>` still holds an actionable item, and names the next pick. When the queue is drained it also refuses to let the turn end unless a background `wait` is running (unless `--no-listen`). It binds to the session that ran `start`: other sessions in the same checkout are never held to your loop (`start` warns if another session already loops on `<wN>`), and the mark is dropped when your session ends. Codex has no `Stop` hook, so there `start` reports that nothing was armed and the exit rules below are the only enforcement.
 
 ## The loop
 
-Repeat until the exit condition below:
-
 ### 1. Pick the next pending item
 
-Read `.pm/<wN>/README.md` and list the tree: `.pm/<wN>/m*/`, `.pm/<wN>/*.md`, `.pm/<wN>/done/`, `.pm/<wN>/blocked/`. The checkbox and the on-disk state must agree; if they disagree, trust the task files, flag the drift, and repair it through `/pm` before continuing.
+Read `.pm/<wN>/README.md` and list the tree: `.pm/<wN>/m*/`, `.pm/<wN>/*.md`, `.pm/<wN>/done/`, `.pm/<wN>/blocked/`. Read only what picking needs: the item list, each milestone's status line and `depends_on` links. Leave the item bodies to the worker.
 
 Pick in this order, and announce what you picked:
 
-1. **The lowest-numbered actionable pending milestone** — unchecked (`- [ ] **mN**`), with a live directory (`.pm/<wN>/mN/`, not under `done/` or `blocked/`), not deferred or blocked earlier this run. Inside it, work its **pending tasks** in `depends_on` order; the next actionable task is the first non-done task whose dependencies are all done. Each task is itself an item and gets its own triage.
-2. **The lowest-numbered open inbox note** (`.pm/<wN>/NNN.md`), when no milestone is actionable. Notes are sub-hour units — a bug fix, a doc correction, a decision to record. They are work items for this loop, not scenery. Pull one forward out of order when a milestone depends on it.
-3. **A blocked item whose unblock condition now holds** (`.pm/<wN>/blocked/`). Re-read the condition and verify it against the repository before reviving anything; `/pm unblock` moves it back, and it then re-enters triage like any other item. Do not retry an unchanged blocker.
+1. **The lowest-numbered actionable pending milestone.** It is unchecked (`- [ ] **mN**`), has a live directory (`.pm/<wN>/mN/`, not under `done/` or `blocked/`), and was not deferred or blocked earlier this run.
+2. **The lowest-numbered open inbox note** (`.pm/<wN>/NNN.md`), when no milestone is actionable. Notes are sub-hour units: a bug fix, a doc correction, a decision to record. Pull one forward out of order when a milestone depends on it.
+3. **A blocked item whose unblock condition now holds** (`.pm/<wN>/blocked/`). Read just its **Unblock:** condition and check it against the repository. If it holds, the worker's first step is `/pm unblock`; say so in the dispatch. Do not retry an unchanged blocker.
 
-Establish which items can proceed before deciding none can: honor explicit `depends_on` links and prerequisites stated in scope or acceptance criteria, including transitive ones. Numbering alone does not imply a dependency. Scan every later pending item before concluding the workstream is done.
+Honor explicit `depends_on` links and prerequisites stated in scope or acceptance criteria, including transitive ones, before deciding none can proceed. Numbering alone does not imply a dependency. Scan every later pending item before concluding the workstream is drained.
 
-If nothing is actionable, go to **Exit**.
+If nothing is actionable, go to **Listen**.
 
-### 2. Triage the item
+### 2. Dispatch it to a worker
 
-Read it fully: a milestone's `README.md` plus every open task file, a task's own file, or the note. These define scope, order, and acceptance. Milestones ship features **end to end** — include the dashboard/mobile tasks alongside the backend, CLI, and skills ones; do not stop at the API. Respect the milestone's `## Definition of done` and each task's `## Acceptance criteria`.
+One worker at a time, strictly in sequence. Every worker ships to `main` from this checkout, so two at once would race on the tree and the rebase.
 
-Then, **before writing any code**, establish what is actually true on `main` and pick one of four outcomes. Triage runs on evidence, not impression: `git log` the source the item cites and the paths it names, grep for the commands, routes, and strings it describes, open every path under `## Files`, run the observable checks in `## Definition of done`, and reproduce a bug note's repro yourself. Announce the outcome and the evidence in a few lines before acting on it.
+- **Claude Code:** use the Agent tool with `subagent_type: "general-purpose"` and no `model`, so the worker runs on the session's model. The prompt is short, because everything else is on disk:
 
-| Outcome | When | What you do |
-| --- | --- | --- |
-| **Work on it** | The goal is still wanted and its acceptance does not hold yet. Stale details — moved paths, renamed commands, a package that changed shape — do not change this: follow the intent and note the deviations in the per-item summary. | Give a one-line plan and continue to step 3. Close any sub-item already satisfied by shipped code with `/pm done`, citing the commit, paths, or tests that satisfy it, so the record shows why it closed without work this session. |
-| **Close as already done** | The acceptance criteria already hold on `main` — including the standing closing tasks (adoption surfaces checked, meaningful tests exist) — and the definition of done holds when you actually run its checks. A note's bug no longer reproduces at HEAD. Missing tests or an unchecked adoption surface make this *work on it*, not close. | `/pm done <target>` — tasks in dependency order, Closeout last; a note gets its resolution line and moves to `done/`. Skip to step 4 and ship the board move alone: `chore(pm): close <target> — already satisfied by <SHA>`. No code rides along. |
-| **Block it** | The work is still wanted but cannot proceed here: missing credentials or external access, an unobservable acceptance criterion, a deploy or store review only the user can run, an unresolved failing check, a ship failure, a scope question only the user can answer, or a source record in `docs/adrs/` whose `- Status:` is `Draft` (only the owner can move it to `Proposed`). A question you cannot settle from evidence is a blocker, not a reason to skip quietly. | `/pm block <target> <reason>`, writing the exact blocker, an **Unblock:** condition, and who can clear it. Preserve any partial work (see [Handling a block](#handling-a-block)). Skip to step 4 and ship the move alone: `chore(pm): block <target> — <one line>`. |
-| **Delete as invalid** | The work should not be done at all: it conflicts with `.pm/DO_NOT_DO.md`; a decision recorded on the board, in an ADR, or in a commit retired it; it is fully superseded by or duplicates other work (shipped or still open — keep the better one); or the surface it targets no longer exists. | `/pm drop <target> <reason>`, naming the rule, ADR, commit, or item that justifies it. Skip to step 4 and ship the deletion alone: `chore(pm): drop <target> — <reason>`. If the reason generalizes into a rule, propose a `DO_NOT_DO.md` entry in the final summary; do not write one yourself. |
+  > You are a `/loopx` worker for `<wN>/<id>` in this repository. Read `.agents/skills/loopx/worker.md` and follow it exactly for this one item. <Add only what the pick step learned, e.g. "its unblock condition holds: start with `/pm unblock`".> End with the LOOPX-RESULT block.
 
-Closing, blocking, and deleting all rewrite a public board, so the bar is evidence you can cite. An item the user explicitly routed or approved (`user routed to`, `user approved`, `user decision`) that you merely *suspect* is unwanted is a **block** with the question as its unblock condition, never a delete. Deleting is for work that is provably invalid; blocking is for work that is still wanted and stuck. Never delete an item to avoid the work in it.
+  Wait for its result before doing anything else.
+- **Codex, or any agent without a subagent tool:** run [`worker.md`](worker.md) inline for this one item, then continue from step 3. Context then accumulates in this session, which is the old single-session behaviour; the loop rules are unchanged.
 
-The last tasks of every milestone are the standing closing tasks defined in [`.agents/skills/pm/SKILL.md`](../pm/SKILL.md) (Adoption surface when present, Simplify, Test coverage, Closeout). They are real work, not bookkeeping: run `/simplify` for Simplify, write meaningful tests for Test coverage, and walk every surface the Adoption surface task names.
+### 3. Verify the outcome
 
-### 3. Implement it
+A worker's summary is a claim, not evidence. Check it:
 
-Do the actual engineering, one item at a time, following `depends_on` order inside a milestone:
+```
+python3 scripts/loopx-guard.py outcome <wN> <id>
+```
 
-- Follow all `AGENTS.md` rules — root and the scoped `<package>/AGENTS.md` for every package you touch (lockfiles are never hand-edited, changes stay scoped to one package, `cd` into the package before running its scripts, no secrets, every scope's guidance stays in a real `AGENTS.md`).
-- Run the checks the change touches and make them pass before considering the item done:
-  - `dashboard/` → `yarn format:check`, `yarn lint`, `yarn test`, `yarn build`
-  - `mobile/` → `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`
-  - `cli/` → `make check-all`
-  - `skills/` or `.agents/skills/` → `python3 scripts/skills/ci-check.py` (from the repo root)
-  - `backend-cluster/*`, `deploy/` → the commands in that package's scoped `AGENTS.md`
-  - any `AGENTS.md` or skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
-  - before every ship → `gitleaks dir . --redact --verbose`
+It fetches and prints where the item sits on `origin/main` (`open`, `done`, `blocked`, or `absent`), whether this checkout's `HEAD` equals `origin/main` (`pushed`), and whether the tree is `clean`. A verified outcome satisfies all of the following:
 
-  Never mark an item complete on unverified code.
+- `shipped` or `closed` → `where: done`
+- `blocked` → `where: blocked`
+- `dropped` → `where: absent`
+- `pushed: true`, `clean: true`, and every SHA the worker listed is in `git log origin/main`
 
-- A bug note is not fixed until its own repro fails to reproduce and a regression test covers it. Prove the test is real — revert the fix and watch it fail.
-- You may delegate independent sub-tasks to subagents (Agent tool) to parallelize, but you own correctness.
-- Keep the board in sync as you go by invoking **`/pm done <target>`** for each finished task or note — `/pm` is the only skill that writes to `.pm/`, so never edit task frontmatter, milestone `**Status:**` lines, workstream checkboxes, or `done/` and `blocked/` placement by hand. Running `/pm done` on the milestone's Closeout task last is what moves the whole milestone to `.pm/<wN>/done/mN/` and flips its workstream checkbox to `[x]`. Do not close out until the milestone's definition of done actually holds; if it cannot hold here, the milestone is a **block**, not a close.
+If the check fails, or the result block is missing, send the **same** worker one follow-up (SendMessage in Claude Code) that states exactly what does not match, and verify again. If it still fails, stop trusting the worker. Keep any leftover changes in a named stash (`git stash push -u -m "loopx/<wN>/<id>"`). Block the item yourself with `/pm block <target> worker did not reach a verified outcome: <what is wrong>; Unblock: <the concrete fix>`. Ship that move alone with `/ship`. If the item ended up shipped but red or half-done, record the commits in the block reason; do not revert them yourself.
 
-### 4. Ship it
+Record one line per item: id, verified outcome, SHAs, and for blocks the unblock condition. That run-local list is all the orchestrator keeps. Do not paste worker reports into the conversation.
 
-Invoke **`/ship`** ([`.agents/skills/ship/SKILL.md`](../ship/SKILL.md)) for this item's changes — code and the `.pm/` moves together, or the board move alone when triage ended the item without code. Because you made the changes this session, `/ship` runs session-aware: it stages exactly what you touched and writes the commit message from your knowledge. `/ship` ends at a successful push — it has no test gate of its own and does not watch CI, so the checks in step 3 are the only gate; run them before invoking it.
+### 4. Continue
 
-Ship each outcome before starting the next item. A milestone large enough to span several sessions may ship at task boundaries, provided every ship is green and self-contained. **Proceed after `/ship` reports the shipped HEAD**, or after isolating a block under the handling below.
+Return to step 1 **immediately**. Do not end the turn, ask the user to resume, or wait for another `/loopx` invocation while step 1 would still find an actionable item. A long queue, a long session, or several items already shipped are not reasons to stop.
 
-If `/ship` surfaces a failure it cannot fix (a rebase conflict it can't resolve, a rejected push), that is a block.
+Between items, write one sentence: what was verified and the id you are picking next.
 
-### 5. Continue
+When an item is blocked, skip it and its dependents and keep going. If `m2` is blocked and `m3` depends on it but `m4` is independent, skip `m2` and `m3` and dispatch `m4`. Revisit a blocked item only when new evidence changes its condition.
 
-Loop back to step 1 to pick the next pending item. After every ship (or block isolation), **immediately** re-scan and pick again — do not end the turn, ask the user to resume, or wait for another `/loopx` invocation while step 1 would still find an actionable item. Stopping because the queue is long, the session is long, or you already shipped several items is not an exit.
+## Listen
 
-Between items, write one sentence: what shipped and the id you are picking next. Save tallies and per-item recaps for the Exit report — a mid-run summary tends to become a premature stop.
+When step 1 finds nothing actionable:
 
-## Handling a block
+1. With `--no-listen`, go to **Exit**.
+2. Write the **drained report**: every item this run handled with its verified outcome (SHAs, close evidence, blockers with their unblock conditions and owners, deletion reasons, proposed `DO_NOT_DO.md` rules), and what is still blocked. The user reads this one while the loop idles, so it is the full report, not a teaser.
+3. Confirm `git status` is clean and `HEAD` matches `origin/main`. A dirty tree or unpushed commit here is a fault: resolve it the way step 3 does before listening.
+4. Start the listener: `python3 scripts/loopx-guard.py wait <wN>`. It polls every 2 minutes at first, doubles the interval up to 30 minutes with jitter, and keeps a 24-hour idle window measured on the wall clock, across chunks and laptop sleep.
+   - **Claude Code:** run it as a background command (`run_in_background`), then end the turn. The Stop hook lets the turn end because the listener is alive, and the harness wakes this session when the command exits. Waiting costs nothing.
+   - **Codex:** run it in the foreground with `--chunk 600` and call it again each time it exits `10`.
+5. When it exits:
+   - `0` — new work on `origin/main`: `git pull --rebase`, then go to step 1.
+   - `3` — idle for 24 hours: go to **Exit** (Done).
+   - `4` — `git fetch` kept failing: go to **Exit** (hard stop) and report the fetch failure.
+   - `10` — Codex chunk elapsed: run it again.
 
-A block is anything you cannot resolve autonomously. It can surface at triage or mid-implementation; either way the item leaves the open tree through `/pm block` with its unblock condition, and the loop keeps going.
-
-- Report the item, the exact blocker, and what would unblock it in a progress update; **do not stop or wait for input** while independent work remains. Keep a run-local record of blocked items and the dependency chains they defer.
-- Preserve partial code together with its board changes before switching items — an isolated worktree or a named stash. Do not discard work, ship half-work, or let a later ship include blocked changes or unpushed commits. Continue from the shipped baseline. Treat a shared failure (such as unavailable push access) as blocking every item that needs it; isolation does not resolve that failure.
-- When only *some* of a milestone's tasks are blocked, block those tasks in place (`status: blocked`, reason in the milestone `README.md`) and keep working the ones that can proceed. When every open task is blocked, block the milestone itself.
-- Return to step 1 and pick the lowest-numbered independent actionable item. If `m2` is blocked and `m3` depends on it but `m4` is independent, skip `m2` and `m3` and work `m4` automatically.
-- Revisit a blocked item only when new evidence changes its condition — another item shipped, the user supplied the missing input. Do not repeatedly retry an unchanged blocker.
+Listening also covers a workstream whose remaining items are all blocked. When the owner clears a blocker (`/unblock` moves it back through `/pm unblock`), the item reappears as a pending item on `origin/main` and wakes the loop.
 
 ## Exit
 
 Stop the loop and give a final summary **only** when one of these holds:
 
-- **Done:** no pending items remain in `<wN>`. Report every item's outcome: shipped implementations with their HEAD SHAs, items closed as already done with the evidence, blocked items with their unblock conditions and owners, deleted items with their reasons (and any `DO_NOT_DO.md` rule you propose).
-- **Blocked:** pending items remain, but every one is blocked or depends directly or transitively on unresolved blocked work. Report items shipped this run (with HEAD SHAs), each blocker and what is needed to proceed, deferred dependents, and where partial work was preserved. A single blocked item is not an exit condition while later independent work can proceed.
-- **Hard stop only:** the user explicitly interrupts, or the runtime forces a stop (session/tool limit, killed process, lost push access that blocks every remaining ship). In that case report progress (triaged, shipped, in-flight, blocked, **next actionable pick**) so a later `/loopx <wN>` can resume — but **never** choose this exit yourself while step 1 still has a known next item.
+- **Done:** nothing actionable remains in `<wN>`, and either `--no-listen` was given or the listener's 24-hour idle window ran out. Report what happened since the last drained report, or the full per-item report if there was none.
+- **Blocked (`--no-listen` only):** pending items remain, but every one is blocked or depends directly or transitively on unresolved blocked work. Report items shipped this run (with HEAD SHAs), each blocker and what is needed to proceed, deferred dependents, and where partial work was preserved. Without `--no-listen`, this state listens instead.
+- **Hard stop only:** the user explicitly interrupts, or the runtime forces a stop (session or tool limit, killed process, a listener that exited `4`, lost push access that blocks every remaining ship). Report progress (verified, in-flight, blocked, **next actionable pick**) so a later `/loopx <wN>` can resume. **Never** choose this exit yourself while step 1 still has a known next item.
 
-**Not an exit:** "checkpoint", "budget", "long enough", "several items shipped already", or "resume with `/loopx <wN>` to pick up at NNN" while open inbox notes or actionable milestones remain. If you can name the next pick, you must pick it and continue.
+**Not an exit:** "checkpoint", "budget", "long enough", "several items shipped already", "the queue is empty for now" (that is **Listen**), or "resume with `/loopx <wN>` to pick up at NNN" while actionable items remain. If you can name the next pick, dispatch it and continue.
 
-When one of the three exits genuinely holds, clear the guard with `python3 scripts/loopx-guard.py end`, then give the final report. Until you run that, the `Stop` hook will keep handing the turn back with the next pick — which is the intended behaviour, not a fault to work around. Never clear it to end a run that has an actionable item left.
+When one of the three exits genuinely holds, clear the guard with `python3 scripts/loopx-guard.py end`, then give the final report. Until you run that, the `Stop` hook keeps handing the turn back with the next pick, or with the instruction to start the listener. That is the intended behaviour, not a fault to work around. Never clear it to end a run that has an actionable item left. (The guard clears itself when the listener gives up after 24 hours.)
 
 ## Guardrails
 
-- **Keep going when the next item is known.** Knowing that `226` (or any later note/milestone) is next is a reason to pick it now, not to stop and tell the user to re-invoke `/loopx`. Drain until Done, Blocked, or a hard stop above.
-- **Triage before code.** No item is implemented on the strength of its checkbox. Every pick gets an evidence-backed outcome — work on, close, block, or delete — announced before any code changes.
-- **Every item ends somewhere.** Shipped, `done/`, `blocked/`, or deleted. Leaving an item open and untouched because it looked hard is not an outcome; that is a block, and it needs a written unblock condition.
-- **One board outcome per ship.** Never batch two items into one commit; an implementation, a triage close, a block, and a deletion each land as their own shipped unit so history and rollback stay clean.
-- **Never ship red.** A failing check is a block, not a footnote. `/ship` will not stop you — the step 3 checks are the gate, so run them yourself before every ship. Run the gates as their own command and read the result before you commit: chaining `&& git commit` onto the end of the gate command makes the commit run on a non-zero gate, which is exactly how a red push happens. If a gate fails, decide whether it is your change or a known flake, and say which in the item's record.
-- **`/pm` owns the board.** All `.pm/` writes go through `/pm done`, `/pm block`, `/pm unblock`, and `/pm drop`. An item is done when it sits under `done/`, blocked when it sits under `blocked/` with its condition, and deleted when `/pm drop` has removed it — not when you stop looking at it.
-- **Doubt is a block, not a delete.** Delete only on evidence you can cite; when the question is one for the user, block with that question as the unblock condition and repeat it in the summary.
-- **The board is public.** Nothing you write into `.pm/` or a commit may contain secrets, user data, or references to private repositories — block reasons, delete reasons, and triage-close evidence included.
-- **Stay in `<wN>`.** Only pick items from the requested workstream. Workers are general-purpose, but this run is scoped to the queue the user named.
-- **Report honestly.** If you skipped a task, mocked something, or a suite was flaky, say so in the per-item summary — don't present partial work as complete, and don't present a close-by-triage as work you did.
+- **Keep going when the next item is known.** Knowing that `226` (or any later note or milestone) is next is a reason to dispatch it now, not to stop and tell the user to re-invoke `/loopx`.
+- **Orchestrate, don't implement.** The orchestrator picks, dispatches, verifies, records, and listens. Item bodies, code, triage evidence, `/pm` moves, and ships are the worker's. The exceptions are the fallback block in step 3 and Codex's inline run.
+- **Verify, don't trust.** An outcome counts only after `outcome` confirms it on `origin/main`.
+- **Every item ends somewhere.** Shipped, `done/`, `blocked/`, or deleted. An item left open and untouched because it looked hard is not an outcome: it is a block, and it needs a written unblock condition.
+- **One worker, one item, one board outcome per ship.** Never run two workers at once, and never let one worker take two items.
+- **`/pm` owns the board.** All `.pm/` writes go through `/pm`, whether a worker or the orchestrator's fallback block makes them.
+- **The board is public.** Nothing written into `.pm/`, a commit, or a dispatch prompt may contain secrets, user data, or references to private repositories.
+- **Stay in `<wN>`.** Only pick items from the requested workstream.
+- **Report honestly.** Relay what workers flagged (skipped steps, mocks, flakes) in the drained and final reports. Do not present a close-by-triage as implemented work, or a fallback block as the worker's.
 
 ## Arguments
 

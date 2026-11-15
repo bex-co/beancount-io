@@ -6,13 +6,13 @@ metadata: {"internal": true}
 
 # Task: Route work onto a worker's queue, then drain it
 
-Usage: `/pmx <work> to <wN>` — e.g. `/pmx make bea doctor print a fix hint for every failed check to w3`
+Usage: `/pmx <work> to <wN> [--no-listen]` — e.g. `/pmx make bea doctor print a fix hint for every failed check to w3`
 
 `/pmx` is `/pm` → `/ship` → `/loopx <wN>` as one command: put the work on worker `<wN>`'s queue, ship the board addition by itself, then drain the whole queue. It adds no board conventions and no loop rules of its own. [`.agents/skills/pm/SKILL.md`](../pm/SKILL.md) stays the canonical board definition and [`.agents/skills/loopx/SKILL.md`](../loopx/SKILL.md) stays the canonical loop; read both when this file and your memory of them disagree. `/pm` remains the only writer to `.pm/`, so this skill never edits a board file by hand.
 
 ## 0. Parse the arguments
 
-`$ARGUMENTS` must end in ` to <wN>` (an optional trailing `worker` is allowed: `to w3 worker`). The work is everything before the last ` to w<digits>`; the worker is that `wN`.
+`$ARGUMENTS` must end in ` to <wN>` (an optional trailing `worker` is allowed: `to w3 worker`), optionally followed by `--no-listen`, which is passed through to `/loopx` in step 5. The work is everything before the last ` to w<digits>`; the worker is that `wN`.
 
 - No work text, or no trailing `wN`: **STOP** and ask. Never guess a worker, and never pick one by topic — workers are general-purpose queues.
 - `.pm/<wN>/README.md` must exist. If it does not, **STOP** and report. Creating a workstream is a deliberate `/pm new workstream`, not a side effect of routing.
@@ -60,16 +60,17 @@ If the scan reports anything, or `/ship` fails (a rebase conflict it cannot reso
 
 ## 5. Drain with `/loopx <wN>`
 
-Say in one line what was routed (the id and path) and the shipped SHA, then invoke `/loopx <wN>`. From here the whole contract is `/loopx`'s — arm the guard, triage before code, one `/ship` per outcome, keep going until its Exit. `/pmx` does not stop early, add checkpoints, or tell the user to resume.
+Say in one line what was routed (the id and path) and the shipped SHA, then invoke `/loopx <wN>` (with `--no-listen` if it was given). From here the whole contract is `/loopx`'s — arm the guard, dispatch each item to a fresh-context worker, verify its outcome, keep going until its Exit. `/pmx` does not stop early, add checkpoints, or tell the user to resume.
 
 Two consequences of composing literally, which the report should state plainly:
 
 - `/loopx` drains the **whole** workstream, not just the item you added. It picks the lowest-numbered actionable milestone, then the lowest open inbox note, so older pending items in `<wN>` may run before the routed work.
 - The routed item goes through triage like any other. It can come out shipped, closed as already done, blocked, or deleted, with evidence for the outcome.
+- Draining is not the end. Unless `--no-listen` was given, `/loopx` writes a drained report and then listens for new items on `origin/main` for up to 24 idle hours, so its final Exit can arrive a day later. The drained report already carries the routed item's outcome.
 
 ## Final report
 
-When `/loopx` reaches its Exit, give its report and put a routing header above it:
+Put a routing header above `/loopx`'s **first drained report** (or above its Exit report, if the run exits before it ever drains, e.g. with `--no-listen` or a hard stop). Later drained and exit reports in the same run need no header:
 
 - what was routed — id, path, and why it is a note or a milestone;
 - the board-addition SHA from step 4, or the covering item when step 2 added nothing;
@@ -84,7 +85,7 @@ When `/loopx` reaches its Exit, give its report and put a routing header above i
 - **One request, one board-addition ship.** Never fold it into an implementation commit.
 - **`/pm` owns the board.** No hand edits to `.pm/`.
 - **The board is public.** Nothing in a note, milestone, commit message, or report may contain secrets, user data, or references to private repositories.
-- **No early exit.** Only `/loopx`'s Done, Blocked, or hard-stop exits end the run.
+- **No early exit.** Only `/loopx`'s Done, Blocked, or hard-stop exits end the run; a drained queue listens rather than exits.
 
 ## Arguments
 
