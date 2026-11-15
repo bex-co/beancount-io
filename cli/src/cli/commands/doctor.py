@@ -898,6 +898,7 @@ def doctor_guidance(
     ledger: Annotated[str, typer.Argument(help="Ledger file; its directory is checked for agent guidance files.")],
 ) -> None:
     """Check a ledger's AGENTS.md and CLAUDE.md."""
+    _refuse_json()
     _refuse_directory_ledger("guidance", [ledger])
     if not Path(ledger).is_file():
         raise UsageError(f"Ledger file '{ledger}' does not exist.")

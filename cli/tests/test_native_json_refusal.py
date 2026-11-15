@@ -67,3 +67,9 @@ def test_json_ingest_refuses_instead_of_beangulp_text(tmp_path: Path) -> None:
     script.write_text("from beangulp import Ingest\nIngest([])()\n")
     (tmp_path / "bank.csv").write_text("a\n")
     _assert_json_refusal(_bea(tmp_path, "--json", "ingest", "identify", "--config", str(script), "bank.csv"), "ingest")
+
+
+def test_json_doctor_guidance_refuses_instead_of_plain_warnings(tmp_path: Path) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text('option "operating_currency" "USD"\n2024-01-01 open Assets:Cash USD\n')
+    _assert_json_refusal(_bea(tmp_path, "--json", "doctor", "guidance", str(ledger)), "doctor")
