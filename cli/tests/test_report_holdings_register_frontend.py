@@ -34,6 +34,7 @@ option "operating_currency" "USD"
 2026-01-05 * "Buy"
   Assets:Brokerage  10 VTI {150 USD}
   Assets:Checking
+2026-01-05 price VTI 150 USD
 2026-01-10 price VTI 170 USD
 """
 
@@ -186,6 +187,23 @@ def test_register_subtree_shows_accounts(tmp_path: Path) -> None:
     assert "ACCOUNT" in proc.stdout
     assert "Assets:Brokerage" in proc.stdout
     assert "150 USD (2026-01-05)" in proc.stdout
+
+
+def test_register_renders_the_closing_row(tmp_path: Path) -> None:
+    # The 01-10 quote revalues the 01-05 buy; a closing row carries it (w1/252).
+    ledger = _write(tmp_path, LEDGER)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "register", "Assets:Brokerage")
+    assert proc.returncode == 0, proc.stderr
+    lines = proc.stdout.splitlines()
+    assert "ACCOUNT" not in proc.stdout
+    assert "1,500 USD" in next(line for line in lines if line.startswith("2026-01-05"))
+    (closing,) = [line for line in lines if line.startswith("2026-01-10")]
+    assert "Valued at the as-of date" in closing
+    assert "1,700 USD" in closing
+    assert "—" not in closing
+    csv_out = _bea(tmp_path, "--file", str(ledger), "report", "register", "Assets:Brokerage", "--format", "csv")
+    assert csv_out.returncode == 0, csv_out.stderr
+    assert csv_out.stdout.splitlines()[-1] == "2,2026-01-10,Assets:Brokerage,closing,,,,,,,,USD,1700"
 
 
 def test_register_json(tmp_path: Path) -> None:

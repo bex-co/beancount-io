@@ -1957,7 +1957,14 @@ group stays while any of its lots is held, even when long and short lots net
 to zero units; such a group has no average cost (`null` under `--json`).
 `register` takes the account as a positional argument instead of `--account`
 and lists one subtree's dated postings oldest first with the running balance,
-so its last row is the trial-balance total. A market value from a stale
+each row valued at its own date (a later quote never values an earlier row;
+a row before the first quote follows the missing-price policy below and
+names its own date in `missing_price_dates`). Its last row is the
+trial-balance total: when a market conversion values the holdings
+differently at the as-of date than at the last posting, one closing row
+(`entry: "closing"`, dated the as-of date, no amount, text description
+`Valued at the as-of date`) carries the end-date valuation. Under `units`
+and `at_cost` there is no closing row. A market value from a stale
 managed quote reads `1,700 USD (stale)`; under `--json` each group names the
 source behind its quotes in `price_source` / `conversion_source`.
 `capital-gains` lists one row per closed lot — acquired and sold dates,

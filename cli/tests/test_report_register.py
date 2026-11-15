@@ -32,6 +32,7 @@ option "operating_currency" "USD"
 2026-01-05 * "Buy"
   Assets:Brokerage  10 VTI {150 USD}
   Assets:Checking
+2026-01-05 price VTI 150 USD
 2026-01-10 price VTI 170 USD
 """
 
@@ -164,15 +165,19 @@ def test_register_parent_lists_the_subtree(tmp_path: Path) -> None:
         ("Assets:Checking", "2026-01-04"),
         ("Assets:Brokerage", "2026-01-05"),
         ("Assets:Checking", "2026-01-05"),
+        # The 01-10 quote moves the value after the last posting (w1/252).
+        ("Assets", "2026-01-10"),
     ]
 
 
 def test_register_carries_lot_cost(tmp_path: Path) -> None:
     data = _engine(_write(tmp_path, LEDGER), "register", "--account", "Assets:Brokerage")
-    (row,) = data["rows"]
+    row, closing = data["rows"]
     assert row["amount"] == {"number": "10", "currency": "VTI"}
     assert row["cost"] == {"number": "150", "currency": "USD", "date": "2026-01-05"}
-    assert row["balance"] == {"USD": "1700"}
+    assert row["balance"] == {"USD": "1500"}
+    assert closing["entry"] == "closing"
+    assert closing["balance"] == {"USD": "1700"}
 
 
 def test_register_needs_account(tmp_path: Path) -> None:
@@ -214,7 +219,7 @@ def test_register_at_cost_runs_on_book_value(tmp_path: Path) -> None:
 def test_register_parent_pattern_is_case_insensitive(tmp_path: Path) -> None:
     data = _engine(_write(tmp_path, LEDGER), "register", "--account", "assets")
     assert data["account"] == "Assets"
-    assert len(data["rows"]) == 5
+    assert len(data["rows"]) == 6
 
 
 def test_register_single_match_regex_resolves(tmp_path: Path) -> None:
@@ -231,3 +236,55 @@ def test_register_missing_prices_fail_strict(tmp_path: Path) -> None:
     data = _engine(ledger, "register", "--account", "Assets:Brokerage", "--allow-errors")
     assert data["valuation"] == "partial"
     assert data["rows"][-1]["balance"] == {"VTI": "10"}
+
+
+# Two buys at 100 USD; the quote doubles after the last one (w1/252).
+REVALUED = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Broker
+2026-01-01 open Assets:Cash USD
+2026-01-01 price STK 100 USD
+2026-03-01 price STK 200 USD
+2026-01-05 * "buy one"
+  Assets:Broker  1 STK {100 USD}
+  Assets:Cash  -100 USD
+2026-02-05 * "buy another"
+  Assets:Broker  1 STK {100 USD}
+  Assets:Cash  -100 USD
+"""
+
+
+def test_register_values_each_row_at_its_own_date(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, REVALUED)
+    data = _engine(ledger, "register", "--account", "Assets:Broker", "--conversion", "USD")
+    assert data["valuation"] == "complete"
+    assert [(row["date"], row["entry"], row["balance"]) for row in data["rows"]] == [
+        ("2026-01-05", "transaction", {"USD": "100"}),
+        ("2026-02-05", "transaction", {"USD": "200"}),
+        ("2026-03-01", "closing", {"USD": "400"}),
+    ]
+    closing = data["rows"][-1]
+    assert (closing["account"], closing["amount"], closing["cost"]) == ("Assets:Broker", None, None)
+    assert closing["balance"] == _trial_total(ledger, "Assets:Broker")
+    # The window does not change a row's value.
+    january = _engine(ledger, "register", "--account", "Assets:Broker", "--conversion", "USD", "--time", "2026-01")
+    assert [(row["date"], row["balance"]) for row in january["rows"]] == [("2026-01-05", {"USD": "100"})]
+
+
+def test_register_has_no_closing_row_without_a_market_conversion(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, REVALUED)
+    for conversion in ("units", "at_cost"):
+        data = _engine(ledger, "register", "--account", "Assets:Broker", "--conversion", conversion)
+        assert [row["entry"] for row in data["rows"]] == ["transaction", "transaction"]
+
+
+def test_register_row_before_the_first_quote_is_missing_at_its_own_date(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, REVALUED.replace("2026-01-01 price STK 100 USD\n", ""))
+    code, payload = _engine_raw(ledger, "register", "--account", "Assets:Broker", "--conversion", "USD")
+    assert code == 1
+    assert payload["error"]["result"]["missing_price_dates"] == [
+        {"from": "STK", "to": "USD", "date": "2026-01-05"},
+        {"from": "STK", "to": "USD", "date": "2026-02-05"},
+    ]
+    data = _engine(ledger, "register", "--account", "Assets:Broker", "--conversion", "USD", "--allow-errors")
+    assert [row["balance"] for row in data["rows"]] == [{"STK": "1"}, {"STK": "2"}, {"USD": "400"}]

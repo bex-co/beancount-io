@@ -672,7 +672,8 @@ def register(
     if not rows:
         typer.echo("No entries.")
         return
-    show_account = len({row["account"] for row in rows}) > 1
+    # The closing row names the root, which is no posting account of its own.
+    show_account = len({row["account"] for row in rows if row["entry"] != "closing"}) > 1
     headers = ["DATE", *(["ACCOUNT"] if show_account else []), "DESCRIPTION", "AMOUNT", "COST", "BALANCE"]
     output.table(
         headers,
@@ -684,6 +685,8 @@ def _row_cells(row: dict[str, Any], conversion: str, precision: Mapping[str, int
     """One register row's cells; the account column appears only across accounts."""
     if row["entry"] == "balance":
         description = "Balance check"
+    elif row["entry"] == "closing":
+        description = "Valued at the as-of date"
     else:
         description = " ".join(part for part in (row["payee"], row["narration"]) if part)
     cost = row["cost"]
@@ -697,7 +700,7 @@ def _row_cells(row: dict[str, Any], conversion: str, precision: Mapping[str, int
         cells.append(row["account"])
     cells += [
         description,
-        _money(row["amount"], conversion, precision),
+        _money(row["amount"], conversion, precision) if row["amount"] is not None else "",
         cost_cell,
         _amounts(row["balance"], conversion, precision),
     ]

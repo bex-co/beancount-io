@@ -791,9 +791,10 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
     account every other matched posting account sits under, refused when the
     pattern spans several trees. The rows are that subtree's postings (plus
     its balance assertions, which move nothing), oldest first, each naming
-    its own account. The running balance converts through the same call the
-    statement trees use, so the last row is the trial-balance total
-    (w22/m3/t002).
+    its own account. Each row's running balance is valued at that row's date
+    (w1/252); when a later quote moves the value, a closing row dated the
+    as-of date carries the end-date valuation, so the last row is still the
+    trial-balance total (w22/m3/t002).
     """
     from beancount.core.data import Balance
 
@@ -889,19 +890,47 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
             )
         else:
             continue
-        # A running position worth exactly zero is `0 USD`, not empty (w5/1055).
-        balance = _balance_map(_converted(running, conversion, prices, filtered.end_date))
+        # Each row is valued at its own date, as Fava's journal and BQL's
+        # `convert(balance, 'USD', date)` value it: a quote from weeks later
+        # must not value an earlier balance (w1/252). A running position
+        # worth exactly zero is `0 USD`, not empty (w5/1055).
+        when = rows[-1]["date"]
+        balance = _balance_map(_converted(running, conversion, prices, when))
         rows[-1]["balance"] = balance
-        balances.append((filtered.end_date, balance))
+        balances.append((when, balance))
+    metadata = _metadata(filtered, conversion, ledger_errors)
     if not rows:
         balances.append((filtered.end_date, {}))
+    elif conversion not in ("units", "at_cost"):
+        # A quote that moved after the last posting leaves the last row short
+        # of the trial-balance total, which values at the report's end. One
+        # closing row, dated the as-of date and moving nothing, carries that
+        # total, so the register still ends where the trial balance does.
+        closing = _balance_map(_converted(running, conversion, prices, filtered.end_date))
+        if closing != rows[-1]["balance"]:
+            rows.append(
+                {
+                    "date": metadata["as_of"] or rows[-1]["date"],
+                    "entry": "closing",
+                    "account": root,
+                    "payee": None,
+                    "narration": None,
+                    "amount": None,
+                    "cost": None,
+                    "balance": closing,
+                }
+            )
+            balances.append((filtered.end_date, closing))
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger, ledger_errors, wanted)
-    metadata = _metadata(filtered, conversion, ledger_errors) | valuation
-    return metadata | {
-        "display_precision": _display_precision(filtered),
-        "account": root,
-        "rows": rows,
-    }
+    return (
+        metadata
+        | valuation
+        | {
+            "display_precision": _display_precision(filtered),
+            "account": root,
+            "rows": rows,
+        }
+    )
 
 
 def _register_root(pattern: str, active: list[str], matched: list[str]) -> str | None:

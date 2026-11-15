@@ -31,7 +31,7 @@ def _json(tmp_path: Path, text: str, *args: str) -> dict[str, object]:
     return json.loads(proc.stdout)["data"]  # type: ignore[no-any-return]
 
 
-CASES = [("at_cost", ""), ("at_value", "2024-01-31 price HOOL 0 USD\n"), ("USD", "2024-01-31 price HOOL 0 USD\n")]
+CASES = [("at_cost", ""), ("at_value", "2024-01-02 price HOOL 0 USD\n"), ("USD", "2024-01-02 price HOOL 0 USD\n")]
 
 
 @pytest.mark.parametrize(("conversion", "price"), CASES, ids=["zero-cost", "zero-price-value", "zero-price-usd"])

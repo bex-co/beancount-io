@@ -230,11 +230,12 @@ def test_holdings_stale_conversion_leg_taints_the_value(feed_server: _FeedServer
 def test_register_carries_source_provenance(feed_server: _FeedServer, tmp_path: Path) -> None:
     server = feed_server.serve({"/prices/VTI-USD": STALE_FEED})
     ledger = _write(tmp_path, _ledger(server))
-    proc = _bea(tmp_path, server, "--file", str(ledger), "--json", "report", "register", "Assets")
+    # The buy predates the feed's quote, so only the closing row values (w1/252).
+    proc = _bea(tmp_path, server, "--file", str(ledger), "--json", "report", "register", "Assets", "--allow-errors")
     assert proc.returncode == 0, proc.stderr
     sources = json.loads(proc.stdout)["data"]["price_sources"]
     assert [(source["alias"], source["freshness"]) for source in sources] == [("VTI-USD", "stale")]
-    text = _bea(tmp_path, server, "--file", str(ledger), "report", "register", "Assets")
+    text = _bea(tmp_path, server, "--file", str(ledger), "report", "register", "Assets", "--allow-errors")
     assert text.returncode == 0, text.stderr
     assert "Price source VTI-USD: stale" in text.stderr
 
