@@ -94,7 +94,7 @@ uploads and imports may be created, edited and deleted to exercise write
 journeys end to end. The rules:
 
 - Before the first write, snapshot every file the run may touch (path and
-  content hash, kept under `.tmp/qa-<date>/`) and run the ledger check.
+  content hash, kept under `.internal/qa-<date>/`) and run the ledger check.
 - Prefix every created entry, file, payee, narration or account segment with
   `qa-<yyyymmdd>-` where the format allows, and record each write (commit SHA or
   entry) as it happens.
@@ -170,12 +170,12 @@ Estimate: tens of minutes, with uncertainty if cause is unverified
 ```
 
 Store every scratch file, fixture, and artifact under the gitignored repo-root
-`.tmp/qa-<date>/`, addressed by absolute path. Never write a one-off file into
+`.internal/qa-<date>/`, addressed by absolute path. Never write a one-off file into
 the working directory, a package directory, or the repo root — a QA run leaves
 no untracked files behind, and `git status` after the run proves it. Browser MCP
 may use a configured output directory instead; pass bare screenshot filenames
 there and record the returned actual paths. If no output directory is configured,
-point it at an absolute `.tmp/qa-<date>/` path. Verify every cited artifact exists.
+point it at an absolute `.internal/qa-<date>/` path. Verify every cited artifact exists.
 Screenshots can be resized: retain their dimensions and do not infer device
 coordinates from an assumed pixel ratio. Keep private account data local; public
 filings use a synthetic reproducer and sanitized captures. Do not place access

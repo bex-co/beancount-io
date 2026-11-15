@@ -2,7 +2,7 @@
 """Scan what git would publish for secrets, the way CI does.
 
 `gitleaks dir .` walks the whole directory, so on a developer machine it also
-reads files git ignores: a real `.env`, QA credentials under `.tmp/`, Pods and
+reads files git ignores: a real `.env`, QA artifacts under `.internal/`, Pods and
 bytecode caches. That reported a dozen "leaks" on every run that CI never sees,
 because CI scans a clean checkout, and a gate that always fails teaches people
 to ignore it. This stages the files git tracks, plus new files it does not

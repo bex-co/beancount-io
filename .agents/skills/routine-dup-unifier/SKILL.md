@@ -40,8 +40,8 @@ Agent-driven search — Grep for repeated names, similar signatures, and shared
 distinctive string literals (error messages, format strings, regexes); read
 sibling directories that grew in parallel (helpers/utils files, per-screen
 copies of formatting or validation logic). Optional accelerator with no new
-dependency: `npx --yes jscpd --min-tokens 50 <pkg>/src --output <pkg>/tmp/`
-(output stays in the gitignored `tmp/`).
+dependency: `npx --yes jscpd --min-tokens 50 <pkg>/src --output .internal/jscpd/`
+(output stays in the gitignored repo-root `.internal/`).
 
 ### 3. Prove it
 

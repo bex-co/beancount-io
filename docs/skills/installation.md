@@ -2,7 +2,7 @@
 
 Install the sixteen `beancount-*` ledger skills for Claude Code, Codex, or both, from any directory. You keep one Git checkout of the skills and link it into each agent's skill directory. Updating the checkout updates every agent, and the helper script never touches skills it did not install. [OpenClaw and Hermes Agent](#openclaw-and-hermes-agent) have the suite route and host limits described below, including migration from the retired standalone listings.
 
-Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#tested-with)). Linux arm64 Codex has [isolated-container installation and ledger rehearsals](evidence/routing-rehearsal.md#linux-codex-execution-restored--2026-11-08). On native Windows, the [PowerShell steps](#windows-powershell) were rehearsed with Windows PowerShell 5.1. Claude Code and Codex there discovered a workspace install and answered the first query, with the [Windows-specific corrections](#agents-on-windows) listed in that section. WSL is not covered.
+Rehearsed on macOS with Claude Code and Codex (see [tested with](first-query.md#tested-with)). Linux arm64 Codex was rehearsed in an isolated container. On native Windows, the [PowerShell steps](#windows-powershell) were rehearsed with Windows PowerShell 5.1. Claude Code and Codex there discovered a workspace install and answered the first query, with the [Windows-specific corrections](#agents-on-windows) listed in that section. WSL is not covered.
 
 ## Prerequisites
 
@@ -61,9 +61,9 @@ codex exec --skip-git-repo-check "List the names of the skills available to you 
 
 In an interactive session, Claude Code lists skills with `/skills` and runs one with `/beancount-ask`. In Codex, mention a skill as `$beancount-ask`. Both agents also pick a skill on their own when your request matches its description.
 
-Next: get a first answer from a sample ledger with the [first-query walkthrough](first-query.md), then complete a synthetic month with the [first-month guide](first-month.md). Already keep Beancount books? [Bring an existing ledger](existing-ledger.md) instead. The latter uses the same `bea` and includes [verified Claude Code and Codex rehearsals](evidence/first-month-rehearsal.md).
+Next: get a first answer from a sample ledger with the [first-query walkthrough](first-query.md), then complete a synthetic month with the [first-month guide](first-month.md). Already keep Beancount books? [Bring an existing ledger](existing-ledger.md) instead.
 
-For investment and property accounts, follow the [first-year investor guide](first-year-investor.md), with its [tested runtimes and current limitations](evidence/first-year-rehearsal.md).
+For investment and property accounts, follow the [first-year investor guide](first-year-investor.md).
 
 ### When a skill does not appear
 
@@ -142,7 +142,7 @@ Both manifests carry one shared suite version; a client delivers a new copy only
 
 ### Hermes and raw GitHub folders
 
-Hermes supports direct GitHub skill paths, but a single raw folder can omit the shared references its instructions read. An earlier direct `beancount-ask` install was SAFE yet lacked its CLI contract. The self-contained standalone ClawHub listings used in that rehearsal are now retired; do not substitute a raw folder for the complete suite. Full Hermes suite installation remains unavailable because of the [actual host admission limits](suite-distribution.md#hermes-admission-limits). Existing local copies are retained, and the [dated standalone results](evidence/clawhub-rehearsal.md) remain historical evidence.
+Hermes supports direct GitHub skill paths, but a single raw folder can omit the shared references its instructions read. An earlier direct `beancount-ask` install was SAFE yet lacked its CLI contract. The self-contained standalone ClawHub listings used in that rehearsal are now retired; do not substitute a raw folder for the complete suite. Full Hermes suite installation remains unavailable because of the [actual host admission limits](suite-distribution.md#hermes-admission-limits). Existing local copies are retained.
 
 ### Choosing a method
 
@@ -207,8 +207,8 @@ scope of these checks.
 
 Earlier releases reached 1.0.4 for all thirteen workflows, with verified
 OpenClaw installs, twelve supported Hermes installs and retained first queries.
-Those [dated results](evidence/clawhub-rehearsal.md#final-current-version-verification--2026-10-22-utc)
-are historical evidence, not a fresh standalone installation route. Hermes
+Those results
+are historical, not a fresh standalone installation route. Hermes
 cannot currently install the complete suite; its metadata and default-scanner
 admission requirements remain open. The [Claude Code/Codex suite](#plugin-both-clients)
 and the OpenClaw suite above remain available.
@@ -275,8 +275,7 @@ The commands in this section were run as written on native Windows 11 (build
 26300, ARM64) in Windows PowerShell 5.1, with python.org Python 3.12 and Git
 for Windows 2.56. The run covered a symlink-denied account and, after
 Developer Mode was turned on, a non-elevated account allowed to create links.
-Paths contained spaces and non-ASCII characters. See the
-[Windows rehearsal](evidence/windows-rehearsal.md). The skills CI also runs this
+Paths contained spaces and non-ASCII characters. The skills CI also runs this
 section's blocks as written in Windows PowerShell 5.1 on a hosted Windows
 runner, using a local copy of the suite in place of the clone URL. That is
 evidence for the installer, not for agent discovery.

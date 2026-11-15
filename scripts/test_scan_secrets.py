@@ -43,7 +43,7 @@ class PublishableFilesTest(unittest.TestCase):
         git(self.repo, "init", "-q")
         git(self.repo, "config", "user.email", "t@example.invalid")
         git(self.repo, "config", "user.name", "t")
-        (self.repo / ".gitignore").write_text(".env\n.tmp/\n")
+        (self.repo / ".gitignore").write_text(".env\n.internal/\n")
         (self.repo / "tracked.txt").write_text("hello\n")
         (self.repo / "gone.txt").write_text("bye\n")
         git(self.repo, "add", ".")
@@ -61,11 +61,11 @@ class PublishableFilesTest(unittest.TestCase):
 
     def test_skips_gitignored_files_however_secret_they_look(self) -> None:
         (self.repo / ".env").write_text(fake_secret())
-        (self.repo / ".tmp").mkdir()
-        (self.repo / ".tmp" / "qa.env").write_text(fake_secret())
+        (self.repo / ".internal").mkdir()
+        (self.repo / ".internal" / "qa.env").write_text(fake_secret())
         names = self.names()
         self.assertNotIn(".env", names)
-        self.assertNotIn(".tmp/qa.env", names)
+        self.assertNotIn(".internal/qa.env", names)
 
     def test_includes_a_new_file_git_does_not_ignore(self) -> None:
         (self.repo / "new.txt").write_text(fake_secret())

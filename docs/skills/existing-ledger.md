@@ -157,7 +157,6 @@ February question with 119.35 USD through `beancount-ask`, running `bea` with
 `PYTHONPATH=.` as the written `AGENTS.md` says. Every ledger checksum was
 unchanged. It ran the checkout's `bea`, since no release has `init --existing`
 yet. Codex has not been run yet, and the PowerShell block has not been run.
-See the [rehearsal record](evidence/existing-ledger-rehearsal.md).
 
 ## Next
 

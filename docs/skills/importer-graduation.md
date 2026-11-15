@@ -291,12 +291,10 @@ python3 "$VERIFY" verify --workspace "$BOOKS" --checkpoint reimported_repair --b
 python3 "$VERIFY" verify --workspace "$BOOKS" --checkpoint unrelated --python "$AUTHOR_PYTHON" --before "$RUN/evidence/before-final-repeat.json" --goldens-before "$RUN/evidence/before-repair.json" --bea "$BEA"
 ```
 
-## Evidence and limits
+## Tested with and limits
 
-See the [recorded Claude Code and Codex rehearsals](evidence/importer-graduation-rehearsal.md)
-for all twelve checkpoints, reviewed golden files, timings, recovered command
-failures, and the targeted check of the sandbox cache setup. Both full journeys
-used published `bea` 0.3.1 and Beangulp 0.2.0 on macOS.
+Claude Code and Codex both completed the full journey
+using published `bea` 0.3.1 and Beangulp 0.2.0 on macOS.
 
 Record the suite revision, platform, executable paths, Python/Beangulp/agent/CLI
 versions, discovered skills, approval decisions, elapsed time, interventions,

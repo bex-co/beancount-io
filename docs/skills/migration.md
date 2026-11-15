@@ -239,4 +239,4 @@ The verifier checks files, Git state, and ledger contents. It cannot judge
 whether a transcript explained the numbers honestly; review that yourself.
 This journey covers one Monarch export with cash accounts. Mint and
 QuickBooks exports, populated-ledger merges, and investment lots are outside
-it. See the [rehearsal record](evidence/migration-rehearsal.md) for observed runs.
+it.

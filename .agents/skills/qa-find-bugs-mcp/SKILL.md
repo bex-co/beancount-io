@@ -92,7 +92,7 @@ on a designated QA ledger needed to reproduce bugs.
   credential needs `--ledger` for the result-shape and output-schema checks.
   `yarn mcp:agent-eval` drives real Claude Code and Codex sessions and is
   billed; run it only when the user asks for client journeys.
-- Store evidence under the gitignored repo-root `.tmp/qa-<date>/`: the exact
+- Store evidence under the gitignored repo-root `.internal/qa-<date>/`: the exact
   helper command, sanitized request and response, status, headers and
   timings. Bound every request with a timeout; a hang is a result.
 

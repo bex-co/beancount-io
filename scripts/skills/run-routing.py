@@ -6,7 +6,7 @@ Local only: every prompt is a paid client call, so CI never runs this script
 
     python3 scripts/skills/run-routing.py                    # every installed client
     python3 scripts/skills/run-routing.py --clients codex --only none-close-amex-account
-    python3 scripts/skills/run-routing.py --score scripts/skills/tmp/routing/<run>/results.json
+    python3 scripts/skills/run-routing.py --score .internal/routing/<run>/results.json
 
 Each client runs in a scratch workspace created in the system temp directory,
 outside this repository, so neither client loads this repository's own
@@ -14,7 +14,7 @@ instructions or development skills. The workspace is a fresh Git repository
 holding a small synthetic ledger and links to every `beancount-*` directory
 of `--suite` (default: this checkout's customer suite), linked into
 `.claude/skills` and `.agents/skills` the same way the installer links them.
-Results go to `scripts/skills/tmp/routing/` (gitignored).
+Results go to `.internal/routing/` at the repository root (gitignored).
 
 How a choice is detected, verified against Claude Code 2.1.289 and Codex 0.163.0:
 
@@ -55,7 +55,7 @@ HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
 ROUTING_SET = HERE / "routing.json"
 SUITE_DIR = REPO_ROOT / "skills"
-OUT_ROOT = HERE / "tmp" / "routing"
+OUT_ROOT = REPO_ROOT / ".internal" / "routing"
 
 LEDGER = """\
 option "title" "Synthetic routing ledger"

@@ -327,7 +327,7 @@ import-recovery profile. Init remains independently tracked in039. The historica
 default Hermes discovery found all13suite names among16results; source-filtered
 discovery remains a separate040 follow-up. Both retained standalone first-query
 runs passed.
-See [final verification](../../docs/skills/evidence/clawhub-rehearsal.md#final-current-version-verification--2026-10-22-utc).
+See final verification.
 The owner selects one suite package for subsequent ClawHub publication.
 [m6.5](./blocked/m6.5/README.md) now ships public suite0.4.0 with verified native
 OpenClaw install/update; its remaining delivery gate is Hermes suite admission.
@@ -371,8 +371,8 @@ Release evidence: [canonical npm metadata](https://registry.npmjs.org/@rustledge
 and [inspected Rustledger main2595fc09](https://github.com/rustledger/rustledger/commit/2595fc09f20ea3d39724abb2dac5d11a5787b59f).
 This is source/release triage, not a new production test. Private bounded04:13
 continuation evidence is retained under `scripts/skills/tmp/w6-resume-20261022T0413/`.
-The [client release controls](../../docs/skills/evidence/client-release-controls-20261021.md),
-[historical publication preflight](../../docs/skills/evidence/clawhub-release-preflight-20261021.md)
+The client release controls,
+historical publication preflight
 and [full queue reconciliation below](#full-queue-reconciliation--2026-10-22-utc)
 preserve earlier source versions, failures and outcomes. Blocking one item does
 not block later independent work; each remaining substep keeps its own condition.
@@ -385,7 +385,7 @@ not block later independent work; each remaining substep keeps its own condition
 
 **After PR #182 merged (2026-10-19):** MIT-0 packaging and all eleven licensed bundles are on main at `6d10a07482bf271d596ab8dcf60783cff8f80cc9`. The [main ClawHub run](https://github.com/bex-co/beancount-io/actions/runs/39371492602) passes; publication is skipped. Agent-guidance and secret-scan runs also pass. Environment read-back confirms `CLAWHUB_OWNER=puncsky`, `CLAWHUB_MIT0_APPROVED=true`, and no `CLAWHUB_TOKEN`. The authenticated ClawHub API-token page still shows no tokens; credential creation awaits the existing action-time confirmation. No PR or merge step remains before publication. npm WASM and GitHub's latest release are rechecked and still report 0.24.0; Hermes's latest stable release is still v0.22.2. No engine or host-policy release clears the remaining blockers.
 
-**First ClawHub submission (2026-10-19):** the operator supplied an existing token, now stored on the protected environment. [Run 39372550698](https://github.com/bex-co/beancount-io/actions/runs/39372550698) submits all eleven version 1.0.0 bundles from main `b5f849059` and cleans its credentials successfully. Nine public OpenClaw and eight Hermes installs pass. Options/property remain pending publication; Hermes init remains blocked by host policy. The [registry rehearsal](../../docs/skills/evidence/clawhub-rehearsal.md) records those results and the direct published-CLI query control. Agent turns await the operator's choice/configuration of temporary model authentication. No ClawHub credential creation or merge approval is outstanding.
+**First ClawHub submission (2026-10-19):** the operator supplied an existing token, now stored on the protected environment. [Run 39372550698](https://github.com/bex-co/beancount-io/actions/runs/39372550698) submits all eleven version 1.0.0 bundles from main `b5f849059` and cleans its credentials successfully. Nine public OpenClaw and eight Hermes installs pass. Options/property remain pending publication; Hermes init remains blocked by host policy. The registry rehearsal records those results and the direct published-CLI query control. Agent turns await the operator's choice/configuration of temporary model authentication. No ClawHub credential creation or merge approval is outstanding.
 
 **Options promotion (2026-10-19; by 05:35 UTC on Oct 20):** options becomes public at 1.0.0 and installs in both hosts without force, bringing verified totals to ten OpenClaw/nine Hermes. Only property remains pending publication. [Complete skills CI on `dec916039`](https://github.com/bex-co/beancount-io/actions/runs/39374976210) passes. The upstream npm WASM dist-tag is rechecked and remains 0.24.0, so the twenty engine items remain blocked.
 

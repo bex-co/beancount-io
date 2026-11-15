@@ -160,7 +160,7 @@ remain separate pending gates.
 ## Hermes source follow-through — 2026-10-26T04:52:58Z
 
 Stable v0.22.5 and inspected main do not clear t005's supported metadata/init
-admission requirements. [Twelve-file comparison](../../../../docs/skills/evidence/hermes-compatibility-20261026.json)
+admission requirements. Twelve-file comparison
 retains exact source hashes and the native-test boundary. No unchanged native
 refusal is rerun or implied. The platform gate remains; no publisher input is
 pending and independent w6 work continues.

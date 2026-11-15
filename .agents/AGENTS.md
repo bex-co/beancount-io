@@ -39,7 +39,7 @@ The `routine-shared/` and `qa-shared/` directories contain shared contracts and 
 
 Each skill lives at `.agents/skills/<name>/SKILL.md` with `name` and `description` frontmatter. Use `references/`, `evals/`, `scripts/`, or `agents/` only when the workflow needs them. Keep sibling references relative so the Claude Code alias resolves them too. Use canonical `.agents/skills/` paths for repository-root commands and GitHub links.
 
-When adding a development skill, update this catalog and run the checks below. Use `.agents/tmp/` for scratch work; it is gitignored. Use the `skill-creator` workflow when iterating on skill behavior.
+When adding a development skill, update this catalog and run the checks below. Use the repo-root `.internal/` for scratch work; it is gitignored. Use the `skill-creator` workflow when iterating on skill behavior.
 
 ### Shared suite conventions — routine-*
 

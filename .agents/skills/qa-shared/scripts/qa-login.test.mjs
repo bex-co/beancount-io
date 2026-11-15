@@ -11,7 +11,7 @@ const helper = fileURLToPath(new URL("./qa-login.mjs", import.meta.url));
 const email = "qa-fixture@example.test";
 const password = "synthetic credential for helper tests";
 const token = "synthetic-session-value";
-const scratchRoot = new URL("../../../../.tmp/", import.meta.url);
+const scratchRoot = new URL("../../../../.internal/", import.meta.url);
 await mkdir(scratchRoot, { recursive: true });
 // The helper prefers ./.env, so tests run in an empty directory: a real ./.env
 // at the repo root must never leak into assertions.
@@ -117,7 +117,7 @@ test("upstream rejection never echoes a response containing credentials", async 
 });
 
 test("an explicit package file selects its own account without ambient fallback", async (t) => {
-  const scratch = new URL("../../../../.tmp/", import.meta.url);
+  const scratch = new URL("../../../../.internal/", import.meta.url);
   await mkdir(scratch, { recursive: true });
   const directory = await mkdtemp(
     fileURLToPath(new URL("qa-env-test-", scratch)),
