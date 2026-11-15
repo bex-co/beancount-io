@@ -93,6 +93,30 @@ export function validatePromptArgs(
 }
 
 /**
+ * The playbook a `prompts/get` returns: the caller's arguments with every
+ * `""` dropped, checked, then folded in.
+ *
+ * Every argument is optional, and a client with a form submits an unfilled
+ * optional field as `""`. Read as given, that one value meant three things
+ * (w31/011): a malformed `month` or `ledger`, refused; a blank folded into
+ * the text ("Reconcile  against one statement period."), losing the
+ * fallback; or nothing at all where a builder tested truthiness. Dropping it
+ * here, before the check and the builder, makes `""` mean omitted for every
+ * argument, as `ledger: ""` already does on the tools.
+ */
+export function renderPrompt(
+  descriptor: McpPromptDescriptor,
+  args: Record<string, string | undefined>,
+  identity: Identity,
+): string {
+  const given = Object.fromEntries(
+    Object.entries(args).filter(([, value]) => value !== ""),
+  );
+  validatePromptArgs(given);
+  return descriptor.build(given, identity);
+}
+
+/**
  * How the playbook should talk about ledger selection for this caller.
  *
  * Repeating `ledger: owner/name` in every step of four playbooks would be

@@ -310,6 +310,28 @@ describe("MCP prompts", () => {
   });
 
   /**
+   * w31/011. A client form submits an unfilled optional field as `""`; on the
+   * wire that refused `month` and `ledger` and blanked the others. Each prompt
+   * fetched with every argument empty is the one fetched with none.
+   */
+  it("serves every argument sent as an empty string as if it were omitted", async () => {
+    await withClient(unpinned, async (client) => {
+      for (const descriptor of MCP_PROMPTS) {
+        const omitted = await client.getPrompt({ name: descriptor.name });
+        const empty = await client.getPrompt({
+          name: descriptor.name,
+          arguments: Object.fromEntries(
+            Object.keys(descriptor.argsSchema).map((arg) => [arg, ""]),
+          ),
+        });
+        expect(textOf(empty.messages[0].content)).toBe(
+          textOf(omitted.messages[0].content),
+        );
+      }
+    });
+  });
+
+  /**
    * w6/015. The reconcile and close playbooks told an agent to pass a
    * `description` to `addLedgerEntries`, whose strict input has none — the
    * call they prescribed would be refused. Only the file tools take one.

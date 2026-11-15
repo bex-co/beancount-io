@@ -104,10 +104,7 @@ import {
 } from "@/features/ai-agent/api";
 import { setGitProxyHandler } from "@/features/gitea/api/git-proxy-handler";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
-import {
-  MCP_PROMPTS,
-  validatePromptArgs,
-} from "@/features/ai-agent/api/mcp-prompts";
+import { MCP_PROMPTS, renderPrompt } from "@/features/ai-agent/api/mcp-prompts";
 import {
   MCP_RESOURCES,
   RESOURCE_SCHEME,
@@ -875,15 +872,15 @@ export function assembleMcpRegistry(
       try {
         // The fixed-shape arguments are checked here rather than in the
         // advertised `argsSchema`, so a malformed one is refused in this
-        // server's envelope instead of the SDK's prose (w4/070).
-        validatePromptArgs(args);
+        // server's envelope instead of the SDK's prose (w4/070). An empty
+        // one counts as omitted (w31/011).
         return {
           messages: [
             {
               role: "user" as const,
               content: {
                 type: "text" as const,
-                text: descriptor.build(args, toolCtx.identity),
+                text: renderPrompt(descriptor, args, toolCtx.identity),
               },
             },
           ],
