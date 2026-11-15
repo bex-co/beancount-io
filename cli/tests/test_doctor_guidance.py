@@ -97,3 +97,45 @@ def test_missing_ledger_is_refused(tmp_path: Path) -> None:
     proc = _bea(tmp_path, "doctor", "guidance", str(tmp_path / "nope.bean"))
     assert proc.returncode == 2
     assert "does not exist" in proc.stderr
+
+
+def _assert_clean(tmp_path: Path, ledger: Path) -> None:
+    proc = _bea(tmp_path, "doctor", "guidance", str(ledger))
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout == f"agent guidance OK in {ledger.parent}\n"
+
+
+def test_claude_md_symlinked_to_agents_md_is_clean(tmp_path: Path) -> None:
+    # w1/245: through the link CLAUDE.md reads as AGENTS.md, which has no
+    # import line; the old advice would have written @AGENTS.md into AGENTS.md.
+    ledger = _books(tmp_path, agents="# Ledger rules\nUse bea.\n")
+    (ledger.parent / "CLAUDE.md").symlink_to("AGENTS.md")
+    _assert_clean(tmp_path, ledger)
+    assert (ledger.parent / "AGENTS.md").read_text() == "# Ledger rules\nUse bea.\n"
+
+
+def test_dot_relative_import_is_clean(tmp_path: Path) -> None:
+    _assert_clean(tmp_path, _books(tmp_path, agents="# conventions\n", claude="@./AGENTS.md\n"))
+
+
+def test_import_inside_a_sentence_is_clean(tmp_path: Path) -> None:
+    _assert_clean(tmp_path, _books(tmp_path, agents="# conventions\n", claude="Read @AGENTS.md first.\n"))
+
+
+def test_import_of_another_file_warns(tmp_path: Path) -> None:
+    ledger = _books(tmp_path, agents="# conventions\n", claude="@docs/AGENTS.md\nmail me@AGENTS.md\n")
+    proc = _bea(tmp_path, "doctor", "guidance", str(ledger))
+    assert "does not import AGENTS.md" in proc.stdout
+
+
+def test_import_inside_code_warns(tmp_path: Path) -> None:
+    claude = "```\n@AGENTS.md\n```\nWrite `@AGENTS.md` to import.\n"
+    ledger = _books(tmp_path, agents="# conventions\n", claude=claude)
+    proc = _bea(tmp_path, "doctor", "guidance", str(ledger))
+    assert proc.returncode == 0, proc.stderr
+    assert "does not import AGENTS.md" in proc.stdout
+
+
+def test_import_after_a_closed_fence_is_clean(tmp_path: Path) -> None:
+    claude = "~~~sh\nbea check main.bean\n~~~\n@AGENTS.md\n"
+    _assert_clean(tmp_path, _books(tmp_path, agents="# conventions\n", claude=claude))
