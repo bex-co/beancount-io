@@ -98,6 +98,14 @@
 
 - [x] **m62** — [Ledger creation: a prefilled Currency field, backward compatible](./done/m62/README.md) (7 tasks) ← user request via /pmx, 2026-11-12; user routed to w3
 
+m63–m67 were materialized on 2026-11-14 from the revised `/pm-brainstorm for w1` items 1–5 (`SELF_HOST` work excluded by the user), routed to w3 by the user. **Suggested order:** m63 and m64 in parallel; m65 → m66; m67 independent. m63/t005 waits on the owner's approval of the `mcp-registry-publish` environment.
+
+- [ ] **m63** — [List the local `bea mcp` server on the official MCP Registry](./m63/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-11-14 item 1; user routed to w3
+- [ ] **m64** — [Give the local `bea mcp` server resources and read-only prompts](./m64/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-11-14 item 2; user routed to w3
+- [ ] **m65** — [Add a read-only review reference to `beancount-report-pack`](./m65/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-11-14 item 3, from ADR020 P2; user routed to w3
+- [ ] **m66** — [`beancount-investor-update`: a recurring factual update from reviewed books](./m66/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-11-14 item 4, from ADR020 P3; user routed to w3 — sequenced after m65
+- [ ] **m67** — [Port the CLI to typer 0.29 and lift the version cap](./m67/README.md) (9 tasks) ← promoted [w1/241](../w1/241.md) (owner chose option (b), 2026-11-14); user routed to w3
+
 ## Inbox
 
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
