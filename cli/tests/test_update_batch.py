@@ -245,6 +245,26 @@ class TestEngineBatch:
         assert data["written"] == 1
         assert [row["status"] for row in data["rows"]] == ["ok", "unchanged"]
 
+    def test_rerunning_an_applied_mapping_reports_its_rows_unchanged(self, tmp_path: Path) -> None:
+        # w1/244: the recovery from a partial apply is to fix the rejected
+        # rows and rerun the same mapping; rows it already applied have no
+        # holding leg left, and must resolve to no-ops instead of rejects.
+        ledger = _ledger(tmp_path)
+        typo = [ROWS[0], {**ROWS[1], "account": "Expenses:Dinning"}]
+        first = batch(ledger, typo, "--apply")
+        assert first.returncode == 1, first.stdout
+        assert json.loads(first.stdout)["error"]["result"]["written_rows"] == [0]
+        completed = batch(ledger, ROWS, "--apply")
+        assert completed.returncode == 0, completed.stdout
+        data = json.loads(completed.stdout)["data"]
+        assert [row["status"] for row in data["rows"]] == ["unchanged", "ok"]
+        assert data["written"] == 1
+        applied = ledger.read_bytes()
+        again = batch(ledger, ROWS, "--apply")
+        assert again.returncode == 0, again.stdout
+        assert [row["status"] for row in json.loads(again.stdout)["data"]["rows"]] == ["unchanged", "unchanged"]
+        assert ledger.read_bytes() == applied
+
     def test_empty_and_misshapen_batches_are_usage_errors(self, tmp_path: Path) -> None:
         ledger = _ledger(tmp_path)
         for rows in ([], {"id": "aaa"}):

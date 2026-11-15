@@ -186,3 +186,18 @@ def test_noop_apply_succeeds_without_writing(tmp_path: Path) -> None:
     )
     assert again.exit_code == 0, again.output
     assert "already matches" in again.output
+
+
+def test_repeating_an_applied_retarget_succeeds_without_writing(tmp_path: Path) -> None:
+    # w1/244: once applied, the holding leg is gone; a repeat must be a no-op.
+    ledger = _ledger(tmp_path)
+    args = ["--file", str(ledger), "update", "transaction", "--id", "abc123"]
+    change = ["--account", "Expenses:Groceries", "--flag", "*", "--apply"]
+    first = runner.invoke(app, [*args, *change])
+    assert first.exit_code == 0, first.output
+    applied = ledger.read_bytes()
+    assert b"Expenses:Groceries 9.99 USD" in applied
+    again = runner.invoke(app, [*args, *change])
+    assert again.exit_code == 0, again.output
+    assert "already matches" in again.output
+    assert ledger.read_bytes() == applied

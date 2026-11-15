@@ -424,7 +424,10 @@ def _retarget_accounts(entry: Any, options: dict[str, Any], changes: _Changes) -
     """The (old, new) posting accounts the change retargets.
 
     A bare account retargets the review queue's leg: the unique posting to the
-    holding account, or the only posting when the entry holds one. Anything
+    holding account, or the only posting when the entry holds one. An entry
+    with no holding leg that already posts to the account is already
+    categorized: the change is a no-op (old == new), so rerunning an applied
+    mapping reports the row unchanged instead of rejecting it. Anything
     less clear names the entry's accounts and asks for OLD=NEW, which retargets
     every posting at OLD.
     """
@@ -446,6 +449,8 @@ def _retarget_accounts(entry: Any, options: dict[str, Any], changes: _Changes) -
         return candidates[0], new
     if not candidates and len(held) == 1:
         return held[0], new
+    if not candidates and new in held:
+        return new, new
     listing = ", ".join(held)
     if len(candidates) > 1:
         raise protocol.UsageError(

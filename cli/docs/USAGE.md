@@ -1877,7 +1877,9 @@ bea list transaction --flag '!'
 
 JSON rows use the single-row fields; pass `--from -` to read either form from
 stdin. Any rejection exits **1** with per-row results, as `bea add
-transactions --partial` reports.
+transactions --partial` reports. Fix the rejected rows and run the same
+mapping again: a row it already applied reports `unchanged`, so the rerun
+exits 0 once every row is valid.
 
 ## Reports
 
