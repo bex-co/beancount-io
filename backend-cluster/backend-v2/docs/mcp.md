@@ -664,7 +664,14 @@ ledger's own `bcio` options assign its type and date, unless `path` names one,
 and is inserted after the last directive dated on or before it rather than at
 the end of the file. When that directive is of another kind and org headings
 follow it, the new one goes under them, so the starter ledger's first
-transaction lands under `* Transactions`, not among the opens (w23/076). A
+transaction lands under `* Transactions`, not among the opens (w23/076). The
+target file's own `pushtag` and `pushmeta` apply by position, so an entry is
+never left inside a scope the file opened, where it would take that scope's
+tag or metadata (w31/015). Dated before a scope's first entry, it goes above
+the push. Dated strictly inside a scope, it is written between a `poptag #t`
+or `popmeta key:` that closes the scope and the same pushes, with the same
+values and in the same order, after it. The stored entry carries exactly the
+tags and metadata its text does, and the file stays in date order. A
 `path` must be a file the ledger loads — one of its
 `source-files` — or the call is refused as `BAD_USER_INPUT`: an entry written
 anywhere else would never appear in a report. Create and `include` a new file

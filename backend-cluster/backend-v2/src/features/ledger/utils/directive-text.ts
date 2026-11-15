@@ -56,6 +56,41 @@ function commentStart(line: string): number {
   return line.length;
 }
 
+/** A `pushtag`/`poptag`/`pushmeta`/`popmeta` line, read. */
+type StackStatement =
+  | { readonly keyword: "pushtag" | "poptag"; readonly tag: string }
+  | {
+      readonly keyword: "pushmeta" | "popmeta";
+      readonly key: string;
+      readonly value: string;
+    };
+
+/**
+ * Read a stack statement at column 0: null when the line is not one, and
+ * what is wrong with it, as a string, when it is one written wrongly.
+ */
+function readStackStatement(line: string): StackStatement | string | null {
+  const keyword = /^(pushtag|poptag|pushmeta|popmeta)\b/.exec(line)?.[1] as
+    | StackStatement["keyword"]
+    | undefined;
+  if (!keyword) return null;
+  const body = line.slice(keyword.length, commentStart(line)).trim();
+  if (keyword === "pushtag" || keyword === "poptag") {
+    const tag = /^#([^\s#^]+)$/.exec(body)?.[1];
+    return tag ? { keyword, tag } : `\`${keyword}\` takes one #tag`;
+  }
+  const pair = /^([a-z][A-Za-z0-9_-]+):\s*(.*)$/.exec(body);
+  if (!pair) {
+    // The lexer's key needs two characters: a lone `k:` is not one (w23/237).
+    return /^[a-z]:/.test(body)
+      ? "a metadata key needs at least two characters"
+      : `\`${keyword}\` takes a metadata key`;
+  }
+  const [, key, value] = pair;
+  if (keyword === "pushmeta" && !value) return "`pushmeta` needs a value";
+  return { keyword, key, value };
+}
+
 /**
  * The `pushtag`/`pushmeta` stacks, expanded onto the entries between push and
  * pop (w23/041). The stack is positional in Beancount, and every appended
@@ -70,42 +105,30 @@ class TagStack {
 
   /** Apply one statement; false when the line is not a stack statement. */
   apply(line: string, lineNumber: number): boolean {
-    const keyword = /^(pushtag|poptag|pushmeta|popmeta)\b/.exec(line)?.[1];
-    if (!keyword) return false;
-    const body = line.slice(keyword.length, commentStart(line)).trim();
-    const refuse = (problem: string) => {
-      throw new BadUserInputError(
+    const statement = readStackStatement(line);
+    if (statement === null) return false;
+    const refuse = (problem: string) =>
+      new BadUserInputError(
         `line ${lineNumber}: ${problem}: ${line.trim()}`,
         "text",
       );
-    };
-    if (keyword === "pushtag" || keyword === "poptag") {
-      const tag = /^#([^\s#^]+)$/.exec(body)?.[1];
-      if (!tag) refuse(`\`${keyword}\` takes one #tag`);
-      if (keyword === "pushtag")
-        this.tags.push({ tag: tag!, line: lineNumber });
+    if (typeof statement === "string") throw refuse(statement);
+    if ("tag" in statement) {
+      const { keyword, tag } = statement;
+      if (keyword === "pushtag") this.tags.push({ tag, line: lineNumber });
       else {
-        const at = this.tags.map((entry) => entry.tag).lastIndexOf(tag!);
-        if (at === -1) refuse(`\`poptag #${tag}\` has no matching pushtag`);
+        const at = this.tags.map((entry) => entry.tag).lastIndexOf(tag);
+        if (at === -1)
+          throw refuse(`\`poptag #${tag}\` has no matching pushtag`);
         this.tags.splice(at, 1);
       }
       return true;
     }
-    const pair = /^([a-z][A-Za-z0-9_-]+):\s*(.*)$/.exec(body);
-    if (!pair) {
-      // The lexer's key needs two characters: a lone `k:` is not one (w23/237).
-      refuse(
-        /^[a-z]:/.test(body)
-          ? "a metadata key needs at least two characters"
-          : `\`${keyword}\` takes a metadata key`,
-      );
-    }
-    const [, key, value] = pair!;
+    const { keyword, key, value } = statement;
     if (keyword === "pushmeta") {
-      if (!value) refuse("`pushmeta` needs a value");
       this.meta.set(key, { value, line: lineNumber });
     } else if (!this.meta.delete(key)) {
-      refuse(`\`popmeta ${key}:\` has no matching pushmeta`);
+      throw refuse(`\`popmeta ${key}:\` has no matching pushmeta`);
     }
     return true;
   }
@@ -363,7 +386,9 @@ export interface InsertionResult {
  *
  * Each new directive lands after the last existing directive dated on or
  * before it. A file whose own directives are out of order gets them appended
- * at the end instead — see {@link InsertionResult.appended}.
+ * at the end instead — see {@link InsertionResult.appended}. Neither place
+ * may leave it inside a `pushtag`/`pushmeta` scope the file opened, or it
+ * would take that scope's tag or metadata — see {@link outsideScopes}.
  */
 export function insertDirectives(
   existing: string,
@@ -399,17 +424,30 @@ export function insertDirectives(
     const lines = directive.text.split("\n");
     const first = lines.findIndex((line) => !isBlank(line));
     const block = first > 0 ? lines.slice(first) : lines;
-    const at = sorted ? placeUnderHeading(working, directive) : working.length;
+    const { at, open, stepped } = outsideScopes(
+      working,
+      sorted ? placeUnderHeading(working, directive) : working.length,
+    );
     // `at > 0` already implies the file is non-empty and that `working[at-1]`
     // exists, so this is the whole condition.
     const prefix = at > 0 && !isBlank(working[at - 1]) ? [""] : [];
-    working.splice(at, 0, ...prefix, ...block);
+    // Stepped back, the directive sits just above the pushes it stepped over.
+    const suffix =
+      stepped && at < working.length && !isBlank(working[at]) ? [""] : [];
+    const written = [
+      ...prefix,
+      ...open.map((push) => push.pop).reverse(),
+      ...block,
+      ...open.map((push) => push.push),
+      ...suffix,
+    ];
+    working.splice(at, 0, ...written);
     // A directive already placed at or below this one moves down with it;
     // the reported lines locate the entries' hashes (w23/060).
     for (const earlier of inserted) {
-      if (earlier.line > at) earlier.line += prefix.length + block.length;
+      if (earlier.line > at) earlier.line += written.length;
     }
-    inserted.push({ line: at + prefix.length + 1 });
+    inserted.push({ line: at + prefix.length + open.length + 1 });
   }
 
   const content = `${working.join(eol).replace(/(?:\r?\n)+$/, "")}${eol}`;
@@ -491,4 +529,76 @@ function endOfBlock(lines: readonly string[], start: number): number {
     break;
   }
   return end;
+}
+
+/**
+ * A push the file has opened and not closed: the line that closes it, and
+ * the line, as the file wrote it, that opens it again.
+ */
+interface OpenPush {
+  readonly pop: string;
+  readonly push: string;
+}
+
+/** A well-formed stack statement in an existing file; anything else is null. */
+function fileStatement(line: string): StackStatement | null {
+  const statement = readStackStatement(line);
+  return typeof statement === "object" ? statement : null;
+}
+
+/**
+ * The `pushtag`/`pushmeta` scopes open where line `end` starts, oldest first.
+ * A pop closes the latest push of its tag or key, as in Beancount; one that
+ * closes nothing is the file's own error and changes nothing here.
+ */
+function openPushes(lines: readonly string[], end: number): OpenPush[] {
+  const open: OpenPush[] = [];
+  for (const line of lines.slice(0, end)) {
+    const statement = fileStatement(line);
+    if (!statement) continue;
+    const pop =
+      "tag" in statement
+        ? `poptag #${statement.tag}`
+        : `popmeta ${statement.key}:`;
+    if (statement.keyword.startsWith("push")) {
+      open.push({ pop, push: line.slice(0, commentStart(line)).trimEnd() });
+    } else {
+      const at = open.map((push) => push.pop).lastIndexOf(pop);
+      if (at !== -1) open.splice(at, 1);
+    }
+  }
+  return open;
+}
+
+/** A line a directive may step back over: a blank, a column-0 comment, a push. */
+const precedesScope = (line: string) =>
+  isBlank(line) ||
+  (isComment(line) && !isContinuation(line)) ||
+  fileStatement(line)?.keyword.startsWith("push") === true;
+
+/**
+ * Where a directive goes so that it is stored as written (w31/015). The
+ * target file's `pushtag` and `pushmeta` apply by position, so a directive
+ * placed by date inside a scope the file opened took its tag or metadata,
+ * and the write still read "No new bean-check errors".
+ *
+ * Placed just past a scope's opening pushes, it steps back above them, and
+ * above the comments and blank lines among them: that is before the scope's
+ * first entry, so the file stays in date order. A scope still open there,
+ * one it falls strictly inside, is closed around it: `open` holds the pushes
+ * to pop before it and push again, in the same order and with the same
+ * values, after it.
+ */
+function outsideScopes(
+  lines: readonly string[],
+  at: number,
+): { at: number; open: OpenPush[]; stepped: boolean } {
+  const open = openPushes(lines, at);
+  if (open.length === 0) return { at, open, stepped: false };
+  let start = at;
+  while (start > 0 && precedesScope(lines[start - 1])) start -= 1;
+  const outer = start < at ? openPushes(lines, start) : open;
+  return outer.length < open.length
+    ? { at: start, open: outer, stepped: true }
+    : { at, open, stepped: false };
 }

@@ -376,6 +376,66 @@ describe("appending Beancount text through the real adapters", () => {
     },
   );
 
+  // w31/015: threaded by date into main.bean's own `pushtag`/`pushmeta`
+  // scopes, the entries took a tag and metadata their text never had.
+  it.each(["rest", "gql", "mcp"] as const)(
+    "keeps appended entries out of the file's pushtag and pushmeta scopes via %s",
+    async (surface) => {
+      const txn = (date: string, payee: string, tag = "") =>
+        [
+          `${date} * "${payee}" "n"${tag}`,
+          "  Expenses:Food   1.00 USD",
+          "  Assets:Cash",
+        ].join("\n");
+      const scoped = [
+        "pushtag #trip",
+        txn("2026-09-02", "A"),
+        "poptag #trip",
+        "",
+        txn("2026-09-03", "B", " #inline"),
+        "",
+        'pushmeta trip: "pm"',
+        txn("2026-09-04", "C"),
+        "popmeta trip:",
+      ];
+      const f = await fixture();
+      f.state.files.set("main.bean", `${scoped.join("\n")}\n`);
+      const text = `${txn("2026-09-01", "New 1")}\n\n${txn("2026-09-03", "New 3")}\n`;
+      try {
+        const dry = await f.call(surface, { text, dryRun: true });
+        expect(dry.ok).toBe(true);
+        const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+        const [{ diff }] = preview.diff as { path: string; diff: string }[];
+        // The new entries come before the push lines, which stay where they were.
+        expect(diff).not.toMatch(/^[+-](push|pop)/m);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+        const result = await f.call(surface, { text });
+        expect(result.ok).toBe(true);
+        const data = result.ok ? (result.data as Record<string, never>) : {};
+        expect(data.appendedUnsorted).toEqual([]);
+        const written = f.state.files.get("main.bean")!;
+        expect(written).toBe(
+          [
+            txn("2026-09-01", "New 1"),
+            "",
+            ...scoped.slice(0, 6),
+            txn("2026-09-03", "New 3"),
+            "",
+            ...scoped.slice(6),
+            "",
+          ].join("\n"),
+        );
+        const lines = written.split("\n");
+        expect(
+          (data.wrote as { line: number }[]).map(({ line }) => lines[line - 1]),
+        ).toEqual(['2026-09-01 * "New 1" "n"', '2026-09-03 * "New 3" "n"']);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it.each(["rest", "gql", "mcp"] as const)(
     "refuses an unbalanced transaction with UNBALANCED via %s",
     async (surface) => {

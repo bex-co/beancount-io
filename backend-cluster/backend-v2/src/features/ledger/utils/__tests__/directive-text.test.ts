@@ -436,6 +436,223 @@ describe("insertDirectives", () => {
   });
 });
 
+// w31/015: the target file's `pushtag`/`pushmeta` apply by position, so an
+// entry threaded into one of its scopes took the scope's tag or metadata.
+describe("insertDirectives around the target file's pushtag/pushmeta scopes", () => {
+  /** Insert `text` into the file `existing` spells, line by line. */
+  const insert = (existing: string[], text: string) => {
+    const result = insertDirectives(
+      `${existing.join("\n")}\n`,
+      parseDirectiveText(text),
+    );
+    const lines = result.content.split("\n");
+    return {
+      content: result.content.replace(/\n$/, ""),
+      lines,
+      at: result.inserted.map(({ line }) => lines[line - 1]),
+    };
+  };
+  const file = (...lines: string[]) => lines.join("\n");
+  const before = [txn("2026-08-30", "Before"), ""];
+
+  it.each([
+    ["pushtag", "pushtag #trip", "poptag #trip"],
+    ["pushmeta", 'pushmeta trip: "Lisbon"', "popmeta trip:"],
+  ])(
+    "puts an entry dated before a %s scope's first entry above the push",
+    (_kind, push, pop) => {
+      const scope = [push, txn("2026-09-02", "Scoped"), pop];
+      const { content, at } = insert(
+        [...before, "; the trip", ...scope],
+        txn("2026-09-01", "New"),
+      );
+      expect(content).toBe(
+        file(...before, txn("2026-09-01", "New"), "", "; the trip", ...scope),
+      );
+      expect(at).toEqual(['2026-09-01 * "New" "note"']);
+    },
+  );
+
+  it.each([
+    ["pushtag", "pushtag #trip", "poptag #trip"],
+    ["pushmeta", 'pushmeta trip: "Lisbon"', "popmeta trip:"],
+  ])(
+    "closes a %s scope around an entry dated strictly inside it",
+    (_kind, push, pop) => {
+      const { content, at } = insert(
+        [push, txn("2026-09-02", "First"), "", txn("2026-09-05", "Last"), pop],
+        txn("2026-09-03", "New"),
+      );
+      expect(content).toBe(
+        file(
+          push,
+          txn("2026-09-02", "First"),
+          "",
+          pop,
+          txn("2026-09-03", "New"),
+          push,
+          "",
+          txn("2026-09-05", "Last"),
+          pop,
+        ),
+      );
+      expect(at).toEqual(['2026-09-03 * "New" "note"']);
+    },
+  );
+
+  it("pops nested scopes last-first and pushes them again with the same values", () => {
+    const pushes = [
+      "pushtag #trip ; the trip",
+      'pushmeta trip: "Lisbon"',
+      'pushmeta trip: "Porto"',
+    ];
+    const pops = ["popmeta trip:", "popmeta trip:", "poptag #trip"];
+    const { content } = insert(
+      [
+        ...pushes,
+        txn("2026-09-02", "First"),
+        txn("2026-09-05", "Last"),
+        ...pops,
+      ],
+      txn("2026-09-03", "New"),
+    );
+    expect(content).toBe(
+      file(
+        ...pushes,
+        txn("2026-09-02", "First"),
+        "",
+        ...pops,
+        txn("2026-09-03", "New"),
+        // The push as the file wrote it, without its comment.
+        "pushtag #trip",
+        ...pushes.slice(1),
+        txn("2026-09-05", "Last"),
+        ...pops,
+      ),
+    );
+  });
+
+  it("steps above an inner scope's push and closes only the outer one", () => {
+    const { content } = insert(
+      [
+        "pushtag #year",
+        txn("2026-08-30", "Before"),
+        "pushtag #trip",
+        txn("2026-09-02", "Scoped"),
+        "poptag #trip",
+        "poptag #year",
+      ],
+      txn("2026-09-01", "New"),
+    );
+    expect(content).toBe(
+      file(
+        "pushtag #year",
+        txn("2026-08-30", "Before"),
+        "",
+        "poptag #year",
+        txn("2026-09-01", "New"),
+        "pushtag #year",
+        "",
+        "pushtag #trip",
+        txn("2026-09-02", "Scoped"),
+        "poptag #trip",
+        "poptag #year",
+      ),
+    );
+  });
+
+  it("keeps the entry's own tags and metadata as written", () => {
+    const own = file(
+      '2026-09-03 * "Own" "note" #mine',
+      '  trip: "Porto"',
+      "  Expenses:Food   1.00 USD",
+      "  Assets:Cash",
+    );
+    const { content, at } = insert(
+      [
+        'pushmeta trip: "Lisbon"',
+        txn("2026-09-02", "First"),
+        txn("2026-09-05", "Last"),
+        "popmeta trip:",
+      ],
+      own,
+    );
+    expect(content).toBe(
+      file(
+        'pushmeta trip: "Lisbon"',
+        txn("2026-09-02", "First"),
+        "",
+        "popmeta trip:",
+        own,
+        'pushmeta trip: "Lisbon"',
+        txn("2026-09-05", "Last"),
+        "popmeta trip:",
+      ),
+    );
+    expect(at).toEqual(['2026-09-03 * "Own" "note" #mine']);
+  });
+
+  it("threads several entries into one scope with single separators", () => {
+    const { content, lines, at } = insert(
+      [
+        ...before,
+        "pushtag #trip",
+        txn("2026-09-02", "First"),
+        "",
+        txn("2026-09-05", "Last"),
+        "poptag #trip",
+      ],
+      file(
+        txn("2026-09-03", "One"),
+        "",
+        txn("2026-09-03", "Two"),
+        "",
+        txn("2026-09-01", "Early"),
+      ),
+    );
+    expect(at).toEqual([
+      '2026-09-03 * "One" "note"',
+      '2026-09-03 * "Two" "note"',
+      '2026-09-01 * "Early" "note"',
+    ]);
+    expect(content).not.toMatch(/\n\n\n/);
+    expect(lines.filter((line) => /^(push|pop)tag/.test(line))).toEqual([
+      "pushtag #trip",
+      "poptag #trip",
+      "pushtag #trip",
+      "poptag #trip",
+    ]);
+    // One and Two share the gap the scope was closed for.
+    const gap = lines.indexOf("poptag #trip");
+    expect(lines.indexOf(at[0])).toBe(gap + 1);
+    expect(lines.indexOf(at[1])).toBeLessThan(
+      lines.lastIndexOf("pushtag #trip"),
+    );
+    expect(lines.indexOf(at[2])).toBeLessThan(lines.indexOf("pushtag #trip"));
+  });
+
+  it("leaves an entry dated on a scope's last day after the pop, as before", () => {
+    const scoped = [
+      "pushtag #trip",
+      txn("2026-09-02", "Scoped"),
+      "poptag #trip",
+    ];
+    const { content } = insert(
+      [...scoped, "", txn("2026-09-03", "After")],
+      txn("2026-09-02", "Same day"),
+    );
+    expect(content).toBe(
+      file(
+        ...scoped,
+        "",
+        txn("2026-09-02", "Same day"),
+        "",
+        txn("2026-09-03", "After"),
+      ),
+    );
+  });
+});
+
 // w1/197: an append rewrote every line of a CRLF file to LF, so each append to
 // a Windows-authored file was a whole-file diff.
 describe("insertDirectives into a CRLF file", () => {
