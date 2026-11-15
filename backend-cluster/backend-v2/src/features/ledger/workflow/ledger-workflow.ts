@@ -106,6 +106,7 @@ import { filterNullish } from "@/shared/tools";
 import { processBatch } from "@/shared/batch-processor";
 import { logger } from "@/shared/logger";
 import { GITEA_PAGE_SIZE, readGiteaPages } from "@/shared/gitea-pages";
+import { HOST_DEFAULT_LIMIT } from "@/shared/host-page";
 import {
   effectiveCapabilities,
   systemIdentity,
@@ -476,8 +477,8 @@ interface CatalogWindow {
  * The window a caller's `page`/`limit` asks for when one upstream call cannot
  * serve it: no paging at all means the whole catalog, and a `limit` above
  * GITEA_PAGE_SIZE spans several upstream pages. `null` means one call with
- * the caller's own arguments, so page-only and small-page reads keep exactly
- * the ledger service's semantics.
+ * the caller's own page, so small-page reads keep exactly the ledger
+ * service's semantics.
  */
 function catalogWindow({
   page,
@@ -513,9 +514,11 @@ function readCatalog(
   args: ListLedgersParams,
 ): Promise<LedgerData[]> {
   const window = catalogWindow(args);
+  // A page asked for without a size gets the default size, sent explicitly,
+  // so the page signal knows what a full page is (w31/012).
   return window
     ? readCatalogWindow(readPage, window)
-    : readPage({ page: args.page, limit: args.limit });
+    : readPage({ page: args.page, limit: args.limit ?? HOST_DEFAULT_LIMIT });
 }
 
 interface CreateRequestRecord {
@@ -2185,24 +2188,37 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       exclusive: args.exclusive,
       sort: args.sort,
       order: args.order,
-      page: args.page,
-      limit: args.limit,
     });
     const { favaApiClient } =
       await this.favaClientFactory.getApiContext(userId);
-
-    const results = await unwrapFavaResponse(
-      favaApiClient.ledgers.searchLedgers(query),
-      "search ledgers",
-    );
-
-    if (!results.data) {
-      return [];
-    }
-
     const capabilities = effectiveCapabilities(identity);
-    const ledgers = results.data.map((ledger) =>
-      mapToLedger(ledger as FavaLedgerPublic, this.config.gitea, capabilities),
+
+    // Search never returns every match: without a `limit` it reads one page
+    // of the default size, which its page signal compares against, instead
+    // of the host's own default (20 or 30, by query) reading as the whole
+    // result. A `limit` above the host's page size reads through the same
+    // window as the other catalog lists (w31/012).
+    const ledgers = await readCatalog(
+      async ({ page, limit }) => {
+        const results = await unwrapFavaResponse(
+          favaApiClient.ledgers.searchLedgers({
+            ...query,
+            ...filterNullish({ page, limit }),
+          }),
+          "search ledgers",
+        );
+        return (results.data ?? []).map((ledger) =>
+          mapToLedger(
+            ledger as FavaLedgerPublic,
+            this.config.gitea,
+            capabilities,
+          ),
+        );
+      },
+      {
+        page: args.page ?? undefined,
+        limit: args.limit ?? HOST_DEFAULT_LIMIT,
+      },
     );
     return restrictToPin(identity, ledgers);
   }

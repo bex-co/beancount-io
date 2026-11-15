@@ -17,6 +17,7 @@ import { SOCIAL_V1_ROUTES } from "@/features/gitea/user-profile/api/social-read-
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
+import { HOST_DEFAULT_LIMIT } from "@/shared/host-page";
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { PAGE_RESPONSE_HEADERS } from "@/server/rest/page-headers";
 import { registerV1Routes, v1Route } from "@/server/rest/v1-route";
@@ -141,8 +142,10 @@ describe("pageSignal", () => {
   });
 
   it("says nothing when the read cannot know", () => {
-    // A catalog page past the first, asked for without a size, has no page size to compare to.
-    expect(pageSignal("ownedLedgers", { page: 2 }, [{}])).toBeUndefined();
+    // A staged-bank page past the first, asked for without a size, has no page size to compare to.
+    expect(
+      pageSignal("bankUnsyncedTransactions", { page: 2 }, [{}]),
+    ).toBeUndefined();
     expect(pageSignal("ledgerJournal", {}, "not rows")).toBeUndefined();
     expect(pageSignal("notAPagedRead", {}, [])).toBeUndefined();
   });
@@ -154,6 +157,52 @@ describe("pageSignal", () => {
       hasMore: false,
     });
   });
+
+  // w31/012: these reads send HOST_DEFAULT_LIMIT when the caller sends no
+  // `limit`, so a full page of that size may be followed by another.
+  it.each(["accessibleLedgers", "ownedLedgers", "listLedgers"])(
+    "reads %s with a page but no size as a page of 30",
+    (read) => {
+      const full = new Array(HOST_DEFAULT_LIMIT).fill({});
+      expect(pageSignal(read, { page: 1 }, full)).toEqual({
+        returned: 30,
+        limit: 30,
+        page: 1,
+        hasMore: true,
+        nextPage: 2,
+      });
+      expect(pageSignal(read, { page: 3 }, [{}])).toEqual({
+        returned: 1,
+        limit: 30,
+        page: 3,
+        hasMore: false,
+      });
+    },
+  );
+
+  it.each([
+    ["searchLedgers", { q: "open_ledger" }],
+    ["searchLedgers", {}],
+    ["ledgerPublicKeys", {}],
+  ])(
+    "reads %s without a limit as a page of 30",
+    (read, query: Record<string, unknown>) => {
+      const full = new Array(HOST_DEFAULT_LIMIT).fill({});
+      expect(pageSignal(read, query, full)).toEqual({
+        returned: 30,
+        limit: 30,
+        page: 1,
+        hasMore: true,
+        nextPage: 2,
+      });
+      expect(pageSignal(read, { ...query, page: 9 }, [{}])).toEqual({
+        returned: 1,
+        limit: 30,
+        page: 9,
+        hasMore: false,
+      });
+    },
+  );
 });
 
 describe("pagedResourceContent", () => {

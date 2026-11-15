@@ -1722,10 +1722,13 @@ and the next page is empty.
 `limit` return every row and report `hasMore: false`; the dashboard's Bank
 Sync table reads the staging area that way. Importing or discarding staged
 rows removes them from the list, so an agent that acts on one page reads
-page 1 again rather than the next page. The three ledger lists called with a `page` past the
-first but no `limit` carry no signal: send a `limit`. Public keys exist on
-REST and GraphQL only. Followers, following and starred lists keep their
-`total`, which counts only the entries returned in that page.
+page 1 again rather than the next page. `listLedgers` and the owned ledgers
+called with a `page` but no `limit` read pages of 30. Ledger search never
+returns every match: without a `limit` it reads pages of 30, so a full first
+page reads `hasMore: true` with `nextPage: 2`, and any `limit` up to 100 is
+served in full. Public keys also read pages of 30 without a `limit`; they
+exist on REST and GraphQL only. Followers, following and starred lists keep
+their `total`, which counts only the entries returned in that page.
 
 ### Failure codes
 

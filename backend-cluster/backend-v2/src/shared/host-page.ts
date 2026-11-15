@@ -8,6 +8,14 @@ import { BadUserInputError } from "@/shared/errors";
  */
 export const HOST_PAGE_MAX = 50;
 
+/**
+ * The page size a list read uses when its caller sends no `limit`: Gitea's
+ * own `DEFAULT_PAGING_NUM`, sent explicitly. A read that let the host pick the
+ * size could not tell a full page from the last one, and reported the first
+ * page of a larger search as the whole result (w31/012).
+ */
+export const HOST_DEFAULT_LIMIT = 30;
+
 /** Refuse a page or limit the host would silently replace. */
 export function assertHostPage(
   page: number | undefined,

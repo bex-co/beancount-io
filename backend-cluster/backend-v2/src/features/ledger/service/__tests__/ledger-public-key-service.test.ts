@@ -135,4 +135,17 @@ describe("LedgerPublicKeyService authorization", () => {
       read_only: true,
     });
   });
+
+  // w31/012: the page signal reads an omitted limit as a page of 30, so the
+  // host must be asked for exactly that rather than its own default.
+  it("sends the default page and size when the caller sends none", async () => {
+    await service.listPublicKeys(identity);
+    await service.listPublicKeys(identity, { page: 3 });
+    await service.listPublicKeys(identity, { page: 2, limit: 5 });
+    expect(listPublicKeys.mock.calls).toEqual([
+      [{ page: 1, limit: 30 }],
+      [{ page: 3, limit: 30 }],
+      [{ page: 2, limit: 5 }],
+    ]);
+  });
 });

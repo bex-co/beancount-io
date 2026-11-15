@@ -1,3 +1,4 @@
+import { HOST_DEFAULT_LIMIT } from "@/shared/host-page";
 import { numberedPage, offsetPage, type PageInfo } from "@/shared/page-info";
 
 /**
@@ -49,6 +50,18 @@ const numberedArray =
     return numberedPage({ returned: rows.length, page, limit });
   };
 
+/**
+ * A ledger catalog list (w2/m34): with neither `page` nor `limit` it returns
+ * every ledger, and a `page` sent alone reads a page of the default size
+ * (w31/012).
+ */
+const catalogArray: Signal = (query, result) =>
+  numberedArray(
+    number(query.page) === undefined && number(query.limit) === undefined
+      ? {}
+      : { limit: HOST_DEFAULT_LIMIT },
+  )(query, result);
+
 /** `{ <rows>, total }` social lists, where `total` is only the page size. */
 const socialRows =
   (rows: string): Signal =>
@@ -97,13 +110,14 @@ const SIGNALS: Record<string, Signal> = {
   // Staged bank transactions: the tool and the resource are the same read.
   listStagedBankTransactions: numberedArray(),
   bankUnsyncedTransactions: numberedArray(),
-  listLedgers: numberedArray(),
-  accessibleLedgers: numberedArray(),
-  ownedLedgers: numberedArray(),
-  searchLedgers: numberedArray(),
+  listLedgers: catalogArray,
+  accessibleLedgers: catalogArray,
+  ownedLedgers: catalogArray,
+  // Search reads one page even when `limit` is omitted.
+  searchLedgers: numberedArray({ limit: HOST_DEFAULT_LIMIT }),
   ledgerCommits: numberedArray({ page: 1, limit: 30 }),
   ledgerCollaborators: numberedArray({ page: 1, limit: 10 }),
-  ledgerPublicKeys: numberedArray(),
+  ledgerPublicKeys: numberedArray({ limit: HOST_DEFAULT_LIMIT }),
   userFollowers: socialRows("users"),
   userFollowing: socialRows("users"),
   userStarredRepos: socialRows("repositories"),

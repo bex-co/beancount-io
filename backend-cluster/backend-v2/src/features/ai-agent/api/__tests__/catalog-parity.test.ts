@@ -2,6 +2,7 @@ import type { Identity } from "@/server/api/identity";
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
+import { ApolloServer } from "@apollo/server";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
@@ -10,6 +11,7 @@ import { LedgerQueryResolver } from "@/features/ledger/api/resolvers/ledger-reso
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { formatError } from "@/server/graphql/format-error";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { pageExtensionsPlugin } from "@/server/graphql/page-extensions-plugin";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import {
   startV1TestServer,
@@ -112,6 +114,31 @@ async function fixture(
           getCurrentIdentity: () => identity,
         },
       }),
+    /** One aliased root field through Apollo, so `extensions.page` is filled. */
+    gqlPage: async (field: string) => {
+      const apollo = new ApolloServer({
+        schema,
+        plugins: [pageExtensionsPlugin],
+      });
+      await apollo.start();
+      try {
+        const response = await apollo.executeOperation(
+          { query: `{ rows: ${field} { fullName } }` },
+          {
+            contextValue: { identity, getCurrentIdentity: () => identity },
+          },
+        );
+        if (response.body.kind !== "single") throw new Error("not single");
+        const { data, errors, extensions } = response.body.singleResult;
+        expect(errors).toBeUndefined();
+        return {
+          rows: (data as { rows: { fullName: string }[] }).rows,
+          page: (extensions?.page as Record<string, unknown> | undefined)?.rows,
+        };
+      } finally {
+        await apollo.stop();
+      }
+    },
     close: async () => {
       await client.close();
       await server.close();
@@ -466,6 +493,78 @@ describe("catalogs larger than one ledger-service page", () => {
     },
   );
 
+  // w31/012: a page sent without a size read the host's default page of 30
+  // and reported `hasMore: false`, so a catalog of 120 looked like 30.
+  it.each([
+    {
+      kind: "accessible",
+      path: "",
+      uri: "beancount://catalog/ledgers",
+      field: "listLedgers",
+    },
+    {
+      kind: "owned",
+      path: "owned",
+      uri: "beancount://catalog/ledgers/owned",
+      field: "listUserOwnedLedgers",
+    },
+  ])(
+    "says more remains after a full $kind page asked for without a size",
+    async (entry) => {
+      const f = await pagedFixture();
+      try {
+        for (const [page, from, to, hasMore] of [
+          [1, 1, 30, true],
+          [4, 91, 120, true],
+          [5, 1, 0, false],
+        ] as const) {
+          const expected = {
+            returned: to - from + 1,
+            limit: 30,
+            page,
+            hasMore,
+            ...(hasMore && { nextPage: page + 1 }),
+          };
+          const response = await f.rest(`${entry.path}?page=${page}`);
+          expect(response.status).toBe(200);
+          expect(namesOf(await response.json())).toEqual(fullNames(from, to));
+          expect(response.headers.get("x-has-more")).toBe(String(hasMore));
+          expect(response.headers.get("link")).toBe(
+            hasMore
+              ? `</api-gateway/v1/ledgers${entry.path ? `/${entry.path}` : ""}?page=${page + 1}&limit=30>; rel="next"`
+              : null,
+          );
+          const resource = await f.client.readResource({
+            uri: `${entry.uri}?page=${page}`,
+          });
+          expect(resource.contents[0]._meta).toEqual({ page: expected });
+          const gql = await f.gqlPage(`${entry.field}(page: ${page})`);
+          expect(namesOf(gql.rows)).toEqual(fullNames(from, to));
+          expect(gql.page).toEqual(expected);
+          if (entry.field === "listLedgers") {
+            const tool = await f.client.callTool({
+              name: "listLedgers",
+              arguments: { page },
+            });
+            expect(tool.structuredContent).toMatchObject({
+              ok: true,
+              page: expected,
+            });
+          }
+        }
+        // The default size is sent, not left to the ledger service.
+        const upstream =
+          entry.field === "listLedgers"
+            ? f.ledgers.listLedgers.mock.calls.map(([query]) => query)
+            : f.ledgers.listUserLedgers.mock.calls.map(([, query]) => query);
+        expect(upstream.length).toBeGreaterThan(0);
+        for (const query of upstream) expect(query.limit).toBe(30);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it("returns exactly the documented maximum page size on every surface", async () => {
     const f = await pagedFixture();
     try {
@@ -490,6 +589,151 @@ describe("catalogs larger than one ledger-service page", () => {
         expect(namesOf(await toolRows(f, { page, limit: 100 }))).toEqual(
           fullNames(from, to),
         );
+      }
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+// w31/012: search without a `limit` let the ledger service pick the page size
+// (20 for a query naming an owner, 30 otherwise) and reported that first page
+// as every match; a `limit` above 50 came back clamped to 50 and read as the
+// last page.
+describe("searches larger than one default page", () => {
+  const catalog = Array.from({ length: 263 }, (_, i) => {
+    const name = `co-${String(i + 1).padStart(3, "0")}`;
+    return { ...ledger, full_name: `open_ledger/${name}`, name };
+  });
+  const fullNames = (from: number, to: number) =>
+    catalog.slice(from - 1, to).map((entry) => entry.full_name);
+  const namesOf = (rows: unknown) =>
+    (rows as { fullName: string }[]).map((row) => row.fullName);
+  // The ledger service: a word naming an owner is paged there, 20 by default
+  // and unclamped; any other search is Gitea's, 30 by default and at most 50.
+  const host = ({
+    q,
+    page,
+    limit,
+  }: { q?: string; page?: number; limit?: number } = {}) => {
+    const size =
+      q === "open_ledger" ? (limit ?? 20) : Math.min(limit ?? 30, 50);
+    const start = ((page ?? 1) - 1) * size;
+    return Promise.resolve(
+      envelope({ data: catalog.slice(start, start + size) }),
+    );
+  };
+
+  async function searchFixture() {
+    const f = await fixture();
+    f.ledgers.searchLedgers.mockImplementation(host);
+    return f;
+  }
+
+  it.each([
+    { label: "a query naming an owner", q: "open_ledger" },
+    { label: "no query", q: undefined },
+  ])(
+    "reads a page of 30 for $label and says more remains on every surface",
+    async ({ q }) => {
+      const f = await searchFixture();
+      const query = q ? `q=${q}` : "";
+      try {
+        const expected = {
+          returned: 30,
+          limit: 30,
+          page: 1,
+          hasMore: true,
+          nextPage: 2,
+        };
+        const response = await f.rest(`search${query ? `?${query}` : ""}`);
+        expect(response.status).toBe(200);
+        const rest = await response.json();
+        expect(namesOf(rest)).toEqual(fullNames(1, 30));
+        expect(response.headers.get("x-has-more")).toBe("true");
+        expect(response.headers.get("link")).toBe(
+          `</api-gateway/v1/ledgers/search?${query ? `${query}&` : ""}page=2&limit=30>; rel="next"`,
+        );
+        const uri = `beancount://catalog/ledgers/search${query ? `?${query}` : ""}`;
+        const resource = await f.client.readResource({ uri });
+        const [content, signal] = resource.contents;
+        expect((content as { text: string }).text).toBe(JSON.stringify(rest));
+        expect(content._meta).toEqual({ page: expected });
+        expect(signal).toEqual({
+          uri,
+          mimeType: "application/json",
+          text: JSON.stringify({ page: expected }),
+        });
+        const gql = await f.gqlPage(
+          q ? `searchLedgers(q: "${q}")` : "searchLedgers",
+        );
+        expect(namesOf(gql.rows)).toEqual(fullNames(1, 30));
+        expect(gql.page).toEqual(expected);
+        for (const [args] of f.ledgers.searchLedgers.mock.calls)
+          expect(args).toEqual({ ...(q && { q }), limit: 30 });
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("reaches every match by following the signal from an unpaged search", async () => {
+    const f = await searchFixture();
+    try {
+      const viaLink: string[] = [];
+      let next: string | null = "search?q=open_ledger";
+      while (next) {
+        const response = await f.rest(next);
+        viaLink.push(...namesOf(await response.json()));
+        const link = response.headers.get("link");
+        next =
+          link && link.replace(/^<\/api-gateway\/v1\/ledgers\/(.*)>.*$/, "$1");
+      }
+      expect(viaLink).toEqual(fullNames(1, 263));
+
+      const viaResource: string[] = [];
+      let page: number | undefined = 1;
+      while (page) {
+        const query: string = page > 1 ? `&page=${page}` : "";
+        const { contents } = await f.client.readResource({
+          uri: `beancount://catalog/ledgers/search?q=open_ledger${query}`,
+        });
+        const { text, _meta } = contents[0] as { text: string; _meta: object };
+        viaResource.push(...namesOf(JSON.parse(text)));
+        page = (_meta as { page: { nextPage?: number } }).page.nextPage;
+      }
+      expect(viaResource).toEqual(fullNames(1, 263));
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("serves a limit above the host's page size in full on every surface", async () => {
+    const f = await searchFixture();
+    try {
+      for (const [page, from, to, hasMore] of [
+        [1, 1, 100, true],
+        [2, 101, 200, true],
+        [3, 201, 263, false],
+      ] as const) {
+        const response = await f.rest(`search?q=co&page=${page}&limit=100`);
+        expect(response.status).toBe(200);
+        expect(namesOf(await response.json())).toEqual(fullNames(from, to));
+        expect(response.headers.get("x-has-more")).toBe(String(hasMore));
+        const [content] = (
+          await f.client.readResource({
+            uri: `beancount://catalog/ledgers/search?q=co&page=${page}&limit=100`,
+          })
+        ).contents;
+        expect(namesOf(JSON.parse((content as { text: string }).text))).toEqual(
+          fullNames(from, to),
+        );
+        expect(content._meta).toMatchObject({ page: { hasMore } });
+        const gql = await f.gqlPage(
+          `searchLedgers(q: "co", page: ${page}, limit: 100)`,
+        );
+        expect(namesOf(gql.rows)).toEqual(fullNames(from, to));
+        expect(gql.page).toMatchObject({ hasMore });
       }
     } finally {
       await f.close();

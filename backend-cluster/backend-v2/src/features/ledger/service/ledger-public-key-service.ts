@@ -1,5 +1,5 @@
 import { unwrapFavaResponse } from "@/foundation/fava";
-import { assertHostPage } from "@/shared/host-page";
+import { assertHostPage, HOST_DEFAULT_LIMIT } from "@/shared/host-page";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { Identity } from "@/server/api/identity";
 import {
@@ -52,7 +52,11 @@ export class LedgerPublicKeyService implements ILedgerPublicKeyService {
     identity: Identity,
     opts?: { page?: number; limit?: number },
   ): Promise<PublicKeyData[]> {
-    assertHostPage(opts?.page, opts?.limit);
+    // The default size is sent, not left to the host, so the page signal
+    // knows what a full page is (w31/012).
+    const page = opts?.page ?? 1;
+    const limit = opts?.limit ?? HOST_DEFAULT_LIMIT;
+    assertHostPage(page, limit);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST,
@@ -62,10 +66,7 @@ export class LedgerPublicKeyService implements ILedgerPublicKeyService {
       identity.userId,
     );
     const data = await unwrapFavaResponse(
-      favaApiClient.keys.listPublicKeys({
-        page: opts?.page,
-        limit: opts?.limit,
-      }),
+      favaApiClient.keys.listPublicKeys({ page, limit }),
       "list public keys",
     );
     return data.map((key) => ({
