@@ -1,4 +1,6 @@
 import { LedgerCollaboratorsWorkflow } from "../ledger-collaborators-workflow";
+import { FavaApiError } from "@/foundation/fava";
+import type { NotFoundError } from "@/shared/errors";
 import {
   AUTHORIZATION_ACTIONS,
   ledgerResource,
@@ -210,32 +212,67 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
     ).rejects.toThrow("upstream down");
   });
 
-  it("translates Gitea's unknown-user error on a permission read, and nothing else", async () => {
-    getLedgerCollaboratorPermission.mockRejectedValueOnce(
-      new Error("user does not exist [uid: 0, name: ghost]"),
-    );
-    await expect(
-      workflow.getCollaboratorPermission({
-        identity,
-        ledgerId,
-        collaborator: "ghost",
+  // w31/010: the read answers only for the owner and collaborators, and
+  // whether the account exists must not show (docs/mcp.md "Resources").
+  it.each([
+    [
+      "an account that is not a collaborator",
+      new FavaApiError("Collaborator 'ghost' not found", 404, {
+        success: false,
+        error: "Collaborator 'ghost' not found",
       }),
-    ).rejects.toMatchObject({
-      name: "BadUserInputError",
-      category: "BAD_USER_INPUT",
-      message: "No such user: ghost",
-    });
-    getLedgerCollaboratorPermission.mockRejectedValueOnce(
-      new Error("upstream down"),
-    );
-    await expect(
-      workflow.getCollaboratorPermission({
-        identity,
-        ledgerId,
-        collaborator: "ghost",
+    ],
+    [
+      "a name no account has",
+      new FavaApiError("user does not exist [uid: 0, name: ghost]", 422, {
+        success: false,
+        error: "user does not exist [uid: 0, name: ghost]",
       }),
-    ).rejects.toThrow("upstream down");
-  });
+    ],
+  ])(
+    "answers a permission read for %s as the same NOT_FOUND",
+    async (_case, upstream) => {
+      getLedgerCollaboratorPermission.mockRejectedValueOnce(upstream);
+      const refusal = await workflow
+        .getCollaboratorPermission({
+          identity,
+          ledgerId,
+          collaborator: "ghost",
+        })
+        .catch((error: unknown) => error);
+      expect(refusal).toMatchObject({
+        name: "NotFoundError",
+        category: "NOT_FOUND",
+        message: "Collaborator 'ghost' not found",
+      });
+      expect((refusal as NotFoundError).metadata?.hint).toContain(
+        "`beancount://{owner}/{name}/collaborators`",
+      );
+    },
+  );
+
+  it.each([
+    [503, "SERVICE_UNAVAILABLE"],
+    [500, "SERVICE_UNAVAILABLE"],
+    [403, "FORBIDDEN"],
+  ])(
+    "maps any other upstream %p on a permission read to %s instead of rethrowing it raw",
+    async (status, category) => {
+      getLedgerCollaboratorPermission.mockRejectedValueOnce(
+        new FavaApiError("upstream down", status, {
+          success: false,
+          error: "upstream down",
+        }),
+      );
+      await expect(
+        workflow.getCollaboratorPermission({
+          identity,
+          ledgerId,
+          collaborator: "ghost",
+        }),
+      ).rejects.toMatchObject({ category });
+    },
+  );
 
   it.each(["", "   ", "a\u0000b"])(
     "refuses a blank or NUL collaborator name %j on update, delete and permission read before any upstream work",

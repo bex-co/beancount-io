@@ -14,13 +14,18 @@ import {
   DomainError,
   ErrorCategory,
   InternalServerError,
+  NotFoundError,
   OperationNotAllowedError,
   ResourceLimitReachedError,
 } from "@/shared/errors";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
 import { readGiteaPages } from "@/shared/gitea-pages";
-import { UserPublic, unwrapFavaResponse } from "@/foundation/fava";
+import {
+  FavaApiError,
+  UserPublic,
+  unwrapFavaResponse,
+} from "@/foundation/fava";
 import { logger } from "@/shared/logger";
 import type { Identity } from "@/server/api/identity";
 import {
@@ -42,6 +47,32 @@ function translateUnknownUser(error: unknown, collaborator: string): unknown {
   return /user does not exist/i.test(message)
     ? new BadUserInputError(`No such user: ${collaborator}`)
     : error;
+}
+
+/**
+ * A permission read answers only for the owner and the collaborators
+ * (docs/mcp.md "Resources"). The ledger service refuses an account that is
+ * not a member with a 404, and the host refuses a name no account has with
+ * "user does not exist". Both become this one refusal, so the answer never
+ * tells which accounts exist (w31/010). Any other upstream failure keeps its
+ * own meaning.
+ */
+function collaboratorNotFound(
+  error: unknown,
+  collaborator: string,
+): NotFoundError | undefined {
+  const message = error instanceof Error ? error.message : String(error);
+  if (
+    !(error instanceof FavaApiError && error.status === 404) &&
+    !/user does not exist/i.test(message)
+  ) {
+    return undefined;
+  }
+  return new NotFoundError(
+    `Collaborator '${collaborator}'`,
+    undefined,
+    "A permission read answers only for the ledger's owner and its collaborators. List them with MCP `beancount://{owner}/{name}/collaborators`, GraphQL `listLedgerCollaborators`, or REST `GET /api-gateway/v1/ledgers/{owner}/{name}/collaborators`.",
+  );
 }
 
 /**
@@ -560,23 +591,18 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
-    let response;
-    try {
-      response =
-        await favaApiClient.collaborators.getLedgerCollaboratorPermission(
-          ledgerOwner,
-          ledgerName,
-          collaborator,
-        );
-    } catch (error) {
-      throw translateUnknownUser(error, collaborator);
-    }
-
-    if (!response.data?.success || !response.data.data) {
+    const data = await unwrapFavaResponse(
+      favaApiClient.collaborators
+        .getLedgerCollaboratorPermission(ledgerOwner, ledgerName, collaborator)
+        .catch((error: unknown) => {
+          throw collaboratorNotFound(error, collaborator) ?? error;
+        }),
+      "fetch collaborator permission",
+    );
+    if (!data) {
       throw new InternalServerError("Failed to fetch collaborator permission");
     }
 
-    const data = response.data.data;
     return {
       permission: data.permission ?? undefined,
       roleName: data.role_name ?? undefined,

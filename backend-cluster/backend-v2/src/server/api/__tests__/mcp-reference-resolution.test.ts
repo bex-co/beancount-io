@@ -48,6 +48,8 @@ const ALLOWED_HINT_SOURCES: Record<string, string> = {
     "the GraphQL mutation, named beside the MCP and REST spellings in the create-conflict hint",
   getLedgerDirContent:
     "the GraphQL query, in the hint of GraphQL's getLedgerFile; MCP reads get `listLedgerFiles` instead (file-read-directory-parity.test.ts)",
+  listLedgerCollaborators:
+    "the GraphQL query, named beside the MCP resource and REST route in the collaborator-permission NOT_FOUND hint (w31/010, collaborator-parity.test.ts)",
 };
 
 /** Docs that name GraphQL operations next to their MCP counterparts. */

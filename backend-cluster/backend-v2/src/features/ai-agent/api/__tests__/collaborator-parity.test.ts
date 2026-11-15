@@ -75,6 +75,8 @@ const mappedUser = (name: string) => ({
   lastLogin: "2026-09-01",
 });
 const envelope = (data: unknown) => ({ data: { success: true, data } });
+/** Accounts the synthetic host knows, whether or not they are members. */
+const ACCOUNTS = new Set(["alice", "bob", "ops.team-1", "carol"]);
 let resolvers: Map<unknown, object>;
 let schemaPromise: ReturnType<typeof buildSchema> | undefined;
 type Surface = "rest" | "mcp" | "gql";
@@ -137,10 +139,20 @@ async function fixture(
           .map(user),
       ),
   );
+  // As the ledger service answers (w31/010): the owner and members get their
+  // grant; another account gets its membership check's 404, and a name no
+  // account has gets the host's "user does not exist".
   const permission = jest.fn(
     async (_owner: string, _name: string, login: string) => {
-      if (login !== "alice" && !members.has(login))
-        return { data: { success: false } };
+      if (login !== "alice" && !members.has(login)) {
+        const error = ACCOUNTS.has(login)
+          ? `Collaborator '${login}' not found`
+          : `user does not exist [uid: 0, name: ${login}]`;
+        throw new FavaApiError(error, ACCOUNTS.has(login) ? 404 : 422, {
+          success: false,
+          error,
+        });
+      }
       const value = login === "alice" ? "admin" : members.get(login);
       return envelope({
         permission: value,
@@ -511,20 +523,21 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       await f.close();
     }
   });
-  it("preserves missing-member failure and partial permission-read behavior", async () => {
+  it("preserves a failed standalone permission read and partial permission-read behavior", async () => {
     const f = await fixture();
     try {
+      // An envelope that says it failed fails the call (docs/mcp.md).
+      f.permission.mockResolvedValue({ data: { success: false } } as never);
       expect(
-        (await f.request("collaborators/permission?collaborator=missing"))
-          .status,
+        (await f.request("collaborators/permission?collaborator=bob")).status,
       ).toBe(500);
       await expect(
-        f.read("collaborators/permission?collaborator=missing"),
+        f.read("collaborators/permission?collaborator=bob"),
       ).rejects.toThrow();
       expect(
         (
           await f.gql(
-            '{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"missing"){permission}}',
+            '{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"bob"){permission}}',
           )
         ).errors,
       ).toHaveLength(1);
@@ -665,30 +678,110 @@ describe("collaborators through actual adapters, workflow, PDP, and relationship
       }
     },
   );
-  it("answers a permission read for an unknown user as bad input, without upstream internals, on every surface", async () => {
+  // w31/010: docs/mcp.md promises the owner or a collaborator, and for any
+  // other name, whether or not the account exists, the same NOT_FOUND. An
+  // existing non-member read as a masked INTERNAL_SERVER_ERROR, and a name no
+  // account has as BAD_USER_INPUT, which told the caller which accounts exist.
+  it.each([
+    ["the owner", "alice", "admin"],
+    ["a collaborator", "bob", "admin"],
+  ])(
+    "reads %s's permission identically on every surface",
+    async (_case, name, value) => {
+      const f = await fixture();
+      try {
+        const expected = {
+          permission: value,
+          roleName: value,
+          user: mappedUser(name),
+        };
+        const query = `collaborators/permission?collaborator=${name}`;
+        const rest = await f.request(query);
+        expect(rest.status).toBe(200);
+        expect(await rest.json()).toEqual(expected);
+        expect(await f.read(query)).toEqual(expected);
+        const gql = await f.gql(
+          `{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"${name}"){permission roleName user{${userFields}}}}`,
+        );
+        expect(gql.errors).toBeUndefined();
+        expect(gql.data?.getLedgerCollaboratorPermission).toEqual(expected);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  it.each([
+    ["an account that is not a collaborator", "carol"],
+    ["a name no account has", "zz-ghost"],
+  ])(
+    "answers a permission read for %s with the same NOT_FOUND on every surface",
+    async (_case, name) => {
+      const f = await fixture();
+      try {
+        const message = `Collaborator '${name}' not found`;
+        const query = `collaborators/permission?collaborator=${name}`;
+        const rest = await f.request(query);
+        expect(rest.status).toBe(404);
+        const body = (await rest.json()) as {
+          error: {
+            code: string;
+            message: string;
+            metadata?: { hint?: string };
+          };
+        };
+        expect(body.error).toMatchObject({ code: "NOT_FOUND", message });
+        expect(body.error.metadata?.hint).toContain(
+          "`beancount://{owner}/{name}/collaborators`",
+        );
+        expect(JSON.stringify(body)).not.toContain("uid");
+        await expect(f.read(query)).rejects.toMatchObject({
+          code: -32002,
+          data: {
+            code: "NOT_FOUND",
+            message,
+            hint: expect.stringContaining(
+              "`beancount://{owner}/{name}/collaborators`",
+            ),
+          },
+        });
+        const gql = await f.gql(
+          `{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"${name}"){permission}}`,
+        );
+        expect(gql.data).toBeNull();
+        expect(gql.errors).toHaveLength(1);
+        expect(gql.errors?.[0].originalError).toMatchObject({
+          category: "NOT_FOUND",
+          message,
+        });
+        expect(f.permission).toHaveBeenCalledTimes(3);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  it("answers a permission read the ledger service failed as SERVICE_UNAVAILABLE on every surface, not a masked 500", async () => {
     const f = await fixture();
     try {
       f.permission.mockRejectedValue(
-        new Error("user does not exist [uid: 0, name: zz-ghost]"),
+        new FavaApiError("Service Unavailable", 503, {
+          success: false,
+          error: "Service Unavailable",
+        }),
       );
-      const rest = await f.request(
-        "collaborators/permission?collaborator=zz-ghost",
-      );
-      expect(rest.status).toBe(400);
-      expect(await rest.text()).not.toContain("uid");
-      await expect(
-        f.read("collaborators/permission?collaborator=zz-ghost"),
-      ).rejects.toMatchObject({
-        code: -32602,
-        data: { code: "BAD_USER_INPUT", message: "No such user: zz-ghost" },
+      const query = "collaborators/permission?collaborator=bob";
+      const rest = await f.request(query);
+      expect(rest.status).toBe(503);
+      expect(await rest.json()).toMatchObject({
+        error: { code: "SERVICE_UNAVAILABLE" },
+      });
+      await expect(f.read(query)).rejects.toMatchObject({
+        data: { code: "SERVICE_UNAVAILABLE" },
       });
       const gql = await f.gql(
-        '{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"zz-ghost"){permission}}',
+        '{getLedgerCollaboratorPermission(ledgerId:"alice/main",collaborator:"bob"){permission}}',
       );
-      expect(gql.errors).toHaveLength(1);
       expect(gql.errors?.[0].originalError).toMatchObject({
-        category: "BAD_USER_INPUT",
-        message: "No such user: zz-ghost",
+        category: "SERVICE_UNAVAILABLE",
       });
     } finally {
       await f.close();
