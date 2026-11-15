@@ -73,6 +73,14 @@ When a new package gets real code, add a `<package>/AGENTS.md` documenting its t
 - Parallel work, such as several `/loopx` queues at once, runs in separate clones the user sets up, not in worktrees.
 - A session the user starts inside a worktree is fine; this rule covers agents creating one.
 
+### Failing checks: fix your own, do not stop for others'
+
+Speed comes first. A red check that someone else caused must not stall your work, and a red check that you caused is always yours to fix.
+
+- **Yours:** a check that passes without your change and fails with it. Fix it before you push. A CI run that your push turned red is yours too: fix it next, ahead of new work.
+- **Not yours:** a check that already fails without your change. Fix it in its own commit when that is quick. When it is not, carry on with your own change and record the failure where the next person will see it: a `.pm` inbox note through `/pm`, or your hand-off.
+- **Going around a failure means not waiting for it, never hiding it.** Do not delete, skip, or weaken a check to get past it, and do not push with `--no-verify`.
+
 ### The public website lives in a separate repository
 
 The marketing site, docs, blog, `/llms.txt`, `/openapi.json` and the `/mcp` page are served by a separate website (CMS) repository, not by this monorepo. A copy may be checked out under `.internal/` (the gitignored local workspace that also holds scratch work; read-only for reference; the layout is the mirror of the website's own `./beancount-io` convention).

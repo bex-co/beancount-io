@@ -46,10 +46,10 @@ When adding a development skill, update this catalog and run the checks below. U
 The `routine-*` skills are autonomous maintenance passes over this monorepo (discover → prove → fix → verify → ship). Their shared contract lives canonically at `.agents/skills/routine-shared/contract.md` (not a skill — no `SKILL.md`); every routine reads it first. The invariants it defines:
 
 - **One finding per `/ship`, never batched**; the next finding waits for the shipped SHA.
-- **Never ship red**: the owning package's checks (the same table as `loopx`'s step 3) are the only gate — `/ship` has none. A package with no covering automated check (backend-v2, agent-box, deploy) means STOP, not ship.
+- **Never ship your own red**: the owning package's checks (the same list as in `loopx`'s worker contract) are the gate before a push — `/ship` has none. A check that already fails without your change is not yours: fix it separately when that is quick, otherwise carry on (root `AGENTS.md`, "Failing checks"). A package with no covering automated check (backend-v2, agent-box, deploy) means STOP, not ship.
 - **Proof over suspicion**: a detector hit or grep match is a candidate; each skill defines its proof (failing test, still-green sabotage, empty reference sweep).
 - **Budget**: 3 shipped findings per invocation, then a summary of shipped / skipped / nothing-found.
-- **Universal STOPs**: new dependencies, cross-package API-contract changes, `DO_NOT_DO.md` conflicts, unpinnable behavior changes, unexplained red checks.
+- **Universal STOPs**: new dependencies, cross-package API-contract changes, `DO_NOT_DO.md` conflicts, unpinnable behavior changes, a red check your own change causes and you cannot explain.
 - **Never touch**: lockfiles, codegen output, `.pm/` (routines never write the board), `.env*`, vendored fava, `AGENTS.md` files, the skills symlink.
 - **Scope argument**: `/routine-* [package-or-path]`; empty means survey, pick one target, announce it. The contract's symptom→owner table keeps the nine skills' territories disjoint.
 

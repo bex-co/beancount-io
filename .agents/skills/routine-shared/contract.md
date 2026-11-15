@@ -31,10 +31,13 @@ Never fix on suspicion. A detector hit, a grep match, or a hunch is a
 still-green sabotaged test, a reference sweep that comes up empty, …). No proof
 → no fix; report the candidate as skipped instead.
 
-## Verify gates (never ship red)
+## Verify gates (never ship your own red)
 
 Run the checks the change touches and make them pass before shipping — always
-`cd` into the package first:
+`cd` into the package first. A check that already fails without your change is
+not yours and is not a reason to stop: fix it in its own commit when that is
+quick, otherwise carry on and name it in the summary (root `AGENTS.md`,
+"Failing checks"). Never delete, skip, or weaken a check to get past it.
 
 - `dashboard/` → `yarn format:check`, `yarn lint`, `yarn test`, `yarn build`
 - `mobile/` → `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`
@@ -73,7 +76,7 @@ Default budget: **3 shipped findings per invocation**, then stop and summarize:
   OpenAPI/IDL specs, generated clients' shapes) — report, don't fix.
 - The finding conflicts with any `DO_NOT_DO.md`.
 - The fix changes behavior that no test pins and that cannot be safely pinned first.
-- A check goes red and you cannot root-cause it.
+- Your change turns a check red and you cannot root-cause it.
 
 ## Never touch
 
