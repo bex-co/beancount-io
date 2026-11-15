@@ -399,4 +399,180 @@ describe("errorsHiddenByUnusedPads", () => {
     expect(blanked.includes(" pad ")).toBe(false);
     expect(blanked.split("\n")).toHaveLength(source.split("\n").length);
   });
+
+  // w31/014: rustledger fills a pad's balance in the pass that checks it, so a
+  // balance its padding moves after that check passed. bean-check 3.2.3:
+  // "Balance failed for 'Assets:A': expected 100 USD != accumulated 0 USD".
+  describe("a padding that moves a balance rustledger checked without it", () => {
+    const balance = (
+      date: string,
+      account: string,
+      number: string,
+    ): DirectiveJson => ({
+      type: "balance",
+      date,
+      account,
+      amount: { number, currency: "USD" },
+    });
+    const padOf = (
+      account: string,
+      source: string,
+      date = "2026-09-03",
+    ): DirectiveJson => ({
+      type: "pad",
+      date,
+      account,
+      source_account: source,
+    });
+    const paddingOf = (
+      account: string,
+      source: string,
+      number: string,
+      date = "2026-09-03",
+    ): DirectiveJson => ({
+      ...padding,
+      date,
+      postings: [
+        { account, units: { number, currency: "USD" } },
+        { account: source, units: { number: `-${number}`, currency: "USD" } },
+      ],
+    });
+    const at = (line: number, account: string, got: string) => ({
+      ...failed,
+      line,
+      message: `Balance failed for ${account}: expected 100 USD, got ${got} USD`,
+    });
+
+    it("re-checks a pad from its own account with its padding in place", async () => {
+      const source = `2026-09-01 open Assets:A USD
+2026-09-03 pad Assets:A Assets:A
+2026-09-04 balance Assets:A 100 USD
+`;
+      const self = padOf("Assets:A", "Assets:A");
+      const selfPadding = paddingOf("Assets:A", "Assets:A", "100");
+      const seen: { lines: string[]; removed: unknown; standIns: unknown }[] =
+        [];
+      const errors = await added(
+        [self, balance("2026-09-04", "Assets:A", "100")],
+        [selfPadding],
+        { "main.bean": source },
+        [],
+        async (files, removed, standIns) => {
+          seen.push({
+            lines: files["main.bean"].split("\n"),
+            removed,
+            standIns,
+          });
+          return [at(3, "Assets:A", "0")];
+        },
+      );
+      // Used, so not reported unused: the balance it could not fill fails.
+      expect(errors.map((e) => [e.code, e.line])).toEqual([["E2001", 3]]);
+      expect(seen).toHaveLength(1);
+      expect(seen[0].removed).toEqual([self]);
+      expect(seen[0].standIns).toEqual([selfPadding]);
+      expect(seen[0].lines[1]).toBe("");
+      expect(seen[0].lines.slice(4).join("\n")).toMatch(
+        /^2026-09-03 \* "\(Padding\)"\n\s+Assets:A\s+100 USD\n\s+Assets:A\s+-100 USD/,
+      );
+    });
+
+    it("re-checks a pad from a child of its account", async () => {
+      const reparse = jest.fn(async () => [at(4, "Assets:A", "0")]);
+      const errors = await added(
+        [
+          padOf("Assets:A", "Assets:A:Sub"),
+          balance("2026-09-04", "Assets:A", "100"),
+        ],
+        [paddingOf("Assets:A", "Assets:A:Sub", "100")],
+        { "main.bean": "x\nx\n2026-09-03 pad Assets:A Assets:A:Sub\n" },
+        [],
+        reparse,
+      );
+      expect(reparse).toHaveBeenCalledTimes(1);
+      expect(errors.map((e) => [e.code, e.line])).toEqual([["E2001", 4]]);
+    });
+
+    // The second pad is filled on B's balance, after A's was checked, and
+    // posts into A on a day before it. Every used pad stands in for the
+    // second run, or the engine would pad A again around the stand-in.
+    it("re-checks every used pad when a later-filled pad posts into a checked account", async () => {
+      const source = `2026-09-01 open Assets:A USD
+2026-09-03 pad Assets:A Equity:Open
+2026-09-03 pad Assets:B Assets:A
+2026-09-04 balance Assets:A 100 USD
+2026-09-04 balance Assets:B 50 USD
+`;
+      const first = padOf("Assets:A", "Equity:Open");
+      const second = padOf("Assets:B", "Assets:A");
+      let removed: readonly DirectiveJson[] = [];
+      const errors = await added(
+        [
+          first,
+          second,
+          balance("2026-09-04", "Assets:A", "100"),
+          balance("2026-09-04", "Assets:B", "50"),
+        ],
+        [
+          paddingOf("Assets:A", "Equity:Open", "100"),
+          paddingOf("Assets:B", "Assets:A", "50"),
+        ],
+        { "main.bean": source },
+        [],
+        async (_files, gone) => {
+          removed = gone;
+          return [at(4, "Assets:A", "50")];
+        },
+      );
+      expect(removed).toEqual([first, second]);
+      expect(errors.map((e) => [e.code, e.line])).toEqual([["E2001", 4]]);
+    });
+
+    it("re-checks a parent's balance dated between a padding and its own", async () => {
+      const reparse = jest.fn(async () => []);
+      await added(
+        [
+          padOf("Assets:A:Sub", "Equity:Open"),
+          balance("2026-09-04", "Assets:A", "0"),
+          balance("2026-09-05", "Assets:A:Sub", "100"),
+        ],
+        [paddingOf("Assets:A:Sub", "Equity:Open", "100")],
+        { "main.bean": "x\nx\n2026-09-03 pad Assets:A:Sub Equity:Open\n" },
+        [],
+        reparse,
+      );
+      expect(reparse).toHaveBeenCalledTimes(1);
+    });
+
+    it("leaves padding whose balances all came after it", async () => {
+      const reparse = jest.fn(async () => []);
+      const errors = await added(
+        [
+          // A pad from the parent fills only the child's balance.
+          padOf("Assets:A:Sub", "Assets:A"),
+          // The same day's balance is checked before that day's padding.
+          balance("2026-09-03", "Assets:A", "0"),
+          balance("2026-09-04", "Assets:A:Sub", "100"),
+          // After the balance that set the padding, the engine sums it.
+          balance("2026-09-05", "Assets:A", "0"),
+          padOf("Assets:Cash", "Equity:Open", "2026-09-05"),
+          balance("2026-09-06", "Assets:Cash", "100"),
+          balance("2026-09-07", "Equity:Open", "-100"),
+          balance("2026-10-06", "Assets:Cash", "100"),
+        ],
+        [
+          paddingOf("Assets:A:Sub", "Assets:A", "100"),
+          paddingOf("Assets:Cash", "Equity:Open", "100", "2026-09-05"),
+        ],
+        {
+          "main.bean":
+            "2026-09-03 pad Assets:A:Sub Assets:A\n2026-09-05 pad Assets:Cash Equity:Open\n",
+        },
+        [],
+        reparse,
+      );
+      expect(errors).toEqual([]);
+      expect(reparse).not.toHaveBeenCalled();
+    });
+  });
 });

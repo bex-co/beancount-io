@@ -10,6 +10,7 @@ import type {
 import { dropUnparsedTransactions, locateParseErrors } from "./parse-errors";
 import { restoreEntrySortOrder } from "./entry-sort-order";
 import { dropPaddingWithinTolerance } from "./pad-tolerance";
+import { paddingCurrencyErrors } from "./pad-currencies";
 import { errorsHiddenByUnusedPads } from "./pad-recheck";
 import { withBalanceErrorDates } from "./balance-error-dates";
 import { loadRustledger } from "./loader";
@@ -866,7 +867,16 @@ async function parseLedgerFilesUncached(
     paddingTransactions,
     stripResult?.strippedFiles ?? scoped,
   );
-  errors = [...errors, ...padding.errors];
+  errors = [
+    ...errors,
+    ...padding.errors,
+    // The engine never checks its padding against an `open` (w31/014).
+    ...paddingCurrencyErrors(
+      directives,
+      padding.paddingTransactions,
+      stripResult?.strippedFiles ?? scoped,
+    ),
+  ];
   if (!isRawPluginProcessing(files, entryPoint)) {
     const scopedFiles = stripResult?.strippedFiles ?? scoped;
     const transformed = directives;
@@ -878,20 +888,22 @@ async function parseLedgerFilesUncached(
       // Checked again as the first pass was: the blanked source has no
       // amortize_over or forecast copies, so every balance on an account a
       // plugin moved failed against the untransformed postings (w21/704).
-      (blanked, removed, standIns) =>
-        validatedTransformed
-          ? transformedValidationErrors(
-              [
-                ...transformed.filter(
-                  (directive) => !removed.includes(directive),
-                ),
-                ...standIns,
-              ].sort((a, b) =>
-                a.date < b.date ? -1 : a.date > b.date ? 1 : 0,
-              ),
-              files[entryPoint],
-            ).then((found) => found ?? [])
-          : withLedger(blanked, entryPoint, (ledger) => ledger.getErrors()),
+      (blanked, removed, standIns) => {
+        if (!validatedTransformed) {
+          return withLedger(blanked, entryPoint, (ledger) =>
+            ledger.getErrors(),
+          );
+        }
+        // Every used pad can be removed (w31/014): look each up once.
+        const gone = new Set<DirectiveJson>(removed);
+        return transformedValidationErrors(
+          [
+            ...transformed.filter((directive) => !gone.has(directive)),
+            ...standIns,
+          ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)),
+          files[entryPoint],
+        ).then((found) => found ?? []);
+      },
     );
     const cleared = new Set(hidden.cleared);
     errors = [

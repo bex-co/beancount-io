@@ -3665,6 +3665,116 @@ async function main(): Promise<void> {
       JSON.stringify([["E2003", 6]]),
     `the pad after an unused one raises no Multiple pad directives (got ${padAfterUnused.errors.map((e) => `${e.code}@${e.line}`)})`,
   );
+  // w31/014: rustledger fills a pad's balance in the pass that checks it and
+  // never checks the padding against an `open`, so each of these loaded
+  // clean. The expected errors are bean-check 3.2.3's, on the same lines.
+  const padErrors = async (...lines: string[]) =>
+    (
+      await parseLedgerFiles(
+        { "main.beancount": lines.join("\n") },
+        "main.beancount",
+        { today: "2099-01-01" },
+      )
+    ).errors.map((e) => `${e.code}@${e.line} ${e.message}`);
+  const selfPad = await padErrors(
+    "2026-09-01 open Assets:A USD",
+    "2026-09-03 pad Assets:A Assets:A",
+    "2026-09-04 balance Assets:A 100 USD",
+  );
+  assert(
+    JSON.stringify(selfPad) ===
+      JSON.stringify([
+        "E2001@3 Balance failed for Assets:A: expected 100 USD, got 0 USD",
+      ]),
+    `a pad from its own account fails its balance, accumulated 0 (got ${JSON.stringify(selfPad)})`,
+  );
+  const childPad = await padErrors(
+    "2026-09-01 open Assets:A USD",
+    "2026-09-01 open Assets:A:Sub USD",
+    "2026-09-03 pad Assets:A Assets:A:Sub",
+    "2026-09-04 balance Assets:A 100 USD",
+  );
+  assert(
+    JSON.stringify(childPad) ===
+      JSON.stringify([
+        "E2001@4 Balance failed for Assets:A: expected 100 USD, got 0 USD",
+      ]),
+    `a pad from a child of its account fails its balance (got ${JSON.stringify(childPad)})`,
+  );
+  // bean-check fails both balances: its pad plugin pads B by 50 from B's own
+  // postings, then sums every padding (A 50, B -50). rustledger pads B by 150,
+  // counting A's padding, so the served stream fails only A's, at -50. That
+  // half waits on the engine: update this check when a rustledger bump pads
+  // as Beancount does.
+  const mutualPads = await padErrors(
+    "2026-09-01 open Assets:A USD",
+    "2026-09-01 open Assets:B USD",
+    "2026-09-03 pad Assets:A Assets:B",
+    "2026-09-03 pad Assets:B Assets:A",
+    "2026-09-04 balance Assets:A 100 USD",
+    "2026-09-04 balance Assets:B 50 USD",
+  );
+  assert(
+    JSON.stringify(mutualPads) ===
+      JSON.stringify([
+        "E2001@5 Balance failed for Assets:A: expected 100 USD, got -50 USD",
+      ]),
+    `a pad filled after a balance it posts into re-checks that balance (got ${JSON.stringify(mutualPads)})`,
+  );
+  const sourceCurrency = await padErrors(
+    "2026-09-01 open Equity:Opening-Balances USD",
+    "2026-09-01 open Assets:EurBank EUR",
+    "2026-09-03 pad Assets:EurBank Equity:Opening-Balances",
+    "2026-09-04 balance Assets:EurBank 250.00 EUR",
+  );
+  assert(
+    JSON.stringify(sourceCurrency) ===
+      JSON.stringify([
+        "E5002@3 Invalid currency EUR for account 'Equity:Opening-Balances'",
+      ]),
+    `padding in a currency its source is not opened for is refused on the pad (got ${JSON.stringify(sourceCurrency)})`,
+  );
+  const paddedCurrency = await padErrors(
+    "2026-09-01 open Assets:A EUR",
+    "2026-09-01 open Equity:Open",
+    "2026-09-03 pad Assets:A Equity:Open",
+    "2026-09-04 balance Assets:A 100 USD",
+  );
+  assert(
+    paddedCurrency.includes(
+      "E5002@3 Invalid currency USD for account 'Assets:A'",
+    ) && paddedCurrency.length === 2,
+    `padding in a currency its account is not opened for is refused beside the balance (got ${JSON.stringify(paddedCurrency)})`,
+  );
+  const ordinaryPad = await padErrors(
+    "2026-09-01 open Assets:A USD",
+    "2026-09-01 open Equity:Open USD",
+    "2026-09-03 pad Assets:A Equity:Open",
+    "2026-09-04 balance Assets:A 100 USD",
+    "2026-09-05 balance Equity:Open -100 USD",
+  );
+  assert(
+    ordinaryPad.length === 0,
+    `a pad from another account in its currency stays clean (got ${JSON.stringify(ordinaryPad)})`,
+  );
+  // The same checks where balances are validated on amortize_over's stream.
+  const transformedPads = await padErrors(
+    amortizeSource,
+    "2017-01-01 open Assets:A USD",
+    "2017-01-01 open Equity:Eur EUR",
+    "2017-03-01 pad Assets:A Assets:A",
+    "2017-03-02 balance Assets:A 100 USD",
+    "2017-04-01 pad Assets:A Equity:Eur",
+    "2017-04-02 balance Assets:A 150 USD",
+  );
+  assert(
+    transformedPads.some((e) => e.startsWith("E2001@12 ")) &&
+      transformedPads.includes(
+        "E5002@13 Invalid currency USD for account 'Equity:Eur'",
+      ) &&
+      !transformedPads.some((e) => e.includes("Prepaid")),
+    `a self pad and a source's currency are checked on amortize_over's stream (got ${JSON.stringify(transformedPads)})`,
+  );
   // w21/708: rustledger books a sale from an AVERAGE position at the average
   // cost; Beancount 3.2 refuses it, as the CLI does.
   const averageSource = (booking: string) =>
