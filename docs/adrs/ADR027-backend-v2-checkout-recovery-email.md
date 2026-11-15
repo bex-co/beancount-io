@@ -144,7 +144,7 @@ Tests cover each D2 ineligibility, the once-per-user key across two expired sess
 
 ## Alternatives considered
 
-- **Stripe's own recovery emails** (Dashboard setting). Stripe sends a reminder with the recovery link, but we would not control the copy, the timing, or a per-person discount, and it would duplicate ours. Rejected; keep it off.
+- **Stripe's own recovery emails.** We expected a Dashboard setting that has Stripe send a reminder with the recovery link. It would duplicate ours, and we would not control the copy, the timing, or a per-person discount. Rejected; keep it off. The Dashboard turned out to have no such setting (checked 2026-11-15). The only related item is Settings → Checkout and Payment Links → Promotional emails. It opens the Promotional Emails API, which collects promotional consent in Checkout, and the merchant still sends every email. This account has never accepted its terms, and our sessions set no `consent_collection`.
 - **Keep the 24-hour expiry and schedule the email from a cron job** reading sessions created one to two hours ago. That works, but it adds a polling job and a pending state, all to recreate what `expires_at` already provides. Rejected.
 - **Pre-apply the discount** (`discounts` on a fresh session behind our own link). The customer would not type anything, but Stripe forbids `discounts` together with `allow_promotion_codes`, and it needs a new authenticated endpoint. Rejected in favor of the recovery URL plus a code.
 - **A series of reminders, or a larger discount on the second email.** This is exactly what teaches customers to wait. Rejected.
