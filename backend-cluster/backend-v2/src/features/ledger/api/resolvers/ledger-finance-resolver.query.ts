@@ -213,11 +213,12 @@ class HoldingsGroup {
   @Field(() => HoldingsMoney)
   units: HoldingsMoney;
 
-  @Field(() => HoldingsMoney)
-  averageCost: HoldingsMoney;
+  // Null when part of the group was bought with a price but no cost (w1/253).
+  @Field(() => HoldingsMoney, { nullable: true })
+  averageCost: HoldingsMoney | null;
 
-  @Field(() => HoldingsMoney)
-  costBasis: HoldingsMoney;
+  @Field(() => HoldingsMoney, { nullable: true })
+  costBasis: HoldingsMoney | null;
 
   @Field(() => HoldingsMoney)
   marketValue: HoldingsMoney;
@@ -248,6 +249,12 @@ class HoldingsData {
     cost_basis: Record<string, string>;
     market_value: Record<string, string>;
   };
+
+  @Field(() => Boolean, {
+    description:
+      "False when a group's cost basis is unknown; totals.cost_basis then leaves it out",
+  })
+  costBasisComplete: boolean;
 
   @Field(() => String)
   valuation: string;
@@ -616,6 +623,7 @@ export class LedgerFinanceQueryResolver {
         price: group.price,
       })),
       totals: data.totals,
+      costBasisComplete: data.cost_basis_complete,
       valuation: data.valuation,
       missingPrices: data.missing_prices,
       missingPriceSummary: data.missing_price_summary,

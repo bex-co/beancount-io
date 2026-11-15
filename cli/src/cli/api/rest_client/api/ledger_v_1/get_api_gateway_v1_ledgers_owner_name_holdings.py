@@ -135,8 +135,10 @@ def sync_detailed(
      Lots grouped by account or commodity — units, average cost, cost basis, market value — valued at
     today's quotes. `conversion` takes a currency or `units` (default: the operating currency when the
     ledger declares exactly one, else each group's held currency); `account` names a parent account or a
-    regular expression. Costless cash and fully-sold groups are left out; groups without a quote value
-    at cost and are named in `missing_prices`.
+    regular expression. Cash (an uncosted balance in a currency the ledger uses as money) and fully-sold
+    groups are left out; a position bought with a price but no cost is a holding whose group has a null
+    `cost_basis` and `average_cost`, and `cost_basis_complete` is false. Groups without a quote value at
+    cost and are named in `missing_prices`.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -190,8 +192,10 @@ def sync(
      Lots grouped by account or commodity — units, average cost, cost basis, market value — valued at
     today's quotes. `conversion` takes a currency or `units` (default: the operating currency when the
     ledger declares exactly one, else each group's held currency); `account` names a parent account or a
-    regular expression. Costless cash and fully-sold groups are left out; groups without a quote value
-    at cost and are named in `missing_prices`.
+    regular expression. Cash (an uncosted balance in a currency the ledger uses as money) and fully-sold
+    groups are left out; a position bought with a price but no cost is a holding whose group has a null
+    `cost_basis` and `average_cost`, and `cost_basis_complete` is false. Groups without a quote value at
+    cost and are named in `missing_prices`.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -240,8 +244,10 @@ async def asyncio_detailed(
      Lots grouped by account or commodity — units, average cost, cost basis, market value — valued at
     today's quotes. `conversion` takes a currency or `units` (default: the operating currency when the
     ledger declares exactly one, else each group's held currency); `account` names a parent account or a
-    regular expression. Costless cash and fully-sold groups are left out; groups without a quote value
-    at cost and are named in `missing_prices`.
+    regular expression. Cash (an uncosted balance in a currency the ledger uses as money) and fully-sold
+    groups are left out; a position bought with a price but no cost is a holding whose group has a null
+    `cost_basis` and `average_cost`, and `cost_basis_complete` is false. Groups without a quote value at
+    cost and are named in `missing_prices`.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -293,8 +299,10 @@ async def asyncio(
      Lots grouped by account or commodity — units, average cost, cost basis, market value — valued at
     today's quotes. `conversion` takes a currency or `units` (default: the operating currency when the
     ledger declares exactly one, else each group's held currency); `account` names a parent account or a
-    regular expression. Costless cash and fully-sold groups are left out; groups without a quote value
-    at cost and are named in `missing_prices`.
+    regular expression. Cash (an uncosted balance in a currency the ledger uses as money) and fully-sold
+    groups are left out; a position bought with a price but no cost is a holding whose group has a null
+    `cost_basis` and `average_cost`, and `cost_basis_complete` is false. Groups without a quote value at
+    cost and are named in `missing_prices`.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

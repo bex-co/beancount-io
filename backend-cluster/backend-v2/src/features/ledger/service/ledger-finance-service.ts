@@ -10,6 +10,7 @@ import {
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 import {
   composeHoldings,
+  HOLDINGS_PRICE_CURRENCIES_QUERY,
   HOLDINGS_PRICES_QUERY,
   holdingsDetailQuery,
   valueHoldingRows,
@@ -235,8 +236,9 @@ export class LedgerFinanceService
         operating,
       );
     }
-    // The detail rows and the price directives are independent reads.
-    const [queryResult, priceResult] = await Promise.all([
+    // The detail rows, the price directives and the posting price
+    // currencies are independent reads.
+    const [queryResult, priceResult, priceCurrencyResult] = await Promise.all([
       unwrapFavaResponse(
         favaApiClient.shell.queryShellPost(ledgerOwner, ledgerName, {
           query: holdingsDetailQuery(),
@@ -249,6 +251,12 @@ export class LedgerFinanceService
         }),
         "get ledger prices",
       ),
+      unwrapFavaResponse(
+        favaApiClient.shell.queryShellPost(ledgerOwner, ledgerName, {
+          query: HOLDINGS_PRICE_CURRENCIES_QUERY,
+        }),
+        "get ledger price currencies",
+      ),
     ]);
     const result = queryResult.result;
     if (!("types" in result && "rows" in result)) {
@@ -256,18 +264,23 @@ export class LedgerFinanceService
     }
     type Cell = string | number | boolean | null | Record<string, unknown>;
     const asOf = new Date().toISOString().slice(0, 10);
+    const prices =
+      "rows" in priceResult.result ? (priceResult.result.rows as Cell[][]) : [];
     const valued = valueHoldingRows({
       columns: result.types.map((col) => col.name),
       rows: result.rows as Cell[][],
-      prices:
-        "rows" in priceResult.result
-          ? (priceResult.result.rows as Cell[][])
-          : [],
+      prices,
       conversionTarget: target,
       asOf,
     });
     return composeHoldings({
       ...valued,
+      prices,
+      priceCurrencies:
+        "rows" in priceCurrencyResult.result
+          ? (priceCurrencyResult.result.rows as Cell[][])
+          : [],
+      operatingCurrencies: operating,
       groupBy: groupBy ?? "account",
       account,
       roots: this.rootsOf(options),

@@ -28,8 +28,9 @@ type HoldingsGroup = {
   accounts?: string[];
   commodity: string;
   units: HoldingsMoney;
-  average_cost: HoldingsMoney;
-  cost_basis: HoldingsMoney;
+  /** Null when part of the group was bought with a price but no cost. */
+  average_cost: HoldingsMoney | null;
+  cost_basis: HoldingsMoney | null;
   market_value: HoldingsMoney;
   price: HoldingsMoney | null;
 };
@@ -41,6 +42,8 @@ export type HoldingsResult = {
     cost_basis: Record<string, string>;
     market_value: Record<string, string>;
   };
+  /** False when a group's basis is unknown: `totals.cost_basis` leaves it out. */
+  cost_basis_complete: boolean;
   valuation: "complete" | "partial";
   missing_prices: { from: string; to: string }[];
   missing_price_summary: string[];
@@ -80,6 +83,15 @@ export function holdingsDetailQuery(): string {
  */
 export const HOLDINGS_PRICES_QUERY =
   "SELECT date, currency, amount FROM prices ORDER BY date";
+
+/**
+ * Every currency a posting price is quoted in. With the operating currencies,
+ * the cost currencies, and the `price` directives' quote currencies, these are
+ * the ledger's money: an uncosted balance in one is cash, not a holding
+ * (w1/253, the CLI's `_money_currencies`).
+ */
+export const HOLDINGS_PRICE_CURRENCIES_QUERY =
+  "SELECT DISTINCT currency(price) AS price_currency";
 
 /**
  * Resolve the conversion target: an explicit currency, `units` for none,
@@ -222,6 +234,55 @@ export function valueHoldingRows(params: {
   };
 }
 
+/** Cells naming the currencies in a column, e.g. the posting price query's. */
+function currenciesIn(rows: BqlCell[][]): string[] {
+  return rows.flatMap(([cell]) =>
+    typeof cell === "string" && cell !== "" ? [cell] : [],
+  );
+}
+
+/**
+ * The currencies this ledger uses as money (w1/253): the operating currencies
+ * and every currency a cost, a posting price or a `price` directive is quoted
+ * in, across the whole ledger so the account filter does not change what is
+ * cash.
+ */
+function moneyCurrencies(
+  rows: BqlCell[][],
+  heldAt: number,
+  prices: BqlCell[][],
+  priceCurrencies: BqlCell[][],
+  operating: readonly string[],
+): Set<string> {
+  const money = new Set<string>([
+    ...operating,
+    ...currenciesIn(priceCurrencies),
+  ]);
+  for (const row of rows) {
+    const held = row[heldAt];
+    if (typeof held === "string" && held !== "") money.add(held);
+  }
+  for (const [, , amount] of prices) {
+    if (typeof amount === "object" && amount !== null && !Array.isArray(amount))
+      for (const quote of Object.keys(amount)) money.add(quote);
+  }
+  return money;
+}
+
+/** Currencies `commodity` is quoted in by a directive, either direction. */
+function quoteCurrencies(prices: BqlCell[][], commodity: string): string[] {
+  const found = new Set<string>();
+  for (const [, base, amount] of prices) {
+    if (typeof amount !== "object" || amount === null || Array.isArray(amount))
+      continue;
+    for (const quote of Object.keys(amount)) {
+      if (base === commodity) found.add(quote);
+      if (quote === commodity && typeof base === "string") found.add(base);
+    }
+  }
+  return [...found].sort();
+}
+
 export function composeHoldings(params: {
   columns: string[];
   rows: BqlCell[][];
@@ -230,16 +291,43 @@ export function composeHoldings(params: {
   roots: readonly string[];
   conversionTarget: string | null;
   asOf: string;
+  /** The price directives, as for {@link valueHoldingRows}. */
+  prices?: BqlCell[][];
+  /** {@link HOLDINGS_PRICE_CURRENCIES_QUERY}'s rows. */
+  priceCurrencies?: BqlCell[][];
+  operatingCurrencies?: readonly string[];
 }): HoldingsResult {
   const { columns, rows, groupBy, account, roots, conversionTarget, asOf } =
     params;
+  const prices = params.prices ?? [];
+  const operating = params.operatingCurrencies ?? [];
   const at = (name: HoldingsColumn): number => columns.indexOf(name);
+  const quote = priceLookup(prices, asOf);
+  const money = moneyCurrencies(
+    rows,
+    at("cost_currency"),
+    prices,
+    params.priceCurrencies ?? [],
+    operating,
+  );
   // (scope..., commodity, cost currency) -> [units, cost basis, accounts,
-  // market value, price]. The CLI's lot table, keyed the same way.
+  // market value, price, basis known, held]. The CLI's lot table, keyed the
+  // same way; `held` is the cost currency before any conversion.
   const lots = new Map<
     string,
-    [BigNumber, BigNumber, Set<string>, BigNumber, string | null]
+    [
+      BigNumber,
+      BigNumber,
+      Set<string>,
+      BigNumber,
+      string | null,
+      boolean,
+      string,
+    ]
   >();
+  // (scope..., commodity) -> [units, accounts]: uncosted, non-cash positions
+  // (`3 AAPL @ 200 USD`), holdings with an unknown basis (w1/253).
+  const uncosted = new Map<string, [BigNumber, Set<string>]>();
   const keyOf = (scope: string[], commodity: string, held: string): string =>
     JSON.stringify([...scope, commodity, held]);
   const missing = new Map<string, { from: string; to: string }>();
@@ -255,16 +343,32 @@ export function composeHoldings(params: {
       typeof name !== "string" ||
       name === "" ||
       typeof commodity !== "string" ||
-      commodity === "" ||
-      typeof held !== "string" ||
-      held === ""
+      commodity === ""
     ) {
       continue;
     }
     if (account !== undefined && !matchesAccountPattern(account, name, roots)) {
       continue;
     }
-    // Costless lots are cash, not holdings — same exclusion as the CLI.
+    if (typeof held !== "string" || held === "") {
+      // Cash is told apart by its commodity, not by a missing cost — the
+      // CLI's rule (w1/253).
+      if (money.has(commodity)) continue;
+      const amount = moneyIn(row[at("units")], commodity);
+      if (amount === null || new BigNumber(amount).isZero()) continue;
+      const pendingKey = JSON.stringify([
+        ...(groupBy === "account" ? [name] : []),
+        commodity,
+      ]);
+      const pending = uncosted.get(pendingKey);
+      if (pending === undefined) {
+        uncosted.set(pendingKey, [new BigNumber(amount), new Set([name])]);
+      } else {
+        pending[0] = pending[0].plus(amount);
+        pending[1].add(name);
+      }
+      continue;
+    }
     const units = moneyIn(row[at("units")], commodity);
     const basis = moneyIn(row[at("book_value")], held);
     const market = moneyIn(row[at("market_value")], held);
@@ -296,7 +400,15 @@ export function composeHoldings(params: {
     );
     const found = lots.get(key);
     if (found === undefined) {
-      lots.set(key, [unitsBN, basisBN, new Set([name]), marketBN, price]);
+      lots.set(key, [
+        unitsBN,
+        basisBN,
+        new Set([name]),
+        marketBN,
+        price,
+        true,
+        held,
+      ]);
     } else {
       found[0] = found[0].plus(unitsBN);
       found[1] = found[1].plus(basisBN);
@@ -305,6 +417,80 @@ export function composeHoldings(params: {
       // One quote per (commodity, held) pair, so merged rows agree; a
       // disagreement keeps the first rather than inventing a blend.
     }
+  }
+
+  for (const [pendingKey, [unitsBN, names]] of uncosted) {
+    const prefix = JSON.parse(pendingKey) as string[];
+    const commodity = prefix[prefix.length - 1]!;
+    const costed = [...lots.keys()].filter(
+      (key) =>
+        JSON.stringify((JSON.parse(key) as string[]).slice(0, -1)) ===
+        pendingKey,
+    );
+    if (costed.length === 1) {
+      // Joins the one costed group of its commodity, valued at its quote; an
+      // unquoted group counts only its costed part, already named missing.
+      const found = lots.get(costed[0]!)!;
+      const held = found[6];
+      const price = quote(commodity, held);
+      if (price !== null) {
+        let market = unitsBN.times(price);
+        const convertedTo = (JSON.parse(costed[0]!) as string[]).at(-1)!;
+        if (convertedTo !== held) {
+          const rate = quote(held, convertedTo);
+          market = rate === null ? market : market.times(rate);
+        }
+        found[3] = found[3].plus(market);
+      }
+      found[0] = found[0].plus(unitsBN);
+      for (const n of names) found[2].add(n);
+      found[5] = false;
+      continue;
+    }
+    // No cost currency to value into: the first operating currency (or other
+    // currency the commodity is quoted in) with a quote, as Fava's `at_value`.
+    const candidates = [
+      ...new Set([
+        ...(conversionTarget === null ? [] : [conversionTarget]),
+        ...operating,
+        ...quoteCurrencies(prices, commodity),
+      ]),
+    ].filter((currency) => currency !== commodity);
+    const held = candidates.find(
+      (currency) => quote(commodity, currency) !== null,
+    );
+    let currency = commodity;
+    let market = unitsBN;
+    let price: string | null = null;
+    if (held === undefined) {
+      if (candidates.length > 0) miss(commodity, candidates[0]!);
+    } else {
+      const quoted = quote(commodity, held)!;
+      currency = held;
+      market = unitsBN.times(quoted);
+      price = plain(quoted);
+      if (conversionTarget !== null && conversionTarget !== held) {
+        const rate = quote(held, conversionTarget);
+        if (rate === null) {
+          miss(held, conversionTarget);
+        } else {
+          currency = conversionTarget;
+          market = market.times(rate);
+          price = plain(quoted.times(rate));
+        }
+      }
+    }
+    // Keyed apart from every costed group, as the CLI keys it; the group's
+    // currency rides in the value.
+    lots.set(JSON.stringify([...prefix, ""]), [
+      unitsBN,
+      new BigNumber(0),
+      names,
+      market,
+      price,
+      false,
+      currency,
+    ]);
   }
 
   const groups: HoldingsGroup[] = [];
@@ -325,10 +511,13 @@ export function composeHoldings(params: {
   const ordered = [...lots.entries()].sort(([a], [b]) =>
     a < b ? -1 : a > b ? 1 : 0,
   );
-  for (const [key, [unitsBN, basisBN, accounts, marketBN, price]] of ordered) {
+  for (const [
+    key,
+    [unitsBN, basisBN, accounts, marketBN, price, basisKnown, valuedIn],
+  ] of ordered) {
     if (unitsBN.isZero()) continue;
     const parts = JSON.parse(key) as string[];
-    const heldCurrency = parts[parts.length - 1]!;
+    const heldCurrency = parts[parts.length - 1] || valuedIn;
     const commodity = parts[parts.length - 2]!;
     const average = plain(basisBN.dividedBy(unitsBN));
     const group: HoldingsGroup = {
@@ -337,13 +526,17 @@ export function composeHoldings(params: {
         : { accounts: [...accounts].sort() }),
       commodity,
       units: { number: plain(unitsBN), currency: commodity },
-      average_cost: { number: average, currency: heldCurrency },
-      cost_basis: { number: plain(basisBN), currency: heldCurrency },
+      average_cost: basisKnown
+        ? { number: average, currency: heldCurrency }
+        : null,
+      cost_basis: basisKnown
+        ? { number: plain(basisBN), currency: heldCurrency }
+        : null,
       market_value: { number: plain(marketBN), currency: heldCurrency },
       price: price === null ? null : { number: price, currency: heldCurrency },
     };
     groups.push(group);
-    total("cost_basis", heldCurrency, basisBN);
+    if (basisKnown) total("cost_basis", heldCurrency, basisBN);
     total("market_value", heldCurrency, marketBN);
   }
 
@@ -367,6 +560,7 @@ export function composeHoldings(params: {
         ]),
       ),
     },
+    cost_basis_complete: groups.every((group) => group.cost_basis !== null),
     valuation: legs.length > 0 ? "partial" : "complete",
     missing_prices: legs,
     missing_price_summary: legs.map(

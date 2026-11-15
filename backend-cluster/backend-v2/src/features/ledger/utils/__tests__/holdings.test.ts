@@ -402,6 +402,136 @@ describe("composeHoldings", () => {
     });
   });
 
+  // w1/253: the repro ledger's detail rows; uncosted rows have no cost
+  // currency and a book value in their own units.
+  describe("uncosted positions", () => {
+    const fixture: Cell[][] = [
+      ["Assets:Bank", "USD", null, map("USD", "8250"), map("USD", "8250")],
+      ["Assets:Mixed", "AAPL", null, map("AAPL", "2"), map("AAPL", "2")],
+      ["Assets:Mixed", "AAPL", "USD", map("AAPL", "5"), map("USD", "750")],
+      ["Assets:Plain", "AAPL", null, map("AAPL", "3"), map("AAPL", "3")],
+      [
+        "Equity:Opening",
+        "USD",
+        null,
+        map("USD", "-10000"),
+        map("USD", "-10000"),
+      ],
+    ];
+    const quotes: Cell[][] = [["2024-03-01", "AAPL", map("USD", "170")]];
+    const compose = (
+      overrides: Partial<Parameters<typeof composeHoldings>[0]> = {},
+      rows: Cell[][] = fixture,
+      prices: Cell[][] = quotes,
+    ) => {
+      const valued = valueHoldingRows({
+        columns: COLUMNS.slice(0, 5),
+        rows,
+        prices,
+        conversionTarget: overrides.conversionTarget ?? null,
+        asOf: "2026-10-25",
+      });
+      return composeHoldings({
+        ...base,
+        ...valued,
+        prices,
+        priceCurrencies: [[null], ["USD"]],
+        operatingCurrencies: ["USD"],
+        ...overrides,
+      });
+    };
+
+    it("keeps priced shares as holdings with an unknown basis", () => {
+      const result = compose();
+      expect(
+        result.groups.map((group) => [
+          group.account,
+          group.units,
+          group.market_value,
+          group.cost_basis,
+          group.average_cost,
+        ]),
+      ).toEqual([
+        [
+          "Assets:Mixed",
+          { number: "7", currency: "AAPL" },
+          { number: "1190", currency: "USD" },
+          null,
+          null,
+        ],
+        [
+          "Assets:Plain",
+          { number: "3", currency: "AAPL" },
+          { number: "510", currency: "USD" },
+          null,
+          null,
+        ],
+      ]);
+      expect(result.groups[1]!.price).toEqual({
+        number: "170",
+        currency: "USD",
+      });
+      expect(result.totals).toEqual({
+        cost_basis: {},
+        market_value: { USD: "1700" },
+      });
+      expect(result.cost_basis_complete).toBe(false);
+      expect(result.valuation).toBe("complete");
+    });
+
+    it("lists an account that holds only priced shares", () => {
+      const result = compose({ account: "Assets:Plain" });
+      expect(result.groups.map((group) => group.units.number)).toEqual(["3"]);
+    });
+
+    it("merges costed and priced units by commodity", () => {
+      const result = compose({ groupBy: "commodity" });
+      expect(result.groups).toHaveLength(1);
+      expect(result.groups[0]).toMatchObject({
+        accounts: ["Assets:Mixed", "Assets:Plain"],
+        units: { number: "10", currency: "AAPL" },
+        market_value: { number: "1700", currency: "USD" },
+        cost_basis: null,
+      });
+    });
+
+    it("leaves uncosted cash in an operating currency out", () => {
+      const result = compose(
+        { operatingCurrencies: ["USD", "EUR"], priceCurrencies: [] },
+        [
+          ["Assets:Bank", "USD", null, map("USD", "800"), map("USD", "800")],
+          ["Assets:Euro", "EUR", null, map("EUR", "500"), map("EUR", "500")],
+          ["Assets:Broker", "HOOL", "USD", map("HOOL", "2"), map("USD", "200")],
+        ],
+        [["2024-01-31", "HOOL", map("USD", "120")]],
+      );
+      expect(result.groups.map((group) => group.commodity)).toEqual(["HOOL"]);
+      expect(result.cost_basis_complete).toBe(true);
+    });
+
+    it("names the missing leg of an unquoted priced lot and keeps its units", () => {
+      const result = compose({}, [fixture[3]!], []);
+      expect(result.valuation).toBe("partial");
+      expect(result.missing_prices).toEqual([{ from: "AAPL", to: "USD" }]);
+      expect(result.groups[0]!.market_value).toEqual({
+        number: "3",
+        currency: "AAPL",
+      });
+    });
+
+    it("converts a priced lot through the quoted leg", () => {
+      const result = compose(
+        { conversionTarget: "EUR" },
+        [fixture[3]!],
+        [...quotes, ["2024-03-01", "USD", map("EUR", "0.5")]],
+      );
+      expect(result.groups[0]).toMatchObject({
+        market_value: { number: "255", currency: "EUR" },
+        price: { number: "85", currency: "EUR" },
+      });
+    });
+  });
+
   it("answers empty holdings with complete valuation", () => {
     const result = composeHoldings({ ...base, rows: [] });
     expect(result.groups).toEqual([]);

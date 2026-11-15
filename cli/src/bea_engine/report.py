@@ -602,11 +602,17 @@ def _holdings(
     account tree aggregates postings into per-account costed inventories, each
     lot is valued through the ledger's price map at the period end, and a
     currency conversion re-expresses the money columns through one more quote.
-    Lots without cost are cash, not holdings, and a group none of whose lots
-    is still held is fully sold — both are left out (w22/m3/t001). Net units
-    are not that test: +2 HOOL long and -2 HOOL short net to 0 HOOL while both
-    lots, and their -40 USD of basis, are still held (w5/947); such a group
-    has no average cost.
+    A group none of whose lots is still held is fully sold and left out
+    (w22/m3/t001). Net units are not that test: +2 HOOL long and -2 HOOL
+    short net to 0 HOOL while both lots, and their -40 USD of basis, are
+    still held (w5/947); such a group has no average cost.
+
+    Cash is told apart by its commodity, not by a missing cost (w1/253): an
+    uncosted position is cash when its commodity is money in this ledger
+    (`_money_currencies`). Any other uncosted position (`3 AAPL @ 200 USD`)
+    is a holding with an unknown basis: it joins the costed group of the
+    same commodity when there is exactly one, else forms its own, and its
+    group reports `cost_basis` and `average_cost` as null.
     """
     from fava.core.tree import Tree
 
@@ -617,30 +623,67 @@ def _holdings(
     # The entry filter keeps whole transactions, so a counterparty's lots
     # survive it; every report prunes its tree by the same matcher instead.
     matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
-    # (scope..., commodity, cost currency) -> [units, cost basis, accounts].
+    money = _money_currencies(filtered.ledger)
+    # (scope..., commodity, cost currency) -> [units, cost basis, accounts,
+    # basis known]. An uncosted group's cost currency is "" until valued.
     lots: dict[tuple[str, ...], list[Any]] = {}
+    # (scope..., commodity) -> [units, accounts] for uncosted non-cash units.
+    uncosted: dict[tuple[str, ...], list[Any]] = {}
     for name, node in sorted(Tree(filtered.entries).items()):
         if not name or (matches is not None and not matches(name)):
             continue
+        scope = (name,) if group_by == "account" else ()
         for (commodity, cost), number in node.balance.items():
-            if cost is None or number == 0:
+            if number == 0:
                 continue
-            key: tuple[str, ...] = (
-                (name, commodity, cost.currency) if group_by == "account" else (commodity, cost.currency)
-            )
+            if cost is None:
+                if commodity in money:
+                    continue
+                pending = uncosted.get((*scope, commodity))
+                if pending is None:
+                    uncosted[(*scope, commodity)] = [number, {name}]
+                else:
+                    pending[0] += number
+                    pending[1].add(name)
+                continue
+            key: tuple[str, ...] = (*scope, commodity, cost.currency)
             found = lots.get(key)
             if found is None:
                 # The first lot as booked: `0 + x` rounded a 29-digit token
                 # quantity to 28 digits before any real sum (w5/1074).
-                lots[key] = [number, number * cost.number, {name}]
+                lots[key] = [number, number * cost.number, {name}, True]
                 continue
             found[0] += number
             found[1] += number * cost.number
             found[2].add(name)
+    for prefix, (number, names) in uncosted.items():
+        costed = [key for key in lots if key[:-1] == prefix]
+        if len(costed) == 1:
+            found = lots[costed[0]]
+            found[0] += number
+            found[2] |= names
+            found[3] = False
+        else:
+            lots[(*prefix, "")] = [number, Decimal(0), names, False]
+    operating = list(prices.operating_currencies)
     groups = []
     missing: list[tuple[str, str]] = []
-    for key, (units, basis, accounts) in sorted(lots.items()):
+    for key, (units, basis, accounts, basis_known) in sorted(lots.items()):
         commodity, held = key[-2], key[-1]
+        if not held:
+            # No cost currency to value into: the first operating currency
+            # (or other currency the commodity is quoted in) with a quote,
+            # as Fava's `at_value` values cost-less positions.
+            candidates = [target] if target is not None else []
+            candidates += [*operating, *sorted(_quote_currencies(prices, commodity))]
+            candidates = [c for c in dict.fromkeys(candidates) if c != commodity]
+            held = next((c for c in candidates if prices.get_price((commodity, c), end) is not None), "")
+            if not held:
+                if candidates:
+                    missing.append((commodity, candidates[0]))
+                # Nothing to value into: the position stays in its units.
+                groups.append(_uncosted_unvalued(key, group_by, accounts, commodity, units))
+                continue
         quoted: tuple[str, str | None] = (commodity, held)
         direct_date, direct = (None, None)
         leg_date, rate = (None, None)
@@ -662,10 +705,12 @@ def _holdings(
             market, currency = units * direct, target
             if rate is not None:
                 basis, basis_currency = basis * rate, target
-            else:
+            elif basis_known:
                 missing.append((held, target))
         else:
             quote_date, price = prices.get_price_point((commodity, held), end)
+            # Unquoted, a group values at cost; a group that also holds
+            # uncosted units counts only its costed part (named missing).
             market = units * price if price is not None else basis
             if price is None:
                 missing.append((commodity, held))
@@ -678,13 +723,13 @@ def _holdings(
                 else:
                     missing.append((held, target))
             basis_currency = currency
-        average = basis / units if units else None
+        average = basis / units if units and basis_known else None
         group: dict[str, Any] = {"account": key[0]} if group_by == "account" else {"accounts": sorted(accounts)}
         group |= {
             "commodity": commodity,
             "units": {"number": units, "currency": commodity},
             "average_cost": {"number": average, "currency": basis_currency} if average is not None else None,
-            "cost_basis": {"number": basis, "currency": basis_currency},
+            "cost_basis": {"number": basis, "currency": basis_currency} if basis_known else None,
             "market_value": {"number": market, "currency": currency},
             "price": {"number": price, "currency": currency} if price is not None else None,
             "price_date": quote_date,
@@ -697,6 +742,8 @@ def _holdings(
     for group in groups:
         for column in ("cost_basis", "market_value"):
             amount = group[column]
+            if amount is None:
+                continue
             total = totals[column]
             total[amount["currency"]] = total.get(amount["currency"], Decimal(0)) + amount["number"]
     metadata = _metadata(filtered, conversion, ledger_errors) | valuation
@@ -705,6 +752,57 @@ def _holdings(
         "group_by": group_by,
         "groups": groups,
         "totals": totals,
+        # False when a group's basis is unknown: the cost-basis total then
+        # leaves those positions out instead of counting them as zero.
+        "cost_basis_complete": all(group["cost_basis"] is not None for group in groups),
+    }
+
+
+def _money_currencies(ledger: Any) -> set[str]:
+    """Currencies this ledger uses as money: an uncosted balance in one is cash.
+
+    The operating currencies, plus every currency a cost, a posting price or a
+    `price` directive is quoted in, across the whole ledger so neither the
+    account filter nor the time window changes what counts as cash (w1/253).
+    The hosted holdings composer applies the same rule.
+    """
+    from beancount.core.data import Price, Transaction
+
+    money = set(ledger.options.get("operating_currency") or ())
+    for entry in ledger.all_entries:
+        if isinstance(entry, Price):
+            money.add(entry.amount.currency)
+        elif isinstance(entry, Transaction):
+            for posting in entry.postings:
+                if posting.cost is not None and posting.cost.currency:
+                    money.add(posting.cost.currency)
+                if posting.price is not None and posting.price.currency:
+                    money.add(posting.price.currency)
+    return money
+
+
+def _quote_currencies(prices: Any, commodity: str) -> set[str]:
+    """Currencies `commodity` has a quote in, directly or by inversion."""
+    return {quote for base, quote in prices.commodity_pairs(()) if base == commodity} | {
+        base for base, quote in prices.commodity_pairs(()) if quote == commodity
+    }
+
+
+def _uncosted_unvalued(
+    key: tuple[str, ...], group_by: str, accounts: set[str], commodity: str, units: Decimal
+) -> dict[str, Any]:
+    """An uncosted holding with no quote at all: units only, value in its units."""
+    group: dict[str, Any] = {"account": key[0]} if group_by == "account" else {"accounts": sorted(accounts)}
+    return group | {
+        "commodity": commodity,
+        "units": {"number": units, "currency": commodity},
+        "average_cost": None,
+        "cost_basis": None,
+        "market_value": {"number": units, "currency": commodity},
+        "price": None,
+        "price_date": None,
+        "price_source": None,
+        "conversion_source": None,
     }
 
 

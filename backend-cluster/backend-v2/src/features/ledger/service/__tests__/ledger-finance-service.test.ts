@@ -60,12 +60,23 @@ const PRICE_COLUMNS = ["date", "currency", "amount"].map((name) => ({
 const table = (rows: unknown[][]) => ({ result: { types: COLUMNS, rows } });
 
 /** The shell answers the detail query and the price-directive query apart (w1/229). */
-const answerShell = (rows: unknown[][], prices: unknown[][] = []) =>
+const answerShell = (
+  rows: unknown[][],
+  prices: unknown[][] = [],
+  priceCurrencies: unknown[][] = [],
+) =>
   mockShell.queryShellPost.mockImplementation(
     async (_owner: string, _name: string, { query }: { query: string }) =>
       query.includes("FROM prices")
         ? ok({ result: { types: PRICE_COLUMNS, rows: prices } })
-        : ok(table(rows)),
+        : query.includes("currency(price)")
+          ? ok({
+              result: {
+                types: [{ name: "price_currency", dtype: "str" }],
+                rows: priceCurrencies,
+              },
+            })
+          : ok(table(rows)),
   );
 
 describe("LedgerFinanceService.getHoldings", () => {
@@ -129,6 +140,48 @@ describe("LedgerFinanceService.getHoldings", () => {
     );
   });
 
+  // w1/253: shares bought with a price but no cost were dropped as if they
+  // were cash; cash is told apart by its commodity instead.
+  it("keeps uncosted shares and leaves uncosted cash out", async () => {
+    answerShell(
+      [
+        ["Assets:Bank", "USD", null, { USD: "8250" }, { USD: "8250" }],
+        ["Assets:Mixed", "AAPL", null, { AAPL: "2" }, { AAPL: "2" }],
+        ["Assets:Mixed", "AAPL", "USD", { AAPL: "5" }, { USD: "750" }],
+        ["Assets:Plain", "AAPL", null, { AAPL: "3" }, { AAPL: "3" }],
+      ],
+      [["2024-03-01", "AAPL", { USD: "170" }]],
+      [[null], ["USD"]],
+    );
+
+    const result = await service.getHoldings({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
+
+    expect(
+      result.groups.map((group) => [
+        group.account,
+        group.units.number,
+        group.market_value,
+        group.cost_basis,
+      ]),
+    ).toEqual([
+      ["Assets:Mixed", "7", { number: "1190", currency: "USD" }, null],
+      ["Assets:Plain", "3", { number: "510", currency: "USD" }, null],
+    ]);
+    expect(result.totals).toEqual({
+      cost_basis: {},
+      market_value: { USD: "1700" },
+    });
+    expect(result.cost_basis_complete).toBe(false);
+    expect(mockShell.queryShellPost).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      { query: "SELECT DISTINCT currency(price) AS price_currency" },
+    );
+  });
+
   // w1/229: a lot with no `price` directive is valued at cost, whatever the
   // engine would have implied from a sale's `@` annotation.
   it("values a lot with no price directive at cost", async () => {
@@ -157,7 +210,7 @@ describe("LedgerFinanceService.getHoldings", () => {
     });
 
     // USD-held lots skip the conversion per row.
-    expect(result.groups[0]!.cost_basis.currency).toBe("USD");
+    expect(result.groups[0]!.cost_basis?.currency).toBe("USD");
   });
 
   it("quotes an explicit target through the conversion leg", async () => {

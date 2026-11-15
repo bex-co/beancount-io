@@ -640,7 +640,12 @@ def holdings(
     )
     totals = data["totals"]
     typer.echo("")
-    typer.echo(f"  {'Cost basis:':<16} {_amounts(totals['cost_basis'], conversion, precision)}")
+    basis = _amounts(totals["cost_basis"], conversion, precision)
+    if data.get("cost_basis_complete") is False:
+        # A position bought with a price but no cost has no known basis; the
+        # total leaves it out rather than counting it as zero (w1/253).
+        basis += " (excludes positions without a cost basis)"
+    typer.echo(f"  {'Cost basis:':<16} {basis}")
     typer.echo(f"  {'Market value:':<16} {_amounts(totals['market_value'], conversion, precision)}")
 
 

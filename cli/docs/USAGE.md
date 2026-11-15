@@ -1955,6 +1955,15 @@ basis, and market value, grouped by account or — with `--group-by commodity`
 — by commodity across accounts; `--account / -a` narrows the positions. A
 group stays while any of its lots is held, even when long and short lots net
 to zero units; such a group has no average cost (`null` under `--json`).
+Cash is told apart by its commodity: an uncosted balance in a currency the
+ledger uses as money (an operating currency, or any currency a cost, a posting
+price, or a `price` directive is quoted in) is cash and left out. Every other
+uncosted position — shares bought as `3 AAPL @ 200 USD` — is a holding with an
+unknown basis: it joins the costed group of the same commodity when there is
+exactly one, is valued at the period-end quote, and its group's average cost
+and cost basis are `null` (text `—`). The cost-basis total then leaves those
+groups out, and `cost_basis_complete` is `false` (text: "excludes positions
+without a cost basis").
 `register` takes the account as a positional argument instead of `--account`
 and lists one subtree's dated postings oldest first with the running balance,
 each row valued at its own date (a later quote never values an earlier row;
