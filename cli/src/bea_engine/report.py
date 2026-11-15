@@ -203,10 +203,15 @@ def _balances(
     if not accounts:
         pruned = {name: tree for name, tree in sections.items()}
     else:
-        closed: set[str] = set()
-        for entry in filtered.entries:
-            if isinstance(entry, Close):
-                closed.add(entry.account)
+        # Closed by the report's as-of date: with no `--time` the entries are
+        # the whole ledger while the period ends at its last dated fact, so a
+        # later close must not hide an account that is still open (w1/250).
+        end = filtered.period[1]
+        closed: set[str] = {
+            entry.account
+            for entry in filtered.entries
+            if isinstance(entry, Close) and (end is None or entry.date < end)
+        }
         # Emptiness is the account's inventory, not its value in this
         # conversion: 10 EUR against -10 USD is worth 0 USD at par and still
         # held (w5/947).

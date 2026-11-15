@@ -82,7 +82,6 @@ m46–m48 were materialized on 2026-11-14 from `/pm-brainstorm for w1` items 1, 
 
 ## Inbox
 
-- [250](./250.md) — `bea balance ACCOUNT` hides an account closed after the report's as-of date and says "No accounts match" (cli QA 2026-11-15; minor)
 - [241](./blocked/241.md) — Port the CLI off typer's private click so typer 0.29+ can install (A2; follow-up to the 239 stopgap) — **blocked:** its 2026-11-14 promotion (w3/m67) was dropped the same day; owner re-funds the port or drops the note
 
 
