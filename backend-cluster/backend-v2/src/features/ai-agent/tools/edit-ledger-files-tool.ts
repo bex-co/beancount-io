@@ -386,11 +386,7 @@ export async function executeEditLedgerFiles(
           deleted.length === 0
             ? []
             : await planIncludeRemovals({
-                ...repoServiceFileAccess(
-                  services.ledgerRepo,
-                  ledgerId,
-                  identity,
-                ),
+                ...repoServiceFileAccess(services, ledgerId, identity),
                 deletedPaths: deleted,
               });
         for (const { path, content } of removals) {

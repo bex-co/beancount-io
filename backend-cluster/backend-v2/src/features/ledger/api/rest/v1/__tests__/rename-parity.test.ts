@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { posix } from "node:path";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -69,6 +70,25 @@ async function fixture(
   );
   const state = { writable: true, exists: true, visible: true };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
+  // The include closure from main.bean, as the ledger service lists it
+  // (exact includes are enough here): a non-`.bean` file in it is an
+  // includer (w31/023).
+  const sourceFiles = () => {
+    const reached = new Set<string>();
+    const pending = ["main.bean"];
+    for (let path = pending.pop(); path !== undefined; path = pending.pop()) {
+      const content = files.get(path)?.content;
+      if (content === undefined || reached.has(path)) continue;
+      reached.add(path);
+      for (const [, target = ""] of content.matchAll(/^include\s+"([^"]+)"/gm))
+        pending.push(
+          target.startsWith("/")
+            ? target.slice(1)
+            : posix.join(posix.dirname(path), target),
+        );
+    }
+    return [...reached].sort();
+  };
   const toPublic = (path: string) => {
     const entry = files.get(path);
     if (!entry) return null;
@@ -139,6 +159,7 @@ async function fixture(
       // The file-write gate projects bean-check over the new contents.
       reports: {
         checkProjectedErrors: async () => envelope([]),
+        getLedgerSourceFiles: async () => envelope(sourceFiles()),
       },
       ledgers: {
         changeLedgerFiles: change,
@@ -206,6 +227,7 @@ async function fixture(
     ),
   );
   const ledgerData = {
+    getSourceFiles: async () => sourceFiles(),
     getErrors: jest.fn(async () => {
       const batch =
         errorBatches[Math.min(errorCalls.count, errorBatches.length - 1)] ?? [];
@@ -1429,6 +1451,110 @@ describe.each(["rest", "gql", "mcp"])(
         });
         expect(outcome.success).toBe(false);
         expect(f.change).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+// w31/023: a non-`.bean` file the ledger loads (`include "qa/list.txt"`) is
+// an includer like any `.bean` file, for rename, its own moved includes and
+// delete, on every surface. A text file the ledger never loads is not, even
+// when it quotes an include line.
+describe.each(["rest", "gql", "mcp"])(
+  "includes in a loaded non-.bean file via %s",
+  (surface) => {
+    const tree = {
+      "main.bean": '; main\ninclude "qa/list.txt"\n',
+      "qa/list.txt": 'include "y.bean"\n',
+      "qa/y.bean": "; y\n",
+      "notes/README.txt": 'include "y.bean"\n',
+      "notes/y.bean": "; quoted by a file the ledger never loads\n",
+    };
+    const updated = (result: unknown) =>
+      (result as { updatedIncludes?: string[] } | undefined)?.updatedIncludes;
+
+    it("refuses renaming a file a loaded .txt includes, then rewrites the .txt", async () => {
+      const f = await fixture(identity, tree);
+      try {
+        const refused = await f.call(surface, "qa/y.bean", "qa/z.bean");
+        expect(refused.success).toBe(false);
+        expect(JSON.stringify(refused)).toContain(
+          "qa/y.bean is still included by qa/list.txt",
+        );
+        expect(f.change).not.toHaveBeenCalled();
+
+        const done = await f.call(surface, "qa/y.bean", "qa/z.bean", {
+          updateIncludes: true,
+        });
+        expect(done.success).toBe(true);
+        expect(updated(done.result)).toEqual(["qa/list.txt"]);
+        expect(f.files.get("qa/list.txt")?.content).toBe('include "z.bean"\n');
+        expect(f.files.get("notes/README.txt")?.content).toBe(
+          tree["notes/README.txt"],
+        );
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("rewrites a moved .txt's own includes for its new folder", async () => {
+      const f = await fixture(identity, tree);
+      try {
+        const done = await f.call(surface, "qa/list.txt", "qa/sub/list.txt", {
+          updateIncludes: true,
+        });
+        expect(done.success).toBe(true);
+        expect(updated(done.result)).toEqual(["qa/sub/list.txt", "main.bean"]);
+        expect(f.files.get("qa/sub/list.txt")?.content).toBe(
+          'include "../y.bean"\n',
+        );
+        expect(f.files.get("main.bean")?.content).toBe(
+          '; main\ninclude "qa/sub/list.txt"\n',
+        );
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("leaves the include lines of a file the ledger never loads alone", async () => {
+      const f = await fixture(identity, tree);
+      try {
+        const renamed = await f.call(surface, "notes/y.bean", "notes/w.bean");
+        expect(renamed.success).toBe(true);
+        expect(updated(renamed.result)).toEqual([]);
+        const moved = await f.call(
+          surface,
+          "notes/README.txt",
+          "docs/README.txt",
+        );
+        expect(moved.success).toBe(true);
+        expect(updated(moved.result)).toEqual([]);
+        expect(f.files.get("docs/README.txt")?.content).toBe(
+          tree["notes/README.txt"],
+        );
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses deleting a file a loaded .txt includes, then drops the line", async () => {
+      const f = await fixture(identity, tree);
+      try {
+        const refused = await f.deleteFile(surface, "qa/y.bean");
+        expect(refused.success).toBe(false);
+        expect(JSON.stringify(refused.result)).toContain(
+          "qa/y.bean is still included by qa/list.txt",
+        );
+        expect(f.files.has("qa/y.bean")).toBe(true);
+        expect(f.change).not.toHaveBeenCalled();
+
+        const done = await f.deleteFile(surface, "qa/y.bean", true);
+        expect(done.success).toBe(true);
+        expect(f.files.has("qa/y.bean")).toBe(false);
+        expect(f.files.get("qa/list.txt")?.content).toBe("");
+        expect(f.change).toHaveBeenCalledTimes(1);
       } finally {
         await f.close();
       }

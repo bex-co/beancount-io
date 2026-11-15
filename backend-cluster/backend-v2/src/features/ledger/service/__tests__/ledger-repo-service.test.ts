@@ -15,6 +15,7 @@ const mockRepoGetAllCommits = jest.fn();
 const mockGetLedgerDirContent = jest.fn();
 const mockGetLedgerFilesContent = jest.fn();
 const mockChangeLedgerFiles = jest.fn();
+const mockGetLedgerSourceFiles = jest.fn();
 
 const mockFavaApiClient = {
   repo: { repoGetAllCommits: mockRepoGetAllCommits },
@@ -23,6 +24,7 @@ const mockFavaApiClient = {
     getLedgerFilesContent: mockGetLedgerFilesContent,
     changeLedgerFiles: mockChangeLedgerFiles,
   },
+  reports: { getLedgerSourceFiles: mockGetLedgerSourceFiles },
 };
 
 const mockFavaClientFactory = {
@@ -43,6 +45,8 @@ describe("LedgerRepoService", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // No include closure unless a case lists one (w31/023).
+    mockGetLedgerSourceFiles.mockReset();
     (authorizeLedger as jest.Mock).mockResolvedValue({
       ledgerRepoId: 1,
       ownerUserId: USER_ID,
@@ -960,6 +964,88 @@ describe("LedgerRepoService", () => {
         ]);
         await attemptDelete("second.bean");
         expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(2);
+      });
+
+      // w31/023: a non-`.bean` file the ledger loads includes as much as a
+      // `.bean` file does; a text file it never loads does not.
+      describe("includers the ledger loads that are not .bean files", () => {
+        const tree = {
+          "main.bean": 'include "qa/list.txt"\n',
+          "qa/list.txt": 'include "y.bean"\n',
+          "qa/y.bean": "; doomed\n",
+          "notes.ldg": "; never loaded\n",
+          "README.md": 'include "notes.ldg"\n',
+        };
+        beforeEach(() => {
+          dirWith(Object.keys(tree).map((path) => ({ path, type: "file" })));
+          // Only the paths asked for, so a file the guard never reads cannot
+          // leak into the scan.
+          mockGetLedgerFilesContent.mockImplementation(
+            async (_o: string, _n: string, body: { files: string[] }) => ({
+              data: {
+                success: true,
+                data: body.files.map((path) => ({
+                  path,
+                  sha: "s1",
+                  content: tree[path as keyof typeof tree],
+                  encoding: null,
+                })),
+              },
+            }),
+          );
+          mockGetLedgerSourceFiles.mockResolvedValue({
+            data: {
+              success: true,
+              data: ["main.bean", "qa/list.txt", "qa/y.bean"],
+            },
+          });
+          mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
+        });
+
+        it("refuses deleting a file a loaded .txt still includes", async () => {
+          await expect(attemptDelete("qa/y.bean")).rejects.toThrow(
+            /^qa\/y\.bean is still included by qa\/list\.txt; remove/,
+          );
+          expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+        });
+
+        it("allows the delete when the same batch drops the .txt include", async () => {
+          await service.changeFiles({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            operations: [
+              {
+                operation: "update",
+                path: "qa/list.txt",
+                content: "",
+                sha: "s1",
+              },
+              { operation: "delete", path: "qa/y.bean" },
+            ],
+            message: "delete file",
+          });
+          expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(1);
+        });
+
+        it("ignores an include line in a file the ledger never loads", async () => {
+          // README.md quotes `include "notes.ldg"`, but the ledger never
+          // loads README.md, so nothing includes notes.ldg.
+          await attemptDelete("notes.ldg");
+          expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(1);
+          expect(mockGetLedgerFilesContent.mock.calls[0]?.[2]).toEqual({
+            files: ["main.bean", "qa/list.txt", "qa/y.bean"],
+          });
+        });
+
+        it("still guards .bean includers when the closure cannot be read", async () => {
+          mockGetLedgerSourceFiles.mockRejectedValue(new Error("down"));
+          await expect(attemptDelete("qa/list.txt")).rejects.toThrow(
+            /qa\/list\.txt is still included by main\.bean/,
+          );
+          // Without the closure the guard is the `.bean` scan it was.
+          await attemptDelete("qa/y.bean");
+          expect(mockChangeLedgerFiles).toHaveBeenCalledTimes(1);
+        });
       });
 
       // w23/m4/t006: when the guard cannot list the tree it fails closed —

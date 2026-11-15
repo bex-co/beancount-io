@@ -148,7 +148,7 @@ import {
   findDanglingDeleteIncluders,
   planIncludeRemovals,
   refuseDanglingDeletes,
-  scanLedgerBeanFiles,
+  scanLedgerIncluders,
 } from "@/features/ledger/utils/include-references";
 import {
   overlaysOf,
@@ -1509,18 +1509,25 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       );
     }
 
-    // Find every `.bean`/`.beancount` file whose `include` line still points
-    // at oldPath, so the rename either refuses or rewrites them in the same
-    // commit instead of leaving a stale reference behind.
-    const { beanFiles, allFiles } = await scanLedgerBeanFiles((dir) =>
-      unwrapFavaResponse(
-        favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
-          ...(dir === undefined ? {} : { dir_path: dir }),
-        }),
-        "list ledger files for rename",
-        (cause) =>
-          operationNotAllowedFromCause("list ledger files for rename", cause),
-      ),
+    // Find every includer whose `include` line still points at oldPath, so
+    // the rename either refuses or rewrites them in the same commit instead
+    // of leaving a stale reference behind. A `.txt` the ledger loads is one
+    // (w31/023).
+    const { includers, allFiles } = await scanLedgerIncluders(
+      (dir) =>
+        unwrapFavaResponse(
+          favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+            ...(dir === undefined ? {} : { dir_path: dir }),
+          }),
+          "list ledger files for rename",
+          (cause) =>
+            operationNotAllowedFromCause("list ledger files for rename", cause),
+        ),
+      () =>
+        unwrapFavaResponse(
+          favaApiClient.reports.getLedgerSourceFiles(ledgerOwner, ledgerName),
+          "list ledger source files for rename",
+        ),
     );
     const keptFiles = allFiles.filter((path) => path !== input.oldPath);
     // Nor be one a kept file's on macOS and Windows (w23/068). The file
@@ -1544,7 +1551,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     // A glob can't be rewritten for one file; refuse when the file falls out
     // of a pattern that includes it today.
     const lostGlobs: string[] = [];
-    const candidates = beanFiles.filter(
+    const candidates = includers.filter(
       (path) => path !== input.oldPath && path !== input.newPath,
     );
     if (candidates.length > 0) {
@@ -1596,12 +1603,14 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       );
     }
 
-    const moved = this.movedIncludesContent(
-      oldFile,
-      input.oldPath,
-      input.newPath,
-      input.updateIncludes === true,
-    );
+    const moved = includers.includes(input.oldPath)
+      ? this.movedIncludesContent(
+          oldFile,
+          input.oldPath,
+          input.newPath,
+          input.updateIncludes === true,
+        )
+      : undefined;
     const movedContent = moved?.content;
     const preservedContent =
       movedContent ??
@@ -1848,9 +1857,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   /**
    * The moved file's own relative includes resolve from its new folder, so a
    * move to another one pointed them at files that are not there (w23/056).
-   * Returns the file's content with them rewritten, as base64, plus the
-   * rewritten lines for the preview — or `undefined` when the move changes
-   * none of them and the bytes move as they are.
+   * The caller passes only an includer, which a `.txt` the ledger loads is
+   * as much as a `.bean` file (w31/023). Returns the file's content with
+   * them rewritten, as base64, plus the rewritten lines for the preview — or
+   * `undefined` when the move changes none of them and the bytes move as
+   * they are.
    */
   private movedIncludesContent(
     file: { content?: string | null; encoding?: string | null },
@@ -1858,12 +1869,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     newPath: string,
     updateIncludes: boolean,
   ): { content: string; lines: string[] } | undefined {
-    if (
-      !/\.(bean|beancount)$/.test(oldPath) ||
-      posix.dirname(oldPath) === posix.dirname(newPath)
-    ) {
-      return undefined;
-    }
+    if (posix.dirname(oldPath) === posix.dirname(newPath)) return undefined;
     const decoded = decodeFileContent(file);
     const moved: string[] = [];
     const globs: string[] = [];

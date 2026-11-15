@@ -3,13 +3,16 @@
  *
  * Rename and delete both reason about `include` lines, and both must see the
  * whole tree rather than trusting the entry-point-reachable set: an orphan
- * file nobody includes today breaks the day someone includes it. The walk is
- * extracted verbatim from the rename guard so the two cannot drift, and both
- * delete paths share the scan, the Fava reads, and the refusal below.
+ * file nobody includes today breaks the day someone includes it. The other
+ * files the ledger loads join the tree's `.bean` files, since their includes
+ * count as much (w31/023). The walk is shared with the rename guard so the
+ * two cannot drift, and both delete paths share the scan, the Fava reads,
+ * and the refusal below.
  */
 import { assertWritableText, decodeFileContent } from "@/shared/file-content";
 import type { Identity } from "@/server/api/identity";
 import type { ILedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
+import type { ILedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { BadUserInputError } from "@/shared/errors";
 import { type FavaApiClient, unwrapFavaResponse } from "@/foundation/fava";
 import { operationNotAllowedFromCause } from "./operation-not-allowed-from-cause";
@@ -58,25 +61,48 @@ export interface LedgerDirEntry {
   path?: string | null;
 }
 
-export interface BeanFileScan {
-  /** Every `.bean`/`.beancount` file in the tree. */
-  beanFiles: string[];
+export interface IncluderScan {
+  /**
+   * The files whose `include` lines the guards read: every
+   * `.bean`/`.beancount` file in the tree, loaded or not, plus every other
+   * file the ledger loads — an `include "accounts.txt"` makes that `.txt`
+   * one (w31/023). A text file the ledger never loads is not, so a README
+   * quoting an include line never blocks a rename. Tree order.
+   */
+  includers: string[];
   /** Every non-directory entry in the tree. */
   allFiles: string[];
 }
 
+/** The ledger's committed include closure, as the ledger service lists it. */
+export type ListSourceFiles = () => Promise<
+  ReadonlyArray<string> | null | undefined
+>;
+
 /**
- * List every `.bean`/`.beancount` file under the repository root,
- * descending into all directories. `listDir` lists one level (undefined for
- * the root) and translates its own failures.
+ * List the includers under the repository root, descending into all
+ * directories. `listDir` lists one level (undefined for the root) and
+ * translates its own failures; a tree that cannot be listed fails the scan.
+ * The closure is the ledger service's to compute, because only its loader
+ * knows what an include reaches. A ledger it cannot load (no entry point,
+ * past its caps) still has every `.bean` file scanned, as before w31/023.
  */
-export async function scanLedgerBeanFiles(
+export async function scanLedgerIncluders(
   listDir: (
     dir?: string,
   ) => Promise<ReadonlyArray<LedgerDirEntry> | null | undefined>,
-): Promise<BeanFileScan> {
-  const beanFiles: string[] = [];
+  listSourceFiles: ListSourceFiles,
+): Promise<IncluderScan> {
+  // Read alongside the walk; a throw of either kind means no closure.
+  const loading = Promise.resolve()
+    .then(listSourceFiles)
+    .then(
+      (paths) => new Set(paths ?? []),
+      () => new Set<string>(),
+    );
+  const includers: string[] = [];
   const allFiles: string[] = [];
+  const regularFiles: string[] = [];
   const pendingDirs: (string | undefined)[] = [undefined];
   while (pendingDirs.length > 0) {
     const dir = pendingDirs.pop();
@@ -88,11 +114,15 @@ export async function scanLedgerBeanFiles(
       }
       if (entry.path === undefined || entry.path === null) continue;
       allFiles.push(entry.path);
-      if (entry.type === "file" && /\.(bean|beancount)$/.test(entry.path))
-        beanFiles.push(entry.path);
+      if (entry.type === "file") regularFiles.push(entry.path);
     }
   }
-  return { beanFiles, allFiles };
+  const loaded = await loading;
+  for (const path of regularFiles) {
+    if (/\.(bean|beancount)$/.test(path) || loaded.has(path))
+      includers.push(path);
+  }
+  return { includers, allFiles };
 }
 
 export interface LedgerFileContent {
@@ -116,7 +146,7 @@ export function deleteGuardFileAccess(
   ledgerName: string,
 ): Pick<
   Parameters<typeof findDanglingDeleteIncluders>[0],
-  "listDir" | "readFiles"
+  "listDir" | "readFiles" | "listSourceFiles"
 > {
   return {
     listDir: (dir) =>
@@ -143,16 +173,21 @@ export function deleteGuardFileAccess(
             cause,
           ),
       ),
+    listSourceFiles: () =>
+      unwrapFavaResponse(
+        favaApiClient.reports.getLedgerSourceFiles(ledgerOwner, ledgerName),
+        "list ledger source files for delete guard",
+      ),
   };
 }
 
 /**
  * The files a delete would strand: for each deleted path, the surviving
- * `.bean`/`.beancount` files whose `include` lines still resolve to it
- * (w23/m4/t001–t002). Includes match on resolved paths like rename's
- * (w23/029). `overlays` carry projected batch contents (null for a path the
- * batch deletes), so a batch that drops the include lines alongside the
- * delete finds nothing. Glob includes are ignored: a file leaving a glob's
+ * includers ({@link scanLedgerIncluders}) whose `include` lines still
+ * resolve to it (w23/m4/t001–t002, w31/023). Includes match on resolved
+ * paths like rename's (w23/029). `overlays` carry projected batch contents
+ * (null for a path the batch deletes), so a batch that drops the include
+ * lines alongside the delete finds nothing. Glob includes are ignored: a file leaving a glob's
  * match breaks no load. Both delete paths — the repo service's batches and
  * the workflow's single-file delete — share this scan and the refusal below,
  * so their messages cannot drift.
@@ -164,13 +199,17 @@ export async function findDanglingDeleteIncluders(opts: {
   readFiles: (
     paths: string[],
   ) => Promise<ReadonlyArray<LedgerFileContent> | null | undefined>;
+  listSourceFiles: ListSourceFiles;
   deletedPaths: ReadonlySet<string> | ReadonlyArray<string>;
   overlays?: ReadonlyMap<string, string | null>;
 }): Promise<Map<string, string[]>> {
   const deleted = new Set(opts.deletedPaths);
   const overlays = opts.overlays ?? new Map<string, string | null>();
-  const { beanFiles } = await scanLedgerBeanFiles(opts.listDir);
-  const survivors = new Set(beanFiles.filter((path) => !deleted.has(path)));
+  const { includers } = await scanLedgerIncluders(
+    opts.listDir,
+    opts.listSourceFiles,
+  );
+  const survivors = new Set(includers.filter((path) => !deleted.has(path)));
   const contents = new Map<string, string>();
   for (const [path, content] of overlays) {
     if (content !== null && survivors.has(path)) contents.set(path, content);
@@ -232,6 +271,7 @@ export interface IncludeRemoval {
 export async function planIncludeRemovals(opts: {
   listDir: Parameters<typeof findDanglingDeleteIncluders>[0]["listDir"];
   readFiles: Parameters<typeof findDanglingDeleteIncluders>[0]["readFiles"];
+  listSourceFiles: ListSourceFiles;
   deletedPaths: ReadonlySet<string> | ReadonlyArray<string>;
 }): Promise<IncludeRemoval[]> {
   const deleted = new Set(opts.deletedPaths);
@@ -257,12 +297,22 @@ export async function planIncludeRemovals(opts: {
   });
 }
 
-/** The tree reads {@link planIncludeRemovals} needs, over the repo service. */
+/**
+ * The tree reads {@link planIncludeRemovals} needs, over the repo service,
+ * and the include closure over the data service.
+ */
 export function repoServiceFileAccess(
-  ledgerRepo: ILedgerRepoService,
+  services: {
+    ledgerRepo: ILedgerRepoService;
+    ledgerData: Pick<ILedgerDataService, "getSourceFiles">;
+  },
   ledgerId: string,
   identity: Identity,
-): Pick<Parameters<typeof planIncludeRemovals>[0], "listDir" | "readFiles"> {
+): Pick<
+  Parameters<typeof planIncludeRemovals>[0],
+  "listDir" | "readFiles" | "listSourceFiles"
+> {
+  const { ledgerRepo, ledgerData } = services;
   return {
     listDir: (dir) =>
       ledgerRepo.listDirContent({
@@ -272,6 +322,7 @@ export function repoServiceFileAccess(
       }),
     readFiles: (paths) =>
       ledgerRepo.getFilesContent({ ledgerId, identity, paths }),
+    listSourceFiles: () => ledgerData.getSourceFiles({ ledgerId, identity }),
   };
 }
 

@@ -325,11 +325,7 @@ export const FILE_ROUTES = [
         REMOVE_INCLUDES_NAMES,
       )
         ? await planIncludeRemovals({
-            ...repoServiceFileAccess(
-              layers.services.ledgerRepo,
-              ledgerId,
-              identity,
-            ),
+            ...repoServiceFileAccess(layers.services, ledgerId, identity),
             deletedPaths: [params.path],
           })
         : [];

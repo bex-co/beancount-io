@@ -800,8 +800,13 @@ the same way on all three delete spellings, naming the includers: remove the
 include from the including file(s) first, then delete. An include counts the
 way the ledger loads it — its target resolves to the deleted path relative
 to the directory of the file that declares it — and glob includes never
-count. Unlike rename there is no rewrite flag: drop the include with
-`updateLedgerFiles` first, then delete.
+count. The files whose includes count are every `.bean`/`.beancount` file,
+loaded or not, and every other file the ledger loads, such as a `.txt` that
+`main.bean` includes; a file the ledger never loads, such as a README that
+quotes an include line, never counts (w31/023). `remove_includes`
+(`removeIncludes` on REST and GraphQL) drops those exact include lines in the
+same commit; otherwise drop the include with `updateLedgerFiles` first, then
+delete.
 
 A file that is not valid UTF-8 (a Windows-1252 export, say) reads back from
 `readLedgerFiles` and REST `GET …/files/{path}` with `lossy: true`: its
@@ -2233,9 +2238,10 @@ is still `include`d, the rename is refused unless `updateIncludes: true`
 rewrites those lines in the same commit. An include counts when its target
 resolves to `oldPath` the way the ledger loads it, relative to the directory of
 the file that declares it, so `include "x.bean"` in `d/inc.bean` names
-`d/x.bean`. A rewritten include names `newPath` relative to that same
-directory, keeps a leading `./` or `/`, and is escaped so it reads back as the
-same path. A glob include cannot be rewritten for one file: when `oldPath`
+`d/x.bean`. Includes count in the same files as for delete: every
+`.bean`/`.beancount` file and every other file the ledger loads (w31/023). A
+rewritten include names `newPath` relative to that same directory, keeps a
+leading `./` or `/`, and is escaped so it reads back as the same path. A glob include cannot be rewritten for one file: when `oldPath`
 matches a glob that `newPath` would not, the rename is refused even with
 `updateIncludes`. The moved file's own relative includes are held to the same
 rule: a move to another folder that would point them elsewhere is refused
@@ -2256,8 +2262,8 @@ This operation exposes GraphQL's existing contract: it has no caller-supplied
 SHA. Repository conflicts remain errors.
 
 Deleting a still-included file is refused with the same include counting —
-there is no `updateIncludes` for delete, so drop the include first (see
-above).
+there is no `updateIncludes` for delete; `remove_includes` drops the include
+lines instead (see above).
 
 ### Update or delete entry source
 
