@@ -23,6 +23,12 @@ GUARD = pathlib.Path(__file__).resolve().parent / "loopx-guard.py"
 A, B = "session-a", "session-b"
 
 
+def reap(proc: subprocess.Popen) -> None:
+    """Stop a background guard process and close its pipes."""
+    proc.kill()
+    proc.communicate()
+
+
 class GuardFixture(unittest.TestCase):
     """A checkout with a w2 and a w5 board; no remote."""
 
@@ -67,6 +73,34 @@ class GuardFixture(unittest.TestCase):
     def marks(self) -> list[str]:
         directory = self.repo / ".git" / "loopx"
         return sorted(p.stem for p in directory.glob("*.json")) if directory.is_dir() else []
+
+    def mark(self, session: str) -> dict:
+        return json.loads((self.repo / ".git" / "loopx" / f"{session}.json").read_text())
+
+    def save_mark(self, session: str, state: dict) -> None:
+        (self.repo / ".git" / "loopx" / f"{session}.json").write_text(json.dumps(state))
+
+    def task(self, rel: str, status: str = "todo", depends_on=()) -> None:
+        """Write a task file such as `w2/m60/t001.md` with real frontmatter."""
+        path = self.repo / ".pm" / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(task_text(rel, status, depends_on))
+
+    def fake_listener(self) -> int:
+        """A live process whose command line reads like a running `wait`."""
+        proc = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(120)", "loopx-guard.py", "wait", "w2"]
+        )
+        self.addCleanup(lambda: (proc.kill(), proc.wait()))
+        return proc.pid
+
+
+def task_text(rel: str, status: str = "todo", depends_on=()) -> str:
+    task_id = rel.removesuffix(".md").replace("/done/", "/").replace("/blocked/", "/")
+    return (
+        f"---\nid: {task_id}\ntitle: \"a task\"\nworker: worker1\nstatus: {status}\n"
+        f"estimate: 30m\ndepends_on: [{', '.join(depends_on)}]\n---\n\n## Objective\n\nstatus: not frontmatter\n"
+    )
 
 
 class GuardTest(GuardFixture):
@@ -138,10 +172,17 @@ class GuardTest(GuardFixture):
     def test_live_wait_lets_the_stop_through_and_keeps_the_mark(self) -> None:
         self.run_guard("start", "w2", session=A)
         self.drain_w2()
-        self.write_listener("w2", since=time.time(), pid=os.getpid())
+        self.write_listener("w2", since=time.time(), pid=self.fake_listener())
         for _ in range(30):  # never counted toward the stand-down limit
             self.assertEqual(self.stop(A), {})
         self.assertEqual(self.marks(), [A])
+
+    def test_a_live_pid_that_is_not_a_listener_does_not_count(self) -> None:
+        # After a reboot the recorded pid belongs to some other process.
+        self.run_guard("start", "w2", session=A)
+        self.drain_w2()
+        self.write_listener("w2", since=time.time(), pid=os.getpid())
+        self.assertEqual(self.stop(A)["decision"], "block")
 
     def test_dead_wait_pid_does_not_count_as_listening(self) -> None:
         self.run_guard("start", "w2", session=A)
@@ -220,6 +261,82 @@ class GuardTest(GuardFixture):
         self.assertEqual(self.marks(), [A])
 
 
+class DependencyTest(GuardFixture):
+    """A milestone whose tasks all wait on unfinished work is not actionable."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        (self.repo / ".pm" / "w2" / "m53").rmdir()
+        (self.repo / ".pm" / "w2" / "089.md").unlink()
+        self.task("w2/m60/t001.md", depends_on=["w5/m9/t003"])
+        self.task("w2/m60/t002.md", depends_on=["w2/m60/t001"])
+        self.task("w5/m9/t003.md")
+
+    def test_a_waiting_milestone_does_not_hold_the_loop(self) -> None:
+        self.run_guard("start", "w2", "--no-listen", session=A)
+        self.assertEqual(self.stop(A), {})  # nothing ready: with --no-listen that is an exit
+        self.assertEqual(self.marks(), [])
+
+    def test_a_waiting_milestone_still_needs_a_listener(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        reason = self.stop(A)["reason"]
+        self.assertIn("nothing ready", reason)
+        self.assertNotIn("next pick", reason)
+
+    def test_it_becomes_actionable_when_the_work_it_names_is_done(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        done = self.repo / ".pm" / "w5" / "m9" / "done"
+        done.mkdir()
+        (self.repo / ".pm" / "w5" / "m9" / "t003.md").rename(done / "t003.md")
+        self.assertIn("the next pick is w2/m60", self.stop(A)["reason"])
+
+    def test_a_dependency_under_blocked_is_unfinished(self) -> None:
+        self.run_guard("start", "w2", "--no-listen", session=A)
+        blocked = self.repo / ".pm" / "w5" / "blocked"
+        blocked.mkdir()
+        (self.repo / ".pm" / "w5" / "m9").rename(blocked / "m9")
+        self.assertEqual(self.stop(A), {})
+
+    def test_a_dependency_that_names_nothing_holds_nothing_back(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        (self.repo / ".pm" / "w5" / "m9" / "t003.md").unlink()  # dropped
+        self.assertIn("the next pick is w2/m60", self.stop(A)["reason"])
+
+    def test_milestone_and_note_dependencies_count_too(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        self.task("w2/m60/t001.md", depends_on=["w5/779", '"w5/m9"'])
+        self.task("w5/m9/done/t003.md", status="done")
+        (self.repo / ".pm" / "w5" / "m9" / "t003.md").unlink()
+        self.assertIn("nothing ready", self.stop(A)["reason"])  # note w5/779 and milestone w5/m9 are open
+        (self.repo / ".pm" / "w5" / "779.md").unlink()
+        self.assertIn("nothing ready", self.stop(A)["reason"])  # the milestone directory is still open
+        done = self.repo / ".pm" / "w5" / "done"
+        done.mkdir()
+        (self.repo / ".pm" / "w5" / "m9").rename(done / "m9")
+        self.assertIn("the next pick is w2/m60", self.stop(A)["reason"])
+
+    def test_one_workable_task_makes_the_milestone_actionable(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        self.task("w2/m60/t003.md", status="blocked")
+        self.assertIn("nothing ready", self.stop(A)["reason"])
+        self.task("w2/m60/t004.md")  # no dependencies
+        self.assertIn("the next pick is w2/m60", self.stop(A)["reason"])
+
+    def test_a_milestone_with_only_finished_tasks_needs_its_closeout(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        self.task("w2/m60/t001.md", status="done", depends_on=["w5/m9/t003"])
+        self.task("w2/m60/t002.md", status="done")
+        self.assertIn("the next pick is w2/m60", self.stop(A)["reason"])
+
+    def test_picks_follow_numeric_order(self) -> None:
+        self.board("w2", milestones=["m100", "m9"], notes=["1014.md", "089.md"])
+        self.run_guard("start", "w2", session=A)
+        self.assertIn("the next pick is w2/m9", self.stop(A)["reason"])
+        (self.repo / ".pm" / "w2" / "m9").rmdir()
+        (self.repo / ".pm" / "w2" / "m100").rmdir()
+        self.assertIn("the next pick is w2/089.md", self.stop(A)["reason"])
+
+
 GIT_ENV = {
     "GIT_AUTHOR_NAME": "loopx test",
     "GIT_AUTHOR_EMAIL": "loopx@example.invalid",
@@ -269,13 +386,42 @@ class RemoteFixture(unittest.TestCase):
         self.git(self.other, "commit", "-q", "-m", message)
         self.git(self.other, "push", "-q", "origin", "HEAD:main")
 
-    def run_guard(self, *args: str, timeout: float = 30):
+    def guard_env(self, session: str | None = None) -> dict:
         env = {k: v for k, v in os.environ.items() if k != "CLAUDE_CODE_SESSION_ID"}
         env.update(GIT_ENV, CLAUDE_PROJECT_DIR=str(self.repo))
+        env.update(getattr(self, "extra_env", {}))
+        if session is not None:
+            env["CLAUDE_CODE_SESSION_ID"] = session
+        return env
+
+    def run_guard(self, *args: str, timeout: float = 30, session: str | None = None, payload: dict | None = None):
         return subprocess.run(
             [sys.executable, str(GUARD), *args], capture_output=True, text=True,
-            env=env, timeout=timeout, check=False,
+            input=json.dumps(payload) if payload is not None else "",
+            env=self.guard_env(session), timeout=timeout, check=False,
         )
+
+    def stop(self, session: str) -> dict:
+        result = self.run_guard(payload={"session_id": session, "hook_event_name": "Stop"})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def mark(self, session: str) -> dict:
+        return json.loads((self.repo / ".git" / "loopx" / f"{session}.json").read_text())
+
+    def pull(self) -> None:
+        self.git(self.repo, "pull", "-q", "--rebase", "origin", "main")
+
+    def local_commit(self, rel: str, text: str, push: bool = True) -> str:
+        """A commit made in the loop's own checkout, as a worker would."""
+        path = self.repo / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+        self.git(self.repo, "add", "-A")
+        self.git(self.repo, "commit", "-q", "-m", f"change {rel}")
+        if push:
+            self.git(self.repo, "push", "-q", "origin", "HEAD:main")
+        return self.git(self.repo, "rev-parse", "HEAD").strip()
 
     def listener(self) -> dict:
         path = self.repo / ".git" / "loopx" / "wait-w2.state"
@@ -321,23 +467,68 @@ class RemoteTest(RemoteFixture):
         self.assertEqual(result.returncode, 10, result.stdout + result.stderr)
 
     def test_chunks_share_one_idle_window_until_it_expires(self) -> None:
-        first = self.run_guard("wait", "w2", *FAST, "--chunk", "0.1", "--give-up", "0.6")
+        # The chunks use a window they cannot outlast, however slow the machine is.
+        first = self.run_guard("wait", "w2", *FAST, "--chunk", "0.1", "--give-up", "600")
         self.assertEqual(first.returncode, 10, first.stderr)
         since = self.listener()["since"]
         self.assertNotIn("pid", self.listener())
-        second = self.run_guard("wait", "w2", *FAST, "--chunk", "0.1", "--give-up", "0.6")
+        second = self.run_guard("wait", "w2", *FAST, "--chunk", "0.1", "--give-up", "600")
         self.assertEqual(second.returncode, 10, second.stderr)
         self.assertEqual(self.listener()["since"], since)
-        final = self.run_guard("wait", "w2", *FAST, "--give-up", "0.6")
+        time.sleep(0.3)
+        final = self.run_guard("wait", "w2", *FAST, "--give-up", "0.2")  # measured from the first chunk
         self.assertEqual(final.returncode, 3, final.stderr)
         self.assertIn("listen window is over", final.stdout)
         self.assertTrue(self.listener()["gave_up"])
 
     def test_wait_stops_when_fetch_keeps_failing(self) -> None:
         self.git(self.repo, "remote", "set-url", "origin", str(self.origin) + "-missing")
-        result = self.run_guard("wait", "w2", *FAST, "--fetch-failures", "3")
+        result = self.run_guard("wait", "w2", *FAST, "--fetch-give-up", "0.3")
         self.assertEqual(result.returncode, 4)
-        self.assertIn("failed 3 times", result.stdout)
+        self.assertIn("has failed for", result.stdout)
+
+    def test_a_fetch_outage_shorter_than_the_limit_does_not_end_the_listener(self) -> None:
+        self.git(self.repo, "remote", "set-url", "origin", str(self.origin) + "-missing")
+        proc = subprocess.Popen(
+            [sys.executable, str(GUARD), "wait", "w2", *FAST, "--fetch-give-up", "30"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=self.guard_env(),
+        )
+        self.addCleanup(reap, proc)
+        time.sleep(0.6)  # dozens of failed polls: the old count-based limit would have quit
+        self.assertIsNone(proc.poll(), "the listener gave up during a short outage")
+        self.git(self.repo, "remote", "set-url", "origin", str(self.origin))
+        self.write(".pm/w2/012.md", "note\n")
+        self.push("work lands after the outage")
+        out, err = proc.communicate(timeout=20)
+        self.assertEqual(proc.returncode, 0, err)
+        self.assertIn("next pick w2/012.md", out)
+
+    def test_only_one_listener_runs_per_workstream(self) -> None:
+        first = subprocess.Popen(
+            [sys.executable, str(GUARD), "wait", "w2", *FAST, "--give-up", "30"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=self.guard_env(),
+        )
+        self.addCleanup(reap, first)
+        time.sleep(0.4)
+        second = self.run_guard("wait", "w2", *FAST)
+        self.assertEqual(second.returncode, 11, second.stdout + second.stderr)
+        self.assertIn("already running", second.stdout)
+        self.assertEqual(self.listener().get("pid"), first.pid)  # the first one's state is untouched
+        self.assertIsNone(first.poll())
+
+    def test_a_waiting_milestone_does_not_wake_the_listener_until_its_dependency_is_done(self) -> None:
+        self.write(".pm/w2/m7/README.md", "milestone\n")
+        self.write(".pm/w2/m7/t001.md", task_text("w2/m7/t001.md", depends_on=["w9/m1/t004"]))
+        self.write(".pm/w9/m1/t004.md", task_text("w9/m1/t004.md"))
+        self.push("a milestone that waits on another queue")
+        idle = self.run_guard("wait", "w2", *FAST, "--chunk", "0.2")
+        self.assertEqual(idle.returncode, 10, idle.stdout + idle.stderr)
+        (self.other / ".pm/w9/m1/done").mkdir()
+        self.git(self.other, "mv", ".pm/w9/m1/t004.md", ".pm/w9/m1/done/t004.md")
+        self.push("the other queue finishes it")
+        woke = self.run_guard("wait", "w2", *FAST)
+        self.assertEqual(woke.returncode, 0, woke.stdout + woke.stderr)
+        self.assertIn("next pick w2/m7", woke.stdout)
 
     def test_wait_rejects_bad_arguments(self) -> None:
         self.assertEqual(self.run_guard("wait", "../w2").returncode, 2)
@@ -366,12 +557,57 @@ class RemoteTest(RemoteFixture):
         self.push("board")
         behind = self.outcome("m4")
         self.assertTrue(behind["fetched"])
-        self.assertFalse(behind["pushed"])  # origin moved; the checkout has not pulled
-        self.git(self.repo, "pull", "-q", "--rebase")
-        self.assertTrue(self.outcome("m4")["pushed"])
-        self.assertTrue(self.outcome("m4")["clean"])
+        # Another loop pushed and origin/main moved ahead: nothing here is unpushed.
+        self.assertTrue(behind["pushed"])
+        sha = self.local_commit("notes.txt", "local work\n", push=False)
+        unpushed = self.outcome("001")
+        self.assertFalse(unpushed["pushed"])
+        self.assertFalse(unpushed["ok"])
+        self.git(self.repo, "pull", "-q", "--rebase", "origin", "main")
+        self.git(self.repo, "push", "-q", "origin", "HEAD:main")
+        self.assertTrue(self.outcome("001")["pushed"])
+        self.assertTrue(self.outcome("001")["ok"])
+        self.assertNotEqual(sha, "")
         (self.repo / "scratch.txt").write_text("partial work\n")
-        self.assertFalse(self.outcome("m4")["clean"])
+        dirty = self.outcome("001")
+        self.assertFalse(dirty["clean"])
+        self.assertFalse(dirty["ok"])
+
+    def test_outcome_checks_the_commits_a_worker_lists(self) -> None:
+        sha = self.local_commit("notes.txt", "shipped\n")
+        ok = json.loads(self.run_guard("outcome", "w2", "001", sha[:9]).stdout)
+        self.assertTrue(ok["ok"])
+        self.assertEqual(ok["missing_commits"], [])
+        pushes = json.loads((self.repo / ".git" / "loopx" / "ci-w2.state").read_text())["pushes"]
+        self.assertEqual([p["sha"] for p in pushes], [sha])  # remembered for the CI check
+        unknown = json.loads(self.run_guard("outcome", "w2", "001", "deadbeef1").stdout)
+        self.assertEqual(unknown["missing_commits"], ["deadbeef1"])
+        self.assertFalse(unknown["ok"])
+        self.assertEqual(self.run_guard("outcome", "w2", "001", "not-a-sha").returncode, 2)
+
+    def test_an_item_still_open_is_never_ok(self) -> None:
+        self.write(".pm/w2/m4/README.md", "open\n")
+        self.push("board")
+        self.pull()
+        self.assertFalse(self.outcome("m4")["ok"])
+
+    def test_outcome_verifies_workers_that_have_no_board_item(self) -> None:
+        sha = self.local_commit("notes.txt", "routine fix\n")
+        result = json.loads(self.run_guard("outcome", "w2", "routine:cli-qa", sha).stdout)
+        self.assertEqual((result["item"], result["where"], result["ok"]), ("routine:cli-qa", "n/a", True))
+        self.assertTrue(json.loads(self.run_guard("outcome", "w2", "ci:ci-cli").stdout)["ok"])
+        self.assertEqual(self.run_guard("outcome", "w2", "routine:../x").returncode, 2)
+
+    def test_a_verified_outcome_clears_the_matching_inflight_mark(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        self.run_guard("dispatch", "w2/001.md", session=A)
+        other = json.loads(self.run_guard("outcome", "w2", "m9", session=A).stdout)
+        self.assertFalse(other["settled"])  # a different item: the mark stays
+        self.assertIn("inflight", self.mark(A))
+        verified = json.loads(self.run_guard("outcome", "w2", "001", session=A).stdout)
+        self.assertTrue(verified["ok"])
+        self.assertTrue(verified["settled"])
+        self.assertNotIn("inflight", self.mark(A))
 
     def test_outcome_rejects_unsafe_ids(self) -> None:
         self.assertEqual(self.run_guard("outcome", "w2", "../m4").returncode, 2)
@@ -410,6 +646,83 @@ class InflightTest(GuardFixture):
         self.assertIn("no loop armed", self.run_guard("dispatch", "w2/m53", session=A).stdout)
         self.assertIn("no loop armed", self.run_guard("settle", session=A).stdout)
         self.assertEqual(self.marks(), [])
+
+    def test_the_hook_never_asks_for_a_second_worker(self) -> None:
+        # Forgetting `dispatch` used to be answered with "dispatch it to a worker".
+        self.run_guard("start", "w2", session=A)
+        reason = self.stop(A)["reason"]
+        self.assertIn("If a worker for w2/m53 is already running", reason)
+        self.assertIn("never launch a second worker", reason)
+
+    def test_a_worker_without_a_board_item_is_released_by_a_timer(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        self.run_guard("dispatch", "routine:cli-qa", session=A)
+        self.assertEqual(self.stop(A), {})
+        state = self.mark(A)
+        self.assertFalse(state["inflight"]["was_open"])
+        state["inflight"]["since"] = time.time() - 4 * 3600
+        self.save_mark(A, state)
+        reason = self.stop(A)["reason"]
+        self.assertIn("routine:cli-qa ran out", reason)
+        self.assertNotIn("inflight", self.mark(A))
+
+    def test_an_item_that_was_not_open_at_dispatch_gives_no_board_signal(self) -> None:
+        # Reviving a blocked item: its worker's first step moves it into the open tree.
+        blocked = self.repo / ".pm" / "w2" / "blocked"
+        blocked.mkdir()
+        (blocked / "113.md").write_text("blocked note\n")
+        self.run_guard("start", "w2", session=A)
+        self.run_guard("dispatch", "w2/113", session=A)
+        self.assertEqual(self.stop(A), {})  # not "left the open tree": it was never in it
+
+    def test_an_item_gone_without_a_ship_is_lost_after_the_grace_period(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        self.run_guard("dispatch", "w2/089.md", session=A)
+        (self.repo / ".pm" / "w2" / "089.md").unlink()  # the worker moved it, then went quiet
+        self.assertEqual(self.stop(A), {})  # still inside the grace period
+        state = self.mark(A)
+        self.assertIn("gone_since", state["inflight"])
+        state["inflight"]["gone_since"] = time.time() - 3600
+        self.save_mark(A, state)
+        self.assertIn("w2/089.md ran out", self.stop(A)["reason"])
+
+
+class FinishedWorkerTest(RemoteFixture):
+    """The Stop hook sees a worker finish from the board and git, not from `settle`."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.write(".pm/w2/007.md", "a note\n")
+        self.write(".pm/w2/008.md", "another note\n")
+        self.push("two notes")
+        self.pull()
+        self.run_guard("start", "w2", session=A)
+        self.run_guard("dispatch", "w2/007.md", session=A)
+
+    def test_the_loop_is_held_again_once_the_item_is_shipped(self) -> None:
+        self.assertEqual(self.stop(A), {})  # the item is still open: the worker is running
+        (self.repo / ".pm/w2/done").mkdir(exist_ok=True)
+        self.git(self.repo, "mv", ".pm/w2/007.md", ".pm/w2/done/007.md")
+        self.assertEqual(self.stop(A), {})  # moved but not committed: still shipping
+        self.git(self.repo, "commit", "-q", "-m", "close w2/007")
+        self.assertEqual(self.stop(A), {})  # committed but not pushed
+        self.git(self.repo, "push", "-q", "origin", "HEAD:main")
+        decision = self.stop(A)  # nobody ran `settle`
+        self.assertEqual(decision["decision"], "block")
+        self.assertIn("The worker for w2/007.md is finished", decision["reason"])
+        self.assertIn("the next pick is w2/008.md", decision["reason"])
+        self.assertNotIn("inflight", self.mark(A))
+
+    def test_another_loop_pushing_meanwhile_does_not_hide_the_finish(self) -> None:
+        (self.repo / ".pm/w2/done").mkdir(exist_ok=True)
+        self.git(self.repo, "mv", ".pm/w2/007.md", ".pm/w2/done/007.md")
+        self.git(self.repo, "commit", "-q", "-m", "close w2/007")
+        self.git(self.repo, "push", "-q", "origin", "HEAD:main")
+        self.git(self.other, "pull", "-q", "--rebase", "origin", "main")
+        self.write("elsewhere.txt", "another queue's push\n")
+        self.push("unrelated push")
+        self.git(self.repo, "fetch", "-q", "origin", "main")  # origin/main is now ahead of HEAD
+        self.assertIn("is finished", self.stop(A)["reason"])
 
 
 ROUTINES = """# w2 routines
@@ -648,12 +961,230 @@ class RoutineTest(RemoteFixture):
         self.schedule("| cli-dead-code | /routine-dead-code-removal cli | 1d | sometimes |\n")
         self.assertIn("when must be changed or always", " ".join(self.due()["problems"]))
 
+    def test_three_failed_runs_drop_a_routine_to_one_try_a_day(self) -> None:
+        self.schedule("| cli-qa | `/qa-find-bugs-cli w2 SHIP=1` | 30m | always | cli |\n", budget="Budget: 48 runs/day\n\n")
+        for count in (1, 2):
+            out = self.done("cli-qa", "failed").stdout
+            self.assertNotIn("/pm add", out)
+            entry = self.state()["routines"]["cli-qa"]
+            self.assertEqual((entry["failures"], entry["interval"]), (count, 1800))  # still on its cadence
+        third = self.done("cli-qa", "failed").stdout
+        self.assertIn("failed 3 runs in a row", third)
+        self.assertIn("/pm add", third)  # one note, when the pause starts
+        self.assertEqual(self.state()["routines"]["cli-qa"]["interval"], 86400)
+        reply = self.due()
+        self.assertIsNone(reply["due"])
+        self.assertAlmostEqual(reply["next_in"], 86400, delta=60)
+        self.assertNotIn("/pm add", self.done("cli-qa", "failed").stdout)  # not a note per failure
+        # A day later it is tried again, and one good run restores the schedule.
+        state = self.state()
+        state["routines"]["cli-qa"]["last_run"] -= 86401
+        self.save(state)
+        self.assertEqual(self.due()["due"]["name"], "cli-qa")
+        self.done("cli-qa", "empty")
+        entry = self.state()["routines"]["cli-qa"]
+        self.assertEqual((entry["failures"], entry["interval"]), (0, 1800))
+
+    def test_a_failed_run_does_not_move_a_changed_rows_gate(self) -> None:
+        self.fetch()
+        self.done("cli-dead-code", "found")
+        entry = self.state()["routines"]["cli-dead-code"]
+        self.write("cli/app.py", "print(2)\n")
+        self.push("cli change")
+        self.fetch()
+        self.done("cli-dead-code", "failed")  # it never looked at the new commit
+        after = self.state()["routines"]["cli-dead-code"]
+        self.assertEqual(after["last_sha"], entry["last_sha"])
+        self.assertEqual(after["interval"], entry["interval"])  # no backoff either
+
+    def test_recording_a_routine_run_clears_its_inflight_mark(self) -> None:
+        self.fetch()
+        self.run_guard("start", "w2", session=A)
+        self.run_guard("dispatch", "routine:cli-dead-code", session=A)
+        self.run_guard("routine-done", "w2", "cli-dead-code", "empty", session=A)
+        self.assertNotIn("inflight", self.mark(A))
+
     def test_routine_done_rejects_unlisted_or_malformed_runs(self) -> None:
         self.fetch()
         self.assertEqual(self.done("not-listed", "found").returncode, 2)
         self.assertEqual(self.done("cli-dead-code", "maybe").returncode, 2)
         self.assertEqual(self.done("../x", "found").returncode, 2)
         self.assertEqual(self.run_guard("routine-done", "w2", "routine-dead-code-removal", "cli", "found").returncode, 2)
+
+
+class BoardTest(RemoteFixture):
+    """`board` hands the orchestrator the facts for a pick in one call."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.write(".pm/w2/m4/README.md", "milestone\n")
+        self.write(".pm/w2/m7/README.md", "milestone\n")
+        self.write(".pm/w2/m7/t001.md", task_text("w2/m7/t001.md", depends_on=["w2/m4"]))
+        self.write(".pm/w2/010.md", "note\n")
+        self.write(".pm/w2/blocked/113.md", "blocked: needs an upstream release\n")
+        self.write(".pm/w2/blocked/m3/README.md", "blocked milestone\n")
+        self.push("board")
+        self.pull()
+
+    def board(self) -> dict:
+        result = self.run_guard("board", "w2")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_lists_ready_and_waiting_items_and_the_default_next(self) -> None:
+        facts = self.board()
+        self.assertEqual(facts["ready"], ["m4", "010.md"])
+        self.assertEqual(facts["waiting"], {"m7": ["w2/m4"]})
+        self.assertEqual(facts["next"], "w2/m4")
+        self.assertEqual(facts["ci"]["checked"], False)  # nothing pushed by this loop yet
+
+    def test_blocked_items_are_listed_once_then_only_when_they_change(self) -> None:
+        self.assertEqual(self.board()["blocked"], {"review": ["113.md", "m3"], "unchanged": 0})
+        self.assertEqual(self.board()["blocked"], {"review": [], "unchanged": 2})
+        self.write(".pm/w2/blocked/113.md", "blocked: the release shipped, unblock condition holds\n")
+        self.push("the owner updates a blocker")
+        self.pull()
+        self.assertEqual(self.board()["blocked"], {"review": ["113.md"], "unchanged": 1})
+        self.run_guard("start", "w2")  # a new run reviews every blocked item once
+        self.assertEqual(self.board()["blocked"]["review"], ["113.md", "m3"])
+
+    def test_a_due_routine_is_next_only_when_nothing_is_ready(self) -> None:
+        self.write(".pm/w2/routine/README.md", "| name | command | every |\n| --- | --- | --- |\n| cli-qa | `/qa-find-bugs-cli w2 SHIP=1` | 30m |\n")
+        self.push("a routine")
+        self.pull()
+        facts = self.board()
+        self.assertEqual(facts["next"], "w2/m4")  # board work first
+        self.assertEqual(facts["routine"]["due"]["name"], "cli-qa")
+        for path in (".pm/w2/m4", ".pm/w2/m7", ".pm/w2/010.md"):
+            self.git(self.other, "rm", "-q", "-r", path)
+        self.push("drain the board")
+        self.pull()
+        self.assertEqual(self.board()["next"], "routine:cli-qa")
+        self.run_guard("routine-done", "w2", "cli-qa", "empty")
+        self.assertIsNone(self.board()["next"])  # nothing to do: listen
+
+
+FAKE_GH = """#!/usr/bin/env python3
+import os, pathlib, sys
+pathlib.Path(os.environ["FAKE_GH_DIR"], "calls").open("a").write(" ".join(sys.argv[1:]) + "\\n")
+runs = pathlib.Path(os.environ["FAKE_GH_DIR"], "runs.json")
+if not runs.exists():
+    sys.stderr.write("gh: not signed in\\n")
+    sys.exit(1)
+sys.stdout.write(runs.read_text())
+"""
+
+
+class CITest(RemoteFixture):
+    """The loop reads CI for its own pushes, through `gh`, and only reports red it caused."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.gh_dir = pathlib.Path(self._tmp.name) / "fake-gh"
+        self.gh_dir.mkdir()
+        gh = self.gh_dir / "gh"
+        gh.write_text(FAKE_GH)
+        gh.chmod(0o755)
+        self.extra_env = {"PATH": f"{self.gh_dir}{os.pathsep}{os.environ['PATH']}", "FAKE_GH_DIR": str(self.gh_dir)}
+        self.theirs = self.git(self.repo, "rev-parse", "HEAD").strip()  # someone else's commit
+        self.ours = self.local_commit("cli/app.py", "print(1)\n")
+        self.clock = 0
+
+    def run_on(self, workflow: str, sha: str, conclusion: str | None) -> dict:
+        self.clock += 1
+        return {
+            "databaseId": 1000 + self.clock, "workflowName": workflow, "headSha": sha,
+            "status": "completed" if conclusion else "in_progress", "conclusion": conclusion or "",
+            "createdAt": f"2026-11-14T10:{self.clock:02d}:00Z", "url": f"https://example.invalid/runs/{1000 + self.clock}",
+        }
+
+    def gh_says(self, *runs: dict) -> None:
+        (self.gh_dir / "runs.json").write_text(json.dumps(list(reversed(runs))))  # gh lists newest first
+
+    def gh_calls(self) -> int:
+        calls = self.gh_dir / "calls"
+        return len(calls.read_text().splitlines()) if calls.exists() else 0
+
+    def pushed(self, *shas: str) -> None:
+        result = json.loads(self.run_guard("outcome", "w2", "routine:cli-qa", *shas).stdout)
+        self.assertTrue(result["ok"], result)
+
+    def ci(self) -> dict:
+        return json.loads(self.run_guard("board", "w2").stdout)["ci"]
+
+    def test_gh_is_not_called_until_the_loop_has_pushed_something(self) -> None:
+        self.gh_says(self.run_on("CI (cli)", self.ours, "failure"))
+        ci = self.ci()
+        self.assertEqual((ci["checked"], ci["own_failures"]), (False, []))
+        self.assertEqual(self.gh_calls(), 0)
+
+    def test_a_workflow_our_push_turned_red_is_reported_once(self) -> None:
+        self.pushed(self.ours)
+        self.gh_says(self.run_on("CI (cli)", self.theirs, "success"), self.run_on("CI (cli)", self.ours, "failure"))
+        facts = json.loads(self.run_guard("board", "w2").stdout)
+        failure = facts["ci"]["own_failures"][0]
+        self.assertEqual((failure["workflow"], failure["label"], failure["attempt"]), ("CI (cli)", "ci:ci-cli", 1))
+        self.assertEqual(failure["since"], self.ours[:9])
+        self.assertEqual(facts["next"], "ci:ci-cli")  # ahead of any board item
+        again = self.ci()
+        self.assertEqual(again["own_failures"], [])  # reported once
+        self.assertEqual(again["still_red"], ["CI (cli)"])  # but not forgotten
+
+    def test_red_that_started_on_someone_elses_commit_is_not_ours(self) -> None:
+        self.pushed(self.ours)
+        self.gh_says(self.run_on("CI (cli)", self.theirs, "failure"), self.run_on("CI (cli)", self.ours, "failure"))
+        ci = self.ci()
+        self.assertTrue(ci["checked"])
+        self.assertEqual((ci["own_failures"], ci["still_red"]), ([], []))
+
+    def test_cancelled_and_running_runs_are_not_verdicts(self) -> None:
+        self.pushed(self.ours)
+        self.gh_says(
+            self.run_on("CI (cli)", self.theirs, "success"),
+            self.run_on("CI (cli)", self.ours, "cancelled"),
+            self.run_on("CI (dashboard)", self.ours, None),
+        )
+        ci = self.ci()
+        self.assertEqual(ci["own_failures"], [])
+        self.assertEqual(ci["pending"], 1)
+
+    def test_a_failed_fix_is_reported_again_and_a_passing_one_ends_it(self) -> None:
+        self.pushed(self.ours)
+        history = [self.run_on("CI (cli)", self.theirs, "success"), self.run_on("CI (cli)", self.ours, "failure")]
+        self.gh_says(*history)
+        self.assertEqual(len(self.ci()["own_failures"]), 1)
+        # Someone else pushes while it is red: still ours, but nothing new to report.
+        history.append(self.run_on("CI (cli)", "f" * 40, "failure"))
+        self.gh_says(*history)
+        self.assertEqual(self.ci()["own_failures"], [])
+        fix = self.local_commit("cli/app.py", "print(2)\n")
+        self.pushed(fix)
+        history.append(self.run_on("CI (cli)", fix, "failure"))
+        self.gh_says(*history)
+        second = self.ci()["own_failures"]
+        self.assertEqual((len(second), second[0]["attempt"], second[0]["since"]), (1, 2, self.ours[:9]))
+        history.append(self.run_on("CI (cli)", "e" * 40, "success"))
+        self.gh_says(*history)
+        green = self.ci()
+        self.assertEqual((green["own_failures"], green["still_red"]), ([], []))
+
+    def test_without_a_working_gh_the_check_is_skipped_and_says_so(self) -> None:
+        self.pushed(self.ours)  # no runs.json: the fake gh exits 1, as when not signed in
+        ci = self.ci()
+        self.assertFalse(ci["checked"])
+        self.assertIn("CI was not checked", ci["reason"])
+        self.assertEqual(self.gh_calls(), 1)
+
+    def test_the_listener_wakes_for_an_own_failure_until_board_has_reported_it(self) -> None:
+        self.pushed(self.ours)
+        self.gh_says(self.run_on("CI (cli)", self.theirs, "success"), self.run_on("CI (cli)", self.ours, "failure"))
+        woke = self.run_guard("wait", "w2", *FAST)
+        self.assertEqual(woke.returncode, 6, woke.stdout + woke.stderr)
+        self.assertIn("CI (cli)", woke.stdout)
+        self.assertEqual(self.run_guard("wait", "w2", *FAST).returncode, 6)  # waiting does not consume it
+        self.assertEqual(len(self.ci()["own_failures"]), 1)  # board reports it
+        idle = self.run_guard("wait", "w2", *FAST, "--chunk", "0.2")
+        self.assertEqual(idle.returncode, 10, idle.stdout + idle.stderr)
 
 
 if __name__ == "__main__":

@@ -6,25 +6,36 @@ The rule — never stop while a next pick exists — is stated four times in
 end-of-run summary and treated writing it as a turn boundary, naming the next
 pick in the same breath. Prose cannot enforce itself. This can.
 
+This script answers questions of fact and keeps time; it never judges. What
+"actionable" means, in every mode:
+
+- An open inbox note (`.pm/<wN>/NNN.md`) is actionable.
+- An open milestone (`.pm/<wN>/mN/`) is actionable when at least one of its
+  open tasks has every written `depends_on` done. A milestone whose tasks all
+  wait on unfinished work elsewhere is *waiting*: it neither holds the loop
+  nor wakes the listener, and becomes actionable by itself once the work it
+  names is done. Anything under `done/` or `blocked/` never counts.
+
 Each mark belongs to the Claude Code session that armed it: `start` reads the
 caller's `CLAUDE_CODE_SESSION_ID`, and the Stop hook consults only the mark of
 the session that is stopping. Several sessions can therefore share one
-checkout, each running its own loop or none, without blocking each other. (An
-earlier version kept one mark per repository and bound it to whichever session
-stopped first, so an unrelated session was held to a loop it never started
-while the real loop lost its guard.)
+checkout, each running its own loop or none, without blocking each other.
 
 A drained loop listens by default: `wait` polls `origin/main` with `git fetch`
-and exponential backoff, costs no model tokens, and exits only when the
-workstream gains an actionable item, the idle limit passes, or fetch keeps
-failing. While that `wait` process is alive the Stop hook lets the turn end and
-keeps the mark; a drained loop that is *not* listening is held until it starts
-one. `--no-listen` restores the old behaviour: drained means done.
+and exponential backoff, costs no model tokens, and exits when the workstream
+gains actionable work, a routine falls due, one of the loop's own pushes
+turned CI red, the idle limit passes, or fetch has failed for two hours
+straight. One listener runs per workstream; a second `wait` exits at once.
+While a listener is alive the Stop hook lets the turn end and keeps the mark;
+a drained loop that is *not* listening is held until it starts one.
+`--no-listen` restores the old behaviour: drained means done.
 
 While the orchestrator waits for a background worker, `dispatch <label>` marks
-the loop in flight and the Stop hook lets turns end until `settle` (or a
-12-hour safety expiry); otherwise every idle turn during a long worker run
-would be handed straight back.
+the loop in flight and the Stop hook lets turns end. For a board item the hook
+checks the facts itself: once the item has left the open tree and everything
+is pushed, the worker is finished and the loop is held again, whether or not
+anyone ran `settle`. Marks without a board signal (routines, CI fixes) expire
+on a timer.
 
 A drained workstream may also run routines listed in
 `.pm/<wN>/routine/README.md` on origin/main. A routine is a named row holding
@@ -34,40 +45,57 @@ when one is due: its interval has passed, and the day's routine budget is not
 spent. A row runs on its own schedule: `when: always` (the default) means
 every interval, whatever changed; `when: changed` also requires one of the
 row's `paths` (any path when it lists none) to have changed since the last
-run, and
-`routine-done` doubles such a row's interval after an empty run (capped at 14
-days), resetting it after a run that shipped something. `wait` never sleeps
-past the next routine's due time, so a schedule holds even while the board
-poll is backed off; board work still wins whenever both are ready. Run state stays in `.git/loopx/`, never on
-the public board.
+run, and `routine-done` doubles such a row's interval after an empty run
+(capped at 14 days), resetting it after a run that shipped something. A row
+that fails three runs in a row drops to one try a day until a run succeeds.
+`wait` never sleeps past the next routine's due time, so a schedule holds even
+while the board poll is backed off; board work still wins whenever both are
+ready. Run state stays in `.git/loopx/`, never on the public board.
+
+`/ship` ends at the push and nobody reads CI afterwards, so the guard does:
+`outcome` records the commits a worker pushed, and `board` and `wait` ask `gh`
+whether one of those commits is where a workflow on main first went red.
+Red that started on someone else's commit is not reported. Without `gh` the
+check is skipped and says so.
 
 Modes:
 
     loopx-guard.py start <wN> [--no-listen]
                                 arm a loop for the calling Claude Code session
     loopx-guard.py end          disarm the calling session's loop (a genuine Exit)
-    loopx-guard.py wait <wN> [--min S] [--max S] [--give-up S] [--chunk S]
-                     [--fetch-failures N]
-                                block until origin/main gives <wN> actionable work;
-                                exit 0 work, 5 routine due, 3 idle limit,
-                                4 fetch failing, 10 chunk elapsed (call again)
-    loopx-guard.py outcome <wN> <id>
-                                where <id> sits on origin/main (JSON)
+    loopx-guard.py board <wN>   the facts for the next pick (JSON): own CI
+                                failures, ready and waiting items, blocked
+                                items changed since they were last listed,
+                                the due routine, and the default next step
     loopx-guard.py dispatch <label>
                                 mark the calling session's loop as waiting on
                                 a background worker (Stop hook lets turns end)
-    loopx-guard.py settle       clear the in-flight mark once its worker is verified
+    loopx-guard.py outcome <wN> <id> [<sha>...]
+                                verify a worker's result (JSON): where <id>
+                                sits on origin/main, whether the listed
+                                commits are there, nothing unpushed, tree
+                                clean; clears the in-flight mark when it holds.
+                                <id> is an item, `routine:<name>`, or `ci:<slug>`
+    loopx-guard.py settle       clear the in-flight mark by hand
     loopx-guard.py routine-due <wN>
                                 the next due routine on origin/main (JSON)
-    loopx-guard.py routine-done <wN> <name> found|empty
+    loopx-guard.py routine-done <wN> <name> found|empty|failed
                                 record a routine run and reschedule it
+    loopx-guard.py wait <wN> [--min S] [--max S] [--give-up S] [--chunk S]
+                     [--fetch-give-up S]
+                                block until origin/main gives <wN> something to
+                                do; exit 0 board work, 5 routine due, 6 own CI
+                                failure, 3 idle limit, 4 fetch failing,
+                                10 chunk elapsed (call again), 11 another
+                                listener is already running
     loopx-guard.py              Stop hook: reads the hook payload on stdin and
                                 blocks the stop while this session's loop has work
     loopx-guard.py forget       SessionEnd hook: drop the ending session's mark
 
 Outside Claude Code there is no session id and no Stop hook (Codex has
-neither), so `start` arms nothing and says so; `wait` and `outcome` work the
-same everywhere, and the skill's exit rules still apply.
+neither), so `start` arms nothing and says so; `board`, `outcome`, `wait` and
+the routine modes work the same everywhere, and the skill's exit rules still
+apply.
 """
 
 from __future__ import annotations
@@ -77,6 +105,7 @@ import os
 import pathlib
 import random
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -90,11 +119,27 @@ STALE_SECONDS = 7 * 24 * 3600
 WAIT_MIN = 120.0
 WAIT_MAX = 1800.0
 WAIT_GIVE_UP = 24 * 3600.0
-WAIT_FETCH_FAILURES = 5
-EXIT_WORK, EXIT_GAVE_UP, EXIT_FETCH, EXIT_ROUTINE, EXIT_CHUNK = 0, 3, 4, 5, 10
+# Fetch may fail this long in a row (a sleeping laptop, a flaky network) before
+# the listener gives up; it keeps backing off normally meanwhile.
+WAIT_FETCH_GIVE_UP = 2 * 3600.0
+EXIT_WORK, EXIT_GAVE_UP, EXIT_FETCH, EXIT_ROUTINE, EXIT_CI, EXIT_CHUNK, EXIT_BUSY = 0, 3, 4, 5, 6, 10, 11
 
-# A worker marked in flight longer than this is presumed lost.
+# A board item's worker marked in flight longer than this is presumed lost.
 INFLIGHT_MAX = 12 * 3600.0
+# A routine or CI-fix worker has no board signal, so only this timer ends its mark.
+INFLIGHT_UNTRACKED_MAX = 3 * 3600.0
+# Once an item has left the open tree, its worker has this long to finish shipping.
+INFLIGHT_SHIP_GRACE = 30 * 60.0
+# A routine that failed this many runs in a row retries once per paused interval.
+ROUTINE_FAILURES_BEFORE_PAUSE = 3
+ROUTINE_PAUSED_INTERVAL = 24 * 3600.0
+# CI: how long a pushed commit is watched, and how many runs one `gh` call reads.
+CI_WINDOW = 6 * 3600.0
+CI_RUNS = 200
+# While a pushed commit's CI is still running, poll at least this often.
+CI_WATCH_PAUSE = 300.0
+# A red workflow that has not run again for this long is no longer tracked.
+CI_OWNED_MAX = 7 * 24 * 3600.0
 # Routines: runs allowed per rolling 24 h, and the cap for a backed-off interval.
 ROUTINE_BUDGET = 4
 ROUTINE_MAX_INTERVAL = 14 * 24 * 3600.0
@@ -107,6 +152,14 @@ DURATION_UNITS = {"m": 60, "h": 3600, "d": 86400, "w": 7 * 86400}
 SESSION_ID = re.compile(r"[A-Za-z0-9_-]{1,128}")
 WORKSTREAM = re.compile(r"w\d+")
 ITEM_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}")
+# A worker with no board item: `routine:<name>` or `ci:<workflow slug>`.
+PSEUDO_ID = re.compile(r"(?:routine|ci):[a-z0-9][a-z0-9-]{0,63}")
+ITEM_LABEL = re.compile(r"(w\d+)/([A-Za-z0-9][A-Za-z0-9_.-]{0,127})")
+COMMIT = re.compile(r"[0-9a-fA-F]{7,40}")
+TASK_FILE = re.compile(r"t\d+[\w.-]*\.md")
+DEP_TASK = re.compile(r"(w\d+)/(m[\w.]+)/(t[\w.-]+)")
+DEP_MILESTONE = re.compile(r"(w\d+)/(m[\w.]+)")
+DEP_NOTE = re.compile(r"(w\d+)/(\d[\w.-]*)")
 REMOTE_REF = "origin/main"
 
 
@@ -137,6 +190,16 @@ def mark_path(session: object) -> pathlib.Path | None:
 def wait_path(workstream: str) -> pathlib.Path:
     """The listener's state for a workstream: idle start, pid, gave_up."""
     return state_dir() / f"wait-{workstream}.state"
+
+
+def board_state_path(workstream: str) -> pathlib.Path:
+    """Which blocked items `board` has already listed, by content hash."""
+    return state_dir() / f"board-{workstream}.state"
+
+
+def ci_state_path(workstream: str) -> pathlib.Path:
+    """The loop's recent pushes, and the workflows one of them turned red."""
+    return state_dir() / f"ci-{workstream}.state"
 
 
 def calling_session() -> pathlib.Path | None:
@@ -173,27 +236,27 @@ def sweep() -> None:
             pass
 
 
+def natural(name: str) -> list:
+    """Sort key that orders m9 before m10 and 089.md before 1014.md."""
+    return [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", name)]
+
+
 def classify(entries: list[tuple[str, bool]]) -> tuple[list[str], list[str]]:
     """Open milestones and inbox notes among (name, is_dir) top-level entries.
 
     `done/` and `blocked/` are directories that are not `m*`, so work that
     moved there never counts.
     """
-    milestones = sorted(name for name, is_dir in entries if is_dir and name.startswith("m"))
+    milestones = sorted((name for name, is_dir in entries if is_dir and name.startswith("m")), key=natural)
     notes = sorted(
-        name
-        for name, is_dir in entries
-        if not is_dir and name.endswith(".md") and name.lower() != "readme.md"
+        (
+            name
+            for name, is_dir in entries
+            if not is_dir and name.endswith(".md") and name.lower() != "readme.md"
+        ),
+        key=natural,
     )
     return milestones, notes
-
-
-def actionable(workstream: str) -> tuple[list[str], list[str]]:
-    """Open milestones and open inbox notes in the working tree, in pick order."""
-    root = project_dir() / ".pm" / workstream
-    if not root.is_dir():
-        return [], []
-    return classify([(p.name, p.is_dir()) for p in root.iterdir()])
 
 
 def git(*args: str) -> subprocess.CompletedProcess:
@@ -206,23 +269,195 @@ def git(*args: str) -> subprocess.CompletedProcess:
     )
 
 
-def tree_entries(ref: str, directory: str) -> list[tuple[str, bool]] | None:
-    """(name, is_dir) for each entry of DIRECTORY at REF; None if git failed."""
-    result = git("ls-tree", ref, "--", f"{directory}/")
-    if result.returncode != 0:
-        return None
-    entries = []
-    for line in result.stdout.splitlines():
-        meta, _, path = line.partition("\t")
-        parts = meta.split()
-        if len(parts) >= 2 and path:
-            entries.append((path.rsplit("/", 1)[-1], parts[1] == "tree"))
-    return entries
+class Tree:
+    """Everything under `.pm/`: in the working tree, or at a git ref."""
+
+    def __init__(self, ref: str | None = None) -> None:
+        self.ref = ref
+        self.ok = True
+        self.files: set[str] = set()
+        self.kids: dict[str, dict[str, bool]] = {}
+        if ref is None:
+            base = project_dir()
+            for dirpath, dirnames, filenames in os.walk(base / ".pm"):
+                rel = pathlib.Path(dirpath).relative_to(base).as_posix()
+                for name in dirnames:  # an empty directory is still an item
+                    self._add(f"{rel}/{name}", True)
+                for name in filenames:
+                    self._add(f"{rel}/{name}", False)
+            return
+        listed = git("ls-tree", "-r", "-z", "--name-only", ref, "--", ".pm/")
+        if listed.returncode != 0:
+            self.ok = False
+            return
+        for path in listed.stdout.split("\0"):
+            if path:
+                self._add(path, False)
+
+    def _add(self, path: str, is_dir: bool) -> None:
+        if not is_dir:
+            self.files.add(path)
+        parent, _, name = path.rpartition("/")
+        while parent:
+            siblings = self.kids.setdefault(parent, {})
+            siblings[name] = siblings.get(name, False) or is_dir
+            is_dir = True
+            parent, _, name = parent.rpartition("/")
+
+    def children(self, directory: str) -> list[tuple[str, bool]]:
+        """(name, is_dir) for each entry directly inside DIRECTORY."""
+        return sorted(self.kids.get(directory, {}).items())
+
+    def has_dir(self, path: str) -> bool:
+        parent, _, name = path.rpartition("/")
+        return self.kids.get(parent, {}).get(name) is True
+
+    def read_many(self, paths: list[str]) -> dict[str, str]:
+        """The text of each of PATHS that exists."""
+        if not paths:
+            return {}
+        texts: dict[str, str] = {}
+        if self.ref is None:
+            for path in paths:
+                try:
+                    texts[path] = (project_dir() / path).read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    pass
+            return texts
+        batch = subprocess.run(
+            ["git", "cat-file", "--batch"],
+            cwd=project_dir(),
+            input="".join(f"{self.ref}:{path}\n" for path in paths).encode(),
+            capture_output=True,
+            check=False,
+        )
+        data, at = batch.stdout, 0
+        for path in paths:
+            newline = data.find(b"\n", at)
+            if newline < 0:
+                break
+            header = data[at:newline].split()
+            at = newline + 1
+            if len(header) != 3:  # "<name> missing"
+                continue
+            size = int(header[2])
+            texts[path] = data[at : at + size].decode("utf-8", "replace")
+            at += size + 1
+        return texts
 
 
-def actionable_at(ref: str, workstream: str) -> tuple[list[str], list[str]] | None:
-    entries = tree_entries(ref, f".pm/{workstream}")
-    return None if entries is None else classify(entries)
+def frontmatter(text: str) -> dict[str, str]:
+    """The leading `---` block's keys; a YAML list becomes comma-separated."""
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return {}
+    meta: dict[str, str] = {}
+    key = None
+    for line in lines[1:80]:
+        if line.strip() == "---":
+            break
+        found = re.match(r"([A-Za-z_]+):\s*(.*)$", line)
+        if found:
+            key = found.group(1)
+            meta[key] = found.group(2).strip()
+        elif key and line.strip().startswith("- "):
+            meta[key] += "," + line.strip()[2:]
+    return meta
+
+
+def dep_ids(value: str) -> list[str]:
+    ids = (part.strip().strip("\"'") for part in value.strip().strip("[]").split(","))
+    return [dep for dep in ids if dep]
+
+
+def dep_unmet(tree: Tree, dep: str) -> bool:
+    """True while the task, milestone, or note DEP names is still open or blocked.
+
+    A name that resolves to nothing (dropped, renamed, mistyped) never holds
+    work back: the worker's triage deals with it.
+    """
+    found = DEP_TASK.fullmatch(dep)
+    if found:
+        queue, milestone, task = found.groups()
+        return any(
+            f".pm/{queue}/{place}{milestone}/{task}.md" in tree.files for place in ("", "blocked/")
+        )
+    found = DEP_MILESTONE.fullmatch(dep)
+    if found:
+        queue, milestone = found.groups()
+        return any(tree.has_dir(f".pm/{queue}/{place}{milestone}") for place in ("", "blocked/"))
+    found = DEP_NOTE.fullmatch(dep)
+    if found:
+        queue, note = found.groups()
+        note = note.removesuffix(".md")
+        return any(f".pm/{queue}/{place}{note}.md" in tree.files for place in ("", "blocked/"))
+    return False
+
+
+def board(tree: Tree, workstream: str) -> dict:
+    """Ready milestones and notes in pick order, and what each waiting milestone waits on."""
+    root = f".pm/{workstream}"
+    milestones: dict[str, list[str]] = {}
+    notes: list[str] = []
+    for name, is_dir in tree.children(root):
+        if is_dir and name.startswith("m"):
+            milestones[name] = [
+                task for task, nested in tree.children(f"{root}/{name}") if not nested and TASK_FILE.fullmatch(task)
+            ]
+        elif not is_dir and name.endswith(".md") and name.lower() != "readme.md":
+            notes.append(name)
+    texts = tree.read_many([f"{root}/{name}/{task}" for name, tasks in milestones.items() for task in tasks])
+
+    ready: list[str] = []
+    waiting: dict[str, list[str]] = {}
+    for name, tasks in milestones.items():
+        held: list[str] = []
+        live = 0
+        workable = False
+        for task in tasks:
+            meta = frontmatter(texts.get(f"{root}/{name}/{task}", ""))
+            status = meta.get("status", "todo").lower()
+            if status in ("done", "abandoned"):
+                continue
+            live += 1
+            if status == "blocked":
+                held.append(f"{workstream}/{name}/{task.removesuffix('.md')} (blocked)")
+                continue
+            unmet = [dep for dep in dep_ids(meta.get("depends_on", "")) if dep_unmet(tree, dep)]
+            if not unmet:
+                workable = True
+                break
+            held += unmet
+        # No live task at all (no task files, or every one finished) still needs
+        # a worker: to triage it, or to close it out.
+        if workable or not live:
+            ready.append(name)
+        else:
+            waiting[name] = sorted(set(held))
+    return {
+        "milestones": sorted(ready, key=natural),
+        "notes": sorted(notes, key=natural),
+        "waiting": {name: waiting[name] for name in sorted(waiting, key=natural)},
+    }
+
+
+def actionable(workstream: str) -> tuple[list[str], list[str]]:
+    """Ready milestones and open inbox notes in the working tree, in pick order."""
+    try:
+        facts = board(Tree(), workstream)
+        return facts["milestones"], facts["notes"]
+    except Exception:
+        # Never let a parsing surprise release the loop: fall back to "it exists".
+        root = project_dir() / ".pm" / workstream
+        if not root.is_dir():
+            return [], []
+        return classify([(p.name, p.is_dir()) for p in root.iterdir()])
+
+
+def actionable_at(ref: str, workstream: str) -> dict | None:
+    """`board` facts at REF, or None when git cannot read it."""
+    tree = Tree(ref)
+    return board(tree, workstream) if tree.ok else None
 
 
 def next_pick(workstream: str, milestones: list[str], notes: list[str]) -> str:
@@ -240,6 +475,82 @@ def pid_alive(pid: object) -> bool:
         return True
     except OSError:
         return False
+    return True
+
+
+def listener_alive(state: dict) -> bool:
+    """True when the pid in a listener's state is a running `wait`.
+
+    A bare pid check is not enough: after a reboot or a long uptime the number
+    belongs to some other process, and the loop would wait on it forever.
+    """
+    pid = state.get("pid")
+    if not pid_alive(pid):
+        return False
+    try:
+        shown = subprocess.run(
+            ["ps", "-o", "command=", "-p", str(pid)], capture_output=True, text=True, timeout=5, check=False
+        )
+    except Exception:
+        return True  # no `ps` here: the pid check is all there is
+    return shown.returncode == 0 and "loopx-guard" in shown.stdout and " wait" in shown.stdout
+
+
+def item_open_locally(workstream: str, item: str) -> bool:
+    root = project_dir() / ".pm" / workstream
+    stem = item.removesuffix(".md")
+    return (root / stem).is_dir() or (root / f"{stem}.md").is_file() or any(root.glob(f"{stem}-*"))
+
+
+def nothing_unpushed() -> bool:
+    """True when every local commit is already on origin/main (as last fetched)."""
+    return git("merge-base", "--is-ancestor", "HEAD", REMOTE_REF).returncode == 0
+
+
+def tree_clean() -> bool:
+    status = git("status", "--porcelain")
+    return status.returncode == 0 and not status.stdout.strip()
+
+
+def inflight_verdict(inflight: dict) -> str:
+    """`running`, `finished`, or `lost` for a dispatched worker.
+
+    Mutates INFLIGHT to remember when its item was first seen gone.
+    """
+    now = time.time()
+    since = inflight.get("since")
+    if not isinstance(since, (int, float)):
+        return "lost"
+    age = now - since
+    found = ITEM_LABEL.fullmatch(str(inflight.get("label", "")))
+    if not found or not inflight.get("was_open"):
+        # A routine, a CI fix, or an item that was not open when dispatched
+        # (a blocked one being revived): no board signal, only the timer.
+        limit = INFLIGHT_MAX if found else INFLIGHT_UNTRACKED_MAX
+        return "running" if age < limit else "lost"
+    if age >= INFLIGHT_MAX:
+        return "lost"
+    if item_open_locally(*found.groups()):
+        return "running"
+    gone = inflight.get("gone_since")
+    if not isinstance(gone, (int, float)):
+        gone = inflight["gone_since"] = now
+    if tree_clean() and nothing_unpushed():
+        return "finished"
+    return "running" if now - gone < INFLIGHT_SHIP_GRACE else "lost"
+
+
+def settle_label(label: str) -> bool:
+    """Clear the calling session's in-flight mark if it is for LABEL."""
+    path = calling_session()
+    if path is None or not path.is_file():
+        return False
+    state = read_json(path)
+    current = str((state.get("inflight") or {}).get("label", ""))
+    if not current or current.removesuffix(".md") != label.removesuffix(".md"):
+        return False
+    state.pop("inflight", None)
+    write_json(path, state)
     return True
 
 
@@ -338,6 +649,8 @@ def due_routine(workstream: str, ref: str = REMOTE_REF) -> dict:
         interval = entry.get("interval") if isinstance(entry.get("interval"), (int, float)) else routine["every"]
         if routine["when"] == "always":
             interval = routine["every"]  # fixed cadence: no backoff
+        if int(entry.get("failures", 0)) >= ROUTINE_FAILURES_BEFORE_PAUSE:
+            interval = max(interval, ROUTINE_PAUSED_INTERVAL)  # it keeps failing: one try a day
         last_run, last_sha = entry.get("last_run"), entry.get("last_sha")
         if isinstance(last_run, (int, float)) and now - last_run < interval:
             remaining = interval - (now - last_run)
@@ -363,6 +676,143 @@ def due_routine(workstream: str, ref: str = REMOTE_REF) -> dict:
     # A `changed` row waiting only for a commit has no time to wake for: the
     # board poll notices the commit.
     return {"due": None, "reason": "; ".join(waiting) or "nothing due", "problems": problems, "next_in": next_in}
+
+
+def record_pushes(workstream: str, shas: list[str]) -> None:
+    """Remember commits this loop pushed, so their CI results get read."""
+    full = []
+    for sha in shas:
+        resolved = git("rev-parse", "--verify", "-q", f"{sha}^{{commit}}")
+        if resolved.returncode == 0 and resolved.stdout.strip():
+            full.append(resolved.stdout.strip())
+    if not full:
+        return
+    path = ci_state_path(workstream)
+    state = read_json(path)
+    now = time.time()
+    pushes = [p for p in state.get("pushes", []) if isinstance(p, dict) and now - p.get("at", 0) < CI_WINDOW]
+    known = {p.get("sha") for p in pushes}
+    pushes += [{"sha": sha, "at": now} for sha in full if sha not in known]
+    state["pushes"] = pushes
+    write_json(path, state)
+
+
+def ci_slug(workflow: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", workflow.lower()).strip("-")[:60] or "workflow"
+
+
+def gh_runs() -> list | None:
+    """Recent workflow runs on main, oldest first; None when `gh` cannot say."""
+    if not shutil.which("gh"):
+        return None
+    try:
+        listed = subprocess.run(
+            [
+                "gh", "run", "list", "--branch", "main", "--limit", str(CI_RUNS),
+                "--json", "databaseId,workflowName,headSha,status,conclusion,createdAt,url",
+            ],
+            cwd=project_dir(), capture_output=True, text=True, timeout=45, check=False,
+        )
+        runs = json.loads(listed.stdout) if listed.returncode == 0 else None
+    except Exception:
+        return None
+    if not isinstance(runs, list):
+        return None
+    return sorted((r for r in runs if isinstance(r, dict)), key=lambda r: str(r.get("createdAt", "")))
+
+
+def own_ci(workstream: str, mark: bool = False) -> dict:
+    """Workflows on main that one of this loop's pushes turned red.
+
+    A workflow is *ours* when the first failing run of its current red streak
+    is on a commit this loop pushed. It stays ours until a run passes, and is
+    reported again only when another of our commits (a fix attempt) fails too.
+    Red that began on someone else's commit is theirs: never reported here.
+    With MARK the reported runs are remembered, so the next call is quiet.
+    """
+    path = ci_state_path(workstream)
+    state = read_json(path)
+    now = time.time()
+    pushes = [p for p in state.get("pushes", []) if isinstance(p, dict) and now - p.get("at", 0) < CI_WINDOW]
+    owned = state.get("owned") if isinstance(state.get("owned"), dict) else {}
+    owned = {
+        workflow: entry
+        for workflow, entry in owned.items()
+        if isinstance(entry, dict) and isinstance(entry.get("reported"), list) and now - entry.get("at", now) < CI_OWNED_MAX
+    }
+    quiet = {"own_failures": [], "still_red": sorted(owned), "pending": 0, "watch": False}
+    if not pushes and not owned:
+        return {"checked": False, "reason": "no pushes to watch", **quiet}
+    runs = gh_runs()
+    if runs is None:
+        return {"checked": False, "reason": "gh is missing or not signed in: CI was not checked", **quiet}
+
+    ours = {p.get("sha") for p in pushes}
+    by_workflow: dict[str, list[dict]] = {}
+    for run in runs:
+        by_workflow.setdefault(str(run.get("workflowName", "")), []).append(run)
+    failures = []
+    pending = 0
+    for workflow, sequence in by_workflow.items():
+        pending += sum(1 for r in sequence if r.get("status") != "completed" and r.get("headSha") in ours)
+        settled = [r for r in sequence if r.get("status") == "completed" and r.get("conclusion") in ("success", "failure")]
+        streak: list[dict] = []
+        for run in reversed(settled):
+            if run.get("conclusion") != "failure":
+                break
+            streak.insert(0, run)
+        if not streak:
+            if settled:
+                owned.pop(workflow, None)  # green again
+            continue
+        entry = owned.get(workflow)
+        if not isinstance(entry, dict):
+            if streak[0].get("headSha") not in ours:
+                continue  # it went red on someone else's commit
+            entry = owned[workflow] = {"since": streak[0].get("headSha", ""), "reported": [], "at": now}
+        fresh = [r for r in streak if r.get("headSha") in ours and r.get("databaseId") not in entry["reported"]]
+        if fresh:
+            failures.append(
+                {
+                    "workflow": workflow,
+                    "label": f"ci:{ci_slug(workflow)}",
+                    "since": str(entry.get("since", ""))[:9],
+                    "run": fresh[-1].get("databaseId"),
+                    "url": fresh[-1].get("url", ""),
+                    "attempt": len(entry["reported"]) + 1,
+                }
+            )
+            if mark:
+                entry["reported"] += [r.get("databaseId") for r in fresh]
+    state["pushes"] = pushes
+    state["owned"] = owned
+    write_json(path, state)
+    recent = any(now - p.get("at", 0) < 1200 for p in pushes)
+    return {
+        "checked": True,
+        "own_failures": failures,
+        "still_red": sorted(owned),
+        "pending": pending,
+        "watch": bool(pending or recent),
+    }
+
+
+def blocked_review(workstream: str) -> tuple[list[str], int]:
+    """Blocked items whose content changed since `board` last listed them, and the count of the rest."""
+    listed = git("ls-tree", "HEAD", "--", f".pm/{workstream}/blocked/")
+    current: dict[str, str] = {}
+    if listed.returncode == 0:
+        for line in listed.stdout.splitlines():
+            meta, _, path = line.partition("\t")
+            parts = meta.split()
+            if len(parts) >= 3 and path:
+                current[path.rsplit("/", 1)[-1]] = parts[2]
+    path = board_state_path(workstream)
+    seen = read_json(path).get("blocked")
+    seen = seen if isinstance(seen, dict) else {}
+    review = sorted((name for name, sha in current.items() if seen.get(name) != sha), key=natural)
+    write_json(path, {"blocked": current})
+    return review, len(current) - len(review)
 
 
 def allow(path: pathlib.Path | None = None) -> None:
@@ -393,10 +843,12 @@ def check_workstream(workstream: str) -> None:
 def cmd_start(workstream: str, listen: bool) -> None:
     check_workstream(workstream)
     sweep()
-    try:
-        wait_path(workstream).unlink()  # a new run starts a fresh idle window
-    except OSError:
-        pass
+    # A new run starts a fresh idle window and reviews every blocked item once.
+    for stale in (wait_path(workstream), board_state_path(workstream)):
+        try:
+            stale.unlink()
+        except OSError:
+            pass
     path = calling_session()
     if path is None:
         print(
@@ -456,10 +908,16 @@ def cmd_dispatch(label: str) -> None:
         print("loopx guard: no loop armed in this session; nothing marked in flight")
         return
     state = read_json(path)
-    state["inflight"] = {"label": label, "since": time.time()}
+    found = ITEM_LABEL.fullmatch(label)
+    state["inflight"] = {
+        "label": label,
+        "since": time.time(),
+        # Only an item that is open now can later be seen leaving the open tree.
+        "was_open": bool(found) and item_open_locally(*found.groups()),
+    }
     state["blocks"] = 0
     write_json(path, state)
-    print(f"loopx guard: {label} in flight; turns may end until `settle`")
+    print(f"loopx guard: {label} in flight; launch its worker, then end the turn")
 
 
 def cmd_settle() -> None:
@@ -480,8 +938,8 @@ def cmd_routine_due(workstream: str) -> None:
 
 def cmd_routine_done(workstream: str, name: str, result: str) -> None:
     check_workstream(workstream)
-    if not ROUTINE_NAME.fullmatch(name) or result not in ("found", "empty"):
-        print("loopx guard: usage: routine-done <wN> <name> found|empty", file=sys.stderr)
+    if not ROUTINE_NAME.fullmatch(name) or result not in ("found", "empty", "failed"):
+        print("loopx guard: usage: routine-done <wN> <name> found|empty|failed", file=sys.stderr)
         sys.exit(2)
     shown = git("show", f"{REMOTE_REF}:.pm/{workstream}/routine/README.md")
     routines, _, _ = parse_routines(shown.stdout) if shown.returncode == 0 else ([], 0, [])
@@ -497,20 +955,40 @@ def cmd_routine_done(workstream: str, name: str, result: str) -> None:
     entries = state.get("routines") if isinstance(state.get("routines"), dict) else {}
     entry = entries.get(name, {})
     previous = entry.get("interval") if isinstance(entry.get("interval"), (int, float)) else base
-    if row["when"] == "always" or result == "found":
-        interval = base
+    failures = int(entry.get("failures", 0)) + 1 if result == "failed" else 0
+    if result == "failed":
+        # The run never really happened: keep the cadence, and the last SHA a
+        # `changed` row is gated on. Three in a row drops it to one try a day.
+        interval = base if row["when"] == "always" else max(previous, base)
+        if failures >= ROUTINE_FAILURES_BEFORE_PAUSE:
+            interval = max(interval, ROUTINE_PAUSED_INTERVAL)
+        sha = entry.get("last_sha", "")
+        empty_runs = int(entry.get("empty_runs", 0))
     else:
-        interval = min(max(previous, base) * 2, ROUTINE_MAX_INTERVAL)
-    sha = git("rev-parse", REMOTE_REF).stdout.strip()
+        if row["when"] == "always" or result == "found":
+            interval = base
+        else:
+            interval = min(max(previous, base) * 2, ROUTINE_MAX_INTERVAL)
+        sha = git("rev-parse", REMOTE_REF).stdout.strip()
+        empty_runs = 0 if result == "found" else int(entry.get("empty_runs", 0)) + 1
     entries[name] = {
         "last_run": now,
         "last_sha": sha,
         "interval": interval,
-        "empty_runs": 0 if result == "found" else int(entry.get("empty_runs", 0)) + 1,
+        "empty_runs": empty_runs,
+        "failures": failures,
     }
     runs = [t for t in state.get("runs", []) if isinstance(t, (int, float)) and now - t < 86400]
     write_json(path, {"routines": entries, "runs": [*runs, now]})
-    if row["when"] == "always":
+    settle_label(f"routine:{name}")
+    if result == "failed" and failures >= ROUTINE_FAILURES_BEFORE_PAUSE:
+        print(
+            f"loopx guard: {name} failed {failures} runs in a row; it now retries once every "
+            f"{interval / 3600:.0f} h until a run succeeds. "
+            + ("File one inbox note for it with /pm add." if failures == ROUTINE_FAILURES_BEFORE_PAUSE else "")
+        )
+        return
+    if row["when"] == "always" or result == "failed":
         gate = ""
     else:
         gate = f" and only after {', '.join(row['paths']) or 'the repository'} changes"
@@ -521,10 +999,16 @@ def cmd_wait(workstream: str, options: dict[str, float]) -> None:
     check_workstream(workstream)
     floor, cap = options["min"], max(options["max"], options["min"])
     give_up, chunk = options["give-up"], options["chunk"]
-    fetch_limit = int(options["fetch-failures"])
+    fetch_give_up = options["fetch-give-up"]
 
     state_file = wait_path(workstream)
     state = read_json(state_file)
+    if state.get("pid") != os.getpid() and listener_alive(state):
+        print(
+            f"loopx wait: a listener (pid {state.get('pid')}) is already running for "
+            f"{workstream} and will wake the loop. Do not start another; end the turn."
+        )
+        sys.exit(EXIT_BUSY)
     now = time.time()  # wall clock: a sleeping laptop still ages the idle window
     since = state.get("since") if isinstance(state.get("since"), (int, float)) else now
     state = {"since": since, "pid": os.getpid()}
@@ -534,7 +1018,7 @@ def cmd_wait(workstream: str, options: dict[str, float]) -> None:
         latest = read_json(state_file)
         latest.pop("pid", None)
         latest.update(extra)
-        if code in (EXIT_WORK, EXIT_ROUTINE):
+        if code in (EXIT_WORK, EXIT_ROUTINE, EXIT_CI):
             latest.pop("since", None)
         write_json(state_file, latest)
         print(message)
@@ -542,22 +1026,34 @@ def cmd_wait(workstream: str, options: dict[str, float]) -> None:
 
     started = time.time()
     delay = floor
-    failures = 0
-    routine_in = None
+    failing_since = None
     while True:
-        fetched = git("fetch", "-q", "origin", "main").returncode == 0
-        found = actionable_at(REMOTE_REF, workstream) if fetched else None
-        if found is None:
-            failures += 1
-            if failures >= fetch_limit:
+        routine_in = None
+        watch_ci = False
+        facts = actionable_at(REMOTE_REF, workstream) if git("fetch", "-q", "origin", "main").returncode == 0 else None
+        if facts is None:
+            # Offline: keep backing off, and do not pace on a stale routine schedule.
+            failing_since = failing_since or time.time()
+            down = time.time() - failing_since
+            if down >= fetch_give_up:
                 finish(
                     EXIT_FETCH,
-                    f"loopx wait: git fetch origin main failed {failures} times in a "
-                    "row; check network and push credentials.",
+                    f"loopx wait: git fetch origin main has failed for {down / 60:.0f} min "
+                    "straight; check network and push credentials.",
                 )
         else:
-            failures = 0
-            milestones, notes = found
+            failing_since = None
+            ci = own_ci(workstream)
+            if ci["own_failures"]:
+                first = ci["own_failures"][0]
+                finish(
+                    EXIT_CI,
+                    f"loopx wait: one of this loop's pushes turned CI red: {first['workflow']} "
+                    f"since {first['since']} ({first['url']}). Run `git pull --rebase`, then "
+                    f"`board {workstream}`, and fix it before anything else.",
+                )
+            watch_ci = ci["watch"]
+            milestones, notes = facts["milestones"], facts["notes"]
             if milestones or notes:
                 count = len(milestones) + len(notes)
                 finish(
@@ -579,7 +1075,7 @@ def cmd_wait(workstream: str, options: dict[str, float]) -> None:
 
         now = time.time()
         idle = now - since
-        if idle >= give_up and routine_in is None:
+        if idle >= give_up and routine_in is None and failing_since is None:
             finish(
                 EXIT_GAVE_UP,
                 f"loopx wait: {workstream} stayed idle for {idle / 3600:.1f} h; "
@@ -598,48 +1094,104 @@ def cmd_wait(workstream: str, options: dict[str, float]) -> None:
         if routine_in is not None:
             # Never sleep past a routine's due time; the backoff only paces the board poll.
             pause = min(pause, routine_in + 1.0)
-        else:
+        elif failing_since is None:
             pause = min(pause, give_up - idle)
+        else:
+            pause = min(pause, fetch_give_up - (now - failing_since))
+        if watch_ci:
+            pause = min(pause, CI_WATCH_PAUSE)  # a pushed commit's CI is still running
         if chunk > 0:
             pause = min(pause, chunk - spent)
         time.sleep(max(pause, 0.0))
         delay = min(delay * 2, cap)
 
 
-def cmd_outcome(workstream: str, item: str) -> None:
+def cmd_outcome(workstream: str, item: str, shas: list[str]) -> None:
     check_workstream(workstream)
-    if not ITEM_ID.fullmatch(item):
-        print(f"loopx guard: {item!r} is not an item id like m12 or 089", file=sys.stderr)
+    pseudo = bool(PSEUDO_ID.fullmatch(item))
+    if not pseudo and not ITEM_ID.fullmatch(item):
+        print(f"loopx guard: {item!r} is not an item id like m12 or 089, or routine:<name>, or ci:<slug>", file=sys.stderr)
+        sys.exit(2)
+    if any(not COMMIT.fullmatch(sha) for sha in shas):
+        print("loopx guard: commits must be 7-40 hex digits", file=sys.stderr)
         sys.exit(2)
     fetched = git("fetch", "-q", "origin", "main").returncode == 0
-    stem = item.removesuffix(".md")
 
-    def matches(name: str) -> bool:
-        return name == stem or name.removesuffix(".md") == stem or name.startswith(f"{stem}-")
+    where = "n/a"
+    if not pseudo:
+        stem = item.removesuffix(".md")
 
-    where = "absent"
-    for place, directory in (
-        ("open", f".pm/{workstream}"),
-        ("done", f".pm/{workstream}/done"),
-        ("blocked", f".pm/{workstream}/blocked"),
-    ):
-        entries = tree_entries(REMOTE_REF, directory) or []
-        if any(matches(name) for name, _ in entries):
-            where = place
-            break
+        def matches(name: str) -> bool:
+            return name == stem or name.removesuffix(".md") == stem or name.startswith(f"{stem}-")
 
+        tree = Tree(REMOTE_REF)
+        where = "absent"
+        for place, directory in (
+            ("open", f".pm/{workstream}"),
+            ("done", f".pm/{workstream}/done"),
+            ("blocked", f".pm/{workstream}/blocked"),
+        ):
+            if any(matches(name) for name, _ in tree.children(directory)):
+                where = place
+                break
+
+    missing = [sha for sha in shas if git("merge-base", "--is-ancestor", sha, REMOTE_REF).returncode != 0]
     head = git("rev-parse", "HEAD").stdout.strip()
-    remote = git("rev-parse", REMOTE_REF).stdout.strip()
-    clean = git("status", "--porcelain").stdout.strip() == ""
+    # "Pushed" means nothing local is missing from origin/main. Another loop
+    # pushing in the meantime moves origin/main ahead, and that is fine.
+    pushed = bool(head) and nothing_unpushed()
+    clean = tree_clean()
+    ok = fetched and pushed and clean and not missing and where != "open"
+    if shas and not missing:
+        record_pushes(workstream, shas)
+    label = item if pseudo else f"{workstream}/{item}"
     print(
         json.dumps(
             {
-                "item": f"{workstream}/{item}",
+                "item": label,
+                "ok": ok,
                 "where": where,
                 "fetched": fetched,
-                "pushed": bool(head) and head == remote,
+                "pushed": pushed,
                 "clean": clean,
+                "missing_commits": missing,
                 "head": head[:12],
+                "settled": settle_label(label) if ok else False,
+            }
+        )
+    )
+
+
+def cmd_board(workstream: str) -> None:
+    check_workstream(workstream)
+    facts = board(Tree(), workstream)
+    ci = own_ci(workstream, mark=True)
+    review, unchanged = blocked_review(workstream)
+    schedule = due_routine(workstream)
+    due = schedule["due"]
+
+    if ci["own_failures"]:
+        nxt = ci["own_failures"][0]["label"]
+    elif facts["milestones"] or facts["notes"]:
+        nxt = next_pick(workstream, facts["milestones"], facts["notes"])
+    elif due:
+        nxt = f"routine:{due['name']}"
+    else:
+        nxt = None
+    routine = {"due": due, "next_in": schedule.get("next_in")}
+    if schedule.get("problems"):
+        routine["problems"] = schedule["problems"]
+    print(
+        json.dumps(
+            {
+                "workstream": workstream,
+                "next": nxt,
+                "ci": {k: ci[k] for k in ("checked", "own_failures", "still_red", "pending") if k in ci}
+                | ({"reason": ci["reason"]} if "reason" in ci else {}),
+                "ready": [*facts["milestones"], *facts["notes"]],
+                "waiting": facts["waiting"],
+                "blocked": {"review": review, "unchanged": unchanged},
+                "routine": routine,
             }
         )
     )
@@ -658,15 +1210,27 @@ def cmd_hook() -> None:
     except Exception:
         allow(path)
 
+    note = ""
     inflight = state.get("inflight")
     if isinstance(inflight, dict):
-        since = inflight.get("since")
-        if isinstance(since, (int, float)) and time.time() - since < INFLIGHT_MAX:
+        verdict = inflight_verdict(inflight)
+        if verdict == "running":
             state["blocks"] = 0
             write_json(path, state)
             print("{}")  # a background worker is running; its notification wakes the loop
             sys.exit(0)
-        state.pop("inflight", None)  # presumed lost: hold the loop again
+        label = inflight.get("label", "the worker")
+        state.pop("inflight", None)
+        if verdict == "finished":
+            note = (
+                f"The worker for {label} is finished: its item left the open tree and "
+                "everything is pushed. Verify it with `outcome` if you have not, then continue. "
+            )
+        else:
+            note = (
+                f"The in-flight mark for {label} ran out without a finished outcome. Check "
+                "on that worker before anything else: verify with `outcome`, or dispatch again. "
+            )
 
     listen = state.get("listen", True) is not False
     milestones, notes = actionable(workstream)
@@ -674,7 +1238,7 @@ def cmd_hook() -> None:
 
     if remaining == 0:
         if not listen:
-            allow(path)  # genuinely Done
+            allow(path)  # genuinely Done, or only waiting and blocked work is left
         listener = read_json(wait_path(workstream))
         if listener.get("gave_up"):
             try:
@@ -682,7 +1246,7 @@ def cmd_hook() -> None:
             except OSError:
                 pass
             allow(path)  # the listen window ran out: Done
-        if pid_alive(listener.get("pid")):
+        if listener_alive(listener):
             state["blocks"] = 0
             state["remaining"] = 0
             write_json(path, state)
@@ -714,23 +1278,26 @@ def cmd_hook() -> None:
 
     if remaining == 0:
         reason = (
-            f"/loopx {workstream} is drained but not listening. If a wait just reported "
-            "work, run `git pull --rebase` and pick it. Otherwise write the drained "
-            f"report, then start `python3 scripts/loopx-guard.py wait {workstream}` as a "
-            "background command and end the turn; it wakes this session when new work "
-            "lands. If the loop genuinely ends, run `python3 scripts/loopx-guard.py end`."
+            f"/loopx {workstream} has nothing ready on the board and is not listening. "
+            f"Run `python3 scripts/loopx-guard.py board {workstream}` and follow its `next`: "
+            "an own CI failure or a due routine comes first. If it names nothing, write the "
+            f"drained report, start `python3 scripts/loopx-guard.py wait {workstream}` as a "
+            "background command, and end the turn; it wakes this session when work lands. "
+            "If the loop genuinely ends, run `python3 scripts/loopx-guard.py end`."
         )
     else:
         nxt = next_pick(workstream, milestones, notes)
         reason = (
-            f"/loopx {workstream} is still running: {remaining} item(s) remain "
-            f"and the next pick is {nxt}. This is not one of the three exits — "
-            "nothing is blocked and a progress summary is not an exit. Pick "
-            f"{nxt}, dispatch it to a worker, and continue. If every remaining "
-            "item really is blocked, move them with /pm block; when the loop "
-            "genuinely ends, run `python3 scripts/loopx-guard.py end`."
+            f"/loopx {workstream} is still running: {remaining} item(s) are ready "
+            f"and the next pick is {nxt}. This is not one of the three exits, and a "
+            f"progress summary is not an exit. If a worker for {nxt} is already running, "
+            f"run `python3 scripts/loopx-guard.py dispatch {nxt}` and end the turn; never "
+            "launch a second worker for the same item. Otherwise mark it with `dispatch`, "
+            "launch its worker, and end the turn. An item that cannot proceed is blocked "
+            "by its worker through /pm block; when the loop genuinely ends, run "
+            "`python3 scripts/loopx-guard.py end`."
         )
-    print(json.dumps({"decision": "block", "reason": reason}))
+    print(json.dumps({"decision": "block", "reason": note + reason}))
 
 
 def parse_wait_options(args: list[str]) -> dict[str, float]:
@@ -739,7 +1306,7 @@ def parse_wait_options(args: list[str]) -> dict[str, float]:
         "max": WAIT_MAX,
         "give-up": WAIT_GIVE_UP,
         "chunk": 0.0,
-        "fetch-failures": float(WAIT_FETCH_FAILURES),
+        "fetch-give-up": WAIT_FETCH_GIVE_UP,
     }
     it = iter(args)
     for flag in it:
@@ -750,8 +1317,6 @@ def parse_wait_options(args: list[str]) -> dict[str, float]:
         if value < 0:
             raise ValueError(flag)
         options[key] = value
-    if options["fetch-failures"] < 1:
-        raise ValueError("--fetch-failures")
     return options
 
 
@@ -778,8 +1343,10 @@ def main() -> None:
         except (ValueError, StopIteration):
             usage()
         cmd_wait(args[1], options)
-    elif args[0] == "outcome" and len(args) == 3:
-        cmd_outcome(args[1], args[2])
+    elif args[0] == "outcome" and len(args) >= 3:
+        cmd_outcome(args[1], args[2], args[3:])
+    elif args[0] == "board" and len(args) == 2:
+        cmd_board(args[1])
     elif args[0] == "dispatch" and len(args) == 2:
         cmd_dispatch(args[1])
     elif args == ["settle"]:
