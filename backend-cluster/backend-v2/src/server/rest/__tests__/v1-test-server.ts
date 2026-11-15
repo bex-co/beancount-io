@@ -14,6 +14,7 @@ import { normalizeRestPath, opMethodsForLayer } from "@/server/api/rest-op-id";
 import { restErrorMiddleware } from "../error-middleware";
 import { restScopeMiddleware } from "../scope-middleware";
 import { restRateLimitMiddleware } from "../rate-limit-middleware";
+import { asyncContextMiddleware } from "@/server/middleware/async-context-middleware";
 
 import { setLedgerV1Routes } from "@/features/ledger/api/rest/v1";
 import { setApiKeyRoutes } from "@/features/apikeys/api/api-key-rest";
@@ -91,6 +92,9 @@ export async function startV1TestServer(
 
   const app = new Koa();
   app.silent = true;
+  // Mounted app-wide in production (`start-server.ts`): request-scoped state
+  // such as a refused credential's wording lives in it.
+  app.use(asyncContextMiddleware);
   app.use(router.routes()).use(router.allowedMethods());
 
   const server = http.createServer(app.callback());

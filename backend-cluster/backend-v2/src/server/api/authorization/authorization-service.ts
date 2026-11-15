@@ -19,7 +19,7 @@ import {
 } from "@/shared/errors";
 import { isMobileOAuthClient } from "@/features/oauth/data/config";
 import { logger } from "@/shared/logger";
-import { getOperationId } from "@/shared/async-context";
+import { getCredentialRejection, getOperationId } from "@/shared/async-context";
 import { sameLedger } from "@/shared/str";
 import {
   AUTHORIZATION_ACTIONS,
@@ -1386,7 +1386,13 @@ export class AuthorizationService implements IAuthorizationService {
     const decision = await this.authorize(input);
     if (!decision.allowed) {
       if (isTrustedAnonymousPrincipal(input.principal)) {
-        throw new UnauthenticatedError("Authentication required");
+        // A public-capable read on a private ledger. A request that sent a
+        // credential and had it refused is told so, not asked for one: told
+        // "Authentication required", an agent resends the same token (w31/025).
+        // The text depends on the request alone, never on the ledger.
+        throw new UnauthenticatedError(
+          getCredentialRejection() ?? "Authentication required",
+        );
       }
       throw new AuthorizationDeniedError(decision);
     }

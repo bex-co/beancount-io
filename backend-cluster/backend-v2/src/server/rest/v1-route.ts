@@ -17,6 +17,7 @@ import {
   type RequestSchemas,
 } from "./validation-middleware";
 import { ErrorCategory, UnauthenticatedError } from "@/shared/errors";
+import { updateRequestContext } from "@/shared/async-context";
 import { V1_PREFIX, writeV1Error } from "./v1-envelope";
 import { errorSchema, json } from "./v1-schemas";
 
@@ -163,6 +164,23 @@ async function requireIdentity(
   return identity;
 }
 
+/**
+ * The caller of a route anonymous callers may use. When it sent a credential
+ * that was refused, the refusal a private ledger raises below the handler says
+ * so instead of asking for a credential (w31/025), as `requireIdentity` does.
+ */
+async function optionalIdentity(
+  ctx: RouterContext,
+  config: AppConfig,
+): Promise<Identity | undefined> {
+  const identity = identityFromState(ctx);
+  if (!identity) {
+    const rejection = await credentialRejection(ctx, config);
+    if (rejection) updateRequestContext({ credentialRejection: rejection });
+  }
+  return identity;
+}
+
 /** The route's responses, with the page headers described on a registered paginated read's 200. */
 function documentPageHeaders(
   route: Pick<
@@ -250,7 +268,7 @@ function registerV1Route<P, Q, B>(
       route.authentication === "optional"
         ? await route.handler(deps, {
             ...input,
-            identity: identityFromState(ctx),
+            identity: await optionalIdentity(ctx, deps.config),
           })
         : await route.handler(deps, {
             ...input,

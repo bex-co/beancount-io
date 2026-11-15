@@ -12,6 +12,7 @@ import {
 import { GraphQLLoaders, createLoaders } from "./loaders";
 import { logger } from "@/shared/logger";
 import { clientAddress } from "@/server/client-address";
+import { updateRequestContext } from "@/shared/async-context";
 
 const lastSeenThrottle = new Map<string, number>();
 const LAST_SEEN_THROTTLE_MS = 5 * 60 * 1000;
@@ -77,6 +78,9 @@ export async function createContext(
   const rejection = identity
     ? undefined
     : await credentialRejection(ctx, config);
+  // For the refusals a public-capable read raises below the resolver, where
+  // this context is out of reach (w31/025).
+  if (rejection) updateRequestContext({ credentialRejection: rejection });
   const userId = identity?.userId;
   if (userId) {
     await touchLastSeen(userId, database);

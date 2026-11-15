@@ -32,6 +32,14 @@ export interface RequestContext {
   sessionToken?: string;
 
   /**
+   * Why the credential this request sent resolved no identity (w23/070), for
+   * a refusal raised below the transport: a public-capable read refusing its
+   * anonymous principal on a private ledger (w31/025). Set by the surface that
+   * resolved the identity. Response text only, never an authorization input.
+   */
+  credentialRejection?: string;
+
+  /**
    * Additional contextual data that can be added during request processing
    */
   [key: string]: unknown;
@@ -89,6 +97,11 @@ export function getUserId(): string | undefined {
 /** Get the operation currently executing within this request, if any. */
 export function getOperationId(): string | undefined {
   return asyncContext.getStore()?.operationId;
+}
+
+/** Why this request's credential was refused, if it sent one that was. */
+export function getCredentialRejection(): string | undefined {
+  return asyncContext.getStore()?.credentialRejection;
 }
 
 /**

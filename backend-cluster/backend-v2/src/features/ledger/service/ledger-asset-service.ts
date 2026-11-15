@@ -22,6 +22,7 @@ import {
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
 import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
+import { getCredentialRejection } from "@/shared/async-context";
 
 /**
  * The refusal for a repository ID this caller cannot use, whether a ledger has
@@ -32,7 +33,11 @@ import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-
  * outside the caller's reach.
  */
 function unusableRepoIdError(identity: Identity | undefined): DomainError {
-  if (!identity) return new UnauthenticatedError();
+  if (!identity) {
+    return new UnauthenticatedError(
+      getCredentialRejection() ?? "Authentication required",
+    );
+  }
   if (!identityHasCapability(identity, "read")) {
     return new ForbiddenError(
       'This operation requires the "ledger.read" scope',

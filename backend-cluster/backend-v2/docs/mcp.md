@@ -133,7 +133,10 @@ Sent there, it is refused with `UNAUTHENTICATED` "This token was issued for the
 MCP endpoint (`/api-gateway/mcp`) and is not accepted here", so a client knows
 to switch credentials rather than resend it. Any other credential header that
 does not resolve (expired, revoked, malformed, another resource's) is refused as
-"not accepted", not as missing.
+"not accepted", not as missing. This includes the reads a public ledger serves
+without a credential: on a private ledger, a request that sent no credential is
+asked for one ("Authentication required"), and a request whose credential was
+refused is told so.
 
 ### Per-host notes
 
