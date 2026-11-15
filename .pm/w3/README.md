@@ -88,8 +88,6 @@
 
 - [x] **m57** — [`beancount-accruals`: supported accrual drafts with explicit period policy](./done/m57/README.md) (7 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 5, from ADR020 P1 — sequenced after m55, m56
 
-- [ ] **m58** — [Reconciliation exception register in `beancount-reconcile`, summarized by `beancount-close`](./blocked/m58/README.md) (6 tasks) ← `/pm-brainstorm w3` 2026-10-20 candidate 6, from ADR020 P1 — sequenced after w2/m48 closeout — **blocked:** t001 waits on w2/m48's closeout (Codex); t002–t006 depend on t001
-
 - [x] **m59** — [Ledger creation: personal modules in the setup specification, builder, and CLI](./done/m59/README.md) (8 tasks) ← PRFAQ001 §3–§5 + Appendix A.9 and ADR021, modules adopted 2026-10-27 — sequenced after m53, before the flow rework in 649
 
 - [x] **m60** — [Ledger creation: the two-step flow with modules and the ADR026 currency suggestion](./done/m60/README.md) (9 tasks) ← promoted from 649 (PRFAQ001 §3, ADR021 revision 2026-10-27, ADR026 phase 3) — sequenced after m59
@@ -98,14 +96,6 @@
 
 - [x] **m62** — [Ledger creation: a prefilled Currency field, backward compatible](./done/m62/README.md) (7 tasks) ← user request via /pmx, 2026-11-12; user routed to w3
 
-m63–m67 were materialized on 2026-11-14 from the revised `/pm-brainstorm for w1` items 1–5 (`SELF_HOST` work excluded by the user), routed to w3 by the user. **Suggested order:** m63 and m64 in parallel; m65 → m66; m67 independent. m63/t005 waits on the owner's approval of the `mcp-registry-publish` environment.
-
-- [ ] **m63** — [List the local `bea mcp` server on the official MCP Registry](./m63/README.md) (9 tasks) ← `/pm-brainstorm for w1` 2026-11-14 item 1; user routed to w3
-- [ ] **m64** — [Give the local `bea mcp` server resources and read-only prompts](./m64/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-11-14 item 2; user routed to w3
-- [ ] **m65** — [Add a read-only review reference to `beancount-report-pack`](./m65/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-11-14 item 3, from ADR020 P2; user routed to w3
-- [ ] **m66** — [`beancount-investor-update`: a recurring factual update from reviewed books](./m66/README.md) (8 tasks) ← `/pm-brainstorm for w1` 2026-11-14 item 4, from ADR020 P3; user routed to w3 — sequenced after m65
-- [ ] **m67** — [Port the CLI to typer 0.29 and lift the version cap](./m67/README.md) (9 tasks) ← promoted [w1/241](../w1/241.md) (owner chose option (b), 2026-11-14); user routed to w3
-
 ## Inbox
 
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
@@ -113,6 +103,12 @@ m63–m67 were materialized on 2026-11-14 from the revised `/pm-brainstorm for w
 
 ## Dropped
 
+- ~~**m58**~~ — Reconciliation exception register in `beancount-reconcile`, summarized by `beancount-close` — dropped 2026-11-14: the owner cleared every pending w3 milestone; ADR020's exception register is unscheduled again.
+- ~~**m63**~~ — List the local `bea mcp` server on the official MCP Registry — dropped 2026-11-14: the owner removed `bea mcp` from the CLI (no evidence of use; coding agents call `bea` directly).
+- ~~**m64**~~ — Give the local `bea mcp` server resources and read-only prompts — dropped 2026-11-14: same reason as m63.
+- ~~**m65**~~ — Add a read-only review reference to `beancount-report-pack` — dropped 2026-11-14: the owner cleared every pending w3 milestone; ADR020's `beancount-report-review` stays unscheduled.
+- ~~**m66**~~ — `beancount-investor-update` — dropped 2026-11-14: the owner cleared every pending w3 milestone; ADR020's candidate stays unscheduled.
+- ~~**m67**~~ — Port the CLI to typer 0.29 and lift the version cap — dropped 2026-11-14: the owner cleared every pending w3 milestone; [w1/241](../w1/blocked/241.md) returns to blocked.
 - ~~**003**~~ — Bulk entry writes are not retry-safe after a false timeout — dropped 2026-11-03: promotion completed; carried as [m61](./done/m61/README.md) with its full record in `source-003.md`.
 
 - ~~**649**~~ — Rework the shipped creation flow to the 2026-10-27 design — dropped 2026-11-01: promotion completed; the work shipped as [m60](./done/m60/README.md).

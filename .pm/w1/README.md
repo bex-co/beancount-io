@@ -16,7 +16,7 @@ m39–m40 were materialized on 2026-10-18 from [PRFAQ005](../../docs/prfaqs/PRFA
 - **Production payment tests:** by user decision on 2026-10-18, each milestone ends with a real payment test in production. It uses the QA account from `beancount-io/.env` and two 100%-off coupons, before closeout.
 - **Not on the board:** PRFAQ005's stage 3, its growth experiments, waits for four weeks of stage 1–2 metrics.
 
-m42–m45 and note [238](./done/238.md) were materialized on 2026-11-13 from `/pm-brainstorm for w1` items 1–5, routed by the user via `/pmx`. m43, m44 and m45 carry the three write primitives [228](./done/228.md) left undecided (account rename, an atomic move between files, bulk source reads), so that note is resolved. **Suggested order:** m42 and note 238 are independent of the rest; m44 before m45. The hosted checks in m43/t006 and m45/t005 wait on a backend-v2 deploy and on [w23/242](../w23/242.md) (`revertCommit` answers `INTERNAL_SERVER_ERROR` in production).
+m42–m45 and note [238](./done/238.md) were materialized on 2026-11-13 from `/pm-brainstorm for w1` items 1–5, routed by the user via `/pmx`. m43, m44 and m45 carry the three write primitives [228](./done/228.md) left undecided (account rename, an atomic move between files, bulk source reads), so that note is resolved. **Suggested order:** m42 and note 238 are independent of the rest; m44 before m45. The hosted checks in m43/t006 and m45/t005 wait on a backend-v2 deploy and on [w23/242](../w23/blocked/242.md) (`revertCommit` answers `INTERNAL_SERVER_ERROR` in production).
 
 ### Open
 
@@ -77,7 +77,7 @@ m42–m45 and note [238](./done/238.md) were materialized on 2026-11-13 from `/p
 
 ## Inbox
 
-- [241](./241.md) — Port the CLI off typer's private click so typer 0.29+ can install (A2; follow-up to the 239 stopgap) — **promoted** 2026-11-14 to [w3/m67](../w3/m67/README.md) after the owner chose the port; stays open until m67 closes
+- [241](./blocked/241.md) — Port the CLI off typer's private click so typer 0.29+ can install (A2; follow-up to the 239 stopgap) — **blocked:** its 2026-11-14 promotion (w3/m67) was dropped the same day; owner re-funds the port or drops the note
 
 
 The three MCP QA findings filed on 2026-09-21/22 were drained on 2026-09-23: [035](./done/035.md), [036](./done/036.md), and [037](./done/037.md) shipped with regression coverage.

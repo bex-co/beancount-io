@@ -64,7 +64,7 @@
 - [x] **m56** — [Invoice clients and pay bills, with collected tax and an aging you can trust](./done/m56/README.md) (12 tasks) ← same review (items 2 and 5) — sequenced after m55/t001
 - [x] **m57** — [Record a payroll run from the provider's summary](./done/m57/README.md) (9 tasks) ← same review (item 4) — sequenced after m55/t001
 - [x] **m58** — [Import payment-processor payouts as gross, fees, tax, and net](./done/m58/README.md) (8 tasks) ← same review (item 6, payout half) — sequenced after m56/t002
-- [ ] **m59** — [Close the books for a business: agings, liabilities, and owner equity](./blocked/m59/README.md) (7 tasks) ← same review (item 7) — sequenced last, after m56, m57, w2/m48, and w3/m58 — **blocked:** t001 waits on w2/m48's closeout (Claude authentication/full-pass gate) and w3/m58's
+- [ ] **m59** — [Close the books for a business: agings, liabilities, and owner equity](./blocked/m59/README.md) (7 tasks) ← same review (item 7) — sequenced last, after m56, m57, and w2/m48 (w3/m58 was dropped 2026-11-14) — **blocked:** t001 waits on w2/m48's closeout (Claude authentication/full-pass gate)
 
 ## Dropped
 

@@ -6,7 +6,7 @@
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Add a business section to the close report | 75m | w2/m56/t006, w2/m57/t003, w2/m48/t008, w3/m58/t006 |
+| t001 | Add a business section to the close report | 75m | w2/m56/t006, w2/m57/t003, w2/m48/t008 |
 | t002 | Write evals: a business close and the personal-close regression | 60m | t001 |
 | t003 | Run the evals on both clients | 45m | t002 |
 | t004 | Adoption surface | 30m | t003 |
@@ -16,7 +16,7 @@
 
 ## Blocked
 
-- **t001 onward (2026-10-27)** — t001 depends on [w2/m48](../m48/README.md)/t008 (close review state) and [w3/m58](../../../w3/blocked/m58/README.md)/t006 (the reconciliation exception register), and both change the close report this milestone extends. w2/m48 is blocked on its Codex eval rerun, and w3/m58's first task waits on w2/m48's closeout. The other two dependencies are met: invoice and bill aging (w2/m56/t006) and payroll quarter totals (w2/m57/t003) have shipped. **Unblock:** w2/m48 closes (Codex runs again) and w3/m58 closes; then start t001. **Who can clear it:** the operator (Codex account and model) for w2/m48; w3's worker for w3/m58.
+- **t001 onward (2026-10-27)** — t001 depends on [w2/m48](../m48/README.md)/t008 (close review state) and w3/m58 (dropped 2026-11-14)/t006 (the reconciliation exception register), and both change the close report this milestone extends. w2/m48 is blocked on its Codex eval rerun, and w3/m58's first task waits on w2/m48's closeout. The other two dependencies are met: invoice and bill aging (w2/m56/t006) and payroll quarter totals (w2/m57/t003) have shipped. **Unblock:** w2/m48 closes (Codex runs again) and w3/m58 closes; then start t001. **Who can clear it:** the operator (Codex account and model) for w2/m48; w3's worker for w3/m58.
 
 ## Definition of done
 
@@ -30,7 +30,7 @@
 - **Source:** small-business owner review of the skill suite (five-person services LLC: client invoices, contractors, a payroll provider, quarterly tax remittances), triaged 2026-10-21 — item 7.
 - **Goal linkage:** **A1 — Agent-native accounting:** the month-end package a small business hands its accountant comes out of the same agent-kept close.
 - **Expected outcome:** an owner closes a month and has the agings and liability balances the accountant asks for, tied to the books. Signals: eval pass rate on both clients; close invocations on business ledgers.
-- **Why now:** last in the sequence: it reports what [m56](../../done/m56/README.md) and [m57](../../done/m57/README.md) book, and it changes the close report after [w2/m48](../m48/README.md) and [w3/m58](../../../w3/blocked/m58/README.md) do, so the report is not rewritten three ways at once. Adoption surface is included because close's customer output changes.
+- **Why now:** last in the sequence: it reports what [m56](../../done/m56/README.md) and [m57](../../done/m57/README.md) book, and it changes the close report after [w2/m48](../m48/README.md) and w3/m58 (dropped 2026-11-14) do, so the report is not rewritten three ways at once. Adoption surface is included because close's customer output changes.
 
 ## Dependency update — 2026-11-08
 
@@ -38,6 +38,7 @@ w2/m48's original Codex cohort now passes 31/31 on a preserved unshipped
 candidate. Its closeout remains blocked on authenticated Claude verification
 and the full-pass gate, followed by its standing closing tasks; Codex usage is
 no longer the blocker. w3/m58's dependency on that closeout is unchanged.
-**Unblock:** w2/m48 and w3/m58 actually close. **Who can clear it:** operator
+**Update 2026-11-14:** w3/m58 was dropped when the owner cleared w3's pending milestones, so the exception register is no longer a prerequisite and t001 no longer depends on it.
+**Unblock:** w2/m48 actually closes. **Who can clear it:** operator
 Claude login, then the respective workers. This does not authorize changing
 the shared close report ahead of either prerequisite.

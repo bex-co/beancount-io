@@ -17,13 +17,13 @@ Seven of the ten candidates are on `main`. Three are not built.
 | P1 | `beancount-roll-forward` | Shipped: [w3/m55](../../.pm/w3/done/m55/README.md). |
 | P1 | `beancount-accruals` | Shipped: [w3/m57](../../.pm/w3/done/m57/README.md). |
 | P1 | Variance explanation | Shipped: a `beancount-ask` recipe that `beancount-close` reuses ([w3/m56](../../.pm/w3/done/m56/README.md)). `bea report budget` covers budget against actual ([w21/m7](../../.pm/w21/done/m7/README.md)). |
-| P1 | Reconciliation exception register | Not built. [w3/m58](../../.pm/w3/blocked/m58/README.md) waits on w2/m48's closeout. |
+| P1 | Reconciliation exception register | Not built. Its milestone (w3/m58) was dropped from the board on 2026-11-14; nothing is scheduled. |
 | P2 | `beancount-report-pack` | Shipped: [w21/m9](../../.pm/w21/done/m9/README.md). |
 | P2 | `beancount-report-review` | Not built. Nothing on the board. |
 | P2 | `beancount-business-metrics` | Shipped: [w21/m10](../../.pm/w21/done/m10/README.md). |
 | P3 | `beancount-investor-update` | Not built. Nothing on the board. |
 
-The record can close when w2/m48 and w3/m58 close, and when the owner either schedules `beancount-report-review` and `beancount-investor-update` or removes them from scope.
+The record can close when w2/m48 closes, and when the owner either schedules the reconciliation exception register, `beancount-report-review`, and `beancount-investor-update` or removes them from scope.
 
 ## Context
 
