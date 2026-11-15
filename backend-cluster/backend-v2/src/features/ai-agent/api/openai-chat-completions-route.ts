@@ -1,6 +1,7 @@
 import Router from "@koa/router";
 import { z } from "zod";
 import { type AppLayers } from "@/foundation/composition";
+import type { AppConfig } from "@/config/config";
 import { BadUserInputError } from "@/shared/errors";
 import { resolveAuthUser } from "../utils/route-guards";
 
@@ -56,11 +57,13 @@ const chatCompletionBodySchema = z
 export function setOpenAIChatCompletionsRoute(
   router: Router,
   layers: AppLayers,
+  config: AppConfig,
 ): void {
   router.post("/api-gateway/ai/openai/chat/completions", async (ctx) => {
     const { identity } = await resolveAuthUser(ctx, {
       models: layers.database.models,
       db: layers.database.db,
+      config,
     });
 
     const parseResult = chatCompletionBodySchema.safeParse(ctx.request.body);

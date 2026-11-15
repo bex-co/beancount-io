@@ -608,6 +608,7 @@ export function setOidcRoutes(
       const { user, identity } = await resolveAuthUser(ctx, {
         models: layers.database.models,
         db: layers.database.db,
+        config,
       });
 
       // Consent is an authorization decision, not merely an authenticated one.

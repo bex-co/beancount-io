@@ -1,6 +1,7 @@
 import Router from "@koa/router";
 import { type UIMessage } from "ai";
 import { type AppLayers } from "@/foundation/composition";
+import type { AppConfig } from "@/config/config";
 import { logger } from "@/shared/logger";
 import { BadUserInputError } from "@/shared/errors";
 import { resolveAuthUser } from "../utils/route-guards";
@@ -13,7 +14,11 @@ import { createFallbackLanguageModel } from "@/features/llm/utils/fallback-langu
 
 const agentLogger = logger.child({ module: "agent-routes" });
 
-export function setAgentRoute(router: Router, layers: AppLayers): void {
+export function setAgentRoute(
+  router: Router,
+  layers: AppLayers,
+  config: AppConfig,
+): void {
   const handler: IAgentHandler = new SelfHostedAgentHandler(
     createFallbackLanguageModel(),
     layers.services.aiCfoUsage,
@@ -48,6 +53,7 @@ export function setAgentRoute(router: Router, layers: AppLayers): void {
     const { user, identity } = await resolveAuthUser(ctx, {
       models: layers.database.models,
       db: layers.database.db,
+      config,
     });
 
     await handler.handle(

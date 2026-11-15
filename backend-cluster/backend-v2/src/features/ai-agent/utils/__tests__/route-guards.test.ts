@@ -1,4 +1,5 @@
 import type { RouterContext } from "@koa/router";
+import type { AppConfig } from "@/config/config";
 import type { Identity } from "@/server/api/identity";
 import { UnauthenticatedError } from "@/shared/errors";
 import { resolveAuthUser } from "../route-guards";
@@ -7,10 +8,11 @@ const getById = jest.fn();
 const deps = {
   db: {} as never,
   models: { user: { getById } as never },
+  config: {} as AppConfig,
 };
 
 function ctx(identity?: Identity): RouterContext {
-  return { state: { identity } } as RouterContext;
+  return { headers: {}, state: { identity } } as unknown as RouterContext;
 }
 
 function oauth(scopes: string[]): Identity {

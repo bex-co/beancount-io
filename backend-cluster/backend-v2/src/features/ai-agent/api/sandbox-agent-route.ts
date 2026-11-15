@@ -92,6 +92,7 @@ export function setSandboxAgentRoute(
     const { user, identity } = await resolveAuthUser(ctx, {
       models: layers.database.models,
       db: layers.database.db,
+      config,
     });
 
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);

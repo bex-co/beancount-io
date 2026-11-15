@@ -3,6 +3,7 @@ import http from "node:http";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import Router from "@koa/router";
+import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { LLMService } from "@/features/llm/service/llm-service";
 import { AiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
@@ -106,10 +107,14 @@ describe("OpenAI chat completions through HTTP and the real LLM service", () => 
       ctx.state.identity = caller;
       await next();
     });
-    setOpenAIChatCompletionsRoute(router, {
-      database: { models: { user: { getById: deps.getById } }, db: {} },
-      services: { llm: deps.llm },
-    } as unknown as AppLayers);
+    setOpenAIChatCompletionsRoute(
+      router,
+      {
+        database: { models: { user: { getById: deps.getById } }, db: {} },
+        services: { llm: deps.llm },
+      } as unknown as AppLayers,
+      {} as AppConfig,
+    );
     app.use(router.routes()).use(router.allowedMethods());
     server = http.createServer(app.callback());
     await new Promise<void>((resolve) =>

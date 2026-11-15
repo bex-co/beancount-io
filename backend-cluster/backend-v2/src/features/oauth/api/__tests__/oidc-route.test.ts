@@ -2308,6 +2308,23 @@ describe("oidc-route: unified MCP + identity provider", () => {
     );
 
     expect(res.status).toBe(401);
+    expect(((await res.json()) as { error?: string }).error).toBe(
+      "Authentication required",
+    );
+  });
+
+  it("consent: a refused credential is told so, not asked for one (w31/026)", async () => {
+    for (const bearer of ["garbage.token.value", `bcio_${"0".repeat(32)}`]) {
+      const { jar, uid } = await startAuthorization();
+
+      const res = await postInteractionLogin({ uid, jar, bearer });
+
+      expect(res.status).toBe(401);
+      expect(((await res.json()) as { error?: string }).error).toMatch(
+        /^The credential sent was not accepted/,
+      );
+      expect(res.headers.get("location")).toBeNull();
+    }
   });
 
   it("MCP flow: dynamic client registration still works, and a ledger-pinned grant gets ledger-scoped claims", async () => {

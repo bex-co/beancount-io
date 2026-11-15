@@ -22,8 +22,8 @@ export function setupAiAgentRoutes(
   const aiRouter = new Router();
   // REST error translation is handled by the outermost restErrorMiddleware in
   // the composition root; routes here just throw DomainErrors.
-  setAgentRoute(aiRouter, layers);
+  setAgentRoute(aiRouter, layers, config);
   setSandboxAgentRoute(aiRouter, layers, config);
-  setOpenAIChatCompletionsRoute(aiRouter, layers);
+  setOpenAIChatCompletionsRoute(aiRouter, layers, config);
   router.use(aiRouter.routes(), aiRouter.allowedMethods());
 }

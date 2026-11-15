@@ -8,14 +8,32 @@
  * "Authentication required" to a refused credential on a private ledger,
  * because their refusal is raised for the anonymous principal, below the
  * transport that knew a credential had been sent.
+ *
+ * w31/026: the ai-agent routes and the OAuth consent approval authenticate
+ * through `resolveAuthUser`, which still said "Authentication required" to a
+ * refused credential.
  */
 import "reflect-metadata";
+
+// The ai-agent routes transitively load the harness ESM packages, whose
+// `import.meta.url` Jest's CommonJS transform cannot evaluate. No request here
+// reaches them.
+jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
+jest.mock("@ai-sdk/harness-acp", () => ({
+  createACP: () => ({}),
+}));
+
+import http from "node:http";
+import Koa from "koa";
+import bodyParser from "koa-bodyparser";
+import Router from "@koa/router";
 import { graphql, type GraphQLSchema } from "graphql";
 import { buildSchema } from "type-graphql";
 import { SignJWT, exportJWK, generateKeyPair, type CryptoKey } from "jose";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers, DatabaseLayer } from "@/foundation/composition";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
+import { setupAiAgentRoutes } from "@/features/ai-agent/api";
 import { CommitsResolver } from "@/features/gitea/commits/api/commits-resolver";
 import { CommitsService } from "@/features/gitea/commits/service/commits-service";
 import { LedgerAssetQueryResolver } from "@/features/ledger/api/resolvers/ledger-asset-resolver";
@@ -28,6 +46,8 @@ import { createContext } from "@/server/graphql/context";
 import { authenticatedMiddleware } from "@/server/graphql/authenticated";
 import { formatError } from "@/server/graphql/format-error";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { restErrorMiddleware } from "@/server/rest/error-middleware";
+import { restIdentityMiddleware } from "@/server/rest/identity-middleware";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import { asyncContext } from "@/shared/async-context";
 
@@ -376,6 +396,85 @@ describe("public-capable reads of a private ledger (w31/025)", () => {
       }
     } finally {
       await rest.close();
+    }
+  });
+});
+
+describe("routes that authenticate through resolveAuthUser (w31/026)", () => {
+  const NO_CREDENTIAL = "Authentication required";
+  const body = {
+    messages: [{ role: "user", content: "What did I spend on rent?" }],
+    ledgerId: "alice/main",
+    conversationId: "conversation-1",
+  };
+  const routes = [
+    "/api-gateway/agent",
+    "/api-gateway/sandbox-agent",
+    "/api-gateway/ai/openai/chat/completions",
+  ];
+  let server: http.Server;
+  let url: string;
+
+  beforeAll(async () => {
+    // The production order: the error adapter outermost, then the shared
+    // identity resolver, then the routes as `setupAiAgentRoutes` mounts them.
+    const router = new Router();
+    router.use(restErrorMiddleware());
+    router.use(restIdentityMiddleware({ database } as AppLayers, config));
+    setupAiAgentRoutes(
+      router,
+      { database, services: {}, workflows: {} } as unknown as AppLayers,
+      config,
+    );
+    const app = new Koa();
+    app.silent = true;
+    app.use(bodyParser());
+    app.use(router.routes()).use(router.allowedMethods());
+    server = http.createServer(app.callback());
+    await new Promise<void>((resolve) =>
+      server.listen(0, "127.0.0.1", resolve),
+    );
+    const { port } = server.address() as { port: number };
+    url = `http://127.0.0.1:${port}`;
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+
+  const post = (path: string, headers: Record<string, string>) =>
+    fetch(`${url}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...headers },
+      body: JSON.stringify(body),
+    }).then(async (response) => ({
+      status: response.status,
+      challenge: response.headers.get("www-authenticate"),
+      body: (await response.json()) as {
+        error: { code: string; message: string };
+      },
+    }));
+
+  it.each(routes)(
+    "%s keeps asking a request with no credential for one",
+    async (path) => {
+      const absent = await post(path, {});
+      expect(absent.status).toBe(401);
+      expect(absent.body.error).toEqual({
+        code: "UNAUTHENTICATED",
+        message: NO_CREDENTIAL,
+      });
+      expect(absent.challenge).not.toContain("invalid_token");
+    },
+  );
+
+  it.each(routes)("%s says a refused credential was refused", async (path) => {
+    for (const [, headers, message] of cases()) {
+      const refused = await post(path, headers);
+      expect(refused.status).toBe(401);
+      expect(refused.body.error.code).toBe("UNAUTHENTICATED");
+      expect(refused.body.error.message).toMatch(message);
+      expect(refused.challenge).toContain('error="invalid_token"');
     }
   });
 });
