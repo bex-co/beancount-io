@@ -1750,7 +1750,7 @@ A `NOT_FOUND` on a bank connection, pull request, commit, branch, archive or use
 | `PREMIUM_REQUIRED`       | `-32003` | The operation needs a paid plan on the credential's account.                                                                                                                                                                                                                                                                                                                        |
 | `RESOURCE_LIMIT_REACHED` | `-32003` | A limit is reached. Remove something; `limitOwner`, when present, says whose plan set it.                                                                                                                                                                                                                                                                                           |
 | `OPERATION_NOT_ALLOWED`  | `-32003` | The ledger's current state forbids it.                                                                                                                                                                                                                                                                                                                                              |
-| `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`.                                                                                                                                                                                                                                                                               |
+| `CONFLICT`               | `-32000` | Something changed since you read it. Re-read with `getEntryContext` and resend the fresh `sha256sum`. `addLedgerEntries` and `appendLedgerText` take no `sha` and retry a lost race themselves: from them it means every attempt lost, so send the same call again (with its `requestId`).                                                                                          |
 | `RATE_LIMITED`           | `-32000` | Over budget. Wait `retryAfter` seconds; batch writes rather than looping.                                                                                                                                                                                                                                                                                                           |
 | `SERVICE_UNAVAILABLE`    | `-32000` | A dependency is down, or the ledger did not answer before its deadline (30 seconds for a read, 90 for a write). Retry with backoff; the request is not the problem. After a timeout a write may already have committed: re-read the ledger before repeating it, or resend an entry write with the same `requestId` ([retry-safe entry writes](#retry-safe-entry-writes-requestid)). |
 | `CONFIGURATION_ERROR`    | `-32000` | The deployment is missing configuration it needs (object storage for uploads, an LLM key for AI features). Do not retry: the hint names the variables the operator must set. REST answers `503`.                                                                                                                                                                                    |
@@ -2315,6 +2315,15 @@ commit only: a preview of the same entries succeeds and returns the errors in
 `validation.newErrors` with `validation.valid: false`, so approve only a
 preview whose `valid` is `true` before re-issuing it with `dry_run: false`
 (w23/219).
+
+Two entry writes at once both land. `addLedgerEntries` and `appendLedgerText`
+take no `sha`: when another write commits between their read and their commit,
+they re-read the files, run bean-check and the balance check again against what
+landed, and commit on top of it, up to 3 attempts. An `UNBALANCED` or
+`VALIDATION_FAILED` refusal therefore applies to the fresh content. Only when
+every attempt loses is the call refused with `CONFLICT`: none of its directives
+were committed, and the hint says to send the same call again, with the same
+`requestId` if it carries one. REST and GraphQL behave the same (w31/007).
 
 ### Retry-safe entry writes (`requestId`)
 

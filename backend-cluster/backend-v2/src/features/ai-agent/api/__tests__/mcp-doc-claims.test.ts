@@ -13,6 +13,7 @@ import {
   MAX_BQL_TEXT_BYTES,
   MAX_STRUCTURED_BQL_ROWS,
 } from "../../tools/bql-query-tool";
+import { ENTRY_WRITE_ATTEMPTS } from "@/features/ledger/utils/entry-write-race";
 import type { AppConfig } from "@/config/config";
 import type { McpRequestContext } from "../mcp-context";
 
@@ -149,6 +150,12 @@ const CLAIMS: Claim[] = [
       MAX_STRUCTURED_BQL_ROWS === 1000 && MAX_BQL_TEXT_BYTES === 100_000
         ? []
         : ["MAX_STRUCTURED_BQL_ROWS / MAX_BQL_TEXT_BYTES"],
+  },
+  {
+    id: "an entry write retries a lost race up to 3 attempts",
+    doc: "commit on top of it, up to 3 attempts",
+    violations: () =>
+      ENTRY_WRITE_ATTEMPTS === 3 ? [] : ["ENTRY_WRITE_ATTEMPTS"],
   },
   {
     id: "the endpoint pushes no list-change notifications",

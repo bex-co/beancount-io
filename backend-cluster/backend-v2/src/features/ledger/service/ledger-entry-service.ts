@@ -1,4 +1,5 @@
 import { runIdempotentEntryWrite } from "@/features/ledger/utils/entry-write-idempotency";
+import { retryLostEntryWriteRace } from "@/features/ledger/utils/entry-write-race";
 import {
   EntryAddBulkEntriesRequest,
   Transaction,
@@ -501,7 +502,8 @@ export class LedgerEntryService implements ILedgerEntryService {
         dryRun,
       );
     // A dry run writes nothing, so there is nothing to make idempotent; its
-    // id is still checked as the commit's would be.
+    // id is still checked as the commit's would be. Nor can it lose a race:
+    // only a commit is run again on fresh content (w31/007).
     return runIdempotentEntryWrite({
       userId: identity.userId,
       ledgerId,
@@ -510,7 +512,7 @@ export class LedgerEntryService implements ILedgerEntryService {
       requestId,
       preview: dryRun,
       request: { inputs, allowInvalid },
-      write,
+      write: dryRun ? write : () => retryLostEntryWriteRace(write),
     });
   }
 
@@ -535,6 +537,8 @@ export class LedgerEntryService implements ILedgerEntryService {
     // these files rather than by a second implementation of the same rules
     // (w2/012). This service keeps the authorization decision.
     const ledgerId = `${ledgerOwner}/${ledgerName}`;
+    const write = () =>
+      this.directiveAppend.appendDirectiveText({ identity, ledgerId, input });
     return runIdempotentEntryWrite({
       userId: identity.userId,
       ledgerId,
@@ -547,8 +551,8 @@ export class LedgerEntryService implements ILedgerEntryService {
         path: input.path,
         allowInvalid: input.allowInvalid,
       },
-      write: () =>
-        this.directiveAppend.appendDirectiveText({ identity, ledgerId, input }),
+      // Inside the id's claim: a retry is the same write, not a second one.
+      write: input.dryRun ? write : () => retryLostEntryWriteRace(write),
     });
   }
 }
