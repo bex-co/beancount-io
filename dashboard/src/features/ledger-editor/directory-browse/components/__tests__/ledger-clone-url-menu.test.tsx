@@ -19,13 +19,13 @@ vi.mock("@/common/components/authenticated", () => ({
   Authenticated: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+const ledgerUrls = vi.hoisted(() => ({
+  httpUrl: "https://example.com/git/alice/books.git",
+  sshUrl: "git@example.com:alice/books.git" as string | null,
+}));
+
 vi.mock("@/common/providers/ledger-provider", () => ({
-  useLedger: () => ({
-    ledgerData: {
-      httpUrl: "https://example.com/git/alice/books.git",
-      sshUrl: "git@example.com:alice/books.git",
-    },
-  }),
+  useLedger: () => ({ ledgerData: ledgerUrls }),
 }));
 
 const LEDGER_ID = "alice/books";
@@ -168,5 +168,45 @@ describe("LedgerCloneUrlMenu download ZIP failures", () => {
       );
     });
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+});
+
+describe("LedgerCloneUrlMenu clone addresses", () => {
+  afterEach(() => {
+    ledgerUrls.sshUrl = "git@example.com:alice/books.git";
+  });
+
+  it("opens on the SSH address when the deployment serves one", async () => {
+    const user = userEvent.setup();
+    render(
+      <MockedProvider mocks={[]}>
+        <LedgerCloneUrlMenu ledgerId={LEDGER_ID} />
+      </MockedProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: /git clone/i }));
+
+    expect(await screen.findByRole("tab", { name: "SSH" })).toBeTruthy();
+    expect(
+      screen.getByDisplayValue("git@example.com:alice/books.git"),
+    ).toBeTruthy();
+    expect(screen.getByText(/manage ssh keys/i)).toBeTruthy();
+  });
+
+  it("offers only the HTTP address when the deployment serves no Git over SSH", async () => {
+    ledgerUrls.sshUrl = null;
+    const user = userEvent.setup();
+    render(
+      <MockedProvider mocks={[]}>
+        <LedgerCloneUrlMenu ledgerId={LEDGER_ID} />
+      </MockedProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: /git clone/i }));
+
+    expect(await screen.findByRole("tab", { name: "HTTP" })).toBeTruthy();
+    expect(screen.queryByRole("tab", { name: "SSH" })).toBeNull();
+    expect(
+      screen.getByDisplayValue("https://example.com/git/alice/books.git"),
+    ).toBeTruthy();
+    expect(screen.queryByText(/manage ssh keys/i)).toBeNull();
   });
 });

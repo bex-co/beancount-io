@@ -42,7 +42,10 @@ const envelope = (data: unknown) => ({ data: { success: true, data } });
 let currentResolver: LedgerQueryResolver;
 let schemaPromise: ReturnType<typeof buildSchema> | undefined;
 
-async function fixture(identity: Identity = readOnlyToken) {
+async function fixture(
+  identity: Identity = readOnlyToken,
+  appConfig: AppConfig = config,
+) {
   const authorizeOrThrow = jest.fn().mockResolvedValue(undefined);
   const ledgers = {
     listLedgers: jest.fn().mockResolvedValue(envelope([ledger])),
@@ -65,7 +68,7 @@ async function fixture(identity: Identity = readOnlyToken) {
     {} as never,
     {} as never,
     {} as never,
-    config,
+    appConfig,
     { authorizeOrThrow } as never,
   );
   currentResolver = new LedgerQueryResolver(workflow);
@@ -78,7 +81,7 @@ async function fixture(identity: Identity = readOnlyToken) {
   const schema = await schemaPromise;
   const rest = await startV1TestServer(
     { workflows: { ledger: workflow } } as unknown as AppLayers,
-    config,
+    appConfig,
     { apiKeys: false },
   );
   rest.setIdentity(identity);
@@ -87,7 +90,7 @@ async function fixture(identity: Identity = readOnlyToken) {
       identity,
       ledgerWorkflow: workflow,
     } as unknown as McpRequestContext,
-    config,
+    appConfig,
   );
   const client = new Client({ name: "catalog-parity", version: "1" });
   const [a, b] = InMemoryTransport.createLinkedPair();
@@ -233,6 +236,41 @@ describe("catalog adapters", () => {
         ok: true,
         page: expected,
       });
+    } finally {
+      await f.close();
+    }
+  });
+
+  // w1/m46: a self-hosted stack whose SSH proxy is off serves no Git over SSH,
+  // so no surface may hand out an SSH clone address.
+  it("returns the same null sshUrl on every surface when no Git over SSH is served", async () => {
+    const f = await fixture(readOnlyToken, {
+      ...config,
+      gitea: { ...config.gitea, sshUnavailable: true },
+    } as AppConfig);
+    try {
+      const rest = await (await f.rest("alice/main")).json();
+      const gql = await f.gql('getLedger(ledgerId: "alice/main")');
+      expect(gql.errors).toBeUndefined();
+      const resource = await f.client.readResource({
+        uri: "beancount://alice/main/metadata",
+      });
+      const tool = await f.client.callTool({
+        name: "listLedgers",
+        arguments: {},
+      });
+      const toolLedgers = (
+        tool.structuredContent as { result: Array<{ sshUrl: unknown }> }
+      ).result;
+      expect(rest.sshUrl).toBeNull();
+      expect(rest.httpUrl).toBe("https://example.com/alice/main.git");
+      expect(
+        (gql.data?.getLedger as { sshUrl: unknown } | undefined)?.sshUrl,
+      ).toBeNull();
+      const text = (resource.contents[0] as { text: string }).text;
+      expect(JSON.parse(text).sshUrl).toBeNull();
+      expect(toolLedgers[0].sshUrl).toBeNull();
+      expect(tool.isError).toBeFalsy();
     } finally {
       await f.close();
     }

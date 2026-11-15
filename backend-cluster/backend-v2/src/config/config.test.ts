@@ -190,6 +190,29 @@ describe("config", () => {
       expect(config.gitea.externalHttpPort).toBeLessThanOrEqual(65535);
       expect(config.gitea.sshPort).toBeLessThanOrEqual(65535);
     });
+
+    // w1/m46: Git over SSH on a self-hosted stack exists only through the SSH
+    // proxy, so without it ledgers must not advertise an SSH address.
+    it.each([
+      [{ SELF_HOST: "true" }, true],
+      [{ SELF_HOST: "true", SSH_PROXY_ENABLED: "true" }, true],
+      [
+        {
+          SELF_HOST: "true",
+          SSH_PROXY_ENABLED: "true",
+          SSH_PROXY_HOST_KEY: "key",
+        },
+        false,
+      ],
+      [{}, false],
+    ])("marks SSH unavailable for %j: %s", async (env, unavailable) => {
+      delete process.env.SELF_HOST;
+      delete process.env.SSH_PROXY_ENABLED;
+      delete process.env.SSH_PROXY_HOST_KEY;
+      Object.assign(process.env, env);
+      const { config: loaded } = await import("./config");
+      expect(loaded.gitea.sshUnavailable).toBe(unavailable);
+    });
   });
 
   describe("plaid configuration", () => {

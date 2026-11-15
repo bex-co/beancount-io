@@ -167,7 +167,8 @@ export interface LedgerData {
   id: string;
   name: string;
   fullName: string;
-  sshUrl: string;
+  /** Null when this deployment serves no Git over SSH. */
+  sshUrl: string | null;
   httpUrl: string;
   empty: boolean;
   private: boolean;

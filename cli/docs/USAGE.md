@@ -328,7 +328,7 @@ several files can rewrite some before failing on one it cannot write, and
 `cloud ledger create --clone` can create a ledger before cloning fails. Read
 the operation result before retrying mutations. A clone failure carries the
 confirmed ledger metadata in `error.result`, including `id`, `full_name`,
-`ssh_url`, and `http_url`; use those to clone the existing ledger instead of
+`ssh_url` (null when the deployment serves no Git over SSH), and `http_url`; use those to clone the existing ledger instead of
 creating it again. Human output prints the ledger details before cloning.
 An in-place formatter failure
 reports completed replacements in `error.result.formatted`, failed files and
@@ -2529,7 +2529,7 @@ credentials, so a malformed name exits **2** naming the rule and a slugified
 suggestion rather than exiting **3** with "Not logged in", which would say
 nothing about the name.
 
-Cloning uses `git clone` over SSH, so it needs Git and working SSH access. It uses the SSH command git would (`GIT_SSH_COMMAND`, `core.sshCommand`, then `GIT_SSH`); unattended (`--json`, `--no-input`, no terminal) it only adds `-o BatchMode=yes` to that command and closes git's stdin, so a host-key or password prompt fails instead of hanging. A clone target git would refuse (`./<name>` or `--dir` naming a file or a non-empty directory) is refused with exit **2** before the ledger is created. If a clone fails after the ledger was created, the command exits nonzero and prints the manual `git clone` command, target included — the ledger exists either way.
+Cloning uses `git clone` over SSH, so it needs Git and working SSH access. It uses the SSH command git would (`GIT_SSH_COMMAND`, `core.sshCommand`, then `GIT_SSH`); unattended (`--json`, `--no-input`, no terminal) it only adds `-o BatchMode=yes` to that command and closes git's stdin, so a host-key or password prompt fails instead of hanging. A clone target git would refuse (`./<name>` or `--dir` naming a file or a non-empty directory) is refused with exit **2** before the ledger is created. If a clone fails after the ledger was created, the command exits nonzero and prints the manual `git clone` command, target included — the ledger exists either way. A ledger whose `ssh_url` is null (a self-hosted deployment that serves no Git over SSH) is not cloned: the command exits **1**, writes nothing to disk, and says the deployment serves no Git over SSH (under `--json`, a `validation` error envelope; `create --clone` also carries the created ledger in `error.result`). It does not try another host or protocol; ask the server's operator to enable Git over SSH.
 
 ## Updating
 

@@ -82,6 +82,30 @@ export type AccountLastEntry = {
   date: Maybe<Scalars['String']['output']>;
 };
 
+export type AccountRenameBankMapping = {
+  __typename: 'AccountRenameBankMapping';
+  from: Scalars['String']['output'];
+  /** The caller's own bank account; null for another member's. */
+  plaidAccount: Maybe<Scalars['String']['output']>;
+  to: Scalars['String']['output'];
+  /** False on a preview, and when the update after the commit failed. */
+  updated: Scalars['Boolean']['output'];
+};
+
+export type AccountRenameFile = {
+  __typename: 'AccountRenameFile';
+  changes: Array<AccountRenameLine>;
+  path: Scalars['String']['output'];
+};
+
+export type AccountRenameLine = {
+  __typename: 'AccountRenameLine';
+  after: Scalars['String']['output'];
+  before: Scalars['String']['output'];
+  /** 1-based line of the file. */
+  line: Scalars['Int']['output'];
+};
+
 export type AccountReport = {
   __typename: 'AccountReport';
   accountBalanceData: Array<DateAndBalance>;
@@ -886,6 +910,10 @@ export type JournalQueryInput = {
   documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
   filter?: InputMaybe<Scalars['String']['input']>;
+  /** Attach each entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context returns, ready for the entry-source update and deletes. null where an entry has no editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries per page with it. */
+  includeSource?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of includeSource, as REST and MCP spell it. */
+  include_source?: InputMaybe<Scalars['Boolean']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
   /** Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total. */
@@ -940,7 +968,8 @@ export type Ledger = {
   preview: Maybe<LedgerUpdatePreview>;
   private: Scalars['Boolean']['output'];
   size: Scalars['Float']['output'];
-  sshUrl: Scalars['String']['output'];
+  /** SSH clone address. Null when this deployment serves no Git over SSH. */
+  sshUrl: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['String']['output'];
 };
 
@@ -1369,6 +1398,42 @@ export type MissingPriceLeg = {
   to: Scalars['String']['output'];
 };
 
+export type MoveEntrySourcesInput = {
+  /** Move the entries even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing */
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of allowInvalid. */
+  allow_invalid?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Run every check and return the preview without committing */
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of dryRun, as MCP spells it. */
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
+  entries: Array<DeleteMultiSourceSliceItemInput>;
+  /** A file the ledger loads that gains include "<toPath>" (relative to it) when toPath is not loaded yet. Without it, an unloaded toPath is refused. */
+  includeFrom?: InputMaybe<Scalars['String']['input']>;
+  /** Repository path of the .bean or .beancount file the entries move into; created when absent. */
+  toPath: Scalars['String']['input'];
+};
+
+export type MoveEntrySourcesResponse = {
+  __typename: 'MoveEntrySourcesResponse';
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
+  dryRun: Scalars['Boolean']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
+  /** Whether includeFrom gained toPath's include line (on a preview, would gain it) */
+  includeAdded: Scalars['Boolean']['output'];
+  message: Scalars['String']['output'];
+  /** The moved entries' hashes, each once, in ledger order */
+  movedHashes: Array<Scalars['String']['output']>;
+  newErrors: Array<SliceWriteError>;
+  /** Each moved entry's text at the file it leaves */
+  preview: Array<SlicePreviewFile>;
+  toPath: Scalars['String']['output'];
+  /** True only when the write adds no bean-check error; gate a preview on this. */
+  valid: Scalars['Boolean']['output'];
+};
+
 export type Mutation = {
   __typename: 'Mutation';
   addEntries: AddEntryResponse;
@@ -1435,6 +1500,8 @@ export type Mutation = {
   leaveLedger: DeleteCollaboratorResponse;
   /** Logout user, revoke JWT token and clear httpOnly cookie */
   logout: LogoutResponse;
+  /** Move entries into another ledger file in one commit: each entry's source text leaves its file byte for byte and is appended to toPath in ledger order. listLedgerEntries with include_source returns each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds a bean-check error (VALIDATION_FAILED, unless allowInvalid). dryRun previews without committing: each moved entry's text and file. revertLedgerCommit undoes the commit. */
+  moveLedgerEntrySources: MoveEntrySourcesResponse;
   /** Parse an uploaded file (multimodal support for PDF/images/any format) into structured transactions. File must be uploaded to S3 first. */
   parseFile: FileParseResult;
   /** Parse a receipt image or PDF and return a single summarized transaction with account recommendations. File must be uploaded to S3 first. */
@@ -1448,6 +1515,8 @@ export type Mutation = {
   /** Refresh authentication token - issues a new token and revokes the current one */
   refreshToken: TokenAuthResponse;
   rejectPullRequest: PullRequestResult;
+  /** Rename an account and every account under it across the ledger's loaded files in one commit: account tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the commit unless allowInvalid. dryRun previews without committing: the changed lines and bank mappings. revertLedgerCommit undoes the commit. */
+  renameLedgerAccount: RenameLedgerAccountResponse;
   /** Rename a file in a specific ledger */
   renameLedgerFile: RenameLedgerFileResponse;
   /** Request an email ownership code to continue password sign-in */
@@ -1730,6 +1799,12 @@ export type MutationLeaveLedgerArgs = {
 };
 
 
+export type MutationMoveLedgerEntrySourcesArgs = {
+  input: MoveEntrySourcesInput;
+  ledgerId: Scalars['String']['input'];
+};
+
+
 export type MutationParseFileArgs = {
   fileFormat: Scalars['String']['input'];
   objectKey?: InputMaybe<Scalars['String']['input']>;
@@ -1769,6 +1844,17 @@ export type MutationRejectPullRequestArgs = {
   ledgerName: Scalars['String']['input'];
   ledgerOwner: Scalars['String']['input'];
   prNumber: Scalars['Int']['input'];
+};
+
+
+export type MutationRenameLedgerAccountArgs = {
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
+  allow_invalid?: InputMaybe<Scalars['Boolean']['input']>;
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
+  from: Scalars['String']['input'];
+  ledgerId: Scalars['String']['input'];
+  to: Scalars['String']['input'];
 };
 
 
@@ -2485,7 +2571,7 @@ export type Query = {
   /** Get a specific public key by ID */
   getPublicKey: Maybe<PublicKey>;
   getPullRequestDetails: PullRequestDetails;
-  /** Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted */
+  /** Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted. Pass limit (at most 100) and page to read them in pages; omit limit for every row. */
   getUnsyncedPlaidTransactions: Array<PlaidTransactionType>;
   getUserByExactMatch: Array<SearchUser>;
   /** Get user's followers */
@@ -2900,6 +2986,8 @@ export type QueryGetPullRequestDetailsArgs = {
 export type QueryGetUnsyncedPlaidTransactionsArgs = {
   accountId?: InputMaybe<Scalars['String']['input']>;
   ledgerId: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Float']['input']>;
+  page?: InputMaybe<Scalars['Float']['input']>;
 };
 
 
@@ -3155,6 +3243,27 @@ export type RegisterRow = {
   postings: Array<RegisterPosting>;
 };
 
+export type RenameLedgerAccountResponse = {
+  __typename: 'RenameLedgerAccountResponse';
+  accounts: Array<RenamedAccount>;
+  bankMappings: Array<AccountRenameBankMapping>;
+  checkError: Maybe<Scalars['String']['output']>;
+  /** Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why. */
+  checked: Maybe<Scalars['Boolean']['output']>;
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit: Maybe<Scalars['String']['output']>;
+  dryRun: Scalars['Boolean']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
+  files: Array<AccountRenameFile>;
+  from: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  newErrors: Array<SliceWriteError>;
+  to: Scalars['String']['output'];
+  /** True only when the write adds no bean-check error; gate a preview on this. */
+  valid: Scalars['Boolean']['output'];
+};
+
 export type RenameLedgerFileResponse = {
   __typename: 'RenameLedgerFileResponse';
   checkError: Maybe<Scalars['String']['output']>;
@@ -3180,6 +3289,12 @@ export type RenamePreviewFile = {
   __typename: 'RenamePreviewFile';
   path: Scalars['String']['output'];
   text: Scalars['String']['output'];
+};
+
+export type RenamedAccount = {
+  __typename: 'RenamedAccount';
+  from: Scalars['String']['output'];
+  to: Scalars['String']['output'];
 };
 
 /** The email report status (deprecated) */
@@ -4448,7 +4563,7 @@ export type CreateLedgerMutationVariables = Exact<{
 }>;
 
 
-export type CreateLedgerMutation = { createLedger: { __typename: 'Ledger', updatedAt: string, sshUrl: string, size: number, private: boolean, name: string, id: string, fullName: string, empty: boolean, createdAt: string, httpUrl: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null } };
+export type CreateLedgerMutation = { createLedger: { __typename: 'Ledger', updatedAt: string, sshUrl: string | null, size: number, private: boolean, name: string, id: string, fullName: string, empty: boolean, createdAt: string, httpUrl: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null } };
 
 export type CreateLedgerInCurrencyMutationVariables = Exact<{
   name: Scalars['String']['input'];
@@ -4458,7 +4573,7 @@ export type CreateLedgerInCurrencyMutationVariables = Exact<{
 }>;
 
 
-export type CreateLedgerInCurrencyMutation = { createLedger: { __typename: 'Ledger', updatedAt: string, sshUrl: string, size: number, private: boolean, name: string, id: string, fullName: string, empty: boolean, createdAt: string, httpUrl: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null } };
+export type CreateLedgerInCurrencyMutation = { createLedger: { __typename: 'Ledger', updatedAt: string, sshUrl: string | null, size: number, private: boolean, name: string, id: string, fullName: string, empty: boolean, createdAt: string, httpUrl: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null } };
 
 export type UpdateLedgerMutationVariables = Exact<{
   ledgerId: Scalars['String']['input'];
@@ -4468,7 +4583,7 @@ export type UpdateLedgerMutationVariables = Exact<{
 }>;
 
 
-export type UpdateLedgerMutation = { updateLedger: { __typename: 'Ledger', id: string, name: string, fullName: string, httpUrl: string, sshUrl: string, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null } };
+export type UpdateLedgerMutation = { updateLedger: { __typename: 'Ledger', id: string, name: string, fullName: string, httpUrl: string, sshUrl: string | null, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null } };
 
 export type DeleteLedgerMutationVariables = Exact<{
   ledgerId: Scalars['String']['input'];
@@ -4483,14 +4598,14 @@ export type ListLedgersQueryVariables = Exact<{
 }>;
 
 
-export type ListLedgersQuery = { listLedgers: Array<{ __typename: 'Ledger', id: string, name: string, fullName: string, httpUrl: string, sshUrl: string, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null }> };
+export type ListLedgersQuery = { listLedgers: Array<{ __typename: 'Ledger', id: string, name: string, fullName: string, httpUrl: string, sshUrl: string | null, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null }> };
 
 export type GetLedgerQueryVariables = Exact<{
   ledgerId: Scalars['String']['input'];
 }>;
 
 
-export type GetLedgerQuery = { getLedger: { __typename: 'Ledger', id: string, name: string, fullName: string, httpUrl: string, sshUrl: string, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, isStarred: boolean | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null, options: { __typename: 'LedgerOptions', title: string, nameAssets: string, nameEquity: string, nameExpenses: string, nameIncome: string, nameLiabilities: string, accountCurrentConversions: string, accountCurrentEarnings: string, renderCommas: boolean, operatingCurrency: Array<string> }, favaOptions: { __typename: 'FavaOptions', accountJournalIncludeChildren: boolean, autoReload: boolean, collapsePattern: Array<string>, conversionCurrencies: Array<string>, currencyColumn: number, defaultPage: string, indent: number, invertIncomeLiabilitiesEquity: boolean, language: string | null, locale: string | null, showAccountsWithZeroBalance: boolean, showAccountsWithZeroTransactions: boolean, showClosedAccounts: boolean, sidebarShowQueries: number, unrealized: string, upcomingEvents: number, uptodateIndicatorGreyLookbackDays: number, useExternalEditor: boolean, fiscalYearEnd: { __typename: 'FiscalYearEnd', month: number, day: number } }, bcioOptions: { __typename: 'BcioOptions', defaultFile: string, transactionFile: string | null, accountFile: string | null, priceFile: string | null, balanceFile: string | null, noteFile: string | null, padFile: string | null } } };
+export type GetLedgerQuery = { getLedger: { __typename: 'Ledger', id: string, name: string, fullName: string, httpUrl: string, sshUrl: string | null, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, isStarred: boolean | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null, options: { __typename: 'LedgerOptions', title: string, nameAssets: string, nameEquity: string, nameExpenses: string, nameIncome: string, nameLiabilities: string, accountCurrentConversions: string, accountCurrentEarnings: string, renderCommas: boolean, operatingCurrency: Array<string> }, favaOptions: { __typename: 'FavaOptions', accountJournalIncludeChildren: boolean, autoReload: boolean, collapsePattern: Array<string>, conversionCurrencies: Array<string>, currencyColumn: number, defaultPage: string, indent: number, invertIncomeLiabilitiesEquity: boolean, language: string | null, locale: string | null, showAccountsWithZeroBalance: boolean, showAccountsWithZeroTransactions: boolean, showClosedAccounts: boolean, sidebarShowQueries: number, unrealized: string, upcomingEvents: number, uptodateIndicatorGreyLookbackDays: number, useExternalEditor: boolean, fiscalYearEnd: { __typename: 'FiscalYearEnd', month: number, day: number } }, bcioOptions: { __typename: 'BcioOptions', defaultFile: string, transactionFile: string | null, accountFile: string | null, priceFile: string | null, balanceFile: string | null, noteFile: string | null, padFile: string | null } } };
 
 export type GetLedgerSourceFilesQueryVariables = Exact<{
   ledgerId: Scalars['String']['input'];
@@ -4527,7 +4642,7 @@ export type SearchLedgersQueryVariables = Exact<{
 }>;
 
 
-export type SearchLedgersQuery = { searchLedgers: Array<{ __typename: 'Ledger', updatedAt: string, sshUrl: string, size: number, private: boolean, name: string, createdAt: string, empty: boolean, fullName: string, httpUrl: string, id: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null }> };
+export type SearchLedgersQuery = { searchLedgers: Array<{ __typename: 'Ledger', updatedAt: string, sshUrl: string | null, size: number, private: boolean, name: string, createdAt: string, empty: boolean, fullName: string, httpUrl: string, id: string, description: string | null, permissions: { __typename: 'Permission', admin: boolean, pull: boolean, push: boolean } | null }> };
 
 export type ListUserOwnedLedgersQueryVariables = Exact<{
   limit?: InputMaybe<Scalars['Float']['input']>;
@@ -4535,7 +4650,7 @@ export type ListUserOwnedLedgersQueryVariables = Exact<{
 }>;
 
 
-export type ListUserOwnedLedgersQuery = { listUserOwnedLedgers: Array<{ __typename: 'Ledger', updatedAt: string, sshUrl: string, size: number, private: boolean, id: string, httpUrl: string, fullName: string, empty: boolean, description: string | null, createdAt: string, name: string }> };
+export type ListUserOwnedLedgersQuery = { listUserOwnedLedgers: Array<{ __typename: 'Ledger', updatedAt: string, sshUrl: string | null, size: number, private: boolean, id: string, httpUrl: string, fullName: string, empty: boolean, description: string | null, createdAt: string, name: string }> };
 
 export type StarLedgerMutationVariables = Exact<{
   ledgerId: Scalars['String']['input'];

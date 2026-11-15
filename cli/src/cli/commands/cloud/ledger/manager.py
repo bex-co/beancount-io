@@ -32,7 +32,8 @@ class LedgerInfo:
     name: str
     full_name: str
     http_url: str
-    ssh_url: str
+    ssh_url: str | None
+    """None when the deployment serves no Git over SSH (a self-hosted stack without its SSH proxy)."""
     private: bool
     record: dict[str, Any]
     """Every field the server returned, snake_cased — the JSON `data`, exactly as `show` emits it."""
@@ -193,6 +194,25 @@ class UnsafeCloneSource(BeaError):
     `../x` or `.` would put the clone outside, or on top of, the current
     directory. Exit 1, as for any other unexpected server response.
     """
+
+
+class NoSshCloneUrl(BeaError):
+    """The ledger has no SSH clone address: this deployment serves no Git over SSH.
+
+    `bea` clones over SSH only, so it stops here rather than try another host
+    or protocol. Exit 1, the same category as any other refusal to clone.
+    """
+
+
+def require_ssh_url(ledger: LedgerInfo) -> str:
+    """The ledger's SSH clone address, or `NoSshCloneUrl` when the server gave none."""
+    if ledger.ssh_url is None:
+        raise NoSshCloneUrl(
+            f"Ledger '{single_line(ledger.full_name)}' has no SSH clone address: this deployment serves no Git "
+            "over SSH, and bea clones only over SSH. Ask the server's operator to enable Git over SSH "
+            "(the SSH proxy) and try again."
+        )
+    return check_clone_url(ledger.ssh_url)
 
 
 # `git@host:owner/name.git`: the scp-like form the service hands out. The user

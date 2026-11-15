@@ -23,7 +23,7 @@ class GetLedgerResponse200:
         id (str):
         name (str):
         full_name (str):
-        ssh_url (str):
+        ssh_url (None | str): SSH clone address. Null when this deployment serves no Git over SSH.
         http_url (str):
         empty (bool):
         private (bool):
@@ -41,7 +41,7 @@ class GetLedgerResponse200:
     id: str
     name: str
     full_name: str
-    ssh_url: str
+    ssh_url: None | str
     http_url: str
     empty: bool
     private: bool
@@ -62,6 +62,7 @@ class GetLedgerResponse200:
 
         full_name = self.full_name
 
+        ssh_url: None | str
         ssh_url = self.ssh_url
 
         http_url = self.http_url
@@ -135,7 +136,12 @@ class GetLedgerResponse200:
 
         full_name = d.pop("fullName")
 
-        ssh_url = d.pop("sshUrl")
+        def _parse_ssh_url(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        ssh_url = _parse_ssh_url(d.pop("sshUrl"))
 
         http_url = d.pop("httpUrl")
 

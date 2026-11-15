@@ -1684,7 +1684,9 @@
                         "type": "string"
                       },
                       "sshUrl": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true,
+                        "description": "SSH clone address. Null when this deployment serves no Git over SSH."
                       },
                       "httpUrl": {
                         "type": "string"
@@ -2036,7 +2038,9 @@
                       "type": "string"
                     },
                     "sshUrl": {
-                      "type": "string"
+                      "type": "string",
+                      "nullable": true,
+                      "description": "SSH clone address. Null when this deployment serves no Git over SSH."
                     },
                     "httpUrl": {
                       "type": "string"
@@ -2286,7 +2290,9 @@
                         "type": "string"
                       },
                       "sshUrl": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true,
+                        "description": "SSH clone address. Null when this deployment serves no Git over SSH."
                       },
                       "httpUrl": {
                         "type": "string"
@@ -2693,7 +2699,9 @@
                         "type": "string"
                       },
                       "sshUrl": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true,
+                        "description": "SSH clone address. Null when this deployment serves no Git over SSH."
                       },
                       "httpUrl": {
                         "type": "string"
@@ -2917,7 +2925,9 @@
                       "type": "string"
                     },
                     "sshUrl": {
-                      "type": "string"
+                      "type": "string",
+                      "nullable": true,
+                      "description": "SSH clone address. Null when this deployment serves no Git over SSH."
                     },
                     "httpUrl": {
                       "type": "string"
@@ -3178,7 +3188,9 @@
                       "type": "string"
                     },
                     "sshUrl": {
-                      "type": "string"
+                      "type": "string",
+                      "nullable": true,
+                      "description": "SSH clone address. Null when this deployment serves no Git over SSH."
                     },
                     "httpUrl": {
                       "type": "string"

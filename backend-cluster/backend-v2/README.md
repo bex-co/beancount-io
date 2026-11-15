@@ -142,6 +142,15 @@ step: `signUp` creates the account and returns the session `token` directly
 user to the unlimited tier, and billing is never asked for a user's plan. Email addresses are
 not verified, and recovery mail still needs `SEND_GRID_API_KEY`.
 
+A self-hosted stack also never advertises beancount.io's Git host. With
+`EXTERNAL_GITEA_HOST_NAME` unset, the server asks Gitea for its `ROOT_URL` at
+start (`GET /api/v1/user` as the admin account, retrying while Gitea starts) and
+builds every ledger's `httpUrl` and `sshUrl` from it, or exits with an error
+naming the variable if Gitea never answers; an explicit value always wins. With
+the SSH proxy off (`SSH_PROXY_ENABLED` and `SSH_PROXY_HOST_KEY` not both set),
+ledgers carry `sshUrl: null` on REST, GraphQL and MCP alike. The managed service
+(`SELF_HOST` unset) is unaffected by either rule.
+
 `BEANCOUNT_REVISION` names the git commit a deployment runs, so a client can tell
 which build it is talking to. It is parsed once into `config.revision`
 (`src/config/revision.ts`): the first of `BEANCOUNT_REVISION` and

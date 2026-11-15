@@ -13,6 +13,7 @@ import { z } from "zod";
 import { logger } from "@/shared/logger";
 import { DEFAULT_EXTERNAL_GITEA_HOST, type GiteaConfig } from "@/config/config";
 import { isSelfHost } from "@/config/self-host";
+import { externalGiteaBase } from "@/shared/gitea-utils";
 
 const prLogger = logger.child({ module: "open-pull-request-tool" });
 
@@ -46,19 +47,6 @@ const outputSchema = z.object({
 // Internal Gitea base for host→Gitea API calls (inside the compose network).
 function internalGiteaBase(gitea: GiteaConfig): string {
   return gitea.internalBaseUrl;
-}
-
-// External base for the human-clickable PR URL.
-function externalGiteaBase(gitea: GiteaConfig): string {
-  const isLocal =
-    gitea.hostname === "localhost" ||
-    gitea.hostname === "gitea" ||
-    /^\d{1,3}(\.\d{1,3}){3}$/.test(gitea.hostname);
-  const protocol = isLocal ? "http" : "https";
-  const standardPort = isLocal ? 80 : 443;
-  const portSuffix =
-    gitea.externalHttpPort === standardPort ? "" : `:${gitea.externalHttpPort}`;
-  return `${protocol}://${gitea.hostname}${portSuffix}`;
 }
 
 /**

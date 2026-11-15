@@ -1,6 +1,10 @@
 import type { GiteaConfig } from "@/config/config";
 
-import { generateGiteaUrl } from "./gitea-utils";
+import {
+  generateGiteaUrl,
+  giteaRootFromUser,
+  learnExternalGitHost,
+} from "./gitea-utils";
 
 describe("generateGiteaUrl", () => {
   describe("HTTP URL generation", () => {
@@ -285,5 +289,169 @@ describe("generateGiteaUrl", () => {
       expect(result.httpUrl).toBe("http://localhost:3000/user/repo.git");
       expect(result.sshUrl).toBe("ssh://git@localhost:2222/user/repo.git");
     });
+  });
+});
+
+function managedDefault(): GiteaConfig {
+  return {
+    hostname: "git.beancount.io",
+    internalHostname: "gitea",
+    httpPort: 3000,
+    internalBaseUrl: "http://gitea:3000",
+    externalHttpPort: 443,
+    sshPort: 2222,
+  };
+}
+
+function giteaAnswering(
+  ...answers: Array<{ status: number; body?: unknown } | Error>
+): jest.Mock {
+  const fetchFn = jest.fn();
+  for (const answer of answers) {
+    if (answer instanceof Error) {
+      fetchFn.mockRejectedValueOnce(answer);
+    } else {
+      fetchFn.mockResolvedValueOnce({
+        ok: answer.status >= 200 && answer.status < 300,
+        status: answer.status,
+        json: async () => answer.body,
+      });
+    }
+  }
+  return fetchFn;
+}
+
+const admin = { adminUser: "beancount_admin", adminPassword: "pw" };
+
+describe("SSH address when no Git over SSH is served", () => {
+  it("returns no sshUrl and keeps the HTTP address", () => {
+    const result = generateGiteaUrl(
+      {
+        ...managedDefault(),
+        hostname: "git.example.com",
+        sshUnavailable: true,
+      },
+      "alice/main",
+    );
+    expect(result.sshUrl).toBeNull();
+    expect(result.httpUrl).toBe("https://git.example.com/alice/main.git");
+  });
+});
+
+describe("learnExternalGitHost", () => {
+  it("gives a self-hosted stack with no configured host the address Gitea reports", async () => {
+    const gitea = managedDefault();
+    const fetchFn = giteaAnswering({
+      status: 200,
+      body: {
+        login: "beancount_admin",
+        html_url: "https://beancount-gitea-x1.onbex.co/beancount_admin",
+      },
+    });
+
+    await learnExternalGitHost(gitea, { selfHost: true, ...admin, fetchFn });
+
+    expect(fetchFn).toHaveBeenCalledWith(
+      "http://gitea:3000/api/v1/user",
+      expect.objectContaining({
+        headers: {
+          Authorization: `Basic ${Buffer.from("beancount_admin:pw").toString("base64")}`,
+        },
+      }),
+    );
+    const urls = generateGiteaUrl(gitea, "alice/main");
+    expect(urls.httpUrl).toBe(
+      "https://beancount-gitea-x1.onbex.co/alice/main.git",
+    );
+    expect(urls.sshUrl).toBe(
+      "ssh://git@beancount-gitea-x1.onbex.co:2222/alice/main.git",
+    );
+    expect(JSON.stringify(urls)).not.toContain("git.beancount.io");
+  });
+
+  it("keeps the scheme, port and sub-path Gitea serves on", async () => {
+    const gitea = managedDefault();
+    await learnExternalGitHost(gitea, {
+      selfHost: true,
+      ...admin,
+      fetchFn: giteaAnswering({
+        status: 200,
+        body: {
+          login: "admin",
+          html_url: "http://git.lan:3000/gitea/admin",
+        },
+      }),
+    });
+    expect(generateGiteaUrl(gitea, "alice/main").httpUrl).toBe(
+      "http://git.lan:3000/gitea/alice/main.git",
+    );
+  });
+
+  it("retries while Gitea is starting", async () => {
+    const gitea = managedDefault();
+    const fetchFn = giteaAnswering(new Error("ECONNREFUSED"), {
+      status: 200,
+      body: { login: "admin", html_url: "https://git.example.org/admin" },
+    });
+    await learnExternalGitHost(gitea, {
+      selfHost: true,
+      ...admin,
+      fetchFn,
+      retryDelayMs: 0,
+    });
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(gitea.hostname).toBe("git.example.org");
+  });
+
+  it("refuses to start rather than advertise beancount.io's host", async () => {
+    const gitea = managedDefault();
+    await expect(
+      learnExternalGitHost(gitea, {
+        selfHost: true,
+        ...admin,
+        fetchFn: giteaAnswering(
+          { status: 401 },
+          { status: 200, body: { login: "admin" } },
+        ),
+        attempts: 2,
+        retryDelayMs: 0,
+      }),
+    ).rejects.toThrow(/EXTERNAL_GITEA_HOST_NAME/);
+    expect(gitea.externalBaseUrl).toBeUndefined();
+  });
+
+  it("leaves an explicitly configured host alone", async () => {
+    const gitea = { ...managedDefault(), hostname: "git.example.com" };
+    const before = generateGiteaUrl(gitea, "alice/main");
+    const fetchFn = jest.fn();
+    await learnExternalGitHost(gitea, { selfHost: true, ...admin, fetchFn });
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(generateGiteaUrl(gitea, "alice/main")).toEqual(before);
+    expect(before).toEqual({
+      sshUrl: "ssh://git@git.example.com:2222/alice/main.git",
+      httpUrl: "https://git.example.com/alice/main.git",
+    });
+  });
+
+  it("leaves the managed service alone", async () => {
+    const gitea = managedDefault();
+    const fetchFn = jest.fn();
+    await learnExternalGitHost(gitea, { selfHost: false, ...admin, fetchFn });
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(generateGiteaUrl(gitea, "alice/main")).toEqual({
+      sshUrl: "ssh://git@git.beancount.io:2222/alice/main.git",
+      httpUrl: "https://git.beancount.io/alice/main.git",
+    });
+  });
+});
+
+describe("giteaRootFromUser", () => {
+  it.each([
+    [{ login: "a", html_url: "not a url" }],
+    [{ login: "a", html_url: "ftp://git.example.com/a" }],
+    [{ login: "a", html_url: "https://git.example.com/someone-else" }],
+    [{ login: 1, html_url: "https://git.example.com/1" }],
+  ])("rejects %j", (user) => {
+    expect(giteaRootFromUser(user)).toBeUndefined();
   });
 });

@@ -381,7 +381,9 @@ type Ledger {
   id: String!
   name: String!
   fullName: String!
-  sshUrl: String!
+
+  """SSH clone address. Null when this deployment serves no Git over SSH."""
+  sshUrl: String
   httpUrl: String!
   empty: Boolean!
   private: Boolean!

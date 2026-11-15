@@ -26,6 +26,7 @@ import { SshProxyServer } from "@/features/gitea/ssh/ssh-proxy-server";
 import { SshAuthenticator } from "@/features/gitea/ssh/ssh-authenticator";
 import { trustProxyHops } from "@/server/client-address";
 import { v1FallbackMiddleware } from "@/server/rest/v1-envelope";
+import { learnExternalGitHost } from "@/shared/gitea-utils";
 
 const serverLogger = logger.child({ module: "start-server" });
 
@@ -73,6 +74,14 @@ export async function startServer(): Promise<void> {
 
   // Add metrics middleware for REST API
   app.use(restMetricsMiddleware());
+
+  // Before anything builds a clone URL: a self-hosted stack with no configured
+  // Git host learns its own from Gitea instead of advertising beancount.io's.
+  await learnExternalGitHost(config.gitea, {
+    selfHost: config.selfHost,
+    adminUser: config.favaApi.adminUser,
+    adminPassword: config.favaApi.adminPassword,
+  });
 
   const layers: AppLayers = await buildAppLayers(config);
 

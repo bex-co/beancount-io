@@ -227,7 +227,10 @@ export const ledgerResultSchema = z.object({
   id: z.string(),
   name: z.string(),
   fullName: z.string(),
-  sshUrl: z.string(),
+  sshUrl: z.string().nullable().openapi({
+    description:
+      "SSH clone address. Null when this deployment serves no Git over SSH.",
+  }),
   httpUrl: z.string(),
   empty: z.boolean(),
   private: z.boolean(),

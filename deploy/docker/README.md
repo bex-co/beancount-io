@@ -139,6 +139,14 @@ policy requires byte-for-byte repeatability.
 
 ## Git over SSH (optional)
 
+Ledger clone addresses name `GIT_DOMAIN`: this file sets `EXTERNAL_GITEA_HOST_NAME`
+from it, and an explicit value always wins. (A self-hosted stack that sets none
+learns the address from Gitea's `ROOT_URL` at start; it never uses
+beancount.io's Git host. See `../bex/README.md`, "Where ledger clone addresses
+come from".) With `SELF_HOST=true` and the SSH overlay below off, ledger
+responses carry `sshUrl: null`, and `bea cloud ledger clone` says this
+deployment serves no Git over SSH instead of trying.
+
 Git over HTTPS works by default. To publish SSH, backend-v2 must terminate the
 connection so its write policy applies. It must present Gitea's existing private
 host key; substituting a new key triggers the same client warning as a

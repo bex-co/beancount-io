@@ -118,6 +118,10 @@ export default function LedgerCloneUrlMenu({
   const httpTabId = useId();
   const sshTabId = useId();
   const formatError = useErrorMessage();
+  const { ledgerData } = useLedger();
+  const { httpUrl, sshUrl } = ledgerData;
+  // A deployment that serves no Git over SSH returns no SSH address (w1/m46):
+  // offer only what works there, rather than an address nothing answers.
   const [activeTab, setActiveTab] = useState<string>("ssh");
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<boolean>(false);
@@ -133,8 +137,6 @@ export default function LedgerCloneUrlMenu({
   const [blockedDownloadUrl, setBlockedDownloadUrl] = useState<string | null>(
     null,
   );
-  const { ledgerData } = useLedger();
-
   const { refetch: fetchArchiveUrl } = useQuery<
     GetLedgerArchiveDownloadUrlQuery,
     GetLedgerArchiveDownloadUrlQueryVariables
@@ -168,8 +170,6 @@ export default function LedgerCloneUrlMenu({
     }
   };
 
-  const { httpUrl, sshUrl } = ledgerData;
-
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -195,14 +195,21 @@ export default function LedgerCloneUrlMenu({
 
           {/* Tabs and Input */}
           <div className="p-4 space-y-3">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs
+              value={sshUrl ? activeTab : "https"}
+              onValueChange={setActiveTab}
+            >
+              <TabsList
+                className={`grid w-full ${sshUrl ? "grid-cols-2" : "grid-cols-1"}`}
+              >
                 <TabsTrigger value="https" className="text-xs">
                   <span id={httpTabId}>HTTP</span>
                 </TabsTrigger>
-                <TabsTrigger value="ssh" className="text-xs">
-                  <span id={sshTabId}>SSH</span>
-                </TabsTrigger>
+                {sshUrl && (
+                  <TabsTrigger value="ssh" className="text-xs">
+                    <span id={sshTabId}>SSH</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
               <TabsContent value="https">
                 <CloneUrlInput
@@ -211,27 +218,31 @@ export default function LedgerCloneUrlMenu({
                   labelledBy={`${httpTabId} ${headingId}`}
                 />
               </TabsContent>
-              <TabsContent value="ssh">
-                <CloneUrlInput
-                  url={sshUrl}
-                  copyLabel={t("ledgerEditor.copySshCloneUrl")}
-                  labelledBy={`${sshTabId} ${headingId}`}
-                />
-              </TabsContent>
+              {sshUrl && (
+                <TabsContent value="ssh">
+                  <CloneUrlInput
+                    url={sshUrl}
+                    copyLabel={t("ledgerEditor.copySshCloneUrl")}
+                    labelledBy={`${sshTabId} ${headingId}`}
+                  />
+                </TabsContent>
+              )}
             </Tabs>
           </div>
 
           {/* Footer */}
           <div className="border-t px-4 py-3 space-y-1">
-            <Authenticated>
-              <Link
-                to="/settings/ssh-keys"
-                className="flex items-center gap-2 py-2 px-2 rounded-md hover:bg-accent transition-colors text-sm"
-              >
-                <KeyRound className="h-4 w-4" />
-                <span>{t("ledgerEditor.manageSshKeys")}</span>
-              </Link>
-            </Authenticated>
+            {sshUrl && (
+              <Authenticated>
+                <Link
+                  to="/settings/ssh-keys"
+                  className="flex items-center gap-2 py-2 px-2 rounded-md hover:bg-accent transition-colors text-sm"
+                >
+                  <KeyRound className="h-4 w-4" />
+                  <span>{t("ledgerEditor.manageSshKeys")}</span>
+                </Link>
+              </Authenticated>
+            )}
             <button
               onClick={handleDownloadZip}
               disabled={downloading}

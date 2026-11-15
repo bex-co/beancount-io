@@ -248,8 +248,12 @@ export class Ledger {
   @Field(() => String)
   fullName: string;
 
-  @Field(() => String)
-  sshUrl: string;
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "SSH clone address. Null when this deployment serves no Git over SSH.",
+  })
+  sshUrl: string | null;
 
   @Field(() => String)
   httpUrl: string;

@@ -243,11 +243,19 @@ written down either: services reference each other with `fromService`
 (`host` or `hostport`), and the start commands put the URLs together
 (`SSR_API_URL`, `API_PROXY_URL`, `FAVA_API_URL`, `PUBLIC_URL_FROM`).
 
-`EXTERNAL_GITEA_HOST_NAME` is not set on bex. It only decides the pull-request link the AI assistant returns; on a self-hosted stack that sets none, the link is the address Gitea itself reports for the pull request (built from its own `ROOT_URL`, which its wrapper derives from the address bex gives it), and is left out if Gitea reports none. It never falls back to beancount.io's Git host.
-
 With your own domain you do not need the proxy: give the dashboard and API hosts
 a shared parent, set `AUTH_COOKIE_DOMAIN` to it, and point `VITE_API_URL` at the
 API host.
+
+### Where ledger clone addresses come from
+
+`EXTERNAL_GITEA_HOST_NAME` is not set on bex. A stack's Git address is chosen by one rule, the same on every self-hosted target:
+
+- An explicit `EXTERNAL_GITEA_HOST_NAME` (with `EXTERNAL_GITEA_HTTP_PORT`) wins.
+- Otherwise, with `SELF_HOST=true`, the API asks Gitea at start for the address it serves on (its `ROOT_URL`, which Gitea's wrapper derives from the address bex gives it) and builds every ledger's `httpUrl`, and the AI assistant's pull-request links, from that. If Gitea does not answer within a few minutes, the API stops with an error naming `EXTERNAL_GITEA_HOST_NAME` rather than start with someone else's host.
+- It never falls back to beancount.io's Git host.
+
+bex serves Git over HTTPS only: it has no TCP routing, so `SSH_PROXY_ENABLED` is `false` and ledger responses (REST, GraphQL and MCP alike) carry `sshUrl: null`. `bea cloud ledger clone`, which clones over SSH, refuses such a ledger and says this deployment serves no Git over SSH; the dashboard's clone menu shows only the HTTP address.
 
 ## Things that bit us, so they don't bite you again
 

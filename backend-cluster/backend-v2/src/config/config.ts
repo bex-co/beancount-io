@@ -94,6 +94,21 @@ export interface GiteaConfig {
   externalHttpPort: number;
   /** Port advertised in clone URLs. */
   sshPort: number;
+  /**
+   * The public origin Gitea reported for itself (its ROOT_URL), learned at
+   * start by a self-hosted stack that configured no EXTERNAL_GITEA_HOST_NAME
+   * (`learnExternalGitHost`, which also sets `hostname` to its host). When
+   * set, HTTP clone URLs are built from it instead of `hostname` and
+   * `externalHttpPort`, so a stack never advertises the managed service's Git
+   * host as its own.
+   */
+  externalBaseUrl?: string;
+  /**
+   * True when nothing on this deployment serves Git over SSH: a self-hosted
+   * stack whose SSH proxy is off. Ledgers then carry no `sshUrl`, rather than
+   * an address no listener answers. The managed service is never marked.
+   */
+  sshUnavailable?: boolean;
   /** Where Gitea's SSH listens inside the compose network. */
 }
 
@@ -349,6 +364,8 @@ function giteaInternalBaseUrl(hostname: string, port: number): string {
 const giteaInternalHostname = process.env.GITEA_HOST_NAME || "gitea";
 const giteaHttpPort = parseInt(process.env.GITEA_HTTP_PORT || "3000", 10);
 const environment = getEnvironment(process.env.NODE_ENV);
+const sshProxyEnabled = process.env.SSH_PROXY_ENABLED === "true";
+const sshProxyHostKey = process.env.SSH_PROXY_HOST_KEY || "";
 const dashboardUrl = getOAuthPublicUrl(
   process.env.DASHBOARD_URL,
   "https://beancount.io",
@@ -412,6 +429,9 @@ export const config: AppConfig = {
       10,
     ),
     sshPort: parseInt(process.env.GITEA_SSH_PORT || "2222", 10),
+    // Git over SSH on a self-hosted stack terminates only in the SSH proxy,
+    // which starts only with both switches set (see sshProxy below).
+    sshUnavailable: isSelfHost() && !(sshProxyEnabled && sshProxyHostKey),
   },
 
   /**
@@ -420,13 +440,13 @@ export const config: AppConfig = {
    * would break every existing client with a host-key warning.
    */
   sshProxy: {
-    enabled: process.env.SSH_PROXY_ENABLED === "true",
+    enabled: sshProxyEnabled,
     port: parseInt(process.env.SSH_PROXY_PORT || "2222", 10),
     // OpenSSH private key, PEM-encoded. Must be Gitea's own host key: any
     // other key gives every prior client a host-key-changed warning that is
     // indistinguishable from an attack (ADR 0004). Retrieve it with
     // _infra/print-ssh-host-key.sh.
-    hostKey: process.env.SSH_PROXY_HOST_KEY || "",
+    hostKey: sshProxyHostKey,
   },
   blockeden: {
     accessKey: process.env.BLOCKEDEN_ACCESS_KEY || "",

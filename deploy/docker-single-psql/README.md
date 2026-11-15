@@ -64,6 +64,10 @@ Three one-shot services should finish with exit code 0, in this order:
 Then open `https://<APP_DOMAIN>`, `https://<API_DOMAIN>/api-gateway/`, and
 `https://<GIT_DOMAIN>` as in `../docker/README.md`.
 
+Ledger clone addresses name `GIT_DOMAIN`, which sets `EXTERNAL_GITEA_HOST_NAME`;
+the rule, and why `sshUrl` is null with `SELF_HOST=true` until the SSH overlay
+is on, are in `../docker/README.md`, "Git over SSH".
+
 If startup stalls, the shared server makes the ordering worth checking first:
 
 ```zsh

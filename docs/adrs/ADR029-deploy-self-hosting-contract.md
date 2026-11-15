@@ -82,7 +82,7 @@ Not run: the `bea cloud login` browser flow (the CLI checks used a session token
 
 ## Implementation status
 
-Nothing in the decision is built. `SELF_HOST` sign-up and limits, the cookie fix, the same-origin proxy, runtime public-URL discovery and the smoke script are shipped and were re-verified on 2026-11-09 as described under Evidence. Follow-up work belongs on the board through `/pm`; none is filed by this record.
+Decision 3's first half is built ([w1/m46](../../.pm/w1/done/m46/README.md), 2026-11-14): with `SELF_HOST` on and no `EXTERNAL_GITEA_HOST_NAME`, the API learns its Git address from Gitea's `ROOT_URL` at start (`learnExternalGitHost` in `backend-cluster/backend-v2/src/shared/gitea-utils.ts`) and stops rather than fall back to `git.beancount.io`; a self-hosted stack without the SSH proxy returns `sshUrl: null` on REST, GraphQL and MCP; `bea cloud ledger clone` refuses such a ledger, saying the deployment serves no Git over SSH; and the dashboard's clone menu shows only the HTTP address. Decision 3's second half (`bea` cloning over HTTPS) is not built: it awaits the owner's ruling on `.pm/DO_NOT_DO.md` "No hosted-ledger export without SSH setup". The rest of the decision is not built. `SELF_HOST` sign-up and limits, the cookie fix, the same-origin proxy, runtime public-URL discovery and the smoke script are shipped and were re-verified on 2026-11-09 as described under Evidence. Follow-up work belongs on the board through `/pm`; none is filed by this record.
 
 ## References
 

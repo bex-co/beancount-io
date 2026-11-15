@@ -154,20 +154,21 @@ def ledger_create(
         typer.echo(f"fullName: {single_line(ledger.full_name)}")
         typer.echo(f"private:  {'yes' if ledger.private else 'no'}")
         typer.echo(f"httpUrl:  {single_line(ledger.http_url)}")
-        typer.echo(f"sshUrl:   {single_line(ledger.ssh_url)}")
+        no_ssh = "none (this deployment serves no Git over SSH)"
+        typer.echo(f"sshUrl:   {no_ssh if ledger.ssh_url is None else single_line(ledger.ssh_url)}")
 
     if clone:
         try:
-            manager.check_clone_url(ledger.ssh_url)
+            ssh_url = manager.require_ssh_url(ledger)
             target = directory or manager.default_clone_dir(ledger.name)
-        except manager.UnsafeCloneSource as e:
+        except (manager.UnsafeCloneSource, manager.NoSshCloneUrl) as e:
             raise LedgerError(
                 f"Ledger '{single_line(ledger.full_name)}' was created but was not cloned. {e}", result=ledger.record
             ) from e
         output.note(f"Cloning repository to '{single_line(str(target))}'...")
         try:
             manager.clone_ledger(
-                ledger.ssh_url,
+                ssh_url,
                 target,
                 quiet=ctx.json_output,
                 unattended=ctx.no_input,
@@ -207,14 +208,14 @@ def ledger_clone(
     if directory is not None:
         manager.refuse_occupied_clone_target(directory, nothing="cloned")
     ledger = manager.get_ledger(authenticated_client(), full_name)
-    manager.check_clone_url(ledger.ssh_url)
+    ssh_url = manager.require_ssh_url(ledger)
     target = directory or manager.default_clone_dir(ledger.name)
     manager.refuse_occupied_clone_target(target, nothing="cloned")
     shown_name, shown_target = single_line(ledger.full_name), single_line(str(target))
     output.note(f"Cloning '{shown_name}' to '{shown_target}'...")
     try:
         manager.clone_ledger(
-            ledger.ssh_url,
+            ssh_url,
             target,
             quiet=ctx.json_output,
             unattended=ctx.no_input,
