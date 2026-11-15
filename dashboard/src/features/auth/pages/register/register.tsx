@@ -3,6 +3,7 @@ import { PageSEO } from "@/common/components/seo/page-seo";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useRegisterForm } from "@/features/auth/hooks/use-register-form";
 import { RegisterForm } from "@/features/auth/components/register-form";
+import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
 
 type RegisterPageProps = {
   withDefaultLedger?: boolean;
@@ -20,6 +21,7 @@ export default function RegisterPage({
   onSignedIn,
 }: RegisterPageProps) {
   const { t } = useTranslations();
+  const { selfHost } = useDeploymentInfo();
 
   const { onSubmit, isLoading, serverError, defaultUsername } = useRegisterForm(
     { withDefaultLedger, inviteSrc, inviteBy, onSuccess, onSignedIn },
@@ -71,6 +73,7 @@ export default function RegisterPage({
               isLoading={isLoading}
               serverError={serverError}
               defaultUsername={defaultUsername}
+              showLegalLinks={!selfHost}
             />
           </div>
         </main>

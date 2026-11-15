@@ -49,6 +49,7 @@ describe("AuthResolver", () => {
       validateEmailToken: jest.fn(),
       resetPassword: jest.fn(),
       createSignUpSession: jest.fn(),
+      isSignUpOpen: jest.fn(),
       finishSignupSession: jest.fn(),
       verifySignUpOtp: jest.fn(),
       getSignupOtpSession: jest.fn(),
@@ -664,5 +665,33 @@ describe("AuthResolver", () => {
       );
       expect((mockContext.koaCtx as any).cookies.set).not.toHaveBeenCalled();
     });
+  });
+
+  describe("deploymentInfo", () => {
+    it("says a managed deployment is not self-hosted and takes sign-ups", async () => {
+      mockAuthService.isSignUpOpen.mockResolvedValue(true);
+      mockContext.config = { env: "development", selfHost: false } as never;
+
+      expect(await resolver.deploymentInfo(mockContext)).toEqual({
+        selfHost: false,
+        signUpOpen: true,
+      });
+    });
+
+    it.each([
+      [true, true],
+      [false, false],
+    ])(
+      "reports a self-host whose sign-up open state is %p as %p",
+      async (open, expected) => {
+        mockAuthService.isSignUpOpen.mockResolvedValue(open);
+        mockContext.config = { env: "development", selfHost: true } as never;
+
+        expect(await resolver.deploymentInfo(mockContext)).toEqual({
+          selfHost: true,
+          signUpOpen: expected,
+        });
+      },
+    );
   });
 });

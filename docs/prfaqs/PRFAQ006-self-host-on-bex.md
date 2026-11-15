@@ -2,11 +2,13 @@
 
 Status: Proposed. This is the target experience, written as if released. Capabilities marked **(planned)** do not exist yet; they are the decisions of [ADR 0029](../adrs/ADR029-deploy-self-hosting-contract.md). Everything else was exercised on a live bex workspace on 2026-11-09.
 
-Date: 2026-11-09
+Date: 2026-11-09 (updated 2026-11-14)
 
 Scope: someone who wants their own Beancount.io, for themselves or a small team, with no server to look after. Docker and local development are covered by their own READMEs.
 
 Evidence baseline: `main` at `bfe5fdddc`; one live run of the root Blueprint, all resources deleted afterwards.
+
+Changed in code after that run (2026-11-14), **not yet run on a live bex**: sign-up closes once the first account exists; Gitea is a private service; `SELF_HOST` accepts `true`, `1`, `yes` and `on`; the sign-up page no longer shows the hosted service's terms; `bea ask` uses `OPENAI_API_KEY`. Each is marked **(not yet run on bex)** below.
 
 ## Press release
 
@@ -18,7 +20,7 @@ Evidence baseline: `main` at `bfe5fdddc`; one live run of the root Blueprint, al
 
 Beancount.io is open source, and today it became a one-click install. From the repository, press **Deploy to bex.co**, pick the workspace that should own it, review the plan, and apply. There is nothing to fill in: every secret is generated, the services find each other, and the address your dashboard gets is the address it uses everywhere.
 
-When the build finishes, open the dashboard's URL and create an account. No verification email, no plan limits. Install the `bea` command line, point it at your address with two environment variables, and the same ledger is reachable from your terminal. Coding agents connect through the built-in MCP server, which advertises your address as its issuer, never ours.
+When the build finishes, open the dashboard's URL and create an account. No verification email, no plan limits. Sign-up closes behind that first account, so make it straight away. Install the `bea` command line, point it at your address with two environment variables, and the same ledger is reachable from your terminal. Coding agents connect through the built-in MCP server, which advertises your address as its issuer, never ours.
 
 Your ledger is a plain-text file in a Git repository on a disk in your workspace. **(planned)** Clone links point at your deployment, so `bea cloud ledger clone` and plain `git clone` over HTTPS work against your own server.
 
@@ -28,7 +30,7 @@ Optional pieces stay optional. Add an Anthropic or OpenAI key for receipt scanni
 
 ### 1. What do I get, and what does it cost?
 
-The dashboard (your one public address), the API, the ledger service (private), Gitea on a 10 GB disk, one managed Postgres and one Key Value store. bex's preview showed about **33 USD a month** at the current Starter plans, billed to your workspace. Delete the resources to stop it. The software is MIT-licensed.
+The dashboard (the address you use), the API (it also has an address of its own, see 8), the ledger service and Gitea (both private, with no public address; Gitea keeps its repositories on a 10 GB disk), one managed Postgres and one Key Value store. bex's preview showed about **33 USD a month** at the current Starter plans, billed to your workspace. Delete the resources to stop it. The software is MIT-licensed.
 
 ### 2. How do I install it?
 
@@ -41,7 +43,7 @@ You are asked for nothing. If a service shows a failed rollout, trigger a deploy
 
 ### 3. Who can sign up?
 
-Anyone who can reach the URL. The stack is built for your own users and does not verify email addresses, so put it behind your own access control if that matters.
+The first person to do it, **(not yet run on bex)**. The stack puts no plan limits on anyone and never proves an email address, so it takes sign-ups only until its first account exists: after that the API refuses `signUp`, and the sign-in page and `/auth/sign-up` stop offering it. Sign up as soon as the deploy is up; until you do, anyone who finds the address could be first. There is no way yet to add a second account; deleting the only account reopens sign-up.
 
 ### 4. How do I use the command line?
 
@@ -54,7 +56,7 @@ bea cloud ledger list
 
 On 2026-11-09 `bea cloud status` and `bea cloud ledger list` worked this way with a token in `BEA_TOKEN`; the browser sign-in (`bea cloud login`) was not run.
 
-Both variables name the dashboard: it forwards `/api-gateway/` to the API, so your deployment has a single public address. **(planned)** `bea cloud ledger clone` then clones from your own Git host over HTTPS. Today it follows the SSH URL the API reports, which on a bex deployment names the hosted service's Git host and fails.
+Both variables name the dashboard: it forwards `/api-gateway/` to the API, so the CLI needs only that one address. **(planned)** `bea cloud ledger clone` then clones over HTTPS from your own deployment, through the API's Git proxy (Gitea itself has no public address). Today it follows the SSH URL the API reports, which on a bex deployment names the hosted service's Git host and fails.
 
 ### 5. Can I use the mobile app?
 
@@ -66,10 +68,11 @@ The App Store and Google Play apps keep a server-address override for self-hoste
 | --- | --- | --- |
 | Receipt and attachment uploads | `TEMP_ASSETS_AWS_S3_*`, `PERM_ASSETS_AWS_S3_*` | The call fails with a configuration error naming these variables. |
 | AI: receipt scan, categories, assistant | `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` | The call fails with a configuration error naming these variables. |
+| `bea ask` | `OPENAI_API_KEY` (and optionally `OPENAI_BASE_URL`), **(not yet run on bex)** | The call fails with a configuration error naming `OPENAI_API_KEY`. |
 | Password reset and other mail | `SEND_GRID_API_KEY` | See the next question. |
 | Bank connections | `PLAID_*` | Not tested on a self-hosted stack. |
 
-Add variables in the bex dashboard's Environment tab; they survive Blueprint syncs.
+Add variables in the bex dashboard's Environment tab; they survive Blueprint syncs. No plan limits apply, so the assistant has no monthly token cap: add a model key after you have signed up, once sign-up has closed.
 
 ### 7. I forgot my password and mail isn't set up. What now?
 
@@ -77,7 +80,7 @@ Today the page says "Email sent!" and nothing arrives, which is wrong. **(planne
 
 ### 8. Is the admin API exposed?
 
-The API service has its own public address and serves `/api/admin/*` there, guarded by the generated `ADMIN_TOKEN` (find it in the API service's environment). Treat that token like a root credential. The dashboard address does not forward `/api/admin`.
+The API service has its own public address and serves `/api/admin/*` there, guarded by the generated `ADMIN_TOKEN` (find it in the API service's environment). Treat that token like a root credential. The dashboard address does not forward `/api/admin`. Of the six services, only the dashboard and the API have a public address; the ledger service and Gitea are private **(Gitea: not yet run on bex)**.
 
 ### 9. How do I update it?
 
@@ -93,7 +96,20 @@ The books are Git repositories on the Gitea disk and rows in the managed Postgre
 
 ### 12. Is my data private?
 
-Yes. Nothing leaves your workspace unless you configure an AI provider or a mail provider, and then only what those features send. Your own ledger is a text file you can read and diff.
+Your books stay on your disk and in your database. Nothing is sent to us and there is no analytics: the browser analytics script is included only when a build sets a measurement ID, and the Blueprint's build does not. A few things do leave the workspace, and these are all of them that we know of:
+
+| What leaves | Where it goes | When |
+| --- | --- | --- |
+| The first 5 characters of the SHA-1 of a new password | api.pwnedpasswords.com | Every sign-up and password change. It is a breach check that tells the service neither the password nor the account; if the service cannot be reached, sign-up carries on. It cannot be switched off today. |
+| Your prompts, and the ledger text, receipts or transactions they involve | The model provider you configured (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`) | Only when someone uses an AI feature or `bea ask`. |
+| The recipient and the message | SendGrid | Only with `SEND_GRID_API_KEY`: password recovery, and a welcome mail whose links name beancount.io **(planned: use your own address)**. |
+| Receipt and attachment files | The S3 bucket you configure | Only with `TEMP_ASSETS_AWS_S3_*` and `PERM_ASSETS_AWS_S3_*`. |
+| An MD5 hash of the user's email address | gravatar.com | Whenever a page shows the avatar of a user who has not uploaded one: the browser fetches their Gravatar. |
+| A request for the blog and changelog feeds (a language, nothing about the user) | beancount.io | When the API builds a user's home feed. |
+| A request for a price feed | beancount.io | Only if a ledger `include`s a managed price URL such as `https://beancount.io/prices/BTC-USD`. |
+| Bank connection data | Plaid | Only with `PLAID_*`; not tested on a self-hosted stack. |
+
+Your own ledger is a text file you can read and diff.
 
 ## Internal FAQ
 
@@ -108,6 +124,7 @@ It is the only target with zero operator inputs, and the platform is ours to imp
 - The self-host checklist passes after every deploy (decision 6).
 - A documented backup and restore for the bex deployment exists.
 - bex retries a failed rollout, or the README keeps the caveat.
+- The closing of sign-up, the private Gitea and `bea ask` with `OPENAI_API_KEY` have been run on a live bex, and there is a way to add a second account.
 
 ### What did the live run find?
 
@@ -115,4 +132,4 @@ Sign-up, tier, discovery documents, CLI access and the configuration errors work
 
 ### What is not verified?
 
-The mobile app, Git over HTTPS with credentials, a redeploy with data on the disk, backup and restore, a custom domain, Plaid, and mail delivery with a real key.
+The mobile app, Git over HTTPS with credentials, a redeploy with data on the disk, backup and restore, a custom domain, Plaid, and mail delivery with a real key. Since the live run, and also not run on bex: sign-up closing after the first account, Gitea as a private service (whether bex accepts `host` for a private service and a disk on it, and whether changing an existing Gitea service from web to private keeps its disk), and `bea ask` through `OPENAI_API_KEY`.

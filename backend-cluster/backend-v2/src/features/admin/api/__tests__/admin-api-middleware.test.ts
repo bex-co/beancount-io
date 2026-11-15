@@ -1,4 +1,5 @@
 import Router from "@koa/router";
+import * as secureStringEqual from "@/features/auth/utils/secure-string-equal";
 import { UnauthenticatedError } from "@/shared/errors";
 import { apiTokenRequired } from "../admin-api-middleware";
 import { errorResponseSchema } from "../admin-error-schema";
@@ -77,6 +78,45 @@ describe("apiTokenRequired", () => {
     await apiTokenRequired(mockCtx, next);
 
     expect(next).toHaveBeenCalled();
+  });
+
+  describe("token comparison", () => {
+    beforeEach(() => {
+      if (global.__mockAdminMiddlewareConfig__) {
+        global.__mockAdminMiddlewareConfig__.adminToken = "correct-token";
+      }
+    });
+
+    it.each([
+      ["a missing header", undefined],
+      ["an empty header", ""],
+      [
+        "a longer token that starts with the real one",
+        "correct-token-and-more",
+      ],
+      ["a shorter prefix of the real one", "correct-tok"],
+      ["a repeated header", ["correct-token", "correct-token"]],
+    ])("rejects %s", async (_label, header) => {
+      if (header !== undefined) mockCtx.headers["x-admin-token"] = header;
+      const next = jest.fn();
+
+      await expect(apiTokenRequired(mockCtx, next)).rejects.toThrow(
+        UnauthenticatedError,
+      );
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it("compares in constant time, through the shared helper", async () => {
+      // `!==` returns at the first differing byte; the helper hashes both sides
+      // first. Pin the route, so a later edit cannot quietly go back.
+      const compare = jest.spyOn(secureStringEqual, "secureStringEqual");
+      mockCtx.headers["x-admin-token"] = "correct-token";
+
+      await apiTokenRequired(mockCtx, jest.fn());
+
+      expect(compare).toHaveBeenCalledWith("correct-token", "correct-token");
+      compare.mockRestore();
+    });
   });
 });
 

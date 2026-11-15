@@ -82,7 +82,7 @@ def test_rate_limit_and_server_errors_get_their_documented_sentences(tmp_bean_fi
 
 def test_an_unconfigured_model_proxy_names_what_to_set(tmp_bean_file: Path, logged_in: None) -> None:
     """A stack without the proxy key answers 503 CONFIGURATION_ERROR: no "server error" (ADR029 D5)."""
-    hint = "Set BLOCKEDEN_ACCESS_KEY (see .env.example)"
+    hint = "Set OPENAI_API_KEY (see .env.example)"
     body = {
         "ok": False,
         "error": {

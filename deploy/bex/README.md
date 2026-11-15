@@ -15,9 +15,9 @@ Nothing is created until you approve the preview.
 > Blueprint created from this link has no push webhook, so later updates are
 > manual ([Rolling out a change](#rolling-out-a-change)).
 
-- **What you get:** the dashboard (the one public address), the API, the ledger
-  service (private), Gitea on a 10 GB disk, one managed Postgres and one Key
-  Value. Sign-up needs no email step and no plan limits apply
+- **What you get:** the dashboard (the address you use and share), the API, the
+  ledger service and Gitea (both private: no public address), Gitea's 10 GB disk,
+  one managed Postgres and one Key Value. Sign-up needs no email step and no plan limits apply
   ([`SELF_HOST`](#self-hosting-no-verification-page-no-plan-limits)).
 - **What it costs:** bex's preview shows about **33 USD a month** at the current
   Starter plans, billed to your workspace. Delete the resources to stop it.
@@ -48,12 +48,28 @@ path explicitly, or rename the file to `render.yaml`.
 | `ledger` | `beancount-ledger` (pserv) | no public port, matching the compose invariant |
 | `postgres-backend` | `beancount-backend-db` (managed Postgres) | |
 | `redis` | `beancount-cache` (managed Key Value) | `noeviction` — it holds auth tokens |
-| `gitea` | `beancount-gitea` (web + 10 GB disk) | bare repos need a filesystem |
+| `gitea` | `beancount-gitea` (pserv + 10 GB disk) | bare repos need a filesystem; private, only the API and the ledger reach it |
 | `postgres` (Gitea's) | a second schema `gitea` in `beancount-backend-db` | one Postgres instance in total |
 
 **Gitea runs on a persistent disk.** bex supports one disk per paid web/private
 service (see the persistent-disks page), at the cost of a single instance and a
-stop-then-start deploy. Git-over-SSH is off (no TCP routing); HTTPS only.
+stop-then-start deploy. Git-over-SSH is off (no TCP routing).
+
+**Gitea is a private service.** It has no public address: its login page, its
+API and its public pages are not on the internet, and only the API and the
+ledger service reach it, by its internal address. Git over HTTP is the job of
+the API's own Git proxy (`backend-v2` `git-proxy-handler.ts`), which
+authenticates a request before it forwards it to Gitea. The clone address the
+API reports is learned from Gitea's own `ROOT_URL` (see
+[Where ledger clone addresses come from](#where-ledger-clone-addresses-come-from)),
+and a private Gitea's is a loopback one, so cloning from your own deployment
+is not wired up yet
+([ADR 029](../../docs/adrs/ADR029-deploy-self-hosting-contract.md), decision 3).
+There is no Gitea web page to
+open, by design: ledgers are used through the dashboard, `bea` and the API. A
+private service has no `RENDER_EXTERNAL_URL`, so Gitea keeps its default
+`ROOT_URL` (`http://localhost:3000/`), and any link Gitea builds for itself
+(`html_url`, `clone_url`) is not one a browser can open.
 `deploy/bex/gitea/` wraps the stock image so the first boot also creates the
 backend's admin account. Gitea connects as the instance's single owner role,
 because bex cannot create a second one; isolation from the backend is by
@@ -108,8 +124,10 @@ is not enough:
 
 ## Check a deployment
 
-Open the dashboard service's URL and sign up, or run the smoke test, which does
-the same in a real browser and cleans up after itself:
+Open the dashboard service's URL and sign up (that account is the stack's
+first, and sign-up closes behind it), or run the smoke test, which does the same
+in a real browser and cleans up after itself. Run it on a fresh deploy, before
+anyone has signed up:
 
 ```zsh
 npm i playwright-core            # once, wherever you run it (this package does not depend on it)
@@ -123,8 +141,9 @@ page, that the browser keeps an HttpOnly, Secure cookie for that host, that a
 reload keeps the session, that a ledger can be created (which exercises the
 ledger service and Gitea), that a second ledger is allowed (no plan limit), and
 that the page logged no errors. It then deletes the account, unless you pass
-`--keep`. On a stack that verifies email it reports "skipped" instead of failing,
-unless you pass `--require-self-host`. Exit code 0 means passed or skipped, 1 a
+`--keep`. On a stack that verifies email, or one that has already closed sign-up
+because it has an account, it reports "skipped" instead of failing (the first
+only unless you pass `--require-self-host`). Exit code 0 means passed or skipped, 1 a
 check failed, 2 it could not run.
 
 ## After the first deploy
@@ -145,9 +164,9 @@ Environment tab (an environment variable you add there is kept across syncs):
 
 | variable | what it enables |
 |---|---|
-| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | AI features; with neither, they fail with "LLM is not configured". `LLM_MODEL` / `LLM_FALLBACK_MODEL` override the models. Never set `ANTHROPIC_BASE_URL` to an empty string |
+| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | AI features; with neither, they fail with "LLM is not configured". `LLM_MODEL` / `LLM_FALLBACK_MODEL` override the models. Never set `ANTHROPIC_BASE_URL` or `OPENAI_BASE_URL` to an empty string |
+| `OPENAI_API_KEY` (and optionally `OPENAI_BASE_URL`) | `bea ask`: its model proxy forwards to OpenAI with this key. With none it answers "Model proxy is not configured. Set OPENAI_API_KEY." |
 | `TEMP_ASSETS_AWS_S3_*`, `PERM_ASSETS_AWS_S3_*` (`BUCKET`, `ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`) | receipt and attachment uploads |
-| `BLOCKEDEN_ACCESS_KEY` | metering for the `bea ask` model proxy |
 | `SEND_GRID_API_KEY` | mail: password recovery and, if you turn `SELF_HOST` off, sign-up codes |
 
 ## Self-hosting: no verification page, no plan limits
@@ -164,16 +183,50 @@ still fails instead of opening up. With it on:
 - **Every plan limit is lifted.** Everyone resolves to the top tier: unlimited
   ledgers, collaborators, directives and AI-assistant tokens, and billing is
   never asked for a user's plan.
+- **Sign-up closes once the first account exists.** With no verification and no
+  limits, an open door would let anyone who finds the address use your disk and
+  your model key. Afterwards `signUp` answers `FORBIDDEN`, the sign-in page
+  offers no "Sign up", and `/auth/sign-up` sends the visitor to sign in. The
+  first account is whoever signs up first, so **sign up as soon as the deploy
+  is up**. There is no way yet to add a second account; deleting the only
+  account reopens sign-up.
+- The sign-up page leaves out the hosted service's Terms and Privacy Policy
+  line: those do not bind a stack its own operator runs.
 - The email address is **not** proven to belong to the person signing up, and
   forgot-password and other mail still do not work without `SEND_GRID_API_KEY`:
   the forgot-password page says the server cannot send email, and you restore
   access as described in [A user forgot their password](#a-user-forgot-their-password).
 - The API logs a warning at boot.
 
-Anyone who can reach the URL can register, so put it behind your own access
-control if that matters. To go back to a managed setup, set `SELF_HOST` to
+The value is read forgivingly: `true`, `1`, `yes`, `y` and `on` mean on, in any
+case; unset, empty, `false`, `0`, `no`, `n` and `off` mean off. Anything else
+(`ture`, `enabled`) is treated as off, and the API says so in its boot log. To
+go back to a managed setup, set `SELF_HOST` to
 `"false"` (an omitted env var is kept, so removing the line from `bex.yaml`
 alone does not turn it off) and set `SEND_GRID_API_KEY`.
+
+### Upgrading a stack that is already running
+
+Read this before you sync a newer Blueprint into a stack that holds data. Four
+things behave differently:
+
+- **Sign-up closes.** A stack that already has any account stops taking
+  sign-ups: `signUp` answers `FORBIDDEN` and the sign-in page drops "Sign up".
+  Existing accounts keep working. There is no way yet to add another account.
+- **More `SELF_HOST` values count as on.** Only `true` used to; now `1`, `yes`,
+  `y` and `on` do too. A stack that had one of those set was running as a
+  managed deployment (email verification, plan limits) and becomes a self-host,
+  which also closes sign-up once it has an account. Set `"false"` to keep the
+  old behavior. The API's boot log says what it read.
+- **`bea ask` needs `OPENAI_API_KEY`.** Its model proxy no longer goes through
+  BlockEden, so `BLOCKEDEN_ACCESS_KEY` is ignored. Without an OpenAI key it
+  answers "Model proxy is not configured. Set OPENAI_API_KEY."
+- **Gitea changes from a web service to a private one.** Whether bex updates
+  `beancount-gitea` in place or replaces it, and whether its disk survives a
+  replacement, has **not** been checked. The repositories live on that disk, so
+  until you know what bex will do, do not sync this change into a stack whose
+  repositories you cannot afford to lose. No backup procedure is documented here
+  yet.
 
 ## A user forgot their password
 
@@ -250,8 +303,11 @@ written into `bex.yaml`. The options considered:
 It only acts when `PUBLIC_URL_FROM` is set. Anything you set yourself is kept,
 so a custom domain works by setting `DASHBOARD_URL` (the rest follows from it).
 If the address cannot be learned the container exits instead of starting with
-the API's built-in default, which is beancount.io's own address. Gitea does the
-same for itself in its entrypoint (`ROOT_URL` and `DOMAIN` from its own address).
+the API's built-in default, which is beancount.io's own address. Gitea has no
+public address on bex (it is a private service), so its entrypoint derives
+`ROOT_URL` and `DOMAIN` from `RENDER_EXTERNAL_URL` only where a platform sets
+one, for example if you make it a web service, and says in its log which case it
+is in.
 
 Internal addresses get the same treatment. bex builds a service's internal
 address from its slug (`beancount-dashboard-496p:3000`), not its name, and the
@@ -268,11 +324,18 @@ API host.
 
 `EXTERNAL_GITEA_HOST_NAME` is not set on bex. A stack's Git address is chosen by one rule, the same on every self-hosted target:
 
-- An explicit `EXTERNAL_GITEA_HOST_NAME` (with `EXTERNAL_GITEA_HTTP_PORT`) wins.
-- Otherwise, with `SELF_HOST=true`, the API asks Gitea at start for the address it serves on (its `ROOT_URL`, which Gitea's wrapper derives from the address bex gives it) and builds every ledger's `httpUrl`, and the AI assistant's pull-request links, from that. If Gitea does not answer within a few minutes, the API stops with an error naming `EXTERNAL_GITEA_HOST_NAME` rather than start with someone else's host.
+- An explicit `GIT_PUBLIC_URL` wins: the address users clone from, with no trailing path to a repository (`https://<api address>/git`). Every ledger's `httpUrl` is built on it.
+- Otherwise an explicit `EXTERNAL_GITEA_HOST_NAME` (with `EXTERNAL_GITEA_HTTP_PORT`) names a public Gitea, as the Docker targets do.
+- Otherwise, with `SELF_HOST=true`, the API asks Gitea at start for the address it serves on (its `ROOT_URL`, which Gitea's wrapper derives from the public address the platform gives it, if it has one) and builds every ledger's `httpUrl`, and the AI assistant's pull-request links, from that. If Gitea does not answer within a few minutes, the API stops with an error naming `EXTERNAL_GITEA_HOST_NAME` rather than start with someone else's host.
 - It never falls back to beancount.io's Git host.
 
-bex serves Git over HTTPS only: it has no TCP routing, so `SSH_PROXY_ENABLED` is `false` and ledger responses (REST, GraphQL and MCP alike) carry `sshUrl: null`. `bea cloud ledger clone`, which clones over SSH, refuses such a ledger and says this deployment serves no Git over SSH; the dashboard's clone menu shows only the HTTP address.
+**On bex the API sets `GIT_PUBLIC_URL` itself.** Gitea is a private service, so it has no address a client can open; users clone through the API's own Git proxy instead. The API's start command builds `GIT_PUBLIC_URL` from the address the platform gives the API service (`RENDER_EXTERNAL_URL`, the variable the dashboard already reads for its own address) and `/git`, where the proxy listens, so a ledger's clone address is `https://<api address>/git/<owner>/<repo>.git`. The path prefix matters: the hosted service reaches the same proxy through a Caddy rewrite to `/git{uri}`, which bex has no equivalent of. The dashboard's address does not forward `/git/*`, so the clone address names the API's. Git asks for a username and password: the account's email address and its password. A value you set yourself in the Environment tab is kept (for example behind a custom domain); with the variable unset and the platform giving no address, the API falls back to asking Gitea, which on bex yields the dead `http://localhost:3000/…` address described below.
+
+The AI assistant leaves out its pull-request link here: that link is a page of Gitea's own, and Gitea has no public address, while the proxy forwards git's requests and nothing else.
+
+bex serves Git over HTTPS only: it has no TCP routing (nor does Render, whose public ports are HTTP(S) alone), so `SSH_PROXY_ENABLED` is `false` and ledger responses (REST, GraphQL and MCP alike) carry `sshUrl: null`. `bea cloud ledger clone`, which clones over SSH, refuses such a ledger and says this deployment serves no Git over SSH; the dashboard's clone menu shows only the HTTP address. Clone with `git clone <httpUrl>` instead.
+
+**Not yet run on a live bex.** The clone address, the proxy behind the platform's ingress (request size and idle timeouts for a large push, how many proxies sit in front for the per-address rate limit, `TRUSTED_PROXY_HOPS`) and `RENDER_EXTERNAL_URL` being set for the API service are all unverified there. If the platform gives the API no address, the clone address falls back to the one Gitea reports, which is `http://localhost:3000/<owner>/<repo>.git` here (Gitea's `ROOT_URL` stays at its default when it has no public address); set `GIT_PUBLIC_URL` yourself in that case. Decision 3 in [ADR 029](../../docs/adrs/ADR029-deploy-self-hosting-contract.md) has the reasoning.
 
 To clone over HTTPS, use any username and a personal access token as the password, minted in the dashboard under Settings → API keys (`/settings/api-keys`). The account password still works for now, with a `remote:` hint to switch: backend-v2's `gitHttp.passwordAuth` ships as `warn`. It lives in `backend-cluster/backend-v2/src/config/config.ts` as `allow`, `warn`, or `deny`, and is not an environment variable, so refusing passwords is a code change and a redeploy. A Git client that keeps offering an old password is cleared with `printf 'protocol=https\nhost=<git host>\n\n' | git credential reject`, the host's Keychain item on macOS, or its line in `~/.git-credentials`.
 

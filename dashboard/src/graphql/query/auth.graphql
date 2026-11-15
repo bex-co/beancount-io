@@ -125,6 +125,13 @@ mutation ResetPassword($token: String!, $newPassword: String!) {
   }
 }
 
+query DeploymentInfo {
+  deploymentInfo {
+    selfHost
+    signUpOpen
+  }
+}
+
 mutation SignUp(
   $email: String!
   $password: String!

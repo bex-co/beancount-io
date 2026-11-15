@@ -8,6 +8,7 @@ import { getSafeRedirectPath } from "@/common/lib/auth/auth";
 import { hardNavigate } from "@/common/lib/navigation/hard-navigate";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLoginForm } from "@/features/auth/hooks/use-login-form";
+import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { SignInRecovery } from "@/features/auth/components/sign-in-recovery";
 import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const search = useSearch({ from: "/auth/login/" });
   const { t } = useTranslations();
   const client = useApolloClient();
+  const { signUpOpen } = useDeploymentInfo();
   const [recoveryEmail, setRecoveryEmail] = useState<string>();
   const recovering = Boolean(search.recovery) || recoveryEmail !== undefined;
   const safeNext = getSafeRedirectPath(search.next);
@@ -98,6 +100,7 @@ export default function LoginPage() {
               isLoading={isLoading}
               serverError={serverError}
               onRecoveryClick={isRateLimited ? setRecoveryEmail : undefined}
+              showSignUpLink={signUpOpen}
             />
           )}
         </div>

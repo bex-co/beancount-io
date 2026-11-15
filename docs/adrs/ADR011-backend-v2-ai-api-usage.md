@@ -23,12 +23,11 @@ flowchart TB
   subgraph paths["provider paths"]
     A["Path A — sandbox harness\nClaude Code in Cloudflare Sandbox\n(sandbox-agent-workflow.ts)"]
     B["Path B — fallback chain\ncreateFallbackLanguageModel\nAnthropic primary → OpenAI fallback"]
-    C["Path C — raw proxy\nhard-coded BlockEden URL"]
+    C["Path C — raw proxy\nOPENAI_BASE_URL, default api.openai.com/v1"]
   end
 
   anthropic["api.anthropic.com"]
   openai["api.openai.com"]
-  blockeden["api.blockeden.xyz\n(key in URL path)"]
 
   ask --> A
   agent --> B
@@ -39,14 +38,14 @@ flowchart TB
   A -->|"ANTHROPIC_API_KEY or\nANTHROPIC_AUTH_TOKEN\nforwarded into sandbox"| anthropic
   B -->|"ANTHROPIC_API_KEY set → direct"| anthropic
   B -->|"OPENAI_API_KEY set → direct"| openai
-  C -->|"always BLOCKEDEN_ACCESS_KEY,\nignores direct keys"| blockeden
+  C -->|"OPENAI_API_KEY as the bearer,\nignores ANTHROPIC_API_KEY"| openai
 ```
 
-**Path A — sandbox harness** (`src/features/ai-agent/workflow/sandbox-agent-workflow.ts`, route `POST /api-gateway/sandbox-agent` in `sandbox-agent-route.ts`). Runs Claude Code inside a Cloudflare Sandbox. Anthropic only. Credentials are the `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` env vars forwarded into the sandbox via `credentialEnv`, with `ANTHROPIC_BASE_URL` / `ANTHROPIC_MODEL` / `ANTHROPIC_SMALL_FAST_MODEL` forwarded non-secret so local stacks can point at an Ollama-style server. Never touches `BLOCKEDEN_ACCESS_KEY`.
+**Path A — sandbox harness** (`src/features/ai-agent/workflow/sandbox-agent-workflow.ts`, route `POST /api-gateway/sandbox-agent` in `sandbox-agent-route.ts`). Runs Claude Code inside a Cloudflare Sandbox. Anthropic only. Credentials are the `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` env vars forwarded into the sandbox via `credentialEnv`, with `ANTHROPIC_BASE_URL` / `ANTHROPIC_MODEL` / `ANTHROPIC_SMALL_FAST_MODEL` forwarded non-secret so local stacks can point at an Ollama-style server. Never touches `OPENAI_API_KEY`.
 
 **Path B — fallback chain** (`src/features/llm/utils/fallback-language-model.ts`, wrapped by `LLMClient`). An Anthropic-primary → OpenAI-fallback `LanguageModel` for the Vercel `ai` SDK, each provider constructed only when its direct key is set. `doGenerate`/`doStream` try providers in order and throw only when the last one fails non-retriably. Consumers: `parseReceipt`, `parseFile`, `suggestCategories` (`llm-service.ts`), the three Plaid AI call sites (`plaid-item-service.ts`), the liveness probe (`llm-probe.ts`), and `SelfHostedAgentHandler` behind `POST /api-gateway/agent` — which is the route the **mobile agent screen** calls (ADR 0002; `mobile/src/screens/agent-screen/use-agent-chat.ts`).
 
-**Path C — raw proxy** (`invokeOpenAI` in `llm-service.ts`, route `POST /api-gateway/ai/openai/chat/completions` in `openai-chat-completions-route.ts`). An OpenAI-compatible request body passed through to a hard-coded BlockEden gateway URL; direct keys are never consulted. Its one consumer is `bea ask`'s quota-metered endpoint. The Anthropic twin of this proxy had no first-party caller and appeared in no public contract, so it was deleted together with its `ai.anthropicMessages` verb — a deliberate product removal of a dead operation, not a parity-gap adjustment.
+**Path C — raw proxy** (`invokeOpenAI` in `llm-service.ts`, route `POST /api-gateway/ai/openai/chat/completions` in `openai-chat-completions-route.ts`). An OpenAI-compatible request body passed through to `${OPENAI_BASE_URL}/chat/completions` (default `https://api.openai.com/v1`) with `OPENAI_API_KEY` as the bearer; `ANTHROPIC_API_KEY` is never consulted. Until 2026-11-14 the upstream was a hard-coded BlockEden gateway URL keyed by `BLOCKEDEN_ACCESS_KEY`, which a self-hosted stack has no account for, so `bea ask` could not work there; that variable no longer exists. Its one consumer is `bea ask`'s quota-metered endpoint. The Anthropic twin of this proxy had no first-party caller and appeared in no public contract, so it was deleted together with its `ai.anthropicMessages` verb — a deliberate product removal of a dead operation, not a parity-gap adjustment.
 
 ### The 2026-09-07 outage that motivated this document
 
@@ -63,15 +62,15 @@ The last provider's non-retriable error was masked to `INTERNAL_SERVER_ERROR` on
 
 ### D1 — The three paths are named and closed
 
-Path A (sandbox harness), Path B (fallback chain via `LLMClient` / `createFallbackLanguageModel`), Path C (raw BlockEden proxy, OpenAI-compatible only). A new AI feature must state which path it uses; the default is Path B through `LLMClient`. Adding a fourth path — or a call site that constructs its own provider client — requires amending this ADR. `fallback-language-model.ts` is the only file in `src/` that constructs a provider client. This is what makes "which features die when credential X dies" answerable from documentation instead of a production incident.
+Path A (sandbox harness), Path B (fallback chain via `LLMClient` / `createFallbackLanguageModel`), Path C (raw OpenAI-compatible proxy). A new AI feature must state which path it uses; the default is Path B through `LLMClient`. Adding a fourth path — or a call site that constructs its own provider client — requires amending this ADR. `fallback-language-model.ts` is the only file in `src/` that constructs a provider client. This is what makes "which features die when credential X dies" answerable from documentation instead of a production incident.
 
 ### D2 — Credential resolution is per-path and deliberately asymmetric
 
 | Path | Reads | Ignores | Upstream when unset |
 |---|---|---|---|
-| A | `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL` (forwarded into sandbox) | `BLOCKEDEN_ACCESS_KEY`, `OPENAI_API_KEY` | none — sandbox agent fails |
-| B | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` (direct, per provider) | `ANTHROPIC_AUTH_TOKEN`, `BLOCKEDEN_ACCESS_KEY` | none — calls fail with the not-configured error |
-| C | `BLOCKEDEN_ACCESS_KEY` only | all direct keys | none — "Model proxy is not configured" |
+| A | `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_BASE_URL` (forwarded into sandbox) | `OPENAI_API_KEY` | none — sandbox agent fails |
+| B | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` (direct, per provider) | `ANTHROPIC_AUTH_TOKEN` | none — calls fail with the not-configured error |
+| C | `OPENAI_API_KEY`, `OPENAI_BASE_URL` | `ANTHROPIC_API_KEY` | none — "Model proxy is not configured. Set OPENAI_API_KEY." |
 
 Path B is direct-keys-only. `createFallbackLanguageModel()` takes no gateway key and has no BlockEden branch, so both providers silently collapsing onto one gateway credential is structurally impossible. Its Anthropic provider is a plain `createAnthropic({ apiKey })`: servers authenticate with real API keys, and the Path B ↔ `ANTHROPIC_AUTH_TOKEN` exclusion is intentional — OAuth subscription tokens are rate-limited and subscription-scoped, suitable for the interactive sandbox harness but not for server-side extraction volume. Operators must know that configuring "Anthropic works" for Path A proves nothing about Path B.
 
@@ -91,8 +90,8 @@ The fallback chain only delivers availability when its two providers can fail in
 
 Non-domain provider errors surface to callers as `INTERNAL_SERVER_ERROR` — correct for clients, insufficient for operators. Three mechanisms close the gap:
 
-- **Not-configured is a clear error, not a masked one.** `parseReceipt`, `parseFile`, and `suggestCategories` call `assertLlmConfigured()` (`llm-service.ts`) immediately after authorization and before any quota, S3, or ledger work, failing with the not-configured message. Path C guards its own key in `invokeModelProxy` with "Model proxy is not configured. Set BLOCKEDEN_ACCESS_KEY."
-- **Provider failures are logged before fallback.** The fallback model logs each failed provider at warn level with its model id. Path B provider URLs no longer carry a gateway key, so those logged errors cannot leak one; Path C's URL still embeds `BLOCKEDEN_ACCESS_KEY`, so that URL must never be logged or returned to a caller.
+- **Not-configured is a clear error, not a masked one.** `parseReceipt`, `parseFile`, and `suggestCategories` call `assertLlmConfigured()` (`llm-service.ts`) immediately after authorization and before any quota, S3, or ledger work, failing with the not-configured message. Path C guards its own key in `invokeModelProxy` with a `CONFIGURATION_ERROR` (HTTP 503) whose hint reads "Set OPENAI_API_KEY (see .env.example)".
+- **Provider failures are logged before fallback.** The fallback model logs each failed provider at warn level with its model id. Path B provider URLs no longer carry a gateway key, so those logged errors cannot leak one; Path C sends `OPENAI_API_KEY` in an `Authorization` header and keeps it out of the URL, so no logged or returned URL carries it.
 - **The mobile client shows the real cause.** `use-receipt-workflow.ts` classifies the parse leg from the thrown `ApolloError` through `parseErrorCode` in `receipt-utils.ts` (`RESOURCE_LIMIT_REACHED` → quota, else parse) and reports every leg to Sentry via a thin `captureError` seam.
 
 ### D6 — A request must never kill the process, and a dead credential must not wait for a user to be discovered

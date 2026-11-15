@@ -7,7 +7,8 @@ interface GiteaCloneUrls {
 }
 
 /**
- * The origin users reach Gitea on, without a trailing slash: the one Gitea
+ * The address clone URLs are built on, without a trailing slash: the one the
+ * operator gave (`GIT_PUBLIC_URL`, the Git proxy's own `/git`) or Gitea
  * reported when it was learned, otherwise the configured host and port (https
  * for a domain, http for localhost or an IP address).
  */
@@ -86,7 +87,8 @@ interface LearnExternalGitHostOptions {
  * would hand every user a clone address on someone else's host, so ask Gitea
  * for the origin it serves on (its ROOT_URL, which the bex wrapper derives
  * from the platform's address) and build clone URLs from that. An operator's
- * explicit EXTERNAL_GITEA_HOST_NAME, and the managed service, are left alone.
+ * explicit EXTERNAL_GITEA_HOST_NAME or GIT_PUBLIC_URL (the stack already says
+ * where users clone from), and the managed service, are left alone.
  *
  * Gitea may still be starting, so this retries; if it never answers, it throws
  * rather than let the server start advertising the wrong host.
@@ -95,7 +97,11 @@ export async function learnExternalGitHost(
   gitea: GiteaConfig,
   options: LearnExternalGitHostOptions,
 ): Promise<void> {
-  if (!options.selfHost || gitea.hostname !== DEFAULT_EXTERNAL_GITEA_HOST) {
+  if (
+    !options.selfHost ||
+    gitea.externalBaseUrl ||
+    gitea.hostname !== DEFAULT_EXTERNAL_GITEA_HOST
+  ) {
     return;
   }
   const fetchFn = options.fetchFn ?? fetch;

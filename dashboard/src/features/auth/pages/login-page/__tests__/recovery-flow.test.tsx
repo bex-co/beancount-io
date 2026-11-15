@@ -76,6 +76,21 @@ function network() {
     link: new ApolloLink(
       (operation) =>
         new Observable((observer) => {
+          // The page asks the deployment who it is for before anything else;
+          // answered at once so the flows under test see only their own requests.
+          if (operation.operationName === "DeploymentInfo") {
+            observer.next({
+              data: {
+                deploymentInfo: {
+                  __typename: "DeploymentInfoResponse",
+                  selfHost: false,
+                  signUpOpen: true,
+                },
+              },
+            });
+            observer.complete();
+            return;
+          }
           pending.push({
             name: operation.operationName,
             variables: operation.variables,

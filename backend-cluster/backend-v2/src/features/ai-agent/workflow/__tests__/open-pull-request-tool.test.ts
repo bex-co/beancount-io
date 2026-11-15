@@ -139,6 +139,108 @@ describe("openPullRequest link on a self-hosted stack", () => {
     },
   );
 
+  // A private Gitea (the bex Blueprint) has no public address: its ROOT_URL is
+  // its default `localhost` or an internal name, and a link built on it is dead.
+  it.each([
+    "http://localhost:3000/alice/default/pulls/3",
+    "http://app.localhost:3000/alice/default/pulls/3",
+    "http://127.0.0.1:3000/alice/default/pulls/3",
+    "http://0.0.0.0:3000/alice/default/pulls/3",
+    "http://[::1]:3000/alice/default/pulls/3",
+    "http://gitea:3000/alice/default/pulls/3",
+    "http://beancount-gitea-x9k2:3000/alice/default/pulls/3",
+  ])(
+    "leaves the link out when Gitea only knows an address no browser can open (%s)",
+    async (htmlUrl) => {
+      reply({ number: 3, html_url: htmlUrl });
+      const result = await openPullRequest(
+        { ...deps, gitea: unconfigured, selfHost: true },
+        input,
+      );
+      expect(result).toEqual({ ok: true, prNumber: 3 });
+    },
+  );
+
+  it.each([
+    "http://192.168.4.49:3701/alice/default/pulls/3",
+    "https://git.mycorp.test/alice/default/pulls/3",
+    "http://[2001:db8::1]:3000/alice/default/pulls/3",
+  ])(
+    "keeps an address a browser on the network can open (%s)",
+    async (htmlUrl) => {
+      reply({ number: 3, html_url: htmlUrl });
+      const result = await openPullRequest(
+        { ...deps, gitea: unconfigured, selfHost: true },
+        input,
+      );
+      expect(result.prUrl).toBe(htmlUrl);
+    },
+  );
+
+  // At start the server learns its Git address from Gitea (`externalBaseUrl`)
+  // and moves `hostname` off the built-in default to match, so the stack no
+  // longer looks unconfigured. The same rule must hold on that shape: a private
+  // Gitea learns its own loopback `ROOT_URL`.
+  describe("a host learned from Gitea at start", () => {
+    const learned = (origin: string): GiteaConfig => ({
+      ...gitea,
+      hostname: new URL(origin).hostname,
+      externalBaseUrl: origin,
+    });
+
+    it.each([
+      "http://localhost:3000",
+      "http://gitea:3000",
+      "http://beancount-gitea-x9k2:3000",
+    ])(
+      "leaves the link out when what it learned no browser can open (%s)",
+      async (origin) => {
+        reply({ number: 3, html_url: `${origin}/alice/default/pulls/3` });
+        const result = await openPullRequest(
+          { ...deps, gitea: learned(origin), selfHost: true },
+          input,
+        );
+        expect(result).toEqual({ ok: true, prNumber: 3 });
+      },
+    );
+
+    it("builds the link on a public address it learned", async () => {
+      reply({ number: 3 });
+      const result = await openPullRequest(
+        {
+          ...deps,
+          gitea: learned("https://git-x9.example.com"),
+          selfHost: true,
+        },
+        input,
+      );
+      expect(result.prUrl).toBe(
+        "https://git-x9.example.com/alice/default/pulls/3",
+      );
+    });
+  });
+
+  // GIT_PUBLIC_URL: clones go through this stack's Git proxy, which serves git's
+  // requests and nothing else. A pull request's page lives on Gitea, which has
+  // no public address, so a link built on the proxy's address would be a 404.
+  it("leaves the link out when users clone through the Git proxy", async () => {
+    reply({
+      number: 3,
+      html_url: "http://localhost:3000/alice/default/pulls/3",
+    });
+    const proxied: GiteaConfig = {
+      ...gitea,
+      hostname: "api.example.test",
+      externalBaseUrl: "https://api.example.test/git",
+      cloneBaseIsGitProxy: true,
+    };
+    const result = await openPullRequest(
+      { ...deps, gitea: proxied, selfHost: true },
+      input,
+    );
+    expect(result).toEqual({ ok: true, prNumber: 3 });
+  });
+
   it("still honours a host the operator configured", async () => {
     reply({ number: 3, html_url: "https://elsewhere.example.com/x" });
     const configured: GiteaConfig = {

@@ -130,9 +130,8 @@ services:
       SSH_PROXY_PORT: 42607
       SSH_PROXY_HOST_KEY: ${SSH_PROXY_HOST_KEY:-}
       # LLM access (ADR 0011). Every LLM var is optional: the server boots with
-      # none set. BLOCKEDEN_ACCESS_KEY only meters the `bea ask` model proxy;
-      # left empty, that proxy fails clearly with "not configured".
-      BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-}
+      # none set. The `bea ask` model proxy uses OPENAI_API_KEY (and
+      # OPENAI_BASE_URL); left empty, it fails clearly with "not configured".
       # No default on purpose: point this at your own Claude Code sandbox
       # deployment if you use the sandboxed ask-agent mode.
       CLAUDE_CODE_SANDBOX_URL: ${CLAUDE_CODE_SANDBOX_URL:-}
@@ -142,6 +141,9 @@ services:
       # and "" crashes the server ("baseURL must be a non-empty string").
       ANTHROPIC_BASE_URL:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Null is intentional here too: pass OPENAI_BASE_URL through only when it
+      # is set, never as an empty string. It also points the `bea ask` proxy.
+      OPENAI_BASE_URL:
       # In-process model overrides (ADR 0011); empty keeps the code defaults.
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_FALLBACK_MODEL: ${LLM_FALLBACK_MODEL:-}

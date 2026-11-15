@@ -10,6 +10,7 @@ import cookie from "koa-cookie";
 import { restMetricsMiddleware } from "@/metrics/koa-middleware";
 import { logger } from "@/shared/logger";
 import { cookieDomainNeedsConfig } from "@/shared/cookie-utils";
+import { readSelfHost } from "@/config/self-host";
 import { asyncContextMiddleware } from "./middleware/async-context-middleware";
 import { bodyParserMiddleware } from "./middleware/body-parser-middleware";
 import { corsMiddleware } from "./middleware/cors-middleware";
@@ -87,7 +88,17 @@ export async function startServer(): Promise<void> {
 
   if (config.selfHost) {
     logger.warn(
-      "SELF_HOST is on: sign-ups are not email-verified and no plan limits apply.",
+      "SELF_HOST is on: sign-ups are not email-verified, no plan limits apply, and sign-up closes once the first account exists.",
+    );
+  }
+  const selfHostSetting = readSelfHost();
+  if (selfHostSetting.unrecognized !== undefined) {
+    // Stays off, so a typo cannot relax a managed deployment, but say so: the
+    // operator would otherwise meet a verification code that no mail provider
+    // will ever send.
+    logger.warn(
+      "SELF_HOST is set to a value that is neither on nor off, so it is OFF. Use true or false.",
+      { value: selfHostSetting.unrecognized.slice(0, 40) },
     );
   }
 

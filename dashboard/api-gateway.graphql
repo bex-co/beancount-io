@@ -7,6 +7,11 @@ type Query {
   validateEmailToken(token: String!): ValidateEmailTokenResponse!
 
   """
+  What the browser sign-in and sign-up pages need to know about this deployment before anyone is signed in. Part of the sign-up ceremony, so it has no REST or MCP twin.
+  """
+  deploymentInfo: DeploymentInfoResponse!
+
+  """
   Describe the CLI authentication request a user code names, so the consent screen can show who is asking before anyone approves.
   """
   getCliAuthRequest(userCode: String!): GetCliAuthRequestResponse!
@@ -342,6 +347,18 @@ type SearchUser {
 
 type ValidateEmailTokenResponse {
   isValid: Boolean!
+}
+
+type DeploymentInfoResponse {
+  """
+  True on a deployment its operator runs for their own users (SELF_HOST). The sign-in and sign-up pages read it to drop what only makes sense on the hosted service.
+  """
+  selfHost: Boolean!
+
+  """
+  Whether signUp would be accepted. False only on a self-hosted deployment that already has an account; the sign-up page is not offered then.
+  """
+  signUpOpen: Boolean!
 }
 
 type GetCliAuthRequestResponse {

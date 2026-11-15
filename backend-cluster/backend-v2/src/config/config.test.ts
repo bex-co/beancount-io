@@ -4,6 +4,8 @@ import {
   getDevelopmentPremiumUserIds,
   getMcpRegistryAuthProof,
   getOAuthPublicUrl,
+  parseGitPublicUrl,
+  parseOpenAIBaseUrl,
   parseTrustedProxyHops,
 } from "./config";
 
@@ -43,6 +45,18 @@ describe("config", () => {
     for (const bad of ["-1", "1.5", "two", "Infinity"]) {
       expect(parseTrustedProxyHops(bad)).toBe(1);
     }
+  });
+
+  it("points the model proxy at OpenAI unless OPENAI_BASE_URL says otherwise", () => {
+    expect(config.openai.baseUrl).toBe("https://api.openai.com/v1");
+    expect(parseOpenAIBaseUrl(undefined)).toBe("https://api.openai.com/v1");
+    expect(parseOpenAIBaseUrl("  ")).toBe("https://api.openai.com/v1");
+    expect(parseOpenAIBaseUrl("http://gateway:8080/v1/")).toBe(
+      "http://gateway:8080/v1",
+    );
+    expect(parseOpenAIBaseUrl(" https://example.test/openai/v1// ")).toBe(
+      "https://example.test/openai/v1",
+    );
   });
 
   it("limits local premium-user overrides to development", () => {
@@ -197,6 +211,58 @@ describe("config", () => {
       Object.assign(process.env, env);
       const { config: loaded } = await import("./config");
       expect(loaded.gitea.sshUnavailable).toBe(unavailable);
+    });
+
+    // GIT_PUBLIC_URL: a stack with no public Gitea says where its Git proxy is.
+    it("takes the clone address, and its host, from GIT_PUBLIC_URL", async () => {
+      delete process.env.EXTERNAL_GITEA_HOST_NAME;
+      process.env.GIT_PUBLIC_URL = "https://api.example.test/git/";
+      const { config: loaded } = await import("./config");
+      expect(loaded.gitea.externalBaseUrl).toBe("https://api.example.test/git");
+      expect(loaded.gitea.hostname).toBe("api.example.test");
+      expect(loaded.gitea.cloneBaseIsGitProxy).toBe(true);
+    });
+
+    it("leaves the managed defaults alone when GIT_PUBLIC_URL is unset or blank", async () => {
+      for (const value of [undefined, "", "  "]) {
+        jest.resetModules();
+        delete process.env.EXTERNAL_GITEA_HOST_NAME;
+        if (value === undefined) delete process.env.GIT_PUBLIC_URL;
+        else process.env.GIT_PUBLIC_URL = value;
+        const { config: loaded } = await import("./config");
+        expect(loaded.gitea.externalBaseUrl).toBeUndefined();
+        expect(loaded.gitea.hostname).toBe("git.beancount.io");
+        expect(loaded.gitea.cloneBaseIsGitProxy).toBe(false);
+      }
+    });
+
+    it("keeps an explicit EXTERNAL_GITEA_HOST_NAME as the SSH host", async () => {
+      process.env.EXTERNAL_GITEA_HOST_NAME = "ssh.example.test";
+      process.env.GIT_PUBLIC_URL = "https://api.example.test/git";
+      const { config: loaded } = await import("./config");
+      expect(loaded.gitea.hostname).toBe("ssh.example.test");
+      expect(loaded.gitea.externalBaseUrl).toBe("https://api.example.test/git");
+    });
+
+    it.each([
+      "api.example.test/git",
+      "http://api.example.test/git",
+      "https://user:pw@api.example.test/git",
+      "https://api.example.test/git?x=1",
+    ])("refuses to start on GIT_PUBLIC_URL=%s", async (value) => {
+      process.env.GIT_PUBLIC_URL = value;
+      await expect(import("./config")).rejects.toThrow(/GIT_PUBLIC_URL/);
+    });
+  });
+
+  describe("parseGitPublicUrl", () => {
+    it("accepts http only for localhost outside production", () => {
+      expect(
+        parseGitPublicUrl("http://localhost:4104/git", "development"),
+      ).toBe("http://localhost:4104/git");
+      expect(() =>
+        parseGitPublicUrl("http://localhost:4104/git", "production"),
+      ).toThrow(/GIT_PUBLIC_URL/);
     });
   });
 

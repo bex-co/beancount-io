@@ -23,7 +23,9 @@ function makeService(authorization: IAuthorizationService) {
     { getApiContext: jest.fn() } as never,
     { getObjectMetadata, generateDownloadUrl } as never,
     { check, assertQuotaAvailable, addTokenUsage } as never,
-    { blockeden: { accessKey: "test-key" } } as never,
+    {
+      openai: { apiKey: "test-key", baseUrl: "https://api.openai.com/v1" },
+    } as never,
     authorization,
   );
   return {

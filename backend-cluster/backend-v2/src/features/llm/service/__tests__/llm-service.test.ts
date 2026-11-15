@@ -37,7 +37,9 @@ describe("LLMService temp-asset ownership", () => {
       { getApiContext: jest.fn() } as never,
       { getObjectMetadata, generateDownloadUrl } as never,
       { check: usageCheck, addTokenUsage: jest.fn() } as never,
-      { blockeden: { accessKey: "test-key" } } as never,
+      {
+        openai: { apiKey: "test-key", baseUrl: "https://api.openai.com/v1" },
+      } as never,
       authorization,
     );
   }
@@ -113,7 +115,9 @@ describe("LLMService receipt formats", () => {
         check: jest.fn().mockResolvedValue({ allowed: true }),
         addTokenUsage: jest.fn(),
       } as never,
-      { blockeden: { accessKey: "test-key" } } as never,
+      {
+        openai: { apiKey: "test-key", baseUrl: "https://api.openai.com/v1" },
+      } as never,
       new AuthorizationService({ check: async () => true }),
     );
   }
@@ -179,7 +183,9 @@ describe("LLMService statement formats", () => {
         check: jest.fn().mockResolvedValue({ allowed: true }),
         addTokenUsage: jest.fn(),
       } as never,
-      { blockeden: { accessKey: "test-key" } } as never,
+      {
+        openai: { apiKey: "test-key", baseUrl: "https://api.openai.com/v1" },
+      } as never,
       new AuthorizationService({ check: async () => true }),
     );
   }

@@ -163,7 +163,9 @@ async function fixture(
     fava as never,
     { getObjectMetadata: metadata, generateDownloadUrl: download } as never,
     { check, addTokenUsage: charge } as never,
-    { blockeden: { accessKey: "fixture" } } as never,
+    {
+      openai: { apiKey: "fixture", baseUrl: "https://api.openai.com/v1" },
+    } as never,
     new AuthorizationService(
       new SourceBackedRelationshipEvaluator(
         {} as never,

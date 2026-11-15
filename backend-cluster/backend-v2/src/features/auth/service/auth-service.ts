@@ -4,6 +4,7 @@ import type { ISendGrid } from "@/foundation/sendgrid";
 import type { IStripeService } from "@/features/stripe/service/stripe-service";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import { type AppConfig } from "@/config/config";
+import { isSelfHost } from "@/config/self-host";
 import { z } from "zod";
 import {
   NotFoundError,
@@ -191,6 +192,8 @@ export interface IAuthService {
   validateEmailToken(token: string): Promise<boolean>;
   resetPassword(token: string, newPassword: string): Promise<void>;
   createSignUpSession(params: CreateSignUpSessionParams): Promise<string>;
+  /** False only on a self-hosted server that already has an account. */
+  isSignUpOpen(): Promise<boolean>;
   finishSignupSession(params: FinishSignupSessionParams): Promise<AuthResponse>;
   verifySignUpOtp(params: FinishSignupSessionParams): Promise<AuthResponse>;
   getSignupOtpSession(sessionId: string): Promise<SignupOtpSession | null>;
@@ -257,10 +260,15 @@ export class AuthService implements IAuthService {
     }
 
     const favaAdminApiClient = this.favaClientFactory.getAdminClient();
-    // Use email-specific lock to prevent concurrent registrations with same email
-    const lockKey = LOCK_KEYS.USER.register(email);
+    // Use email-specific lock to prevent concurrent registrations with same email.
+    // A self-host serializes every registration instead: whether one may happen
+    // at all depends on whether any account exists yet.
+    const lockKey = isSelfHost()
+      ? LOCK_KEYS.USER.registerOnSelfHost()
+      : LOCK_KEYS.USER.register(email);
     const result = await lock.acquire(lockKey, () => {
       return this.db.transaction(async (tx) => {
+        await this.assertSignUpOpen(tx);
         const user = await this.models.user.create(tx, {
           email,
           password,
@@ -564,9 +572,32 @@ export class AuthService implements IAuthService {
     await clearPasswordFailures(user.email);
   };
 
+  /**
+   * Whether a new account may be created here: always, except on a self-hosted
+   * server (`SELF_HOST`) that already has one. That server has no email
+   * verification and no plan limits, so the first account is its operator's and
+   * the door shuts behind it; otherwise anyone who finds the address could use
+   * the operator's disk and model key.
+   */
+  public isSignUpOpen = async (db: DbExecutor = this.db): Promise<boolean> =>
+    !isSelfHost() || (await this.models.user.countUsers(db)) === 0;
+
+  private assertSignUpOpen = async (db: DbExecutor): Promise<void> => {
+    if (await this.isSignUpOpen(db)) return;
+    throw new ForbiddenError(
+      "Sign-up is closed on this server: it already has an account.",
+      "signUp",
+      "Sign in with the existing account, or ask whoever runs this server.",
+    );
+  };
+
   public createSignUpSession = async (
     params: CreateSignUpSessionParams,
   ): Promise<string> => {
+    // Before any budget is spent or session stored. `registerUser` checks again
+    // under the self-host lock, which is what settles a race.
+    await this.assertSignUpOpen(this.db);
+
     const { email, password, firstName, lastName, username, ip } = params;
 
     const normalizedEmail = email.toLowerCase().trim();

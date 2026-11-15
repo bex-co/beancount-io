@@ -43,7 +43,9 @@ describe("LLMService authorizes as the caller", () => {
       { getApiContext: jest.fn() } as never,
       { getObjectMetadata, generateDownloadUrl: jest.fn() } as never,
       { check: usageCheck, addTokenUsage: jest.fn() } as never,
-      { blockeden: { accessKey: "test-key" } } as never,
+      {
+        openai: { apiKey: "test-key", baseUrl: "https://api.openai.com/v1" },
+      } as never,
       new AuthorizationService({ check: async () => true }),
     );
   }

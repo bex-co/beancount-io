@@ -7,7 +7,7 @@ import { LLMClient } from "../../src/features/llm/utils/llm-client";
 import { isLlmConfigured } from "../../src/features/llm/utils/fallback-language-model";
 
 /**
- * Free-text completion provider reusing the same BlockEden-proxied model as
+ * Free-text completion provider reusing the same direct-key model chain as
  * production (no Zod output schema). Used as the llm-rubric grading/judge
  * provider so evals need no separate judge API key.
  */

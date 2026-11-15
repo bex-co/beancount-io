@@ -52,3 +52,20 @@ describe("LoginForm password recovery", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("LoginForm sign-up link", () => {
+  it("offers sign-up by default", () => {
+    const { container } = render(<LoginForm {...defaultProps} />);
+    expect(container.querySelector('a[href="/auth/sign-up"]')).not.toBeNull();
+  });
+
+  it("offers none once the deployment takes no more sign-ups", () => {
+    const { container } = render(
+      <LoginForm {...defaultProps} showSignUpLink={false} />,
+    );
+    expect(container.querySelector('a[href="/auth/sign-up"]')).toBeNull();
+    expect(
+      screen.getByRole("button", { name: /sign in/i }),
+    ).toBeInTheDocument();
+  });
+});

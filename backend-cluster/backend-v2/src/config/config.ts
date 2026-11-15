@@ -103,6 +103,13 @@ export interface GiteaConfig {
    */
   externalBaseUrl?: string;
   /**
+   * True when `externalBaseUrl` is this stack's own Git proxy (`GIT_PUBLIC_URL`,
+   * ending in `/git`) and not a page of Gitea. Gitea has no public address
+   * there, so its pages (a pull request's, say) are not reachable from outside
+   * and no link to one is built.
+   */
+  cloneBaseIsGitProxy?: boolean;
+  /**
    * True when nothing on this deployment serves Git over SSH: a self-hosted
    * stack whose SSH proxy is off. Ledgers then carry no `sshUrl`, rather than
    * an address no listener answers. The managed service is never marked.
@@ -117,8 +124,26 @@ interface SshProxyConfig {
   hostKey: string;
 }
 
-interface BlockEdenConfig {
-  accessKey: string;
+const DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1";
+
+/**
+ * `OPENAI_BASE_URL` without its trailing slashes, or OpenAI's own address when
+ * it is unset or blank. (The AI SDK takes a blank value literally and then
+ * calls an empty address; the proxy has no reason to.)
+ */
+export function parseOpenAIBaseUrl(value: string | undefined): string {
+  return (value ?? "").trim().replace(/\/+$/, "") || DEFAULT_OPENAI_BASE_URL;
+}
+
+/**
+ * The OpenAI-compatible endpoint behind the `bea ask` model proxy
+ * (`POST /api-gateway/ai/openai/chat/completions`). The same two variables the
+ * AI SDK reads for the fallback model, so one pair configures both paths.
+ */
+interface OpenAIConfig {
+  apiKey: string;
+  /** No trailing slash; `/chat/completions` is appended to it. */
+  baseUrl: string;
 }
 
 interface ClaudeCodeSandboxConfig {
@@ -254,12 +279,13 @@ export interface AppConfig {
   dashboard: DashboardConfig;
   /**
    * SELF_HOST=true: the operator runs the stack for their own users. Sign-up
-   * needs no email verification and no plan limits apply. See `self-host.ts`.
+   * needs no email verification, no plan limits apply, and sign-up closes once
+   * the first account exists. See `self-host.ts`.
    */
   selfHost: boolean;
   mcpRegistry: McpRegistryConfig;
   gitea: GiteaConfig;
-  blockeden: BlockEdenConfig;
+  openai: OpenAIConfig;
   claudeCodeSandbox: ClaudeCodeSandboxConfig;
   /** Controls which Ask AI backend to use: "bql" (local LLM+BQL) or "sandbox" (Cloudflare sandbox proxy) */
   askAiMode: "bql" | "sandbox";
@@ -323,6 +349,23 @@ export function getOAuthPublicUrl(
     );
   }
   return url.toString().replace(/\/$/, "");
+}
+
+/**
+ * `GIT_PUBLIC_URL`: the address users clone from on a stack whose Gitea has no
+ * public address of its own: the origin this API is served on, then `/git`
+ * (where its Git proxy listens). Unset or blank means none. Anything that is
+ * not an https URL (http only for localhost in development) without
+ * credentials, a query or a fragment stops the server at start, as
+ * `DASHBOARD_URL` does: a clone address that is silently wrong is found by a
+ * user, not by the operator.
+ */
+export function parseGitPublicUrl(
+  value: string | undefined,
+  env: Environment,
+): string | undefined {
+  if (value === undefined || value.trim() === "") return undefined;
+  return getOAuthPublicUrl(value, "", "GIT_PUBLIC_URL", env);
 }
 
 /**
@@ -390,6 +433,7 @@ function giteaInternalBaseUrl(hostname: string, port: number): string {
 const giteaInternalHostname = process.env.GITEA_HOST_NAME || "gitea";
 const giteaHttpPort = parseInt(process.env.GITEA_HTTP_PORT || "3000", 10);
 const environment = getEnvironment(process.env.NODE_ENV);
+const gitPublicUrl = parseGitPublicUrl(process.env.GIT_PUBLIC_URL, environment);
 const sshProxyEnabled = process.env.SSH_PROXY_ENABLED === "true";
 const sshProxyHostKey = process.env.SSH_PROXY_HOST_KEY || "";
 const dashboardUrl = getOAuthPublicUrl(
@@ -446,8 +490,15 @@ export const config: AppConfig = {
     authProof: getMcpRegistryAuthProof(process.env.MCP_REGISTRY_AUTH_PROOF),
   },
   gitea: {
+    // An explicit host wins; otherwise the host of GIT_PUBLIC_URL, so a stack
+    // that says where its Git proxy is never looks unconfigured (and is never
+    // handed the managed service's host).
     hostname:
-      process.env.EXTERNAL_GITEA_HOST_NAME || DEFAULT_EXTERNAL_GITEA_HOST,
+      process.env.EXTERNAL_GITEA_HOST_NAME ||
+      (gitPublicUrl ? new URL(gitPublicUrl).hostname : undefined) ||
+      DEFAULT_EXTERNAL_GITEA_HOST,
+    externalBaseUrl: gitPublicUrl,
+    cloneBaseIsGitProxy: gitPublicUrl !== undefined,
     internalHostname: giteaInternalHostname,
     httpPort: giteaHttpPort,
     internalBaseUrl: giteaInternalBaseUrl(giteaInternalHostname, giteaHttpPort),
@@ -475,8 +526,9 @@ export const config: AppConfig = {
     // _infra/print-ssh-host-key.sh.
     hostKey: sshProxyHostKey,
   },
-  blockeden: {
-    accessKey: process.env.BLOCKEDEN_ACCESS_KEY || "",
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY || "",
+    baseUrl: parseOpenAIBaseUrl(process.env.OPENAI_BASE_URL),
   },
   claudeCodeSandbox: {
     apiUrl: process.env.CLAUDE_CODE_SANDBOX_URL || "",

@@ -138,7 +138,7 @@ export class LLMService implements ILLMService {
     private readonly favaClientFactory: IFavaClientFactory,
     private readonly assetStorage: IAssetStorageService,
     private readonly aiCfoUsageService: IAiCfoUsageService,
-    private readonly config: Pick<AppConfig, "blockeden">,
+    private readonly config: Pick<AppConfig, "openai">,
     private readonly authorization: IAuthorizationService,
   ) {
     this.llmClient = new LLMClient();
@@ -422,8 +422,9 @@ export class LLMService implements ILLMService {
         : request;
     const response = await this.invokeModelProxy(
       identity,
-      `https://api.blockeden.xyz/openai/${this.config.blockeden.accessKey}/v1/chat/completions`,
+      `${this.config.openai.baseUrl}/chat/completions`,
       boundedRequest,
+      { Authorization: `Bearer ${this.config.openai.apiKey}` },
     );
     const usage = (response as { usage?: { total_tokens?: number } }).usage;
     await this.recordProxyUsage(identity.userId, usage?.total_tokens ?? 0);
@@ -441,10 +442,10 @@ export class LLMService implements ILLMService {
       action: AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
       resource: userResource(identity.userId),
     });
-    if (!this.config.blockeden.accessKey) {
+    if (!this.config.openai.apiKey) {
       throw new ConfigurationError(
         "Model proxy is not configured on this deployment",
-        "Set BLOCKEDEN_ACCESS_KEY (see .env.example)",
+        "Set OPENAI_API_KEY (see .env.example)",
       );
     }
     await this.aiCfoUsageService.assertQuotaAvailable(identity.userId);

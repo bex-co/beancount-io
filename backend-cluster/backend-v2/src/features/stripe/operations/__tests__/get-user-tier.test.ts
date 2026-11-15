@@ -264,7 +264,15 @@ describe("SELF_HOST", () => {
     });
   });
 
-  it.each(["false", "1", "TRUE", ""])(
+  it.each(["TRUE", "1", " yes ", "on"])(
+    "gives everyone the unlimited tier when SELF_HOST is spelled %p",
+    async (value) => {
+      process.env.SELF_HOST = value;
+      expect(await getUserTier(deps([]))).toBe(SubscriptionTier.ENTERPRISE);
+    },
+  );
+
+  it.each(["false", "0", "off", "", "ture", "2"])(
     "keeps the user's own plan when SELF_HOST is %p",
     async (value) => {
       process.env.SELF_HOST = value;

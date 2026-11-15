@@ -186,6 +186,21 @@ class SignUpResponse {
   public tokenExpireAt?: Date | null;
 }
 
+@ObjectType()
+class DeploymentInfoResponse {
+  @Field(() => Boolean, {
+    description:
+      "True on a deployment its operator runs for their own users (SELF_HOST). The sign-in and sign-up pages read it to drop what only makes sense on the hosted service.",
+  })
+  public selfHost: boolean;
+
+  @Field(() => Boolean, {
+    description:
+      "Whether signUp would be accepted. False only on a self-hosted deployment that already has an account; the sign-up page is not offered then.",
+  })
+  public signUpOpen: boolean;
+}
+
 @ArgsType()
 class VerifySignUpOtpInput {
   @Field(() => String)
@@ -364,6 +379,20 @@ export class AuthResolver {
   ): Promise<ValidateEmailTokenResponse> {
     const isValid = await this.authService.validateEmailToken(args.token);
     return { isValid };
+  }
+
+  @AllowAnonymous()
+  @Query(() => DeploymentInfoResponse, {
+    description:
+      "What the browser sign-in and sign-up pages need to know about this deployment before anyone is signed in. Part of the sign-up ceremony, so it has no REST or MCP twin.",
+  })
+  public async deploymentInfo(
+    @Ctx() ctx: IContext,
+  ): Promise<DeploymentInfoResponse> {
+    return {
+      selfHost: ctx.config.selfHost,
+      signUpOpen: await this.authService.isSignUpOpen(),
+    };
   }
 
   @AllowAnonymous()

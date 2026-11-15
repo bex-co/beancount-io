@@ -13,7 +13,12 @@ import selfHostSignUp, {
 
 const BASE = "https://dash.example.com";
 
-type Mode = "self-host" | "verifies-email" | "limited" | "login-after-reload";
+type Mode =
+  | "self-host"
+  | "verifies-email"
+  | "limited"
+  | "login-after-reload"
+  | "closed";
 
 function fakePage(mode: Mode, cookie: Record<string, unknown> | null = {}) {
   const state = {
@@ -37,7 +42,10 @@ function fakePage(mode: Mode, cookie: Record<string, unknown> | null = {}) {
   const page = {
     on: () => {},
     url: () => new URL(state.path, BASE).href,
-    goto: async () => {},
+    goto: async () => {
+      // A stack that already has an account sends the sign-up page to sign-in.
+      if (mode === "closed") state.path = "/auth/login";
+    },
     reload: async () => {
       if (mode === "login-after-reload") state.path = "/auth/login";
     },
@@ -142,6 +150,14 @@ describe("selfHostSignUp", () => {
     const { page, state } = fakePage("verifies-email");
     const result = await run(page);
     expect(result.skipped).toMatch(/verifies email/);
+    expect(state.evaluated).toEqual([]);
+  });
+
+  it("skips, and creates nothing, on a stack that has closed sign-up", async () => {
+    const { page, state } = fakePage("closed");
+    const result = await run(page);
+    expect(result.skipped).toMatch(/no more sign-ups/);
+    expect(result.checks).toEqual([]);
     expect(state.evaluated).toEqual([]);
   });
 

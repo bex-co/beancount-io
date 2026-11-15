@@ -33,6 +33,15 @@ export const LOCK_KEYS = {
     register: (email: string) => `user:register:${email}`,
 
     /**
+     * Lock held by every registration on a self-hosted server, whatever the
+     * email. A self-host takes sign-ups only until its first account exists;
+     * serializing them keeps two simultaneous first sign-ups from both seeing
+     * an empty table. An email contains "@", so this never collides with
+     * {@link register}.
+     */
+    registerOnSelfHost: () => "user:register:self-host",
+
+    /**
      * Lock for username updates by user ID.
      * Prevents concurrent username changes for the same user.
      */

@@ -63,7 +63,7 @@ describe("createPlaidSyncJob", () => {
     mockLayers = createMockLayers();
     mockConfig = {
       env: "development",
-      blockeden: { accessKey: "test-key" },
+      openai: { apiKey: "test-key", baseUrl: "https://api.openai.com/v1" },
     } as unknown as AppConfig;
 
     // Default: no active items (avoids cross-test leakage of mockResolvedValueOnce queues)

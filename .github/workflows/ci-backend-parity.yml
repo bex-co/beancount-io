@@ -27,10 +27,6 @@ jobs:
     defaults:
       run:
         working-directory: backend-cluster/backend-v2
-    env:
-      # Placeholder so composition-time LLM client construction succeeds in a
-      # clean environment; the unit suites never call a provider.
-      BLOCKEDEN_ACCESS_KEY: ci-placeholder
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

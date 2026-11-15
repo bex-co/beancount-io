@@ -4,14 +4,23 @@
 # Gitea reports healthy), then hand over to the stock entrypoint.
 set -eu
 
-# The platform assigns the hostname, and a second deployer of this Blueprint is
-# given a different one when the first choice is taken, so it cannot be written
-# into the Blueprint. bex tells the service its own address; use it unless the
-# operator set Gitea's address themselves.
+# The Blueprint makes Gitea a private service: it has no public address, so the
+# platform sets no RENDER_EXTERNAL_URL and Gitea keeps its own default
+# (http://localhost:3000/). Nobody opens that address; the API and the ledger
+# reach Gitea by its internal name, and anything Gitea reports as a link to
+# itself (html_url, clone_url) is not for a browser.
+#
+# Where a platform does give the service a public address (it is made a web
+# service, say), use it for Gitea's ROOT_URL and DOMAIN unless the operator set
+# them. A second deployer of the Blueprint is given a different hostname when the
+# first choice is taken, so it cannot be written into the Blueprint.
 if [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
     : "${GITEA__server__ROOT_URL:=${RENDER_EXTERNAL_URL%/}/}"
     : "${GITEA__server__DOMAIN:=${RENDER_EXTERNAL_HOSTNAME:-}}"
     export GITEA__server__ROOT_URL GITEA__server__DOMAIN
+    echo "bex-entrypoint: public address ${GITEA__server__ROOT_URL}"
+else
+    echo "bex-entrypoint: no public address; Gitea is private (ROOT_URL ${GITEA__server__ROOT_URL:-left at the Gitea default})"
 fi
 
 # Gitea shares the backend's database (one managed Postgres in total) and keeps

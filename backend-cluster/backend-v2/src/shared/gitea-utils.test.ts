@@ -338,6 +338,37 @@ describe("SSH address when no Git over SSH is served", () => {
   });
 });
 
+describe("a stack that says where its Git proxy is (GIT_PUBLIC_URL)", () => {
+  // bex: Gitea is private, so users clone through this API's own /git.
+  const proxied = (): GiteaConfig => ({
+    ...managedDefault(),
+    hostname: "api.example.test",
+    externalBaseUrl: "https://api.example.test/git",
+    cloneBaseIsGitProxy: true,
+    sshUnavailable: true,
+  });
+
+  it("builds the clone address on the proxy's /git, and advertises no SSH one", () => {
+    expect(generateGiteaUrl(proxied(), "alice/main")).toEqual({
+      sshUrl: null,
+      httpUrl: "https://api.example.test/git/alice/main.git",
+    });
+  });
+
+  it("does not ask Gitea for its address", async () => {
+    // The default host with a base already set: nothing but the base itself
+    // tells the stack it is configured.
+    const gitea = {
+      ...managedDefault(),
+      externalBaseUrl: "https://api.example.test/git",
+    };
+    const fetchFn = jest.fn();
+    await learnExternalGitHost(gitea, { selfHost: true, ...admin, fetchFn });
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(gitea.externalBaseUrl).toBe("https://api.example.test/git");
+  });
+});
+
 describe("learnExternalGitHost", () => {
   it("gives a self-hosted stack with no configured host the address Gitea reports", async () => {
     const gitea = managedDefault();

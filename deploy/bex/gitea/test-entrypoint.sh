@@ -8,6 +8,9 @@
 # a plain lowercase identifier; a second boot is harmless; and a database that is
 # not up yet is waited for, not raced. These are the faults a clean second
 # workspace showed, where Gitea missed its readiness deadline waiting on the API.
+# It also pins the address handling: Gitea is a private service on bex and has no
+# public address, so the wrapper must say so and still start it; where a platform
+# does give one, that becomes ROOT_URL, and an operator's own value wins.
 set -u
 
 cd "$(dirname "$0")"
@@ -64,6 +67,32 @@ echo "== a second boot is harmless"
 docker run -d --name "$NET-a" --network "$NET" "${ENV_ARGS[@]}" "$IMAGE" >/dev/null
 wait_log "$NET-a" "schema gitea ensured" 30
 check "second boot ensures it again" 1 "$(ensured "$NET-a")"
+docker rm -f "$NET-a" >/dev/null
+
+echo "== a private service has no public address and keeps Gitea's own default"
+# The Blueprint makes Gitea a pserv, so the platform sets no RENDER_EXTERNAL_URL.
+docker run -d --name "$NET-a" --network "$NET" "${ENV_ARGS[@]}" "$IMAGE" >/dev/null
+wait_log "$NET-a" "schema gitea ensured" 30
+check "says it is private" 1 "$(docker logs "$NET-a" 2>&1 | grep -c 'no public address; Gitea is private')"
+check "invents no public address" 0 "$(docker logs "$NET-a" 2>&1 | grep -c 'bex-entrypoint: public address')"
+wait_log "$NET-a" "Starting Gitea" 60
+check "Gitea starts" 1 "$(docker logs "$NET-a" 2>&1 | grep -c 'Starting Gitea')"
+docker rm -f "$NET-a" >/dev/null
+
+echo "== where the platform does give a public address, it becomes ROOT_URL"
+docker run -d --name "$NET-a" --network "$NET" "${ENV_ARGS[@]}" \
+  -e RENDER_EXTERNAL_URL=https://git-x9.example.test -e RENDER_EXTERNAL_HOSTNAME=git-x9.example.test \
+  "$IMAGE" >/dev/null
+wait_log "$NET-a" "schema gitea ensured" 30
+check "uses the platform's address" 1 "$(docker logs "$NET-a" 2>&1 | grep -c 'public address https://git-x9.example.test/$')"
+docker rm -f "$NET-a" >/dev/null
+
+echo "== an address the operator set wins over the platform's"
+docker run -d --name "$NET-a" --network "$NET" "${ENV_ARGS[@]}" \
+  -e RENDER_EXTERNAL_URL=https://git-x9.example.test -e GITEA__server__ROOT_URL=https://git.mycorp.test/ \
+  "$IMAGE" >/dev/null
+wait_log "$NET-a" "schema gitea ensured" 30
+check "keeps the operator's" 1 "$(docker logs "$NET-a" 2>&1 | grep -c 'public address https://git.mycorp.test/$')"
 docker rm -f "$NET-a" >/dev/null
 
 echo "== a name that is not a plain lowercase identifier is refused"

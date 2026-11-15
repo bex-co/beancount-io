@@ -27,6 +27,12 @@ export type RegisterFormProps = {
   hideUsername?: boolean;
   showSignInLink?: boolean;
   onSignInClick?: () => void;
+  /**
+   * "By signing up you agree to Beancount.io's Terms and Privacy Policy".
+   * Those are the hosted service's; a self-hosted deployment is run by its own
+   * operator and is not bound by them, so its page leaves the line out.
+   */
+  showLegalLinks?: boolean;
 };
 
 export function RegisterForm({
@@ -37,6 +43,7 @@ export function RegisterForm({
   hideUsername = false,
   showSignInLink = true,
   onSignInClick,
+  showLegalLinks = true,
 }: RegisterFormProps) {
   const { t } = useTranslations();
 
@@ -306,27 +313,29 @@ export function RegisterForm({
           : t("auth.createAccount")}
       </Button>
 
-      <p className="text-xs text-muted-foreground text-left">
-        {t("auth.termsAgreementPrefix")}{" "}
-        <a
-          href="https://beancount.io/terms-of-service"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:text-primary/80 transition-colors underline"
-        >
-          {t("auth.termsOfUse")}
-        </a>{" "}
-        {t("auth.and")}{" "}
-        <a
-          href="https://beancount.io/privacy-policy"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:text-primary/80 transition-colors underline"
-        >
-          {t("auth.privacyPolicy")}
-        </a>
-        .
-      </p>
+      {showLegalLinks && (
+        <p className="text-xs text-muted-foreground text-left">
+          {t("auth.termsAgreementPrefix")}{" "}
+          <a
+            href="https://beancount.io/terms-of-service"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:text-primary/80 transition-colors underline"
+          >
+            {t("auth.termsOfUse")}
+          </a>{" "}
+          {t("auth.and")}{" "}
+          <a
+            href="https://beancount.io/privacy-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:text-primary/80 transition-colors underline"
+          >
+            {t("auth.privacyPolicy")}
+          </a>
+          .
+        </p>
+      )}
 
       {showSignInLink && (
         <div className="text-center text-sm text-muted-foreground">

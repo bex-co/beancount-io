@@ -526,6 +526,12 @@ const AUTH_VERB_ENTRIES: readonly VerbEntry[] = [
     M.sessionCeremony,
   ),
   gqlOnly(
+    "Query.deploymentInfo",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
     "Mutation.signUp",
     "session-only",
     R.sessionCeremony,

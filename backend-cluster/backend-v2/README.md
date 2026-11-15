@@ -136,21 +136,49 @@ mail without contacting a provider. See the
 [operator guide](docs/authentication-rate-limits.md#deployment-and-development)
 for the worker, Redis and recovery prerequisites.
 
-`SELF_HOST=true` is for a deployment its operator runs for their own users (off
-unless exactly `true`). Sign-up then sends no code and needs no verification
+`SELF_HOST=true` is for a deployment its operator runs for their own users. It
+is read forgivingly: `true`, `1`, `yes`, `y` and `on` turn it on, in any case and
+with stray spaces or one pair of quotes; unset, empty, `false`, `0`, `no`, `n` and
+`off` leave it off; anything else is a typo, stays off, and is logged as a warning
+at boot (a garbled value never relaxes a managed deployment). Sign-up then sends no code and needs no verification
 step: `signUp` creates the account and returns the session `token` directly
 (also set as the auth cookie). Every plan limit is lifted by resolving each
 user to the unlimited tier, and billing is never asked for a user's plan. Email addresses are
 not verified, and recovery mail still needs `SEND_GRID_API_KEY`.
 
-A self-hosted stack also never advertises beancount.io's Git host. With
-`EXTERNAL_GITEA_HOST_NAME` unset, the server asks Gitea for its `ROOT_URL` at
-start (`GET /api/v1/user` as the admin account, retrying while Gitea starts) and
-builds every ledger's `httpUrl` and `sshUrl` from it, or exits with an error
-naming the variable if Gitea never answers; an explicit value always wins. With
-the SSH proxy off (`SSH_PROXY_ENABLED` and `SSH_PROXY_HOST_KEY` not both set),
-ledgers carry `sshUrl: null` on REST, GraphQL and MCP alike. The managed service
-(`SELF_HOST` unset) is unaffected by either rule.
+**Sign-up closes once the first account exists.** With no verification and no
+limits, an open door would let anyone who finds the address use the operator's
+disk and model key. `signUp` then answers `FORBIDDEN`, and the anonymous GraphQL
+query `deploymentInfo { selfHost signUpOpen }` lets the sign-in and sign-up
+pages leave out "Sign up" and the hosted service's terms and privacy-policy
+line. It is part of the sign-up ceremony, so like `signUp` it has no REST or MCP
+twin. The first account is therefore whoever signs up first: do it right after
+the deploy. Deleting the only account reopens sign-up.
+
+Upgrading a running self-host changes three things. A stack that already has an
+account stops taking sign-ups, and there is no way yet to add another. Only
+`true` used to turn `SELF_HOST` on, so a stack that had `1`, `yes`, `y` or `on`
+set was running as a managed deployment and now becomes a self-host (set
+`false` to keep the old behavior). And `bea ask`'s model proxy now forwards to
+`OPENAI_BASE_URL` (default `https://api.openai.com/v1`) with `OPENAI_API_KEY`;
+`BLOCKEDEN_ACCESS_KEY` is ignored.
+
+A self-hosted stack also never advertises beancount.io's Git host. Where users
+clone from is chosen in this order: `GIT_PUBLIC_URL` (the address of this API's
+own Git proxy, `https://<api address>/git`, for a stack whose Gitea has no
+public address; the bex Blueprint sets it), then `EXTERNAL_GITEA_HOST_NAME`
+(a public Gitea), then, with both unset, the server asks Gitea for its
+`ROOT_URL` at start (`GET /api/v1/user` as the admin account, retrying while
+Gitea starts) and builds every ledger's `httpUrl` from it, or exits with an
+error naming the variable if Gitea never answers. `GIT_PUBLIC_URL` must be an
+https URL (http for localhost outside production) with no credentials, query or
+fragment, or the server refuses to start. With the SSH proxy off
+(`SSH_PROXY_ENABLED` and `SSH_PROXY_HOST_KEY` not both set), ledgers carry
+`sshUrl: null` on REST, GraphQL and MCP alike. The managed service
+(`SELF_HOST` unset) is unaffected by either rule. The AI assistant's
+pull-request tool leaves out its link whenever the address it would build on is
+the Git proxy (`GIT_PUBLIC_URL`) or one no browser can open, such as the
+loopback `ROOT_URL` a Gitea with no public address reports.
 
 Production OAuth requires `OAUTH_JWKS`, a complete private P-256/ES256 signing
 JWKS provided by the deployment secret manager. It must never be committed or

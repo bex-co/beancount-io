@@ -45,6 +45,14 @@ vi.mock("@/common/lib/navigation/hard-navigate", () => ({
 
 vi.mock("@/common/components/seo/page-seo", () => ({ PageSEO: () => null }));
 
+vi.mock("@/features/auth/hooks/use-deployment-info", () => ({
+  useDeploymentInfo: () => ({
+    __typename: "DeploymentInfoResponse",
+    selfHost: false,
+    signUpOpen: true,
+  }),
+}));
+
 // The form hooks own the GraphQL calls; this suite drives their success
 // callbacks to follow the flow, so the real pages and their redirect logic run.
 vi.mock("@/features/auth/hooks/use-register-form", () => ({
@@ -85,12 +93,12 @@ vi.mock("@/features/auth/components/otp-form", () => ({
 type BeforeLoadInput = Parameters<typeof registerBeforeLoad>[0];
 
 /** Runs the real beforeLoad; returns the thrown redirect's options, or null. */
-function beforeLoad(
+async function beforeLoad(
   userProfile: RouterContext["userProfile"],
   next: string | undefined,
 ) {
   try {
-    void registerBeforeLoad({
+    await registerBeforeLoad({
       context: { userProfile } as RouterContext,
       search: { next },
     } as BeforeLoadInput);
@@ -112,8 +120,8 @@ const SIGNED_IN = {
 } as unknown as RouterContext["userProfile"];
 
 describe("sign-up beforeLoad with a next destination", () => {
-  it("sends a signed-in visitor back to the pricing page with a document reload", () => {
-    const redirect = beforeLoad(SIGNED_IN, PRICING_NEXT);
+  it("sends a signed-in visitor back to the pricing page with a document reload", async () => {
+    const redirect = await beforeLoad(SIGNED_IN, PRICING_NEXT);
 
     expect(redirect).toMatchObject({
       href: PRICING_NEXT,
@@ -124,8 +132,8 @@ describe("sign-up beforeLoad with a next destination", () => {
 
   it.each(UNSAFE_NEXT)(
     "sends a signed-in visitor to the welcome page instead of %s",
-    (next) => {
-      const redirect = beforeLoad(SIGNED_IN, next);
+    async (next) => {
+      const redirect = await beforeLoad(SIGNED_IN, next);
 
       expect(redirect).toMatchObject({ to: "/auth/welcome" });
       expect(redirect?.href).toBeUndefined();
@@ -133,8 +141,8 @@ describe("sign-up beforeLoad with a next destination", () => {
     },
   );
 
-  it("lets a signed-out visitor reach the form, keeping next for later", () => {
-    expect(beforeLoad(null, PRICING_NEXT)).toBeNull();
+  it("lets a signed-out visitor reach the form, keeping next for later", async () => {
+    expect(await beforeLoad(null, PRICING_NEXT)).toBeNull();
   });
 });
 

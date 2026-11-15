@@ -72,7 +72,13 @@ function dependencies() {
     jest.fn(),
   );
   const authorize = jest.spyOn(authorization, "authorizeOrThrow");
-  const config = { blockeden: { accessKey: "synthetic-cap-test" } };
+  // The service reads this object on every call, so a test can change it.
+  const config = {
+    openai: {
+      apiKey: "synthetic-cap-test",
+      baseUrl: "https://api.openai.com/v1",
+    },
+  };
   const llm = new LLMService(
     {} as never,
     {} as never,
@@ -153,9 +159,11 @@ describe("OpenAI chat completions through HTTP and the real LLM service", () => 
       expect(await response.json()).toEqual(completion);
       expect(deps.upstream).toHaveBeenCalledTimes(1);
       const [destination, init] = deps.upstream.mock.calls[0];
-      expect(destination).toBe(
-        "https://api.blockeden.xyz/openai/synthetic-cap-test/v1/chat/completions",
-      );
+      expect(destination).toBe("https://api.openai.com/v1/chat/completions");
+      expect(init?.headers).toEqual({
+        "Content-Type": "application/json",
+        Authorization: "Bearer synthetic-cap-test",
+      });
       expect(JSON.parse(String(init?.body))).toEqual({
         ...requestBody,
         ...expectedCap,
@@ -179,6 +187,16 @@ describe("OpenAI chat completions through HTTP and the real LLM service", () => 
       );
     },
   );
+
+  it("forwards to the configured OpenAI-compatible base URL", async () => {
+    deps.config.openai.baseUrl = "http://gateway.internal:8080/openai/v1";
+    const response = await post({ max_completion_tokens: 50 });
+
+    expect(response.status).toBe(200);
+    expect(deps.upstream.mock.calls[0][0]).toBe(
+      "http://gateway.internal:8080/openai/v1/chat/completions",
+    );
+  });
 
   describe.each(["max_completion_tokens", "max_tokens"])(
     "invalid %s",
@@ -250,7 +268,7 @@ describe("OpenAI chat completions through HTTP and the real LLM service", () => 
   // ADR029 D5: a deployment without the proxy key is an operator setup gap,
   // answered as CONFIGURATION_ERROR with the variable to set — 503, not 500.
   it("refuses an unconfigured model proxy as a configuration error, before quota or model work", async () => {
-    deps.config.blockeden.accessKey = "";
+    deps.config.openai.apiKey = "";
     const response = await post({ max_completion_tokens: 50 });
 
     expect(response.status).toBe(503);
@@ -258,9 +276,10 @@ describe("OpenAI chat completions through HTTP and the real LLM service", () => 
       ok: false,
       error: {
         code: "CONFIGURATION_ERROR",
-        metadata: { hint: "Set BLOCKEDEN_ACCESS_KEY (see .env.example)" },
+        metadata: { hint: "Set OPENAI_API_KEY (see .env.example)" },
       },
     });
+    expect(deps.authorize).toHaveBeenCalledTimes(1);
     expect(deps.quota).not.toHaveBeenCalled();
     expect(deps.upstream).not.toHaveBeenCalled();
     expect(deps.charge).not.toHaveBeenCalled();

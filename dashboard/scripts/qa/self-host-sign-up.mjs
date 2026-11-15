@@ -15,6 +15,11 @@
  * A stack that verifies email shows a code page instead of signing the visitor
  * in. That is not a failure of this check, so it reports "skipped" (or fails,
  * with `requireSelfHost`, for a pipeline that expects SELF_HOST).
+ *
+ * A self-hosted stack closes sign-up once its first account exists, and sends a
+ * visitor who asks for the sign-up page to sign in instead. That is the stack
+ * working as designed, not a failure, so it reports "skipped" too: run this
+ * against a fresh deploy, before anyone has signed up.
  */
 import { randomBytes } from "node:crypto";
 
@@ -80,6 +85,12 @@ export default async function selfHostSignUp(
   );
 
   await page.goto(at("/auth/sign-up"), { waitUntil: "networkidle" });
+  if (!new URL(page.url()).pathname.startsWith("/auth/sign-up")) {
+    return result({
+      skipped:
+        "this stack takes no more sign-ups: a self-hosted stack closes sign-up once its first account exists, so there is nothing to try",
+    });
+  }
   const formReady = await page
     .locator("#email")
     .waitFor({ timeout: timeoutMs })

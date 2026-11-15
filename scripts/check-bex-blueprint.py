@@ -12,6 +12,9 @@ regressions the one-click deploy was fixed against:
   * a `sync: false` variable                (every one becomes a question on the deploy form)
   * a service naming its own `repo`/`branch` (a fork would deploy ours)
   * a reference to a resource that is not declared
+  * a `fromService` whose `type` is not the type the service is declared with
+  * a Gitea service declared as a `web` service (its login page and API would
+    be on the internet; it must stay a private `pserv`)
 
     python3 scripts/check-bex-blueprint.py [path/to/bex.yaml]
 
@@ -30,6 +33,24 @@ DEFAULT = pathlib.Path(__file__).resolve().parent.parent / "bex.yaml"
 HOSTNAME = re.compile(r"[a-z0-9][a-z0-9-]*\.onbex\.co\b")
 RESOURCE = re.compile(r"^  - name:\s*(\S+)\s*$")
 REFERENCE = re.compile(r"^\s{8,}name:\s*(\S+)\s*$")
+SERVICE_TYPE = re.compile(r"^    type:\s*(\S+)\s*$")
+SIBLING_TYPE = re.compile(r"^\s{8,}type:\s*(\S+)\s*$")
+
+
+def indent(line: str) -> int:
+    return len(line) - len(line.lstrip())
+
+
+def declared_types(lines: list[tuple[int, str]]) -> dict[str, tuple[int, str]]:
+    """Each service's declared `type`, with the line it is on."""
+    types: dict[str, tuple[int, str]] = {}
+    current: str | None = None
+    for number, line in lines:
+        if resource := RESOURCE.match(line):
+            current = resource.group(1)
+        elif current and (kind := SERVICE_TYPE.match(line)):
+            types.setdefault(current, (number, kind.group(1)))
+    return types
 
 
 def code_lines(text: str) -> list[tuple[int, str]]:
@@ -45,9 +66,17 @@ def code_lines(text: str) -> list[tuple[int, str]]:
 def check(text: str) -> list[str]:
     lines = code_lines(text)
     declared = {m.group(1) for _, line in lines if (m := RESOURCE.match(line))}
+    types = declared_types(lines)
     problems: list[str] = []
 
-    for number, line in lines:
+    for name, (number, kind) in types.items():
+        if "gitea" in name.lower() and kind == "web":
+            problems.append(
+                f"line {number}: `{name}` is a web service, so its login page and API get a public "
+                "address; Gitea stays a private service (`type: pserv`) that only the API and the ledger reach"
+            )
+
+    for position, (number, line) in enumerate(lines):
         if HOSTNAME.search(line):
             problems.append(
                 f"line {number}: writes a platform hostname; the platform assigns it "
@@ -79,6 +108,18 @@ def check(text: str) -> list[str]:
             problems.append(
                 f"line {number}: refers to `{reference.group(1)}`, which this file does not declare"
             )
+        elif reference:
+            name = reference.group(1)
+            # `type:` is a sibling key of `name:`, on the line before or after it.
+            neighbours = lines[max(position - 1, 0) : position + 2]
+            for _, neighbour in neighbours:
+                sibling = SIBLING_TYPE.match(neighbour)
+                if sibling and indent(neighbour) == indent(line) and name in types:
+                    if sibling.group(1) != types[name][1]:
+                        problems.append(
+                            f"line {number}: refers to `{name}` as `{sibling.group(1)}`, "
+                            f"but it is declared as `{types[name][1]}`"
+                        )
     return problems
 
 

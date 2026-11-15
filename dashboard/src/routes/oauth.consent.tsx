@@ -5,6 +5,7 @@ import OAuthConsentPage from "@/features/oauth/pages/consent";
 import { handleConsentPost } from "@/features/oauth/funcs/handle-consent-post";
 import { oauthConsentLoader } from "@/features/oauth/funcs/loader";
 import { createNoIndexHead } from "@/common/lib/seo/seo-helpers";
+import { fetchDeploymentInfo } from "@/features/auth/lib/deployment-info";
 
 const searchSchema = z.object({
   uid: z.string(),
@@ -23,8 +24,11 @@ export const Route = createFileRoute("/oauth/consent")({
       ? parsed.data
       : ({ uid: "" } as unknown as z.infer<typeof searchSchema>);
   },
-  beforeLoad: ({ search }) => {
+  beforeLoad: async ({ search, context }) => {
     if (!search.uid) throw notFound();
+    // The sign-in step offers "Sign up" and the register step shows the legal
+    // links only where the deployment says they apply.
+    await fetchDeploymentInfo(context.client);
   },
   notFoundComponent: InvalidAuthorizationLinkPage,
   component: OAuthConsentPage,

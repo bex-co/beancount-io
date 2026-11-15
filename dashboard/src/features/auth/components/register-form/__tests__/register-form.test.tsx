@@ -164,3 +164,31 @@ describe("RegisterForm password rule", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("RegisterForm legal links", () => {
+  const TERMS = 'a[href="https://beancount.io/terms-of-service"]';
+  const PRIVACY = 'a[href="https://beancount.io/privacy-policy"]';
+  const props = {
+    onSubmit: vi.fn(),
+    isLoading: false,
+    serverError: "",
+    showSignInLink: false,
+  };
+
+  it("says the hosted service's terms and privacy policy apply, by default", () => {
+    const { container } = render(<RegisterForm {...props} />);
+    expect(container.querySelector(TERMS)).not.toBeNull();
+    expect(container.querySelector(PRIVACY)).not.toBeNull();
+  });
+
+  it("leaves the line out for a self-hosted deployment, which those terms do not bind", () => {
+    const { container } = render(
+      <RegisterForm {...props} showLegalLinks={false} />,
+    );
+    expect(container.querySelector(TERMS)).toBeNull();
+    expect(container.querySelector(PRIVACY)).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Create account" }),
+    ).toBeInTheDocument();
+  });
+});

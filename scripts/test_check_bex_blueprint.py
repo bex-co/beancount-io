@@ -96,6 +96,62 @@ class EachRuleTripsOnItsViolation(unittest.TestCase):
         self.only(text, "does not declare")
 
 
+GITEA = """\
+  - name: beancount-gitea
+    type: {kind}
+    runtime: docker
+    rootDir: deploy/bex/gitea
+"""
+
+
+class GiteaStaysPrivate(unittest.TestCase):
+    def test_a_private_gitea_passes(self) -> None:
+        self.assertEqual(problems(CLEAN + GITEA.format(kind="pserv")), [])
+
+    def test_a_gitea_web_service_trips(self) -> None:
+        found = problems(CLEAN + GITEA.format(kind="web"))
+        self.assertEqual(len(found), 1, found)
+        self.assertIn("private service", found[0])
+        self.assertRegex(found[0], r"^line \d+:")
+
+    def test_the_rule_does_not_touch_other_web_services(self) -> None:
+        self.assertEqual(problems(CLEAN), [])
+
+
+class ReferencesNameTheTypeTheServiceHas(unittest.TestCase):
+    REFERENCED = (
+        CLEAN
+        + GITEA.format(kind="pserv")
+        + """\
+  - name: beancount-ledger
+    type: pserv
+    envVars:
+      - key: GITEA_HOST_NAME
+        fromService:
+          type: {kind}
+          name: beancount-gitea
+          property: host
+"""
+    )
+
+    def test_the_declared_type_passes(self) -> None:
+        self.assertEqual(problems(self.REFERENCED.format(kind="pserv")), [])
+
+    def test_a_reference_to_a_web_service_that_is_now_private_trips(self) -> None:
+        found = problems(self.REFERENCED.format(kind="web"))
+        self.assertEqual(len(found), 1, found)
+        self.assertIn("declared as `pserv`", found[0])
+
+    def test_type_after_name_is_read_too(self) -> None:
+        text = self.REFERENCED.format(kind="web").replace(
+            "          type: web\n          name: beancount-gitea\n",
+            "          name: beancount-gitea\n          type: web\n",
+        )
+        found = problems(text)
+        self.assertEqual(len(found), 1, found)
+        self.assertIn("declared as `pserv`", found[0])
+
+
 class Reporting(unittest.TestCase):
     def test_problems_carry_line_numbers(self) -> None:
         text = CLEAN + "      - key: X\n        sync: false\n"

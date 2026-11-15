@@ -41,8 +41,9 @@ Edit `.env`:
 1. Set `APP_DOMAIN`, `API_DOMAIN`, `GIT_DOMAIN`, and `ACME_EMAIL`.
 2. Replace every `change-me` value. `openssl rand -hex 32` produces values that
    are both strong and safe inside the generated PostgreSQL URI.
-3. Configure optional integrations only when you need them. The committed
-   BlockEden placeholder lets the API boot but does not enable AI.
+3. Configure optional integrations only when you need them. AI stays off until
+   you set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`; the `bea ask` model proxy
+   needs `OPENAI_API_KEY`.
 
 Validate without starting containers, then build and start the stack:
 

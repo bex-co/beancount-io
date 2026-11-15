@@ -91,7 +91,8 @@ point), not in Gitea. It is off by default. To enable:
   lockfile into the image; a fresh clone resolves dependencies unpinned.
 - AI features need `ANTHROPIC_API_KEY` (or `OPENAI_API_KEY`); unset, the
   server still boots and AI calls fail with a clear "LLM is not configured"
-  error. `BLOCKEDEN_ACCESS_KEY` only meters the `bea ask` model proxy. Stripe,
+  error. The `bea ask` model proxy needs `OPENAI_API_KEY` (and honours
+  `OPENAI_BASE_URL`). Stripe,
   Plaid, SendGrid, and S3 uploads are likewise disabled until their keys are
   set. An unconfigured AI feature or upload answers `CONFIGURATION_ERROR`
   (HTTP 503 on REST) on every API surface, with a hint naming the variables to

@@ -6,6 +6,7 @@ import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLoginForm } from "@/features/auth/hooks/use-login-form";
+import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
 import { useConsentRegisterForm } from "@/features/oauth/hooks/use-consent-register-form";
 import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
 import { LoginForm } from "@/features/auth/components/login-form";
@@ -35,6 +36,7 @@ function LoginStep({
 }) {
   const { t } = useTranslations();
   const client = useApolloClient();
+  const { signUpOpen } = useDeploymentInfo();
 
   const { onSubmit, isLoading, serverError } = useLoginForm({
     onSuccess: async () => {
@@ -57,6 +59,7 @@ function LoginStep({
         serverError={serverError}
         onForgotPasswordClick={onForgotPasswordClick}
         onRegisterClick={onRegisterClick}
+        showSignUpLink={signUpOpen}
       />
     </div>
   );
@@ -73,6 +76,7 @@ function RegisterStep({
   onSignInClick: () => void;
 }) {
   const { t } = useTranslations();
+  const { selfHost } = useDeploymentInfo();
 
   const { onSubmit, isLoading, serverError, defaultUsername } =
     useConsentRegisterForm({ withDefaultLedger: true, onSuccess, onSignedIn });
@@ -92,6 +96,7 @@ function RegisterStep({
         defaultUsername={defaultUsername}
         showSignInLink={true}
         onSignInClick={onSignInClick}
+        showLegalLinks={!selfHost}
       />
     </div>
   );

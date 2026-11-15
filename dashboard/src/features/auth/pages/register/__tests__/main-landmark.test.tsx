@@ -18,6 +18,14 @@ vi.mock("@tanstack/react-router", () => ({
 
 vi.mock("@/common/components/seo/page-seo", () => ({ PageSEO: () => null }));
 
+vi.mock("@/features/auth/hooks/use-deployment-info", () => ({
+  useDeploymentInfo: () => ({
+    __typename: "DeploymentInfoResponse",
+    selfHost: false,
+    signUpOpen: true,
+  }),
+}));
+
 vi.mock("@/features/auth/hooks/use-register-form", () => ({
   useRegisterForm: () => ({
     onSubmit: vi.fn(),

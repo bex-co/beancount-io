@@ -97,9 +97,11 @@ describe("op-class coverage", () => {
     // 83 since w22/m6:t001 added `getLedgerHoldings`, the holdings report;
     // 84 since w22/m6:t002 added `getLedgerRegister`, the register report;
     // 85 since w22/m6:t003 added `getLedgerCapitalGains`, the gains report;
-    // 86 since w7/m3:t001 added `storeBillingIdentity` (ADR 001 D13).
+    // 86 since w7/m3:t001 added `storeBillingIdentity` (ADR 001 D13);
+    // 87 since `deploymentInfo`, the sign-in and sign-up pages' anonymous probe
+    // of a self-hosted deployment (a sign-up ceremony: no REST or MCP twin).
     expect(graphqlOps.filter((op) => op.startsWith("GQL Query.")).length).toBe(
-      86,
+      87,
     );
     // 63 since w2/m28:t005 added `appendLedgerText`, the Beancount-text
     // dialect of `bulkEntries`, on all three surfaces; 64 since w2/m32 added
