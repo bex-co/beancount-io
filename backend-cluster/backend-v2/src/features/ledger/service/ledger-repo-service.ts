@@ -5,6 +5,7 @@ import {
   assertNoTwinsAmong,
 } from "@/features/ledger/utils/portable-twin";
 import { parseLedgerId } from "@/shared/str";
+import { assertCommitRef } from "@/shared/commit-ref";
 import {
   FavaApiError,
   favaApiErrorToDomainError,
@@ -173,6 +174,7 @@ export class LedgerRepoService
     branchName?: string;
   }): Promise<LatestCommitResult> {
     const { ledgerId, identity, branchName = "main" } = params;
+    assertCommitRef(branchName, "branchName");
     await authorizeLedger(
       identity,
       ledgerId,

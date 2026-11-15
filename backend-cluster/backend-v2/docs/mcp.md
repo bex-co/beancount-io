@@ -2038,6 +2038,9 @@ All three require repository read access to the URI's ledger:
   metadata, parents, file statistics, and a unified diff.
 
 Percent-encode branch names and SHA query values when constructing a URI.
+A `branchName`, `branch` or `sha` with a space is refused as `BAD_USER_INPUT`
+naming it, because no branch or SHA holds one. Git revision syntax that takes a
+space still works: inside a `@{…}` or `^{…}` group, and after `:/`.
 
 ### Public configuration reads
 

@@ -5,6 +5,7 @@ import {
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import type { Api as GiteaApi } from "@/features/gitea/client/gitea-api";
 import { assertHostPage, HOST_PAGE_MAX } from "@/shared/host-page";
+import { assertCommitRef } from "@/shared/commit-ref";
 import { parseLedgerId } from "@/shared/str";
 import type {
   CommitListItem,
@@ -58,6 +59,7 @@ export async function findCommit(
   sha: string,
   { stat }: { stat: boolean },
 ) {
+  assertCommitRef(sha, "sha");
   let commit;
   try {
     const listed = await client.repos.repoGetAllCommits(
@@ -274,6 +276,7 @@ export class CommitsService implements ICommitsService {
     // `limit=-1` and `page=0` returned a full first page as if they had been
     // honoured. Checked here because GraphQL's Int arguments arrive unchecked.
     assertHostPage(page, limit);
+    assertCommitRef(branch, "branch");
     await this.authorization.authorizeOrThrow({
       principal: identity ?? anonymousPrincipal(),
       action: AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,

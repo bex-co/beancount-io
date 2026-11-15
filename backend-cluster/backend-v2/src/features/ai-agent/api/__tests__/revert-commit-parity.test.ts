@@ -305,6 +305,21 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
     }
   });
 
+  // w31/024: the host answers a ref with a space it cannot find with a 500, so
+  // the revert refuses it before the lookup, through the shared commit check.
+  it("refuses a sha with a space inside it as bad input, writing nothing", async () => {
+    const f = await fixture([FINE, BROKEN]);
+    try {
+      expect(common(await f.call(surface, { sha: "c1 c0" })).code).toBe(
+        "BAD_USER_INPUT",
+      );
+      expect(f.snapshot()).toEqual(BROKEN);
+      expect(f.shas()).toEqual(["c0", "c1"]);
+    } finally {
+      await f.close();
+    }
+  });
+
   it("refuses a credential that may not write, writing nothing", async () => {
     const f = await fixture([FINE, BROKEN], reader);
     try {

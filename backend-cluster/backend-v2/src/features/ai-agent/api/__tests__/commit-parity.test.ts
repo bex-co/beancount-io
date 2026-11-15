@@ -9,6 +9,7 @@ import { LedgerRepoQueryResolver } from "@/features/ledger/api/resolvers/ledger-
 import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import { CommitsResolver } from "@/features/gitea/commits/api/commits-resolver";
 import { CommitsService } from "@/features/gitea/commits/service/commits-service";
+import { FavaApiError } from "@/foundation/fava/api-client";
 import { AuthorizationService } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { formatError } from "@/server/graphql/format-error";
@@ -332,6 +333,89 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
           formatError(graphqlError.toJSON(), graphqlError).extensions?.code,
         ).toBe("BAD_USER_INPUT");
         expect(f.history).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  // w31/024: the host answers a ref with a space it cannot find with a 500,
+  // which reached callers as INTERNAL_SERVER_ERROR or SERVICE_UNAVAILABLE,
+  // telling them to retry when the fix was to drop the space.
+  const spacedRefs = ["main ", " b6d69fd", "b6d69fd ", "a b", " "];
+  const refReads = [
+    { path: "commit-details", param: "sha", field: "getCommitDetails" },
+    { path: "commits", param: "branch", field: "listCommits" },
+    {
+      path: "latest-commit",
+      param: "branchName",
+      field: "getLatestLedgerCommit",
+    },
+  ];
+  it.each(
+    refReads.flatMap((read) => spacedRefs.map((ref) => ({ ...read, ref }))),
+  )(
+    "refuses $field with $param=$ref as BAD_USER_INPUT naming $param across REST, GraphQL, and MCP",
+    async ({ path, param, field, ref }) => {
+      const f = await fixture();
+      f.history.mockRejectedValue(
+        new Response(null, {
+          status: 500,
+          statusText: "Internal Server Error",
+        }),
+      );
+      f.latest.mockRejectedValue(
+        new FavaApiError("Internal Server Error", 500),
+      );
+      const query = `${path}?${param}=${encodeURIComponent(ref)}`;
+      try {
+        const response = await f.rest(query);
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringMatching(new RegExp(`^${param} `)),
+            metadata: { field: param },
+          },
+        });
+        await expect(f.mcp(query)).rejects.toMatchObject({
+          code: -32602,
+          message: expect.stringContaining(`${param} must not contain a space`),
+          data: { code: "BAD_USER_INPUT" },
+        });
+        const result = await f.gql(
+          `${field}(ledgerId: "alice/main", ${param}: ${JSON.stringify(ref)}) { sha }`,
+        );
+        const [graphqlError] = result.errors ?? [];
+        expect(graphqlError).toBeDefined();
+        const formatted = formatError(graphqlError.toJSON(), graphqlError);
+        expect(formatted.extensions?.code).toBe("BAD_USER_INPUT");
+        expect(formatted.message).toMatch(new RegExp(`^${param} `));
+        expect(f.history).not.toHaveBeenCalled();
+        expect(f.latest).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  it.each([
+    ["main@{1 day ago}", "main@%7B1%20day%20ago%7D"],
+    [":/restore fixture", "%3A%2Frestore%20fixture"],
+  ])(
+    "passes %p, git revision syntax with a space, to the host on every surface",
+    async (ref, encoded) => {
+      const f = await fixture();
+      try {
+        const response = await f.rest(`commits?branch=${encoded}`);
+        expect(response.status).toBe(200);
+        expect(await f.mcp(`commits?branch=${encoded}`)).toEqual([listItem]);
+        const result = await f.gql(
+          `listCommits(ledgerId: "alice/main", branch: ${JSON.stringify(ref)}) { sha }`,
+        );
+        expect(result.errors).toBeUndefined();
+        expect(f.history).toHaveBeenCalledTimes(3);
+        for (const call of f.history.mock.calls)
+          expect(call[2]).toMatchObject({ sha: ref });
       } finally {
         await f.close();
       }
