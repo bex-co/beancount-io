@@ -44,7 +44,7 @@ When a new package gets real code, add a `<package>/AGENTS.md` documenting its t
 
 ## Roadmap board (`.pm/`)
 
-`.pm/` is the public TPM board for growing adoption in the open-source and agentic-coding community (workstreams → milestones → tasks). Conventions live canonically in `.agents/skills/pm/SKILL.md`; `/pm` is the **only** skill that writes to `.pm/`, `/pm-brainstorm` proposes work as text, and `/loopx <wN>` drains a workstream item by item — every pending milestone, task, and inbox note is triaged, then implemented and shipped, closed as already done (`/pm done`), parked with its unblock condition (`/pm block`), or deleted as invalid (`/pm drop`), one `/ship` per outcome; each item goes to a fresh-context worker, and a drained queue listens for new items on `origin/main` for up to 24 idle hours (`--no-listen` exits instead). `/pmx <work> to <wN>` composes the two for one request: it adds the work to `<wN>` through `/pm`, ships that board addition alone, then runs `/loopx <wN>`. Read `.pm/DO_NOT_DO.md` before proposing roadmap work. The board is public — no secrets, no private-repo references.
+`.pm/` is the public TPM board for growing adoption in the open-source and agentic-coding community (workstreams → milestones → tasks). Conventions live canonically in `.agents/skills/pm/SKILL.md`; `/pm` is the **only** skill that writes to `.pm/`, `/pm-brainstorm` proposes work as text, and `/loopx <wN>` drains a workstream item by item — every pending milestone, task, and inbox note is triaged, then implemented and shipped, closed as already done (`/pm done`), parked with its unblock condition (`/pm block`), or deleted as invalid (`/pm drop`), one `/ship` per outcome; each item goes to a fresh-context worker, and a drained queue runs the workstream's routines (`.pm/<wN>/routine/README.md`) on schedule, yielding to new board items, and otherwise listens for new items on `origin/main` for up to 24 idle hours (`--no-listen` exits instead). `/pmx <work> to <wN>` composes the two for one request: it adds the work to `<wN>` through `/pm`, ships that board addition alone, then runs `/loopx <wN>`. Read `.pm/DO_NOT_DO.md` before proposing roadmap work. The board is public — no secrets, no private-repo references.
 
 ## Repo-wide rules
 
@@ -65,6 +65,13 @@ When a new package gets real code, add a `<package>/AGENTS.md` documenting its t
 - Always `cd` into the package directory before running scripts (`yarn`, `tsc`, `uv`, etc.).
 - Don't introduce new cross-package imports — packages are otherwise independent.
 - If unsure which package a change belongs to, ask.
+
+### Work in the checkout you were started in
+
+- Do not create a git worktree (`git worktree add`, a built-in worktree tool, or worktree isolation for a subagent) unless the user asks for one in the current conversation. Work done there is invisible from the checkout the user is looking at, `/ship` cannot run there because `main` is already checked out, and gitignored local files such as `.env` and installed dependencies are missing.
+- If the tree holds changes you did not make, stop and ask. Do not move elsewhere to work around them.
+- Parallel work, such as several `/loopx` queues at once, runs in separate clones the user sets up, not in worktrees.
+- A session the user starts inside a worktree is fine; this rule covers agents creating one.
 
 ### The public website lives in a separate repository
 

@@ -23,7 +23,9 @@ GUARD = pathlib.Path(__file__).resolve().parent / "loopx-guard.py"
 A, B = "session-a", "session-b"
 
 
-class GuardTest(unittest.TestCase):
+class GuardFixture(unittest.TestCase):
+    """A checkout with a w2 and a w5 board; no remote."""
+
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
         self.repo = pathlib.Path(self._tmp.name)
@@ -65,6 +67,9 @@ class GuardTest(unittest.TestCase):
     def marks(self) -> list[str]:
         directory = self.repo / ".git" / "loopx"
         return sorted(p.stem for p in directory.glob("*.json")) if directory.is_dir() else []
+
+
+class GuardTest(GuardFixture):
 
     def test_start_binds_to_the_calling_session_and_blocks_its_stop(self) -> None:
         self.assertIn("armed for w2", self.run_guard("start", "w2", session=A).stdout)
@@ -227,8 +232,8 @@ GIT_ENV = {
 FAST = ["--min", "0.02", "--max", "0.05"]
 
 
-class RemoteTest(unittest.TestCase):
-    """`wait` and `outcome` read origin/main, so these run against a real remote."""
+class RemoteFixture(unittest.TestCase):
+    """A checkout with a real origin, and a second clone that pushes board changes."""
 
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -275,6 +280,10 @@ class RemoteTest(unittest.TestCase):
     def listener(self) -> dict:
         path = self.repo / ".git" / "loopx" / "wait-w2.state"
         return json.loads(path.read_text()) if path.exists() else {}
+
+
+class RemoteTest(RemoteFixture):
+    """`wait` and `outcome` read origin/main, so these run against a real remote."""
 
     def test_wait_wakes_when_a_note_lands_on_origin(self) -> None:
         self.write(".pm/w2/007.md", "new note\n")
@@ -366,6 +375,285 @@ class RemoteTest(unittest.TestCase):
 
     def test_outcome_rejects_unsafe_ids(self) -> None:
         self.assertEqual(self.run_guard("outcome", "w2", "../m4").returncode, 2)
+
+
+class InflightTest(GuardFixture):
+    """`dispatch` lets turns end while a background worker runs."""
+
+    def test_inflight_worker_lets_stops_through_until_settled(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        self.assertIn("in flight", self.run_guard("dispatch", "w2/m53", session=A).stdout)
+        for _ in range(30):  # never counted toward the stand-down limit
+            self.assertEqual(self.stop(A), {})
+        self.assertEqual(self.marks(), [A])
+        self.assertIn("settled w2/m53", self.run_guard("settle", session=A).stdout)
+        self.assertEqual(self.stop(A)["decision"], "block")
+
+    def test_inflight_belongs_to_the_dispatching_session(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        self.run_guard("start", "w5", session=B)
+        self.run_guard("dispatch", "w2/m53", session=A)
+        self.assertEqual(self.stop(A), {})
+        self.assertEqual(self.stop(B)["decision"], "block")
+
+    def test_a_lost_worker_expires_and_the_loop_is_held_again(self) -> None:
+        self.run_guard("start", "w2", session=A)
+        self.run_guard("dispatch", "w2/m53", session=A)
+        mark = self.repo / ".git" / "loopx" / f"{A}.json"
+        state = json.loads(mark.read_text())
+        state["inflight"]["since"] = time.time() - 13 * 3600
+        mark.write_text(json.dumps(state))
+        self.assertEqual(self.stop(A)["decision"], "block")
+        self.assertNotIn("inflight", json.loads(mark.read_text()))
+
+    def test_dispatch_without_a_loop_is_a_no_op(self) -> None:
+        self.assertIn("no loop armed", self.run_guard("dispatch", "w2/m53", session=A).stdout)
+        self.assertIn("no loop armed", self.run_guard("settle", session=A).stdout)
+        self.assertEqual(self.marks(), [])
+
+
+ROUTINES = """# w2 routines
+
+Budget: 2 runs/day
+
+| name | command | every | when | paths |
+| --- | --- | --- | --- | --- |
+| cli-dead-code | `/routine-dead-code-removal cli` | 24h | changed | cli |
+| dashboard-flaky | `/routine-flaky-test-fixer dashboard` | 3d | changed | dashboard |
+"""
+
+
+class RoutineTest(RemoteFixture):
+    """Routine scheduling reads origin/main and keeps its state in .git/loopx/."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.write("cli/app.py", "print(1)\n")
+        self.write("dashboard/app.ts", "1\n")
+        self.write(".pm/w2/routine/README.md", ROUTINES)
+        self.push("routines")
+
+    def due(self) -> dict:
+        result = self.run_guard("routine-due", "w2")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def done(self, name: str, result: str):
+        return self.run_guard("routine-done", "w2", name, result)
+
+    def state(self) -> dict:
+        return json.loads((self.repo / ".git" / "loopx" / "routine-w2.state").read_text())
+
+    def save(self, state: dict) -> None:
+        (self.repo / ".git" / "loopx" / "routine-w2.state").write_text(json.dumps(state))
+
+    def fetch(self) -> None:
+        self.git(self.repo, "fetch", "-q", "origin", "main")
+
+    def schedule(self, table: str, budget: str = "") -> None:
+        header = "| name | command | every | when | paths |\n| --- | --- | --- | --- | --- |\n"
+        self.write(".pm/w2/routine/README.md", budget + header + table)
+        self.push("schedule")
+        self.fetch()
+
+    def test_never_run_routines_are_due_in_list_order(self) -> None:
+        self.fetch()
+        self.assertEqual(self.due()["due"], {
+            "name": "cli-dead-code", "command": "/routine-dead-code-removal cli",
+            "when": "changed", "paths": ["cli"], "interval_hours": 24.0,
+        })
+        self.done("cli-dead-code", "empty")
+        self.assertEqual(self.due()["due"]["name"], "dashboard-flaky")
+
+    def test_any_command_is_a_routine(self) -> None:
+        self.schedule(
+            "| links | python3 scripts/check-links.py --fix | 1d | | |\n"
+            "| triage | Read open CI failures and file each as an inbox note | 2d | always | |\n"
+            "| simplify | `/simplify` | 1w | changed | |\n"
+        )
+        reply = self.due()
+        self.assertEqual(reply["problems"], [])
+        self.assertEqual(reply["due"]["command"], "python3 scripts/check-links.py --fix")
+        self.assertEqual(reply["due"]["when"], "always")
+        self.done("links", "empty")
+        self.assertEqual(self.due()["due"]["command"], "Read open CI failures and file each as an inbox note")
+
+    def test_a_ran_routine_waits_for_its_interval_and_a_path_change(self) -> None:
+        self.fetch()
+        self.done("cli-dead-code", "found")
+        self.done("dashboard-flaky", "found")
+        self.assertIsNone(self.due()["due"])
+        # Interval elapsed, but cli/ has not changed: still not due.
+        state = self.state()
+        for entry in state["routines"].values():
+            entry["last_run"] -= 4 * 86400
+        state["runs"] = []
+        self.save(state)
+        reply = self.due()
+        self.assertIsNone(reply["due"])
+        self.assertIn("no change since", reply["reason"])
+        # A commit outside cli/ does not count; one inside does.
+        self.write("mobile/app.ts", "1\n")
+        self.push("mobile change")
+        self.fetch()
+        self.assertIsNone(self.due()["due"])
+        self.write("cli/app.py", "print(2)\n")
+        self.push("cli change")
+        self.fetch()
+        self.assertEqual(self.due()["due"]["name"], "cli-dead-code")
+
+    def test_a_changed_row_without_paths_waits_for_any_commit(self) -> None:
+        self.schedule("| any | /simplify | 1m | changed | |\n")
+        self.done("any", "found")
+        state = self.state()
+        state["routines"]["any"]["last_run"] -= 120
+        self.save(state)
+        self.assertIsNone(self.due()["due"])
+        self.write("mobile/app.ts", "2\n")
+        self.push("any change")
+        self.fetch()
+        self.assertEqual(self.due()["due"]["name"], "any")
+
+    def test_empty_runs_double_the_interval_and_a_find_resets_it(self) -> None:
+        self.fetch()
+        key = "cli-dead-code"
+        self.done(key, "empty")
+        self.assertEqual(self.state()["routines"][key]["interval"], 2 * 86400)
+        self.done(key, "empty")
+        self.assertEqual(self.state()["routines"][key]["interval"], 4 * 86400)
+        self.assertEqual(self.state()["routines"][key]["empty_runs"], 2)
+        for _ in range(6):
+            self.done(key, "empty")
+        self.assertEqual(self.state()["routines"][key]["interval"], 14 * 86400)  # capped
+        self.done(key, "found")
+        self.assertEqual(self.state()["routines"][key]["interval"], 86400)
+        self.assertEqual(self.state()["routines"][key]["empty_runs"], 0)
+
+    def test_the_daily_budget_stops_further_runs(self) -> None:
+        self.fetch()
+        self.done("cli-dead-code", "found")
+        self.done("dashboard-flaky", "found")
+        state = self.state()
+        for entry in state["routines"].values():
+            entry["last_run"] -= 4 * 86400
+            entry["last_sha"] = ""
+        self.save(state)
+        reply = self.due()
+        self.assertIsNone(reply["due"])
+        self.assertIn("budget of 2", reply["reason"])
+
+    def test_wait_exits_5_for_a_due_routine_and_board_work_comes_first(self) -> None:
+        result = self.run_guard("wait", "w2", *FAST)
+        self.assertEqual(result.returncode, 5, result.stdout + result.stderr)
+        self.assertIn("cli-dead-code (/routine-dead-code-removal cli)", result.stdout)
+        self.assertNotIn("since", self.listener())
+        self.write(".pm/w2/011.md", "note\n")
+        self.push("board work")
+        result = self.run_guard("wait", "w2", *FAST)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_wait_idles_once_every_routine_is_waiting(self) -> None:
+        self.fetch()
+        self.done("cli-dead-code", "found")
+        self.done("dashboard-flaky", "found")
+        result = self.run_guard("wait", "w2", *FAST, "--chunk", "0.2")
+        self.assertEqual(result.returncode, 10, result.stdout + result.stderr)
+
+    def test_bad_rows_are_reported_and_skipped(self) -> None:
+        self.schedule(
+            "| Bad_Name | /x | 24h | | |\n"
+            "| often | /x | often | | |\n"
+            "| nocmd |  | 1d | | |\n"
+            "| gone | /x | 1d | changed | nowhere |\n"
+            "| escape | /x | 1d | changed | ../etc |\n"
+            "| short | /x |\n"
+            "| twice | /x | 1d | | |\n"
+            "| twice | /y | 1d | | |\n"
+        )
+        reply = self.due()
+        problems = " ".join(reply["problems"])
+        self.assertIn("'Bad_Name' is not a routine name", problems)
+        self.assertIn("'often' is not an interval", problems)
+        self.assertIn("nocmd: no command", problems)
+        self.assertIn("gone: no nowhere on origin/main", problems)
+        self.assertIn("escape: paths must be repository-relative", problems)
+        self.assertIn("'short': a row needs name, command, and every", problems)
+        self.assertIn("twice: listed twice", problems)
+        self.assertEqual(reply["due"]["name"], "twice")  # the first copy still runs
+
+    def test_no_routine_list_means_nothing_due(self) -> None:
+        self.git(self.other, "rm", "-q", "-r", ".pm/w2/routine")
+        self.git(self.other, "commit", "-q", "-m", "no routines")
+        self.git(self.other, "push", "-q", "origin", "HEAD:main")
+        self.fetch()
+        self.assertEqual(self.due(), {"due": None, "reason": "no routine list", "problems": [], "next_in": None})
+
+    def test_always_rows_run_on_a_fixed_cadence_without_a_change_gate(self) -> None:
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 30m | always | cli |\n", budget="Budget: 48 runs/day\n\n")
+        self.assertEqual(self.due()["due"], {
+            "name": "cli-qa", "command": "/qa-find-bugs-cli w2 SHIP=1",
+            "when": "always", "paths": ["cli"], "interval_hours": 0.5,
+        })
+        for _ in range(3):  # empty runs never back off
+            self.done("cli-qa", "empty")
+            self.assertEqual(self.state()["routines"]["cli-qa"]["interval"], 1800)
+        self.assertIsNone(self.due()["due"])  # ran just now
+        state = self.state()
+        state["routines"]["cli-qa"]["last_run"] -= 1801
+        self.save(state)
+        # Nothing under cli/ changed since the last run, yet it is due again.
+        self.assertEqual(self.due()["due"]["name"], "cli-qa")
+
+    def test_a_row_without_when_runs_on_its_schedule(self) -> None:
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 30m |\n")
+        self.assertEqual(self.due()["due"]["when"], "always")
+        self.done("cli-qa", "empty")
+        reply = self.due()
+        self.assertIsNone(reply["due"])
+        self.assertAlmostEqual(reply["next_in"], 1800, delta=60)
+        self.assertEqual(self.state()["routines"]["cli-qa"]["interval"], 1800)  # no backoff
+
+    def test_wait_wakes_on_the_routine_schedule_not_the_backed_off_poll(self) -> None:
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 0.03m | always |\n")  # due 1.8 s after a run
+        self.done("cli-qa", "empty")
+        started = time.time()
+        # The board poll alone would not look again for 20 s.
+        result = self.run_guard("wait", "w2", "--min", "20", "--max", "20", "--give-up", "60")
+        self.assertEqual(result.returncode, 5, result.stdout + result.stderr)
+        self.assertLess(time.time() - started, 10)
+
+    def test_a_scheduled_routine_outlasts_the_idle_limit(self) -> None:
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 0.03m | always |\n")
+        self.done("cli-qa", "empty")
+        result = self.run_guard("wait", "w2", "--min", "20", "--max", "20", "--give-up", "0.1")
+        self.assertEqual(result.returncode, 5, result.stdout + result.stderr)
+
+    def test_board_work_wins_over_a_due_routine(self) -> None:
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 30m | always |\n")
+        self.assertIsNotNone(self.due()["due"])
+        self.write(".pm/w2/m9/README.md", "milestone\n")
+        self.push("board work")
+        result = self.run_guard("wait", "w2", *FAST)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("next pick w2/m9", result.stdout)
+
+    def test_a_spent_budget_says_when_it_frees_up(self) -> None:
+        self.schedule("| cli-qa | /qa-find-bugs-cli w2 SHIP=1 | 1m |\n", budget="Budget: 1 runs/day\n\n")
+        self.done("cli-qa", "found")
+        reply = self.due()
+        self.assertIn("budget of 1", reply["reason"])
+        self.assertAlmostEqual(reply["next_in"], 86400, delta=60)
+
+    def test_rejects_an_unknown_when(self) -> None:
+        self.schedule("| cli-dead-code | /routine-dead-code-removal cli | 1d | sometimes |\n")
+        self.assertIn("when must be changed or always", " ".join(self.due()["problems"]))
+
+    def test_routine_done_rejects_unlisted_or_malformed_runs(self) -> None:
+        self.fetch()
+        self.assertEqual(self.done("not-listed", "found").returncode, 2)
+        self.assertEqual(self.done("cli-dead-code", "maybe").returncode, 2)
+        self.assertEqual(self.done("../x", "found").returncode, 2)
+        self.assertEqual(self.run_guard("routine-done", "w2", "routine-dead-code-removal", "cli", "found").returncode, 2)
 
 
 if __name__ == "__main__":

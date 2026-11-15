@@ -16,7 +16,7 @@ Customer-facing `beancount-*` ledger skills belong in [`skills/<name>/`](../skil
 | `pm-brainstorm` | Propose roadmap milestones and tasks as text for `/pm` to materialize. |
 | `pmx` | Route one specific piece of work onto a named workstream through `/pm`, ship that board addition on its own, then run `/loopx` on the same workstream (`/pmx <work> to <wN>`). |
 | `unblock` | Guide the owner in Chinese through concrete actions and decisions that let a worker resume, using quick choices or focused discussion and recording outcomes through `/pm`. |
-| `loopx` | Drain a workstream item by item — triage every pending milestone, task, and inbox note, then work and ship it, close it as already done, block it with an unblock condition, or delete it as invalid. Each item runs in a fresh-context worker; once drained, a zero-token background listener waits up to 24 h for new items (`--no-listen` exits instead). |
+| `loopx` | Drain a workstream item by item — triage every pending milestone, task, and inbox note, then work and ship it, close it as already done, block it with an unblock condition, or delete it as invalid. Each item runs in a fresh-context worker; once drained, it runs routines from `.pm/<wN>/routine/README.md` on schedule (new board items always first; daily budget) and otherwise a zero-token background listener waits up to 24 h for new items (`--no-listen` exits instead). |
 | `ship` | Rebase, commit, and push the current `main` branch. |
 | `mobile-release` | Prepare and publish mobile store releases and localized listings. |
 | `qa-find-bugs-cli` | Exercise real `bea` commands against isolated synthetic ledgers. |

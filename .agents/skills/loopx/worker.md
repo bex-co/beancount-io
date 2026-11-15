@@ -1,12 +1,12 @@
 # `/loopx` worker: take one item to an outcome
 
-You were dispatched by a `/loopx <wN>` orchestrator (see [`SKILL.md`](SKILL.md)) to handle **exactly one** item: a pending milestone (with all of its tasks, closing tasks included) or one open inbox note. Your context is fresh on purpose. Everything you need is on disk: the item's files under `.pm/<wN>/`, `.pm/DO_NOT_DO.md`, the root and scoped `AGENTS.md` files, and the code. Do not rely on anything else.
+You were dispatched by a `/loopx <wN>` orchestrator (see [`SKILL.md`](SKILL.md)) to handle **exactly one** item: a pending milestone (with all of its tasks, closing tasks included) or one open inbox note. If the dispatch says you are a *routine worker* instead, skip to [Routine runs](#routine-runs): you run one scheduled command, not an item. Your context is fresh on purpose. Everything you need is on disk: the item's files under `.pm/<wN>/`, `.pm/DO_NOT_DO.md`, the root and scoped `AGENTS.md` files, and the code. Do not rely on anything else.
 
 Your job ends when the item has reached exactly one of four outcomes and that outcome is shipped to `origin/main`. Those outcomes are: implemented and shipped, closed as already done, moved to `blocked/` with the condition that would clear it, or deleted as invalid. Then return the result block below.
 
 **Scope**
 - Do not pick another item. Do not touch other items' board entries except through the `/pm` moves this item requires.
-- Do not run `scripts/loopx-guard.py start`, `end`, or `wait`. The loop belongs to the orchestrator.
+- Do not run any `scripts/loopx-guard.py` mode other than `outcome` (`start`, `end`, `wait`, `dispatch`, `settle`, `routine-due`, `routine-done` belong to the orchestrator).
 - Never ask the user. A question you cannot settle from evidence is a **block**, with the question as its unblock condition.
 - Start from a clean `main` that matches `origin/main`. If the tree is dirty with work you did not do, stop and report that in the result block (`outcome: blocked`, explaining it in `notes`) without touching it.
 
@@ -73,6 +73,34 @@ A block is anything you cannot resolve autonomously. It can surface at triage or
 - **Doubt is a block, not a delete.**
 - **The board is public.** Nothing you write into `.pm/` or a commit may contain secrets, user data, or references to private repositories. That includes block reasons, delete reasons, and triage-close evidence.
 - **Report honestly.** If you skipped a step, mocked something, or a suite was flaky, say so in `notes`. Do not present partial work as complete, and do not present a close-by-triage as work you did. The orchestrator checks your claim against `origin/main`.
+
+## Routine runs
+
+When the dispatch says you are a **routine worker**, there is no board item. You run the one command the dispatch quotes, as written, and nothing else. The command comes from a row in `.pm/<wN>/routine/README.md` and can be anything:
+
+- **A slash command** (`/qa-find-bugs-cli w1 SHIP=1`, `/routine-dead-code-removal dashboard`, `/simplify`): invoke that skill with exactly those arguments and follow its `SKILL.md`, including any contract it tells you to read (proof standards, verify gates, budgets, STOPs, where its findings go). Where the skill is stricter than the rules below, the skill wins.
+- **A shell command**: run it from the repository root, read its output, and act on what it reports within the command's evident purpose (fix what it flags, or surface it as follow-ups). Do not stretch it into unrelated work.
+- **A task in plain words**: do that task, scoped as narrowly as it reads.
+
+The triage and `/pm` sections above do not apply. Whatever the command is:
+
+- Run the checks for every package you change (step 2's list) and ship each change through `/ship`. Never ship red.
+- Write the board only when the command itself does so through `/pm` (a QA skill filing its findings, for example). List the item ids it filed or extended in `notes`.
+- Anything else that needs board work goes into `followups`: a STOP that needs a person, a finding outside the command's scope, a candidate too large for one run. The orchestrator files each one as an inbox note. Write each one so it stands alone: the problem, the evidence, the paths, and a testable end state. The board is public.
+- `result: found` means the run shipped at least one commit (code, or board items filed or extended); otherwise `empty`.
+- Leave the tree clean and every shipped commit on `origin/main`. A half-done change goes into a named stash (`git stash push -u -m "loopx/routine/<name>"`), never into a ship.
+
+End with this block instead of LOOPX-RESULT, with nothing after it:
+
+```
+LOOPX-ROUTINE
+routine: <name>
+result: found|empty
+commits: <short SHA, comma-separated; - if none>
+followups:
+- <one line per follow-up: problem, evidence, paths, testable end state; or - if none>
+notes: <at most two lines: skipped candidates and why, flakes, stash name>
+```
 
 ## Result block
 

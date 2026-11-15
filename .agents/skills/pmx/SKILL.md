@@ -66,7 +66,7 @@ Two consequences of composing literally, which the report should state plainly:
 
 - `/loopx` drains the **whole** workstream, not just the item you added. It picks the lowest-numbered actionable milestone, then the lowest open inbox note, so older pending items in `<wN>` may run before the routed work.
 - The routed item goes through triage like any other. It can come out shipped, closed as already done, blocked, or deleted, with evidence for the outcome.
-- Draining is not the end. Unless `--no-listen` was given, `/loopx` writes a drained report and then listens for new items on `origin/main` for up to 24 idle hours, so its final Exit can arrive a day later. The drained report already carries the routed item's outcome.
+- Draining is not the end. Unless `--no-listen` was given, `/loopx` writes a drained report, then runs the workstream's due routines (if it lists any) and listens for new items on `origin/main` for up to 24 idle hours, so its final Exit can arrive a day later. The drained report already carries the routed item's outcome.
 
 ## Final report
 

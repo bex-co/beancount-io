@@ -21,6 +21,26 @@ failing. While that `wait` process is alive the Stop hook lets the turn end and
 keeps the mark; a drained loop that is *not* listening is held until it starts
 one. `--no-listen` restores the old behaviour: drained means done.
 
+While the orchestrator waits for a background worker, `dispatch <label>` marks
+the loop in flight and the Stop hook lets turns end until `settle` (or a
+12-hour safety expiry); otherwise every idle turn during a long worker run
+would be handed straight back.
+
+A drained workstream may also run routines listed in
+`.pm/<wN>/routine/README.md` on origin/main. A routine is a named row holding
+any command: a slash command with its arguments, a shell command, or a task in
+plain words; the guard schedules it and never interprets it. `wait` exits 5
+when one is due: its interval has passed, and the day's routine budget is not
+spent. A row runs on its own schedule: `when: always` (the default) means
+every interval, whatever changed; `when: changed` also requires one of the
+row's `paths` (any path when it lists none) to have changed since the last
+run, and
+`routine-done` doubles such a row's interval after an empty run (capped at 14
+days), resetting it after a run that shipped something. `wait` never sleeps
+past the next routine's due time, so a schedule holds even while the board
+poll is backed off; board work still wins whenever both are ready. Run state stays in `.git/loopx/`, never on
+the public board.
+
 Modes:
 
     loopx-guard.py start <wN> [--no-listen]
@@ -29,10 +49,18 @@ Modes:
     loopx-guard.py wait <wN> [--min S] [--max S] [--give-up S] [--chunk S]
                      [--fetch-failures N]
                                 block until origin/main gives <wN> actionable work;
-                                exit 0 work, 3 idle limit, 4 fetch failing,
-                                10 chunk elapsed (call again)
+                                exit 0 work, 5 routine due, 3 idle limit,
+                                4 fetch failing, 10 chunk elapsed (call again)
     loopx-guard.py outcome <wN> <id>
                                 where <id> sits on origin/main (JSON)
+    loopx-guard.py dispatch <label>
+                                mark the calling session's loop as waiting on
+                                a background worker (Stop hook lets turns end)
+    loopx-guard.py settle       clear the in-flight mark once its worker is verified
+    loopx-guard.py routine-due <wN>
+                                the next due routine on origin/main (JSON)
+    loopx-guard.py routine-done <wN> <name> found|empty
+                                record a routine run and reschedule it
     loopx-guard.py              Stop hook: reads the hook payload on stdin and
                                 blocks the stop while this session's loop has work
     loopx-guard.py forget       SessionEnd hook: drop the ending session's mark
@@ -63,7 +91,18 @@ WAIT_MIN = 120.0
 WAIT_MAX = 1800.0
 WAIT_GIVE_UP = 24 * 3600.0
 WAIT_FETCH_FAILURES = 5
-EXIT_WORK, EXIT_GAVE_UP, EXIT_FETCH, EXIT_CHUNK = 0, 3, 4, 10
+EXIT_WORK, EXIT_GAVE_UP, EXIT_FETCH, EXIT_ROUTINE, EXIT_CHUNK = 0, 3, 4, 5, 10
+
+# A worker marked in flight longer than this is presumed lost.
+INFLIGHT_MAX = 12 * 3600.0
+# Routines: runs allowed per rolling 24 h, and the cap for a backed-off interval.
+ROUTINE_BUDGET = 4
+ROUTINE_MAX_INTERVAL = 14 * 24 * 3600.0
+# A routine row's name: its identity in run state and in `routine-done`.
+ROUTINE_NAME = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
+WHEN = ("changed", "always")
+DURATION = re.compile(r"(\d+(?:\.\d+)?)\s*(m|h|d|w)")
+DURATION_UNITS = {"m": 60, "h": 3600, "d": 86400, "w": 7 * 86400}
 
 SESSION_ID = re.compile(r"[A-Za-z0-9_-]{1,128}")
 WORKSTREAM = re.compile(r"w\d+")
@@ -204,6 +243,128 @@ def pid_alive(pid: object) -> bool:
     return True
 
 
+def parse_duration(text: str) -> float | None:
+    match = DURATION.fullmatch(text.strip().lower())
+    if not match:
+        return None
+    seconds = float(match.group(1)) * DURATION_UNITS[match.group(2)]
+    return seconds if seconds > 0 else None
+
+
+def parse_routines(text: str) -> tuple[list[dict], int, list[str]]:
+    """Routines, the daily budget, and problems from a routine README.
+
+    Rows look like `| cli-qa | /qa-find-bugs-cli w1 SHIP=1 | 30m | always | |`:
+    a name, any command, an interval, an optional `when` (`always`, the
+    default, or `changed`), and optional comma-separated `paths` that gate a
+    `changed` row. A line like `Budget: 4 runs/day` overrides the default
+    budget. The command is opaque here: the routine worker runs it.
+    """
+    routines, problems, seen = [], [], set()
+    budget = ROUTINE_BUDGET
+    for line in text.splitlines():
+        found = re.match(r"\s*\**budget:?\**:?\s*(\d+)", line, re.IGNORECASE)
+        if found:
+            budget = int(found.group(1))
+            continue
+        if not line.strip().startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        name = cells[0].strip("`")
+        if name.lower() == "name" or not name or set(name) <= set("-: "):
+            continue  # the header or its separator
+        if len(cells) < 3:
+            problems.append(f"{name!r}: a row needs name, command, and every")
+            continue
+        command = cells[1].strip("`").strip()
+        every = cells[2].strip("`")
+        when = (cells[3].strip("`") if len(cells) > 3 and cells[3] else "always").lower()
+        paths = [p.strip().strip("`").rstrip("/") for p in (cells[4] if len(cells) > 4 else "").split(",")]
+        paths = [p for p in paths if p]
+        interval = parse_duration(every)
+        if not ROUTINE_NAME.fullmatch(name):
+            problems.append(f"{name!r} is not a routine name like cli-qa (lowercase, digits, dashes)")
+        elif not command:
+            problems.append(f"{name}: no command")
+        elif interval is None:
+            problems.append(f"{name}: {every!r} is not an interval like 24h or 3d")
+        elif when not in WHEN:
+            problems.append(f"{name}: when must be changed or always, not {when!r}")
+        elif any(p.startswith(("/", "-")) or ".." in p.split("/") for p in paths):
+            problems.append(f"{name}: paths must be repository-relative, not {', '.join(paths)!r}")
+        elif name in seen:
+            problems.append(f"{name}: listed twice")
+        else:
+            seen.add(name)
+            routines.append({"name": name, "command": command, "every": interval, "when": when, "paths": paths})
+    return routines, budget, problems
+
+
+def routine_state_path(workstream: str) -> pathlib.Path:
+    return state_dir() / f"routine-{workstream}.state"
+
+
+def due_routine(workstream: str, ref: str = REMOTE_REF) -> dict:
+    """The first due routine at REF, or why none is: {"due": {...} | None, ...}."""
+    shown = git("show", f"{ref}:.pm/{workstream}/routine/README.md")
+    if shown.returncode != 0:
+        return {"due": None, "reason": "no routine list", "problems": [], "next_in": None}
+    routines, budget, problems = parse_routines(shown.stdout)
+    if not routines:
+        return {"due": None, "reason": "routine list is empty", "problems": problems, "next_in": None}
+
+    state = read_json(routine_state_path(workstream))
+    now = time.time()
+    runs = [t for t in state.get("runs", []) if isinstance(t, (int, float)) and now - t < 86400]
+    if len(runs) >= budget:
+        return {
+            "due": None,
+            "reason": f"daily budget of {budget} routine runs is spent",
+            "problems": problems,
+            # The budget frees up as the oldest run in the window ages out.
+            "next_in": max(min(runs) + 86400 - now, 0.0),
+        }
+
+    entries = state.get("routines", {}) if isinstance(state.get("routines"), dict) else {}
+    waiting = []
+    next_in = None  # seconds until the soonest routine's interval passes
+    for routine in routines:
+        name, paths = routine["name"], routine["paths"]
+        missing = [p for p in paths if git("cat-file", "-e", f"{ref}:{p}").returncode != 0]
+        if missing:
+            problems.append(f"{name}: no {', '.join(missing)} on {ref}")
+            continue
+        entry = entries.get(name, {})
+        interval = entry.get("interval") if isinstance(entry.get("interval"), (int, float)) else routine["every"]
+        if routine["when"] == "always":
+            interval = routine["every"]  # fixed cadence: no backoff
+        last_run, last_sha = entry.get("last_run"), entry.get("last_sha")
+        if isinstance(last_run, (int, float)) and now - last_run < interval:
+            remaining = interval - (now - last_run)
+            next_in = remaining if next_in is None else min(next_in, remaining)
+            waiting.append(f"{name}: next in {remaining / 3600:.1f} h")
+            continue
+        if routine["when"] == "changed" and isinstance(last_sha, str) and last_sha:
+            changed = git("log", "-1", "--format=%H", f"{last_sha}..{ref}", "--", *paths)
+            # An unknown SHA (history rewritten, shallow clone) counts as changed.
+            if changed.returncode == 0 and not changed.stdout.strip():
+                waiting.append(f"{name}: no change since {last_sha[:9]}")
+                continue
+        return {
+            "due": {
+                "name": name,
+                "command": routine["command"],
+                "when": routine["when"],
+                "paths": paths,
+                "interval_hours": round(interval / 3600, 2),
+            },
+            "problems": problems,
+        }
+    # A `changed` row waiting only for a commit has no time to wake for: the
+    # board poll notices the commit.
+    return {"due": None, "reason": "; ".join(waiting) or "nothing due", "problems": problems, "next_in": next_in}
+
+
 def allow(path: pathlib.Path | None = None) -> None:
     """Let the stop through, removing PATH (the session's mark) when given."""
     if path is not None:
@@ -289,6 +450,73 @@ def cmd_forget() -> None:
     allow(path)
 
 
+def cmd_dispatch(label: str) -> None:
+    path = calling_session()
+    if path is None or not path.is_file():
+        print("loopx guard: no loop armed in this session; nothing marked in flight")
+        return
+    state = read_json(path)
+    state["inflight"] = {"label": label, "since": time.time()}
+    state["blocks"] = 0
+    write_json(path, state)
+    print(f"loopx guard: {label} in flight; turns may end until `settle`")
+
+
+def cmd_settle() -> None:
+    path = calling_session()
+    if path is None or not path.is_file():
+        print("loopx guard: no loop armed in this session")
+        return
+    state = read_json(path)
+    label = (state.pop("inflight", None) or {}).get("label")
+    write_json(path, state)
+    print(f"loopx guard: settled {label}" if label else "loopx guard: nothing was in flight")
+
+
+def cmd_routine_due(workstream: str) -> None:
+    check_workstream(workstream)
+    print(json.dumps(due_routine(workstream)))
+
+
+def cmd_routine_done(workstream: str, name: str, result: str) -> None:
+    check_workstream(workstream)
+    if not ROUTINE_NAME.fullmatch(name) or result not in ("found", "empty"):
+        print("loopx guard: usage: routine-done <wN> <name> found|empty", file=sys.stderr)
+        sys.exit(2)
+    shown = git("show", f"{REMOTE_REF}:.pm/{workstream}/routine/README.md")
+    routines, _, _ = parse_routines(shown.stdout) if shown.returncode == 0 else ([], 0, [])
+    row = next((r for r in routines if r["name"] == name), None)
+    if row is None:
+        print(f"loopx guard: {name} is not in .pm/{workstream}/routine/README.md", file=sys.stderr)
+        sys.exit(2)
+
+    base = row["every"]
+    path = routine_state_path(workstream)
+    state = read_json(path)
+    now = time.time()
+    entries = state.get("routines") if isinstance(state.get("routines"), dict) else {}
+    entry = entries.get(name, {})
+    previous = entry.get("interval") if isinstance(entry.get("interval"), (int, float)) else base
+    if row["when"] == "always" or result == "found":
+        interval = base
+    else:
+        interval = min(max(previous, base) * 2, ROUTINE_MAX_INTERVAL)
+    sha = git("rev-parse", REMOTE_REF).stdout.strip()
+    entries[name] = {
+        "last_run": now,
+        "last_sha": sha,
+        "interval": interval,
+        "empty_runs": 0 if result == "found" else int(entry.get("empty_runs", 0)) + 1,
+    }
+    runs = [t for t in state.get("runs", []) if isinstance(t, (int, float)) and now - t < 86400]
+    write_json(path, {"routines": entries, "runs": [*runs, now]})
+    if row["when"] == "always":
+        gate = ""
+    else:
+        gate = f" and only after {', '.join(row['paths']) or 'the repository'} changes"
+    print(f"loopx guard: {name} recorded as {result}; next eligible in {interval / 3600:.1f} h{gate}")
+
+
 def cmd_wait(workstream: str, options: dict[str, float]) -> None:
     check_workstream(workstream)
     floor, cap = options["min"], max(options["max"], options["min"])
@@ -306,7 +534,7 @@ def cmd_wait(workstream: str, options: dict[str, float]) -> None:
         latest = read_json(state_file)
         latest.pop("pid", None)
         latest.update(extra)
-        if code == EXIT_WORK:
+        if code in (EXIT_WORK, EXIT_ROUTINE):
             latest.pop("since", None)
         write_json(state_file, latest)
         print(message)
@@ -315,6 +543,7 @@ def cmd_wait(workstream: str, options: dict[str, float]) -> None:
     started = time.time()
     delay = floor
     failures = 0
+    routine_in = None
     while True:
         fetched = git("fetch", "-q", "origin", "main").returncode == 0
         found = actionable_at(REMOTE_REF, workstream) if fetched else None
@@ -337,10 +566,20 @@ def cmd_wait(workstream: str, options: dict[str, float]) -> None:
                     f"{REMOTE_REF}; next pick {next_pick(workstream, milestones, notes)}. "
                     "Run `git pull --rebase`, then pick it.",
                 )
+            # Board work was checked first and always wins; only then a routine.
+            schedule = due_routine(workstream)
+            due = schedule["due"]
+            routine_in = schedule.get("next_in")
+            if due:
+                finish(
+                    EXIT_ROUTINE,
+                    f"loopx wait: routine due for {workstream}: {due['name']} ({due['command']}). "
+                    "Run `git pull --rebase`, recheck the board, then dispatch it.",
+                )
 
         now = time.time()
         idle = now - since
-        if idle >= give_up:
+        if idle >= give_up and routine_in is None:
             finish(
                 EXIT_GAVE_UP,
                 f"loopx wait: {workstream} stayed idle for {idle / 3600:.1f} h; "
@@ -356,7 +595,11 @@ def cmd_wait(workstream: str, options: dict[str, float]) -> None:
             )
 
         pause = delay * random.uniform(0.8, 1.2)
-        pause = min(pause, give_up - idle)
+        if routine_in is not None:
+            # Never sleep past a routine's due time; the backoff only paces the board poll.
+            pause = min(pause, routine_in + 1.0)
+        else:
+            pause = min(pause, give_up - idle)
         if chunk > 0:
             pause = min(pause, chunk - spent)
         time.sleep(max(pause, 0.0))
@@ -414,6 +657,16 @@ def cmd_hook() -> None:
             raise ValueError(workstream)
     except Exception:
         allow(path)
+
+    inflight = state.get("inflight")
+    if isinstance(inflight, dict):
+        since = inflight.get("since")
+        if isinstance(since, (int, float)) and time.time() - since < INFLIGHT_MAX:
+            state["blocks"] = 0
+            write_json(path, state)
+            print("{}")  # a background worker is running; its notification wakes the loop
+            sys.exit(0)
+        state.pop("inflight", None)  # presumed lost: hold the loop again
 
     listen = state.get("listen", True) is not False
     milestones, notes = actionable(workstream)
@@ -527,6 +780,14 @@ def main() -> None:
         cmd_wait(args[1], options)
     elif args[0] == "outcome" and len(args) == 3:
         cmd_outcome(args[1], args[2])
+    elif args[0] == "dispatch" and len(args) == 2:
+        cmd_dispatch(args[1])
+    elif args == ["settle"]:
+        cmd_settle()
+    elif args[0] == "routine-due" and len(args) == 2:
+        cmd_routine_due(args[1])
+    elif args[0] == "routine-done" and len(args) == 4:
+        cmd_routine_done(*args[1:])
     else:
         usage()
 
