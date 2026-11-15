@@ -1986,7 +1986,9 @@ trial-balance total: when a market conversion values the holdings
 differently at the as-of date than at the last posting, one closing row
 (`entry: "closing"`, dated the as-of date, no amount, text description
 `Valued at the as-of date`) carries the end-date valuation. Under `units`
-and `at_cost` there is no closing row. A market value from a stale
+and `at_cost` there is no closing row. The text table adds an ACCOUNT
+column whenever a row posted below the requested account, even when every
+row hit the same subaccount. A market value from a stale
 managed quote reads `1,700 USD (stale)`; under `--json` each group names the
 source behind its quotes in `price_source` / `conversion_source`.
 `capital-gains` lists one row per closed lot — acquired and sold dates,

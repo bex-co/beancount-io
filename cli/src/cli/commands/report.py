@@ -677,8 +677,11 @@ def register(
     if not rows:
         typer.echo("No entries.")
         return
-    # The closing row names the root, which is no posting account of its own.
-    show_account = len({row["account"] for row in rows if row["entry"] != "closing"}) > 1
+    # Any row posted below the requested account names its account, even when
+    # every row hit the same descendant (w1/260). The closing row names the
+    # root, which is no posting account of its own.
+    requested = str(data["account"]).casefold()
+    show_account = any(row["account"].casefold() != requested for row in rows if row["entry"] != "closing")
     headers = ["DATE", *(["ACCOUNT"] if show_account else []), "DESCRIPTION", "AMOUNT", "COST", "BALANCE"]
     output.table(
         headers,
@@ -687,7 +690,7 @@ def register(
 
 
 def _row_cells(row: dict[str, Any], conversion: str, precision: Mapping[str, int], show_account: bool) -> list[str]:
-    """One register row's cells; the account column appears only across accounts."""
+    """One register row's cells; the account column appears when rows sit below the requested account."""
     if row["entry"] == "balance":
         description = "Balance check"
     elif row["entry"] == "closing":

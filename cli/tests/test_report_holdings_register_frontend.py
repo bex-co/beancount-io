@@ -189,6 +189,35 @@ def test_register_subtree_shows_accounts(tmp_path: Path) -> None:
     assert "150 USD (2026-01-05)" in proc.stdout
 
 
+SUBACCOUNT = """\
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Expenses:Food
+2026-01-01 open Expenses:Food:Dining
+
+2026-01-02 * "Opening"
+  Assets:Checking 100.00 USD
+  Expenses:Food -100.00 USD
+
+2026-02-10 * "Bistro"
+  Expenses:Food:Dining 50.00 USD
+  Assets:Checking
+"""
+
+
+def test_register_names_a_lone_subaccount(tmp_path: Path) -> None:
+    # Rows that all hit one descendant still name it; the heading names the parent (w1/260).
+    ledger = _write(tmp_path, SUBACCOUNT)
+    for requested in ("Expenses:Food", "expenses:food", "Expenses"):
+        proc = _bea(tmp_path, "--file", str(ledger), "report", "register", requested, "-t", "2026-02")
+        assert proc.returncode == 0, proc.stderr
+        assert "ACCOUNT" in proc.stdout
+        (row,) = [line for line in proc.stdout.splitlines() if line.startswith("2026-02-10")]
+        assert "Expenses:Food:Dining" in row
+    own = _bea(tmp_path, "--file", str(ledger), "report", "register", "Assets:Checking", "-t", "2026-02")
+    assert own.returncode == 0, own.stderr
+    assert "ACCOUNT" not in own.stdout
+
+
 def test_register_renders_the_closing_row(tmp_path: Path) -> None:
     # The 01-10 quote revalues the 01-05 buy; a closing row carries it (w1/252).
     ledger = _write(tmp_path, LEDGER)
