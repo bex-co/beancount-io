@@ -23,10 +23,15 @@ ROOT = Path(__file__).resolve().parents[1]
     ("option", "message"),
     [
         (["--date", "2026-13-01"], "--date '2026-13-01': Invalid date '2026-13-01': not a calendar date"),
-        (["--opening-balance", "Assets:Nope 10"], "--opening-balance 'Assets:Nope 10': Opening balance must be"),
+        (["--opening-balance", "Assets:Nope 10"], "--opening-balance 'Assets:Nope 10': Assets:Nope is not an account"),
         (["--opening-balance", "Assets:Checking 1e3"], "--opening-balance 'Assets:Checking 1e3': Scientific notation"),
+        (
+            ["--opening-balance", "Assets:Checking 10 USD"],
+            "Give the amount without a currency ('ACCOUNT NUMBER'); it is in the operating currency. "
+            "To write 'USD', also pass --currency USD.",
+        ),
     ],
-    ids=["date", "unknown-account", "scientific-notation"],
+    ids=["date", "unknown-account", "scientific-notation", "currency-before-it-is-chosen"],
 )
 def test_a_bad_option_is_refused_before_the_first_question(tmp_path: Path, option: list[str], message: str) -> None:
     env = {k: v for k, v in os.environ.items() if not k.startswith("BEA_") and k != "CI"}

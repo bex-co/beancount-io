@@ -475,6 +475,13 @@ bea --no-input init books --currency EUR --date 2026-08-01 \
   --opening-balance "Liabilities:CreditCard -50"
 ```
 
+`--opening-balance` takes `ACCOUNT NUMBER` for an asset or liability account
+the new ledger opens (`Assets:Checking`, `Assets:Savings`, `Assets:Cash`, and
+`Liabilities:CreditCard` in the fixed chart). The amount is in the operating
+currency; `ACCOUNT NUMBER CUR` is accepted when `CUR` is that `--currency`.
+Any other value exits **2** before anything is created, naming its problem;
+an unknown or non-asset/liability account lists the accounts it accepts.
+
 ### Setup presets and modules
 
 `--preset` builds the chart from the setup catalog instead of the fixed one:

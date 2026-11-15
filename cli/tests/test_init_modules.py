@@ -130,7 +130,7 @@ def test_without_modules_the_preset_ledger_is_unchanged(tmp_path: Path) -> None:
         (["--preset", "personal@1", "--module", "rental-property@1", "--property-name", "Oak St"], "--property-name"),
         (
             ["--preset", "personal@1", "--opening-balance", "Assets:Business:Bank 5"],
-            "Opening balance must be",
+            "Assets:Business:Bank is not an account the new ledger opens",
         ),
     ],
 )

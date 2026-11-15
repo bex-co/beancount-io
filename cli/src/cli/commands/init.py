@@ -228,6 +228,44 @@ def _opening_amount(value: str) -> Decimal:
         raise typer.BadParameter(str(exc)) from exc
 
 
+def _opening_balance_parts(balance: str, currency: str | None, allowed: tuple[str, ...]) -> tuple[str, str]:
+    """Split one `--opening-balance` value into its account and number.
+
+    Each way the value can be wrong gets its own message (w1/262): the shape,
+    a currency other than the operating one, and an account the new ledger
+    does not open as an asset or liability, which lists the ones it does.
+    """
+    prefix = f"--opening-balance {balance!r}:"
+    parts = balance.split()
+    if len(parts) == 3:
+        # `ACCOUNT NUMBER CUR` is the natural amount form; the amount is
+        # always in the operating currency, so only that currency is allowed.
+        if currency is None:
+            raise UsageError(
+                f"{prefix} Give the amount without a currency ('ACCOUNT NUMBER'); it is in the operating "
+                f"currency. To write {parts[2]!r}, also pass --currency {parts[2]}."
+            )
+        if parts[2] != currency:
+            raise UsageError(
+                f"{prefix} Opening balances are in the operating currency {currency}, not {parts[2]}. "
+                f"Use --currency {parts[2]}, or give the amount in {currency}."
+            )
+        parts = parts[:2]
+    if len(parts) != 2:
+        raise UsageError(
+            f"{prefix} Expected 'ACCOUNT NUMBER' with the amount in the operating currency, "
+            "e.g. 'Assets:Checking 1000'."
+        )
+    account, number = parts
+    accepted = [name for name in allowed if name.startswith(("Assets:", "Liabilities:"))]
+    if account not in accepted:
+        problem = (
+            "is not an asset or liability account" if account in allowed else "is not an account the new ledger opens"
+        )
+        raise UsageError(f"{prefix} {account} {problem}. Opening balances accept: {', '.join(accepted)}.")
+    return account, number
+
+
 def _in_working_directory(file: Path) -> bool:
     """Whether `file` is the `main.bean` a bare `bea` run here would discover.
 
@@ -521,13 +559,7 @@ def init(
     allowed_opening = (*preset_accounts, *added) if preset_accounts is not None else _ACCOUNTS
     balances: dict[str, Decimal] = {}
     for balance in opening_balance or []:
-        parts = balance.split()
-        if len(parts) != 2 or parts[0] not in allowed_opening or not parts[0].startswith(("Assets:", "Liabilities:")):
-            raise UsageError(
-                f"--opening-balance {balance!r}: Opening balance must be 'ACCOUNT NUMBER' for one of the "
-                "template's asset/liability accounts."
-            )
-        account, number = parts
+        account, number = _opening_balance_parts(balance, currency, allowed_opening)
         if account in balances:
             raise UsageError(f"--opening-balance {balance!r}: Opening balance specified twice for {account}.")
         try:
