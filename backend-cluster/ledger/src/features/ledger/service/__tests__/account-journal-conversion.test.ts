@@ -66,6 +66,7 @@ beforeEach(() => {
     sourceFiles: ["main.bean"],
     managedPrices: [],
     managedPricePaths: [],
+    ref: "HEAD",
   });
   jest.mocked(parseLedgerFiles).mockResolvedValue({
     valid: true,

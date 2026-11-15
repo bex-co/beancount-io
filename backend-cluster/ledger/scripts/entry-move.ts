@@ -28,7 +28,7 @@ function fail(message: string): never {
 }
 
 /** A repository the loader reads and `commitLedgerFiles` writes, one commit per change. */
-function committingRepo(files: Record<string, string>) {
+export function committingRepo(files: Record<string, string>) {
   const commits: string[][] = [];
   const blob = (text: string) =>
     createHash("sha1").update(text).digest("hex");

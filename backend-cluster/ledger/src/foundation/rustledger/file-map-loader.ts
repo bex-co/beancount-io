@@ -417,6 +417,11 @@ export interface LoadedLedger {
    * check.
    */
   repoPaths: string[];
+  /**
+   * The commit the files were read at (`HEAD` only when the tree named none),
+   * so a later read of a file the map lacks sees the same snapshot.
+   */
+  ref: string;
 }
 
 /** List every tree entry across pages (recursive), bounded for safety. */
@@ -450,6 +455,220 @@ async function listAllTreeEntries(
 }
 
 /**
+ * Reads repository blobs at one ref into a FileMap under the loader's caps: a
+ * file over {@link MAX_LEDGER_SOURCE_FILE_BYTES}, a map over
+ * {@link MAX_LEDGER_FILE_MAP_BYTES} or one of more than
+ * {@link MAX_LEDGER_FILE_MAP_FILES} files is refused. What the map already
+ * holds counts against them. `sizeByPath`, the tree's declared blob sizes,
+ * lets a batch be refused before any of it is fetched.
+ */
+class RepoFileReader {
+  loadedBytes = 0;
+  loadedFileCount = 0;
+  private readonly contentsQuery: { ref: string } | undefined;
+
+  constructor(
+    private readonly client: GiteaClientLike,
+    private readonly owner: string,
+    private readonly repo: string,
+    ref: string,
+    readonly files: FileMap,
+    readonly sizeByPath: ReadonlyMap<string, number> = new Map(),
+  ) {
+    // Gitea's `contents` endpoint does not resolve symbolic `HEAD`; normally
+    // the tree response supplies its concrete SHA. Retain the old omission
+    // only for non-conforming mocks/servers that omit `GitTreeResponse.sha`.
+    this.contentsQuery = ref === "HEAD" ? undefined : { ref };
+    for (const content of Object.values(files)) {
+      if (content !== UNDECODABLE_SOURCE) {
+        this.loadedBytes += Buffer.byteLength(content, "utf-8");
+      }
+      this.loadedFileCount += 1;
+    }
+  }
+
+  fetchAll(paths: readonly string[]): Promise<void> {
+    return fetchPathsWithBoundedConcurrency(paths, (path) => this.fetch(path));
+  }
+
+  private async fetch(path: string): Promise<void> {
+    // The generated client splices the path RAW into the URL, so a legally
+    // named file containing a URL metacharacter (`budget#1.bean`, `q?.bean`)
+    // would truncate/rewrite the request and fail the whole FileMap load —
+    // encode each segment like every other Gitea content read (see
+    // safe-repo-path.ts). The FileMap keeps the RAW path as its key.
+    const urlPath = toSafeRepoUrlPath(path);
+    const contents = await this.client.repos.repoGetContents(
+      this.owner,
+      this.repo,
+      urlPath,
+      this.contentsQuery,
+    );
+    let text: string;
+    try {
+      text = await readGiteaFileText(
+        this.client.repos,
+        this.owner,
+        this.repo,
+        urlPath,
+        contents.data,
+        this.contentsQuery,
+        { maxBytes: MAX_LEDGER_SOURCE_FILE_BYTES, requireUtf8: true },
+      );
+    } catch (error) {
+      // One undecodable file must not make the whole ledger unreadable; the
+      // parse reports it only if the entry point reaches it (w23/011).
+      if (!(error instanceof UndecodableTextError)) throw error;
+      this.loadedFileCount += 1;
+      this.files[path] = UNDECODABLE_SOURCE;
+      return;
+    }
+    const nextBytes = this.loadedBytes + Buffer.byteLength(text, "utf-8");
+    if (nextBytes > MAX_LEDGER_FILE_MAP_BYTES) {
+      throw new ResourceLimitReachedError(
+        "Ledger source bytes",
+        MAX_LEDGER_FILE_MAP_BYTES,
+        nextBytes,
+      );
+    }
+    this.loadedBytes = nextBytes;
+    this.loadedFileCount += 1;
+    this.files[path] = text;
+  }
+}
+
+/**
+ * Fetch every repository file an `include` in the reader's map reaches that
+ * the map lacks: beancount permits any extension (`include "accounts.txt"`,
+ * extensionless data files), and an included file may itself `include`, so
+ * this resolves transitively. Only paths that exist in the repo blob
+ * inventory are fetched; a missing target is left for the engine to report.
+ * The WASM engine expands globs against the FileMap, so a glob target loads
+ * ALL matching repo blobs (else the pattern matches nothing). A path in
+ * `excluded` is never fetched. The walk reads the includes of the files in
+ * `from` (default: every file in the map), then of each file it fetched, so a
+ * caller whose other files were walked already names only the ones that
+ * changed.
+ */
+async function fetchReachedIncludes(
+  reader: RepoFileReader,
+  repoPaths: readonly string[],
+  options: { from?: Iterable<string>; excluded?: ReadonlySet<string> } = {},
+): Promise<void> {
+  const { files, sizeByPath } = reader;
+  const excluded = options.excluded ?? new Set<string>();
+  const repoSet = new Set(repoPaths);
+  const globBudget = new GlobWorkBudget();
+  const processedIncludes = new Set<string>();
+  const fetchable = (path: string): boolean =>
+    !Object.hasOwn(files, path) && !excluded.has(path);
+  let scan = [...(options.from ?? Object.keys(files))];
+  for (let pass = 0; pass < MAX_INCLUDE_PASSES; pass += 1) {
+    const missing = new Set<string>();
+    let declaredMissingBytes = 0;
+    const addMissing = (path: string): void => {
+      if (missing.has(path)) return;
+      const declaredBytes = sizeByPath.get(path) ?? 0;
+      if (declaredBytes > MAX_LEDGER_SOURCE_FILE_BYTES) {
+        throw new ResourceLimitReachedError(
+          "Ledger source file bytes",
+          MAX_LEDGER_SOURCE_FILE_BYTES,
+          declaredBytes,
+        );
+      }
+      const nextDeclaredBytes = declaredMissingBytes + declaredBytes;
+      if (reader.loadedBytes + nextDeclaredBytes > MAX_LEDGER_FILE_MAP_BYTES) {
+        throw new ResourceLimitReachedError(
+          "Ledger source bytes",
+          MAX_LEDGER_FILE_MAP_BYTES,
+          reader.loadedBytes + nextDeclaredBytes,
+        );
+      }
+      if (
+        reader.loadedFileCount + missing.size + 1 >
+        MAX_LEDGER_FILE_MAP_FILES
+      ) {
+        throw new ResourceLimitReachedError(
+          "Ledger source file count",
+          MAX_LEDGER_FILE_MAP_FILES,
+          reader.loadedFileCount + missing.size + 1,
+        );
+      }
+      declaredMissingBytes = nextDeclaredBytes;
+      missing.add(path);
+    };
+    for (const path of scan) {
+      if (!Object.hasOwn(files, path)) continue;
+      for (const target of extractIncludeTargets(files[path])) {
+        const includeKey = `${path}\0${target}`;
+        if (processedIncludes.has(includeKey)) continue;
+        processedIncludes.add(includeKey);
+        if (isUrlIncludeTarget(target)) continue;
+        const resolved = resolveIncludeTarget(path, target);
+        if (isGlob(resolved)) {
+          const pattern = globToRegExp(resolved);
+          // A malformed glob compiles to null → load nothing; the engine reports
+          // a normal "no match" ledger error rather than throwing.
+          if (pattern) {
+            for (const repoPath of repoPaths) {
+              if (fetchable(repoPath) && globBudget.test(pattern, repoPath)) {
+                addMissing(repoPath);
+              }
+            }
+          }
+        } else if (fetchable(resolved) && repoSet.has(resolved)) {
+          addMissing(resolved);
+        }
+      }
+    }
+    if (missing.size === 0) break;
+    scan = [...missing];
+    await reader.fetchAll(scan);
+  }
+}
+
+/**
+ * Complete a projected FileMap (a load's files with a write's overlays
+ * applied) with the repository files its includes reach, read at the load's
+ * `ref`, as the load after the commit would (w31/022). The committed load
+ * fetched only the non-`.bean` files the committed includes reach, so an
+ * include a write adds of an existing `.txt`, `.ldg` or extensionless file
+ * previewed "Included file not found". Only the `written` files can reach
+ * anything new, since the load walked the rest; a path in `deleted` stays
+ * deleted. The map's own keys keep their order; fetched files follow, sorted.
+ */
+export async function fetchProjectedIncludes(
+  client: GiteaClientLike,
+  owner: string,
+  repo: string,
+  projection: {
+    files: FileMap;
+    repoPaths: readonly string[];
+    ref: string;
+    written: ReadonlySet<string>;
+    deleted: ReadonlySet<string>;
+  },
+): Promise<FileMap> {
+  const { repoPaths, ref, written, deleted } = projection;
+  const files = Object.assign(Object.create(null), projection.files) as FileMap;
+  const projected = Object.keys(files);
+  await fetchReachedIncludes(
+    new RepoFileReader(client, owner, repo, ref, files),
+    repoPaths,
+    { from: written, excluded: deleted },
+  );
+  if (Object.keys(files).length === projected.length) return projection.files;
+  const known = new Set(projected);
+  const ordered = Object.create(null) as FileMap;
+  for (const path of projected) ordered[path] = files[path];
+  for (const path of Object.keys(files)
+    .filter((key) => !known.has(key))
+    .sort())
+    ordered[path] = files[path];
+  return ordered;
+}
+
+/**
  * Fetch every `.bean`/`.beancount` file in a ledger repo at `ref` into a
  * FileMap. Entry-point-agnostic — the result is a pure function of
  * `(owner, repo, ref)`, which is what makes it cacheable per commit SHA.
@@ -459,7 +678,7 @@ export async function fetchBeanFileMap(
   owner: string,
   repo: string,
   ref: string = "HEAD",
-): Promise<{ files: FileMap; repoPaths: string[] }> {
+): Promise<{ files: FileMap; repoPaths: string[]; ref: string }> {
   const { entries: treeEntries, resolvedRef } = await listAllTreeEntries(
     client,
     owner,
@@ -508,131 +727,19 @@ export async function fetchBeanFileMap(
     );
   }
 
-  // Gitea's `contents` endpoint does not resolve symbolic `HEAD`; normally the
-  // tree response above supplies its concrete SHA. Retain the old omission only
-  // for non-conforming mocks/servers that omit `GitTreeResponse.sha`.
-  const contentsQuery =
-    resolvedRef === "HEAD" ? undefined : { ref: resolvedRef };
   const files = Object.create(null) as FileMap;
-  let loadedBytes = 0;
-  let loadedFileCount = 0;
-  const fetchInto = async (path: string): Promise<void> => {
-    // The generated client splices the path RAW into the URL, so a legally
-    // named file containing a URL metacharacter (`budget#1.bean`, `q?.bean`)
-    // would truncate/rewrite the request and fail the whole FileMap load —
-    // encode each segment like every other Gitea content read (see
-    // safe-repo-path.ts). The FileMap keeps the RAW path as its key.
-    const urlPath = toSafeRepoUrlPath(path);
-    const contents = await client.repos.repoGetContents(
-      owner,
-      repo,
-      urlPath,
-      contentsQuery,
-    );
-    let text: string;
-    try {
-      text = await readGiteaFileText(
-        client.repos,
-        owner,
-        repo,
-        urlPath,
-        contents.data,
-        contentsQuery,
-        { maxBytes: MAX_LEDGER_SOURCE_FILE_BYTES, requireUtf8: true },
-      );
-    } catch (error) {
-      // One undecodable file must not make the whole ledger unreadable; the
-      // parse reports it only if the entry point reaches it (w23/011).
-      if (!(error instanceof UndecodableTextError)) throw error;
-      loadedFileCount += 1;
-      files[path] = UNDECODABLE_SOURCE;
-      return;
-    }
-    const nextBytes = loadedBytes + Buffer.byteLength(text, "utf-8");
-    if (nextBytes > MAX_LEDGER_FILE_MAP_BYTES) {
-      throw new ResourceLimitReachedError(
-        "Ledger source bytes",
-        MAX_LEDGER_FILE_MAP_BYTES,
-        nextBytes,
-      );
-    }
-    loadedBytes = nextBytes;
-    loadedFileCount += 1;
-    files[path] = text;
-  };
-
-  await fetchPathsWithBoundedConcurrency(beanPaths, fetchInto);
-
-  // Pull in non-`.bean` files reached through `include` (e.g.
-  // `include "accounts.txt"`, or a glob `include "accounts/*.txt"`). Every
-  // `.bean` file is already loaded, so this only fetches the extra text files an
-  // include points at; resolve transitively (an included file may itself
-  // `include`) and only fetch paths that genuinely exist in the repo blob
-  // inventory. The WASM engine expands globs against the FileMap, so for a glob
-  // target we load ALL matching repo blobs (else the pattern matches nothing).
-  const repoSet = new Set(repoPaths);
-  const globBudget = new GlobWorkBudget();
-  const processedIncludes = new Set<string>();
-  for (let pass = 0; pass < MAX_INCLUDE_PASSES; pass += 1) {
-    const missing = new Set<string>();
-    let declaredMissingBytes = 0;
-    const addMissing = (path: string): void => {
-      if (missing.has(path)) return;
-      const declaredBytes = sizeByPath.get(path) ?? 0;
-      if (declaredBytes > MAX_LEDGER_SOURCE_FILE_BYTES) {
-        throw new ResourceLimitReachedError(
-          "Ledger source file bytes",
-          MAX_LEDGER_SOURCE_FILE_BYTES,
-          declaredBytes,
-        );
-      }
-      const nextDeclaredBytes = declaredMissingBytes + declaredBytes;
-      if (loadedBytes + nextDeclaredBytes > MAX_LEDGER_FILE_MAP_BYTES) {
-        throw new ResourceLimitReachedError(
-          "Ledger source bytes",
-          MAX_LEDGER_FILE_MAP_BYTES,
-          loadedBytes + nextDeclaredBytes,
-        );
-      }
-      if (loadedFileCount + missing.size + 1 > MAX_LEDGER_FILE_MAP_FILES) {
-        throw new ResourceLimitReachedError(
-          "Ledger source file count",
-          MAX_LEDGER_FILE_MAP_FILES,
-          loadedFileCount + missing.size + 1,
-        );
-      }
-      declaredMissingBytes = nextDeclaredBytes;
-      missing.add(path);
-    };
-    for (const [path, content] of Object.entries(files)) {
-      for (const target of extractIncludeTargets(content)) {
-        const includeKey = `${path}\0${target}`;
-        if (processedIncludes.has(includeKey)) continue;
-        processedIncludes.add(includeKey);
-        if (isUrlIncludeTarget(target)) continue;
-        const resolved = resolveIncludeTarget(path, target);
-        if (isGlob(resolved)) {
-          const pattern = globToRegExp(resolved);
-          // A malformed glob compiles to null → load nothing; the engine reports
-          // a normal "no match" ledger error rather than throwing.
-          if (pattern) {
-            for (const repoPath of repoPaths) {
-              if (
-                !Object.hasOwn(files, repoPath) &&
-                globBudget.test(pattern, repoPath)
-              ) {
-                addMissing(repoPath);
-              }
-            }
-          }
-        } else if (!Object.hasOwn(files, resolved) && repoSet.has(resolved)) {
-          addMissing(resolved);
-        }
-      }
-    }
-    if (missing.size === 0) break;
-    await fetchPathsWithBoundedConcurrency([...missing], fetchInto);
-  }
+  const reader = new RepoFileReader(
+    client,
+    owner,
+    repo,
+    resolvedRef,
+    files,
+    sizeByPath,
+  );
+  await reader.fetchAll(beanPaths);
+  // Every `.bean` file is loaded; pull in the non-`.bean` files their
+  // includes reach (`include "accounts.txt"`, `include "accounts/*.txt"`).
+  await fetchReachedIncludes(reader, repoPaths);
 
   // Return the FileMap with DETERMINISTIC key order (sorted). Blobs are fetched
   // in parallel, so raw insertion order follows network-completion order — which
@@ -642,7 +749,7 @@ export async function fetchBeanFileMap(
   for (const path of Object.keys(files).sort())
     orderedFiles[path] = files[path];
 
-  return { files: orderedFiles, repoPaths };
+  return { files: orderedFiles, repoPaths, ref: resolvedRef };
 }
 
 /**
@@ -734,9 +841,10 @@ export async function loadLedgerFileMap(
   const ref = options.ref ?? "HEAD";
   const entryPoint = options.entryPoint ?? DEFAULT_ENTRY_POINT;
 
-  const { files, repoPaths } = await fetchBeanFileMap(client, owner, repo, ref);
+  const loaded = await fetchBeanFileMap(client, owner, repo, ref);
+  const { files, repoPaths } = loaded;
   requireEntryPoint(files, owner, repo, entryPoint);
   const sourceFiles = collectSourceFiles(files, entryPoint);
 
-  return { files, entryPoint, sourceFiles, repoPaths };
+  return { files, entryPoint, sourceFiles, repoPaths, ref: loaded.ref };
 }

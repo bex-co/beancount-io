@@ -36,6 +36,7 @@ import {
   commodityPairsWithPrices,
   deriveReportAccounts,
   entriesCountPerType,
+  fetchProjectedIncludes,
   filterDirectivesAsync,
   formatFiscalYearEnd,
   intervalTotals,
@@ -563,7 +564,7 @@ export class LedgerDataService implements ILedgerDataService {
       ledgerId,
       userId,
     );
-    const { files, entryPoint, repoPaths, managedPricePaths } =
+    const { files, entryPoint, repoPaths, managedPricePaths, ref } =
       await loadCachedFileMapForRepo(
         client as GiteaCommitClient,
         this.cacheHelper,
@@ -574,6 +575,8 @@ export class LedgerDataService implements ILedgerDataService {
     // over the includes the projection holds.
     const projected: Record<string, string> = { ...files };
     for (const path of managedPricePaths) delete projected[path];
+    const written = new Set<string>();
+    const deleted = new Set<string>();
     let totalBytes = 0;
     overlays.forEach((overlay, index) => {
       if (
@@ -587,6 +590,7 @@ export class LedgerDataService implements ILedgerDataService {
       assertNotManagedPricePath(overlay.path, managedPricePaths);
       if (overlay.content === null || overlay.content === undefined) {
         delete projected[overlay.path];
+        deleted.add(overlay.path);
         return;
       }
       if (typeof overlay.content !== "string") {
@@ -602,14 +606,24 @@ export class LedgerDataService implements ILedgerDataService {
         );
       }
       projected[overlay.path] = text;
+      written.add(overlay.path);
     });
     if (!Object.hasOwn(projected, entryPoint)) {
       return { projected, entryPoint, repoPaths };
     }
+    // A write that adds an include of a committed file the load never reached
+    // (`include "accounts.txt"`, a glob over `.ldg` files) gets that file from
+    // the same commit, as the commit's own load would (w31/022).
+    const included = await fetchProjectedIncludes(
+      client as GiteaCommitClient,
+      ledgerOwner,
+      ledgerName,
+      { files: projected, repoPaths, ref, written, deleted },
+    );
     // A write that adds or moves a managed include gets its feed, from the
     // cache or one fetch, as the commit's own load would (w1/221).
     const overlaid = await overlayProjectedManagedPrices(
-      projected,
+      included,
       entryPoint,
       this.cacheHelper,
     );

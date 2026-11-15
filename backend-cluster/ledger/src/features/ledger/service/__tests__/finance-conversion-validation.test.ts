@@ -49,6 +49,7 @@ function configure(directives: DirectiveJson[]) {
     sourceFiles: ["main.bean"],
     managedPrices: [],
     managedPricePaths: [],
+    ref: "HEAD",
   });
   jest.mocked(parseLedgerFiles).mockResolvedValue({
     valid: true,

@@ -88,6 +88,7 @@ beforeEach(() => {
     repoPaths: ["main.bean"],
     managedPrices: [],
     managedPricePaths: [],
+    ref: "HEAD",
   });
   parseMock.mockResolvedValue({
     valid: true,

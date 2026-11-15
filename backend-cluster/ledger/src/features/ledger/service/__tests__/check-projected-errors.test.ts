@@ -25,14 +25,42 @@ const MAIN = [
   "",
 ].join("\n");
 
+/** Repository blobs the projection may read, served at any ref. */
+const repoGetContents = jest.fn();
+
 function service() {
-  const giteaClientFactory = { getPublicApiClient: jest.fn() };
+  const giteaClientFactory = {
+    getPublicApiClient: jest.fn(async () => ({ repos: { repoGetContents } })),
+  };
   return new LedgerDataService(giteaClientFactory as never, {} as never);
+}
+
+/** A committed repository whose `.bean` files the load read, and all its blobs. */
+function committed(
+  files: Record<string, string>,
+  blobs: Record<string, string>,
+) {
+  loadMock.mockResolvedValue({
+    files,
+    entryPoint: "main.bean",
+    repoPaths: Object.keys({ ...files, ...blobs }),
+    managedPrices: [],
+    managedPricePaths: [],
+    ref: "c0ffee",
+  });
+  repoGetContents.mockImplementation(
+    async (_owner: string, _repo: string, path: string) => {
+      const text = blobs[decodeURIComponent(path)];
+      if (text === undefined) throw { status: 404 };
+      return { data: { encoding: "base64", content: b64(text) } };
+    },
+  );
 }
 
 beforeEach(() => {
   loadMock.mockReset();
   parseMock.mockReset();
+  repoGetContents.mockReset();
   loadMock.mockResolvedValue({
     files: { "main.bean": MAIN },
     entryPoint: "main.bean",
@@ -81,6 +109,110 @@ describe("checkProjectedErrors", () => {
     });
     expect(parseMock.mock.calls[0]?.[0]).toEqual({
       "main.bean": `${MAIN}include "extra.bean"\n`,
+    });
+  });
+
+  // w31/022: the load fetched only the non-`.bean` files the committed
+  // includes reach, so a write that added an include of another one was
+  // refused "Included file not found" although the commit loads it.
+  describe("a committed file the load never reached", () => {
+    const LIST = 'include "y.bean"\n';
+    const Y =
+      "2026-08-30 *\n  Expenses:Food 1.00 USD\n  Assets:Cash -1.00 USD\n";
+    const LDG =
+      "2026-08-31 *\n  Expenses:Food 2.00 USD\n  Assets:Cash -2.00 USD\n";
+    const include = (target: string) =>
+      service().checkProjectedErrors({
+        ledgerId: "alice/main",
+        userId: "user-1",
+        overlays: [
+          { path: "main.bean", content: b64(`${MAIN}include "${target}"\n`) },
+        ],
+      });
+    const projected = () => parseMock.mock.calls[0]?.[0];
+
+    beforeEach(() =>
+      committed(
+        { "main.bean": MAIN, "qa/y.bean": Y },
+        {
+          "qa/list.txt": LIST,
+          "qa/extra.ldg": LDG,
+          "qa/more.ldg": LDG,
+          "qa/notes.md": "# not included\n",
+        },
+      ),
+    );
+
+    it("is read from the load's commit when a write includes it", async () => {
+      await include("qa/list.txt");
+      expect(projected()).toEqual({
+        "main.bean": `${MAIN}include "qa/list.txt"\n`,
+        "qa/y.bean": Y,
+        "qa/list.txt": LIST,
+      });
+      expect(repoGetContents).toHaveBeenCalledTimes(1);
+      expect(repoGetContents).toHaveBeenCalledWith(
+        "alice",
+        "main",
+        "qa/list.txt",
+        { ref: "c0ffee" },
+      );
+    });
+
+    it("is read for every match of a glob include", async () => {
+      await include("qa/*.ldg");
+      expect(Object.keys(projected())).toEqual([
+        "main.bean",
+        "qa/y.bean",
+        "qa/extra.ldg",
+        "qa/more.ldg",
+      ]);
+    });
+
+    it("is read through the includes of a file it reaches", async () => {
+      committed(
+        { "main.bean": MAIN },
+        { "a.txt": 'include "sub/b.dat"\n', "sub/b.dat": LDG },
+      );
+      await include("a.txt");
+      expect(projected()).toMatchObject({ "sub/b.dat": LDG });
+    });
+
+    it("stays missing when the repository has no such file", async () => {
+      await include("qa/nope.txt");
+      await include("qa/*.dat");
+      expect(repoGetContents).not.toHaveBeenCalled();
+      expect(Object.keys(parseMock.mock.calls[1]?.[0])).toEqual([
+        "main.bean",
+        "qa/y.bean",
+      ]);
+    });
+
+    it("stays deleted when the write deletes it", async () => {
+      await service().checkProjectedErrors({
+        ledgerId: "alice/main",
+        userId: "user-1",
+        overlays: [
+          { path: "qa/list.txt", content: null },
+          { path: "main.bean", content: b64(`${MAIN}include "qa/*.txt"\n`) },
+        ],
+      });
+      expect(repoGetContents).not.toHaveBeenCalled();
+      expect(projected()).not.toHaveProperty("qa/list.txt");
+    });
+
+    it("counts toward the loaded files projectedSourceFiles lists", async () => {
+      const sources = await service().projectedSourceFiles({
+        ledgerId: "alice/main",
+        userId: "user-1",
+        overlays: [
+          {
+            path: "main.bean",
+            content: b64(`${MAIN}include "qa/list.txt"\n`),
+          },
+        ],
+      });
+      expect(sources).toEqual(["main.bean", "qa/list.txt", "qa/y.bean"]);
     });
   });
 

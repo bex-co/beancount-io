@@ -189,11 +189,15 @@ export interface CachedLoadOptions extends LoadLedgerOptions {
  * the SHA-keyed value is retrieved, so the cached value stays a pure function
  * of the commit and a price refresh never depends on a push.
  */
-async function withManagedPrices(
-  loaded: LoadedLedger,
+async function withManagedPrices<
+  T extends Pick<LoadedLedger, "files" | "sourceFiles">,
+>(
+  loaded: T,
   cacheHelper: CacheHelper,
   options: CachedLoadOptions,
-): Promise<LoadedLedgerWithManagedPrices> {
+): Promise<
+  T & Pick<LoadedLedgerWithManagedPrices, "managedPrices" | "managedPricePaths">
+> {
   if (options.committedOnly) {
     return { ...loaded, managedPrices: [], managedPricePaths: [] };
   }
@@ -232,12 +236,7 @@ export async function overlayProjectedManagedPrices(
   options: CachedLoadOptions = {},
 ): Promise<FileMap> {
   const overlaid = await withManagedPrices(
-    {
-      files,
-      entryPoint,
-      sourceFiles: collectSourceFiles(files, entryPoint),
-      repoPaths: [],
-    },
+    { files, sourceFiles: collectSourceFiles(files, entryPoint) },
     cacheHelper,
     options,
   );
@@ -323,7 +322,7 @@ export async function loadCachedFileMapForRepo(
   requireEntryPoint(files, owner, repo, entryPoint);
   const sourceFiles = collectSourceFiles(files, entryPoint);
   return withManagedPrices(
-    { files, entryPoint, sourceFiles, repoPaths },
+    { files, entryPoint, sourceFiles, repoPaths, ref: sha },
     cacheHelper,
     options,
   );

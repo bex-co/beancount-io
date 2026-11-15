@@ -85,6 +85,7 @@ function configure(expenses = "17000", custom = false) {
     sourceFiles: ["main.bean"],
     managedPrices: [],
     managedPricePaths: [],
+    ref: "HEAD",
   });
   const snapshot = {
     valid: true,

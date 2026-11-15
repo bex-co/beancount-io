@@ -25,6 +25,7 @@ const loaded = {
   repoPaths: ["main.beancount"],
   managedPrices: [],
   managedPricePaths: [],
+  ref: "HEAD",
 };
 const params = {
   ledgerId: "open_ledger/example",

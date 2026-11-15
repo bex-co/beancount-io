@@ -66,6 +66,7 @@ import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-s
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { verifyBatchDeleteScale } from "./batch-delete-scale";
 import { verifyEntryMove, verifyScopedEntryMove } from "./entry-move";
+import { verifyProjectedIncludes } from "./projected-includes";
 import type { SerializableTreeNodePublic } from "@/foundation/ledger-api-types";
 import {
   accountBalanceSeries,
@@ -5490,6 +5491,7 @@ poptag #trip
   await verifyBatchDeleteScale();
   await verifyEntryMove();
   await verifyScopedEntryMove();
+  await verifyProjectedIncludes();
 
   console.log("\nAll rustledger engine checks passed.");
 }
