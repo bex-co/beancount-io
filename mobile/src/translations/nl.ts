@@ -785,6 +785,7 @@ export const nl: Translations = {
   agentErrorBody: "Die vraag is niet doorgekomen.",
   agentNoAnswerBody:
     "Ik heb je grootboek doorzocht, maar mijn stappen waren op voordat ik kon antwoorden. Een specifiekere vraag lukt meestal wel.",
+  agentNotConfiguredTitle: "Deze functie is niet ingesteld op deze server.",
   agentQuotaTitle: "Maandelijkse AI-limiet bereikt",
   agentQuotaBody:
     "Je AI-tegoed van deze maand is op. Het wordt volgende maand hersteld.",

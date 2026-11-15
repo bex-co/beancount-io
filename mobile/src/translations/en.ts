@@ -800,6 +800,7 @@ export const en = {
   agentErrorBody: "That question didn't go through.",
   agentNoAnswerBody:
     "I looked through your ledger but ran out of steps before answering. A more specific question usually gets there.",
+  agentNotConfiguredTitle: "This feature isn't set up on this server.",
   agentQuotaTitle: "Monthly AI limit reached",
   agentQuotaBody:
     "You've used this month's AI allowance. It resets next month.",

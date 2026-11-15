@@ -803,6 +803,7 @@ export const sk: Translations = {
   agentErrorBody: "Táto otázka neprešla.",
   agentNoAnswerBody:
     "Prezrel som tvoju knihu, ale minuli sa mi kroky skôr, než som odpovedal. Konkrétnejšia otázka zvyčajne pomôže.",
+  agentNotConfiguredTitle: "Táto funkcia nie je na tomto serveri nastavená.",
   agentQuotaTitle: "Mesačný limit AI je vyčerpaný",
   agentQuotaBody:
     "Vyčerpal si limit AI na tento mesiac. Obnoví sa budúci mesiac.",

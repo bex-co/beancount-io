@@ -2,7 +2,9 @@ import fs from "fs";
 import path from "path";
 // Relative imports: jest-lite has no @/ alias for value modules.
 import {
+  agentConfigurationError,
   classifyAgentError,
+  configurationErrorDetail,
   isRetryable,
 } from "../screens/agent-screen/agent-errors";
 import { stripAgentNotation } from "../screens/agent-screen/agent-notation";
@@ -67,6 +69,92 @@ describe("agent error classification", () => {
     expect(
       classifyAgentError(new Error("Request failed with status 401")),
     ).toBe("auth");
+  });
+});
+
+describe("an Ask-AI request on a stack with no AI model configured (w1/242)", () => {
+  // The 503 the agent route answers before streaming (w1/m48); the AI SDK
+  // transport throws the response body as the Error's message.
+  const NOT_CONFIGURED_BODY = JSON.stringify({
+    ok: false,
+    error: {
+      code: "CONFIGURATION_ERROR",
+      message: "LLM is not configured on this deployment",
+      metadata: {
+        hint: "Set ANTHROPIC_API_KEY or OPENAI_API_KEY (see .env.example)",
+      },
+    },
+  });
+
+  it("is classified as not configured, not generic", () => {
+    expect(classifyAgentError(new Error(NOT_CONFIGURED_BODY))).toBe(
+      "notConfigured",
+    );
+    expect(classifyAgentError(new Error(`Error: ${NOT_CONFIGURED_BODY}`))).toBe(
+      "notConfigured",
+    );
+  });
+
+  it("offers no retry, since the server refuses until its operator acts", () => {
+    expect(isRetryable(new Error(NOT_CONFIGURED_BODY))).toBeFalsy();
+  });
+
+  it("keeps the server's message and operator hint as sent", () => {
+    const parsed = agentConfigurationError(new Error(NOT_CONFIGURED_BODY));
+    expect(parsed).toEqual({
+      message: "LLM is not configured on this deployment",
+      hint: "Set ANTHROPIC_API_KEY or OPENAI_API_KEY (see .env.example)",
+    });
+    expect(configurationErrorDetail(parsed!)).toBe(
+      "LLM is not configured on this deployment. Set ANTHROPIC_API_KEY or OPENAI_API_KEY (see .env.example)",
+    );
+  });
+
+  it("reads an MCP-style top-level hint and tolerates a missing one", () => {
+    expect(
+      agentConfigurationError(
+        '{"ok":false,"error":{"code":"CONFIGURATION_ERROR","message":"m","hint":"h"}}',
+      ),
+    ).toEqual({ message: "m", hint: "h" });
+    expect(
+      agentConfigurationError(
+        new Error(
+          '{"ok":false,"error":{"code":"CONFIGURATION_ERROR","message":"m"}}',
+        ),
+      ),
+    ).toEqual({ message: "m", hint: undefined });
+  });
+
+  it("ignores other codes and non-JSON failures", () => {
+    expect(
+      agentConfigurationError(
+        new Error(
+          '{"ok":false,"error":{"code":"INTERNAL_SERVER_ERROR","message":"x"}}',
+        ),
+      ),
+    ).toBe(null);
+    expect(agentConfigurationError(new Error("Network request failed"))).toBe(
+      null,
+    );
+    expect(agentConfigurationError(new Error("{not json"))).toBe(null);
+    expect(agentConfigurationError(undefined)).toBe(null);
+  });
+
+  it("shows the hint in a notice with no retry action on the screen", () => {
+    const screen = read("agent-screen.tsx");
+    const notice = screen.slice(
+      screen.indexOf('testID="agent-not-configured-notice"'),
+      screen.indexOf(
+        "/>",
+        screen.indexOf('testID="agent-not-configured-notice"'),
+      ),
+    );
+    expect(notice.includes('t("agentNotConfiguredTitle")')).toBe(true);
+    expect(notice.includes("configurationErrorDetail(notConfigured)")).toBe(
+      true,
+    );
+    expect(notice.includes("action")).toBe(false);
+    expect(en.agentNotConfiguredTitle).toBeTruthy();
   });
 });
 

@@ -799,6 +799,7 @@ export const es: Translations = {
   agentErrorBody: "Esa pregunta no llegó a enviarse.",
   agentNoAnswerBody:
     "He revisado tu libro contable, pero me quedé sin pasos antes de responder. Una pregunta más concreta suele funcionar.",
+  agentNotConfiguredTitle: "Esta función no está configurada en este servidor.",
   agentQuotaTitle: "Límite mensual de IA alcanzado",
   agentQuotaBody:
     "Has agotado el uso de IA de este mes. Se restablece el mes que viene.",

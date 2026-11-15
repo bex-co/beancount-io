@@ -800,6 +800,8 @@ export const ca: Translations = {
   agentErrorBody: "Aquesta pregunta no s'ha enviat.",
   agentNoAnswerBody:
     "He consultat el teu llibre, però m'he quedat sense passos abans de respondre. Una pregunta més concreta sol funcionar.",
+  agentNotConfiguredTitle:
+    "Aquesta funció no està configurada en aquest servidor.",
   agentQuotaTitle: "Límit mensual d'IA exhaurit",
   agentQuotaBody:
     "Has exhaurit l'ús d'IA d'aquest mes. Es restableix el mes vinent.",

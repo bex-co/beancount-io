@@ -801,6 +801,8 @@ export const de: Translations = {
   agentErrorBody: "Diese Frage ist nicht durchgekommen.",
   agentNoAnswerBody:
     "Ich habe Ihr Hauptbuch durchsucht, aber die Schritte waren aufgebraucht, bevor ich antworten konnte. Eine gezieltere Frage führt meist zum Ziel.",
+  agentNotConfiguredTitle:
+    "Diese Funktion ist auf diesem Server nicht eingerichtet.",
   agentQuotaTitle: "Monatliches KI-Limit erreicht",
   agentQuotaBody:
     "Sie haben das KI-Kontingent dieses Monats aufgebraucht. Es wird nächsten Monat zurückgesetzt.",

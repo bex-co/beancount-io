@@ -24,7 +24,12 @@ import { LEADING_TEXT_ALIGN, leadingInputTextAlign } from "@/common/rtl";
 import { useAgentChat } from "./use-agent-chat";
 import { MessageBubble } from "./message-bubble";
 import { messageText } from "./message-text";
-import { classifyAgentError, isRetryable } from "./agent-errors";
+import {
+  agentConfigurationError,
+  classifyAgentError,
+  configurationErrorDetail,
+  isRetryable,
+} from "./agent-errors";
 import { AGENT_PRESET_KEYS } from "./presets";
 import { useRouteParams } from "@/common/hooks/use-route-params";
 import { useStackKeyboardOffset } from "@/common/hooks/use-stack-keyboard-offset";
@@ -264,6 +269,8 @@ function AgentScreenImpl() {
   );
 
   const errorKind = error ? classifyAgentError(error) : undefined;
+  const notConfigured =
+    errorKind === "notConfigured" ? agentConfigurationError(error) : null;
 
   // The shared stack offset (insets.top + 44 on iOS), not a literal: 96 only
   // matched one inset size, floating the composer ~24 pt too high on iPad
@@ -358,7 +365,18 @@ function AgentScreenImpl() {
             />
           )}
 
-          {errorKind && errorKind !== "quota" && (
+          {notConfigured && (
+            <Notice
+              styles={styles}
+              testID="agent-not-configured-notice"
+              title={t("agentNotConfiguredTitle")}
+              body={
+                configurationErrorDetail(notConfigured) || t("agentErrorBody")
+              }
+            />
+          )}
+
+          {errorKind && errorKind !== "quota" && !notConfigured && (
             <Notice
               styles={styles}
               testID="agent-error-notice"

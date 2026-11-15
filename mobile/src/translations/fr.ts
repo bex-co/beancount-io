@@ -801,6 +801,8 @@ export const fr: Translations = {
   agentErrorBody: "Cette question n'est pas passée.",
   agentNoAnswerBody:
     "J'ai parcouru votre livre, mais je n'avais plus d'étapes avant de pouvoir répondre. Une question plus précise aboutit généralement.",
+  agentNotConfiguredTitle:
+    "Cette fonctionnalité n'est pas configurée sur ce serveur.",
   agentQuotaTitle: "Limite mensuelle d'IA atteinte",
   agentQuotaBody:
     "Vous avez épuisé votre quota d'IA du mois. Il se réinitialise le mois prochain.",

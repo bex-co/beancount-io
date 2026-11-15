@@ -709,6 +709,7 @@ export const zh: Translations = {
   agentErrorBody: "这个问题没有发送成功。",
   agentNoAnswerBody:
     "我查阅了你的账本，但在给出答案前用完了步骤。问得更具体一些通常就能得到结果。",
+  agentNotConfiguredTitle: "此服务器尚未设置该功能。",
   agentQuotaTitle: "本月 AI 额度已用完",
   agentQuotaBody: "你已用完本月的 AI 额度，下月会重置。",
   agentApprovalTitle: "请在网页端确认",
