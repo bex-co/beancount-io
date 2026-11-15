@@ -284,6 +284,10 @@ export class LedgerFinanceService
       groupBy: groupBy ?? "account",
       account,
       roots: this.rootsOf(options),
+      positionRoots: [
+        options?.name_assets ?? "Assets",
+        options?.name_liabilities ?? "Liabilities",
+      ],
       conversionTarget: target,
       asOf,
     });

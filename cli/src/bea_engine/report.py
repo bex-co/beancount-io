@@ -612,7 +612,10 @@ def _holdings(
     (`_money_currencies`: operating and cost currencies, w1/255). Any other uncosted position (`3 AAPL @ 200 USD`)
     is a holding with an unknown basis: it joins the costed group of the
     same commodity when there is exactly one, else forms its own, and its
-    group reports `cost_basis` and `average_cost` as null.
+    group reports `cost_basis` and `average_cost` as null. Only a balance
+    sheet position counts: an uncosted balance under Income, Expenses or
+    Equity (`Expenses:Travel 100 EUR @ 1.1 USD`) is a flow, not a holding
+    (w1/256).
     """
     from fava.core.tree import Tree
 
@@ -624,6 +627,9 @@ def _holdings(
     # survive it; every report prunes its tree by the same matcher instead.
     matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
     money = _money_currencies(filtered.ledger)
+    positions = {
+        root for root, kind in _root_type_map(filtered.ledger.options).items() if kind in ("Assets", "Liabilities")
+    }
     # (scope..., commodity, cost currency) -> [units, cost basis, accounts,
     # basis known]. An uncosted group's cost currency is "" until valued.
     lots: dict[tuple[str, ...], list[Any]] = {}
@@ -637,7 +643,7 @@ def _holdings(
             if number == 0:
                 continue
             if cost is None:
-                if commodity in money:
+                if commodity in money or name.split(":", 1)[0] not in positions:
                     continue
                 pending = uncosted.get((*scope, commodity))
                 if pending is None:

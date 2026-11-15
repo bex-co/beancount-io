@@ -1963,7 +1963,9 @@ still a holding, and so is an uncosted `500 EUR` that no lot is costed in
 (valued at its quote) unless EUR is declared with
 `option "operating_currency" "EUR"`. Only a ledger that declares no
 `operating_currency` also treats every posting-price and `price`-directive
-quote currency as cash. Every other
+quote currency as cash. Only balance-sheet accounts hold positions: an uncosted
+balance under Income, Expenses or Equity (`Expenses:Travel 100 EUR @ 1.1 USD`)
+is a flow and never a holding. Every other
 uncosted position — shares bought as `3 AAPL @ 200 USD` — is a holding with an
 unknown basis: it joins the costed group of the same commodity when there is
 exactly one, is valued at the period-end quote, and its group's average cost

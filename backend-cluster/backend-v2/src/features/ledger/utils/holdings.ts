@@ -292,6 +292,12 @@ export function composeHoldings(params: {
   groupBy: HoldingsGrouping;
   account: string | undefined;
   roots: readonly string[];
+  /**
+   * The ledger's Assets and Liabilities root names. An uncosted balance under
+   * any other root (`Expenses:Travel 100 EUR @ 1.1 USD`) is a flow, not a
+   * holding (w1/256, the CLI's rule).
+   */
+  positionRoots: readonly string[];
   conversionTarget: string | null;
   asOf: string;
   /** The price directives, as for {@link valueHoldingRows}. */
@@ -355,8 +361,10 @@ export function composeHoldings(params: {
     }
     if (typeof held !== "string" || held === "") {
       // Cash is told apart by its commodity, not by a missing cost — the
-      // CLI's rule (w1/253).
+      // CLI's rule (w1/253) — and only a balance-sheet account holds a
+      // position (w1/256).
       if (money.has(commodity)) continue;
+      if (!params.positionRoots.includes(name.split(":", 1)[0]!)) continue;
       const amount = moneyIn(row[at("units")], commodity);
       if (amount === null || new BigNumber(amount).isZero()) continue;
       const pendingKey = JSON.stringify([

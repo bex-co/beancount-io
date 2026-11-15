@@ -239,3 +239,51 @@ def test_a_foreign_currency_outside_the_operating_ones_is_a_holding(tmp_path: Pa
     euro = data["groups"][1]  # type: ignore[index]
     assert euro["market_value"] == {"number": "550.00", "currency": "USD"}
     assert euro["cost_basis"] is None
+
+
+# w1/256: only balance-sheet positions are holdings. A priced expense in a
+# foreign currency is a flow, not a position, while the same uncosted EUR in an
+# Assets account still is one (w1/253).
+FLOWS = """option "operating_currency" "USD"
+2024-01-01 open Assets:Bank USD
+2024-01-01 open Assets:Wallet
+2024-01-01 open Liabilities:Loan
+2024-01-01 open Expenses:Travel
+2024-01-01 open Income:Refund
+2024-01-01 open Equity:Opening
+2024-01-02 * "fund"
+  Assets:Bank 1000 USD
+  Equity:Opening
+2024-02-01 * "trip"
+  Expenses:Travel 100 EUR @ 1.1 USD
+  Assets:Bank
+2024-02-02 * "refund"
+  Income:Refund -20 GBP @ 1.25 USD
+  Assets:Bank
+2024-02-03 * "exchange"
+  Assets:Wallet 50 EUR @ 1.1 USD
+  Assets:Bank
+2024-02-04 * "borrow btc"
+  Assets:Bank 1000 USD
+  Liabilities:Loan -0.02 BTC @ 50000 USD
+2024-03-01 price EUR 1.2 USD
+2024-03-01 price GBP 1.3 USD
+2024-03-01 price BTC 50000 USD
+"""
+
+
+@pytest.mark.parametrize("group_by", ["account", "commodity"])
+def test_uncosted_flow_balances_are_not_holdings(tmp_path: Path, group_by: str) -> None:
+    data = _data(tmp_path, FLOWS, "--group-by", group_by)
+
+    assert sorted((commodity, units) for commodity, units, _ in _positions(data)) == [("BTC", "-0.02"), ("EUR", "50")]
+    groups = data["groups"]  # type: ignore[assignment]
+    accounts = sorted(group["account"] if group_by == "account" else group["accounts"][0] for group in groups)  # type: ignore[attr-defined,index]
+    assert accounts == ["Assets:Wallet", "Liabilities:Loan"]
+    assert data["totals"] == {"cost_basis": {}, "market_value": {"USD": "-940.00"}}
+
+
+def test_an_expense_account_filter_lists_no_holdings(tmp_path: Path) -> None:
+    data = _data(tmp_path, FLOWS, "-a", "Expenses:Travel")
+
+    assert data["groups"] == []

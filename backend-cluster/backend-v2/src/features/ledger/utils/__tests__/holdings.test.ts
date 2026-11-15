@@ -40,6 +40,7 @@ const base = {
   groupBy: "account" as const,
   account: undefined,
   roots: ["Assets", "Liabilities", "Equity", "Income", "Expenses"],
+  positionRoots: ["Assets", "Liabilities"],
   conversionTarget: null,
   asOf: "2026-10-25",
 };
@@ -554,6 +555,70 @@ describe("composeHoldings", () => {
       expect(result.groups.map((group) => group.commodity)).toEqual([
         "HOOL",
         "ALT",
+      ]);
+    });
+
+    // w1/256: only balance-sheet accounts hold positions. A priced expense
+    // in a foreign currency is a flow; the same EUR in Assets is a holding.
+    const flows: Cell[][] = [
+      ["Assets:Bank", "USD", null, map("USD", "1830"), map("USD", "1830")],
+      ["Assets:Wallet", "EUR", null, map("EUR", "50"), map("EUR", "50")],
+      [
+        "Liabilities:Loan",
+        "BTC",
+        null,
+        map("BTC", "-0.02"),
+        map("BTC", "-0.02"),
+      ],
+      ["Expenses:Travel", "EUR", null, map("EUR", "100"), map("EUR", "100")],
+      ["Income:Refund", "GBP", null, map("GBP", "-20"), map("GBP", "-20")],
+      ["Equity:Opening", "USD", null, map("USD", "-1000"), map("USD", "-1000")],
+    ];
+    const flowQuotes: Cell[][] = [
+      ["2024-03-01", "EUR", map("USD", "1.2")],
+      ["2024-03-01", "GBP", map("USD", "1.3")],
+      ["2024-03-01", "BTC", map("USD", "50000")],
+    ];
+
+    it.each(["account", "commodity"] as const)(
+      "leaves uncosted flow balances out of %s holdings",
+      (groupBy) => {
+        const result = compose({ groupBy }, flows, flowQuotes);
+        expect(
+          result.groups
+            .map((group) => [
+              group.account ?? group.accounts?.[0],
+              group.units.number,
+              group.units.currency,
+            ])
+            .sort(),
+        ).toEqual([
+          ["Assets:Wallet", "50", "EUR"],
+          ["Liabilities:Loan", "-0.02", "BTC"],
+        ]);
+        expect(result.totals.market_value).toEqual({ USD: "-940" });
+      },
+    );
+
+    it("lists no holdings under an expense account filter", () => {
+      const result = compose({ account: "Expenses:Travel" }, flows, flowQuotes);
+      expect(result.groups).toEqual([]);
+    });
+
+    it("reads renamed balance-sheet roots", () => {
+      const result = compose(
+        {
+          roots: ["Activos", "Pasivos", "Capital", "Ingresos", "Gastos"],
+          positionRoots: ["Activos", "Pasivos"],
+        },
+        [
+          ["Activos:Cartera", "EUR", null, map("EUR", "50"), map("EUR", "50")],
+          ["Gastos:Viaje", "EUR", null, map("EUR", "100"), map("EUR", "100")],
+        ],
+        flowQuotes,
+      );
+      expect(result.groups.map((group) => group.account)).toEqual([
+        "Activos:Cartera",
       ]);
     });
 
