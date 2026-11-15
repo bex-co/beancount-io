@@ -92,7 +92,7 @@ ChatGPT has only the first path, and Copilot's cloud agent only the second. Both
 - Minting a key requires a paid plan (w1/m22), so a free user cannot use a header-only host at all. That pricing decision is out of scope here; this records that it gates a host.
 - Claude's `static_headers` (beta) sends one Owner-entered key for everyone in an organization. A `bcio_` key is one person's credential and carries that person's ledger authority, so we do not recommend `static_headers` for Beancount.io; Claude users connect with OAuth.
 
-Tools are also to declare OpenAI's per-tool `securitySchemes`: OAuth 2 with the scope the tool's op class requires (`read` → `ledger.read`, `write` → `ledger.write`, `admin` → `ledger.admin`; a grouped tool declares its most privileged branch). ChatGPT uses the declaration to decide when to link an account and when to ask for a broader scope; other hosts ignore it. The declaration is to be derived from `VERB_TABLE` and never hand-written — the rule ADR 0007 D8 applied to output schemas. Where the field sits on the wire follows OpenAI's current Apps SDK reference.
+Tools are also to declare OpenAI's per-tool `securitySchemes`: OAuth 2 with the scope the tool's op class requires (`read` → `ledger.read`, `write` → `ledger.write`, `admin` → `ledger.admin`; a grouped tool declares its most privileged branch). *Amended 2026-11-15 (w31/004):* the scope is the one the verb's credential check requires, and the op class decides only for a verb without one — see [Amendments](#2026-11-15--a-tool-declares-the-scope-its-credential-check-requires-not-its-rate-class-w31004). ChatGPT uses the declaration to decide when to link an account and when to ask for a broader scope; other hosts ignore it. The declaration is to be derived from `VERB_TABLE` and never hand-written — the rule ADR 0007 D8 applied to output schemas. Where the field sits on the wire follows OpenAI's current Apps SDK reference.
 
 ### D3 — A registration that does not state `application_type` is native
 
@@ -280,7 +280,7 @@ The table below names where each decision lives; the one after it gives its stat
 
 | Decision | Change |
 | --- | --- |
-| D2 | `securitySchemes` derived from the op class on each tool descriptor, where `src/server/api/composition-root.ts` registers them |
+| D2 | `securitySchemes` derived from each verb's PDP credential requirement (the op class for a verb without a PDP action) on each tool descriptor, where `src/server/api/composition-root.ts` registers them |
 | D3 | `clientDefaults.application_type` in `src/features/oauth/api/oidc-route.ts`; Discourse states `"web"` in `buildStaticOAuthClients` (`src/features/oauth/data/config.ts`) |
 | D4 | `redirect_uri` and `client_name` on `GET /api-gateway/oauth/interaction/:uid`; `dashboard/src/features/oauth/pages/consent.tsx` renders them, with copy in every locale |
 | D5 | `oauthLifetimes`, `shouldRotateRefreshToken`, and the TTLs in `config.ts`; the grant re-save in `oidc-route.ts` extended from the mobile client to every non-static client and capped at one year; the README lifetime table |
@@ -313,6 +313,14 @@ Ledger scope is settled in ADR 0007: [every credential reaches all the ledgers i
 - **Which directory comes next?** [The official MCP Registry listing](#the-official-mcp-registry-listing) ships first, because it needs none of D3–D9. The order among Claude's, ChatGPT's, and Muse's directories remains open.
 
 ## Amendments
+
+### 2026-11-15 — A tool declares the scope its credential check requires, not its rate class (w31/004)
+
+D2 derived each tool's `securitySchemes` scope from its op class. The op class is a rate budget and audit default, and it is not a credential ceiling (`VERB_TABLE`, `src/server/api/op-class.ts`). Three tools have a write-class budget, but their PDP actions accept `ledger.read`: `generateTempAssetUploadUrl` (`temp_asset.upload.create`), `parseFile` (`assisted.file.parse`) and `parseReceipt` (`assisted.receipt.parse`). `docs/mcp.md` already stated that read policy on all three surfaces. A live `ledger.read` key minted an upload URL on MCP, REST and GraphQL alike. These tools still declared `ledger.write`, so ChatGPT would have asked a user who linked with `ledger.read` for a broader grant the server did not need.
+
+**Decision.** A verb with a PDP action needs the capability that action's credential requirement checks, and an action that checks no capability needs an OAuth grant but no particular scope. A verb without a PDP action falls back to its op class. A tool declares the strongest of its verbs' needs, as before. Op classes, rate budgets and the PDP itself do not change, so REST and GraphQL behave exactly as before. The three tools now declare `ledger.read` and still spend the write budget.
+
+**Where.** `mcpToolSecuritySchemes` (`src/server/api/op-class.ts`) reads `authorizationActionCredentialCapability` (`src/server/api/authorization/authorization-service.ts`). `mcp-tool-list.test.ts` checks the rule for every tool on the wire. `docs/mcp.md` marks the three tools **Read, write budget** in its Tools table.
 
 ### 2026-10-31 — Annotation review covers actual removal and public targets (w6/m11/t008)
 

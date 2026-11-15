@@ -844,6 +844,17 @@ export const authorizationActionAcceptsDelegatedCredential = (
   return !oauthFromAppOnly && methods.some((method) => method !== "session");
 };
 
+/**
+ * The capability a credential must hold for an action, or undefined when the
+ * action checks none. MCP's per-tool `securitySchemes` read it (ADR 019 D2),
+ * so a tool asks a host for the scope this table requires rather than one its
+ * rate class implies (w31/004).
+ */
+export const authorizationActionCredentialCapability = (
+  action: AuthorizationAction,
+): OperationClass | undefined =>
+  ACTION_REQUIREMENTS[action].credential.capability;
+
 const isAuthorizationAction = (action: string): action is AuthorizationAction =>
   Object.prototype.hasOwnProperty.call(ACTION_REQUIREMENTS, action);
 

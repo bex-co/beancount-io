@@ -16,7 +16,10 @@ import {
   AUTHORIZATION_ACTIONS,
   type AuthorizationAction,
 } from "./authorization/authorization-contract";
-import { authorizationActionAcceptsDelegatedCredential } from "./authorization/authorization-service";
+import {
+  authorizationActionAcceptsDelegatedCredential,
+  authorizationActionCredentialCapability,
+} from "./authorization/authorization-service";
 
 const scopeLogger = logger.child({ module: "op-class" });
 
@@ -1700,7 +1703,8 @@ const LLM_VERBS: readonly VerbEntry[] = [
   },
   // Parsing mutations retain write-class transport budgets. Their canonical
   // PDP actions permit read capability and enforce ownership/quota independently;
-  // the operation class is not a credential ceiling.
+  // the operation class is not a credential ceiling, so their MCP tools declare
+  // `ledger.read` (`mcpToolSecuritySchemes`, w31/004).
   {
     verb: "Mutation.parseFile",
     class: "write",
@@ -2251,23 +2255,45 @@ export type McpSecurityScheme =
 /** Scoped classes, most privileged first. */
 const STRONGEST_FIRST: readonly OpClass[] = ["admin", "write", "read"];
 
+type SchemeVerb = Pick<VerbEntry, "mcp" | "class" | "authorizationAction">;
+
 /**
- * What a tool declares it needs, derived from `VERB_TABLE` and never written
- * by hand (ADR 019 D2, the rule ADR 0007 D8 applied to output schemas).
+ * The class whose scope a credential must hold to run one verb. A verb with a
+ * PDP action needs what that action's credential requirement checks — an
+ * action that checks no capability needs OAuth but no particular scope, as a
+ * `session-only` verb does. Only a verb without an action falls back to its
+ * op class, which is otherwise a rate budget and may be stronger: parsing and
+ * upload-URL minting spend write budgets yet accept `ledger.read` (w31/004).
+ */
+function credentialClass({
+  class: opClass,
+  authorizationAction,
+}: SchemeVerb): OpClass {
+  if (!authorizationAction) return opClass;
+  return (
+    authorizationActionCredentialCapability(authorizationAction) ??
+    "session-only"
+  );
+}
+
+/**
+ * What a tool declares it needs, derived from `VERB_TABLE` and the PDP's
+ * credential requirements and never written by hand (ADR 019 D2, the rule
+ * ADR 0007 D8 applied to output schemas).
  *
- * A tool spanning several verbs declares its most privileged one's scope.
- * A tool whose only verbs are `session-only` (callable by an OAuth grant,
- * never by a scoped key) needs OAuth with no particular scope; a `public`
- * verb also allows anonymous calls. ChatGPT uses the declaration to decide
- * when to link an account and when to ask for a broader scope; other hosts
- * ignore it.
+ * A tool spanning several verbs declares the scope of the one needing the
+ * most ({@link credentialClass}). A tool whose verbs need no particular scope
+ * (callable by an OAuth grant, never by a scoped key) declares OAuth without
+ * one; a `public` verb also allows anonymous calls. ChatGPT uses the
+ * declaration to decide when to link an account and when to ask for a broader
+ * scope; other hosts ignore it.
  */
 export function mcpToolSecuritySchemes(
   tool: string,
-  table: readonly Pick<VerbEntry, "mcp" | "class">[] = VERB_TABLE,
+  table: readonly SchemeVerb[] = VERB_TABLE,
 ): McpSecurityScheme[] {
   const classes = new Set(
-    table.filter((entry) => entry.mcp === tool).map((entry) => entry.class),
+    table.filter((entry) => entry.mcp === tool).map(credentialClass),
   );
   const strongest = STRONGEST_FIRST.find((opClass) => classes.has(opClass));
   const scope = strongest ? SCOPE_FOR_CLASS[strongest] : null;

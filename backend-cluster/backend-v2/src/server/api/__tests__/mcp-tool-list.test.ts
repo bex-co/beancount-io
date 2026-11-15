@@ -17,7 +17,17 @@ import {
   PLAN_WORDING,
   STEERING_WORDING,
 } from "@/features/ai-agent/api/__tests__/directory-wording";
-import { mcpToolSecuritySchemes } from "../op-class";
+import {
+  classifyOp,
+  mcpOpId,
+  mcpToolSecuritySchemes,
+  VERB_TABLE,
+  type McpSecurityScheme,
+} from "../op-class";
+import {
+  AUTHORIZATION_ACTIONS,
+  authorizationActionCredentialCapability,
+} from "../authorization";
 import annotationReview from "../../../../docs/marketplace-submissions/openai/tool-annotations.json";
 import { PREVIEW_FLAG_DESCRIPTION } from "@/features/ledger/utils/preview-flag-description";
 
@@ -618,6 +628,64 @@ describe("MCP tool security schemes", () => {
         { mcp: "mixed", class: "write" },
       ]),
     ).toEqual([{ type: "oauth2", scopes: ["ledger.admin"] }]);
+  });
+
+  // w31/004: three tools budgeted as writes declared `ledger.write`, so a host
+  // holding `ledger.read` was told to ask for more than the server requires.
+  it("declares, for every tool, the scope its verbs' credential requirements need", async () => {
+    const { tools } = await listToolsRaw();
+    const mismatched = tools.flatMap((tool) => {
+      // The PDP action's capability when the verb has one, else its op class.
+      const needed = VERB_TABLE.filter((entry) => entry.mcp === tool.name).map(
+        (entry) =>
+          entry.authorizationAction
+            ? authorizationActionCredentialCapability(entry.authorizationAction)
+            : entry.class,
+      );
+      const strongest = (["admin", "write", "read"] as const).find((level) =>
+        needed.includes(level),
+      );
+      const expected = strongest ? [`ledger.${strongest}`] : [];
+      const declared = (tool.securitySchemes as McpSecurityScheme[]).flatMap(
+        (scheme) => (scheme.type === "oauth2" ? (scheme.scopes ?? []) : []),
+      );
+      return JSON.stringify(declared) === JSON.stringify(expected)
+        ? []
+        : [{ tool: tool.name, declared, expected }];
+    });
+    expect(mismatched).toEqual([]);
+  });
+
+  it.each(["parseFile", "parseReceipt", "generateTempAssetUploadUrl"])(
+    "declares ledger.read for %s while it keeps its write rate budget",
+    (tool) => {
+      expect(mcpToolSecuritySchemes(tool)).toEqual([
+        { type: "oauth2", scopes: ["ledger.read"] },
+      ]);
+      expect(classifyOp(mcpOpId(tool)).class).toBe("write");
+    },
+  );
+
+  it("follows a verb's PDP action over its op class", () => {
+    expect(
+      mcpToolSecuritySchemes("budgeted", [
+        {
+          mcp: "budgeted",
+          class: "write",
+          authorizationAction: AUTHORIZATION_ACTIONS.TEMP_ASSET_UPLOAD_CREATE,
+        },
+      ]),
+    ).toEqual([{ type: "oauth2", scopes: ["ledger.read"] }]);
+    // An action that checks no capability needs an OAuth grant, not a scope.
+    expect(
+      mcpToolSecuritySchemes("unscoped", [
+        {
+          mcp: "unscoped",
+          class: "admin",
+          authorizationAction: AUTHORIZATION_ACTIONS.USER_DELETE,
+        },
+      ]),
+    ).toEqual([{ type: "oauth2" }]);
   });
 
   it("declares OAuth without a scope for session-only tools, and allows anonymous public ones", () => {
