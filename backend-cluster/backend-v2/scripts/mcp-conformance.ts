@@ -393,6 +393,18 @@ async function checkScopeRefusal(o: Options): Promise<CheckResult> {
     ...(result.content ?? []).map(({ text }) => text ?? ""),
     error.message ?? "",
   ].join(" ");
+  // An unpinned credential that names no ledger is refused before write
+  // authority is consulted. That is the documented answer to the call, so it
+  // is neither a pass nor a failure: the check did not run (w31/003).
+  if (
+    !o.ledger &&
+    error.code === "BAD_USER_INPUT" &&
+    /select a ledger/i.test(refusalText)
+  ) {
+    return v.skip(
+      "the credential is not pinned to one ledger and the probe named none, so it was refused before write authority was consulted. Pass --ledger owner/name",
+    );
+  }
   if (!refusalText.includes("ledger.write")) {
     return v.fail(
       "the tool failed, but not because write authority was refused — an unrelated validation or repository error is not authorization evidence",
@@ -1188,7 +1200,7 @@ async function main(): Promise<void> {
   );
   if (skipped.length) {
     console.log(
-      `Skipped checks did not run — supply the credentials named above to cover them.`,
+      `Skipped checks did not run — supply the credentials or flags named above to cover them.`,
     );
   }
   if (failed.length) {

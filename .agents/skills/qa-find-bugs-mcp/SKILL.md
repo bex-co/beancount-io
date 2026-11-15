@@ -89,7 +89,8 @@ on a designated QA ledger needed to reproduce bugs.
   It reads `QA_MCP_TOKEN` and `QA_MCP_READ_ONLY_TOKEN` from the repo-root
   `./.env` (preferred) or the environment, so never pass `--token` or
   `--read-only-token`: those flags put the credential on argv. An unpinned
-  credential needs `--ledger` for the result-shape and output-schema checks.
+  credential needs `--ledger owner/name` for checks 5, 10 and 17 (the write
+  refusal, the result shape and the output schema); without it they skip.
   `yarn mcp:agent-eval` drives real Claude Code and Codex sessions and is
   billed; run it only when the user asks for client journeys.
 - Store evidence under the gitignored repo-root `.internal/qa-<date>/`: the exact

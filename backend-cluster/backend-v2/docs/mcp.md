@@ -1848,6 +1848,7 @@ not compared, not as a pass.
 
 A credential that is not pinned to one ledger needs `--ledger owner/name` so the
 read, preview and refusal checks (5, 10 and 17) can name the ledger they use.
+Without it they skip.
 
 An optional `--read-only-token` checks refusal of a file write. Supply only a
 credential restricted to `ledger.read`: the probe attempts a real create-file

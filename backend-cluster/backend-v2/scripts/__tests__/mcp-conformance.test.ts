@@ -246,6 +246,37 @@ describe("MCP conformance checks", () => {
     expect(result.detail).toMatch(/code [A-Z_]+/);
   });
 
+  it("check 5 skips, naming --ledger, when an unpinned read-only credential names no ledger", async () => {
+    // w31/003: "select a ledger" is the documented answer to an unpinned
+    // credential that names none. It is no evidence about write authority.
+    acceptTokens({ ro: { ...readOnly, ledgerScope: undefined } });
+    const result = await checkScopeRefusal({ baseUrl, readOnlyToken: "ro" });
+    expect(result.outcome).toBe("skip");
+    expect(result.detail).toContain("--ledger owner/name");
+  });
+
+  it("check 5 passes for an unpinned read-only credential given --ledger", async () => {
+    acceptTokens({ ro: { ...readOnly, ledgerScope: undefined } });
+    const result = await checkScopeRefusal({
+      baseUrl,
+      readOnlyToken: "ro",
+      ledger: "alice/main",
+    });
+    expect(result.outcome).toBe("pass");
+  });
+
+  it("check 5 fails on a refusal that is neither the missing-ledger answer nor a ledger.write refusal", async () => {
+    // A pin violation: refused, enveloped, and about something else entirely.
+    acceptTokens({ ro: readOnly });
+    const result = await checkScopeRefusal({
+      baseUrl,
+      readOnlyToken: "ro",
+      ledger: "bob/other",
+    });
+    expect(result.outcome).toBe("fail");
+    expect(result.detail).toContain("not because write authority was refused");
+  });
+
   it("check 10 passes when a BQL result leads with its row count", async () => {
     acceptTokens({ good: ledgerScoped });
     const result = await checkResultShape({ baseUrl, token: "good" });
