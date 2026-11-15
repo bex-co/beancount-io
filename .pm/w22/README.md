@@ -12,7 +12,7 @@
 - [x] **m6** — [Backend parity for holdings, register, and capital-gains](./done/m6/README.md) (7 tasks) ← promoted from `w22/003` 2026-10-25
 - [x] **m8** — [Self-hosted deployments: no verification page, no plan limits](./done/m8/README.md) (7 tasks) ← self-host request 2026-11-07
 - [x] **m9** — [One-click "Deploy to bex" for the self-hosted stack](./done/m9/README.md) (8 tasks) ← deploy-badge request 2026-11-07
-- [ ] **m10** — [Bank Sync: set one target account for every selected staged row](./blocked/m10/README.md) (8 tasks) ← promoted from `w22/051` 2026-11-14 (user report 2026-11-08); user routed to w22 via /pmx — **blocked:** shipped except t004, the browser check (Persian RTL layout, hover tooltip, one Apply and Submit with staged rows), which needs QA credentials for a ledger with staged Plaid rows and a Playwright browser; t008 Closeout waits on it
+- [ ] **m10** — [Bank Sync: set one target account for every selected staged row](./blocked/m10/README.md) (8 tasks) ← promoted from `w22/051` 2026-11-14 (user report 2026-11-08); user routed to w22 via /pmx — **blocked:** shipped except t004, the browser check (Persian RTL layout, hover tooltip, one Apply and Submit with staged rows), which needs a Plaid sandbox bank connected to the QA ledger (the owner's yes) and a dashboard build that carries the control; t008 Closeout waits on it
 - [x] **m11** — [Every deployment says which commit it runs](./done/m11/README.md) (9 tasks) ← promoted from `w22/052` 2026-11-14 (observed 2026-11-13); drained from w22 by /pmx
 
 ## Dropped
