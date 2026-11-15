@@ -106,11 +106,31 @@ function resourceLimitFromError(
 }
 
 /**
- * Translate a non-2xx response from the ledger service into the backend's
- * transport-agnostic error vocabulary. The ledger service's legacy error
- * envelope exposes HTTP status plus prose for most failures, so status is the
- * fallback; known machine codes and stable legacy shapes take precedence.
+ * The ledger service's refusal of a name another ledger holds. A rename
+ * preview raises the same one before anything commits (w31/006).
  */
+export function ledgerNameExistsConflict(): ConflictError {
+  return new ConflictError("Ledger", "Name already exists", {
+    reasonCode: LEDGER_NAME_ALREADY_EXISTS,
+    field: "name",
+    // Without one, MCP falls back to the CONFLICT category's hint, which is
+    // about re-reading an entry's hash — nothing to do with a name (w5/042).
+    hint: "Choose a different ledger name. Your existing ledgers are listed by `listLedgers`.",
+  });
+}
+
+/**
+ * A renamed ledger's former name: no ledger has it, so the existing-name
+ * conflict and its "listed by listLedgers" hint would be false (w23/061).
+ */
+export function ledgerNameReservedConflict(message: string): ConflictError {
+  return new ConflictError("Ledger", message, {
+    reasonCode: LEDGER_NAME_RESERVED,
+    field: "name",
+    hint: "Choose a different ledger name. A renamed ledger's old name keeps redirecting to it, so the name stays taken; `listLedgers` lists that ledger under its new name.",
+  });
+}
+
 /**
  * What an agent is told when the ledger did not answer in time (w23/m34). A
  * timeout is not "down": the request reached the engine, which may have acted
@@ -120,6 +140,12 @@ function resourceLimitFromError(
 const TIMEOUT_HINT =
   "The ledger did not answer before the deadline. A read is safe to retry. A write may already have committed: re-read the ledger before repeating it, or resend an entry write with the same `requestId` so nothing is applied twice.";
 
+/**
+ * Translate a non-2xx response from the ledger service into the backend's
+ * transport-agnostic error vocabulary. The ledger service's legacy error
+ * envelope exposes HTTP status plus prose for most failures, so status is the
+ * fallback; known machine codes and stable legacy shapes take precedence.
+ */
 export function favaApiErrorToDomainError(
   error: FavaApiError,
   operation: string,
@@ -135,23 +161,11 @@ export function favaApiErrorToDomainError(
     (error.status === 400 &&
       /ledger with the name .* already exists/i.test(message))
   ) {
-    return new ConflictError("Ledger", "Name already exists", {
-      reasonCode: LEDGER_NAME_ALREADY_EXISTS,
-      field: "name",
-      // Without one, MCP falls back to the CONFLICT category's hint, which is
-      // about re-reading an entry's hash — nothing to do with a name (w5/042).
-      hint: "Choose a different ledger name. Your existing ledgers are listed by `listLedgers`.",
-    });
+    return ledgerNameExistsConflict();
   }
 
-  // A renamed ledger's former name: no ledger has it, so the existing-name
-  // conflict and its "listed by listLedgers" hint would be false (w23/061).
   if (code === LEDGER_NAME_RESERVED) {
-    return new ConflictError("Ledger", message, {
-      reasonCode: LEDGER_NAME_RESERVED,
-      field: "name",
-      hint: "Choose a different ledger name. A renamed ledger's old name keeps redirecting to it, so the name stays taken; `listLedgers` lists that ledger under its new name.",
-    });
+    return ledgerNameReservedConflict(message);
   }
 
   const resourceLimit = resourceLimitFromError(error);

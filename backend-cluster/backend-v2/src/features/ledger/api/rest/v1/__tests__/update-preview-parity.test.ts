@@ -17,6 +17,7 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import { MAKE_PUBLIC_WARNING } from "@/features/ledger/utils/ledger-visibility";
+import { formatError } from "@/server/graphql/format-error";
 
 const config = {
   api: { scopeEnforcement: "enforce" },
@@ -53,10 +54,73 @@ const CURRENT = {
   updated_at: "2024-01-01T00:00:00Z",
 };
 
+const OTHER = {
+  ...CURRENT,
+  id: 2,
+  name: "example",
+  full_name: "alice/example",
+  description: null,
+};
+
+/**
+ * What the host answers each name with, through the ledger service: a ledger
+ * by its name, and a renamed ledger's former name with the ledger it now
+ * names (w23/061). `main` was once `main-2025`; `example` was once `books`.
+ * Any other name is free.
+ */
+const BY_NAME: Record<string, typeof CURRENT | typeof OTHER> = {
+  main: CURRENT,
+  "main-2025": CURRENT,
+  example: OTHER,
+  books: OTHER,
+};
+
+/**
+ * The ledger service's answers to a rename commit onto a taken name, as its
+ * `nameTakenError` and error envelope put them on the wire.
+ */
+const COMMIT_REFUSALS: Record<string, () => FavaApiError> = {
+  example: () => {
+    const error =
+      "A ledger with the name 'example' already exists. Please choose a different name.";
+    return new FavaApiError(error, 400, {
+      success: false,
+      error,
+      code: null,
+      details: null,
+    });
+  },
+  books: () => {
+    const error =
+      "'books' is the former name of alice/example: links to it redirect there, so the name stays reserved. Choose a different name.";
+    return new FavaApiError(error, 400, {
+      success: false,
+      error,
+      code: "LEDGER_NAME_RESERVED",
+      details: { name: "books", redirects_to: "alice/example" },
+    });
+  },
+};
+
 async function fixture() {
   const envelope = (data: unknown) => ({ data: { success: true, data } });
-  const updateSpy = jest.fn(async () => envelope({ ...CURRENT }));
-  const getSpy = jest.fn(async () => envelope({ ...CURRENT }));
+  const updateSpy = jest.fn(
+    async (_owner: string, _name: string, update: { name?: string }) => {
+      const refusal = update.name && COMMIT_REFUSALS[update.name];
+      if (refusal) throw refusal();
+      return envelope({ ...CURRENT });
+    },
+  );
+  const getSpy = jest.fn(async (_owner: string, name: string) => {
+    const ledger = BY_NAME[name];
+    if (!ledger) {
+      throw new FavaApiError("Not Found", 404, {
+        success: false,
+        error: "Not Found",
+      });
+    }
+    return envelope({ ...ledger });
+  });
   const fava = {
     getPublicApiClient: async () => ({
       ledgers: {
@@ -106,10 +170,15 @@ async function fixture() {
           body: JSON.stringify(args),
         },
       );
+      const result = (await response.json()) as Record<string, unknown>;
       return {
         success: response.status === 200,
         status: response.status,
-        result: (await response.json()) as Record<string, unknown>,
+        result,
+        error:
+          response.status === 200
+            ? undefined
+            : { status: response.status, ...(result.error as object) },
       };
     }
     if (surface === "gql") {
@@ -119,22 +188,31 @@ async function fixture() {
         variableValues: args,
         contextValue: { identity, getCurrentIdentity: () => identity },
       });
+      const error = result.errors?.[0];
+      const formatted = error && formatError(error.toJSON(), error);
       return {
         success: !result.errors,
         result: result.data?.updateLedger as
           | Record<string, unknown>
           | undefined,
         errors: result.errors,
+        error: formatted && {
+          message: formatted.message,
+          extensions: formatted.extensions,
+        },
       };
     }
     const result = await client.callTool({
       name: "updateLedger",
       arguments: args,
     });
+    const content = result.structuredContent as
+      | { result?: Record<string, unknown>; error?: Record<string, unknown> }
+      | undefined;
     return {
       success: !result.isError,
-      result: (result.structuredContent as { result?: Record<string, unknown> })
-        ?.result,
+      result: content?.result,
+      error: content?.error,
     };
   };
 
@@ -231,6 +309,116 @@ describe.each(["rest", "gql", "mcp"])(
     });
   },
 );
+
+/** Where each surface carries the commit's name refusal. */
+function nameConflict(surface: string, reasonCode: string) {
+  if (surface === "rest") {
+    return { status: 409, code: "CONFLICT", metadata: { reasonCode } };
+  }
+  if (surface === "gql")
+    return { extensions: { code: "CONFLICT", reasonCode } };
+  // MCP's envelope carries the category and the reason's own hint.
+  return { code: "CONFLICT", hint: expect.stringContaining("different") };
+}
+
+// A rename preview runs the commit's name check (w31/006): a name another
+// ledger holds, and another ledger's former name, are refused exactly as the
+// commit refuses them; the ledger's own former name stays free, and its
+// current name is no rename at all.
+describe.each(["rest", "gql", "mcp"])(
+  "updateLedger rename preview (%s)",
+  (surface) => {
+    const flag = surface === "mcp" ? { dry_run: true } : { dryRun: true };
+
+    it.each([
+      ["a name another ledger holds", "example", "LEDGER_NAME_ALREADY_EXISTS"],
+      ["another ledger's former name", "books", "LEDGER_NAME_RESERVED"],
+    ])("refuses %s as the commit does", async (_case, name, reasonCode) => {
+      const f = await fixture();
+      try {
+        const preview = await f.call(surface, { name, ...flag });
+        expect(preview.success).toBe(false);
+        expect(f.updateSpy).not.toHaveBeenCalled();
+
+        const commit = await f.call(surface, { name });
+        expect(commit.success).toBe(false);
+        expect(f.updateSpy).toHaveBeenCalledTimes(1);
+
+        expect(preview.error).toMatchObject(nameConflict(surface, reasonCode));
+        expect(preview.error).toEqual(commit.error);
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("keeps the ledger's own former name free", async () => {
+      const f = await fixture();
+      try {
+        const { success, result } = await f.call(surface, {
+          name: "main-2025",
+          ...flag,
+        });
+        expect(success).toBe(true);
+        expect(f.updateSpy).not.toHaveBeenCalled();
+        expect(result).toMatchObject({
+          preview: { name: { from: "main", to: "main-2025" } },
+        });
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("renders the current name as no rename", async () => {
+      const f = await fixture();
+      try {
+        const { success, result } = await f.call(surface, {
+          name: "main",
+          description: "New description",
+          ...flag,
+        });
+        expect(success).toBe(true);
+        expect(f.updateSpy).not.toHaveBeenCalled();
+        const preview = result?.preview as {
+          name?: unknown;
+          description?: unknown;
+          warnings: string[];
+        };
+        expect(preview.name ?? undefined).toBeUndefined();
+        expect(preview.description).toEqual({
+          from: "Old description",
+          to: "New description",
+        });
+        expect(preview.warnings).toEqual([]);
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+it("rest refuses a rename preview whose name check fails, not as a free name", async () => {
+  const f = await fixture();
+  try {
+    f.getSpy.mockImplementation(async (_owner: string, name: string) => {
+      if (name === "main") {
+        return { data: { success: true, data: { ...CURRENT } } };
+      }
+      throw new FavaApiError("Forbidden", 403, {
+        success: false,
+        error: "Forbidden",
+      });
+    });
+    const { success, status } = await f.call("rest", {
+      name: "renamed",
+      dryRun: true,
+    });
+    expect(success).toBe(false);
+    expect(status).toBe(403);
+    expect(f.updateSpy).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
 
 it("rest agrees when both twins are true", async () => {
   const f = await fixture();

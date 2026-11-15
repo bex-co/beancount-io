@@ -476,7 +476,10 @@ A lifecycle preview runs the commit's checks under the commit's
 authority and changes nothing; a commit echoes the flag off
 (`dry_run: false`) with no preview. `updateLedger` renders the
 current→new diff over the provided fields only, with a flip to
-public called out. `deleteLedger` renders the destroy summary —
+public called out; a rename onto a name another ledger holds, or
+onto a renamed ledger's former name, is refused with the commit's
+`CONFLICT`, and the ledger's current name renders no rename.
+`deleteLedger` renders the destroy summary —
 identity, emptiness, size, and warnings covering permanence and
 linked-bank cleanup. `setLedgerCollaborator` renders the would-be
 grant, current→requested, under the same plan-limit check the commit

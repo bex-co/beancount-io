@@ -30,6 +30,8 @@ import {
   LedgerUpdate,
   unwrapFavaResponse,
   FavaApiClient,
+  ledgerNameExistsConflict,
+  ledgerNameReservedConflict,
 } from "@/foundation/fava";
 import { type IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { decryptToken } from "@/features/plaid/utils/encryption";
@@ -188,16 +190,17 @@ function assertDescriptionLength(description: string | null | undefined) {
 /**
  * Render an updateLedger preview from the current settings and the caller's
  * input (w23/m13/t002). Only provided (non-null) fields appear — nulls pass
- * through to the commit path unchanged, and the preview renders effective
- * changes only. A privacy flip to public is called out in `warnings`, because
- * that is the one update whose blast radius exceeds the ledger itself.
+ * through to the commit path unchanged — and a name equal to the current one
+ * is no rename, so it renders no change and no URL warning (w31/006). A
+ * privacy flip to public is called out in `warnings`, because that is the one
+ * update whose blast radius exceeds the ledger itself.
  */
 function previewLedgerUpdate(
   current: LedgerData,
   input: UpdateLedgerCommand,
 ): LedgerUpdatePreview {
   const preview: LedgerUpdatePreview = { warnings: [] };
-  if (input.name != null) {
+  if (input.name != null && input.name !== current.name) {
     preview.name = { from: current.name, to: input.name };
     preview.warnings.push(
       `Renaming to ${input.name} changes the ledger's full name and URLs; update pins and links.`,
@@ -216,6 +219,69 @@ function previewLedgerUpdate(
     }
   }
   return preview;
+}
+
+/** The ledger a name answers with, or `undefined` when none does. */
+async function findLedgerByName(
+  favaApiClient: FavaApiClient,
+  ledgerOwner: string,
+  name: string,
+): Promise<FavaLedgerPublic | undefined> {
+  try {
+    return (await unwrapFavaResponse(
+      favaApiClient.ledgers.getLedger(ledgerOwner, name),
+      "check ledger name",
+    )) as FavaLedgerPublic;
+  } catch (error) {
+    // A miss is the free name the commit's lookup is after.
+    if (error instanceof NotFoundError) return undefined;
+    throw error;
+  }
+}
+
+/**
+ * The commit's rename check, run for the preview (w31/006). The ledger
+ * service's `PUT /ledgers/{owner}/{repo_name}` looks the new name up as the
+ * caller and refuses it when a repository answers (`findExistingRepo` and
+ * `nameTakenError` in `backend-cluster/ledger/src/api/ledgers.ts`; packages
+ * share no code, so this restates them). The host answers a renamed ledger's
+ * former name with the ledger it now names, so an answer under another full
+ * name is a reserved name rather than a ledger's (w23/061). An answer that is
+ * this ledger itself — renaming back to its own former name — leaves the name
+ * free, identified as there by the stable numeric id rather than by names.
+ */
+async function assertRenameTargetFree(
+  favaApiClient: FavaApiClient,
+  ledgerId: string,
+  newName: string,
+): Promise<void> {
+  const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+  if (newName === ledgerName) return;
+  const target = await findLedgerByName(favaApiClient, ledgerOwner, newName);
+  if (!target) return;
+  const targetId = target.id;
+  if (
+    typeof targetId === "number" &&
+    Number.isSafeInteger(targetId) &&
+    targetId > 0
+  ) {
+    const source = await findLedgerByName(
+      favaApiClient,
+      ledgerOwner,
+      ledgerName,
+    );
+    if (source?.id === targetId) return;
+  }
+  const fullName = target.full_name;
+  if (
+    typeof fullName === "string" &&
+    fullName.toLowerCase() !== `${ledgerOwner}/${newName}`.toLowerCase()
+  ) {
+    throw ledgerNameReservedConflict(
+      `'${newName}' is the former name of ${fullName}: links to it redirect there, so the name stays reserved. Choose a different name.`,
+    );
+  }
+  throw ledgerNameExistsConflict();
 }
 
 /**
@@ -909,8 +975,16 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       // The preview reads the current settings through the same getter the
       // reads use and renders the diff; the PUT below never runs (w23/m13/t002).
       // Authorization stays the commit's: previewing admin changes requires
-      // admin, exactly as committing them does.
+      // admin, exactly as committing them does, and the name check runs under
+      // the caller's ledger credentials, as the commit's does (w31/006).
       const current = await this.getLedger({ ledgerId, identity });
+      if (input.name != null && input.name !== current.name) {
+        await assertRenameTargetFree(
+          await this.favaClientFactory.getPublicApiClient(ledgerId, userId),
+          ledgerId,
+          input.name,
+        );
+      }
       return {
         ...current,
         dryRun: true,
