@@ -190,6 +190,10 @@ def error(exc: BaseException | str) -> NoReturn:
             }
             if err.request_id:
                 payload["request_id"] = err.request_id
+            if err.code:
+                payload["code"] = err.code
+            if err.hint:
+                payload["hint"] = err.hint
             if err.details:
                 payload["details"] = err.details
             if err.result is not None:

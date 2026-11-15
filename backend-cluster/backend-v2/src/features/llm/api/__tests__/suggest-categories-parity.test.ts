@@ -398,9 +398,24 @@ it.each([undefined, "beancount-mobile"])(
     delete process.env.ANTHROPIC_API_KEY;
     delete process.env.OPENAI_API_KEY;
     try {
-      expect((await f.rest()).status).toBe(500);
-      expect((await f.gql()).errors).toHaveLength(1);
-      await expect(f.read()).rejects.toThrow();
+      // ADR029 D5: an operator setup gap, not a crash — one code, the
+      // variables to set as the hint, and 503 rather than 500 on REST.
+      const hint = "Set ANTHROPIC_API_KEY or OPENAI_API_KEY (see .env.example)";
+      const r = await f.rest();
+      expect(r.status).toBe(503);
+      expect(await r.json()).toMatchObject({
+        ok: false,
+        error: { code: "CONFIGURATION_ERROR", metadata: { hint } },
+      });
+      const g = await f.gql();
+      expect(g.errors).toHaveLength(1);
+      expect(g.errors![0].originalError).toMatchObject({
+        category: "CONFIGURATION_ERROR",
+        metadata: { hint },
+      });
+      await expect(f.read()).rejects.toMatchObject({
+        data: { code: "CONFIGURATION_ERROR", hint },
+      });
       expect(categorizeTransactions).not.toHaveBeenCalled();
       expect(f.charge).not.toHaveBeenCalled();
     } finally {
@@ -421,9 +436,22 @@ it.each([undefined, "beancount-mobile"])(
       .mocked(categorizeTransactions)
       .mockRejectedValue(new Error("fixture provider unavailable"));
     try {
-      expect((await f.rest()).status).toBe(500);
-      expect((await f.gql()).errors).toHaveLength(1);
-      await expect(f.read()).rejects.toThrow();
+      // The control for the case above: a genuine failure stays a 500
+      // INTERNAL_SERVER_ERROR on every surface.
+      const r = await f.rest();
+      expect(r.status).toBe(500);
+      expect(await r.json()).toMatchObject({
+        error: { code: "INTERNAL_SERVER_ERROR" },
+      });
+      const g = await f.gql();
+      expect(g.errors).toHaveLength(1);
+      expect(g.errors![0].originalError).not.toHaveProperty(
+        "category",
+        "CONFIGURATION_ERROR",
+      );
+      await expect(f.read()).rejects.toMatchObject({
+        data: { code: "INTERNAL_SERVER_ERROR" },
+      });
       expect(f.charge).not.toHaveBeenCalled();
     } finally {
       await f.close();

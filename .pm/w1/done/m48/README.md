@@ -1,19 +1,19 @@
 # w1 · m48 — "The operator has not set this up" fails one way on REST, GraphQL and MCP
 
-**Worker:** worker1 **Goal:** every feature that needs operator setup (object storage for uploads, the LLM key for AI features) fails with `CONFIGURATION_ERROR`, a hint naming what to set, and one non-500 HTTP status, on every surface, and the dashboard and `bea` show that hint instead of a generic failure. **Status:** todo
+**Worker:** worker1 **Goal:** every feature that needs operator setup (object storage for uploads, the LLM key for AI features) fails with `CONFIGURATION_ERROR`, a hint naming what to set, and one non-500 HTTP status, on every surface, and the dashboard and `bea` show that hint instead of a generic failure. **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Map `CONFIGURATION_ERROR` to one non-500 HTTP status | 30m | — |
-| t002 | A missing LLM key raises `CONFIGURATION_ERROR` with a hint | 30m | — |
-| t003 | Parity tests for both setup errors on REST, GraphQL and MCP | 45m | t001, t002 |
-| t004 | The dashboard and `bea` show the setup hint for `CONFIGURATION_ERROR` | 45m | t003 |
-| t005 | Adoption surface | 20m | t004 |
-| t006 | Simplify | 15m | t005 |
-| t007 | Test coverage | 30m | t005, t006 |
-| t008 | Closeout | 10m | t007 |
+| t001 | Map `CONFIGURATION_ERROR` to one non-500 HTTP status — **DONE** | 30m | — |
+| t002 | A missing LLM key raises `CONFIGURATION_ERROR` with a hint — **DONE** | 30m | — |
+| t003 | Parity tests for both setup errors on REST, GraphQL and MCP — **DONE** | 45m | t001, t002 |
+| t004 | The dashboard and `bea` show the setup hint for `CONFIGURATION_ERROR` — **DONE** | 45m | t003 |
+| t005 | Adoption surface — **DONE** | 20m | t004 |
+| t006 | Simplify — **DONE** | 15m | t005 |
+| t007 | Test coverage — **DONE** | 30m | t005, t006 |
+| t008 | Closeout — **DONE** | 10m | t007 |
 
 ## Definition of done
 

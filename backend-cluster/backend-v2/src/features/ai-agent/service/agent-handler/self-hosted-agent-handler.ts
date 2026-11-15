@@ -5,6 +5,10 @@ import { logger } from "@/shared/logger";
 import { BadUserInputError } from "@/shared/errors";
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import type { ILLMService } from "@/features/llm/service/llm-service";
+import {
+  llmNotConfiguredError,
+  UNCONFIGURED_PROVIDER,
+} from "@/features/llm/utils/fallback-language-model";
 import type { ILedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
 import type { IAuthorizationService } from "@/server/api/authorization";
 import { resolveAgentAccessMode } from "../../agent-access";
@@ -71,6 +75,16 @@ export class SelfHostedAgentHandler implements IAgentHandler {
       ledgerId,
       requestedMode: "agent",
     });
+    // Refuse before the stream opens, so a stack with no LLM key answers the
+    // same CONFIGURATION_ERROR envelope (503 plus hint) as every other AI
+    // operation instead of an error part inside a 200 stream (ADR029 D5).
+    // The injected model, not the environment, decides: it is what streams.
+    if (
+      typeof this.model !== "string" &&
+      this.model.provider === UNCONFIGURED_PROVIDER
+    ) {
+      throw llmNotConfiguredError();
+    }
     await this.aiCfoUsage.assertQuotaAvailable(userId);
 
     let modelMessages;

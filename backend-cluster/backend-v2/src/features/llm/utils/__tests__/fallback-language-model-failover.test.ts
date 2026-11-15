@@ -1,4 +1,4 @@
-import { APICallError } from "ai";
+import { APICallError, generateText } from "ai";
 import type {
   LanguageModelV4,
   LanguageModelV4CallOptions,
@@ -127,5 +127,42 @@ describe("createFallbackLanguageModel failover order", () => {
     } finally {
       if (prior !== undefined) process.env.LLM_MODEL = prior;
     }
+  });
+});
+
+describe("createFallbackLanguageModel with no provider key", () => {
+  const prior = {
+    anthropic: process.env.ANTHROPIC_API_KEY,
+    openai: process.env.OPENAI_API_KEY,
+  };
+
+  beforeEach(() => {
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+  });
+
+  afterAll(() => {
+    if (prior.anthropic === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = prior.anthropic;
+    if (prior.openai === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = prior.openai;
+  });
+
+  // ADR029 D5: a missing key is permanent operator setup, so the call fails
+  // once with CONFIGURATION_ERROR and the variables to set — the SDK's retry
+  // loop must not spend its attempts on it.
+  it("fails once with CONFIGURATION_ERROR and the hint, without retrying", async () => {
+    const model = createFallbackLanguageModel() as LanguageModelV4;
+    const doGenerate = jest.spyOn(model, "doGenerate");
+
+    await expect(
+      generateText({ model, prompt: "hello", maxRetries: 3 }),
+    ).rejects.toMatchObject({
+      category: "CONFIGURATION_ERROR",
+      metadata: {
+        hint: "Set ANTHROPIC_API_KEY or OPENAI_API_KEY (see .env.example)",
+      },
+    });
+    expect(doGenerate).toHaveBeenCalledTimes(1);
   });
 });

@@ -44,6 +44,10 @@ class BeaError(Exception):
     unexpected = False
     #: The HTTP status of the server answer this error reports, when there was one.
     http_status: int | None = None
+    #: The server's machine `error.code`, when a v1 error envelope named one.
+    code: str | None = None
+    #: What to do about it, from the envelope's `error.metadata.hint`.
+    hint: str | None = None
 
     def __init__(
         self,
@@ -239,6 +243,11 @@ def _metadata_text(body: object, key: str) -> str | None:
     return value if isinstance(value, str) else None
 
 
+def error_hint(body: object) -> str | None:
+    """What the server says to do about a refusal, from `error.metadata.hint`."""
+    return _metadata_text(body, "hint")
+
+
 def limit_owner(body: object) -> str | None:
     """Whose plan set a limit, from the v1 envelope's `error.metadata`."""
     return _metadata_text(body, "limitOwner")
@@ -268,13 +277,48 @@ def error_from_status(
     request_id: str | None = None,
     code: str | None = None,
     owner: str | None = None,
+    hint: str | None = None,
 ) -> BeaError:
     """Map a v1 HTTP status to the documented category, keeping the server's words.
 
     One deterministic table, so a script can branch on the exit code and a
-    person reads the server's own message rather than a paraphrase.
+    person reads the server's own message rather than a paraphrase. The
+    server's `code` and `hint` ride along on the error, so `--json` reports
+    them for an agent to branch on.
     """
+    error = _error_for_status(status, message, request_id=request_id, code=code, owner=owner, hint=hint)
+    error.code = code
+    error.hint = hint
+    return error
+
+
+def error_from_body(status: int, body: object, *, request_id: str | None = None) -> BeaError:
+    """`error_from_status` for a decoded v1 error body: every envelope field read in one place."""
+    return error_from_status(
+        status,
+        server_message(body),
+        request_id=request_id,
+        code=error_code(body),
+        hint=error_hint(body),
+    )
+
+
+def _error_for_status(
+    status: int,
+    message: str | None,
+    *,
+    request_id: str | None,
+    code: str | None,
+    owner: str | None,
+    hint: str | None,
+) -> BeaError:
     detail = message or f"HTTP {status}"
+    # The deployment lacks something its operator must set up (an LLM key,
+    # object storage): no server crash and nothing a retry fixes, so the
+    # sentence is the server's plus the variables its hint names (ADR029 D5).
+    if code == "CONFIGURATION_ERROR":
+        lead = detail if not hint or detail.endswith(".") else f"{detail}."
+        return BeaError(" ".join(filter(None, [lead, hint])), request_id=request_id)
     # A plan limit answers 403, but it is not a credential problem: the
     # server's sentence names the limit and the count, and `owner` says who
     # can change it.

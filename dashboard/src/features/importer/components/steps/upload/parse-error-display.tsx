@@ -8,6 +8,11 @@ import { UpgradePromptLink } from "@/common/components/upgrade-prompt-link";
 import { getNextTier } from "@/common/lib/subscription/tier-config";
 import { isPremiumRequired } from "../../../utils/is-premium-required";
 import {
+  configurationErrorDetail,
+  getConfigurationError,
+  type ConfigurationError,
+} from "@/common/lib/errors/configuration-error";
+import {
   CsvEmptyError,
   CsvEncodingError,
 } from "../../../utils/decode-csv-bytes";
@@ -189,6 +194,34 @@ function ServerError({ onReset }: { onReset: () => void }) {
 }
 
 /**
+ * The deployment's operator has not set up AI parsing or file storage. Neither
+ * an upgrade nor another try helps, so show the server's message and the hint
+ * naming what to configure, verbatim.
+ */
+function NotConfiguredError({
+  configuration,
+  onReset,
+}: {
+  configuration: ConfigurationError;
+  onReset: () => void;
+}) {
+  const { t } = useTranslations();
+
+  return (
+    <ErrorLayout onReset={onReset}>
+      <div role="alert" className="space-y-2">
+        <h3 className="text-lg font-semibold text-foreground">
+          {t("common.errors.notConfigured")}
+        </h3>
+        <p className="text-sm text-muted-foreground break-words">
+          {configurationErrorDetail(configuration)}
+        </p>
+      </div>
+    </ErrorLayout>
+  );
+}
+
+/**
  * A CSV whose bytes are not UTF-8: say how to re-save it rather than import
  * changed text (w4/278).
  */
@@ -248,6 +281,13 @@ export function ParseErrorDisplay({
 
   if (error instanceof CsvEmptyError) {
     return <EmptyFileError onReset={onReset} />;
+  }
+
+  const configuration = getConfigurationError(error);
+  if (configuration) {
+    return (
+      <NotConfiguredError configuration={configuration} onReset={onReset} />
+    );
   }
 
   if (isPremiumRequiredError) {

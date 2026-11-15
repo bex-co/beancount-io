@@ -97,7 +97,9 @@ point), not in Gitea. It is off by default. To enable:
   server still boots and AI calls fail with a clear "LLM is not configured"
   error. `BLOCKEDEN_ACCESS_KEY` only meters the `bea ask` model proxy. Stripe,
   Plaid, SendGrid, and S3 uploads are likewise disabled until their keys are
-  set.
+  set. An unconfigured AI feature or upload answers `CONFIGURATION_ERROR`
+  (HTTP 503 on REST) on every API surface, with a hint naming the variables to
+  set; the dashboard and `bea --json` show that hint.
 - No mail leaves this stack: with `NODE_ENV=development` the API only logs that
   it suppressed a mail, even with `SEND_GRID_API_KEY` set, so the
   forgot-password page says the server cannot send email. To reset a local

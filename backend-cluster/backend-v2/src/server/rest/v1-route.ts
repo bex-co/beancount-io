@@ -143,7 +143,10 @@ const SHARED_ERROR_RESPONSES: RouteConfig["responses"] = {
   ),
   429: json("Rate limited", errorSchema),
   500: json("The server failed; the request may be retried", errorSchema),
-  503: json("A dependency is unavailable; retry later", errorSchema),
+  503: json(
+    "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
+    errorSchema,
+  ),
 };
 
 async function requireIdentity(

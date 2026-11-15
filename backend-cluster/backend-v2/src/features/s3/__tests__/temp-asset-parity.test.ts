@@ -47,7 +47,7 @@ const service = new AssetStorageService(
     ),
   ),
 );
-const resolver = new AssetStorageResolver(service);
+let resolver: AssetStorageResolver;
 let schema: Awaited<ReturnType<typeof buildSchema>>;
 beforeAll(async () => {
   schema = await buildSchema({
@@ -68,14 +68,15 @@ beforeEach(() => {
     );
 });
 
-async function fixture(caller = identity) {
+async function fixture(caller = identity, storage = service) {
+  resolver = new AssetStorageResolver(storage);
   const rest = await startV1TestServer(
-    { services: { assetStorage: service } } as unknown as AppLayers,
+    { services: { assetStorage: storage } } as unknown as AppLayers,
     config,
   );
   rest.setIdentity(caller);
   const server = assembleMcpRegistry(
-    { identity: caller, assetStorage: service } as unknown as McpRequestContext,
+    { identity: caller, assetStorage: storage } as unknown as McpRequestContext,
     config,
   );
   const client = new Client({ name: "temp-asset-parity", version: "1" });
@@ -349,6 +350,54 @@ it("refuses a missing download key as bad input on every surface", async () => {
         uri: "beancount://temp-assets/download-url?",
       }),
     ).rejects.toMatchObject({ data: { code: "BAD_USER_INPUT" } });
+    expect(getSignedUrl).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+// ADR029 D5: a stack with no object storage refuses the upload as one
+// operator setup error everywhere — code, the variables to set, and 503
+// (not 500) on REST — before anything is signed.
+it("refuses upload on unconfigured storage as CONFIGURATION_ERROR on every surface", async () => {
+  const unconfigured = new AssetStorageService(
+    { region: "us-east-1", uploadUrlExpiration: 300 } as AssetS3Config,
+    new AuthorizationService(
+      new SourceBackedRelationshipEvaluator(
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+      ),
+    ),
+  );
+  const hint =
+    "Set TEMP_ASSETS_AWS_S3_BUCKET, TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID, and TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY (see .env.example)";
+  const f = await fixture(identity, unconfigured);
+  try {
+    const body = { filename: "receipt.pdf", mimeType: "application/pdf" };
+    const r = await f.rest("upload-url", body);
+    expect(r.status).toBe(503);
+    expect(await r.json()).toMatchObject({
+      ok: false,
+      error: { code: "CONFIGURATION_ERROR", metadata: { hint } },
+    });
+    const g = await f.gql(
+      'mutation { generateTempAssetUploadUrl(filename:"receipt.pdf",mimeType:"application/pdf") { objectKey } }',
+    );
+    expect(g.errors?.[0].originalError).toMatchObject({
+      category: "CONFIGURATION_ERROR",
+      metadata: { hint },
+    });
+    const m = await f.client.callTool({
+      name: "generateTempAssetUploadUrl",
+      arguments: body,
+    });
+    expect(m.isError).toBe(true);
+    expect(m.structuredContent).toMatchObject({
+      ok: false,
+      error: { code: "CONFIGURATION_ERROR", hint },
+    });
     expect(getSignedUrl).not.toHaveBeenCalled();
   } finally {
     await f.close();

@@ -40,7 +40,7 @@ const EXPECTED: Record<
   RESOURCE_LIMIT_REACHED: { http: 403, jsonRpc: -32003, onMcp: true },
   OPERATION_NOT_ALLOWED: { http: 403, jsonRpc: -32003, onMcp: true },
   UNBALANCED: { http: 400, jsonRpc: -32602, onMcp: true },
-  CONFIGURATION_ERROR: { http: 500, jsonRpc: -32000, onMcp: true },
+  CONFIGURATION_ERROR: { http: 503, jsonRpc: -32000, onMcp: true },
   PREMIUM_REQUIRED: { http: 402, jsonRpc: -32003, onMcp: true },
   // Raised only by the store-billed plan change, which is session-only and has
   // no MCP tool (billing is outside the agent surface), so the MCP guide's

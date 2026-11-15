@@ -193,14 +193,16 @@ def call[T](
             # A documented error status whose JSON body lacks the `{ok, error}`
             # envelope (a gateway's `{"message": ...}`, `[]`, a bare string)
             # makes `V1Error.from_dict` raise; keep the status mapping anyway.
-            from cli.errors import error_from_status
+            from cli.errors import error_from_status, error_hint, limit_owner
 
+            body = _json_body(response.content)
             error = error_from_status(
                 response.status_code,
                 _error_message(None, response.content),
                 request_id=request_id_from(response.headers),
                 code=_error_code(None, response.content),
-                owner=_limit_owner(response.content),
+                owner=limit_owner(body),
+                hint=error_hint(body),
             )
             error.http_status = response.status_code
             raise error from exc
@@ -235,7 +237,14 @@ def unwrap_or_none[T](response: Response[T | V1Error], *, model: type | None = N
     of raising, so `call` never sees a parser failure; without this check the
     command then read an attribute off a dict (w5/366).
     """
-    from cli.errors import UnreadableSuccess, error_from_status, redirect_error, request_id_from
+    from cli.errors import (
+        UnreadableSuccess,
+        error_from_status,
+        error_hint,
+        limit_owner,
+        redirect_error,
+        request_id_from,
+    )
 
     parsed = response.parsed
     if 300 <= response.status_code < 400:
@@ -248,12 +257,14 @@ def unwrap_or_none[T](response: Response[T | V1Error], *, model: type | None = N
                 request_id=request_id_from(response.headers),
             )
         return parsed
+    body = _json_body(response.content)
     raise error_from_status(
         response.status_code,
         _error_message(parsed, response.content),
         request_id=request_id_from(response.headers),
         code=_error_code(parsed, response.content),
-        owner=_limit_owner(response.content),
+        owner=limit_owner(body),
+        hint=error_hint(body),
     )
 
 
@@ -269,14 +280,13 @@ def _error_code(parsed: object, content: bytes) -> str | None:
         return None
 
 
-def _limit_owner(content: bytes) -> str | None:
-    """Whose plan set a limit; a refusal that names none, or no JSON, has none."""
-    from cli.errors import limit_owner
-
+def _json_body(content: bytes) -> object | None:
+    """The error body decoded once for its metadata fields; no JSON reads as none."""
     try:
-        return limit_owner(json.loads(content))
+        body: object = json.loads(content)
     except (ValueError, RecursionError):
         return None
+    return body
 
 
 def _error_message(parsed: object, content: bytes) -> str | None:

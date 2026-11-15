@@ -1031,6 +1031,11 @@ const jaCommon: Record<string, TranslationEntry> = {
     description:
       "Error shown when the ledger refuses a transaction whose postings do not balance (UNBALANCED)",
   },
+  "common.errors.notConfigured": {
+    message: "この機能はこのサーバーで設定されていません。",
+    description:
+      "Lead-in shown before the server's own message and operator hint when the deployment has not configured a feature, such as the AI model or file storage (CONFIGURATION_ERROR)",
+  },
   "common.writeLeftErrors": {
     message: "保存しましたが、元帳でエラーが報告されています：{error}",
     description:

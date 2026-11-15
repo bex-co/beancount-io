@@ -25,8 +25,7 @@ from cli import output
 from cli.ask.results import format_result
 from cli.ask.skills import MAX_BODY, AgentSkill, build_skills_index_prompt
 from cli.engine import launch
-from cli.errors import BeaError, LedgerError, error_from_status, redirect_error, request_id_from
-from cli.errors import server_message as _server_message
+from cli.errors import BeaError, LedgerError, error_from_body, redirect_error, request_id_from
 
 _SYSTEM_PROMPT = """You are a helpful Beancount accounting assistant.
 Use the run_bql_query tool to retrieve data from the user's ledger, then answer their question.
@@ -267,7 +266,8 @@ def translated_failures(deps: BqlDeps | None = None) -> Iterator[None]:
         if quota is not None:
             raise BeaError(quota, request_id=request_id) from exc
         raise _naming_writes(
-            error_from_status(exc.status_code, _server_message(exc.body), request_id=request_id), deps
+            error_from_body(exc.status_code, exc.body, request_id=request_id),
+            deps,
         ) from exc
     except ModelAPIError as exc:
         # The SDK wraps redirects as ModelAPIError rather than ModelHTTPError,
@@ -333,9 +333,7 @@ def _model_api_error(exc: BaseException) -> BeaError:
                     body = response.json()
                 except (ValueError, RecursionError):
                     pass
-            return error_from_status(
-                response.status_code, _server_message(body), request_id=request_id_from(response.headers)
-            )
+            return error_from_body(response.status_code, body, request_id=request_id_from(response.headers))
         if isinstance(cause, httpx.TransportError):
             return to_bea_error(cause)
     return BeaError(f"Could not reach the server ({type(exc).__name__}).")

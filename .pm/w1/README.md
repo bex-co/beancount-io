@@ -24,7 +24,7 @@ m46–m48 were materialized on 2026-11-14 from `/pm-brainstorm for w1` items 1, 
 
 - [x] **m46** — [Ledger clone addresses come from the deployment, never beancount.io](./done/m46/README.md) (8 tasks) ← user request via /pmx, 2026-11-14 (`/pm-brainstorm for w1` item 1, ADR029 D3); user routed to w1
 - [x] **m47** — [A mail-less self-hosted stack says so on forgot-password, and the operator has a tested way to restore access](./done/m47/README.md) (8 tasks) ← user request via /pmx, 2026-11-14 (`/pm-brainstorm for w1` item 3, ADR029 D4); user routed to w1
-- [ ] **m48** — ["The operator has not set this up" fails one way on REST, GraphQL and MCP](./m48/README.md) (8 tasks) ← user request via /pmx, 2026-11-14 (`/pm-brainstorm for w1` item 5, ADR029 D5); user routed to w1
+- [x] **m48** — ["The operator has not set this up" fails one way on REST, GraphQL and MCP](./done/m48/README.md) (8 tasks) ← user request via /pmx, 2026-11-14 (`/pm-brainstorm for w1` item 5, ADR029 D5); user routed to w1
 - [ ] **m42** — [Bring an existing Beancount ledger to `bea` and a coding agent](./blocked/m42/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 1); user routed to w1 — **blocked:** all shipped except the Codex rehearsal; Codex cannot refresh its expired sign-in (`codex login`)
 - [ ] **m43** — [Rename an account across a hosted ledger in one previewed commit](./blocked/m43/README.md) (10 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 2, from [228](./done/228.md)); user routed to w1 — **blocked:** shipped and deployed; the hosted check's undo step waits on w23/242
 - [x] **m44** — [List entries with their source text in one call](./done/m44/README.md) (7 tasks) ← user request via /pmx, 2026-11-13 (`/pm-brainstorm for w1` item 3, from [228](./done/228.md)); user routed to w1
@@ -82,6 +82,7 @@ m46–m48 were materialized on 2026-11-14 from `/pm-brainstorm for w1` items 1, 
 
 ## Inbox
 
+- [242](./242.md) — Mobile Ask-AI shows the operator hint for `CONFIGURATION_ERROR` instead of a retry (A2; follow-up to m48)
 - [241](./blocked/241.md) — Port the CLI off typer's private click so typer 0.29+ can install (A2; follow-up to the 239 stopgap) — **blocked:** its 2026-11-14 promotion (w3/m67) was dropped the same day; owner re-funds the port or drops the note
 
 

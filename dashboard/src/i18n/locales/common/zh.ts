@@ -1005,6 +1005,11 @@ const zhCommon: Record<string, TranslationEntry> = {
     description:
       "Error shown when the ledger refuses a transaction whose postings do not balance (UNBALANCED)",
   },
+  "common.errors.notConfigured": {
+    message: "此服务器尚未设置该功能。",
+    description:
+      "Lead-in shown before the server's own message and operator hint when the deployment has not configured a feature, such as the AI model or file storage (CONFIGURATION_ERROR)",
+  },
   "common.writeLeftErrors": {
     message: "已保存，但账本现在报告了一个错误：{error}",
     description:

@@ -431,3 +431,52 @@ def test_plan_limit_reads_as_the_server_says_not_as_a_permission_problem(
     assert "permission" not in result.stderr.lower()
     if json_output:
         assert json.loads(result.stderr)["error"]["category"] == "validation"
+
+
+@pytest.mark.parametrize("json_output", [False, True], ids=["human", "json"])
+def test_an_unconfigured_server_feature_says_what_to_set(
+    logged_in: None, httpx_mock: HTTPXMock, json_output: bool
+) -> None:
+    """A setup gap is no crash: the code and the operator's hint reach the user (ADR029 D5)."""
+    hint = "Set TEMP_ASSETS_AWS_S3_BUCKET (see .env.example)"
+    httpx_mock.add_response(
+        status_code=503,
+        json={
+            "ok": False,
+            "error": {
+                "code": "CONFIGURATION_ERROR",
+                "message": "Object storage is not configured on this deployment",
+                "metadata": {"hint": hint},
+            },
+        },
+    )
+
+    result = CliRunner().invoke(
+        app, [*(["--json"] if json_output else []), "cloud", "ledger", "create", "qa-synthetic"]
+    )
+
+    assert result.exit_code == 1, result.stderr
+    assert "Server error" not in result.stderr
+    if json_output:
+        error = json.loads(result.stderr)["error"]
+        assert error["code"] == "CONFIGURATION_ERROR"
+        assert error["hint"] == hint
+        assert error["message"] == f"Object storage is not configured on this deployment. {hint}"
+    else:
+        assert f"Object storage is not configured on this deployment. {hint}" in result.stderr
+
+
+def test_a_genuine_server_failure_still_reads_as_one(logged_in: None, httpx_mock: HTTPXMock) -> None:
+    """The control for the case above: a 500 stays a server error, with its code."""
+    httpx_mock.add_response(
+        status_code=500,
+        json={"ok": False, "error": {"code": "INTERNAL_SERVER_ERROR", "message": "Internal server error"}},
+    )
+
+    result = CliRunner().invoke(app, ["--json", "cloud", "ledger", "create", "qa-synthetic"])
+
+    assert result.exit_code == 1, result.stderr
+    error = json.loads(result.stderr)["error"]
+    assert error["message"] == "Server error (Internal server error)."
+    assert error["code"] == "INTERNAL_SERVER_ERROR"
+    assert "hint" not in error

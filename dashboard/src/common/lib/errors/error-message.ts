@@ -7,12 +7,19 @@ import {
   ServerParseError,
 } from "@apollo/client/errors";
 import { useTranslations } from "@/common/hooks/use-translations";
+import {
+  configurationErrorDetail,
+  getConfigurationError,
+} from "./configuration-error";
 
 /**
  * Maps backend error categories (surfaced as `extensions.code` on GraphQL
  * errors — see backend-cluster/backend-v2/src/shared/errors/) to localized
  * message keys. Raw server `error.message` strings are never shown to users;
- * they are internals meant for logs.
+ * they are internals meant for logs. The one exception is CONFIGURATION_ERROR,
+ * whose message and hint are an instruction to the deployment's operator
+ * (`configuration-error.ts`); `useErrorMessage` shows them after a localized
+ * lead-in.
  */
 const ERROR_CODE_TO_KEY: Record<string, string> = {
   UNAUTHENTICATED: "common.errors.unauthenticated",
@@ -85,6 +92,10 @@ export function getErrorMessageKey(
   if (error instanceof EntryWriteMaybeSavedError) {
     return "common.errors.entryMaybeSaved";
   }
+
+  // A feature this deployment's operator has not set up. Its REST form
+  // is a 503, which must not read as a passing outage worth retrying.
+  if (getConfigurationError(error)) return "common.errors.notConfigured";
 
   if (CombinedGraphQLErrors.is(error)) {
     for (const gqlError of error.errors) {
@@ -283,6 +294,10 @@ export function useErrorMessage(): (error: unknown) => string {
     tRef.current = t;
   });
   return useCallback((error: unknown) => {
+    const configuration = getConfigurationError(error);
+    if (configuration) {
+      return `${tRef.current("common.errors.notConfigured")} ${configurationErrorDetail(configuration)}`.trim();
+    }
     const detail = getNewLedgerErrorDetail(error);
     if (detail)
       return tRef.current("common.errors.wouldBreakLedger", { detail });

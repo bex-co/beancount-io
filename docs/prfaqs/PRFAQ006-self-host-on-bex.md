@@ -65,7 +65,7 @@ The App Store and Google Play apps keep a server-address override for self-hoste
 | You want | Set | Until then |
 | --- | --- | --- |
 | Receipt and attachment uploads | `TEMP_ASSETS_AWS_S3_*`, `PERM_ASSETS_AWS_S3_*` | The call fails with a configuration error naming these variables. |
-| AI: receipt scan, categories, assistant | `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` | "LLM is not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY." |
+| AI: receipt scan, categories, assistant | `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` | The call fails with a configuration error naming these variables. |
 | Password reset and other mail | `SEND_GRID_API_KEY` | See the next question. |
 | Bank connections | `PLAID_*` | Not tested on a self-hosted stack. |
 

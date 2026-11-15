@@ -1026,6 +1026,11 @@ const koCommon: Record<string, TranslationEntry> = {
     description:
       "Error shown when the ledger refuses a transaction whose postings do not balance (UNBALANCED)",
   },
+  "common.errors.notConfigured": {
+    message: "이 기능은 이 서버에 설정되어 있지 않습니다.",
+    description:
+      "Lead-in shown before the server's own message and operator hint when the deployment has not configured a feature, such as the AI model or file storage (CONFIGURATION_ERROR)",
+  },
   "common.writeLeftErrors": {
     message: "저장했지만 원장에서 이제 오류가 보고됩니다: {error}",
     description:

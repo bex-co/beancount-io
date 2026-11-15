@@ -269,4 +269,40 @@ describe("isPremiumRequired", () => {
       expect(isPremiumRequired(error)).toBe(true);
     });
   });
+
+  describe("CONFIGURATION_ERROR", () => {
+    it("is never premium, whatever else the refusal carries", () => {
+      expect(
+        isPremiumRequired({
+          errors: [
+            {
+              message: "LLM is not configured on this deployment",
+              extensions: {
+                code: "CONFIGURATION_ERROR",
+                hint: "Set ANTHROPIC_API_KEY or OPENAI_API_KEY (see .env.example)",
+              },
+            },
+            { message: "Premium required", extensions: { code: "FORBIDDEN" } },
+          ],
+        }),
+      ).toBe(false);
+    });
+
+    it("is never premium in the REST envelope's text", () => {
+      expect(
+        isPremiumRequired(
+          new Error(
+            JSON.stringify({
+              ok: false,
+              error: {
+                code: "CONFIGURATION_ERROR",
+                message: "LLM is not configured; upgrade the server config",
+                metadata: { hint: "Set ANTHROPIC_API_KEY" },
+              },
+            }),
+          ),
+        ),
+      ).toBe(false);
+    });
+  });
 });

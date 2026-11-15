@@ -1043,6 +1043,11 @@ const caCommon: Record<string, TranslationEntry> = {
     description:
       "Error shown when the ledger refuses a transaction whose postings do not balance (UNBALANCED)",
   },
+  "common.errors.notConfigured": {
+    message: "Aquesta funció no està configurada en aquest servidor.",
+    description:
+      "Lead-in shown before the server's own message and operator hint when the deployment has not configured a feature, such as the AI model or file storage (CONFIGURATION_ERROR)",
+  },
   "common.writeLeftErrors": {
     message: "S'ha desat, però ara el llibre informa d'un error: {error}",
     description:

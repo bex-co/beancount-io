@@ -366,7 +366,10 @@ In `--json` mode a failure writes nothing to stdout and one object to stderr:
 ```
 
 `request_id` is included when the backend supplied one; a text-mode error
-prints it as a last `  Request ID: …` line, for support. `result` carries
+prints it as a last `  Request ID: …` line, for support. `code` and `hint` are
+the server's own `error.code` and `error.metadata.hint` when a cloud command's
+or `ask`'s refusal carried them, so an agent can branch on the code rather
+than the sentence. `result` carries
 the partial effects when the command wrote some of what it promised (the
 `formatted` paths for `format`, the `written` rows for `add transactions`);
 `ledger_warnings` carries loader errors a `--json` command tolerated before
@@ -376,7 +379,10 @@ Cloud commands map the server's HTTP status onto the same table, preserving a
 readable message from a supported JSON error response and otherwise showing
 `HTTP <status>`: `401`/`403` exit **3**, `400` exits **2**, `409` exits **4**, and
 everything else — including `404`, rate limiting, and server errors — exits
-**1**. `ask` also accepts a single plain-text sentence of at most 200 characters;
+**1**. A `CONFIGURATION_ERROR` (HTTP `503`: the deployment lacks something its
+operator must set up, such as object storage or an AI key) also exits **1**, with
+the server's sentence followed by its hint naming the variables to set, never
+`Server error`; retrying will not help. `ask` also accepts a single plain-text sentence of at most 200 characters;
 markup, multiline or longer raw bodies fall back to the HTTP status. A message
 inside JSON can span lines. A write whose outcome the CLI cannot know (a timeout
 mid-delete, or a gateway's `504` or Cloudflare's `520`, `522` or `524`) exits

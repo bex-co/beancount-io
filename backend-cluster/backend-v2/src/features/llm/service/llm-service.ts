@@ -13,7 +13,10 @@ import {
   userResource,
 } from "@/server/api/authorization";
 import { LLMClient } from "../utils/llm-client";
-import { isLlmConfigured } from "../utils/fallback-language-model";
+import {
+  isLlmConfigured,
+  llmNotConfiguredError,
+} from "../utils/fallback-language-model";
 import { extractTransactionsFromFile } from "../utils/extract-transactions-from-file";
 import { extractReceiptFromFile } from "../utils/extract-receipt-from-file";
 import { recommendAccounts } from "../utils/recommend-accounts";
@@ -26,7 +29,7 @@ import { DirectiveType } from "@/foundation/fava";
 import {
   ResourceLimitReachedError,
   BadUserInputError,
-  InternalServerError,
+  ConfigurationError,
 } from "@/shared/errors";
 import type { RecentTransactionExample } from "../types";
 import { logger } from "@/shared/logger";
@@ -151,11 +154,7 @@ export class LLMService implements ILLMService {
    * a masked INTERNAL_SERVER_ERROR from deep inside the model call.
    */
   private assertLlmConfigured(): void {
-    if (!isLlmConfigured()) {
-      throw new InternalServerError(
-        "LLM is not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.",
-      );
-    }
+    if (!isLlmConfigured()) throw llmNotConfiguredError();
   }
 
   private async assertAssistedQuotaAvailable(
@@ -443,8 +442,9 @@ export class LLMService implements ILLMService {
       resource: userResource(identity.userId),
     });
     if (!this.config.blockeden.accessKey) {
-      throw new InternalServerError(
-        "Model proxy is not configured. Set BLOCKEDEN_ACCESS_KEY.",
+      throw new ConfigurationError(
+        "Model proxy is not configured on this deployment",
+        "Set BLOCKEDEN_ACCESS_KEY (see .env.example)",
       );
     }
     await this.aiCfoUsageService.assertQuotaAvailable(identity.userId);

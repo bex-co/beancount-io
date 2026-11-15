@@ -1034,6 +1034,11 @@ const faCommon: Record<string, TranslationEntry> = {
     description:
       "Error shown when the ledger refuses a transaction whose postings do not balance (UNBALANCED)",
   },
+  "common.errors.notConfigured": {
+    message: "این قابلیت روی این سرور راه\u200cاندازی نشده است.",
+    description:
+      "Lead-in shown before the server's own message and operator hint when the deployment has not configured a feature, such as the AI model or file storage (CONFIGURATION_ERROR)",
+  },
   "common.writeLeftErrors": {
     message: "ذخیره شد، اما دفتر شما اکنون یک خطا گزارش می‌کند: {error}",
     description:

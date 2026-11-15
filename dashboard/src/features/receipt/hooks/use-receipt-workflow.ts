@@ -4,6 +4,7 @@ import { useMutation } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { getConfigurationError } from "@/common/lib/errors/configuration-error";
 import {
   negateDecimalNumber,
   parseDecimalNumber,
@@ -48,7 +49,15 @@ type WorkflowState =
       error?: string;
     }
   | { step: "success"; formData: ReviewFormData }
-  | { step: "error"; message: string };
+  | {
+      step: "error";
+      message: string;
+      /**
+       * The deployment has not set up AI parsing or file storage: another
+       * try is refused the same way until its operator acts.
+       */
+      notConfigured?: boolean;
+    };
 
 /**
  * The expense and payment posting amounts for a reviewed receipt: the typed
@@ -79,6 +88,7 @@ const REFUSAL_CODES = new Set([
   "OPERATION_NOT_ALLOWED",
   "PREMIUM_REQUIRED",
   "UNBALANCED",
+  "CONFIGURATION_ERROR",
 ]);
 
 function wasRefused(err: unknown): boolean {
@@ -129,7 +139,11 @@ export function useReceiptWorkflow(ledgerId: string) {
 
         setState({ step: "review", objectKey, parsed });
       } catch (err) {
-        setState({ step: "error", message: formatError(err) });
+        setState({
+          step: "error",
+          message: formatError(err),
+          notConfigured: Boolean(getConfigurationError(err)),
+        });
       }
     },
     [uploadFile, parseReceiptMutation, ledgerId, t, formatError],

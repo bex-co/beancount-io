@@ -2,10 +2,10 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { APICallError, type LanguageModel } from "ai";
 import {
-  LoadAPIKeyError,
   type LanguageModelV4,
   type LanguageModelV4CallOptions,
 } from "@ai-sdk/provider";
+import { ConfigurationError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 
 const fallbackLogger = logger.child({ module: "fallback-language-model" });
@@ -31,8 +31,21 @@ function fallbackModelId(): string {
   return process.env.LLM_FALLBACK_MODEL || DEFAULT_FALLBACK_MODEL;
 }
 
-const NOT_CONFIGURED_MESSAGE =
-  "LLM is not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.";
+/**
+ * The one refusal for "no LLM provider key" (ADR029 D5): a configuration
+ * error, so REST answers 503 rather than 500, and every surface carries the
+ * variables to set as the hint. It is not an `APICallError`, so neither the
+ * AI SDK's retry loop nor the provider fallback below retries it.
+ */
+export function llmNotConfiguredError(): ConfigurationError {
+  return new ConfigurationError(
+    "LLM is not configured on this deployment",
+    "Set ANTHROPIC_API_KEY or OPENAI_API_KEY (see .env.example)",
+  );
+}
+
+/** The `provider` of the model returned when no key is set. */
+export const UNCONFIGURED_PROVIDER = "unconfigured";
 
 /**
  * Whether any direct provider credential is present. Callers that want a
@@ -52,7 +65,7 @@ export function isLlmConfigured(): boolean {
  * transparently.
  *
  * Construction never throws (ADR 0011): with no key set this returns a model
- * whose calls fail with a clear "not configured" error, so services can be
+ * whose calls fail with {@link llmNotConfiguredError}, so services can be
  * built — and the server can boot — without any LLM credential.
  */
 export function createFallbackLanguageModel(): LanguageModel {
@@ -70,11 +83,11 @@ export function createFallbackLanguageModel(): LanguageModel {
 
   if (providers.length === 0) {
     const fail = (): never => {
-      throw new LoadAPIKeyError({ message: NOT_CONFIGURED_MESSAGE });
+      throw llmNotConfiguredError();
     };
     const unconfigured: LanguageModelV4 = {
       specificationVersion: "v4",
-      provider: "unconfigured",
+      provider: UNCONFIGURED_PROVIDER,
       modelId: primaryModelId(),
       supportedUrls: {},
       doGenerate: async () => fail(),

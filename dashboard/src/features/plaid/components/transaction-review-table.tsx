@@ -57,6 +57,8 @@ import {
 import { useState } from "react";
 import { useToast } from "@/common/hooks/use-toast";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { getConfigurationError } from "@/common/lib/errors/configuration-error";
 import { Amount } from "@/common/components/amount";
 import { BulkTargetPopover } from "./bulk-target-popover";
 
@@ -105,6 +107,7 @@ export function TransactionReviewTable({
   /** Empty means "let the backend decide", which writes to main.bean. */
   const [targetFile, setTargetFile] = useState("");
   const { toast } = useToast();
+  const formatError = useErrorMessage();
 
   const getSourceAccount = (transaction: {
     id: string;
@@ -173,12 +176,14 @@ export function TransactionReviewTable({
           { count: suggestions.length },
         ),
       });
-    } catch {
+    } catch (err) {
       toast({
         title: t("plaid.transactionReview.toast.categorizationFailed"),
-        description: t(
-          "plaid.transactionReview.toast.categorizationFailedDescription",
-        ),
+        // An unconfigured AI model answers the same way every time, so name
+        // what the operator must set instead of asking for another try.
+        description: getConfigurationError(err)
+          ? formatError(err)
+          : t("plaid.transactionReview.toast.categorizationFailedDescription"),
         variant: "destructive",
       });
     }

@@ -1,3 +1,5 @@
+import { getConfigurationError } from "@/common/lib/errors/configuration-error";
+
 /**
  * Premium-related GraphQL error codes
  */
@@ -65,6 +67,10 @@ function isGraphQLError(error: unknown): error is GraphQLErrorObject {
  * ```
  */
 export function isPremiumRequired(error: unknown): boolean {
+  // A feature the deployment's operator has not set up is no plan's to lift:
+  // no upgrade will configure the server (CONFIGURATION_ERROR).
+  if (getConfigurationError(error)) return false;
+
   // Check if it's a GraphQL error with extensions.code
   if (isGraphQLError(error)) {
     for (const err of error.errors) {

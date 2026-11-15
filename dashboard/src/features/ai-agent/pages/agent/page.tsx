@@ -14,6 +14,7 @@ import {
   useErrorMessage,
   getErrorMessageKey,
 } from "@/common/lib/errors/error-message";
+import { getConfigurationError } from "@/common/lib/errors/configuration-error";
 import { toast } from "sonner";
 import { AiCfoUpgradePanel } from "@/common/components/ai-cfo-upgrade-panel";
 import { useLedger } from "@/common/hooks/use-ledger";
@@ -164,6 +165,11 @@ export function AgentPageImpl({
     Boolean(error) &&
     getErrorMessageKey(error) === "common.errors.network" &&
     !isLoading;
+  // The deployment has no AI model configured (the agent route answers 503
+  // CONFIGURATION_ERROR before streaming). Keep the operator hint on screen;
+  // a retry would be refused the same way.
+  const notConfiguredError =
+    !isLoading && error ? getConfigurationError(error) : null;
 
   const isAwaitingApproval = useMemo(() => {
     if (messages.length === 0) return false;
@@ -369,7 +375,16 @@ export function AgentPageImpl({
         <div className="relative z-40 shrink-0">
           <div className="pointer-events-none absolute inset-x-0 -top-8 h-8 bg-gradient-to-t from-background to-transparent" />
           <div className="mx-auto w-full max-w-3xl px-1 pb-1 pt-2 sm:px-3 sm:pb-2">
-            {canRetryNetworkError ? (
+            {notConfiguredError ? (
+              <div
+                role="alert"
+                className="mb-2 rounded-lg border border-border/70 bg-muted/50 px-3 py-2.5"
+              >
+                <p className="break-words text-sm text-muted-foreground">
+                  {formatError(error)}
+                </p>
+              </div>
+            ) : canRetryNetworkError ? (
               <div
                 role="alert"
                 className="mb-2 flex flex-col gap-2 rounded-lg border border-border/70 bg-muted/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"

@@ -545,9 +545,10 @@ export function withoutAllowInvalidOffer(error: unknown): unknown {
 /**
  * The deployment is missing configuration an operation needs (w2/m26) —
  * object storage for asset uploads, downloads, and receipt parsing when no
- * bucket or credentials are set.
+ * bucket or credentials are set, or an LLM provider key for AI features.
  *
- * Category: CONFIGURATION_ERROR (HTTP 500). The message names the missing
+ * Category: CONFIGURATION_ERROR (HTTP 503, never retried: nothing about the
+ * request or a later attempt fixes it). The message names the missing
  * capability; the hint names the env variables that provide it, so an agent
  * can tell the operator exactly what to set instead of pasting SDK internals.
  *

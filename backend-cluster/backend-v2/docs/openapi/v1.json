@@ -1838,7 +1838,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2191,7 +2191,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2444,7 +2444,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -2853,7 +2853,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3078,7 +3078,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3341,7 +3341,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3522,7 +3522,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3676,7 +3676,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3823,7 +3823,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3991,7 +3991,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4152,7 +4152,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4331,7 +4331,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4526,7 +4526,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4743,7 +4743,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -4992,7 +4992,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5208,7 +5208,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5436,7 +5436,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5626,7 +5626,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5816,7 +5816,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5988,7 +5988,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6158,7 +6158,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6455,7 +6455,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6609,7 +6609,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6808,7 +6808,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -6961,7 +6961,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -7188,7 +7188,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -7379,7 +7379,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -7583,7 +7583,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -7775,7 +7775,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -7960,7 +7960,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -8154,7 +8154,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -8325,7 +8325,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -8483,7 +8483,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -8620,7 +8620,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -8761,7 +8761,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -8996,7 +8996,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -9155,7 +9155,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -9438,7 +9438,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -9655,7 +9655,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -9962,7 +9962,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -10107,7 +10107,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -10265,7 +10265,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -10491,7 +10491,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -10650,7 +10650,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -10807,7 +10807,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -10971,7 +10971,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11135,7 +11135,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11416,7 +11416,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11757,7 +11757,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -12029,7 +12029,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -12264,7 +12264,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -12530,7 +12530,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -12745,7 +12745,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -13004,7 +13004,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -13276,7 +13276,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -13570,7 +13570,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -13847,7 +13847,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -13995,7 +13995,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -14143,7 +14143,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -14291,7 +14291,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -14439,7 +14439,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -14587,7 +14587,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -14735,7 +14735,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -14883,7 +14883,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -15124,7 +15124,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -15305,7 +15305,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -15453,7 +15453,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -15598,7 +15598,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -15800,7 +15800,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -16053,7 +16053,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -16264,7 +16264,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -16442,7 +16442,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -16631,7 +16631,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -16827,7 +16827,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -17005,7 +17005,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -17194,7 +17194,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -17420,7 +17420,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -17631,7 +17631,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -17809,7 +17809,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -17987,7 +17987,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -18165,7 +18165,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -18320,7 +18320,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -18476,7 +18476,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -18631,7 +18631,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -18796,7 +18796,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -18941,7 +18941,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -19086,7 +19086,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -19241,7 +19241,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -19422,7 +19422,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -19577,7 +19577,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -19722,7 +19722,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -19926,7 +19926,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -20081,7 +20081,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -20236,7 +20236,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -20419,7 +20419,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -20601,7 +20601,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -20783,7 +20783,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -20966,7 +20966,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -21155,7 +21155,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -21341,7 +21341,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -21527,7 +21527,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -21697,7 +21697,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -21844,7 +21844,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -21964,7 +21964,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -22107,7 +22107,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -22238,7 +22238,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -22357,7 +22357,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -22569,7 +22569,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -22746,7 +22746,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -22895,7 +22895,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -23041,7 +23041,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -23169,7 +23169,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -23429,7 +23429,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -23670,7 +23670,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -23875,7 +23875,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -24080,7 +24080,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -24295,7 +24295,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -24417,7 +24417,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -24543,7 +24543,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -24676,7 +24676,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {
@@ -24805,7 +24805,7 @@
             }
           },
           "503": {
-            "description": "A dependency is unavailable; retry later",
+            "description": "A dependency is unavailable (`SERVICE_UNAVAILABLE`; retry later), or the deployment lacks configuration this operation needs (`CONFIGURATION_ERROR`; retrying will not help, `error.metadata.hint` names what the operator must set)",
             "content": {
               "application/json": {
                 "schema": {

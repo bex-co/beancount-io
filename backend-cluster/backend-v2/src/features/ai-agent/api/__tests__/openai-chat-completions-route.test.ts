@@ -71,11 +71,12 @@ function dependencies() {
     jest.fn(),
   );
   const authorize = jest.spyOn(authorization, "authorizeOrThrow");
+  const config = { blockeden: { accessKey: "synthetic-cap-test" } };
   const llm = new LLMService(
     {} as never,
     {} as never,
     { assertQuotaAvailable: quota, addTokenUsage: charge } as never,
-    { blockeden: { accessKey: "synthetic-cap-test" } } as never,
+    config as never,
     authorization,
   );
   const upstream = jest.spyOn(global, "fetch").mockImplementation(
@@ -85,7 +86,7 @@ function dependencies() {
         headers: { "Content-Type": "application/json" },
       }),
   );
-  return { getById, quota, charge, authorize, llm, upstream };
+  return { getById, quota, charge, authorize, llm, upstream, config };
 }
 
 describe("OpenAI chat completions through HTTP and the real LLM service", () => {
@@ -236,6 +237,25 @@ describe("OpenAI chat completions through HTTP and the real LLM service", () => 
       error: { code: "FORBIDDEN" },
     });
     expect(deps.authorize).toHaveBeenCalledTimes(1);
+    expect(deps.quota).not.toHaveBeenCalled();
+    expect(deps.upstream).not.toHaveBeenCalled();
+    expect(deps.charge).not.toHaveBeenCalled();
+  });
+
+  // ADR029 D5: a deployment without the proxy key is an operator setup gap,
+  // answered as CONFIGURATION_ERROR with the variable to set — 503, not 500.
+  it("refuses an unconfigured model proxy as a configuration error, before quota or model work", async () => {
+    deps.config.blockeden.accessKey = "";
+    const response = await post({ max_completion_tokens: 50 });
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      ok: false,
+      error: {
+        code: "CONFIGURATION_ERROR",
+        metadata: { hint: "Set BLOCKEDEN_ACCESS_KEY (see .env.example)" },
+      },
+    });
     expect(deps.quota).not.toHaveBeenCalled();
     expect(deps.upstream).not.toHaveBeenCalled();
     expect(deps.charge).not.toHaveBeenCalled();

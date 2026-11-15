@@ -124,10 +124,14 @@ function ReceiptWorkflow() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{t("receipt.page.errorTitle")}</AlertTitle>
           <AlertDescription className="space-y-3 mt-2">
-            <p>{state.message}</p>
-            <Button variant="outline" size="sm" onClick={workflow.reset}>
-              {t("receipt.page.tryAgain")}
-            </Button>
+            <p className="break-words">{state.message}</p>
+            {/* The message names what the operator must configure; another
+                upload would be refused the same way. */}
+            {!state.notConfigured && (
+              <Button variant="outline" size="sm" onClick={workflow.reset}>
+                {t("receipt.page.tryAgain")}
+              </Button>
+            )}
           </AlertDescription>
         </Alert>
       )}

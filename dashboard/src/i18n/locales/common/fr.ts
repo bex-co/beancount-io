@@ -1046,6 +1046,11 @@ const frCommon: Record<string, TranslationEntry> = {
     description:
       "Error shown when the ledger refuses a transaction whose postings do not balance (UNBALANCED)",
   },
+  "common.errors.notConfigured": {
+    message: "Cette fonctionnalité n'est pas configurée sur ce serveur.",
+    description:
+      "Lead-in shown before the server's own message and operator hint when the deployment has not configured a feature, such as the AI model or file storage (CONFIGURATION_ERROR)",
+  },
   "common.writeLeftErrors": {
     message:
       "Enregistré, mais votre grand livre signale maintenant une erreur : {error}",

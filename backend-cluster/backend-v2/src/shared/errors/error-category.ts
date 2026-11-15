@@ -75,6 +75,11 @@ export const CATEGORY_HTTP_STATUS: Record<ErrorCategory, number> = {
   [ErrorCategory.OPERATION_NOT_ALLOWED]: 403,
   [ErrorCategory.PREMIUM_REQUIRED]: 402,
   [ErrorCategory.UNBALANCED]: 400,
-  [ErrorCategory.CONFIGURATION_ERROR]: 500,
+  // 503, not 500 (ADR029 D5): the server did not fail, the deployment lacks
+  // a capability (object storage, an LLM key) an operator has to set up, so
+  // monitors keyed on 500 stop counting it as a crash. Unlike
+  // SERVICE_UNAVAILABLE it carries no Retry-After: retrying cannot help, and
+  // the error's hint names the variables to set.
+  [ErrorCategory.CONFIGURATION_ERROR]: 503,
   [ErrorCategory.BILLED_BY_STORE]: 409,
 };

@@ -26,7 +26,7 @@ import pytest
 from pydantic_ai.exceptions import ModelHTTPError
 from typer.testing import CliRunner
 
-from cli.ask.agent import _server_message
+from cli.errors import server_message as _server_message
 from cli.main import app
 
 runner = CliRunner()
@@ -78,6 +78,24 @@ def test_rate_limit_and_server_errors_get_their_documented_sentences(tmp_bean_fi
     assert down.exit_code == 1
     assert "Server error" in down.output
     assert "model_name" not in down.output
+
+
+def test_an_unconfigured_model_proxy_names_what_to_set(tmp_bean_file: Path, logged_in: None) -> None:
+    """A stack without the proxy key answers 503 CONFIGURATION_ERROR: no "server error" (ADR029 D5)."""
+    hint = "Set BLOCKEDEN_ACCESS_KEY (see .env.example)"
+    body = {
+        "ok": False,
+        "error": {
+            "code": "CONFIGURATION_ERROR",
+            "message": "Model proxy is not configured on this deployment",
+            "metadata": {"hint": hint},
+        },
+    }
+    result = _ask(tmp_bean_file, 503, body)
+
+    assert result.exit_code == 1, result.output
+    assert f"Model proxy is not configured on this deployment. {hint}" in result.output
+    assert "Server error" not in result.output
 
 
 def test_no_credentials_still_refuses_locally(tmp_bean_file: Path) -> None:

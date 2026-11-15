@@ -9,7 +9,7 @@ import pytest
 from cli.api.client import _error_message
 from cli.api.rest_client.models.v1_error import V1Error
 from cli.api.rest_client.models.v1_error_error import V1ErrorError
-from cli.ask.agent import _server_message
+from cli.errors import server_message as _server_message
 
 SENTENCE = "Too many requests; retry in 60s"
 NESTED = {"error": {"message": SENTENCE}}
