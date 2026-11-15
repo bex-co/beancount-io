@@ -299,7 +299,7 @@ Every active package has path-filtered CI, and a repository-wide secret scan gat
 | --- | --- |
 | [`dashboard/`](./dashboard) | Active web client: ledgers, journal, reports, Monaco editor, imports, collaboration, AI assistant (React 19 + TanStack Start + Apollo) |
 | [`mobile/`](./mobile) | Active iOS & Android client (Expo + React Native + Apollo) |
-| [`cli/`](./cli) | Active `bea` CLI (including a local read-only MCP server, `bea mcp`) and Python tooling ([releases](https://github.com/bex-co/beancount-io/releases?q=bea)) |
+| [`cli/`](./cli) | Active `bea` CLI and Python tooling ([releases](https://github.com/bex-co/beancount-io/releases?q=bea)) |
 | [`skills/`](./skills) | One Beancount.io ledger suite with sixteen `beancount-*` workflows; install the versioned `beancount-io` plugin or the complete source collection. |
 | [`backend-cluster/`](./backend-cluster) | Active backend: GraphQL/REST gateway, ledger service, IDL, and agent sandbox |
 
