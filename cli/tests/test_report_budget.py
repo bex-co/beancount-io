@@ -258,6 +258,33 @@ def test_the_last_period_is_prorated_by_day_and_rounded(tmp_path: Path) -> None:
     assert Decimal(rows[("Expenses:Food", "USD")]["budget"]) == Decimal("107.14")
 
 
+def test_the_first_period_starts_where_the_report_does(tmp_path: Path) -> None:
+    # w1/251: without --time the first month ran back to 2026-01-01 and budgeted
+    # nine days before the period the report states.
+    text = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank
+2026-01-01 open Expenses:Food
+2026-01-01 custom "budget" Expenses:Food "monthly" 310.00 USD
+2026-01-10 * "f"
+  Expenses:Food  100 USD
+  Assets:Bank
+2026-03-15 * "f"
+  Expenses:Food  50 USD
+  Assets:Bank
+"""
+    whole = _report([], tmp_path, text)
+    assert whole["period"]["start"] == "2026-01-10"
+    spans = [(p["begin"], p["end"], p["rows"][0]["budget"]) for p in whole["periods"]]
+    assert spans == [
+        ("2026-01-10", "2026-01-31", "220.00"),
+        ("2026-02-01", "2026-02-28", "310.00"),
+        ("2026-03-01", "2026-03-15", "150.00"),
+    ]
+    explicit = _report(["-t", "2026-01-10 - 2026-03-15"], tmp_path, text)
+    assert explicit["periods"] == whole["periods"]
+
+
 def test_the_account_filter_narrows_the_rows(tmp_path: Path) -> None:
     rows = _rows(_report(["-t", "2026-01", "-a", "Expenses:Rent"], tmp_path))
     assert {account for account, _ in rows} == {"Expenses:Rent"}

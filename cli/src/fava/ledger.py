@@ -241,10 +241,13 @@ class FilteredLedger:
         # Beancount.io change: upstream Fava ran the last range out to the next
         # interval boundary, so a ledger ending 2026-02-10 dated its yearly
         # point 2026-12-31 — after the report's own as-of date, and at a
-        # different day for every interval. Earlier ranges stay whole; the last
+        # different day for every interval. Middle ranges stay whole; the last
         # one stops where the period does, as it already did under a time
-        # filter.
+        # filter. The first range likewise starts where the period does, not at
+        # the interval boundary before it: a budget is spread by day, so the
+        # widened range budgeted days the report says it does not cover (w1/251).
         ranges = list(dateranges(self._date_first, self._date_last, interval, complete=True))
+        ranges[0] = DateRange(self._date_first, ranges[0].end)
         ranges[-1] = DateRange(ranges[-1].begin, self._date_last)
         return ranges
 

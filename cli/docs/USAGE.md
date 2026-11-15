@@ -2015,8 +2015,8 @@ too:
 
 - A budget applies from its date until a later line for the same account and
   currency replaces it. It is spread by day, so a period shorter than its
-  interval (the ledger's last month, or `--time` ending mid-month) gets its
-  share; exact day shares are accumulated before one final half-up rounding,
+  interval (the ledger's first or last month, or `--time` starting or ending
+  mid-month) gets its share; exact day shares are accumulated before one final half-up rounding,
   using at least the fractional digits of its declared budget. A whole month
   reads as declared even when actuals use whole units. Explicit display
   precision still controls human tables;
