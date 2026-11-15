@@ -99,3 +99,69 @@ def test_capital_gains_refuses_bad_range(tmp_path: Path) -> None:
     proc = _bea(tmp_path, "--file", str(ledger), "report", "capital-gains", "--from-date", "not-a-date")
     assert proc.returncode != 0
     assert "Invalid --from-date" in proc.stderr
+
+
+# Two lots held exactly one year to the day; the second year spans
+# 29 February, so it is 366 days long (w1/249).
+LEAP = """\
+option "operating_currency" "USD"
+2022-01-01 open Assets:Cash USD
+2022-01-01 open Assets:Broker
+2022-01-01 open Income:Gains USD
+2022-01-01 open Equity:Open
+2022-01-02 * "fund"
+  Assets:Cash 10000 USD
+  Equity:Open
+2022-03-01 * "buy control"
+  Assets:Broker 1 XYZ {100 USD}
+  Assets:Cash
+2023-03-01 * "buy leap"
+  Assets:Broker 1 ABC {100 USD}
+  Assets:Cash
+2023-03-01 * "sell control"
+  Assets:Broker -1 XYZ {100 USD} @ 110 USD
+  Assets:Cash 110 USD
+  Income:Gains
+2024-03-01 * "sell leap"
+  Assets:Broker -1 ABC {100 USD} @ 120 USD
+  Assets:Cash 120 USD
+  Income:Gains
+2024-03-02 * "buy leap day"
+  Assets:Broker 2 DEF {100 USD, 2024-02-29}
+  Assets:Cash
+2025-02-28 * "sell leap day, anniversary"
+  Assets:Broker -1 DEF {100 USD, 2024-02-29} @ 130 USD
+  Assets:Cash 130 USD
+  Income:Gains
+2025-03-01 * "sell leap day, past anniversary"
+  Assets:Broker -1 DEF {100 USD, 2024-02-29} @ 140 USD
+  Assets:Cash 140 USD
+  Income:Gains
+"""
+
+
+def test_capital_gains_one_year_is_a_calendar_year(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, LEAP)
+    proc = _bea(tmp_path, "--file", str(ledger), "--json", "report", "capital-gains")
+    assert proc.returncode == 0, proc.stderr
+    data = json.loads(proc.stdout)["data"]
+    assert [(row["held_days"], row["long_held"]) for row in data["rows"]] == [
+        (365, False),
+        (366, False),
+        (365, False),
+        (366, True),
+    ]
+    assert data["totals"]["one_year_or_less"] == {"USD": "60"}
+    assert data["totals"]["more_than_one_year"] == {"USD": "40"}
+
+    text = _bea(tmp_path, "--file", str(ledger), "report", "capital-gains")
+    assert text.returncode == 0, text.stderr
+    assert "366 days (short)" in text.stdout
+    assert "366 days (long)" in text.stdout
+
+    csv = _bea(tmp_path, "--file", str(ledger), "report", "capital-gains", "--format", "csv")
+    assert csv.returncode == 0, csv.stderr
+    rows = [line for line in csv.stdout.splitlines()[1:] if line]
+    header = csv.stdout.splitlines()[0].split(",")
+    terms = [line.split(",")[header.index("term")] for line in rows]
+    assert terms == ["short", "short", "short", "long"]

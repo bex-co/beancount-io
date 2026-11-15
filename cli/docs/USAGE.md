@@ -1963,7 +1963,10 @@ source behind its quotes in `price_source` / `conversion_source`.
 `capital-gains` lists one row per closed lot — acquired and sold dates,
 quantity, proceeds, basis, and gain — with `--from-date / --to-date`
 bounding the sales (both ends inclusive). Rows bucket into held one year or
-less vs more than one year, a bare day count with no tax rules attached;
+less vs more than one year by calendar date, with no tax rules attached: a
+lot is more than one year only when it sold after its acquisition date's
+anniversary (29 February's is 28 February), so a lot held exactly one year
+stays short even across a leap day, and `held_days` stays the plain count;
 splits and transfers carry no price and stay out. A closed lot is whatever a
 priced posting actually reduced, long or short: covering a short (or settling
 a costed foreign-currency payable) reports the opening cost as proceeds and

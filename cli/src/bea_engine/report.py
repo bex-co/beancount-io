@@ -975,8 +975,8 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
     Beancount matched the lot at load, and the posting's cost names it,
     acquisition date included. Proceeds and basis stay in their own
     currencies, and totals never sum across currencies. The one-year boundary
-    (`held_days > 365`) is a bare day count with no jurisdiction rules
-    attached (w22/m4/t001).
+    is the acquisition date's anniversary, a calendar date with no
+    jurisdiction rules attached (w22/m4/t001, w1/249).
     """
     from beancount.core.data import Transaction
     from beancount.core.inventory import Inventory
@@ -1040,6 +1040,15 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
                 basis = {"number": quantity * price.number, "currency": price.currency}
             acquired = cost.date
             held = (entry.date - acquired).days if acquired is not None else None
+            # "More than one year" is by calendar date, not `held > 365`: a
+            # year spanning 29 February has 366 days, so a lot held exactly
+            # one year passed the day count (w1/249). Comparing (year, month,
+            # day) treats 29 February plus a year as 28 February.
+            long_held = (
+                (entry.date.year, entry.date.month, entry.date.day) > (acquired.year + 1, acquired.month, acquired.day)
+                if acquired is not None
+                else None
+            )
             gain = {"number": proceeds["number"] - basis["number"], "currency": cost.currency}
             rows.append(
                 {
@@ -1048,7 +1057,7 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
                     "acquired": acquired,
                     "sold": entry.date,
                     "held_days": held,
-                    "long_held": (held > 365) if held is not None else None,
+                    "long_held": long_held,
                     "quantity": {"number": quantity, "currency": units.currency},
                     "proceeds": proceeds,
                     "basis": basis,
@@ -1057,9 +1066,9 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
             )
     totals: dict[str, dict[str, Decimal]] = {"one_year_or_less": {}, "more_than_one_year": {}, "holding_unknown": {}}
     for row in rows:
-        if row["held_days"] is None:
+        if row["long_held"] is None:
             bucket = totals["holding_unknown"]
-        elif row["held_days"] > 365:
+        elif row["long_held"]:
             bucket = totals["more_than_one_year"]
         else:
             bucket = totals["one_year_or_less"]

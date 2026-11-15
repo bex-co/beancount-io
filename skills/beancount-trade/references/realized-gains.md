@@ -18,8 +18,10 @@ bea --file "$ledger" --json --no-input report capital-gains --from-date 2026-01-
 
 It lists one row per closed lot — account, commodity, acquired and sold
 dates, held days, quantity, proceeds, basis, and gain — and buckets the
-totals into held one year or less vs more than one year (a bare day count
-with no tax rules attached). Both bounds are inclusive, so the to-date is
+totals into held one year or less vs more than one year (by calendar
+date, with no tax rules attached: a lot is long only when it sold after
+the acquisition date's anniversary, so a lot held exactly one year is
+short even when that year had 366 days). Both bounds are inclusive, so the to-date is
 the year's last day, where the queries below compare against the next
 year's first day (`$year_end`). A closed lot is a reducing posting that
 carries both cost and price: splits and own-account transfers reduce lots
@@ -49,11 +51,13 @@ predicate, a per-lot filter the flags cannot express) — the per-lot rows:
 bea --file "$ledger" --json --no-input query "SELECT account, currency AS commodity, cost_date AS acquired, date AS sold, (date - cost_date) AS held_days, -number AS quantity, -number * number(price) AS proceeds, -number * cost_number AS cost, (-number * number(price)) - (-number * cost_number) AS gain, cost_currency WHERE number < 0 AND price IS NOT NULL AND cost_number IS NOT NULL AND date >= $year_start AND date < $year_end ORDER BY date"
 ```
 
-Then the engine-computed subtotals per holding bucket and cost currency:
+Then the engine-computed subtotals per holding bucket and cost currency
+(`long_held` compares calendar dates the way the command does, so a lot
+held exactly one year across 29 February stays short):
 
 <!-- recipe: realized-gains-totals -->
 ```sh
-bea --file "$ledger" --json --no-input query "SELECT (date - cost_date) > 365 AS long_held, cost_currency, sum((-number * number(price)) - (-number * cost_number)) AS gain WHERE number < 0 AND price IS NOT NULL AND cost_number IS NOT NULL AND date >= $year_start AND date < $year_end GROUP BY long_held, cost_currency"
+bea --file "$ledger" --json --no-input query "SELECT year(date) * 10000 + month(date) * 100 + day(date) > (year(cost_date) + 1) * 10000 + month(cost_date) * 100 + day(cost_date) AS long_held, cost_currency, sum((-number * number(price)) - (-number * cost_number)) AS gain WHERE number < 0 AND price IS NOT NULL AND cost_number IS NOT NULL AND date >= $year_start AND date < $year_end GROUP BY long_held, cost_currency"
 ```
 
 **Not covered:** open lots and unrealized gains (nothing here prices a

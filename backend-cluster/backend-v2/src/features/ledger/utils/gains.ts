@@ -87,6 +87,18 @@ function heldDays(acquired: string, sold: string): number {
   );
 }
 
+/**
+ * "More than one year" by calendar date, not `held > 365`: a year that
+ * spans 29 February has 366 days, so a lot held exactly one year passed
+ * the day count (w1/249). ISO dates compare as strings, and 29 February
+ * plus a year is the nonexistent `YYYY-02-29`, which sorts as 28 February.
+ */
+function heldLong(acquired: string, sold: string): boolean {
+  const year = String(Number(acquired.slice(0, 4)) + 1).padStart(4, "0");
+  const anniversary = `${year}${acquired.slice(4)}`;
+  return sold > anniversary;
+}
+
 /** Plain decimal notation: `toString()` may answer `1e-7` at the extremes. */
 function plain(value: BigNumber): string {
   const text = value.toString();
@@ -121,9 +133,9 @@ export function composeGains(params: {
       if (row === null) continue;
       rows.push(row);
       const bucket =
-        row.held_days === null
+        row.long_held === null
           ? totals.holding_unknown
-          : row.held_days > 365
+          : row.long_held
             ? totals.more_than_one_year
             : totals.one_year_or_less;
       const currency = row.gain.currency;
@@ -197,7 +209,7 @@ function closedLot(
     acquired,
     sold,
     held_days: held,
-    long_held: held === null ? null : held > 365,
+    long_held: acquired === null ? null : heldLong(acquired, sold),
     quantity: { number: plain(bought), currency: units.currency },
     proceeds: { number: plain(proceeds), currency: price.currency },
     basis: { number: plain(basis), currency: cost.currency },

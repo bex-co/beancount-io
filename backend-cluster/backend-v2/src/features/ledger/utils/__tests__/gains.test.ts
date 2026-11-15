@@ -177,6 +177,40 @@ describe("composeGains", () => {
     });
   });
 
+  it("calls a lot long only after a calendar year, across 29 February", () => {
+    // Each lot is held exactly one year, or one day past it; the 366-day
+    // holdings span a leap day (w1/249).
+    const sell = (sold: string, acquired: string) =>
+      txn(sold, [
+        {
+          account: "Assets:Broker",
+          number: "-1",
+          cost: { number: "100.00", currency: "USD", date: acquired },
+          price: { number: "110.00", currency: "USD" },
+        },
+      ]);
+    const result = composeGains({
+      ...base,
+      transactions: [
+        sell("2025-03-01", "2024-02-29"),
+        sell("2025-02-28", "2024-02-29"),
+        sell("2024-03-01", "2023-03-01"),
+        sell("2023-03-01", "2022-03-01"),
+      ],
+    });
+    expect(result.rows.map((row) => [row.held_days, row.long_held])).toEqual([
+      [365, false],
+      [366, false],
+      [365, false],
+      [366, true],
+    ]);
+    expect(result.totals).toEqual({
+      one_year_or_less: { USD: "30" },
+      more_than_one_year: { USD: "10" },
+      holding_unknown: {},
+    });
+  });
+
   it("orders oldest sale first", () => {
     const first = txn("2024-01-01", [
       { account: "Assets:Broker", number: "-1", cost, price },

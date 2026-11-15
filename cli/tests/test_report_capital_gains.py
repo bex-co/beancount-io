@@ -4,7 +4,7 @@ A closed lot is a reducing posting that carries both cost and price;
 FIFO vs specific-lot is the ledger's own booking, read from the
 matched cost. Proceeds and basis stay in their own currencies and the
 gain is their difference only when those agree; the one-year boundary
-is a bare day count.
+is a calendar date, the acquisition's anniversary.
 """
 
 from __future__ import annotations
