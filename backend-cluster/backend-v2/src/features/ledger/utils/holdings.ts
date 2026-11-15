@@ -242,10 +242,14 @@ function currenciesIn(rows: BqlCell[][]): string[] {
 }
 
 /**
- * The currencies this ledger uses as money (w1/253): the operating currencies
- * and every currency a cost, a posting price or a `price` directive is quoted
- * in, across the whole ledger so the account filter does not change what is
- * cash.
+ * The currencies this ledger uses as money: the operating currencies and every
+ * currency a lot is costed in, since the currency paid for holdings settles
+ * them. Being quoted in does not make a commodity money — a USD ledger pricing
+ * `ETH` in `BTC`, by a directive or a posting price, still holds BTC as an
+ * investment (w1/255). Only a ledger that declares no operating currency also
+ * counts every posting-price and price-directive quote currency (w1/253).
+ * Across the whole ledger, so the account filter does not change what is
+ * cash. The CLI's rule.
  */
 function moneyCurrencies(
   rows: BqlCell[][],
@@ -254,14 +258,13 @@ function moneyCurrencies(
   priceCurrencies: BqlCell[][],
   operating: readonly string[],
 ): Set<string> {
-  const money = new Set<string>([
-    ...operating,
-    ...currenciesIn(priceCurrencies),
-  ]);
+  const money = new Set<string>(operating);
   for (const row of rows) {
     const held = row[heldAt];
     if (typeof held === "string" && held !== "") money.add(held);
   }
+  if (operating.length > 0) return money;
+  for (const quote of currenciesIn(priceCurrencies)) money.add(quote);
   for (const [, , amount] of prices) {
     if (typeof amount === "object" && amount !== null && !Array.isArray(amount))
       for (const quote of Object.keys(amount)) money.add(quote);

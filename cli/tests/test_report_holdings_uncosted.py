@@ -4,8 +4,9 @@
 cost-less lots are cash. Shares recorded as `3 AAPL @ 200 USD` vanished:
 `Assets:Plain` printed "No holdings." while the trial balance and the balance
 sheet valued it at 510 USD. Cash is now told apart by its commodity: an
-uncosted balance in a currency the ledger uses as money stays out, any other
-uncosted position is a holding with an unknown basis.
+uncosted balance in an operating or cost currency stays out, any other
+uncosted position is a holding with an unknown basis. A currency something is
+only quoted in is not cash (w1/255).
 """
 
 from __future__ import annotations
@@ -157,3 +158,84 @@ def test_an_unquoted_priced_lot_fails_strict_and_stays_in_units_partial(tmp_path
     mixed = data["groups"][0]  # type: ignore[index]
     assert mixed["units"] == {"number": "7", "currency": "AAPL"}
     assert mixed["market_value"] == {"number": "7", "currency": "AAPL"}
+
+
+# w1/255: being quoted in does not make a commodity money. A USD ledger that
+# prices ETH in BTC, or swaps BTC for ETH at a BTC price, still holds BTC as
+# an investment.
+CRYPTO = """option "operating_currency" "USD"
+2024-01-01 open Assets:Bank USD
+2024-01-01 open Assets:Crypto
+2024-01-01 open Equity:Opening
+2024-01-02 * "fund"
+  Assets:Bank 100000 USD
+  Equity:Opening
+2024-02-01 * "buy btc"
+  Assets:Crypto 1 BTC @ 40000 USD
+  Assets:Bank -40000 USD
+2024-03-01 price BTC 50000 USD
+2024-03-01 price ETH 0.05 BTC
+"""
+
+
+def _positions(data: dict[str, object]) -> list[tuple[str, str, dict[str, str]]]:
+    return [
+        (group["commodity"], group["units"]["number"], group["market_value"])  # type: ignore[index]
+        for group in data["groups"]  # type: ignore[attr-defined]
+    ]
+
+
+def test_a_currency_other_commodities_are_quoted_in_is_still_a_holding(tmp_path: Path) -> None:
+    data = _data(tmp_path, CRYPTO)
+
+    (group,) = data["groups"]  # type: ignore[misc]
+    assert group["account"] == "Assets:Crypto"
+    assert group["units"] == {"number": "1", "currency": "BTC"}
+    assert group["market_value"] == {"number": "50000", "currency": "USD"}
+    assert group["cost_basis"] is None
+    assert data["cost_basis_complete"] is False
+    assert data["valuation"] == "complete"
+
+
+def test_a_posting_price_currency_is_still_a_holding(tmp_path: Path) -> None:
+    text = CRYPTO.replace(
+        "2024-03-01 price BTC",
+        '2024-02-15 * "swap"\n  Assets:Crypto 2 ETH @ 0.05 BTC\n  Assets:Crypto -0.1 BTC\n2024-03-01 price BTC',
+    )
+    data = _data(tmp_path, text)
+
+    assert _positions(data) == [
+        ("BTC", "0.9", {"number": "45000.0", "currency": "USD"}),
+        ("ETH", "2", {"number": "5000.00", "currency": "USD"}),
+    ]
+    assert data["totals"] == {"cost_basis": {}, "market_value": {"USD": "50000.00"}}
+
+
+def test_a_cost_currency_stays_cash_beside_a_quoted_holding(tmp_path: Path) -> None:
+    # EUR pays for a lot, so its balance settles holdings and stays out; BTC
+    # is only quoted in, so it stays a holding.
+    text = CRYPTO.replace(
+        "2024-03-01 price BTC",
+        "2024-01-01 open Assets:Euro\n"
+        '2024-02-10 * "eur"\n  Assets:Euro 1000 EUR @ 1.10 USD\n  Assets:Bank\n'
+        '2024-02-11 * "hool"\n  Assets:Crypto 2 HOOL {100 EUR}\n  Assets:Euro\n'
+        "2024-03-01 price HOOL 120 EUR\n2024-03-01 price EUR 1.10 USD\n2024-03-01 price BTC",
+    )
+    data = _data(tmp_path, text)
+
+    assert [(commodity, units) for commodity, units, _ in _positions(data)] == [("BTC", "1"), ("HOOL", "2")]
+
+
+def test_a_foreign_currency_outside_the_operating_ones_is_a_holding(tmp_path: Path) -> None:
+    text = (
+        CASH.replace('option "operating_currency" "EUR"\n', "")
+        .replace("  Assets:Euro 500 EUR\n", "")
+        .replace("2024-01-03", '2024-01-02 * "exchange"\n  Assets:Euro 500 EUR @ 1.10 USD\n  Assets:Bank\n2024-01-03')
+        + "2024-01-31 price EUR 1.10 USD\n"
+    )
+    data = _data(tmp_path, text)
+
+    assert [(commodity, units) for commodity, units, _ in _positions(data)] == [("HOOL", "2"), ("EUR", "500")]
+    euro = data["groups"][1]  # type: ignore[index]
+    assert euro["market_value"] == {"number": "550.00", "currency": "USD"}
+    assert euro["cost_basis"] is None

@@ -1955,9 +1955,15 @@ basis, and market value, grouped by account or — with `--group-by commodity`
 — by commodity across accounts; `--account / -a` narrows the positions. A
 group stays while any of its lots is held, even when long and short lots net
 to zero units; such a group has no average cost (`null` under `--json`).
-Cash is told apart by its commodity: an uncosted balance in a currency the
-ledger uses as money (an operating currency, or any currency a cost, a posting
-price, or a `price` directive is quoted in) is cash and left out. Every other
+Cash is told apart by its commodity: an uncosted balance in an operating
+currency, or in a currency lots are costed in (EUR beside `{140 EUR}` lots), is
+cash and left out. Being quoted in does not make a commodity money: with
+`price ETH 0.05 BTC` or `2 ETH @ 0.05 BTC` in a USD ledger, a BTC balance is
+still a holding, and so is an uncosted `500 EUR` that no lot is costed in
+(valued at its quote) unless EUR is declared with
+`option "operating_currency" "EUR"`. Only a ledger that declares no
+`operating_currency` also treats every posting-price and `price`-directive
+quote currency as cash. Every other
 uncosted position — shares bought as `3 AAPL @ 200 USD` — is a holding with an
 unknown basis: it joins the costed group of the same commodity when there is
 exactly one, is valued at the period-end quote, and its group's average cost

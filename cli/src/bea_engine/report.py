@@ -609,7 +609,7 @@ def _holdings(
 
     Cash is told apart by its commodity, not by a missing cost (w1/253): an
     uncosted position is cash when its commodity is money in this ledger
-    (`_money_currencies`). Any other uncosted position (`3 AAPL @ 200 USD`)
+    (`_money_currencies`: operating and cost currencies, w1/255). Any other uncosted position (`3 AAPL @ 200 USD`)
     is a holding with an unknown basis: it joins the costed group of the
     same commodity when there is exactly one, else forms its own, and its
     group reports `cost_basis` and `average_cost` as null.
@@ -761,22 +761,29 @@ def _holdings(
 def _money_currencies(ledger: Any) -> set[str]:
     """Currencies this ledger uses as money: an uncosted balance in one is cash.
 
-    The operating currencies, plus every currency a cost, a posting price or a
-    `price` directive is quoted in, across the whole ledger so neither the
-    account filter nor the time window changes what counts as cash (w1/253).
-    The hosted holdings composer applies the same rule.
+    The operating currencies and every currency a lot is costed in: the
+    currency paid for holdings settles them (EUR beside `{140 EUR}` lots).
+    Being quoted in does not make a commodity money: a USD ledger pricing
+    `ETH` in `BTC`, by a `price` directive or a posting price, still holds
+    BTC as an investment (w1/255). Only a ledger that declares no operating
+    currency also counts every posting-price and price-directive quote
+    currency (w1/253). The set spans the whole ledger, so neither the account
+    filter nor the time window changes what counts as cash. The hosted
+    holdings composer applies the same rule.
     """
     from beancount.core.data import Price, Transaction
 
-    money = set(ledger.options.get("operating_currency") or ())
+    operating = set(ledger.options.get("operating_currency") or ())
+    money = set(operating)
     for entry in ledger.all_entries:
         if isinstance(entry, Price):
-            money.add(entry.amount.currency)
+            if not operating:
+                money.add(entry.amount.currency)
         elif isinstance(entry, Transaction):
             for posting in entry.postings:
                 if posting.cost is not None and posting.cost.currency:
                     money.add(posting.cost.currency)
-                if posting.price is not None and posting.price.currency:
+                if not operating and posting.price is not None and posting.price.currency:
                     money.add(posting.price.currency)
     return money
 

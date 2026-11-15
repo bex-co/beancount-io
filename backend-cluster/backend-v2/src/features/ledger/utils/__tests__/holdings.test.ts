@@ -509,6 +509,54 @@ describe("composeHoldings", () => {
       expect(result.cost_basis_complete).toBe(true);
     });
 
+    // w1/255: being quoted in does not make a commodity money. BTC that ETH
+    // is priced in, or a posting price is in, stays a holding in a USD
+    // ledger; EUR that a lot is costed in stays cash.
+    const crypto: Cell[][] = [
+      ["Assets:Bank", "USD", null, map("USD", "60000"), map("USD", "60000")],
+      ["Assets:Crypto", "BTC", null, map("BTC", "1"), map("BTC", "1")],
+      ["Assets:Crypto", "ALT", "USD", map("ALT", "10"), map("USD", "500")],
+      ["Assets:Euro", "EUR", null, map("EUR", "300"), map("EUR", "300")],
+      ["Assets:Broker", "HOOL", "EUR", map("HOOL", "2"), map("EUR", "200")],
+    ];
+    const cryptoQuotes: Cell[][] = [
+      ["2024-03-01", "BTC", map("USD", "50000")],
+      ["2024-03-01", "ETH", map("BTC", "0.05")],
+    ];
+
+    it("keeps a currency others are quoted in as a holding", () => {
+      const result = compose(
+        { priceCurrencies: [["USD"], ["BTC"]] },
+        crypto,
+        cryptoQuotes,
+      );
+      expect(result.groups.map((group) => group.commodity)).toEqual([
+        "HOOL",
+        "ALT",
+        "BTC",
+      ]);
+      const btc = result.groups.find((group) => group.commodity === "BTC");
+      expect(btc).toMatchObject({
+        account: "Assets:Crypto",
+        units: { number: "1", currency: "BTC" },
+        market_value: { number: "50000", currency: "USD" },
+        cost_basis: null,
+      });
+      expect(result.cost_basis_complete).toBe(false);
+    });
+
+    it("falls back to quote currencies as cash with no operating currency", () => {
+      const result = compose(
+        { operatingCurrencies: [], priceCurrencies: [["USD"], ["BTC"]] },
+        crypto,
+        cryptoQuotes,
+      );
+      expect(result.groups.map((group) => group.commodity)).toEqual([
+        "HOOL",
+        "ALT",
+      ]);
+    });
+
     it("names the missing leg of an unquoted priced lot and keeps its units", () => {
       const result = compose({}, [fixture[3]!], []);
       expect(result.valuation).toBe("partial");
