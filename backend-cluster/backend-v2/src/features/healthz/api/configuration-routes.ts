@@ -33,15 +33,21 @@ export const CONFIGURATION_V1_ROUTES = [
     path: "/api-gateway/v1/feature-flags",
     summary: "Read public feature flags",
     description:
-      "Public feature flags. The legacy userId argument is accepted but does not affect this static configuration.",
+      "Public feature flags and deployment facts. The legacy userId argument is accepted but does not affect this static configuration.",
     query: featureFlagsQuery,
     responses: {
       200: json(
         "Feature flags",
-        z.object({ spendingReportSubscription: z.boolean() }),
+        z.object({
+          spendingReportSubscription: z.boolean(),
+          emailDelivery: z.boolean().openapi({
+            description:
+              "Whether this deployment can send email. False on a server with no mail provider, where password-reset mail never arrives and the operator restores access.",
+          }),
+        }),
       ),
     },
-    handler: readFeatureFlags,
+    handler: () => readFeatureFlags(),
   }),
 ] as const;
 

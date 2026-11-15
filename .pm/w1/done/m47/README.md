@@ -1,19 +1,19 @@
 # w1 · m47 — A mail-less self-hosted stack says so on forgot-password, and the operator has a tested way to restore access
 
-**Worker:** worker1 **Goal:** on a stack with no mail provider, the forgot-password page tells the user the server cannot send email and to ask the operator, and the operator can issue a one-time password-reset link through a documented, tested admin operation. **Status:** todo
+**Worker:** worker1 **Goal:** on a stack with no mail provider, the forgot-password page tells the user the server cannot send email and to ask the operator, and the operator can issue a one-time password-reset link through a documented, tested admin operation. **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Tell the dashboard whether the deployment can send email | 45m | — |
-| t002 | The forgot-password page states that this server cannot send email | 40m | t001 |
-| t003 | An admin operation issues a one-time password-reset link for a user | 60m | — |
-| t004 | Document operator recovery and the admin API's exposure | 30m | t003 |
-| t005 | Adoption surface | 20m | t002, t004 |
-| t006 | Simplify | 15m | t005 |
-| t007 | Test coverage | 30m | t005, t006 |
-| t008 | Closeout | 10m | t007 |
+| t001 | Tell the dashboard whether the deployment can send email — **DONE** | 45m | — |
+| t002 | The forgot-password page states that this server cannot send email — **DONE** | 40m | t001 |
+| t003 | An admin operation issues a one-time password-reset link for a user — **DONE** | 60m | — |
+| t004 | Document operator recovery and the admin API's exposure — **DONE** | 30m | t003 |
+| t005 | Adoption surface — **DONE** | 20m | t002, t004 |
+| t006 | Simplify — **DONE** | 15m | t005 |
+| t007 | Test coverage — **DONE** | 30m | t005, t006 |
+| t008 | Closeout — **DONE** | 10m | t007 |
 
 ## Definition of done
 
@@ -35,3 +35,7 @@
 - Printing reset links to the API log (rejected in ADR029's alternatives: it puts a live credential in logs).
 - A self-service "change password while signed in" screen.
 - Moving the admin API off the public host.
+
+## Closeout record
+
+Verified 2026-11-14 on `deploy/docker-mac` built from this change with `SELF_HOST=true` and no `SEND_GRID_API_KEY`: `GET /api-gateway/v1/feature-flags` answered `emailDelivery: false`; `/auth/forgot-password` showed "This server can't send email" with no form, in English and in Persian (`?lang=fa`, `dir=rtl`); `POST /api/admin/password-reset-link` answered 401 with no or a wrong `x-admin-token`, 404 for an unknown address, and a `…/auth/reset-password/?token=<64 hex>` link for a fresh account; the first `resetPassword` with that token succeeded, the second was refused, the new password signed in and the old one did not; the token appeared 0 times in the API and dashboard logs. Reproduce with the curl calls in `deploy/docker-mac/README.md`. Mobile has no forgot-password screen, so no follow-up was filed.

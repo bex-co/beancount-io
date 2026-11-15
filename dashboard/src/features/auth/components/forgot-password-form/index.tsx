@@ -3,13 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle2 } from "lucide-react";
-import { useMutation } from "@apollo/client/react";
+import { CheckCircle2, MailX } from "lucide-react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
 import { Label } from "@/common/components/ui/label";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
+  DeploymentFeatureFlagsDocument,
   SendForgotPasswordLinkDocument,
   type SendForgotPasswordLinkMutation,
   type SendForgotPasswordLinkMutationVariables,
@@ -58,6 +59,10 @@ export function ForgotPasswordForm({
 }: ForgotPasswordFormProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
+  // A server with no mail provider can never deliver the link (ADR029 D4).
+  // Until the answer arrives, or if it fails, the form behaves as before.
+  const { data: flags } = useQuery(DeploymentFeatureFlagsDocument);
+  const emailUnavailable = flags?.featureFlags.emailDelivery === false;
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [sendForgotPasswordLink] = useMutation<
@@ -105,6 +110,23 @@ export function ForgotPasswordForm({
       setError(formatError(err));
     }
   };
+
+  if (emailUnavailable) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col items-center justify-center space-y-4 py-8">
+          <MailX className="h-16 w-16 text-muted-foreground" aria-hidden />
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-bold">{t("auth.emailUnavailable")}</h1>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              {t("auth.emailUnavailableDescription")}
+            </p>
+          </div>
+        </div>
+        <BackToSignIn onClick={onBackToSignIn} />
+      </div>
+    );
+  }
 
   if (success) {
     return (

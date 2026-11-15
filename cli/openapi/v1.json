@@ -21979,7 +21979,7 @@
     "/api-gateway/v1/feature-flags": {
       "get": {
         "summary": "Read public feature flags",
-        "description": "Public feature flags. The legacy userId argument is accepted but does not affect this static configuration.",
+        "description": "Public feature flags and deployment facts. The legacy userId argument is accepted but does not affect this static configuration.",
         "tags": [
           "Ledger v1"
         ],
@@ -22012,10 +22012,15 @@
                   "properties": {
                     "spendingReportSubscription": {
                       "type": "boolean"
+                    },
+                    "emailDelivery": {
+                      "type": "boolean",
+                      "description": "Whether this deployment can send email. False on a server with no mail provider, where password-reset mail never arrives and the operator restores access."
                     }
                   },
                   "required": [
-                    "spendingReportSubscription"
+                    "spendingReportSubscription",
+                    "emailDelivery"
                   ]
                 }
               }

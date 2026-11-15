@@ -82,6 +82,17 @@ const enAuth: Record<string, TranslationEntry> = {
       "We've sent a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "This server can't send email",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "Password reset emails can't be delivered from this server. Ask the person who runs this Beancount.io server (its operator) for a one-time password reset link.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Enter your details to get started with your dashboard",
     description: "Registration page description",

@@ -94,6 +94,17 @@ const esAuth: Record<string, TranslationEntry> = {
       "Hemos enviado un enlace para restablecer la contraseña a su dirección de correo electrónico. Por favor revise su bandeja de entrada y siga las instrucciones para restablecer su contraseña.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Este servidor no puede enviar correos",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "Este servidor no puede enviar correos para restablecer la contraseña. Pida a la persona que administra este servidor de Beancount.io (su operador) un enlace de un solo uso para restablecer su contraseña.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Ingrese sus datos para comenzar con su panel",
     description: "Registration page description",

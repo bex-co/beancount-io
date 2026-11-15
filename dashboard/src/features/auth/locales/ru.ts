@@ -94,6 +94,17 @@ const ruAuth: Record<string, TranslationEntry> = {
       "Мы отправили ссылку для сброса пароля на ваш адрес электронной почты. Пожалуйста, проверьте входящие письма и следуйте инструкциям для сброса пароля.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Этот сервер не может отправлять письма",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "С этого сервера нельзя отправить письмо для сброса пароля. Попросите человека, который обслуживает этот сервер Beancount.io (его оператора), выдать одноразовую ссылку для сброса пароля.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Введите данные для начала работы с панелью управления",
     description: "Registration page description",

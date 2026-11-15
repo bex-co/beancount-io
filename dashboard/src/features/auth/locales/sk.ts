@@ -94,6 +94,17 @@ const skAuth: Record<string, TranslationEntry> = {
       "Odoslali sme odkaz na resetovanie hesla na vašu e-mailovú adresu. Skontrolujte si prosím doručenú poštu a postupujte podľa pokynov.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Tento server nemôže posielať e-maily",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "Z tohto servera nemožno odoslať e-mail na resetovanie hesla. Požiadajte osobu, ktorá tento server Beancount.io spravuje (jeho prevádzkovateľa), o jednorazový odkaz na resetovanie hesla.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Zadajte svoje údaje pre začiatok práce s ovládacím panelom",
     description: "Registration page description",

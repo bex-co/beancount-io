@@ -94,6 +94,17 @@ const nlAuth: Record<string, TranslationEntry> = {
       "We hebben een link om uw wachtwoord te resetten naar uw e-mailadres verzonden. Controleer uw inbox en volg de instructies om uw wachtwoord te resetten.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Deze server kan geen e-mail versturen",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "Deze server kan geen e-mails voor het resetten van uw wachtwoord versturen. Vraag de persoon die deze Beancount.io-server beheert (de beheerder) om een eenmalige link om uw wachtwoord te resetten.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Voer uw gegevens in om aan de slag te gaan met uw dashboard",
     description: "Registration page description",

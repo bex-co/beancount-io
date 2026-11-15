@@ -180,13 +180,45 @@ still fails instead of opening up. With it on:
   ledgers, collaborators, directives and AI-assistant tokens, and billing is
   never asked for a user's plan.
 - The email address is **not** proven to belong to the person signing up, and
-  forgot-password and other mail still do not work without `SEND_GRID_API_KEY`.
+  forgot-password and other mail still do not work without `SEND_GRID_API_KEY`:
+  the forgot-password page says the server cannot send email, and you restore
+  access as described in [A user forgot their password](#a-user-forgot-their-password).
 - The API logs a warning at boot.
 
 Anyone who can reach the URL can register, so put it behind your own access
 control if that matters. To go back to a managed setup, set `SELF_HOST` to
 `"false"` (an omitted env var is kept, so removing the line from `bex.yaml`
 alone does not turn it off) and set `SEND_GRID_API_KEY`.
+
+## A user forgot their password
+
+Without `SEND_GRID_API_KEY` the server cannot mail a reset link, and the
+dashboard's forgot-password page says so and tells the user to ask you. Issue
+them a one-time reset link from the admin API:
+
+```zsh
+curl -sS -X POST "https://<beancount-api address>/api/admin/password-reset-link" \
+  -H "x-admin-token: $ADMIN_TOKEN" -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com"}'
+```
+
+`ADMIN_TOKEN` is generated for you: copy it from the `beancount-api` service's Environment tab and paste it into `read -rs ADMIN_TOKEN; export ADMIN_TOKEN`, which keeps it off the screen and out of history. The address is that service's own `*.onbex.co` URL, not the dashboard's (the dashboard forwards only `/api-gateway/*` and `/.well-known/*`). The answer is
+`{"ok":true,"resetUrl":"…/auth/reset-password/?token=…","expireAt":"…"}`. Send
+`resetUrl` to the user over a channel you trust: it opens the dashboard's
+reset-password page, works once, and expires after an hour. Setting the new
+password signs the user out everywhere, and they sign in with it. An unknown
+address answers 404, a blocked user 403, and a missing or wrong token 401. The
+server never writes the link to its logs, so do not paste it into yours.
+
+**The admin API is public.** It is served on the API's own address, reachable
+by anyone who can reach that address, and `ADMIN_TOKEN` is the only thing
+guarding it: the token can sign in as any user, reset any password and run
+migrations. Keep it out of shell history and chat, treat it like a root
+password, and rotate it if it may have leaked.
+
+To rotate `ADMIN_TOKEN`, set a new value (`openssl rand -hex 32`) on
+`beancount-api` in the Environment tab, check that `beancount-ledger`'s
+`BACKEND_V2_ADMIN_TOKEN` shows the same value (set it if not), and deploy both.
 
 ## Sign-in on the platform hostnames
 

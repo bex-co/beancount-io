@@ -94,6 +94,17 @@ const bgAuth: Record<string, TranslationEntry> = {
       "Изпратихме връзка за нулиране на паролата на вашия имейл адрес. Моля, проверете входящата си поща и следвайте инструкциите за нулиране на паролата.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Този сървър не може да изпраща имейли",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "Имейлите за нулиране на паролата не могат да бъдат изпратени от този сървър. Помолете човека, който поддържа този сървър на Beancount.io (неговия оператор), за еднократна връзка за нулиране на паролата.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Въведете данните си, за да започнете работа с таблото",
     description: "Registration page description",

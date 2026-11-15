@@ -94,6 +94,17 @@ const deAuth: Record<string, TranslationEntry> = {
       "Wir haben einen Link zum Zurücksetzen des Passworts an Ihre E-Mail-Adresse gesendet. Bitte prüfen Sie Ihren Posteingang und folgen Sie den Anweisungen zum Zurücksetzen Ihres Passworts.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Dieser Server kann keine E-Mails senden",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "Von diesem Server können keine E-Mails zum Zurücksetzen des Passworts versendet werden. Bitten Sie die Person, die diesen Beancount.io-Server betreibt (den Betreiber), um einen einmaligen Link zum Zurücksetzen Ihres Passworts.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Geben Sie Ihre Daten ein, um mit Ihrem Dashboard zu beginnen",
     description: "Registration page description",

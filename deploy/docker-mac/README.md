@@ -98,6 +98,18 @@ point), not in Gitea. It is off by default. To enable:
   error. `BLOCKEDEN_ACCESS_KEY` only meters the `bea ask` model proxy. Stripe,
   Plaid, SendGrid, and S3 uploads are likewise disabled until their keys are
   set.
+- No mail leaves this stack: with `NODE_ENV=development` the API only logs that
+  it suppressed a mail, even with `SEND_GRID_API_KEY` set, so the
+  forgot-password page says the server cannot send email. To reset a local
+  user's password, issue a one-time link with the `ADMIN_TOKEN` from `.env` and
+  open the `resetUrl` it returns (the production targets document the same
+  call, under "A user forgot their password"):
+
+  ```zsh
+  curl -sS -X POST http://localhost:42601/api/admin/password-reset-link \
+    -H "x-admin-token: $(sed -n 's/^ADMIN_TOKEN=//p' .env)" \
+    -H "Content-Type: application/json" -d '{"email":"you@example.com"}'
+  ```
 - This stack is for local use: default database passwords, `NODE_ENV=development`,
   no TLS. For the production-oriented topology (reverse proxy, named volumes,
   and no directly published application ports), see [`../docker/`](../docker/).

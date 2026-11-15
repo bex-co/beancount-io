@@ -102,6 +102,11 @@ mutation UpdateProfile($firstName: String, $lastName: String) {
   }
 }
 
+# Public deployment facts; emailDelivery is false on a server that cannot send mail.
+query DeploymentFeatureFlags {
+  featureFlags
+}
+
 mutation SendForgotPasswordLink($email: String!) {
   sendForgotPasswordLink(email: $email) {
     success

@@ -79,6 +79,17 @@ const koAuth: Record<string, TranslationEntry> = {
       "이메일 주소로 비밀번호 재설정 링크를 보냈습니다. 받은 편지함을 확인하고 안내에 따라 비밀번호를 재설정해 주세요.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "이 서버는 이메일을 보낼 수 없습니다",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "이 서버에서는 비밀번호 재설정 이메일을 보낼 수 없습니다. 이 Beancount.io 서버를 운영하는 사람(운영자)에게 한 번만 사용할 수 있는 비밀번호 재설정 링크를 요청하세요.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "대시보드를 시작하기 위해 정보를 입력하세요",
     description: "Registration page description",

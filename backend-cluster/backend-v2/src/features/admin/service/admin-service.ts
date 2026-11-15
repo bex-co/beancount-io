@@ -1,4 +1,5 @@
 import path from "path";
+import { randomBytes } from "crypto";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import type { IModels } from "@/foundation/models/types";
 import type { DbExecutor } from "@/drizzle/drizzle";
@@ -7,12 +8,20 @@ import type { IAccountService } from "@/features/auth/service/account-service";
 import type { IStripeService } from "@/features/stripe/service/stripe-service";
 import type { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { lookupDirectiveLimit } from "@/features/ledger/operations/directive-limit-lookup";
-import type { CacheHelper } from "@/shared/cache";
+import { TTL, type CacheHelper } from "@/shared/cache";
 import {
   NotFoundError,
   BadUserInputError,
   OperationNotAllowedError,
+  ServiceUnavailableError,
 } from "@/shared/errors";
+
+/**
+ * How long an operator-issued reset link stays valid. Longer than the mailed
+ * link's five minutes: the operator hands it over by hand, through whatever
+ * channel they share with the user.
+ */
+const ADMIN_RESET_LINK_TTL_MS = TTL.HOUR_1;
 
 // Gmail ignores dots in the local part (p.an@gmail.com === pan@gmail.com)
 function normalizeGmailDots(email: string): string {
@@ -111,6 +120,9 @@ export interface IAdminService {
   }>;
   getStats(): Promise<{ totalUsers: number; activePaidUsers: number }>;
   loginAs(email: string): Promise<{ redirectUrl: string }>;
+  issuePasswordResetLink(
+    email: string,
+  ): Promise<{ resetUrl: string; expireAt: string }>;
   runMigrations(): Promise<void>;
   unblockUser(email: string): Promise<{ message: string }>;
   fixUserEmail(
@@ -128,7 +140,11 @@ export class AdminService implements IAdminService {
   constructor(
     private readonly models: Pick<
       IModels,
-      "user" | "signupOtpSession" | "magicLinkToken" | "paidCustomer"
+      | "user"
+      | "signupOtpSession"
+      | "magicLinkToken"
+      | "paidCustomer"
+      | "emailToken"
     >,
     private readonly db: DbExecutor,
     private readonly config: Pick<AppConfig, "dashboard">,
@@ -232,6 +248,39 @@ export class AdminService implements IAdminService {
     );
     return {
       redirectUrl: `${this.config.dashboard.url}/auth/callback?oneTimeToken=${oneTimeToken.id}`,
+    };
+  }
+
+  /**
+   * A one-time password-reset link for a user, for a deployment that cannot
+   * mail one (ADR029 Decision 4). It is the mailed flow's own token store and
+   * reset page, so redeeming it ends the user's sessions exactly as a mailed
+   * reset does, and a second use fails. The link is a live credential: it is
+   * returned to the operator and never logged.
+   */
+  async issuePasswordResetLink(
+    email: string,
+  ): Promise<{ resetUrl: string; expireAt: string }> {
+    const user = await this.models.user.getByMail(this.db, email);
+    if (!user) {
+      throw new NotFoundError("User", email);
+    }
+    if (user.isBlocked) {
+      throw new OperationNotAllowedError(
+        "password-reset-link",
+        `User ${email} is blocked`,
+      );
+    }
+    const token = await this.models.emailToken.issueToken(
+      user.id,
+      randomBytes(32).toString("hex"),
+      new Date(Date.now() + ADMIN_RESET_LINK_TTL_MS),
+    );
+    if (!token) throw new ServiceUnavailableError("Email token storage", 5);
+    const dashboard = this.config.dashboard.url.replace(/\/$/, "");
+    return {
+      resetUrl: `${dashboard}/auth/reset-password/?token=${encodeURIComponent(token.token)}`,
+      expireAt: token.expireAt,
     };
   }
 

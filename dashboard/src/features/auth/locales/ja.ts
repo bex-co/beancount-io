@@ -79,6 +79,17 @@ const jaAuth: Record<string, TranslationEntry> = {
       "パスワードリセットのリンクをメールアドレスに送信しました。受信トレイを確認し、手順に従ってパスワードをリセットしてください。",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "このサーバーはメールを送信できません",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "このサーバーからはパスワードリセットのメールを送信できません。この Beancount.io サーバーの運用者に、1 回限り有効なパスワードリセットのリンクを依頼してください。",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "ダッシュボードを始めるために詳細を入力してください",
     description: "Registration page description",

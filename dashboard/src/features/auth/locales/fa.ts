@@ -94,6 +94,17 @@ const faAuth: Record<string, TranslationEntry> = {
       "لینک بازنشانی رمز عبور به آدرس ایمیل شما ارسال شد. لطفاً صندوق ورودی خود را بررسی کنید و دستورالعمل‌ها را برای بازنشانی رمز عبور دنبال کنید.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "این سرور نمی‌تواند ایمیل ارسال کند",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "ایمیل بازنشانی رمز عبور از این سرور ارسال نمی‌شود. از شخصی که این سرور Beancount.io را اداره می‌کند (اپراتور آن) یک لینک یک‌بارمصرف برای بازنشانی رمز عبور بخواهید.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "اطلاعات خود را برای شروع کار با داشبورد وارد کنید",
     description: "Registration page description",

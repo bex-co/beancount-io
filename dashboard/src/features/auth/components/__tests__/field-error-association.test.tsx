@@ -13,6 +13,7 @@ vi.mock("@tanstack/react-router", () => ({
 const sendForgotPasswordLink = vi.fn();
 vi.mock("@apollo/client/react", () => ({
   useMutation: () => [sendForgotPasswordLink, { loading: false }],
+  useQuery: () => ({ data: undefined }),
   useApolloClient: () => ({ query: vi.fn(), resetStore: vi.fn() }),
 }));
 

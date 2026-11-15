@@ -181,6 +181,38 @@ future Compose operations while SSH is enabled. Disable it by bringing the
 overlay project down and starting the base file again; do not rotate the host
 key unless you also plan a known-hosts migration for every client.
 
+## A user forgot their password
+
+Without `SEND_GRID_API_KEY` the server cannot mail a reset link, and the
+dashboard's forgot-password page says so and tells the user to ask you. Issue
+them a one-time reset link from the admin API:
+
+```zsh
+curl -sS -X POST "https://<API_DOMAIN>/api/admin/password-reset-link" \
+  -H "x-admin-token: $ADMIN_TOKEN" -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com"}'
+```
+
+`ADMIN_TOKEN` is the value in `.env`; from this directory,
+`export ADMIN_TOKEN="$(sed -n 's/^ADMIN_TOKEN=//p' .env)"` loads it without
+printing it. The answer is
+`{"ok":true,"resetUrl":"…/auth/reset-password/?token=…","expireAt":"…"}`. Send
+`resetUrl` to the user over a channel you trust: it opens the dashboard's
+reset-password page, works once, and expires after an hour. Setting the new
+password signs the user out everywhere, and they sign in with it. An unknown
+address answers 404, a blocked user 403, and a missing or wrong token 401. The
+server never writes the link to its logs, so do not paste it into yours.
+
+**The admin API is public.** It is served on the API's own address, reachable
+by anyone who can reach that address, and `ADMIN_TOKEN` is the only thing
+guarding it: the token can sign in as any user, reset any password and run
+migrations. Keep it out of shell history and chat, treat it like a root
+password, and rotate it if it may have leaked.
+
+To rotate `ADMIN_TOKEN`, put a new value (`openssl rand -hex 32`) in `.env` and
+run `docker compose up -d`; Compose recreates `backend-v2` and `ledger`, which
+share it.
+
 ## Configuration notes and limitations
 
 - `.env` contains live credentials. It is gitignored; keep mode 0600 and never

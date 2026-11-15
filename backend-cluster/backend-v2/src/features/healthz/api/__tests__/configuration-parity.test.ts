@@ -13,7 +13,7 @@ import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import { generateV1OpenAPIDocument } from "@/server/rest/openapi-registry";
-import type { AppConfig } from "@/config/config";
+import { config as appConfig, type AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 
@@ -103,7 +103,10 @@ describe("public configuration across real adapters", () => {
         `${rest.url}/api-gateway/v1/feature-flags?userId=someone`,
       );
       expect(flags.status).toBe(200);
-      expect(await flags.json()).toEqual({ spendingReportSubscription: false });
+      expect(await flags.json()).toEqual({
+        spendingReportSubscription: false,
+        emailDelivery: false,
+      });
       const g = await graphql({
         schema,
         source: '{health featureFlags(userId:"someone")}',
@@ -112,11 +115,17 @@ describe("public configuration across real adapters", () => {
       expect(g.errors).toBeUndefined();
       expect(g.data).toEqual({
         health: "OK",
-        featureFlags: { spendingReportSubscription: false },
+        featureFlags: {
+          spendingReportSubscription: false,
+          emailDelivery: false,
+        },
       });
       for (const [uri, expected] of [
         ["health", "OK"],
-        ["feature-flags?userId=someone", { spendingReportSubscription: false }],
+        [
+          "feature-flags?userId=someone",
+          { spendingReportSubscription: false, emailDelivery: false },
+        ],
       ] as const) {
         const r = await client.readResource({
           uri: `beancount://configuration/${uri}`,
@@ -131,13 +140,17 @@ describe("public configuration across real adapters", () => {
     rest.setIdentity(undefined);
     const flags = await fetch(`${rest.url}/api-gateway/v1/feature-flags`);
     expect(flags.status).toBe(200);
-    expect(await flags.json()).toEqual({ spendingReportSubscription: false });
+    expect(await flags.json()).toEqual({
+      spendingReportSubscription: false,
+      emailDelivery: false,
+    });
     const r = await client.readResource({
       uri: "beancount://configuration/feature-flags",
     });
     const content = r.contents[0];
     expect("text" in content && JSON.parse(content.text)).toEqual({
       spendingReportSubscription: false,
+      emailDelivery: false,
     });
     const g = await graphql({
       schema,
@@ -146,8 +159,39 @@ describe("public configuration across real adapters", () => {
     });
     expect(g.errors).toBeUndefined();
     expect(g.data).toEqual({
-      featureFlags: { spendingReportSubscription: false },
+      featureFlags: { spendingReportSubscription: false, emailDelivery: false },
     });
+  });
+
+  it("reports a configured mail provider on every surface", async () => {
+    // The adapters read the deployment's own config; flip it to a production
+    // server with a key and every surface must say mail can be delivered.
+    const saved = { env: appConfig.env, apiKey: appConfig.sendGrid.apiKey };
+    appConfig.env = "production";
+    appConfig.sendGrid.apiKey = "SG.test-key";
+    try {
+      rest.setIdentity(undefined);
+      const flags = await fetch(`${rest.url}/api-gateway/v1/feature-flags`);
+      const r = await client.readResource({
+        uri: "beancount://configuration/feature-flags",
+      });
+      const content = r.contents[0];
+      const g = await graphql({
+        schema,
+        source: "{featureFlags}",
+        contextValue: { identity: undefined },
+      });
+      const expected = {
+        spendingReportSubscription: false,
+        emailDelivery: true,
+      };
+      expect(await flags.json()).toEqual(expected);
+      expect("text" in content && JSON.parse(content.text)).toEqual(expected);
+      expect(g.data).toEqual({ featureFlags: expected });
+    } finally {
+      appConfig.env = saved.env;
+      appConfig.sendGrid.apiKey = saved.apiKey;
+    }
   });
 
   it("keeps protected routes enforced", async () => {

@@ -107,8 +107,8 @@ def sync_detailed(
 ) -> Response[GetApiGatewayV1FeatureFlagsResponse200 | V1Error]:
     """Read public feature flags
 
-     Public feature flags. The legacy userId argument is accepted but does not affect this static
-    configuration.
+     Public feature flags and deployment facts. The legacy userId argument is accepted but does not
+    affect this static configuration.
 
     Args:
         user_id (str | Unset):
@@ -139,8 +139,8 @@ def sync(
 ) -> GetApiGatewayV1FeatureFlagsResponse200 | V1Error | None:
     """Read public feature flags
 
-     Public feature flags. The legacy userId argument is accepted but does not affect this static
-    configuration.
+     Public feature flags and deployment facts. The legacy userId argument is accepted but does not
+    affect this static configuration.
 
     Args:
         user_id (str | Unset):
@@ -166,8 +166,8 @@ async def asyncio_detailed(
 ) -> Response[GetApiGatewayV1FeatureFlagsResponse200 | V1Error]:
     """Read public feature flags
 
-     Public feature flags. The legacy userId argument is accepted but does not affect this static
-    configuration.
+     Public feature flags and deployment facts. The legacy userId argument is accepted but does not
+    affect this static configuration.
 
     Args:
         user_id (str | Unset):
@@ -196,8 +196,8 @@ async def asyncio(
 ) -> GetApiGatewayV1FeatureFlagsResponse200 | V1Error | None:
     """Read public feature flags
 
-     Public feature flags. The legacy userId argument is accepted but does not affect this static
-    configuration.
+     Public feature flags and deployment facts. The legacy userId argument is accepted but does not
+    affect this static configuration.
 
     Args:
         user_id (str | Unset):

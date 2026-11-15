@@ -165,6 +165,7 @@ describe("LedgerLegacyResolver", () => {
 
       expect(result).toEqual({
         spendingReportSubscription: false,
+        emailDelivery: false,
       });
     });
 
@@ -173,6 +174,7 @@ describe("LedgerLegacyResolver", () => {
 
       expect(result).toEqual({
         spendingReportSubscription: false,
+        emailDelivery: false,
       });
     });
   });

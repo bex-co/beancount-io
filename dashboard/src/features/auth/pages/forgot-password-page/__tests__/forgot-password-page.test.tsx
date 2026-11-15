@@ -6,6 +6,8 @@ import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-f
 
 // Mock dependencies
 const mockMutation = vi.fn();
+// The deployment's public feature flags; undefined until the query answers.
+let mockFlags: { featureFlags: Record<string, unknown> } | undefined;
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
@@ -25,6 +27,7 @@ vi.mock("@tanstack/react-router", () => ({
 
 vi.mock("@apollo/client/react", () => ({
   useMutation: vi.fn(() => [mockMutation, { loading: false }]),
+  useQuery: vi.fn(() => ({ data: mockFlags })),
 }));
 
 // Mock SEO components (they use useLocation which requires router context)
@@ -35,6 +38,67 @@ vi.mock("@/common/components/seo/page-seo", () => ({
 describe("ForgotPasswordPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFlags = undefined;
+  });
+
+  describe("on a server that cannot send email", () => {
+    beforeEach(() => {
+      mockFlags = {
+        featureFlags: {
+          spendingReportSubscription: false,
+          emailDelivery: false,
+        },
+      };
+    });
+
+    it("says so and sends the user to the operator instead of offering a link", () => {
+      render(<ForgotPasswordPage />);
+
+      expect(
+        screen.getByRole("heading", { name: "This server can't send email" }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/its operator/)).toBeInTheDocument();
+      expect(screen.queryByLabelText("Email address")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Send reset link" }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText("Email sent!")).not.toBeInTheDocument();
+      expect(mockMutation).not.toHaveBeenCalled();
+      expect(
+        screen.getByRole("link", { name: "Back to Sign in" }),
+      ).toHaveAttribute("href", "/auth/login");
+    });
+
+    it("keeps the way back inside a containing sign-in flow", async () => {
+      const user = userEvent.setup();
+      const onBackToSignIn = vi.fn();
+      render(<ForgotPasswordForm onBackToSignIn={onBackToSignIn} />);
+
+      await user.click(screen.getByRole("button", { name: "Back to Sign in" }));
+
+      expect(onBackToSignIn).toHaveBeenCalledOnce();
+    });
+  });
+
+  it("still sends the link and confirms it when the server delivers mail", async () => {
+    mockFlags = {
+      featureFlags: { spendingReportSubscription: false, emailDelivery: true },
+    };
+    mockMutation.mockResolvedValue({
+      data: { sendForgotPasswordLink: { success: true } },
+    });
+    const user = userEvent.setup();
+    render(<ForgotPasswordPage />);
+
+    await user.type(screen.getByLabelText("Email address"), "a@example.com");
+    await user.click(screen.getByRole("button", { name: "Send reset link" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Email sent!")).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByText("This server can't send email"),
+    ).not.toBeInTheDocument();
   });
 
   it("should render forgot password form", () => {

@@ -94,6 +94,17 @@ const ukAuth: Record<string, TranslationEntry> = {
       "Ми надіслали посилання для скидання пароля на вашу електронну адресу. Перевірте свою поштову скриньку та дотримуйтесь інструкцій для скидання пароля.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Цей сервер не може надсилати листи",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "З цього сервера неможливо надіслати лист для скидання пароля. Попросіть людину, яка обслуговує цей сервер Beancount.io (його оператора), надати одноразове посилання для скидання пароля.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Введіть свої дані, щоб почати роботу з панеллю",
     description: "Registration page description",

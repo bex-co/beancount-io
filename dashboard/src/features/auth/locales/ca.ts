@@ -94,6 +94,17 @@ const caAuth: Record<string, TranslationEntry> = {
       "Hem enviat un enllaç per restablir la contrasenya a la vostra adreça de correu. Si us plau, comproveu la safata d'entrada i seguiu les instruccions per restablir la contrasenya.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Aquest servidor no pot enviar correus",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "Aquest servidor no pot enviar correus per restablir la contrasenya. Demaneu a la persona que gestiona aquest servidor de Beancount.io (l'operador) un enllaç d'un sol ús per restablir la contrasenya.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Introduïu les vostres dades per començar amb el tauler",
     description: "Registration page description",

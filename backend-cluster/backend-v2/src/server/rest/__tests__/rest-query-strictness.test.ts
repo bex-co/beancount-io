@@ -255,6 +255,7 @@ describe("documented lenient values", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       spendingReportSubscription: false,
+      emailDelivery: false,
     });
   });
 });

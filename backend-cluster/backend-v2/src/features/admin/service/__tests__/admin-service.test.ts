@@ -49,6 +49,9 @@ describe("AdminService", () => {
   let mockMagicLinkTokenModel: jest.Mocked<
     Pick<IModels["magicLinkToken"], "regenerateToken">
   >;
+  let mockEmailTokenModel: jest.Mocked<
+    Pick<IModels["emailToken"], "issueToken">
+  >;
   let mockPaidCustomerModel: jest.Mocked<
     Pick<
       IModels["paidCustomer"],
@@ -88,6 +91,10 @@ describe("AdminService", () => {
       regenerateToken: jest.fn(),
     };
 
+    mockEmailTokenModel = {
+      issueToken: jest.fn(),
+    };
+
     mockPaidCustomerModel = {
       listWithActivePeriod: jest.fn(),
       countWithActivePeriod: jest.fn(),
@@ -120,6 +127,7 @@ describe("AdminService", () => {
           mockMagicLinkTokenModel as unknown as IModels["magicLinkToken"],
         paidCustomer:
           mockPaidCustomerModel as unknown as IModels["paidCustomer"],
+        emailToken: mockEmailTokenModel as unknown as IModels["emailToken"],
       },
       mockDb,
       mockConfig,
@@ -290,6 +298,59 @@ describe("AdminService", () => {
       expect(result.redirectUrl).toBe(
         "https://dashboard.example.com/auth/callback?oneTimeToken=tok123",
       );
+    });
+  });
+
+  describe("issuePasswordResetLink", () => {
+    it("throws NotFoundError for an unknown user and issues nothing", async () => {
+      mockUserModel.getByMail.mockResolvedValue(null);
+
+      await expect(
+        service.issuePasswordResetLink("notfound@example.com"),
+      ).rejects.toThrow(NotFoundError);
+      expect(mockEmailTokenModel.issueToken).not.toHaveBeenCalled();
+    });
+
+    it("refuses a blocked user and issues nothing", async () => {
+      mockUserModel.getByMail.mockResolvedValue({
+        id: "u1",
+        email: "blocked@example.com",
+        isBlocked: true,
+      } as any);
+
+      await expect(
+        service.issuePasswordResetLink("blocked@example.com"),
+      ).rejects.toThrow(OperationNotAllowedError);
+      expect(mockEmailTokenModel.issueToken).not.toHaveBeenCalled();
+    });
+
+    it("issues a fresh one-hour token and links the deployment's reset page", async () => {
+      mockUserModel.getByMail.mockResolvedValue({
+        id: "u1",
+        email: "valid@example.com",
+        isBlocked: false,
+      } as any);
+      mockEmailTokenModel.issueToken.mockImplementation(
+        async (userId, token, expiresAt) => ({
+          userId,
+          token,
+          expireAt: expiresAt!.toISOString(),
+        }),
+      );
+
+      const first = await service.issuePasswordResetLink("valid@example.com");
+      const second = await service.issuePasswordResetLink("valid@example.com");
+
+      const [userId, token, expiresAt] =
+        mockEmailTokenModel.issueToken.mock.calls[0];
+      expect(userId).toBe("u1");
+      expect(token).toMatch(/^[a-f0-9]{64}$/);
+      expect(expiresAt!.getTime() - Date.now()).toBeGreaterThan(59 * 60_000);
+      expect(first.resetUrl).toBe(
+        `https://dashboard.example.com/auth/reset-password/?token=${token}`,
+      );
+      expect(first.expireAt).toBe(expiresAt!.toISOString());
+      expect(second.resetUrl).not.toBe(first.resetUrl);
     });
   });
 

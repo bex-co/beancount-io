@@ -94,6 +94,17 @@ const zhAuth: Record<string, TranslationEntry> = {
       "我们已向你的邮箱发送了密码重置链接。请检查你的收件箱并按照说明重置密码。",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "此服务器无法发送邮件",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "此服务器无法发送密码重置邮件。请联系运行这台 Beancount.io 服务器的人（其运维者），索取一次性的密码重置链接。",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "输入你的详细信息以开始使用仪表板",
     description: "Registration page description",

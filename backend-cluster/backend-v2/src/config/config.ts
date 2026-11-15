@@ -258,6 +258,17 @@ export interface AppConfig {
   oauth: OAuthConfig;
 }
 
+/**
+ * Whether this deployment delivers mail: a production server with a SendGrid
+ * key. Without one (a self-hosted stack that set none, or any development or
+ * test server, which only logs mail) nothing reaches an inbox. One fact for the
+ * whole deployment, the same for every address, so publishing it says nothing
+ * about which accounts exist.
+ */
+export function deliversEmail(c: Pick<AppConfig, "env" | "sendGrid">): boolean {
+  return c.env === "production" && c.sendGrid.apiKey !== "";
+}
+
 function getEnvironment(env: unknown): Environment {
   if (typeof env !== "string") {
     return "production";

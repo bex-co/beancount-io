@@ -94,6 +94,17 @@ const ptAuth: Record<string, TranslationEntry> = {
       "Enviamos um link de redefinição de senha para seu endereço de e-mail. Verifique sua caixa de entrada e siga as instruções para redefinir sua senha.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Este servidor não pode enviar e-mails",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "Este servidor não consegue enviar e-mails de redefinição de senha. Peça à pessoa que administra este servidor Beancount.io (o operador) um link de uso único para redefinir sua senha.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message: "Digite seus dados para começar com seu painel",
     description: "Registration page description",

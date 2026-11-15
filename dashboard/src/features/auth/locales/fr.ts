@@ -94,6 +94,17 @@ const frAuth: Record<string, TranslationEntry> = {
       "Nous avons envoyé un lien de réinitialisation de mot de passe à votre adresse e-mail. Veuillez consulter votre boîte de réception et suivre les instructions pour réinitialiser votre mot de passe.",
     description: "Detailed success message after reset email sent",
   },
+  "auth.emailUnavailable": {
+    message: "Ce serveur ne peut pas envoyer d'e-mails",
+    description:
+      "Title on the forgot-password page when the server has no mail provider",
+  },
+  "auth.emailUnavailableDescription": {
+    message:
+      "Ce serveur ne peut pas envoyer d'e-mails de réinitialisation de mot de passe. Demandez à la personne qui gère ce serveur Beancount.io (son opérateur) un lien de réinitialisation à usage unique.",
+    description:
+      "Forgot-password page text when the server cannot send email; tells the user to ask the server operator for a reset link",
+  },
   "auth.enterDetailsToGetStarted": {
     message:
       "Saisissez vos informations pour commencer avec votre tableau de bord",
