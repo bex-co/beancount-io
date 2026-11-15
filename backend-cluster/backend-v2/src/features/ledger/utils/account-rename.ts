@@ -1,3 +1,5 @@
+import { ACCOUNT_CHAR } from "./account-matcher";
+
 /**
  * Rename one account, and every account under it, in Beancount source text
  * (w1/m43). Lexer-aware: only account tokens outside strings and comments
@@ -22,14 +24,12 @@ export interface AccountRenameChange {
 }
 
 /**
- * A character an account token can hold, as the loader reads it: ASCII
- * letters, digits and `-`, or any non-ASCII character that is not a space or
- * a control (`account-matcher.ts` approximates the same lexer).
+ * Whether `char` continues an account token, as the loader reads one: a
+ * zero-width joiner or non-joiner inside a Persian or Indic name does, so
+ * renaming `Expenses:X` leaves `Expenses:X\u200cY` alone.
  */
-const NAME_CHAR = /[A-Za-z0-9-]|[^\p{ASCII}\s\p{Cc}\p{Cf}]/u;
-
 function isNameChar(char: string | undefined): boolean {
-  return char !== undefined && NAME_CHAR.test(char);
+  return char !== undefined && ACCOUNT_CHAR.test(char);
 }
 
 /** Whether the account name at `text[j]` goes on: a name character, or `:` before one. */

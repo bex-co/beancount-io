@@ -2,6 +2,8 @@ import { BadUserInputError } from "@/shared/errors";
 import {
   assertValidAccountPattern,
   isAccountSpelling,
+  lexesAsAccount,
+  loadsAsAccount,
   matchesAccountPattern,
 } from "../account-matcher";
 
@@ -28,6 +30,14 @@ describe("isAccountSpelling", () => {
 
   it("refuses control characters to the regex branch", () => {
     expect(isAccountSpelling("Assets:Nope\u202E", ROOTS)).toBe(false);
+  });
+
+  it("sends a name the lexer splits to the regex branch, as Fava does", () => {
+    // Each is two tokens or more to the lexer, so no account is spelled so.
+    expect(isAccountSpelling("Expenses:Food:coffee", ROOTS)).toBe(false);
+    expect(isAccountSpelling("Expenses:Food:", ROOTS)).toBe(false);
+    expect(isAccountSpelling("Expenses:Food::Bar", ROOTS)).toBe(false);
+    expect(isAccountSpelling("Expenses:Food:-Bar", ROOTS)).toBe(false);
   });
 
   it("honors configured roots", () => {
@@ -99,5 +109,39 @@ describe("assertValidAccountPattern", () => {
     expect(() => assertValidAccountPattern("([")).toThrow(
       "Invalid account filter '(['",
     );
+  });
+});
+
+describe("lexesAsAccount and loadsAsAccount (w31/013)", () => {
+  it.each([
+    // [name, one lexer token, loads in stock Beancount]
+    ["Assets:Bank:Checking", true, true],
+    ["Expenses:Food:日本", true, true],
+    ["Expenses:Food:Café", true, true],
+    ["Expenses:Food:éclair", true, true],
+    ["Expenses:2026:日本", true, true],
+    ["Expenses:Food:خرید\u200cها", true, true],
+    ["Aktiva:Bank", true, true],
+    // The grammar needs a capital or a digit to start the first component.
+    ["Expenses:日本", true, false],
+    ["日本:Food", true, false],
+    // The lexer splits these, so neither loader reads one account.
+    ["Expenses:Food:coffee", false, false],
+    ["assets:Bank", false, false],
+    ["Expenses:Food:", false, false],
+    ["Expenses:Food::日本", false, false],
+    ["Expenses:Food:-Bar", false, false],
+    ["Expenses:Food:Bar$", false, false],
+    ["Expenses", false, false],
+    ["", false, false],
+    // Spaces and controls end a name; bidirectional overrides are refused.
+    ["Expenses:Food:日 本", false, false],
+    ["Expenses:Food:日\u3000本", false, false],
+    ["Expenses:Food:日\u00a0本", false, false],
+    ["Expenses:Food:日\u0085本", false, false],
+    ["Expenses:Food:日本\u202e", false, false],
+  ])("%p: lexes %p, loads %p", (name, lexes, loads) => {
+    expect(lexesAsAccount(name)).toBe(lexes);
+    expect(loadsAsAccount(name)).toBe(loads);
   });
 });

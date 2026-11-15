@@ -554,9 +554,22 @@ on whole names: renaming `Assets:Check` leaves `Assets:Checking` alone, and
 `note` text and comments keep the old name, and a file the ledger does not load
 is not touched.
 
+`to` may be any name stock Beancount loads, and that includes non-Latin
+components after the first: `Expenses:Food:日本` renames to
+`Expenses:Food:食品` or `Expenses:Food:Japan` and back. The root is a capital
+letter followed by letters, digits or hyphens. The first component starts with
+a capital letter or a digit. Each later component starts with a capital
+letter, a digit or a non-ASCII character. ASCII inside a component is limited
+to letters, digits and hyphens, and a name holds no spaces or control
+characters. `from` may also be a name only the hosted engine loads, whose root
+or first component starts with a non-ASCII character, such as `Expenses:日本`.
+Renaming it to a name stock Beancount loads is how a ledger gets rid of it.
+
 It refuses, writing nothing:
 
-- an invalid `from` or `to`, or the same account twice (`BAD_USER_INPUT`);
+- a `from` or `to` that breaks those rules, such as `Expenses:Food:coffee`
+  or a `to` of `Expenses:日本` (`BAD_USER_INPUT`, with the rule in the
+  message), or the same account twice (`BAD_USER_INPUT`);
 - a `to` under another root, such as `Assets:` to `Liabilities:`
   (`BAD_USER_INPUT`); that is a reclassification that changes how reports read
   the account, not a rename;

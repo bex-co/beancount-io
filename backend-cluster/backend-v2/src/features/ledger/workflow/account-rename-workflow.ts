@@ -12,7 +12,10 @@ import type {
 } from "@/features/ledger/service/ledger-repo-service";
 import type { ILedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { gateFileWrite } from "@/features/ledger/utils/file-write-gate";
-import { isValidAccountName } from "@/features/ledger/utils/account-matcher";
+import {
+  lexesAsAccount,
+  loadsAsAccount,
+} from "@/features/ledger/utils/account-matcher";
 import {
   accountNamesAt,
   accountNamesUnder,
@@ -219,15 +222,27 @@ export class AccountRenameWorkflow implements IAccountRenameWorkflow {
   }
 }
 
-/** The refusals that need no read: names, the root, and a rename onto itself. */
+/** The rule a refused name breaks, as stock Beancount loads an account. */
+const ACCOUNT_NAME_RULE =
+  "Join a root and its components with colons (Expenses:Food:日本). The root is a capital letter followed by letters, digits or hyphens; the first component starts with a capital letter or a digit; each later component starts with a capital letter, a digit or a non-ASCII character. ASCII inside a component is limited to letters, digits and hyphens, and a name holds no spaces or control characters.";
+
+/**
+ * The refusals that need no read: names, the root, and a rename onto itself.
+ * `to` must be a name stock Beancount loads, a non-Latin leaf included
+ * (w31/013). `from` need only be one account token, its root or first
+ * component starting with any non-ASCII character: the hosted engine loads
+ * `Expenses:日本`, which stock refuses, and renaming it is how a ledger gets
+ * rid of it.
+ */
 function assertRenamable(from: string, to: string): void {
-  for (const [name, value] of [
-    ["from", from],
-    ["to", to],
+  for (const [name, value, loads] of [
+    ["from", from, lexesAsAccount],
+    ["to", to, loadsAsAccount],
   ] as const) {
-    if (!isValidAccountName(value)) {
+    if (!loads(value)) {
       throw new BadUserInputError(
-        `${name} ${JSON.stringify(value)} is not a valid account name (Root:Component, each component starting with a capital letter or digit).`,
+        `${name} ${JSON.stringify(value)} is not an account name Beancount loads. ${ACCOUNT_NAME_RULE}`,
+        name,
       );
     }
   }

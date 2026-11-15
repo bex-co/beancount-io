@@ -215,7 +215,7 @@ describe("AccountRenameWorkflow (w1/m43)", () => {
       "an invalid target",
       "Assets:Bank:Checking",
       "assets:lower",
-      /not a valid account name/,
+      /not an account name Beancount loads/,
     ],
     [
       "another root",
@@ -233,6 +233,116 @@ describe("AccountRenameWorkflow (w1/m43)", () => {
     const { ledgerRepo, rename } = fixture();
     await expect(rename({ from, to })).rejects.toThrow(message);
     expect(ledgerRepo.projectedSourceFiles).not.toHaveBeenCalled();
+  });
+
+  describe("non-Latin names (w31/013)", () => {
+    const FOOD = [
+      "2026-01-01 open Expenses:Food:日本 USD",
+      "2026-01-01 open Expenses:日本 USD",
+      '2026-03-01 * "Ramen"',
+      "  Expenses:Food:日本  12 USD",
+      "  Expenses:日本  1 USD",
+      "  Assets:Bank:Checking",
+      "",
+    ].join("\n");
+    const files = { "main.bean": MAIN, "food.bean": FOOD };
+
+    it("previews a non-Latin leaf renamed to another as valid", async () => {
+      const { ledgerRepo, rename } = fixture({ files });
+      const result = await rename({
+        from: "Expenses:Food:日本",
+        to: "Expenses:Food:食品",
+        dryRun: true,
+      });
+      expect(ledgerRepo.changeGeneratedFiles).not.toHaveBeenCalled();
+      expect(result.validation.valid).toBe(true);
+      expect(result.accounts).toEqual([
+        { from: "Expenses:Food:日本", to: "Expenses:Food:食品" },
+      ]);
+      expect(result.files).toEqual([
+        {
+          path: "food.bean",
+          changes: [
+            {
+              line: 1,
+              before: "2026-01-01 open Expenses:Food:日本 USD",
+              after: "2026-01-01 open Expenses:Food:食品 USD",
+            },
+            {
+              line: 4,
+              before: "  Expenses:Food:日本  12 USD",
+              after: "  Expenses:Food:食品  12 USD",
+            },
+          ],
+        },
+      ]);
+    });
+
+    it("renames a non-Latin leaf out to an ASCII name in one commit", async () => {
+      const { ledgerRepo, rename } = fixture({ files });
+      await rename({ from: "Expenses:Food:日本", to: "Expenses:Food:Japan" });
+      const { operations } = ledgerRepo.changeGeneratedFiles.mock.calls[0][0];
+      expect(operations.map((op) => op.path)).toEqual(["food.bean"]);
+      expect(operations[0].content).toBe(
+        FOOD.replaceAll("Expenses:Food:日本", "Expenses:Food:Japan"),
+      );
+    });
+
+    it("renames out of a name only the hosted engine loads, to one stock Beancount loads", async () => {
+      const { ledgerRepo, rename } = fixture({ files });
+      const result = await rename({
+        from: "Expenses:日本",
+        to: "Expenses:Japan",
+      });
+      expect(result.accounts).toEqual([
+        { from: "Expenses:日本", to: "Expenses:Japan" },
+      ]);
+      const { operations } = ledgerRepo.changeGeneratedFiles.mock.calls[0][0];
+      expect(operations[0].content).toContain("  Expenses:Japan  1 USD");
+      expect(operations[0].content).toContain("  Expenses:Food:日本  12 USD");
+    });
+
+    it.each([
+      [
+        "a lowercase ASCII start",
+        "Expenses:Food:Coffee",
+        "Expenses:Food:coffee",
+        "to",
+      ],
+      [
+        "a non-Latin first component",
+        "Expenses:Food:日本",
+        "Expenses:日本2",
+        "to",
+      ],
+      [
+        "a space inside a component",
+        "Expenses:Food:日本",
+        "Expenses:Food:日　本",
+        "to",
+      ],
+      ["an empty component", "Expenses:Food:日本", "Expenses:Food::日本", "to"],
+      [
+        "a lowercase ASCII start as from",
+        "Expenses:Food:coffee",
+        "Expenses:Food:Coffee",
+        "from",
+      ],
+    ])(
+      "refuses %s before reading anything, stating the rule",
+      async (_case, from, to, field) => {
+        const { ledgerRepo, rename } = fixture({ files });
+        const refused = rename({ from, to });
+        await expect(refused).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field },
+        });
+        await expect(refused).rejects.toThrow(
+          /not an account name Beancount loads\. .*the first component starts with a capital letter or a digit/,
+        );
+        expect(ledgerRepo.projectedSourceFiles).not.toHaveBeenCalled();
+      },
+    );
   });
 
   it("answers FORBIDDEN before judging the request for a credential without write", async () => {

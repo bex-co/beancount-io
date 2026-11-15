@@ -118,6 +118,19 @@ describe("renameAccountInText (w1/m43)", () => {
     ).toBe("2026-01-01 open Assets:Savings€\n2026-01-01 open Assets:Saving\n");
   });
 
+  it("reads a zero-width non-joiner as part of the name (w31/013)", () => {
+    // Persian writes خریدها with a ZWNJ; the loader reads one token.
+    const longer = "Expenses:Food:خرید\u200cها";
+    const source = `2026-01-01 open ${longer}\n2026-01-01 open Expenses:Food:خرید\n`;
+    expect(
+      renameAccountInText(source, "Expenses:Food:خرید", "Expenses:Food:Shop")
+        .text,
+    ).toBe(`2026-01-01 open ${longer}\n2026-01-01 open Expenses:Food:Shop\n`);
+    expect(renamedAccounts([source], longer, "Expenses:Food:Shops")).toEqual([
+      { from: longer, to: "Expenses:Food:Shops" },
+    ]);
+  });
+
   it("returns the text unchanged, with no changes, when nothing names the account", () => {
     const source = "2026-01-01 open Assets:Cash\n";
     expect(renameAccountInText(source, FROM, TO)).toEqual({

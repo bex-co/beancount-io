@@ -36,6 +36,9 @@ const MAIN =
   'include "2026.bean"\n2026-01-01 open Assets:Bank:Checking USD\n2026-01-01 open Expenses:Coffee USD\n';
 const YEAR =
   '2026-02-01 * "Coffee at Assets:Bank:Checking"\n  Expenses:Coffee  3 USD\n  Assets:Bank:Checking\n';
+/** A non-Latin leaf, which stock Beancount and the hosted engine both load (w31/013). */
+const FOOD =
+  '2026-01-01 open Expenses:Food:日本 USD\n2026-03-01 * "Ramen"\n  Expenses:Food:日本  12 USD\n  Expenses:Coffee\n';
 
 let resolver: LedgerMutationResolver;
 let schema: Awaited<ReturnType<typeof buildSchema>>;
@@ -57,6 +60,7 @@ async function fixture(
   const files = new Map([
     ["main.bean", { content: MAIN, sha: "sha-main" }],
     ["2026.bean", { content: YEAR, sha: "sha-year" }],
+    ["food.bean", { content: FOOD, sha: "sha-food" }],
   ]);
   const commits: {
     path: string;
@@ -141,12 +145,13 @@ async function fixture(
         },
       );
       const body = (await response.json()) as Record<string, unknown> & {
-        error?: { code?: string };
+        error?: { code?: string; message?: string };
       };
       return {
         success: response.status === 200,
         result: body,
         code: body.error?.code,
+        message: body.error?.message,
       };
     }
     if (surface === "gql") {
@@ -166,6 +171,7 @@ async function fixture(
         code: error
           ? formatError(error.toJSON(), error).extensions?.code
           : undefined,
+        message: error?.message,
       };
     }
     const { dryRun, allowInvalid, ...others } = args;
@@ -179,12 +185,13 @@ async function fixture(
     });
     const structured = result.structuredContent as {
       result?: Record<string, unknown>;
-      error?: { code?: string };
+      error?: { code?: string; message?: string };
     };
     return {
       success: !result.isError,
       result: structured?.result,
       code: structured?.error?.code,
+      message: structured?.error?.message,
     };
   };
   return {
@@ -269,6 +276,86 @@ describe.each(SURFACES)("renameAccount on %s (w1/m43)", (surface) => {
       await env.close();
     }
   });
+
+  it("previews and commits a non-Latin leaf renamed in and out (w31/013)", async () => {
+    const env = await fixture();
+    try {
+      const preview = await env.call(surface, {
+        from: "Expenses:Food:日本",
+        to: "Expenses:Food:食品",
+        dryRun: true,
+      });
+      expect(preview.success).toBe(true);
+      const verdict = preview.result as {
+        valid?: boolean;
+        validation?: { valid: boolean };
+      };
+      expect(verdict.valid ?? verdict.validation?.valid).toBe(true);
+      expect(preview.result).toMatchObject({
+        accounts: [{ from: "Expenses:Food:日本", to: "Expenses:Food:食品" }],
+        files: [
+          {
+            path: "food.bean",
+            changes: [
+              { line: 1, after: "2026-01-01 open Expenses:Food:食品 USD" },
+              { line: 3, after: "  Expenses:Food:食品  12 USD" },
+            ],
+          },
+        ],
+      });
+      expect(env.commits).toHaveLength(0);
+      const renamed = await env.call(surface, {
+        from: "Expenses:Food:日本",
+        to: "Expenses:Food:Japan",
+      });
+      expect(renamed.success).toBe(true);
+      expect(env.commits).toEqual([
+        [
+          {
+            operation: "update",
+            path: "food.bean",
+            content: FOOD.replaceAll(
+              "Expenses:Food:日本",
+              "Expenses:Food:Japan",
+            ),
+            sha: "sha-food",
+          },
+        ],
+      ]);
+    } finally {
+      await env.close();
+    }
+  });
+
+  it.each([
+    ["a lowercase ASCII start", "Expenses:Food:coffee"],
+    ["a non-Latin first component", "Expenses:日本"],
+  ])(
+    "refuses a to with %s by BAD_USER_INPUT, stating the rule (w31/013)",
+    async (_case, to) => {
+      const env = await fixture();
+      try {
+        const refused = await env.call(surface, {
+          from: "Expenses:Food:日本",
+          to,
+          dryRun: true,
+        });
+        expect(refused).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+        });
+        expect(refused.message).toContain(
+          `to "${to}" is not an account name Beancount loads.`,
+        );
+        expect(refused.message).toContain(
+          "the first component starts with a capital letter or a digit",
+        );
+        expect(env.commits).toHaveLength(0);
+      } finally {
+        await env.close();
+      }
+    },
+  );
 
   it("refuses a rename to another root and a read-only credential by the same codes", async () => {
     const env = await fixture();
