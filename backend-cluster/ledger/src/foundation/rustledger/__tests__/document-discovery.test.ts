@@ -91,15 +91,119 @@ describe("discoverDocuments", () => {
 
   it("does nothing without the option or the repository's file list", () => {
     const path = ["documents/Assets/Bank/Checking/2024-02-01.pdf"];
-    expect(discover(path, undefined, "").documents).toEqual([]);
+    expect(discover(path, undefined, "")).toEqual({
+      documents: [],
+      errors: [],
+      misdated: new Set(),
+    });
     expect(
       discoverDocuments(
         [open("Assets:Bank:Checking")],
-        OPTION,
+        'option "documents" "missing"\n',
         "main.beancount",
         undefined,
-      ).documents,
-    ).toEqual([]);
+      ),
+    ).toEqual({ documents: [], errors: [], misdated: new Set() });
+  });
+});
+
+// w31/021: rustledger 0.24 stopped reporting a documents root that does not
+// exist, so a mistyped one found nothing and the check stayed clean.
+describe("a documents root that does not exist", () => {
+  const located = (paths: string[], source: string, entryPoint?: string) =>
+    discover(paths, undefined, source, entryPoint).errors.map((error) => [
+      error.code,
+      error.file,
+      error.line,
+      error.column,
+      error.severity,
+      error.message,
+    ]);
+
+  it("raises Beancount's error on the option that names it", () => {
+    expect(
+      located(
+        ["main.beancount", "receipts/Assets/Bank/Checking/2024-02-01.pdf"],
+        'option "title" "Books"\noption "documents" "qa-receipts"\n',
+      ),
+    ).toEqual([
+      [
+        "E7006",
+        "main.beancount",
+        2,
+        1,
+        "error",
+        "Document root 'qa-receipts' does not exist",
+      ],
+    ]);
+  });
+
+  it("names the root resolved against the entry point's directory", () => {
+    // Only a root-level `scans/` exists; Beancount looks in `books/scans`.
+    expect(
+      located(
+        ["books/main.beancount", "scans/Assets/Bank/Checking/2024-02-01.pdf"],
+        'option "documents" "./scans/"\n',
+        "books/main.beancount",
+      ),
+    ).toEqual([
+      [
+        "E7006",
+        "books/main.beancount",
+        1,
+        1,
+        "error",
+        "Document root 'books/scans' does not exist",
+      ],
+    ]);
+  });
+
+  it("reports each missing root and still discovers the others", () => {
+    const { documents, errors } = discover(
+      ["main.beancount", "documents/Assets/Bank/Checking/2024-02-01.pdf"],
+      undefined,
+      'option "documents" "missing"\noption "documents" "documents"\n',
+    );
+    expect(errors.map((error) => [error.line, error.message])).toEqual([
+      [1, "Document root 'missing' does not exist"],
+    ]);
+    expect(documents).toEqual([
+      expect.objectContaining({
+        path: "documents/Assets/Bank/Checking/2024-02-01.pdf",
+      }),
+    ]);
+  });
+
+  it.each([
+    ["a folder with files in it", "docs", ["main.beancount", "docs/x.pdf"]],
+    [
+      "a folder whose files are deeper",
+      "docs",
+      ["main.beancount", "docs/a/b/c.pdf"],
+    ],
+    ["the repository root", ".", ["main.beancount"]],
+    ["an empty value (the entry point's folder)", "", ["main.beancount"]],
+    ["a file, as bean-check accepts", "main.beancount", ["main.beancount"]],
+  ])("accepts %s", (_name, root, paths) => {
+    expect(located(paths, `option "documents" "${root}"\n`)).toEqual([]);
+  });
+
+  it("does not take a sibling sharing the root's name as a prefix", () => {
+    expect(
+      located(
+        ["main.beancount", "docs-old/x.pdf", "docs.pdf"],
+        'option "documents" "docs"\n',
+      ),
+    ).toEqual([
+      [
+        "E7006",
+        "main.beancount",
+        1,
+        1,
+        "error",
+        "Document root 'docs' does not exist",
+      ],
+    ]);
   });
 });
 

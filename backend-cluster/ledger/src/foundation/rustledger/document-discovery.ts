@@ -50,6 +50,13 @@ const normalize = (path: string) =>
  * `option "documents"` line that found it (bean-check gives that file's line
  * 0). `misdated` names those accounts: a revalidation after the fava plugins
  * reports them again, unlocated.
+ *
+ * A root that does not exist raises Beancount's `Document root '<root>' does
+ * not exist` on its option line, naming the root by repository path. The engine
+ * stopped reporting it in 0.24 and cannot tell, having no filesystem, so a
+ * mistyped root found nothing and said nothing (w31/021). A Git repository
+ * holds no empty folder, so a root exists when it is a path or some path lies
+ * under it.
  */
 export function discoverDocuments(
   directives: readonly DirectiveJson[],
@@ -82,6 +89,17 @@ export function discoverDocuments(
   const errors: BeancountError[] = [];
   for (const { root, line } of roots) {
     const prefix = root === "." || root === "" ? "" : `${root}/`;
+    if (!paths.some((path) => path === root || path.startsWith(prefix))) {
+      errors.push({
+        ...pluginError(`Document root '${root}' does not exist`, {
+          code: "E7006",
+          file: entryPoint,
+          line,
+        }),
+        column: 1,
+      });
+      continue;
+    }
     for (const path of paths) {
       if (!path.startsWith(prefix)) continue;
       const folders = path.slice(prefix.length).split("/");

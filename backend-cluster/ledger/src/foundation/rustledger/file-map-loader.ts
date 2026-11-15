@@ -412,8 +412,9 @@ export interface LoadedLedger {
    * Every blob path in the repo at this ref (`.bean` AND non-`.bean` — e.g.
    * committed receipt PDFs), as the real inventory of files that exist. The
    * WASM engine has no filesystem, so `document`/`option "documents"` existence
-   * is validated against THIS set (see `document-validation.ts`), not the
-   * engine's own (always-failing) filesystem check.
+   * is validated against THIS set (see `document-validation.ts` and
+   * `document-discovery.ts`), not the engine's own (always-failing) filesystem
+   * check.
    */
   repoPaths: string[];
 }

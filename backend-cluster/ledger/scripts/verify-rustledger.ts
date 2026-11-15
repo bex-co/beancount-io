@@ -695,6 +695,36 @@ async function verifyDocumentDiscovery(): Promise<void> {
       `a statement before its account's open is refused once, located (got ${JSON.stringify(shown)})`,
     );
   }
+  // w31/021: a mistyped root is reported, through the fava plugins' second
+  // validation too, and a ledger in a subfolder resolves its root from there.
+  for (const plugin of ["", 'plugin "fava.plugins.tag_discovered_documents"\n']) {
+    const mistyped = await parseLedgerFiles(
+      {
+        "books/main.beancount": `${plugin}option "documents" "qa-receipts"\n2026-03-01 open Assets:Docs\n`,
+      },
+      "books/main.beancount",
+      {
+        today: "2099-01-01",
+        repoPaths: [
+          "books/main.beancount",
+          "qa-receipts/Assets/Docs/2026-04-01.statement.pdf",
+        ],
+      },
+    );
+    const shown = mistyped.errors.map(
+      (e) => `${e.file}:${e.line} ${e.severity} ${e.message}`,
+    );
+    assert(
+      !mistyped.valid &&
+        JSON.stringify(shown) ===
+          JSON.stringify([
+            `books/main.beancount:${plugin ? 2 : 1} error Document root 'books/qa-receipts' does not exist`,
+          ]) &&
+        !mistyped.directives.some((directive) => directive.type === "document"),
+      `a documents root missing from the repository is refused once, located (got ${JSON.stringify(shown)})`,
+    );
+  }
+  console.log("✓ a documents root that does not exist is reported (w31/021)");
 }
 
 /**
@@ -4737,10 +4767,10 @@ async function main(): Promise<void> {
     "a ledger referencing a missing document is invalid",
   );
 
-  // `option "documents"` root (E7006): @rustledger/wasm ≥0.24 no longer emits the
-  // always-failing filesystem check, so reconcileDocumentErrors has nothing to
-  // keep for a missing root. Explicit `document` E8001 reconciliation above is
-  // unchanged. When a root *is* present in the inventory the ledger stays valid.
+  // `option "documents"` root (E7006): @rustledger/wasm ≥0.24 no longer emits
+  // the check, and could not tell without a filesystem. Discovery reports a
+  // root with nothing under it in the repo inventory, once, on its option line
+  // (w31/021). When a root *is* present in the inventory the ledger stays valid.
   const optDocsSource = [
     'option "documents" "docs"',
     "2020-01-01 open Assets:Cash",
@@ -4759,10 +4789,16 @@ async function main(): Promise<void> {
     "main.beancount",
     { repoPaths: ["main.beancount"] },
   );
+  const rootMissingShown = rootMissing.errors.map(
+    (e) => `${e.file}:${e.line} ${e.severity} ${e.code} ${e.message}`,
+  );
   assert(
-    rootMissing.valid &&
-      !rootMissing.errors.some((e) => e.message.includes("[E7006]")),
-    'option "documents" with a missing root stays valid under wasm ≥0.24 (no E7006)',
+    !rootMissing.valid &&
+      JSON.stringify(rootMissingShown) ===
+        JSON.stringify([
+          "main.beancount:1 error E7006 Document root 'docs' does not exist",
+        ]),
+    `option "documents" with a missing root is refused once, located (got ${JSON.stringify(rootMissingShown)})`,
   );
 
   // #4: beancount reads option/plugin ONLY from the entry point; the WASM applies

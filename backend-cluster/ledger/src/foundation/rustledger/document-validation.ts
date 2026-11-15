@@ -26,12 +26,11 @@ import { getDirectiveSourceLocation } from "./plugins/provenance";
  *     original source file/line) only when the referenced file is genuinely
  *     absent from the repo — a real typo; otherwise it is a false positive and
  *     dropped.
- *   - `E7006` (`option "documents"` root): when the engine still emits it
- *     (wasm <0.24), kept only when the configured root directory genuinely has
- *     no files under it in the repo. (The *auto-discovery* of files under that
- *     root is done from the same inventory, in `document-discovery.ts`; a
- *     mistyped/nonexistent root was a real config error.) wasm ≥0.24 does not
- *     emit this check, so there is nothing to reconcile for the option root.
+ *   - `E7006` (`option "documents"` root): always dropped. Discovery
+ *     (`document-discovery.ts`) walks each root in the same inventory and
+ *     reports a root that does not exist itself, resolved against the entry
+ *     point as Beancount does, so an engine that emitted the check again
+ *     would only repeat it (w31/021).
  *
  * Because we filter (rather than reconstruct) the engine's own errors, the
  * original source location (which file / line, including from `include`d files)
@@ -114,30 +113,6 @@ function extractDocumentPath(message: string): string | null {
   return match === null ? null : match[1];
 }
 
-/** The documents root named in an `[E7006]` message (`… root 'X' does not exist`). */
-function extractDocumentRoot(message: string): string | null {
-  // Greedy + end-anchored on the fixed suffix, so a root name that itself
-  // contains a single quote (e.g. `docs'archive`) is captured whole rather than
-  // truncated at the first `'` (which `'([^']*)'` would do).
-  const match = /Document root '(.*)' does not exist$/u.exec(message);
-  return match === null ? null : match[1];
-}
-
-/**
- * Whether `root` exists in the (already-normalized) repo inventory as a directory
- * — i.e. some file lives under it.
- */
-function directoryExists(repoNorm: string[], root: string): boolean {
-  const normalizedRoot = normalizePath(root);
-  if (normalizedRoot === "." || normalizedRoot === "") {
-    return repoNorm.length > 0;
-  }
-  const prefix = `${normalizedRoot}/`;
-  return repoNorm.some(
-    (path) => path === normalizedRoot || path.startsWith(prefix),
-  );
-}
-
 /**
  * Filter the engine's filesystem-less document errors, validating each against
  * the real repo file inventory. See the module doc for the rationale. The
@@ -148,8 +123,7 @@ export function reconcileDocumentErrors(
   errors: BeancountError[],
   repoPaths: string[] | undefined,
 ): BeancountError[] {
-  const repoNorm = repoPaths?.map(normalizePath);
-  const repoSet = repoNorm ? new Set(repoNorm) : undefined;
+  const repoSet = repoPaths ? new Set(repoPaths.map(normalizePath)) : undefined;
 
   return errors.filter((error) => {
     if (isFileNotFound(error)) {
@@ -162,14 +136,8 @@ export function reconcileDocumentErrors(
         path !== null && !repoSet.has(resolveDocumentPath(path, error.file))
       );
     }
-    if (isDocumentRootError(error)) {
-      if (repoNorm === undefined) return false;
-      const root = extractDocumentRoot(error.message);
-      return (
-        root !== null &&
-        !directoryExists(repoNorm, resolveDocumentPath(root, error.file))
-      );
-    }
+    // Discovery reports a missing root (see the module doc).
+    if (isDocumentRootError(error)) return false;
     return true; // unrelated error — keep
   });
 }

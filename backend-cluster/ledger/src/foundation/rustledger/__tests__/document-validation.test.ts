@@ -130,50 +130,17 @@ describe("reconcileDocumentErrors", () => {
     });
   });
 
+  // w31/021: discovery reports a missing root itself, resolved against the
+  // entry point; keeping the engine's check too would report it twice.
   describe('E7006 (`option "documents"` root)', () => {
-    it("without repoPaths, drops the engine error", () => {
+    it.each([
+      ["without repoPaths", undefined],
+      ["when the root exists", ["main.bean", "documents/Assets/x.pdf"]],
+      ["when the root does not exist", ["main.bean", "other/x.pdf"]],
+    ])("drops the engine's error %s", (_name, repoPaths) => {
       expect(
-        reconcileDocumentErrors([rootError("documents")], undefined),
+        reconcileDocumentErrors([rootError("documents")], repoPaths),
       ).toEqual([]);
-    });
-
-    it("drops the error when the root directory exists (has files under it)", () => {
-      const out = reconcileDocumentErrors(
-        [rootError("documents")],
-        ["main.bean", "documents/Assets/2020-01-05 receipt.pdf"],
-      );
-      expect(out).toEqual([]);
-    });
-
-    it.each([".", ""])(
-      "treats the repository root %j as an existing documents directory",
-      (root) => {
-        expect(
-          reconcileDocumentErrors([rootError(root)], ["main.bean"]),
-        ).toEqual([]);
-      },
-    );
-
-    it("KEEPS the error when the root directory genuinely does not exist", () => {
-      const missing = rootError("missing-dir");
-      expect(
-        reconcileDocumentErrors([missing], ["main.bean", "documents/x.pdf"]),
-      ).toEqual([missing]);
-    });
-
-    it("extracts a root name that contains a single quote (docs'archive)", () => {
-      // Exists in the repo -> dropped (the whole `docs'archive` is parsed, not `docs`).
-      expect(
-        reconcileDocumentErrors(
-          [rootError("docs'archive")],
-          ["main.bean", "docs'archive/2020-01-05 receipt.pdf"],
-        ),
-      ).toEqual([]);
-      // Genuinely missing -> kept.
-      const missing = rootError("docs'archive");
-      expect(
-        reconcileDocumentErrors([missing], ["main.bean", "other/x.pdf"]),
-      ).toEqual([missing]);
     });
   });
 
