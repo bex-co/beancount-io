@@ -18,6 +18,7 @@ import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { formatError } from "@/server/graphql/format-error";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
+import { generateV1OpenAPIDocument } from "@/server/rest/openapi-registry";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
@@ -272,6 +273,7 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
     moveSourceSlices,
     commits,
     call,
+    listTools: () => client.listTools(),
     close: async () => {
       await client.close();
       await server.close();
@@ -490,6 +492,34 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
         code: "FORBIDDEN",
       });
       expect(env.moveSourceSlices).not.toHaveBeenCalled();
+    } finally {
+      await env.close();
+    }
+  });
+});
+
+describe("moveEntrySources description (w31/017)", () => {
+  it("says on every surface that a scoped entry keeps its pushed tags and metadata", async () => {
+    const env = await fixture();
+    try {
+      const { tools } = await env.listTools();
+      const descriptions = {
+        mcp: tools.find((tool) => tool.name === "moveEntrySources")
+          ?.description,
+        rest: generateV1OpenAPIDocument().paths[
+          "/api-gateway/v1/ledgers/{owner}/{name}/entries/move"
+        ]?.post?.description,
+        gql: schema.getMutationType()?.getFields().moveLedgerEntrySources
+          ?.description,
+      };
+      for (const description of Object.values(descriptions)) {
+        // Since w31/016 the move writes a pushtag/pushmeta scope onto the
+        // entry, so the text that arrives is not the text that left.
+        expect(description).toContain(
+          "An entry inside its file's pushtag or pushmeta scope keeps that scope's tags and metadata, written onto the entry",
+        );
+        expect(description).not.toMatch(/byte for byte/);
+      }
     } finally {
       await env.close();
     }

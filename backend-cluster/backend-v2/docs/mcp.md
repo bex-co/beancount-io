@@ -494,9 +494,9 @@ than the flag — the older precedent this milestone did not revisit.
 
 `moveEntrySources` (REST `POST …/entries/move`, GraphQL
 `moveLedgerEntrySources`) moves entries into another ledger file in one
-commit. Each entry's source text leaves its file byte for byte (an entry in a
-`pushtag` or `pushmeta` scope also gains that scope, below) and is appended
-to `toPath` in ledger order (by file path, then line), after a blank line and
+commit. Each entry's source text leaves its file (an entry in a `pushtag` or
+`pushmeta` scope keeps that scope's tags and metadata, written onto the
+entry, below) and is appended to `toPath` in ledger order (by file path, then line), after a blank line and
 in `toPath`'s own line ending; `toPath` is created when absent. The include
 line goes after `includeFrom`'s last `include`, or at its end when it has none,
 and a new `toPath` must be a portable name, as `createLedgerFiles` requires. Entries are addressed as the entry-source

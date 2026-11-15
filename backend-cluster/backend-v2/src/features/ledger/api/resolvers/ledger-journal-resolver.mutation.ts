@@ -270,7 +270,8 @@ class MoveEntrySourcesResponse {
   includeAdded: boolean;
 
   @Field(() => [SlicePreviewFile], {
-    description: "Each moved entry's text at the file it leaves",
+    description:
+      "Each moved entry's text as toPath receives it, with the file it leaves",
   })
   preview: SlicePreviewFile[];
 

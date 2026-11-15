@@ -160,7 +160,7 @@ export type MoveSlicesResult = {
   toPath: string;
   /** Whether includeFrom gained (on a preview, would gain) toPath's include line. */
   includeAdded: boolean;
-  /** Each moved entry's text at the file it leaves. */
+  /** Each moved entry's text as toPath receives it, with the file it leaves. */
   preview: SlicePreview;
 } & TouchedFiles &
   CommitSha &

@@ -139,7 +139,9 @@ export const moveSlicesResult = z.object({
     ),
   preview: z
     .array(previewFile)
-    .describe("Each moved entry's text at the file it leaves."),
+    .describe(
+      "Each moved entry's text as toPath receives it, with the file it leaves.",
+    ),
   commit: z.string().optional().describe(COMMIT_SHA_DESCRIPTION),
   ...writeProjectionShape,
 });

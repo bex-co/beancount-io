@@ -120,9 +120,11 @@ def sync_detailed(
 ) -> Response[PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200 | V1Error]:
     """Move entries into another file
 
-     Move entries into another ledger file in one commit: each entry's source text leaves its file byte
-    for byte and is appended to toPath in ledger order. listLedgerEntries with include_source returns
-    each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless
+     Move entries into another ledger file in one commit: each entry's source text leaves its file and is
+    appended to toPath in ledger order. An entry inside its file's pushtag or pushmeta scope keeps that
+    scope's tags and metadata, written onto the entry, so its hash stays but its text and sha256sum
+    change; any other entry's text moves unchanged. listLedgerEntries with include_source returns each
+    entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless
     includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds
     a bean-check error (VALIDATION_FAILED, unless allowInvalid). `dryRun` previews without committing:
     each moved entry's text and file. POST …/revert-commit undoes the commit.
@@ -162,9 +164,11 @@ def sync(
 ) -> PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200 | V1Error | None:
     """Move entries into another file
 
-     Move entries into another ledger file in one commit: each entry's source text leaves its file byte
-    for byte and is appended to toPath in ledger order. listLedgerEntries with include_source returns
-    each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless
+     Move entries into another ledger file in one commit: each entry's source text leaves its file and is
+    appended to toPath in ledger order. An entry inside its file's pushtag or pushmeta scope keeps that
+    scope's tags and metadata, written onto the entry, so its hash stays but its text and sha256sum
+    change; any other entry's text moves unchanged. listLedgerEntries with include_source returns each
+    entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless
     includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds
     a bean-check error (VALIDATION_FAILED, unless allowInvalid). `dryRun` previews without committing:
     each moved entry's text and file. POST …/revert-commit undoes the commit.
@@ -199,9 +203,11 @@ async def asyncio_detailed(
 ) -> Response[PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200 | V1Error]:
     """Move entries into another file
 
-     Move entries into another ledger file in one commit: each entry's source text leaves its file byte
-    for byte and is appended to toPath in ledger order. listLedgerEntries with include_source returns
-    each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless
+     Move entries into another ledger file in one commit: each entry's source text leaves its file and is
+    appended to toPath in ledger order. An entry inside its file's pushtag or pushmeta scope keeps that
+    scope's tags and metadata, written onto the entry, so its hash stays but its text and sha256sum
+    change; any other entry's text moves unchanged. listLedgerEntries with include_source returns each
+    entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless
     includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds
     a bean-check error (VALIDATION_FAILED, unless allowInvalid). `dryRun` previews without committing:
     each moved entry's text and file. POST …/revert-commit undoes the commit.
@@ -239,9 +245,11 @@ async def asyncio(
 ) -> PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200 | V1Error | None:
     """Move entries into another file
 
-     Move entries into another ledger file in one commit: each entry's source text leaves its file byte
-    for byte and is appended to toPath in ledger order. listLedgerEntries with include_source returns
-    each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless
+     Move entries into another ledger file in one commit: each entry's source text leaves its file and is
+    appended to toPath in ledger order. An entry inside its file's pushtag or pushmeta scope keeps that
+    scope's tags and metadata, written onto the entry, so its hash stays but its text and sha256sum
+    change; any other entry's text moves unchanged. listLedgerEntries with include_source returns each
+    entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless
     includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds
     a bean-check error (VALIDATION_FAILED, unless allowInvalid). `dryRun` previews without committing:
     each moved entry's text and file. POST …/revert-commit undoes the commit.

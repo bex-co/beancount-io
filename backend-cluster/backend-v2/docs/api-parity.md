@@ -860,7 +860,7 @@ entries' source text into `toPath` in one commit, adding its include line to
 `includeFrom` when the ledger does not load `toPath` yet. The surfaces agree on
 the inputs (`dryRun`/`dry_run`, `allowInvalid`/`allow_invalid`), the result
 (`movedHashes`, `toPath`, `includeAdded`, `preview` with each moved entry's text
-at the file it leaves, the verdict, and `commit` on a real write), the
+as `toPath` receives it and the file it leaves, the verdict, and `commit` on a real write), the
 authorization (`ledger.files.write`, since the move can create a file) and the
 refusals: `BAD_USER_INPUT` for an unloaded `toPath` without `includeFrom` and
 the other path errors, `CONFLICT` for a stale `sha256sum` of any entry,

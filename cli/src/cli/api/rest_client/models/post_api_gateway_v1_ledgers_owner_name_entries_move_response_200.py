@@ -29,8 +29,8 @@ class PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200:
         moved_hashes (list[str]): The moved entries' hashes, each once, in ledger order.
         to_path (str):
         include_added (bool): Whether includeFrom gained toPath's include line (on a preview, would gain it).
-        preview (list[PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200PreviewItem]): Each moved entry's text at
-            the file it leaves.
+        preview (list[PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200PreviewItem]): Each moved entry's text as
+            toPath receives it, with the file it leaves.
         errors_before (int):
         errors_after (int):
         new_errors (list[PostApiGatewayV1LedgersOwnerNameEntriesMoveResponse200NewErrorsItem]):

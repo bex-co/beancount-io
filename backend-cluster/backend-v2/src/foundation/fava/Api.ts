@@ -6737,7 +6737,7 @@ export class Api<
       }),
 
     /**
-     * @description Move entries into another file in one commit: each slice leaves its file and is appended, byte for byte and in ledger order, to to_path (created when absent); include_from gains the include line when the target is not reached.
+     * @description Move entries into another file in one commit: each slice leaves its file and is appended, in ledger order, to to_path (created when absent). A slice inside its file's pushtag or pushmeta scope gets that scope's tags and metadata written onto it; any other slice moves unchanged. include_from gains the include line when the target is not reached.
      *
      * @tags journal
      * @name MoveSourceSlices

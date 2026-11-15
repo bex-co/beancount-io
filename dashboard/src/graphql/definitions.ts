@@ -767,6 +767,8 @@ export type GetCliAuthSessionResponse = {
 export type HoldingsData = {
   __typename: 'HoldingsData';
   asOf: Scalars['String']['output'];
+  /** False when a group's cost basis is unknown; totals.cost_basis then leaves it out */
+  costBasisComplete: Scalars['Boolean']['output'];
   groupBy: Scalars['String']['output'];
   groups: Array<HoldingsGroup>;
   missingPriceSummary: Array<Scalars['String']['output']>;
@@ -779,9 +781,9 @@ export type HoldingsGroup = {
   __typename: 'HoldingsGroup';
   account: Maybe<Scalars['String']['output']>;
   accounts: Maybe<Array<Scalars['String']['output']>>;
-  averageCost: HoldingsMoney;
+  averageCost: Maybe<HoldingsMoney>;
   commodity: Scalars['String']['output'];
-  costBasis: HoldingsMoney;
+  costBasis: Maybe<HoldingsMoney>;
   marketValue: HoldingsMoney;
   price: Maybe<HoldingsMoney>;
   units: HoldingsMoney;
@@ -1427,7 +1429,7 @@ export type MoveEntrySourcesResponse = {
   /** The moved entries' hashes, each once, in ledger order */
   movedHashes: Array<Scalars['String']['output']>;
   newErrors: Array<SliceWriteError>;
-  /** Each moved entry's text at the file it leaves */
+  /** Each moved entry's text as toPath receives it, with the file it leaves */
   preview: Array<SlicePreviewFile>;
   toPath: Scalars['String']['output'];
   /** True only when the write adds no bean-check error; gate a preview on this. */
@@ -1500,7 +1502,7 @@ export type Mutation = {
   leaveLedger: DeleteCollaboratorResponse;
   /** Logout user, revoke JWT token and clear httpOnly cookie */
   logout: LogoutResponse;
-  /** Move entries into another ledger file in one commit: each entry's source text leaves its file byte for byte and is appended to toPath in ledger order. listLedgerEntries with include_source returns each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds a bean-check error (VALIDATION_FAILED, unless allowInvalid). dryRun previews without committing: each moved entry's text and file. revertLedgerCommit undoes the commit. */
+  /** Move entries into another ledger file in one commit: each entry's source text leaves its file and is appended to toPath in ledger order. An entry inside its file's pushtag or pushmeta scope keeps that scope's tags and metadata, written onto the entry, so its hash stays but its text and sha256sum change; any other entry's text moves unchanged. listLedgerEntries with include_source returns each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds a bean-check error (VALIDATION_FAILED, unless allowInvalid). dryRun previews without committing: each moved entry's text and file. revertLedgerCommit undoes the commit. */
   moveLedgerEntrySources: MoveEntrySourcesResponse;
   /** Parse an uploaded file (multimodal support for PDF/images/any format) into structured transactions. File must be uploaded to S3 first. */
   parseFile: FileParseResult;
