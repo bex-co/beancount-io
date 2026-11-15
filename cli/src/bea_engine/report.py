@@ -126,6 +126,8 @@ def answer(
         # difference would break that identity; the report always runs at cost.
         raise protocol.UsageError("cash-flow reports at cost so rows tie to cash balances and takes no --conversion.")
     filtered, resolved_conversion, ledger_errors = _load(file, account, time, conversion, allow_errors)
+    if time is not None:
+        _refuse_window_outside_time(filtered.period, bounds, ledger_errors)
     if kind == "overview":
         return _overview(filtered, resolved_conversion, interval, allow_errors, ledger_errors)
     if kind == "income-statement":
@@ -936,6 +938,34 @@ def _date_bounds(from_date: str | None, to_date: str | None) -> tuple[date | Non
     return start, end
 
 
+def _refuse_window_outside_time(
+    period: tuple[date | None, date | None], bounds: tuple[date | None, date | None], ledger_errors: list[str]
+) -> None:
+    """Refuse a `--from-date / --to-date` window that shares no day with `--time`.
+
+    Intersected with a period it misses, the window was empty yet still stated:
+    a heading reading `2026-01-01 through 2025-06-01` and opening cash from the
+    wrong side of it, exit 0 (w1/248). Like a reversed `--from/--to`, it is a
+    usage error, and nothing is computed.
+    """
+    first, after = period
+    start, end = bounds
+    if first is None and after is None:
+        return
+    stated = (
+        f"{first.isoformat() if first else 'the start'} through "
+        f"{(after - timedelta(days=1)).isoformat() if after else 'the end'}"
+    )
+    if end is not None and first is not None and end < first:
+        raise protocol.UsageError(
+            f"--to-date {end.isoformat()} is before the --time period {stated}.", ledger_errors=ledger_errors
+        )
+    if start is not None and after is not None and start >= after:
+        raise protocol.UsageError(
+            f"--from-date {start.isoformat()} is after the --time period {stated}.", ledger_errors=ledger_errors
+        )
+
+
 def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledger_errors: list[str]) -> dict[str, Any]:
     """Realized gain/loss per reduction, from the booked cost and price.
 
@@ -1711,8 +1741,10 @@ def _bounded(metadata: dict[str, Any], bounds: tuple[date | None, date | None]) 
     if end is not None and end != date.max:
         after = min(after, end + timedelta(days=1)) if after is not None else end + timedelta(days=1)
     if first is not None and after is not None and first >= after:
-        # A window with no dated activity at all is stated as asked.
-        first = start or first
+        # A window with no dated activity at all is stated as asked: a lone
+        # `--to-date` before the first entry is that day, not a reversed
+        # range from the period's own start (w1/248).
+        first = start or (end if end is not None and end != date.max else first)
         after = end + timedelta(days=1) if end is not None and end != date.max else first + timedelta(days=1)
     return metadata | {
         "period": {"start": first, "end_exclusive": after},

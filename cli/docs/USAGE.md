@@ -2061,7 +2061,8 @@ bea report register Assets:Checking --time 2026-01 --format csv --spreadsheet-sa
 
 Each report states its period, as-of date, account filter, and valuation.
 Invalid intervals, dates, reversed ranges, and malformed account filters exit
-**2**. `--account` takes a parent account (`Expenses:Food`) or a regular
+**2**, as does a `--from-date / --to-date` window that shares no day with the
+`--time` period. `--account` takes a parent account (`Expenses:Food`) or a regular
 expression (`'Expenses:(Food|Rent)'`). A value spelled as an account name,
 or a bare root (`Income`, or the ledger's renamed root), matches that account
 and its children only, counted from the start of the name. So `Expenses:Food`

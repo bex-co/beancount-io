@@ -54,8 +54,23 @@ def _report(tmp_path: Path, kind: str, *args: str, as_json: bool = True) -> obje
         (["--time", "2024-01-10 - 2024-01-31", "--to-date", "2024-01-20"], "2024-01-10", "2024-01-20"),
         # The calendar's last day bounds nothing and has no day after it (w5/1049).
         (["--to-date", "9999-12-31"], "2024-01-01", "2024-01-31"),
+        # A lone to-date before the first entry is that day, not a reversed range (w1/248).
+        (["--to-date", "2023-06-01"], "2023-06-01", "2023-06-01"),
+        (["--from-date", "2024-03-01"], "2024-03-01", "2024-03-01"),
+        # Sharing only the period's last day still overlaps it.
+        (["--time", "2024-01", "--from-date", "2024-01-31"], "2024-01-31", "2024-01-31"),
     ],
-    ids=["populated-day", "quiet-day", "from-only", "to-only", "time-intersection", "maximum-to"],
+    ids=[
+        "populated-day",
+        "quiet-day",
+        "from-only",
+        "to-only",
+        "time-intersection",
+        "maximum-to",
+        "to-before-ledger",
+        "from-after-ledger",
+        "time-last-day",
+    ],
 )
 def test_the_window_is_the_reported_period(tmp_path: Path, kind: str, args: list[str], first: str, last: str) -> None:
     data = _report(tmp_path, kind, *args)
@@ -72,3 +87,34 @@ def test_unbounded_gains_keep_the_whole_period(tmp_path: Path) -> None:
     assert data["period"]["start"] == "2024-01-01" and data["as_of"] == "2024-01-31"  # type: ignore[index]
     assert data["totals"]["one_year_or_less"] == {"USD": "30"}  # type: ignore[index]
     assert "bounds" not in data  # type: ignore[operator]
+
+
+@pytest.mark.parametrize("kind", ["capital-gains", "cash-flow"])
+@pytest.mark.parametrize(
+    ("args", "message"),
+    [
+        (
+            ["--time", "2025", "--to-date", "2024-06-01"],
+            "--to-date 2024-06-01 is before the --time period 2025-01-01 through 2025-12-31.",
+        ),
+        (
+            ["--time", "2023", "--from-date", "2024-01-15"],
+            "--from-date 2024-01-15 is after the --time period 2023-01-01 through 2023-12-31.",
+        ),
+        (
+            ["--time", "2024-01", "--from-date", "2024-02-01", "--to-date", "2024-02-10"],
+            "--from-date 2024-02-01 is after the --time period 2024-01-01 through 2024-01-31.",
+        ),
+    ],
+    ids=["to-before-time", "from-after-time", "window-after-time"],
+)
+def test_a_window_outside_time_is_refused(tmp_path: Path, kind: str, args: list[str], message: str) -> None:
+    """A window sharing no day with `--time` read as a reversed period, exit 0 (w1/248)."""
+    ledger = write_ledger(tmp_path, LEDGER)
+    before = ledger.read_bytes()
+    proc = bea(["--file", str(ledger), "report", kind, *args], tmp_path)
+
+    assert proc.returncode == 2, proc.stdout
+    assert message in proc.stderr
+    assert proc.stdout == ""
+    assert ledger.read_bytes() == before
