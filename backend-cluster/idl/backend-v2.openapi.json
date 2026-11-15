@@ -283,6 +283,50 @@
         ],
         "description": "Request body for logging in as a specific user"
       },
+      "PasswordResetLinkResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "resetUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Dashboard reset-password URL carrying a one-time token. Give it to the user; it sets a new password once.",
+            "example": "https://beancount.example.com/auth/reset-password/?token=abc123"
+          },
+          "expireAt": {
+            "type": "string",
+            "description": "When the link stops working (ISO 8601)",
+            "example": "2026-11-14T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "ok",
+          "resetUrl",
+          "expireAt"
+        ],
+        "description": "A one-time password-reset link for the user"
+      },
+      "PasswordResetLinkRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email of the user whose password is to be reset",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "Request body for issuing a one-time password-reset link"
+      },
       "UnblockUserResponse": {
         "type": "object",
         "properties": {
@@ -1163,6 +1207,37 @@
         }
       }
     },
+    "/api-gateway/healthz": {
+      "get": {
+        "summary": "Health check endpoint",
+        "description": "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea) and reads cached AI feature health. Returns 200 when infrastructure services are healthy, 500 when any is unhealthy. Use ?strict=true to also fail on unhealthy AI feature.",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "All services are healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "One or more services are unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/login-as": {
       "post": {
         "summary": "Generate a one-time login URL for a user by email",
@@ -1207,6 +1282,81 @@
           },
           "401": {
             "description": "Unauthorized - invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/password-reset-link": {
+      "post": {
+        "summary": "Issue a one-time password-reset link for a user by email",
+        "description": "Lets the operator of a deployment without a mail provider restore a user's access. The returned URL opens the dashboard's reset-password page; the user sets a new password there, which signs out every existing session. The link works once and expires after one hour.\n\nThe endpoint will return an error if:\n- The user with the provided email does not exist (404)\n- The request body is invalid (400)\n- The user is blocked (403)",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One-time reset link issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordResetLinkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The user is blocked",
             "content": {
               "application/json": {
                 "schema": {
@@ -1898,7 +2048,7 @@
     "/api-gateway/stripe/webhook": {
       "post": {
         "summary": "Handle Stripe webhook events",
-        "description": "Receives and processes webhook events from Stripe for payment and subscription management.\n\n**Important**: This endpoint expects raw request body for signature verification.\n\n**Event Processing**:\n- Verifies webhook signature using client-specific webhook secret\n- Verifies the live client before reading metadata; resolves subscription ownership from the customer binding\n- Processes customer, checkout and subscription lifecycle events\n- Returns 200 even for ignored events (missing metadata) to prevent retries\n\n**Billing client**:\nOnly the configured live billing client is supported; signed test events are ignored.\n\n**Security**:\n- Signature verification prevents unauthorized events\n- Retired-client metadata and test events are ignored\n- Subscription events refresh current Stripe state rather than replay stale cache values",
+        "description": "Receives and processes webhook events from Stripe for payment and subscription management.\n\n**Important**: This endpoint expects raw request body for signature verification.\n\n**Event Processing**:\n- Verifies webhook signature using client-specific webhook secret\n- Verifies the live client before reading metadata; resolves subscription ownership from the customer binding\n- Processes customer, checkout and subscription lifecycle events\n- On `checkout.session.expired`, sends a first-time customer at most one recovery email (ADR027)\n- Returns 200 even for ignored events (missing metadata) to prevent retries\n\n**Billing client**:\nOnly the configured live billing client is supported; signed test events are ignored.\n\n**Security**:\n- Signature verification prevents unauthorized events\n- Retired-client metadata and test events are ignored\n- Subscription events refresh current Stripe state rather than replay stale cache values",
         "tags": [
           "Stripe Webhooks"
         ],
