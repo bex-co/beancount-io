@@ -436,6 +436,45 @@ describe("appending Beancount text through the real adapters", () => {
     },
   );
 
+  // w31/018: a note or document inside the text's own `pushtag` was stored
+  // without the tag, though Beancount and the engine both give it one.
+  it.each(["rest", "gql", "mcp"] as const)(
+    "writes the text's pushed tag onto a note and a document via %s",
+    async (surface) => {
+      const text = [
+        "pushtag #trip",
+        '2026-02-10 note Assets:Cash "left a tip"',
+        '2026-02-11 document Assets:Cash "receipt.pdf"',
+        "poptag #trip",
+      ].join("\n");
+      const tagged = [
+        '2026-02-10 note Assets:Cash "left a tip" #trip',
+        '2026-02-11 document Assets:Cash "receipt.pdf" #trip',
+      ];
+      const f = await fixture();
+      try {
+        const dry = await f.call(surface, { text, dryRun: true });
+        expect(dry.ok).toBe(true);
+        const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+        const [{ diff }] = preview.diff as { path: string; diff: string }[];
+        for (const line of tagged) expect(diff).toContain(`+${line}\n`);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+        const result = await f.call(surface, { text });
+        expect(result.ok).toBe(true);
+        const data = result.ok ? (result.data as Record<string, never>) : {};
+        const written = f.state.files.get("main.bean")!;
+        expect(written).not.toMatch(/^(push|pop)tag/m);
+        const lines = written.split("\n");
+        expect(
+          (data.wrote as { line: number }[]).map(({ line }) => lines[line - 1]),
+        ).toEqual(tagged);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it.each(["rest", "gql", "mcp"] as const)(
     "refuses an unbalanced transaction with UNBALANCED via %s",
     async (surface) => {

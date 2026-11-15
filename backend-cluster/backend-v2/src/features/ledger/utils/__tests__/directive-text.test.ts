@@ -52,7 +52,7 @@ describe("parseDirectiveText", () => {
   // w23/041: the stack is positional, but each appended entry moves to its
   // date position, so the statements ended up apart from the entries they
   // annotated. They are applied to those entries instead.
-  it("writes a pushed tag onto each enclosed transaction and drops the statements", () => {
+  it("writes a pushed tag onto each enclosed transaction, note and document and drops the statements", () => {
     const parsed = parseDirectiveText(
       [
         "pushtag #trip",
@@ -60,6 +60,8 @@ describe("parseDirectiveText", () => {
         "  Assets:Cash  -3 USD",
         "  Expenses:Food",
         '2026-01-02 note Assets:Cash "left a tip"',
+        '2026-01-02 document Assets:Cash "receipt.pdf" ^case-1 ; scan',
+        "2026-01-02 balance Assets:Cash 0 USD",
         "poptag #trip",
         '2026-01-03 * "Home"',
         "  Assets:Cash  -1 USD",
@@ -69,14 +71,91 @@ describe("parseDirectiveText", () => {
     expect(parsed.map(({ date, kind }) => ({ date, kind }))).toEqual([
       { date: "2026-01-02", kind: "Transaction" },
       { date: "2026-01-02", kind: "Note" },
+      { date: "2026-01-02", kind: "Document" },
+      { date: "2026-01-02", kind: "Balance" },
       { date: "2026-01-03", kind: "Transaction" },
     ]);
     expect(parsed[0]!.text.split("\n")[0]).toBe(
       '2026-01-02 * "Cafe" #food #trip ; lunch',
     );
-    // Beancount tags only transactions from the stack.
-    expect(parsed[1]!.text).toBe('2026-01-02 note Assets:Cash "left a tip"');
-    expect(parsed[2]!.text).not.toContain("#trip");
+    // w31/018: Beancount, and the hosted engine, tag notes and documents from
+    // the stack too; the appended note and document had silently lost it.
+    expect(parsed[1]!.text).toBe(
+      '2026-01-02 note Assets:Cash "left a tip" #trip',
+    );
+    expect(parsed[2]!.text).toBe(
+      '2026-01-02 document Assets:Cash "receipt.pdf" ^case-1 #trip ; scan',
+    );
+    // No other directive carries a tag.
+    expect(parsed[3]!.text).toBe("2026-01-02 balance Assets:Cash 0 USD");
+    expect(parsed[4]!.text).not.toContain("#trip");
+  });
+
+  // w31/018: the header ends where its strings do.
+  it("writes the stack onto a header whose string runs onto an indented line", () => {
+    const [note] = parseDirectiveText(
+      [
+        "pushtag #trip",
+        'pushmeta where: "Lisbon"',
+        '2026-01-02 note Assets:Cash "first line',
+        '  second line" ; c',
+        "popmeta where:",
+        "poptag #trip",
+      ].join("\n"),
+    );
+    expect(note.text).toBe(
+      [
+        '2026-01-02 note Assets:Cash "first line',
+        '  second line" #trip ; c',
+        '  where: "Lisbon"',
+      ].join("\n"),
+    );
+  });
+
+  it("does not count a tag inside a string as one the entry writes", () => {
+    const parsed = parseDirectiveText(
+      [
+        "pushtag #trip",
+        '2026-01-02 * "Cafe" "dinner #trip day"',
+        "  Assets:Cash  -3 USD",
+        "  Expenses:Food",
+        '2026-01-02 note Assets:Cash "see #trip"',
+        "poptag #trip",
+      ].join("\n"),
+    );
+    expect(parsed[0]!.text.split("\n")[0]).toBe(
+      '2026-01-02 * "Cafe" "dinner #trip day" #trip',
+    );
+    expect(parsed[1]!.text).toBe(
+      '2026-01-02 note Assets:Cash "see #trip" #trip',
+    );
+  });
+
+  it("reads the entry's own tag lines, and stops its own keys at the first posting", () => {
+    const [entry] = parseDirectiveText(
+      [
+        "pushtag #trip",
+        'pushmeta where: "Lisbon"',
+        '2026-01-02 * "Cafe"',
+        "  #trip",
+        "  Assets:Cash  -3 USD",
+        '    where: "posting"',
+        "  Expenses:Food",
+        "popmeta where:",
+        "poptag #trip",
+      ].join("\n"),
+    );
+    // A posting's key is the posting's: the entry still takes the pushed one.
+    expect(entry.text).toBe(
+      [
+        '2026-01-02 * "Cafe"',
+        '  where: "Lisbon"',
+        "  #trip",
+        "  Assets:Cash  -3 USD",
+        '    where: "posting"',
+        "  Expenses:Food",
+      ].join("\n"),
+    );
   });
 
   it("writes pushed metadata onto each enclosed directive under its header", () => {

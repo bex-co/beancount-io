@@ -42,19 +42,33 @@ const UNDATED_KEYWORDS = new Set([
  */
 const CONFIGURATION_KEYWORDS = new Set(["option", "plugin", "include"]);
 
-/** Where a line's comment starts, outside any string; its length if none. */
-function commentStart(line: string): number {
-  let inString = false;
+/**
+ * One line read from `inString` on (`"` escapes with a backslash; `;` outside
+ * a string starts a comment): where its comment starts, or its length if it
+ * has none; its code with each string blanked out; and whether it ends inside
+ * a string.
+ */
+function scanLine(
+  line: string,
+  inString = false,
+): { comment: number; code: string; inString: boolean } {
+  let code = "";
   for (let i = 0; i < line.length; i += 1) {
     const char = line[i];
     if (inString) {
       if (char === "\\") i += 1;
       else if (char === '"') inString = false;
-    } else if (char === '"') inString = true;
-    else if (char === ";") return i;
+    } else if (char === '"') {
+      inString = true;
+      code += " ";
+    } else if (char === ";") return { comment: i, code, inString };
+    else code += char;
   }
-  return line.length;
+  return { comment: line.length, code, inString };
 }
+
+/** Where a line's comment starts, outside any string; its length if none. */
+const commentStart = (line: string): number => scanLine(line).comment;
 
 /** A `pushtag`/`poptag`/`pushmeta`/`popmeta` line, read. */
 type StackStatement =
@@ -92,12 +106,28 @@ function readStackStatement(line: string): StackStatement | string | null {
 }
 
 /**
+ * The directives Beancount gives the `pushtag` stack's tags: transactions,
+ * notes and documents (`_finalize_tags_links`; the ledger service restores
+ * the engine's for notes and documents, w21/655). No other directive can
+ * carry a tag.
+ */
+const STACK_TAGGED_KINDS: ReadonlySet<DirectiveKind> = new Set([
+  "Transaction",
+  "Note",
+  "Document",
+]);
+
+/** A `#tag` token, read from a line's code outside its strings. */
+const TAG_TOKEN = /#[^\s#^]+/g;
+
+/**
  * The `pushtag`/`pushmeta` stacks, expanded onto the entries between push and
  * pop (w23/041). The stack is positional in Beancount, and every appended
  * entry is moved to its date position, so the statements themselves would
  * end up apart from the entries they annotate: the tag silently dropped, or a
- * dangling `pushtag` breaking the file. Tags go on transactions, the only
- * directive Beancount tags from the stack; metadata goes on every directive.
+ * dangling `pushtag` breaking the file. Tags go on the directives Beancount
+ * tags from the stack ({@link STACK_TAGGED_KINDS}); metadata goes on every
+ * directive, as the engine reads `pushmeta`.
  */
 class TagStack {
   private readonly tags: { tag: string; line: number }[] = [];
@@ -143,31 +173,62 @@ class TagStack {
     );
   }
 
-  /** The directive's lines with the active tags and metadata written onto it. */
+  /**
+   * The directive's lines with the active tags and metadata written onto it,
+   * as the engine reads the same entry inside the scope (w31/018). Tags go
+   * after the header's last token and before its comment: on the line its
+   * strings close on, since a narration or a note's comment can run onto an
+   * indented line. Each key goes on its own line under the header. A tag the
+   * entry writes itself, outside its strings, and a key it sets above its
+   * first posting are not written again.
+   */
   annotate(lines: string[], head: number, kind: DirectiveKind): string[] {
-    const header = lines[head];
-    const cut = commentStart(header);
-    const before = header.slice(0, cut).trimEnd();
-    const present = new Set(before.match(/#[^\s#^]+/g) ?? []);
-    const added =
-      kind === "Transaction"
-        ? [...new Set(this.tags.map((entry) => `#${entry.tag}`))].filter(
-            (tag) => !present.has(tag),
-          )
-        : [];
-    const comment = header.slice(cut);
+    const own = new Set<string>();
+    const readTags = (code: string) => {
+      for (const tag of code.match(TAG_TOKEN) ?? []) own.add(tag);
+    };
+    let end = head;
+    let scan = scanLine(lines[head]);
+    readTags(scan.code);
+    while (scan.inString && end + 1 < lines.length) {
+      end += 1;
+      scan = scanLine(lines[end], true);
+      readTags(scan.code);
+    }
+    // A string that never closes is the text's own error; bean-check names it.
+    if (scan.inString) return lines;
+
+    // The entry's own metadata and tag lines run until its first posting.
+    const keys = new Set<string>();
+    let inside = false;
+    for (const line of lines.slice(end + 1)) {
+      const continued = inside;
+      const read = scanLine(line, inside);
+      inside = read.inString;
+      if (continued) continue;
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith(";")) continue;
+      const key = /^\s+([a-z][A-Za-z0-9_-]+):/.exec(line)?.[1];
+      if (key) keys.add(key);
+      else if (/^[#^]/.test(trimmed)) readTags(read.code);
+      else break;
+    }
+
+    const added = STACK_TAGGED_KINDS.has(kind)
+      ? [...new Set(this.tags.map((entry) => `#${entry.tag}`))].filter(
+          (tag) => !own.has(tag),
+        )
+      : [];
+    const header = lines[end];
+    const before = header.slice(0, scan.comment).trimEnd();
+    const comment = header.slice(scan.comment);
     const annotated = [
       [before, ...added].join(" ") + (comment ? ` ${comment}` : ""),
     ];
-    const keys = new Set(
-      lines
-        .slice(head + 1)
-        .map((line) => /^\s+([a-z][A-Za-z0-9_-]+):/.exec(line)?.[1]),
-    );
     for (const [key, { value }] of this.meta) {
       if (!keys.has(key)) annotated.push(`  ${key}: ${value}`);
     }
-    return [...lines.slice(0, head), ...annotated, ...lines.slice(head + 1)];
+    return [...lines.slice(0, end), ...annotated, ...lines.slice(end + 1)];
   }
 }
 
@@ -231,24 +292,9 @@ function directiveHead(
   return null;
 }
 
-/** Whether `lines` end inside a quoted string (`"` escapes with a backslash; `;` outside one starts a comment). */
-function endsInsideString(lines: readonly string[]): boolean {
-  let inside = false;
-  for (const line of lines) {
-    for (let i = 0; i < line.length; i += 1) {
-      const ch = line[i];
-      if (inside) {
-        if (ch === "\\") i += 1;
-        else if (ch === '"') inside = false;
-      } else if (ch === '"') {
-        inside = true;
-      } else if (ch === ";") {
-        break;
-      }
-    }
-  }
-  return inside;
-}
+/** Whether `lines` end inside a quoted string. */
+const endsInsideString = (lines: readonly string[]): boolean =>
+  lines.reduce((inside, line) => scanLine(line, inside).inString, false);
 
 /**
  * Two things stock Beancount reads that this tool's line classifier does not
