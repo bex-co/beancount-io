@@ -1,4 +1,7 @@
+import { posix } from "node:path";
 import { runIdempotentEntryWrite } from "@/features/ledger/utils/entry-write-idempotency";
+import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
+import { parseDirectiveDate } from "@/features/ledger/utils/directive-date";
 import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
 import { parseLedgerId } from "@/shared/str";
 import { nanoidBase58 } from "@/shared/nanoid-base58";
@@ -96,6 +99,18 @@ function buildReceiptPath(
 ): string {
   const slug = slugify(payee) || "receipt";
   return `${baseFolder}/${date}-${slug}-${id}${ext}`;
+}
+
+/**
+ * `repoPath` as a `document` directive in `declaringFile` must spell it:
+ * Beancount resolves a relative document path against the directory of the
+ * file that declares it, not the repository root, so a receipt routed to
+ * `books/docs.bean` names `../documents/…` (w31/019). Both paths are rooted
+ * at `/` first so the result never depends on the process's working
+ * directory.
+ */
+function documentPathFrom(declaringFile: string, repoPath: string): string {
+  return posix.relative(posix.dirname(`/${declaringFile}`), `/${repoPath}`);
 }
 
 /** The receipt's transaction, linked or annotated the way its storage needs. */
@@ -212,7 +227,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     receiptObjectKey: string;
     input: InsertReceiptInput;
     identity: Identity;
-    bcioData: BcioOptionsPublic | undefined;
+    bcioData: BcioOptionsPublic;
     favaApiClient: FavaApiClient;
   }): Promise<InsertReceiptResult> {
     const {
@@ -243,13 +258,20 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     );
 
     const ext = extractExt(receiptObjectKey);
-    const receiptBaseFolder = bcioData?.receipt_base_folder ?? "documents";
+    const receiptBaseFolder = bcioData.receipt_base_folder ?? "documents";
     const receiptPath = buildReceiptPath(
       input.date,
       input.payee,
       ext,
       linkId,
       receiptBaseFolder,
+    );
+    // The directive lands where the bulk write routes a document; its path
+    // must resolve from there. The date passed the check above.
+    const documentFile = resolveEntryFile(
+      "Document",
+      parseDirectiveDate(input.date),
+      bcioData,
     );
 
     const { downloadUrl } =
@@ -302,7 +324,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
             entry: {
               date: input.date,
               account: input.documentAccount,
-              filename: receiptPath,
+              filename: documentPathFrom(documentFile, receiptPath),
               links: [linkTag],
             },
           },

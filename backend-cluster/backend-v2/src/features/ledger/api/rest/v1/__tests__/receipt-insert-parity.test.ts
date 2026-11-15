@@ -112,7 +112,11 @@ async function fixture(
       },
     }),
     getPublicApiClient: async () => ({
-      reports: { getLedgerBcioOptions: async () => envelope(state.bcio) },
+      // The ledger always answers a default_file (main.bean unless set).
+      reports: {
+        getLedgerBcioOptions: async () =>
+          envelope({ default_file: "main.bean", ...state.bcio }),
+      },
       ledgers: { createLedgerFile: createFile, deleteLedgerFile: deleteFile },
     }),
   };
@@ -336,6 +340,58 @@ it("stores the receipt in git with a linked document when configured", async () 
     await f.close();
   }
 });
+
+// w31/019: the document directive is routed to document_file (else
+// default_file), and Beancount resolves its path from that file's directory.
+// A repo-root path written into a subdirectory file named a missing file, so
+// every insert was refused. The stored path stays repo-root-relative.
+it.each<[Record<string, string>, string]>([
+  [{ document_file: "books/docs.bean" }, "../documents/"],
+  [{ document_file: "books/{year}/docs.bean" }, "../../documents/"],
+  [{ default_file: "ledger/main.bean" }, "../documents/"],
+  [{ document_file: "docs.bean" }, "documents/"],
+  [
+    { document_file: "receipts/docs.bean", receipt_base_folder: "receipts" },
+    "",
+  ],
+])(
+  "writes the document path from the file it is routed to (%j)",
+  async (routing, prefix) => {
+    const f = await fixture();
+    f.state.bcio = { receipt_storage: "git", ...routing };
+    try {
+      expect((await f.rest()).status).toBe(200);
+      expect((await f.gql()).errors).toBeUndefined();
+      expect((await f.mcp()).isError).not.toBe(true);
+      const writes = f.write.mock.calls.filter(
+        (call) => (call as unknown[])[6] !== true,
+      );
+      expect(writes).toHaveLength(3);
+      for (let call = 0; call < 3; call += 1) {
+        const [, , stored] = f.createFile.mock.calls[call] as unknown as [
+          string,
+          string,
+          { path: string; message: string },
+        ];
+        const folder = routing.receipt_base_folder ?? "documents";
+        expect(stored.path).toMatch(
+          new RegExp(`^${folder}/2026-09-01-caf-fixture-[^./]+\\.pdf$`),
+        );
+        expect(stored.message).toBe(`docs: add receipt ${stored.path}`);
+        const [document] = (writes[call] as unknown[])[3] as {
+          type: string;
+          entry: { filename: string };
+        }[];
+        expect(document.type).toBe("document");
+        expect(document.entry.filename).toBe(
+          prefix + stored.path.slice(folder.length + 1),
+        );
+      }
+    } finally {
+      await f.close();
+    }
+  },
+);
 
 // w23/083: the result named neither the file nor the hash, so an agent had
 // to list-and-guess its own entry. The bulk write already resolves both;

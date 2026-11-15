@@ -12,9 +12,12 @@ jest.mock("@/shared/fetch-asset-base64", () => ({
   fetchAssetAsBase64: jest.fn().mockResolvedValue("base64data"),
 }));
 
-/** Minimal bcio options stub with only the receipt routing field set. */
+/** Minimal bcio options stub: the receipt storage and the ledger's default file. */
 const bcio = (receipt_storage: string | null): BcioOptionsPublic =>
-  ({ receipt_storage }) as unknown as BcioOptionsPublic;
+  ({
+    receipt_storage,
+    default_file: "main.bean",
+  }) as unknown as BcioOptionsPublic;
 
 /** A browser session: full trust, pinned to nothing. */
 const sessionIdentity: Identity = {

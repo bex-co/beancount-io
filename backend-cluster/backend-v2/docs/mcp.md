@@ -2212,7 +2212,12 @@ once (see [Retry-safe entry writes](#retry-safe-entry-writes-requestid)).
 The ledger's `receipt_storage` beancountio-option decides the strategy: S3
 storage promotes the object and writes one transaction with a receipt URL in
 its metadata; git storage commits the receipt bytes into the repository and
-writes a link-tagged document plus transaction pair. Requires write capability
+writes a link-tagged document plus transaction pair. The receipt is stored at
+`<receipt_base_folder>/<date>-<payee>-<id><ext>` (`documents/` by default). The
+document directive is routed like any other (`document_file`, else
+`default_file`) and names the receipt relative to that file's directory, the
+way Beancount resolves it, so a document routed to `books/docs.bean` reads
+`../documents/…`. Requires write capability
 with current content and asset write access; unowned temporary keys are
 concealed as not found. The result is `{success}`. No preview; a failed entry
 write keeps the temporary upload for retry.
