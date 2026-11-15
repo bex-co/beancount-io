@@ -290,8 +290,9 @@ def answer_preset(
         f'option "title" "{saved_title}"',
         f'option "operating_currency" "{currency}"',
         'option "inferred_tolerance_default" "*:0.001"',
-        "",
-        'plugin "beancount.plugins.auto_accounts"',
+        # No auto_accounts plugin: the preset opens its whole chart, and the
+        # plugin silently opened a misspelt account instead of refusing it,
+        # unlike the hosted builder's header (w1/247, w23/059).
         "",
     ]
     opened = sorted(accounts)

@@ -93,3 +93,47 @@ def test_init_without_preset_keeps_the_fixed_chart(tmp_path: Path) -> None:
     result = _bea(tmp_path, "--json", "init", str(books), "--currency", "USD", "--date", "2026-08-01")
     assert result.returncode == 0, result.stderr or result.stdout
     assert "Assets:Checking" in json.loads(result.stdout)["data"]["accounts"]
+
+
+def test_preset_ledger_refuses_a_misspelt_account(tmp_path: Path) -> None:
+    """A preset header loads no `auto_accounts` plugin, so a typo is refused (w1/247).
+
+    The plugin opened `Assets:Csah` on first use instead of refusing it, unlike
+    the hosted builder's header (w23/059) and plain `bea init`.
+    """
+    books = tmp_path / "books"
+    made = _bea(
+        tmp_path,
+        "--no-input",
+        "init",
+        str(books),
+        "--preset",
+        "personal@1",
+        "--currency",
+        "USD",
+        "--date",
+        "2026-01-01",
+    )
+    assert made.returncode == 0, made.stderr or made.stdout
+    main = books / "main.bean"
+    before = main.read_bytes()
+    assert b"plugin" not in before
+
+    typo = _bea(
+        tmp_path,
+        "--no-input",
+        "--file",
+        str(main),
+        "add",
+        "transaction",
+        "typo",
+        "--date",
+        "2026-01-05",
+        "-p",
+        "Expenses:Fodo 3 USD",
+        "-p",
+        "Assets:Csah",
+    )
+    assert typo.returncode == 1, typo.stdout + typo.stderr
+    assert "Assets:Csah" in typo.stdout + typo.stderr
+    assert main.read_bytes() == before
