@@ -38,13 +38,6 @@ jest.mock("../jobs/jwt-cleanup-job", () => ({
   })),
 }));
 
-jest.mock("../jobs/dev-test-job", () => ({
-  createDevTestJob: jest.fn((_service, _config) => ({
-    schedule: "*/5 * * * *",
-    task: jest.fn(),
-  })),
-}));
-
 jest.mock("../jobs/plaid-sync-job", () => ({
   createPlaidSyncJob: jest.fn((_service, _config) => ({
     schedule: "0 */6 * * *",
@@ -76,7 +69,6 @@ jest.mock("../jobs/oauth-adapter-cleanup-job", () => ({
 import cron from "node-cron";
 import { logger } from "@/shared/logger";
 import { createJwtCleanupJob } from "../jobs/jwt-cleanup-job";
-import { createDevTestJob } from "../jobs/dev-test-job";
 import { createPlaidSyncJob } from "../jobs/plaid-sync-job";
 import { createPlaidWebhookProcessorJob } from "../jobs/plaid-webhook-processor-job";
 import { createPlaidWebhookCleanupJob } from "../jobs/plaid-webhook-cleanup-job";
@@ -122,10 +114,10 @@ describe("JobScheduler", () => {
       scheduler = new JobScheduler(mockLayers, mockConfig);
       scheduler.start();
 
-      // Should schedule enabled jobs: auth-mail + llm-probe + dev-test + audit-retention +
+      // Should schedule enabled jobs: auth-mail + llm-probe + audit-retention +
       // jwt-cleanup + oauth-adapter-cleanup + plaid-webhook-processor +
       // plaid-webhook-cleanup (plaid-sync is disabled)
-      expect(cron.schedule).toHaveBeenCalledTimes(8);
+      expect(cron.schedule).toHaveBeenCalledTimes(7);
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Started job:"),
       );
@@ -141,11 +133,8 @@ describe("JobScheduler", () => {
 
       // Should schedule auth-mail + llm-probe + audit-retention + jwt-cleanup +
       // oauth-adapter-cleanup + plaid-webhook-processor + plaid-webhook-cleanup
-      // (dev-test disabled in production, plaid-sync always disabled)
+      // (plaid-sync always disabled)
       expect(cron.schedule).toHaveBeenCalledTimes(7);
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Skipping disabled job: dev-test"),
-      );
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Skipping disabled job: plaid-sync"),
       );
@@ -157,7 +146,6 @@ describe("JobScheduler", () => {
 
       // All job factories should be called with service and config
       expect(createJwtCleanupJob).toHaveBeenCalledWith(mockLayers, mockConfig);
-      expect(createDevTestJob).toHaveBeenCalledWith(mockLayers, mockConfig);
       expect(createPlaidSyncJob).toHaveBeenCalledWith(mockLayers, mockConfig);
       expect(createPlaidWebhookProcessorJob).toHaveBeenCalledWith(
         mockLayers,
@@ -172,10 +160,10 @@ describe("JobScheduler", () => {
         mockConfig,
       );
       expect(createAuthMailJob).toHaveBeenCalledWith(mockLayers, mockConfig);
-      // 8 jobs scheduled in dev (auth-mail + llm-probe + dev-test + audit-retention +
+      // 7 jobs scheduled in dev (auth-mail + llm-probe + audit-retention +
       // jwt-cleanup + oauth-adapter-cleanup + plaid-webhook-processor +
       // plaid-webhook-cleanup), plaid-sync is disabled
-      expect(cron.schedule).toHaveBeenCalledTimes(8);
+      expect(cron.schedule).toHaveBeenCalledTimes(7);
     });
 
     it.each(["development", "production"] as const)(
@@ -225,8 +213,8 @@ describe("JobScheduler", () => {
     it("should catch and log job errors without crashing", async () => {
       // Mock job task that throws an error BEFORE starting scheduler
       const mockJobTask = jest.fn().mockRejectedValue(new Error("Job failed"));
-      (createDevTestJob as jest.Mock).mockReturnValue({
-        schedule: "*/5 * * * *",
+      (createPlaidWebhookProcessorJob as jest.Mock).mockReturnValue({
+        schedule: "*/2 * * * *",
         task: mockJobTask,
       });
 
@@ -235,7 +223,7 @@ describe("JobScheduler", () => {
 
       // Get the task wrapper function that was passed to cron.schedule
       const scheduleCall = (cron.schedule as jest.Mock).mock.calls.find(
-        (call: unknown[]) => call[0] === "*/5 * * * *",
+        (call: unknown[]) => call[0] === "*/2 * * * *",
       );
       const taskWrapper = scheduleCall[1];
 

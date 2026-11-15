@@ -5,7 +5,6 @@ import { logger } from "@/shared/logger";
 import { createJwtCleanupJob } from "./jobs/jwt-cleanup-job";
 import { createAuditRetentionJob } from "./jobs/audit-retention-job";
 import { createOauthAdapterCleanupJob } from "./jobs/oauth-adapter-cleanup-job";
-import { createDevTestJob } from "./jobs/dev-test-job";
 import { createPlaidSyncJob } from "./jobs/plaid-sync-job";
 import { createPlaidWebhookProcessorJob } from "./jobs/plaid-webhook-processor-job";
 import { createPlaidWebhookCleanupJob } from "./jobs/plaid-webhook-cleanup-job";
@@ -60,7 +59,6 @@ export class JobScheduler {
   }
 
   private getJobConfigs(): ScheduledJob[] {
-    const devTest = createDevTestJob(this.layers, this.config);
     const jwtCleanup = createJwtCleanupJob(this.layers, this.config);
     const auditRetention = createAuditRetentionJob(this.layers, this.config);
     const oauthAdapterCleanup = createOauthAdapterCleanupJob(
@@ -84,12 +82,6 @@ export class JobScheduler {
         schedule: authMail.schedule,
         task: authMail.task,
         enabled: true,
-      },
-      {
-        name: "dev-test",
-        schedule: devTest.schedule,
-        task: devTest.task,
-        enabled: this.config.env !== "production", // Dev/test only
       },
       {
         name: "audit-retention",

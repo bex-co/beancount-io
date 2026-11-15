@@ -5,7 +5,6 @@ Background job scheduling using node-cron. Jobs run in the main Node.js process 
 ## Current Jobs
 
 - **JWT Cleanup** (`jwt-cleanup-job.ts`) - Daily at midnight, deletes expired JWT tokens (PostgreSQL)
-- **Dev Test** (`dev-test-job.ts`) - Every 5 minutes in non-production, verifies scheduler functionality
 
 ## Architecture
 
