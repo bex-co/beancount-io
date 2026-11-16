@@ -1,6 +1,11 @@
 import { logger } from "@/shared/logger";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
+import { PlaidWebhookEventPostgresModel } from "../data/plaid-webhook-event-model";
+import type {
+  CreatePlaidWebhookEventInput,
+  PlaidWebhookEvent,
+} from "../data/plaid-webhook-event-model";
 import type { PlaidWebhookRequest } from "../api/rest/plaid-webhook-schemas";
 import type { IPlaidSyncService } from "./plaid-sync-service";
 import {
@@ -41,8 +46,9 @@ function readStringField(
   return typeof value === "string" && value ? value : undefined;
 }
 
-interface IPlaidWebhookService {
+export interface IPlaidWebhookService {
   handleEvent(event: PlaidWebhookRequest): Promise<void>;
+  recordEvent(input: CreatePlaidWebhookEventInput): Promise<PlaidWebhookEvent | null>;
 }
 
 export class PlaidWebhookService implements IPlaidWebhookService {
@@ -53,6 +59,39 @@ export class PlaidWebhookService implements IPlaidWebhookService {
     private readonly favaClientFactory: IFavaClientFactory,
     private readonly authorization: IAuthorizationService,
   ) {}
+
+  /**
+   * Store a verified webhook payload for asynchronous processing. Retries the
+   * insert once; a store that keeps failing is logged and reported as lost
+   * (null) so the receiver can still answer 200 — Plaid retries its own
+   * deliveries.
+   */
+  async recordEvent(
+    input: CreatePlaidWebhookEventInput,
+  ): Promise<PlaidWebhookEvent | null> {
+    const eventModel = new PlaidWebhookEventPostgresModel();
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        const event = await eventModel.create(this.db, input);
+        webhookLogger.debug("Webhook received and queued", {
+          eventId: event.id,
+          webhookType: input.webhookType,
+          webhookCode: input.webhookCode,
+          itemId: input.itemId,
+        });
+        return event;
+      } catch (err) {
+        webhookLogger.error("Webhook storage failed", {
+          error: err,
+          attempt,
+          webhookType: input.webhookType,
+          webhookCode: input.webhookCode,
+          itemId: input.itemId,
+        });
+      }
+    }
+    return null;
+  }
 
   private async authorizeItemWebhook(item: PlaidItem): Promise<void> {
     let ledgerId: string;

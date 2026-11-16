@@ -2,6 +2,13 @@ import { PlaidWebhookService } from "../plaid-webhook-service";
 import type { IPlaidSyncService } from "../plaid-sync-service";
 import { ForbiddenError } from "@/shared/errors";
 
+const mockWebhookEventCreate = jest.fn();
+jest.mock("@/features/plaid/data/plaid-webhook-event-model", () => ({
+  PlaidWebhookEventPostgresModel: jest.fn().mockImplementation(() => ({
+    create: mockWebhookEventCreate,
+  })),
+}));
+
 jest.mock("@/shared/logger", () => ({
   logger: {
     child: jest.fn().mockReturnValue({
@@ -369,6 +376,42 @@ describe("PlaidWebhookService", () => {
       expect(
         mockSyncService.syncItemTransactionsInBackground,
       ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("recordEvent", () => {
+    const input = {
+      webhookType: "TRANSACTIONS",
+      webhookCode: "SYNC_UPDATES_AVAILABLE",
+      itemId: "plaid-item-ext-id",
+      rawBody: "{}",
+    };
+
+    it("stores the event and returns it", async () => {
+      mockWebhookEventCreate.mockResolvedValue({ id: "pwe_1" });
+
+      await expect(webhookService.recordEvent(input)).resolves.toEqual({
+        id: "pwe_1",
+      });
+      expect(mockWebhookEventCreate).toHaveBeenCalledWith(mockDb, input);
+    });
+
+    it("retries once when the first insert fails", async () => {
+      mockWebhookEventCreate
+        .mockRejectedValueOnce(new Error("connection reset"))
+        .mockResolvedValueOnce({ id: "pwe_2" });
+
+      await expect(webhookService.recordEvent(input)).resolves.toEqual({
+        id: "pwe_2",
+      });
+      expect(mockWebhookEventCreate).toHaveBeenCalledTimes(2);
+    });
+
+    it("returns null when both attempts fail", async () => {
+      mockWebhookEventCreate.mockRejectedValue(new Error("down"));
+
+      await expect(webhookService.recordEvent(input)).resolves.toBeNull();
+      expect(mockWebhookEventCreate).toHaveBeenCalledTimes(2);
     });
   });
 });
