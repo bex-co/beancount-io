@@ -50,10 +50,13 @@ describe("route param guards", () => {
     const direct = [...walk("src"), ...walk("app")].filter((file) =>
       read(file).includes("useLocalSearchParams"),
     );
-    // The hook itself, and the OAuth callback, which reads every value as
-    // `string | string[]` already.
+    // The hook itself, and the OAuth callback screen, which reads every
+    // value as `string | string[]` already.
     expect(direct.sort()).toEqual(
-      ["app/oauth/callback.tsx", "src/common/hooks/use-route-params.ts"].sort(),
+      [
+        "src/screens/oauth-callback-screen/oauth-callback-screen.tsx",
+        "src/common/hooks/use-route-params.ts",
+      ].sort(),
     );
   });
 });
