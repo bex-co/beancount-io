@@ -42,7 +42,7 @@ Then the worker runs t005 and closes t009. **Who can clear it:** the operator (d
 - After the commit, the ledger's error list and every account balance are identical to before, the entries' text is byte-identical in the target, and `main.bean` includes the new file once.
 - A target that no loaded file includes, with no `includeFrom`, is refused naming the fix, and nothing is written. A stale `sha256sum` for any listed entry refuses the whole move.
 - REST, GraphQL and MCP accept the same inputs and return the same results and failures; the parity gate and `yarn test` pass in `backend-cluster/backend-v2`.
-- t005 records a move and its `revertCommit` undo on the hosted endpoint, with the deployed revision.
+- t005 records a move and its `revertCommit` undo on the hosted endpoint, with the date.
 
 ## Source + Goal linkage
 

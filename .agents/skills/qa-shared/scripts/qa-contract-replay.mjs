@@ -392,7 +392,7 @@ async function main() {
   console.log(`\n${results.length} probes, ${bad.length} mismatch(es)`);
   if (bad.length > 0)
     console.log(
-      "A mismatch on a rule newer than the deployment is a deploy lag, not a regression: compare the fingerprint and the server's deployed revision with the commit that introduced the rule.",
+      "A mismatch on a rule newer than the deployment is a deploy lag, not a regression: compare the fingerprint with the commit that introduced the rule and with when production was last deployed.",
     );
   process.exit(bad.length === 0 ? 0 : 1);
 }

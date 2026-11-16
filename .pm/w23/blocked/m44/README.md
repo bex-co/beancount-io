@@ -6,7 +6,7 @@
 
 | id | title | est | depends_on |
 | -- | ----- | --- | ---------- |
-| t001 | Verify the text-block fix on claude.ai against the deployed revision | 30m | — |
+| t001 | Verify the text-block fix on claude.ai | 30m | — |
 | t002 | Check text against structuredContent in the MCP QA helper and contract replay | 45m | — |
 | t003 | Page listStagedBankTransactions on every surface — **DONE** | 60m | — |
 | t004 | Put a resource's page signal where a text-only reader sees it — **DONE** | 45m | — |
@@ -29,7 +29,7 @@
 
 ## Definition of done
 
-- On claude.ai, against a recorded deployed revision, an agent reads the rows of `getLedgerContext`, `listLedgerFiles` and `listStagedBankTransactions` (or a synthetic ledger's equivalent with a payload over 400 characters) from the text block alone.
+- On claude.ai, an agent reads the rows of `getLedgerContext`, `listLedgerFiles` and `listStagedBankTransactions` (or a synthetic ledger's equivalent with a payload over 400 characters) from the text block alone.
 - `qa-contract-replay.mjs` fails when any replayed tool's text block carries less than its `structuredContent`.
 - `listStagedBankTransactions` returns a bounded page with a `page` signal to an agent following its description, on MCP, REST and GraphQL alike, while the dashboard's Bank Sync page still lists every staged row.
 - A paginated resource whose body is a bare array says whether more remains in content a text-only reader receives.

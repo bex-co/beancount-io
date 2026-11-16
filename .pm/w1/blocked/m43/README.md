@@ -27,7 +27,7 @@ Production verification (t006) runs after Test coverage so it checks the revisio
 - **Deploy half: cleared.** Production now serves `renameAccount`. [w23/242](../../../w23/242.md) records `tools/list` at 46 tools after that deploy, and a `renameAccount` preview-and-commit round trip on the disposable QA ledger that an inverse rename restored byte for byte.
 - **Undo half: not cleared.** `revertCommit` still answers `INTERNAL_SERVER_ERROR` on MCP and REST for both commits that round trip made.
 
-**Remaining unblock:** w23/242 fixed and deployed. Then the worker runs t006 (preview, commit and `revertCommit` undo, with the deployed revision) and closes t010. **Who can clear it:** whoever fixes and deploys w23/242.
+**Remaining unblock:** w23/242 fixed and deployed. Then the worker runs t006 (preview, commit and `revertCommit` undo) and closes t010. **Who can clear it:** whoever fixes and deploys w23/242.
 
 ## Definition of done
 
@@ -36,7 +36,7 @@ Production verification (t006) runs after Test coverage so it checks the revisio
 - Prefix neighbours are untouched (renaming `Assets:Check` leaves `Assets:Checking` alone). A target that is already open, an invalid account name, or a stale ledger HEAD is refused with the documented code and nothing is written. A read-only credential is `FORBIDDEN`.
 - Plaid account mappings that named the old account, or an account under it, name the new one after the commit, and the preview lists them.
 - The operation is in the op-class registry and the surface-parity gate, the v1 OpenAPI snapshot and the CLI's pinned spec are regenerated, and `yarn test` passes in `backend-cluster/backend-v2`.
-- t006 records a preview, a commit and a `revertCommit` undo of that commit on the hosted endpoint, with the deployed revision it observed.
+- t006 records a preview, a commit and a `revertCommit` undo of that commit on the hosted endpoint, with its date.
 
 ## Source + Goal linkage
 

@@ -17,7 +17,7 @@
 
 ## Definition of done
 
-- Claude (claude.ai), Claude Code, ChatGPT developer mode, Cursor, and VS Code Copilot each completed a real sign-in, one read, and one `dry_run` write on the hosted endpoint, recorded with date and deployed revision.
+- Claude (claude.ai), Claude Code, ChatGPT developer mode, Cursor, and VS Code Copilot each completed a real sign-in, one read, and one `dry_run` write on the hosted endpoint, recorded with date.
 - The VS Code run succeeded from a loopback port other than 33418.
 - Muse is recorded as unverifiable with the reason; every gap found is a w1 inbox note.
 - `docs/mcp.md` shows per-host status matching the recorded runs.
