@@ -165,3 +165,39 @@ def test_capital_gains_one_year_is_a_calendar_year(tmp_path: Path) -> None:
     header = csv.stdout.splitlines()[0].split(",")
     terms = [line.split(",")[header.index("term")] for line in rows]
     assert terms == ["short", "short", "short", "long"]
+
+
+SHORT_HOLDS = """\
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Assets:Broker AAPL "FIFO"
+2026-01-01 open Income:Gains USD
+2026-01-02 * "Buy"
+  Assets:Broker   2 AAPL {100 USD}
+  Assets:Cash  -200 USD
+2026-01-02 * "Sell same day"
+  Assets:Broker  -1 AAPL {} @ 110 USD
+  Assets:Cash   110 USD
+  Income:Gains
+2026-01-03 * "Sell next day"
+  Assets:Broker  -1 AAPL {} @ 120 USD
+  Assets:Cash   120 USD
+  Income:Gains
+"""
+
+
+def test_capital_gains_one_day_hold_is_singular(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, SHORT_HOLDS)
+    text = _bea(tmp_path, "--file", str(ledger), "report", "capital-gains")
+    assert text.returncode == 0, text.stderr
+    assert "0 days (short)" in text.stdout
+    assert "1 day (short)" in text.stdout
+    assert "1 days" not in text.stdout
+
+    data = json.loads(_bea(tmp_path, "--file", str(ledger), "--json", "report", "capital-gains").stdout)["data"]
+    assert [row["held_days"] for row in data["rows"]] == [0, 1]
+
+    csv = _bea(tmp_path, "--file", str(ledger), "report", "capital-gains", "--format", "csv")
+    assert csv.returncode == 0, csv.stderr
+    header = csv.stdout.splitlines()[0].split(",")
+    rows = [line.split(",") for line in csv.stdout.splitlines()[1:] if line]
+    assert [(r[header.index("held_days")], r[header.index("term")]) for r in rows] == [("0", "short"), ("1", "short")]

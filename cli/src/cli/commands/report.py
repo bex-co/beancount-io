@@ -779,7 +779,8 @@ def _held(row: dict[str, Any]) -> str:
     """Holding period as days with its one-year bucket; unknown when undated."""
     if row["held_days"] is None:
         return "unknown"
-    return f"{row['held_days']} days ({'long' if row['long_held'] else 'short'})"
+    unit = "day" if row["held_days"] == 1 else "days"
+    return f"{row['held_days']} {unit} ({'long' if row['long_held'] else 'short'})"
 
 
 @report_app.command("cash-flow", cls=SingleValueCommand)
