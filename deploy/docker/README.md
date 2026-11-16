@@ -147,7 +147,21 @@ come from".) With `SELF_HOST=true` and the SSH overlay below off, ledger
 responses carry `sshUrl: null`, and `bea cloud ledger clone` says this
 deployment serves no Git over SSH instead of trying.
 
-Git over HTTPS works by default. To publish SSH, backend-v2 must terminate the
+Git over HTTPS works by default. Users clone `https://<GIT_DOMAIN>/git/<owner>/<ledger>.git`
+with any username and a personal access token as the password, minted in the
+dashboard under Settings → API keys (`/settings/api-keys`); every user of a
+self-hosted stack can mint one. The account password is still accepted for
+now, with a `remote:` hint to switch, because backend-v2's
+`gitHttp.passwordAuth` ships as `warn`. It is a code setting in
+`backend-cluster/backend-v2/src/config/config.ts` (`allow`, `warn`, or `deny`),
+not an environment variable: to refuse passwords, change it to `deny` and
+rebuild the image. A user whose Git client keeps sending an old password
+clears it with
+`printf 'protocol=https\nhost=<GIT_DOMAIN>\n\n' | git credential reject`, the
+host's Keychain item on macOS, or its line in `~/.git-credentials`. See
+`backend-cluster/backend-v2/docs/authentication-rate-limits.md`.
+
+To publish SSH, backend-v2 must terminate the
 connection so its write policy applies. It must present Gitea's existing private
 host key; substituting a new key triggers the same client warning as a
 man-in-the-middle attack.

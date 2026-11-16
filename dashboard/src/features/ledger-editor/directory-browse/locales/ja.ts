@@ -32,6 +32,17 @@ const jaDirectoryBrowse: Record<
     message: "HTTPクローンURLをコピー",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message:
+      "ユーザー名：任意。パスワード：アカウントのパスワードではなく、個人アクセストークン。",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "個人アクセストークンを作成",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "SSHクローンURLをコピー",
     description: "Accessible name for copying the SSH clone URL",

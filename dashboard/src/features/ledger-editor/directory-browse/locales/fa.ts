@@ -32,6 +32,17 @@ const faDirectoryBrowse: Record<
     message: "کپی نشانی کلون HTTP",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message:
+      "نام کاربری: هر چیزی. گذرواژه: یک توکن دسترسی شخصی، نه گذرواژه حساب شما.",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "ایجاد توکن دسترسی شخصی",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "کپی نشانی کلون SSH",
     description: "Accessible name for copying the SSH clone URL",

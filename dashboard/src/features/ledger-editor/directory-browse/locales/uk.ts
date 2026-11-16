@@ -32,6 +32,17 @@ const ukDirectoryBrowse: Record<
     message: "Скопіювати HTTP URL клонування",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message:
+      "Ім'я користувача: будь-яке. Пароль: персональний токен доступу, а не пароль облікового запису.",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "Створити персональний токен доступу",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "Скопіювати SSH URL клонування",
     description: "Accessible name for copying the SSH clone URL",

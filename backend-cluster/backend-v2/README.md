@@ -15,8 +15,9 @@ The backend is built with Node.js and TypeScript using Koa and GraphQL. It power
 For password admission, API quotas, email recovery and deployment requirements,
 see [Authentication and rate limits](docs/authentication-rate-limits.md).
 Signup's explicit account-existence response remains a deliberate product
-choice. Frequent Git automation should use SSH keys rather than repeatedly
-present an account password over HTTP.
+choice. Git over HTTPS takes a personal access token as its password, under
+any username; the account password still works while `gitHttp.passwordAuth`
+is `warn`, and SSH keys remain the alternative for frequent Git automation.
 
 ## Billing
 

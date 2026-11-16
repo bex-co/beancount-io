@@ -878,7 +878,8 @@ function acceptedCredentials(methods: readonly string[]): string {
 }
 
 /** The next step for a credential pinned to a different ledger. */
-const OTHER_LEDGER_HINT =
+/** Shared with the Git HTTPS proxy, so a pinned token is refused in one wording. */
+export const OTHER_LEDGER_HINT =
   "This credential is pinned to another ledger. Use a credential for this ledger, or one without a ledger pin.";
 
 /**

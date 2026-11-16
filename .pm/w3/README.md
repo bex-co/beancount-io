@@ -96,7 +96,7 @@
 
 - [x] **m62** — [Ledger creation: a prefilled Currency field, backward compatible](./done/m62/README.md) (7 tasks) ← user request via /pmx, 2026-11-12; user routed to w3
 
-- [ ] **m68** — [Git over HTTPS: personal access tokens instead of the account password](./m68/README.md) (7 tasks) ← user request via /pmx, 2026-11-15; user routed to w3
+- [x] **m68** — [Git over HTTPS: personal access tokens instead of the account password](./done/m68/README.md) (7 tasks) ← user request via /pmx, 2026-11-15; user routed to w3
 
 ## Inbox
 

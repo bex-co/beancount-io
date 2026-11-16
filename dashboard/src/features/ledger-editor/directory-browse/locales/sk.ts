@@ -32,6 +32,17 @@ const skDirectoryBrowse: Record<
     message: "Kopírovať HTTP URL klonu",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message:
+      "Používateľské meno: ľubovoľné. Heslo: osobný prístupový token, nie heslo k účtu.",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "Vytvoriť osobný prístupový token",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "Kopírovať SSH URL klonu",
     description: "Accessible name for copying the SSH clone URL",

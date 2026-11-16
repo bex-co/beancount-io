@@ -53,3 +53,12 @@ export const cpuUsage = new Gauge({
 // Note: Error rates can be calculated from main counters using PromQL:
 // HTTP error rate: rate(http_requests_total{status_code=~"4xx|5xx"}[5m]) / rate(http_requests_total[5m])
 // GraphQL errors are tracked in application logs - use query duration/volume for performance monitoring
+
+// Git over HTTPS sign-ins that used a password rather than a personal access
+// token, while `gitHttp.passwordAuth` is `warn` (w3/m68). `path` is `email`
+// (account email + password) or `gitea` (the generated Gitea credential).
+export const gitHttpPasswordAuthTotal = new Counter({
+  name: `git_http_password_auth_total`,
+  help: "Git over HTTPS requests authenticated with a password instead of a token",
+  labelNames: ["path"],
+});

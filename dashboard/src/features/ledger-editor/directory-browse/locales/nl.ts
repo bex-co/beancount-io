@@ -32,6 +32,17 @@ const nlDirectoryBrowse: Record<
     message: "HTTP-kloon-URL kopiëren",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message:
+      "Gebruikersnaam: willekeurig. Wachtwoord: een persoonlijk toegangstoken, niet je accountwachtwoord.",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "Persoonlijk toegangstoken aanmaken",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "SSH-kloon-URL kopiëren",
     description: "Accessible name for copying the SSH clone URL",

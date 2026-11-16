@@ -458,11 +458,14 @@ const lastUsedThrottle = new Map<string, number>();
  * Revoked, expired, and never-existed all return `undefined` — the same answer
  * a garbage token gets. A caller that could tell them apart could enumerate
  * which keys were once real, and learn when one was revoked.
+ *
+ * Exported for the Git HTTPS proxy, which takes a key as a Basic Auth password
+ * (w3/m68): one resolution path, so a key REST refuses Git refuses too.
  */
-async function resolveApiKeyIdentity(
+export async function resolveApiKeyIdentity(
   token: string,
   database: DatabaseLayer,
-  recordUsage: boolean,
+  recordUsage = true,
 ): Promise<Identity | undefined> {
   if (!token.startsWith(API_KEY_PLAINTEXT_PREFIX)) {
     return undefined;

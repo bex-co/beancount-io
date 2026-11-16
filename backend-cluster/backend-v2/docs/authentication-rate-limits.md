@@ -44,9 +44,37 @@ unavailable with a one-second retry hint; Redis admission failure or a lost
 reservation returns service unavailable with a five-second hint.
 
 GraphQL sign-in and password-based Git HTTP authentication call the same
-password verifier. Prefer SSH keys for frequent Git automation so each Git
-request need not present and compare the account password. SSH still applies
-its own key, repository-access and push-policy checks.
+password verifier. Git over HTTPS should not use the account password at all:
+its password is a personal access token (`bcio_…`, minted at
+`/settings/api-keys`) under any username. A token request never reaches the
+password verifier and spends none of the failed-password budget; it is
+authorized as REST authorizes the key (`ledger.read` to clone and fetch,
+`ledger.write` to push, a ledger-pinned key only on its ledger), and a revoked,
+expired, or unknown key gets the same 401 as a wrong password. SSH keys remain
+the alternative, with their own key, repository-access and push-policy checks.
+
+The two password paths on the Git endpoint, account email + password and the
+generated Gitea credential, are governed by `gitHttp.passwordAuth` in
+`src/config/config.ts`: `allow` accepts them, `warn` (the shipped value)
+accepts them but logs and counts each use as
+`git_http_password_auth_total{path="email"|"gitea"}` and prints a `remote:`
+line asking the user to switch to a token, and `deny` refuses them with a 401
+that names the token page. It is code, not an environment variable; changing it
+is a commit and a deploy. Moving to `deny` is the owner's decision once the
+`warn` counts are known, since minting tokens is a paid feature on
+beancount.io (a self-hosted stack has every feature).
+
+A stale stored credential is a real failure mode: git keeps retrying it, and on
+the email path each retry spends the account's failed-password budget until the
+endpoint answers 429. Clear it before entering a token:
+
+```zsh
+printf 'protocol=https\nhost=<git host>\n\n' | git credential reject
+```
+
+On macOS also delete the Keychain item for the host (Keychain Access, kind
+"Internet password"), and remove the host's line from `~/.git-credentials` if
+the `store` helper is in use.
 
 ## Authentication mail and OTPs
 

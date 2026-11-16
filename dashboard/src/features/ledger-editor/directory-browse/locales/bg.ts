@@ -32,6 +32,17 @@ const bgDirectoryBrowse: Record<
     message: "Копирай HTTP URL за клониране",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message:
+      "Потребителско име: произволно. Парола: личен токен за достъп, а не паролата на акаунта ви.",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "Създаване на личен токен за достъп",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "Копирай SSH URL за клониране",
     description: "Accessible name for copying the SSH clone URL",

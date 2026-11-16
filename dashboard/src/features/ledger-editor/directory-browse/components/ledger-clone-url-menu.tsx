@@ -217,6 +217,19 @@ export default function LedgerCloneUrlMenu({
                   copyLabel={t("ledgerEditor.copyHttpCloneUrl")}
                   labelledBy={`${httpTabId} ${headingId}`}
                 />
+                {/* Git asks for a password here; the account password is being
+                    phased out on this endpoint in favor of a token (w3/m68). */}
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("ledgerEditor.httpsCredentialHint")}{" "}
+                  <Authenticated>
+                    <Link
+                      to="/settings/api-keys"
+                      className="underline underline-offset-2 hover:text-foreground"
+                    >
+                      {t("ledgerEditor.createAccessToken")}
+                    </Link>
+                  </Authenticated>
+                </p>
               </TabsContent>
               {sshUrl && (
                 <TabsContent value="ssh">

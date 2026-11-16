@@ -32,6 +32,17 @@ const ruDirectoryBrowse: Record<
     message: "Скопировать HTTP URL клонирования",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message:
+      "Имя пользователя: любое. Пароль: персональный токен доступа, а не пароль от аккаунта.",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "Создать персональный токен доступа",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "Скопировать SSH URL клонирования",
     description: "Accessible name for copying the SSH clone URL",

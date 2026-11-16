@@ -31,6 +31,17 @@ const koDirectoryBrowse: Record<
     message: "HTTP 클론 URL 복사",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message:
+      "사용자 이름: 아무거나. 비밀번호: 계정 비밀번호가 아닌 개인 액세스 토큰.",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "개인 액세스 토큰 만들기",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "SSH 클론 URL 복사",
     description: "Accessible name for copying the SSH clone URL",

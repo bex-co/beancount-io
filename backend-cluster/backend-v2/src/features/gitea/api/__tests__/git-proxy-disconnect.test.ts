@@ -62,7 +62,11 @@ beforeAll(async () => {
       services: {},
       clients: {},
     } as never,
-    { gitea: { internalBaseUrl: giteaUrl } } as unknown as AppConfig,
+    {
+      gitea: { internalBaseUrl: giteaUrl },
+      gitHttp: { passwordAuth: "allow" },
+      dashboard: { url: "https://app.example.com" },
+    } as unknown as AppConfig,
   );
   const app = new Koa();
   app.silent = true;

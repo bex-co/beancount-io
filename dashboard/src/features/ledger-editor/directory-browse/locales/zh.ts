@@ -31,6 +31,16 @@ const zhDirectoryBrowse: Record<
     message: "复制 HTTP 克隆地址",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message: "用户名：任意。密码：个人访问令牌，而不是账户密码。",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "创建个人访问令牌",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "复制 SSH 克隆地址",
     description: "Accessible name for copying the SSH clone URL",

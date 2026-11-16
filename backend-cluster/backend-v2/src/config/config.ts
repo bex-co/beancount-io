@@ -218,8 +218,30 @@ export function getDevelopmentPremiumUserIds(
   );
 }
 
+/**
+ * Whether Git over HTTPS still takes a password (w3/m68).
+ *
+ * - `allow`: the account email + password and the generated Gitea credential
+ *   both sign in, as they always did.
+ * - `warn`: both still sign in, but each use is logged and counted
+ *   (`git_http_password_auth_total{path}`), and a clone, fetch, or push prints a
+ *   `remote:` line asking the user to switch to a personal access token.
+ * - `deny`: both are refused with a 401 that names the token settings page.
+ *
+ * Personal access tokens work under all three. Like `api.scopeEnforcement`,
+ * this is reviewed code rather than an environment variable: environment
+ * variables carry credentials, and an authentication policy change goes
+ * through a commit and a deploy.
+ */
+export type GitPasswordAuthPolicy = "allow" | "warn" | "deny";
+
+interface GitHttpConfig {
+  passwordAuth: GitPasswordAuthPolicy;
+}
+
 export interface AppConfig {
   api: ApiConfig;
+  gitHttp: GitHttpConfig;
   sshProxy: SshProxyConfig;
   env: Environment;
   project: string;
@@ -410,6 +432,8 @@ export const config: AppConfig = {
       environment,
     ),
   },
+  // `deny` is the owner's call once the `warn` counts are in (w3/m68).
+  gitHttp: { passwordAuth: "warn" },
   env: environment,
   project: "beancount-io",
   jwt: {

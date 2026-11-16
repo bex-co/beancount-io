@@ -122,6 +122,9 @@ describe("setGitProxyHandler", () => {
         externalHttpPort: 443,
         sshPort: 2222,
       },
+      // Today's behavior; the policy's own tests set the other two values.
+      gitHttp: { passwordAuth: "allow" },
+      dashboard: { url: "https://app.example.com" },
     } as unknown as AppConfig;
   });
 

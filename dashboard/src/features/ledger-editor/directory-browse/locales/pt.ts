@@ -32,6 +32,17 @@ const ptDirectoryBrowse: Record<
     message: "Copiar URL de clone HTTP",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsCredentialHint": {
+    message:
+      "Usuário: qualquer um. Senha: um token de acesso pessoal, não a senha da sua conta.",
+    description:
+      "Under the HTTPS clone URL: what to type when git asks for a username and password",
+  },
+  "ledgerEditor.createAccessToken": {
+    message: "Criar um token de acesso pessoal",
+    description:
+      "Link from the HTTPS clone option to the personal access token settings page",
+  },
   "ledgerEditor.copySshCloneUrl": {
     message: "Copiar URL de clone SSH",
     description: "Accessible name for copying the SSH clone URL",

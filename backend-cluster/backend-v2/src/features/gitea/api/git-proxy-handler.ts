@@ -1,8 +1,10 @@
 import Router from "@koa/router";
 import { once } from "node:events";
-import { PassThrough, type Readable } from "node:stream";
+import { PassThrough, Transform, type Readable } from "node:stream";
 import { type AppLayers } from "@/foundation/composition";
 import { AppConfig } from "@/config/config";
+import { getBasicAuthHeader } from "@/features/auth/utils/auth";
+import type { User } from "@/features/auth/data/user-model";
 import { createFavaApiWithAuthorization } from "@/foundation/fava";
 import { invalidateUserFeed } from "@/shared/cache";
 import {
@@ -24,6 +26,15 @@ import {
   ServiceUnavailableError,
 } from "@/shared/errors";
 import { clientAddress } from "@/server/client-address";
+import {
+  identityAllowsLedgerScope,
+  identityHasCapability,
+  resolveApiKeyIdentity,
+  type OperationClass,
+} from "@/server/api/identity";
+import { API_KEY_PLAINTEXT_PREFIX } from "@/features/apikeys/service/api-key-service";
+import { gitHttpPasswordAuthTotal } from "@/metrics/metrics-definitions";
+import { OTHER_LEDGER_HINT } from "@/server/api/authorization";
 
 const proxyLogger = logger.child({ module: "git-proxy" });
 
@@ -230,6 +241,14 @@ export function pktLine(line: string): string {
   return (Buffer.byteLength(line) + 4).toString(16).padStart(4, "0") + line;
 }
 
+/** Text as band-2 packets, which git prints as `remote:` lines, one per line. */
+function sidebandProgress(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => pktLine("\x02" + line + "\n"))
+    .join("");
+}
+
 /**
  * Build the receive-pack response that reports each ref as rejected.
  *
@@ -269,12 +288,7 @@ export function buildRejectionReport(
   // Band 2 is the progress channel git prints as `remote:` lines; band 1 carries
   // the packfile-data channel, which is where report-status goes. The
   // explanation goes out first so it reads above the per-ref line.
-  const progress = explanation
-    ? explanation
-        .split("\n")
-        .map((line) => pktLine("\x02" + line + "\n"))
-        .join("")
-    : "";
+  const progress = explanation ? sidebandProgress(explanation) : "";
   return Buffer.from(progress + pktLine("\x01" + report) + "0000", "utf8");
 }
 
@@ -417,27 +431,204 @@ function parseBasicAuth(
   }
 }
 
+/** The operation a smart-HTTP request performs: a push writes, anything else reads. */
+export function gitOperationFor(
+  path: string,
+  querystring: string | undefined,
+): OperationClass {
+  if (path.endsWith("/git-receive-pack")) return "write";
+  if (path.endsWith("/info/refs")) {
+    const service = new URLSearchParams(querystring ?? "").get("service");
+    return service === "git-receive-pack" ? "write" : "read";
+  }
+  return "read";
+}
+
+/**
+ * The three ways a Git HTTPS request may sign in, told apart by the
+ * credential. `email` and `gitea` are passwords, which `gitHttp.passwordAuth`
+ * governs; a token is not.
+ */
+type GitCredentialKind = "token" | "email" | "gitea";
+
+function gitCredentialKind(
+  username: string,
+  password: string,
+): GitCredentialKind {
+  // The prefix decides first: a token may arrive under any username, including
+  // an email address, and must never be tried as a password.
+  if (password.startsWith(API_KEY_PLAINTEXT_PREFIX)) return "token";
+  return username.includes("@") ? "email" : "gitea";
+}
+
+/** What a request authenticated as, or why it did not. */
+type GitAuthentication =
+  | {
+      ok: true;
+      /** The Authorization header to forward to Gitea. */
+      authorization: string;
+      /** The app user, when known without a lookup. */
+      appUserId?: string;
+    }
+  | { ok: false; status: 401 | 403; message: string };
+
+const invalidCredentials: GitAuthentication = {
+  ok: false,
+  status: 401,
+  message: "Invalid credentials",
+};
+
+/** Where a user mints the token that replaces their Git password. */
+function gitTokenSettingsUrl(config: Pick<AppConfig, "dashboard">) {
+  return `${config.dashboard.url}/settings/api-keys`;
+}
+
+/** The `remote:` lines a password sign-in gets while the policy is `warn`. */
+function passwordAuthWarning(settingsUrl: string): string {
+  return [
+    "Signing in to Git over HTTPS with a password is being phased out.",
+    "Use a personal access token as the password instead (any username works):",
+    settingsUrl,
+  ].join("\n");
+}
+
+/** The 401 body a password sign-in gets once the policy is `deny`. */
+function passwordAuthRefusal(settingsUrl: string): string {
+  return [
+    "Password sign-in for Git over HTTPS is turned off.",
+    "Use a personal access token as the password (any username works).",
+    `Create one at ${settingsUrl}`,
+    "",
+  ].join("\n");
+}
+
+const FLUSH_PKT = Buffer.from("0000", "ascii");
+const NO_BYTES = Buffer.alloc(0);
+
+/**
+ * Add progress lines to a sideband response, just before its closing flush.
+ *
+ * Git prints band-2 packets as `remote:` lines, so this is how the proxy talks
+ * to a user mid-clone. It is only safe inside a sideband stream, and pkt-lines
+ * carry no marker saying they are one — so this parses the packet framing as it
+ * passes (lengths only; payloads are streamed, never buffered) and inserts the
+ * lines only when the response both carried band-1 data and ended on a flush.
+ * That holds for a v0 or v2 packfile response and a push report, and for
+ * nothing else: refs, ACK/NAK negotiation rounds, and `ls-refs` never start a
+ * packet with byte 0x01. A stream that stops parsing as pkt-lines (raw pack
+ * data without side-band) passes through unchanged.
+ */
+export class SidebandMessageInjector extends Transform {
+  /** Header bytes not yet passed on: a partial header, or a trailing flush. */
+  private pending: Buffer = NO_BYTES;
+  private payloadLeft = 0;
+  private atPayloadStart = false;
+  private sawBand1 = false;
+  private framingLost = false;
+
+  constructor(private readonly message: string) {
+    super();
+  }
+
+  override _transform(
+    chunk: Buffer,
+    _encoding: BufferEncoding,
+    done: (error?: Error | null) => void,
+  ): void {
+    // A flush held back at the end of the last chunk was not the last packet.
+    if (this.pending.length === 4) {
+      this.push(this.pending);
+      this.pending = NO_BYTES;
+    }
+    if (this.framingLost) {
+      this.push(chunk);
+      done();
+      return;
+    }
+
+    let offset = 0;
+    let passFrom = 0;
+    while (offset < chunk.length) {
+      if (this.payloadLeft > 0) {
+        if (this.atPayloadStart) {
+          if (chunk[offset] === 0x01) this.sawBand1 = true;
+          this.atPayloadStart = false;
+        }
+        const take = Math.min(this.payloadLeft, chunk.length - offset);
+        offset += take;
+        this.payloadLeft -= take;
+        continue;
+      }
+
+      // Header bytes are held until the header is whole, so a trailing flush
+      // can be kept back without having passed on half of it.
+      if (offset > passFrom) this.push(chunk.subarray(passFrom, offset));
+      const need = 4 - this.pending.length;
+      const part = chunk.subarray(offset, offset + need);
+      this.pending = Buffer.concat([this.pending, part]);
+      offset += part.length;
+      passFrom = offset;
+      if (this.pending.length < 4) break;
+
+      const hex = this.pending.toString("ascii");
+      if (!/^[0-9a-fA-F]{4}$/.test(hex)) {
+        this.framingLost = true;
+        this.push(this.pending);
+        this.push(chunk.subarray(offset));
+        this.pending = NO_BYTES;
+        offset = passFrom = chunk.length;
+        break;
+      }
+      const length = parseInt(hex, 16);
+      if (length === 0 && offset === chunk.length) break; // maybe the last
+      this.push(this.pending);
+      this.pending = NO_BYTES;
+      if (length >= 4) {
+        this.payloadLeft = length - 4;
+        this.atPayloadStart = this.payloadLeft > 0;
+      }
+    }
+    if (offset > passFrom) this.push(chunk.subarray(passFrom, offset));
+    done();
+  }
+
+  override _flush(done: (error?: Error | null) => void): void {
+    const endsOnFlush =
+      this.pending.length === 4 && this.pending.equals(FLUSH_PKT);
+    // A lost framing empties `pending`, so it never reaches this branch.
+    if (endsOnFlush && this.sawBand1) {
+      this.push(Buffer.from(sidebandProgress(this.message), "utf8"));
+    }
+    if (this.pending.length > 0) this.push(this.pending);
+    done();
+  }
+}
+
 /**
  * Set up git HTTP proxy routes that translate app credentials to Gitea credentials.
  *
- * This proxy supports two authentication methods:
- * 1. App email + password: The proxy looks up the user by email, verifies the password,
- *    and translates to the Gitea-specific credentials stored in the database.
- * 2. Gitea username + password: Credentials are passed directly through to Gitea.
+ * The Basic Auth password decides how a request signs in (`gitCredentialKind`):
+ * 1. A personal access token (`bcio_…`), under any username: authorized the way
+ *    REST authorizes the key — `ledger.read` to clone and fetch, `ledger.write`
+ *    to push, and a ledger-pinned key only on its own ledger — then forwarded
+ *    with the key owner's Gitea credential. This is the credential to use.
+ * 2. App email + password: verified like dashboard sign-in, against the same
+ *    per-account budget, and forwarded with the user's Gitea credential.
+ * 3. Gitea username + password: passed straight through to Gitea.
  *
- * The auth method is determined by whether the username contains "@":
- * - Contains "@" → app email + password (translated to Gitea credentials)
- * - No "@" → Gitea username + password (passed through directly)
+ * The two password paths are governed by `gitHttp.passwordAuth` in
+ * `config.ts`: `allow`, `warn` (accepted, logged, counted, and answered with a
+ * switch-to-token hint), or `deny` (refused with a 401 naming the token page).
  *
  * Usage:
- *   git clone http://localhost:4104/git/<username>/<repo>.git
- *   # When prompted, enter your app email and password, or Gitea username and password
+ *   git clone https://<host>/git/<owner>/<ledger>.git
+ *   # Username: anything. Password: a personal access token from
+ *   # /settings/api-keys.
  *
- * The proxy handles all git smart HTTP protocol endpoints:
+ * Only Git's three smart-HTTP requests are forwarded:
  * - /git/:owner/:repo/info/refs
  * - /git/:owner/:repo/git-upload-pack
  * - /git/:owner/:repo/git-receive-pack
- * - /git/:owner/:repo/* (other git objects/files)
  */
 export function setGitProxyHandler(
   router: Router,
@@ -479,6 +670,113 @@ export function setGitProxyHandler(
     );
   }
 
+  const passwordAuth = config.gitHttp.passwordAuth;
+  const settingsUrl = gitTokenSettingsUrl(config);
+
+  /** Forward as the app user's generated Gitea credential. */
+  const signedInAs = (user: User): GitAuthentication => ({
+    ok: true,
+    authorization: getBasicAuthHeader(
+      user.ledger_username,
+      user.ledger_password,
+    ).Authorization,
+    appUserId: user.id,
+  });
+
+  /** Sign a request in by whichever credential it carries. */
+  async function authenticate(
+    ctx: Router.RouterContext,
+    path: string,
+    kind: GitCredentialKind,
+    username: string,
+    password: string,
+    authHeader: string,
+  ): Promise<GitAuthentication> {
+    if (kind !== "token" && passwordAuth === "deny") {
+      return {
+        ok: false,
+        status: 401,
+        message: passwordAuthRefusal(settingsUrl),
+      };
+    }
+    switch (kind) {
+      case "token":
+        return authenticateToken(ctx, path, password);
+      case "email":
+        return authenticateEmail(ctx, username, password);
+      case "gitea":
+        // Gitea checks its own credential; the header goes through unchanged.
+        return { ok: true, authorization: authHeader };
+    }
+  }
+
+  /**
+   * A personal access token, resolved by the same function REST uses, so a
+   * key REST refuses (revoked, expired, unknown, or its account gone) is
+   * refused here with the same undistinguished 401. It is not a password and
+   * is never charged against the account's failed-password budget.
+   */
+  async function authenticateToken(
+    ctx: Router.RouterContext,
+    path: string,
+    token: string,
+  ): Promise<GitAuthentication> {
+    const identity = await resolveApiKeyIdentity(token, layers.database);
+    if (!identity) return invalidCredentials;
+
+    const operation = gitOperationFor(path, ctx.querystring);
+    if (!identityHasCapability(identity, operation)) {
+      return {
+        ok: false,
+        status: 403,
+        // REST's wording for the same refusal (`credentialDenial`).
+        message: `This operation requires the "ledger.${operation}" scope. Use a credential that holds the "ledger.${operation}" scope.\n`,
+      };
+    }
+    const repo = parseGitRepoPath(path);
+    if (
+      !repo ||
+      !identityAllowsLedgerScope(identity, `${repo.owner}/${repo.repo}`)
+    ) {
+      return {
+        ok: false,
+        status: 403,
+        message: `This credential is not authorized for this ledger. ${OTHER_LEDGER_HINT}\n`,
+      };
+    }
+
+    const user = await layers.database.models.user.getById(
+      layers.database.db,
+      identity.userId,
+    );
+    return user ? signedInAs(user) : invalidCredentials;
+  }
+
+  /**
+   * App email + password, verified the way dashboard sign-in verifies it and
+   * against the same per-account budget (w0/m7). A spent budget is a
+   * RateLimitedError, answered as a 429 by the caller's catch.
+   */
+  async function authenticateEmail(
+    ctx: Router.RouterContext,
+    email: string,
+    password: string,
+  ): Promise<GitAuthentication> {
+    let user;
+    try {
+      user = await layers.services.auth.verifyPasswordCredentials(
+        email,
+        password,
+        clientAddress(ctx),
+      );
+    } catch (error) {
+      if (!(error instanceof BadUserInputError)) throw error;
+      proxyLogger.warn("Git proxy auth failed", { email });
+      return invalidCredentials;
+    }
+    return signedInAs(user);
+  }
+
   // Helper function to handle git proxy requests
   async function handleGitProxy(ctx: Router.RouterContext, path: string) {
     // Reject before authenticating: there is no reason to translate
@@ -506,9 +804,8 @@ export function setGitProxyHandler(
     }
 
     const [username, password] = credentials;
-    // Who the push is by, for the feed cache: known at once for an app
-    // sign-in, looked up from the Gitea username otherwise.
-    let appUserId: string | undefined;
+    const kind = gitCredentialKind(username, password);
+    const warnPassword = kind !== "token" && passwordAuth === "warn";
 
     try {
       // Forward headers, excluding host and authorization
@@ -525,47 +822,38 @@ export function setGitProxyHandler(
         }
       }
 
-      if (username.includes("@")) {
-        // App email + password, verified the way dashboard sign-in verifies it
-        // and against the same per-account budget (w0/m7). A spent budget is a
-        // RateLimitedError, answered as a 429 by the catch below.
-        let user;
-        try {
-          user = await layers.services.auth.verifyPasswordCredentials(
-            username,
-            password,
-            clientAddress(ctx),
-          );
-        } catch (error) {
-          if (!(error instanceof BadUserInputError)) throw error;
-          proxyLogger.warn("Git proxy auth failed", { email: username });
-          ctx.status = 401;
+      const auth = await authenticate(
+        ctx,
+        path,
+        kind,
+        username,
+        password,
+        authHeader,
+      );
+      if (!auth.ok) {
+        ctx.status = auth.status;
+        if (auth.status === 401) {
           ctx.set("WWW-Authenticate", 'Basic realm="Git"');
-          ctx.body = "Invalid credentials";
-          return;
         }
-
-        appUserId = user.id;
-        const ledgerAuth = Buffer.from(
-          `${user.ledger_username}:${user.ledger_password}`,
-        ).toString("base64");
-        forwardHeaders["Authorization"] = `Basic ${ledgerAuth}`;
-
-        proxyLogger.debug("Proxying git request (app auth)", {
-          path,
-          method: ctx.method,
-          ledgerUsername: user.ledger_username,
-        });
-      } else {
-        // Gitea username + password: pass credentials directly through
-        forwardHeaders["Authorization"] = authHeader;
-
-        proxyLogger.debug("Proxying git request (gitea auth)", {
-          path,
-          method: ctx.method,
-          giteaUsername: username,
-        });
+        ctx.body = auth.message;
+        return;
       }
+      // Who the push is by, for the feed cache: known at once for a token or
+      // an app sign-in, looked up from the Gitea username otherwise.
+      const appUserId = auth.appUserId;
+      forwardHeaders["Authorization"] = auth.authorization;
+
+      if (warnPassword) {
+        // The credential and the username stay out of the log: the count by
+        // path is what decides when `deny` can ship.
+        proxyLogger.warn("Git password sign-in", { credential: kind, path });
+        gitHttpPasswordAuthTotal.inc({ path: kind });
+      }
+      proxyLogger.debug("Proxying git request", {
+        path,
+        method: ctx.method,
+        credential: kind,
+      });
 
       const refPolicy = await rejectNonMainPush(ctx, path);
       if (refPolicy.handled) return;
@@ -659,11 +947,15 @@ export function setGitProxyHandler(
       ctx.status = response.status;
 
       // Forward response headers
+      // A pack response the hint is added to grows, so its length is not
+      // Gitea's any more.
+      const addHint = warnPassword && ctx.method === "POST";
       const headersToSkip = new Set([
         "connection",
         "keep-alive",
         "transfer-encoding",
         "content-encoding",
+        ...(addHint ? ["content-length"] : []),
       ]);
 
       response.headers.forEach((value, key) => {
@@ -700,9 +992,9 @@ export function setGitProxyHandler(
             transport: "https",
           }),
         );
-        ctx.body = observed;
+        ctx.body = addHint ? withHint(observed) : observed;
       } else {
-        ctx.body = response.body;
+        ctx.body = addHint ? withHint(response.body) : response.body;
       }
     } catch (error) {
       if (
@@ -725,6 +1017,16 @@ export function setGitProxyHandler(
       ctx.status = 502;
       ctx.body = "Bad Gateway";
     }
+  }
+
+  /** The `warn` policy's switch-to-token lines, added to a pack response. */
+  function withHint(body: NodeJS.ReadableStream): Readable {
+    const injector = new SidebandMessageInjector(
+      passwordAuthWarning(settingsUrl),
+    );
+    // `pipe` does not forward source errors; see the observation path above.
+    body.on("error", (err: Error) => injector.destroy(err));
+    return body.pipe(injector);
   }
 
   // Rate limit: 60 requests/minute per IP for all git operations

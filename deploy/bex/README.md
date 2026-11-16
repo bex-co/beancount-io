@@ -289,6 +289,8 @@ API host.
 
 bex serves Git over HTTPS only: it has no TCP routing, so `SSH_PROXY_ENABLED` is `false` and ledger responses (REST, GraphQL and MCP alike) carry `sshUrl: null`. `bea cloud ledger clone`, which clones over SSH, refuses such a ledger and says this deployment serves no Git over SSH; the dashboard's clone menu shows only the HTTP address.
 
+To clone over HTTPS, use any username and a personal access token as the password, minted in the dashboard under Settings → API keys (`/settings/api-keys`). The account password still works for now, with a `remote:` hint to switch: backend-v2's `gitHttp.passwordAuth` ships as `warn`. It lives in `backend-cluster/backend-v2/src/config/config.ts` as `allow`, `warn`, or `deny`, and is not an environment variable, so refusing passwords is a code change and a redeploy. A Git client that keeps offering an old password is cleared with `printf 'protocol=https\nhost=<git host>\n\n' | git credential reject`, the host's Keychain item on macOS, or its line in `~/.git-credentials`.
+
 ## Things that bit us, so they don't bite you again
 
 - **Ports follow the image.** The platform probes the image's declared
