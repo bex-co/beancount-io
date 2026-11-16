@@ -90,7 +90,7 @@ def _add(tmp_path: Path, ledger: Path, debit: str) -> subprocess.CompletedProces
     ("build", "existing"),
     [
         pytest.param(_lot_mismatch, "No position matches", id="lot-mismatch"),
-        pytest.param(_duplicate_include, "Duplicate filename parsed", id="duplicate-include"),
+        pytest.param(_duplicate_include, "already included at", id="duplicate-include"),
     ],
 )
 def test_an_existing_path_embedding_error_is_tolerated(

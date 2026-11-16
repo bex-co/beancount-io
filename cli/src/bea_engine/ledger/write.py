@@ -39,7 +39,7 @@ from bea_engine.ledger.text import (
 )
 from bea_engine.paths import expand_path
 from bea_engine.protocol import AuthError, ConflictError, LedgerError, StagingFailed, UsageError, notice
-from bea_engine.query import format_error, same_file
+from bea_engine.query import format_error, is_unlocated_include, same_file
 
 if TYPE_CHECKING:
     from beancount.parser.lexer import LexBuilder
@@ -2650,6 +2650,13 @@ def validate_candidate(
     }
     for index, error in enumerate(errors):
         hints = []
+        if is_unlocated_include(error):
+            # The include walk reads the real files: a file loaded twice is
+            # quoted at its staged path, which the walk never reaches (w1/273).
+            unstaged = error.message
+            for staged, original in filenames.items():
+                unstaged = unstaged.replace(str(staged), str(original))
+            error = error._replace(message=unstaged)
         message = format_error(error, ledger_file=file)
         for staged, original in filenames.items():
             message = message.replace(str(staged), str(original))

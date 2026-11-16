@@ -708,6 +708,14 @@ directory, not the root ledger's or the working directory. Every read and
 ledger's other load errors. With bean-check's own options (`-v`, `--auto`, its
 `--json`), the output stays bean-check's: `<load>:0: File glob "PATTERN" does
 not match any files`.
+A file loaded a second time is reported the same way, at the include that
+loaded it again, naming where it was first included: `FILE:LINE: include
+"PATTERN" loads PATH, already included at FIRST:LINE`. An include that leads
+back to a file still being loaded (the file itself, or one of the files that
+included it) is an include cycle: `FILE:LINE: include "PATTERN" leads back to
+PATH, which includes this file (an include cycle)`. Remove that include line.
+With bean-check's own options, the output stays `<load>:0: Duplicate filename
+parsed: "PATH"`.
 
 `bea check` loads the ledger once in its helper, which applies bean-check's own
 validations. With no bean-check options, a ledger that passes is answered from

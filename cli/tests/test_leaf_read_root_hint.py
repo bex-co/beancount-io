@@ -104,4 +104,4 @@ def test_an_include_cycle_names_no_root(tmp_path: Path, start: str, command: lis
     result = _bea(tmp_path, "--file", str(tmp_path / start), *command)
 
     assert "is included by" not in result.stdout + result.stderr, result.stdout + result.stderr
-    assert "Duplicate filename parsed" in result.stdout + result.stderr
+    assert "(an include cycle)" in result.stdout + result.stderr
