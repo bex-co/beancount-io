@@ -496,6 +496,40 @@ describe("composeHoldings", () => {
       });
     });
 
+    // w1/266: an uncosted position no quote values stays in its units, so
+    // its missing leg must not claim a cost-basis value.
+    it("says an unquoted uncosted position is shown in units", () => {
+      const result = compose(
+        {},
+        [
+          ["Assets:Broker", "AAPL", "USD", map("AAPL", "2"), map("USD", "200")],
+          [
+            "Assets:Vacation",
+            "VACHR",
+            null,
+            map("VACHR", "10"),
+            map("VACHR", "10"),
+          ],
+        ],
+        [],
+      );
+      expect(result.groups[1]!.market_value).toEqual({
+        number: "10",
+        currency: "VACHR",
+      });
+      expect(result.missing_price_summary).toEqual([
+        "AAPL has no USD quote at 2026-10-25; valued at cost",
+        "VACHR has no USD quote at 2026-10-25; shown in units",
+      ]);
+    });
+
+    it("names both treatments when one leg covers costed and uncosted units", () => {
+      const result = compose({}, fixture, []);
+      expect(result.missing_price_summary).toEqual([
+        "AAPL has no USD quote at 2026-10-25; costed lots valued at cost, the rest shown in units",
+      ]);
+    });
+
     it("leaves uncosted cash in an operating currency out", () => {
       const result = compose(
         { operatingCurrencies: ["USD", "EUR"], priceCurrencies: [] },

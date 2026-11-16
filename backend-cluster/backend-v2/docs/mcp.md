@@ -1307,7 +1307,9 @@ Prices come from the ledger's `price` directives alone, on the statements, the
 overview and holdings alike, as in stock beancount without the `implicit_prices`
 plugin: an `@` annotation on a posting is not a price (w1/229). A holding with no
 directive is valued at cost, and holdings answers `valuation: "partial"` naming
-the missing leg.
+the missing leg. A position with no cost basis has no cost to fall back on: it
+stays in its own units, and its `missing_price_summary` line says `shown in
+units` instead of `valued at cost` (w1/266).
 
 When an explicit currency `conversion` did not reach everything, the summary
 also carries `missingPrices`: one `{from, to}` leg per currency that stayed

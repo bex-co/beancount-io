@@ -339,9 +339,22 @@ export function composeHoldings(params: {
   const uncosted = new Map<string, [BigNumber, Set<string>]>();
   const keyOf = (scope: string[], commodity: string, held: string): string =>
     JSON.stringify([...scope, commodity, held]);
+  // Each missing leg remembers how its holdings are shown without it: a
+  // costed lot at cost, an uncosted position with no quote in its own units
+  // (w1/266). One leg can cover both kinds under per-account grouping.
   const missing = new Map<string, { from: string; to: string }>();
-  const miss = (from: string, to: string): void => {
-    missing.set(`${from}→${to}`, { from, to });
+  const atCost = new Set<string>();
+  const inUnits = new Set<string>();
+  const miss = (from: string, to: string, uncostedLeg = false): void => {
+    const id = `${from}→${to}`;
+    missing.set(id, { from, to });
+    (uncostedLeg ? inUnits : atCost).add(id);
+  };
+  const shownAs = (from: string, to: string): string => {
+    const id = `${from}→${to}`;
+    if (!inUnits.has(id)) return "valued at cost";
+    if (!atCost.has(id)) return "shown in units";
+    return "costed lots valued at cost, the rest shown in units";
   };
 
   for (const row of rows) {
@@ -474,7 +487,7 @@ export function composeHoldings(params: {
     let market = unitsBN;
     let price: string | null = null;
     if (held === undefined) {
-      if (candidates.length > 0) miss(commodity, candidates[0]!);
+      if (candidates.length > 0) miss(commodity, candidates[0]!, true);
     } else {
       const quoted = quote(commodity, held)!;
       currency = held;
@@ -575,7 +588,8 @@ export function composeHoldings(params: {
     valuation: legs.length > 0 ? "partial" : "complete",
     missing_prices: legs,
     missing_price_summary: legs.map(
-      ({ from, to }) => `${from} has no ${to} quote at ${asOf}; valued at cost`,
+      ({ from, to }) =>
+        `${from} has no ${to} quote at ${asOf}; ${shownAs(from, to)}`,
     ),
     as_of: asOf,
   };

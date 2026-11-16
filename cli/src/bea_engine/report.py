@@ -674,6 +674,8 @@ def _holdings(
     operating = list(prices.operating_currencies)
     groups = []
     missing: list[tuple[str, str]] = []
+    # Legs of uncosted positions no quote values: shown in units, not at cost.
+    in_units: set[tuple[str, str]] = set()
     for key, (units, basis, accounts, basis_known) in sorted(lots.items()):
         commodity, held = key[-2], key[-1]
         if not held:
@@ -686,7 +688,7 @@ def _holdings(
             held = next((c for c in candidates if prices.get_price((commodity, c), end) is not None), "")
             if not held:
                 if candidates:
-                    missing.append((commodity, candidates[0]))
+                    in_units.add((commodity, candidates[0]))
                 # Nothing to value into: the position stays in its units.
                 groups.append(_uncosted_unvalued(key, group_by, accounts, commodity, units))
                 continue
@@ -743,7 +745,7 @@ def _holdings(
             "conversion_source": (_quote_source(sources, held, target, leg_date) if leg_date is not None else None),
         }
         groups.append(group)
-    valuation = _holdings_valuation(missing, end, allow_errors, filtered.ledger, ledger_errors)
+    valuation = _holdings_valuation(missing, in_units, end, allow_errors, filtered.ledger, ledger_errors)
     totals: dict[str, dict[str, Decimal]] = {"cost_basis": {}, "market_value": {}}
     for group in groups:
         for column in ("cost_basis", "market_value"):
@@ -854,6 +856,7 @@ def _quote_source(
 
 def _holdings_valuation(
     missing: list[tuple[str, str]],
+    in_units: set[tuple[str, str]],
     end: date | None,
     allow_errors: bool,
     ledger: Any,
@@ -863,26 +866,41 @@ def _holdings_valuation(
 
     `_valuation` judges leftovers against a report-wide conversion; a holding
     is already unvalued when its own commodity has no quote in its cost
-    currency, whatever the conversion, so the legs are named explicitly. Each
-    missing leg values at cost (or stays in its own currency) under
-    `--allow-errors` and fails strict reads, the same policy as every report.
+    currency, whatever the conversion, so the legs are named explicitly. Under
+    `--allow-errors` a `missing` leg values at cost, while an `in_units` leg,
+    an uncosted position no quote values, has no cost and stays in its units
+    (w1/266); strict reads fail on either, the same policy as every report.
     """
-    legs = sorted(set(missing))
+    at_cost = set(missing)
+    legs = sorted(at_cost | in_units)
     pairs = [{"from": base, "to": quote} for base, quote in legs]
     dated = [{"from": base, "to": quote, "date": end} for base, quote in legs]
     summary = []
-    for base, quote in legs:
-        all_prices = ledger.prices.get_all_prices((base, quote))
+    for leg in legs:
+        base, quote = leg
+        if leg not in in_units:
+            shown = "valued at cost"
+        elif leg not in at_cost:
+            shown = "shown in units"
+        else:
+            shown = "costed lots valued at cost, the rest shown in units"
+        all_prices = ledger.prices.get_all_prices(leg)
         if not all_prices:
-            summary.append(f"{base} has no {quote} price at any date; valued at cost")
+            summary.append(f"{base} has no {quote} price at any date; {shown}")
             continue
         earliest = min(point[0] for point in all_prices)
-        summary.append(f"{base} → {quote} has no price before {earliest}; earlier holdings valued at cost")
+        summary.append(f"{base} → {quote} has no price before {earliest}; earlier holdings {shown}")
     if pairs and not allow_errors:
+        if not in_units:
+            hint = "for cost-basis values"
+        elif not at_cost:
+            hint = "to show them in their own units"
+        else:
+            hint = "to value the costed lots at cost and show the rest in units"
         raise protocol.LedgerError(
             f"Missing prices for {', '.join(sorted({base for base, _ in legs}))}. "
             "Each holding is valued at the period end. Add prices covering the dates below "
-            "or pass --allow-errors for cost-basis values.",
+            f"or pass --allow-errors {hint}.",
             details=summary,
             result={"missing_prices": pairs, "missing_price_dates": dated},
             ledger_errors=ledger_errors,

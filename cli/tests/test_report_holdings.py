@@ -206,6 +206,53 @@ def test_holdings_unpriced_values_at_cost_when_allowed(tmp_path: Path) -> None:
     assert data["missing_price_summary"] == ["VTI has no USD price at any date; valued at cost"]
 
 
+# w1/266: an uncosted position no quote values stays in its units, so its
+# missing leg must not read "valued at cost", nor the hint promise a basis.
+UNCOSTED_UNPRICED = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Assets:Vacation VACHR
+2026-01-01 open Assets:Broker AAPL
+2026-01-01 open Income:Vacation VACHR
+2026-01-02 * "Accrue"
+  Assets:Vacation  10 VACHR
+  Income:Vacation
+2026-01-03 * "Buy"
+  Assets:Broker  2 AAPL {100 USD}
+  Assets:Cash  -200 USD
+"""
+
+UNCOSTED_UNPRICED_SUMMARY = [
+    "AAPL has no USD price at any date; valued at cost",
+    "VACHR has no USD price at any date; shown in units",
+]
+
+
+def test_holdings_uncosted_unpriced_fails_strict_without_promising_cost(tmp_path: Path) -> None:
+    code, payload = _engine_raw(_write(tmp_path, UNCOSTED_UNPRICED))
+    assert code == 1
+    assert payload["error"]["details"] == UNCOSTED_UNPRICED_SUMMARY
+    message = payload["error"]["message"]
+    assert "cost-basis values" not in message
+    assert message.endswith("or pass --allow-errors to value the costed lots at cost and show the rest in units.")
+
+
+def test_holdings_uncosted_unpriced_is_shown_in_units(tmp_path: Path) -> None:
+    data = _engine(_write(tmp_path, UNCOSTED_UNPRICED), "--allow-errors")
+    assert data["missing_price_summary"] == UNCOSTED_UNPRICED_SUMMARY
+    vachr = next(group for group in data["groups"] if group["commodity"] == "VACHR")
+    assert vachr["cost_basis"] is None
+    assert vachr["market_value"] == {"number": "10", "currency": "VACHR"}
+
+
+def test_holdings_only_uncosted_unpriced_hint(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, UNCOSTED_UNPRICED.split('2026-01-03 * "Buy"')[0])
+    code, payload = _engine_raw(ledger)
+    assert code == 1
+    assert payload["error"]["details"] == ["VACHR has no USD price at any date; shown in units"]
+    assert payload["error"]["message"].endswith("or pass --allow-errors to show them in their own units.")
+
+
 def test_holdings_converts_to_target_currency(tmp_path: Path) -> None:
     data = _engine(_write(tmp_path, FX))
     (group,) = data["groups"]
