@@ -399,7 +399,78 @@ describe("MCP conformance checks", () => {
     expect(result.outcome).toBe("fail");
     expect(result.detail).toContain("oauth-protected-resource");
   });
+
+  // w31/030: production answered check 1's POST, then 503'd check 2's own, and
+  // check 2 skipped blaming check 1 — so the run exited 0 as a pass.
+  it("check 2 and the host checks fail, reporting the 503, when their own discovery POST fails after check 1's succeeded", async () => {
+    let posts = 0;
+    await withStub(
+      (req, res) => {
+        const origin = `http://${req.headers.host}`;
+        if (req.url === "/api-gateway/mcp") {
+          posts += 1;
+          res.writeHead(
+            posts === 1 ? 401 : 503,
+            posts === 1
+              ? { "WWW-Authenticate": `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"` }
+              : {},
+          );
+          res.end();
+          return;
+        }
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ resource: `${origin}/api-gateway/mcp` }));
+      },
+      async (url) => {
+        expect((await checkUnauthenticated({ baseUrl: url })).outcome).toBe("pass");
+        for (const check of [checkDiscovery, checkPkceS256]) {
+          const result = await check({ baseUrl: url });
+          expect(result.outcome).toBe("fail");
+          expect(result.detail).toContain(`${url}/api-gateway/mcp returned 503`);
+          expect(result.detail).not.toMatch(/check 1/);
+        }
+      },
+    );
+  });
+
+  it("check 2 fails, naming the address, when its discovery POST cannot connect", async () => {
+    let closedUrl = "";
+    await withStub((_req, res) => res.end(), async (url) => {
+      closedUrl = url;
+    });
+    const result = await checkDiscovery({ baseUrl: closedUrl });
+    expect(result.outcome).toBe("fail");
+    expect(result.detail).toContain(`an anonymous POST to ${closedUrl}/api-gateway/mcp failed`);
+  });
+
+  it("check 2 skips, naming check 1, when the 401 names no metadata URL", async () => {
+    await withStub(
+      (_req, res) => {
+        res.writeHead(401);
+        res.end();
+      },
+      async (url) => {
+        const result = await checkDiscovery({ baseUrl: url });
+        expect(result.outcome).toBe("skip");
+        expect(result.detail).toMatch(/check 1/);
+      },
+    );
+  });
 });
+
+/** A throwaway server for one test, closed however the test ends. */
+async function withStub(
+  handler: http.RequestListener,
+  run: (url: string) => Promise<void>,
+): Promise<void> {
+  const stub = http.createServer(handler);
+  await new Promise<void>((r) => stub.listen(0, "127.0.0.1", r));
+  try {
+    await run(`http://127.0.0.1:${(stub.address() as { port: number }).port}`);
+  } finally {
+    await new Promise<void>((r) => stub.close(() => r()));
+  }
+}
 
 /**
  * Checks 11–15 read only discovery documents, so a stub that serves the chain a
@@ -421,11 +492,17 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
   let issuerPath: string;
   let pointer: boolean;
   let hits: string[];
+  /** A path the stub answers with a 503 instead. */
+  let failing: string | undefined;
 
   beforeAll(async () => {
     stub = http.createServer((req, res) => {
       const url = req.url ?? "";
       hits.push(url);
+      if (url === failing) {
+        res.writeHead(503);
+        return res.end();
+      }
       const json = (body: unknown) => {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(body));
@@ -458,6 +535,7 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
     issuerPath = "";
     pointer = true;
     hits = [];
+    failing = undefined;
   });
 
   const all = [
@@ -508,6 +586,22 @@ describe("MCP conformance: what hosts gate on (ADR 019 D8)", () => {
     const result = await checkResourceMatches({ baseUrl: stubUrl });
     expect(result.outcome).toBe("fail");
     expect(result.detail).toContain("elsewhere.example");
+  });
+
+  // w31/030: each is a request hostMetadata sends itself, so a failed one is a
+  // failure here — not a skip naming a check whose own request may have passed.
+  it.each([
+    ["the anonymous POST", "/api-gateway/mcp"],
+    ["the protected-resource document", "/.well-known/oauth-protected-resource"],
+    ["the authorization-server metadata", "/.well-known/oauth-authorization-server"],
+  ])("fails, reporting the 503, when %s fails", async (_what, path) => {
+    failing = path;
+    for (const check of all) {
+      const result = await check({ baseUrl: stubUrl });
+      expect(result.outcome).toBe("fail");
+      expect(result.detail).toContain(`${stubUrl}${path} returned 503`);
+      expect(result.detail).not.toMatch(/check \d/);
+    }
   });
 
   it("skips rather than fails when the endpoint offers no pointer to follow", async () => {

@@ -156,21 +156,41 @@ function verdict(id: string, title: string) {
  * follow it — and they stay independent (each is separately runnable) rather
  * than one feeding the other, so the extraction lives here instead of being
  * written twice.
+ *
+ * Independence means every caller sends its own request, so `failure` is that
+ * request's own outcome: an error, or a status other than the 401 a pointer is
+ * read from. A follower must report it. Blaming check 1, whose earlier request
+ * may have succeeded, would turn a transient 503 into a skip and the run into a
+ * pass (w31/030). Only a 401 without a pointer is check 1's own finding.
  */
 async function discoverPointer(baseUrl: string): Promise<{
   pointer?: string;
+  failure?: string;
   response: Awaited<ReturnType<typeof probe>>;
 }> {
-  const response = await probe(`${baseUrl}${MCP_PATH}`, {
+  const url = `${baseUrl}${MCP_PATH}`;
+  const response = await probe(url, {
     method: "POST",
     headers: jsonRpcHeaders(),
     body: INITIALIZE,
   });
-  const pointer = response.ok
-    ? response.headers.get("www-authenticate")?.match(/resource_metadata="([^"]+)"/)?.[1]
-    : undefined;
+  if (!response.ok) {
+    return { response, failure: `an anonymous POST to ${url} failed: ${response.error}` };
+  }
+  if (response.status !== 401) {
+    return {
+      response,
+      failure: `an anonymous POST to ${url} returned ${response.status}, not 401, so there was no metadata URL to follow`,
+    };
+  }
+  const pointer = response.headers
+    .get("www-authenticate")
+    ?.match(/resource_metadata="([^"]+)"/)?.[1];
   return { pointer, response };
 }
+
+/** The skip for a 401 that names nothing to follow, which check 1 fails on. */
+const NO_POINTER = "the 401 named no metadata URL to follow (check 1)";
 
 // --- checks ---------------------------------------------------------------
 
@@ -207,8 +227,9 @@ async function checkDiscovery(o: Options): Promise<CheckResult> {
     "2 discovery-resolves",
     "The metadata URL named by the 401 returns a usable document",
   );
-  const { pointer } = await discoverPointer(o.baseUrl);
-  if (!pointer) return v.skip("check 1 produced no pointer to follow");
+  const { pointer, failure } = await discoverPointer(o.baseUrl);
+  if (failure) return v.fail(failure);
+  if (!pointer) return v.skip(NO_POINTER);
 
   // A local deployment advertising a production issuer is a real
   // misconfiguration and an easy one to misread — the check would report the
@@ -654,26 +675,34 @@ async function checkOptionalUserId(o: Options): Promise<CheckResult> {
  *
  * Hosts refuse to start a sign-in when a field below is missing, and they do it
  * before any request reaches the MCP endpoint — so no other check sees it.
+ *
+ * Each step sends its own request, and a request that fails is a failure here,
+ * named with its address and error or status. Only a response that arrived and
+ * is unusable in a way check 1 or check 2 fails on is a skip that names that
+ * check (see `discoverPointer`).
  */
 async function hostMetadata(baseUrl: string): Promise<
   | { ok: true; resource: Record<string, unknown>; server: Record<string, unknown> }
-  | { ok: false; reason: string }
+  | { ok: false; outcome: Exclude<Outcome, "pass">; reason: string }
 > {
-  const { pointer } = await discoverPointer(baseUrl);
-  if (!pointer) return { ok: false, reason: "check 1 produced no pointer to follow" };
+  const fail = (reason: string) => ({ ok: false, outcome: "fail", reason }) as const;
+  const skip = (reason: string) => ({ ok: false, outcome: "skip", reason }) as const;
+
+  const { pointer, failure } = await discoverPointer(baseUrl);
+  if (failure) return fail(failure);
+  if (!pointer) return skip(NO_POINTER);
   const res = await probe(pointer);
-  if (!res.ok || res.status !== 200) {
-    return { ok: false, reason: `${pointer} did not resolve (check 2)` };
-  }
+  if (!res.ok) return fail(`${pointer} is unreachable: ${res.error}`);
+  if (res.status !== 200) return fail(`${pointer} returned ${res.status}`);
   let resource: Record<string, unknown>;
   try {
     resource = JSON.parse(res.body) as Record<string, unknown>;
   } catch {
-    return { ok: false, reason: `${pointer} is not valid JSON (check 2)` };
+    return skip(`${pointer} is not valid JSON (check 2)`);
   }
   const issuer = (resource.authorization_servers as unknown[] | undefined)?.[0];
   if (typeof issuer !== "string") {
-    return { ok: false, reason: `${pointer} names no authorization_servers` };
+    return skip(`${pointer} names no authorization_servers`);
   }
   const { origin, pathname } = new URL(issuer);
   const suffix = pathname === "/" ? "" : pathname.replace(/\/+$/, "");
@@ -681,9 +710,17 @@ async function hostMetadata(baseUrl: string): Promise<
     `${origin}/.well-known/oauth-authorization-server${suffix}`,
     `${origin}${suffix}/.well-known/openid-configuration`,
   ];
+  const misses: string[] = [];
   for (const url of candidates) {
     const meta = await probe(url);
-    if (!meta.ok || meta.status !== 200) continue;
+    if (!meta.ok) {
+      misses.push(`${url} is unreachable: ${meta.error}`);
+      continue;
+    }
+    if (meta.status !== 200) {
+      misses.push(`${url} returned ${meta.status}`);
+      continue;
+    }
     try {
       return {
         ok: true,
@@ -691,13 +728,10 @@ async function hostMetadata(baseUrl: string): Promise<
         server: JSON.parse(meta.body) as Record<string, unknown>,
       };
     } catch {
-      continue;
+      misses.push(`${url} is not valid JSON`);
     }
   }
-  return {
-    ok: false,
-    reason: `no authorization-server metadata for ${issuer} at ${candidates.join(" or ")}`,
-  };
+  return fail(`no authorization-server metadata for ${issuer}: ${misses.join("; ")}`);
 }
 
 /**
@@ -736,7 +770,7 @@ function metadataCheck(
   return async (o: Options): Promise<CheckResult> => {
     const v = verdict(id, title);
     const m = await hostMetadataFor(o);
-    if (!m.ok) return v.skip(m.reason);
+    if (!m.ok) return v[m.outcome](m.reason);
     const problem = judge(m, o);
     return problem ? v.fail(`${problem} — ${impact}`) : v.pass(passDetail);
   };
