@@ -13,7 +13,7 @@ Usage: `/pm [status | new workstream <title> | add <wN> <idea> | promote <wN/NNN
 
 ## Mission — the TPM lens
 
-This board exists to grow **adoption of Beancount.io in the open-source and agentic-coding community**. Act as the technical program manager for that goal: sequence work by adoption impact, not by what is fun to build. Every milestone must advance one of these pillars and name it in its `## Source + Goal linkage`:
+This board exists to grow **adoption of Beancount.io in the open-source and agentic-coding community**. Adoption is the result, not the aim: people adopt what serves a need they actually have. Act as the technical program manager for that goal: sequence work by the value it creates for a real user, shown by evidence that they need it, not by what is fun to build or easy to imagine. Our own gain (revenue, retention, our speed and cost) counts second, and making things simpler for the user, including removing what nobody uses, counts as much as adding. Every milestone must advance one of these pillars and name it in its `## Source + Goal linkage`:
 
 | Pillar | Meaning |
 | --- | --- |
@@ -44,7 +44,7 @@ This board exists to grow **adoption of Beancount.io in the open-source and agen
 - **Blocked work waits in `blocked/` with its unblock condition.** Work that is still wanted but cannot proceed keeps its number, its files, and its pending checkbox, and moves aside: a milestone to `wN/blocked/mN/`, an inbox note to `wN/blocked/NNN.md`. A task cannot leave its milestone — its `id` must match its path — so a blocked task stays put with `status: blocked` and the milestone `README.md` carries the reason. Every blocked item states the exact blocker and an **Unblock:** condition, and names who can clear it when that is not this repository (a deploy, a credential, a store review, a decision only the user can make). "Blocked" with no written condition to clear it is not a status, it is an abandonment.
 - **Numbering:** next free zero-padded 3-digit for inbox notes (`NNN`) and tasks (`tNNN`); next free `wN` / `mN`. Scan the tree first, including `## Dropped` tombstones and everything under `done/` and `blocked/`; don't reuse a number.
 - Use `worker: worker1` unless the workstream README names another worker.
-- **Milestones must be meaningful.** Every milestone must include direct pillar linkage (A1/A2/A3), an observable expected adoption outcome, and why this work matters now (dependency/risk/sequence rationale).
+- **Milestones must be meaningful.** Every milestone must include direct pillar linkage (A1/A2/A3), the evidence of need it rests on (a user's request or report, a failure in real use, a measurement — never "users might want"), an observable expected outcome for a named user, and why this work matters now (dependency/risk/sequence rationale).
 - **Every milestone ends with standing closing tasks**, appended after the implementation tasks whenever a milestone is materialized:
 
   1. **Adoption surface** — _only when the milestone ships something a user or a coding agent touches._ Check the shipped change is discoverable and usable on every surface it exposes: the owning package's `README.md` (install/quickstart steps still work exactly as written), the root `README.md` and `AGENTS.md` package tables, the appropriate skill catalog (`skills/AGENTS.md` for customer workflows, `.agents/AGENTS.md` for development workflows) for new or changed skills, every scope's guidance in a real `AGENTS.md`, and the `.claude/skills` link to the real `.agents/skills` directory (root `AGENTS.md` compatibility rules). For agent-facing work, verify the behavior holds for both Claude Code and Codex — same instructions, same triggers. Flag drift as follow-up work rather than silently diverging. Omit this task only for milestones with no user- or agent-facing surface (pure infra, board mechanics, internal refactors) — note why it was omitted in the milestone's `## Source + Goal linkage`.
@@ -177,8 +177,9 @@ Edit the workstream's routine list, `wN/routine/README.md` (template below). `/l
 ## Source + Goal linkage
 
 - **Source:** <pointer to the inbox note / brainstorm / docs this came from>
+- **Evidence:** <who asked or what was observed, with its date and where to find it>
 - **Goal linkage:** <which adoption pillar (A1/A2/A3) this advances, and how>
-- **Expected outcome:** <observable adoption impact after shipping — who can now do what>
+- **Expected outcome:** <observable outcome after shipping — who can now do what, and what changes for them>
 - **Why now:** <dependency / risk / sequence rationale>
 ```
 
