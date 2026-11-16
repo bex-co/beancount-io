@@ -523,6 +523,17 @@ def _redirect_output(shell: Any, arg: str, stream: TextIO, file: Path | None) ->
     shell.outfile = destination
 
 
+def _leave_on_eof(stream: TextIO) -> bool:
+    """End the prompt line on the terminal at Ctrl-D, never in an export (w1/265).
+
+    Upstream's `do_EOF` prints `exit` to `outfile`, which is the export file
+    whenever `--output` or `.output` is active: the CSV gained a last row
+    `exit` and the terminal was left on the prompt line.
+    """
+    print("exit", file=stream)
+    return True
+
+
 def _unpaged(shell: Any) -> None:
     """Start the shell without upstream's pager, as `bean-query` runs it (w5/585).
 
@@ -614,6 +625,10 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
         def do_output(self, arg: str) -> None:
             """Send output to FILE or restore stdout, preserving source files."""
             _redirect_output(self, arg, sys.stdout, file)
+
+        def do_EOF(self, arg: str) -> bool:
+            """Exit the command interpreter."""
+            return _leave_on_eof(sys.stdout)
 
         def do_help(self, arg: str) -> None:
             """List commands, writing to outfile like every other command."""
@@ -1391,6 +1406,11 @@ def _interactive_session(
         _replay_init(shell, destination)
         shell.cmdloop()
     finally:
+        # An in-shell `.output FILE` replaces `destination` and is still open
+        # when the session ends; closing it here avoids the ResourceWarning
+        # at shutdown (w1/265).
+        if shell.outfile is not sys.stdout:
+            shell.outfile.close()
         if destination is not None:
             destination.close()
 
@@ -1439,6 +1459,10 @@ def build_shell(
             # stream before opening its replacement. Remove this override when
             # upstream supports reset and failed redirection without losing output.
             _redirect_output(self, arg, stream, file)
+
+        def do_EOF(self, arg: str) -> bool:
+            """Exit the command interpreter."""
+            return _leave_on_eof(stream)
 
         def do_reload(self, arg: Any = None) -> None:
             """Reload the Beancount input file."""

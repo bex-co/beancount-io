@@ -83,7 +83,6 @@ m46–m48 were materialized on 2026-11-14 from `/pm-brainstorm for w1` items 1, 
 ## Inbox
 
 - [241](./blocked/241.md) — Port the CLI off typer's private click so typer 0.29+ can install (A2; follow-up to the 239 stopgap) — **blocked:** its 2026-11-14 promotion (w3/m67) was dropped the same day; owner re-funds the port or drops the note
-- [265](./265.md) — The `bea query` shell writes `exit` into an `-o`/`.output` export on Ctrl-D, and leaving after `.output FILE` prints a `ResourceWarning` (minor, cli)
 - [266](./266.md) — `report holdings` says a position with no cost basis is "valued at cost" when it is left in its own units (minor, cli + backend-v2 parity)
 
 
