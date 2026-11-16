@@ -2543,6 +2543,10 @@ def validate_candidate(
     # The staged copy has a private name, so the guard inside the load would
     # name that; a `{filename}` cache pattern is about the ledger file itself.
     refuse_cache_over_ledger(file, snapshot.contents if snapshot else [file], snapshot.patterns if snapshot else ())
+    # `file` is the write's destination; error locations come from the include
+    # closure and plugin lines of the ledger being loaded, which an `--into`
+    # file below the root cannot see (w1/275).
+    ledger = snapshot.root if snapshot else file
     try:
         if snapshot is None:
             entries, errors, options = managed_load.load_file(candidate)
@@ -2588,9 +2592,7 @@ def validate_candidate(
         }
 
     if allow_errors:
-        _, before_errors, _ = managed_load.load_file(
-            snapshot.root if snapshot else file, snapshot=snapshot, check_types=True
-        )
+        _, before_errors, _ = managed_load.load_file(ledger, snapshot=snapshot, check_types=True)
         tolerated = _preexisting_errors(errors, before_errors, filenames, original_lines, _own_lifecycle_accounts)
         existing_plugin_errors = tolerated
     accounts = [entry.account for entry in entries if isinstance(entry, Open)]
@@ -2657,7 +2659,7 @@ def validate_candidate(
             for staged, original in filenames.items():
                 unstaged = unstaged.replace(str(staged), str(original))
             error = error._replace(message=unstaged)
-        message = format_error(error, ledger_file=file)
+        message = format_error(error, ledger_file=ledger)
         for staged, original in filenames.items():
             message = message.replace(str(staged), str(original))
         metadata = error.source or {}
@@ -3183,7 +3185,7 @@ def validate_candidate(
         current = [
             _ErrorRecord(
                 getattr(error, "message", str(error)),
-                format_error(error, ledger_file=file),
+                format_error(error, ledger_file=ledger),
                 (error.source or {}).get("lineno"),
                 [],
                 Path((error.source or {}).get("filename", str(file))),
