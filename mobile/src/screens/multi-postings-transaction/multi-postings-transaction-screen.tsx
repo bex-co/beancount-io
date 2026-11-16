@@ -72,7 +72,7 @@ import {
   formatRemainderAmount,
   hasNonZeroAmount,
   hasUnparsedAmount,
-  isRemainderBalanced,
+  isZeroExact,
   lastPostingAutoToggle,
   makePosting,
   postingAmountAccessibility,
@@ -672,7 +672,7 @@ const MultiPostingsTransactionScreenComponent = () => {
   ]);
 
   const rem = remainder(postings);
-  const isBalanced = isRemainderBalanced(rem);
+  const isBalanced = isZeroExact(rem);
   const validationError = validatePostings(postings);
   // Any row's, not the first problem's: a row with no account before it hid
   // an unreadable amount behind a green "✓ $0.00" (w21/793).
