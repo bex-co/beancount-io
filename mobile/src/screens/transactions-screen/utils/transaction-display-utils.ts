@@ -140,11 +140,13 @@ const isFeeLine = (account: string, roots: RootNames): boolean => {
 };
 
 /**
- * The amount an exchange's fee and rounding lines leave, signed from the cash
- * side (spent is negative), or null when they are in several currencies or
- * cancel out, where the exchange stays neutral.
+ * The signed sum of single-currency legs, negated from the cash side (spent
+ * is negative), or null when they are in several currencies or cancel out.
+ * Shared by the exchange-fee read (the amount the fee and rounding lines
+ * leave, where the exchange itself stays neutral) and the income-funded read
+ * below: both reduce to "sum these legs and flip the sign".
  */
-const feeAmount = (
+const negatedSingleCurrencyTotal = (
   lines: JournalPosting[],
   operatingCurrency?: string,
 ): TransactionAmount | null => {
@@ -189,24 +191,7 @@ const incomeFundedAmount = (
     sheet.map((p) => Math.sign(parseFloat(p.units.number))),
   );
   if (directions.size !== 1) return null;
-  const currencies = new Set(flows.map((p) => p.units.currency));
-  if (currencies.size !== 1) return null;
-  const currency = flows[0]!.units.currency;
-  let total = 0;
-  let scale = 0;
-  for (const p of flows) {
-    const value = parseFloat(p.units.number);
-    if (!Number.isFinite(value)) return null;
-    total += value;
-    scale = Math.max(scale, amountScale(p.units.number));
-  }
-  const value = -total;
-  if (Math.abs(value) < 0.5 * 10 ** -scale) return null;
-  return {
-    text: formatAmount(value, currency, scale, false, operatingCurrency),
-    value,
-    currency,
-  };
+  return negatedSingleCurrencyTotal(flows, operatingCurrency);
 };
 
 /**
@@ -411,7 +396,7 @@ export const selectTransactionAmount = (
               isBalanceSheet(p.account, roots) || isFeeLine(p.account, roots),
           );
         if (exchangeWithFee) {
-          const fee = feeAmount(feeLines, operatingCurrency);
+          const fee = negatedSingleCurrencyTotal(feeLines, operatingCurrency);
           if (fee) return fee;
         }
         // Through Equity conversion legs rather than `@` (w21/818).
