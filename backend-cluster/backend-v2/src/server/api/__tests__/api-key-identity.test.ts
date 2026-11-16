@@ -32,7 +32,11 @@ const liveKey: ApiKey = {
   updatedAt: new Date("2026-01-01"),
 };
 
-function databaseWith(key: ApiKey | null, ownerExists = true) {
+function databaseWith(
+  key: ApiKey | null,
+  ownerExists = true,
+  ownerBlocked = false,
+) {
   const touchLastUsedAt = jest.fn(async () => undefined);
   const bindLedgerScopeRepoId = jest.fn(async () => undefined);
   return {
@@ -44,7 +48,9 @@ function databaseWith(key: ApiKey | null, ownerExists = true) {
         jwt: { verify: jest.fn(async () => null) },
         user: {
           getById: jest.fn(async (_db: unknown, id: string) =>
-            ownerExists && key?.userId === id ? { id } : null,
+            ownerExists && key?.userId === id
+              ? { id, isBlocked: ownerBlocked }
+              : null,
           ),
         },
         apiKey: {
@@ -92,6 +98,25 @@ describe("resolving an API key", () => {
     await expect(
       resolveIdentity(bearer(PLAINTEXT), database, config),
     ).resolves.toBeUndefined();
+  });
+
+  // w3/651: blocking an account ends its keys too — REST, GraphQL, MCP, and
+  // Git over HTTPS all resolve keys here.
+  it("refuses a key whose account is blocked, and accepts it once unblocked", async () => {
+    await expect(
+      resolveIdentity(
+        bearer(PLAINTEXT),
+        databaseWith(liveKey, true, true).database,
+        config,
+      ),
+    ).resolves.toBeUndefined();
+    await expect(
+      resolveIdentity(
+        bearer(PLAINTEXT),
+        databaseWith(liveKey, true, false).database,
+        config,
+      ),
+    ).resolves.toMatchObject({ userId: "usr_1", method: "apikey" });
   });
 
   it("accepts the x-api-key form published by the OpenAPI contract", async () => {

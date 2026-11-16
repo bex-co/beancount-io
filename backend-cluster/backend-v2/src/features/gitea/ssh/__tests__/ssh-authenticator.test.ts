@@ -75,12 +75,17 @@ describe("SshAuthenticator", () => {
     };
   }
 
-  const userModel = (login: string | null) => ({
+  const userModel = (login: string | null, isBlocked = false) => ({
     getUserByUsername: jest
       .fn()
       .mockImplementation(async (_db: unknown, name: string) =>
         login && name === login
-          ? { id: "usr_1", ledger_username: "un_alice", ledger_password: "pw" }
+          ? {
+              id: "usr_1",
+              ledger_username: "un_alice",
+              ledger_password: "pw",
+              isBlocked,
+            }
           : null,
       ),
   });
@@ -152,6 +157,23 @@ describe("SshAuthenticator", () => {
       {} as never,
     );
     await expect(auth.identify(blob)).resolves.toBeNull();
+  });
+
+  it("refuses a key whose owner is blocked (w3/651)", async () => {
+    const gitea = giteaHolding([{ fingerprint, login: "un_alice" }]);
+    const blocked = new SshAuthenticator(
+      gitea.factory as never,
+      userModel("un_alice", true) as never,
+      {} as never,
+    );
+    await expect(blocked.identify(blob)).resolves.toBeNull();
+
+    const unblocked = new SshAuthenticator(
+      gitea.factory as never,
+      userModel("un_alice", false) as never,
+      {} as never,
+    );
+    expect(await unblocked.identify(blob)).not.toBeNull();
   });
 
   it("refuses a key whose owner has no account here", async () => {

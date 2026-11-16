@@ -74,10 +74,18 @@ const SESSION_EXPIRES_AT = 1_800_000_000;
 function databaseAccepting(
   validSessionToken: string | null,
   userId = "user-session",
+  accounts: { blocked?: readonly string[]; gone?: readonly string[] } = {},
 ): DatabaseLayer {
   return {
     db: {} as DatabaseLayer["db"],
     models: {
+      user: {
+        getById: jest.fn(async (_db: unknown, id: string) =>
+          accounts.gone?.includes(id)
+            ? null
+            : { id, isBlocked: accounts.blocked?.includes(id) ?? false },
+        ),
+      },
       jwt: {
         verify: jest.fn(async (_db: unknown, token: string) =>
           validSessionToken && token === validSessionToken
@@ -545,5 +553,54 @@ describe("full session identity", () => {
     { ...session, assurance: { type: "workload" as const } },
   ])("rejects a delegated or non-interactive identity", (identity) => {
     expect(() => assertSessionIdentity(identity)).toThrow(ForbiddenError);
+  });
+});
+
+/**
+ * w3/651: a session or OAuth token outlives the moment its account is blocked,
+ * so the account is read on every request, not only at sign-in.
+ */
+describe("resolveIdentity — the account behind the credential", () => {
+  it("refuses a session whose account is blocked, and accepts it once unblocked", async () => {
+    const req = request({ authorization: "Bearer session-token" });
+    await expect(
+      resolveIdentity(
+        req,
+        databaseAccepting("session-token", "user-session", {
+          blocked: ["user-session"],
+        }),
+        config,
+      ),
+    ).resolves.toBeUndefined();
+    await expect(
+      resolveIdentity(req, databaseAccepting("session-token"), config),
+    ).resolves.toMatchObject({ userId: "user-session", method: "session" });
+  });
+
+  it("refuses a session whose account is gone", async () => {
+    await expect(
+      resolveIdentity(
+        request({ authorization: "Bearer session-token" }),
+        databaseAccepting("session-token", "user-session", {
+          gone: ["user-session"],
+        }),
+        config,
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it("refuses an OAuth token whose account is blocked, and accepts it once unblocked", async () => {
+    const token = await mintOAuth({ scope: "ledger.read" });
+    const req = request({ authorization: `Bearer ${token}` });
+    await expect(
+      resolveIdentity(
+        req,
+        databaseAccepting(null, "user-session", { blocked: ["user-oauth"] }),
+        config,
+      ),
+    ).resolves.toBeUndefined();
+    await expect(
+      resolveIdentity(req, databaseAccepting(null), config),
+    ).resolves.toMatchObject({ userId: "user-oauth", method: "oauth" });
   });
 });

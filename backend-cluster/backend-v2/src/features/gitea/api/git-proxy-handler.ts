@@ -27,6 +27,7 @@ import {
 } from "@/shared/errors";
 import { clientAddress } from "@/server/client-address";
 import {
+  accountMayAuthenticate,
   identityAllowsLedgerScope,
   identityHasCapability,
   resolveApiKeyIdentity,
@@ -478,6 +479,18 @@ const invalidCredentials: GitAuthentication = {
   message: "Invalid credentials",
 };
 
+/**
+ * A blocked account whose credential was verified: told why, in dashboard
+ * sign-in's words. A credential not yet verified gets `invalidCredentials`
+ * instead, so the proxy never says which usernames are blocked.
+ */
+const accountBlocked: GitAuthentication = {
+  ok: false,
+  status: 403,
+  message:
+    "User is banned. If you need help, please contact https://beancount.io/tg.\n",
+};
+
 /** Where a user mints the token that replaces their Git password. */
 function gitTokenSettingsUrl(config: Pick<AppConfig, "dashboard">) {
   return `${config.dashboard.url}/settings/api-keys`;
@@ -673,15 +686,21 @@ export function setGitProxyHandler(
   const passwordAuth = config.gitHttp.passwordAuth;
   const settingsUrl = gitTokenSettingsUrl(config);
 
-  /** Forward as the app user's generated Gitea credential. */
-  const signedInAs = (user: User): GitAuthentication => ({
-    ok: true,
-    authorization: getBasicAuthHeader(
-      user.ledger_username,
-      user.ledger_password,
-    ).Authorization,
-    appUserId: user.id,
-  });
+  /**
+   * Forward as the app user's generated Gitea credential — unless the account
+   * is blocked, which every path that reaches here has to refuse (w3/651).
+   */
+  const signedInAs = (user: User): GitAuthentication =>
+    !accountMayAuthenticate(user)
+      ? accountBlocked
+      : {
+          ok: true,
+          authorization: getBasicAuthHeader(
+            user.ledger_username,
+            user.ledger_password,
+          ).Authorization,
+          appUserId: user.id,
+        };
 
   /** Sign a request in by whichever credential it carries. */
   async function authenticate(
@@ -705,9 +724,26 @@ export function setGitProxyHandler(
       case "email":
         return authenticateEmail(ctx, username, password);
       case "gitea":
-        // Gitea checks its own credential; the header goes through unchanged.
-        return { ok: true, authorization: authHeader };
+        return authenticateGitea(username, authHeader);
     }
+  }
+
+  /**
+   * A Gitea username and password. Gitea checks the credential itself, so the
+   * header goes through unchanged — but a blocked account is refused first,
+   * since Gitea knows nothing about blocking. That refusal is the same 401 a
+   * wrong password gets: the password is unverified here.
+   */
+  async function authenticateGitea(
+    username: string,
+    authHeader: string,
+  ): Promise<GitAuthentication> {
+    const user = await layers.database.models.user.getUserByUsername(
+      layers.database.db,
+      username,
+    );
+    if (user && !accountMayAuthenticate(user)) return invalidCredentials;
+    return { ok: true, authorization: authHeader, appUserId: user?.id };
   }
 
   /**

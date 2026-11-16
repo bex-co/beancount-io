@@ -14,6 +14,7 @@ import { logger } from "@/shared/logger";
 import { sameLedger } from "@/shared/str";
 import { ForbiddenError } from "@/shared/errors";
 import type { LedgerPinResolver } from "@/features/ledger/utils/ledger-pin-resolver";
+import type { User } from "@/features/auth/data/user-model/types";
 
 const identityLogger = logger.child({ module: "identity" });
 
@@ -406,7 +407,7 @@ export async function resolveIdentity(
     return undefined;
   }
 
-  return (
+  const identity =
     (await resolveOAuthIdentity(
       token,
       config,
@@ -419,8 +420,26 @@ export async function resolveIdentity(
       database,
       options.recordUsage ?? true,
     )) ??
-    (await resolveSessionIdentity(token, database))
-  );
+    (await resolveSessionIdentity(token, database));
+
+  // The key path already read the account row and refused it there. An OAuth
+  // token or session outlives the moment its account is blocked or deleted, so
+  // both are checked against the account on every request (w3/651).
+  if (!identity || identity.method === "apikey") return identity;
+  const user = await database.models.user.getById(database.db, identity.userId);
+  return accountMayAuthenticate(user) ? identity : undefined;
+}
+
+/**
+ * Whether an account may sign in by any credential: it exists and is not
+ * blocked. Every credential path calls this — the API identity resolver, the
+ * Git HTTPS proxy, and the SSH proxy — so blocking an account ends all of its
+ * ways in at once, not only dashboard sign-in (w3/651).
+ */
+export function accountMayAuthenticate(
+  user: Pick<User, "isBlocked"> | null | undefined,
+): boolean {
+  return Boolean(user) && !user?.isBlocked;
 }
 
 /**
@@ -483,7 +502,12 @@ export async function resolveApiKeyIdentity(
   // A key whose account is gone is no identity at all. Deletion now removes
   // a user's keys, but one left by an earlier deletion still resolved, and
   // endpoints that never read the user row accepted it (w21/156).
-  if (!(await database.models.user.getById(database.db, key.userId))) {
+  // A blocked account's keys are refused the same way (w3/651).
+  if (
+    !accountMayAuthenticate(
+      await database.models.user.getById(database.db, key.userId),
+    )
+  ) {
     return undefined;
   }
 

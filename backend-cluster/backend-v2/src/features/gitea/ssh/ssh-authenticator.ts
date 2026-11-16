@@ -3,6 +3,7 @@ import { type DbExecutor } from "@/drizzle/drizzle";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import type { IUserModel } from "@/features/auth/data/user-model";
 import { logger } from "@/shared/logger";
+import { accountMayAuthenticate } from "@/server/api/identity";
 
 const log = logger.child({ module: "ssh-auth" });
 
@@ -54,7 +55,7 @@ export class SshAuthenticator {
    * Resolve a presented key to a user, or null to refuse the connection.
    *
    * Fails closed on every unknown: a key Gitea does not know, an owner with no
-   * account here, an unreachable Gitea. A key that cannot be attributed must
+   * account here or a blocked one, an unreachable Gitea. A key that cannot be attributed must
    * not reach the git backend at all — the request would otherwise have to be
    * made on behalf of an identity we picked.
    */
@@ -94,6 +95,11 @@ export class SshAuthenticator {
       // Gitea knows the key but we have no account for its owner. Rare, and not
       // something to guess our way through.
       log.warn("ssh key owner has no account here", { fingerprint, login });
+      return null;
+    }
+    if (!accountMayAuthenticate(user)) {
+      // Blocking ends SSH access too; Gitea knows nothing about it (w3/651).
+      log.warn("ssh key owner is blocked", { fingerprint });
       return null;
     }
 

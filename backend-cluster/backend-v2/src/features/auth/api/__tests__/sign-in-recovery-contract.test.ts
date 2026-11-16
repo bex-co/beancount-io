@@ -156,6 +156,9 @@ function createFixture() {
     getByIdForUpdate: jest.fn(async (_db: unknown, id: string) =>
       id === ACCOUNT.id ? { ...ACCOUNT } : null,
     ),
+    getById: jest.fn(async (_db: unknown, id: string) =>
+      id === ACCOUNT.id ? { ...ACCOUNT } : null,
+    ),
     verifyPassword: jest.fn(
       async (_db: unknown, _id: string, password: string) =>
         password === "correct-password",

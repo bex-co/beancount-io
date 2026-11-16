@@ -162,7 +162,9 @@ describe("Context Types", () => {
             verify: jest.fn().mockResolvedValue(sessionVerification),
           },
           user: {
-            getById: jest.fn(),
+            getById: jest
+              .fn()
+              .mockResolvedValue({ id: mockUserId, isBlocked: false }),
             updateLastSeenAt: jest.fn().mockResolvedValue(undefined),
           },
         },
@@ -375,6 +377,12 @@ describe("Context Types", () => {
           models: {
             jwt: {
               verify: jest.fn().mockResolvedValue(sessionVerification),
+            },
+            user: {
+              getById: jest
+                .fn()
+                .mockResolvedValue({ id: mockUserId, isBlocked: false }),
+              updateLastSeenAt: jest.fn().mockResolvedValue(undefined),
             },
           },
         } as unknown as DatabaseLayer;

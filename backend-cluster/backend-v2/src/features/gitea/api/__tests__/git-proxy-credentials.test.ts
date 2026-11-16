@@ -45,6 +45,7 @@ const USER = {
   password: "stored-hash",
   ledger_username: "a",
   ledger_password: "gitea-secret",
+  isBlocked: false,
 };
 const GITEA_AUTH = `Basic ${Buffer.from("a:gitea-secret").toString("base64")}`;
 
@@ -131,7 +132,9 @@ const models = {
       async (_db: unknown, _id: string, password: string) =>
         password === "hunter2-pw",
     ),
-    getUserByUsername: jest.fn(async () => null),
+    getUserByUsername: jest.fn(
+      async (_db: unknown, _name: string): Promise<typeof USER | null> => null,
+    ),
   },
   apiKey: {
     findByDigest: jest.fn(
@@ -422,6 +425,62 @@ describe("gitHttp.passwordAuth", () => {
       expect(await passwordCount("email")).toBe(0);
     },
   );
+});
+
+describe("a blocked account (w3/651)", () => {
+  const clone = ENDPOINTS[1];
+  const push = ENDPOINTS[3];
+  const CREDENTIALS = [
+    { kind: "token", username: "x", password: TOKENS.write },
+    { kind: "email", username: USER.email, password: "hunter2-pw" },
+    { kind: "gitea", username: "a", password: "gitea-secret" },
+  ] as const;
+
+  beforeEach(() => {
+    // The Gitea username is the app user's, so the passthrough can find it.
+    models.user.getUserByUsername.mockImplementation(
+      async (_db: unknown, name: string) =>
+        name.toLowerCase() === USER.ledger_username ? USER : null,
+    );
+  });
+  afterEach(() => {
+    USER.isBlocked = false;
+    models.user.getUserByUsername.mockImplementation(async () => null);
+  });
+
+  for (const { kind, username, password } of CREDENTIALS) {
+    it(`is refused with a ${kind} credential, and works again once unblocked`, async () => {
+      const handle = handlerFor("allow");
+      USER.isBlocked = true;
+      for (const endpoint of [clone, push]) {
+        const ctx = request(endpoint, username, password);
+        await handle(ctx);
+        // Only a verified password learns why; a token or an unverified Gitea
+        // password gets the answer any wrong credential gets.
+        if (kind === "email") {
+          expect(ctx.status).toBe(403);
+          expect(ctx.body).toContain("User is banned");
+        } else {
+          expect(ctx.status).toBe(401);
+          expect(ctx.body).toBe("Invalid credentials");
+        }
+      }
+      expect(mockFetch).not.toHaveBeenCalled();
+
+      USER.isBlocked = false;
+      for (const endpoint of [clone, push]) {
+        const ctx = request(endpoint, username, password);
+        await handle(ctx);
+        expect(ctx.status).toBe(200);
+      }
+    });
+  }
+
+  it("a Gitea username with no app account still goes to Gitea", async () => {
+    const ctx = request(clone, "gitea-admin", "secret");
+    await handlerFor("allow")(ctx);
+    expect(ctx.status).toBe(200);
+  });
 });
 
 describe("SidebandMessageInjector", () => {
