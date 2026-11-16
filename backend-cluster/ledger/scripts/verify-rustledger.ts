@@ -65,7 +65,11 @@ import { LedgerDataService } from "@/features/ledger/service/ledger-data-service
 import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { verifyBatchDeleteScale } from "./batch-delete-scale";
-import { verifyEntryMove, verifyScopedEntryMove } from "./entry-move";
+import {
+  verifyEntryMove,
+  verifyOwnKeyUnderPushmeta,
+  verifyScopedEntryMove,
+} from "./entry-move";
 import { verifyProjectedDocuments } from "./projected-documents";
 import { verifyProjectedIncludes } from "./projected-includes";
 import type { SerializableTreeNodePublic } from "@/foundation/ledger-api-types";
@@ -5492,6 +5496,7 @@ poptag #trip
   await verifyBatchDeleteScale();
   await verifyEntryMove();
   await verifyScopedEntryMove();
+  await verifyOwnKeyUnderPushmeta();
   await verifyProjectedIncludes();
   await verifyProjectedDocuments();
 

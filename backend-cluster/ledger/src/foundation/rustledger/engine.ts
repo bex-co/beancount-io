@@ -47,6 +47,11 @@ import { openAutoAccounts } from "./auto-accounts";
 import { reportPreOpenUses } from "./pre-open-uses";
 import { orderMetaAsWritten } from "./meta-order";
 import {
+  keepOwnMetaOverPushed,
+  sourceMayShadowPushedMeta,
+  withoutMetaStacks,
+} from "./pushed-meta";
+import {
   discoverDocuments,
   mergeDiscoveredDocuments,
 } from "./document-discovery";
@@ -680,6 +685,18 @@ async function parseLedgerFilesUncached(
     entryPoint,
     snapshotOf,
   );
+  // An entry's own key wins over an open `pushmeta` of it in Beancount; the
+  // engine lets the push win (w31/028).
+  if (sourceMayShadowPushedMeta(stripResult?.strippedFiles ?? scoped)) {
+    keepOwnMetaOverPushed(
+      raw.directives,
+      await withLedger(
+        withoutMetaStacks(stripResult?.strippedFiles ?? scoped),
+        entryPoint,
+        (ledger) => ledger.getDirectives(),
+      ),
+    );
+  }
 
   // Beancount's same-day order, before plugins and pad expansion walk it: the
   // engine groups a day by directive kind (w21/134).
@@ -1026,7 +1043,9 @@ export async function queryLedgerFilesResultInProcess(
   const needsMaterializedStream =
     needsTsPluginStream ||
     sourceHasTaggedDocument(files) ||
-    sourceHasPad(files);
+    sourceHasPad(files) ||
+    // The engine's `entry_meta` lets a push override the entry's key (w31/028).
+    sourceMayShadowPushedMeta(files);
   const materialized = needsMaterializedStream
     ? materializeDirectiveStreamWithSourceMap(
         (await parseLedgerFilesInProcess(files, entryPoint)).directives,

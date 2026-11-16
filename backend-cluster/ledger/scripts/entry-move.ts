@@ -17,6 +17,7 @@ import {
   accountHierarchy,
   buildPriceMap,
   parseLedgerFiles,
+  queryLedgerFilesResult,
 } from "@/foundation/rustledger";
 
 const TEA = '2026-08-04 * "Tea"\n  Expenses:Food  4.00 USD\n  Assets:Cash';
@@ -357,5 +358,130 @@ export async function verifyScopedEntryMove(): Promise<void> {
 
   console.log(
     "✓ entries moved out of a pushtag/pushmeta scope keep its tags, metadata and their hashes; an unscoped one moves byte for byte (w31/016)",
+  );
+}
+
+/**
+ * An entry that writes a key an open `pushmeta` holds keeps its own value, as
+ * Beancount's grammar sets the pushed keys first and the entry's on top
+ * (w31/028). The engine let the push win, so the journal, the entry context
+ * and BQL `entry_meta` read the pushed value, and the w31/016 move, which
+ * writes only the entry's own key, flipped that reading under the same hash.
+ * Checked on the live engine before and after the move, with an entry that
+ * writes no key of its own (it keeps the pushed value) and a nested push.
+ */
+export async function verifyOwnKeyUnderPushmeta(): Promise<void> {
+  const own =
+    '2026-09-26 * "PAYEE-C1" "own key"\n  qa-c: "own"\n  Expenses:Food   1.00 USD\n  Assets:Cash';
+  const files: Record<string, string> = {
+    "main.bean": [
+      'option "operating_currency" "USD"',
+      "2026-01-01 open Assets:Cash USD",
+      "2026-01-01 open Expenses:Food USD",
+      "",
+      'pushmeta qa-c: "pushed"',
+      own,
+      '2026-09-27 * "PAYEE-C2" "no key of its own"',
+      "  Expenses:Food   2.00 USD",
+      "  Assets:Cash",
+      'pushmeta qa-c: "inner"',
+      '2026-09-28 * "PAYEE-C3" "own key, nested"',
+      '  qa-c: "own-3"',
+      "  Expenses:Food   3.00 USD",
+      "  Assets:Cash",
+      '2026-09-28 * "PAYEE-C4" "nested, no key of its own"',
+      "  Expenses:Food   4.00 USD",
+      "  Assets:Cash",
+      "popmeta qa-c:",
+      "popmeta qa-c:",
+      "",
+    ].join("\n"),
+  };
+  const expected = {
+    "PAYEE-C1": "own",
+    "PAYEE-C2": "pushed",
+    "PAYEE-C3": "own-3",
+    "PAYEE-C4": "inner",
+  };
+  const { factory } = committingRepo(files);
+  const journal = new LedgerJournalService(factory as never, {} as never);
+  const params = { ledgerId: "synthetic/pushmeta-own-key", userId: "usr_1" };
+  const listed = async () =>
+    (
+      await journal.getJournal({
+        ...params,
+        userId: undefined,
+        query: { includeSource: true },
+      })
+    ).data as unknown as ScopedRow[];
+  const readings = async () => {
+    const rows = (await listed()).filter((row) => row.payee?.startsWith("PAYEE-C"));
+    const context = await Promise.all(
+      rows.map(async (row) => {
+        const { entry } = await journal.getContext({
+          ...params,
+          userId: undefined,
+          entryHash: row.entry_hash,
+        });
+        return (entry.meta as Record<string, unknown>)["qa-c"];
+      }),
+    );
+    const bql = await queryLedgerFilesResult(
+      { ...files },
+      "main.bean",
+      "SELECT DISTINCT payee, entry_meta('qa-c') WHERE payee ~ '^PAYEE-C' ORDER BY payee",
+    );
+    if (bql.errors.length > 0) fail(`BQL: ${JSON.stringify(bql.errors)}`);
+    return {
+      journal: Object.fromEntries(
+        rows.map((row) => [row.payee, row.meta?.["qa-c"] ?? null]),
+      ),
+      context: Object.fromEntries(
+        rows.map((row, index) => [row.payee, context[index] ?? null]),
+      ),
+      bql: Object.fromEntries(bql.rows.map(([payee, value]) => [payee, value])),
+      hashes: rows.map((row) => row.entry_hash),
+    };
+  };
+  const want = (label: string, got: Record<string, unknown>) => {
+    const sorted = Object.fromEntries(Object.entries(got).sort());
+    if (JSON.stringify(sorted) !== JSON.stringify(expected))
+      fail(`${label} reads ${JSON.stringify(sorted)}`);
+  };
+
+  const before = await ledgerState(files);
+  if (before.errors.length > 0)
+    fail(`the pushmeta fixture has errors: ${JSON.stringify(before.errors)}`);
+  const was = await readings();
+  want("the journal", was.journal);
+  want("the entry context", was.context);
+  want("BQL entry_meta", was.bql);
+
+  const row = (await listed()).find((item) => item.payee === "PAYEE-C1");
+  if (!row?.source) fail("no source for PAYEE-C1");
+  const result = await journal.moveSourceSlices({
+    ...params,
+    entries: [{ entryHash: row.entry_hash, sha256sum: row.source.sha256sum }],
+    toPath: "moved.bean",
+    includeFrom: "main.bean",
+  });
+  if (files["moved.bean"] !== `${own}\n`)
+    fail(`the target holds:\n${files["moved.bean"]}`);
+  if (result.validation.newErrors.length !== 0)
+    fail(`the move reports ${JSON.stringify(result.validation.newErrors)}`);
+  const is = await readings();
+  want("the journal after the move", is.journal);
+  want("the entry context after the move", is.context);
+  want("BQL entry_meta after the move", is.bql);
+  if (JSON.stringify([...is.hashes].sort()) !== JSON.stringify([...was.hashes].sort()))
+    fail(`the hashes changed: ${JSON.stringify(was.hashes)} -> ${JSON.stringify(is.hashes)}`);
+  const after = await ledgerState(files);
+  if (JSON.stringify(after) !== JSON.stringify(before))
+    fail(
+      `the ledger changed: ${JSON.stringify(before)} -> ${JSON.stringify(after)}`,
+    );
+
+  console.log(
+    "✓ an entry's own key wins over an open pushmeta of it on the journal, entry context and BQL, before and after a move (w31/028)",
   );
 }
