@@ -98,7 +98,21 @@ Changed in code and tests after the live run; **none of it has been run on a liv
 
 ### Update, 2026-11-16
 
-The rest of decision 2 and the decision 1 leftovers are built (code and tests; not yet run on a live bex). With `SELF_HOST` on: sign-in no longer tries to follow the hosted showcase user `open_ledger` (`auth-session-workflow.ts`); the welcome mail is sent only when the deployment delivers mail, and its dashboard link is the deployment's own address (`welcomeMailLinks` in `backend-cluster/backend-v2/src/features/auth/utils/deployment-copy.ts`; the app-store and help-centre links are public pages); a blocked account is told to contact the person who runs the server, at sign-in and on the Git proxy (`bannedUserMessage`, same file); and the dashboard's plan card leaves out the hosted "Contact us" link. The managed service's behavior and wording are unchanged.
+The rest of decision 2 and the decision 1 leftovers are built. With `SELF_HOST` on: sign-in no longer tries to follow the hosted showcase user `open_ledger` (`auth-session-workflow.ts`); the welcome mail is sent only when the deployment delivers mail, and its dashboard link is the deployment's own address (`welcomeMailLinks` in `backend-cluster/backend-v2/src/features/auth/utils/deployment-copy.ts`; the app-store and help-centre links are public pages); a blocked account is told to contact the person who runs the server, at sign-in and on the Git proxy (`bannedUserMessage`, same file); and the dashboard's plan card leaves out the hosted "Contact us" link. The managed service's behavior and wording are unchanged.
+
+**Second live run.** The same day the root Blueprint was applied again to an idle bex workspace (`main` at `34b43768b`; dashboard and Gitea redeployed at `8fa681216`), exercised, and deleted. It settles what the 2026-11-14 update listed as unverified, except the last item:
+
+- bex accepts Gitea as a private service with a disk and resolves `property: host` for it; the stack was live 27 minutes after the Blueprint was created.
+- `RENDER_EXTERNAL_URL` is set for the API service: every ledger's `httpUrl` was `https://<API address>/git/<owner>/<ledger>.git`, with `sshUrl: null`.
+- Through the platform's ingress, `git clone` with a personal access token, a small push and a 20 MB push all worked; no credential and a wrong password were refused. Larger pushes and `TRUSTED_PROXY_HOPS` were not examined.
+- The repositories survived a restart of Gitea and a rebuild and redeploy of it.
+- Sign-up closed after the first account (`FORBIDDEN`), the pages dropped "Sign up", and deleting the only account reopened it.
+- The forgot-password page said the server cannot send email; the operator's reset link worked once and was refused the second time.
+- Category suggestions, the upload URL and `bea ask`'s model proxy answered `CONFIGURATION_ERROR` with their hints (503 on REST).
+- The API's log held no `open_ledger` warning and no failed welcome mail; Settings → Billing linked nowhere on beancount.io.
+- **Not run:** syncing this Blueprint into an existing deployment whose Gitea is a web service. Whether bex keeps the disk across that change is still unknown.
+
+The run found two defects, fixed and rerun the same day: Settings → Billing listed the managed service's paid plans on a self-hosted stack (now left out), and the smoke script of decision 6 looked for a button the create-ledger form no longer has and stopped without deleting its account, closing sign-up on the stack under test. It also showed that `bea` 0.3.1, the latest release, predates w1/m46: its `cloud ledger clone` stops on a null `sshUrl` with `expected str … not NoneType` instead of the refusal described above, until a newer release ships.
 
 Still open from this review: the Pwned Passwords check cannot be switched off; the API's `/api/admin/*` and Git proxy are on the internet behind a single header token with no visible lockout.
 
