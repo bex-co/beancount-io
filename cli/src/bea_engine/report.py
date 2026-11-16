@@ -592,6 +592,90 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
     }
 
 
+@dataclasses.dataclass
+class _ValuedHolding:
+    """One held group's market value and converted cost basis at the period end.
+
+    `market`/`currency` is the value and the currency it is in; `price`/
+    `price_date`/`quoted` is the quote behind it. `basis`/`basis_currency` is
+    the cost basis converted toward the requested currency as far as its leg
+    has a rate. `leg_date` is the conversion-leg quote date behind the group's
+    `conversion_source`, None when no conversion was read. `missing` names
+    each unquotable leg for the strict/partial contract.
+    """
+
+    market: Decimal
+    currency: str
+    price: Decimal | None
+    price_date: date | None
+    quoted: tuple[str, str | None]
+    basis: Decimal
+    basis_currency: str
+    leg_date: date | None
+    missing: list[tuple[str, str]]
+
+
+def _value_holding(
+    prices: Any,
+    end: date | None,
+    *,
+    units: Decimal,
+    basis: Decimal,
+    basis_known: bool,
+    commodity: str,
+    held: str,
+    target: str | None,
+) -> _ValuedHolding:
+    """Value one held group at the period end, in the requested currency when asked.
+
+    A quote in the requested currency values the lot directly, as Beancount's
+    own conversion does; routed through the cost currency, an older quote
+    misvalued the lot, or its absence refused the report (w5/1033). The basis
+    still converts through the cost currency, and without that rate it stays
+    in it beside the market value, with the rate reported missing (w5/1117).
+    Without any quote into the requested currency the group values through
+    its own cost currency instead. `held` is never empty here: groups with no
+    cost currency to value into are resolved or left out before this runs.
+    """
+    quoted: tuple[str, str | None] = (commodity, held)
+    direct_date, direct = (None, None)
+    leg_date, rate = (None, None)
+    if target is not None and target != held:
+        leg_date, rate = prices.get_price_point((held, target), end)
+        direct_date, direct = prices.get_price_point((commodity, target), end)
+    # `direct` only comes from the fetch above, so a direct quote already
+    # implies a requested currency; the `target` check stays to narrow the
+    # type for the branch below.
+    if direct is None or target is None:
+        # No quote straight into the requested currency: value through the
+        # cost currency, converting into the target when its leg has a rate.
+        quote_date, price = prices.get_price_point((commodity, held), end)
+        # Unquoted, a group values at cost; a group that also holds
+        # uncosted units counts only its costed part (named missing).
+        market = units * price if price is not None else basis
+        missing = [] if price is not None else [(commodity, held)]
+        currency = held
+        if target is not None and target != held:
+            if rate is not None:
+                basis, market = basis * rate, market * rate
+                price = price * rate if price is not None else None
+                currency = target
+            else:
+                missing.append((held, target))
+        return _ValuedHolding(market, currency, price, quote_date, quoted, basis, currency, leg_date, missing)
+    quote_date, price, quoted = direct_date, direct, (commodity, target)
+    market, currency = units * direct, target
+    # The currency the basis is in; the market value has its own above, since
+    # a direct quote in the requested currency needs no basis rate.
+    basis_currency = held
+    missing = []
+    if rate is not None:
+        basis, basis_currency = basis * rate, target
+    elif basis_known:
+        missing.append((held, target))
+    return _ValuedHolding(market, currency, price, quote_date, quoted, basis, basis_currency, leg_date, missing)
+
+
 def _holdings(
     filtered: Any, conversion: str, group_by: str, allow_errors: bool, ledger_errors: list[str]
 ) -> dict[str, Any]:
@@ -700,57 +784,32 @@ def _holdings(
                 # Nothing to value into: the position stays in its units.
                 groups.append(_uncosted_unvalued(key, group_by, accounts, commodity, units))
                 continue
-        quoted: tuple[str, str | None] = (commodity, held)
-        direct_date, direct = (None, None)
-        leg_date, rate = (None, None)
-        if target is not None and target != held:
-            leg_date, rate = prices.get_price_point((held, target), end)
-            direct_date, direct = prices.get_price_point((commodity, target), end)
-        # The currency the basis is in; the market value has its own below, since
-        # a direct quote in the requested currency needs no basis rate (w5/1117).
-        basis_currency = held
-        if direct is not None and target is not None:
-            # A quote in the requested currency values the lot directly, as
-            # Beancount's own conversion does; routed through the cost
-            # currency, an older EUR quote valued 300 USD of shares at 250, or
-            # its absence refused the report (w5/1033). The basis still
-            # converts through the cost currency, and without that rate it
-            # stays in it beside the market value, with the rate reported
-            # missing.
-            quote_date, price, quoted = direct_date, direct, (commodity, target)
-            market, currency = units * direct, target
-            if rate is not None:
-                basis, basis_currency = basis * rate, target
-            elif basis_known:
-                missing.append((held, target))
-        else:
-            quote_date, price = prices.get_price_point((commodity, held), end)
-            # Unquoted, a group values at cost; a group that also holds
-            # uncosted units counts only its costed part (named missing).
-            market = units * price if price is not None else basis
-            if price is None:
-                missing.append((commodity, held))
-            currency = held
-            if target is not None and target != held:
-                if rate is not None:
-                    basis, market = basis * rate, market * rate
-                    price = price * rate if price is not None else None
-                    currency = target
-                else:
-                    missing.append((held, target))
-            basis_currency = currency
+        valued = _value_holding(
+            prices,
+            end,
+            units=units,
+            basis=basis,
+            basis_known=basis_known,
+            commodity=commodity,
+            held=held,
+            target=target,
+        )
+        basis = valued.basis
+        missing.extend(valued.missing)
         average = basis / units if units and basis_known else None
         group: dict[str, Any] = {"account": key[0]} if group_by == "account" else {"accounts": sorted(accounts)}
         group |= {
             "commodity": commodity,
             "units": {"number": units, "currency": commodity},
-            "average_cost": {"number": average, "currency": basis_currency} if average is not None else None,
-            "cost_basis": {"number": basis, "currency": basis_currency} if basis_known else None,
-            "market_value": {"number": market, "currency": currency},
-            "price": {"number": price, "currency": currency} if price is not None else None,
-            "price_date": quote_date,
-            "price_source": _quote_source(sources, *quoted, quote_date),
-            "conversion_source": (_quote_source(sources, held, target, leg_date) if leg_date is not None else None),
+            "average_cost": {"number": average, "currency": valued.basis_currency} if average is not None else None,
+            "cost_basis": {"number": valued.basis, "currency": valued.basis_currency} if basis_known else None,
+            "market_value": {"number": valued.market, "currency": valued.currency},
+            "price": {"number": valued.price, "currency": valued.currency} if valued.price is not None else None,
+            "price_date": valued.price_date,
+            "price_source": _quote_source(sources, *valued.quoted, valued.price_date),
+            "conversion_source": (
+                _quote_source(sources, held, target, valued.leg_date) if valued.leg_date is not None else None
+            ),
         }
         groups.append(group)
     valuation = _holdings_valuation(missing, in_units, end, allow_errors, filtered.ledger, ledger_errors)
