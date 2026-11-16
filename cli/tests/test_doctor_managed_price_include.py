@@ -85,6 +85,7 @@ def test_roundtrip_reports_no_glob_error(feed_server: str, tmp_path: Path) -> No
 
     assert result.returncode == 0, result.stderr
     assert GLOB_ERROR not in result.stdout + result.stderr
+    assert "matches no file" not in result.stdout + result.stderr
     assert "Entries are the same. Congratulations." in result.stderr
     assert sorted(path.name for path in tmp_path.glob("main*")) == ["main.bean"]
 
@@ -95,6 +96,7 @@ def test_roundtrip_names_a_source_it_cannot_resolve(feed_server: str, tmp_path: 
     result = _run_bea(tmp_path, feed_server, "--offline", "doctor", "roundtrip", str(ledger))
 
     assert GLOB_ERROR not in result.stdout + result.stderr
+    assert "matches no file" not in result.stdout + result.stderr
     assert "managed price source unavailable" in result.stderr
 
 

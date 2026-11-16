@@ -60,6 +60,7 @@ def test_check_loads_the_globbed_include(books: Path, mode: tuple[str, ...]) -> 
 
     assert result.exit_code == 0, result.output
     assert "does not match any files" not in result.output
+    assert "matches no file" not in result.output
 
 
 def test_balance_shows_the_included_expense(books: Path) -> None:

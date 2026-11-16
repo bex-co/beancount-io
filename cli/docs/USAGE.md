@@ -700,6 +700,14 @@ still reports the rest, and the key joins its list.
 Beancount writes such a value over the entry's location without a word, so
 every read would place the entry in a file that does not exist. Reads keep the
 real location; rename the key, for example to `receipt:` or `statement:`.
+An `include` that matches no file is reported at the line that wrote it, with
+the path it was matched against: `FILE:LINE: include "PATTERN" matches no file
+(looked for PATH)`. A relative pattern is matched in the including file's
+directory, not the root ledger's or the working directory. Every read and
+`--json check` report it this way; plain `bea check` does too, beside the
+ledger's other load errors. With bean-check's own options (`-v`, `--auto`, its
+`--json`), the output stays bean-check's: `<load>:0: File glob "PATTERN" does
+not match any files`.
 
 `bea check` loads the ledger once in its helper, which applies bean-check's own
 validations. With no bean-check options, a ledger that passes is answered from

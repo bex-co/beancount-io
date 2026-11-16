@@ -166,7 +166,11 @@ def check(ctx: typer.Context) -> None:
                 # its answer. Short-circuited, `-C`, `-v` and `--json` showed
                 # the key alone with the wrong count (w5/850).
                 added, reserved = reserved, []
-            if failed or unbookable or reserved:
+            # An include that matches nothing: bean-check names neither the
+            # include line nor where it looked (w1/269). With bean-check's own
+            # options, its output stays native, as USAGE documents.
+            missing = [] if args else [str(line) for line in loaded.get("missing_includes") or []]
+            if failed or unbookable or reserved or missing:
                 # bean-check reports a plugin that cannot load as a traceback at
                 # `<load>:0`, and a transaction booking cannot do the arithmetic
                 # for as an uncaught `DivisionByZero` or `InvalidOperation` (w5/538);

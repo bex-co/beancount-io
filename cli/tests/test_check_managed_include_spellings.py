@@ -49,6 +49,7 @@ def test_text_check_agrees_with_json_check(feed_server: str, tmp_path: Path, spe
     assert json.loads(control.stdout)["data"] == {"valid": True, "errors": []}
     assert text.returncode == 0, text.stdout + text.stderr
     assert "does not match any files" not in text.stdout + text.stderr
+    assert "matches no file" not in text.stdout + text.stderr
 
 
 def test_bean_check_options_are_refused_for_an_uppercase_scheme(feed_server: str, tmp_path: Path) -> None:

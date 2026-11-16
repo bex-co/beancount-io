@@ -151,10 +151,10 @@ def test_an_include_matching_nothing_stays_a_ledger_error(tmp_path: Path) -> Non
     checked = _bea(tmp_path, "--file", str(main), "check")
 
     assert listed.returncode == 1
-    assert "does not match any files" in listed.stderr
+    assert f'{main}:2: include "sub/apr.bean" matches no file' in listed.stderr
     assert tolerated.returncode == 0, tolerated.stderr
     assert checked.returncode == 1
-    assert "does not match any files" in checked.stderr
+    assert f'{main}:2: include "sub/apr.bean" matches no file' in checked.stderr
     assert "Traceback" not in checked.stderr
 
 

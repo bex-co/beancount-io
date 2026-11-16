@@ -892,7 +892,7 @@ def price_status(
         answer.data = {
             "sources": [managed_load.source_json(source) for source in loaded.sources],
             "refused": [{"url": url, "reason": reason} for url, reason in refused.items()],
-            "errors": [format_error(error) for error in loaded.errors],
+            "errors": [format_error(error, ledger_file=ledger) for error in loaded.errors],
         }
 
 
@@ -942,7 +942,7 @@ def price_refresh(
                 for url, source in sorted(after.items())
                 if source.revision != before.get(url)
             ],
-            "errors": [format_error(error) for error in loaded.errors],
+            "errors": [format_error(error, ledger_file=root) for error in loaded.errors],
         }
 
 
@@ -972,13 +972,14 @@ def price_export(
         from bea_engine import managed_load
         from bea_engine.query import format_error
 
-        exported = managed_load.export_portable(_ledger(file), output, allow_errors=allow_errors, force=force)
+        ledger = _ledger(file)
+        exported = managed_load.export_portable(ledger, output, allow_errors=allow_errors, force=force)
         answer.data = {
             "output": str(exported.output),
             "files": list(exported.files),
             "overwritten": list(exported.overwritten),
             "sources": [managed_load.source_json(source) for source in exported.sources],
-            "errors": [format_error(error) for error in exported.errors],
+            "errors": [format_error(error, ledger_file=ledger) for error in exported.errors],
         }
 
 
@@ -1073,7 +1074,7 @@ def _validate(file: Path, *, documents_only: bool = False) -> dict[str, Any]:
 
     from bea_engine.compat import is_reserved_location
     from bea_engine.managed_load import data_type_errors, is_booking_failure
-    from bea_engine.query import format_error, is_plugin_failure
+    from bea_engine.query import format_error, is_missing_include, is_plugin_failure
     from fava.core.loader import load_file
 
     entries, errors, options = load_file(str(file))
@@ -1099,7 +1100,10 @@ def _validate(file: Path, *, documents_only: bool = False) -> dict[str, Any]:
     failed = [format_error(error, ledger_file=file) for error in errors if is_plugin_failure(error)]
     unbookable = [format_error(error, ledger_file=file) for error in errors if is_booking_failure(error)]
     reserved = [format_error(error, ledger_file=file) for error in errors if is_reserved_location(error)]
-    if failed or unbookable or reserved:
+    # bean-check reports an include that matches nothing at `<load>:0`, with
+    # no file, line, or the directory its pattern was matched in (w1/269).
+    missing = [format_error(error, ledger_file=file) for error in errors if is_missing_include(error)]
+    if failed or unbookable or reserved or missing:
         # bean-check prints these as a traceback at `<load>:0`, raises on the
         # transaction booking cannot do the arithmetic for (w5/538), or accepts
         # metadata that overwrites an entry's location (w5/630); the caller,
@@ -1110,6 +1114,7 @@ def _validate(file: Path, *, documents_only: bool = False) -> dict[str, Any]:
             "plugin_failures": failed,
             "booking_failures": unbookable,
             "reserved_keys": reserved,
+            "missing_includes": missing,
             "root_hint": hint,
             "clean": False,
         }

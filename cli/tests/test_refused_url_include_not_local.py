@@ -77,3 +77,4 @@ def test_the_refusal_names_the_reason(tmp_path: Path, target: str, reason: str) 
     assert f'include "{target}":' in checked.stderr
     assert reason in checked.stderr
     assert "does not match any files" not in checked.stderr
+    assert "matches no file" not in checked.stderr

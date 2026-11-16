@@ -3193,9 +3193,10 @@ def is_plugin_failure(error: Any) -> bool:
 def format_error(error: Any, ledger_file: Path | str | None = None) -> str:
     """One loader error as `file:line: message` — the frontend's detail line.
 
-    Two loader messages arrive as internal Python artifacts and are rewritten
+    Three loader messages arrive as internal Python artifacts and are rewritten
     here, the one boundary where error objects become display strings: plugin
-    failures embed a full traceback with a `<load>:0` location, and duplicate
+    failures embed a full traceback with a `<load>:0` location, an include
+    that matches nothing is reported at `<load>:0` too (w1/269), and duplicate
     reports embed two whole `Transaction(...)` reprs. Anything unrecognized
     keeps its legacy rendering rather than losing information.
     """
@@ -3208,6 +3209,9 @@ def format_error(error: Any, ledger_file: Path | str | None = None) -> str:
         duplicate = _duplicate_message(error, message)
         if duplicate is not None:
             return duplicate
+        include = _missing_include_message(message, ledger_file, source)
+        if include is not None:
+            return include
         message = _booking_message(error, message)
     return f"{source.get('filename', '<ledger>')}:{source.get('lineno', 0)}: {message}"
 
@@ -3394,6 +3398,76 @@ def _plugin_message(message: str, ledger_file: Path | str | None, source: Any) -
     if location is None:
         return f"<ledger>:0: {text}"
     return f"{location[0]}:{location[1]}: {text}"
+
+
+_MISSING_INCLUDE = re.compile(r'File glob "(?P<pattern>.*)" does not match any files\Z', re.DOTALL)
+
+
+def is_missing_include(error: Any) -> bool:
+    """Whether a loader error is an `include` whose glob matched no file."""
+    message = getattr(error, "message", error)
+    source = getattr(error, "source", None) or {}
+    return (
+        isinstance(message, str) and _MISSING_INCLUDE.match(message) is not None and source.get("filename") == "<load>"
+    )
+
+
+def _missing_include_message(message: str, ledger_file: Path | str | None, source: Any) -> str | None:
+    """An include that matches no file, at the line that wrote it, with the path searched (w1/269).
+
+    The loader keeps include strings without their lines and reports the
+    miss at `<load>:0`, quoting the pattern relative to a directory it does
+    not name. The include closure is walked again from the root, resolving
+    each pattern against its own file's directory as the loader does, and
+    every include of this pattern that matches nothing is named.
+    """
+    match = _MISSING_INCLUDE.match(message)
+    if match is None or ledger_file is None or not isinstance(source, dict) or source.get("filename") != "<load>":
+        return None
+    pattern = match["pattern"]
+    found = _include_misses(Path(ledger_file))
+    misses = [(path, line, searched) for path, line, target, searched in found if target == pattern]
+    if not misses:
+        return None
+    (path, line, searched), *others = misses
+    text = f'{path}:{line}: include "{pattern}" matches no file (looked for {searched})'
+    for other, other_line, other_searched in others:
+        text += f"; also {other}:{other_line} (looked for {other_searched})"
+    return text
+
+
+def _include_misses(root: Path) -> list[tuple[str, int, str, str]]:
+    """`(file, line, target, searched path)` for each include in the closure that matches nothing.
+
+    Read textually, beancount's way: a relative glob is matched against the
+    including file's directory, and every match is normalized before it is
+    read in turn. Unreadable or unlexable files contribute nothing.
+    """
+    import glob
+
+    from bea_engine.ledger.text import iter_includes
+
+    misses: list[tuple[str, int, str, str]] = []
+    seen: set[str] = set()
+    stack = [os.path.abspath(root)]
+    while stack:
+        current = stack.pop()
+        if current in seen:
+            continue
+        seen.add(current)
+        try:
+            spans = list(iter_includes(Path(current).read_bytes()))
+        except Exception:  # noqa: BLE001 - a file the walk cannot read just adds no includes
+            continue
+        for span in spans:
+            searched = span.target
+            if not os.path.isabs(searched):
+                searched = os.path.join(os.path.dirname(current), searched)
+            found = glob.glob(searched, recursive=True)
+            if not found:
+                misses.append((current, span.line, span.target, os.path.normpath(searched)))
+            stack.extend(os.path.normpath(path) for path in sorted(found, reverse=True) if os.path.isfile(path))
+    return misses
 
 
 _UNKNOWN_CONFIG = object()
