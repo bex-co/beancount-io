@@ -1,3 +1,4 @@
+import { isSelfHost } from "@/config/self-host";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
 import type {
@@ -73,6 +74,9 @@ export class AuthSessionWorkflow implements IAuthSessionWorkflow {
   }
 
   private async followOpenLedger(token: string): Promise<void> {
+    // The showcase account is the managed service's: a self-hosted stack has
+    // no such user, and following it would fail on every sign-in.
+    if (isSelfHost()) return;
     try {
       // These anonymous auth ceremonies just issued a real session. Resolve
       // that credential through the shared seam before using social permissions.

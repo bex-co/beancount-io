@@ -23,8 +23,9 @@ Nothing is created until you approve the preview.
   Starter plans, billed to your workspace. Delete the resources to stop it.
 - **What you fill in:** nothing. Every secret is generated; optional
   integrations are added later ([After the first deploy](#after-the-first-deploy)).
-- **Then:** open the dashboard service's URL and sign up. Anyone who can reach
-  that URL can register, so see the note under `SELF_HOST` before you share it.
+- **Then:** open the dashboard service's URL and sign up straight away. Until
+  the first account exists, anyone who can reach that URL can be the one to
+  create it; sign-up closes behind it (see the note under `SELF_HOST`).
 
 The link carries `path=bex.yaml` because bex looks for `render.yaml` by default
 and this repository keeps the manifest under the other name. Services build from

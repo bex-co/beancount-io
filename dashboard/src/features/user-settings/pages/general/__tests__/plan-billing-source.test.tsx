@@ -44,6 +44,22 @@ const billing = (
 });
 
 describe("the plan card's billing source (ADR 001 D14)", () => {
+  it("links the hosted contact for Enterprise, but not on a self-hosted stack", () => {
+    const { rerender } = render(
+      <PlanBillingSource tier="ENTERPRISE" billing={null} t={t} />,
+    );
+    expect(screen.getByRole("link")).toHaveAttribute(
+      "href",
+      "https://beancount.io/tg",
+    );
+
+    rerender(
+      <PlanBillingSource tier="ENTERPRISE" billing={null} selfHost t={t} />,
+    );
+    expect(screen.queryByTestId("plan-billing-source")).toBeNull();
+    expect(screen.queryByRole("link")).toBeNull();
+  });
+
   it("names Stripe for a Stripe plan", () => {
     render(
       <PlanBillingSource

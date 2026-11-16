@@ -204,6 +204,33 @@ describe("AuthSessionWorkflow default community follow", () => {
     ).toBe(true);
   });
 
+  describe("on a self-hosted stack", () => {
+    const original = process.env.SELF_HOST;
+    beforeEach(() => {
+      process.env.SELF_HOST = "true";
+    });
+    afterEach(() => {
+      if (original === undefined) delete process.env.SELF_HOST;
+      else process.env.SELF_HOST = original;
+    });
+
+    // The showcase account belongs to the managed service (ADR029 Decision 2).
+    it.each(["password", "one-time link"] as const)(
+      "does not look for open_ledger after %s",
+      async (path) => {
+        const fixture = createFixture();
+
+        await expect(authenticate(fixture, path)).resolves.toEqual(
+          authResponse,
+        );
+
+        expect(fixture.isFollowing()).toBe(false);
+        expect(fixture.fetch).not.toHaveBeenCalled();
+        expect(fixture.giteaFactory.getUserApiClient).not.toHaveBeenCalled();
+      },
+    );
+  });
+
   it("waits until signup provisioning and the transaction have finished", async () => {
     const fixture = createFixture();
     fixture.giteaFactory.getUserApiClient.mockImplementation(async () => {

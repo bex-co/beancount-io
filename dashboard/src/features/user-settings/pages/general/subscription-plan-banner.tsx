@@ -28,6 +28,7 @@ export function CurrentPlanBanner({
   billing = null,
   planBilling = null,
   deferredStart = false,
+  selfHost = false,
 }: {
   tier: UserTier;
   renewalDate: string | null;
@@ -37,6 +38,8 @@ export function CurrentPlanBanner({
   /** Who bills the plan, on any source. */
   planBilling?: PlanBillingStatus | null;
   deferredStart?: boolean;
+  /** This stack is self-hosted: no hosted-service contact link. */
+  selfHost?: boolean;
 }) {
   const formatCount = useFormatCount();
   const formatMoney = useMoneyFormat();
@@ -121,6 +124,7 @@ export function CurrentPlanBanner({
               tier={tier}
               billing={planBilling}
               deferredStart={deferredStart}
+              selfHost={selfHost}
               t={t}
             />
           </div>

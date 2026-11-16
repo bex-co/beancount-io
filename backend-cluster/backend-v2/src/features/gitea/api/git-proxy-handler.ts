@@ -4,6 +4,7 @@ import { PassThrough, Transform, type Readable } from "node:stream";
 import { type AppLayers } from "@/foundation/composition";
 import { AppConfig } from "@/config/config";
 import { getBasicAuthHeader } from "@/features/auth/utils/auth";
+import { bannedUserMessage } from "@/features/auth/utils/deployment-copy";
 import type { User } from "@/features/auth/data/user-model";
 import { createFavaApiWithAuthorization } from "@/foundation/fava";
 import { invalidateUserFeed } from "@/shared/cache";
@@ -484,12 +485,11 @@ const invalidCredentials: GitAuthentication = {
  * sign-in's words. A credential not yet verified gets `invalidCredentials`
  * instead, so the proxy never says which usernames are blocked.
  */
-const accountBlocked: GitAuthentication = {
+const accountBlocked = (): GitAuthentication => ({
   ok: false,
   status: 403,
-  message:
-    "User is banned. If you need help, please contact https://beancount.io/tg.\n",
-};
+  message: `${bannedUserMessage()}\n`,
+});
 
 /** Where a user mints the token that replaces their Git password. */
 function gitTokenSettingsUrl(config: Pick<AppConfig, "dashboard">) {
@@ -692,7 +692,7 @@ export function setGitProxyHandler(
    */
   const signedInAs = (user: User): GitAuthentication =>
     !accountMayAuthenticate(user)
-      ? accountBlocked
+      ? accountBlocked()
       : {
           ok: true,
           authorization: getBasicAuthHeader(

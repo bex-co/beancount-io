@@ -14,6 +14,7 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { useAiCfoUsage } from "@/common/hooks/use-ai-cfo-usage";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
+import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
 import { useCreateSubscriptionSession } from "@/features/user-settings/hooks/use-create-subscription-session";
 import {
   isBilledByStore,
@@ -138,6 +139,7 @@ export function SubscriptionSection({
   // Usage is unknown only while no read has succeeded: a failed refresh
   // keeps the counts an earlier read returned (w4/312).
   const aiCfoRetry = useQueryRetry(aiCfoError, refetchAiCfoUsage);
+  const { selfHost } = useDeploymentInfo();
   const aiUsageUnavailable =
     !aiCfoUsage && aiCfoRetry.failure
       ? { retrying: aiCfoRetry.retrying, onRetry: aiCfoRetry.retry }
@@ -366,6 +368,7 @@ export function SubscriptionSection({
               t={t}
               planBilling={planBilling}
               deferredStart={hasDeferredSubscription}
+              selfHost={selfHost}
               billing={
                 currentPrice
                   ? {

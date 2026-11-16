@@ -66,17 +66,24 @@ export function PlanBillingSource({
   tier,
   billing,
   deferredStart = false,
+  selfHost = false,
   t,
 }: {
   tier: UserTier;
   billing: PlanBillingStatus | null;
   /** The Stripe plan starts when the store plan ends (D15). */
   deferredStart?: boolean;
+  /**
+   * A self-hosted stack bills nobody: its top tier is not a contract with
+   * beancount.io, so the hosted service's contact link is left out (ADR029).
+   */
+  selfHost?: boolean;
   t: Translate;
 }) {
   const formatDate = useBillingDateFormat();
   let content;
   if (tier === "ENTERPRISE") {
+    if (selfHost) return null;
     content = (
       <a
         href={ENTERPRISE_CONTACT_URL}

@@ -5,6 +5,10 @@ import type { IStripeService } from "@/features/stripe/service/stripe-service";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import { type AppConfig } from "@/config/config";
 import { isSelfHost } from "@/config/self-host";
+import {
+  bannedUserMessage,
+  welcomeMailLinks,
+} from "@/features/auth/utils/deployment-copy";
 import { z } from "zod";
 import {
   NotFoundError,
@@ -220,7 +224,7 @@ export class AuthService implements IAuthService {
       AppConfig,
       "favaApi" | "dashboard" | "gitea"
     > &
-      Partial<Pick<AppConfig, "jwt">>,
+      Partial<Pick<AppConfig, "jwt" | "env" | "sendGrid">>,
     private readonly isPwnedPassword: IsPwnedPassword,
     private readonly enqueueAuthMail?: IAuthMailService["enqueue"],
   ) {}
@@ -302,20 +306,18 @@ export class AuthService implements IAuthService {
           throw error;
         }
 
-        delayRun<void>(async () => {
-          const welcomeParams = {
-            firstName,
-            dashboardUrl: "https://beancount.io/ledger",
-            mobileAppUrl: "http://onelink.to/v3rz2v",
-            helpCenterUrl: "https://beancount.io/docs/help-center",
-          };
-          await this.sendgrid.sendMail({
-            to: email,
-            subject: "Welcome to Beancount.io!",
-            html: renderWelcomeHtml(welcomeParams),
-            text: renderWelcomeText(welcomeParams),
+        const welcomeLinks = welcomeMailLinks(this.config);
+        if (welcomeLinks) {
+          delayRun<void>(async () => {
+            const welcomeParams = { firstName, ...welcomeLinks };
+            await this.sendgrid.sendMail({
+              to: email,
+              subject: "Welcome to Beancount.io!",
+              html: renderWelcomeHtml(welcomeParams),
+              text: renderWelcomeText(welcomeParams),
+            });
           });
-        });
+        }
 
         return { token, expireAt };
       });
@@ -379,9 +381,7 @@ export class AuthService implements IAuthService {
         throw new BadUserInputError("Invalid email or password");
       }
       if (current.isBlocked) {
-        throw new ForbiddenError(
-          "User is banned. If you need help, please contact https://beancount.io/tg.",
-        );
+        throw new ForbiddenError(bannedUserMessage());
       }
       return this.models.jwt.create(tx, current.id);
     });
@@ -403,9 +403,7 @@ export class AuthService implements IAuthService {
       throw new NotFoundError("User", oneTimeToken.userId);
     }
     if (user.isBlocked) {
-      throw new ForbiddenError(
-        "User is banned. If you need help, please contact https://beancount.io/tg.",
-      );
+      throw new ForbiddenError(bannedUserMessage());
     }
 
     const { token: jwtToken, expireAt } = await this.models.jwt.create(
@@ -424,9 +422,7 @@ export class AuthService implements IAuthService {
       throw new NotFoundError("User", userId);
     }
     if (user.isBlocked) {
-      throw new ForbiddenError(
-        "User is banned. If you need help, please contact https://beancount.io/tg.",
-      );
+      throw new ForbiddenError(bannedUserMessage());
     }
 
     return this.db.transaction(async (tx) => {

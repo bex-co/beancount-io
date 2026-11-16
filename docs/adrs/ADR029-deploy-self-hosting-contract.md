@@ -96,7 +96,11 @@ Changed in code and tests after the live run; **none of it has been run on a liv
 - **PRFAQ006 question 12 now lists every outbound flow we know of** (breach check, model provider, mail, S3, Gravatar, beancount.io feeds and price feeds, Plaid), where it used to say nothing leaves the workspace.
 - **The admin token is compared in constant time** (`admin-api-middleware.ts` used `!==`, which returns at the first differing byte); a missing or repeated header is refused as before. The agent-box example env file no longer carries a BlockEden access key that looked real. It stays in git history, so the key itself has to be revoked at BlockEden.
 
-Still open from this review: the hosted-service links in the ban message, welcome mail and Enterprise contact; the Pwned Passwords check cannot be switched off; the API's `/api/admin/*` and Git proxy are on the internet behind a single header token with no visible lockout.
+### Update, 2026-11-16
+
+The rest of decision 2 and the decision 1 leftovers are built (code and tests; not yet run on a live bex). With `SELF_HOST` on: sign-in no longer tries to follow the hosted showcase user `open_ledger` (`auth-session-workflow.ts`); the welcome mail is sent only when the deployment delivers mail, and its dashboard link is the deployment's own address (`welcomeMailLinks` in `backend-cluster/backend-v2/src/features/auth/utils/deployment-copy.ts`; the app-store and help-centre links are public pages); a blocked account is told to contact the person who runs the server, at sign-in and on the Git proxy (`bannedUserMessage`, same file); and the dashboard's plan card leaves out the hosted "Contact us" link. The managed service's behavior and wording are unchanged.
+
+Still open from this review: the Pwned Passwords check cannot be switched off; the API's `/api/admin/*` and Git proxy are on the internet behind a single header token with no visible lockout.
 
 ## References
 
