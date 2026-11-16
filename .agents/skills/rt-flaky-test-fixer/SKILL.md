@@ -1,27 +1,27 @@
 ---
-name: routine-flaky-test-fixer
+name: rt-flaky-test-fixer
 description: Autonomous maintenance routine that root-causes intermittently
   failing CI tests — mining GitHub Actions history for same-commit red-to-green
   reruns, reproducing locally with repeated runs, fixing the real
   nondeterminism (timers, teardown, ordering, unawaited promises), and shipping
   via /ship after 20 consecutive green runs. Use only when the user explicitly
-  invokes /routine-flaky-test-fixer or asks to hunt down flaky tests. SKIP for
-  tests that can never fail (routine-useless-test-pruner) and for logic bugs
-  that fail deterministically (routine-logic-bugfixer). The core trigger is
+  invokes /rt-flaky-test-fixer or asks to hunt down flaky tests. SKIP for
+  tests that can never fail (rt-useless-test-pruner) and for logic bugs
+  that fail deterministically (rt-logic-bugfixer). The core trigger is
   "this test sometimes fails; make it deterministic".
 metadata: {"internal": true}
 ---
 
 # Task: Root-cause flaky CI tests and make them deterministic
 
-Usage: `/routine-flaky-test-fixer [package-or-path]`
+Usage: `/rt-flaky-test-fixer [package-or-path]`
 
 Find a test that sometimes fails, reproduce or root-cause the nondeterminism,
 fix the real cause, prove determinism with repeated runs, and ship via `/ship`.
 
 ## Contract
 
-Read `.agents/skills/routine-shared/contract.md` first — preconditions,
+Read `.agents/skills/rt-shared/contract.md` first — preconditions,
 scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
 even without it: never ship red; one finding per ship; anything in a
 `DO_NOT_DO.md` is a hard STOP.
@@ -83,12 +83,12 @@ Compose `/ship` for this one flake. Loop within budget.
   masking a flake is worse than leaving it visibly flaky.
 - Never delete a flaky test to make it stop flaking. If it is genuinely
   unsalvageable, that must independently pass
-  `routine-useless-test-pruner`'s proof standard — and the summary says so
+  `rt-useless-test-pruner`'s proof standard — and the summary says so
   honestly.
 - Never mark a fix done on fewer than 20 consecutive greens; three passes is
   luck, not determinism.
 - A test failing the same way every run is not flaky — defer to
-  `routine-logic-bugfixer`.
+  `rt-logic-bugfixer`.
 
 ## Arguments
 

@@ -1,6 +1,6 @@
-# routine-* shared contract
+# rt-* shared contract
 
-Every `/routine-*` skill is an autonomous maintenance pass over this monorepo:
+Every `/rt-*` skill is an autonomous maintenance pass over this monorepo:
 **discover → prove → fix → verify → ship**, one finding at a time. This file is
 the shared contract; each skill's `SKILL.md` adds only what is specific to its
 defect class.
@@ -94,13 +94,13 @@ the summary and defer to its owner:
 
 | Symptom | Owner |
 | --- | --- |
-| Code nothing can reach | `routine-dead-code-removal` |
-| Dead branch behind a feature flag | `routine-shipped-feature-inliner` |
-| Two live copies of the same logic | `routine-dup-unifier` |
-| One implementation behind needless indirection | `routine-abstraction-improver` |
-| Import crossing a stated boundary the wrong way | `routine-abstraction-police` |
-| Live, single, reachable, but convoluted | `routine-logic-simplifier` |
-| Behavior provably wrong (including crashes) | `routine-logic-bugfixer` |
-| A test that can never fail | `routine-useless-test-pruner` |
-| A test that sometimes fails | `routine-flaky-test-fixer` |
+| Code nothing can reach | `rt-dead-code-removal` |
+| Dead branch behind a feature flag | `rt-shipped-feature-inliner` |
+| Two live copies of the same logic | `rt-dup-unifier` |
+| One implementation behind needless indirection | `rt-abstraction-improver` |
+| Import crossing a stated boundary the wrong way | `rt-abstraction-police` |
+| Live, single, reachable, but convoluted | `rt-logic-simplifier` |
+| Behavior provably wrong (including crashes) | `rt-logic-bugfixer` |
+| A test that can never fail | `rt-useless-test-pruner` |
+| A test that sometimes fails | `rt-flaky-test-fixer` |
 | Tests of code being deleted | travel with their code, whichever routine deletes it |

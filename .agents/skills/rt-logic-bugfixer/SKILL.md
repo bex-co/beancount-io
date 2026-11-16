@@ -1,21 +1,21 @@
 ---
-name: routine-logic-bugfixer
+name: rt-logic-bugfixer
 description: Autonomous maintenance routine that picks one tricky logic unit in a
   monorepo package — state machines, date/period math, sign conventions, dedup
   windows, pagination — models its states and edge cases exhaustively, proves any
   divergence from documented intent with a failing test, lands the minimal
   root-cause fix plus regression test, and ships via /ship. Use only when the
-  user explicitly invokes /routine-logic-bugfixer or asks to hunt for logic bugs.
+  user explicitly invokes /rt-logic-bugfixer or asks to hunt for logic bugs.
   SKIP for test-infrastructure failures and intermittent tests
-  (routine-flaky-test-fixer) and for merely convoluted-but-correct code
-  (routine-logic-simplifier). The core trigger is "model this tricky logic and
+  (rt-flaky-test-fixer) and for merely convoluted-but-correct code
+  (rt-logic-simplifier). The core trigger is "model this tricky logic and
   fix what's provably wrong".
 metadata: {"internal": true}
 ---
 
 # Task: Model tricky logic to find and fix provable bugs
 
-Usage: `/routine-logic-bugfixer [package-or-path]`
+Usage: `/rt-logic-bugfixer [package-or-path]`
 
 Pick one unit of genuinely tricky logic, enumerate its states and edges, derive
 inputs that should break it, prove each bug with a failing test against
@@ -23,7 +23,7 @@ documented intent, fix the root cause, and ship via `/ship`.
 
 ## Contract
 
-Read `.agents/skills/routine-shared/contract.md` first — preconditions,
+Read `.agents/skills/rt-shared/contract.md` first — preconditions,
 scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
 even without it: never ship red; one finding per ship; anything in a
 `DO_NOT_DO.md` is a hard STOP.
@@ -62,7 +62,7 @@ ambiguity instead of shipping an opinion.
 
 The minimal root-cause fix, plus the failing test as a permanent regression
 test. No drive-by refactoring; if the unit also deserves simplification, defer
-to `routine-logic-simplifier` in the summary.
+to `rt-logic-simplifier` in the summary.
 
 ### 5. Verify
 
@@ -81,7 +81,7 @@ Compose `/ship` for this one bug. Loop within budget.
 - Never weaken or delete an existing test to make a fix pass; a conflicting
   test means conflicting intent — STOP and report.
 - Intermittent failures are not logic bugs — defer to
-  `routine-flaky-test-fixer`.
+  `rt-flaky-test-fixer`.
 - Don't model units that are trivial or already exhaustively tested; spend the
   budget where trickiness lives.
 

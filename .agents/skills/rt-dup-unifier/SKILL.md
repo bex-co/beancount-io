@@ -1,12 +1,12 @@
 ---
-name: routine-dup-unifier
+name: rt-dup-unifier
 description: Autonomous maintenance routine that finds duplicated implementations
   of the same logic within one monorepo package, merges them into the single best
   copy, repoints every caller, deletes the rest, and ships each unification via
-  /ship. Use only when the user explicitly invokes /routine-dup-unifier or asks
+  /ship. Use only when the user explicitly invokes /rt-dup-unifier or asks
   to merge/deduplicate duplicated code. SKIP for code with no remaining callers
-  (routine-dead-code-removal), needless indirection around a single
-  implementation (routine-abstraction-improver), and duplication across two
+  (rt-dead-code-removal), needless indirection around a single
+  implementation (rt-abstraction-improver), and duplication across two
   packages — that is reported, never merged. The core trigger is "these are two
   copies of the same logic; make them one".
 metadata: {"internal": true}
@@ -14,7 +14,7 @@ metadata: {"internal": true}
 
 # Task: Merge duplicated implementations into one
 
-Usage: `/routine-dup-unifier [package-or-path]`
+Usage: `/rt-dup-unifier [package-or-path]`
 
 Find two (or more) live copies of the same logic inside one package, prove they
 are semantically the same, keep the best one, repoint all callers, delete the
@@ -22,7 +22,7 @@ rest, and ship via `/ship`.
 
 ## Contract
 
-Read `.agents/skills/routine-shared/contract.md` first — preconditions,
+Read `.agents/skills/rt-shared/contract.md` first — preconditions,
 scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
 even without it: never ship red; one finding per ship; anything in a
 `DO_NOT_DO.md` is a hard STOP.

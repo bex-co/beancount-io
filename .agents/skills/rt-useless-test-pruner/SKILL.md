@@ -1,12 +1,12 @@
 ---
-name: routine-useless-test-pruner
+name: rt-useless-test-pruner
 description: Autonomous maintenance routine that finds tests that cannot fail —
   no real assertions, tautologies that assert a mock returns what it was told,
   mock-everything tests that never touch the unit — proves it mechanically by
   breaking the covered behavior and watching the test stay green, deletes them,
   and ships via /ship. Use only when the user explicitly invokes
-  /routine-useless-test-pruner or asks to prune useless/worthless tests. SKIP
-  for tests that fail intermittently (routine-flaky-test-fixer), tests of code
+  /rt-useless-test-pruner or asks to prune useless/worthless tests. SKIP
+  for tests that fail intermittently (rt-flaky-test-fixer), tests of code
   being deleted (they travel with their code), and slow-but-valid tests. The
   core trigger is "delete tests that can't fail".
 metadata: {"internal": true}
@@ -14,7 +14,7 @@ metadata: {"internal": true}
 
 # Task: Delete tests that cannot fail
 
-Usage: `/routine-useless-test-pruner [package-or-path]`
+Usage: `/rt-useless-test-pruner [package-or-path]`
 
 Find tests that pass no matter what the code does, prove it by sabotaging the
 covered behavior and watching them stay green, delete them, and ship via
@@ -22,7 +22,7 @@ covered behavior and watching them stay green, delete them, and ship via
 
 ## Contract
 
-Read `.agents/skills/routine-shared/contract.md` first — preconditions,
+Read `.agents/skills/rt-shared/contract.md` first — preconditions,
 scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
 even without it: never ship red; one finding per ship; anything in a
 `DO_NOT_DO.md` is a hard STOP.
@@ -72,7 +72,7 @@ Compose `/ship` for this one pruning. Loop within budget.
 ## What NOT to do
 
 - Never delete a test that went red under sabotage, however ugly it looks.
-- Never prune a test for being slow, intermittent (`routine-flaky-test-fixer`),
+- Never prune a test for being slow, intermittent (`rt-flaky-test-fixer`),
   or attached to code some other routine is deleting.
 - Never leave sabotage in the tree — verify the revert with `git diff` before
   staging, every time.

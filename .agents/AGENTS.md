@@ -23,17 +23,17 @@ Customer-facing `beancount-*` ledger skills belong in [`skills/<name>/`](../skil
 | `qa-find-bugs-dashboard` | Exercise dashboard journeys with Playwright and reproduce findings. |
 | `qa-find-bugs-mobile` | Exercise native mobile journeys with Expo MCP and reproduce findings. |
 | `qa-find-bugs-mcp` | Exercise the remote MCP endpoint with JSON-RPC and real clients, check the envelope against REST/GraphQL controls, and reproduce findings. |
-| `routine-logic-simplifier` | Simplify convoluted logic with behavior pinned by tests. |
-| `routine-logic-bugfixer` | Prove and fix bugs in tricky logic with regression tests. |
-| `routine-dup-unifier` | Merge equivalent duplicated implementations within a package. |
-| `routine-dead-code-removal` | Verify detector findings and remove unreachable code. |
-| `routine-useless-test-pruner` | Prove tests cannot detect broken behavior, then remove them. |
-| `routine-shipped-feature-inliner` | Remove obsolete gates for fully shipped features. |
-| `routine-flaky-test-fixer` | Reproduce and fix nondeterministic CI tests. |
-| `routine-abstraction-improver` | Flatten unnecessary indirection. |
-| `routine-abstraction-police` | Fix imports that violate documented architectural boundaries. |
+| `rt-logic-simplifier` | Simplify convoluted logic with behavior pinned by tests. |
+| `rt-logic-bugfixer` | Prove and fix bugs in tricky logic with regression tests. |
+| `rt-dup-unifier` | Merge equivalent duplicated implementations within a package. |
+| `rt-dead-code-removal` | Verify detector findings and remove unreachable code. |
+| `rt-useless-test-pruner` | Prove tests cannot detect broken behavior, then remove them. |
+| `rt-shipped-feature-inliner` | Remove obsolete gates for fully shipped features. |
+| `rt-flaky-test-fixer` | Reproduce and fix nondeterministic CI tests. |
+| `rt-abstraction-improver` | Flatten unnecessary indirection. |
+| `rt-abstraction-police` | Fix imports that violate documented architectural boundaries. |
 
-The `routine-shared/` and `qa-shared/` directories contain shared contracts and helpers; they have no `SKILL.md` and are not independently invokable skills. Each routine reads [its shared contract](skills/routine-shared/contract.md) first; each QA skill reads [the QA contract](skills/qa-shared/contract.md).
+The `rt-shared/` and `qa-shared/` directories contain shared contracts and helpers; they have no `SKILL.md` and are not independently invokable skills. Each routine reads [its shared contract](skills/rt-shared/contract.md) first; each QA skill reads [the QA contract](skills/qa-shared/contract.md).
 
 ## Conventions
 
@@ -41,9 +41,9 @@ Each skill lives at `.agents/skills/<name>/SKILL.md` with `name` and `descriptio
 
 When adding a development skill, update this catalog and run the checks below. Use the repo-root `.internal/` for scratch work; it is gitignored. Use the `skill-creator` workflow when iterating on skill behavior.
 
-### Shared suite conventions — routine-*
+### Shared suite conventions — rt-*
 
-The `routine-*` skills are autonomous maintenance passes over this monorepo (discover → prove → fix → verify → ship). Their shared contract lives canonically at `.agents/skills/routine-shared/contract.md` (not a skill — no `SKILL.md`); every routine reads it first. The invariants it defines:
+The `rt-*` skills are autonomous maintenance passes over this monorepo (discover → prove → fix → verify → ship). Their shared contract lives canonically at `.agents/skills/rt-shared/contract.md` (not a skill — no `SKILL.md`); every routine reads it first. The invariants it defines:
 
 - **One finding per `/ship`, never batched**; the next finding waits for the shipped SHA.
 - **Never ship your own red**: the owning package's checks (the same list as in `loopx`'s worker contract) are the gate before a push — `/ship` has none. A check that already fails without your change is not yours: fix it separately when that is quick, otherwise carry on (root `AGENTS.md`, "Failing checks"). A package with no covering automated check (backend-v2, agent-box, deploy) means STOP, not ship.
@@ -51,7 +51,7 @@ The `routine-*` skills are autonomous maintenance passes over this monorepo (dis
 - **Budget**: 3 shipped findings per invocation, then a summary of shipped / skipped / nothing-found.
 - **Universal STOPs**: new dependencies, cross-package API-contract changes, `DO_NOT_DO.md` conflicts, unpinnable behavior changes, a red check your own change causes and you cannot explain.
 - **Never touch**: lockfiles, codegen output, `.pm/` (routines never write the board), `.env*`, vendored fava, `AGENTS.md` files, the skills symlink.
-- **Scope argument**: `/routine-* [package-or-path]`; empty means survey, pick one target, announce it. The contract's symptom→owner table keeps the nine skills' territories disjoint.
+- **Scope argument**: `/rt-* [package-or-path]`; empty means survey, pick one target, announce it. The contract's symptom→owner table keeps the nine skills' territories disjoint.
 
 ### Validation
 

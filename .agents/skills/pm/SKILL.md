@@ -138,7 +138,7 @@ Show the intended removals before mutating if the user passed `DRY_RUN=1`.
 
 Edit the workstream's routine list, `wN/routine/README.md` (template below). `/loopx <wN>` runs the listed routines only when the queue is drained. `scripts/loopx-guard.py` schedules them: each row runs on its own interval, and new board items always go first. The list holds configuration only. Run history stays out of the board.
 
-- `add`: everything after `--` is the `<command>`, stored verbatim. It can be any command a `/loopx` worker can carry out: a slash command with all of its arguments (`/qa-find-bugs-cli w1 SHIP=1`, `/routine-dead-code-removal dashboard`, `/simplify`), a shell command, or a task in plain words. Nothing is appended at run time, so spell out every argument (a QA skill needs its `<wN> SHIP=1` to file into this workstream). Refuse unless `<name>` is a unique lowercase slug (letters, digits, dashes; it keys the run state), `<every>` is an interval like `30m`, `24h`, `3d`, or `1w`, and the command contains no `|` (wrap a pipeline in a script). When the command is a slash command for a repository skill, confirm `.agents/skills/<skill>/SKILL.md` exists. `when` defaults to `always` (run every interval). `changed` is an opt-in token saver: run only after one of the comma-separated repository-relative `paths` changed (any path when none are given), and double the interval after a run that ships nothing. Pair a short interval with a matching `budget`, or the default of 4 runs/day caps it. Create the file from the template if it does not exist (git does not track an empty `routine/` directory).
+- `add`: everything after `--` is the `<command>`, stored verbatim. It can be any command a `/loopx` worker can carry out: a slash command with all of its arguments (`/qa-find-bugs-cli w1 SHIP=1`, `/rt-dead-code-removal dashboard`, `/simplify`), a shell command, or a task in plain words. Nothing is appended at run time, so spell out every argument (a QA skill needs its `<wN> SHIP=1` to file into this workstream). Refuse unless `<name>` is a unique lowercase slug (letters, digits, dashes; it keys the run state), `<every>` is an interval like `30m`, `24h`, `3d`, or `1w`, and the command contains no `|` (wrap a pipeline in a script). When the command is a slash command for a repository skill, confirm `.agents/skills/<skill>/SKILL.md` exists. `when` defaults to `always` (run every interval). `changed` is an opt-in token saver: run only after one of the comma-separated repository-relative `paths` changed (any path when none are given), and double the interval after a run that ships nothing. Pair a short interval with a matching `budget`, or the default of 4 runs/day caps it. Create the file from the template if it does not exist (git does not track an empty `routine/` directory).
 - `remove`: delete the row with that name. Keep the file even when the table is empty: an empty table means no routines.
 - `budget`: set the `Budget: N runs/day` line (default 4 when absent).
 - **Verify before returning:** run `python3 scripts/loopx-guard.py routine-due <wN>` and confirm the reply lists no `problems` for the rows you touched. It reads `origin/main`, so ship the change first, or check the rows by hand when not shipping.
@@ -235,7 +235,7 @@ Budget: 4 runs/day
 
 | name | command | every | when | paths |
 | --- | --- | --- | --- | --- |
-| dashboard-dead-code | `/routine-dead-code-removal dashboard` | 24h | changed | dashboard |
+| dashboard-dead-code | `/rt-dead-code-removal dashboard` | 24h | changed | dashboard |
 ```
 
 ## Arguments

@@ -1,20 +1,20 @@
 ---
-name: routine-abstraction-police
+name: rt-abstraction-police
 description: Autonomous maintenance routine that finds imports crossing a stated
   architectural boundary the wrong way — cross-package imports, dashboard
   features reaching into each other, backend-v2 transport adapters touching
   models, mobile routes bypassing screens — and fixes each violation by moving
   code or inverting the dependency, shipping via /ship. Use only when the user
-  explicitly invokes /routine-abstraction-police or asks to fix layering
+  explicitly invokes /rt-abstraction-police or asks to fix layering
   violations. Only rules stated in a AGENTS.md count; SKIP for too-many-layers
-  (routine-abstraction-improver) and duplicated logic (routine-dup-unifier). The
+  (rt-abstraction-improver) and duplicated logic (rt-dup-unifier). The
   core trigger is "this import points the wrong way across a stated boundary".
 metadata: {"internal": true}
 ---
 
 # Task: Fix imports that cross a stated boundary the wrong way
 
-Usage: `/routine-abstraction-police [package-or-path]`
+Usage: `/rt-abstraction-police [package-or-path]`
 
 Find an import that violates a boundary this repo has written down, fix it by
 moving code to the right layer or inverting the dependency, and ship via
@@ -22,7 +22,7 @@ moving code to the right layer or inverting the dependency, and ship via
 
 ## Contract
 
-Read `.agents/skills/routine-shared/contract.md` first — preconditions,
+Read `.agents/skills/rt-shared/contract.md` first — preconditions,
 scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
 even without it: never ship red; one finding per ship; anything in a
 `DO_NOT_DO.md` is a hard STOP.
@@ -71,7 +71,7 @@ Pick the smallest correct repair:
    prop instead of importing downward.
 3. **Duplicate a tiny helper** (≤10 lines, with a comment naming the twin) when
    sharing would demand a worse structure — explicitly not a
-   `routine-dup-unifier` finding at that size.
+   `rt-dup-unifier` finding at that size.
 
 For a cross-**package** violation, the fix lives entirely on the violating side
 (duplicate or restructure locally); touching the other package is a separate
@@ -90,8 +90,8 @@ Compose `/ship` for this one violation. Loop within budget.
 
 - Never invent a boundary. If the structure feels wrong but no rule says so,
   propose the rule in the summary — don't enforce it.
-- Don't remove layers (`routine-abstraction-improver`) or unify duplicates
-  (`routine-dup-unifier`).
+- Don't remove layers (`rt-abstraction-improver`) or unify duplicates
+  (`rt-dup-unifier`).
 - Never "fix" a violation by weakening the rule's `AGENTS.md` wording.
 - Never hand-edit codegen output to satisfy a boundary — regenerate or
   restructure the source instead.

@@ -1,28 +1,28 @@
 ---
-name: routine-abstraction-improver
+name: rt-abstraction-improver
 description: Autonomous maintenance routine that flattens over-engineered
   abstractions in a monorepo package — interfaces with one implementation and no
   stated reason, passthrough wrappers, one-product factories, delegate-only
   manager layers — by inlining the single thing behind them and shipping via
-  /ship. Use only when the user explicitly invokes /routine-abstraction-improver
+  /ship. Use only when the user explicitly invokes /rt-abstraction-improver
   or asks to flatten needless indirection. SKIP for convoluted logic inside one
-  unit (routine-logic-simplifier), imports crossing stated boundaries
-  (routine-abstraction-police), and duplicated implementations
-  (routine-dup-unifier). The core trigger is "remove indirection that has
+  unit (rt-logic-simplifier), imports crossing stated boundaries
+  (rt-abstraction-police), and duplicated implementations
+  (rt-dup-unifier). The core trigger is "remove indirection that has
   exactly one thing behind it".
 metadata: {"internal": true}
 ---
 
 # Task: Flatten over-engineered abstractions
 
-Usage: `/routine-abstraction-improver [package-or-path]`
+Usage: `/rt-abstraction-improver [package-or-path]`
 
 Find a layer of indirection with exactly one thing behind it and no stated
 reason to exist, inline it, delete the layer, and ship via `/ship`.
 
 ## Contract
 
-Read `.agents/skills/routine-shared/contract.md` first — preconditions,
+Read `.agents/skills/rt-shared/contract.md` first — preconditions,
 scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
 even without it: never ship red; one finding per ship; anything in a
 `DO_NOT_DO.md` is a hard STOP.
@@ -76,8 +76,8 @@ Compose `/ship` for this one flattening. Loop within budget.
 
 - Never flatten an abstraction a `AGENTS.md`, ADR, or working test double
   justifies — a stated convention beats this routine's taste, every time.
-- Don't rewrite convoluted logic inside a unit (`routine-logic-simplifier`) or
-  move code across layers (`routine-abstraction-police`).
+- Don't rewrite convoluted logic inside a unit (`rt-logic-simplifier`) or
+  move code across layers (`rt-abstraction-police`).
 - Don't flatten two layers in one ship; each deletion stands alone.
 - Don't replace the deleted abstraction with a cleverer one — the fix is
   *less* structure, not different structure.

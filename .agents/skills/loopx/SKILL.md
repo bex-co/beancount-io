@@ -112,7 +112,7 @@ Without `gh`, or when it is not signed in, `ci.checked` is `false` and the loop 
 
 When step 1 finds nothing actionable, run any due routine **before** listening. With `--no-listen`, skip this section and go to **Exit**: no routines run in that mode.
 
-A workstream can list routines in `.pm/<wN>/routine/README.md` (format in [`.agents/skills/pm/SKILL.md`](../pm/SKILL.md#routine-list-wnroutinereadmemd)). Each row has a `name`, the **command** to run, an interval, and optionally `when` and `paths`. The command can be anything a worker can carry out: a slash command with its arguments (`/qa-find-bugs-cli w1 SHIP=1`, `/routine-dead-code-removal dashboard`, `/simplify`), a shell command, or a task in plain words. Neither the guard nor the orchestrator interprets it; the row carries every argument the command needs.
+A workstream can list routines in `.pm/<wN>/routine/README.md` (format in [`.agents/skills/pm/SKILL.md`](../pm/SKILL.md#routine-list-wnroutinereadmemd)). Each row has a `name`, the **command** to run, an interval, and optionally `when` and `paths`. The command can be anything a worker can carry out: a slash command with its arguments (`/qa-find-bugs-cli w1 SHIP=1`, `/rt-dead-code-removal dashboard`, `/simplify`), a shell command, or a task in plain words. Neither the guard nor the orchestrator interprets it; the row carries every argument the command needs.
 - `always` (the default): runs on its schedule, every interval, whatever changed.
 - `changed`: an opt-in token saver. The row also waits for one of its `paths` (any path when it lists none) to change since its last run, and its interval doubles after a run that ships nothing.
 

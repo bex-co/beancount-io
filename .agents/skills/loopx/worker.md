@@ -88,7 +88,7 @@ A block is anything you cannot resolve autonomously. It can surface at triage or
 
 When the dispatch says you are a **routine worker**, there is no board item. You run the one command the dispatch quotes, as written, and nothing else. The command comes from a row in `.pm/<wN>/routine/README.md` and can be anything:
 
-- **A slash command** (`/qa-find-bugs-cli w1 SHIP=1`, `/routine-dead-code-removal dashboard`, `/simplify`): invoke that skill with exactly those arguments and follow its `SKILL.md`, including any contract it tells you to read (proof standards, verify gates, budgets, STOPs, where its findings go). Where the skill is stricter than the rules below, the skill wins.
+- **A slash command** (`/qa-find-bugs-cli w1 SHIP=1`, `/rt-dead-code-removal dashboard`, `/simplify`): invoke that skill with exactly those arguments and follow its `SKILL.md`, including any contract it tells you to read (proof standards, verify gates, budgets, STOPs, where its findings go). Where the skill is stricter than the rules below, the skill wins.
 - **A shell command**: run it from the repository root, read its output, and act on what it reports within the command's evident purpose (fix what it flags, or surface it as follow-ups). Do not stretch it into unrelated work.
 - **A task in plain words**: do that task, scoped as narrowly as it reads.
 

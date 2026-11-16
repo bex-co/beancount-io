@@ -731,8 +731,8 @@ Budget: 2 runs/day
 
 | name | command | every | when | paths |
 | --- | --- | --- | --- | --- |
-| cli-dead-code | `/routine-dead-code-removal cli` | 24h | changed | cli |
-| dashboard-flaky | `/routine-flaky-test-fixer dashboard` | 3d | changed | dashboard |
+| cli-dead-code | `/rt-dead-code-removal cli` | 24h | changed | cli |
+| dashboard-flaky | `/rt-flaky-test-fixer dashboard` | 3d | changed | dashboard |
 """
 
 
@@ -772,7 +772,7 @@ class RoutineTest(RemoteFixture):
     def test_never_run_routines_are_due_in_list_order(self) -> None:
         self.fetch()
         self.assertEqual(self.due()["due"], {
-            "name": "cli-dead-code", "command": "/routine-dead-code-removal cli",
+            "name": "cli-dead-code", "command": "/rt-dead-code-removal cli",
             "when": "changed", "paths": ["cli"], "interval_hours": 24.0,
         })
         self.done("cli-dead-code", "empty")
@@ -858,7 +858,7 @@ class RoutineTest(RemoteFixture):
     def test_wait_exits_5_for_a_due_routine_and_board_work_comes_first(self) -> None:
         result = self.run_guard("wait", "w2", *FAST)
         self.assertEqual(result.returncode, 5, result.stdout + result.stderr)
-        self.assertIn("cli-dead-code (/routine-dead-code-removal cli)", result.stdout)
+        self.assertIn("cli-dead-code (/rt-dead-code-removal cli)", result.stdout)
         self.assertNotIn("since", self.listener())
         self.write(".pm/w2/011.md", "note\n")
         self.push("board work")
@@ -958,7 +958,7 @@ class RoutineTest(RemoteFixture):
         self.assertAlmostEqual(reply["next_in"], 86400, delta=60)
 
     def test_rejects_an_unknown_when(self) -> None:
-        self.schedule("| cli-dead-code | /routine-dead-code-removal cli | 1d | sometimes |\n")
+        self.schedule("| cli-dead-code | /rt-dead-code-removal cli | 1d | sometimes |\n")
         self.assertIn("when must be changed or always", " ".join(self.due()["problems"]))
 
     def test_three_failed_runs_drop_a_routine_to_one_try_a_day(self) -> None:
@@ -1009,7 +1009,7 @@ class RoutineTest(RemoteFixture):
         self.assertEqual(self.done("not-listed", "found").returncode, 2)
         self.assertEqual(self.done("cli-dead-code", "maybe").returncode, 2)
         self.assertEqual(self.done("../x", "found").returncode, 2)
-        self.assertEqual(self.run_guard("routine-done", "w2", "routine-dead-code-removal", "cli", "found").returncode, 2)
+        self.assertEqual(self.run_guard("routine-done", "w2", "rt-dead-code-removal", "cli", "found").returncode, 2)
 
 
 class BoardTest(RemoteFixture):

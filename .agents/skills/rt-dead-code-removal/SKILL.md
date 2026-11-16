@@ -1,22 +1,22 @@
 ---
-name: routine-dead-code-removal
+name: rt-dead-code-removal
 description: Autonomous maintenance routine that deletes provably unreachable code
   from one monorepo package using the repo's own detectors (yarn lint:deadcode /
   make deadcode / scripts/lint-deadcode.sh), verifies every hit against dynamic
   references before deleting, and ships each removal via /ship. Use only when the
-  user explicitly invokes /routine-dead-code-removal or asks to find and delete
+  user explicitly invokes /rt-dead-code-removal or asks to find and delete
   dead or unused code. SKIP for dead branches behind a feature flag
-  (routine-shipped-feature-inliner), live duplicates whose callers need repointing
-  (routine-dup-unifier), tests that pass but assert nothing
-  (routine-useless-test-pruner), or live single-implementation indirection
-  (routine-abstraction-improver). The core trigger is "find and delete code
+  (rt-shipped-feature-inliner), live duplicates whose callers need repointing
+  (rt-dup-unifier), tests that pass but assert nothing
+  (rt-useless-test-pruner), or live single-implementation indirection
+  (rt-abstraction-improver). The core trigger is "find and delete code
   nothing can reach".
 metadata: {"internal": true}
 ---
 
 # Task: Delete provably unreachable code
 
-Usage: `/routine-dead-code-removal [package-or-path]`
+Usage: `/rt-dead-code-removal [package-or-path]`
 
 Run the target package's dead-code detector, prove each hit is truly
 unreachable, delete it (with the tests and fixtures that only existed for it),
@@ -24,7 +24,7 @@ make the package's checks pass, and ship each removal via `/ship`.
 
 ## Contract
 
-Read `.agents/skills/routine-shared/contract.md` first — it defines
+Read `.agents/skills/rt-shared/contract.md` first — it defines
 preconditions, scope resolution, verify gates, the ship protocol, the budget,
 and universal STOPs. This file adds only what is specific to dead code. Floor
 even without it: never ship red; one finding per ship; anything in a
@@ -91,9 +91,9 @@ budget remain.
 ## What NOT to do
 
 - Never delete a branch that is dead only because a feature flag holds one
-  value — that is `routine-shipped-feature-inliner`'s job.
+  value — that is `rt-shipped-feature-inliner`'s job.
 - Never delete one of two live duplicate implementations — that is
-  `routine-dup-unifier`'s job (it repoints callers first).
+  `rt-dup-unifier`'s job (it repoints callers first).
 - Never touch the CLI's vendored `fava` code, codegen output, or lockfiles.
 - Never trust a Knip/Vulture hit without the reference sweep — file-based
   routes and dynamic lookups are exactly where detectors lie.

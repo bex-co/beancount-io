@@ -1,12 +1,12 @@
 ---
-name: routine-shipped-feature-inliner
+name: rt-shipped-feature-inliner
 description: Autonomous maintenance routine that finds gates for fully shipped
   features — flags, env switches, boolean guards that have held one value
   everywhere for a long time — triages deliberate gates from forgotten ones,
   inlines the enabled path, deletes the dead branch and the flag itself, and
   ships each removal via /ship. Use only when the user explicitly invokes
-  /routine-shipped-feature-inliner or asks to clean up shipped/stale feature
-  flags. SKIP for unreachable code not behind a flag (routine-dead-code-removal)
+  /rt-shipped-feature-inliner or asks to clean up shipped/stale feature
+  flags. SKIP for unreachable code not behind a flag (rt-dead-code-removal)
   and for changing what any flag is set to — this routine never flips a value.
   The core trigger is "this feature fully shipped; remove its flag and inline
   the winning path".
@@ -15,7 +15,7 @@ metadata: {"internal": true}
 
 # Task: Remove gates for fully shipped features
 
-Usage: `/routine-shipped-feature-inliner [package-or-path]`
+Usage: `/rt-shipped-feature-inliner [package-or-path]`
 
 Find a flag whose decision has already been made everywhere, prove it is
 forgotten rather than deliberate, inline the path it always takes, delete the
@@ -23,7 +23,7 @@ other branch and the flag definition, and ship via `/ship`.
 
 ## Contract
 
-Read `.agents/skills/routine-shared/contract.md` first — preconditions,
+Read `.agents/skills/rt-shared/contract.md` first — preconditions,
 scope resolution, verify gates, ship protocol, budget, universal STOPs. Floor
 even without it: never ship red; one finding per ship; anything in a
 `DO_NOT_DO.md` is a hard STOP.
@@ -84,7 +84,7 @@ Compose `/ship` for this one flag. Loop within budget.
   (`backend-cluster/backend-v2/src/features/ledger/api/resolvers/ledger-legacy-resolver.query.ts`,
   consumed by the mobile app). Removing or reshaping it is a coordinated
   multi-package change — report it, don't fix it (universal STOP).
-- Never delete unflagged dead code — that is `routine-dead-code-removal`'s job.
+- Never delete unflagged dead code — that is `rt-dead-code-removal`'s job.
 - Never "finish shipping" a feature by turning its flag on. Flipping a value is
   a product decision, not maintenance.
 
