@@ -3,6 +3,8 @@ import {
   overlayProjectedManagedPrices,
 } from "@/foundation/clients/load-cached-ledger-file-map";
 import { hashEntry, parseLedgerFiles } from "@/foundation/rustledger";
+import { discoverDocuments } from "@/foundation/rustledger/document-discovery";
+import { reconcileDocumentErrors } from "@/foundation/rustledger/document-validation";
 import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
 
 jest.mock("@/foundation/clients/load-cached-ledger-file-map", () => ({
@@ -213,6 +215,144 @@ describe("checkProjectedErrors", () => {
         ],
       });
       expect(sources).toEqual(["main.bean", "qa/list.txt", "qa/y.bean"]);
+    });
+  });
+
+  // w31/027: the projection checked `document` paths, documents roots and
+  // discovery against the committed tree, so a write that deleted or moved a
+  // document file previewed clean and its commit reported the errors.
+  describe("a document file the write deletes, moves or adds", () => {
+    const STATEMENT = "docs/Assets/Cash/2026-09-01.statement.txt";
+    const DOCUMENTS = `${MAIN}option "documents" "docs"\n2026-10-05 document Assets:Cash "ref.txt"\n`;
+    const write = (path: string, text: string) => ({
+      path,
+      content: b64(text),
+    });
+    const remove = (path: string) => ({ path, content: null });
+    const preview = async (
+      overlays: { path: string; content: string | null }[],
+    ) =>
+      (
+        await service().checkProjectedErrors({
+          ledgerId: "alice/main",
+          userId: "user-1",
+          overlays,
+        })
+      ).map(
+        (error) =>
+          `${error.source?.filename}:${error.source?.lineno} ${error.code} ${error.message}`,
+      );
+
+    beforeEach(() => {
+      committed(
+        { "main.bean": DOCUMENTS },
+        { [STATEMENT]: "statement\n", "ref.txt": "reference\n" },
+      );
+      // The engine's half of the document checks, run on the paths the parse
+      // is given: it reports every `document` line E8001, which the service
+      // keeps only for a file missing from them, and the service's discovery
+      // reports a documents root with nothing under it.
+      parseMock.mockImplementation(
+        async (
+          files: Record<string, string>,
+          entryPoint: string,
+          options: { repoPaths?: string[] },
+        ) => {
+          const source = files[entryPoint] ?? "";
+          const named = [
+            ...source.matchAll(/^\S+ document \S+ "([^"]+)"$/gmu),
+          ].map((match) => ({
+            message: `Document file not found: ${match[1]}`,
+            code: "E8001",
+            phase: "validate",
+            hint: null,
+            file: entryPoint,
+            line: source.slice(0, match.index).split("\n").length,
+            column: null,
+            end_line: null,
+            end_column: null,
+            severity: "error" as const,
+          }));
+          const opened = [
+            {
+              type: "open" as const,
+              date: "2020-01-01",
+              account: "Assets:Cash",
+              currencies: ["USD"],
+            },
+          ];
+          return {
+            errors: [
+              ...discoverDocuments(
+                opened,
+                source,
+                entryPoint,
+                options.repoPaths,
+              ).errors,
+              ...reconcileDocumentErrors(named, options.repoPaths),
+            ],
+          };
+        },
+      );
+    });
+
+    it("previews the committed files clean", async () => {
+      expect(await preview([write("main.bean", DOCUMENTS)])).toEqual([]);
+    });
+
+    it("reports the root a deletion empties", async () => {
+      expect(await preview([remove(STATEMENT)])).toEqual([
+        "main.bean:3 E7006 Document root 'docs' does not exist",
+      ]);
+    });
+
+    it("reports the file a deletion removes from under a `document`", async () => {
+      expect(await preview([remove("ref.txt")])).toEqual([
+        "main.bean:4 E8001 Document file not found: ref.txt",
+      ]);
+    });
+
+    it("reports both when a rename moves each file away", async () => {
+      expect(
+        await preview([
+          write("moved/2026-09-01.statement.txt", "statement\n"),
+          remove(STATEMENT),
+          write("elsewhere/ref.txt", "reference\n"),
+          remove("ref.txt"),
+        ]),
+      ).toEqual([
+        "main.bean:3 E7006 Document root 'docs' does not exist",
+        "main.bean:4 E8001 Document file not found: ref.txt",
+      ]);
+      expect(parseMock.mock.calls[0]?.[2].repoPaths).toEqual([
+        "main.bean",
+        "moved/2026-09-01.statement.txt",
+        "elsewhere/ref.txt",
+      ]);
+    });
+
+    it("lets the last change to a path in the write decide whether it exists", async () => {
+      expect(
+        await preview([remove("ref.txt"), write("ref.txt", "reference\n")]),
+      ).toEqual([]);
+      expect(
+        await preview([write("ref.txt", "reference\n"), remove("ref.txt")]),
+      ).toEqual(["main.bean:4 E8001 Document file not found: ref.txt"]);
+    });
+
+    it("finds the files a write adds with the root and the `document`", async () => {
+      committed({ "main.bean": MAIN }, {});
+      expect(
+        await preview([
+          write("main.bean", DOCUMENTS),
+          write(STATEMENT, "statement\n"),
+          write("ref.txt", "reference\n"),
+        ]),
+      ).toEqual([]);
+      expect(await preview([write("main.bean", DOCUMENTS)])).toEqual([
+        "main.bean:3 E7006 Document root 'docs' does not exist",
+        "main.bean:4 E8001 Document file not found: ref.txt",
+      ]);
     });
   });
 

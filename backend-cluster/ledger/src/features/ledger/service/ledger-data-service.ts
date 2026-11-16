@@ -541,7 +541,10 @@ export class LedgerDataService implements ILedgerDataService {
       : [];
   }
 
-  /** The repository's file map with `overlays` applied (`null` deletes). */
+  /**
+   * The repository's file map with `overlays` applied (`null` deletes), and
+   * the paths of the tree the commit would leave (`repoPaths`).
+   */
   private async projectFileMap(
     params: BaseParams & {
       overlays: ProjectedFileOverlay[];
@@ -590,6 +593,7 @@ export class LedgerDataService implements ILedgerDataService {
       assertNotManagedPricePath(overlay.path, managedPricePaths);
       if (overlay.content === null || overlay.content === undefined) {
         delete projected[overlay.path];
+        written.delete(overlay.path);
         deleted.add(overlay.path);
         return;
       }
@@ -606,10 +610,20 @@ export class LedgerDataService implements ILedgerDataService {
         );
       }
       projected[overlay.path] = text;
+      deleted.delete(overlay.path);
       written.add(overlay.path);
     });
+    // The tree the commit leaves, not the one the load read: `document`
+    // paths, documents roots and discovery are checked against it, so a write
+    // that deletes or moves a document file previews the errors its commit
+    // reports, and one that adds the file does not report it missing (w31/027).
+    const committed = new Set(repoPaths);
+    const projectedPaths = [
+      ...repoPaths.filter((path) => !deleted.has(path)),
+      ...[...written].filter((path) => !committed.has(path)),
+    ];
     if (!Object.hasOwn(projected, entryPoint)) {
-      return { projected, entryPoint, repoPaths };
+      return { projected, entryPoint, repoPaths: projectedPaths };
     }
     // A write that adds an include of a committed file the load never reached
     // (`include "accounts.txt"`, a glob over `.ldg` files) gets that file from
@@ -627,7 +641,7 @@ export class LedgerDataService implements ILedgerDataService {
       entryPoint,
       this.cacheHelper,
     );
-    return { projected: overlaid, entryPoint, repoPaths };
+    return { projected: overlaid, entryPoint, repoPaths: projectedPaths };
   }
 
   async checkLedgerFiles(params: {
