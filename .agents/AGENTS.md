@@ -23,6 +23,7 @@ Customer-facing `beancount-*` ledger skills belong in [`skills/<name>/`](../skil
 | `qa-find-bugs-dashboard` | Exercise dashboard journeys with Playwright and reproduce findings. |
 | `qa-find-bugs-mobile` | Exercise native mobile journeys with Expo MCP and reproduce findings. |
 | `qa-find-bugs-mcp` | Exercise the remote MCP endpoint with JSON-RPC and real clients, check the envelope against REST/GraphQL controls, and reproduce findings. |
+| `loop-to-meet-webby-award-bar` | Review named dashboard or website pages at several viewport sizes against user experience and the Webby judging criteria, redesign or polish them, and repeat until they pass or the round limit is reached; changes stay uncommitted in the working tree. |
 | `rt-logic-simplifier` | Simplify convoluted logic with behavior pinned by tests. |
 | `rt-logic-bugfixer` | Prove and fix bugs in tricky logic with regression tests. |
 | `rt-dup-unifier` | Merge equivalent duplicated implementations within a package. |

@@ -1,0 +1,23 @@
+{
+  "skill_name": "loop-to-meet-webby-award-bar",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run $loop-to-meet-webby-award-bar /login. The working tree already has unrelated edits in backend-cluster/.",
+      "expected_output": "Reads dashboard/AGENTS.md, records the existing dirty files and leaves them alone, starts the local dashboard in a headless isolated browser, captures /login at the six viewports plus widths around the package's real breakpoints, runs the measured checks, and has a fresh-context reviewer score the six Webby criteria without seeing the diff or earlier scores. Improves the page, runs the dashboard format, lint and test checks, and reviews again with a new reviewer until the bar is met or a stop condition applies. Commits nothing, pushes nothing, does not run ship or write .pm, and reports before and after scores with the changed files.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Use $loop-to-meet-webby-award-bar on the website's /pricing page and the dashboard journal page. No website checkout exists under .internal/.",
+      "expected_output": "Asks for the website repository's clone URL rather than guessing or writing a repository name into tracked files, and meanwhile proceeds with the dashboard journal page. Uses the QA contract's login helper for the signed-in page and performs no ledger writes. Once the checkout exists, reads its own AGENTS.md, runs its own checks, and leaves its changes uncommitted in that checkout. Reports changed files per repository.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "$loop-to-meet-webby-award-bar /ledger MAX_ROUNDS=3. After three rounds Visual Design is still 7 at 360x740, and one fix would need a new animation library.",
+      "expected_output": "Stops at the round limit and reports that the page did not meet the bar, with the remaining issues at the failing viewport. Does not lower the bar, drop the viewport, re-run the reviewer until it agrees, or add the dependency without asking. Raises the new-dependency decision in the report and states that nothing was committed or pushed.",
+      "files": []
+    }
+  ]
+}
