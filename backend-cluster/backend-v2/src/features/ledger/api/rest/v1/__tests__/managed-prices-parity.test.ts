@@ -50,6 +50,7 @@ const STATUS = [
     revision: "e1",
     etag: '"e1"',
     observedAt: "2026-09-15T08:25:00.000Z",
+    latestPriceDate: "2026-09-15",
     fetchedAt: "2026-09-15T08:26:00.000Z",
     nextRefreshAt: "2026-09-15T08:31:00.000Z",
     freshness: "stale",
@@ -58,7 +59,7 @@ const STATUS = [
   },
 ];
 const FIELDS =
-  "url alias includedFrom { file line target } commodity quote source revision etag observedAt fetchedAt nextRefreshAt freshness error shadowedCount";
+  "url alias includedFrom { file line target } commodity quote source revision etag observedAt latestPriceDate fetchedAt nextRefreshAt freshness error shadowedCount";
 
 let currentResolvers: Map<unknown, unknown>;
 let schema: Awaited<ReturnType<typeof buildSchema>>;

@@ -57,9 +57,9 @@ class _Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         assert isinstance(self.server, _Feeds)
         self.server.hits.append(self.path)
-        # Observed now, so a served feed reads `recent` and strict mode passes it.
-        stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        body = f'2024-01-05 price BTC 1100.00 USD\n  observed-at: "{stamp}"\n'.encode()
+        # Priced today, so a served feed reads `recent` and strict mode passes it.
+        today = time.strftime("%Y-%m-%d", time.gmtime())
+        body = f"{today} price BTC 1100.00 USD\n".encode()
         self.send_response(200)
         self.send_header("Content-Type", "text/plain; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))

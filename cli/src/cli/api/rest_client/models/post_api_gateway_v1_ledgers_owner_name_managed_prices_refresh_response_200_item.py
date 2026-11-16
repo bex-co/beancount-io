@@ -32,6 +32,7 @@ class PostApiGatewayV1LedgersOwnerNameManagedPricesRefreshResponse200Item:
         revision (None | str):
         etag (None | str):
         observed_at (None | str):
+        latest_price_date (None | str):
         fetched_at (None | str):
         next_refresh_at (None | str):
         freshness (PostApiGatewayV1LedgersOwnerNameManagedPricesRefreshResponse200ItemFreshness):
@@ -48,6 +49,7 @@ class PostApiGatewayV1LedgersOwnerNameManagedPricesRefreshResponse200Item:
     revision: None | str
     etag: None | str
     observed_at: None | str
+    latest_price_date: None | str
     fetched_at: None | str
     next_refresh_at: None | str
     freshness: PostApiGatewayV1LedgersOwnerNameManagedPricesRefreshResponse200ItemFreshness
@@ -83,6 +85,9 @@ class PostApiGatewayV1LedgersOwnerNameManagedPricesRefreshResponse200Item:
         observed_at: None | str
         observed_at = self.observed_at
 
+        latest_price_date: None | str
+        latest_price_date = self.latest_price_date
+
         fetched_at: None | str
         fetched_at = self.fetched_at
 
@@ -109,6 +114,7 @@ class PostApiGatewayV1LedgersOwnerNameManagedPricesRefreshResponse200Item:
                 "revision": revision,
                 "etag": etag,
                 "observedAt": observed_at,
+                "latestPriceDate": latest_price_date,
                 "fetchedAt": fetched_at,
                 "nextRefreshAt": next_refresh_at,
                 "freshness": freshness,
@@ -183,6 +189,13 @@ class PostApiGatewayV1LedgersOwnerNameManagedPricesRefreshResponse200Item:
 
         observed_at = _parse_observed_at(d.pop("observedAt"))
 
+        def _parse_latest_price_date(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        latest_price_date = _parse_latest_price_date(d.pop("latestPriceDate"))
+
         def _parse_fetched_at(data: object) -> None | str:
             if data is None:
                 return data
@@ -218,6 +231,7 @@ class PostApiGatewayV1LedgersOwnerNameManagedPricesRefreshResponse200Item:
             revision=revision,
             etag=etag,
             observed_at=observed_at,
+            latest_price_date=latest_price_date,
             fetched_at=fetched_at,
             next_refresh_at=next_refresh_at,
             freshness=freshness,

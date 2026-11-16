@@ -16,7 +16,7 @@ with its usage line, arguments, and options.
 | `--debug` | flag |  | Include exception tracebacks in errors |
 | `--strict` | flag |  | Refuse partial answers even in a terminal; --allow-errors opts in |
 | `--offline` | flag |  | Never fetch (except upgrade --check): reuse cached managed prices and skip background update checks |
-| `--strict-prices` | flag |  | Fail the load when a managed price source is stale or unavailable |
+| `--strict-prices` | flag |  | Fail the load when a managed price source is stale, unavailable, or failed to refresh |
 | `--shell` | str |  | Completion shell: bash, zsh, fish, powershell or pwsh |
 | `--show-completion` | flag |  | Print completion script; detects the shell unless --shell is supplied |
 | `--install-completion` | flag |  | Install shell completion; optionally select --shell |

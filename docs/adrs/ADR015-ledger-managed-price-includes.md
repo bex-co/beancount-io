@@ -1,7 +1,7 @@
 # ADR015: Managed price includes in the ledger service
 
 - Status: Done
-- Status notes: Implementation reviewed 2026-09-27. Accepted 2026-09-15; section 3 amended 2026-09-16 (relayed caller credential, ADR 016 section 7). Implements the ledger-layer scope of `docs/prfaqs/PRFAQ002-include-live-price.md` (FAQ 16, "Ledger service" row).
+- Status notes: Implementation reviewed 2026-09-27. Accepted 2026-09-15; section 3 amended 2026-09-16 (relayed caller credential, ADR 016 section 7); section 8 amended 2026-11-15 (freshness by price date). Implements the ledger-layer scope of `docs/prfaqs/PRFAQ002-include-live-price.md` (FAQ 16, "Ledger service" row).
 - Decision owner: Ledger service (`backend-cluster/ledger`)
 
 ## Context
@@ -57,7 +57,7 @@ Before a feed is materialized, the loader collects every `price` directive decla
 
 ### 8. Freshness is computed when read, status travels with the load
 
-The cached load returns `managedPrices`, one record per resolved URL: url, alias, the includes that named it, commodity, quote, source, revision, ETag, `observedAt`, `fetchedAt`, `nextRefreshAt`, `freshness` (`recent`, `stale`, or `unavailable`), the last error when any, how many points the ledger shadowed, and the dates the engine actually sees (which is what lets counting reports recognize feed directives exactly). The committed-file loader type stays free of managed fields; callers that only count or list repository files ask for the committed map and never trigger a fetch. Freshness compares the latest `observed-at` with the current clock at read time: recent within ten minutes, stale beyond it, unavailable when no validated revision exists. An unchanged ETag can still become stale. Nothing about freshness is stored.
+The cached load returns `managedPrices`, one record per resolved URL: url, alias, the includes that named it, commodity, quote, source, revision, ETag, `observedAt`, `latestPriceDate`, `fetchedAt`, `nextRefreshAt`, `freshness` (`recent`, `stale`, or `unavailable`), the last error when any, how many points the ledger shadowed, and the dates the engine actually sees (which is what lets counting reports recognize feed directives exactly). The committed-file loader type stays free of managed fields; callers that only count or list repository files ask for the committed map and never trigger a fetch. Freshness compares the date of the feed's newest price (`latestPriceDate`) with today's UTC date at read time: recent while it is at most seven days old, stale beyond it, unavailable when no validated revision exists. A date more than one day ahead of today is stale too: a calendar east of UTC can put today's price a day ahead, but a price further out would keep the source recent however old its real prices are. `observed-at` plays no part. An unchanged ETag can still become stale. Nothing about freshness is stored.
 
 ### 9. Read-only boundaries
 
@@ -82,6 +82,8 @@ When a managed URL has no validated revision, the engine's missing-file report i
 - **Dashboard.** The commodities page shows each source's freshness, timestamps, last error and a Refresh prices action. The journal entry panel no longer offers Edit or Delete on managed entries, which retires the "until the dashboard hides that action" caveat above.
 
 Snapshots and export, and the instrument catalog, remain open.
+
+**Amended 2026-11-15.** Section 8 judged freshness by the latest `observed-at` within ten minutes. Equity and FX feeds publish one price per business day, and only a provisional point carries `observed-at`, so every equity and FX source read `stale` permanently, `--strict-prices` failed any `bea` load that included one, and the dashboard's valuations ignored the field and counted days instead. Freshness is now the age of the feed's newest price date: seven days, one rule for every feed. A daily crypto feed is never close to it, and an equity or FX feed's longest regular silence (Good Friday to Easter Monday, five days, plus next-morning publication) still fits. A feed that keeps answering without new dates turns stale after a week; a failing fetch shows its `error` immediately. The status record gains `latestPriceDate`, `MANAGED_PRICE_STALE_SECONDS` is gone, and the `bea` CLI mirrors the rule (ADR 018 section 7). A per-asset trading calendar was rejected: neither the ledger service nor the CLI knows a feed's asset class or exchange holidays, and the one-week bound needs neither.
 
 ## Alternatives considered
 

@@ -120,13 +120,13 @@ def _status(extra: list[str]) -> None:
         typer.echo("No usable managed price sources." if refused else "No managed price includes in this ledger.")
         return
     output.table(
-        ["ALIAS", "FRESHNESS", "REVISION", "OBSERVED AT", "NEXT REFRESH", "SHADOWED", "ERROR"],
+        ["ALIAS", "FRESHNESS", "REVISION", "LATEST PRICE", "NEXT REFRESH", "SHADOWED", "ERROR"],
         [
             [
                 str(source["alias"]),
                 str(source["freshness"]),
                 str(source["revision"] or "-"),
-                str(source["observed_at"] or "-"),
+                str(source.get("latest_price_date") or "-"),
                 str(source["next_refresh_at"] or "-"),
                 str(source["shadowed_count"]),
                 str(source["error"] or ""),

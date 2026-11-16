@@ -55,6 +55,7 @@ from bea_engine.managed_price_cache import (
     cache_write_problem,
     feed_dir,
     freshness,
+    latest_price_date,
     open_cache_file,
     resolve_feed,
     write_text_atomic,
@@ -80,7 +81,7 @@ OFFLINE_ENV = "MANAGED_PRICE_OFFLINE"
 """Set to resolve managed includes from the cache only, without fetching."""
 
 STRICT_ENV = "MANAGED_PRICE_STRICT"
-"""Set to fail the load on a stale or unavailable managed source."""
+"""Set to fail the load on a stale, unavailable or failing managed source."""
 
 # Beancount spells a date `YYYY-M-D` or `YYYY/M/D` (mixed separators, one or
 # two digit month and day); feed dates are always ISO, so normalise before
@@ -131,6 +132,7 @@ class ManagedSource:
     revision: str | None
     etag: str | None
     observed_at: str | None
+    latest_price_date: str | None
     fetched_at: str | None
     next_refresh_at: str | None
     freshness: str
@@ -294,7 +296,7 @@ def load_with_sources(
 
     Flags default from the `MANAGED_PRICE_*` environment; explicit arguments
     win. Without a managed include this is a plain Beancount load. Strict
-    mode raises naming any stale or unavailable source; offline mode never
+    mode raises naming any stale, unavailable or failing source; offline mode never
     fetches. A write snapshot may supply an absent included destination as an
     empty staged file, so reads and validation never need to create it.
     """
@@ -541,6 +543,7 @@ def _load_with_sources(
                 revision=serving.revision if serving else None,
                 etag=serving.etag if serving else None,
                 observed_at=serving.feed.latest_observed_at if serving else None,
+                latest_price_date=latest_price_date(serving.feed) if serving else None,
                 fetched_at=_iso(serving.fetched_at) if serving else None,
                 # A zero window is the "never fetched / refresh now" sentinel,
                 # not a moment: report no scheduled refresh rather than 1970.
@@ -1660,6 +1663,7 @@ def source_json(source: ManagedSource) -> dict[str, Any]:
         "revision": source.revision,
         "etag": source.etag,
         "observed_at": source.observed_at,
+        "latest_price_date": source.latest_price_date,
         "fetched_at": source.fetched_at,
         "next_refresh_at": source.next_refresh_at,
         "freshness": source.freshness,

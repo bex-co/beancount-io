@@ -336,8 +336,9 @@ export interface ManagedPriceIncludePublic {
 /**
  * ManagedPriceSourcePublic
  * Status of one managed price include resolved for this load (ADR 015 §8).
- * Freshness is computed when read: `recent` within ten minutes of the latest
- * `observedAt`, `stale` beyond it, `unavailable` when no revision validated.
+ * Freshness is computed when read: `recent` while `latestPriceDate` is at most
+ * seven UTC days old, `stale` beyond it, `unavailable` when no revision
+ * validated.
  */
 export interface ManagedPriceSourcePublic {
   url: string;
@@ -349,8 +350,10 @@ export interface ManagedPriceSourcePublic {
   source: string | null;
   revision: string | null;
   etag: string | null;
-  /** ISO timestamps. */
+  /** ISO timestamps. `observedAt` is the newest `observed-at` the feed wrote. */
   observedAt: string | null;
+  /** ISO date of the feed's newest price. */
+  latestPriceDate: string | null;
   fetchedAt: string | null;
   nextRefreshAt: string | null;
   freshness: "recent" | "stale" | "unavailable";

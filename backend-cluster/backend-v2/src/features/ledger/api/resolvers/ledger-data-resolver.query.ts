@@ -156,7 +156,7 @@ class ManagedPriceInclude {
 
 @ObjectType({
   description:
-    "Status of one managed price include (ADR 015). `freshness` is `recent` within ten minutes of the latest observation, `stale` beyond it, and `unavailable` when no revision has validated.",
+    "Status of one managed price include (ADR 015). `freshness` is `recent` while the feed's newest price is at most seven days old, `stale` beyond it, and `unavailable` when no revision has validated.",
 })
 export class ManagedPriceSource {
   @Field(() => String)
@@ -185,6 +185,13 @@ export class ManagedPriceSource {
 
   @Field(() => String, { nullable: true })
   observedAt: string | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "ISO date of the feed's newest price; `freshness` is judged by it.",
+  })
+  latestPriceDate: string | null;
 
   @Field(() => String, { nullable: true })
   fetchedAt: string | null;
@@ -459,7 +466,7 @@ export class LedgerDataQueryResolver {
   @AllowAnonymous()
   @Query(() => [ManagedPriceSource], {
     description:
-      "Status of every managed price include the ledger names: feed pair and source, serving revision, observed/fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none.",
+      "Status of every managed price include the ledger names: feed pair and source, serving revision, newest price date, fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none.",
   })
   async getLedgerManagedPrices(
     @Arg("ledgerId", () => String) ledgerId: string,

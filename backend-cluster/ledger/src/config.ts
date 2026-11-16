@@ -44,8 +44,6 @@ export interface ManagedPricesConfig {
   refreshMs: number;
   /** How long to wait after a failed refresh before trying again. */
   retryMs: number;
-  /** Observation age beyond which a source is reported `stale`. */
-  staleMs: number;
   /** Whole-exchange timeout for one feed fetch. */
   fetchTimeoutMs: number;
   /** Byte cap on one feed body. */
@@ -140,7 +138,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       ),
       refreshMs: positiveInt(env.MANAGED_PRICE_REFRESH_SECONDS, 300) * 1000,
       retryMs: positiveInt(env.MANAGED_PRICE_RETRY_SECONDS, 60) * 1000,
-      staleMs: positiveInt(env.MANAGED_PRICE_STALE_SECONDS, 600) * 1000,
       fetchTimeoutMs: positiveInt(env.MANAGED_PRICE_FETCH_TIMEOUT_MS, 5000),
       maxBodyBytes: positiveInt(env.MANAGED_PRICE_MAX_BODY_BYTES, 1024 * 1024),
       maxFeedsPerLedger: positiveInt(env.MANAGED_PRICE_MAX_FEEDS, 16),

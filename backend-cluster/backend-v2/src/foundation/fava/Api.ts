@@ -3692,7 +3692,7 @@ export interface ManagedPriceIncludePublic {
 
 /**
  * ManagedPriceSourcePublic
- * Status of one managed price include (ADR 015 section 8). Freshness: recent within ten minutes of the latest observedAt, stale beyond it, unavailable when no revision validated.
+ * Status of one managed price include (ADR 015 section 8). Freshness: recent while latestPriceDate is at most seven UTC days old, stale beyond it, unavailable when no revision validated.
  */
 export interface ManagedPriceSourcePublic {
   /** Url */
@@ -3713,6 +3713,11 @@ export interface ManagedPriceSourcePublic {
   etag: string | null;
   /** Observedat */
   observedAt: string | null;
+  /**
+   * Latestpricedate
+   * Date of the feed's newest price; freshness is judged by it.
+   */
+  latestPriceDate: string | null;
   /** Fetchedat */
   fetchedAt: string | null;
   /** Nextrefreshat */

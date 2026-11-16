@@ -19,9 +19,9 @@ exports or diagnostics.
 
 Explicit refresh collects every source outcome and fails with the full result
 when any source fails, even if cached prices remain usable. Strict refresh
-also fails on stale observations; offline refresh refuses before changing any
+also fails on stale sources; offline refresh refuses before changing any
 refresh window. Ordinary reports include the exact load's `price_sources` in
-JSON and warn about observation age and refresh errors in text. This source
+JSON and warn about stale sources and refresh errors in text. This source
 freshness is separate from valuation completeness and is not calendar-aware.
 
 Deterministic fixture and real subprocess tests cover authentication scope,
@@ -90,14 +90,14 @@ Refresh is driven by `next_refresh_at` inside the head, never by file expiry, so
 
 ### 7. Freshness is computed at read time and travels with the load
 
-Each resolved URL yields a `ManagedSource`: url, alias, the include lines that named it, commodity, quote, source, revision, ETag, `observed_at`, `fetched_at`, `next_refresh_at`, `freshness`, the last error, the shadowed count, and the dates the engine actually sees. Freshness compares the latest `observed-at` with the clock at read time — recent within 600 seconds, stale beyond, unavailable with no validated revision — and is never stored. A feed with no parseable `observed-at` reads stale: without an observation age there is nothing fresh to claim.
+Each resolved URL yields a `ManagedSource`: url, alias, the include lines that named it, commodity, quote, source, revision, ETag, `observed_at`, `latest_price_date`, `fetched_at`, `next_refresh_at`, `freshness`, the last error, the shadowed count, and the dates the engine actually sees. Freshness compares the feed's newest price date with today's UTC date at read time — recent while it is at most seven days old and at most one day ahead, stale otherwise, unavailable with no validated revision — and is never stored. `observed-at` plays no part, so a feed without it reads by its dates alone. The rule and its reasons are ADR 015 section 8's (amended 2026-11-15), mirrored line for line.
 
 ### 8. Offline and strict are global modes
 
 Two modes exist locally that the hosted contract does not need:
 
 - `--offline` reads the head and its blob only, makes no network call, and writes nothing. PRFAQ002 FAQ 8 requires it; with no cache it reports the source unavailable while the books stay readable.
-- `--strict-prices` fails the load, naming the source and its cause, when any managed source is stale or unavailable, for automation that must not silently degrade.
+- `--strict-prices` fails the load, naming the source and its cause, when any managed source is stale or unavailable, or is serving its cached revision because the last refresh failed, for automation that must not silently degrade. The failed refresh counts on its own because a week-old price still reads recent; it clears with the next good refresh. A cache that cannot be written after a good fetch does not count: the prices are current.
 
 Both are top-level `bea` options that reach the engine through `MANAGED_PRICE_OFFLINE` / `MANAGED_PRICE_STRICT` on the helper's environment, so every load-bearing helper call honors them without threading a flag through each command's argv. An explicit flag wins over the inherited environment.
 
@@ -105,7 +105,7 @@ Both are top-level `bea` options that reach the engine through `MANAGED_PRICE_OF
 
 `bea price` gains three subcommands ahead of its existing `bean-price` passthrough:
 
-- `bea price status` — every managed source with freshness, revision, observed-at, next refresh, shadowed count, and last error, as a table or as JSON.
+- `bea price status` — every managed source with freshness, revision, latest price date, next refresh, shadowed count, and last error, as a table or as JSON (which also carries `observed_at`).
 - `bea price refresh` — zeroes each head's `next_refresh_at` and re-resolves, reporting `previous → new` per source.
 - `bea price export [--output DIR] [--allow-errors]` — the portable export below.
 

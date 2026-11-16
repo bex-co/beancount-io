@@ -55,6 +55,7 @@ describe("LedgerDataService managed price status", () => {
       revision: "e1",
       etag: '"e1"',
       observedAt: "2026-09-15T08:25:00Z",
+      latestPriceDate: "2026-09-15",
       error: null,
       shadowedCount: 0,
     });

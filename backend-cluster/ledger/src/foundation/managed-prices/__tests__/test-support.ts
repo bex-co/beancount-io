@@ -13,7 +13,6 @@ export const TEST_CONFIG: ManagedPricesConfig = {
   origins: ["https://beancount.io"],
   refreshMs: 5 * 60 * 1000,
   retryMs: 60 * 1000,
-  staleMs: 10 * 60 * 1000,
   fetchTimeoutMs: 1000,
   maxBodyBytes: 1024 * 1024,
   maxFeedsPerLedger: 16,

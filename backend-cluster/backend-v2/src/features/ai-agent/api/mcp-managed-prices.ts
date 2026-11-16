@@ -11,7 +11,7 @@ export const refreshManagedPricesInput = z
   .object({ ledger: ledgerSelection })
   .strict();
 // Only the fields an agent acts on are typed; each record carries the rest
-// of the `ledgerManagedPrices` resource's shape. Publishing all fourteen here
+// of the `ledgerManagedPrices` resource's shape. Publishing all fifteen here
 // would cost ~1.7 KB of every session's tools/list for a schema the resource
 // template already documents.
 export const refreshManagedPricesOutput = mcpOutputSchema(

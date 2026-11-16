@@ -44,6 +44,8 @@ export interface ManagedPriceSource {
   revision: string | null;
   etag: string | null;
   observedAt: string | null;
+  /** Date of the feed's newest price; what `freshness` is judged by. */
+  latestPriceDate: string | null;
   fetchedAt: string | null;
   nextRefreshAt: string | null;
   freshness: ManagedPriceFreshness;
@@ -219,15 +221,48 @@ export function managedPriceSourceFor(
   return null;
 }
 
-/** Freshness from observation age, recomputed on every read (never stored). */
+/**
+ * Days a feed's newest price may age before the source is `stale` (ADR 015
+ * section 8). One rule for every feed, so no asset class or trading calendar
+ * is needed: a crypto feed has a price every day, and an equity or FX feed's
+ * longest regular silence (Good Friday to Easter Monday, five days) plus its
+ * next-morning publication still fits inside a week.
+ */
+const MANAGED_PRICE_STALE_DAYS = 7;
+/**
+ * Days ahead of the UTC date a newest price may be dated and still be
+ * `recent`: a feed dated by a calendar east of UTC can put today's price a
+ * day ahead, and a price further out would keep the source recent however
+ * old its real prices are.
+ */
+const MANAGED_PRICE_FUTURE_DAYS = 1;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** The newest price date in a validated feed (ISO dates sort as strings). */
+function latestManagedPriceDate(
+  prices: ReadonlyArray<{ date: string }>,
+): string | null {
+  let latest: string | null = null;
+  for (const { date } of prices) if (latest === null || date > latest) latest = date;
+  return latest;
+}
+
+/**
+ * Freshness from the age in UTC days of the feed's newest price, recomputed
+ * on every read (never stored). A missing or unreadable date, or one more
+ * than a day ahead, is `stale`.
+ */
 export function managedPriceFreshness(
-  observedAt: string | null,
+  latestPriceDate: string | null,
   now: number,
-  staleMs: number,
 ): Exclude<ManagedPriceFreshness, "unavailable"> {
-  const observed = observedAt === null ? NaN : Date.parse(observedAt);
-  if (!Number.isFinite(observed)) return "stale";
-  return now - observed <= staleMs ? "recent" : "stale";
+  if (latestPriceDate === null || !isIsoDate(latestPriceDate)) return "stale";
+  const today = Math.floor(now / DAY_MS) * DAY_MS;
+  const ageDays = (today - Date.parse(`${latestPriceDate}T00:00:00Z`)) / DAY_MS;
+  return ageDays >= -MANAGED_PRICE_FUTURE_DAYS &&
+    ageDays <= MANAGED_PRICE_STALE_DAYS
+    ? "recent"
+    : "stale";
 }
 
 const iso = (ms: number | null): string | null =>
@@ -344,6 +379,7 @@ export async function overlayManagedPrices(
   const managedPricePaths: string[] = [];
   const managedPrices = sources.map((source, index): ManagedPriceSource => {
     const { blob, head } = resolved[index];
+    const latestPriceDate = blob ? latestManagedPriceDate(blob.feed.prices) : null;
     const effective = blob
       ? applyLedgerPricePrecedence(blob.text, blob.feed, ledgerPairs)
       : null;
@@ -362,15 +398,10 @@ export async function overlayManagedPrices(
       revision: blob?.revision ?? null,
       etag: blob?.etag ?? null,
       observedAt: blob?.feed.latestObservedAt ?? null,
+      latestPriceDate,
       fetchedAt: iso(blob?.fetchedAt ?? null),
       nextRefreshAt: iso(head.nextRefreshAt),
-      freshness: blob
-        ? managedPriceFreshness(
-            blob.feed.latestObservedAt,
-            now(),
-            deps.config.staleMs,
-          )
-        : "unavailable",
+      freshness: blob ? managedPriceFreshness(latestPriceDate, now()) : "unavailable",
       error: head.lastError,
       shadowedCount: effective?.shadowedCount ?? 0,
       effectiveDates: effective?.effectiveDates ?? [],

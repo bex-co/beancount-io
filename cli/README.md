@@ -161,7 +161,7 @@ include "https://beancount.io/prices/BTC-USD"
 
 `bea price status` shows each source's freshness, `bea price refresh`
 re-resolves on demand and exits nonzero if any source fails, `--offline` reads the cache only, `--strict-prices`
-fails the load on a stale or unavailable source, and `bea price export`
+fails the load on a stale, unavailable or failing source, and `bea price export`
 snapshots portable local includes for stock Beancount and Fava — which
 cannot fetch the URL themselves. The
 [usage guide](https://github.com/bex-co/beancount-io/blob/main/cli/docs/USAGE.md#managed-price-includes)

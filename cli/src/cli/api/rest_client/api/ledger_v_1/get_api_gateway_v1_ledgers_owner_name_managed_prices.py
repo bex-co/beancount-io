@@ -115,10 +115,12 @@ def sync_detailed(
     """List managed price sources and their freshness
 
      One record per managed price include (`include "https://beancount.io/prices/BTC-USD"`): the feed's
-    commodity pair and source, the revision serving, when it was observed and fetched, when it next
-    refreshes, and `freshness` — `recent` within ten minutes of the latest observation, `stale` beyond
-    it, `unavailable` when no revision has validated (then `error` says why). Check it before trusting a
-    valuation built on a managed feed. Empty when the ledger has no managed include.
+    commodity pair and source, the revision serving, the date of its newest price (`latestPriceDate`),
+    when it was fetched and next refreshes, and `freshness` — `recent` while that newest price is at
+    most seven days old (one rule for every feed, so a stock or FX feed stays recent over a weekend or
+    holiday), `stale` beyond it, `unavailable` when no revision has validated (then `error` says why).
+    Check it before trusting a valuation built on a managed feed. Empty when the ledger has no managed
+    include.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -153,10 +155,12 @@ def sync(
     """List managed price sources and their freshness
 
      One record per managed price include (`include "https://beancount.io/prices/BTC-USD"`): the feed's
-    commodity pair and source, the revision serving, when it was observed and fetched, when it next
-    refreshes, and `freshness` — `recent` within ten minutes of the latest observation, `stale` beyond
-    it, `unavailable` when no revision has validated (then `error` says why). Check it before trusting a
-    valuation built on a managed feed. Empty when the ledger has no managed include.
+    commodity pair and source, the revision serving, the date of its newest price (`latestPriceDate`),
+    when it was fetched and next refreshes, and `freshness` — `recent` while that newest price is at
+    most seven days old (one rule for every feed, so a stock or FX feed stays recent over a weekend or
+    holiday), `stale` beyond it, `unavailable` when no revision has validated (then `error` says why).
+    Check it before trusting a valuation built on a managed feed. Empty when the ledger has no managed
+    include.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -186,10 +190,12 @@ async def asyncio_detailed(
     """List managed price sources and their freshness
 
      One record per managed price include (`include "https://beancount.io/prices/BTC-USD"`): the feed's
-    commodity pair and source, the revision serving, when it was observed and fetched, when it next
-    refreshes, and `freshness` — `recent` within ten minutes of the latest observation, `stale` beyond
-    it, `unavailable` when no revision has validated (then `error` says why). Check it before trusting a
-    valuation built on a managed feed. Empty when the ledger has no managed include.
+    commodity pair and source, the revision serving, the date of its newest price (`latestPriceDate`),
+    when it was fetched and next refreshes, and `freshness` — `recent` while that newest price is at
+    most seven days old (one rule for every feed, so a stock or FX feed stays recent over a weekend or
+    holiday), `stale` beyond it, `unavailable` when no revision has validated (then `error` says why).
+    Check it before trusting a valuation built on a managed feed. Empty when the ledger has no managed
+    include.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -222,10 +228,12 @@ async def asyncio(
     """List managed price sources and their freshness
 
      One record per managed price include (`include "https://beancount.io/prices/BTC-USD"`): the feed's
-    commodity pair and source, the revision serving, when it was observed and fetched, when it next
-    refreshes, and `freshness` — `recent` within ten minutes of the latest observation, `stale` beyond
-    it, `unavailable` when no revision has validated (then `error` says why). Check it before trusting a
-    valuation built on a managed feed. Empty when the ledger has no managed include.
+    commodity pair and source, the revision serving, the date of its newest price (`latestPriceDate`),
+    when it was fetched and next refreshes, and `freshness` — `recent` while that newest price is at
+    most seven days old (one rule for every feed, so a stock or FX feed stays recent over a weekend or
+    holiday), `stale` beyond it, `unavailable` when no revision has validated (then `error` says why).
+    Check it before trusting a valuation built on a managed feed. Empty when the ledger has no managed
+    include.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

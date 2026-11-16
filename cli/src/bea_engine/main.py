@@ -874,12 +874,13 @@ def price_status(
     """Report every managed price include in the ledger with its freshness.
 
     Answers `{"sources": [...], "refused": [...], "errors": [...]}`: one
-    record per resolved URL with alias, revision, observed-at, fetched-at,
-    next refresh, freshness computed at read time, shadowed count, and the
-    last error when any; one `{url, reason}` per URL include the origin policy
-    refused, which is never fetched; plus the load's own errors for the
-    frontend to banner. Status never fails on ledger errors; only strict mode
-    fails it, on stale sources.
+    record per resolved URL with alias, revision, observed-at, latest price date,
+    fetched-at, next refresh, freshness computed at read time, shadowed count,
+    and the last error when any; one `{url, reason}` per URL include the
+    origin policy refused, which is never fetched; plus the load's own errors
+    for the frontend to banner. Status never fails on ledger errors; only
+    strict mode fails it, on a source that is unavailable, stale, or serving
+    cached prices after a failed refresh.
     """
     with protocol.answering("price-status") as answer:
         from bea_engine import managed_load

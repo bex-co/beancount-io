@@ -61,6 +61,7 @@ describe("overlayManagedPrices", () => {
         revision: "e1",
         etag: '"e1"',
         observedAt: latest,
+        latestPriceDate: (latest as string).slice(0, 10),
         fetchedAt: new Date(clock.now()).toISOString(),
         nextRefreshAt: new Date(clock.now() + TEST_CONFIG.refreshMs).toISOString(),
         freshness: "recent",
@@ -74,13 +75,18 @@ describe("overlayManagedPrices", () => {
     expect(Object.keys(files)).toEqual(["main.bean"]);
   });
 
-  it("turns stale as the clock advances even though the bytes are unchanged", async () => {
-    const text = feedText([["2026-09-15", "1", "2026-09-15T08:00:00Z"]]);
-    const clock = fakeClock(Date.parse("2026-09-15T08:05:00Z"));
+  it("turns stale a week after the newest price date even though the bytes are unchanged", async () => {
+    const text = feedText([["2026-09-15", "1"]]);
+    const clock = fakeClock(Date.parse("2026-09-22T23:59:59Z"));
     const { deps } = feedDeps([feedResponse(text)], clock);
     const files = { "main.bean": `include "${URL_BTC}"\n` };
-    expect((await overlay(files, deps)).managedPrices[0].freshness).toBe("recent");
-    clock.advance(TEST_CONFIG.staleMs);
+    const [source] = (await overlay(files, deps)).managedPrices;
+    expect(source).toMatchObject({
+      observedAt: null,
+      latestPriceDate: "2026-09-15",
+      freshness: "recent",
+    });
+    clock.advance(1000);
     expect((await overlay(files, deps)).managedPrices[0].freshness).toBe("stale");
   });
 
@@ -396,12 +402,30 @@ describe("precedence helpers", () => {
 });
 
 describe("managedPriceFreshness", () => {
-  const now = Date.parse("2026-09-15T08:30:00Z");
-  it("is recent within the window, stale beyond it or without a timestamp", () => {
-    expect(managedPriceFreshness("2026-09-15T08:21:00Z", now, 600_000)).toBe("recent");
-    expect(managedPriceFreshness("2026-09-15T08:19:59Z", now, 600_000)).toBe("stale");
-    expect(managedPriceFreshness(null, now, 600_000)).toBe("stale");
-    expect(managedPriceFreshness("garbage", now, 600_000)).toBe("stale");
+  // Sunday 2026-11-15, just after midnight and just before the next one.
+  const sundayEarly = Date.parse("2026-11-15T00:00:01Z");
+  const sundayLate = Date.parse("2026-11-15T23:59:59Z");
+  it("is recent for a price up to seven UTC days old, whatever the time of day", () => {
+    expect(managedPriceFreshness("2026-11-15", sundayEarly)).toBe("recent");
+    expect(managedPriceFreshness("2026-11-08", sundayEarly)).toBe("recent");
+    expect(managedPriceFreshness("2026-11-08", sundayLate)).toBe("recent");
+    expect(managedPriceFreshness("2026-11-07", sundayEarly)).toBe("stale");
+  });
+  it("keeps a daily equity or FX feed recent across a weekend and Easter", () => {
+    // Friday's close is still the newest price on Sunday.
+    expect(managedPriceFreshness("2026-11-13", sundayLate)).toBe("recent");
+    // Good Friday and Easter Monday 2027 (26 and 29 March) close ECB fixings:
+    // Thursday's rate is the newest until Tuesday's is published Wednesday.
+    expect(
+      managedPriceFreshness("2027-03-25", Date.parse("2027-03-31T03:00:00Z")),
+    ).toBe("recent");
+  });
+  it("is stale without a readable date or more than a day ahead of today", () => {
+    expect(managedPriceFreshness(null, sundayEarly)).toBe("stale");
+    expect(managedPriceFreshness("garbage", sundayEarly)).toBe("stale");
+    expect(managedPriceFreshness("2026-11-16", sundayLate)).toBe("recent");
+    expect(managedPriceFreshness("2026-11-17", sundayLate)).toBe("stale");
+    expect(managedPriceFreshness("2099-01-01", sundayLate)).toBe("stale");
   });
 });
 

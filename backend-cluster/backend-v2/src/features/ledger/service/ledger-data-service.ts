@@ -62,8 +62,8 @@ export interface ILedgerDataService {
 
   /**
    * Status of every managed price include the ledger names (ADR 015 §8):
-   * feed identity, revision, observed/next-refresh times, freshness and the
-   * last refresh error. Empty for a ledger with no managed include.
+   * feed identity, revision, newest price date, fetched/next-refresh times,
+   * freshness and the last refresh error. Empty for a ledger with no managed include.
    */
   getManagedPrices(params: BaseParams): Promise<ManagedPriceSourcePublic[]>;
 

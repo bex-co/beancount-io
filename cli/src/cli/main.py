@@ -427,7 +427,10 @@ def main(
     ] = False,
     strict_prices: Annotated[
         bool,
-        typer.Option("--strict-prices", help="Fail the load when a managed price source is stale or unavailable"),
+        typer.Option(
+            "--strict-prices",
+            help="Fail the load when a managed price source is stale, unavailable, or failed to refresh",
+        ),
     ] = False,
     shell: Annotated[
         str | None,

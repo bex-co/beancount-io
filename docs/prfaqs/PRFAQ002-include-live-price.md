@@ -80,7 +80,7 @@ One include covers that commodity across accounts in the ledger. A portfolio wit
 
 ### 3. How live are the prices, and which markets come first?
 
-The following are proposed release requirements, subject to provider qualification. Polling a provider more often cannot remove the provider's delay. Shipped behavior is narrower: the loaders check for a new revision at most every five minutes, and `bea` labels a source recent within ten minutes of its observation and stale after that. No market calendar, published delay, or stock coverage is built.
+The following are proposed release requirements, subject to provider qualification. Polling a provider more often cannot remove the provider's delay. Shipped behavior is narrower: the loaders check for a new revision at most every five minutes, and the dashboard and `bea` label a source recent while its newest price is at most seven days old (UTC dates) and stale after that, one rule for every feed (ADR 015 section 8, amended 2026-11-15). No market calendar, published delay, or stock coverage is built.
 
 | Asset class | First-release coverage | Price and freshness contract |
 | --- | --- | --- |

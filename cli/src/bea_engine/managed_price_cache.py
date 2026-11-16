@@ -24,7 +24,8 @@ the only cost of two loads racing, and feeds are idempotent bytes.
 
 Two modes beyond the hosted contract: offline resolution reads the head and
 its blob only and never touches the network, and strict resolution fails the
-load when a source is stale or unavailable instead of degrading quietly.
+load when a source is stale, unavailable, or serving its cache after a failed
+refresh, instead of degrading quietly.
 """
 
 from __future__ import annotations
@@ -38,6 +39,7 @@ import tempfile
 import time
 from contextlib import suppress
 from dataclasses import asdict, dataclass
+from datetime import UTC, date, datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import IO, Any, Literal
@@ -53,7 +55,6 @@ from bea_engine.managed_prices import (
     feed_revision_id,
     fetch_managed_price_feed,
     is_feed_commodity,
-    observed_instant,
     validate_managed_price_text,
 )
 from bea_engine.protocol import LedgerError
@@ -64,14 +65,25 @@ REFRESH_SECONDS = 300
 RETRY_SECONDS = 60
 """How long to wait after a failed refresh before trying again."""
 
-STALE_SECONDS = 600
-"""Observation age beyond which a source reads `stale` (ADR 015 section 8)."""
+STALE_DAYS = 7
+"""Days a feed's newest price may age before the source reads `stale` (ADR 015 section 8).
+
+One rule for every feed, so no asset class or trading calendar is needed: a
+crypto feed has a price every day, and an equity or FX feed's longest regular
+silence (Good Friday to Easter Monday, five days) plus its next-morning
+publication still fits inside a week.
+"""
+
+FUTURE_DAYS = 1
+"""Days ahead of the UTC date a newest price may be dated and still read recent.
+
+A feed dated by a calendar east of UTC, or a computer clock running a little
+slow, can put today's price a day ahead; a price further ahead is no evidence
+of freshness, and would keep the source recent however old its real prices are.
+"""
 
 SUPERSEDED_GRACE_SECONDS = REFRESH_SECONDS
 """How long a superseded revision's files stay for a load that already chose it (w5/640)."""
-
-FUTURE_SKEW_SECONDS = 300
-"""How far ahead of the clock an observation may claim to be and still read recent."""
 
 
 @dataclass(frozen=True)
@@ -166,6 +178,20 @@ def _read_blob(directory: Path, revision: str) -> PriceFeedBlob | None:
             # it breaks loads, and its pair would refuse the corrected feed.
             # Treat it as missing so the next refresh replaces it.
             return None
+        prices = tuple(
+            PricePoint(
+                line=point["line"],
+                date=point["date"],
+                base=point["base"],
+                quote=point["quote"],
+                observed_at=point.get("observed_at"),
+            )
+            for point in feed.get("prices", [])
+        )
+        if any(date.fromisoformat(point.date).isoformat() != point.date for point in prices):
+            # Not a date the feed's validation accepted: a damaged record.
+            # Treat it as missing so the next refresh replaces it.
+            return None
         blob = PriceFeedBlob(
             url=raw["url"],
             revision=raw["revision"],
@@ -179,16 +205,7 @@ def _read_blob(directory: Path, revision: str) -> PriceFeedBlob | None:
                 source=feed.get("source"),
                 revision=feed.get("revision"),
                 latest_observed_at=feed.get("latest_observed_at"),
-                prices=tuple(
-                    PricePoint(
-                        line=point["line"],
-                        date=point["date"],
-                        base=point["base"],
-                        quote=point["quote"],
-                        observed_at=point.get("observed_at"),
-                    )
-                    for point in feed.get("prices", [])
-                ),
+                prices=prices,
             ),
         )
     except (OSError, ValueError, TypeError, KeyError, AttributeError):
@@ -317,24 +334,31 @@ def _persist_head(directory: Path, head: PriceFeedHead) -> PriceFeedHead:
     return PriceFeedHead(revision=head.revision, next_refresh_at=head.next_refresh_at, last_error=problem)
 
 
-def freshness(
-    blob: PriceFeedBlob | None, now: float, stale_seconds: int = STALE_SECONDS
-) -> Literal["recent", "stale", "unavailable"]:
+def latest_price_date(feed: FeedSummary) -> str | None:
+    """The newest price date in a validated feed (ISO dates sort as strings)."""
+    return max((point.date for point in feed.prices), default=None)
+
+
+def _age_days(day: str, now: float) -> int:
+    """Whole UTC days from `day` to the UTC date of `now`."""
+    today = datetime.fromtimestamp(now, UTC).date()
+    return (today - date.fromisoformat(day)).days
+
+
+def freshness(blob: PriceFeedBlob | None, now: float) -> Literal["recent", "stale", "unavailable"]:
     """Freshness computed at read time, never stored (ADR 015 section 8).
 
-    Recent within the stale window of the latest `observed-at`, stale beyond
-    it, unavailable when no revision validated. A feed with no parseable
-    observed-at reads stale: without an observation age there is nothing
-    fresh to claim, and the hosted side reads the same feed the same way.
+    Recent while the feed's newest price is at most `STALE_DAYS` UTC days
+    old (and at most `FUTURE_DAYS` ahead), stale otherwise, unavailable when
+    no revision validated. The hosted ledger service reads the same feed the
+    same way.
     """
     if blob is None:
         return "unavailable"
-    instant = observed_instant(blob.feed.latest_observed_at)
-    if instant is None:
+    day = latest_price_date(blob.feed)
+    if day is None:
         return "stale"
-    age = now - instant
-    # An observation from well past the clock is not evidence of freshness.
-    return "recent" if -FUTURE_SKEW_SECONDS <= age <= stale_seconds else "stale"
+    return "recent" if -FUTURE_DAYS <= _age_days(day, now) <= STALE_DAYS else "stale"
 
 
 def resolve_feed(
@@ -350,14 +374,14 @@ def resolve_feed(
     max_body_bytes: int = MAX_BODY_BYTES,
     refresh_seconds: int = REFRESH_SECONDS,
     retry_seconds: int = RETRY_SECONDS,
-    stale_seconds: int = STALE_SECONDS,
 ) -> ResolvedFeed:
     """Serve the feed at `url` from the cache, refreshing past its window.
 
     Never fails for a feed problem in lenient mode: every failure is recorded
     on the head and the caller receives whatever revision last validated.
     Offline mode reads the head and its blob only and writes nothing. Strict
-    mode raises naming the source when it is stale or unavailable.
+    mode raises naming the source when it is unavailable, stale, or serving
+    cached prices because its last refresh failed.
     """
     at = time.time() if now is None else now
     directory = feed_dir(url, root)
@@ -367,14 +391,14 @@ def resolve_feed(
         if previous is None and head.revision is not None:
             head = PriceFeedHead(revision=None, next_refresh_at=0.0, last_error=head.last_error)
         resolved = ResolvedFeed(blob=previous, head=head)
-        _enforce_strict(url, resolved, at, stale_seconds, strict)
+        _enforce_strict(url, resolved, at, strict, refresh_error=head.last_error)
         return resolved
     # A refresh time further out than any window sets was written under a
     # clock running fast; honored, it suppressed refreshes for days (w5/645).
     believable = head.next_refresh_at <= at + max(refresh_seconds, retry_seconds)
     if at < head.next_refresh_at and believable and (previous is not None or head.revision is None):
         resolved = ResolvedFeed(blob=previous, head=head)
-        _enforce_strict(url, resolved, at, stale_seconds, strict)
+        _enforce_strict(url, resolved, at, strict, refresh_error=head.last_error)
         return resolved
 
     result = fetch_managed_price_feed(
@@ -388,7 +412,7 @@ def resolve_feed(
         refreshed = PriceFeedHead(revision=previous.revision, next_refresh_at=at + refresh_seconds, last_error=None)
         refreshed = _persist_head(directory, refreshed)
         resolved = ResolvedFeed(blob=previous, head=refreshed)
-        _enforce_strict(url, resolved, at, stale_seconds, strict)
+        _enforce_strict(url, resolved, at, strict, refresh_error=None)
         return resolved
 
     message: str | None = None
@@ -435,7 +459,7 @@ def resolve_feed(
                     _retire(directory, previous.revision)
                 _sweep(directory, revision)
             resolved = ResolvedFeed(blob=blob, head=refreshed)
-            _enforce_strict(url, resolved, at, stale_seconds, strict)
+            _enforce_strict(url, resolved, at, strict, refresh_error=None)
             return resolved
         message = (
             f"invalid feed: {validation.reason}"
@@ -462,12 +486,18 @@ def resolve_feed(
     # only means the next load retries sooner.
     _try_write(directory / "head.json", json.dumps(asdict(degraded)))
     resolved = ResolvedFeed(blob=previous, head=degraded)
-    _enforce_strict(url, resolved, at, stale_seconds, strict)
+    _enforce_strict(url, resolved, at, strict, refresh_error=message)
     return resolved
 
 
-def _enforce_strict(url: str, resolved: ResolvedFeed, at: float, stale_seconds: int, strict: bool) -> None:
-    """Fail the load, naming the source, when strict mode forbids degrading."""
+def _enforce_strict(url: str, resolved: ResolvedFeed, at: float, strict: bool, *, refresh_error: str | None) -> None:
+    """Fail the load, naming the source, when strict mode forbids degrading.
+
+    `refresh_error` is why the last refresh failed when the cache is serving
+    in its place. A week-old price still reads recent, so the failure itself
+    is what tells strict mode that the prices may be out of date. A cache
+    write problem after a good fetch is not one: the prices are current.
+    """
     if not strict:
         return
     if resolved.blob is None:
@@ -476,23 +506,21 @@ def _enforce_strict(url: str, resolved: ResolvedFeed, at: float, stale_seconds: 
         # full stop only when one is missing.
         cause = (resolved.head.last_error or "no cached revision").rstrip()
         raise LedgerError(f"managed price source {url} is unavailable in strict mode: {cause}".rstrip(".") + ".")
-    if freshness(resolved.blob, at, stale_seconds) == "stale":
-        # Worded by why it reads stale: "older than 600 seconds" was said of a
-        # stamp an hour ahead of the clock, and of a feed with none (w5/644).
-        stamp = resolved.blob.feed.latest_observed_at
-        instant = observed_instant(stamp)
-        if not stamp:
-            why = "the feed has no observation time (observed-at)."
-        elif instant is None:
-            why = f"its observation time {stamp} cannot be read."
-        elif instant - at > FUTURE_SKEW_SECONDS:
+    if freshness(resolved.blob, at) == "stale":
+        day = latest_price_date(resolved.blob.feed)
+        age = _age_days(day, at) if day else None
+        if age is None:
+            why = "the feed has no price."
+        elif age < 0:
             why = (
-                f"latest observation {stamp} is more than {FUTURE_SKEW_SECONDS} seconds ahead of this computer's "
-                "clock; check the clock."
+                f"its newest price is dated {day}, ahead of today's UTC date; check the feed or this computer's clock."
             )
         else:
-            why = f"latest observation {stamp} is older than {stale_seconds} seconds."
+            why = f"its newest price is dated {day}, {age} days ago; a feed is stale after {STALE_DAYS} days."
         raise LedgerError(f"managed price source {url} is stale in strict mode: {why}")
+    if refresh_error is not None:
+        cause = refresh_error.rstrip()
+        raise LedgerError(f"managed price source {url} failed to refresh in strict mode: {cause}".rstrip(".") + ".")
 
 
 def managed_source_for_path(path: Path, root: Path | None = None) -> str | None:

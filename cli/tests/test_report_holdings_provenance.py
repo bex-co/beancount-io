@@ -4,7 +4,7 @@ Holdings groups name the managed source behind each quote, reusing the
 w5/m7 provenance fields; a value from a stale quote is labelled in text
 and JSON. The register carries the same envelope, so its heading names
 stale sources like every report. Feeds are served locally: one revision
-observed long ago (stale), one observed just now (recent).
+priced long ago (stale), one priced today (recent).
 """
 
 from __future__ import annotations
@@ -47,16 +47,15 @@ FX_FEED = """\
 
 
 def _fresh_feed() -> str:
-    seen = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    today = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
     return f"""\
 ; alias: VTI-USD
 ; commodity: VTI
 ; quote: USD
 ; source: fixture
 ; revision: r2
-2026-01-10 price VTI 170.00 USD
+{today} price VTI 170.00 USD
   price-source: "fixture"
-  observed-at: "{seen}"
 """
 
 
@@ -171,6 +170,7 @@ def test_holdings_json_names_the_stale_source(feed_server: _FeedServer, tmp_path
         "alias": "VTI-USD",
         "freshness": "stale",
         "observed_at": "2026-01-10T00:00:00Z",
+        "latest_price_date": "2026-01-10",
         "revision": source["revision"],
     }
     assert group["conversion_source"] is None
@@ -223,6 +223,7 @@ def test_holdings_stale_conversion_leg_taints_the_value(feed_server: _FeedServer
         "alias": "EUR-USD",
         "freshness": "stale",
         "observed_at": "2026-01-10T00:00:00Z",
+        "latest_price_date": "2026-01-10",
         "revision": fx["revision"],
     }
 

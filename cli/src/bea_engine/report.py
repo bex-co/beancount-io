@@ -864,6 +864,7 @@ def _quote_source(
                 "alias": record.get("alias"),
                 "freshness": record.get("freshness"),
                 "observed_at": record.get("observed_at"),
+                "latest_price_date": record.get("latest_price_date"),
                 "revision": record.get("revision"),
             }
     return None

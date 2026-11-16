@@ -15525,6 +15525,19 @@
             ],
             "title": "Observedat"
           },
+          "latestPriceDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latestpricedate",
+            "description": "Date of the feed's newest price; freshness is judged by it."
+          },
           "fetchedAt": {
             "anyOf": [
               {
@@ -15585,6 +15598,7 @@
           "revision",
           "etag",
           "observedAt",
+          "latestPriceDate",
           "fetchedAt",
           "nextRefreshAt",
           "freshness",
@@ -15592,7 +15606,7 @@
           "shadowedCount"
         ],
         "title": "ManagedPriceSourcePublic",
-        "description": "Status of one managed price include (ADR 015 section 8). Freshness: recent within ten minutes of the latest observedAt, stale beyond it, unavailable when no revision validated."
+        "description": "Status of one managed price include (ADR 015 section 8). Freshness: recent while latestPriceDate is at most seven UTC days old, stale beyond it, unavailable when no revision validated."
       },
       "SuccessResponse_list_ManagedPriceSourcePublic__": {
         "properties": {

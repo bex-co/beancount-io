@@ -247,7 +247,8 @@ def _heading(
             detail = f"; {source['error'].rstrip('.')}" if source["error"] else ""
             output.note(
                 f"Price source {source['alias']}: {source['freshness']}; "
-                f"observed {source['observed_at'] or 'unknown'}; revision {source['revision'] or 'none'}{detail}."
+                f"latest price {source.get('latest_price_date') or 'unknown'}; "
+                f"revision {source['revision'] or 'none'}{detail}."
             )
     if metadata.get("excluded_date"):
         output.note(

@@ -100,7 +100,7 @@ Global options come before the command.
 | `--no-input` | Never prompt. Missing confirmation or input fails with exit 2 instead of waiting. |
 | `--strict` | Refuse partial answers even in a terminal; `--allow-errors` opts into them. |
 | `--offline` | Never fetch, except an explicit `upgrade --check`: reuse cached managed prices and skip background update checks. Forwarded `price` quote fetching, `price refresh`, `engine enable`, `upgrade`, every `bea cloud` command, and `bea ask` exit 2 instead of sending anything. Local engine commands reuse an available engine; if installation is needed, they exit 2 before starting it. Run once without `--offline` with network access to install the engine. |
-| `--strict-prices` | Fail the load when a managed price source is stale or unavailable. |
+| `--strict-prices` | Fail the load when a managed price source is stale, unavailable, or failed to refresh. |
 | `--yes / -y` | Answer confirmations with yes. |
 | `--debug` | Include exception tracebacks; JSON errors gain a `traceback` string. |
 | `--show-completion` / `--install-completion` | Print or install shell completion. |
@@ -2284,18 +2284,20 @@ source. Duplicate detection and the `--force` conflict rule apply to prices
 already authored in the ledger, including its local included files.
 
 ```bash
-bea price status            # freshness, revision, observed-at, errors per source
+bea price status            # freshness, revision, latest price date, errors per source
 bea price refresh           # re-resolve now; reports which sources changed
 bea --offline balance       # resolve from the cache only; never fetch
-bea --strict-prices check   # fail when a source is stale or unavailable
+bea --strict-prices check   # fail when a source is stale, unavailable or failing
 ```
 
-Freshness is computed at read time from the latest observation: `recent`
-within ten minutes, `stale` beyond it, `unavailable` when no revision ever
-validated. This measures observation age, not exchange trading hours.
-`observed-at` stamps compare as instants; a stamp without an offset (or a bare
-date) reads as UTC, and one more than five minutes ahead of the clock reads
-`stale`.
+Freshness is computed at read time from the date of the feed's newest price:
+`recent` while it is at most seven days old (UTC dates), `stale` beyond it,
+`unavailable` when no revision ever validated. One week holds every feed's
+normal quiet spell, so a stock or FX source stays `recent` over weekends and
+exchange holidays; `observed-at` plays no part. A newest price dated more than
+one day ahead of today reads `stale`. Because a week-old price is still
+`recent`, `--strict-prices` also fails while a source serves its cached
+revision after a failed refresh, until the next refresh succeeds.
 A URL include the origin policy refuses (managed price includes disabled, an
 origin not in `MANAGED_PRICE_ORIGINS`) is no source and is never fetched;
 `price status` lists it under `Refused URL includes` with its reason (JSON:
@@ -2309,7 +2311,7 @@ records under `error.result`. `--strict-prices` also rejects stale refresh resul
 `--offline price refresh` exits 2 without fetching or changing refresh windows.
 Ordinary `balance` and `report` text warns about stale or unavailable sources
 and failed refreshes. JSON includes `price_sources` with the revision,
-observation timestamp, freshness and error from the same load that calculated
+latest price date, freshness and error from the same load that calculated
 the report. Freshness does not change the separate missing-price valuation
 rules; use `--strict-prices` to reject stale sources.
 Missing/rejected login points to `bea cloud login` or `BEA_TOKEN`; 403 means
@@ -2765,7 +2767,7 @@ select targets, endpoints, and state directories:
 | `CI` | — | Truthy implies `--no-input`, and disables the update notice |
 | `MANAGED_PRICE_ORIGINS` | `https://beancount.io` | Comma-separated origin allowlist for managed price includes; empty disables them. Each entry compares as its origin (`https://Beancount.io:443/` is `https://beancount.io`); one that is not an http(s) URL is ignored, and when every entry is, the refusal names them instead of saying includes are disabled |
 | `MANAGED_PRICE_OFFLINE` | — | Truthy resolves managed includes from the cache only, like `--offline` |
-| `MANAGED_PRICE_STRICT` | — | Truthy fails loads on stale or unavailable sources, like `--strict-prices` |
+| `MANAGED_PRICE_STRICT` | — | Truthy fails loads on stale, unavailable or failing sources, like `--strict-prices` |
 
 `BEA_API_URL` and `BEA_DASHBOARD_URL` also validate Unicode and punycode
 hostnames. An invalid endpoint exits **2** before any request; `cloud logout`

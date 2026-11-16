@@ -38,7 +38,7 @@ Customers sign in with `bea cloud login`, choose their assets and quote currency
 include "https://beancount.io/prices/BTC-USD"
 ```
 
-`bea` uses the saved login to retrieve prices and maintains a local cache. Customers can inspect each source's observation time, refresh it explicitly, or continue reading cached prices offline. A failed refresh preserves the last validated data and reports the problem. Export saves local price files for use with ordinary Beancount and Fava.
+`bea` uses the saved login to retrieve prices and maintains a local cache. Customers can inspect each source's latest price date, refresh it explicitly, or continue reading cached prices offline. A failed refresh preserves the last validated data and reports the problem. Export saves local price files for use with ordinary Beancount and Fava.
 
 The ledger stays on the customer's machine. Price requests send the requested instrument pair and authentication credential to Beancount.io; they do not upload transactions, account names, holdings, or ledger files. No separate market-data provider key is required for the supported catalog.
 
@@ -93,7 +93,7 @@ Customers do not paste a token into an include, a Git repository, or a price-pro
 bea --file main.bean price refresh
 ```
 
-Source observation time is distinct from download time. The current CLI classifies observations as `recent` within ten minutes, `stale` after that, or `unavailable` when it has no validated revision. A successful download of an old observation must still appear stale.
+A source's price dates are distinct from its download time. The current CLI classifies a source as `recent` while its newest price is at most seven days old, `stale` after that, or `unavailable` when it has no validated revision (amended 2026-11-15 from a ten-minute observation window that left every stock and FX source stale). A successful download of old prices must still appear stale.
 
 The first release keeps these explicit age-based labels. It does not claim that they understand exchange calendars or distinguish a normal weekend close from an overdue update. Stock and fund examples may be promoted only with the source's actual delay and coverage disclosed; no blanket real-time-equity promise is part of this launch.
 
@@ -138,7 +138,7 @@ bea --file main.bean --json --no-input price refresh
 bea --file main.bean --json --no-input --strict-prices balance Assets --conversion USD
 ```
 
-Source status includes revision, freshness, observation time, refresh timing, and any error. Failure output must follow the existing JSON envelope and exit-code conventions. `--no-input` never starts a login ceremony, and credentials never appear in normal output, debug output, or exported files.
+Source status includes revision, freshness, latest price date, refresh timing, and any error. Failure output must follow the existing JSON envelope and exit-code conventions. `--no-input` never starts a login ceremony, and credentials never appear in normal output, debug output, or exported files.
 
 ## Internal FAQ
 
@@ -184,7 +184,7 @@ The catalog defines which pairs are selectable; launch examples must also pass a
 | No login or expired stored login when a network fetch is needed | Name the source and give `bea cloud login` as the next action; retain usable cache and existing partial-read behavior. |
 | Server rejects a credential | Report an authentication or access error, without printing the token or claiming the instrument is unsupported. |
 | Unknown alias / removed source | Name the unavailable pair and link to the catalog; do not synthesize a replacement symbol. |
-| Timeout, rate limit, redirect, or invalid feed body | Preserve the last validated revision and report the cause and observation time. |
+| Timeout, rate limit, redirect, or invalid feed body | Preserve the last validated revision and report the cause and latest price date. |
 | Explicit refresh fails | Return nonzero using the existing error categories; report per-source successes and failures without claiming an all-success refresh. |
 | Offline with usable cache | Read the identified cached revision without authentication or network activity. |
 | Offline without cache | Report unavailable pricing; strict valuation fails and quantities remain inspectable through existing partial-read controls. |

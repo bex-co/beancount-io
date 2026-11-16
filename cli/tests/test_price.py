@@ -17,6 +17,7 @@ import sys
 import textwrap
 import threading
 import time
+from datetime import UTC, date, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -39,7 +40,6 @@ from bea_engine.managed_price_cache import (
 )
 from bea_engine.managed_prices import (
     AllowedUrl,
-    FeedSummary,
     FetchedFeed,
     FetchFailed,
     InvalidFeed,
@@ -647,7 +647,7 @@ class TestFeedRevisionId:
 # --------------------------------------------------------------------------- #
 
 
-def _feed_text(*observed: str, revision: str = "r1") -> str:
+def _feed_text(*observed: str, revision: str = "r1", first_day: str = "2026-09-10") -> str:
     lines = [
         "; alias: BTC-USD",
         "; commodity: BTC",
@@ -657,7 +657,7 @@ def _feed_text(*observed: str, revision: str = "r1") -> str:
     ]
     for index, stamp in enumerate(observed):
         lines += [
-            f"2026-09-{10 + index:02d} price BTC {112000 + index} USD",
+            f"{date.fromisoformat(first_day) + timedelta(days=index)} price BTC {112000 + index} USD",
             '  price-source: "fixture"',
             f'  observed-at: "{stamp}"',
         ]
@@ -666,6 +666,11 @@ def _feed_text(*observed: str, revision: str = "r1") -> str:
 
 def _stamp(now: float) -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))
+
+
+def _day(now: float, days_ago: int = 0) -> str:
+    """The UTC date `days_ago` days before `now`, as a feed writes it."""
+    return time.strftime("%Y-%m-%d", time.gmtime(now - days_ago * 86400))
 
 
 def _resolve(
@@ -701,6 +706,23 @@ class TestFeedCache:
         assert resolved.blob.text == FEED
         assert resolved.head.last_error is None
         assert first.blob is not None and resolved.blob.revision == first.blob.revision
+
+    def test_a_cached_record_with_an_unreadable_date_is_replaced(self, feed_server: str, tmp_path: Path) -> None:
+        """A damaged price date reads as a missing revision, never a crash, offline too."""
+        now = time.time()
+        _resolve(feed_server, tmp_path, now=now)
+        directory = feed_dir(f"{feed_server}/prices/BTC-USD", tmp_path)
+        meta = json.loads((directory / "r1.json").read_text())
+        meta["feed"]["prices"][0]["date"] = "not-a-date"
+        (directory / "r1.json").write_text(json.dumps(meta))
+        _FeedHandler.routes["/prices/BTC-USD"].pop("etag_match")
+
+        offline = _resolve(feed_server, tmp_path, now=now + 1, offline=True)
+        healed = _resolve(feed_server, tmp_path, now=now + 1)
+
+        assert offline.blob is None
+        assert healed.blob is not None
+        assert healed.blob.feed.prices[0].date == "2026-09-10"
 
     def test_first_fetch_writes_blob_and_head(self, feed_server: str, tmp_path: Path) -> None:
         now = time.time()
@@ -943,7 +965,7 @@ class TestFeedCache:
 
     def test_strict_accepts_fresh(self, feed_server: str, tmp_path: Path) -> None:
         now = time.time()
-        body = _feed_text(_stamp(now)).encode("utf-8")
+        body = _feed_text(_stamp(now), first_day=_day(now)).encode("utf-8")
         _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
 
         resolved = _resolve(feed_server, tmp_path, now=now, strict=True)
@@ -990,50 +1012,62 @@ class TestFeedCache:
 
 
 class TestFreshness:
-    def _blob(self, observed: str | None, fetched_at: float) -> PriceFeedBlob:
-        validation = validate_managed_price_text(FEED)
-        assert isinstance(validation, ValidFeed)
-        feed = validation.feed
-        summary = FeedSummary(
-            alias=feed.alias,
-            commodity=feed.commodity,
-            quote=feed.quote,
-            source=feed.source,
-            revision=feed.revision,
-            latest_observed_at=observed,
-            prices=feed.prices,
-        )
-        return PriceFeedBlob(
-            url="https://beancount.io/prices/BTC-USD",
-            revision="r1",
-            etag='"r1"',
-            text=FEED,
-            fetched_at=fetched_at,
-            feed=summary,
-        )
+    """ADR 015 section 8: a source ages by its newest price date, seven UTC days at most."""
+
+    def _blob(self, *days: str, observed: str | None = None) -> PriceFeedBlob:
+        lines = ["; alias: BTC-USD", "; commodity: BTC", "; quote: USD"]
+        for day in days:
+            lines.append(f"{day} price BTC 112000 USD")
+            if observed is not None:
+                lines.append(f'  observed-at: "{observed}"')
+        return _blob_for("\n".join(lines) + "\n")
 
     def test_no_blob_is_unavailable(self) -> None:
         assert freshness(None, time.time()) == "unavailable"
 
-    def test_recent_observation_is_recent(self) -> None:
+    def test_a_price_up_to_seven_days_old_is_recent(self) -> None:
         now = time.time()
 
-        assert freshness(self._blob(_stamp(now - 60), now - 60), now) == "recent"
+        assert freshness(self._blob(_day(now)), now) == "recent"
+        assert freshness(self._blob(_day(now, 7)), now) == "recent"
+        assert freshness(self._blob(_day(now, 8)), now) == "stale"
 
-    def test_old_observation_is_stale(self) -> None:
+    def test_the_newest_price_decides_whatever_the_order(self) -> None:
         now = time.time()
 
-        assert freshness(self._blob(_stamp(now - 601), now - 601), now) == "stale"
+        assert freshness(self._blob(_day(now), _day(now, 30)), now) == "recent"
 
-    def test_missing_observed_at_reads_stale(self) -> None:
+    def test_days_are_utc_whatever_the_hour(self) -> None:
+        sunday_early = datetime(2026, 11, 15, 0, 0, 1, tzinfo=UTC).timestamp()
+        sunday_late = datetime(2026, 11, 15, 23, 59, 59, tzinfo=UTC).timestamp()
+
+        assert freshness(self._blob("2026-11-08"), sunday_early) == "recent"
+        assert freshness(self._blob("2026-11-08"), sunday_late) == "recent"
+        assert freshness(self._blob("2026-11-07"), sunday_early) == "stale"
+
+    def test_a_weekly_quiet_equity_or_fx_feed_stays_recent(self) -> None:
+        # Friday's close on Sunday, and Thursday's ECB fixing on the Wednesday
+        # after Good Friday and Easter Monday 2027.
+        sunday = datetime(2026, 11, 15, 23, tzinfo=UTC).timestamp()
+        wednesday = datetime(2027, 3, 31, 3, tzinfo=UTC).timestamp()
+
+        assert freshness(self._blob("2026-11-13"), sunday) == "recent"
+        assert freshness(self._blob("2027-03-25"), wednesday) == "recent"
+
+    def test_observed_at_plays_no_part(self) -> None:
         now = time.time()
 
-        assert freshness(self._blob(None, now - 60), now) == "stale"
+        assert freshness(self._blob(_day(now), observed="2020-01-01T00:00:00Z"), now) == "recent"
+        assert freshness(self._blob(_day(now, 30), observed=_stamp(now)), now) == "stale"
 
-    def test_unparseable_observed_at_reads_stale(self) -> None:
+    def test_a_price_dated_one_day_ahead_reads_recent_and_further_reads_stale(self) -> None:
+        # A feed dated east of UTC, or a slow clock, puts today's price a day
+        # ahead; a price further out would keep the source recent forever.
         now = time.time()
 
-        assert freshness(self._blob("whenever", now - 60), now) == "stale"
+        assert freshness(self._blob(_day(now, -1)), now) == "recent"
+        assert freshness(self._blob(_day(now, -2)), now) == "stale"
+        assert freshness(self._blob(_day(now, 30), "2099-01-01"), now) == "stale"
 
 
 # --------------------------------------------------------------------------- #
@@ -1471,7 +1505,7 @@ class TestPriceStatus:
         result = _run_bea(tmp_path, feed_server, "--file", str(ledger), "price", "status")
 
         assert result.returncode == 0, result.stderr
-        for token in ("BTC-USD", "FRESHNESS", "REVISION", "r1", "2026-09-11", "SHADOWED"):
+        for token in ("BTC-USD", "FRESHNESS", "REVISION", "r1", "LATEST PRICE", "2026-09-11", "SHADOWED"):
             assert token in result.stdout
 
     def test_status_json_carries_the_adr015_record(self, feed_server: str, tmp_path: Path) -> None:
@@ -1693,33 +1727,74 @@ class TestStrictAndUnavailableWording:
             _resolve(feed_server, tmp_path, now=now, strict=True)
         return str(raised.value)
 
-    def test_a_future_stamp_names_the_clock(self, feed_server: str, tmp_path: Path) -> None:
+    def test_an_old_price_names_its_date_and_age(self, feed_server: str, tmp_path: Path) -> None:
         now = time.time()
-        stamp = _stamp(now + 3600)
+        day = _day(now, 9)
 
-        message = self._strict(feed_server, tmp_path, _feed_text(stamp), now)
+        message = self._strict(feed_server, tmp_path, _feed_text(_stamp(now), first_day=day), now)
 
         assert message.endswith(
-            f"is stale in strict mode: latest observation {stamp} is more than 300 seconds ahead of this "
-            "computer's clock; check the clock."
+            f"is stale in strict mode: its newest price is dated {day}, 9 days ago; a feed is stale after 7 days."
         )
-        assert "older than" not in message
 
-    def test_a_feed_with_no_stamp_says_so(self, feed_server: str, tmp_path: Path) -> None:
-        body = "; alias: BTC-USD\n; commodity: BTC\n; quote: USD\n2026-09-10 price BTC 112000 USD\n"
-
-        message = self._strict(feed_server, tmp_path, body, time.time())
-
-        assert message.endswith("is stale in strict mode: the feed has no observation time (observed-at).")
-        assert "unknown observation time" not in message
-
-    def test_an_old_stamp_keeps_its_age(self, feed_server: str, tmp_path: Path) -> None:
+    def test_a_far_future_price_names_the_clock(self, feed_server: str, tmp_path: Path) -> None:
         now = time.time()
-        stamp = _stamp(now - 3600)
 
-        assert self._strict(feed_server, tmp_path, _feed_text(stamp), now).endswith(
-            f"latest observation {stamp} is older than 600 seconds."
+        message = self._strict(feed_server, tmp_path, _feed_text(_stamp(now), first_day="2099-01-01"), now)
+
+        assert message.endswith(
+            "is stale in strict mode: its newest price is dated 2099-01-01, ahead of today's UTC date; "
+            "check the feed or this computer's clock."
         )
+
+    def test_a_failed_refresh_fails_strict_while_the_cached_price_is_recent(
+        self, feed_server: str, tmp_path: Path
+    ) -> None:
+        # A week-old price still reads recent, so the failed refresh is what
+        # tells strict mode the cached prices may be out of date.
+        now = time.time()
+        _FeedHandler.routes["/prices/BTC-USD"] = {
+            "body": _feed_text(_stamp(now), first_day=_day(now, 6)).encode("utf-8")
+        }
+        _resolve(feed_server, tmp_path, now=now)
+        _FeedHandler.routes["/prices/BTC-USD"] = {"status": 503, "body": b"down"}
+
+        with pytest.raises(LedgerError) as refreshing:
+            _resolve(feed_server, tmp_path, now=now + 301, strict=True)
+        # Inside the retry window no fetch runs; the recorded failure still counts.
+        with pytest.raises(LedgerError) as waiting:
+            _resolve(feed_server, tmp_path, now=now + 302, strict=True)
+        lenient = _resolve(feed_server, tmp_path, now=now + 303)
+
+        for raised in (refreshing, waiting):
+            assert str(raised.value).endswith(
+                "failed to refresh in strict mode: fetch failed (provider): HTTP 503: price service unavailable. "
+                "Retry later; cached prices remain usable."
+            )
+        assert freshness(lenient.blob, now + 303) == "recent"
+
+    def test_a_good_refresh_clears_the_strict_failure(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        body = _feed_text(_stamp(now), first_day=_day(now)).encode("utf-8")
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
+        _resolve(feed_server, tmp_path, now=now)
+        _FeedHandler.routes["/prices/BTC-USD"] = {"status": 503, "body": b"down"}
+        _resolve(feed_server, tmp_path, now=now + 301)
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": body}
+
+        resolved = _resolve(feed_server, tmp_path, now=now + 400, strict=True)
+
+        assert resolved.blob is not None and resolved.head.last_error is None
+
+    def test_a_feed_without_observed_at_passes_on_its_date(self, feed_server: str, tmp_path: Path) -> None:
+        now = time.time()
+        body = f"; alias: BTC-USD\n; commodity: BTC\n; quote: USD\n{_day(now, 3)} price BTC 112000 USD\n"
+        _FeedHandler.routes["/prices/BTC-USD"] = {"body": body.encode("utf-8")}
+
+        resolved = _resolve(feed_server, tmp_path, now=now, strict=True)
+
+        assert resolved.blob is not None
+        assert resolved.blob.feed.latest_observed_at is None
 
     def test_a_provider_outage_mentions_cached_prices_only_when_cached(self, feed_server: str, tmp_path: Path) -> None:
         now = time.time()
@@ -2175,7 +2250,7 @@ class TestAuthenticatedPrices:
         head = SimpleNamespace(last_error="fetch failed (auth): Not logged in. Run bea cloud login.")
         resolved = SimpleNamespace(blob=None, head=head)
         with pytest.raises(LedgerError) as raised:
-            _enforce_strict("https://beancount.io/prices/BTC-USD", resolved, 0.0, 0, True)
+            _enforce_strict("https://beancount.io/prices/BTC-USD", resolved, 0.0, True, refresh_error=None)
         assert ".." not in str(raised.value)
         assert str(raised.value).endswith("bea cloud login.")
 
@@ -2307,6 +2382,7 @@ class TestReportPriceProvenance:
         source = json.loads(result.stdout)["data"]["price_sources"][0]
         assert source["revision"] == "r1"
         assert source["observed_at"] == "2026-09-11T00:00:00Z"
+        assert source["latest_price_date"] == "2026-09-11"
         assert source["freshness"] == "stale"
         assert source["error"] is None
         assert _FeedHandler.hits == ["/prices/BTC-USD"]
@@ -2827,10 +2903,11 @@ class TestRelativeXdgHomes:
         assert list((tmp_path / "home" / ".cache" / "bea" / "managed-prices").rglob("*.effective.*"))
 
 
-def _mix_feed(*stamps: str) -> str:
+def _mix_feed(*stamps: str, first_day: str = "2026-10-01") -> str:
     lines = ["; alias: BTC-USD"]
     for index, stamp in enumerate(stamps):
-        lines += [f"2026-10-0{index + 1} price BTC {index + 2} USD", f'  observed-at: "{stamp}"']
+        day = date.fromisoformat(first_day) + timedelta(days=index)
+        lines += [f"{day} price BTC {index + 2} USD", f'  observed-at: "{stamp}"']
     return "\n".join(lines) + "\n"
 
 
@@ -2866,31 +2943,21 @@ class TestObservedAtInstants:
         blob = _blob_for(_mix_feed(earlier_far_east, recent))
 
         assert blob.feed.latest_observed_at == recent
-        assert freshness(blob, now) == "recent"
 
     @pytest.mark.parametrize("zone", ["UTC", "Etc/GMT+12", "Pacific/Kiritimati", "Asia/Kathmandu"])
-    def test_naive_stamp_ages_the_same_in_every_time_zone(self, zone: str, time_zone: Any) -> None:
+    def test_price_dates_age_the_same_in_every_time_zone(self, zone: str, time_zone: Any) -> None:
         now = time.time()
         time_zone(zone)
 
-        recent = _blob_for(_mix_feed(time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(now - 60))))
-        old = _blob_for(_mix_feed(time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(now - 3600))))
-        day = _blob_for(_mix_feed(time.strftime("%Y-%m-%d", time.gmtime(now - 2 * 86400))))
-
-        assert freshness(recent, now) == "recent"
-        assert freshness(old, now) == "stale"
-        assert freshness(day, now) == "stale"
-
-    def test_far_future_observation_is_not_recent(self) -> None:
-        now = time.time()
-
-        assert freshness(_blob_for(_mix_feed(_stamp(now + 60))), now) == "recent"
-        assert freshness(_blob_for(_mix_feed(_stamp(now + 3600))), now) == "stale"
+        assert freshness(_blob_for(_mix_feed(_stamp(now), first_day=_day(now, 7))), now) == "recent"
+        assert freshness(_blob_for(_mix_feed(_stamp(now), first_day=_day(now, 8))), now) == "stale"
 
     def test_strict_resolve_accepts_a_mixed_offset_feed(self, feed_server: str, tmp_path: Path) -> None:
         now = time.time()
         earlier_far_east = time.strftime("%Y-%m-%dT%H:%M:%S+14:00", time.gmtime(now - 13 * 3600 + 14 * 3600))
-        _FeedHandler.routes["/prices/BTC-USD"] = {"body": _mix_feed(earlier_far_east, _stamp(now - 60)).encode()}
+        _FeedHandler.routes["/prices/BTC-USD"] = {
+            "body": _mix_feed(earlier_far_east, _stamp(now - 60), first_day=_day(now, 1)).encode()
+        }
 
         resolved = _resolve(feed_server, tmp_path / "cache", now=now, strict=True)
 
