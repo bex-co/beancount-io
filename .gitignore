@@ -54,3 +54,4 @@ __pycache__/
 # Run evidence (rehearsal and release-check records) is scratch: keep it in
 # .internal/, never commit it. This guards the retired location.
 docs/skills/evidence/
+.tmp
