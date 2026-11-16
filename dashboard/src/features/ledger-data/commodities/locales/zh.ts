@@ -56,22 +56,22 @@ const zhCommodities: Record<string, TranslationEntry> = {
   "page.commodities.freshness.recent": {
     message: "最新",
     description:
-      "Freshness badge: the managed feed was observed within the last ten minutes",
+      "Freshness badge: the managed feed's newest price is at most seven days old",
   },
   "page.commodities.freshness.stale": {
     message: "已过时",
     description:
-      "Freshness badge: the managed feed's latest price is older than ten minutes",
+      "Freshness badge: the managed feed's newest price is more than seven days old",
   },
   "page.commodities.freshness.unavailable": {
     message: "不可用",
     description:
       "Freshness badge: no valid price has been received from the managed feed",
   },
-  "page.commodities.observedAt": {
-    message: "观测于 {time}",
+  "page.commodities.latestPriceDate": {
+    message: "最新价格 {date}",
     description:
-      "When the feed's latest price was observed. {time} is a formatted date and time.",
+      "Date of the managed feed's newest price. {date} is a formatted date.",
   },
   "page.commodities.nextRefreshAt": {
     message: "下次刷新 {time}",

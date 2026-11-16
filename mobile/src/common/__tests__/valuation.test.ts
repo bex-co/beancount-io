@@ -381,9 +381,10 @@ describe("isPriceStale", () => {
   });
 
   it("judges a managed feed by its own terms", () => {
-    expect(isPriceStale({ age: 2, managed, dates: daily })).toBe(false);
-    expect(isPriceStale({ age: 3, managed, dates: daily })).toBe(false);
-    expect(isPriceStale({ age: 4, managed, dates: daily })).toBe(true);
+    // A Friday close read on the Tuesday after a Monday holiday is not behind.
+    expect(isPriceStale({ age: 4, managed, dates: daily })).toBe(false);
+    expect(isPriceStale({ age: 7, managed, dates: daily })).toBe(false);
+    expect(isPriceStale({ age: 8, managed, dates: daily })).toBe(true);
     const down = { ...managed, freshness: "unavailable" };
     expect(isPriceStale({ age: 1, managed: down, dates: daily })).toBe(true);
     expect(isPriceStale({ age: 0, managed: down, dates: daily })).toBe(false);

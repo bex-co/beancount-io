@@ -39,7 +39,7 @@ function source(overrides: Record<string, unknown>) {
     commodity: "ETH",
     quote: "USD",
     source: "coinbase",
-    observedAt: "2026-10-20T08:00:00.000Z",
+    latestPriceDate: "2026-10-20",
     nextRefreshAt: "2026-10-20T09:00:00.000Z",
     freshness: "stale",
     error: "controlled prior error",
@@ -107,7 +107,7 @@ function renderPage({
                       refreshLedgerManagedPrices: [
                         source({
                           freshness: "recent",
-                          observedAt: "2026-10-22T12:00:00.000Z",
+                          latestPriceDate: "2026-10-22",
                           nextRefreshAt: "2026-10-22T13:00:00.000Z",
                           error: null,
                         }),

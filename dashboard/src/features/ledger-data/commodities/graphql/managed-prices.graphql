@@ -4,7 +4,7 @@ fragment ManagedPriceSourceFields on ManagedPriceSource {
   commodity
   quote
   source
-  observedAt
+  latestPriceDate
   nextRefreshAt
   freshness
   error

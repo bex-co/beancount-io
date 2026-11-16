@@ -57,22 +57,22 @@ const deCommodities: Record<string, TranslationEntry> = {
   "page.commodities.freshness.recent": {
     message: "Aktuell",
     description:
-      "Freshness badge: the managed feed was observed within the last ten minutes",
+      "Freshness badge: the managed feed's newest price is at most seven days old",
   },
   "page.commodities.freshness.stale": {
     message: "Veraltet",
     description:
-      "Freshness badge: the managed feed's latest price is older than ten minutes",
+      "Freshness badge: the managed feed's newest price is more than seven days old",
   },
   "page.commodities.freshness.unavailable": {
     message: "Nicht verfügbar",
     description:
       "Freshness badge: no valid price has been received from the managed feed",
   },
-  "page.commodities.observedAt": {
-    message: "Beobachtet {time}",
+  "page.commodities.latestPriceDate": {
+    message: "Letzter Kurs {date}",
     description:
-      "When the feed's latest price was observed. {time} is a formatted date and time.",
+      "Date of the managed feed's newest price. {date} is a formatted date.",
   },
   "page.commodities.nextRefreshAt": {
     message: "Nächste Aktualisierung {time}",

@@ -16,6 +16,7 @@ import {
 import { usePendingAction } from "@/common/hooks/use-pending-action";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatDateTime } from "@/common/lib/format";
+import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import {
   GetLedgerCommoditiesDocument,
   GetLedgerManagedPricesDocument,
@@ -51,13 +52,18 @@ function ManagedPriceSourceRow({
 }: {
   source: ManagedPriceSourceFieldsFragment;
 }) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const badge = FRESHNESS_BADGE[freshnessOf(source)];
   const pair =
     source.commodity && source.quote
       ? commodityPairLabel({ base: source.commodity, quote: source.quote })
       : source.alias;
-  const observed = formatDateTime(source.observedAt);
+  // A feed price is a ledger date, not an instant: shown as that calendar day.
+  const latestPrice = source.latestPriceDate
+    ? (formatLedgerDate(source.latestPriceDate, i18n.language, {
+        dateStyle: "medium",
+      }) ?? source.latestPriceDate)
+    : null;
   const nextRefresh = formatDateTime(source.nextRefreshAt);
 
   return (
@@ -71,8 +77,8 @@ function ManagedPriceSourceRow({
       </div>
       <div className="text-muted-foreground flex flex-wrap gap-x-4 text-xs">
         <span>
-          {observed
-            ? t("page.commodities.observedAt", { time: observed })
+          {latestPrice
+            ? t("page.commodities.latestPriceDate", { date: latestPrice })
             : t("page.commodities.neverObserved")}
         </span>
         {nextRefresh && (
@@ -92,7 +98,7 @@ function ManagedPriceSourceRow({
 
 /**
  * Prices the ledger includes from a managed feed (ADR 015): each source's
- * freshness, when it was last observed and next refreshes, and a refresh
+ * freshness, the date of its newest price, when it next refreshes, and a refresh
  * action for writers. Renders nothing for a ledger with no managed include,
  * and nothing while loading or on error — it is an annotation on the price
  * charts below, which report their own failures.

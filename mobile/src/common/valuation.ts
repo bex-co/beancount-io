@@ -60,8 +60,12 @@ export type ManagedSource = {
 
 /** Floor on a ledger-authored price's staleness threshold, in days. */
 const STALE_FLOOR_DAYS = 7;
-/** A managed feed older than this many days is behind, weekends included. */
-const MANAGED_STALE_DAYS = 3;
+/**
+ * A managed feed older than this many days is behind: the ledger service's own
+ * freshness rule (ADR 015 section 8), which holds a stock or FX feed's
+ * weekends and exchange holidays.
+ */
+const MANAGED_STALE_DAYS = 7;
 /** Cadence assumed for a commodity with too few prices to measure one. */
 const DEFAULT_CADENCE_DAYS = 7;
 /** Price points a cadence is measured over. */

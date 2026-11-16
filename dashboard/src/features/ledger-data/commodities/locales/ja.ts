@@ -57,22 +57,22 @@ const jaCommodities: Record<string, TranslationEntry> = {
   "page.commodities.freshness.recent": {
     message: "最新",
     description:
-      "Freshness badge: the managed feed was observed within the last ten minutes",
+      "Freshness badge: the managed feed's newest price is at most seven days old",
   },
   "page.commodities.freshness.stale": {
     message: "古い",
     description:
-      "Freshness badge: the managed feed's latest price is older than ten minutes",
+      "Freshness badge: the managed feed's newest price is more than seven days old",
   },
   "page.commodities.freshness.unavailable": {
     message: "利用不可",
     description:
       "Freshness badge: no valid price has been received from the managed feed",
   },
-  "page.commodities.observedAt": {
-    message: "観測日時 {time}",
+  "page.commodities.latestPriceDate": {
+    message: "最新価格 {date}",
     description:
-      "When the feed's latest price was observed. {time} is a formatted date and time.",
+      "Date of the managed feed's newest price. {date} is a formatted date.",
   },
   "page.commodities.nextRefreshAt": {
     message: "次回更新 {time}",

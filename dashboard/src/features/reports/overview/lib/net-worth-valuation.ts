@@ -86,8 +86,12 @@ function exactOf(value: unknown): string | null {
 
 /** Floor for a ledger-authored price's threshold, and the cadence of a sparse one. */
 export const MIN_STALE_DAYS = 7;
-/** A managed feed is judged by days, never by its minute-level status. */
-export const MANAGED_STALE_DAYS = 3;
+/**
+ * A managed feed is stale once its price is more than a week old: the ledger
+ * service's own freshness rule (ADR 015 section 8), which leaves room for a
+ * stock or FX feed's weekends and exchange holidays.
+ */
+export const MANAGED_STALE_DAYS = 7;
 /** Cadence multiple a ledger-authored price may lag before it is stale. */
 export const CADENCE_MULTIPLE = 3;
 /** How many recent price points set a ledger-authored price's cadence. */

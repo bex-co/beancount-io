@@ -91,13 +91,17 @@ describe("isPriceStale", () => {
     ).toBe(true);
   });
 
-  it("judges a managed feed by days, not its minute-level status", () => {
+  it("judges a managed feed by a week, the ledger service's own rule", () => {
     const priceDates = dates("2026-09-24", 30, 1);
-    expect(
-      isPriceStale({ ageDays: 2, managedFreshness: "stale", priceDates }),
-    ).toBe(false);
+    // Friday's close read on a Monday holiday's Tuesday is not behind.
     expect(
       isPriceStale({ ageDays: 4, managedFreshness: "recent", priceDates }),
+    ).toBe(false);
+    expect(
+      isPriceStale({ ageDays: 7, managedFreshness: "recent", priceDates }),
+    ).toBe(false);
+    expect(
+      isPriceStale({ ageDays: 8, managedFreshness: "recent", priceDates }),
     ).toBe(true);
   });
 

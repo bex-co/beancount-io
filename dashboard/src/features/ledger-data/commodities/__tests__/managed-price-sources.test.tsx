@@ -22,6 +22,7 @@ vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string, params?: Record<string, string>) =>
       params ? `${key} ${JSON.stringify(params)}` : key,
+    i18n: { language: "en" },
   }),
 }));
 
@@ -35,7 +36,7 @@ function source(overrides: Record<string, unknown> = {}) {
     commodity: "BTC",
     quote: "USD",
     source: "coinbase",
-    observedAt: "2026-09-15T08:25:00.000Z",
+    latestPriceDate: "2026-09-15",
     nextRefreshAt: "2026-09-15T08:31:00.000Z",
     freshness: "stale",
     error: null,
@@ -81,12 +82,21 @@ describe("ManagedPriceSources", () => {
     expect(screen.getByText("BTC/USD")).toBeInTheDocument();
   });
 
+  it("shows the date of the newest price as a calendar day", async () => {
+    renderPanel([statusMock([source({ latestPriceDate: "2026-11-13" })])]);
+    expect(
+      await screen.findByText(
+        'page.commodities.latestPriceDate {"date":"Nov 13, 2026"}',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("shows the cause and never-observed state of an unavailable source", async () => {
     renderPanel([
       statusMock([
         source({
           freshness: "unavailable",
-          observedAt: null,
+          latestPriceDate: null,
           error: "fetch failed (status): 404",
         }),
       ]),
