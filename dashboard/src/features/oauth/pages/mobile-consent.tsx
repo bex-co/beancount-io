@@ -4,14 +4,13 @@ import { getRouteApi } from "@tanstack/react-router";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useLoginForm } from "@/features/auth/hooks/use-login-form";
-import { useConsentRegisterForm } from "@/features/oauth/hooks/use-consent-register-form";
-import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
-import { LoginForm } from "@/features/auth/components/login-form";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
 import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";
-import { RegisterForm } from "@/features/auth/components/register-form";
-import { OtpForm } from "@/features/auth/components/otp-form";
+import {
+  ConsentLoginStep,
+  ConsentOtpStep,
+  ConsentRegisterStep,
+} from "@/features/oauth/components/consent-steps";
 import { LogoutDocument } from "@/graphql/definitions";
 import { describeMobileScopes } from "@/features/oauth/funcs/mobile-scope-copy";
 import {
@@ -20,111 +19,6 @@ import {
 } from "@/features/oauth/funcs/mobile-consent-state";
 
 const routeApi = getRouteApi("/oauth/mobile-consent");
-
-function LoginStep({
-  onSuccess,
-  onForgotPasswordClick,
-  onRegisterClick,
-}: {
-  onSuccess: () => void;
-  onForgotPasswordClick: () => void;
-  onRegisterClick: () => void;
-}) {
-  const { t } = useTranslations();
-  const client = useApolloClient();
-  const { onSubmit, isLoading, serverError } = useLoginForm({
-    onSuccess: async () => {
-      await client.resetStore();
-      onSuccess();
-    },
-  });
-
-  return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold text-foreground">
-        {t("auth.oauthMobileSignInTitle")}
-      </h1>
-      <LoginForm
-        onSubmit={onSubmit}
-        isLoading={isLoading}
-        serverError={serverError}
-        onForgotPasswordClick={onForgotPasswordClick}
-        onRegisterClick={onRegisterClick}
-      />
-    </div>
-  );
-}
-
-function RegisterStep({
-  onSuccess,
-  onSignedIn,
-  onSignInClick,
-}: {
-  onSuccess: (sessionId: string, email: string) => void;
-  /** A self-hosted deployment verifies no email: sign-up arrives signed in. */
-  onSignedIn: (email: string) => void;
-  onSignInClick: () => void;
-}) {
-  const { t } = useTranslations();
-  const { onSubmit, isLoading, serverError, defaultUsername } =
-    useConsentRegisterForm({ withDefaultLedger: true, onSuccess, onSignedIn });
-
-  return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold text-foreground">
-        {t("auth.oauthMobileRegisterTitle")}
-      </h1>
-      <RegisterForm
-        onSubmit={onSubmit}
-        isLoading={isLoading}
-        serverError={serverError}
-        defaultUsername={defaultUsername}
-        // The generated username is submitted as-is; it can be changed in
-        // settings later, and it is one field fewer to type on a phone.
-        hideUsername={true}
-        showSignInLink={true}
-        onSignInClick={onSignInClick}
-      />
-    </div>
-  );
-}
-
-function OtpStep({
-  sessionId,
-  email,
-  onSuccess,
-  onBack,
-}: {
-  sessionId: string;
-  email: string;
-  onSuccess: () => void;
-  onBack: () => void;
-}) {
-  const { t } = useTranslations();
-  const client = useApolloClient();
-  const { onSubmit, isLoading, serverError } = useOtpForm({
-    sessionId,
-    onSuccess: async () => {
-      await client.resetStore();
-      onSuccess();
-    },
-  });
-
-  return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">
-        {t("auth.oauthVerifyEmailToContinue")}
-      </h2>
-      <OtpForm
-        email={email}
-        onSubmit={onSubmit}
-        isLoading={isLoading}
-        serverError={serverError}
-        onBack={onBack}
-      />
-    </div>
-  );
-}
 
 /**
  * Signs the browser out and moves to another step. Logout can fail (offline,
@@ -315,12 +209,13 @@ export default function MobileOAuthConsentPage() {
     <AuthPageLayout>
       <div className="space-y-8">
         {state.step === "login" && (
-          <LoginStep
+          <ConsentLoginStep
             onSuccess={() => dispatch({ type: "authenticated" })}
             onForgotPasswordClick={() =>
               dispatch({ type: "show_forgot_password" })
             }
             onRegisterClick={() => dispatch({ type: "show_register" })}
+            titleKey="auth.oauthMobileSignInTitle"
           />
         )}
         {state.step === "forgot_password" && (
@@ -329,16 +224,21 @@ export default function MobileOAuthConsentPage() {
           />
         )}
         {state.step === "register" && (
-          <RegisterStep
+          <ConsentRegisterStep
             onSuccess={(sessionId, email) =>
               dispatch({ type: "registration_submitted", sessionId, email })
             }
             onSignedIn={(email) => dispatch({ type: "authenticated", email })}
             onSignInClick={() => dispatch({ type: "show_login" })}
+            withDefaultLedger={true}
+            titleKey="auth.oauthMobileRegisterTitle"
+            // The generated username is submitted as-is; it can be changed in
+            // settings later, and it is one field fewer to type on a phone.
+            hideUsername={true}
           />
         )}
         {state.step === "otp" && (
-          <OtpStep
+          <ConsentOtpStep
             sessionId={state.sessionId}
             email={state.email}
             onSuccess={() => {

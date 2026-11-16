@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
-import { useQuery, useApolloClient } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
 import { getRouteApi, Link } from "@tanstack/react-router";
 import { ListLedgersDocument } from "@/graphql/definitions";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useLoginForm } from "@/features/auth/hooks/use-login-form";
 import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
-import { useConsentRegisterForm } from "@/features/oauth/hooks/use-consent-register-form";
-import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
-import { LoginForm } from "@/features/auth/components/login-form";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
 import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";
-import { RegisterForm } from "@/features/auth/components/register-form";
-import { OtpForm } from "@/features/auth/components/otp-form";
+import {
+  ConsentLoginStep,
+  ConsentOtpStep,
+  ConsentRegisterStep,
+} from "@/features/oauth/components/consent-steps";
 
 import { describeMobileScopes } from "@/features/oauth/funcs/mobile-scope-copy";
 import type { ConsentRequester } from "@/features/oauth/funcs/consent-requester";
@@ -24,123 +23,6 @@ const routeApi = getRouteApi("/oauth/consent");
 type OAuthState =
   | { step: "login" | "forgot_password" | "register" | "ledger" }
   | { step: "otp"; sessionId: string; email: string };
-
-function LoginStep({
-  onSuccess,
-  onForgotPasswordClick,
-  onRegisterClick,
-}: {
-  onSuccess: () => void;
-  onForgotPasswordClick: () => void;
-  onRegisterClick: () => void;
-}) {
-  const { t } = useTranslations();
-  const client = useApolloClient();
-  const { signUpOpen } = useDeploymentInfo();
-
-  const { onSubmit, isLoading, serverError } = useLoginForm({
-    onSuccess: async () => {
-      await client.resetStore();
-      onSuccess();
-    },
-  });
-
-  return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-foreground">
-          {t("auth.oauthSignInToContinue")}
-        </h1>
-        <p className="text-muted-foreground">{t("auth.oauthAppWantsAccess")}</p>
-      </div>
-      <LoginForm
-        onSubmit={onSubmit}
-        isLoading={isLoading}
-        serverError={serverError}
-        onForgotPasswordClick={onForgotPasswordClick}
-        onRegisterClick={onRegisterClick}
-        showSignUpLink={signUpOpen}
-      />
-    </div>
-  );
-}
-
-function RegisterStep({
-  onSuccess,
-  onSignedIn,
-  onSignInClick,
-}: {
-  onSuccess: (sessionId: string, email: string) => void;
-  /** A self-hosted deployment verifies no email: sign-up arrives signed in. */
-  onSignedIn: (email: string) => void;
-  onSignInClick: () => void;
-}) {
-  const { t } = useTranslations();
-  const { selfHost } = useDeploymentInfo();
-
-  const { onSubmit, isLoading, serverError, defaultUsername } =
-    useConsentRegisterForm({ withDefaultLedger: true, onSuccess, onSignedIn });
-
-  return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-foreground">
-          {t("auth.oauthRegisterToContinue")}
-        </h1>
-        <p className="text-muted-foreground">{t("auth.oauthAppWantsAccess")}</p>
-      </div>
-      <RegisterForm
-        onSubmit={onSubmit}
-        isLoading={isLoading}
-        serverError={serverError}
-        defaultUsername={defaultUsername}
-        showSignInLink={true}
-        onSignInClick={onSignInClick}
-        showLegalLinks={!selfHost}
-      />
-    </div>
-  );
-}
-
-function OtpStep({
-  sessionId,
-  email,
-  onSuccess,
-  onBack,
-}: {
-  sessionId: string;
-  email: string;
-  onSuccess: () => void;
-  onBack: () => void;
-}) {
-  const { t } = useTranslations();
-  const client = useApolloClient();
-
-  const { onSubmit, isLoading, serverError } = useOtpForm({
-    sessionId,
-    onSuccess: async () => {
-      await client.resetStore();
-      onSuccess();
-    },
-  });
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">
-          {t("auth.oauthVerifyEmailToContinue")}
-        </h2>
-      </div>
-      <OtpForm
-        email={email}
-        onSubmit={onSubmit}
-        isLoading={isLoading}
-        serverError={serverError}
-        onBack={onBack}
-      />
-    </div>
-  );
-}
 
 type RequesterState =
   | { status: "loading" }
@@ -379,6 +261,7 @@ function LedgerStep({ uid, scope }: { uid: string; scope?: string }) {
 export default function OAuthConsentPage() {
   const { uid, scope } = routeApi.useSearch();
   const { initialStep } = routeApi.useLoaderData();
+  const { signUpOpen, selfHost } = useDeploymentInfo();
   const [state, setState] = useState<OAuthState>({ step: initialStep });
 
   if (state.step === "ledger") {
@@ -396,10 +279,13 @@ export default function OAuthConsentPage() {
     <AuthPageLayout>
       <div className="space-y-8">
         {state.step === "login" && (
-          <LoginStep
+          <ConsentLoginStep
             onSuccess={() => setState({ step: "ledger" })}
             onForgotPasswordClick={() => setState({ step: "forgot_password" })}
             onRegisterClick={() => setState({ step: "register" })}
+            titleKey="auth.oauthSignInToContinue"
+            descriptionKey="auth.oauthAppWantsAccess"
+            showSignUpLink={signUpOpen}
           />
         )}
         {state.step === "forgot_password" && (
@@ -408,16 +294,20 @@ export default function OAuthConsentPage() {
           />
         )}
         {state.step === "register" && (
-          <RegisterStep
+          <ConsentRegisterStep
             onSuccess={(sessionId, email) =>
               setState({ step: "otp", sessionId, email })
             }
             onSignedIn={() => setState({ step: "ledger" })}
             onSignInClick={() => setState({ step: "login" })}
+            withDefaultLedger={true}
+            titleKey="auth.oauthRegisterToContinue"
+            descriptionKey="auth.oauthAppWantsAccess"
+            showLegalLinks={!selfHost}
           />
         )}
         {state.step === "otp" && (
-          <OtpStep
+          <ConsentOtpStep
             sessionId={state.sessionId}
             email={state.email}
             onSuccess={() => setState({ step: "ledger" })}
