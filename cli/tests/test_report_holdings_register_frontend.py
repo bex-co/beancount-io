@@ -280,3 +280,92 @@ def test_holdings_lenient_and_strict(tmp_path: Path) -> None:
 def test_register_lenient_and_strict(tmp_path: Path) -> None:
     ledger = _write(tmp_path, BAD_ASSERTION)
     _assert_lenient_strict(ledger, tmp_path, "report", "register", "Assets:Checking", needle="1,420 USD")
+
+
+SUB_CENT_LOT = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Equity:Opening
+2026-01-01 * "open"
+  Assets:Bank:Checking 5000.00 USD
+  Equity:Opening
+2026-01-02 * "buy"
+  Assets:Broker 100000 SHIB {0.0042 USD}
+  Assets:Bank:Checking -420.00 USD
+2026-01-05 price SHIB 0.0050 USD
+"""
+
+WHOLE_DOLLARS = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Equity:Opening
+2026-01-01 * "open"
+  Assets:Bank:Checking 5000 USD
+  Equity:Opening
+2026-01-02 * "penny stock"
+  Assets:Broker 1000 PENNY {0.30 USD}
+  Assets:Bank:Checking -300 USD
+2026-01-02 * "euros"
+  Assets:Broker 100 EUR {1.10 USD}
+  Assets:Bank:Checking -110 USD
+2026-01-05 price PENNY 0.35 USD
+2026-01-05 price EUR 1.12 USD
+"""
+
+REPEATING_AVERAGE = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Equity:Opening
+2026-01-01 * "open"
+  Assets:Bank:Checking 5000 USD
+  Equity:Opening
+2026-01-02 * "buy"
+  Assets:Broker 10 VTI {100 USD}
+  Assets:Bank:Checking -1000 USD
+2026-01-03 * "buy more"
+  Assets:Broker 5 VTI {120 USD}
+  Assets:Bank:Checking -600 USD
+2026-01-05 price VTI 110 USD
+"""
+
+
+def _holdings_row(stdout: str, commodity: str) -> list[str]:
+    (row,) = [line for line in stdout.splitlines() if f"  {commodity}  " in line]
+    return [cell for cell in row.split("  ") if cell.strip()]
+
+
+def test_holdings_keeps_a_sub_cent_average_cost(tmp_path: Path) -> None:
+    # A 0.0042 USD lot in a cents ledger read as 0.00 USD (w1/267).
+    ledger = _write(tmp_path, SUB_CENT_LOT)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "holdings")
+    assert proc.returncode == 0, proc.stderr
+    cells = _holdings_row(proc.stdout, "SHIB")
+    assert [cell.strip() for cell in cells[3:6]] == ["0.0042 USD", "420.00 USD", "500.00 USD"]
+    proc = _bea(tmp_path, "--file", str(ledger), "--json", "report", "holdings")
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert "average_cost_precision" not in payload["data"]
+    assert payload["data"]["groups"][0]["average_cost"] == {"number": "0.0042", "currency": "USD"}
+
+
+def test_holdings_average_cost_keeps_lot_digits_in_a_whole_dollar_ledger(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, WHOLE_DOLLARS)
+    for extra in ((), ("-x", "at_cost")):
+        proc = _bea(tmp_path, "--file", str(ledger), "report", "holdings", *extra)
+        assert proc.returncode == 0, proc.stderr
+        assert _holdings_row(proc.stdout, "PENNY")[3].strip() == "0.30 USD"
+        assert _holdings_row(proc.stdout, "EUR")[3].strip() == "1.10 USD"
+        # The money columns keep the ledger's whole dollars.
+        assert _holdings_row(proc.stdout, "PENNY")[4].strip() == "300 USD"
+
+
+def test_holdings_repeating_average_still_rounds(tmp_path: Path) -> None:
+    # 1600 USD / 15 VTI over whole-dollar lots in a whole-dollar ledger.
+    ledger = _write(tmp_path, REPEATING_AVERAGE)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "holdings")
+    assert proc.returncode == 0, proc.stderr
+    cells = _holdings_row(proc.stdout, "VTI")
+    assert [cell.strip() for cell in cells[3:5]] == ["107 USD", "1,600 USD"]

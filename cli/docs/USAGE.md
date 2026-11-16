@@ -1908,7 +1908,10 @@ Its precision is bounded by the transaction's written numbers: division noise
 from a total price such as `3 HOOL @@ 1000 JPY` does not add decimal places.
 A currency no posting names — usually a `--conversion` target — has no
 precision to infer and renders with two decimals; `--json` keeps the exact
-value either way.
+value either way. The one per-unit figure, `report holdings`' AVG COST, also
+keeps the digits its lots were costed in, so a `{0.0042 USD}` lot shows
+`0.0042 USD` rather than `0.00 USD`; an average that does not divide evenly
+still rounds to that finer precision.
 
 Report interval breakdowns cover the complete requested period, including more
 than 100 daily or monthly intervals. The interval selects the aggregation

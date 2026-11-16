@@ -631,7 +631,8 @@ def _holdings(
         root for root, kind in _root_type_map(filtered.ledger.options).items() if kind in ("Assets", "Liabilities")
     }
     # (scope..., commodity, cost currency) -> [units, cost basis, accounts,
-    # basis known]. An uncosted group's cost currency is "" until valued.
+    # basis known, finest lot-cost fractional digits]. An uncosted group's
+    # cost currency is "" until valued.
     lots: dict[tuple[str, ...], list[Any]] = {}
     # (scope..., commodity) -> [units, accounts] for uncosted non-cash units.
     uncosted: dict[tuple[str, ...], list[Any]] = {}
@@ -657,11 +658,12 @@ def _holdings(
             if found is None:
                 # The first lot as booked: `0 + x` rounded a 29-digit token
                 # quantity to 28 digits before any real sum (w5/1074).
-                lots[key] = [number, number * cost.number, {name}, True]
+                lots[key] = [number, number * cost.number, {name}, True, _fraction_digits(cost.number)]
                 continue
             found[0] += number
             found[1] += number * cost.number
             found[2].add(name)
+            found[4] = max(found[4], _fraction_digits(cost.number))
     for prefix, (number, names) in uncosted.items():
         costed = [key for key in lots if key[:-1] == prefix]
         if len(costed) == 1:
@@ -670,13 +672,19 @@ def _holdings(
             found[2] |= names
             found[3] = False
         else:
-            lots[(*prefix, "")] = [number, Decimal(0), names, False]
+            lots[(*prefix, "")] = [number, Decimal(0), names, False, 0]
     operating = list(prices.operating_currencies)
     groups = []
     missing: list[tuple[str, str]] = []
     # Legs of uncosted positions no quote values: shown in units, not at cost.
     in_units: set[tuple[str, str]] = set()
-    for key, (units, basis, accounts, basis_known) in sorted(lots.items()):
+    # Per group, in order: the fractional digits the text table shows the
+    # average cost in, at least those of the finest lot cost (w1/267). A
+    # per-unit figure rounded to the posting precision read a 0.0042 USD lot
+    # as 0.00 USD. Frontend-only, like `display_precision`.
+    cost_digits: list[int] = []
+    for key, (units, basis, accounts, basis_known, digits) in sorted(lots.items()):
+        cost_digits.append(digits)
         commodity, held = key[-2], key[-1]
         if not held:
             # No cost currency to value into: the first operating currency
@@ -757,6 +765,7 @@ def _holdings(
     metadata = _metadata(filtered, conversion, ledger_errors) | valuation
     return metadata | {
         "display_precision": _display_precision(filtered),
+        "average_cost_precision": cost_digits,
         "group_by": group_by,
         "groups": groups,
         "totals": totals,
@@ -764,6 +773,12 @@ def _holdings(
         # leaves those positions out instead of counting them as zero.
         "cost_basis_complete": all(group["cost_basis"] is not None for group in groups),
     }
+
+
+def _fraction_digits(number: Decimal) -> int:
+    """The fractional digits `number` is written with: 2 for `0.30`, 0 for `5`."""
+    exponent = number.as_tuple().exponent
+    return max(0, -exponent) if isinstance(exponent, int) else 0
 
 
 def _money_currencies(ledger: Any) -> set[str]:

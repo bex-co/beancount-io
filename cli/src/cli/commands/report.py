@@ -396,8 +396,12 @@ def _emit_csv(kind: str, file: Any, data: dict[str, Any], target: CsvOutput) -> 
     atomic_write(target.destination, text, export=True)
 
 
+# Rendering hints for the text tables; JSON and CSV carry exact numbers.
+_TEXT_ONLY_KEYS = frozenset({"display_precision", "average_cost_precision"})
+
+
 def _emit_json(file: Any, data: dict[str, Any]) -> None:
-    payload = {key: value for key, value in data.items() if key != "display_precision"}
+    payload = {key: value for key, value in data.items() if key not in _TEXT_ONLY_KEYS}
     output.emit(payload, target=output.file_target(file))
 
 
@@ -631,11 +635,11 @@ def holdings(
                 group["account"] if by_account else ", ".join(group["accounts"]),
                 group["commodity"],
                 _money(group["units"], conversion, precision),
-                _money(group["average_cost"], conversion, precision),
+                _average_cost(group["average_cost"], conversion, precision, digits),
                 _money(group["cost_basis"], conversion, precision),
                 _valued(group["market_value"], group, conversion, precision),
             ]
-            for group in groups
+            for group, digits in zip(groups, data["average_cost_precision"], strict=True)
         ],
     )
     totals = data["totals"]
@@ -647,6 +651,21 @@ def holdings(
         basis += " (excludes positions without a cost basis)"
     typer.echo(f"  {'Cost basis:':<16} {basis}")
     typer.echo(f"  {'Market value:':<16} {_amounts(totals['market_value'], conversion, precision)}")
+
+
+def _average_cost(amount: dict[str, Any] | None, conversion: str, precision: Mapping[str, int], digits: int) -> str:
+    """A per-unit cost, kept to the digits its lots were costed in (w1/267).
+
+    The posting precision is for amounts held; a per-unit figure rounded to
+    it read a 0.0042 USD lot as 0.00 USD, and a 0.30 USD lot in a
+    whole-dollar ledger as 0 USD. A weighted average that does not divide
+    evenly still rounds, to the finer of the two precisions.
+    """
+    if amount is None:
+        return "—"
+    currency = str(amount["currency"])
+    finer = {**precision, currency: max(digits, precision.get(currency, _FALLBACK_FRACTIONAL_DIGITS))}
+    return _money(amount, conversion, finer)
 
 
 @report_app.command("register", cls=SingleValueCommand)
