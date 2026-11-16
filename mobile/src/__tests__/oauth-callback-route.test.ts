@@ -7,9 +7,15 @@ import path from "path";
  * loading…" forever with no way out, because the failure card was gated on a
  * completion that never started.
  */
-describe("OAuth callback route without a callback URL", () => {
+describe("OAuth callback screen without a callback URL", () => {
   const source = fs.readFileSync(
-    path.join(__dirname, "..", "..", "app", "oauth", "callback.tsx"),
+    path.join(
+      __dirname,
+      "..",
+      "screens",
+      "oauth-callback-screen",
+      "oauth-callback-screen.tsx",
+    ),
     "utf8",
   );
 
