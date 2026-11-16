@@ -1,7 +1,7 @@
 # ADR027: Checkout recovery — one short email, one modest code, once per person
 
-- Status: Proposed
-- Status notes: Proposed since 2026-11-14 (was Accepted). Implemented in [w0/m9](../../.pm/w0/blocked/m9/README.md) (2026-11-08); live-mode verification waits on the owner's Stripe and SendGrid setup.
+- Status: Done
+- Status notes: Done since 2026-11-16 (Proposed since 2026-11-14, was Accepted). Implemented in [w0/m9](../../.pm/w0/done/m9/README.md) (2026-11-08) and verified live from 2026-11-13 to 2026-11-16. That covers the email, one per person, the code's settings, the recovery URL, and the code applying in Checkout. The owner waived a completed recovered purchase. The open questions (returning customers, a holdout) are out of scope and unscheduled.
 - Date: 2026-11-05
 - Owners: Product, backend-v2
 - Baseline: source tree read on 2026-11-05

@@ -1,6 +1,6 @@
 # w0 · m9 — An abandoned first Checkout gets one short recovery email
 
-**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** in progress (t001–t005, t007–t009 done; t006 waits on the deploy)
+**Worker:** worker1 **Goal:** a signed-in customer who leaves their first Checkout without paying gets one three-line email about 90 minutes after they started, with a single-use 20% code and a link back to the same plan, as [ADR027](../../../../docs/adrs/ADR027-backend-v2-checkout-recovery-email.md) decides **Status:** done
 
 ## Tasks (in order)
 
@@ -11,13 +11,15 @@
 | t003 | Eligibility and paid-since checks | 45m | t002 | — **DONE**
 | t004 | Claim, promotion code, three-line email, and rollback | 45m | t003 | — **DONE**
 | t005 | Handle `checkout.session.expired` in the webhook | 20m | t004 | — **DONE**
-| t006 | Owner setup and live-mode verification | 30m | t001, t005 |
+| t006 | Owner setup and live-mode verification | 30m | t001, t005 | — **DONE**
 | t007 | Adoption surface | 15m | t005 | — **DONE**
 | t008 | Simplify | 15m | t007 | — **DONE**
 | t009 | Test coverage | 30m | t007, t008 | — **DONE**
-| t010 | Closeout | 10m | t006, t009 |
+| t010 | Closeout | 10m | t006, t009 | — **DONE**
 
-## Blocked
+## Blocked (cleared 2026-11-16)
+
+**Cleared 2026-11-16:** production runs the tracking fix `11878ebb5`. The owner confirmed the deploy. Production's `/.well-known/mcp.json` still served the `revision` key (value `unknown`, because the build passed no commit). That key exists only from `a2ae7dbac` until its removal in `686cd91a2`, and `11878ebb5` is an ancestor of `a2ae7dbac` on a linear `main`. The record below is kept as history.
 
 **t006 — Owner setup and live-mode verification** (blocked 2026-11-08). The code (t001–t005) is on `main`, but the email cannot run, or be verified, until things outside this repository exist. The webhook drops test-mode events, so only live mode proves the flow.
 
@@ -49,6 +51,17 @@
 - The promotion code is on coupon `checkout-recovery-20`, with `max_redemptions: 1`, `expires_at` 48 hours out, `first_time_transaction`, and `metadata.source: "checkout-recovery"`. The email body is three lines, says the code expires in 48 hours, and links the recovery URL (or the pricing page when it is missing), with List-Unsubscribe and a footer unsubscribe link.
 - In live mode on an owner account, an abandoned session produced the email, the recovery URL reopened the same plan, the code applied, and the completed session bound to the right user with `recovered_from` set (evidence in the closeout); the owner waived the completed purchase on 2026-11-15, and the recovered session's `recovered_from` and user metadata stand in for it (see Blocked).
 - backend-v2 `yarn typecheck` and `yarn test` pass, and `surface-parity.test.ts` is unchanged.
+
+## Closeout (2026-11-16)
+
+Each definition-of-done item, with its evidence:
+
+- **Sessions:** `subscription-service.ts` sets `expires_at` from `CHECKOUT_SESSION_LIFETIME_SECONDS = 90 * 60`, sets `after_expiration.recovery: { enabled: true, allow_promotion_codes: true }`, and sets no `consent_collection`. Live on 2026-11-13: a new production session had a 90-minute `expires_at` and a recovery URL.
+- **Who gets the email:** each D2 check and the `processed: false` acknowledgements are pinned by the t003–t005 and t009 tests. Live on 2026-11-14, the email went out in group 38671, and its footer unsubscribe removed the address from that group only.
+- **Once per person and rollback:** the tests "sends once per person, across sessions", "deactivates the code and gives the claim back when the send fails", and "gives the claim back when the code cannot be created" (`checkout-recovery-email.test.ts`). Live on 2026-11-14, the account's second expired session was acknowledged with no email and no code.
+- **Code and email:** live on 2026-11-14, one code on `checkout-recovery-20` with a single use, 48 hours, first-time only, and `metadata.source: checkout-recovery`. The body was the three D7 lines, and its footer unsubscribe worked. SendGrid adds the List-Unsubscribe header to mail sent in a group (`asm`), and the operation's test asserts the group. The received mail's headers were not recorded. The email is sent without SendGrid open and click tracking (`11878ebb5`, asserted by the operation's test), and that fix has been live since this deploy. No email has gone out since the deploy, so the untracked headers were not seen in a live mail.
+- **Live mode:** the email (2026-11-14), the recovery URL reopening Premium · Yearly with `recovered_from` and the user metadata (2026-11-14), and the code applying in a real Checkout, $143.88 → $115.10 (2026-11-15). The owner waived the completed purchase (2026-11-15).
+- **Checks:** `CI (backend parity)` (`yarn typecheck`, `yarn test`) passed on `64cbbcc42`, the latest backend-v2 change on `main`. `surface-parity.test.ts` has no commit since 2026-11-06, so this milestone left it unchanged.
 
 ## Source + Goal linkage
 
