@@ -1442,6 +1442,10 @@ Usage: bea cloud ledger delete [OPTIONS] {full_name}
 | --- | --- | --- | --- |
 | `full_name` | str | yes | Ledger full name (e.g. username/my-ledger) |
 
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--dry-run` | flag |  | Run every check and return the preview without committing |
+
 ### `bea cloud ledger create`
 
 Create a new ledger, private by default, and optionally clone it.

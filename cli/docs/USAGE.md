@@ -2569,7 +2569,15 @@ bea cloud ledger show alice/my-books
 bea cloud ledger clone alice/my-books
 bea cloud ledger delete alice/my-books          # asks for confirmation
 bea --yes cloud ledger delete alice/old-books   # global switches precede the command
+bea cloud ledger delete alice/old-books --dry-run   # preview; deletes nothing
 ```
+
+`bea cloud ledger delete --dry-run` asks the server for the destroy summary
+without destroying anything: it runs the same permission checks, needs no
+confirmation (so `--no-input` without `--yes` is fine), and prints the
+ledger's name, visibility, size and whether it is empty, followed by one
+`warning:` line per irreversible effect. Under `--json` the envelope's `data`
+holds `dry_run: true` and that summary under `preview`.
 
 `clone` and `create --clone` pass git only an `ssh://`, `https://` or
 `user@host:path` remote, and clone into `./<name>` only when the server's
@@ -2666,7 +2674,7 @@ advertised to a Homebrew installation before the tap can install them.
 
 ## JSON output
 
-Global `--json` provides structured results for `check`, local-file `query`, `list <type>`, `balance`, `report`, `price status`, `engine status`, and hosted reads such as `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `price refresh`, `price export`, `engine enable`, `cloud ledger create`, and `cloud ledger delete` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata with the same fields as `cloud ledger show`, delete the deleted ledger's id). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
+Global `--json` provides structured results for `check`, local-file `query`, `list <type>`, `balance`, `report`, `price status`, `engine status`, and hosted reads such as `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `price refresh`, `price export`, `engine enable`, `cloud ledger create`, and `cloud ledger delete` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata with the same fields as `cloud ledger show`, delete the deleted ledger's id, or with `--dry-run` the destroy preview). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
 
 The envelope is always:
 

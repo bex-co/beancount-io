@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -54,6 +55,12 @@ class Command:
     confirm: str | None = None
     success: str | None = None
     write_action: str | None = None
+    # A boolean request-body field that turns the call into a preview, exposed
+    # as `--dry-run`. A preview destroys nothing, so it skips the confirmation
+    # gate and renders the response's `preview` object; `preview_done` is the
+    # closing line that says nothing changed.
+    dry_run: str | None = None
+    preview_done: str | None = None
 
 
 COMMANDS: list[Command] = [
@@ -78,6 +85,8 @@ COMMANDS: list[Command] = [
         confirm="Permanently delete ledger '{full_name}'?",
         success="Ledger '{full_name}' deleted.",
         write_action="Deleting ledger '{full_name}'",
+        dry_run="dryRun",
+        preview_done="Dry run: ledger '{full_name}' was not deleted.",
     ),
 ]
 
@@ -120,6 +129,32 @@ def query_params(op: dict[str, Any]) -> list[dict[str, Any]]:
     return [p for p in op.get("parameters", []) if p.get("in") == "query"]
 
 
+def body_fields(op: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    content = (op.get("requestBody") or {}).get("content", {})
+    schema = content.get("application/json", {}).get("schema", {})
+    return dict(schema.get("properties", {}))
+
+
+def cli_description(cmd: Command, op: dict[str, Any]) -> str:
+    """The spec description with body fields named as their CLI options.
+
+    The spec speaks wire names (`Pass dryRun to preview`); a command whose
+    help names a field it has no option for promises something the user
+    cannot do (w1/272), so generation fails instead.
+    """
+    text = str(op["description"])
+    options = {cmd.dry_run: "--dry-run"} if cmd.dry_run else {}
+    for wire, option in options.items():
+        text = re.sub(rf"`?\b{re.escape(wire)}\b`?", option, text)
+    for wire in body_fields(op):
+        if re.search(rf"\b{re.escape(wire)}\b", text):
+            fail(
+                f"operation '{cmd.operation_id}' description names body field '{wire}', "
+                "which has no CLI option; add one to its registry entry or reword the description in backend-v2"
+            )
+    return text
+
+
 def esc(text: str) -> str:
     return text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
 
@@ -145,9 +180,22 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
             "add `write_action` and `success` templates to its registry entry"
         )
 
+    if cmd.dry_run:
+        field_schema = body_fields(op).get(cmd.dry_run)
+        if field_schema is None or field_schema.get("type") != "boolean":
+            fail(f"operation '{cmd.operation_id}' has no boolean body field '{cmd.dry_run}' for --dry-run")
+        if not str(field_schema.get("description") or "").strip():
+            fail(
+                f"operation '{cmd.operation_id}' body field '{cmd.dry_run}' has no description; "
+                "annotate it in backend-v2 before generating a command"
+            )
+        if not cmd.preview_done:
+            fail(f"operation '{cmd.operation_id}' has --dry-run; add a `preview_done` template to its registry entry")
+
     module = snake(cmd.operation_id)
     headline = cmd.row or op["summary"]
-    help_text = esc(f"{headline}.\n\n{op['description']}") if headline != op["description"] else esc(headline)
+    description = cli_description(cmd, op)
+    help_text = esc(f"{headline}.\n\n{description}") if headline != description else esc(headline)
 
     signature: list[str] = []
     call_args: list[str] = []
@@ -179,6 +227,10 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
         )
         call_args.append(f"{py_name}={py_name}")
 
+    if cmd.dry_run:
+        help_ = esc(str(body_fields(op)[cmd.dry_run]["description"]))
+        signature.append(f'    dry_run: Annotated[bool, typer.Option("--dry-run", help="{help_}")] = False,')
+
     fn = f"{cmd.group}_{cmd.name}"
     # Single-value parsing: `--page 1 --page 3` sent `page=3` with exit 0, the
     # last value winning (w5/846), where `create` refuses the repeat.
@@ -194,6 +246,28 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
 
     lines.append("    from cli.api.client import authenticated_client, call, unwrap")
     lines.append(f"    from cli.api.rest_client.api.ledger_v_1 import {module}")
+
+    if cmd.dry_run:
+        body_class = f"{cmd.operation_id[0].upper()}{cmd.operation_id[1:]}Body"
+        preview_args = ", ".join([*call_args, "client=authenticated_client()"])
+        lines.append(f"    from cli.api.rest_client.models.{module}_body import {body_class}")
+        lines.append("")
+        lines.append("    if dry_run:")
+        lines.append("        # A preview destroys nothing: no confirmation, and a lost answer is not an unknown outcome.")
+        lines.append(f'        preview_body = {body_class}.from_dict({{"{cmd.dry_run}": True}})')
+        lines.append(f"        answer = unwrap(call({module}.sync_detailed, {preview_args}, body=preview_body))")
+        lines.append("        row = snake_keys(answer.to_dict())")
+        lines.append('        summary = snake_keys(row.get("preview") or {})')
+        lines.append('        row["preview"] = summary')
+        lines.append("        if context.current().json_output:")
+        lines.append("            output.emit(row, target=output.server_target())")
+        lines.append("            return")
+        lines.append('        warnings = summary.pop("warnings", None) or []')
+        lines.append("        output.fields(summary)")
+        lines.append("        for warning in warnings:")
+        lines.append('            output.fields({"warning": warning})')
+        lines.append(f'        output.success(f"{esc(cmd.preview_done or "")}")')
+        lines.append("        return")
 
     # Resolve credentials before the destructive confirmation gate so a
     # signed-out agent sees exit 3 (auth) instead of exit 2 (pass --yes).

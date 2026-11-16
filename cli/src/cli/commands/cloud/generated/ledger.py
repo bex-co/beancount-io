@@ -80,15 +80,37 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
     @ledger_app.command(
         "delete",
         cls=SingleValueCommand,
-        help="Delete a ledger.\n\nDelete the repository and perform the existing linked-bank cleanup. Requires current administrative authority and respects the credential pin. Pass dryRun to preview the destroy summary without destroying anything.",
+        help="Delete a ledger.\n\nDelete the repository and perform the existing linked-bank cleanup. Requires current administrative authority and respects the credential pin. Pass --dry-run to preview the destroy summary without destroying anything.",
     )
     def ledger_delete(
         full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],
+        dry_run: Annotated[
+            bool, typer.Option("--dry-run", help="Run every check and return the preview without committing")
+        ] = False,
     ) -> None:
         owner, name = owner_and_name(full_name)
         from cli.api.client import authenticated_client, call, unwrap
         from cli.api.rest_client.api.ledger_v_1 import delete_ledger
+        from cli.api.rest_client.models.delete_ledger_body import DeleteLedgerBody
 
+        if dry_run:
+            # A preview destroys nothing: no confirmation, and a lost answer is not an unknown outcome.
+            preview_body = DeleteLedgerBody.from_dict({"dryRun": True})
+            answer = unwrap(
+                call(delete_ledger.sync_detailed, owner, name, client=authenticated_client(), body=preview_body)
+            )
+            row = snake_keys(answer.to_dict())
+            summary = snake_keys(row.get("preview") or {})
+            row["preview"] = summary
+            if context.current().json_output:
+                output.emit(row, target=output.server_target())
+                return
+            warnings = summary.pop("warnings", None) or []
+            output.fields(summary)
+            for warning in warnings:
+                output.fields({"warning": warning})
+            output.success(f"Dry run: ledger '{full_name}' was not deleted.")
+            return
         client = authenticated_client()
         if not context.current().confirm(f"Permanently delete ledger '{full_name}'?"):
             output.success("Cancelled.")
