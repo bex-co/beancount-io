@@ -217,7 +217,7 @@ function negateExact(a: string): string {
   return a.startsWith("-") ? a.slice(1) : `-${a}`;
 }
 
-function isZeroExact(a: string | null): boolean {
+export function isZeroExact(a: string | null): boolean {
   if (a === null) return true;
   return a === "0" || /^0\.0+$/.test(a) || /^-0(\.0+)?$/.test(a);
 }
@@ -552,10 +552,6 @@ export function hasUnparsedAmount(posting: Posting): boolean {
 
 export function hasNonZeroAmount(posting: Posting): boolean {
   return !isZeroExact(posting.amount);
-}
-
-export function isRemainderBalanced(rem: string): boolean {
-  return isZeroExact(rem);
 }
 
 /**

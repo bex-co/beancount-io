@@ -9,7 +9,7 @@ import {
   formatExactAmount,
   formatRemainderAmount,
   hasUnparsedAmount,
-  isRemainderBalanced,
+  isZeroExact,
   lastPostingAutoToggle,
   makePosting,
   parseExactAmount,
@@ -196,7 +196,7 @@ test("remainder sums exact decimals without float drift", () => {
     posting("Expenses:Food", "10.10", "10.10"),
   ];
   expect(remainder(postings)).toBe("0.00");
-  expect(isRemainderBalanced(remainder(postings))).toBe(true);
+  expect(isZeroExact(remainder(postings))).toBe(true);
 });
 
 test("remainder handles classic 0.10 + 0.20 without float drift", () => {
@@ -205,7 +205,7 @@ test("remainder handles classic 0.10 + 0.20 without float drift", () => {
     posting("Expenses:Coffee", "0.10", "0.10"),
     posting("Expenses:Snack", "0.20", "0.20", true),
   ];
-  expect(isRemainderBalanced(remainder(postings))).toBe(true);
+  expect(isZeroExact(remainder(postings))).toBe(true);
 });
 
 test("remainder returns non-zero for unbalanced postings", () => {
@@ -225,7 +225,7 @@ test("1.005 auto-balances to exact -1.005 with zero remainder", () => {
   expect(updated[0].amount).toBe("1.005");
   expect(updated[1].amount).toBe("-1.005");
   expect(updated[1].amountInput).toBe("-1.005");
-  expect(isRemainderBalanced(remainder(updated))).toBe(true);
+  expect(isZeroExact(remainder(updated))).toBe(true);
   expect(validatePostings(updated)).toBe(null);
   const entry = buildEntryInput(updated, {
     date: "2026-09-11",
@@ -550,7 +550,7 @@ test("buildEntryInput postings sum to zero (balanced)", () => {
     const amount = parseExactAmount(p.amount.split(" ")[0]);
     return posting(p.account, p.amount.split(" ")[0], amount);
   });
-  expect(isRemainderBalanced(remainder(reconstructed))).toBe(true);
+  expect(isZeroExact(remainder(reconstructed))).toBe(true);
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -568,7 +568,7 @@ test("createPrefilledPostings opens balanced with the payment leg negative", () 
   expect(postings[0].amount).toBe("-27.35");
   expect(postings[1].account).toBe("Expenses:Groceries");
   expect(postings[1].amount).toBe("27.35");
-  expect(isRemainderBalanced(remainder(postings))).toBe(true);
+  expect(isZeroExact(remainder(postings))).toBe(true);
   expect(validatePostings(postings)).toBe(null);
 });
 
@@ -583,7 +583,7 @@ test("createPrefilledPostings leaves the expense leg auto so later edits refill 
 
   const edited = updatePostingAmount(postings, 0, "-42.50");
   expect(edited[1].amount).toBe("42.50");
-  expect(isRemainderBalanced(remainder(edited))).toBe(true);
+  expect(isZeroExact(remainder(edited))).toBe(true);
 });
 
 test("createPrefilledPostings formats whole and fractional totals", () => {
@@ -717,7 +717,7 @@ describe("leading decimal points and sub-cent remainders", () => {
       posting("Expenses:Food", "10.004", "10.004"),
       posting("Assets:Cash", "-10", "-10"),
     ]);
-    expect(isRemainderBalanced(rem)).toBe(false);
+    expect(isZeroExact(rem)).toBe(false);
     expect(formatRemainderAmount(rem, "USD")).toBe("+$0.004");
     expect(formatRemainderAmount("-12.5", "USD")).toBe("-$12.50");
   });
