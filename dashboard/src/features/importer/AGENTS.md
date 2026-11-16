@@ -20,7 +20,7 @@ Preview. It clears on a new upload or reset/finish — never via localStorage.
 
 ## Component Hierarchy
 
-- **`import-workflow-container.tsx`** — Orchestrates steps
+- **`components/import-workflow-container.tsx`** — Orchestrates steps
 - **`components/steps/upload/`** — File upload, parsing progress, error display
 - **`components/steps/preview/`** — Editable table with inline cell editing (`editable-cell.tsx`, `editable-preview-row.tsx`)
 - **`components/steps/configure/`** — Account mapping table, transaction config form

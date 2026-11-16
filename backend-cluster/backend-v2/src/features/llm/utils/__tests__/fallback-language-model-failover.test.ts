@@ -123,7 +123,7 @@ describe("createFallbackLanguageModel failover order", () => {
     delete process.env.LLM_MODEL;
     try {
       createFallbackLanguageModel();
-      expect(anthropicModel).toHaveBeenCalledWith("claude-sonnet-4-5");
+      expect(anthropicModel).toHaveBeenCalledWith("claude-sonnet-5");
     } finally {
       if (prior !== undefined) process.env.LLM_MODEL = prior;
     }

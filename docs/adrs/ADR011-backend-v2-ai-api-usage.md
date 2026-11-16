@@ -74,7 +74,7 @@ Path A (sandbox harness), Path B (fallback chain via `LLMClient` / `createFallba
 
 Path B is direct-keys-only. `createFallbackLanguageModel()` takes no gateway key and has no BlockEden branch, so both providers silently collapsing onto one gateway credential is structurally impossible. Its Anthropic provider is a plain `createAnthropic({ apiKey })`: servers authenticate with real API keys, and the Path B ↔ `ANTHROPIC_AUTH_TOKEN` exclusion is intentional — OAuth subscription tokens are rate-limited and subscription-scoped, suitable for the interactive sandbox harness but not for server-side extraction volume. Operators must know that configuring "Anthropic works" for Path A proves nothing about Path B.
 
-Provider models are config, not code: `LLM_MODEL` / `LLM_FALLBACK_MODEL` (deliberately not `ANTHROPIC_MODEL` — that belongs to the Path A sandbox) select them, defaulting to the aliases `claude-sonnet-4-5` / `gpt-4o`.
+Provider models are config, not code: `LLM_MODEL` / `LLM_FALLBACK_MODEL` (deliberately not `ANTHROPIC_MODEL` — that belongs to the Path A sandbox) select them, defaulting to `claude-sonnet-5` / `gpt-4o`.
 
 ### D3 — "AI not configured" is a legal, visible state; the fallback must be a real second leg
 

@@ -21,12 +21,13 @@ T = TypeVar("T", bound="CreateLedgerBodySetupType0")
 class CreateLedgerBodySetupType0:
     """
     Attributes:
-        preset (CreateLedgerBodySetupType0Preset): Setup preset id (ADR026).
+        preset (CreateLedgerBodySetupType0Preset): Setup preset id.
         modules (list[CreateLedgerBodySetupType0ModulesItem] | Unset): personal@1 only; each module at most once.
         title (str | Unset):
         operating_currency (str | Unset):
         history_start (str | Unset):
-        capabilities (CreateLedgerBodySetupType0Capabilities | Unset):
+        capabilities (CreateLedgerBodySetupType0Capabilities | Unset): Keyed by preset question id; only enabled adds
+            its accounts.
         accounts (list[CreateLedgerBodySetupType0AccountsItem] | Unset):
     """
 

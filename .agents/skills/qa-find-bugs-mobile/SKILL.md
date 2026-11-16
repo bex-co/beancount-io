@@ -35,7 +35,7 @@ selected server before signing in or writing anything.
 3. Use the native development build `io.beancount.ios`. Check it is installed on
    the target UDID and launch it with `xcrun simctl launch <udid> io.beancount.ios`.
    If necessary, build for that device with
-   `SENTRY_DISABLE_AUTO_UPLOAD=true npx expo run:ios --device <udid>`.
+   `npx expo run:ios --device <udid>`.
    Do not count Expo Go or an old native binary's missing module/permission as a
    product regression. Reusing a compatible build does not authorize copying
    credentials or another simulator's data container.

@@ -52,100 +52,7 @@ npm run deploy
 
 ## API Endpoints
 
-The API provides three execution modes:
-
-### 1. Blocking Mode (POST /execute)
-Waits for complete execution and returns full logs and diff.
-
-```bash
-curl -X POST http://localhost:8787/execute \
-  -H "Content-Type: application/json" \
-  -H "x-admin-token: your-token" \
-  -d '{
-    "repo": "https://github.com/owner/repo",
-    "task": "Add user authentication feature",
-    "githubToken": "ghp_xxxx"
-  }'
-```
-
-**Response:**
-```json
-{
-  "logs": "...",
-  "diff": "...",
-  "prUrl": "https://github.com/owner/repo/pull/123",
-  "prNumber": 123,
-  "branchName": "claude-code/2025-01-06-task",
-  "status": "completed"
-}
-```
-
-### 2. Async Mode (POST /async)
-Returns immediately after PR creation, executes in background.
-
-```bash
-curl -X POST http://localhost:8787/async \
-  -H "Content-Type: application/json" \
-  -H "x-admin-token: your-token" \
-  -d '{
-    "repo": "https://github.com/owner/repo",
-    "task": "Add user authentication feature",
-    "githubToken": "ghp_xxxx",
-    "async": true
-  }'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "prUrl": "https://github.com/owner/repo/pull/123",
-  "prNumber": 123,
-  "branchName": "claude-code/2025-01-06-task",
-  "status": "PR created, running Claude Code in background..."
-}
-```
-
-### 3. Streaming Mode (POST /beancount-stream)
-Real-time progress via Server-Sent Events (SSE).
-
-```bash
-curl -X POST http://localhost:8787/beancount-stream \
-  -H "Content-Type: application/json" \
-  -H "Accept: text/event-stream" \
-  -H "x-admin-token: your-token" \
-  -d '{
-    "repo": "https://github.com/owner/repo",
-    "task": "Add user authentication feature",
-    "githubToken": "ghp_xxxx"
-  }'
-```
-
-**Response Stream:**
-```
-event: init
-data: {"type":"init","data":{"message":"Initializing...","progress":0}}
-
-event: cloning
-data: {"type":"cloning","data":{"message":"Cloning repository...","progress":20}}
-
-event: completed
-data: {"type":"completed","data":{"message":"Done","progress":100,"prUrl":"..."}}
-```
-
-### Request Parameters
-
-All execution modes accept the same request body:
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `repo` | string | Yes | - | Repository URL (HTTPS, SSH, or owner/repo format) |
-| `task` | string | Yes | - | Task description for Claude Code |
-| `githubToken` | string | Yes | - | GitHub personal access token with repo permissions |
-| `baseBranch` | string | No | "main" | Base branch for pull request |
-| `gitUserName` | string | No | "Claude Code Bot" | Git commit author name |
-| `gitUserEmail` | string | No | "claude-code@anthropic.com" | Git commit author email |
-| `async` | boolean | No | false | Enable async mode (for /async endpoint, must be `true`) |
+The worker is the sandbox control plane for backend-v2: sandbox lifecycle, exec, file, and exposed-port routes under `src/features/control-plane/`, plus `/healthz`. The interactive docs at `/docs` list every route and schema; `AGENTS.md` describes the design.
 
 ## Authentication
 
@@ -166,30 +73,6 @@ The `.dev.vars` file should contain:
 ANTHROPIC_API_KEY=<your-anthropic-api-key>
 ADMIN_TOKEN=your-secret-admin-token
 ```
-
-### Backward Compatibility
-
-The original `POST /api` endpoint is still supported for backward compatibility. It automatically routes to the appropriate mode based on headers and body:
-
-```bash
-# Auto-routes to streaming mode (Accept: text/event-stream)
-curl -X POST http://localhost:8787/api \
-  -H "Accept: text/event-stream" \
-  -H "x-admin-token: your-token" \
-  -d '{"repo":"...","task":"...","githubToken":"..."}'
-
-# Auto-routes to async mode (async: true in body)
-curl -X POST http://localhost:8787/api \
-  -H "x-admin-token: your-token" \
-  -d '{"repo":"...","task":"...","githubToken":"...","async":true}'
-
-# Auto-routes to blocking mode (default)
-curl -X POST http://localhost:8787/api \
-  -H "x-admin-token: your-token" \
-  -d '{"repo":"...","task":"...","githubToken":"..."}'
-```
-
-**Recommendation**: Use the dedicated endpoints (`/execute`, `/async`, `/beancount-stream`) for clearer intent and better documentation.
 
 ### Error Responses
 
@@ -317,8 +200,6 @@ claude-code-sandbox/
 ```
 
 ## Technical Architecture
-
-> **See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** for the full request flow diagram covering classification, shortcut answers, and the task/question pipelines.
 
 ### OpenAPI Documentation (chanfana + Scalar UI)
 

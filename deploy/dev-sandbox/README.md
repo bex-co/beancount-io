@@ -83,7 +83,7 @@ Three pieces of glue make this work locally:
 
 Default is **local-model mode**: `ANTHROPIC_BASE_URL` points at the host's
 Ollama (`:11434`), `ANTHROPIC_AUTH_TOKEN=ollama`, and `ollama-models.sh`
-aliases the Claude model ids the backend pins (`claude-sonnet-4-5-*`, Haiku
+aliases the Claude model ids the backend pins (`claude-sonnet-5`, Haiku
 small/fast ids) to `DEV_SANDBOX_LOCAL_MODEL` (default `qwen3:32b` — pull it
 first, or point at any tool-calling model you have). Ollama's native Anthropic
 `/v1/messages` compatibility does the rest. Note the base URL also applies to

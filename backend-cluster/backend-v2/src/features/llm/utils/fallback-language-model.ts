@@ -18,9 +18,9 @@ function isNonRetriableError(err: unknown): boolean {
 // (w2/m30/t003). Deliberately NOT named ANTHROPIC_MODEL — that env var is
 // claimed by the Path A sandbox harness (sandbox-agent-workflow.ts forwards it
 // into Claude Code); sharing would recouple the two paths ADR 0011 separates.
-// The primary default is the alias, not a dated snapshot, so it tracks the
-// line automatically.
-const DEFAULT_PRIMARY_MODEL = "claude-sonnet-4-5";
+// The primary default is an undated id. It still names one model, which the
+// provider retires on its own schedule, so bump it here when that happens.
+const DEFAULT_PRIMARY_MODEL = "claude-sonnet-5";
 const DEFAULT_FALLBACK_MODEL = "gpt-4o";
 
 function primaryModelId(): string {

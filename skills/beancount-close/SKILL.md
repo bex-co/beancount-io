@@ -63,7 +63,7 @@ Resolve the period (the user's words or the last complete month) and state it. F
 
 ### 2. Reconcile
 
-For each active account, ask for the period statement (CSV or pasted text). Per account **with** a statement, run the `beancount-reconcile` flow (its own confirm gate applies). Record the account's **evidence** — the statement file or files, the statement period, the coverage counts from reconcile's Coverage phase (source / included / excluded rows), and the residual — and exactly one **state**:
+For each active account, ask for the period statement (CSV, PDF, or pasted text). Per account **with** a statement, run the `beancount-reconcile` flow (its own confirm gate applies). Record the account's **evidence** — the statement file or files, the statement period, the coverage counts from reconcile's Coverage phase (source / included / excluded rows), and the residual — and exactly one **state**:
 
 - **tied** — a passing assertion over the whole close period.
 - **partial** — reconcile withheld the assertion over unresolved suspects or mismatches (a reported finding with its residual, not a failure to retry).

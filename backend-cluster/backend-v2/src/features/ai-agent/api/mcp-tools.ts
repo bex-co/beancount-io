@@ -353,7 +353,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "runBqlQuery",
     title: "Run Beancount Query (BQL)",
     annotations: READ_ONLY,
-    description: bqlDescription,
+    description:
+      bqlDescription +
+      " Returns rendered text; runBqlQueryStructured returns typed rows.",
     inputSchema: bqlQueryInputSchema.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(bqlQueryOutputSchema),
     execute: withLedger(executeBqlQuery),
@@ -363,7 +365,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Run BQL with Typed Results",
     annotations: READ_ONLY,
     description:
-      "Execute BQL and return the typed table (column names, types, and rows) or structured text result. Uses the same query contract as REST JSON and GraphQL queryShell. " +
+      "Execute BQL and return the typed table (column names, types, and rows) or structured text result. At most 1000 rows; truncated flags a cut. Uses the same query contract as REST JSON and GraphQL queryShell. " +
       BQL_SIZE_DESCRIPTION,
     inputSchema: bqlQueryInputSchema.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(structuredBqlOutputSchema),
@@ -427,7 +429,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "listLedgerFiles",
     title: "List Ledger Files & Directories",
     annotations: READ_ONLY,
-    description: listDescription,
+    description:
+      listDescription +
+      " Each row's sha is the one updateLedgerFiles and deleteLedgerFiles accept.",
     inputSchema: listLedgerFilesInputSchema.extend({ ledger: ledgerSelection }),
     outputSchema: mcpOutputSchema(listLedgerFilesOutputSchema),
     execute: withLedger(executeListLedgerFiles),
@@ -696,7 +700,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Delete Entry Source",
     annotations: DESTRUCTIVE,
     description:
-      "Delete one entry's source text, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash) and sha256sum from getEntryContext (or listLedgerEntries with include_source). The commit message is composed from the operation; there is no message argument. A write that would add a bean-check error the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
+      "Delete one entry's source text, addressed by the entry_hash listLedgerEntries returns (as entryHash or entry_hash) and sha256sum from getEntryContext (or listLedgerEntries with include_source). The commit message is composed from the operation; there is no message argument. A write that would add a bean-check error the ledger did not have — deleting an entry a balance assertion depends on — is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
     inputSchema: SOURCE_SLICE_OPERATION_SCHEMAS.delete,
     outputSchema: SOURCE_SLICE_OPERATION_OUTPUTS.delete,
     execute: SOURCE_SLICE_EXECUTORS.delete,
@@ -706,7 +710,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Delete Several Entry Sources",
     annotations: DESTRUCTIVE,
     description:
-      "Delete several entries' source text in one commit; entries is a list of {entryHash or entry_hash, sha256sum} — the entry_hash listLedgerEntries returns under either spelling; with include_source it also returns each sha256sum. The commit message is composed from the operation; there is no message argument. Returns the deleted count. A write that would add a bean-check error the ledger did not have — deleting an entry a balance assertion depends on, re-dating it past one — is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
+      "Delete several entries' source text in one commit; entries is a list of {entryHash or entry_hash, sha256sum} — the entry_hash listLedgerEntries returns under either spelling; with include_source it also returns each sha256sum. The commit message is composed from the operation; there is no message argument. Returns the deleted count. A write that would add a bean-check error the ledger did not have — deleting an entry a balance assertion depends on — is refused with VALIDATION_FAILED naming each new error; pass allowInvalid: true to commit it anyway. dry_run previews without committing.",
     inputSchema: SOURCE_SLICE_OPERATION_SCHEMAS.delete_many,
     outputSchema: SOURCE_SLICE_OPERATION_OUTPUTS.delete_many,
     execute: SOURCE_SLICE_EXECUTORS.delete_many,
@@ -980,7 +984,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Create Pull Request",
     annotations: APPEND,
     description:
-      "Propose a set of file changes as a pull request. Requires title, description, clearCommitMessage, and changes [{path,content}]; an omitted baseBranch targets main. A repository server failure is SERVICE_UNAVAILABLE naming the failed step.",
+      "Propose a set of file changes as a pull request. Requires title, description, clearCommitMessage (the branch's commit message), and changes [{path,content}]: each content is the whole file, created or replaced; a change cannot delete a file. An omitted baseBranch targets main. A repository server failure is SERVICE_UNAVAILABLE naming the failed step.",
     inputSchema: PULL_REQUEST_OPERATION_SCHEMAS.create,
     outputSchema: pullRequestToolOutput,
     execute: PULL_REQUEST_EXECUTORS.create,
@@ -1023,7 +1027,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Preview Ledger Setup",
     annotations: { ...READ_ONLY, openWorldHint: false },
     description:
-      "Preview a ledger setup (ADR026) without creating anything: returns the files, account list, and validation result the specification would produce. Accepts the same setup object as createLedger.",
+      "Preview a ledger setup without creating anything: returns the files, account list, and validation result the specification would produce. Accepts the same setup object as createLedger.",
     inputSchema: LIFECYCLE_OPERATION_SCHEMAS.preview,
     outputSchema: previewToolOutput,
     execute: LIFECYCLE_EXECUTORS.preview,

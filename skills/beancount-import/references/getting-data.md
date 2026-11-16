@@ -4,7 +4,7 @@ This skill consumes files the user already has. It never logs into a bank, drive
 
 ## 1. Manual export (default)
 
-Every US/CA bank and card portal exports CSV and most export OFX/QFX ("Quicken format" — parse as OFX):
+Most US/CA bank and card portals export CSV, and many export OFX/QFX ("Quicken format" — parse as OFX); a bank that offers only PDF statements takes the PDF path in `references/formats.md`:
 
 - Prefer **OFX/QFX over CSV** when offered: it carries `FITID`, the strongest dedup ID (see dedup.md).
 - Export a **bounded, slightly overlapping window** (e.g. last 60 days, monthly). Overlap is safe — dedup makes re-imported rows no-ops; gaps are the real risk. `beancount-reconcile`'s balance assertions are the backstop that catches a gap.

@@ -19,8 +19,9 @@ class PreviewLedgerSetupBodySetupAccountsItem:
     Attributes:
         name (str):
         currency (str | Unset):
-        opening_state (PreviewLedgerSetupBodySetupAccountsItemOpeningState | Unset):
-        amount (str | Unset):
+        opening_state (PreviewLedgerSetupBodySetupAccountsItemOpeningState | Unset): unknown (default): no opening
+            balance; zero: confirmed zero start; known: opening transaction the day before historyStart, from amount.
+        amount (str | Unset): Only with openingState known; unsigned on a liability means owed.
     """
 
     name: str

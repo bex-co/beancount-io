@@ -56,7 +56,7 @@ One worker at a time, strictly in sequence. Every worker ships to `main` from th
   Run `python3 scripts/loopx-guard.py dispatch <wN>/<id>` **first**, then launch the worker, then end the turn. The worker runs in the background. The mark tells the Stop hook that this loop is waiting, so idle turns are not handed straight back, and it is how the hook knows not to ask for a second worker. Let the worker's completion notification wake you: do not poll or sleep, and do nothing else until the result arrives. If the launch itself fails, run `python3 scripts/loopx-guard.py settle`.
 
   A notification with no result block, in which the worker says it is waiting on its own background work, is not a result. End the turn again and keep waiting. Do not send a follow-up, and do not settle.
-- **Codex, or any agent without a subagent tool:** run [`worker.md`](worker.md) inline for this one item, then continue from step 3. Context then accumulates in this session, which is the old single-session behaviour; the loop rules are unchanged.
+- **Codex, or any agent without a subagent tool:** run [`worker.md`](worker.md) inline for this one item, then continue from step 3. Context then accumulates in this session; the loop rules are unchanged.
 
 ### 3. Verify the outcome
 
@@ -106,7 +106,7 @@ CI takes ten minutes to an hour, and the loop never waits for it. A failure ther
 2. Verify with `outcome <wN> <label> <sha>...`. The fix's commits are remembered like any other push, so the next `board` reports the workflow again, with `attempt: 2`, if the fix did not turn it green.
 3. After a second failed attempt, stop dispatching fixes for that workflow. File one inbox note with `/pm add <wN> …` that names the workflow, the run URL, and both attempts, ship it, and carry on. `ci.still_red` keeps listing the workflow until a run passes.
 
-Without `gh`, or when it is not signed in, `ci.checked` is `false` and the loop runs as it did before. Say so in the drained report instead of implying CI is green.
+Without `gh`, or when it is not signed in, `ci.checked` is `false` and the loop runs without the CI check. Say so in the drained report instead of implying CI is green.
 
 ## Routines
 
@@ -174,7 +174,7 @@ When one of the three exits genuinely holds, clear the guard with `python3 scrip
 
 ## Guardrails
 
-- **Keep going when the next item is known.** Knowing that `226` (or any later note or milestone) is next is a reason to dispatch it now, not to stop and tell the user to re-invoke `/loopx`.
+- **Keep going when the next item is known.** Knowing which note or milestone is next is a reason to dispatch it now, not to stop and tell the user to re-invoke `/loopx`.
 - **Orchestrate, don't implement.** The orchestrator picks, dispatches, verifies, records, and listens. Item bodies, code, triage evidence, `/pm` moves, and ships are the worker's. The exceptions are the fallback block in step 3 and Codex's inline run.
 - **Verify, don't trust.** An outcome counts only after `outcome` confirms it on `origin/main`.
 - **Facts come from the guard.** `board` says what is ready, waiting, changed, due, and red. Do not re-derive them by reading the board yourself, and do not second-guess `waiting`.

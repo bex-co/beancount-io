@@ -18,13 +18,11 @@ mkdir -p tmp
 MODEL="${DEV_SANDBOX_LOCAL_MODEL:-qwen3:32b}"
 NUM_CTX="${DEV_SANDBOX_LOCAL_MODEL_CTX:-32768}"
 # The Claude model ids that will hit Ollama's /v1/messages endpoint:
-#   - claude-sonnet-5 (+ dated variant): ASK_AGENT_MODEL pinned in backend-v2
+#   - claude-sonnet-5: SANDBOX_AGENT_MODEL pinned in backend-v2 (and the LLM_MODEL default)
 #   - the Haiku ids: Claude Code's default small/fast model across versions
 ALIASES=(
     "claude-sonnet-5"
-    "claude-sonnet-5-20250929"
     "claude-haiku-4-5-20251001"
-    "claude-3-5-haiku-20241022"
 )
 
 if [ -n "${OLLAMA_MODELS:-}" ]; then

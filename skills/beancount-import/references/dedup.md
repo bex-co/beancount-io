@@ -65,7 +65,7 @@ Example: a statement line dated 2026-06-03 posting `-12.40 USD` to `Assets:Bank:
 
 Sharing the hash input is deliberate: when a later CSV export's raw description for the same purchase normalizes to the same string, the two digests are equal, and the row exact-matches across sources (`bea import` already indexes the bare digest of any `<prefix>:sha256:` id). When the bank words the two sources differently, Layer 2c below is the net. The prefix still records provenance — which source kind first recorded the row — and Layer 2c keys off it.
 
-## The two dedup layers
+## The dedup layers
 
 **Layer 1 — exact (import-id match).** Collect every `import-id` value already in the ledger (scan entry metadata; also collect `import-id-2` — beancount-migrate's merged transfer pairs record the counterparty row's id there). A candidate whose ID is present under either key is *already imported*: drop it, count it in the review summary. This layer is mechanical — no user decision needed.
 

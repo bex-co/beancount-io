@@ -78,8 +78,7 @@ async function parseBody<T>(
 }
 
 /**
- * Register the control-plane routes on `app`, each protected by `requireAdminToken`.
- * Additive — does not touch the existing /beancount-stream surface.
+ * Register the control-plane routes on `app`. Every route is protected by `requireAdminToken`.
  */
 export function registerControlPlaneRoutes(
   app: AnyHono,

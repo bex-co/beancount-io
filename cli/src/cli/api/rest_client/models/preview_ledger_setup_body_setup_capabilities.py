@@ -15,6 +15,8 @@ T = TypeVar("T", bound="PreviewLedgerSetupBodySetupCapabilities")
 
 @_attrs_define
 class PreviewLedgerSetupBodySetupCapabilities:
+    """Keyed by preset question id; only enabled adds its accounts."""
+
     additional_properties: dict[str, PreviewLedgerSetupBodySetupCapabilitiesAdditionalProperty] = _attrs_field(
         init=False, factory=dict
     )

@@ -221,7 +221,9 @@ const submitInput = z.object({
   filename: z
     .string()
     .optional()
-    .describe("Which ledger file to append to. Must exist."),
+    .describe(
+      "Which ledger file to append to; must exist. Omitted writes to main.bean.",
+    ),
   dry_run: dryRunField,
   dryRun: dryRunAliasField,
 });
@@ -249,7 +251,7 @@ export const BANK_OPERATIONS = {
     "submit",
     "import",
     submitInput,
-    "Write staged bank transactions into the ledger as directives, each booked against the given target account. dry_run returns the result and projected validation without committing.",
+    "Write staged bank transactions into the ledger as directives, each booked against the given target account. dry_run returns the transactions it would write without committing; its validation is the ledger's current bean-check errors, not a projection.",
     submitTransactions,
   ),
   discard: bankOperation(
@@ -283,7 +285,7 @@ export const BANK_OPERATIONS = {
       dry_run: dryRunField,
       dryRun: dryRunAliasField,
     }),
-    "Re-read which accounts a linked bank shares; accounts the bank no longer shares can be deleted along with their staged transactions. dry_run reports the changes without applying them.",
+    "Re-read which accounts a linked bank shares; accounts the bank no longer shares are deleted along with their staged transactions. dry_run reports the changes without applying them.",
     ({ services, identity, ledgerId }, { itemId, item_id, dry_run, dryRun }) =>
       services.plaidItem.reconcileItemAccounts(
         identity,

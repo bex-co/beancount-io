@@ -4,7 +4,7 @@ import { type BankAccountToMap } from "../../types";
 export const ACCOUNT_MAPPING_SYSTEM_PROMPT =
   "You are an assistant that maps a user's bank accounts to Beancount ledger accounts for a double-entry accounting system.";
 
-const ACCOUNT_MAPPING_TEMPLATE = `You are mapping bank accounts from "{{institutionName}}" to Beancount ledger accounts.
+const ACCOUNT_MAPPING_TEMPLATE = `You are mapping bank accounts from "{{{institutionName}}}" to Beancount ledger accounts.
 
 **User's Existing Open Accounts:**
 {{{existingAccounts}}}

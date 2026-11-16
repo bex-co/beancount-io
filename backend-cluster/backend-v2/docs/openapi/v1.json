@@ -1913,7 +1913,7 @@
                           "community@1",
                           "blank@1"
                         ],
-                        "description": "Setup preset id (ADR026)."
+                        "description": "Setup preset id."
                       },
                       "modules": {
                         "type": "array",
@@ -1961,7 +1961,8 @@
                             "declined",
                             "deferred"
                           ]
-                        }
+                        },
+                        "description": "Keyed by preset question id; only enabled adds its accounts."
                       },
                       "accounts": {
                         "type": "array",
@@ -1981,11 +1982,13 @@
                                 "unknown",
                                 "zero",
                                 "known"
-                              ]
+                              ],
+                              "description": "unknown (default): no opening balance; zero: confirmed zero start; known: opening transaction the day before historyStart, from amount."
                             },
                             "amount": {
                               "type": "string",
-                              "pattern": "^[+-]?\\d+(\\.\\d+)?$"
+                              "pattern": "^[+-]?\\d+(\\.\\d+)?$",
+                              "description": "Only with openingState known; unsigned on a liability means owed."
                             }
                           },
                           "required": [
@@ -6207,7 +6210,7 @@
                           "community@1",
                           "blank@1"
                         ],
-                        "description": "Setup preset id (ADR026)."
+                        "description": "Setup preset id."
                       },
                       "modules": {
                         "type": "array",
@@ -6255,7 +6258,8 @@
                             "declined",
                             "deferred"
                           ]
-                        }
+                        },
+                        "description": "Keyed by preset question id; only enabled adds its accounts."
                       },
                       "accounts": {
                         "type": "array",
@@ -6275,11 +6279,13 @@
                                 "unknown",
                                 "zero",
                                 "known"
-                              ]
+                              ],
+                              "description": "unknown (default): no opening balance; zero: confirmed zero start; known: opening transaction the day before historyStart, from amount."
                             },
                             "amount": {
                               "type": "string",
-                              "pattern": "^[+-]?\\d+(\\.\\d+)?$"
+                              "pattern": "^[+-]?\\d+(\\.\\d+)?$",
+                              "description": "Only with openingState known; unsigned on a liability means owed."
                             }
                           },
                           "required": [

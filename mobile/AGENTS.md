@@ -11,8 +11,8 @@ React Native iOS/Android app for [Beancount.io](https://beancount.io/), built wi
 - **Forms**: React Hook Form + Zod
 - **Styling**: StyleSheet + custom theme system (light / dark / system)
 - **i18n**: `i18n-js` with 13 locales (en, zh, bg, ca, de, es, fa, fr, nl, pt, ru, sk, uk)
-- **Errors**: no error-reporting SDK (Sentry removed, w4/028 — it was never initialised)
-- **Analytics**: none — the Mixpanel wrapper was retired (`.pm` `w3/001`); the app ships no event tracking
+- **Errors**: no error-reporting SDK
+- **Analytics**: none; the app ships no event tracking (adding it is a board decision, `.pm` `w3/001`)
 - **TypeScript**: strict (`noImplicitAny`, `strictNullChecks`, `noUnusedLocals`, …); path alias `@/*` → `src/*`
 
 ## Layout

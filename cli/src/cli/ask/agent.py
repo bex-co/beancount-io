@@ -83,8 +83,8 @@ means nothing matched, and a cell reading 0 is a real zero.
 
 Other functions: year(date), month(date), root(account), leaf(account), units(position), cost(position)
 FROM also takes temporal modifiers instead of a relation: FROM OPEN ON <date> /
-FROM CLOSE [ON <date>] / FROM CLEAR. Use the run_bql_query tool for SELECT
-(and BALANCES / JOURNAL); it does not run PRINT or dot commands.
+FROM CLOSE [ON <date>] / FROM CLEAR. BALANCES and JOURNAL run as statements
+too; PRINT and dot commands do not.
 
 Prefer aggregates to enumeration: a result is truncated past a few hundred rows,
 and a total, a GROUP BY or a date range answers most questions. When a result
@@ -606,10 +606,14 @@ def make_agent(
 
     @agent.tool(retries=2)
     def run_bql_query(ctx: RunContext[BqlDeps], query: str) -> str:
-        """Run a BQL SELECT (Beancount Query Language) against the user's Beancount ledger.
+        """Run one BQL (Beancount Query Language) statement against the user's ledger: SELECT, BALANCES or JOURNAL.
 
-        Returns the matching rows with a row count. An invalid query or an invalid
-        ledger comes back as an error to fix and retry.
+        PRINT and dot commands are not run. Returns the rows with a row count; a result past
+        200 rows or about 12,000 characters is cut and ends with a truncation line. An invalid
+        query or an invalid ledger comes back as an error to fix and retry.
+
+        Args:
+            query: The BQL statement, e.g. SELECT account, sum(position) GROUP BY account.
         """
         if not query.strip():
             raise ModelRetry("The query is empty. Send a BQL SELECT statement.")
@@ -720,7 +724,14 @@ def make_agent(
 
     @agent.tool()
     def get_skill_body(ctx: RunContext[BqlDeps], name: str) -> str:
-        """Load the full instructions for an agent skill by name."""
+        """Load the full instructions for one skill from the Available Agent Skills index.
+
+        Returns the skill's body text, cut at 12,000 characters; an unknown name returns the
+        available names.
+
+        Args:
+            name: The skill's name exactly as the index lists it.
+        """
         skill = ctx.deps.skills.get(name)
         if skill is None:
             available = ", ".join(ctx.deps.skills) or "none"

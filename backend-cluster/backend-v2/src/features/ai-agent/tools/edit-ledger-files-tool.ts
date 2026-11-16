@@ -60,12 +60,9 @@ const description =
   "  delete: remove a file — refused when still `include`d by another file. " +
   DELETE_INCLUDE_GUARD_BATCH_NOTE +
   "\n" +
-  "  Each new/resulting file is limited to 1 MiB of UTF-8 bytes, including dry runs.\n" +
-  "  dry_run previews without committing: same checks, a unified diff per " +
-  "touched file, and bean-check's verdict over the projected contents " +
-  "(newErrors, valid) — approve only a valid preview, then send the identical " +
-  "files with dry_run false." +
-  NEW_ERRORS_GATE_NOTE;
+  "  Each new/resulting file is limited to 1 MiB of UTF-8 bytes.\n" +
+  "  The user approves each call before it commits; there is no preview mode.\n" +
+  "  A commit that adds bean-check errors is refused with VALIDATION_FAILED: fix the change and send it again.";
 
 const filePath = z.string().describe("File path relative to ledger root");
 const oldString = z
@@ -602,7 +599,14 @@ export async function executeEditLedgerFiles(
 export function createEditLedgerFilesTool(ctx: ToolContext) {
   return tool({
     description,
-    inputSchema: editLedgerFilesInputSchema,
+    // The in-product agent always commits (dry_run: false below), so the
+    // preview and override flags are not offered to it.
+    inputSchema: editLedgerFilesInputSchema.omit({
+      dry_run: true,
+      dryRun: true,
+      allow_invalid: true,
+      allowInvalid: true,
+    }),
     outputSchema: editLedgerFilesOutputSchema,
     needsApproval: true,
     execute: async ({ description, message, files }) =>

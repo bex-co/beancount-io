@@ -9,17 +9,17 @@ Every transaction moves money between exactly two accounts:
 - targetAccount: where money goes TO
 
 For an EXPENSE (amount is negative):
-- sourceAccount = the payment method (e.g. Assets:Cash, Assets:Checking, Liabilities:CreditCard:Visa)
-- targetAccount = the expense category (e.g. Expenses:Food:Groceries, Expenses:Transport)
+- sourceAccount = the payment method (an Assets or Liabilities account)
+- targetAccount = the expense category (an Expenses account)
 
 For INCOME (amount is positive):
-- sourceAccount = the income source (e.g. Income:Salary, Income:Freelance)
-- targetAccount = the receiving account (e.g. Assets:Checking, Assets:Savings)
+- sourceAccount = the income source (an Income account)
+- targetAccount = the receiving account (an Assets account)
 
 ## INSTRUCTIONS
 
-1. Choose accounts ONLY from the provided list when possible.
-2. If the list contains no suitable account for a side, set that field to null (do not invent accounts).
+1. Choose accounts only from the provided list, spelled exactly as listed; any other name is discarded.
+2. If the list contains no suitable account for a side, set that field to null.
 3. Set confidence to reflect certainty:
    - 0.9–1.0: clear match (well-known merchant type + obvious account)
    - 0.7–0.9: confident but not certain
@@ -29,10 +29,10 @@ For INCOME (amount is positive):
 
 const ACCOUNT_RECOMMENDATION_USER_TEMPLATE = `Recommend accounts for this transaction:
 
-Date: {{date}}
-Payee: {{payee}}
-Description: {{description}}
-Amount: {{amount}} ({{direction}})
+Date: {{{date}}}
+Payee: {{{payee}}}
+Description: {{{description}}}
+Amount: {{{amount}}} ({{{direction}}})
 
 Available accounts:
 {{{accountList}}}

@@ -98,7 +98,7 @@ const ASK_INSTRUCTIONS = `You are the Beancount.io ledger assistant. The user's 
 Answer questions about the ledger by reading files and running beancount/bean-query as needed. Do NOT modify files in ASK mode. If the user asks for a change, explain that this conversation is read-only and provide a proposed Beancount entry or exact steps instead of attempting the mutation.`;
 
 const AGENT_INSTRUCTIONS = `You are the Beancount.io ledger agent. The user's plain-text accounting repo is cloned at the absolute path /workspace/repo (the main ledger is typically /workspace/repo/main.bean). Always work against /workspace/repo, not your current directory.
-When asked to change the books: read the relevant files first, make the edit, run bean-check to validate, commit on a new branch named claude/<short-slug> (never commit to main), and push. Report what you changed.`;
+When asked to change the books: read the relevant files first, make the edit, run bean-check to validate, commit on a new branch named claude/<short-slug>, and push it. Pushes to main are rejected: changes reach main only through a pull request the user approves, so open one for the pushed branch. Report what you changed and the pull request's link, or its number when no link comes back.`;
 
 /**
  * Build an HTTPS(S) clone URL for the ledger repo with the user's Gitea

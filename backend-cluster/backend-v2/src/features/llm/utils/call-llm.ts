@@ -53,7 +53,9 @@ export async function callLLM({
   const result = await llmClient.generate({
     system,
     messages,
-    maxOutputTokens: 4096,
+    // Thinking counts toward this cap on current Claude models, and a long
+    // statement is thousands of tokens of JSON on its own.
+    maxOutputTokens: 16384,
     output: Output.object({
       schema: dateOptional
         ? receiptTransactionsResponseSchema

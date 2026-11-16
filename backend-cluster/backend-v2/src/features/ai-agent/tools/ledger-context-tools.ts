@@ -98,7 +98,7 @@ export async function executeCheckLedger(
 // --- getLedgerContext -----------------------------------------------------
 
 export const getLedgerContextDescription =
-  "Read a ledger's working vocabulary in one call: attributes, open accounts, currencies, payees, years, and source files. Counts accompany truncated lists so a large ledger does not flood context.";
+  "Read a ledger's working vocabulary in one call: attributes, open accounts, currencies, payees, years, and source files. Only payees are capped (payeeLimit, default 50; payeeCount is the full count).";
 
 export const getLedgerContextInputSchema = z.object({
   payeeLimit: z

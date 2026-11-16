@@ -12,7 +12,7 @@ Carry a release through preparation, verification, shipping, and both stores. A 
 
 ## Establish release state
 
-Locate the repository with `git rev-parse --show-toplevel`. Read root and mobile `AGENTS.md`, `mobile/docs/app-store-localization.md`, `mobile/scripts/app-store-release.sh`, `mobile/scripts/play-release.sh`, `mobile/eas.json`, and `.github/workflows/deploy.yml`. Run package commands inside `mobile/`; keep scratch artifacts in `mobile/tmp/`. Discover installed `gh`, `asc`, and the workflow's pinned EAS CLI capabilities with `--help` rather than assuming newer commands exist.
+Locate the repository with `git rev-parse --show-toplevel`. Read root and mobile `AGENTS.md`, `mobile/docs/app-store-localization.md`, `mobile/scripts/app-store-release.sh`, `mobile/scripts/play-release.sh`, `mobile/eas.json`, and `.github/workflows/deploy.yml`. Run package commands inside `mobile/`; the release helpers write their own output to `mobile/tmp/` and `mobile/.asc/`, and your own scratch artifacts go under the repo-root `.internal/mobile-release/`. Discover installed `gh`, `asc`, and the workflow's pinned EAS CLI capabilities with `--help` rather than assuming newer commands exist.
 
 Inspect branch, staged and unstaged changes, and remote state. Fetch origin and tags. Preserve unrelated work; release only reviewed changes. Bring the release base up to date before preparing notes. Do not push a version bump until its store staging receipt is ready.
 

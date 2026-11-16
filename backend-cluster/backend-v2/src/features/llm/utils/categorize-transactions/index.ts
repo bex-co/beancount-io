@@ -62,7 +62,6 @@ export async function categorizeTransactions(
   const result = await llmClient.generate({
     system: CATEGORIZATION_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }],
-    temperature: 0.2,
     output: Output.object({
       schema: categorizationsResponseSchema,
     }),

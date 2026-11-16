@@ -43,13 +43,13 @@ SELECT sum(cost(position)) AS bal WHERE account = '<account>' AND date < <end>
 
 ## 4. Market value (state the price date)
 
-This query uses the ledger's latest available prices for the selected holdings; the posting-date filter does **not** bound the price date. Inspect the ledger's price directives and label the result with the actual valuation date and price. For the eval fixture, January closes with 10 ACME at 1,000.00 USD cost. The available 2026-02-01 price of 110.00 USD values those holdings at 1,100.00 USD on that date; January 31 market value remains unavailable.
+This query uses the ledger's latest available prices for the selected holdings; the posting-date filter does **not** bound the price date. Inspect the ledger's price directives and label the result with the actual valuation date and price. For example, if January closes with 10 ACME at 1,000.00 USD cost and the only price is 110.00 USD dated 2026-02-01, the holdings are worth 1,100.00 USD on 2026-02-01; January 31 market value remains unavailable.
 
 <!-- recipe: rollforward-value -->
 ```sql
 SELECT sum(value(position)) AS bal WHERE account = '<account>' AND date < <end>
 ```
 
-## Worked tie-out (the eval fixture)
+## Worked tie-out (illustrative)
 
 `Assets:PrepaidInsurance`, January 2026: opening 1,200.00; movements +600.00 premium top-up, −150.00 recognition; closing 1,650.00 — both routes agree. `Liabilities:Loan`: opening −5,000.00; movement +400.00 principal; closing −4,600.00 owed. `Assets:BrokerCash`: opening 2,000.00; movements −1,000.00 purchase, +25.00 dividend; closing 1,025.00.

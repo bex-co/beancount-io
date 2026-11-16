@@ -45,7 +45,7 @@ quick, otherwise carry on and name it in the summary (root `AGENTS.md`,
 - `skills/` or `.agents/skills/` → `python3 scripts/skills/ci-check.py` (from the repo root)
 - `backend-cluster/*`, `deploy/` → the commands in that package's scoped `AGENTS.md`
 - any `AGENTS.md` or skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
-- before every ship → `gitleaks dir . --redact --verbose`
+- before every ship → `python3 scripts/scan-secrets.py` (from the repo root)
 
 **If no automated check covers the changed behavior** (backend-v2, agent-box,
 and deploy have no package-wide CI workflow), STOP and report the finding
@@ -85,7 +85,7 @@ Default budget: **3 shipped findings per invocation**, then stop and summarize:
 - `.pm/` — routines never write the board (`/pm` is its only writer).
 - `.env*` files and anything secret-shaped.
 - Vendored third-party code (the CLI's vendored `fava`).
-- `AGENTS.md` symlinks and the shared-skills symlinks.
+- `AGENTS.md` files and the `.claude/skills` symlink.
 
 ## Symptom → owner
 

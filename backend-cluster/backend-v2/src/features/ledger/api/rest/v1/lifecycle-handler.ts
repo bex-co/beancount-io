@@ -51,7 +51,7 @@ const ledgerSetupInput = z
           ...PresetId[],
         ],
       )
-      .describe("Setup preset id (ADR026)."),
+      .describe("Setup preset id."),
     modules: z
       .array(
         z
@@ -82,7 +82,8 @@ const ledgerSetupInput = z
       .optional(),
     capabilities: z
       .record(z.string(), z.enum(["enabled", "declined", "deferred"]))
-      .optional(),
+      .optional()
+      .describe("Keyed by preset question id; only enabled adds its accounts."),
     accounts: z
       .array(
         z
@@ -92,11 +93,19 @@ const ledgerSetupInput = z
               .string()
               .regex(/^[A-Z]{3}$/)
               .optional(),
-            openingState: z.enum(["unknown", "zero", "known"]).optional(),
+            openingState: z
+              .enum(["unknown", "zero", "known"])
+              .optional()
+              .describe(
+                "unknown (default): no opening balance; zero: confirmed zero start; known: opening transaction the day before historyStart, from amount.",
+              ),
             amount: z
               .string()
               .regex(/^[+-]?\d+(\.\d+)?$/)
-              .optional(),
+              .optional()
+              .describe(
+                "Only with openingState known; unsigned on a liability means owed.",
+              ),
           })
           .strict(),
       )

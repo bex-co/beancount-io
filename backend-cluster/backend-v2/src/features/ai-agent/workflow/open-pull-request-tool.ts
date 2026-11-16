@@ -170,7 +170,7 @@ export async function openPullRequest(
 export function createOpenPullRequestTool(deps: OpenPullRequestToolDeps) {
   return tool({
     description:
-      "Open a Gitea pull request from a pushed branch against main, after committing and pushing the change inside the sandbox. Returns the PR number and URL.",
+      "Open a pull request on the ledger's Git host from a branch already pushed from the sandbox; it does not commit or push. Use it once per finished change, after the push. `head` is the pushed branch and cannot be main; `base` defaults to main. Returns ok: true with prNumber, plus prUrl when the host has an address a browser can open (some self-hosted stacks have none). On failure returns ok: false with the host's error text, e.g. when the branch was not pushed or a pull request for it already exists.",
     inputSchema,
     outputSchema,
     execute: async ({ title, body, head, base }) =>

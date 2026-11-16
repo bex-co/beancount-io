@@ -167,7 +167,7 @@ Cash in investment accounts is not a lot and appears in none of these; say wheth
 
 ## 9. Variance: why did this category change?
 
-A variance answer compares one account (or subtree) across two periods under a **threshold policy the user states** — there is no built-in percentage that makes a change "worth explaining". Ask for, or state and confirm: the absolute threshold, the relative threshold, whether both must trip (AND) or either (OR), the denominator (comparator period by default), and any always-comment accounts that are explained regardless. The old upstream habit of a universal 5% fallback is not a rule here.
+A variance answer compares one account (or subtree) across two periods under a **threshold policy the user states** — there is no built-in percentage that makes a change "worth explaining". Ask for, or state and confirm: the absolute threshold, the relative threshold, whether both must trip (AND) or either (OR), the denominator (comparator period by default), and any always-comment accounts that are explained regardless.
 
 Run the same totals query for the current period and the comparator period (half-open bounds, as everywhere in this file):
 

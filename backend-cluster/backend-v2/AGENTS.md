@@ -25,6 +25,7 @@ src/
 │   ├── plaid/              # Bank linking and synchronization
 │   ├── s3/                 # Temporary/permanent asset storage
 │   ├── sitemap/            # Sitemap generation and cache
+│   ├── store-billing/      # App Store / Google Play billing (ADR 001)
 │   ├── stripe/             # Billing and tier operations
 │   ├── v1-compat/          # Legacy URL compatibility
 │   └── well-known/         # /.well-known routes (ADR 0009)
@@ -133,7 +134,8 @@ yarn mcp:conformance <base-url>
 
 Code generation:
 
-- `yarn generate-backend-v2-openapi` updates the backend REST spec. The CLI ships a pinned copy (`cli/openapi/v1.json`): when the regen moves the spec, re-pin it and regenerate the CLI client in the same change — from `cli/`, `make spec-sync && make codegen` — or CI (cli) fails its spec-check on main. CI (backend parity) diffs the two files so the producing change goes red, not a later CLI run.
+- `yarn generate-backend-v2-openapi` updates the admin REST spec (`../idl/backend-v2.openapi.json`).
+- `yarn generate-v1-openapi` updates the public v1 spec (`docs/openapi/v1.json`). The CLI ships a pinned copy (`cli/openapi/v1.json`): when the regen moves the spec, re-pin it and regenerate the CLI client in the same change — from `cli/`, `make spec-sync && make codegen` — or CI (cli) fails its spec-check on main. CI (backend parity) diffs the two files so the producing change goes red, not a later CLI run.
 - `yarn generate-fava-client` reads `../idl/beancount-ledger.openapi.json`.
 - `yarn generate-gitea-client` reads `../idl/gitea.swagger.v1.json`; never hand-edit `src/features/gitea/client/gitea-api.ts`.
 - `yarn generate-agent-tool-types` updates generated agent tool types.

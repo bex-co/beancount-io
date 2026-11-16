@@ -20,7 +20,7 @@ import { ACP_PERMISSION_MODES } from "@/features/ai-agent/workflow/sandbox-agent
 const ADMIN_TOKEN = process.env.SANDBOX_ADMIN_TOKEN ?? process.env.ADMIN_TOKEN ?? "";
 // The container reaches the host's llm-cli-proxy via the host LAN IP.
 const PROXY = process.env.SPIKE_ANTHROPIC_BASE_URL ?? "http://192.168.4.49:4322";
-const MODEL = process.env.SPIKE_MODEL ?? "claude-sonnet-4-5-20250929";
+const MODEL = process.env.SPIKE_MODEL ?? "claude-sonnet-5";
 
 function log(m: string, x?: unknown) {
   // eslint-disable-next-line no-console

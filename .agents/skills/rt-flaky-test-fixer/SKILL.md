@@ -43,14 +43,15 @@ gh run list --workflow=ci-dashboard.yml --branch main --limit 50
 gh run list --workflow=ci-cli.yml --branch main --limit 50
 gh run list --workflow=ci-skills.yml --branch main --limit 50
 gh run list --workflow=ci-backend-parity.yml --branch main --limit 50  # backend-v2
+gh run list --workflow=ci-ledger.yml --branch main --limit 50          # ledger
 ```
 
 Flake signals: the same commit red then green on rerun; failures whose job logs
 (`gh run view <id> --log-failed`) show different tests failing across runs.
 Locally: rerun the owning suite — or the suspect file — 20–30 times (mobile via
-`yarn test:unit`, the bespoke `mobile/scripts/jest-lite-runner.js`; dashboard/
-backend via their jest commands; cli via pytest), with shuffled order where the
-runner supports it.
+`yarn test:unit`, the bespoke `mobile/scripts/jest-lite-runner.js`; dashboard via
+Vitest (`yarn test`); backend-v2 and ledger via Jest (`yarn test`); cli via
+pytest), with shuffled order where the runner supports it.
 
 ### 3. Prove it
 

@@ -16,13 +16,13 @@ export const accountRecommendationSchema = z.object({
     .string()
     .nullable()
     .describe(
-      "Account money comes FROM (e.g. Assets:Cash, Liabilities:CreditCard:Visa). Use null if no suitable account exists.",
+      "Account money comes FROM (one of the provided accounts). Use null if no suitable account exists.",
     ),
   targetAccount: z
     .string()
     .nullable()
     .describe(
-      "Account money goes TO (e.g. Expenses:Food:Groceries, Income:Salary). Use null if no suitable account exists.",
+      "Account money goes TO (one of the provided accounts). Use null if no suitable account exists.",
     ),
   confidence: z
     .number()
@@ -51,7 +51,6 @@ export async function recommendAccounts(
         ),
       },
     ],
-    temperature: 0.2,
     output: Output.object({ schema: accountRecommendationSchema }),
   });
 
@@ -69,10 +68,9 @@ export async function recommendAccounts(
 }
 
 /**
- * Drop a suggestion that is not one of the ledger's accounts. The prompt only
- * asks the model to use them "when possible", and its examples invite made-up
- * names (`Expenses:Food:Groceries`) that a client would write as an account the
- * ledger never opened (w21/281).
+ * Drop a suggestion that is not one of the ledger's accounts. The prompt asks
+ * for listed accounts only, but a model can still return a made-up name that a
+ * client would write as an account the ledger never opened (w21/281).
  */
 function restrictToAccounts(
   recommendation: AccountRecommendation,

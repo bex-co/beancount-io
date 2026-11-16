@@ -55,7 +55,6 @@ export async function suggestAccountMapping(
   const result = await llmClient.generate({
     system: ACCOUNT_MAPPING_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }],
-    temperature: 0.2,
     output: Output.object({
       schema: accountMappingResponseSchema,
     }),
