@@ -1854,35 +1854,6 @@ arguments by name, description and requiredness, as `prompts/list` does. Its
 protected-resource metadata remains the authoritative source when requesting
 permissions.
 
-### Which build a deployment runs
-
-The manifest's `version` (`1.0.0`) is the contract version and moves only when
-the server's contract does. Which build is running is reported separately, in two
-places:
-
-- the manifest's `revision`, the full commit; and
-- the `initialize` answer's `serverInfo.version`, which carries the commit's first
-  seven characters as semver build metadata (`1.0.0+2144cdb`).
-
-A deployment that was given no commit says `"revision": "unknown"` and a plain
-`1.0.0`; one that predates the field has no `revision` in its manifest and a plain
-`1.0.0` too. The manifest is cacheable for an hour (`Cache-Control: public,
-max-age=3600`), so right after a deploy a cache or a proxy in front can still show
-the previous build's `revision`; the `initialize` answer is a `POST` and is not
-cached, so trust it when the two differ. To learn whether a fix is live, run
-`git merge-base --is-ancestor <fix commit> <revision>` in a checkout: it exits 0
-when the deployed build contains the fix.
-
-The backend reads the commit from `BEANCOUNT_REVISION`, then `RENDER_GIT_COMMIT`
-(set at runtime by Render-compatible platforms). A value counts only if it is 7–40
-hexadecimal characters, so nothing else ever reaches either document; the literal
-`unknown`, an empty value, and free text all count as not given, and a build that
-was given none never hides the platform's own variable. Images built from
-`deploy/` take it as the `REVISION` build argument
-(`BEANCOUNT_REVISION=$(git rev-parse HEAD) docker compose up -d --build`); a
-platform whose builds take no build arguments, such as bex, supplies the variable
-at runtime ([which commit is running on bex](../../../deploy/bex/README.md#which-commit-is-running)).
-
 From `backend-cluster/backend-v2/`, run:
 
 ```bash
@@ -1898,14 +1869,6 @@ variable has that one spelling: when it is unset but a name such as
 `QA_MCP_TOKEN_READONLY` or `QA_MCP_READONLY_TOKEN` is set, the command prints one
 line naming the variable it reads (never a value), and the checks that need the
 read-only credential skip (w23/235).
-
-Before the checks the command prints the build it reached: `revision: <commit>`
-from `/.well-known/mcp.json` and, when a credential is supplied (the handshake
-needs one), from the `initialize` answer, with a `WARNING:` line when the two
-disagree (a cache or a proxy in front may be serving an older build). It is
-information, not a check: the exit code does not depend on it, and `unknown` does
-not fail the run. The QA contract replay prints the same fact as a `revision:`
-line beside `server:`.
 
 The [conformance script](../scripts/mcp-conformance.ts) checks the unauthenticated
 challenge, discovery, method handling (`GET`, `DELETE`, `OPTIONS` and `PUT` must all be
@@ -1955,10 +1918,7 @@ A test in [`well-known-route.test.ts`](../src/features/well-known/api/__tests__/
 fails if its name or remote URL drifts from what `/.well-known/mcp.json`
 advertises. The listing's `version` is its own lifecycle: it moves with every
 listing edit (see below) and is not compared with the manifest's or the MCP
-`serverInfo` version, which only change when the server's contract does. (The
-`+<commit>` build metadata on the `serverInfo` version and the manifest's
-`revision` name the running build, not the contract; see [which build a
-deployment runs](#which-build-a-deployment-runs).)
+`serverInfo` version, which only change when the server's contract does.
 
 The registry grants the `io.beancount/*` namespace to whoever proves control of
 `beancount.io`. The backend can prove it over HTTP: `MCP_REGISTRY_AUTH_PROOF`

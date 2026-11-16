@@ -11,16 +11,12 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import {
   type AttemptResult,
-  buildReport,
   clientCommand,
-  deployedRevision,
   deployedToolDrift,
   invocationFor,
   loadSuite,
@@ -969,66 +965,6 @@ describe("toolDrift", () => {
     const broken = { listTools: async () => { throw new Error("offline"); } } as unknown as Pick<Client, "listTools">;
 
     expect(await deployedToolDrift(broken)).toBeNull();
-  });
-});
-
-// The report must say which build it ran against: .pm/DO_NOT_DO.md requires a
-// real-client evaluation to record the deployed revision it observed.
-describe("deployed revision", () => {
-  /** What the harness reads about a server: the identity in its `initialize` answer. */
-  const handshakeOf = async (version: string) => {
-    const server = new McpServer({ name: "beancount-mcp", version });
-    const client = new Client({ name: "agent-eval-test", version: "0.0.0" });
-    const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
-    await Promise.all([server.connect(serverSide), client.connect(clientSide)]);
-    const identity = client.getServerVersion();
-    await client.close();
-    return {
-      name: identity?.name ?? "unknown",
-      version: identity?.version ?? "unknown",
-    };
-  };
-
-  const reportFor = (server: { name: string; version: string }) =>
-    buildReport({
-      url: "https://example.test/api-gateway/mcp",
-      server,
-      clients: [],
-      installed: {},
-      models: {},
-      promptDrift: null,
-      toolDrift: null,
-      results: [],
-      timeoutSec: 1,
-      maxMcpCalls: 1,
-      attempts: 1,
-      cleanup: "",
-    });
-
-  it("carries the commit a deployment names in its handshake", async () => {
-    const report = reportFor(await handshakeOf("1.0.0+2144cdb"));
-
-    expect(report.server.version).toBe("1.0.0+2144cdb");
-    expect(report.server.deployedRevision).toBe("2144cdb");
-  });
-
-  it("says unknown against a deployment that names none", async () => {
-    const report = reportFor(await handshakeOf("1.0.0"));
-
-    expect(report.server.version).toBe("1.0.0");
-    expect(report.server.deployedRevision).toBe("unknown");
-  });
-
-  it("only takes a commit for a build: any other suffix, or none, is unknown", () => {
-    const full = "2144cdb".padEnd(40, "a");
-
-    expect(deployedRevision(`1.0.0+${full}`)).toBe(full);
-    expect(deployedRevision("1.0.0+2144CDB")).toBe("unknown");
-    expect(deployedRevision("1.0.0+abc")).toBe("unknown");
-    expect(deployedRevision("1.0.0+not-a-commit")).toBe("unknown");
-    expect(deployedRevision("1.0.0+")).toBe("unknown");
-    // The harness falls back to this when the handshake gave no version at all.
-    expect(deployedRevision("unknown")).toBe("unknown");
   });
 });
 

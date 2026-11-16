@@ -13,8 +13,9 @@
 - [x] **m8** — [Self-hosted deployments: no verification page, no plan limits](./done/m8/README.md) (7 tasks) ← self-host request 2026-11-07
 - [x] **m9** — [One-click "Deploy to bex" for the self-hosted stack](./done/m9/README.md) (8 tasks) ← deploy-badge request 2026-11-07
 - [ ] **m10** — [Bank Sync: set one target account for every selected staged row](./blocked/m10/README.md) (8 tasks) ← promoted from `w22/051` 2026-11-14 (user report 2026-11-08); user routed to w22 via /pmx — **blocked:** shipped except t004, the browser check (Persian RTL layout, hover tooltip, one Apply and Submit with staged rows), which needs a Plaid sandbox bank connected to the QA ledger (the owner's yes) and a dashboard build that carries the control; t008 Closeout waits on it
-- [x] **m11** — [Every deployment says which commit it runs](./done/m11/README.md) (9 tasks) ← promoted from `w22/052` 2026-11-14 (observed 2026-11-13); drained from w22 by /pmx
 
 ## Dropped
 
 - ~~**m7**~~ — One click to deploy beancount to bex (owner checklist, no tasks) — dropped 2026-11-09: superseded, with the owner's confirmation. Every open item on the checklist shipped elsewhere: mail and plan limits in [m8](./done/m8/README.md), the public-URL and deploy-form work and the clean-workspace browser check in [m9](./done/m9/README.md), the repeatable smoke script in [006](./done/006.md).
+- ~~**m11**~~ — Every deployment says which commit it runs (promoted from `w22/052`) — dropped 2026-11-15: owner decision. Reporting the deployed commit was not worth what it costs: a per-deploy value on a public manifest, and on bex a variable the platform does not supply, so a hand-set one goes stale. Its code, tests and docs were removed in the same change; `DO_NOT_DO.md` is unchanged.
+- ~~**054**~~ — The agent evaluation report records the deployed revision it observed — dropped 2026-11-15: it only existed to read the commit m11 reported; removed with m11, and the report says again that the endpoint reports none.

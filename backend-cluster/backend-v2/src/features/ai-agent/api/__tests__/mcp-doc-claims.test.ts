@@ -47,19 +47,12 @@ const FLAT = DOC.replace(/\s+/g, " ");
 interface Served {
   tools: Map<string, Tool>;
   capabilities: NonNullable<ReturnType<Client["getServerCapabilities"]>>;
-  /** `serverInfo.version` from a deployment given no commit. */
-  serverVersion: string;
-  /** `serverInfo.version` from one given `DOC_REVISION`. */
-  serverVersionWithRevision: string;
 }
 
-/** A commit whose first seven characters are the one docs/mcp.md writes out. */
-const DOC_REVISION = "2144cdbb2e6f0a1b3c4d5e6f708192a3b4c5d6e7";
-
-async function serve(revision?: string): Promise<Served> {
+async function serve(): Promise<Served> {
   const server = assembleMcpRegistry(
     { identity, services: {}, llmService: {} } as unknown as McpRequestContext,
-    { ...config, revision } as AppConfig,
+    config,
   );
   const [a, b] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "doc-claims", version: "1.0.0" });
@@ -69,22 +62,11 @@ async function serve(revision?: string): Promise<Served> {
     return {
       tools: new Map(tools.map((tool) => [tool.name, tool])),
       capabilities: client.getServerCapabilities() ?? {},
-      serverVersion: client.getServerVersion()?.version ?? "",
-      serverVersionWithRevision: "",
     };
   } finally {
     await client.close();
     await server.close();
   }
-}
-
-/** The tools and capabilities, plus the version a deployment reports with and without a commit. */
-async function serveBoth(): Promise<Served> {
-  const [without, withRevision] = await Promise.all([
-    serve(),
-    serve(DOC_REVISION),
-  ]);
-  return { ...without, serverVersionWithRevision: withRevision.serverVersion };
 }
 
 const properties = (tool: Tool | undefined): string[] =>
@@ -187,22 +169,6 @@ const CLAIMS: Claim[] = [
       ),
   },
   {
-    id: "a deployment that knows its commit appends it to serverInfo.version as build metadata",
-    doc: "semver build metadata (`1.0.0+2144cdb`)",
-    violations: (s) =>
-      s.serverVersionWithRevision === "1.0.0+2144cdb"
-        ? []
-        : [`serverInfo.version is ${s.serverVersionWithRevision}`],
-  },
-  {
-    id: "a deployment that was given no commit reports a plain 1.0.0",
-    doc: 'says `"revision": "unknown"` and a plain `1.0.0`',
-    violations: (s) =>
-      s.serverVersion === "1.0.0"
-        ? []
-        : [`serverInfo.version is ${s.serverVersion}`],
-  },
-  {
     id: "MCP has no API-key tool",
     doc: "MCP has no API-key tool",
     violations: (s) =>
@@ -231,7 +197,7 @@ const STALE = [
 
 let served: Served;
 beforeAll(async () => {
-  served = await serveBoth();
+  served = await serve();
 });
 
 describe("docs/mcp.md claims about the served contract", () => {
@@ -270,17 +236,5 @@ describe("docs/mcp.md claims about the served contract", () => {
     const lie = { ...served, tools: new Map(served.tools) };
     lie.tools.delete("updateLedger");
     expect(CLAIMS[0].violations(lie)).toContain("updateLedger");
-  });
-
-  it("fails the build-metadata claims when the served version changes", () => {
-    const build = CLAIMS.find((claim) => claim.id.includes("build metadata"));
-    const plain = CLAIMS.find((claim) => claim.id.includes("plain 1.0.0"));
-
-    expect(
-      build?.violations({ ...served, serverVersionWithRevision: "1.0.0" }),
-    ).toEqual(["serverInfo.version is 1.0.0"]);
-    expect(
-      plain?.violations({ ...served, serverVersion: "1.0.0+2144cdb" }),
-    ).toEqual(["serverInfo.version is 1.0.0+2144cdb"]);
   });
 });

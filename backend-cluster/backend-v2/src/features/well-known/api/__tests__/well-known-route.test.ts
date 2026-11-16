@@ -101,12 +101,6 @@ describe("well-known routes", () => {
     );
   });
 
-  it("serves the manifest cacheable for an hour, which docs/mcp.md says can show the previous build's revision after a deploy", async () => {
-    const response = await fetch(`${origin}/.well-known/mcp.json`);
-
-    expect(response.headers.get("cache-control")).toBe("public, max-age=3600");
-  });
-
   it("declares the resource surface too, not only tools", async () => {
     const response = await fetch(`${origin}/.well-known/mcp.json`);
     const body = (await response.json()) as {
@@ -325,66 +319,5 @@ describe("well-known routes on a self-hosted deployment", () => {
   it("returns 404 for the OpenAI apps challenge on a self-hosted deployment", async () => {
     const response = await fetch(`${origin}/.well-known/openai-apps-challenge`);
     expect(response.status).toBe(404);
-  });
-});
-
-describe("MCP manifest revision", () => {
-  const SHA = "2144cdbb2e6f0a1b3c4d5e6f708192a3b4c5d6e7";
-
-  /** The manifest a deployment would serve with this `config.revision`. */
-  async function manifestFor(
-    revision: string | undefined,
-  ): Promise<Record<string, unknown>> {
-    const app = new Koa();
-    const router = new Router();
-    setWellKnownRoutes(router, { ...config, revision } as unknown as AppConfig);
-    app.use(router.routes());
-    const revisionServer = app.listen(0);
-    await new Promise<void>((resolve) =>
-      revisionServer.once("listening", resolve),
-    );
-    try {
-      const address = revisionServer.address();
-      if (!address || typeof address === "string") {
-        throw new Error("Test server did not expose a TCP address");
-      }
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/.well-known/mcp.json`,
-      );
-      return (await response.json()) as Record<string, unknown>;
-    } finally {
-      await new Promise<void>((resolve, reject) =>
-        revisionServer.close((error) => (error ? reject(error) : resolve())),
-      );
-    }
-  }
-
-  it("reports the running commit beside the contract version", async () => {
-    const manifest = await manifestFor(SHA);
-
-    expect(manifest.revision).toBe(SHA);
-    // `version` moves only with the server's contract, never with a deploy.
-    expect(manifest.version).toBe("1.0.0");
-  });
-
-  it("says unknown when the deployment was given no commit", async () => {
-    expect((await manifestFor("unknown")).revision).toBe("unknown");
-    expect((await manifestFor(undefined)).revision).toBe("unknown");
-  });
-
-  it("never prints a value that is not a commit", async () => {
-    for (const notACommit of ["main", "<script>alert(1)</script>", ""]) {
-      expect((await manifestFor(notACommit)).revision).toBe("unknown");
-    }
-  });
-
-  it("changes nothing else in the manifest", async () => {
-    const known = await manifestFor(SHA);
-    const unset = await manifestFor(undefined);
-
-    expect({ ...known, revision: undefined }).toEqual({
-      ...unset,
-      revision: undefined,
-    });
   });
 });

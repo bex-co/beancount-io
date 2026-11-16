@@ -1,7 +1,6 @@
 import Router from "@koa/router";
 import { toJSONSchema } from "zod";
 import type { AppConfig } from "@/config/config";
-import { publishedRevision } from "@/config/revision";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import {
   MCP_RESOURCES,
@@ -18,13 +17,6 @@ export const OPENAI_APPS_CHALLENGE_TOKEN =
   "0HlDMC8M4gFl6ZswOTS-La1Hr8vlT7wrf_W-e1v5wmY"; // gitleaks:allow
 const BEANCOUNT_IO_ORIGIN = "https://beancount.io";
 
-/**
- * The MCP contract version: it moves only when the server's contract does, never
- * with a deploy. The manifest's `version` and the `initialize` answer's
- * `serverInfo.version` both start from it (docs/mcp.md).
- */
-export const MCP_CONTRACT_VERSION = "1.0.0";
-
 const SECURITY_TXT = `Contact: mailto:security@beancount.io
 Contact: https://beancount.io/security#report-a-vulnerability
 Expires: 2027-08-01T00:00:00.000Z
@@ -39,11 +31,7 @@ function mcpManifest(config: AppConfig) {
   return {
     name: "beancount",
     displayName: "Beancount.io MCP Server",
-    version: MCP_CONTRACT_VERSION,
-    // The git commit this deployment runs, or "unknown" when it was given none:
-    // `version` above moves only with the server's contract, so this is how a
-    // client tells which build it reached.
-    revision: publishedRevision(config.revision),
+    version: "1.0.0",
     description:
       "Talk to your Beancount ledger from Claude, Cursor, and any MCP client.",
     endpoint: `${publicOrigin}/api-gateway/mcp`,

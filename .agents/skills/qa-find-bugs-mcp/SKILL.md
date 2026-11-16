@@ -84,8 +84,7 @@ on a designated QA ledger needed to reproduce bugs.
   they ran.
 - `yarn mcp:conformance <base-url> [--ledger owner/name]` inside
   `backend-cluster/backend-v2/` runs ADR 0007's checklist and only observes;
-  run it first against the target and treat a failed check as a candidate. It also prints
-  the target's `revision:`; record it, as the QA contract asks.
+  run it first against the target and treat a failed check as a candidate.
   It reads `QA_MCP_TOKEN` and `QA_MCP_READ_ONLY_TOKEN` from the repo-root
   `./.env` (preferred) or the environment, so never pass `--token` or
   `--read-only-token`: those flags put the credential on argv. An unpinned
@@ -119,9 +118,7 @@ It writes nothing. The
 last line must parse to `structuredContent`, and `runBqlQuery`'s text must be
 its table. Failures are listed under the table by tool name. A
 mismatch on a rule newer than the deployment is a deploy lag: check the commit
-that introduced the rule before filing it, against the `revision:` line the replay
-prints (`git merge-base --is-ancestor <commit> <revision>` exits 0 when the
-deployment has it; `unknown` means it names no commit). It targets the hosted endpoint
+that introduced the rule before filing it. It targets the hosted endpoint
 (`--base`); do not stand up a second stack for it.
 
 ## Sweep whole journeys

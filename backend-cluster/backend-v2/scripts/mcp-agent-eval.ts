@@ -40,7 +40,6 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { publishedRevision } from "@/config/revision";
 import { MCP_PROMPTS } from "@/features/ai-agent/api/mcp-prompts";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import type { Identity } from "@/server/api/identity";
@@ -900,18 +899,7 @@ async function runAttempt(
 
 // --- report ----------------------------------------------------------------------
 
-/**
- * The commit a deployment says it runs: the `+<build>` suffix of the version in
- * its `initialize` answer (`1.0.0+2144cdb`), which the harness has already read
- * to name the server. `unknown` when the version carries no suffix or one that
- * is not a commit, so a deployment that was given no commit says so plainly
- * (docs/mcp.md, "Which build a deployment runs").
- */
-export function deployedRevision(serverVersion: string): string {
-  return publishedRevision(serverVersion.split("+")[1]);
-}
-
-export function buildReport(input: {
+function buildReport(input: {
   url: string;
   server: { name: string; version: string };
   clients: readonly ClientName[];
@@ -930,7 +918,7 @@ export function buildReport(input: {
     endpoint: input.url,
     server: {
       ...input.server,
-      deployedRevision: deployedRevision(input.server.version),
+      deployedRevision: "unavailable (the endpoint does not report one)",
       /** Invoked prompts whose deployed text differs from this working tree; null when no journey invokes one. */
       promptsDifferingFromWorkingTree: input.promptDrift,
       /** Tools whose deployed description or input schema differs from this working tree; null when it could not be compared. */

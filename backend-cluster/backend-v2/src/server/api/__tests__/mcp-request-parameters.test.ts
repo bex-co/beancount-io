@@ -33,7 +33,6 @@ async function withClient(
     queryShellText: jest.Mock;
     listLedgers: jest.Mock;
   }) => Promise<void>,
-  serverConfig: AppConfig = config,
 ) {
   const domainAccess = jest.fn();
   const queryShellText = jest
@@ -54,7 +53,7 @@ async function withClient(
       },
     },
   ) as unknown as McpRequestContext;
-  const server = assembleMcpRegistry(context, serverConfig);
+  const server = assembleMcpRegistry(context, config);
   const client = new Client({ name: "request-parameters", version: "1" });
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -275,50 +274,6 @@ describe("MCP outer request parameters over SDK dispatch (w6/001)", () => {
         hint: expect.any(String),
       });
       expect(f.domainAccess).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("the running revision on serverInfo (w22/m11)", () => {
-    const SHA = "2144cdbb2e6f0a1b3c4d5e6f708192a3b4c5d6e7";
-
-    async function initializeWith(revision: string | undefined) {
-      let version = "";
-      let handshakeVersion: string | undefined;
-      await withClient(
-        async (f) => {
-          const answer = await f.client.request(
-            request("initialize", {
-              protocolVersion: LATEST_PROTOCOL_VERSION,
-              capabilities: {},
-              clientInfo: { name: "request-parameters", version: "1" },
-            }),
-            InitializeResultSchema,
-          );
-          version = answer.serverInfo.version;
-          handshakeVersion = f.client.getServerVersion()?.version;
-        },
-        { ...config, revision } as AppConfig,
-      );
-      return { version, handshakeVersion };
-    }
-
-    it("appends the first seven characters as semver build metadata", async () => {
-      const { version, handshakeVersion } = await initializeWith(SHA);
-
-      expect(version).toBe("1.0.0+2144cdb");
-      // The handshake `connect` performs reports the same build.
-      expect(handshakeVersion).toBe("1.0.0+2144cdb");
-    });
-
-    it("is exactly 1.0.0 when the revision is unknown, absent, or not a commit", async () => {
-      for (const revision of [
-        "unknown",
-        undefined,
-        "main",
-        "<script>alert(1)</script>",
-      ]) {
-        expect((await initializeWith(revision)).version).toBe("1.0.0");
-      }
     });
   });
 

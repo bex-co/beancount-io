@@ -1,5 +1,4 @@
 import { isSelfHost } from "./self-host";
-import { parseRevision } from "./revision";
 import { getOptionalJwks } from "./jwks";
 import type { ScopeEnforcementMode } from "@/server/api/op-class";
 
@@ -258,12 +257,6 @@ export interface AppConfig {
    * needs no email verification and no plan limits apply. See `self-host.ts`.
    */
   selfHost: boolean;
-  /**
-   * The git commit this deployment runs, from `BEANCOUNT_REVISION` or
-   * `RENDER_GIT_COMMIT`: 7–40 lowercase hex characters, else `unknown`. See
-   * `revision.ts`.
-   */
-  revision: string;
   mcpRegistry: McpRegistryConfig;
   gitea: GiteaConfig;
   blockeden: BlockEdenConfig;
@@ -449,7 +442,6 @@ export const config: AppConfig = {
     url: dashboardUrl,
   },
   selfHost: isSelfHost(),
-  revision: parseRevision(process.env),
   mcpRegistry: {
     authProof: getMcpRegistryAuthProof(process.env.MCP_REGISTRY_AUTH_PROOF),
   },
