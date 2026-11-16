@@ -24,11 +24,12 @@ jest.mock("@/features/plaid/utils/plaid-webhook-parser", () => ({
   safeParseWebhookEvent: mockSafeParseWebhookEvent,
 }));
 
-// Mock PlaidWebhookEventPostgresModel
-const mockWebhookEventCreate = jest.fn();
-jest.mock("@/features/plaid/data/plaid-webhook-event-model", () => ({
-  PlaidWebhookEventPostgresModel: jest.fn().mockImplementation(() => ({
-    create: mockWebhookEventCreate,
+// The transport adapter delegates persistence to the webhook service; it must
+// never touch the persistence model directly.
+const mockRecordEvent = jest.fn();
+jest.mock("@/features/plaid/service/plaid-webhook-service", () => ({
+  PlaidWebhookService: jest.fn().mockImplementation(() => ({
+    recordEvent: mockRecordEvent,
   })),
 }));
 
@@ -40,7 +41,8 @@ const mockPlaidClient = {} as any;
 
 const mockLayers = {
   database: { db: mockPostgresDb, models: {} as any },
-  clients: { plaidClient: mockPlaidClient },
+  clients: { plaidClient: mockPlaidClient, favaClientFactory: {} as any },
+  services: { plaidSync: {} as any, authorization: {} as any },
 } as any;
 
 function createMockRouter() {
@@ -94,8 +96,10 @@ describe("plaid-webhook-handler", () => {
       webhookCode: "SYNC_UPDATES_AVAILABLE",
       itemId: "plaid-item-ext-id",
     });
-    const mockEvent = { id: "whevt_1", webhookType: "TRANSACTIONS" };
-    mockWebhookEventCreate.mockResolvedValue(mockEvent);
+    mockRecordEvent.mockResolvedValue({
+      id: "whevt_1",
+      webhookType: "TRANSACTIONS",
+    });
 
     const ctx = createMockCtx(
       {
@@ -109,8 +113,7 @@ describe("plaid-webhook-handler", () => {
     await invokeWebhookHandler(ctx);
 
     expect(mockValidatePlaidWebhook).toHaveBeenCalled();
-    expect(mockWebhookEventCreate).toHaveBeenCalledWith(
-      mockPostgresDb,
+    expect(mockRecordEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         webhookType: "TRANSACTIONS",
         webhookCode: "SYNC_UPDATES_AVAILABLE",
@@ -140,33 +143,30 @@ describe("plaid-webhook-handler", () => {
 
       await invokeWebhookHandler(ctx);
 
-      expect(mockWebhookEventCreate).not.toHaveBeenCalled();
+      expect(mockRecordEvent).not.toHaveBeenCalled();
       expect(ctx.status).toBe(401);
       expect(ctx.body).toEqual({ received: false });
     },
   );
 
-  it("retries a verified event whose first insert fails", async () => {
+  it("still returns 200 when the service reports the store as lost", async () => {
     mockValidatePlaidWebhook.mockResolvedValue(undefined);
     mockSafeParseWebhookEvent.mockReturnValue({
       webhookType: "ITEM",
       webhookCode: "ERROR",
       itemId: "plaid-item-ext-id",
     });
-    mockWebhookEventCreate
-      .mockRejectedValueOnce(new Error("connection reset"))
-      .mockResolvedValueOnce({ id: "whevt_2" });
+    mockRecordEvent.mockResolvedValue(null);
 
     const ctx = createMockCtx({ webhook_type: "ITEM" }, "jwt-token");
 
     await invokeWebhookHandler(ctx);
 
-    expect(mockWebhookEventCreate).toHaveBeenCalledTimes(2);
-    expect(mockWebhookEventCreate).toHaveBeenLastCalledWith(
-      mockPostgresDb,
+    expect(mockRecordEvent).toHaveBeenCalledWith(
       expect.objectContaining({ webhookType: "ITEM", webhookCode: "ERROR" }),
     );
     expect(ctx.status).toBe(200);
+    expect(ctx.body).toEqual({ received: true });
   });
 
   it("should store failed event and return 200 on parse error", async () => {
@@ -174,13 +174,13 @@ describe("plaid-webhook-handler", () => {
     mockSafeParseWebhookEvent.mockImplementation(() => {
       throw new Error("Parse failed");
     });
-    mockWebhookEventCreate.mockResolvedValue({ id: "whevt_failed" });
+    mockRecordEvent.mockResolvedValue({ id: "whevt_failed" });
 
     const ctx = createMockCtx({});
 
     await invokeWebhookHandler(ctx);
 
-    expect(mockWebhookEventCreate).toHaveBeenCalled();
+    expect(mockRecordEvent).toHaveBeenCalled();
     expect(ctx.status).toBe(200);
   });
 });

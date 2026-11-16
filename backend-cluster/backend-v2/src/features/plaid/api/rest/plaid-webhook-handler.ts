@@ -2,10 +2,11 @@ import type Router from "@koa/router";
 import {
   type DatabaseLayer,
   type ClientFactoryLayer,
+  type ServiceLayer,
 } from "@/foundation/composition";
 import { validatePlaidWebhook } from "@/features/plaid/utils/plaid-webhook-verification";
 import { safeParseWebhookEvent } from "@/features/plaid/utils/plaid-webhook-parser";
-import { PlaidWebhookEventPostgresModel } from "@/features/plaid/data/plaid-webhook-event-model";
+import { PlaidWebhookService } from "@/features/plaid/service/plaid-webhook-service";
 import { logger } from "@/shared/logger";
 
 const webhookLogger = logger.child({ module: "plaid-webhook-handler" });
@@ -23,9 +24,19 @@ const webhookLogger = logger.child({ module: "plaid-webhook-handler" });
  */
 export function setPlaidWebhookHandler(
   router: Router,
-  layers: { database: DatabaseLayer; clients: ClientFactoryLayer },
+  layers: {
+    database: DatabaseLayer;
+    clients: ClientFactoryLayer;
+    services: Pick<ServiceLayer, "plaidSync" | "authorization">;
+  },
 ): void {
-  const webhookEventModel = new PlaidWebhookEventPostgresModel();
+  const webhookService = new PlaidWebhookService(
+    layers.database.models,
+    layers.database.db,
+    layers.services.plaidSync,
+    layers.clients.favaClientFactory,
+    layers.services.authorization,
+  );
 
   router.post("/api/plaid/webhook", async (ctx) => {
     // Step 1: Verify the Plaid-Verification signature. A request without a
@@ -64,31 +75,12 @@ export function setPlaidWebhookHandler(
     }
 
     // Step 3: Store the verified event (ID auto-generated), retrying once.
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
-      try {
-        const event = await webhookEventModel.create(layers.database.db, {
-          webhookType,
-          webhookCode,
-          itemId,
-          rawBody,
-        });
-        webhookLogger.debug("Webhook received and queued", {
-          eventId: event.id,
-          webhookType,
-          webhookCode,
-          itemId,
-        });
-        break;
-      } catch (err) {
-        webhookLogger.error("Webhook storage failed", {
-          error: err,
-          attempt,
-          webhookType,
-          webhookCode,
-          itemId,
-        });
-      }
-    }
+    await webhookService.recordEvent({
+      webhookType,
+      webhookCode,
+      itemId,
+      rawBody,
+    });
 
     // Step 4: Return 200 (< 10 seconds)
     ctx.status = 200;
