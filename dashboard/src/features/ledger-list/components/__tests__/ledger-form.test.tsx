@@ -248,21 +248,18 @@ describe("LedgerForm", () => {
     });
   });
 
-  // TODO: This test is skipped because of test library limitation with clearing default values
-  // The feature works correctly in the browser - this is a testing-only issue
-  it.skip("should show validation error for empty name", async () => {
+  it("should show validation error for empty name", async () => {
+    // No ledgers resolve, so no default name is generated and the field
+    // starts empty; the submit below exercises the min(1) rule directly.
+    // (Clearing a prefilled input is not reliable here: the default-name
+    // effect repopulates it after every render while the mocked list query
+    // returns a fresh object.)
+    vi.mocked(apolloClient.useQuery).mockImplementation(() =>
+      createMockQueryResult({ data: undefined, loading: false }),
+    );
     const user = userEvent.setup();
     render(<LedgerForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
 
-    // Wait for default name to load, then select all and type a space, then delete it
-    await waitFor(() => {
-      expect(screen.getByDisplayValue("my-book")).toBeInTheDocument();
-    });
-
-    const nameInput = screen.getByLabelText("Ledger Name");
-    await user.tripleClick(nameInput);
-    await user.keyboard(" "); // Replace selection with a space
-    await user.keyboard("{Backspace}"); // Delete the space
     await user.click(screen.getByRole("button", { name: "Create Ledger" }));
 
     await waitFor(() => {
