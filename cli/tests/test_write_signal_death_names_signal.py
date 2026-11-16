@@ -5,9 +5,10 @@ w5/010 made the helper path name the signal instead of printing a raw
 before reaching that code. The exit code (4) and the untouched ledger were
 already right; only the message was not.
 
-The real-command case rests on upstream segfaulting on a computed zero divisor,
-which the input guard (literal `/0` only) does not catch. The stub cases pin
-the behaviour for any signal death and do not depend on that crash.
+The real-command case rests on upstream segfaulting on a computed zero divisor
+already in the ledger file: the input guard refuses one in the request
+(w1/274), but a write still parses the existing ledger. The stub cases pin the
+behaviour for any signal death and do not depend on that crash.
 """
 
 from __future__ import annotations
@@ -28,6 +29,9 @@ ROOT = Path(__file__).resolve().parents[1]
 LEDGER = """option "operating_currency" "EUR"
 2026-01-01 open Assets:Cash EUR
 2026-01-01 open Expenses:X EUR
+2026-01-05 * "dz"
+  Expenses:X 100/(2-2) EUR
+  Assets:Cash
 """
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX signal semantics")
@@ -58,7 +62,7 @@ def _add(tmp_path: Path, *leading: str) -> subprocess.CompletedProcess[str]:
             "--date",
             "2026-02-01",
             "-p",
-            "Expenses:X 100/(2-2) EUR",
+            "Expenses:X 5 EUR",
             "-p",
             "Assets:Cash",
         ],

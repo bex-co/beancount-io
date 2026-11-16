@@ -1286,9 +1286,10 @@ balance tolerances included), typed metadata, import row amounts, query JSON
 and CSV, and balance and report JSON — spells amounts in fixed-point decimal notation
 (`0.00000001`, never `1E-8`) so tiny values can be fed back into input without
 losing precision. Native posting
-arithmetic such as `84/2 EUR` works. A literal zero divisor (`100/0`) is
-refused as a usage error before it reaches the engine, because Beancount
-evaluates amount arithmetic while parsing and a zero divisor crashes it.
+arithmetic such as `84/2 EUR` works. A zero divisor, literal (`100/0`,
+`100/(0)`) or computed (`100/(2-2)`), is refused as a usage error before it
+reaches the engine, because Beancount evaluates amount arithmetic while
+parsing and a zero divisor crashes it.
 
 Every write is staged into a hidden `.bea-*.tmp` copy beside the ledger and
 moved into place only once it validates, so an interrupted write never leaves a

@@ -17,6 +17,108 @@ _ZERO_DIVISOR = re.compile(r"/\s*[-+]?(?:0+(?:\.0*)?|\.0+)(?![\d.]|[A-Z0-9'._-]*
 _NOT_ARITHMETIC = re.compile(r'"(?:[^"\\]|\\.)*"|;[^\n]*|^[*:#!&?%][^\n]*', re.MULTILINE)
 
 
+# A slash currency is one token to Beancount's lexer, the longest match at
+# its slash: /0J and /0-J are currencies, while /0-5 divides by zero and then
+# subtracts. Its token needs a letter.
+_SLASH_CURRENCY = re.compile(r"/[A-Z0-9'._-]*[A-Z]")
+_NUMBER = re.compile(r"(?:\d+(?:,\d{3})*(?:\.\d*)?|\.\d+)")
+
+
+class _NotArithmetic(Exception):
+    """The text after a slash is not an expression this check can read; the parser reports it."""
+
+
+class _ZeroDivisor(Exception):
+    """A division whose divisor is exactly zero."""
+
+
+class _Expression:
+    """Beancount's `number_expr`: numbers, unary `+`/`-`, `+ - * /` and parentheses.
+
+    Evaluated exactly as the grammar evaluates it, with `Decimal` under the
+    active context, so a computed divisor (`100/(2-2)`) is found as surely
+    as a literal one. Every division checks its divisor before dividing.
+    """
+
+    def __init__(self, text: str, start: int) -> None:
+        self.text = text
+        self.at = start
+
+    def _peek(self) -> str:
+        while self.at < len(self.text) and self.text[self.at] in " \t":
+            self.at += 1
+        return self.text[self.at] if self.at < len(self.text) else ""
+
+    def expression(self) -> Decimal:
+        value = self.term()
+        while self._peek() in ("+", "-"):
+            sign = self.text[self.at]
+            self.at += 1
+            right = self.term()
+            value = value + right if sign == "+" else value - right
+        return value
+
+    def term(self) -> Decimal:
+        value = self.unary()
+        while self._peek() in ("*", "/") and not _SLASH_CURRENCY.match(self.text, self.at):
+            operator = self.text[self.at]
+            self.at += 1
+            right = self.unary()
+            if operator == "*":
+                value *= right
+            elif right == 0:
+                raise _ZeroDivisor
+            else:
+                value /= right
+        return value
+
+    def unary(self) -> Decimal:
+        # Unary minus binds tightest in the grammar, so `/-0-5` divides by `-0`.
+        char = self._peek()
+        if char in ("+", "-"):
+            self.at += 1
+            value = self.unary()
+            return -value if char == "-" else value
+        if char == "(":
+            self.at += 1
+            value = self.expression()
+            if self._peek() != ")":
+                raise _NotArithmetic
+            self.at += 1
+            return value
+        number = _NUMBER.match(self.text, self.at)
+        if number is None:
+            raise _NotArithmetic
+        self.at = number.end()
+        return Decimal(number[0].replace(",", ""))
+
+
+def _divides_by_zero(text: str) -> bool:
+    """Whether any division in one line of amount text has a divisor that evaluates to zero.
+
+    The divisor of a slash is the unary operand right after it, because `*`
+    and `/` bind tighter than `+` and `-`; every slash is tried, so a zero
+    divisor nested inside another divisor or a dividend is found too.
+    """
+    for slash in re.finditer("/", text):
+        if _SLASH_CURRENCY.match(text, slash.start()):
+            continue
+        # The parser reads under the active context, and again under a wide
+        # one when that rounded, so a divisor zero under either crashes it.
+        for wide in (False, True):
+            with localcontext() as context:
+                if wide:
+                    context.prec = max(context.prec, len(text)) + 2
+                try:
+                    if _Expression(text, slash.end()).unary() == 0:
+                        return True
+                except _ZeroDivisor:
+                    return True
+                except (_NotArithmetic, RecursionError, ArithmeticError):
+                    break
+    return False
+
+
 def zero_divisor_line(text: str) -> int | None:
     """The first literal zero divisor in ledger text, before the parser can crash.
 
@@ -198,15 +300,16 @@ def _probed_amount(tail: str) -> tuple[str, str] | None:
 
 
 def refuse_zero_divisor(text: str) -> None:
-    """Refuse a literal zero divisor, which crashes Beancount's parser instead of erroring.
+    """Refuse a zero divisor, which crashes Beancount's parser instead of erroring.
 
     The frontend's `check_decimal_notation` makes the same check for flag
     input; a bulk row's amount fragment reaches the engine without passing
-    it. Quoted labels and comments are text, and anything computed
-    (`100/(2-2)`) is still upstream's to answer. Slash currencies such as
-    /0-J need a letter in their token; /0-5 instead divides by zero.
+    it. Quoted labels and comments are text. A computed divisor
+    (`100/(2-2)`) is evaluated and refused like a literal one (w1/274).
+    Slash currencies such as /0-J need a letter in their token; /0-5
+    instead divides by zero.
     """
-    if _ZERO_DIVISOR.search(_QUOTED_OR_COMMENT.sub("", text)):
+    if _divides_by_zero(_QUOTED_OR_COMMENT.sub(" ", text)):
         raise ValueError(
             f"Division by zero in {text.strip()!r}. Beancount evaluates amount arithmetic while parsing, "
             "and a zero divisor crashes it outright, so bea refuses the expression instead of sending it."
