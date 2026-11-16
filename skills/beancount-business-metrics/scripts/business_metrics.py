@@ -85,16 +85,19 @@ def money(value: Decimal) -> str:
 
 def collect(bea: Bea, through: str, months: int) -> dict[str, Any]:
     bea.data("check")
-    first = bea.data("query", "--", "SELECT min(date) AS first")["rows"][0][0]
-    if first is None:
+    bounds = bea.data("query", "--", "SELECT min(date) AS first, max(date) AS last")["rows"]
+    first = bounds[0][0] if bounds else None
+    last = bounds[0][1] if bounds else None
+    if first is None or last is None:
         raise MetricsError("The ledger has no dated entries.", 2)
     first_month = str(first)[:7]
+    last_month = str(last)[:7]
     window = months_back(through, months)
     rows: list[dict[str, Any]] = []
     cash_accounts: list[dict[str, Any]] = []
     residual = False
     for month in window:
-        if month < first_month:
+        if month < first_month or month > last_month:
             continue
         report = bea.data("report", "cash-flow", "--time", month)
         operating = amounts(report["totals"]["operating"])
@@ -112,6 +115,8 @@ def collect(bea: Bea, through: str, months: int) -> dict[str, Any]:
         residual = residual or bool(report["rounding_residual"])
         cash_accounts = report["cash_accounts"]
     if not rows:
+        if through > last_month:
+            raise MetricsError(f"The ledger ends in {last_month}, before {through}; there is nothing to measure.", 2)
         raise MetricsError(f"The ledger starts in {first_month}, after {through}; there is nothing to measure.", 2)
     return {"rows": rows, "first_month": first_month, "cash_accounts": cash_accounts, "rounding_residual": residual}
 
