@@ -134,12 +134,15 @@ def update_transaction(
     by two entries is refused rather than guessed at. Only the entry's own
     lines change, so the diff stays reviewable:
 
+    \b
       bea update transaction --id 9f2c --account Expenses:Groceries --flag '*'
 
     A bare --account retargets the queue's leg (the posting to
     Expenses:Uncategorized); OLD=NEW retargets another leg instead:
 
-      bea update transaction --id 9f2c --account 'Expenses:Dining=Expenses:Coffee'
+    \b
+      bea update transaction --id 9f2c \\
+        --account 'Expenses:Dining=Expenses:Coffee'
 
     Previews a diff by default and writes only with --apply. An ambiguous or
     unknown id exits 2 and changes nothing; a write the ledger would reject
@@ -328,10 +331,12 @@ def update_transactions(
 
     JSON rows use the single-row fields:
 
+    \b
       [{"id": "9f2c", "account": "Expenses:Groceries", "flag": "*"}]
 
     CSV rows map an id to an account and a flag; empty cells leave the field:
 
+    \b
       id,account,flag
       9f2c,Expenses:Groceries,*
       71ab,,*
