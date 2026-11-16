@@ -155,9 +155,14 @@ export default async function selfHostSignUp(
   );
   if (record("the first-ledger form is offered", formFound)) {
     await name.fill(account.ledger);
-    await page.getByRole("button", { name: /^save$/i }).click();
+    // By test id, not by label: the button's text changes with the form's mode
+    // and the visitor's language. A failure here is a failed check, never a
+    // thrown error, because the account made above still has to be deleted:
+    // left behind, it closes sign-up on the stack under test.
     const made = await page
-      .waitForURL(/\/ledger\//, { timeout: timeoutMs })
+      .getByTestId("ledger-form-submit")
+      .click({ timeout: timeoutMs })
+      .then(() => page.waitForURL(/\/ledger\//, { timeout: timeoutMs }))
       .then(
         () => true,
         () => false,

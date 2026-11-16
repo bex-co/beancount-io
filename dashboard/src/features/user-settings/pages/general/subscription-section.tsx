@@ -456,7 +456,9 @@ export function SubscriptionSection({
                 </span>
               </div>
             )}
-            {!noStripeSale && (
+            {/* A self-hosted stack sells nothing: every account already has
+                the top tier, and the plans below are the managed service's. */}
+            {!noStripeSale && !selfHost && (
               <PlanPicker
                 tier={tier}
                 currentInterval={currentInterval}

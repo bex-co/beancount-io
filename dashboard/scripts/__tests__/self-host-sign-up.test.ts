@@ -18,7 +18,8 @@ type Mode =
   | "verifies-email"
   | "limited"
   | "login-after-reload"
-  | "closed";
+  | "closed"
+  | "no-create-button";
 
 function fakePage(mode: Mode, cookie: Record<string, unknown> | null = {}) {
   const state = {
@@ -64,8 +65,9 @@ function fakePage(mode: Mode, cookie: Record<string, unknown> | null = {}) {
           : "Create Your First Ledger",
     }),
     getByPlaceholder: () => field(),
-    getByRole: () => ({
+    getByTestId: () => ({
       click: async () => {
+        if (mode === "no-create-button") throw new Error("timeout");
         state.path = "/ledger/smoke/books";
       },
     }),
@@ -137,6 +139,13 @@ describe("selfHostSignUp", () => {
     const result = await run(page);
     expect(failed(result)).toEqual([]);
     expect(result.skipped).toBeUndefined();
+    expect(state.deleted).toBe(true);
+  });
+
+  it("fails, and still deletes its account, when the ledger form cannot be submitted", async () => {
+    const { page, state } = fakePage("no-create-button");
+    const result = await run(page);
+    expect(failed(result)).toContain("a ledger is created");
     expect(state.deleted).toBe(true);
   });
 

@@ -274,6 +274,31 @@ const translate = (
 const banner = () => within(screen.getByTestId("current-plan-banner"));
 
 describe("Current Plan Banner", () => {
+  it("offers the managed service's plans, but none on a self-hosted stack", () => {
+    setUserLimits("ENTERPRISE");
+    const query = (selfHost: boolean) => ({
+      data: {
+        ...mockNoSubscriptionData,
+        deploymentInfo: { selfHost, signUpOpen: !selfHost },
+      },
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    mockUseQuery.mockReturnValue(query(false));
+    const { unmount } = render(<SubscriptionSection />);
+    expect(screen.getByTestId("plan-card-PREMIUM")).toBeInTheDocument();
+    expect(screen.getByTestId("plan-billing-source")).toBeInTheDocument();
+    unmount();
+
+    mockUseQuery.mockReturnValue(query(true));
+    render(<SubscriptionSection />);
+    expect(screen.getByTestId("current-plan-banner")).toBeInTheDocument();
+    expect(screen.queryByTestId("plan-card-PREMIUM")).toBeNull();
+    expect(screen.queryByTestId("plan-billing-source")).toBeNull();
+  });
+
   it("should show current tier name for free user", () => {
     setUserLimits("FREE");
     mockUseQuery.mockReturnValue({
