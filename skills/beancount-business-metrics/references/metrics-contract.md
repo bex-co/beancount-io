@@ -4,7 +4,7 @@
 
 - **Cash** is what `bea report cash-flow` treats as cash: Assets accounts named like cash (`Cash`, `Checking`, `Savings`, `Bank`) and their children, plus any account whose `open` declares `cash-flow-role: "cash"`. The script prints the accounts and whether each was declared or chosen by name; the user confirms them before the figures are relied on.
 - **Transfers between cash accounts** are not flows: they never reach any section, so moving money to savings is neither burn nor income.
-- **Time basis:** calendar months by `bea --time YYYY-MM`, at cost, in each currency separately. Months before the ledger's first dated entry are not counted.
+- **Time basis:** calendar months by `bea --time YYYY-MM`, at cost, in each currency separately. Months outside the ledger's dated entries — before its first entry or after its last — are not counted.
 
 ## Definitions
 

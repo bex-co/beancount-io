@@ -8,6 +8,7 @@ hand from the fixture's postings (see evals/evals.json notes).
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import shutil
@@ -118,6 +119,84 @@ class BusinessMetrics(unittest.TestCase):
         before = FIXTURE.read_bytes()
         self.run_script("--through", "2026-06")
         self.assertEqual(FIXTURE.read_bytes(), before)
+
+
+def _load_script():
+    spec = importlib.util.spec_from_file_location("business_metrics", SCRIPT)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+METRICS = _load_script()
+
+
+class FakeBea:
+    """The script's `Bea` surface over canned answers, needing no ledger.
+
+    History runs 2026-01 to 2026-06 with the fixture's hand-computed monthly
+    operating flows; any other month reports zero flows with closing carried
+    at June's balance, which is what `bea report cash-flow` returns for a
+    month with no entries.
+    """
+
+    OPERATING = {
+        "2026-01": "1000.00",
+        "2026-02": "-5000.00",
+        "2026-03": "-6000.00",
+        "2026-04": "-4000.00",
+        "2026-05": "-5000.00",
+        "2026-06": "-5000.00",
+    }
+    CLOSING = "118000.00"
+
+    def __init__(self, first: str | None = "2026-01-01", last: str | None = "2026-06-30") -> None:
+        self.bounds = [] if first is None else [[first, last]]
+
+    def data(self, *argv: str) -> dict:
+        if argv[:1] == ("check",):
+            return {}
+        if argv[:1] == ("query",):
+            return {"rows": self.bounds}
+        month = argv[argv.index("--time") + 1]
+        operating = self.OPERATING.get(month, "0")
+        return {
+            "totals": {
+                "operating": {"USD": operating} if operating != "0" else {},
+                "investing": {},
+                "financing": {},
+            },
+            "net_change": {},
+            "closing": {"USD": self.CLOSING},
+            "rounding_residual": False,
+            "cash_accounts": [{"account": "Assets:Bank:Checking", "role_source": "heuristic"}],
+        }
+
+
+class BusinessMetricsWindowing(unittest.TestCase):
+    """Months outside the ledger's dated entries are not counted, either side."""
+
+    def test_months_after_the_last_entry_are_not_counted(self) -> None:
+        data = METRICS.collect(FakeBea(), "2026-07", 7)
+        self.assertEqual([row["month"] for row in data["rows"]],
+                         ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06"])
+        plan = METRICS.runway(data["rows"], "2026-07", 3)
+        self.assertEqual(plan["status"], "insufficient-history")
+        self.assertEqual(plan["currencies"], {})
+        self.assertIn("only 2 of the 3 months", plan["reason"])
+
+    def test_a_period_after_the_last_entry_is_refused(self) -> None:
+        with self.assertRaises(METRICS.MetricsError) as caught:
+            METRICS.collect(FakeBea(), "2026-12", 6)
+        self.assertEqual(caught.exception.code, 2)
+        self.assertIn("ends in 2026-06", str(caught.exception))
+
+    def test_a_ledger_with_no_dated_entries_is_refused(self) -> None:
+        with self.assertRaises(METRICS.MetricsError) as caught:
+            METRICS.collect(FakeBea(first=None), "2026-06", 6)
+        self.assertEqual(caught.exception.code, 2)
+        self.assertIn("no dated entries", str(caught.exception))
 
 
 if __name__ == "__main__":
