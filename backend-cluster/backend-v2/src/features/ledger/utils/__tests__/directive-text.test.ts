@@ -180,6 +180,80 @@ describe("parseDirectiveText", () => {
     );
   });
 
+  // w31/029: Beancount keeps a stack of values per key. A second `pushmeta`
+  // of a key shadows the first until its `popmeta` brings the first back; the
+  // text was refused at its second `popmeta`, and an entry between the two
+  // pops lost the outer value.
+  it("restores a key's outer value when its inner pushmeta is popped", () => {
+    const parsed = parseDirectiveText(
+      [
+        'pushmeta qa-k: "outer"',
+        'pushmeta qa-k: "inner"',
+        '2026-09-10 * "T1A" "inner scope"',
+        "  Expenses:Food:Coffee   1.00 USD",
+        "  Assets:Cash",
+        "popmeta qa-k:",
+        '2026-09-11 * "T1B" "outer scope"',
+        "  Expenses:Food:Coffee   1.00 USD",
+        "  Assets:Cash",
+        "popmeta qa-k:",
+        '2026-09-12 note Assets:Cash "after both"',
+      ].join("\n"),
+    );
+    // Stock Beancount 3.2.3 reads T1A "inner" and T1B "outer".
+    expect(parsed.map((directive) => directive.text)).toEqual([
+      [
+        '2026-09-10 * "T1A" "inner scope"',
+        '  qa-k: "inner"',
+        "  Expenses:Food:Coffee   1.00 USD",
+        "  Assets:Cash",
+      ].join("\n"),
+      [
+        '2026-09-11 * "T1B" "outer scope"',
+        '  qa-k: "outer"',
+        "  Expenses:Food:Coffee   1.00 USD",
+        "  Assets:Cash",
+      ].join("\n"),
+      '2026-09-12 note Assets:Cash "after both"',
+    ]);
+  });
+
+  it("writes the latest push of a key under a nested scope, below the entry's own value", () => {
+    const parsed = parseDirectiveText(
+      [
+        'pushmeta qa-c: "pushed"',
+        '2026-09-26 * "PAYEE-C1" "own key"',
+        '  qa-c: "own"',
+        "  Expenses:Food   1.00 USD",
+        "  Assets:Cash",
+        '2026-09-27 * "PAYEE-C2" "no key of its own"',
+        "  Expenses:Food   2.00 USD",
+        "  Assets:Cash",
+        'pushmeta qa-c: "inner"',
+        '2026-09-28 * "PAYEE-C3" "own key, nested"',
+        '  qa-c: "own-3"',
+        "  Expenses:Food   3.00 USD",
+        "  Assets:Cash",
+        '2026-09-28 * "PAYEE-C4" "nested, no key of its own"',
+        "  Expenses:Food   4.00 USD",
+        "  Assets:Cash",
+        "popmeta qa-c:",
+        "popmeta qa-c:",
+      ].join("\n"),
+    );
+    // Stock Beancount 3.2.3's `entry_meta('qa-c')` for each, in order.
+    expect(
+      parsed.map((directive) =>
+        directive.text.split("\n").filter((line) => line.includes("qa-c:")),
+      ),
+    ).toEqual([
+      ['  qa-c: "own"'],
+      ['  qa-c: "pushed"'],
+      ['  qa-c: "own-3"'],
+      ['  qa-c: "inner"'],
+    ]);
+  });
+
   it.each([
     [
       "pushtag #trip\n2026-01-02 open Assets:Cash",
@@ -196,6 +270,15 @@ describe("parseDirectiveText", () => {
     [
       "2026-01-02 open Assets:Cash\npopmeta trip:",
       "line 2: `popmeta trip:` has no matching pushmeta",
+    ],
+    // w31/029: one pop per push of the key, as stock Beancount counts them.
+    [
+      'pushmeta qa-k: "outer"\npushmeta qa-k: "inner"\n2026-01-02 open Assets:Cash\npopmeta qa-k:\npopmeta qa-k:\npopmeta qa-k:',
+      "line 6: `popmeta qa-k:` has no matching pushmeta",
+    ],
+    [
+      'pushmeta qa-k: "outer"\npushmeta qa-k: "inner"\n2026-01-02 open Assets:Cash\npopmeta qa-k:',
+      "line 1: pushed metadata is never popped",
     ],
     [
       "pushtag trip\n2026-01-02 open Assets:Cash",

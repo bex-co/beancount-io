@@ -131,7 +131,12 @@ const TAG_TOKEN = /#[^\s#^]+/g;
  */
 class TagStack {
   private readonly tags: { tag: string; line: number }[] = [];
-  private readonly meta = new Map<string, { value: string; line: number }>();
+  /**
+   * Each pushed key's values, latest last (w31/029). Beancount keeps a stack
+   * per key: a second `pushmeta` of a key shadows the first until its
+   * `popmeta`, which brings the first back.
+   */
+  private readonly meta = new Map<string, { value: string; line: number }[]>();
 
   /** Apply one statement; false when the line is not a stack statement. */
   apply(line: string, lineNumber: number): boolean {
@@ -155,17 +160,22 @@ class TagStack {
       return true;
     }
     const { keyword, key, value } = statement;
+    const values = this.meta.get(key);
     if (keyword === "pushmeta") {
-      this.meta.set(key, { value, line: lineNumber });
-    } else if (!this.meta.delete(key)) {
+      if (values) values.push({ value, line: lineNumber });
+      else this.meta.set(key, [{ value, line: lineNumber }]);
+    } else if (!values) {
       throw refuse(`\`popmeta ${key}:\` has no matching pushmeta`);
+    } else {
+      values.pop();
+      if (values.length === 0) this.meta.delete(key);
     }
     return true;
   }
 
   /** A push left open at the end of the text is refused, naming its line. */
   assertClosed(): void {
-    const open = this.tags[0] ?? [...this.meta.values()][0];
+    const open = this.tags[0] ?? [...this.meta.values()][0]?.[0];
     if (!open) return;
     throw new BadUserInputError(
       `line ${open.line}: pushed ${this.tags[0] ? `#${this.tags[0].tag}` : "metadata"} is never popped`,
@@ -225,8 +235,8 @@ class TagStack {
     const annotated = [
       [before, ...added].join(" ") + (comment ? ` ${comment}` : ""),
     ];
-    for (const [key, { value }] of this.meta) {
-      if (!keys.has(key)) annotated.push(`  ${key}: ${value}`);
+    for (const [key, values] of this.meta) {
+      if (!keys.has(key)) annotated.push(`  ${key}: ${values.at(-1)!.value}`);
     }
     return [...lines.slice(0, end), ...annotated, ...lines.slice(end + 1)];
   }

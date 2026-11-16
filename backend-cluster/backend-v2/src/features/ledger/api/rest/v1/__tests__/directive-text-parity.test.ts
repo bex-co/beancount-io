@@ -475,6 +475,55 @@ describe("appending Beancount text through the real adapters", () => {
     },
   );
 
+  // w31/029: a key pushed twice keeps a stack of values, as in Beancount.
+  // The text was refused at its second `popmeta` on every surface.
+  it.each(["rest", "gql", "mcp"] as const)(
+    "writes a nested pushmeta's values onto the entries of each scope via %s",
+    async (surface) => {
+      const entry = (date: string, payee: string) => [
+        `${date} * "${payee}" ""`,
+        "  Expenses:Food   1.00 USD",
+        "  Assets:Cash    -1.00 USD",
+      ];
+      const text = [
+        'pushmeta trip: "outer"',
+        'pushmeta trip: "inner"',
+        ...entry("2026-02-10", "T1A"),
+        "popmeta trip:",
+        ...entry("2026-02-11", "T1B"),
+        "popmeta trip:",
+      ].join("\n");
+      const stored = [
+        ['2026-02-10 * "T1A" ""', '  trip: "inner"'],
+        ['2026-02-11 * "T1B" ""', '  trip: "outer"'],
+      ];
+      const f = await fixture();
+      try {
+        const dry = await f.call(surface, { text, dryRun: true });
+        expect(dry.ok).toBe(true);
+        const preview = dry.ok ? (dry.data as Record<string, never>) : {};
+        const [{ diff }] = preview.diff as { path: string; diff: string }[];
+        for (const [header, meta] of stored)
+          expect(diff).toContain(`+${header}\n+${meta}\n`);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+
+        const result = await f.call(surface, { text });
+        expect(result.ok).toBe(true);
+        const data = result.ok ? (result.data as Record<string, never>) : {};
+        const written = f.state.files.get("main.bean")!;
+        expect(written).not.toMatch(/^(push|pop)meta/m);
+        const lines = written.split("\n");
+        expect(
+          (data.wrote as { line: number }[]).map(({ line }) =>
+            lines.slice(line - 1, line + 1),
+          ),
+        ).toEqual(stored);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
   it.each(["rest", "gql", "mcp"] as const)(
     "refuses an unbalanced transaction with UNBALANCED via %s",
     async (surface) => {

@@ -680,10 +680,12 @@ whole ledger rather than record an entry, so change them deliberately with
 `updateLedgerFiles`. `pushtag`/`poptag` and `pushmeta`/`popmeta` around
 entries are applied to them as the engine reads them in place — the tag
 written onto each enclosed transaction, note and document (the directives
-Beancount tags from the stack), the metadata under each enclosed directive's
-header — and the statements themselves are not written, because each entry
-moves to its date position; a push that is never popped, or a pop with no
-push, is refused naming the line. Each directive goes to the file the
+Beancount tags from the stack), each key's latest pushed value under each
+enclosed directive's header, so a key pushed again holds until its own
+`popmeta` and the earlier value comes back after it — and the statements
+themselves are not written, because each entry moves to its date position; a
+push that is never popped, or a pop with no push left to close, is refused
+naming the line. Each directive goes to the file the
 ledger's own `bcio` options assign its type and date, unless `path` names one,
 and is inserted after the last directive dated on or before it rather than at
 the end of the file. When that directive is of another kind and org headings
