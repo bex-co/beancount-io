@@ -82,6 +82,33 @@ def test_an_existing_claude_file_is_never_replaced(tmp_path: Path) -> None:
     assert "CLAUDE.md already exists; left unchanged" in done.stderr
 
 
+def test_a_kept_claude_file_that_does_not_import_agents_is_named(tmp_path: Path) -> None:
+    """w1/263: the next step `bea doctor guidance` gives, without touching the file."""
+    folder = tmp_path / "keep"
+    folder.mkdir()
+    (folder / "CLAUDE.md").write_bytes(b"# Claude notes\n")
+    done = bea(["--no-input", "init", str(folder), "--currency", "USD", "--agent-files"], tmp_path)
+    assert done.returncode == 0, done.stderr
+    assert "CLAUDE.md does not import AGENTS.md" in done.stderr
+    assert "Add a line containing exactly @AGENTS.md." in done.stderr
+    assert (folder / "CLAUDE.md").read_bytes() == b"# Claude notes\n"
+
+
+def test_a_kept_claude_file_that_imports_agents_draws_no_hint(tmp_path: Path) -> None:
+    folder = tmp_path / "keep"
+    folder.mkdir()
+    (folder / "CLAUDE.md").write_text("@AGENTS.md\n")
+    done = bea(["--no-input", "init", str(folder), "--currency", "USD", "--agent-files"], tmp_path)
+    assert done.returncode == 0, done.stderr
+    assert "does not import AGENTS.md" not in done.stderr
+
+
+def test_writing_both_files_draws_no_import_hint(tmp_path: Path) -> None:
+    _, run = _init(tmp_path, "--agent-files")
+    assert run.returncode == 0, run.stderr
+    assert "does not import AGENTS.md" not in run.stderr
+
+
 def test_json_reports_what_happened_to_each_file(tmp_path: Path) -> None:
     target, run = _init(tmp_path, "--agent-files", globals_=("--json",))
     assert run.returncode == 0, run.stderr

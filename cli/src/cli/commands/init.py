@@ -22,6 +22,7 @@ from cli.agent_guidance import (
     baseline_errors,
     beside_ledger_plugins,
     check_command,
+    claude_reads_agents,
     write_agent_files,
     write_existing_agent_files,
 )
@@ -381,21 +382,25 @@ def _init_existing(directory: Path) -> None:
         f"Read {root.name}: {files} file{'s' if files != 1 else ''}, {accounts} open "
         f"account{'s' if accounts != 1 else ''}, {currencies}. No ledger file was changed."
     )
-    _report_agent_files(data["agent_files"])
+    _report_agent_files(data["agent_files"], Path(description["root"]).parent)
     # None when a plugin kept beside the ledger did not load: the report says
     # how to load it, and what the ledger reports then was not measured here.
     count = baseline_errors(description)
     if count:
-        output.note(
-            f"The ledger loads with {count} error{'s' if count != 1 else ''} today; AGENTS.md asks agents to add none."
-        )
+        # Only an AGENTS.md this run wrote records the baseline (w1/263).
+        asks = "; AGENTS.md asks agents to add none" if data["agent_files"]["AGENTS.md"] == "created" else ""
+        output.note(f"The ledger loads with {count} error{'s' if count != 1 else ''} today{asks}.")
     for line in existing_report.render(items, check):
         # Paths and plugin names come from the user's files (w5/887).
         typer.echo(inert_text(line))
 
 
-def _report_agent_files(result: dict[str, str]) -> None:
-    """Say which agent files were written and which already existed."""
+def _report_agent_files(result: dict[str, str], folder: Path) -> None:
+    """Say which agent files were written and which already existed.
+
+    A CLAUDE.md bea did not write gets the `bea doctor guidance` import check,
+    so a user learns when Claude Code will not read AGENTS.md (w1/263).
+    """
     made = [name for name, state in result.items() if state == "created"]
     if made:
         output.success(f"Wrote {' and '.join(made)} beside the ledger.")
@@ -403,6 +408,12 @@ def _report_agent_files(result: dict[str, str]) -> None:
         output.note("AGENTS.md already exists; left unchanged, and CLAUDE.md was not written.")
     elif result["CLAUDE.md"] == "kept":
         output.note("CLAUDE.md already exists; left unchanged.")
+    claude = folder / "CLAUDE.md"
+    if result["CLAUDE.md"] != "created" and claude.is_file() and not claude_reads_agents(claude, folder / "AGENTS.md"):
+        output.note(
+            "CLAUDE.md does not import AGENTS.md, so Claude Code reads different instructions than other agents. "
+            "Add a line containing exactly @AGENTS.md."
+        )
 
 
 def init(
@@ -626,7 +637,7 @@ def init(
         accounts = data["accounts"] if "accounts" in data else list(_ACCOUNTS)
         output.success(f"Created {file} with {len(accounts)} accounts in {currency}.")
         if agent_files:
-            _report_agent_files(data["agent_files"])
+            _report_agent_files(data["agent_files"], file.parent)
         try:
             shown = f"~/{file.relative_to(Path.home())}"
         except ValueError:

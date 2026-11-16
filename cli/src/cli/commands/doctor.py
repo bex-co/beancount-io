@@ -17,6 +17,7 @@ import typer
 from typer.core import TyperGroup
 
 from cli import output
+from cli.agent_guidance import claude_reads_agents
 from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS
 from cli.context import refuse_expanding_ledger_path
 from cli.engine import launch
@@ -878,56 +879,6 @@ for _op in _OPS:
     _register(_op)
 
 
-#: Claude Code's memory import: ``@path`` at the start of the text or after
-#: whitespace, anywhere in a line; a backslash escapes a space in the path.
-_CLAUDE_IMPORT = re.compile(r"(?:^|(?<=\s))@((?:[^\s\\]|\\ )+)")
-#: A Markdown fence opener or closer; imports inside a fence are not read.
-_FENCE = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
-#: An inline code span; imports inside one are not read.
-_CODE_SPAN = re.compile(r"(`+).+?\1")
-
-
-def _same_file(first: Path, second: Path) -> bool:
-    try:
-        return os.path.samefile(first, second)
-    except OSError:
-        # AGENTS.md may be missing (that draws its own warning): compare paths.
-        return first.resolve() == second.resolve()
-
-
-def _claude_points_at_agents(claude: Path, agents: Path) -> bool:
-    """Whether Claude Code reads AGENTS.md through CLAUDE.md (unreadable means no).
-
-    True when CLAUDE.md is AGENTS.md (a symlink or hard link), or when it
-    imports it through any ``@`` path outside code that resolves, against
-    CLAUDE.md's directory, to AGENTS.md: ``@AGENTS.md``, ``@./AGENTS.md``,
-    or an import inside a sentence.
-    """
-    if _same_file(claude, agents):
-        return True
-    try:
-        text = claude.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        return False
-    fence: str | None = None
-    for line in text.splitlines():
-        opener = _FENCE.match(line)
-        if opener:
-            marker = opener.group(1)
-            if fence is None:
-                fence = marker
-            elif marker[0] == fence[0] and len(marker) >= len(fence) and not line.strip(marker[0] + " \t"):
-                fence = None
-            continue
-        if fence is not None:
-            continue
-        for match in _CLAUDE_IMPORT.finditer(_CODE_SPAN.sub(" ", line)):
-            target = Path(match.group(1).replace("\\ ", " ")).expanduser()
-            if _same_file(claude.parent / target, agents):
-                return True
-    return False
-
-
 @doctor_app.command("guidance")
 def doctor_guidance(
     ledger: Annotated[str, typer.Argument(help="Ledger file; its directory is checked for agent guidance files.")],
@@ -946,7 +897,7 @@ def doctor_guidance(
             f"warning: {agents} is missing, so a coding agent cannot read this ledger's conventions. "
             f"Write one, describing this ledger as it is: bea init --existing {shlex.quote(ledger)}"
         )
-    if claude.is_file() and not _claude_points_at_agents(claude, agents):
+    if claude.is_file() and not claude_reads_agents(claude, agents):
         findings.append(
             f"warning: {claude} does not import AGENTS.md, so Claude Code reads different instructions "
             "than other agents. Add a line containing exactly @AGENTS.md."

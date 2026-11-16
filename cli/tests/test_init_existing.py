@@ -168,6 +168,57 @@ def test_a_ledger_with_errors_gets_its_files_and_a_count(tmp_path: Path) -> None
     assert re.search(r"On \d{4}-\d\d-\d\d it reported 1 error; a change must not add any\.", agents)
 
 
+IMPORT_HINT = (
+    "CLAUDE.md does not import AGENTS.md, so Claude Code reads different instructions than other agents. "
+    "Add a line containing exactly @AGENTS.md."
+)
+_WITH_ERROR = ROOT + '\n2025-02-01 * "Unknown"\n  Expenses:Nope  1 EUR\n  Assets:Bank:Checking\n'
+
+
+def test_a_kept_agents_file_is_not_said_to_record_the_baseline(tmp_path: Path) -> None:
+    """w1/263 case A: the user's own AGENTS.md asks nothing about errors."""
+    books = _books(tmp_path, root=_WITH_ERROR)
+    (books / "AGENTS.md").write_bytes(b"# Team notes\n")
+    (books / "CLAUDE.md").write_bytes(b"# Claude notes\n")
+    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    assert "The ledger loads with 1 error today." in run.stderr
+    assert "asks agents to add none" not in run.stderr
+    assert IMPORT_HINT in run.stderr
+    assert (books / "AGENTS.md").read_bytes() == b"# Team notes\n"
+    assert (books / "CLAUDE.md").read_bytes() == b"# Claude notes\n"
+
+
+def test_a_kept_claude_file_that_does_not_import_agents_is_named(tmp_path: Path) -> None:
+    """w1/263 case B: Claude Code would never read the AGENTS.md bea just wrote."""
+    books = _books(tmp_path, root=_WITH_ERROR)
+    (books / "CLAUDE.md").write_bytes(b"# Claude notes\n")
+    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    assert "CLAUDE.md already exists; left unchanged." in run.stderr
+    assert IMPORT_HINT in run.stderr
+    assert "loads with 1 error today; AGENTS.md asks agents to add none." in run.stderr
+    assert (books / "CLAUDE.md").read_bytes() == b"# Claude notes\n"
+
+
+def test_a_kept_claude_file_that_imports_agents_draws_no_hint(tmp_path: Path) -> None:
+    books = _books(tmp_path)
+    (books / "CLAUDE.md").write_text("Read @./AGENTS.md first.\n")
+    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    assert "CLAUDE.md already exists; left unchanged." in run.stderr
+    assert "does not import AGENTS.md" not in run.stderr
+
+
+def test_writing_both_files_keeps_the_baseline_text(tmp_path: Path) -> None:
+    books = _books(tmp_path, root=_WITH_ERROR)
+    run = bea(["--no-input", "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    assert "The ledger loads with 1 error today; AGENTS.md asks agents to add none." in run.stderr
+    assert "does not import AGENTS.md" not in run.stderr
+    assert "Wrote AGENTS.md and CLAUDE.md beside the ledger." in run.stdout
+
+
 def _bea_with_pythonpath(tmp_path: Path, cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
     """`bea` run from `cwd` with `PYTHONPATH=.` added, as AGENTS.md tells agents to."""
     env = run_env(tmp_path)
