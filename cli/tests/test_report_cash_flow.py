@@ -51,18 +51,14 @@ option "operating_currency" "USD"
 FX = """\
 option "operating_currency" "USD"
 2026-01-01 open Assets:Bank:Checking USD
-2026-01-01 open Liabilities:Card USD
 2026-01-01 open Expenses:Food USD,EUR
 2026-01-01 open Income:Salary USD
 2026-02-01 * "Salary"
   Assets:Bank:Checking  3000.00 USD
   Income:Salary        -3000.00 USD
 2026-02-10 * "Paris hotel"
-  Liabilities:Card  -330.00 USD
-  Expenses:Food       300 EUR @ 1.10 USD
-2026-02-12 * "Pay card"
   Assets:Bank:Checking  -330.00 USD
-  Liabilities:Card        330.00 USD
+  Expenses:Food           300 EUR @ 1.10 USD
 """
 
 ROLES = """\
@@ -93,23 +89,23 @@ def test_sections_net_equals_cash_change(tmp_path: Path) -> None:
     data = _cash_flow(write_ledger(tmp_path, BASE))
     assert data["conversion"] == "at_cost"
     assert data["row_signs"] == "positive_for_inflow"
+    # The groceries went on the card and moved no cash (w1/268); paying the
+    # card from Checking is the cash event, a financing outflow.
     operating = {row["account"]: row["amounts"] for row in data["sections"]["operating"]}
-    assert operating == {
-        "Expenses:Food": {"USD": "-78.20"},
-        "Income:Salary": {"USD": "3000.00"},
-    }
+    assert operating == {"Income:Salary": {"USD": "3000.00"}}
     investing = {row["account"]: row["amounts"] for row in data["sections"]["investing"]}
     assert investing == {
         "Assets:Bank:CD": {"USD": "-200.00"},
         "Assets:Brokerage": {"USD": "-1000"},
     }
     assert data["sections"]["financing"] == [
-        {"account": "Equity:Opening", "amounts": {"USD": "4000.00"}, "role_source": "heuristic"}
+        {"account": "Equity:Opening", "amounts": {"USD": "4000.00"}, "role_source": "heuristic"},
+        {"account": "Liabilities:Card", "amounts": {"USD": "-78.20"}, "role_source": "heuristic"},
     ]
     assert data["totals"] == {
-        "operating": {"USD": "2921.80"},
+        "operating": {"USD": "3000.00"},
         "investing": {"USD": "-1200.00"},
-        "financing": {"USD": "4000.00"},
+        "financing": {"USD": "3921.80"},
     }
     assert data["net_change"] == {"USD": "5721.80"}
     assert data["opening"] == {"USD": "0.00"}
@@ -125,8 +121,9 @@ def test_transfers_between_cash_accounts_never_appear(tmp_path: Path) -> None:
     rows = [row["account"] for section in data["sections"].values() for row in section]
     assert "Assets:Bank:Checking" not in rows
     assert "Assets:Bank:Savings" not in rows
-    # The card round-trips to zero, so it is not a row either.
-    assert "Liabilities:Card" not in rows
+    # The card purchase moves no cash; only its payment from Checking is a
+    # row, as financing (w1/268).
+    assert "Expenses:Food" not in rows
 
 
 def test_a_priced_exchange_is_refused_rather_than_misreconciled(tmp_path: Path) -> None:
@@ -161,8 +158,11 @@ def test_bounds_after_activity_keep_position_without_flows(tmp_path: Path) -> No
 
 
 def test_window_bounds_flows_and_closing(tmp_path: Path) -> None:
+    # The window holds only the card groceries, which move no cash, and a
+    # transfer between cash accounts (w1/268).
     data = _cash_flow(write_ledger(tmp_path, BASE), "--from-date", "2026-01-10", "--to-date", "2026-01-15")
-    assert data["net_change"] == {"USD": "0.00"}
+    assert data["sections"] == {"operating": [], "investing": [], "financing": []}
+    assert data["net_change"] == {}
     assert data["closing"] == {"USD": "7000.00"}
     assert data["opening"] == {"USD": "7000.00"}
 
@@ -227,16 +227,15 @@ option "operating_currency" "USD"
 """
 
 
-def test_no_cash_accounts_still_reports_sections(tmp_path: Path) -> None:
+def test_no_cash_accounts_reports_no_activity(tmp_path: Path) -> None:
+    # Without a cash account no transaction moves cash, so none is activity;
+    # the dashboard's empty cash set matches no transaction either (w1/268).
     data = _cash_flow(write_ledger(tmp_path, NOCASH))
     assert data["cash_accounts"] == []
+    assert data["sections"] == {"operating": [], "investing": [], "financing": []}
+    assert data["net_change"] == {}
+    assert data["opening"] == {}
     assert data["closing"] == {}
-    operating = {row["account"]: row["amounts"] for row in data["sections"]["operating"]}
-    assert operating == {"Income:Gains": {"USD": "1000"}}
-    investing = {row["account"]: row["amounts"] for row in data["sections"]["investing"]}
-    assert investing == {"Assets:Brokerage": {"USD": "-1000"}}
-    assert data["net_change"] == {"USD": "0"}
-    assert data["opening"] == {"USD": "0"}
 
 
 def test_foreign_cash_stays_in_its_own_units(tmp_path: Path) -> None:
@@ -308,3 +307,57 @@ def test_conversion_is_refused(tmp_path: Path) -> None:
     refused = json.loads(proc.stdout)
     assert refused["ok"] is False
     assert "takes no --conversion" in refused["error"]["message"]
+
+
+CARD_ONLY = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Employer:Vacation VACHR
+2026-01-01 open Liabilities:Card USD
+2026-01-01 open Expenses:Food USD
+2026-01-01 open Expenses:Vacation VACHR
+2026-01-01 open Equity:Opening
+2026-01-02 * "Opening"
+  Assets:Bank:Checking 100.00 USD
+  Equity:Opening
+2026-01-10 * "Grocer" "on card"
+  Expenses:Food 40.00 USD
+  Liabilities:Card
+2026-01-12 * "Day off"
+  Expenses:Vacation 8 VACHR
+  Assets:Employer:Vacation -8 VACHR
+"""
+
+
+def test_transactions_without_a_cash_leg_are_not_activity(tmp_path: Path) -> None:
+    # A card purchase and hours taken from an accrual move no cash: no
+    # operating outflow, no matching financing or investing inflow (w1/268).
+    data = _cash_flow(write_ledger(tmp_path, CARD_ONLY))
+    assert data["sections"] == {
+        "operating": [],
+        "investing": [],
+        "financing": [{"account": "Equity:Opening", "amounts": {"USD": "100.00"}, "role_source": "heuristic"}],
+    }
+    assert data["net_change"] == {"USD": "100.00"}
+    assert data["closing"] == {"USD": "100.00"}
+    assert data["rounding_residual"] == {}
+
+
+def test_paying_the_card_is_the_cash_event(tmp_path: Path) -> None:
+    ledger = write_ledger(
+        tmp_path,
+        CARD_ONLY + '2026-01-20 * "Pay card"\n  Liabilities:Card 40.00 USD\n  Assets:Bank:Checking\n',
+    )
+    data = _cash_flow(ledger)
+    assert data["sections"]["operating"] == []
+    financing = {row["account"]: row["amounts"] for row in data["sections"]["financing"]}
+    assert financing == {"Equity:Opening": {"USD": "100.00"}, "Liabilities:Card": {"USD": "-40.00"}}
+    assert data["net_change"] == {"USD": "60.00"}
+
+
+def test_account_filter_over_a_card_purchase_is_not_split(tmp_path: Path) -> None:
+    # The card purchase has no cash leg, so keeping Expenses:Food without
+    # Liabilities:Card drops no cash movement and is not refused (w1/268).
+    data = _cash_flow(write_ledger(tmp_path, CARD_ONLY), "--account", "Expenses")
+    assert data["sections"] == {"operating": [], "investing": [], "financing": []}
+    assert data["net_change"] == {}

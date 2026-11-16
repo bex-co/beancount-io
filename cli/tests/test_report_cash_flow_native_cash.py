@@ -144,8 +144,11 @@ def test_large_unchanged_cash_does_not_erase_accepted_cost_rounding(tmp_path: Pa
         "2023-01-01 open Equity:Opening USD\n"
         '2023-12-31 * "Capital"\n'
         f"  Assets:Cash {capital} USD\n  Equity:Opening -{capital} USD\n"
-        '2024-01-05 * "Noncash cost movement"\n'
-        "  Assets:Broker 3 HOOL {{1000.00 USD}}\n  Assets:Other -1000.00 USD\n",
+        '2024-01-05 * "Cost movement beside cash"\n'
+        "  Assets:Broker 3 HOOL {{1000.00 USD}}\n  Assets:Other -1000.00 USD\n"
+        # A zero cash leg makes it cash activity without moving the cash; a
+        # transaction with no cash leg at all is not activity (w1/268).
+        "  Assets:Cash 0 USD\n",
     )
     original = ledger.read_bytes()
 

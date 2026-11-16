@@ -118,8 +118,9 @@ def test_cash_flow_without_cash_accounts(tmp_path: Path) -> None:
     ledger = write_ledger(tmp_path, NOCASH)
     proc = _bea(tmp_path, "--file", str(ledger), "report", "cash-flow")
     assert proc.returncode == 0, proc.stderr
-    assert "Operating" in proc.stdout
-    assert "Investing" in proc.stdout
+    # No transaction without a cash leg is cash activity (w1/268).
+    assert "No cash flows in this period." in proc.stdout
+    assert "Operating" not in proc.stdout
     assert "Net change in cash:" in proc.stdout
     assert "Cash accounts:" not in proc.stdout
 

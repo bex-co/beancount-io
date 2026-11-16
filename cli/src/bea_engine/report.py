@@ -1365,6 +1365,7 @@ def _cash_flow(
     accepted booking and cash accumulation rounding. `--account` narrows
     rows and the CCE set together, and is refused when it keeps only some
     legs of a window transaction, omitting part of its cash movement.
+    A transaction with no cash leg moves no cash and is not activity.
     Accounts outside the five roots are
     excluded from rows and surface via the shared unrooted-accounts note.
     Membership — not the direct role — gates rows, so an inherited-cash
@@ -1413,6 +1414,16 @@ def _cash_flow(
         if first is not None and entry.date < first:
             continue
         if cutoff is not None and entry.date >= cutoff:
+            continue
+        # Only a transaction with a cash leg is cash activity: a purchase
+        # charged wholly to a card balances against the card and moves no
+        # cash, so it is neither a row nor a split under `--account`. The
+        # membership is the unfiltered one, as the dashboard's
+        # cashAccountMembership (w4/m56, w1/268).
+        if not any(
+            posting.units is not None and posting.units.number is not None and posting.account in members
+            for posting in entry.postings
+        ):
             continue
         if matches is not None:
             # Every leg the statement reads — a cash member or a rooted

@@ -382,14 +382,16 @@ def test_declared_cash_membership_holds_under_any_root(
     members = [cash, overdraft] if member else [cash]
     whole = _cash_flow(tmp_path, ledger)
     window = _cash_flow(tmp_path, ledger, *WINDOW)
-    for data in (whole, window):
+    for data, charged in ((whole, False), (window, True)):
         assert data["cash_accounts"] == [
             {"account": cash, "balance": {"USD": "1100"}, "role_source": "heuristic"},
             *([{"account": overdraft, "balance": {"USD": "-250"}, "role_source": "declared"}] if member else []),
         ]
         rows = {row["account"]: row for section in data["sections"].values() for row in section}
-        # A declared cash member is never a row; anything else explains its change.
-        assert (overdraft in rows) is not member
+        # A declared cash member is never a row; anything else explains the
+        # cash its transactions moved. The window's only overdraft activity is
+        # a charge with no cash leg, which moves no cash (w1/268).
+        assert (overdraft in rows) is (not member and not charged)
         assert data["invalid_role_values"] == ([{"account": overdraft, "value": "Cash"}] if invalid else [])
     _assert_actual(tmp_path, ledger, whole, members, None, "2024-01-04")
     _assert_actual(tmp_path, ledger, window, members, "2024-01-02", "2024-02-01")
