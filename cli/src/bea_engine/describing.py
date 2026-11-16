@@ -89,8 +89,14 @@ def _error(error: Any, formatted: str, root: Path) -> dict[str, Any]:
 
 
 def _relative(path: Path, folder: Path) -> str:
+    """`path` as the root's folder would name it: `../shared/prices.beancount` for a file beside it (w1/270).
+
+    `AGENTS.md` travels with the folder, so an absolute path would name nothing
+    once it is cloned or moved. Only a file on another Windows drive, which no
+    relative path reaches, keeps its absolute path.
+    """
     try:
-        return path.relative_to(folder).as_posix()
+        return Path(os.path.relpath(path, folder)).as_posix()
     except ValueError:
         return str(path)
 

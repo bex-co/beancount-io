@@ -130,6 +130,12 @@ def baseline_errors(description: dict[str, Any]) -> int | None:
     return None if unmeasured else error_count(description)
 
 
+def _example_destination(files: list[str]) -> str:
+    """The `--into` example: the first included file inside the ledger's folder, else the first one (w1/270)."""
+    inside = (name for name in files if not name.startswith("../") and not Path(name).is_absolute())
+    return next(inside, files[0])
+
+
 def existing_agents_text(description: dict[str, Any], *, today: str) -> str:
     """`EXISTING_TEMPLATE` filled in from `bea-engine describe`'s answer."""
     root = Path(description["root"]).name
@@ -143,7 +149,7 @@ def existing_agents_text(description: dict[str, Any], *, today: str) -> str:
         listed = f"; it includes {len(files)} other file{'s' if len(files) != 1 else ''}: {names}{more}"
         destination = (
             f"New entries go into `{root}` unless a write names an included file with `--into` "
-            f"(for example `--into {shell_path(files[0])}`)."
+            f"(for example `--into {shell_path(_example_destination(files))}`)."
         )
     currencies = ", ".join(description["operating_currencies"]) or 'none set (no `option "operating_currency"` line)'
     beside = beside_ledger_plugins(description)

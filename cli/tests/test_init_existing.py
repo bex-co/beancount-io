@@ -278,6 +278,29 @@ def test_json_names_the_ledger_and_what_happened_to_each_file(tmp_path: Path) ->
     assert data["agent_files"] == {"AGENTS.md": "created", "CLAUDE.md": "created"}
 
 
+@pytest.mark.parametrize("as_json", [False, True])
+def test_an_include_outside_the_folder_is_named_relative_to_it(tmp_path: Path, as_json: bool) -> None:
+    """w1/270: `AGENTS.md` travels with the folder, so no file it lists may be the machine's absolute path."""
+    books = tmp_path / "e" / "books"
+    (books / "years").mkdir(parents=True)
+    (tmp_path / "e" / "a-shared").mkdir()
+    (books / "ledger.beancount").write_text(
+        'option "operating_currency" "EUR"\nplugin "beancount.plugins.auto_accounts"\n'
+        'include "years/*.beancount"\ninclude "../a-shared/prices.beancount"\n'
+    )
+    (books / "years" / "2024.beancount").write_text('2024-01-01 * "x"\n  Assets:Bank 1 EUR\n  Income:Job\n')
+    (tmp_path / "e" / "a-shared" / "prices.beancount").write_text("2024-01-01 price USD 0.9 EUR\n")
+    run = bea(["--no-input", *(["--json"] if as_json else []), "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    if as_json:
+        assert json.loads(run.stdout)["data"]["files"] == ["../a-shared/prices.beancount", "years/2024.beancount"]
+    agents = (books / "AGENTS.md").read_text()
+    assert str(tmp_path) not in agents
+    assert "it includes 2 other files: `../a-shared/prices.beancount`, `years/2024.beancount`." in agents
+    # The example destination is the file inside the folder, not the one beside it.
+    assert "(for example `--into years/2024.beancount`)" in agents
+
+
 def test_init_on_an_existing_ledger_points_at_existing(tmp_path: Path) -> None:
     books = _books(tmp_path)
     (books / "main.bean").write_text("")
