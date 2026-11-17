@@ -1,4 +1,3 @@
-import { isExcludedAccount } from "@/features/reports/overview/lib/account-categorizer";
 import {
   invertDecimal,
   sumBalanceRecords,
@@ -127,17 +126,6 @@ export interface CashFlowStatement {
    * inferred-cash-set disclosure (per-row sources live on `rows`).
    */
   hasHeuristicCashAccounts: boolean;
-}
-
-/**
- * Cash & cash equivalents heuristic. The patterns live in
- * `../config` (`CASH_EQUIVALENT_PATTERNS`) and are shared with the
- * Sankey's exclusion list (account-categorizer.ts) so both surfaces agree
- * on what counts as cash. This is a documented heuristic, not account
- * metadata — exports must disclose it.
- */
-export function isCashEquivalentAccount(accountName: string): boolean {
-  return isExcludedAccount(accountName);
 }
 
 /**

@@ -24,8 +24,6 @@ newest first.
 
 ### Deferred
 
-- 2026-11-17 dashboard `isCashEquivalentAccount` (cash-flow) — only tests call it, no production caller found; seen by an rt-abstraction-improver run, which does not delete dead code.
-
 ### Skipped
 
 ## rt-dup-unifier

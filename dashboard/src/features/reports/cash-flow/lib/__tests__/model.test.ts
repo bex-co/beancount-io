@@ -3,7 +3,6 @@ import {
   buildCashFlowStatement,
   classifyCashFlowActivity,
   collectCashAccounts,
-  isCashEquivalentAccount,
   subtractBalanceRecords,
   toAccountMetaMap,
   type IntervalAccountChanges,
@@ -40,20 +39,6 @@ describe("toAccountMetaMap", () => {
     expect(map.get("Assets:Bank:Checking")).toBeNull();
     expect(map.get("Expenses:Rent")).toBeNull();
     expect(map.has("Income:Salary")).toBe(false);
-  });
-});
-
-describe("isCashEquivalentAccount", () => {
-  it("matches checking/savings/cash/bank asset accounts", () => {
-    expect(isCashEquivalentAccount("Assets:US:Chase:Checking")).toBe(true);
-    expect(isCashEquivalentAccount("Assets:Bank:Ally:Savings")).toBe(true);
-    expect(isCashEquivalentAccount("Assets:Cash")).toBe(true);
-  });
-
-  it("rejects non-cash and non-asset accounts", () => {
-    expect(isCashEquivalentAccount("Assets:Invest:Brokerage")).toBe(false);
-    expect(isCashEquivalentAccount("Liabilities:CreditCard")).toBe(false);
-    expect(isCashEquivalentAccount("Expenses:Cash")).toBe(false);
   });
 });
 
