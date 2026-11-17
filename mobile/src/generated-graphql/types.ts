@@ -7,11 +7,8 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format. */
   DateTimeISO: { input: unknown; output: unknown; }
-  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSON: { input: unknown; output: unknown; }
-  /** The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSONObject: { input: Record<string, number | string>; output: Record<string, number | string>; }
 };
 
@@ -74,6 +71,30 @@ export type AccountLastEntry = {
   account: Scalars['String']['output'];
   balance?: Maybe<Scalars['JSONObject']['output']>;
   date?: Maybe<Scalars['String']['output']>;
+};
+
+export type AccountRenameBankMapping = {
+  __typename?: 'AccountRenameBankMapping';
+  from: Scalars['String']['output'];
+  /** The caller's own bank account; null for another member's. */
+  plaidAccount?: Maybe<Scalars['String']['output']>;
+  to: Scalars['String']['output'];
+  /** False on a preview, and when the update after the commit failed. */
+  updated: Scalars['Boolean']['output'];
+};
+
+export type AccountRenameFile = {
+  __typename?: 'AccountRenameFile';
+  changes: Array<AccountRenameLine>;
+  path: Scalars['String']['output'];
+};
+
+export type AccountRenameLine = {
+  __typename?: 'AccountRenameLine';
+  after: Scalars['String']['output'];
+  before: Scalars['String']['output'];
+  /** 1-based line of the file. */
+  line: Scalars['Int']['output'];
 };
 
 export type AccountReport = {
@@ -557,6 +578,14 @@ export type DenyCliAuthSessionResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type DeploymentInfoResponse = {
+  __typename?: 'DeploymentInfoResponse';
+  /** True on a deployment its operator runs for their own users (SELF_HOST). The sign-in and sign-up pages read it to drop what only makes sense on the hosted service. */
+  selfHost: Scalars['Boolean']['output'];
+  /** Whether signUp would be accepted. False only on a self-hosted deployment that already has an account; the sign-up page is not offered then. */
+  signUpOpen: Scalars['Boolean']['output'];
+};
+
 export type DirectiveTextDiff = {
   __typename?: 'DirectiveTextDiff';
   diff: Scalars['String']['output'];
@@ -737,6 +766,8 @@ export type GetCliAuthSessionResponse = {
 export type HoldingsData = {
   __typename?: 'HoldingsData';
   asOf: Scalars['String']['output'];
+  /** False when a group's cost basis is unknown; totals.cost_basis then leaves it out */
+  costBasisComplete: Scalars['Boolean']['output'];
   groupBy: Scalars['String']['output'];
   groups: Array<HoldingsGroup>;
   missingPriceSummary: Array<Scalars['String']['output']>;
@@ -749,9 +780,9 @@ export type HoldingsGroup = {
   __typename?: 'HoldingsGroup';
   account?: Maybe<Scalars['String']['output']>;
   accounts?: Maybe<Array<Scalars['String']['output']>>;
-  averageCost: HoldingsMoney;
+  averageCost?: Maybe<HoldingsMoney>;
   commodity: Scalars['String']['output'];
-  costBasis: HoldingsMoney;
+  costBasis?: Maybe<HoldingsMoney>;
   marketValue: HoldingsMoney;
   price?: Maybe<HoldingsMoney>;
   units: HoldingsMoney;
@@ -880,6 +911,10 @@ export type JournalQueryInput = {
   documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   /** Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences. */
   filter?: InputMaybe<Scalars['String']['input']>;
+  /** Attach each entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context returns, ready for the entry-source update and deletes. null where an entry has no editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries per page with it. */
+  includeSource?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of includeSource, as REST and MCP spell it. */
+  include_source?: InputMaybe<Scalars['Boolean']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
   /** Fava time expression, e.g. 2026-08. Pre-window `open` directives are preserved as context and counted in total. */
@@ -934,7 +969,8 @@ export type Ledger = {
   preview?: Maybe<LedgerUpdatePreview>;
   private: Scalars['Boolean']['output'];
   size: Scalars['Float']['output'];
-  sshUrl: Scalars['String']['output'];
+  /** SSH clone address. Null when this deployment serves no Git over SSH. */
+  sshUrl?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['String']['output'];
 };
 
@@ -1331,7 +1367,7 @@ export type ManagedPriceInclude = {
   target: Scalars['String']['output'];
 };
 
-/** Status of one managed price include (ADR 015). `freshness` is `recent` within ten minutes of the latest observation, `stale` beyond it, and `unavailable` when no revision has validated. */
+/** Status of one managed price include (ADR 015). `freshness` is `recent` while the feed's newest price is at most seven days old, `stale` beyond it, and `unavailable` when no revision has validated. */
 export type ManagedPriceSource = {
   __typename?: 'ManagedPriceSource';
   alias: Scalars['String']['output'];
@@ -1341,6 +1377,8 @@ export type ManagedPriceSource = {
   fetchedAt?: Maybe<Scalars['String']['output']>;
   freshness: Scalars['String']['output'];
   includedFrom: Array<ManagedPriceInclude>;
+  /** ISO date of the feed's newest price; `freshness` is judged by it. */
+  latestPriceDate?: Maybe<Scalars['String']['output']>;
   nextRefreshAt?: Maybe<Scalars['String']['output']>;
   observedAt?: Maybe<Scalars['String']['output']>;
   quote?: Maybe<Scalars['String']['output']>;
@@ -1361,6 +1399,42 @@ export type MissingPriceLeg = {
   __typename?: 'MissingPriceLeg';
   from: Scalars['String']['output'];
   to: Scalars['String']['output'];
+};
+
+export type MoveEntrySourcesInput = {
+  /** Move the entries even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing */
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of allowInvalid. */
+  allow_invalid?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Run every check and return the preview without committing */
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Alias of dryRun, as MCP spells it. */
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
+  entries: Array<DeleteMultiSourceSliceItemInput>;
+  /** A file the ledger loads that gains include "<toPath>" (relative to it) when toPath is not loaded yet. Without it, an unloaded toPath is refused. */
+  includeFrom?: InputMaybe<Scalars['String']['input']>;
+  /** Repository path of the .bean or .beancount file the entries move into; created when absent. */
+  toPath: Scalars['String']['input'];
+};
+
+export type MoveEntrySourcesResponse = {
+  __typename?: 'MoveEntrySourcesResponse';
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit?: Maybe<Scalars['String']['output']>;
+  dryRun: Scalars['Boolean']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
+  /** Whether includeFrom gained toPath's include line (on a preview, would gain it) */
+  includeAdded: Scalars['Boolean']['output'];
+  message: Scalars['String']['output'];
+  /** The moved entries' hashes, each once, in ledger order */
+  movedHashes: Array<Scalars['String']['output']>;
+  newErrors: Array<SliceWriteError>;
+  /** Each moved entry's text as toPath receives it, with the file it leaves */
+  preview: Array<SlicePreviewFile>;
+  toPath: Scalars['String']['output'];
+  /** True only when the write adds no bean-check error; gate a preview on this. */
+  valid: Scalars['Boolean']['output'];
 };
 
 export type Mutation = {
@@ -1429,6 +1503,8 @@ export type Mutation = {
   leaveLedger: DeleteCollaboratorResponse;
   /** Logout user, revoke JWT token and clear httpOnly cookie */
   logout: LogoutResponse;
+  /** Move entries into another ledger file in one commit: each entry's source text leaves its file and is appended to toPath in ledger order. An entry inside its file's pushtag or pushmeta scope keeps that scope's tags and metadata, written onto the entry, so its hash stays but its text and sha256sum change; any other entry's text moves unchanged. listLedgerEntries with include_source returns each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds a bean-check error (VALIDATION_FAILED, unless allowInvalid). dryRun previews without committing: each moved entry's text and file. revertLedgerCommit undoes the commit. */
+  moveLedgerEntrySources: MoveEntrySourcesResponse;
   /** Parse an uploaded file (multimodal support for PDF/images/any format) into structured transactions. File must be uploaded to S3 first. */
   parseFile: FileParseResult;
   /** Parse a receipt image or PDF and return a single summarized transaction with account recommendations. File must be uploaded to S3 first. */
@@ -1442,6 +1518,8 @@ export type Mutation = {
   /** Refresh authentication token - issues a new token and revokes the current one */
   refreshToken: TokenAuthResponse;
   rejectPullRequest: PullRequestResult;
+  /** Rename an account and every account under it across the ledger's loaded files in one commit: account tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the commit unless allowInvalid. dryRun previews without committing: the changed lines and bank mappings. revertLedgerCommit undoes the commit. */
+  renameLedgerAccount: RenameLedgerAccountResponse;
   /** Rename a file in a specific ledger */
   renameLedgerFile: RenameLedgerFileResponse;
   /** Request an email ownership code to continue password sign-in */
@@ -1724,6 +1802,12 @@ export type MutationLeaveLedgerArgs = {
 };
 
 
+export type MutationMoveLedgerEntrySourcesArgs = {
+  input: MoveEntrySourcesInput;
+  ledgerId: Scalars['String']['input'];
+};
+
+
 export type MutationParseFileArgs = {
   fileFormat: Scalars['String']['input'];
   objectKey?: InputMaybe<Scalars['String']['input']>;
@@ -1763,6 +1847,17 @@ export type MutationRejectPullRequestArgs = {
   ledgerName: Scalars['String']['input'];
   ledgerOwner: Scalars['String']['input'];
   prNumber: Scalars['Int']['input'];
+};
+
+
+export type MutationRenameLedgerAccountArgs = {
+  allowInvalid?: InputMaybe<Scalars['Boolean']['input']>;
+  allow_invalid?: InputMaybe<Scalars['Boolean']['input']>;
+  dryRun?: InputMaybe<Scalars['Boolean']['input']>;
+  dry_run?: InputMaybe<Scalars['Boolean']['input']>;
+  from: Scalars['String']['input'];
+  ledgerId: Scalars['String']['input'];
+  to: Scalars['String']['input'];
 };
 
 
@@ -2378,6 +2473,8 @@ export type Query = {
   allTierQuotas: Array<TierQuotaItem>;
   /** Your API keys */
   apiKeys: Array<ApiKeyType>;
+  /** What the browser sign-in and sign-up pages need to know about this deployment before anyone is signed in. Part of the sign-up ceremony, so it has no REST or MCP twin. */
+  deploymentInfo: DeploymentInfoResponse;
   featureFlags: Scalars['JSONObject']['output'];
   /** Generate a presigned download URL for a temporary asset uploaded by the current user. Foreign, malformed, and permanent keys are not exposed. */
   generateTempAssetDownloadUrl: TempAssetDownloadUrl;
@@ -2439,7 +2536,7 @@ export type Query = {
   getLedgerJournal: JournalResponse;
   /** Get the links of a specific ledger */
   getLedgerLinks: Array<Scalars['String']['output']>;
-  /** Status of every managed price include the ledger names: feed pair and source, serving revision, observed/fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none. */
+  /** Status of every managed price include the ledger names: feed pair and source, serving revision, newest price date, fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none. */
   getLedgerManagedPrices: Array<ManagedPriceSource>;
   /** Get the most recent transaction for a narration, or null when none matches */
   getLedgerNarrationTransactions?: Maybe<Transaction>;
@@ -2479,7 +2576,7 @@ export type Query = {
   /** Get a specific public key by ID */
   getPublicKey?: Maybe<PublicKey>;
   getPullRequestDetails: PullRequestDetails;
-  /** Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted */
+  /** Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted. Pass limit (at most 100) and page to read them in pages; omit limit for every row. */
   getUnsyncedPlaidTransactions: Array<PlaidTransactionType>;
   getUserByExactMatch: Array<SearchUser>;
   /** Get user's followers */
@@ -2894,6 +2991,8 @@ export type QueryGetPullRequestDetailsArgs = {
 export type QueryGetUnsyncedPlaidTransactionsArgs = {
   accountId?: InputMaybe<Scalars['String']['input']>;
   ledgerId: Scalars['String']['input'];
+  limit?: InputMaybe<Scalars['Float']['input']>;
+  page?: InputMaybe<Scalars['Float']['input']>;
 };
 
 
@@ -3149,6 +3248,27 @@ export type RegisterRow = {
   postings: Array<RegisterPosting>;
 };
 
+export type RenameLedgerAccountResponse = {
+  __typename?: 'RenameLedgerAccountResponse';
+  accounts: Array<RenamedAccount>;
+  bankMappings: Array<AccountRenameBankMapping>;
+  checkError?: Maybe<Scalars['String']['output']>;
+  /** Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why. */
+  checked?: Maybe<Scalars['Boolean']['output']>;
+  /** The sha of the commit this write made; absent on a preview or a read. */
+  commit?: Maybe<Scalars['String']['output']>;
+  dryRun: Scalars['Boolean']['output'];
+  errorsAfter: Scalars['Float']['output'];
+  errorsBefore: Scalars['Float']['output'];
+  files: Array<AccountRenameFile>;
+  from: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  newErrors: Array<SliceWriteError>;
+  to: Scalars['String']['output'];
+  /** True only when the write adds no bean-check error; gate a preview on this. */
+  valid: Scalars['Boolean']['output'];
+};
+
 export type RenameLedgerFileResponse = {
   __typename?: 'RenameLedgerFileResponse';
   checkError?: Maybe<Scalars['String']['output']>;
@@ -3174,6 +3294,12 @@ export type RenamePreviewFile = {
   __typename?: 'RenamePreviewFile';
   path: Scalars['String']['output'];
   text: Scalars['String']['output'];
+};
+
+export type RenamedAccount = {
+  __typename?: 'RenamedAccount';
+  from: Scalars['String']['output'];
+  to: Scalars['String']['output'];
 };
 
 /** The email report status (deprecated) */

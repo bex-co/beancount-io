@@ -1,7 +1,6 @@
 schema {
   query: Query
   mutation: Mutation
-  subscription: Subscription
 }
 
 type AccountBalance {
@@ -70,6 +69,27 @@ type AccountLastEntry {
   account: String!
   balance: JSONObject
   date: String
+}
+
+type AccountRenameBankMapping {
+  from: String!
+  """The caller's own bank account; null for another member's."""
+  plaidAccount: String
+  to: String!
+  """False on a preview, and when the update after the commit failed."""
+  updated: Boolean!
+}
+
+type AccountRenameFile {
+  changes: [AccountRenameLine!]!
+  path: String!
+}
+
+type AccountRenameLine {
+  after: String!
+  before: String!
+  """1-based line of the file."""
+  line: Int!
 }
 
 type AccountReport {
@@ -564,6 +584,17 @@ type DenyCliAuthSessionResponse {
   success: Boolean!
 }
 
+type DeploymentInfoResponse {
+  """
+  True on a deployment its operator runs for their own users (SELF_HOST). The sign-in and sign-up pages read it to drop what only makes sense on the hosted service.
+  """
+  selfHost: Boolean!
+  """
+  Whether signUp would be accepted. False only on a self-hosted deployment that already has an account; the sign-up page is not offered then.
+  """
+  signUpOpen: Boolean!
+}
+
 type DirectiveTextDiff {
   diff: String!
   path: String!
@@ -729,6 +760,10 @@ type GetCliAuthSessionResponse {
 
 type HoldingsData {
   asOf: String!
+  """
+  False when a group's cost basis is unknown; totals.cost_basis then leaves it out
+  """
+  costBasisComplete: Boolean!
   groupBy: String!
   groups: [HoldingsGroup!]!
   missingPriceSummary: [String!]!
@@ -740,9 +775,9 @@ type HoldingsData {
 type HoldingsGroup {
   account: String
   accounts: [String!]
-  averageCost: HoldingsMoney!
+  averageCost: HoldingsMoney
   commodity: String!
-  costBasis: HoldingsMoney!
+  costBasis: HoldingsMoney
   marketValue: HoldingsMoney!
   price: HoldingsMoney
   units: HoldingsMoney!
@@ -815,12 +850,12 @@ type IntrospectionType {
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
-scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+scalar JSON
 
 """
 The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
-scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+scalar JSONObject
 
 type JournalEntriesResponse {
   data: [JournalEntry!]!
@@ -884,6 +919,12 @@ input JournalQueryInput {
   Fava advanced-filter expression. `#tag` and `^link` match exactly; bare or "quoted" words match narration/payee (transactions) or comment (notes); `field:value` looks up `account` (posting accounts included), `tag`, `link`, `payee`, `narration`, `date`, or entry metadata; `field>100` compares amounts and bare `>100` matches posting units; both compare the absolute value, so thresholds are non-negative (`<0` matches nothing); `any(...)`/`all(...)` scope a test to postings; `-` negates, `,` is OR, juxtaposition is AND, parentheses group. Quote values holding a colon, a space, or a leading digit — `account:"Assets:Bank:Checking"`, `date:"2026"` — there are no escape sequences.
   """
   filter: String
+  """
+  Attach each entry's source as {path, lineno, text, sha256sum}: the text and checksum entry context returns, ready for the entry-source update and deletes. null where an entry has no editable source (a plugin's or a pad's copy, a managed price line). At most 200 entries per page with it.
+  """
+  includeSource: Boolean
+  """Alias of includeSource, as REST and MCP spell it."""
+  include_source: Boolean
   limit: Float = 20
   offset: Float = 0
   """
@@ -940,7 +981,8 @@ type Ledger {
   preview: LedgerUpdatePreview
   private: Boolean!
   size: Float!
-  sshUrl: String!
+  """SSH clone address. Null when this deployment serves no Git over SSH."""
+  sshUrl: String
   updatedAt: String!
 }
 
@@ -1357,7 +1399,7 @@ type ManagedPriceInclude {
 }
 
 """
-Status of one managed price include (ADR 015). `freshness` is `recent` within ten minutes of the latest observation, `stale` beyond it, and `unavailable` when no revision has validated.
+Status of one managed price include (ADR 015). `freshness` is `recent` while the feed's newest price is at most seven days old, `stale` beyond it, and `unavailable` when no revision has validated.
 """
 type ManagedPriceSource {
   alias: String!
@@ -1367,6 +1409,8 @@ type ManagedPriceSource {
   fetchedAt: String
   freshness: String!
   includedFrom: [ManagedPriceInclude!]!
+  """ISO date of the feed's newest price; `freshness` is judged by it."""
+  latestPriceDate: String
   nextRefreshAt: String
   observedAt: String
   quote: String
@@ -1385,6 +1429,51 @@ type MintedApiKeyType {
 type MissingPriceLeg {
   from: String!
   to: String!
+}
+
+input MoveEntrySourcesInput {
+  """
+  Move the entries even when that would add bean-check errors (VALIDATION_FAILED), instead of refusing
+  """
+  allowInvalid: Boolean
+  """Alias of allowInvalid."""
+  allow_invalid: Boolean
+  """Run every check and return the preview without committing"""
+  dryRun: Boolean
+  """Alias of dryRun, as MCP spells it."""
+  dry_run: Boolean
+  entries: [DeleteMultiSourceSliceItemInput!]!
+  """
+  A file the ledger loads that gains include "<toPath>" (relative to it) when toPath is not loaded yet. Without it, an unloaded toPath is refused.
+  """
+  includeFrom: String
+  """
+  Repository path of the .bean or .beancount file the entries move into; created when absent.
+  """
+  toPath: String!
+}
+
+type MoveEntrySourcesResponse {
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
+  dryRun: Boolean!
+  errorsAfter: Float!
+  errorsBefore: Float!
+  """
+  Whether includeFrom gained toPath's include line (on a preview, would gain it)
+  """
+  includeAdded: Boolean!
+  message: String!
+  """The moved entries' hashes, each once, in ledger order"""
+  movedHashes: [String!]!
+  newErrors: [SliceWriteError!]!
+  """Each moved entry's text as toPath receives it, with the file it leaves"""
+  preview: [SlicePreviewFile!]!
+  toPath: String!
+  """
+  True only when the write adds no bean-check error; gate a preview on this.
+  """
+  valid: Boolean!
 }
 
 type Mutation {
@@ -1630,6 +1719,10 @@ type Mutation {
   """Logout user, revoke JWT token and clear httpOnly cookie"""
   logout: LogoutResponse!
   """
+  Move entries into another ledger file in one commit: each entry's source text leaves its file and is appended to toPath in ledger order. An entry inside its file's pushtag or pushmeta scope keeps that scope's tags and metadata, written onto the entry, so its hash stays but its text and sha256sum change; any other entry's text moves unchanged. listLedgerEntries with include_source returns each entry's hash and sha256sum. Refused, writing nothing: a toPath the ledger does not load unless includeFrom is given, a stale sha256sum (CONFLICT), an entry already in toPath, and a move that adds a bean-check error (VALIDATION_FAILED, unless allowInvalid). dryRun previews without committing: each moved entry's text and file. revertLedgerCommit undoes the commit.
+  """
+  moveLedgerEntrySources(input: MoveEntrySourcesInput!, ledgerId: String!): MoveEntrySourcesResponse!
+  """
   Parse an uploaded file (multimodal support for PDF/images/any format) into structured transactions. File must be uploaded to S3 first.
   """
   parseFile(
@@ -1679,6 +1772,26 @@ type Mutation {
   """
   refreshToken: TokenAuthResponse!
   rejectPullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
+  """
+  Rename an account and every account under it across the ledger's loaded files in one commit: account tokens outside strings and comments, whole names only. Bank mappings move with it. Refused for an invalid name, another root, or a name the ledger already uses; new bean-check errors refuse the commit unless allowInvalid. dryRun previews without committing: the changed lines and bank mappings. revertLedgerCommit undoes the commit.
+  """
+  renameLedgerAccount(
+    """
+    Commit even when the rename adds bean-check errors the ledger did not have.
+    """
+    allowInvalid: Boolean
+    """Alias of allowInvalid."""
+    allow_invalid: Boolean
+    """Run every check and return the preview without committing"""
+    dryRun: Boolean
+    """Alias of dryRun, as MCP spells it."""
+    dry_run: Boolean
+    """The account to rename; every account under it is renamed too."""
+    from: String!
+    ledgerId: String!
+    """The new name; it must stay under the same root."""
+    to: String!
+  ): RenameLedgerAccountResponse!
   """Rename a file in a specific ledger"""
   renameLedgerFile(
     """Alias of message, as the MCP file tools spell it."""
@@ -2243,6 +2356,10 @@ type Query {
   allTierQuotas: [TierQuotaItem!]!
   """Your API keys"""
   apiKeys: [ApiKeyType!]!
+  """
+  What the browser sign-in and sign-up pages need to know about this deployment before anyone is signed in. Part of the sign-up ceremony, so it has no REST or MCP twin.
+  """
+  deploymentInfo: DeploymentInfoResponse!
   featureFlags(userId: String): JSONObject!
   """
   Generate a presigned download URL for a temporary asset uploaded by the current user. Foreign, malformed, and permanent keys are not exposed.
@@ -2406,7 +2523,7 @@ type Query {
   """Get the links of a specific ledger"""
   getLedgerLinks(ledgerId: String!): [String!]!
   """
-  Status of every managed price include the ledger names: feed pair and source, serving revision, observed/fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none.
+  Status of every managed price include the ledger names: feed pair and source, serving revision, newest price date, fetched/next-refresh times, freshness and the last refresh error. Empty when the ledger has none.
   """
   getLedgerManagedPrices(ledgerId: String!): [ManagedPriceSource!]!
   """
@@ -2477,9 +2594,16 @@ type Query {
   getPublicKey(keyId: Float!): PublicKey
   getPullRequestDetails(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestDetails!
   """
-  Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted
+  Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted. Pass limit (at most 100) and page to read them in pages; omit limit for every row.
   """
-  getUnsyncedPlaidTransactions(accountId: String, ledgerId: String!): [PlaidTransactionType!]!
+  getUnsyncedPlaidTransactions(
+    accountId: String
+    ledgerId: String!
+    """Page size, at most 100; omit for every row"""
+    limit: Float
+    """1-based page number"""
+    page: Float
+  ): [PlaidTransactionType!]!
   getUserByExactMatch(includeCurrentUser: String, keyword: String!): [SearchUser!]!
   """Get user's followers"""
   getUserFollowers(
@@ -2674,6 +2798,30 @@ type RegisterRow {
   postings: [RegisterPosting!]!
 }
 
+type RenameLedgerAccountResponse {
+  accounts: [RenamedAccount!]!
+  bankMappings: [AccountRenameBankMapping!]!
+  checkError: String
+  """
+  Present, as false, when bean-check could not run, so the other fields say nothing; checkError says why.
+  """
+  checked: Boolean
+  """The sha of the commit this write made; absent on a preview or a read."""
+  commit: String
+  dryRun: Boolean!
+  errorsAfter: Float!
+  errorsBefore: Float!
+  files: [AccountRenameFile!]!
+  from: String!
+  message: String!
+  newErrors: [SliceWriteError!]!
+  to: String!
+  """
+  True only when the write adds no bean-check error; gate a preview on this.
+  """
+  valid: Boolean!
+}
+
 type RenameLedgerFileResponse {
   checkError: String
   """
@@ -2701,6 +2849,11 @@ type RenameLedgerFileResponse {
 type RenamePreviewFile {
   path: String!
   text: String!
+}
+
+type RenamedAccount {
+  from: String!
+  to: String!
 }
 
 """The email report status (deprecated)"""
