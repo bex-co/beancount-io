@@ -1,4 +1,3 @@
-import { isExcludedAccount } from "@/features/reports/overview/lib/account-categorizer";
 import {
   invertDecimal,
   sumBalanceRecords,
@@ -127,46 +126,6 @@ export interface CashFlowStatement {
    * inferred-cash-set disclosure (per-row sources live on `rows`).
    */
   hasHeuristicCashAccounts: boolean;
-}
-
-/**
- * Cash & cash equivalents heuristic. The patterns live in
- * `../config` (`CASH_EQUIVALENT_PATTERNS`) and are shared with the
- * Sankey's exclusion list (account-categorizer.ts) so both surfaces agree
- * on what counts as cash. This is a documented heuristic, not account
- * metadata — exports must disclose it.
- */
-export function isCashEquivalentAccount(accountName: string): boolean {
-  return isExcludedAccount(accountName);
-}
-
-/**
- * Classify a non-cash account into a cash-flow activity via
- * resolveCashFlowRole: a declared `cash-flow-role` (from `meta`) wins over
- * the name heuristics. Returns null for CCE accounts (they are the cash
- * being explained, never a row) and — heuristic only — for anything outside
- * the five roots. A declared activity role is honored verbatim.
- *
- * Signs (beancount credit-normal): the row amount is the inverse of the
- * account's change, so e.g. an Income credit (-5000) is a +5000 operating
- * inflow, and paying down a credit card (liability +200 toward zero) is a
- * -200 financing outflow.
- */
-export function classifyCashFlowActivity(
-  name: string,
-  meta?: Record<string, unknown> | null,
-  roots?: AccountRoots,
-): CashFlowActivity | null {
-  if (!name) return null;
-
-  // A renamed root (Revenus) is read as its type (Income) (w4/1022).
-  const accountName = accountAsRootType(name, roots);
-  const prefix = accountName.split(":")[0] as CashFlowRoot;
-  const heuristicActivity = CASH_FLOW_ACTIVITY_BY_ROOT[prefix] ?? null;
-  if (heuristicActivity === null) return null;
-
-  const { role } = resolveCashFlowRole(accountName, meta);
-  return role === "cash" ? null : role;
 }
 
 const ZERO_DECIMAL = /^[+-]?0+(?:\.0+)?$/;
@@ -421,9 +380,9 @@ export function buildCashFlowStatement(input: {
     // rows are independent, so count every key once (do not drop parents).
     Object.keys(interval.accountChanges).forEach((account) => {
       const meta = input.accountMeta?.get(account);
-      // Same exclusions as classifyCashFlowActivity (a root outside the five
-      // beancount roots is heuristic-only excluded; "cash" is never a row),
-      // but resolving the role once since the row also records its source.
+      // A root outside the five beancount roots is heuristic-only excluded
+      // and "cash" is never a row; resolve the role once since the row also
+      // records its source.
       const typed = accountAsRootType(account, input.roots);
       const prefix = typed.split(":")[0] as CashFlowRoot;
       if ((CASH_FLOW_ACTIVITY_BY_ROOT[prefix] ?? null) === null) return;

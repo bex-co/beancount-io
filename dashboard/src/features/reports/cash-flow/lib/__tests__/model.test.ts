@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCashFlowStatement,
-  classifyCashFlowActivity,
   collectCashAccounts,
-  isCashEquivalentAccount,
   subtractBalanceRecords,
   toAccountMetaMap,
   type IntervalAccountChanges,
@@ -40,39 +38,6 @@ describe("toAccountMetaMap", () => {
     expect(map.get("Assets:Bank:Checking")).toBeNull();
     expect(map.get("Expenses:Rent")).toBeNull();
     expect(map.has("Income:Salary")).toBe(false);
-  });
-});
-
-describe("isCashEquivalentAccount", () => {
-  it("matches checking/savings/cash/bank asset accounts", () => {
-    expect(isCashEquivalentAccount("Assets:US:Chase:Checking")).toBe(true);
-    expect(isCashEquivalentAccount("Assets:Bank:Ally:Savings")).toBe(true);
-    expect(isCashEquivalentAccount("Assets:Cash")).toBe(true);
-  });
-
-  it("rejects non-cash and non-asset accounts", () => {
-    expect(isCashEquivalentAccount("Assets:Invest:Brokerage")).toBe(false);
-    expect(isCashEquivalentAccount("Liabilities:CreditCard")).toBe(false);
-    expect(isCashEquivalentAccount("Expenses:Cash")).toBe(false);
-  });
-});
-
-describe("classifyCashFlowActivity", () => {
-  it("classifies the five roots into activities", () => {
-    expect(classifyCashFlowActivity("Income:Salary")).toBe("operating");
-    expect(classifyCashFlowActivity("Expenses:Rent")).toBe("operating");
-    expect(classifyCashFlowActivity("Assets:Invest:Brokerage")).toBe(
-      "investing",
-    );
-    expect(classifyCashFlowActivity("Liabilities:Mortgage")).toBe("financing");
-    expect(classifyCashFlowActivity("Equity:Opening-Balances")).toBe(
-      "financing",
-    );
-  });
-
-  it("never classifies cash accounts as rows", () => {
-    expect(classifyCashFlowActivity("Assets:US:Chase:Checking")).toBeNull();
-    expect(classifyCashFlowActivity("Assets:Bank")).toBeNull();
   });
 });
 
