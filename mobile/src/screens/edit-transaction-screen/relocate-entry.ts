@@ -19,6 +19,16 @@ export type EntryLocation = {
   accounts: string[];
 };
 
+/** A row's posting accounts, sorted, for telling an entry from its neighbours. */
+function postingAccounts(postings: unknown): string[] {
+  return Array.isArray(postings)
+    ? postings
+        .map((posting) => (posting as { account?: unknown })?.account)
+        .filter((account): account is string => typeof account === "string")
+        .sort()
+    : [];
+}
+
 /** The location a context read reports for its entry, when it has one. */
 export function entryLocation(entry: unknown): EntryLocation | null {
   if (typeof entry !== "object" || entry === null) return null;
@@ -31,12 +41,7 @@ export function entryLocation(entry: unknown): EntryLocation | null {
   };
   if (typeof meta !== "object" || meta === null) return null;
   const { filename, lineno } = meta as { filename?: unknown; lineno?: unknown };
-  const accounts = Array.isArray(postings)
-    ? postings
-        .map((posting) => (posting as { account?: unknown })?.account)
-        .filter((account): account is string => typeof account === "string")
-        .sort()
-    : [];
+  const accounts = postingAccounts(postings);
   return typeof filename === "string" &&
     typeof lineno === "number" &&
     typeof date === "string"
@@ -91,12 +96,7 @@ function rowLooksLike(row: unknown, at: EntryLocation): boolean {
     narration?: unknown;
     postings?: unknown;
   };
-  const accounts = Array.isArray(postings)
-    ? postings
-        .map((posting) => (posting as { account?: unknown })?.account)
-        .filter((account): account is string => typeof account === "string")
-        .sort()
-    : [];
+  const accounts = postingAccounts(postings);
   return recognisable(
     {
       payee: typeof payee === "string" ? payee.trim() : "",
