@@ -109,33 +109,49 @@ Only a successful full journey updates `tests/managed_prices_live_status.json`.
 This is an explicit network gate, separate from the deterministic unit suite.
 `BEA_LIVE_PRICE_TESTS=1` additionally opts into the anonymous login-boundary test.
 
-## 0.3.1 release notes
+## 0.4.0 release notes
 
-This section is the GitHub Release body for `cli-v0.3.1`; apply it with
-`gh release edit cli-v0.3.1 --notes-file <this section>` after the workflow
+This section is the GitHub Release body for `cli-v0.4.0`; apply it with
+`gh release edit cli-v0.4.0 --notes-file <this section>` after the workflow
 creates the release.
 
-`bea` 0.3.1 is a bug-fix release. It needs no ledger changes.
+`bea` 0.4.0 adds reports, entry updates and OFX import, and works against
+self-hosted servers. It needs no ledger changes.
 
-- **Imports recognize migrated history.** `bea import` now matches entries that
-  `beancount-migrate` wrote as `monarch:`, `mint:` or `qbo:sha256:` IDs, including
-  the second side of a merged transfer (`import-id-2`). Overlapping bank exports
-  therefore skip already-migrated rows instead of writing them again or reporting
-  conflicts. A reused native bank ID whose data changed is still a conflict.
-- **Option expiries with empty lot costs return valid JSON.** A native expiry of
-  a lot without a recorded cost now writes once and reports parseable `--json`
-  output.
-- **Generated import IDs are exact.** New IDs hash the exact amount and its
-  commodity, so rows that differ only past two decimals, or by commodity, keep
-  separate identities. IDs written by earlier versions still match on re-import.
-- **Many smaller fixes** in CSV import (whole-column date inference,
-  decimal-comma precision, over-wide rows, exact sign changes), queries and
-  exports (atomic writes, statement counting, control characters shown
-  visibly), `doctor`, `format`, `add`, portable price exports, and exit codes
-  for interrupts and closed pipes.
+- **More reports.** `bea report holdings`, `register`, `capital-gains`,
+  `cash-flow` and `budget` (budget versus actual; a missing budget is never
+  shown as zero). Every report takes `--format csv`, with `-o` to write a file.
+- **Change an existing entry.** `bea update transaction --id <import-id, ref or
+  file:line>` previews the change as a diff and rewrites the entry with
+  `--apply`. `bea update transactions --from <JSON or CSV>` does the same for
+  many entries.
+- **OFX and QFX imports.** `bea import` reads OFX/QFX bank exports directly,
+  with the same rules and remembered accounts as CSV, and needs no Python
+  importer.
+- **Bring an existing ledger.** `bea init --existing` describes a ledger bea did
+  not create, writes `AGENTS.md` and `CLAUDE.md` beside it, and lists what needs
+  attention. `bea init --agent-files` adds those files to a new ledger;
+  `--module`, `--currency` and `--date` shape a `--preset personal@1` ledger.
+  `bea doctor guidance` checks the agent files.
+- **Self-hosted servers without Git over SSH.** `bea cloud ledger clone` clones
+  over SSH only. On a server that serves no Git over SSH (a bex deployment, for
+  one) it now stops and says so; 0.3.1 failed there with
+  `expected str … not NoneType`. Clone such a ledger with `git clone` and its
+  HTTPS address instead.
+- **Safer cloud commands.** `bea cloud ledger delete --dry-run` runs every check
+  without deleting, and a plan-limit refusal says whose plan set the limit.
+- **Stricter writes.** `bea add close` refuses an account that still holds a
+  balance on the close date unless you pass `--force`, and a missing or
+  twice-included file is reported at the include line that names it.
+- **Many smaller fixes** in holdings and capital gains (cost basis, cash,
+  long-term after a calendar year), reports' date windows, CSV import, managed
+  prices (stale after seven days without a new price date), `doctor`,
+  `format`, `add` and `update`.
 
-Upgrade with `brew upgrade bex-co/tap/bea` or `uv tool upgrade beancount-io`,
-or install with `uv tool install beancount-io==0.3.1`.
+The first `bea` command after a uv or pip upgrade provisions the 0.4.0 engine
+once; Homebrew installs it with the formula. Upgrade with
+`brew upgrade bex-co/tap/bea` or `uv tool upgrade beancount-io`, or install with
+`uv tool install beancount-io==0.4.0`.
 
 ## 0.2.0 migration
 

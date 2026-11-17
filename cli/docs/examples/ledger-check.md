@@ -7,7 +7,7 @@ workflow checks out the repo and calls the shared action in one line:
 ```yaml
 - uses: bex-co/beancount-io/cli/action@cb844f97b261f7f5457e8e64371642de5e5f0882 # no action tag yet; re-pin to cli-v* on the next release
   with:
-    version: "0.3.1"
+    version: "0.4.0"
     file: main.bean
 ```
 
@@ -31,7 +31,7 @@ checks.
 ## Pre-commit hooks
 
 The same checks run before each commit. Install `bea` once
-(`uv tool install 'beancount-io==0.3.1'`), then add to the ledger
+(`uv tool install 'beancount-io==0.4.0'`), then add to the ledger
 repository's `.pre-commit-config.yaml`:
 
 ```yaml
@@ -71,7 +71,7 @@ the results below unchanged.
 
 A ledger that carries a managed price include
 (`include "https://beancount.io/prices/BTC-USD"`) passes `bea format --check`
-like any other formatted ledger from the release after 0.3.1: the formatter
+like any other formatted ledger from 0.4.0 on: the formatter
 does not treat the feed URL as a missing file, and needs neither the network
 nor a login. On 0.3.1 and earlier that gate fails on such a ledger. This was
 checked on a source checkout, not on a published release.
