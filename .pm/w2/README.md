@@ -75,7 +75,6 @@
 ## Inbox
 
 - [139 — Mobile's committed GraphQL snapshot is stale against the deployed api-gateway](./139.md) — no `latestPriceDate`, ten-minute freshness text, ~1,400 lines of other drift
-- [138 — In Persian, a truncated English commit message or payee loses its beginning](./138.md) — `truncate` without `dir="auto"` cuts LTR text at its start under `dir="rtl"`
 - [135 — Signed in, a Gallery search for a common term takes 4–5 s per request (under 1.2 s signed out)](./blocked/135.md) — ledger service read every Gitea page of an owner search in turn — **blocked:** fix shipped in `7355c52f1`; the operator redeploys `beancount-ledger`, then the search is re-measured
 
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains — 2026-11-11: Claude works on the macOS checkout, but the candidates and Codex are only on the Linux runtime.

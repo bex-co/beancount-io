@@ -390,7 +390,9 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
 
         <div className="overflow-clip rounded-md border border-border">
           <div className="flex h-9 items-center border-b border-border bg-muted px-3 font-mono text-xs font-semibold">
-            <span className="truncate">{currentVirtualFile}</span>
+            <span dir="auto" className="truncate">
+              {currentVirtualFile}
+            </span>
           </div>
           <List<Record<string, never>>
             data-testid="virtualized-diff"

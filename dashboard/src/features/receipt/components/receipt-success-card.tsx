@@ -44,7 +44,9 @@ export function ReceiptSuccessCard({
             <dt className="text-muted-foreground shrink-0">
               {t("receipt.success.payee")}
             </dt>
-            <dd className="font-medium truncate">{formData.payee}</dd>
+            <dd dir="auto" className="font-medium truncate">
+              {formData.payee}
+            </dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground shrink-0">

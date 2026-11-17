@@ -248,7 +248,10 @@ export function RecentActivityCard({
                             />
                             <span className="min-w-0">
                               <span className="flex items-center gap-2">
-                                <span className="truncate text-sm font-medium">
+                                <span
+                                  dir="auto"
+                                  className="truncate text-sm font-medium"
+                                >
                                   {title}
                                 </span>
                                 {summary.status !== "cleared" && (
@@ -269,7 +272,10 @@ export function RecentActivityCard({
                                 </span>
                               )}
                               {subtitle && (
-                                <span className="hidden truncate text-xs text-muted-foreground lg:block">
+                                <span
+                                  dir="auto"
+                                  className="hidden truncate text-xs text-muted-foreground lg:block"
+                                >
                                   {subtitle}
                                 </span>
                               )}

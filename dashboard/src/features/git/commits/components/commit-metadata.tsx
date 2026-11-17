@@ -75,6 +75,7 @@ export function CommitMetadata({
 
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground">
         <span
+          dir="auto"
           className="max-w-full truncate font-medium text-foreground"
           title={author.email}
         >

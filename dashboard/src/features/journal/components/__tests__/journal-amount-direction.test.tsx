@@ -114,7 +114,11 @@ describe("journal financial amounts under RTL layout", () => {
     expect(row).not.toHaveAttribute("dir", "ltr");
     const payee = within(row).getByText("رستوران", { exact: true });
     expect(payee.closest("bdi")).toBeNull();
-    expect(payee.closest("[dir]")).toHaveAttribute("dir", "rtl");
+    // The payee takes its own direction (w2/138), so a Persian one reads
+    // right to left inside the page's right-to-left context, never inside a
+    // left-to-right run.
+    expect(payee).toHaveAttribute("dir", "auto");
+    expect(payee.parentElement?.closest("[dir]")).toHaveAttribute("dir", "rtl");
     expect(within(row).getByText("2026-10-15")).toBeInTheDocument();
   });
 

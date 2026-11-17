@@ -83,9 +83,11 @@ function LedgerSwitcherButtonContent({
             className="flex min-h-6 items-center text-xs text-muted-foreground truncate hover:text-foreground transition-colors"
             {...EXACT_PAGE_LINK}
           >
-            {owner ?? ""}
+            <span dir="auto" className="truncate">
+              {owner ?? ""}
+            </span>
           </Link>
-          <span className="text-sm font-medium truncate">
+          <span dir="auto" className="text-sm font-medium truncate">
             {repo || currentLedgerFullName}
           </span>
         </div>
@@ -240,7 +242,9 @@ function LedgerAuthenticatedSwitcher({
               className="flex min-h-6 items-center text-xs text-muted-foreground truncate hover:text-foreground transition-colors"
               {...EXACT_PAGE_LINK}
             >
-              {owner}
+              <span dir="auto" className="truncate">
+                {owner}
+              </span>
             </Link>
           )}
           <Popover open={open} onOpenChange={setOpen}>
@@ -254,7 +258,7 @@ function LedgerAuthenticatedSwitcher({
                 })}
                 className="justify-start min-w-0 min-h-6 px-0 py-0 h-auto has-[>svg]:px-0 hover:bg-transparent"
               >
-                <span className="text-sm font-medium truncate">
+                <span dir="auto" className="text-sm font-medium truncate">
                   {repo || fullName}
                 </span>
                 <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
@@ -347,7 +351,7 @@ function LedgerAuthenticatedSwitcher({
                                     : "opacity-0",
                                 )}
                               />
-                              <span className="text-sm truncate">
+                              <span dir="auto" className="text-sm truncate">
                                 {repo || ledger.name}
                               </span>
                               <LedgerVisibilityIcon

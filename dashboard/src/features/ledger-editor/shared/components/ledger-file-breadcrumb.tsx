@@ -99,7 +99,7 @@ export default function LedgerFileBreadcrumb({
         {derivedName && (
           <span className="flex items-center gap-1 min-w-0">
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            <span className="truncate font-medium text-foreground">
+            <span dir="auto" className="truncate font-medium text-foreground">
               {derivedName}
             </span>
           </span>

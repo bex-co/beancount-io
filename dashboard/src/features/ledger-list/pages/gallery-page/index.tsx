@@ -538,12 +538,18 @@ export default function GalleryPage() {
                                   aria-selected={highlightedIndex === index}
                                 >
                                   <div className="flex flex-col flex-1 min-w-0">
-                                    <span className="font-medium truncate">
+                                    <span
+                                      dir="auto"
+                                      className="max-w-full self-start font-medium truncate"
+                                    >
                                       {ledger.name}
                                     </span>
                                     {ledger.fullName &&
                                       ledger.fullName !== ledger.name && (
-                                        <span className="text-sm text-muted-foreground truncate">
+                                        <span
+                                          dir="auto"
+                                          className="max-w-full self-start text-sm text-muted-foreground truncate"
+                                        >
                                           {ledger.fullName}
                                         </span>
                                       )}

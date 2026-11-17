@@ -111,14 +111,19 @@ interface LedgerListDataProps {
 function TruncatedText({
   text,
   className,
+  dir,
 }: {
   text: string;
   className?: string;
+  /** `auto` for a ledger-supplied string, so it truncates at its own end. */
+  dir?: "auto";
 }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={cn("truncate", className)}>{text}</span>
+        <span dir={dir} className={cn("truncate", className)}>
+          {text}
+        </span>
       </TooltipTrigger>
       <TooltipContent side="right">{text}</TooltipContent>
     </Tooltip>
@@ -157,7 +162,7 @@ function LedgerItem({
       >
         <div className="flex items-center gap-1.5 min-w-0">
           <LedgerVisibilityIcon isPrivate={ledger.private} />
-          <TruncatedText text={displayName} className="text-sm" />
+          <TruncatedText dir="auto" text={displayName} className="text-sm" />
         </div>
         <TruncatedText
           text={metaLine}

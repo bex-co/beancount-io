@@ -291,7 +291,12 @@ export default function LedgerDirectoryView({
                     <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium truncate">{item.name}</div>
+                    <div
+                      dir="auto"
+                      className="w-fit max-w-full font-medium truncate"
+                    >
+                      {item.name}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground ml-2">

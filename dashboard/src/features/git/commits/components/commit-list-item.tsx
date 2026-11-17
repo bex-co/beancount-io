@@ -68,11 +68,20 @@ export function CommitListItem({
         aria-hidden="true"
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium leading-5">
+        {/* Git supplies the message and author in any script: each takes its
+            own direction, so an English message in Persian still truncates
+            at its end. Sized to the text, the message stays at the row's
+            start edge in either direction (w2/138). */}
+        <p
+          dir="auto"
+          className="w-fit max-w-full truncate text-sm font-medium leading-5"
+        >
           {commit.message.split("\n")[0]}
         </p>
         <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs leading-4 text-muted-foreground">
-          <span className="min-w-0 truncate">{commit.author.name}</span>
+          <span dir="auto" className="min-w-0 truncate">
+            {commit.author.name}
+          </span>
           <span aria-hidden="true">·</span>
           <span className="shrink-0 font-mono">
             {commit.shortSha || commit.sha.substring(0, 7)}

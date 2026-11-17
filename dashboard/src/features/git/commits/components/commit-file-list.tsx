@@ -44,8 +44,13 @@ export function CommitFileList({ files, onFileSelect }: CommitFileListProps) {
                   className="size-4 shrink-0 text-muted-foreground"
                   aria-hidden="true"
                 />
-                <span className="min-w-0 flex-1 truncate font-mono text-xs">
-                  {file.filename}
+                <span className="min-w-0 flex-1">
+                  <span
+                    dir="auto"
+                    className="block w-fit max-w-full truncate font-mono text-xs"
+                  >
+                    {file.filename}
+                  </span>
                 </span>
                 <span className="shrink-0 text-xs text-green-700 dark:text-green-400">
                   +{file.additions}

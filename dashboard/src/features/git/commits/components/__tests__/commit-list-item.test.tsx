@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { formatDistanceToNow } from "date-fns";
+import { compileAppCss, parseRules } from "@/test/tailwind";
 import { CommitListItem } from "../commit-list-item";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -61,6 +62,33 @@ describe("CommitListItem", () => {
 
     await user.tab();
     expect(link).toHaveFocus();
+  });
+
+  it("truncates an English message and author at their end in a right-to-left page", async () => {
+    // In Persian an English message took the page's direction, so its
+    // ellipsis landed at the left and cut "Add 2026-10-30 custom budget …"
+    // at its start (w2/138). Each git string now takes its own direction,
+    // and the message is sized to its text so a short one stays at the
+    // row's start edge rather than the far side.
+    const root = document.body.appendChild(document.createElement("div"));
+    root.setAttribute("dir", "rtl");
+    const message = "Add 2026-10-30 custom budget Expenses:Food:Restaurant";
+    render(
+      <CommitListItem
+        commit={{ ...commit, message: `${message}\n\nBody text` }}
+        ledgerId="alice/books"
+      />,
+      { container: root },
+    );
+
+    const subject = screen.getByText(message);
+    expect(subject).toHaveAttribute("dir", "auto");
+    expect(subject).toHaveClass("truncate", "w-fit", "max-w-full");
+    expect(screen.getByText(commit.author.name)).toHaveAttribute("dir", "auto");
+
+    const rules = parseRules(await compileAppCss(["w-fit", "max-w-full"]));
+    expect(rules.get("w-fit")).toContain("width: fit-content");
+    expect(rules.get("max-w-full")).toContain("max-width: 100%");
   });
 
   it("preserves modified-click behavior while closing responsive history on plain activation", async () => {

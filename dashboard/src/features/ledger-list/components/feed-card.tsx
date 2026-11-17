@@ -106,7 +106,11 @@ function LedgerActivityCard({ item }: { item: FeedItem }) {
                 .split("\n")
                 .filter(Boolean)
                 .map((line, index) => (
-                  <p key={`${line}-${index}`} className="truncate">
+                  <p
+                    key={`${line}-${index}`}
+                    dir="auto"
+                    className="w-fit max-w-full truncate"
+                  >
                     {line}
                   </p>
                 ))}
