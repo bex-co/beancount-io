@@ -63,7 +63,8 @@ import {
   ledgerSpelling,
   openAccountSubmitState,
 } from "./account-name";
-import { useOpenAccount } from "./use-open-account";
+import { useSingleEntryWrite } from "@/common/hooks/use-single-entry-write";
+import { buildOpenAccountEntry } from "./open-account-entry";
 import { getFormatDate } from "@/common/format-util";
 import { useToday } from "@/common/hooks/use-today";
 import { initialOpenDate } from "./open-date";
@@ -242,7 +243,11 @@ export function OpenAccountScreenComponent(): JSX.Element {
     error: metaError,
     refetch: refetchMeta,
   } = useLedgerMeta(userId, ledgerId);
-  const { openAccount, loading } = useOpenAccount(ledgerId);
+  const { writeEntry: openAccount, loading } = useSingleEntryWrite(
+    ledgerId,
+    buildOpenAccountEntry,
+    { haptics: true },
+  );
   const isHere = useIsHere();
 
   // The account picker's "Create <typed>" row lands here with the typed query

@@ -117,7 +117,7 @@ describe("fingerprint", () => {
   });
 });
 
-/** The real hook, with React and Apollo stubbed, as use-save-budget.test does. */
+/** The real hook, with React and Apollo stubbed, as use-single-entry-write.test does. */
 function loadHook() {
   const invalidations: string[] = [];
   const exports: Record<string, any> = {};

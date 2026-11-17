@@ -54,8 +54,11 @@ import { DatePickerModal } from "@/components/date-picker-modal";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { Picker } from "@/components/picker";
 import type { ColorTheme } from "@/types/theme-props";
-import { useSaveBudget } from "@/screens/budget-screen/hooks/use-save-budget";
-import { isBudgetAmount } from "@/screens/budget-screen/build-budget-entry";
+import { useSingleEntryWrite } from "@/common/hooks/use-single-entry-write";
+import {
+  buildBudgetEntry,
+  isBudgetAmount,
+} from "@/screens/budget-screen/build-budget-entry";
 import {
   BUDGET_INTERVALS,
   intervalLabelKey,
@@ -225,7 +228,10 @@ function AddBudgetScreenImpl(): JSX.Element {
     loading: metaLoading,
     error: metaError,
   } = useLedgerMeta(userId, ledgerId);
-  const { saveBudget, loading } = useSaveBudget(ledgerId);
+  const { writeEntry: saveBudget, loading } = useSingleEntryWrite(
+    ledgerId,
+    buildBudgetEntry,
+  );
   const isHere = useIsHere();
 
   const params = useRouteParams<{
