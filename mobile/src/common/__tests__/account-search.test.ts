@@ -62,6 +62,17 @@ describe("fuzzyMatch", () => {
       expect(scattered > 0).toBe(true);
       expect(consecutive > scattered).toBe(true);
     });
+
+    test("an exact substring outranks a scattered one at every pattern length", () => {
+      // Seven characters: earlier decoys consume all but the last pattern
+      // character, so the exact site adds almost nothing to the run score
+      // while a six-character run elsewhere plus segment bonuses outruns
+      // the quadratic exact bonus.
+      const exact = fuzzyMatch("abcdefa", "xAxBxCxDxExFxabcdefa");
+      const scattered = fuzzyMatch("abcdefa", "E:abcdef:Xa");
+      expect(scattered > 0).toBe(true);
+      expect(exact > scattered).toBe(true);
+    });
   });
 });
 
@@ -101,6 +112,17 @@ describe("filterAccounts", () => {
   test("searches across every root type", () => {
     const result = filterAccounts("a", accounts);
     expect(result.length > 1).toBe(true);
+  });
+
+  test("ranks the account holding a long query above a near-run without it", () => {
+    // Neither names the query exactly (both tier 0), so the fuzzy score
+    // decides: the exact hit used to lose to the six-character run plus
+    // segment bonuses.
+    const result = filterAccounts("abcdefa", [
+      "E:abcdef:Xa",
+      "xAxBxCxDxExFxabcdefa",
+    ]);
+    expect(result).toEqual(["xAxBxCxDxExFxabcdefa", "E:abcdef:Xa"]);
   });
 
   describe("frecency tiebreak", () => {
