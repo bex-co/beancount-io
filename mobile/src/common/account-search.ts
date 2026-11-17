@@ -22,9 +22,14 @@ import { frecencyScore, type RankingContext } from "./account-frecency";
 const SEGMENT_MATCH_BONUS = 2;
 
 /**
- * An exact substring adds `length² + 3·length`, which outruns the best possible
- * scattered score (`3·length`: every character isolated on a segment start) at
- * every pattern length — so an exact hit always sorts above a scattered one.
+ * An exact substring adds `length³ + 3·length`, which outruns the best total
+ * without one at every pattern length — so an exact hit always sorts above a
+ * scattered one. Without an exact substring the longest run covers at most
+ * `length − 1` characters (a full-length run IS the substring), scoring
+ * `(length − 1)·length·(2·length − 1)/6`, plus the isolated character and at
+ * most 2 per character on segment starts; the cubic term dominates that sum.
+ * A quadratic bonus stopped doing so at seven characters, where a
+ * six-character run plus segment bonuses sorted above the exact hit.
  */
 const EXACT_MATCH_LENGTH_FACTOR = 3;
 
@@ -141,7 +146,7 @@ export function fuzzyMatch(pattern: string, text: string): number {
 
   const exactIndex = substringIndex(text, lowerText, pattern);
   if (exactIndex >= 0) {
-    score += pattern.length ** 2 + EXACT_MATCH_LENGTH_FACTOR * pattern.length;
+    score += pattern.length ** 3 + EXACT_MATCH_LENGTH_FACTOR * pattern.length;
     if (isSegmentStart(text, exactIndex)) {
       score += pattern.length;
     }
