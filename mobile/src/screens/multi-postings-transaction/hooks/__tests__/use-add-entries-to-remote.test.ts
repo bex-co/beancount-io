@@ -49,8 +49,8 @@ describe("retry-safe entry saves", () => {
       "hooks",
       "use-add-entries-to-remote.ts",
     ),
-    path.join(screens, "budget-screen", "hooks", "use-save-budget.ts"),
-    path.join(screens, "open-account-screen", "use-open-account.ts"),
+    // The budget save and the account open share one hook now.
+    path.join(screens, "..", "common", "hooks", "use-single-entry-write.ts"),
   ];
   for (const file of hooks) {
     it(`${path.basename(file)} sends its write through useEntryWrite`, () => {
