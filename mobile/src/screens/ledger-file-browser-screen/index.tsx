@@ -537,21 +537,29 @@ export function LedgerFileBrowserScreen(): JSX.Element {
     }
   }, [client, currentPath, refetch, t, toast]);
 
+  // One listing read for every name check: the dialog's live validator and
+  // the create handler check against the same names — the entries on screen
+  // plus the clashes the server has reported since (w21/564, w21/989).
+  const nameCheckLists = useMemo(
+    () => ({
+      names: [...entries.map((entry) => entry.name), ...knownExisting],
+      files: entries
+        .filter((entry) => entry.type !== "dir")
+        .map((entry) => entry.name),
+      folders: entries
+        .filter((entry) => entry.type === "dir")
+        .map((entry) => entry.name),
+    }),
+    [entries, knownExisting],
+  );
+
   // Create is disabled with the reason under the field, never silently.
   const validateNewFilename = useCallback(
     (input: string): boolean | string => {
-      const check = checkLedgerFileName(
-        input,
-        [...entries.map((entry) => entry.name), ...knownExisting],
-        {
-          files: entries
-            .filter((entry) => entry.type !== "dir")
-            .map((entry) => entry.name),
-          folders: entries
-            .filter((entry) => entry.type === "dir")
-            .map((entry) => entry.name),
-        },
-      );
+      const check = checkLedgerFileName(input, nameCheckLists.names, {
+        files: nameCheckLists.files,
+        folders: nameCheckLists.folders,
+      });
       if (check.ok) return true;
       switch (check.issue) {
         case "empty":
@@ -572,7 +580,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
           return t("ledgerFileNamePortable");
       }
     },
-    [entries, knownExisting, t],
+    [nameCheckLists, t],
   );
 
   // Adds `include "<path>"` to the entry point. True once it is there (also
@@ -615,18 +623,10 @@ export function LedgerFileBrowserScreen(): JSX.Element {
 
   const handleCreate = useCallback(
     async (input: string) => {
-      const check = checkLedgerFileName(
-        input,
-        [...entries.map((entry) => entry.name), ...knownExisting],
-        {
-          files: entries
-            .filter((entry) => entry.type !== "dir")
-            .map((entry) => entry.name),
-          folders: entries
-            .filter((entry) => entry.type === "dir")
-            .map((entry) => entry.name),
-        },
-      );
+      const check = checkLedgerFileName(input, nameCheckLists.names, {
+        files: nameCheckLists.files,
+        folders: nameCheckLists.folders,
+      });
       if (!check.ok || !canWrite || createInFlightRef.current) return;
       const { filename } = check;
 
@@ -759,8 +759,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
       includeNew,
       includeInEntryPoint,
       currentPath,
-      entries,
-      knownExisting,
+      nameCheckLists,
       ledgerId,
       refetch,
       t,
