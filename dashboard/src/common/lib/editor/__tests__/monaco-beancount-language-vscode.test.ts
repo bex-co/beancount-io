@@ -138,6 +138,60 @@ describe("Monaco Beancount Language (VSCode version)", () => {
     });
   });
 
+  describe("tokenizer patterns", () => {
+    function rulePattern(token: string): RegExp {
+      const rule = beancountTokenProvider.tokenizer.root.find(
+        (rule) => Array.isArray(rule) && rule[1] === token,
+      );
+      expect(rule).toBeDefined();
+      expect(Array.isArray(rule) && rule[0] instanceof RegExp).toBe(true);
+      return (rule as unknown as [RegExp, string])[0];
+    }
+
+    it("should match every beancount directive as a keyword", () => {
+      const keywordPattern = rulePattern("keyword.beancount");
+      for (const directive of [
+        "include",
+        "plugin",
+        "pushtag",
+        "option",
+        "commodity",
+        "balance",
+        "open",
+        "close",
+        "pad",
+        "note",
+        "document",
+        "price",
+        "event",
+        "query",
+        "custom",
+      ]) {
+        expect(keywordPattern.test(directive)).toBe(true);
+      }
+    });
+
+    it("should match every account root", () => {
+      const rootPattern = rulePattern("constant.language.beancount");
+      for (const root of [
+        "Assets",
+        "Liabilities",
+        "Equity",
+        "Income",
+        "Expenses",
+      ]) {
+        expect(rootPattern.test(root)).toBe(true);
+      }
+    });
+
+    it("should match every operator", () => {
+      const operatorPattern = rulePattern("operator.beancount");
+      for (const operator of ["+", "-", "*", "/", "="]) {
+        expect(operatorPattern.test(operator)).toBe(true);
+      }
+    });
+  });
+
   describe("registerBeancountLanguage", () => {
     it("should register the language with monaco", () => {
       expect(mockLanguages.register).toHaveBeenCalledWith({

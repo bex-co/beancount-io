@@ -26,7 +26,7 @@ import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { MonacoEditor as Editor } from "@/common/components/monaco-editor";
 import { X, Save } from "lucide-react";
 import { CreateLedgerFileDocument } from "@/graphql/definitions";
-import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-language";
+import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-language-vscode";
 import { createLedgerId, base64Encode } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
