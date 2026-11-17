@@ -9,7 +9,7 @@ import { useCallback } from "react";
 import { useMutation } from "@apollo/client/react";
 import { ParseFileDocument } from "@/graphql/definitions";
 import type { FileFormat, CSVParseResult } from "../types";
-import { useTempAssetUpload } from "./use-temp-asset-upload";
+import { useTempAssetUpload } from "@/common/hooks/use-temp-asset-upload";
 import { createParsedRowId } from "../utils/csv-validator";
 
 export function useLLMParser() {
