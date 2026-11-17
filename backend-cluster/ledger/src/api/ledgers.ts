@@ -11,8 +11,8 @@ import { countDirectivesForRepo } from "@/core/directive-limit";
 import { slugify, validateLedgerName } from "@/shared/ledger-name";
 import { boolQuery, intQuery, strQuery } from "./query-params";
 import {
-  dedupeById,
   mightBeOwnerName,
+  readMatches,
   repoMatchesTerm,
   searchTerms,
 } from "./ledger-search";
@@ -50,7 +50,7 @@ interface LedgerPublic {
 
 const COMMIT_SHA_RE = /^[0-9a-f]{7,64}$/i;
 
-/** Gitea's largest page, and how many of them a word search reads (w21/245). */
+/** Gitea's largest page, and the most of them a word search reads (w21/245). */
 const SEARCH_FETCH_LIMIT = 50;
 const SEARCH_FETCH_PAGES = 6;
 /** Page size when the caller sends none, as Gitea's own default. */
@@ -290,56 +290,49 @@ export function setLedgersHandler(router: Router): void {
 
     // Several words, or an owner: every word must be found in `owner/name` or
     // the description. Gitea is asked about the longest word (any ledger that
-    // matches all of them matches that one), plus the owner's ledgers when a
-    // word names an owner; the rest is filtered here and then paged.
+    // matches all of them matches that one), then for the owner's ledgers when
+    // that word names an owner; the rest is filtered here and then paged.
     const primary = terms.reduce((best, term) =>
       term.length > best.length ? term : best,
     );
-    const fetchAll = async (
-      params: Parameters<typeof client.repos.repoSearch>[0],
-    ): Promise<{ repos: Repository[]; ok: boolean | null }> => {
-      const repos: Repository[] = [];
-      let ok: boolean | null = null;
-      for (
-        let upstreamPage = 1;
-        upstreamPage <= SEARCH_FETCH_PAGES;
-        upstreamPage++
-      ) {
+    const ownerId = owners.get(primary);
+    const searches = [
+      { ...filters, q: primary },
+      ...(ownerId === undefined ? [] : [{ ...filters, uid: ownerId }]),
+    ];
+    const size = limit ?? SEARCH_DEFAULT_LIMIT;
+    const start = ((page ?? 1) - 1) * size;
+    const { matches, ok } = await readMatches(
+      searches.length,
+      async (search, upstreamPage) => {
         const res = await client.repos.repoSearch({
-          ...params,
+          ...searches[search],
           page: upstreamPage,
           limit: SEARCH_FETCH_LIMIT,
         });
         const body = res.data as { ok?: boolean; data?: Repository[] };
-        ok = ok ?? body.ok ?? null;
-        const batch = body.data ?? [];
-        repos.push(...batch);
-        if (batch.length < SEARCH_FETCH_LIMIT) break;
-      }
-      return { repos, ok };
-    };
-    const byWord = await fetchAll({ ...filters, q: primary });
-    const ownerId = owners.get(primary);
-    const byOwner =
-      ownerId === undefined
-        ? { repos: [] as Repository[], ok: null }
-        : await fetchAll({ ...filters, uid: ownerId });
-    const matched = dedupeById([...byWord.repos, ...byOwner.repos]).filter(
-      (repo) =>
-        terms.every(
-          (term) =>
-            term === primary ||
-            repoMatchesTerm(
-              { full_name: repo.full_name, description: repo.description },
-              term,
-            ),
-        ),
+        return { ok: body.ok ?? null, data: body.data ?? [] };
+      },
+      {
+        keep: (repo) =>
+          terms.every(
+            (term) =>
+              term === primary ||
+              repoMatchesTerm(
+                { full_name: repo.full_name, description: repo.description },
+                term,
+              ),
+          ),
+        // A window counted back from the end (a page or limit below 1) needs
+        // every match.
+        wanted: start >= 0 && size >= 0 ? start + size : Infinity,
+        pageSize: SEARCH_FETCH_LIMIT,
+        maxPages: SEARCH_FETCH_PAGES,
+      },
     );
-    const size = limit ?? SEARCH_DEFAULT_LIMIT;
-    const start = ((page ?? 1) - 1) * size;
     ctx.body = successResponse({
-      data: matched.slice(start, start + size).map(toLedgerPublic),
-      ok: byWord.ok ?? byOwner.ok,
+      data: matches.slice(start, start + size).map(toLedgerPublic),
+      ok,
     });
   });
 

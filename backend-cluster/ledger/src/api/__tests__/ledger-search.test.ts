@@ -8,8 +8,10 @@ import { clearMemoizedGiteaClients } from "@/features/gitea/service/gitea-client
 import {
   mightBeOwnerName,
   normalizeSearchText,
+  readMatches,
   repoMatchesTerm,
   searchTerms,
+  type SearchPage,
 } from "@/api/ledger-search";
 
 const AUTH = `Basic ${Buffer.from("alice:synthetic-password").toString("base64")}`;
@@ -46,8 +48,17 @@ const REPOS = [
   repo(4, "alice", 1, "my-book", "Household budget"),
   repo(5, "bob", 2, "example-ledger", "Work"),
   repo(6, "elsewhere", 9, "demo", "A demo of open_ledger"),
+  // An owner with more ledgers than one upstream page holds.
+  ...Array.from({ length: 130 }, (_, i) =>
+    repo(100 + i, "gallery", 11, `book-${String(i + 1).padStart(3, "0")}`),
+  ),
 ];
-const OWNERS: Record<string, number> = { open_ledger: 7, alice: 1, bob: 2 };
+const OWNERS: Record<string, number> = {
+  open_ledger: 7,
+  alice: 1,
+  bob: 2,
+  gallery: 11,
+};
 
 function wire(r: Repo): Record<string, unknown> {
   return {
@@ -71,6 +82,10 @@ async function listen(server: http.Server): Promise<string> {
 
 describe("GET /ledgers/search reads the query as words (w21/245)", () => {
   const upstreamCalls: string[] = [];
+  // Searches Gitea is answering right now, and the most at once.
+  let inFlight = 0;
+  let mostInFlight = 0;
+  let searchDelayMs = 0;
   let upstream: http.Server;
   let ledgerServer: http.Server;
   let ledgerUrl: string;
@@ -92,25 +107,39 @@ describe("GET /ledgers/search reads the query as words (w21/245)", () => {
           : send(200, { id, login: user[1] });
       }
       if (url.pathname === "/api/v1/repos/search") {
-        const q = (url.searchParams.get("q") ?? "").toLowerCase();
-        const uid = url.searchParams.get("uid");
-        const desc = url.searchParams.get("includeDesc") === "true";
-        const page = Number(url.searchParams.get("page") ?? "1");
-        const limit = Number(url.searchParams.get("limit") ?? "20");
-        const found = REPOS.filter(
-          (r) =>
-            (uid === null || r.owner === Number(uid)) &&
-            (!q ||
-              r.name.toLowerCase().includes(q) ||
-              (desc && r.description.toLowerCase().includes(q))),
-        );
-        return send(200, {
-          ok: true,
-          data: found.slice((page - 1) * limit, page * limit).map(wire),
-        });
+        inFlight += 1;
+        mostInFlight = Math.max(mostInFlight, inFlight);
+        const answer = () => {
+          inFlight -= 1;
+          searchRepos(url, send);
+        };
+        return void (searchDelayMs > 0
+          ? setTimeout(answer, searchDelayMs)
+          : answer());
       }
       return send(500, { message: `Unexpected: ${request.url}` });
     });
+    const searchRepos = (
+      url: URL,
+      send: (status: number, data: unknown) => void,
+    ) => {
+      const q = (url.searchParams.get("q") ?? "").toLowerCase();
+      const uid = url.searchParams.get("uid");
+      const desc = url.searchParams.get("includeDesc") === "true";
+      const page = Number(url.searchParams.get("page") ?? "1");
+      const limit = Number(url.searchParams.get("limit") ?? "20");
+      const found = REPOS.filter(
+        (r) =>
+          (uid === null || r.owner === Number(uid)) &&
+          (!q ||
+            r.name.toLowerCase().includes(q) ||
+            (desc && r.description.toLowerCase().includes(q))),
+      );
+      send(200, {
+        ok: true,
+        data: found.slice((page - 1) * limit, page * limit).map(wire),
+      });
+    };
     config.gitea.baseUrl = await listen(upstream);
     clearMemoizedGiteaClients();
     const app = new Koa();
@@ -123,6 +152,8 @@ describe("GET /ledgers/search reads the query as words (w21/245)", () => {
 
   beforeEach(() => {
     upstreamCalls.length = 0;
+    mostInFlight = 0;
+    searchDelayMs = 0;
   });
 
   afterAll(async () => {
@@ -211,6 +242,145 @@ describe("GET /ledgers/search reads the query as words (w21/245)", () => {
     expect(await search("q=%20%20&limit=2")).toEqual([
       "open_ledger/crypto-example",
       "open_ledger/kroger",
+    ]);
+  });
+
+  /** The repository searches Gitea was asked for, as `<search> page=<n>`. */
+  const searchesRead = (): string[] =>
+    upstreamCalls
+      .filter((call) => call.startsWith("/api/v1/repos/search?"))
+      .map((call) => {
+        const params = new URL(call, "http://upstream").searchParams;
+        const search = params.has("uid")
+          ? `uid=${params.get("uid")}`
+          : `q=${params.get("q")}`;
+        return `${search} page=${params.get("page")}`;
+      })
+      .sort();
+  const book = (n: number) => `gallery/book-${String(n).padStart(3, "0")}`;
+
+  it("reads only the upstream pages an owner's first page needs (w2/135)", async () => {
+    const first = await search("q=gallery&limit=50&page=1");
+    expect(first).toEqual(Array.from({ length: 50 }, (_, i) => book(i + 1)));
+    expect(searchesRead()).toEqual(["q=gallery page=1", "uid=11 page=1"]);
+  });
+
+  it("requests the pages a later page needs together, not in turn (w2/135)", async () => {
+    searchDelayMs = 100;
+    const third = await search("q=gallery&limit=50&page=3");
+    expect(third).toEqual(Array.from({ length: 30 }, (_, i) => book(101 + i)));
+    expect(searchesRead()).toEqual([
+      "q=gallery page=1",
+      "q=gallery page=2",
+      "q=gallery page=3",
+      "uid=11 page=1",
+      "uid=11 page=2",
+      "uid=11 page=3",
+    ]);
+    expect(mostInFlight).toBe(6);
+  });
+
+  it("answers every page as the same window of the whole result (w2/135)", async () => {
+    const all = await search("q=gallery&limit=500&page=1");
+    expect(all).toEqual(Array.from({ length: 130 }, (_, i) => book(i + 1)));
+    for (const limit of [7, 20, 50, 60]) {
+      for (let page = 1; page <= Math.ceil(130 / limit) + 1; page++) {
+        expect(await search(`q=gallery&limit=${limit}&page=${page}`)).toEqual(
+          all.slice((page - 1) * limit, page * limit),
+        );
+      }
+    }
+  });
+});
+
+describe("readMatches (w2/135)", () => {
+  // Two searches that overlap, as a word search overlaps an owner's ledgers.
+  const SEARCHES = [
+    Array.from({ length: 23 }, (_, i) => ({ id: i * 3 })),
+    Array.from({ length: 41 }, (_, i) => ({ id: i * 2 })),
+  ];
+  const keep = (repo: { id: number }) => repo.id % 5 !== 0;
+  const pageSize = 10;
+  const maxPages = 4;
+
+  const reader = () => {
+    const reads: string[] = [];
+    const readPage = async (
+      search: number,
+      page: number,
+    ): Promise<SearchPage<{ id: number }>> => {
+      reads.push(`${search}:${page}`);
+      return {
+        ok: search === 0 ? null : true,
+        data: SEARCHES[search].slice((page - 1) * pageSize, page * pageSize),
+      };
+    };
+    return { reads, readPage };
+  };
+
+  // What reading every page of every search finds: first occurrences, kept.
+  const seen = new Set<number>();
+  const everything = SEARCHES.flatMap((repos) =>
+    repos.slice(0, pageSize * maxPages),
+  )
+    .filter((repo) => !seen.has(repo.id) && Boolean(seen.add(repo.id)))
+    .filter(keep)
+    .map((repo) => repo.id);
+
+  it("finds the same first matches as reading every page", async () => {
+    for (let wanted = 0; wanted <= everything.length + 2; wanted++) {
+      const { readPage } = reader();
+      const { matches, ok } = await readMatches(2, readPage, {
+        keep,
+        wanted,
+        pageSize,
+        maxPages,
+      });
+      expect(matches.slice(0, wanted).map((repo) => repo.id)).toEqual(
+        everything.slice(0, wanted),
+      );
+      expect(ok).toBe(true);
+    }
+  });
+
+  it("reads no page past the ones the wanted matches come from", async () => {
+    const { reads, readPage } = reader();
+    await readMatches(2, readPage, { keep, wanted: 5, pageSize, maxPages });
+    expect(reads.sort()).toEqual(["0:1", "1:1"]);
+  });
+
+  it("reads the pages the window spans from every search at once", async () => {
+    const { reads, readPage } = reader();
+    const { matches } = await readMatches(2, readPage, {
+      keep,
+      wanted: 25,
+      pageSize,
+      maxPages,
+    });
+    expect(matches.slice(0, 25).map((repo) => repo.id)).toEqual(
+      everything.slice(0, 25),
+    );
+    expect(reads.sort()).toEqual(["0:1", "0:2", "0:3", "1:1", "1:2", "1:3"]);
+  });
+
+  it("reads every page of every search, up to maxPages, for an endless window", async () => {
+    const { reads, readPage } = reader();
+    const { matches } = await readMatches(2, readPage, {
+      keep,
+      wanted: Infinity,
+      pageSize,
+      maxPages,
+    });
+    expect(matches.map((repo) => repo.id)).toEqual(everything);
+    expect(reads.sort()).toEqual([
+      "0:1",
+      "0:2",
+      "0:3",
+      "0:4",
+      "1:1",
+      "1:2",
+      "1:3",
+      "1:4",
     ]);
   });
 });
