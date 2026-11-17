@@ -119,6 +119,7 @@ export class AccountService implements IAccountService {
       | "emailToken"
       | "plaidItem"
       | "apiKey"
+      | "oidcIdentity"
     >,
     private readonly db: DbExecutor,
     private readonly stripe: IStripeService,
@@ -458,6 +459,7 @@ export class AccountService implements IAccountService {
       // API keys too: `api_keys` has no foreign key to cascade from, and a
       // surviving key still resolved to the deleted identity (w21/156).
       await this.models.apiKey.deleteByUserId(tx, userId);
+      await this.models.oidcIdentity.deleteByUserId(tx, userId);
       await this.models.user.deleteByUserId(tx, userId);
     });
 

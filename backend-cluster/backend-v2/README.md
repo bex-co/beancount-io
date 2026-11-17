@@ -155,6 +155,28 @@ line. It is part of the sign-up ceremony, so like `signUp` it has no REST or MCP
 twin. The first account is therefore whoever signs up first: do it right after
 the deploy. Deleting the only account reopens sign-up.
 
+**Sign-in with your own identity provider (optional).** Set `OIDC_ISSUER`,
+`OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET` to add a "Sign in with
+`OIDC_NAME`" button (default "SSO"). Register
+`<public API address>/api-gateway/auth/oidc/callback` as the client's redirect
+URI. In production that is the dashboard address; in a development stack it is
+`SERVER_URL`. An ID is tied to its account by the provider's `sub`, not by email
+unless you set `OIDC_LINK_BY_EMAIL=true`:
+
+- A linked ID signs in to its account.
+- A new ID with a verified email that no account uses gets a new account, with
+  no password and a default ledger. This works even when sign-up is closed,
+  because the operator's provider vouches for the user.
+- A new ID whose email an account already uses is refused. That user signs in
+  with their password and links the provider in Settings. With
+  `OIDC_LINK_BY_EMAIL=true` the ID is linked to that account and signs in to
+  it instead. Turn it on only when you trust the provider's verified emails,
+  because whoever controls an email there gets the account that uses it.
+- An unverified email or a blocked account is refused.
+
+`deploymentInfo { oidcProviderName }` returns the button name, or null when
+OIDC is off.
+
 Upgrading a running self-host changes three things. A stack that already has an
 account stops taking sign-ups, and there is no way yet to add another. Only
 `true` used to turn `SELF_HOST` on, so a stack that had `1`, `yes`, `y` or `on`

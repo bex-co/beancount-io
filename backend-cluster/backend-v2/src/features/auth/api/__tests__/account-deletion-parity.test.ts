@@ -64,6 +64,7 @@ async function fixture(
     oauthGrant: { revokeAllForUser: remove("oauth") },
     // w21/156: a deleted account's API keys go with it.
     apiKey: { deleteByUserId: remove("apikey") },
+    oidcIdentity: { deleteByUserId: remove("oidc") },
     plaidItem: { getByUserId: async () => [], deleteByUserId: remove("plaid") },
     emailToken: {
       deleteByUserId: async (userId: string) => remove("email")(null, userId),
@@ -178,6 +179,7 @@ describe("account deletion through real transports and the existing cleanup serv
           "jwt",
           "oauth",
           "apikey",
+          "oidc",
           "user",
           "email",
         ]);

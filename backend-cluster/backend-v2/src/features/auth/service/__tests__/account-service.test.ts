@@ -115,6 +115,9 @@ describe("AccountService", () => {
       apiKey: {
         deleteByUserId: jest.fn().mockResolvedValue(undefined),
       },
+      oidcIdentity: {
+        deleteByUserId: jest.fn().mockResolvedValue(undefined),
+      },
       emailToken: {
         deleteByUserId: jest.fn(),
       },

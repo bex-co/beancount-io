@@ -39,6 +39,7 @@ import { type IFeatureUsageService } from "@/features/feature-usage/service/feat
 import { type IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import { type IAccountService } from "@/features/auth/service/account-service";
 import { type IAuthService } from "@/features/auth/service/auth-service";
+import { type IOidcLoginService } from "@/features/auth/service/oidc-login-service";
 import type { IAuthMailService } from "@/features/auth/service/auth-mail-service";
 import { type IAuthSessionWorkflow } from "@/features/auth/workflow/auth-session-workflow";
 import { type ICliAuthService } from "@/features/auth/service/cli-auth-service";
@@ -109,6 +110,7 @@ export interface ServiceLayer {
   aiCfoUsage: IAiCfoUsageService;
   account: IAccountService;
   auth: IAuthService;
+  oidcLogin: IOidcLoginService;
   authMail: IAuthMailService;
   cliAuth: ICliAuthService;
   userProfile: IUserProfileService;

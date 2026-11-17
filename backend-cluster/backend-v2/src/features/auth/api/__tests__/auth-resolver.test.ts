@@ -675,6 +675,7 @@ describe("AuthResolver", () => {
       expect(await resolver.deploymentInfo(mockContext)).toEqual({
         selfHost: false,
         signUpOpen: true,
+        oidcProviderName: null,
       });
     });
 
@@ -690,6 +691,7 @@ describe("AuthResolver", () => {
         expect(await resolver.deploymentInfo(mockContext)).toEqual({
           selfHost: true,
           signUpOpen: expected,
+          oidcProviderName: null,
         });
       },
     );

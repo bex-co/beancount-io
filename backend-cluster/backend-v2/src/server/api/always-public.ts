@@ -53,6 +53,16 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
     reason: `${OIDC_CEREMONY} Covers the provider's own endpoints, dynamic client registration included.`,
   },
   {
+    opId: "REST GET /api-gateway/auth/oidc/start",
+    reason:
+      "Starts sign-in through the operator's OIDC provider. The caller has no session yet; a link request carries a one-time ticket minted for a signed-in user.",
+  },
+  {
+    opId: "REST GET /api-gateway/auth/oidc/callback",
+    reason:
+      "The OIDC provider sends the browser back here with a code. The handler checks the state cookie and the signed ID token before it signs anyone in.",
+  },
+  {
     opId: "REST GET /.well-known/oauth-authorization-server",
     reason:
       "RFC 8414 requires this document to be readable anonymously — a client reads it precisely because it does not yet have a credential.",

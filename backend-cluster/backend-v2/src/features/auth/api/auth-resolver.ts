@@ -199,6 +199,13 @@ class DeploymentInfoResponse {
       "Whether signUp would be accepted. False only on a self-hosted deployment that already has an account; the sign-up page is not offered then.",
   })
   public signUpOpen: boolean;
+
+  @Field(() => String, {
+    nullable: true,
+    description:
+      "The OIDC provider's name for the sign-in button, or null when OIDC sign-in is off.",
+  })
+  public oidcProviderName: string | null;
 }
 
 @ArgsType()
@@ -392,6 +399,7 @@ export class AuthResolver {
     return {
       selfHost: ctx.config.selfHost,
       signUpOpen: await this.authService.isSignUpOpen(),
+      oidcProviderName: ctx.config.oidcLogin?.name ?? null,
     };
   }
 

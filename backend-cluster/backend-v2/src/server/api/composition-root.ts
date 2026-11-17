@@ -78,6 +78,7 @@ import { setAdminApiRoute } from "@/features/admin/api/admin-api-handler";
 import { setStripeWebhookHandler } from "@/features/stripe/api/stripe-webhook-handler";
 import { setPlaidWebhookHandler } from "@/features/plaid/api/rest/plaid-webhook-handler";
 import { setV1CompatRedirectRoutes } from "@/features/v1-compat/api/redirect-handler";
+import { setOidcLoginRoutes } from "@/features/auth/api/oidc-login-routes";
 import { setLedgerApiHandler } from "@/features/ledger/api/rest/ledger-api-handler";
 import {
   setLedgerV1Routes,
@@ -211,6 +212,13 @@ const REST_FRAGMENTS: readonly RestFragment[] = [
     gate: "outside",
     register: (router, { layers, config }) =>
       setOidcRoutes(router, layers, config),
+  },
+  {
+    // Sign-in through an outside OIDC provider. Kept off `/api-gateway/oauth/`
+    // so the provider's catch-all does not swallow it.
+    feature: "oidc-login",
+    gate: "outside",
+    register: (router, { layers }) => setOidcLoginRoutes(router, layers),
   },
   {
     feature: "well-known",

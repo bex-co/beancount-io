@@ -532,6 +532,24 @@ const AUTH_VERB_ENTRIES: readonly VerbEntry[] = [
     M.sessionCeremony,
   ),
   gqlOnly(
+    "Query.oidcLinked",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.createOidcLinkUrl",
+    "session-only",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Mutation.unlinkOidc",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
     "Mutation.signUp",
     "session-only",
     R.sessionCeremony,
