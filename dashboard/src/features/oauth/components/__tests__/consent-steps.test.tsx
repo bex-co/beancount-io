@@ -25,7 +25,7 @@ vi.mock("@apollo/client/react", () => ({
   useApolloClient: () => ({ resetStore: state.resetStore }),
 }));
 
-vi.mock("@/features/auth/hooks/use-deployment-info", () => ({
+vi.mock("@/common/hooks/use-deployment-info", () => ({
   useDeploymentInfo: () => ({ selfHost: true, signUpOpen: state.signUpOpen }),
 }));
 

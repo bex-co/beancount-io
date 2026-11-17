@@ -5,7 +5,7 @@ import OAuthConsentPage from "@/features/oauth/pages/consent";
 import { handleConsentPost } from "@/features/oauth/funcs/handle-consent-post";
 import { oauthConsentLoader } from "@/features/oauth/funcs/loader";
 import { createNoIndexHead } from "@/common/lib/seo/seo-helpers";
-import { fetchDeploymentInfo } from "@/features/auth/lib/deployment-info";
+import { fetchDeploymentInfo } from "@/common/lib/deployment-info";
 
 const searchSchema = z.object({
   uid: z.string(),

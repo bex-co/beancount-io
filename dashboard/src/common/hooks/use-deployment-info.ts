@@ -3,7 +3,7 @@ import { DeploymentInfoDocument } from "@/graphql/definitions";
 import {
   MANAGED_DEPLOYMENT,
   type DeploymentInfo,
-} from "@/features/auth/lib/deployment-info";
+} from "@/common/lib/deployment-info";
 
 /**
  * The deployment's answer, read from the cache the route's `beforeLoad` filled

@@ -14,7 +14,7 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
 import { useAiCfoUsage } from "@/common/hooks/use-ai-cfo-usage";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
-import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
+import { useDeploymentInfo } from "@/common/hooks/use-deployment-info";
 import { useCreateSubscriptionSession } from "@/features/user-settings/hooks/use-create-subscription-session";
 import {
   isBilledByStore,

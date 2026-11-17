@@ -1,7 +1,7 @@
 import { redirect } from "@tanstack/react-router";
 import type { RouteBeforeLoader } from "@/common/types/route-loader";
 import { getSafeRedirectPath } from "@/common/lib/auth/auth";
-import { fetchDeploymentInfo } from "@/features/auth/lib/deployment-info";
+import { fetchDeploymentInfo } from "@/common/lib/deployment-info";
 
 /**
  * Already-signed-in visitors skip the form. A `?next=` destination is honored
