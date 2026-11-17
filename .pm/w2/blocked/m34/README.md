@@ -1,6 +1,6 @@
 # w2 · m34 — Ledger catalogs list every ledger, not the first upstream page
 
-**Worker:** worker2 **Goal:** every catalog read — REST, GraphQL, the MCP tool and the MCP catalog resources — returns the caller's complete ledger list when it asks for no page, and exactly the page size it asks for up to the documented 100, instead of whatever single page Gitea hands the ledger service **Status:** blocked (t001–t005 done; t006 waits on a production deploy)
+**Worker:** worker2 **Goal:** every catalog read — REST, GraphQL, the MCP tool and the MCP catalog resources — returns the caller's complete ledger list when it asks for no page, and exactly the page size it asks for up to the documented 100, instead of whatever single page Gitea hands the ledger service **Status:** blocked (t001–t005 done and deployed 2026-11-16; t006 waits on a deployed check from an account with more than 50 ledgers)
 
 ## Tasks (in order)
 
@@ -24,10 +24,18 @@
 
 ## Blocked
 
-- **What:** t006 Closeout. Its definition of done includes the deployed-stack checks, and the code is on `main` but not yet in production.
-- **Blocker:** production deploys are operator-triggered (`deploy/bex/README.md`: auto-deploy on push did not fire), so shipping to `main` does not change what users see.
-- **Unblock:** production backend-v2 (`beancount-api`) runs a build that includes the w2/m34 catalog fix. A deployed check proves it: signed in as an account with more than 50 ledgers, an unpaged GraphQL `listLedgers` returns more than 50. Then run t006's checks and `/pm done w2/m34/t006`.
-- **Who:** whoever deploys beancount.io; nothing in this repository can clear it.
+- **What:** t006 Closeout. Its definition of done includes deployed-stack checks that only an account with more than 50 ledgers can observe.
+- **Original blocker (2026-10-02):** production deploys are operator-triggered (`deploy/bex/README.md`: auto-deploy on push did not fire), so shipping to `main` did not change what users saw. The original condition was that production backend-v2 (`beancount-api`) runs a build that includes the fix, proven on an account with more than 50 ledgers.
+- **2026-11-16: the deploy has landed.** The operator redeployed production backend-v2 from `main`. Two public checks show the build includes the fix commit `bcb91c003`:
+  - production GraphQL serves `ManagedPriceSource.latestPriceDate`, added in `15173444f`, which descends from `bcb91c003`;
+  - the deployed `/.well-known/mcp.json` describes `listLedgers` as "every one when `page` and `limit` are omitted", text that `bcb91c003` introduced.
+- **Remaining blocker:** no credential available to a worker reaches more than 50 ledgers. The QA account in the repo-root `.env` holds 6, and an unpaged read, `limit: 100` and `limit: 50, page: 1` all return those 6. The connected MCP credential is pinned to one ledger. Below 51 ledgers the old and new code return the same lists, so neither account can show the fix working.
+- **Unblock:** on production, signed in as an account with more than 50 ledgers, an unpaged GraphQL `listLedgers` returns more than 50. The `open_ledger` showcase held 91 at the report. Two ways to clear it:
+  - the account holder runs t006's checks and records the counts here;
+  - the account holder puts that account's `QA_EMAIL` and `QA_PASSWORD` in a gitignored env file and names its path to the worker. The QA login helper takes `--env-file <path>`.
+
+  Then run `/pm unblock w2/m34`, run t006's remaining checks (switcher search for `stock`, the `/ledger` sidebar, the OAuth consent picker) and `/pm done w2/m34/t006`.
+- **Who:** the repository owner, or whoever holds the `open_ledger` account or another account with more than 50 ledgers. Nothing in this repository can clear it.
 - **Shipped baseline:** t001–t005. The workflow, parity and seeded-defect evidence is in `done/t001.md`–`done/t005.md`.
 
 ## Source + Goal linkage
