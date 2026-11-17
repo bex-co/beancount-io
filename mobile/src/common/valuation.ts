@@ -235,6 +235,54 @@ export type PricedHolding = Holding & {
   managed: boolean;
 };
 
+/**
+ * The price history judging one converted holding: the latest-reading history
+ * among its cost currencies — the ledger values a lot at a price in its cost
+ * currency, never hopping through another (w21/124) — or the operating
+ * currency's when it names none of its own. Null when no history names it.
+ */
+function priceHistoryFor(
+  holding: Holding,
+  costCurrencies: readonly string[],
+  prices: readonly PricePair[],
+  currency: string,
+  date: string | undefined,
+): { priceCurrency: string; priceDate: string; dates: string[] } | null {
+  const candidates = costCurrencies.filter(
+    (candidate) => candidate !== holding.currency,
+  );
+  let priceCurrency = currency;
+  let dates: string[] = [];
+  for (const candidate of candidates.length > 0 ? candidates : [currency]) {
+    const found = priceDates(prices, holding.currency, candidate, date);
+    if ((found.at(-1) ?? "") > (dates.at(-1) ?? "")) {
+      dates = found;
+      priceCurrency = candidate;
+    }
+  }
+  const priceDate = dates.at(-1);
+  if (priceDate === undefined) return null;
+  return { priceCurrency, priceDate, dates };
+}
+
+/** The managed feed pricing one commodity in its price currency, when one does. */
+function managedSourceFor(
+  managed: readonly ManagedSource[] | undefined,
+  commodity: string,
+  priceCurrency: string,
+): ManagedSource | null {
+  return (
+    managed?.find((entry) =>
+      pairMatches(
+        entry.commodity ?? "",
+        entry.quote ?? "",
+        commodity,
+        priceCurrency,
+      ),
+    ) ?? null
+  );
+}
+
 export type Valuation = {
   /** The total in the operating currency: priced holdings at market, the rest at cost. */
   market: number;
@@ -363,40 +411,30 @@ export function selectValuation({
     holdingsOf(cost ?? market).map((holding) => holding.currency);
   if (prices !== undefined) {
     for (const holding of converted) {
-      const candidates = costCurrencies.filter(
-        (candidate) => candidate !== holding.currency,
+      const history = priceHistoryFor(
+        holding,
+        costCurrencies,
+        prices,
+        currency,
+        date,
       );
-      let priceCurrency = currency;
-      let dates: string[] = [];
-      for (const candidate of candidates.length > 0 ? candidates : [currency]) {
-        const found = priceDates(prices, holding.currency, candidate, date);
-        if ((found.at(-1) ?? "") > (dates.at(-1) ?? "")) {
-          dates = found;
-          priceCurrency = candidate;
-        }
-      }
-      const priceDate = dates.at(-1);
-      if (priceDate === undefined) {
+      if (history === null) {
         atCostNoPrice.push(holding);
         continue;
       }
-      const source =
-        managed?.find((entry) =>
-          pairMatches(
-            entry.commodity ?? "",
-            entry.quote ?? "",
-            holding.currency,
-            priceCurrency,
-          ),
-        ) ?? null;
+      const source = managedSourceFor(
+        managed,
+        holding.currency,
+        history.priceCurrency,
+      );
       priced.push({
         ...holding,
-        priceDate,
+        priceDate: history.priceDate,
         managed: source !== null,
         stale: isPriceStale({
-          age: daysBetween(priceDate, reference),
+          age: daysBetween(history.priceDate, reference),
           managed: source,
-          dates,
+          dates: history.dates,
         }),
       });
     }
