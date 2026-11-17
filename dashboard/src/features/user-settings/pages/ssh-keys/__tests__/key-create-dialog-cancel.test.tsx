@@ -44,6 +44,8 @@ describe("KeyCreateDialog cancel resets draft", () => {
     expect(publicKey).toHaveValue("qa-public-key-placeholder");
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    // A typed draft asks before it is discarded (w2/134).
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
     fireEvent.click(screen.getByRole("button", { name: "New SSH key" }));
 
     expect(screen.getByLabelText("Key Title")).toHaveValue("");

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiKeysDocument, CreateApiKeyDocument } from "@/graphql/definitions";
 import { ApiKeyCreateDialog } from "../api-key-create-dialog";
@@ -201,5 +202,122 @@ describe("ApiKeyCreateDialog", () => {
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  });
+
+  /**
+   * A typed token name and chosen permissions vanished on Escape with no
+   * question (w2/134, after w2/123).
+   */
+  describe("asks before discarding what was typed", () => {
+    const tokenDialog = () =>
+      screen.queryByRole("dialog", { name: "Create personal access token" });
+    const confirm = () =>
+      screen.queryByRole("dialog", { name: "Discard what you typed?" });
+    const renderDialog = () =>
+      render(
+        <>
+          <p>Page behind</p>
+          <ApiKeyCreateDialog>
+            <button>New token</button>
+          </ApiKeyCreateDialog>
+        </>,
+      );
+
+    it("closes an untouched form at once", async () => {
+      const user = userEvent.setup();
+      renderDialog();
+      await user.click(screen.getByRole("button", { name: "New token" }));
+      expect(tokenDialog()).toBeVisible();
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(tokenDialog()).toBeNull());
+      expect(confirm()).toBeNull();
+    });
+
+    // Focus goes back to where it was when leaving was asked for.
+    it.each([
+      [
+        "Escape",
+        async (user: ReturnType<typeof userEvent.setup>) =>
+          user.keyboard("{Escape}"),
+        () => screen.getByLabelText("Token name"),
+      ],
+      [
+        "Close",
+        async (user: ReturnType<typeof userEvent.setup>) =>
+          user.click(screen.getByRole("button", { name: /^close$/i })),
+        () => screen.getByRole("button", { name: /^close$/i }),
+      ],
+      [
+        "Cancel",
+        async (user: ReturnType<typeof userEvent.setup>) =>
+          user.click(screen.getByRole("button", { name: "Cancel" })),
+        () => screen.getByRole("button", { name: "Cancel" }),
+      ],
+      [
+        "an outside click",
+        // Radix dismisses on a pointerdown outside its content; the page
+        // behind a modal has pointer-events: none, so dispatch it directly.
+        async () => {
+          fireEvent.pointerDown(screen.getByText("Page behind"));
+        },
+        () => screen.getByLabelText("Token name"),
+      ],
+    ])(
+      "asks on %s, and Keep editing keeps the form",
+      async (_exit, leave, focusTarget) => {
+        const user = userEvent.setup();
+        renderDialog();
+        await user.click(screen.getByRole("button", { name: "New token" }));
+        await user.click(
+          screen.getByRole("checkbox", { name: "ledger.write" }),
+        );
+        await user.type(screen.getByLabelText("Token name"), "Importer");
+
+        await leave(user);
+        expect(
+          await screen.findByRole("dialog", {
+            name: "Discard what you typed?",
+          }),
+        ).toBeVisible();
+        await user.click(screen.getByRole("button", { name: "Keep editing" }));
+
+        await waitFor(() => expect(confirm()).toBeNull());
+        expect(screen.getByLabelText("Token name")).toHaveValue("Importer");
+        expect(
+          screen.getByRole("checkbox", { name: "ledger.write" }),
+        ).toBeChecked();
+        await waitFor(() => expect(focusTarget()).toHaveFocus());
+      },
+    );
+
+    it("asks for a changed option alone, and Discard resets it", async () => {
+      const user = userEvent.setup();
+      renderDialog();
+      await user.click(screen.getByRole("button", { name: "New token" }));
+      await user.click(screen.getByRole("checkbox", { name: "ledger.write" }));
+      await user.keyboard("{Escape}");
+      await user.click(await screen.findByRole("button", { name: "Discard" }));
+      await waitFor(() => expect(tokenDialog()).toBeNull());
+
+      await user.click(screen.getByRole("button", { name: "New token" }));
+      expect(
+        screen.getByRole("checkbox", { name: "ledger.write" }),
+      ).not.toBeChecked();
+    });
+
+    it("closes the created token's view without asking", async () => {
+      const user = userEvent.setup();
+      renderDialog();
+      await user.click(screen.getByRole("button", { name: "New token" }));
+      await user.type(screen.getByLabelText("Token name"), "CI");
+      await user.click(screen.getByRole("button", { name: "Create token" }));
+      expect(
+        await screen.findByDisplayValue("bcio_only-shown-once"),
+      ).toBeInTheDocument();
+
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      expect(confirm()).toBeNull();
+    });
   });
 });

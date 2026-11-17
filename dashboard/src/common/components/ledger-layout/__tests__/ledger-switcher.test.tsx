@@ -298,6 +298,61 @@ describe("LedgerSwitcher", () => {
     },
   );
 
+  // Create Ledger closed on one Escape with a typed name and description
+  // (w2/134); the switcher's copy asks as the /ledger sidebar's does.
+  it("asks before Create Ledger discards what was typed", async () => {
+    const user = userEvent.setup();
+    render(
+      <SidebarProvider>
+        <LedgerSwitcher
+          currentLedgerId="open_ledger/ledger-1"
+          currentLedgerName="ledger-1"
+          currentLedgerFullName="open_ledger/ledger-1"
+        />
+      </SidebarProvider>,
+    );
+    const createDialog = () =>
+      screen.queryByRole("dialog", { name: "Create New Ledger" });
+    const confirm = () =>
+      screen.queryByRole("dialog", { name: "Discard what you typed?" });
+    const openCreate = async () => {
+      await user.click(
+        screen.getByRole("combobox", { name: "ledger-1 — switch ledger" }),
+      );
+      await user.click(
+        await screen.findByRole("button", { name: "Create Ledger" }),
+      );
+      expect(await screen.findByLabelText("Ledger Name")).toHaveValue(
+        "my-book",
+      );
+    };
+
+    // Untouched, it closes at once.
+    await openCreate();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(createDialog()).toBeNull());
+    expect(confirm()).toBeNull();
+
+    await openCreate();
+    await user.type(
+      screen.getByLabelText("Description (Optional)"),
+      "Household books",
+    );
+    await user.keyboard("{Escape}");
+    expect(
+      await screen.findByRole("dialog", { name: "Discard what you typed?" }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Keep editing" }));
+    await waitFor(() => expect(confirm()).toBeNull());
+    expect(screen.getByLabelText("Description (Optional)")).toHaveValue(
+      "Household books",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await user.click(await screen.findByRole("button", { name: "Discard" }));
+    await waitFor(() => expect(createDialog()).toBeNull());
+  });
+
   describe("failed ledger read", () => {
     const view = () => (
       <SidebarProvider>

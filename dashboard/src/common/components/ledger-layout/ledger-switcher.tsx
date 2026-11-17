@@ -11,6 +11,7 @@ import {
   useCreateLedger,
   type CreateLedgerFormValues,
 } from "@/features/ledger-list/hooks/use-create-ledger";
+import { useLedgerFormDialog } from "@/features/ledger-list/hooks/use-ledger-form-dialog";
 import {
   Popover,
   PopoverContent,
@@ -112,6 +113,7 @@ function LedgerAuthenticatedSwitcher({
   const { isMobile, setOpenMobile } = useSidebar();
   const [open, setOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const createDialog = useLedgerFormDialog(() => setIsCreateDialogOpen(false));
 
   const closeMobileDrawer = () => {
     if (isMobile) {
@@ -204,6 +206,7 @@ function LedgerAuthenticatedSwitcher({
           to: `/ledger/${ledgerOwner}/${ledgerName}`,
         });
       }
+      return true;
     } catch (error) {
       toast.error(formatError(error));
       console.error("Failed to create ledger:", error);
@@ -395,8 +398,11 @@ function LedgerAuthenticatedSwitcher({
       </div>
 
       {/* Create Ledger Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+      <Dialog
+        open={isCreateDialogOpen}
+        onOpenChange={createDialog.onOpenChange}
+      >
+        <DialogContent busy={createDialog.busy}>
           <DialogHeader>
             <DialogTitle>{t("page.dashboard.createNewLedger")}</DialogTitle>
             <DialogDescription>
@@ -406,8 +412,9 @@ function LedgerAuthenticatedSwitcher({
           <LedgerForm
             onSubmit={handleCreateLedger}
             isLoading={createLoading}
-            onCancel={() => setIsCreateDialogOpen(false)}
+            {...createDialog.formProps}
           />
+          {createDialog.confirmation}
         </DialogContent>
       </Dialog>
     </>

@@ -69,6 +69,7 @@ import {
   type CreateLedgerFormValues,
 } from "@/features/ledger-list/hooks/use-create-ledger";
 import { LedgerForm } from "@/features/ledger-list/components/ledger-form";
+import { useLedgerFormDialog } from "@/features/ledger-list/hooks/use-ledger-form-dialog";
 import { toast } from "sonner";
 import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
 import { decodeLedgerId } from "@/common/lib/utils/encode";
@@ -314,6 +315,8 @@ export function DashboardSidebar() {
   const deleteReturnFocusRef = useRef<HTMLElement | null>(null);
   const editReturnFocusRef = useRef<HTMLElement | null>(null);
   const skipEditFocusRestoreRef = useRef(false);
+  const createDialog = useLedgerFormDialog(() => setIsCreateDialogOpen(false));
+  const editDialog = useLedgerFormDialog(() => setEditingLedger(null));
 
   const {
     data,
@@ -366,6 +369,7 @@ export function DashboardSidebar() {
         );
         void navigate({ to: `/ledger/${ledgerOwner}/${ledgerName}` });
       }
+      return true;
     } catch (error) {
       toast.error(formatError(error));
       console.error("Failed to create ledger:", error);
@@ -482,8 +486,14 @@ export function DashboardSidebar() {
       </Sidebar>
 
       {/* Create Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent data-testid="create-ledger-dialog">
+      <Dialog
+        open={isCreateDialogOpen}
+        onOpenChange={createDialog.onOpenChange}
+      >
+        <DialogContent
+          data-testid="create-ledger-dialog"
+          busy={createDialog.busy}
+        >
           <DialogHeader>
             <DialogTitle>{t("page.dashboard.createNewLedger")}</DialogTitle>
             <DialogDescription>
@@ -493,17 +503,16 @@ export function DashboardSidebar() {
           <LedgerForm
             onSubmit={handleCreateLedger}
             isLoading={createLoading}
-            onCancel={() => setIsCreateDialogOpen(false)}
+            {...createDialog.formProps}
           />
+          {createDialog.confirmation}
         </DialogContent>
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog
-        open={!!editingLedger}
-        onOpenChange={() => setEditingLedger(null)}
-      >
+      <Dialog open={!!editingLedger} onOpenChange={editDialog.onOpenChange}>
         <DialogContent
+          busy={editDialog.busy}
           onCloseAutoFocus={(event) => {
             if (skipEditFocusRestoreRef.current) {
               skipEditFocusRestoreRef.current = false;
@@ -563,15 +572,17 @@ export function DashboardSidebar() {
                       }
                     }
                   }
+                  return true;
                 } catch (error) {
                   toast.error(formatError(error));
                   console.error("Failed to update ledger:", error);
                 }
               }}
               isLoading={updateLoading}
-              onCancel={() => setEditingLedger(null)}
+              {...editDialog.formProps}
             />
           )}
+          {editDialog.confirmation}
         </DialogContent>
       </Dialog>
 

@@ -29,6 +29,7 @@ import { todayIsoDate } from "@/common/components/ui/date-picker-utils";
 import { useOpenAccountSchema } from "@/common/hooks/use-open-account-schema";
 import { useWriteOutcome } from "@/common/hooks/use-write-outcome";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
+import { useDiscardDraftGuard } from "@/common/components/discard-draft-guard";
 
 type OpenAccountFormData = {
   date: string;
@@ -126,8 +127,19 @@ export function OpenAccountDialog({
   // and neither Cancel, Escape nor the close button can dismiss it.
   const { submit, pending } = usePendingSubmit(form, onSubmit);
 
+  // Cancel, Close, Escape and an outside click ask before discarding a typed
+  // account (w2/134); an untouched draft closes at once.
+  // Read during render: react-hook-form tracks only what a render reads.
+  const { requestLeave, confirmation } = useDiscardDraftGuard(
+    form.formState.isDirty,
+  );
+  const dismiss = () => onOpenChange(false);
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => (v ? onOpenChange(true) : requestLeave(dismiss))}
+    >
       <DialogContent
         busy={pending}
         className="sm:max-w-[480px]"
@@ -192,7 +204,7 @@ export function OpenAccountDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => requestLeave(dismiss)}
                 >
                   {t("common.cancel")}
                 </Button>
@@ -207,6 +219,7 @@ export function OpenAccountDialog({
             </fieldset>
           </form>
         </Form>
+        {confirmation}
       </DialogContent>
     </Dialog>
   );

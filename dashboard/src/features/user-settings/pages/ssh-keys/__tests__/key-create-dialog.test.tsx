@@ -186,6 +186,15 @@ vi.mock("@/common/components/ui/alert", () => ({
   ),
 }));
 
+// These tests replace the dialog primitives, which would also render the
+// discard question's dialog; key-create-dialog-cancel covers that question.
+vi.mock("@/common/components/discard-draft-guard", () => ({
+  useDiscardDraftGuard: () => ({
+    requestLeave: (leave: () => void) => leave(),
+    confirmation: null,
+  }),
+}));
+
 describe("KeyCreateDialog", () => {
   beforeEach(() => {
     vi.clearAllMocks();

@@ -19,6 +19,8 @@ import {
   type CreateLedgerMutationVariables,
 } from "@/graphql/definitions";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
+import { useReportDirty } from "@/common/hooks/use-report-dirty";
 import { useMemo, useEffect } from "react";
 import { LimitIndicator } from "@/common/components/limit-indicator";
 import { useUserLimits } from "@/common/hooks/use-user-limits";
@@ -104,10 +106,17 @@ const createLedgerFormSchema = (t: (key: string) => string) =>
 
 interface LedgerFormProps {
   initialData?: Partial<CreateLedgerMutationVariables>;
-  onSubmit: (data: CreateLedgerFormValues) => void | Promise<void>;
+  /** Resolves `true` once the ledger is saved; anything else is a failure. */
+  onSubmit: (
+    data: CreateLedgerFormValues,
+  ) => boolean | void | Promise<boolean | void>;
   isLoading?: boolean;
   onCancel?: () => void;
   hideLimitIndicator?: boolean;
+  /** Whether the form holds input the reader typed (w2/134). */
+  onDirtyChange?: (dirty: boolean) => void;
+  /** Whether a save is in flight, for the dialog to hold its dismissal. */
+  onPendingChange?: (pending: boolean) => void;
 }
 
 /**
@@ -120,6 +129,8 @@ export function LedgerForm({
   isLoading = false,
   onCancel,
   hideLimitIndicator = false,
+  onDirtyChange,
+  onPendingChange,
 }: LedgerFormProps) {
   const { t, i18n } = useTranslations();
   const { limits, tier, isAtLedgerLimit, defaultCurrency } = useUserLimits();
@@ -149,15 +160,16 @@ export function LedgerForm({
   // preference, else the browser region's currency, else USD. Browser locales
   // are read after mount, so server and client render the same first frame;
   // a currency the customer picked is never replaced.
+  // A prefill is the form's default, not input: it alone never asks before
+  // the dialog closes (w2/134).
   useEffect(() => {
     if (!isCreate || form.getFieldState("currency").isDirty) return;
-    form.setValue(
-      "currency",
-      defaultLedgerCurrency({
+    form.resetField("currency", {
+      defaultValue: defaultLedgerCurrency({
         saved: defaultCurrency,
         locales: browserLocales(),
       }),
-    );
+    });
   }, [isCreate, defaultCurrency, form]);
 
   const currencyOptions = useMemo(() => {
@@ -186,7 +198,7 @@ export function LedgerForm({
           (ledger: { name: string }) => ledger.name,
         );
         const defaultName = generateDefaultLedgerName(existingNames);
-        form.setValue("name", defaultName);
+        form.resetField("name", { defaultValue: defaultName });
       }
     }
   }, [isCreate, ledgersData, form]);
@@ -227,13 +239,24 @@ export function LedgerForm({
             ? { template: data.template }
             : {}),
         };
-    await onSubmit(submitData);
+    return onSubmit(submitData);
   };
+
+  // One save at a time: a second Enter or click sends nothing, and the
+  // fields lock until it settles (w2/134).
+  const { submit, pending } = usePendingSubmit(
+    form,
+    handleSubmit,
+    onPendingChange,
+  );
+  const locked = isLoading || pending;
+  // Read during render: react-hook-form tracks only what a render reads.
+  useReportDirty(form.formState.isDirty, onDirtyChange);
 
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form onSubmit={submit} className="space-y-6">
           {limits && isCreate && !hideLimitIndicator ? (
             <LimitIndicator
               used={limits.ledgersUsed}
@@ -255,7 +278,7 @@ export function LedgerForm({
                   <Input
                     placeholder={t("page.dashboard.enterLedgerName")}
                     {...field}
-                    disabled={isLoading}
+                    disabled={locked}
                     className="transition-colors duration-200"
                     data-testid="ledger-name-input"
                   />
@@ -320,7 +343,7 @@ export function LedgerForm({
                             field.value === value
                               ? "border-primary bg-primary/5 ring-1 ring-primary"
                               : "border-input hover:bg-muted/50",
-                            isLoading && "cursor-not-allowed opacity-60",
+                            locked && "cursor-not-allowed opacity-60",
                           )}
                         >
                           <input
@@ -330,7 +353,7 @@ export function LedgerForm({
                             checked={field.value === value}
                             onBlur={field.onBlur}
                             onChange={() => field.onChange(value)}
-                            disabled={isLoading}
+                            disabled={locked}
                             className="sr-only"
                           />
                           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -374,7 +397,7 @@ export function LedgerForm({
                         })
                       }
                       allowCustom={false}
-                      disabled={isLoading}
+                      disabled={locked}
                     />
                   </FormControl>
                   <FormDescription className="text-muted-foreground text-sm">
@@ -399,7 +422,7 @@ export function LedgerForm({
                     placeholder={t("page.dashboard.enterDescription")}
                     {...field}
                     maxLength={LEDGER_DESCRIPTION_MAX}
-                    disabled={isLoading}
+                    disabled={locked}
                     className="transition-colors duration-200"
                   />
                 </FormControl>
@@ -453,7 +476,7 @@ export function LedgerForm({
                     <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      disabled={isLoading}
+                      disabled={locked}
                     />
                   </FormControl>
                 </div>
@@ -467,7 +490,7 @@ export function LedgerForm({
                 type="button"
                 variant="outline"
                 onClick={onCancel}
-                disabled={isLoading}
+                disabled={locked}
                 className="transition-colors duration-200"
               >
                 {t("common.cancel")}
@@ -475,7 +498,7 @@ export function LedgerForm({
             )}
             <Button
               type="submit"
-              disabled={isLoading || (isCreate && isAtLedgerLimit)}
+              disabled={locked || (isCreate && isAtLedgerLimit)}
               className="transition-colors duration-200"
               title={
                 isAtLedgerLimit
@@ -484,7 +507,7 @@ export function LedgerForm({
               }
               data-testid="ledger-form-submit"
             >
-              {isLoading
+              {locked
                 ? t("common.saving")
                 : isCreate
                   ? t("page.dashboard.createLedger")

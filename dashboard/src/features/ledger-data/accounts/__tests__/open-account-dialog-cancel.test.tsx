@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import { OpenAccountDialog } from "../open-account-dialog";
@@ -52,16 +53,19 @@ describe("OpenAccountDialog cancel resets draft", () => {
     vi.clearAllMocks();
   });
 
-  it("clears the account name after Cancel before reopening", () => {
+  it("clears the account name after Cancel before reopening", async () => {
+    const user = userEvent.setup();
     render(<Harness />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Open Account" }));
+    await user.click(screen.getByRole("button", { name: "Open Account" }));
     const account = screen.getByLabelText("Account Name");
-    fireEvent.change(account, { target: { value: "Assets:QaCancelDraft" } });
+    await user.type(account, "Assets:QaCancelDraft");
     expect(account).toHaveValue("Assets:QaCancelDraft");
 
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    fireEvent.click(screen.getByRole("button", { name: "Open Account" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    // A typed draft asks before it is discarded (w2/134).
+    await user.click(await screen.findByRole("button", { name: "Discard" }));
+    await user.click(screen.getByRole("button", { name: "Open Account" }));
 
     expect(screen.getByLabelText("Account Name")).toHaveValue("");
   });

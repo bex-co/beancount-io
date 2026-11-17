@@ -79,7 +79,6 @@
 - [136 — In Persian, table column headings sit on the physical left while their values start on the right](./136.md) — shared `TableHead` `text-left`; table counterpart of w2/132
 - [137 — The account page's Units, Change and Balance columns print the raw decimal under a localized period table](./137.md) — `JournalTable` amounts missed by w2/119's `<LedgerAmount>` move
 - [135 — Signed in, a Gallery search for a common term takes 4–5 s per request (under 1.2 s signed out)](./135.md) — backend-v2 Gitea search as the user; "Show more ledgers" waits 5–10 s
-- [134 — Create Ledger, Open Account, and the SSH and API key dialogs still close on Escape and lose typed input](./134.md) — the w2/123 discard guard and AGENTS rule reached only New Entry and Add Budget; Create Ledger and SSH key also lack `busy`
 
 - [090 — Add manual entry to the first-month guide](./blocked/090.md) — Codex twelve-checkpoint candidate and native regressions complete; fresh Claude release gate remains — 2026-11-11: Claude works on the macOS checkout, but the candidates and Codex are only on the Linux runtime.
 

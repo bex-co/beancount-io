@@ -35,6 +35,7 @@ import { Input } from "@/common/components/ui/input";
 import { Label } from "@/common/components/ui/label";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { useDiscardDraftGuard } from "@/common/components/discard-draft-guard";
 import { ApiKeysDocument, CreateApiKeyDocument } from "@/graphql/definitions";
 import {
   API_KEY_SCOPES,
@@ -195,6 +196,17 @@ export function ApiKeyCreateDialog({ children }: ApiKeyCreateDialogProps) {
     setOpen(nextOpen);
   };
 
+  // Cancel, Close, Escape and an outside click ask before discarding a typed
+  // key name or chosen options (w2/134); an untouched form closes at once.
+  // Once the key is created the form is spent, and the secret's own view
+  // closes directly. Read during render: react-hook-form tracks only what a
+  // render reads.
+  const formDirty = form.formState.isDirty;
+  const { requestLeave, confirmation } = useDiscardDraftGuard(
+    !plaintext && formDirty,
+  );
+  const dismiss = () => handleOpenChange(false);
+
   const handleCreate = async (data: ApiKeyFormData) => {
     try {
       setErrorMessage(null);
@@ -229,7 +241,12 @@ export function ApiKeyCreateDialog({ children }: ApiKeyCreateDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) =>
+        next ? handleOpenChange(true) : requestLeave(dismiss)
+      }
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-xl" busy={loading}>
         {plaintext ? (
@@ -394,7 +411,7 @@ export function ApiKeyCreateDialog({ children }: ApiKeyCreateDialogProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleOpenChange(false)}
+                  onClick={() => requestLeave(dismiss)}
                   disabled={loading}
                 >
                   {t("common.cancel")}
@@ -411,6 +428,7 @@ export function ApiKeyCreateDialog({ children }: ApiKeyCreateDialogProps) {
             </form>
           </Form>
         )}
+        {confirmation}
       </DialogContent>
     </Dialog>
   );

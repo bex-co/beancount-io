@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import * as apolloClient from "@apollo/client/react";
 import { toast } from "sonner";
@@ -475,6 +481,199 @@ describe("DashboardSidebar", () => {
       expect(screen.getByTestId("create-ledger-dialog")).toBeInTheDocument();
 
       consoleError.mockRestore();
+    });
+  });
+
+  /**
+   * Create Ledger closed on one Escape with a typed name and description, and
+   * Escape during the create dismissed it before the ledger existed (w2/134).
+   * Edit Ledger Settings shares the form, so it asks the same way.
+   */
+  describe("ledger dialogs ask before discarding what was typed", () => {
+    const confirm = () =>
+      screen.queryByRole("dialog", { name: "Discard what you typed?" });
+    const createDialog = () =>
+      screen.queryByRole("dialog", { name: "Create New Ledger" });
+    const ledgerName = () => screen.getByLabelText("Ledger Name");
+    const description = () => screen.getByLabelText("Description (Optional)");
+
+    async function openCreate(user: ReturnType<typeof userEvent.setup>) {
+      setLedgerQueryResult({ data: { listLedgers: [] }, loading: false });
+      renderSidebar();
+      await user.click(screen.getByTestId("create-ledger-btn"));
+      // The suggested name is filled in for the reader, not typed by them.
+      await waitFor(() => expect(ledgerName()).toHaveValue("my-book"));
+    }
+
+    it("closes an untouched Create Ledger at once, suggested name and all", async () => {
+      const user = userEvent.setup();
+      await openCreate(user);
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(createDialog()).toBeNull());
+      expect(confirm()).toBeNull();
+    });
+
+    it("closes at once when a changed name is put back to the suggestion", async () => {
+      const user = userEvent.setup();
+      await openCreate(user);
+      await user.type(ledgerName(), "-draft");
+      await user.tripleClick(ledgerName());
+      await user.keyboard("my-book");
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(createDialog()).toBeNull());
+      expect(confirm()).toBeNull();
+    });
+
+    // Focus goes back to where it was when leaving was asked for.
+    it.each([
+      [
+        "Escape",
+        async (user: ReturnType<typeof userEvent.setup>) =>
+          user.keyboard("{Escape}"),
+        description,
+      ],
+      [
+        "Close",
+        async (user: ReturnType<typeof userEvent.setup>) =>
+          user.click(screen.getByRole("button", { name: /^close$/i })),
+        () => screen.getByRole("button", { name: /^close$/i }),
+      ],
+      [
+        "Cancel",
+        async (user: ReturnType<typeof userEvent.setup>) =>
+          user.click(screen.getByRole("button", { name: "Cancel" })),
+        () => screen.getByRole("button", { name: "Cancel" }),
+      ],
+      [
+        "an outside click",
+        // Radix dismisses on a pointerdown outside its content; the page
+        // behind a modal has pointer-events: none, so dispatch it directly.
+        async () => {
+          fireEvent.pointerDown(
+            screen.getByRole("button", {
+              name: "Go to dashboard",
+              hidden: true,
+            }),
+          );
+        },
+        description,
+      ],
+    ])(
+      "asks before Create Ledger closes on %s, and Keep editing keeps the draft",
+      async (_exit, leave, focusTarget) => {
+        const user = userEvent.setup();
+        await openCreate(user);
+        await user.tripleClick(ledgerName());
+        await user.keyboard("qa-draft-guard");
+        await user.type(description(), "Household books");
+
+        await leave(user);
+        expect(
+          await screen.findByRole("dialog", {
+            name: "Discard what you typed?",
+          }),
+        ).toBeVisible();
+        await user.click(screen.getByRole("button", { name: "Keep editing" }));
+
+        await waitFor(() => expect(confirm()).toBeNull());
+        expect(ledgerName()).toHaveValue("qa-draft-guard");
+        expect(description()).toHaveValue("Household books");
+        await waitFor(() => expect(focusTarget()).toHaveFocus());
+      },
+    );
+
+    it("closes Create Ledger once the reader chooses Discard, and reopens fresh", async () => {
+      const user = userEvent.setup();
+      await openCreate(user);
+      await user.type(description(), "Household books");
+      await user.keyboard("{Escape}");
+      await user.click(await screen.findByRole("button", { name: "Discard" }));
+      await waitFor(() => expect(createDialog()).toBeNull());
+      expect(mockCreateMutation).not.toHaveBeenCalled();
+
+      await user.click(screen.getByTestId("create-ledger-btn"));
+      await waitFor(() => expect(description()).toHaveValue(""));
+    });
+
+    it("holds Escape while the ledger is being created, then closes without asking", async () => {
+      const user = userEvent.setup();
+      let finish: (value: unknown) => void = () => {};
+      mockCreateMutation.mockReturnValue(
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+      );
+      await openCreate(user);
+      await user.type(description(), "Household books");
+      await user.click(screen.getByTestId("ledger-form-submit"));
+      await waitFor(() => expect(mockCreateMutation).toHaveBeenCalledTimes(1));
+
+      // The create is in flight: the draft is locked and stays in front.
+      expect(description()).toBeDisabled();
+      expect(screen.getByRole("button", { name: /^close$/i })).toBeDisabled();
+      await user.keyboard("{Escape}");
+      expect(createDialog()).toBeVisible();
+      expect(confirm()).toBeNull();
+
+      // A second submit sends nothing while the first is pending.
+      fireEvent.submit(description().closest("form") as HTMLFormElement);
+      expect(mockCreateMutation).toHaveBeenCalledTimes(1);
+
+      finish({
+        data: {
+          createLedger: makeLedger({
+            id: "alice/my-book",
+            name: "my-book",
+            fullName: "alice/my-book",
+          }),
+        },
+      });
+      await waitFor(() => expect(createDialog()).toBeNull());
+      expect(confirm()).toBeNull();
+      expect(mockNavigate).toHaveBeenCalledWith({
+        to: "/ledger/alice/my-book",
+      });
+    });
+
+    it("asks before Edit Ledger Settings discards a changed description", async () => {
+      const user = userEvent.setup();
+      setLedgerQueryResult({
+        data: { listLedgers: [adminLedger] },
+        loading: false,
+      });
+      renderSidebar();
+      const editDialog = () =>
+        screen.queryByRole("dialog", { name: "Edit Ledger Settings" });
+      const openEdit = async () => {
+        await user.click(screen.getByTestId("ledger-settings-btn"));
+        await user.click(
+          await screen.findByRole("menuitem", { name: "Edit Ledger" }),
+        );
+        expect(await screen.findByLabelText("Ledger Name")).toHaveValue(
+          "Personal",
+        );
+      };
+
+      // Untouched settings close at once.
+      await openEdit();
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(editDialog()).toBeNull());
+      expect(confirm()).toBeNull();
+
+      await openEdit();
+      await user.type(description(), " and savings");
+      await user.keyboard("{Escape}");
+      expect(
+        await screen.findByRole("dialog", { name: "Discard what you typed?" }),
+      ).toBeVisible();
+      await user.click(screen.getByRole("button", { name: "Keep editing" }));
+      await waitFor(() => expect(confirm()).toBeNull());
+      expect(description()).toHaveValue("Household books and savings");
+
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+      await user.click(await screen.findByRole("button", { name: "Discard" }));
+      await waitFor(() => expect(editDialog()).toBeNull());
+      expect(mockUpdateMutation).not.toHaveBeenCalled();
     });
   });
 
