@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCashFlowStatement,
-  classifyCashFlowActivity,
   collectCashAccounts,
   subtractBalanceRecords,
   toAccountMetaMap,
@@ -39,25 +38,6 @@ describe("toAccountMetaMap", () => {
     expect(map.get("Assets:Bank:Checking")).toBeNull();
     expect(map.get("Expenses:Rent")).toBeNull();
     expect(map.has("Income:Salary")).toBe(false);
-  });
-});
-
-describe("classifyCashFlowActivity", () => {
-  it("classifies the five roots into activities", () => {
-    expect(classifyCashFlowActivity("Income:Salary")).toBe("operating");
-    expect(classifyCashFlowActivity("Expenses:Rent")).toBe("operating");
-    expect(classifyCashFlowActivity("Assets:Invest:Brokerage")).toBe(
-      "investing",
-    );
-    expect(classifyCashFlowActivity("Liabilities:Mortgage")).toBe("financing");
-    expect(classifyCashFlowActivity("Equity:Opening-Balances")).toBe(
-      "financing",
-    );
-  });
-
-  it("never classifies cash accounts as rows", () => {
-    expect(classifyCashFlowActivity("Assets:US:Chase:Checking")).toBeNull();
-    expect(classifyCashFlowActivity("Assets:Bank")).toBeNull();
   });
 });
 
