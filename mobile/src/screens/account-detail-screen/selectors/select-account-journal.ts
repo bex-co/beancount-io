@@ -413,6 +413,71 @@ export type AccountJournalSection = {
   data: AccountJournalRow[];
 };
 
+/** Precision a day's total reads at: its units rows' scales, else its recorded money scales. */
+function dayTotalScale(
+  data: readonly AccountJournalRow[],
+  units: AccountJournalRow["units"],
+): number {
+  if (units) {
+    return Math.max(...data.map((row) => row.units?.scale ?? 0));
+  }
+  return Math.max(...data.map((row) => row.moneyScale ?? 2));
+}
+
+/**
+ * A day's changes netted. Rounded to what the header shows before its sign is
+ * read: summed as floats, 4.10 + 8.20 − 12.30 left −1.8e-15, a day of "-$0.00"
+ * over rows that net to nothing (w21/163). `+ 0` turns a rounded -0 into 0.
+ */
+function dayNet(data: readonly AccountJournalRow[], scale: number): number {
+  return (
+    Number(data.reduce((sum, row) => sum + row.change, 0).toFixed(scale)) + 0
+  );
+}
+
+/**
+ * A day's shown total: a units day reads in its commodity — exactly as the
+ * ledger wrote it when one row holds more digits than a double does — and a
+ * money day in the operating currency. Sign is an explicit prefix; the amount
+ * carries the symbol (or code suffix).
+ */
+function formatDayShown(
+  data: readonly AccountJournalRow[],
+  units: AccountJournalRow["units"],
+  net: number,
+  scale: number,
+  currency: string,
+): string {
+  if (!units) {
+    return formatAccountJournalChange(net, currency, scale);
+  }
+  const exactNet = exactSum(
+    data.map((row) => ({ number: row.change, scale, exact: row.changeExact })),
+  );
+  if (exactNet === undefined) {
+    return formatUnits(net, units.currency, scale, net > 0);
+  }
+  return (
+    formatExactUnits(exactNet, units.currency, net > 0) ??
+    formatUnits(net, units.currency, scale, net > 0)
+  );
+}
+
+/**
+ * A day's total line from its shown total: a day that moved only other
+ * currencies says so, not "$0.00" (w21/100); one that moved both names the
+ * others beside the shown total (w21/421).
+ */
+function joinDayTotal(
+  shown: string,
+  net: number,
+  others: readonly Holding[],
+): string {
+  if (others.length === 0) return shown;
+  if (net === 0) return formatOtherChanges(others);
+  return `${shown} · ${formatOtherChanges(others)}`;
+}
+
 /**
  * Group display rows into date sections for the SectionList, with a net-change
  * total per section matching Journal's section-header layout.
@@ -437,42 +502,15 @@ export function groupAccountJournalRowsToSections(
   const last = groups.size - 1;
   return Array.from(groups.entries()).map(([isoDate, data], index) => {
     const units = data[0].units;
-    const scale = units
-      ? Math.max(...data.map((r) => r.units?.scale ?? 0))
-      : Math.max(...data.map((r) => r.moneyScale ?? 2));
-    // Rounded to what the header shows before its sign is read: summed as
-    // floats, 4.10 + 8.20 − 12.30 left −1.8e-15, a day of "-$0.00" over rows
-    // that net to nothing (w21/163). `+ 0` turns a rounded -0 into 0.
-    const net =
-      Number(data.reduce((sum, r) => sum + r.change, 0).toFixed(scale)) + 0;
-    // A day that moved only other currencies says so, not "$0.00" (w21/100);
-    // one that moved both names the others beside the shown total (w21/421).
+    const scale = dayTotalScale(data, units);
+    const net = dayNet(data, scale);
     const others = sumOtherChanges(data);
-    // Sign is an explicit prefix; the amount carries the symbol (or code suffix).
-    const exactNet = units
-      ? exactSum(
-          data.map((r) => ({
-            number: r.change,
-            scale,
-            exact: r.changeExact,
-          })),
-        )
-      : undefined;
-    const shown = units
-      ? ((exactNet !== undefined
-          ? formatExactUnits(exactNet, units.currency, net > 0)
-          : null) ?? formatUnits(net, units.currency, scale, net > 0))
-      : formatAccountJournalChange(net, currency, scale);
-    const totalChange =
-      others.length === 0
-        ? shown
-        : net === 0
-          ? formatOtherChanges(others)
-          : `${shown} · ${formatOtherChanges(others)}`;
+    const shown = formatDayShown(data, units, net, scale, currency);
     return {
       isoDate,
       displayDate: formatLedgerDate(isoDate, locale),
-      totalChange: morePages && index === last ? "" : totalChange,
+      totalChange:
+        morePages && index === last ? "" : joinDayTotal(shown, net, others),
       data,
     };
   });
