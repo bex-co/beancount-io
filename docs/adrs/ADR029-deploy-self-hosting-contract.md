@@ -112,7 +112,7 @@ The rest of decision 2 and the decision 1 leftovers are built. With `SELF_HOST` 
 - The API's log held no `open_ledger` warning and no failed welcome mail; Settings → Billing linked nowhere on beancount.io.
 - **Not run here:** syncing this Blueprint into an existing deployment whose Gitea is a web service. The third run below did it.
 
-The run found two defects, fixed and rerun the same day: Settings → Billing listed the managed service's paid plans on a self-hosted stack (now left out), and the smoke script of decision 6 looked for a button the create-ledger form no longer has and stopped without deleting its account, closing sign-up on the stack under test. It also showed that `bea` 0.3.1, the latest release, predates w1/m46: its `cloud ledger clone` stops on a null `sshUrl` with `expected str … not NoneType` instead of the refusal described above, until a newer release ships.
+The run found two defects, fixed and rerun the same day: Settings → Billing listed the managed service's paid plans on a self-hosted stack (now left out), and the smoke script of decision 6 looked for a button the create-ledger form no longer has and stopped without deleting its account, closing sign-up on the stack under test. It also showed that `bea` 0.3.1, the latest release, predates w1/m46: its `cloud ledger clone` stops on a null `sshUrl` with `expected str … not NoneType` instead of the refusal described above, until a newer release ships. `bea` 0.4.0, published 2026-11-17, gives the refusal.
 
 **Third live run, 2026-11-16.** A stack created from the Blueprint before Gitea became private (`ae0e4c7ba`) was upgraded to `main`, which answers the question the second run left open:
 

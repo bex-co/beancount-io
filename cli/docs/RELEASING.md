@@ -115,8 +115,8 @@ This section is the GitHub Release body for `cli-v0.4.0`; apply it with
 `gh release edit cli-v0.4.0 --notes-file <this section>` after the workflow
 creates the release.
 
-`bea` 0.4.0 adds reports, entry updates and OFX import, and works against
-self-hosted servers. It needs no ledger changes.
+`bea` 0.4.0 adds reports, entry updates and OFX import, and stops cleanly on a
+self-hosted server that serves no Git over SSH. It needs no ledger changes.
 
 - **More reports.** `bea report holdings`, `register`, `capital-gains`,
   `cash-flow` and `budget` (budget versus actual; a missing budget is never

@@ -5,7 +5,7 @@ Copy [ledger-check.yml](ledger-check.yml) into
 workflow checks out the repo and calls the shared action in one line:
 
 ```yaml
-- uses: bex-co/beancount-io/cli/action@cb844f97b261f7f5457e8e64371642de5e5f0882 # no action tag yet; re-pin to cli-v* on the next release
+- uses: bex-co/beancount-io/cli/action@18f58fc53356b0b29e0a834552fdf3495451f1d9 # cli-v0.4.0
   with:
     version: "0.4.0"
     file: main.bean
@@ -37,7 +37,7 @@ repository's `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/bex-co/beancount-io
-    rev: cb844f97b261f7f5457e8e64371642de5e5f0882 # re-pin to cli-v* on the next release
+    rev: 18f58fc53356b0b29e0a834552fdf3495451f1d9 # cli-v0.4.0
     hooks:
       - id: bea-check
       - id: bea-format
@@ -60,8 +60,9 @@ published bea 0.3.0. The isolated synthetic repository had `main.bean`
 including `entries.bean`; installation used a fresh tool directory and
 managed engine. The setup and three cases took 27.36 seconds on that
 machine. On 2026-09-28 the same three cases were repeated with published
-bea 0.3.1, the current pin, in a fresh tool directory and engine, with
-the results below unchanged.
+bea 0.3.1 in a fresh tool directory and engine, and on 2026-11-17 with
+published bea 0.4.0, the current pin (uv 0.13.4); the results below were
+unchanged both times.
 
 | Synthetic input | `bea check` exit | `bea format --check` exit | Files unchanged |
 | --- | --- | --- | --- |
@@ -73,8 +74,8 @@ A ledger that carries a managed price include
 (`include "https://beancount.io/prices/BTC-USD"`) passes `bea format --check`
 like any other formatted ledger from 0.4.0 on: the formatter
 does not treat the feed URL as a missing file, and needs neither the network
-nor a login. On 0.3.1 and earlier that gate fails on such a ledger. This was
-checked on a source checkout, not on a published release.
+nor a login. On 0.3.1 and earlier that gate fails on such a ledger. Checked
+with published 0.4.0 and `--offline` on 2026-11-17.
 
 Both commands were run independently for each case to establish their distinct
 failure behavior. File hashes, including Git state, were unchanged after every

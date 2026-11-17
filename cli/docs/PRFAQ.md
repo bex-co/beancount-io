@@ -2,7 +2,7 @@
 
 Strategy proposal · September 6, 2026 · Source review at `9a6cc106`
 
-Status: Released as `bea` 0.3.1. Increment 1 and the local half of increment 3 are shipped. Increment 2, increment 4, and hosted importing are not built and not scheduled. FAQ 14 gives the state of each increment.
+Status: Released as `bea` 0.4.0 (FAQ 16 still inventories 0.3.1). Increment 1 and the local half of increment 3 are shipped. Increment 2, increment 4, and hosted importing are not built and not scheduled. FAQ 14 gives the state of each increment.
 
 Recommendation: make the CLI the dependable way to operate a ledger from a terminal, script, or coding agent. Support local files and hosted books through familiar commands and explicit targets. Keep Python and reuse the Beancount ecosystem. Prioritize trustworthy output and writes before expanding embedded AI or command count.
 
