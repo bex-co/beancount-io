@@ -109,49 +109,27 @@ Only a successful full journey updates `tests/managed_prices_live_status.json`.
 This is an explicit network gate, separate from the deterministic unit suite.
 `BEA_LIVE_PRICE_TESTS=1` additionally opts into the anonymous login-boundary test.
 
-## 0.4.0 release notes
+## 0.4.1 release notes
 
-This section is the GitHub Release body for `cli-v0.4.0`; apply it with
-`gh release edit cli-v0.4.0 --notes-file <this section>` after the workflow
-creates the release.
+This section is the GitHub Release body for `cli-v0.4.1`; apply it with
+`gh release edit cli-v0.4.1 --notes-file <this section>` after the workflow
+creates the release. The 0.4.0 notes are on the `cli-v0.4.0` release.
 
-`bea` 0.4.0 adds reports, entry updates and OFX import, and stops cleanly on a
-self-hosted server that serves no Git over SSH. It needs no ledger changes.
+`bea` 0.4.1 changes one message. It needs no ledger changes.
 
-- **More reports.** `bea report holdings`, `register`, `capital-gains`,
-  `cash-flow` and `budget` (budget versus actual; a missing budget is never
-  shown as zero). Every report takes `--format csv`, with `-o` to write a file.
-- **Change an existing entry.** `bea update transaction --id <import-id, ref or
-  file:line>` previews the change as a diff and rewrites the entry with
-  `--apply`. `bea update transactions --from <JSON or CSV>` does the same for
-  many entries.
-- **OFX and QFX imports.** `bea import` reads OFX/QFX bank exports directly,
-  with the same rules and remembered accounts as CSV, and needs no Python
-  importer.
-- **Bring an existing ledger.** `bea init --existing` describes a ledger bea did
-  not create, writes `AGENTS.md` and `CLAUDE.md` beside it, and lists what needs
-  attention. `bea init --agent-files` adds those files to a new ledger;
-  `--module`, `--currency` and `--date` shape a `--preset personal@1` ledger.
-  `bea doctor guidance` checks the agent files.
-- **Self-hosted servers without Git over SSH.** `bea cloud ledger clone` clones
-  over SSH only. On a server that serves no Git over SSH (a bex deployment, for
-  one) it now stops and says so; 0.3.1 failed there with
-  `expected str … not NoneType`. Clone such a ledger with `git clone` and its
-  HTTPS address instead.
-- **Safer cloud commands.** `bea cloud ledger delete --dry-run` runs every check
-  without deleting, and a plan-limit refusal says whose plan set the limit.
-- **Stricter writes.** `bea add close` refuses an account that still holds a
-  balance on the close date unless you pass `--force`, and a missing or
-  twice-included file is reported at the include line that names it.
-- **Many smaller fixes** in holdings and capital gains (cost basis, cash,
-  long-term after a calendar year), reports' date windows, CSV import, managed
-  prices (stale after seven days without a new price date), `doctor`,
-  `format`, `add` and `update`.
+- **Cloning from a self-hosted server with no Git over SSH.** `bea cloud ledger
+  clone` (and `create --clone`) still clones over SSH only, so on such a server
+  (a bex deployment, for one) it still stops. It now says how to get the ledger
+  anyway: the `git clone` command for its HTTPS address, a personal access
+  token from the dashboard (Settings → API keys) as the password, and that the
+  operator can turn on Git over SSH except on bex, which routes no SSH. Under
+  `--json` these lines are in `error.details`. 0.4.0 told you only to ask the
+  operator to enable SSH.
 
-The first `bea` command after a uv or pip upgrade provisions the 0.4.0 engine
+The first `bea` command after a uv or pip upgrade provisions the 0.4.1 engine
 once; Homebrew installs it with the formula. Upgrade with
 `brew upgrade bex-co/tap/bea` or `uv tool upgrade beancount-io`, or install with
-`uv tool install beancount-io==0.4.0`.
+`uv tool install beancount-io==0.4.1`.
 
 ## 0.2.0 migration
 

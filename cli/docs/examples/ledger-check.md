@@ -7,7 +7,7 @@ workflow checks out the repo and calls the shared action in one line:
 ```yaml
 - uses: bex-co/beancount-io/cli/action@18f58fc53356b0b29e0a834552fdf3495451f1d9 # cli-v0.4.0
   with:
-    version: "0.4.0"
+    version: "0.4.1"
     file: main.bean
 ```
 
@@ -31,7 +31,7 @@ checks.
 ## Pre-commit hooks
 
 The same checks run before each commit. Install `bea` once
-(`uv tool install 'beancount-io==0.4.0'`), then add to the ledger
+(`uv tool install 'beancount-io==0.4.1'`), then add to the ledger
 repository's `.pre-commit-config.yaml`:
 
 ```yaml
