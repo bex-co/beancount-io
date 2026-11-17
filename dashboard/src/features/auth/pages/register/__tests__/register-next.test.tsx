@@ -45,7 +45,7 @@ vi.mock("@/common/lib/navigation/hard-navigate", () => ({
 
 vi.mock("@/common/components/seo/page-seo", () => ({ PageSEO: () => null }));
 
-vi.mock("@/features/auth/hooks/use-deployment-info", () => ({
+vi.mock("@/common/hooks/use-deployment-info", () => ({
   useDeploymentInfo: () => ({
     __typename: "DeploymentInfoResponse",
     selfHost: false,

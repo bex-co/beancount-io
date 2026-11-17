@@ -9,7 +9,7 @@ import {
   negateDecimalNumber,
   parseDecimalNumber,
 } from "@/common/lib/beancount/decimal-number";
-import { useTempAssetUpload } from "@/features/importer/hooks/use-temp-asset-upload";
+import { useTempAssetUpload } from "@/common/hooks/use-temp-asset-upload";
 import {
   ParseReceiptDocument,
   InsertReceiptTransactionDocument,

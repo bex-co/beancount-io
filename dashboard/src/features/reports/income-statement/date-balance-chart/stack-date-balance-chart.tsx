@@ -15,12 +15,11 @@ import {
   ChartPeriodTable,
   type ChartPeriodSeries,
 } from "../../components/chart-period-table";
+import { type BaseChartProps, createEmptyChartOption } from "./utils";
 import {
-  type BaseChartProps,
   createCommonAxisConfig,
   createCommonGridConfig,
-  createEmptyChartOption,
-} from "./utils";
+} from "@/common/lib/chart/cartesian-config";
 
 /**
  * Stacked Date Balance Chart component

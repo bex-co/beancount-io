@@ -3,7 +3,7 @@ import { PageSEO } from "@/common/components/seo/page-seo";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useRegisterForm } from "@/features/auth/hooks/use-register-form";
 import { RegisterForm } from "@/features/auth/components/register-form";
-import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
+import { useDeploymentInfo } from "@/common/hooks/use-deployment-info";
 
 type RegisterPageProps = {
   withDefaultLedger?: boolean;

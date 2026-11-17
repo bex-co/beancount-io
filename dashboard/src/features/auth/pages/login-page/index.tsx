@@ -8,7 +8,7 @@ import { getSafeRedirectPath } from "@/common/lib/auth/auth";
 import { hardNavigate } from "@/common/lib/navigation/hard-navigate";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLoginForm } from "@/features/auth/hooks/use-login-form";
-import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
+import { useDeploymentInfo } from "@/common/hooks/use-deployment-info";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { SignInRecovery } from "@/features/auth/components/sign-in-recovery";
 import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";

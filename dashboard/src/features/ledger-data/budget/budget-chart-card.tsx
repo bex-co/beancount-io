@@ -45,7 +45,7 @@ import type { ChartInterval, ConversionOption } from "@/common/types/chart";
 import {
   createCommonAxisConfig,
   createCommonGridConfig,
-} from "@/features/reports/income-statement/date-balance-chart/utils";
+} from "@/common/lib/chart/cartesian-config";
 import { AddBudgetDialog } from "./add-budget-dialog";
 import { BudgetHistoryTable } from "./budget-history-table";
 import {

@@ -39,7 +39,7 @@ vi.mock("@/common/components/seo/page-seo", () => ({ PageSEO: () => null }));
 // The page asks the deployment whether it is self-hosted through Apollo, which
 // this memory router does not provide; the managed service's answer is the
 // one this flow was written for.
-vi.mock("@/features/auth/hooks/use-deployment-info", () => ({
+vi.mock("@/common/hooks/use-deployment-info", () => ({
   useDeploymentInfo: () => ({
     __typename: "DeploymentInfoResponse",
     selfHost: false,

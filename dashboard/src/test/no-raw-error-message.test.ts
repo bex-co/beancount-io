@@ -38,7 +38,7 @@ const ALLOWLIST: Record<string, string> = {
     "importResult errors carry only localized strings or intentional mutation-payload feedback (populated exclusively by use-import-submit)",
   "features/importer/components/steps/preview/editable-preview-row.tsx":
     "zod field-validation messages are intentional user feedback, not JS error internals",
-  "features/importer/hooks/use-temp-asset-upload.ts":
+  "common/hooks/use-temp-asset-upload.ts":
     "diagnostic-only error state (no consumer renders it); the original error is rethrown for callers to map",
 };
 

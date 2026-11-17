@@ -27,7 +27,7 @@ import { AgentMessageList, type AgentUIMessage } from "./agent-message-list";
 
 import { buildUnauthenticatedLoginHref } from "@/common/apollo/links/auth-error-link";
 import { buildAgentLoginNextUrl } from "./agent-login-next-url";
-import { useTempAssetUpload } from "@/features/importer/hooks/use-temp-asset-upload";
+import { useTempAssetUpload } from "@/common/hooks/use-temp-asset-upload";
 import { useTempAssetDownloadUrl } from "./use-temp-asset-download-url";
 import {
   createStagedEntries,

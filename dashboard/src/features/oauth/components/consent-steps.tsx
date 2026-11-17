@@ -1,7 +1,7 @@
 import { useApolloClient } from "@apollo/client/react";
 import type en from "@/i18n/locales/en";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
+import { useDeploymentInfo } from "@/common/hooks/use-deployment-info";
 import { useLoginForm } from "@/features/auth/hooks/use-login-form";
 import { useConsentRegisterForm } from "@/features/oauth/hooks/use-consent-register-form";
 import { useOtpForm } from "@/features/auth/hooks/use-otp-form";

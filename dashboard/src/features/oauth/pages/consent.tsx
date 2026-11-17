@@ -5,7 +5,7 @@ import { ListLedgersDocument } from "@/graphql/definitions";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
+import { useDeploymentInfo } from "@/common/hooks/use-deployment-info";
 import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
 import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";
 import {

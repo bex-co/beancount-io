@@ -73,7 +73,7 @@ vi.mock("../agent-message-list", () => ({
   AgentMessageList: () => null,
 }));
 
-vi.mock("@/features/importer/hooks/use-temp-asset-upload", () => ({
+vi.mock("@/common/hooks/use-temp-asset-upload", () => ({
   useTempAssetUpload: () => ({ uploadFile: vi.fn() }),
 }));
 

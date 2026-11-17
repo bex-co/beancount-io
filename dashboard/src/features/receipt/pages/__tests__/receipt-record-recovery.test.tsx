@@ -30,7 +30,7 @@ vi.mock("@/common/hooks/use-ledger", () => ({
 vi.mock("@/common/hooks/use-date-locale", () => ({
   useDateLocale: () => enUS,
 }));
-vi.mock("@/features/importer/hooks/use-temp-asset-upload", () => ({
+vi.mock("@/common/hooks/use-temp-asset-upload", () => ({
   useTempAssetUpload: () => ({
     uploadFile: async () => {
       uploads.count += 1;
