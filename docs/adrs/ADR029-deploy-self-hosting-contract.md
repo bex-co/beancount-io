@@ -110,9 +110,19 @@ The rest of decision 2 and the decision 1 leftovers are built. With `SELF_HOST` 
 - The forgot-password page said the server cannot send email; the operator's reset link worked once and was refused the second time.
 - Category suggestions, the upload URL and `bea ask`'s model proxy answered `CONFIGURATION_ERROR` with their hints (503 on REST).
 - The API's log held no `open_ledger` warning and no failed welcome mail; Settings → Billing linked nowhere on beancount.io.
-- **Not run:** syncing this Blueprint into an existing deployment whose Gitea is a web service. Whether bex keeps the disk across that change is still unknown.
+- **Not run here:** syncing this Blueprint into an existing deployment whose Gitea is a web service. The third run below did it.
 
 The run found two defects, fixed and rerun the same day: Settings → Billing listed the managed service's paid plans on a self-hosted stack (now left out), and the smoke script of decision 6 looked for a button the create-ledger form no longer has and stopped without deleting its account, closing sign-up on the stack under test. It also showed that `bea` 0.3.1, the latest release, predates w1/m46: its `cloud ledger clone` stops on a null `sshUrl` with `expected str … not NoneType` instead of the refusal described above, until a newer release ships.
+
+**Third live run, 2026-11-16.** A stack created from the Blueprint before Gitea became private (`ae0e4c7ba`) was upgraded to `main`, which answers the question the second run left open:
+
+- bex does not change a service's type in place. The sync stops at Gitea after updating the API, and the stack keeps working with the old public Gitea. Finishing means deleting the Gitea service (and its disk) and syncing again, so an upgrade needs a backup first. `deploy/bex/README.md` now has the steps and a tested backup and restore: a mirror clone, then a merge into a new ledger of the same name, because a forced push is refused.
+- Defect, fixed: the recreated Gitea service generates a new administrator password while the account in the shared Postgres kept the old one, so every ledger read was refused. The wrapper now sets the existing account's password at start (`deploy/bex/gitea/test-entrypoint.sh` covers it).
+- Defect, fixed: the dashboard's same-origin API proxy followed redirects itself, so the OAuth authorization endpoint never redirected the browser and no OAuth sign-in (mobile app, MCP client) could start on bex. Decision 6's checklist said discovery names the host; it did, but nothing checked that an authorization could begin.
+- Defect, fixed: the mobile and identity consent pages offered "Sign Up" after sign-up had closed.
+- Verified: `bea cloud login` through the browser, the mobile app's sign-in replayed with its own client and redirect (consent, callback, token exchange, API read, refresh), the blocked-account message and the admin unblock, and a 200 MB push.
+- Decision 6: the smoke script now also checks closed sign-up, clone addresses on the stack that lead to a Git host, OAuth discovery on the host, and a redirecting authorization endpoint (15 checks, all passing on the live stack). Mail-less recovery and "no beancount.io address in any response or mail" are still checked by hand.
+- Decision 7: `docker-single-psql` passes `SELF_HOST` through.
 
 Still open from this review: the Pwned Passwords check cannot be switched off; the API's `/api/admin/*` and Git proxy are on the internet behind a single header token with no visible lockout.
 

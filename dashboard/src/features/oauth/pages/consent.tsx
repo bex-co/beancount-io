@@ -261,7 +261,7 @@ function LedgerStep({ uid, scope }: { uid: string; scope?: string }) {
 export default function OAuthConsentPage() {
   const { uid, scope } = routeApi.useSearch();
   const { initialStep } = routeApi.useLoaderData();
-  const { signUpOpen, selfHost } = useDeploymentInfo();
+  const { selfHost } = useDeploymentInfo();
   const [state, setState] = useState<OAuthState>({ step: initialStep });
 
   if (state.step === "ledger") {
@@ -285,7 +285,6 @@ export default function OAuthConsentPage() {
             onRegisterClick={() => setState({ step: "register" })}
             titleKey="auth.oauthSignInToContinue"
             descriptionKey="auth.oauthAppWantsAccess"
-            showSignUpLink={signUpOpen}
           />
         )}
         {state.step === "forgot_password" && (

@@ -1,6 +1,7 @@
 import { useApolloClient } from "@apollo/client/react";
 import type en from "@/i18n/locales/en";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useDeploymentInfo } from "@/features/auth/hooks/use-deployment-info";
 import { useLoginForm } from "@/features/auth/hooks/use-login-form";
 import { useConsentRegisterForm } from "@/features/oauth/hooks/use-consent-register-form";
 import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
@@ -16,7 +17,6 @@ type ConsentLoginStepProps = {
   onRegisterClick: () => void;
   titleKey: TranslationKey;
   descriptionKey?: TranslationKey;
-  showSignUpLink?: boolean;
 };
 
 type ConsentRegisterStepProps = {
@@ -51,10 +51,12 @@ export function ConsentLoginStep({
   onRegisterClick,
   titleKey,
   descriptionKey,
-  showSignUpLink,
 }: ConsentLoginStepProps) {
   const { t } = useTranslations();
   const client = useApolloClient();
+  // Read here, not passed in, so every consent page (MCP, mobile, identity)
+  // drops "Sign Up" on a self-hosted stack that has closed sign-up.
+  const { signUpOpen } = useDeploymentInfo();
 
   const { onSubmit, isLoading, serverError } = useLoginForm({
     onSuccess: async () => {
@@ -79,7 +81,7 @@ export function ConsentLoginStep({
         serverError={serverError}
         onForgotPasswordClick={onForgotPasswordClick}
         onRegisterClick={onRegisterClick}
-        showSignUpLink={showSignUpLink}
+        showSignUpLink={signUpOpen}
       />
     </div>
   );

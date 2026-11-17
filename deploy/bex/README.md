@@ -140,8 +140,12 @@ It signs up a throwaway account (random address and password, nothing
 hard-coded), then checks that the visitor lands signed in with no verification
 page, that the browser keeps an HttpOnly, Secure cookie for that host, that a
 reload keeps the session, that a ledger can be created (which exercises the
-ledger service and Gitea), that a second ledger is allowed (no plan limit), and
-that the page logged no errors. It then deletes the account, unless you pass
+ledger service and Gitea), that a second ledger is allowed (no plan limit), that
+sign-up is closed behind the account, that ledger clone addresses name this
+stack and lead to a Git host asking for credentials, that OAuth discovery names
+this host and its authorization endpoint redirects the browser (what the mobile
+app and MCP clients sign in through), and that the page logged no errors. It
+then deletes the account, unless you pass
 `--keep`. On a stack that verifies email, or one that has already closed sign-up
 because it has an account, it reports "skipped" instead of failing (the first
 only unless you pass `--require-self-host`). Exit code 0 means passed or skipped, 1 a
@@ -209,7 +213,7 @@ alone does not turn it off) and set `SEND_GRID_API_KEY`.
 ### Upgrading a stack that is already running
 
 Read this before you sync a newer Blueprint into a stack that holds data. Four
-things behave differently:
+things behave differently, and the last one needs a backup first:
 
 - **Sign-up closes.** A stack that already has any account stops taking
   sign-ups: `signUp` answers `FORBIDDEN` and the sign-in page drops "Sign up".
@@ -222,12 +226,61 @@ things behave differently:
 - **`bea ask` needs `OPENAI_API_KEY`.** Its model proxy no longer goes through
   BlockEden, so `BLOCKEDEN_ACCESS_KEY` is ignored. Without an OpenAI key it
   answers "Model proxy is not configured. Set OPENAI_API_KEY."
-- **Gitea changes from a web service to a private one.** Whether bex updates
-  `beancount-gitea` in place or replaces it, and whether its disk survives a
-  replacement, has **not** been checked. The repositories live on that disk, so
-  until you know what bex will do, do not sync this change into a stack whose
-  repositories you cannot afford to lose. No backup procedure is documented here
-  yet.
+- **Gitea changes from a web service to a private one, and bex will not do that
+  in place.** The sync stops with "a service's type cannot be changed after it
+  is created; delete the service and create it again". Run on a live stack on
+  2026-11-16: the API had already been updated when the sync stopped, so the
+  stack kept working with the new API and the old, still public, Gitea, and no
+  repository was touched. Every later sync stops the same way until Gitea is
+  created again, and deleting the service deletes its disk and every repository
+  on it. To finish the upgrade:
+  1. Back up every ledger ([Back up and restore](#back-up-and-restore)).
+  2. Delete the `beancount-gitea` service, then sync the Blueprint. bex creates
+     the private service with an empty disk and redeploys the API and the
+     ledger service.
+  3. Deploy the dashboard by hand: its Blueprint entry did not change, so the
+     sync leaves it on the old commit.
+  4. Restore each ledger as described below. Until you do, the old ledgers are
+     still listed (their records are in Postgres) but cannot be opened or
+     cloned.
+
+  The new Gitea service generates a new administrator password. The wrapper
+  gives it to the existing administrator account at start; without that (before
+  2026-11-16) every ledger page answered "Page not found" after this step.
+
+## Back up and restore
+
+A ledger is a Git repository, so a clone is a complete backup of its files and
+history. Accounts, API keys and settings live in the managed Postgres; this
+procedure does not cover them, and restoring a Postgres dump into a new stack
+has not been tried.
+
+Back up, with a personal access token that can read the ledger:
+
+```zsh
+git clone --mirror https://<any name>:<token>@<api address>/git/<owner>/<ledger>.git
+```
+
+Restore into a stack where the ledger is gone or cannot be opened. The server
+refuses a forced push to a ledger's main branch, so the backup is merged on top
+of the new ledger's first commit instead of replacing it:
+
+1. In the dashboard, delete the ledger if it is still listed, and create one
+   with the same name.
+2. Clone the new ledger, merge the backup into it, and push:
+
+   ```zsh
+   git clone https://<any name>:<token>@<api address>/git/<owner>/<ledger>.git restore
+   cd restore
+   git fetch ../<ledger>.git main
+   git merge --allow-unrelated-histories -X theirs -m "Restore from backup" FETCH_HEAD
+   git push origin HEAD
+   ```
+
+Run on a live stack on 2026-11-16, after its Gitea service and disk had been
+deleted: the restored ledger opened in the dashboard with the backup's files
+and every earlier commit, under one merge commit. `-X theirs` makes the backup
+win where the new ledger's starter file has the same name.
 
 ## A user forgot their password
 
@@ -336,7 +389,7 @@ The AI assistant leaves out its pull-request link here: that link is a page of G
 
 bex serves Git over HTTPS only: it has no TCP routing (nor does Render, whose public ports are HTTP(S) alone), so `SSH_PROXY_ENABLED` is `false` and ledger responses (REST, GraphQL and MCP alike) carry `sshUrl: null`. `bea cloud ledger clone`, which clones over SSH, refuses such a ledger and says this deployment serves no Git over SSH; the dashboard's clone menu shows only the HTTP address. Clone with `git clone <httpUrl>` instead.
 
-**Run on a live bex on 2026-11-16.** The platform set `RENDER_EXTERNAL_URL` for the API service, so the clone address was `https://<api address>/git/<owner>/<repo>.git`; cloning with a personal access token, a small push and a 20 MB push worked through the platform's ingress, and the repositories survived a restart and a redeploy of Gitea. Not examined: a much larger push (request size and idle timeouts) and how many proxies sit in front for the per-address rate limit (`TRUSTED_PROXY_HOPS`). If a platform gives the API no address, the clone address falls back to the one Gitea reports, which is `http://localhost:3000/<owner>/<repo>.git` here (Gitea's `ROOT_URL` stays at its default when it has no public address); set `GIT_PUBLIC_URL` yourself in that case. Decision 3 in [ADR 029](../../docs/adrs/ADR029-deploy-self-hosting-contract.md) has the reasoning.
+**Run on a live bex on 2026-11-16.** The platform set `RENDER_EXTERNAL_URL` for the API service, so the clone address was `https://<api address>/git/<owner>/<repo>.git`; cloning with a personal access token, a small push, a 20 MB push and a 200 MB push (84 seconds) worked through the platform's ingress, and the repositories survived a restart and a redeploy of Gitea. Not examined: how many proxies sit in front for the per-address rate limit (`TRUSTED_PROXY_HOPS`). If a platform gives the API no address, the clone address falls back to the one Gitea reports, which is `http://localhost:3000/<owner>/<repo>.git` here (Gitea's `ROOT_URL` stays at its default when it has no public address); set `GIT_PUBLIC_URL` yourself in that case. Decision 3 in [ADR 029](../../docs/adrs/ADR029-deploy-self-hosting-contract.md) has the reasoning.
 
 To clone over HTTPS, use any username and a personal access token as the password, minted in the dashboard under Settings → API keys (`/settings/api-keys`). The account password still works for now, with a `remote:` hint to switch: backend-v2's `gitHttp.passwordAuth` ships as `warn`. It lives in `backend-cluster/backend-v2/src/config/config.ts` as `allow`, `warn`, or `deny`, and is not an environment variable, so refusing passwords is a code change and a redeploy. A Git client that keeps offering an old password is cleared with `printf 'protocol=https\nhost=<git host>\n\n' | git credential reject`, the host's Keychain item on macOS, or its line in `~/.git-credentials`.
 

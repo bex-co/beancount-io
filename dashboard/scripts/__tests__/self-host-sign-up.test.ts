@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import selfHostSignUp, {
   AUTH_COOKIE,
+  judgeContract,
   judgeCookie,
+  judgeOAuth,
   makeAccount,
   // @ts-expect-error plain ES module without types, like the other QA scenarios
 } from "../qa/self-host-sign-up.mjs";
@@ -19,7 +21,11 @@ type Mode =
   | "limited"
   | "login-after-reload"
   | "closed"
-  | "no-create-button";
+  | "no-create-button"
+  | "sign-up-still-open"
+  | "hosted-clone-address"
+  | "clone-address-dead"
+  | "proxy-follows-redirect";
 
 function fakePage(mode: Mode, cookie: Record<string, unknown> | null = {}) {
   const state = {
@@ -77,14 +83,57 @@ function fakePage(mode: Mode, cookie: Record<string, unknown> | null = {}) {
         typeof target === "function" ? target(url) : target.test(url.pathname);
       if (!hit) throw new Error("timeout");
     },
+    request: {
+      get: async (url: string) => {
+        if (url.includes("/.well-known/")) {
+          return {
+            json: async () => ({
+              issuer: BASE,
+              authorization_endpoint: `${BASE}/api-gateway/oauth/auth`,
+              token_endpoint: `${BASE}/api-gateway/oauth/token`,
+            }),
+          };
+        }
+        if (url.includes("/oauth/auth")) {
+          return mode === "proxy-follows-redirect"
+            ? { status: () => 200, headers: () => ({}) }
+            : {
+                status: () => 303,
+                headers: () => ({ location: `${BASE}/oauth/mobile-consent` }),
+              };
+        }
+        return { status: () => (mode === "clone-address-dead" ? 404 : 401) };
+      },
+    },
     evaluate: async (fn: (arg?: unknown) => unknown) => {
       const source = String(fn);
       state.evaluated.push(
-        source.includes("DeleteAccount") ? "delete" : "create",
+        source.includes("DeleteAccount")
+          ? "delete"
+          : source.includes("SelfHostContract")
+            ? "contract"
+            : "create",
       );
       if (source.includes("DeleteAccount")) {
         state.deleted = true;
         return true;
+      }
+      if (source.includes("SelfHostContract")) {
+        return {
+          deployment: {
+            selfHost: true,
+            signUpOpen: mode === "sign-up-still-open",
+          },
+          ledgers: [
+            {
+              httpUrl:
+                mode === "hosted-clone-address"
+                  ? "https://git.beancount.io/smoke/books.git"
+                  : "https://api.example.com/git/smoke/books.git",
+              sshUrl: null,
+            },
+          ],
+        };
       }
       return mode === "limited"
         ? { status: 200, error: "Ledger limit reached" }
@@ -133,6 +182,87 @@ describe("judgeCookie", () => {
   });
 });
 
+describe("judgeContract", () => {
+  const deployment = { selfHost: true, signUpOpen: false };
+  const bad = (input: unknown) =>
+    judgeContract(input)
+      .filter((c: { ok: boolean }) => !c.ok)
+      .map((c: { name: string }) => c.name);
+
+  it("accepts the stack's own HTTPS and SSH addresses", () => {
+    const ledgers = [
+      {
+        httpUrl: "https://git.example.com/a/b.git",
+        sshUrl: "git@git.example.com:a/b.git",
+      },
+    ];
+    expect(bad({ deployment, ledgers })).toEqual([]);
+  });
+
+  it("refuses an SSH address on the hosted service", () => {
+    const ledgers = [
+      {
+        httpUrl: "https://git.example.com/a/b.git",
+        sshUrl: "git@git.beancount.io:a/b.git",
+      },
+    ];
+    expect(bad({ deployment, ledgers })).toEqual([
+      "ledger clone addresses name this stack, not beancount.io",
+    ]);
+  });
+
+  it("does not mistake a look-alike host for the hosted service", () => {
+    const ledgers = [
+      { httpUrl: "https://notbeancount.io/a/b.git", sshUrl: null },
+    ];
+    expect(bad({ deployment, ledgers })).toEqual([]);
+  });
+
+  it("fails when the stack cannot be asked", () => {
+    expect(bad({ error: "Unauthorized" })).toEqual([
+      "the stack reports its deployment and ledgers",
+    ]);
+  });
+});
+
+describe("judgeOAuth", () => {
+  const metadata = {
+    issuer: BASE,
+    authorization_endpoint: `${BASE}/api-gateway/oauth/auth`,
+    token_endpoint: `${BASE}/api-gateway/oauth/token`,
+  };
+  const authorize = { status: 303, location: `${BASE}/auth/login` };
+  const bad = (input: unknown) =>
+    judgeOAuth(input, BASE)
+      .filter((c: { ok: boolean }) => !c.ok)
+      .map((c: { name: string }) => c.name);
+
+  it("accepts discovery on this host and a redirecting authorization", () => {
+    expect(bad({ metadata, authorize })).toEqual([]);
+  });
+
+  it("refuses a discovery document that names another host", () => {
+    expect(
+      bad({
+        metadata: { ...metadata, issuer: "https://beancount.io" },
+        authorize,
+      }),
+    ).toEqual(["OAuth discovery names this stack"]);
+  });
+
+  it("refuses an authorization endpoint that answers with a page", () => {
+    expect(bad({ metadata, authorize: { status: 200 } })).toEqual([
+      "the authorization endpoint sends the browser on to sign in",
+    ]);
+  });
+
+  it("fails when discovery cannot be read", () => {
+    expect(bad({ error: "timeout" })).toEqual([
+      "OAuth discovery names this stack",
+    ]);
+  });
+});
+
 describe("selfHostSignUp", () => {
   it("passes on a healthy self-hosted stack and deletes its own account", async () => {
     const { page, state } = fakePage("self-host");
@@ -146,6 +276,26 @@ describe("selfHostSignUp", () => {
     const { page, state } = fakePage("no-create-button");
     const result = await run(page);
     expect(failed(result)).toContain("a ledger is created");
+    expect(state.deleted).toBe(true);
+  });
+
+  it.each([
+    ["sign-up-still-open", "sign-up is closed behind the first account"],
+    [
+      "hosted-clone-address",
+      "ledger clone addresses name this stack, not beancount.io",
+    ],
+    [
+      "clone-address-dead",
+      "the clone address is a Git host that asks for credentials",
+    ],
+    [
+      "proxy-follows-redirect",
+      "the authorization endpoint sends the browser on to sign in",
+    ],
+  ] as const)("fails on a stack with %s", async (mode, check) => {
+    const { page, state } = fakePage(mode);
+    expect(failed(await run(page))).toEqual([check]);
     expect(state.deleted).toBe(true);
   });
 

@@ -10,7 +10,10 @@
  *
  * It judges what a deployment can get wrong and unit tests cannot see: the
  * cookie the browser accepts, the page it lands on, the session surviving a
- * reload, and a ledger actually being created through the backend and Gitea.
+ * reload, a ledger actually being created through the backend and Gitea, sign-up
+ * closing behind the first account, clone addresses that name this stack and
+ * lead to a Git host, and an OAuth sign-in (the mobile app's, an MCP client's)
+ * that is discovered on this host and redirects the browser.
  *
  * A stack that verifies email shows a code page instead of signing the visitor
  * in. That is not a failure of this check, so it reports "skipped" (or fails,
@@ -57,6 +60,125 @@ export function judgeCookie(cookies, baseURL) {
         ok: true,
         detail: `${cookie.domain}, HttpOnly${cookie.secure ? ", Secure" : ""}`,
       };
+}
+
+/** True for the hosted service's own addresses, which a self-hosted stack must never hand out. */
+const isHostedAddress = (address) => {
+  if (!address) return false;
+  // An SSH address has no scheme: git@host:owner/name.git.
+  const host = /^[a-z][a-z0-9+.-]*:\/\//i.test(address)
+    ? new URL(address).hostname
+    : address.replace(/^[^@]*@/, "").split(/[:/]/)[0];
+  return host === "beancount.io" || host.endsWith(".beancount.io");
+};
+
+/**
+ * What the stack says about itself once the first account exists: sign-up is
+ * closed behind it, and every ledger's clone address names this stack.
+ */
+export function judgeContract({ deployment, ledgers = [], error }) {
+  if (error || !deployment) {
+    return [
+      {
+        name: "the stack reports its deployment and ledgers",
+        ok: false,
+        detail: error ?? "no deploymentInfo in the response",
+      },
+    ];
+  }
+  const hosted = ledgers
+    .flatMap((l) => [l.httpUrl, l.sshUrl])
+    .filter(isHostedAddress);
+  return [
+    {
+      name: "sign-up is closed behind the first account",
+      ok: deployment.selfHost === true && deployment.signUpOpen === false,
+      detail: `selfHost ${deployment.selfHost}, signUpOpen ${deployment.signUpOpen}`,
+    },
+    {
+      name: "ledger clone addresses name this stack, not beancount.io",
+      ok: ledgers.length > 0 && hosted.length === 0,
+      detail: hosted[0] ?? ledgers[0]?.httpUrl ?? "no ledger to read",
+    },
+  ];
+}
+
+/**
+ * What an OAuth client (the mobile app, an MCP client) needs from the stack: a
+ * discovery document that names this host, and an authorization endpoint that
+ * sends the browser on to sign in. `authorize` is the status and Location of an
+ * authorization request made without following redirects.
+ */
+export function judgeOAuth({ metadata, authorize, error }, baseURL) {
+  const origin = new URL(baseURL).origin;
+  if (error || !metadata) {
+    return [
+      {
+        name: "OAuth discovery names this stack",
+        ok: false,
+        detail: error ?? "no discovery document",
+      },
+    ];
+  }
+  const endpoints = [
+    metadata.issuer,
+    metadata.authorization_endpoint,
+    metadata.token_endpoint,
+  ];
+  const elsewhere = endpoints.find(
+    (url) => !url || new URL(url).origin !== origin,
+  );
+  const redirected =
+    authorize?.status >= 300 &&
+    authorize.status < 400 &&
+    Boolean(authorize.location);
+  return [
+    {
+      name: "OAuth discovery names this stack",
+      ok: endpoints.every(Boolean) && elsewhere === undefined,
+      detail: elsewhere ?? metadata.issuer ?? "an endpoint is missing",
+    },
+    {
+      name: "the authorization endpoint sends the browser on to sign in",
+      ok: redirected,
+      detail: redirected
+        ? `${authorize.status} to ${new URL(authorize.location).pathname}`
+        : `answered ${authorize?.status ?? "nothing"} with no redirect: a proxy in front of the API is following it`,
+    },
+  ];
+}
+
+/** Ask the stack for its OAuth discovery document and start an authorization, as the mobile app does. */
+async function probeOAuth(request, baseURL, timeout) {
+  try {
+    const discovery = await request.get(
+      new URL("/.well-known/oauth-authorization-server", baseURL).href,
+      { timeout },
+    );
+    const metadata = await discovery.json();
+    if (!metadata.authorization_endpoint) return { metadata };
+    const url = new URL(metadata.authorization_endpoint);
+    url.search = new URLSearchParams({
+      response_type: "code",
+      client_id: "beancount-mobile",
+      redirect_uri: "io.beancount.ios:/oauth/callback",
+      scope: "openid",
+      state: "smoke",
+      // The S256 challenge of RFC 7636's example verifier; no code is redeemed.
+      code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+      code_challenge_method: "S256",
+    });
+    const response = await request.get(url.href, { maxRedirects: 0, timeout });
+    return {
+      metadata,
+      authorize: {
+        status: response.status(),
+        location: response.headers().location,
+      },
+    };
+  } catch (error) {
+    return { error: String(error.message ?? error) };
+  }
 }
 
 const VERIFY_PAGE = /verify your email|\b\d-digit code\b/i;
@@ -195,6 +317,52 @@ export default async function selfHostSignUp(
     Boolean(extra.created),
     extra.error ?? extra.created ?? "",
   );
+
+  const contract = await page.evaluate(async () => {
+    const response = await fetch("/api-gateway/", {
+      method: "POST",
+      credentials: "include",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        operationName: "SelfHostContract",
+        query:
+          "query SelfHostContract { deploymentInfo { selfHost signUpOpen } listLedgers { fullName httpUrl sshUrl } }",
+      }),
+    });
+    const body = await response.json();
+    return {
+      deployment: body.data?.deploymentInfo,
+      ledgers: body.data?.listLedgers,
+      error: body.errors?.[0]?.message,
+    };
+  });
+  for (const check of judgeContract(contract))
+    record(check.name, check.ok, check.detail);
+
+  // A private ledger's address must be a Git host that asks who is cloning. A
+  // 404 or a page of HTML means the address leads nowhere a `git clone` works.
+  const cloneUrl = contract.ledgers?.[0]?.httpUrl;
+  if (cloneUrl && page.request) {
+    const status = await page.request
+      .get(`${cloneUrl}/info/refs?service=git-upload-pack`, {
+        timeout: timeoutMs,
+      })
+      .then(
+        (response) => response.status(),
+        (error) => String(error.message ?? error),
+      );
+    record(
+      "the clone address is a Git host that asks for credentials",
+      status === 401,
+      `${cloneUrl} answered ${status}`,
+    );
+  }
+
+  if (page.request) {
+    const oauth = await probeOAuth(page.request, baseURL, timeoutMs);
+    for (const check of judgeOAuth(oauth, baseURL))
+      record(check.name, check.ok, check.detail);
+  }
 
   record(
     "no console errors",

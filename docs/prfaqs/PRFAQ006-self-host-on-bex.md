@@ -6,9 +6,9 @@ Date: 2026-11-09 (updated 2026-11-14 and 2026-11-16)
 
 Scope: someone who wants their own Beancount.io, for themselves, with no server to look after. A deployment holds one account today (see question 3); a team is not served yet. Docker and local development are covered by their own READMEs.
 
-Evidence baseline: two live runs of the root Blueprint on an idle bex workspace, all resources deleted after each. The first, on 2026-11-09, ran `main` at `bfe5fdddc`. The second, on 2026-11-16, ran `main` at `34b43768b` (the dashboard and Gitea were redeployed at `8fa681216` during it) and covered what had changed in between.
+Evidence baseline: three live runs of the root Blueprint on an idle bex workspace, all resources deleted after each. The first, on 2026-11-09, ran `main` at `bfe5fdddc`. The second, on 2026-11-16, ran `main` at `34b43768b` (the dashboard and Gitea were redeployed at `8fa681216` during it) and covered what had changed in between. The third, later the same day, started from the Blueprint as it was before Gitea became private (`ae0e4c7ba`), upgraded that stack to `main`, and ran what the second had left unverified.
 
-The second run exercised everything that had changed since the first: sign-up closing once the first account exists; Gitea as a private service with ledgers cloned and pushed through the API's Git proxy; the forgot-password page on a server without mail and the operator's one-time reset link; the configuration errors for AI, uploads and `bea ask`; and the places that used to name beancount.io on a self-hosted stack. What it did not cover is listed under [What is not verified?](#what-is-not-verified).
+The second run exercised everything that had changed since the first: sign-up closing once the first account exists; Gitea as a private service with ledgers cloned and pushed through the API's Git proxy; the forgot-password page on a server without mail and the operator's one-time reset link; the configuration errors for AI, uploads and `bea ask`; and the places that used to name beancount.io on a self-hosted stack. The third run covered the upgrade of an existing deployment, a backup and restore, the browser sign-in of `bea cloud login`, the mobile app's sign-in protocol, a blocked account, and a 200 MB push; see [What did the third live run find?](#what-did-the-third-live-run-find). What no run covered is listed under [What is not verified?](#what-is-not-verified).
 
 ## Press release
 
@@ -62,7 +62,7 @@ To get a ledger's Git history, use plain `git`: every ledger's `httpUrl` is `htt
 
 ### 5. Can I use the mobile app?
 
-The App Store and Google Play apps keep a server-address override for self-hosted deployments, and they sign in with the custom-scheme redirect rather than a verified link ([ADR 013](../adrs/ADR013-mobile-verified-https-oauth-redirect.md)). We have not run the app against a bex deployment yet, so treat this as unconfirmed until we do.
+The App Store and Google Play apps keep a server-address override for self-hosted deployments, and they sign in with the custom-scheme redirect rather than a verified link ([ADR 013](../adrs/ADR013-mobile-verified-https-oauth-redirect.md)). On 2026-11-16 we replayed the app's sign-in against a bex deployment from a desktop browser, with the app's own client, redirect and scopes: discovery, the consent page, the redirect back to the app, the token exchange, a ledger read with the app's token, and a token refresh all worked, after one fix (see the third live run). Enter the dashboard's address as the server address. The app itself has not been run against a bex deployment on a phone, so its screens are unconfirmed.
 
 ### 6. What doesn't work until I configure it?
 
@@ -152,6 +152,26 @@ On 2026-11-16 the Blueprint went from creation to all four services live in 27 m
 
 It also found two defects, both fixed and rerun the same day: Settings → Billing listed the managed service's paid plans with "Downgrade" buttons, and the smoke script looked for a button the create-ledger form no longer has, so it stopped without deleting its account, which closed sign-up on the stack.
 
+### What did the third live run find?
+
+Later on 2026-11-16 a second stack was created from the Blueprint as it stood before Gitea became a private service, given an account and a ledger with history, and then upgraded to `main`.
+
+| Check | Result |
+| --- | --- |
+| Upgrading an existing deployment | bex refuses to change Gitea from a web service to a private one in place: the sync stops with "a service's type cannot be changed after it is created". The API had already been updated, and the stack kept working with the old public Gitea and all its data. Finishing the upgrade means deleting the Gitea service, which deletes its disk, and syncing again. |
+| Backup and restore | `git clone --mirror` before the upgrade, then, on the new empty Gitea, a ledger of the same name with the backup merged in and pushed. The restored ledger opened in the dashboard with the backup's files and every earlier commit. A forced push is refused, so the restore is a merge. The steps are in `deploy/bex/README.md`. |
+| `bea cloud login` | The terminal printed a one-time code, the dashboard's device page showed the requesting device and authorized it, and the stored credential then worked for `bea cloud status` and `bea cloud ledger list`. |
+| Mobile sign-in protocol | Replayed from a desktop browser with the app's client and redirect: consent, redirect to `io.beancount.ios:/oauth/callback`, token exchange, a ledger read and a refresh all worked. |
+| Blocked account | Sign-in answers "User is banned. If you need help, please contact the person who runs this server."; `POST /api/admin/unblock-user` restores access. |
+| Large push | A 200 MB file pushed through the API's Git proxy in 84 seconds. |
+| Smoke script | Now 15 checks, adding closed sign-up, clone addresses on this stack, and the OAuth sign-in; all pass. |
+
+It found three defects, all fixed and rerun on that stack:
+
+- After the Gitea service was deleted and created again, every ledger page answered "Page not found". The new service generates a new administrator password, but the administrator account lives in the shared Postgres and kept the old one. Gitea's start script now gives the existing account the new password.
+- No OAuth sign-in could start on a bex deployment. The dashboard's same-origin API proxy followed the authorization endpoint's redirect itself, so the browser was left on a "Page not found". This stopped the mobile app's sign-in and an MCP client's authorization; the proxy now hands the redirect to the browser.
+- The mobile and identity consent pages still offered "Sign Up" on a stack that had closed sign-up. They now read the same answer as the sign-in page.
+
 ### What is not verified?
 
-The mobile app, the browser sign-in of `bea cloud login`, a backup and restore, a custom domain, Plaid, mail delivery with a real key, and any AI feature with a real model key. Also not run: syncing this Blueprint into an older deployment whose Gitea is still a web service (whether bex keeps the disk), and a push much larger than 20 MB.
+The mobile app on a phone (its sign-in protocol was replayed from a desktop browser), restoring accounts and settings from a Postgres backup, a custom domain, Plaid, mail delivery with a real key, and any AI feature with a real model key.

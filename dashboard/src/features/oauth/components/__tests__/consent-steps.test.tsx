@@ -8,6 +8,7 @@ import {
 
 const state = vi.hoisted(() => ({
   resetStore: vi.fn(),
+  signUpOpen: true,
   loginOptions: null as { onSuccess: () => void } | null,
   registerArgs: null as {
     withDefaultLedger: boolean;
@@ -22,6 +23,10 @@ const state = vi.hoisted(() => ({
 
 vi.mock("@apollo/client/react", () => ({
   useApolloClient: () => ({ resetStore: state.resetStore }),
+}));
+
+vi.mock("@/features/auth/hooks/use-deployment-info", () => ({
+  useDeploymentInfo: () => ({ selfHost: true, signUpOpen: state.signUpOpen }),
 }));
 
 vi.mock("@/features/auth/hooks/use-login-form", () => ({
@@ -133,18 +138,21 @@ describe("ConsentLoginStep", () => {
     expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
-  it("forwards the sign-up link visibility to the form", () => {
-    render(
-      <ConsentLoginStep
-        onSuccess={vi.fn()}
-        onForgotPasswordClick={vi.fn()}
-        onRegisterClick={vi.fn()}
-        titleKey="auth.oauthSignInToContinue"
-        showSignUpLink={false}
-      />,
-    );
-    expect(state.loginFormProps?.["showSignUpLink"]).toBe(false);
-  });
+  it.each([true, false])(
+    "offers Sign Up only while the deployment takes sign-ups (%s)",
+    (signUpOpen) => {
+      state.signUpOpen = signUpOpen;
+      render(
+        <ConsentLoginStep
+          onSuccess={vi.fn()}
+          onForgotPasswordClick={vi.fn()}
+          onRegisterClick={vi.fn()}
+          titleKey="auth.oauthSignInToContinue"
+        />,
+      );
+      expect(state.loginFormProps?.["showSignUpLink"]).toBe(signUpOpen);
+    },
+  );
 });
 
 describe("ConsentRegisterStep", () => {
