@@ -1,7 +1,8 @@
 #!/bin/sh
 # Tell Gitea its own public address, give it its schema in the shared Postgres,
-# create the backend's Gitea administrator exactly once (in the background, after
-# Gitea reports healthy), then hand over to the stock entrypoint.
+# create the backend's Gitea administrator or give the existing one this
+# deployment's password (in the background, after Gitea reports healthy), then
+# hand over to the stock entrypoint.
 set -eu
 
 # The Blueprint makes Gitea a private service: it has no public address, so the
@@ -66,7 +67,19 @@ create_admin() {
     export GITEA_WORK_DIR=/data GITEA_CUSTOM=/data/gitea
     if su-exec git gitea --config /data/gitea/conf/app.ini admin user list 2>/dev/null |
         grep -Fq "$FAVA_API_ADMIN_USER"; then
-        echo "bex-entrypoint: admin '$FAVA_API_ADMIN_USER' already exists"
+        # The account outlives this service: it is a row in the shared Postgres,
+        # while the password is generated per service. A Gitea service that was
+        # deleted and created again (the only way to change its type) arrives
+        # with a new password, which the API and the ledger are given too. Make
+        # the account match, or every request they send is refused.
+        if su-exec git gitea --config /data/gitea/conf/app.ini admin user change-password \
+            --username "$FAVA_API_ADMIN_USER" \
+            --password "$FAVA_API_ADMIN_PASSWORD" \
+            --must-change-password=false >/dev/null; then
+            echo "bex-entrypoint: admin '$FAVA_API_ADMIN_USER' already exists; password set from this deployment"
+        else
+            echo "bex-entrypoint: admin '$FAVA_API_ADMIN_USER' exists but its password could not be set" >&2
+        fi
     else
         su-exec git gitea --config /data/gitea/conf/app.ini admin user create \
             --username "$FAVA_API_ADMIN_USER" \

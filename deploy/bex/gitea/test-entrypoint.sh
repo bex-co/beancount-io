@@ -10,7 +10,9 @@
 # workspace showed, where Gitea missed its readiness deadline waiting on the API.
 # It also pins the address handling: Gitea is a private service on bex and has no
 # public address, so the wrapper must say so and still start it; where a platform
-# does give one, that becomes ROOT_URL, and an operator's own value wins.
+# does give one, that becomes ROOT_URL, and an operator's own value wins. And it
+# pins that an administrator left in the database by an earlier Gitea service is
+# given this service's password, which is what the API and the ledger present.
 set -u
 
 cd "$(dirname "$0")"
@@ -93,6 +95,30 @@ docker run -d --name "$NET-a" --network "$NET" "${ENV_ARGS[@]}" \
   "$IMAGE" >/dev/null
 wait_log "$NET-a" "schema gitea ensured" 30
 check "keeps the operator's" 1 "$(docker logs "$NET-a" 2>&1 | grep -c 'public address https://git.mycorp.test/$')"
+docker rm -f "$NET-a" >/dev/null
+
+echo "== a service created again, with a new generated password, still owns its administrator"
+# The account is a row in the shared Postgres; the password is generated per
+# service. Deleting and creating the Gitea service (bex's only way to change its
+# type) keeps the row and changes the password the API and ledger are handed.
+ADMIN_ARGS=(
+  -e GITEA__security__INSTALL_LOCK=true -e FAVA_API_ADMIN_USER=beancount_admin
+  -e GITEA_ADMIN_EMAIL=admin@example.test
+)
+signs_in() { # container, password -> HTTP status of an authenticated request
+  docker exec "$1" curl -s -o /dev/null -w '%{http_code}' -u "beancount_admin:$2" http://localhost:3000/api/v1/user
+}
+docker run -d --name "$NET-a" --network "$NET" "${ENV_ARGS[@]}" "${ADMIN_ARGS[@]}" \
+  -e FAVA_API_ADMIN_PASSWORD=first-generated-password "$IMAGE" >/dev/null
+wait_log "$NET-a" "New user 'beancount_admin' has been successfully created" 180
+check "first boot creates the administrator" 200 "$(signs_in "$NET-a" first-generated-password)"
+docker rm -f "$NET-a" >/dev/null
+docker run -d --name "$NET-a" --network "$NET" "${ENV_ARGS[@]}" "${ADMIN_ARGS[@]}" \
+  -e FAVA_API_ADMIN_PASSWORD=second-generated-password "$IMAGE" >/dev/null
+wait_log "$NET-a" "password set from this deployment" 180
+check "the wrapper says it set the password" 1 "$(docker logs "$NET-a" 2>&1 | grep -c 'already exists; password set from this deployment')"
+check "the new password signs in" 200 "$(signs_in "$NET-a" second-generated-password)"
+check "the old password no longer does" 401 "$(signs_in "$NET-a" first-generated-password)"
 docker rm -f "$NET-a" >/dev/null
 
 echo "== a name that is not a plain lowercase identifier is refused"
