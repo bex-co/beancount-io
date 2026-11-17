@@ -373,10 +373,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "交易",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "交易记录",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "单位",
     description: "Table header for units column",

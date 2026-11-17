@@ -419,10 +419,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Transakcia",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "Transakcie",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "Jednotky",
     description: "Table header for units column",

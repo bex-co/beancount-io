@@ -30,11 +30,6 @@ const ukReportsShared = {
     message: "Доходи проти витрат",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message:
-      "Стовпчаста діаграма, що порівнює загальні доходи та витрати за кожен інтервал у вибраному періоді.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const ukReports = {

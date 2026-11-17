@@ -208,7 +208,7 @@ const koSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "{ledgerName}의 재무 개요와 보고서. 순자산, 수입, 지출, 자산 배분을 볼 수 있습니다.",
+      "{ledgerName}의 재무 개요와 보고서. 순자산, 수입, 지출, 계정 잔액을 볼 수 있습니다.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

@@ -209,7 +209,7 @@ const jaSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "{ledgerName}の財務概要とレポート。純資産、収入、支出、資産配分を表示できます。",
+      "{ledgerName}の財務概要とレポート。純資産、収入、支出、勘定残高を表示できます。",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

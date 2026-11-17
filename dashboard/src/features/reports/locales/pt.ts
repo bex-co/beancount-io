@@ -29,11 +29,6 @@ const ptReportsShared = {
     message: "Renda vs Despesas",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message:
-      "Gráfico de barras comparando renda total e despesas para cada intervalo no período selecionado.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const ptReports = {

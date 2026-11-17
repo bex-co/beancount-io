@@ -29,11 +29,6 @@ const skReportsShared = {
     message: "Príjmy vs Výdavky",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message:
-      "Stĺpcový graf porovnávajúci celkové príjmy a výdavky pre každý interval vo vybranom období.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const skReports = {

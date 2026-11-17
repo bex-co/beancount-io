@@ -389,10 +389,6 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Транзакция",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "Транзакции",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "Единици",
     description: "Table header for units column",

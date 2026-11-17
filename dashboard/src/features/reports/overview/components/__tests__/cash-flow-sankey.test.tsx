@@ -121,8 +121,8 @@ describe("CashFlowSankey", () => {
     );
     expect(screen.getByTestId("chart-empty")).toBeInTheDocument();
 
-    // Declared `investing` pulls it out of the cash set once metadata lands;
-    // at the default depth it surfaces as the `Assets:US` investing node.
+    // Declared `investing` pulls it out of the cash set once metadata lands.
+    // A lone asset group is drawn as the account inside it, not as `Assets:US`.
     rerender(
       <CashFlowSankey
         assetsHierarchyData={assetsData}
@@ -137,8 +137,20 @@ describe("CashFlowSankey", () => {
     // With no income in the period, the investing outflow is funded by a
     // Shortfall of the same amount (w4/m54).
     expect(option.series[0].links).toEqual([
-      { source: "Cash Flow", target: "Assets:US", value: 1500, exact: "1500" },
-      { source: "Shortfall", target: "Cash Flow", value: 1500, exact: "1500" },
+      {
+        source: "Cash Flow",
+        target: "Assets:US:Bank:CD",
+        value: 1500,
+        exact: "1500",
+      },
+      // Drawn in its own grey rather than the hub's green.
+      {
+        source: "Shortfall",
+        target: "Cash Flow",
+        value: 1500,
+        exact: "1500",
+        lineStyle: { color: expect.any(String) },
+      },
     ]);
   });
 

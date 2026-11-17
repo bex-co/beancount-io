@@ -66,14 +66,41 @@ describe("normalizeDashboardLayout", () => {
     const result = normalizeDashboardLayout({
       version: 0,
       order: ["recent-activity", "removed-widget", "recent-activity"],
-      hidden: ["cash-flow", "removed-widget", "cash-flow"],
+      hidden: ["readme", "removed-widget", "readme"],
     });
 
     expect(result.version).toBe(1);
     expect(result.order[0]).toBe("recent-activity");
     expect(result.order).toHaveLength(DASHBOARD_WIDGET_IDS.length);
     expect(new Set(result.order)).toEqual(new Set(DASHBOARD_WIDGET_IDS));
-    expect(result.hidden).toEqual(["cash-flow"]);
+    expect(result.hidden).toEqual(["readme"]);
+  });
+
+  it("keeps a layout saved before the money and balance modules merged", () => {
+    // Income vs Expenses and Cash Flow moved into Money movement, and the
+    // Balance Sheet pies into the holdings shares: their ids drop out, and
+    // the reader's own order and choices for the rest survive.
+    const result = normalizeDashboardLayout({
+      version: 1,
+      order: [
+        "recent-activity",
+        "cash-flow",
+        "money-movement",
+        "income-expenses",
+        "balance-sheet",
+        "financial-position",
+        "readme",
+      ],
+      hidden: ["cash-flow", "readme"],
+    });
+
+    expect(result.order).toEqual([
+      "recent-activity",
+      "money-movement",
+      "financial-position",
+      "readme",
+    ]);
+    expect(result.hidden).toEqual(["readme"]);
   });
 
   it("falls back to the complete default layout for invalid data", () => {
@@ -86,21 +113,21 @@ describe("normalizeDashboardLayout", () => {
     const first = renderHook(() => useDashboardLayout("owner/first"));
 
     act(() => {
-      first.result.current.setVisible("cash-flow", false);
+      first.result.current.setVisible("readme", false);
       first.result.current.move("recent-activity", -1);
     });
 
     expect(
       window.localStorage.getItem("ledger.owner/first.overview.layout.v1"),
-    ).toContain("cash-flow");
-    expect(first.result.current.layout.hidden).toContain("cash-flow");
+    ).toContain("readme");
+    expect(first.result.current.layout.hidden).toContain("readme");
     expect(first.result.current.layout.order.indexOf("recent-activity")).toBe(
       1,
     );
     first.unmount();
 
     const restored = renderHook(() => useDashboardLayout("owner/first"));
-    expect(restored.result.current.layout.hidden).toContain("cash-flow");
+    expect(restored.result.current.layout.hidden).toContain("readme");
     expect(
       restored.result.current.layout.order.indexOf("recent-activity"),
     ).toBe(1);

@@ -419,10 +419,6 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Транзакция",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "Транзакции",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "Единицы",
     description: "Table header for units column",

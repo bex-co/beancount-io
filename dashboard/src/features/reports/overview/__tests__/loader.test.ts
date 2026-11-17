@@ -4,6 +4,7 @@ import {
   GetLedgerAccountMetaDocument,
   GetLedgerDocument,
   GetLedgerFileDocument,
+  GetLedgerJournalDocument,
   GetLedgerOverviewDocument,
   GetLedgerOverviewValuationDocument,
 } from "@/graphql/definitions";
@@ -31,15 +32,21 @@ function pending() {
   return new Promise<never>(() => {});
 }
 
-// The two reads the page renders from: flows at cost, balances at market.
-const PRIMARY = [GetLedgerOverviewDocument, GetLedgerOverviewValuationDocument];
+// The reads the page renders from: flows at cost, balances at market, and the
+// newest transactions, which say where the ledger's data ends.
+const PRIMARY = [
+  GetLedgerOverviewDocument,
+  GetLedgerOverviewValuationDocument,
+  GetLedgerJournalDocument,
+];
 
 describe("overviewLoader", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.useRealTimers();
   });
 
-  it("resolves once both primary reads are cached even while README and metadata are still loading", async () => {
+  it("resolves once the primary reads are cached even while README and metadata are still loading", async () => {
     vi.stubEnv("SSR", false);
     const query = vi.fn((options: QueryOptions) =>
       PRIMARY.includes(options.query as never)
@@ -84,9 +91,24 @@ describe("overviewLoader", () => {
             interval: "monthly",
           },
         },
+        {
+          // The same variables Recent activity reads, so it is a cache hit.
+          query: GetLedgerJournalDocument,
+          variables: {
+            ledgerId: "open_ledger/example",
+            query: {
+              account: "Assets:Checking",
+              filter: undefined,
+              time: "2025",
+              directiveTypes: ["Transaction"],
+              offset: 0,
+              limit: 8,
+            },
+          },
+        },
       ]),
     );
-    expect(requested).toHaveLength(4);
+    expect(requested).toHaveLength(5);
   });
 
   it("waits for the market read, so no balance renders at cost first", async () => {
@@ -118,6 +140,7 @@ describe("overviewLoader", () => {
 
     expect(order.indexOf(GetLedgerOverviewDocument)).toBe(2);
     expect(order.indexOf(GetLedgerOverviewValuationDocument)).toBe(3);
+    expect(order.indexOf(GetLedgerJournalDocument)).toBe(4);
   });
 
   it("leaves an overview failure to the page's own error state", async () => {
@@ -136,11 +159,11 @@ describe("overviewLoader", () => {
   it("leaves a market-read failure to the balance modules", async () => {
     vi.stubEnv("SSR", false);
     const query = vi.fn((options: QueryOptions) => {
-      if (options.query === GetLedgerOverviewDocument) {
-        return Promise.resolve({ data: {} });
+      if (options.query === GetLedgerOverviewValuationDocument) {
+        return Promise.reject(new Error("prices failed to load"));
       }
-      return options.query === GetLedgerOverviewValuationDocument
-        ? Promise.reject(new Error("prices failed to load"))
+      return PRIMARY.includes(options.query as never)
+        ? Promise.resolve({ data: {} })
         : pending();
     });
 
@@ -157,8 +180,8 @@ describe("overviewLoader", () => {
 
     await overviewLoader(loaderInput(query));
 
-    // A server render still carries both primary reads.
-    expect(query).toHaveBeenCalledTimes(3);
+    // A server render still carries every primary read.
+    expect(query).toHaveBeenCalledTimes(4);
     expect(query.mock.calls.map(([options]) => options.query)).toEqual([
       GetLedgerDocument,
       ...PRIMARY,
@@ -177,10 +200,131 @@ describe("overviewLoader", () => {
       const call = query.mock.calls.find(
         ([options]) => options.query === document,
       );
-      expect(call?.[0].variables).toMatchObject({
+      const variables = call?.[0].variables as Record<string, unknown>;
+      // The journal read nests its filters under `query`.
+      expect(variables.query ?? variables).toMatchObject({
         filter: "payee:Rent",
         time: "2025-10",
       });
     }
+  });
+});
+
+describe("overviewLoader, the opening month's balances", () => {
+  const interval = (date: string, amount: string) => ({
+    date,
+    balance: { USD: amount },
+    accountBalances: {},
+  });
+  const flows = {
+    data: {
+      getLedgerOverview: {
+        incomeIntervalData: [
+          interval("2025-08-31", "-9000"),
+          interval("2025-09-30", "-9400"),
+          interval("2025-10-31", "-4600"),
+        ],
+        expensesIntervalData: [
+          interval("2025-08-31", "7800"),
+          interval("2025-09-30", "7500"),
+          interval("2025-10-31", "2400"),
+        ],
+      },
+    },
+  };
+  // The newest entry: the data stops on 11 October.
+  const newest = {
+    data: { getLedgerJournal: { data: [{ date: "2025-10-11" }] } },
+  };
+  const publicLedger = {
+    data: {
+      getLedger: {
+        private: false,
+        permissions: { admin: false, pull: true, push: false },
+      },
+    },
+  };
+  const monthRead = {
+    query: GetLedgerOverviewValuationDocument,
+    variables: {
+      ledgerId: "open_ledger/example",
+      account: "",
+      filter: "",
+      time: "2025-09",
+      interval: "monthly",
+    },
+  };
+
+  function serve(monthBalances: () => Promise<unknown>) {
+    return vi.fn((options: QueryOptions) => {
+      if (options.query === GetLedgerOverviewDocument)
+        return Promise.resolve(flows);
+      if (options.query === GetLedgerJournalDocument)
+        return Promise.resolve(newest);
+      if (options.query === GetLedgerDocument)
+        return Promise.resolve(publicLedger);
+      if (options.query === GetLedgerOverviewValuationDocument)
+        return options.variables?.time === "2025-09"
+          ? monthBalances()
+          : Promise.resolve({ data: {} });
+      return pending();
+    });
+  }
+
+  function unfiltered(query: (options: QueryOptions) => Promise<unknown>) {
+    const input = loaderInput(query);
+    input.deps = { account: "", filter: "", time: "" };
+    return input;
+  }
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+
+  it("reads the balances at the close of a month before the data's last, as the page will", async () => {
+    vi.stubEnv("SSR", true);
+    // A year after the ledger stopped part-way through October, a public
+    // reader opens on September: Financial position shows its close, and
+    // a server render must already hold those rows.
+    vi.useFakeTimers({ now: new Date(2026, 10, 16, 12), toFake: ["Date"] });
+    const query = serve(() => Promise.resolve({ data: {} }));
+
+    await overviewLoader(unfiltered(query));
+
+    expect(query.mock.calls.map(([options]) => options)).toContainEqual(
+      monthRead,
+    );
+  });
+
+  it("waits for that read, so the rows never render as placeholders", async () => {
+    vi.stubEnv("SSR", false);
+    vi.useFakeTimers({ now: new Date(2026, 10, 16, 12), toFake: ["Date"] });
+    const query = serve(pending);
+
+    const settled = vi.fn();
+    void overviewLoader(unfiltered(query)).then(settled);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(query.mock.calls.map(([options]) => options)).toContainEqual(
+      monthRead,
+    );
+    expect(settled).not.toHaveBeenCalled();
+  });
+
+  it("reads nothing more when the page opens on the month the data ends in", async () => {
+    vi.stubEnv("SSR", false);
+    // Mid-October: the running month is the page's month, whose balances
+    // are the page's own read.
+    vi.useFakeTimers({ now: new Date(2025, 9, 20, 12), toFake: ["Date"] });
+    const query = serve(() => Promise.resolve({ data: {} }));
+
+    await overviewLoader(unfiltered(query));
+
+    expect(
+      query.mock.calls.filter(
+        ([options]) => options.query === GetLedgerOverviewValuationDocument,
+      ),
+    ).toHaveLength(1);
   });
 });

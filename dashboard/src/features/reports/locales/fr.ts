@@ -31,11 +31,6 @@ const frReportsShared = {
     message: "Revenus vs Dépenses",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message:
-      "Graphique à barres comparant les revenus et dépenses totaux pour chaque intervalle de la période sélectionnée.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const frReports = {

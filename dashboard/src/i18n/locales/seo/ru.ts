@@ -249,7 +249,7 @@ const ruSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Финансовый обзор и отчеты для {ledgerName}. Просматривайте чистую стоимость, доходы, расходы и распределение активов.",
+      "Финансовый обзор и отчеты для {ledgerName}. Просматривайте чистую стоимость, доходы, расходы и остатки на счетах.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

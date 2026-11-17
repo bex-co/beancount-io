@@ -2,10 +2,16 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MoneyMovementSection } from "../money-movement-section";
+import { MonthSummary } from "../month-summary";
+import { useOverviewMonth } from "../../hooks/use-overview-month";
+import type { IntervalDataSeries } from "../../lib/overview-utils";
 
 const searchParams = vi.hoisted(() => ({ account: "", filter: "", time: "" }));
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({
   useLedgerSearchParams: () => ({ searchParams }),
+}));
+vi.mock("@/common/components/react-echarts", () => ({
+  ReactECharts: () => <div data-testid="echarts-mock" />,
 }));
 vi.mock("@/common/hooks/use-ledger", () => ({
   useLedgerNavigateToAccount: () => vi.fn(),
@@ -14,8 +20,75 @@ vi.mock("@/common/hooks/use-ledger", () => ({
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }));
+// The chart view lives in the page URL; these cases only read the months.
+vi.mock("@/common/hooks/use-url-view", () => ({
+  useUrlView: (_from: string, _views: unknown, fallback: string) => [
+    fallback,
+    vi.fn(),
+  ],
+}));
 
-const props = {
+/**
+ * The page's wiring in miniature: the month hook chooses the month, the
+ * summary steps it, and the section follows.
+ */
+function Section({
+  income,
+  expenses,
+  preferActiveMonth = false,
+  dataThrough = "2099-12-31",
+  today = "2099-12-31",
+  netWorth = [],
+  ...rest
+}: typeof props & {
+  preferActiveMonth?: boolean;
+  dataThrough?: string;
+  today?: string;
+  netWorth?: Array<{ date: string; balance: Record<string, unknown> }>;
+}) {
+  const month = useOverviewMonth({
+    income,
+    expenses,
+    preferActiveMonth,
+    dataThrough,
+    today,
+  });
+  return (
+    <>
+      {month.selectedDate && (
+        <MonthSummary
+          dates={month.dates}
+          selectedDate={month.selectedDate}
+          onSelectDate={month.setSelectedDate}
+          dataThrough={dataThrough}
+          income={income}
+          expenses={expenses}
+          netWorth={netWorth}
+          primaryCurrency={rest.primaryCurrency}
+          today={today}
+        />
+      )}
+      <MoneyMovementSection
+        {...rest}
+        income={income}
+        expenses={expenses}
+        dates={month.dates}
+        selectedDate={month.selectedDate}
+        onSelectDate={month.setSelectedDate}
+        timeFilter={month.timeFilter}
+        dataThrough={dataThrough}
+      />
+    </>
+  );
+}
+
+const props: {
+  income: IntervalDataSeries;
+  expenses: IntervalDataSeries;
+  primaryCurrency: string;
+  ledgerOwner: string;
+  ledgerName: string;
+} = {
   income: [{ date: "2026-04-30", balance: { USD: -100 }, accountBalances: {} }],
   expenses: [
     { date: "2026-05-31", balance: { USD: 15 }, accountBalances: {} },
@@ -33,26 +106,24 @@ beforeEach(() =>
 describe("public money-movement default", () => {
   it("shows the latest activity and preserves an explicitly selected empty month", async () => {
     const user = userEvent.setup();
-    const { rerender } = render(
-      <MoneyMovementSection {...props} preferActiveMonth />,
-    );
-    expect(screen.getAllByText("May 2026")).toHaveLength(3);
+    const { rerender } = render(<Section {...props} preferActiveMonth />);
+    expect(screen.getAllByText("May 2026")).toHaveLength(2);
     await user.click(screen.getByRole("button", { name: "Next" }));
-    expect(screen.getAllByText("January 2027")).toHaveLength(3);
-    rerender(<MoneyMovementSection {...props} preferActiveMonth />);
-    expect(screen.getAllByText("January 2027")).toHaveLength(3);
+    expect(screen.getAllByText("January 2027")).toHaveLength(2);
+    rerender(<Section {...props} preferActiveMonth />);
+    expect(screen.getAllByText("January 2027")).toHaveLength(2);
     await user.click(screen.getByRole("button", { name: "Previous" }));
-    expect(screen.getAllByText("May 2026")).toHaveLength(3);
+    expect(screen.getAllByText("May 2026")).toHaveLength(2);
   });
 
   it("preserves the workspace default for writers and private ledgers", () => {
-    render(<MoneyMovementSection {...props} />);
-    expect(screen.getAllByText("January 2027")).toHaveLength(3);
+    render(<Section {...props} />);
+    expect(screen.getAllByText("January 2027")).toHaveLength(2);
   });
 
   it("falls back to the final supplied interval when every amount is zero", () => {
     render(
-      <MoneyMovementSection
+      <Section
         {...props}
         income={[]}
         expenses={[
@@ -61,7 +132,7 @@ describe("public money-movement default", () => {
         preferActiveMonth
       />,
     );
-    expect(screen.getAllByText("January 2027")).toHaveLength(3);
+    expect(screen.getAllByText("January 2027")).toHaveLength(2);
     expect(
       screen.getAllByText("No money movement for this period."),
     ).toHaveLength(2);
@@ -109,12 +180,12 @@ describe("filtered money-movement default on 2026-10-15", () => {
           : ["2026-01", "2026-12"];
       Object.assign(searchParams, { time });
       render(
-        <MoneyMovementSection
+        <Section
           {...props}
           {...series(months(window[0], window[1]), "2026-08")}
         />,
       );
-      expect(screen.getAllByText("August 2026")).toHaveLength(3);
+      expect(screen.getAllByText("August 2026")).toHaveLength(2);
       expect(screen.queryByText("December 2026")).toBeNull();
     },
   );
@@ -124,24 +195,19 @@ describe("filtered money-movement default on 2026-10-15", () => {
     (filter) => {
       Object.assign(searchParams, filter);
       render(
-        <MoneyMovementSection
+        <Section
           {...props}
           {...series(months("2026-01", "2026-12"), "2026-08")}
         />,
       );
-      expect(screen.getAllByText("August 2026")).toHaveLength(3);
+      expect(screen.getAllByText("August 2026")).toHaveLength(2);
     },
   );
 
   it("opens a selection with no activity on its last month that has begun", () => {
     Object.assign(searchParams, { time: "year" });
-    render(
-      <MoneyMovementSection
-        {...props}
-        {...series(months("2026-01", "2026-12"))}
-      />,
-    );
-    expect(screen.getAllByText("October 2026")).toHaveLength(3);
+    render(<Section {...props} {...series(months("2026-01", "2026-12"))} />);
+    expect(screen.getAllByText("October 2026")).toHaveLength(2);
     expect(
       screen.getAllByText("No money movement for this period."),
     ).toHaveLength(2);
@@ -149,13 +215,8 @@ describe("filtered money-movement default on 2026-10-15", () => {
 
   it("keeps a wholly future selection's empty state", () => {
     Object.assign(searchParams, { time: "2030" });
-    render(
-      <MoneyMovementSection
-        {...props}
-        {...series(months("2030-01", "2030-12"))}
-      />,
-    );
-    expect(screen.getAllByText("December 2030")).toHaveLength(3);
+    render(<Section {...props} {...series(months("2030-01", "2030-12"))} />);
+    expect(screen.getAllByText("December 2030")).toHaveLength(2);
     expect(
       screen.getAllByText("No money movement for this period."),
     ).toHaveLength(2);
@@ -177,7 +238,7 @@ describe("Money movement averages", () => {
 
   it("shows a commodity's small averages beside the USD ones", () => {
     render(
-      <MoneyMovementSection
+      <Section
         {...props}
         income={quarter({ BTC: "-0.003", USD: "-3.00" })}
         expenses={quarter({ BTC: "0.001", USD: "1.00" })}
@@ -192,10 +253,10 @@ describe("Money movement averages", () => {
 
   it("keeps every digit of a whole-unit average", () => {
     render(
-      <MoneyMovementSection
+      <Section
         {...props}
         income={quarter({ USD: "-9007199254740993" })}
-        expenses={quarter({ USD: "1.00" })}
+        expenses={quarter({ USD: "2.00" })}
       />,
     );
     const text = document.body.textContent ?? "";

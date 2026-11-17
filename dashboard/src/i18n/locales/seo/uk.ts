@@ -249,7 +249,7 @@ const ukSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Фінансовий огляд та звіти для {ledgerName}. Переглядайте чисту вартість, дохід, витрати та розподіл активів.",
+      "Фінансовий огляд та звіти для {ledgerName}. Переглядайте чисту вартість, дохід, витрати та залишки на рахунках.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

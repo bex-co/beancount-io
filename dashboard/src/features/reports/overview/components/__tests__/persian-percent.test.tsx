@@ -1,15 +1,16 @@
 import { type ReactNode } from "react";
-import { cleanup } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SerializableTreeNode } from "@/graphql/definitions";
-import { node, renderInLedger, rows, table } from "./overview-chart-test-utils";
-import { DistributionChart } from "../distribution-chart";
+import { node, renderInLedger } from "./overview-chart-test-utils";
+import { AccountBalancesCard } from "../account-balances-card";
 import { HierarchyTreeMap } from "../../../balance-sheet/hierarchy-tree-map";
 
 /**
  * In Persian the Overview's share column wrote Persian digits with a Latin
  * `%`, and the pie and Balance Sheet tree map tooltips wrote Latin digits and
- * `%` (w2/133). A share is now written the way Statistics already writes it.
+ * `%` (w2/133). A share is now written the way Statistics already writes it;
+ * the Overview's shares are now the Accounts card's column, the pie gone.
  */
 let captured: Record<string, unknown> | undefined;
 vi.unmock("@/common/hooks/use-translations");
@@ -19,6 +20,14 @@ vi.mock("@/common/components/react-echarts", () => ({
     captured = option;
     return <div data-testid="chart" />;
   },
+}));
+vi.mock("@/common/hooks/use-ledger", async (original) => ({
+  ...(await original<typeof import("@/common/hooks/use-ledger")>()),
+  useLedgerNavigateToAccount: () => vi.fn(),
+}));
+vi.mock("@tanstack/react-router", async (original) => ({
+  ...(await original<typeof import("@tanstack/react-router")>()),
+  Link: ({ children }: { children: ReactNode }) => <a>{children}</a>,
 }));
 afterEach(() => {
   cleanup();
@@ -38,48 +47,33 @@ const distribution = node("Assets", {}, [
   node("Assets:Vanguard:VBMPX", { USD: "3422" }),
 ]);
 
+/** The Accounts card's share column: each account's share of its side. */
 const shares = async (language: string) => {
-  const option = await mount(
-    <DistributionChart
-      title="Assets Distribution"
-      data={distribution}
+  await renderInLedger(
+    <AccountBalancesCard
+      assets={distribution}
       primaryCurrency="USD"
+      invertLiabilities={false}
+      ledgerOwner="owner"
+      ledgerName="book"
     />,
     language,
   );
-  // The disclosure's summary is in the page language.
-  const summary = document.querySelector("summary")!.textContent!;
-  const shareColumn = rows(await table("Assets Distribution", summary)).map(
-    (row) => row[2],
-  );
-  return { option, shareColumn };
+  return (account: string) => screen.getByTitle(account).textContent ?? "";
 };
 
 describe("percentages in the language's digits and sign", () => {
-  it("writes ۳۴٫۲۲٪ in the Persian distribution table and pie tooltip", async () => {
-    const { option, shareColumn } = await shares("fa");
-    expect(shareColumn).toEqual(["۳۴٫۲۲٪", "۶۵٫۷۸٪"]);
-    expect(
-      option.tooltip.formatter({
-        name: "VBMPX",
-        value: 3422,
-        percent: 34.22,
-        data: { account: "Assets:Vanguard:VBMPX", exact: "3422" },
-      }),
-    ).toMatch(/\(۳۴٫۲۲٪\)$/);
+  it("writes ۳۴٫۲٪ in the Persian Accounts share column", async () => {
+    const row = await shares("fa");
+    expect(row("Assets:Vanguard:VBMPX")).toContain("۳۴٫۲٪");
+    expect(row("Assets:Vanguard:RGAGX")).toContain("۶۵٫۸٪");
+    expect(row("Assets:Vanguard:VBMPX")).not.toContain("%");
   });
 
-  it("keeps 34.22% in English", async () => {
-    const { option, shareColumn } = await shares("en");
-    expect(shareColumn).toEqual(["34.22%", "65.78%"]);
-    expect(
-      option.tooltip.formatter({
-        name: "VBMPX",
-        value: 3422,
-        percent: 34.22,
-        data: { account: "Assets:Vanguard:VBMPX", exact: "3422" },
-      }),
-    ).toBe("Assets:Vanguard:VBMPX: 3,422 (34.22%)");
+  it("keeps 34.2% in English", async () => {
+    const row = await shares("en");
+    expect(row("Assets:Vanguard:VBMPX")).toContain("34.2%");
+    expect(row("Assets:Vanguard:RGAGX")).toContain("65.8%");
   });
 
   const treeMap = (language: string) =>

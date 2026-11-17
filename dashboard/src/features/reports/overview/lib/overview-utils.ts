@@ -11,8 +11,10 @@ import {
   balanceToAmounts,
   chooseDisplayUnit,
   collectUnits,
+  readBalance,
   toExactAmount,
   toFiniteAmount,
+  type UnitAmounts,
 } from "./unit-amounts";
 
 export type DataSeries = Array<{
@@ -45,7 +47,6 @@ export type CurrencyAmount = {
 
 export type AccountBalanceRow = {
   account: string;
-  label: string;
   kind: "asset" | "liability";
   amounts: CurrencyAmount[];
   sortValue: number;
@@ -53,7 +54,6 @@ export type AccountBalanceRow = {
 
 export type MovementCategory = {
   account: string;
-  label: string;
   amounts: CurrencyAmount[];
   sortValue: number;
 };
@@ -264,7 +264,6 @@ export function buildAccountBalanceRows({
         );
         return {
           account: node.account,
-          label: node.account.split(":").pop() ?? node.account,
           kind,
           amounts,
           sortValue: Math.abs(comparable?.value ?? fallbackMagnitude),
@@ -277,6 +276,29 @@ export function buildAccountBalanceRows({
     ...buildRows(liabilities, "liability", invertLiabilities),
   ].sort(
     (a, b) => b.sortValue - a.sortValue || a.account.localeCompare(b.account),
+  );
+}
+
+/**
+ * One side of the balance sheet (assets or liabilities) as a total, unit by
+ * unit and summed exactly: every account's own balance counted once, as its
+ * rows are, so the rows below a total add up to it. The operating currency
+ * comes first; units without a price stay apart rather than added into it.
+ */
+export function sumSideBalance(
+  input: unknown,
+  inverted: boolean,
+  preferredCurrency: string,
+): CurrencyAmount[] {
+  const total: UnitAmounts = new Map();
+  for (const node of flattenHierarchy(input)) {
+    readBalance(node.balance, inverted, total);
+  }
+  return prioritizeCurrency(
+    [...total]
+      .map(([currency, exact]) => ({ currency, value: Number(exact), exact }))
+      .filter((amount) => amount.value !== 0),
+    preferredCurrency,
   );
 }
 
@@ -400,7 +422,6 @@ export function getMovementSnapshot({
       );
       return {
         account,
-        label: account.split(":").pop() ?? account,
         amounts,
         sortValue: Math.abs(comparable?.value ?? fallbackMagnitude),
       };
@@ -576,4 +597,98 @@ export function buildDistributionData(
   });
 
   return { items, unit, units };
+}
+
+/**
+ * The last day the ledger has data for: its newest entry, but never past
+ * today, since a future-dated entry does not finish the current month.
+ * Without a known entry it is today.
+ */
+export function resolveDataThrough(
+  latestEntry: string | null | undefined,
+  today: string,
+): string {
+  return latestEntry && latestEntry < today ? latestEntry : today;
+}
+
+/**
+ * A period, dated by its last day, that ends after the ledger's data does: a
+ * month still running, or one whose entries stop part-way (a ledger last
+ * written on 8 September). Its totals are a part, not a month.
+ */
+export function isPeriodIncomplete(
+  periodDate: string,
+  dataThrough: string,
+): boolean {
+  return periodDate > dataThrough;
+}
+
+/**
+ * The periods a history shows around `selected`: pages of `size` counted back
+ * from the latest period, so selecting a period inside the page never moves
+ * the page, and stepping past its edge turns to the next one.
+ */
+export function periodPage(
+  dates: ReadonlyArray<string>,
+  selected: string,
+  size = 12,
+): string[] {
+  const index = dates.indexOf(selected);
+  if (index < 0 || dates.length <= size) return [...dates];
+  const page = Math.floor((dates.length - 1 - index) / size);
+  const end = dates.length - page * size;
+  return dates.slice(Math.max(0, end - size), end);
+}
+
+const DAY_MS = 86_400_000;
+
+/** Whole days from one `YYYY-MM-DD` date to another. */
+function daysBetween(from: string, to: string): number {
+  return Math.round(
+    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS,
+  );
+}
+
+/**
+ * A ledger whose entries stopped well before today: a month and a half
+ * without one. Its last month is where the record ends, not a month still
+ * running.
+ */
+export function isLedgerDormant(dataThrough: string, today: string): boolean {
+  return daysBetween(dataThrough, today) > 45;
+}
+
+/** How long ago `date` was, in the reader's language ("9 years ago"). */
+export function formatTimeAgo(
+  date: string,
+  today: string,
+  language: string,
+): string {
+  const days = Math.max(0, daysBetween(date, today));
+  const relative = new Intl.RelativeTimeFormat(language, { numeric: "auto" });
+  if (days >= 365) return relative.format(-Math.floor(days / 365.25), "year");
+  if (days >= 60) return relative.format(-Math.floor(days / 30.44), "month");
+  if (days >= 14) return relative.format(-Math.floor(days / 7), "week");
+  return relative.format(-days, "day");
+}
+
+/**
+ * The month the Overview opens on, given the one it would otherwise pick. A
+ * ledger that stopped part-way through its last month opens on the month
+ * before: eight days of a month that never finished say nothing about it.
+ * A running month stays, since that is the one its writer is living in.
+ */
+export function settledOpeningMonth(
+  dates: ReadonlyArray<string>,
+  candidate: string,
+  dataThrough: string,
+  today: string,
+): string {
+  if (
+    !candidate ||
+    !isLedgerDormant(dataThrough, today) ||
+    !isPeriodIncomplete(candidate, dataThrough)
+  )
+    return candidate;
+  return dates[dates.indexOf(candidate) - 1] ?? candidate;
 }

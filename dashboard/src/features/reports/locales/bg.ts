@@ -30,11 +30,6 @@ const bgReportsShared = {
     message: "Доходи срещу разходи",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message:
-      "Стълбовидна диаграма, сравняваща общите доходи и разходи за всеки интервал в избрания период.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const bgReports = {

@@ -1,15 +1,27 @@
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
-import { AlertCircle, BarChart3, FileUp, Filter } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowRight,
+  FileUp,
+  Filter,
+} from "lucide-react";
+import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import { useQuery } from "@apollo/client/react";
 import {
   GetLedgerOverviewDocument,
@@ -23,7 +35,6 @@ import { RelatedLinks } from "@/common/components/related-links";
 import { ErrorBoundary } from "@/common/components/error-boundary";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
-import CashFlowSankey from "./components/cash-flow-sankey";
 import { overviewQueryDefaults } from "./constants";
 import { ReadmeCard } from "@/common/components/readme-card";
 import { useLedgerReadme } from "@/common/hooks/use-ledger-readme";
@@ -33,8 +44,6 @@ import { getInvertIncomeLiabilitiesEquity } from "@/common/lib/fava-options";
 import { StarButton } from "./components/star-button";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { QuickAskInput } from "@/features/ai-agent/components/quick-ask-input";
-import { IncomeExpensesChart } from "./components/income-expenses-chart";
-import { DistributionChart } from "./components/distribution-chart";
 import { LedgerWritePermission } from "@/common/components/ledger-permission/write";
 import { NetWorthCard } from "./components/net-worth-card";
 import { AccountBalancesCard } from "./components/account-balances-card";
@@ -51,8 +60,15 @@ import {
 import { useAccountMeta } from "./hooks/use-account-meta";
 import { ReportEmptyState } from "@/common/components/state-components";
 import { hasOverviewActivity, toLocalISODate } from "./lib/overview-utils";
-import { describeLatestNetWorth } from "./lib/net-worth-valuation";
+import {
+  describeLatestNetWorth,
+  throughCurrentMonth,
+} from "./lib/net-worth-valuation";
 import { EmptyLedgerSetup } from "./components/empty-ledger-setup";
+import { MonthSummary } from "./components/month-summary";
+import { MonthCashFlow } from "./components/month-cash-flow";
+import { useDataThrough, useOverviewMonth } from "./hooks/use-overview-month";
+import { isPastMonth } from "./lib/overview-month";
 
 function PublicLedgerIntroduction({
   ledgerId,
@@ -96,11 +112,52 @@ function PublicLedgerIntroduction({
 }
 
 /**
+ * One heading per section, and no sentence under it explaining what the
+ * section is: the content says that. A card inside a section does not repeat
+ * the heading either.
+ */
+function SectionHeading({
+  id,
+  title,
+  meta,
+}: {
+  id: string;
+  title: string;
+  /** What the section is as of, quieter beside its title. */
+  meta?: string;
+}) {
+  return (
+    <h2
+      id={id}
+      className="flex flex-wrap items-baseline gap-x-2 text-xl font-semibold tracking-tight"
+    >
+      {title}
+      {meta && (
+        <span className="text-base font-normal tracking-normal text-muted-foreground tabular-nums">
+          {meta}
+        </span>
+      )}
+    </h2>
+  );
+}
+
+/** Sections rise in one after another, unless the reader asked for less motion. */
+const SECTION_ENTRANCE =
+  "animate-in fade-in slide-in-from-bottom-2 duration-500 motion-reduce:animate-none";
+const sectionDelay = (index: number) =>
+  ({
+    "--tw-animation-delay": `${Math.min(index, 6) * 70}ms`,
+    "--tw-animation-fill-mode": "both",
+  }) as CSSProperties;
+
+const NO_INTERVALS: never[] = [];
+
+/**
  * Overview page component
  * This page shows ledger overview information
  */
 export default function LedgerOverviewPage() {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/",
   });
@@ -160,6 +217,38 @@ export default function LedgerOverviewPage() {
   const { accountMeta, pending: accountMetaPending } = useAccountMeta(ledgerId);
 
   const today = toLocalISODate(new Date());
+  const dataThrough = useDataThrough({
+    ledgerId,
+    account: ledgerFilters.searchParams.account,
+    filter: ledgerFilters.searchParams.filter,
+    time: ledgerFilters.searchParams.time,
+    today,
+  });
+  // One month for the whole page: the summary, the money cards, their
+  // history and the cash-flow diagram all answer for it.
+  const month = useOverviewMonth({
+    income: data?.getLedgerOverview?.incomeIntervalData ?? NO_INTERVALS,
+    expenses: data?.getLedgerOverview?.expensesIntervalData ?? NO_INTERVALS,
+    preferActiveMonth: publicReader,
+    dataThrough,
+    today,
+  });
+  // A month before the one the data ends in is history: the balances are
+  // read again at its close, so Financial position answers for the same month
+  // as the summary above it. The running (or last) month uses the page's own
+  // read.
+  const pastMonth = isPastMonth(month.selectedDate, dataThrough);
+  const monthValuation = useQuery(GetLedgerOverviewValuationDocument, {
+    variables: {
+      ledgerId,
+      account: ledgerFilters.searchParams.account,
+      filter: ledgerFilters.searchParams.filter,
+      time: month.timeFilter,
+      interval: overviewQueryDefaults.interval,
+    },
+    skip: !pastMonth || !month.timeFilter,
+    fetchPolicy: "cache-first",
+  });
   const market = valuationData?.market;
   const costNetWorth = data?.getLedgerOverview?.netWorthData;
   const netWorthValuation = useMemo(
@@ -254,45 +343,152 @@ export default function LedgerOverviewPage() {
       </AlertDescription>
     </Alert>
   ) : null;
+  // The one thing on the page that asks the writer to act: holdings valued
+  // at prices that stopped updating. Said once, beside the balances it
+  // affects, with the way to fix it; the Net Worth card keeps the per-holding
+  // detail. A note, not a banner: it qualifies figures, it does not lead.
+  const staleSince = netWorthValuation?.staleSince ?? null;
+  const staleNoticeShown =
+    canWrite &&
+    !reportState &&
+    hasActivity &&
+    staleSince !== null &&
+    // It is about today's prices: a past month's close is not valued at them.
+    !pastMonth &&
+    !layout.hidden.includes("financial-position");
+  const staleNotice = staleNoticeShown ? (
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+      <AlertTriangle
+        aria-hidden="true"
+        className="size-4 shrink-0 text-amber-600 dark:text-amber-400"
+      />
+      <p className="min-w-0">
+        {t("page.overview.pricesNotUpdated", {
+          date:
+            formatLedgerDate(staleSince, i18n.language, {
+              dateStyle: "medium",
+            }) ?? staleSince,
+          count:
+            netWorthValuation?.holdings.filter((holding) => holding.stale)
+              .length ?? 0,
+        })}
+      </p>
+      <Link
+        to="/ledger/$ledgerOwner/$ledgerName/commodities"
+        params={{ ledgerOwner, ledgerName }}
+        className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-4 hover:underline"
+      >
+        {t("page.overview.updatePrices")}
+        <ArrowRight aria-hidden="true" className="size-4" />
+      </Link>
+    </div>
+  ) : null;
+
+  // The month's summary and its chart lead the page whenever there is a
+  // month to show.
+  const heroShown = !reportState && hasActivity && month.selectedDate !== "";
+  // The day Financial position answers for: the month's close, or the
+  // ledger's last day with data.
+  const positionDate = pastMonth
+    ? month.selectedDate
+    : [
+        throughCurrentMonth(market?.netWorthData ?? [], today).at(-1)?.date,
+        dataThrough,
+      ]
+        .filter((date): date is string => Boolean(date))
+        .sort()[0];
+  const netWorth = (trend: boolean) => (
+    <NetWorthCard
+      data={market?.netWorthData ?? []}
+      valuation={netWorthValuation}
+      primaryCurrency={primaryCurrency}
+      ledgerOwner={ledgerOwner}
+      ledgerName={ledgerName}
+      today={today}
+      selectedDate={month.selectedDate || undefined}
+      dataThrough={dataThrough}
+      staleNoticeShown={staleNoticeShown}
+      // Without a trend the page's hero chart draws the line (and lists the
+      // months), and the figure heads the Accounts card.
+      trend={trend}
+    />
+  );
+  const monthBalancesFailed = Boolean(pastMonth && monthValuation.error);
+  const monthBalancesAlert = monthValuation.error ? (
+    <Alert variant="destructive">
+      <AlertDescription>
+        {t(getErrorMessageKey(monthValuation.error))}
+      </AlertDescription>
+    </Alert>
+  ) : null;
+  const accountBalances = (summary: ReactNode | undefined) => (
+    <AccountBalancesCard
+      summary={summary}
+      assets={
+        pastMonth
+          ? monthValuation.data?.market?.assetsHierarchyData
+          : market?.assetsHierarchyData
+      }
+      liabilities={
+        pastMonth
+          ? monthValuation.data?.market?.liabilitiesHierarchyData
+          : market?.liabilitiesHierarchyData
+      }
+      primaryCurrency={primaryCurrency}
+      invertLiabilities={invertIncomeLiabilitiesEquity}
+      ledgerOwner={ledgerOwner}
+      ledgerName={ledgerName}
+      time={pastMonth ? month.timeFilter : ledgerFilters.searchParams.time}
+      fiscalYearEnd={ledgerData.favaOptions?.fiscalYearEnd}
+      // The same day the Net Worth card names.
+      asOf={positionDate}
+      pending={pastMonth && !monthValuation.data}
+    />
+  );
   const widgets: Record<DashboardWidgetId, ReactNode> = {
     "financial-position": (
       <section
         aria-labelledby="overview-financial-position-heading"
         className="space-y-3"
       >
-        <div>
-          <h2
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <SectionHeading
             id="overview-financial-position-heading"
-            className="text-lg font-semibold tracking-tight"
-          >
-            {t("page.overview.financialPosition")}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("page.overview.financialPositionDescription")}
-          </p>
+            title={t("page.overview.financialPosition")}
+            // One card answers for one day, so the section names it once.
+            meta={
+              heroShown && positionDate
+                ? (formatLedgerDate(positionDate, i18n.language, {
+                    dateStyle: "medium",
+                  }) ?? positionDate)
+                : undefined
+            }
+          />
+          {staleNotice}
         </div>
-        {balancesError ?? (
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(19rem,0.8fr)]">
-            <NetWorthCard
-              data={market?.netWorthData ?? []}
-              valuation={netWorthValuation}
-              primaryCurrency={primaryCurrency}
-              ledgerOwner={ledgerOwner}
-              ledgerName={ledgerName}
-              today={today}
-            />
-            <AccountBalancesCard
-              assets={market?.assetsHierarchyData}
-              liabilities={market?.liabilitiesHierarchyData}
-              primaryCurrency={primaryCurrency}
-              invertLiabilities={invertIncomeLiabilitiesEquity}
-              ledgerOwner={ledgerOwner}
-              ledgerName={ledgerName}
-              time={ledgerFilters.searchParams.time}
-              fiscalYearEnd={ledgerData.favaOptions?.fiscalYearEnd}
-            />
-          </div>
-        )}
+        {balancesError ??
+          (heroShown ? (
+            // A size container: the card lays its sides out by the width
+            // the section has, which a sidebar narrows. The figure heads the
+            // card that lists what it adds up.
+            <div className="@container grid gap-4">
+              {monthBalancesFailed ? (
+                <>
+                  <Card className="gap-0 px-5 py-5">{netWorth(false)}</Card>
+                  {monthBalancesAlert}
+                </>
+              ) : (
+                accountBalances(netWorth(false))
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(19rem,0.8fr)]">
+              {netWorth(true)}
+              {monthBalancesFailed
+                ? monthBalancesAlert
+                : accountBalances(undefined)}
+            </div>
+          ))}
       </section>
     ),
     "money-movement": (
@@ -302,7 +498,23 @@ export default function LedgerOverviewPage() {
         primaryCurrency={primaryCurrency}
         ledgerOwner={ledgerOwner}
         ledgerName={ledgerName}
-        preferActiveMonth={publicReader}
+        dates={month.dates}
+        selectedDate={month.selectedDate}
+        onSelectDate={month.setSelectedDate}
+        timeFilter={month.timeFilter}
+        dataThrough={dataThrough}
+        history={!heroShown}
+        flow={
+          <MonthCashFlow
+            ledgerId={ledgerId}
+            account={ledgerFilters.searchParams.account}
+            filter={ledgerFilters.searchParams.filter}
+            time={month.timeFilter}
+            accountMeta={accountMeta}
+            primaryCurrency={primaryCurrency}
+            accountMetaPending={accountMetaPending}
+          />
+        }
       />
     ),
     "recent-activity": (
@@ -319,114 +531,22 @@ export default function LedgerOverviewPage() {
         canWrite={canWrite}
       />
     ),
-    "income-expenses": (
-      <section
-        aria-labelledby="overview-income-expenses-heading"
-        className="space-y-3"
-      >
-        <h2
-          id="overview-income-expenses-heading"
-          className="text-lg font-semibold tracking-tight"
-        >
-          {t("page.reports.incomeVsExpenses")}
-        </h2>
-        <Card className="min-w-0 gap-0 overflow-hidden py-0">
-          <CardHeader className="border-b py-5">
-            <CardTitle>{t("page.reports.incomeVsExpenses")}</CardTitle>
-            <CardDescription>
-              {t("page.reports.incomeVsExpensesDescription")}
-            </CardDescription>
-            <CardAction>
-              <span className="flex size-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <BarChart3 className="size-4" />
-              </span>
-            </CardAction>
-          </CardHeader>
-          <CardContent className="px-3 py-4 sm:px-6 sm:py-5">
-            <IncomeExpensesChart
-              income={overview?.incomeIntervalData ?? []}
-              expenses={overview?.expensesIntervalData ?? []}
-              primaryCurrency={primaryCurrency}
-            />
-          </CardContent>
-        </Card>
-      </section>
-    ),
-    "balance-sheet": (
-      <section
-        aria-labelledby="overview-position-heading"
-        className="space-y-3"
-      >
-        <h2
-          id="overview-position-heading"
-          className="text-lg font-semibold tracking-tight"
-        >
-          {t("common.balanceSheet")}
-        </h2>
-        {balancesError ?? (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <DistributionChart
-              title={t("page.overview.assetsDistribution")}
-              description={t("page.overview.assetsDistributionDescription", {
-                ledgerName: displayName,
-              })}
-              data={market?.assetsHierarchyData}
-              primaryCurrency={primaryCurrency}
-            />
-            <DistributionChart
-              title={t("page.overview.liabilitiesDistribution")}
-              description={t(
-                "page.overview.liabilitiesDistributionDescription",
-                {
-                  ledgerName: displayName,
-                },
-              )}
-              data={market?.liabilitiesHierarchyData}
-              primaryCurrency={primaryCurrency}
-              inverse
-            />
-          </div>
-        )}
-      </section>
-    ),
-    "cash-flow": (
-      <section
-        aria-labelledby="overview-cash-flow-heading"
-        className="space-y-3"
-      >
-        <h2
-          id="overview-cash-flow-heading"
-          className="text-lg font-semibold tracking-tight"
-        >
-          {t("page.overview.cashFlow")}
-        </h2>
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle>{t("page.overview.cashFlow")}</CardTitle>
-            <CardDescription>
-              {t("page.overview.cashFlowDescription")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CashFlowSankey
-              incomeHierarchyData={overview?.incomeHierarchyData}
-              expensesHierarchyData={overview?.expensesHierarchyData}
-              assetsHierarchyData={overview?.assetsHierarchyData}
-              liabilitiesHierarchyData={overview?.liabilitiesHierarchyData}
-              accountMeta={accountMeta}
-              primaryCurrency={primaryCurrency}
-              accountMetaPending={accountMetaPending}
-            />
-          </CardContent>
-        </Card>
-      </section>
-    ),
     readme: (
       <div id="overview-ledger-notes" className="scroll-mt-4">
         <ReadmeCard
           ledgerId={ledgerId}
           initialReadme={initialReadme}
           headingOffset={1}
+          // A writer's notes follow the figures, as a preview to read on
+          // from; a public reader's are what the page is there to explain.
+          collapse={
+            publicReader
+              ? undefined
+              : {
+                  more: t("page.overview.readMore"),
+                  less: t("common.showLess"),
+                }
+          }
         />
       </div>
     ),
@@ -438,87 +558,106 @@ export default function LedgerOverviewPage() {
   const narrativeOnly = Boolean(reportState) || !hasActivity;
 
   return (
-    <div className="space-y-6 pb-4 md:space-y-8">
-      <section className="relative overflow-hidden rounded-xl border bg-card shadow-sm">
-        <div className="pointer-events-none absolute -top-32 -left-24 size-72 rounded-full bg-primary/10 blur-3xl" />
-        <div className="pointer-events-none absolute -top-24 right-0 size-64 rounded-full bg-chart-4/10 blur-3xl" />
-        <div className="relative p-4 sm:px-5 sm:py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                {t("common.overview")}
-              </p>
-              <h1
-                ref={overviewHeading}
-                tabIndex={-1}
-                className={`mt-1 text-xl font-semibold tracking-tight outline-none sm:text-2xl ${publicReader ? "" : "truncate"}`}
+    // On a phone the shell's 8px edge is too tight for a page that reads
+    // like an article; the page adds 8px more, a 16px gutter.
+    // An article's page: the headline and its chart sit on the page itself,
+    // and the modules under them are quiet tinted panels, with no outline or
+    // shadow, so nothing frames a figure more loudly than the headline.
+    // A module marked plain sits on the page like the hero, so the page
+    // alternates between open charts and panels of detail.
+    <div className="mx-auto w-full max-w-[1360px] space-y-10 pb-4 max-sm:px-2 md:space-y-14 [&_[data-slot=card]:not([data-plain])]:rounded-2xl [&_[data-slot=card]:not([data-plain])]:border-0 [&_[data-slot=card]:not([data-plain])]:bg-muted/50 [&_[data-slot=card]:not([data-plain])]:shadow-none">
+      {/* The page's own header, not a card: the ledger's name, its actions,
+          and the question box. Writers already know which page this is, so
+          the sentence describing the dashboard is kept for public readers,
+          who arrive without that context. */}
+      <header className={SECTION_ENTRANCE} style={sectionDelay(0)}>
+        {/* One grid: the name and the actions on the first row, with the
+            question box between them where there is room, so it never stands
+            between the month's summary and the figures; on a narrow screen
+            it follows the summary. */}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)_auto] lg:gap-x-6">
+          <div className="min-w-0">
+            <h1
+              ref={overviewHeading}
+              tabIndex={-1}
+              // The ledger's name labels the page; the month's summary
+              // below is what it says, so that is the larger type. A
+              // public reader arrives without context: the title leads.
+              className={`font-semibold tracking-tight outline-none ${publicReader ? "text-2xl sm:text-3xl" : "truncate text-lg"}`}
+            >
+              {displayName}
+            </h1>
+            {publicReader && (
+              <PublicLedgerIntroduction
+                ledgerId={ledgerId}
+                initialReadme={initialReadme}
+                name={displayName}
+                description={ledgerData.description}
+                readmeVisible={visibleWidgetIds.includes("readme")}
+              />
+            )}
+          </div>
+          <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-1.5 lg:col-start-3">
+            <LedgerWritePermission>
+              <Button
+                asChild
+                size="sm"
+                variant="secondary"
+                className="rounded-full px-3"
               >
-                {displayName}
-              </h1>
-              {publicReader ? (
-                <PublicLedgerIntroduction
-                  ledgerId={ledgerId}
-                  initialReadme={initialReadme}
-                  name={displayName}
-                  description={ledgerData.description}
-                  readmeVisible={visibleWidgetIds.includes("readme")}
-                />
-              ) : (
-                <p className="mt-1 max-w-2xl text-xs leading-snug text-muted-foreground sm:text-sm">
-                  {t("common.pageDescription.overview", {
-                    ledgerName: displayName,
-                  })}
-                </p>
-              )}
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              <LedgerWritePermission>
-                <Button
-                  asChild
-                  size="sm"
-                  variant="secondary"
-                  className="rounded-full px-3"
+                <Link
+                  to="/ledger/$ledgerOwner/$ledgerName/import"
+                  params={{ ledgerOwner, ledgerName }}
                 >
-                  <Link
-                    to="/ledger/$ledgerOwner/$ledgerName/import"
-                    params={{ ledgerOwner, ledgerName }}
-                  >
-                    <FileUp />
-                    {t("common.relatedLinks.import")}
-                  </Link>
-                </Button>
-              </LedgerWritePermission>
-              {showStarButton && (
-                <StarButton
-                  ledgerId={ledgerId}
-                  isStarred={isStarred}
-                  starLabel={t("page.overview.starButton.star")}
-                  starredLabel={t("page.overview.starButton.starred")}
-                />
-              )}
-              <DashboardCustomizer
-                showTrigger={!publicReader}
-                layout={layout}
-                setVisible={setVisible}
-                move={move}
-                reset={reset}
-                open={customizing}
-                onOpenChange={(open) => {
-                  // Opened by its own header trigger: Radix returns focus there.
-                  if (open) customizeOpener.current = null;
-                  setCustomizing(open);
-                }}
-                returnFocus={customizeOpener}
-                closeFocusFallback={overviewHeading}
+                  <FileUp />
+                  {t("common.relatedLinks.import")}
+                </Link>
+              </Button>
+            </LedgerWritePermission>
+            {showStarButton && (
+              <StarButton
+                ledgerId={ledgerId}
+                isStarred={isStarred}
+                starLabel={t("page.overview.starButton.star")}
+                starredLabel={t("page.overview.starButton.starred")}
+              />
+            )}
+            <DashboardCustomizer
+              showTrigger={!publicReader}
+              layout={layout}
+              setVisible={setVisible}
+              move={move}
+              reset={reset}
+              open={customizing}
+              onOpenChange={(open) => {
+                // Opened by its own header trigger: Radix returns focus there.
+                if (open) customizeOpener.current = null;
+                setCustomizing(open);
+              }}
+              returnFocus={customizeOpener}
+              closeFocusFallback={overviewHeading}
+            />
+          </div>
+          {heroShown && (
+            <div className="col-span-full">
+              <MonthSummary
+                dates={month.dates}
+                selectedDate={month.selectedDate}
+                onSelectDate={month.setSelectedDate}
+                dataThrough={dataThrough}
+                income={overview?.incomeIntervalData ?? []}
+                expenses={overview?.expensesIntervalData ?? []}
+                netWorth={market?.netWorthData ?? []}
+                primaryCurrency={primaryCurrency}
+                today={today}
               />
             </div>
-          </div>
-
-          <div className="mt-3 max-w-3xl">
+          )}
+          <div className="col-span-full max-w-3xl lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:max-w-none lg:-mt-1.5">
             <QuickAskInput />
           </div>
         </div>
-      </section>
+      </header>
 
       {reportState ? (
         <div id="overview-report-state">{reportState}</div>
@@ -558,8 +697,13 @@ export default function LedgerOverviewPage() {
           </CardContent>
         </Card>
       ) : (
-        visibleWidgetIds.map((id) => (
-          <div key={id} id={`overview-widget-${id}`} className="scroll-mt-4">
+        visibleWidgetIds.map((id, index) => (
+          <div
+            key={id}
+            id={`overview-widget-${id}`}
+            className={`scroll-mt-4 ${SECTION_ENTRANCE}`}
+            style={sectionDelay(index + 1)}
+          >
             <ErrorBoundary>{widgets[id]}</ErrorBoundary>
           </div>
         ))

@@ -102,8 +102,10 @@ describe("the shared chart registry", () => {
         option.backgroundColor === "transparent" || !option.backgroundColor,
       ).toBe(true);
       const svg = chart.renderToSVGString();
-      // Dark theme contrast color #B9B8CE should appear for axis/legend text.
-      expect(svg.toLowerCase()).toContain("#b9b8ce");
+      // The app's dark muted text (#a1a398) labels the axes, and the legend
+      // reads in its lighter legend color (#c9cbc1).
+      expect(svg.toLowerCase()).toContain("#a1a398");
+      expect(svg.toLowerCase()).toContain("#c9cbc1");
     } finally {
       chart.dispose();
     }

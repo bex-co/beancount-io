@@ -250,7 +250,7 @@ const deSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Finanzüberblick und Berichte für {ledgerName}. Zeigen Sie Vermögen, Einkommen, Ausgaben und Vermögensverteilung an.",
+      "Finanzüberblick und Berichte für {ledgerName}. Zeigen Sie Vermögen, Einkommen, Ausgaben und Kontostände an.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

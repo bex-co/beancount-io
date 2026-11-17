@@ -7,22 +7,14 @@ export interface TranslationEntry {
 }
 
 const enOverview: Record<string, TranslationEntry> = {
-  "page.overview.chartBreakdown": {
-    message: "Breakdown",
-    description: "Disclosure label for the distribution chart data table",
+  "page.overview.periodInProgress": {
+    message: "In progress",
+    description:
+      "Tooltip note on the Income vs Expenses chart for the current month, which has not ended yet",
   },
   "page.overview.chartFlows": {
     message: "Flows",
     description: "Disclosure label for the cash flow Sankey links table",
-  },
-  "page.overview.chartShare": {
-    message: "Share of total",
-    description: "Column header for each plotted slice share of the total",
-  },
-  "page.overview.chartMagnitudeShare": {
-    message: "Share of absolute total",
-    description:
-      "Column header for the absolute value share of the total magnitude in a signed distribution",
   },
   "page.overview.netWorthByMonth": {
     message: "Net worth by month",
@@ -44,29 +36,9 @@ const enOverview: Record<string, TranslationEntry> = {
       "Failed to load ledger overview information. Please try again later.",
     description: "Error description for overview page",
   },
-  "page.overview.assetsDistribution": {
-    message: "Assets Distribution",
-    description: "Title for assets distribution chart",
-  },
-  "page.overview.assetsDistributionDescription": {
-    message: "Visual representation of {ledgerName} assets composition",
-    description: "Description for assets distribution chart",
-  },
-  "page.overview.liabilitiesDistribution": {
-    message: "Liabilities Distribution",
-    description: "Title for liabilities distribution chart",
-  },
-  "page.overview.liabilitiesDistributionDescription": {
-    message: "Visual representation of {ledgerName} liabilities composition",
-    description: "Description for liabilities distribution chart",
-  },
   "page.overview.cashFlow": {
     message: "Cash Flow",
     description: "Title for cash flow section",
-  },
-  "page.overview.cashFlowDescription": {
-    message: "Money flow from income sources to expenses and investments",
-    description: "Description for cash flow sankey diagram",
   },
   "page.overview.cashFlowRolesPending": {
     message: "Loading account roles…",
@@ -74,14 +46,14 @@ const enOverview: Record<string, TranslationEntry> = {
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
   "page.overview.cashFlowSavings": {
-    message: "Savings",
+    message: "To cash",
     description:
-      "Cash flow chart node for what the period's income left after its outflows",
+      "Cash flow chart destination for what the period took in (income, borrowing, sales) beyond what it paid out, which stays as cash on hand; not a ledger account, and not the same as income less spending",
   },
   "page.overview.cashFlowShortfall": {
-    message: "Shortfall",
+    message: "From cash",
     description:
-      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+      "Cash flow chart source for what the period paid out (spending, investing, repaying debt) beyond what came in, drawn from cash already on hand; not a ledger account",
   },
   "page.overview.chartUnitScope": {
     message:

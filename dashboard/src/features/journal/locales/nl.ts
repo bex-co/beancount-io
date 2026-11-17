@@ -390,10 +390,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Transactie",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "Transacties",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "Eenheden",
     description: "Table header for units column",

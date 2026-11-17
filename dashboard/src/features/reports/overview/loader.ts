@@ -3,12 +3,20 @@ import type { LedgerSearchParams } from "@/common/providers/ledger-search-params
 import { prefetchOptionalQuery } from "@/common/apollo/prefetch";
 import {
   GetLedgerAccountMetaDocument,
+  GetLedgerDocument,
   GetLedgerFileDocument,
+  GetLedgerJournalDocument,
   GetLedgerOverviewDocument,
   GetLedgerOverviewValuationDocument,
 } from "@/graphql/definitions";
 import { overviewQueryDefaults } from "./constants";
 import { loadPublicReadme } from "./load-public-readme";
+import { recentTransactionsVariables } from "./lib/recent-transactions";
+import { dataThroughOf, isPastMonth, openingMonth } from "./lib/overview-month";
+import {
+  resolveMovementTimeFilter,
+  toLocalISODate,
+} from "./lib/overview-utils";
 import type { InitialLedgerReadme } from "@/common/lib/ledger-readme";
 
 export const overviewLoader: RouteLoader<
@@ -34,37 +42,101 @@ export const overviewLoader: RouteLoader<
     variables: { ledgerId },
   });
 
-  // Both reads are primary content: the flows at cost, and the balances at
-  // market value. Awaiting both means a server render already has the market
-  // figures, so nothing is drawn at cost and then replaced. The page renders
-  // its own error states from these same queries, so a failure here must not
-  // become a route error.
-  await Promise.all([
-    context.client
-      .query({
-        query: GetLedgerOverviewDocument,
-        variables: {
-          ledgerId,
-          account,
-          filter,
-          time,
-          interval: overviewQueryDefaults.interval,
-          conversion: overviewQueryDefaults.conversion,
-        },
-      })
-      .catch(() => undefined),
-    context.client
-      .query({
-        query: GetLedgerOverviewValuationDocument,
-        variables: {
-          ledgerId,
-          account,
-          filter,
-          time,
-          interval: overviewQueryDefaults.interval,
-        },
-      })
-      .catch(() => undefined),
-  ]);
+  // Three reads are primary content: the flows at cost, the balances at
+  // market value, and the newest transactions. Awaiting the first two means a
+  // server render already has the market figures, so nothing is drawn at cost
+  // and then replaced; the third says where the ledger's data ends, which
+  // picks the month the page opens on, so that month never changes under the
+  // reader. The page renders its own error states from these same queries, so
+  // a failure here must not become a route error.
+  const overview = context.client
+    .query({
+      query: GetLedgerOverviewDocument,
+      variables: {
+        ledgerId,
+        account,
+        filter,
+        time,
+        interval: overviewQueryDefaults.interval,
+        conversion: overviewQueryDefaults.conversion,
+      },
+    })
+    .catch(() => undefined);
+  const market = context.client
+    .query({
+      query: GetLedgerOverviewValuationDocument,
+      variables: {
+        ledgerId,
+        account,
+        filter,
+        time,
+        interval: overviewQueryDefaults.interval,
+      },
+    })
+    .catch(() => undefined);
+  const journal = context.client
+    .query({
+      query: GetLedgerJournalDocument,
+      variables: recentTransactionsVariables({
+        ledgerId,
+        account,
+        filter,
+        time,
+      }),
+    })
+    .catch(() => undefined);
+  // When that month is one before the data's last, Financial position shows
+  // the balances at its close, read on their own: primary content too.
+  // Without them a server render holds only the account rows' placeholders,
+  // which a reader without JavaScript, or a crawler, never sees filled.
+  const monthBalances = Promise.all([overview, journal]).then(
+    async ([flows, newest]) => {
+      const income = flows?.data?.getLedgerOverview?.incomeIntervalData ?? [];
+      const expenses =
+        flows?.data?.getLedgerOverview?.expensesIntervalData ?? [];
+      if (income.length === 0 && expenses.length === 0) return;
+      // Who is reading decides the month as the page does: a public reader
+      // opens on the latest month with activity. The parent loader has
+      // already asked, so this is its cached answer.
+      const ledger = await context.client
+        .query({ query: GetLedgerDocument, variables: { ledgerId } })
+        .catch(() => undefined);
+      const about = ledger?.data?.getLedger;
+      const permissions = about?.permissions;
+      const today = toLocalISODate(new Date());
+      const dataThrough = dataThroughOf(
+        newest?.data?.getLedgerJournal?.data,
+        today,
+      );
+      const month = openingMonth({
+        income,
+        expenses,
+        preferActiveMonth:
+          about?.private === false &&
+          permissions?.push !== true &&
+          permissions?.admin !== true,
+        hasFilters: Boolean(account || filter || time),
+        dataThrough,
+        today,
+      });
+      if (!isPastMonth(month, dataThrough)) return;
+      const monthTime = resolveMovementTimeFilter(month, time || undefined);
+      if (!monthTime) return;
+      // The variables the page's own month read uses, so it is a cache hit.
+      await context.client
+        .query({
+          query: GetLedgerOverviewValuationDocument,
+          variables: {
+            ledgerId,
+            account,
+            filter,
+            time: monthTime,
+            interval: overviewQueryDefaults.interval,
+          },
+        })
+        .catch(() => undefined);
+    },
+  );
+  await Promise.all([overview, market, journal, monthBalances]);
   return { readme: await readme };
 };

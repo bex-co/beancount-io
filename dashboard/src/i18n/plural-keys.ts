@@ -32,6 +32,8 @@ export const PLURAL_BASE_KEYS = [
   "page.gallery.ledgersFound",
   "page.gallery.ledgersShownMoreAvailable",
   "page.overview.atCostCount",
+  "page.overview.monthsAverage",
+  "page.overview.moreAccounts",
   "page.overview.notInTotalCount",
   "page.overview.pricesNotUpdated",
   "plaid.accountMapping.toast.acceptedAllDescription",

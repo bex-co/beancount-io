@@ -30,11 +30,6 @@ const enReportsShared = {
     message: "Income vs Expenses",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message:
-      "Bar chart comparing total income and expenses for each interval in the selected period.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const enReports = {

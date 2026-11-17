@@ -92,12 +92,6 @@ vi.mock("../components/money-movement-section", () => ({
 vi.mock("../components/recent-activity-card", () => ({
   RecentActivityCard: () => <div data-testid="module-recent-activity" />,
 }));
-vi.mock("../components/income-expenses-chart", () => ({
-  IncomeExpensesChart: () => null,
-}));
-vi.mock("../components/distribution-chart", () => ({
-  DistributionChart: () => null,
-}));
 vi.mock("../components/account-balances-card", () => ({
   AccountBalancesCard: () => null,
 }));
@@ -114,9 +108,6 @@ const ALL = [
   "financial-position",
   "money-movement",
   "recent-activity",
-  "income-expenses",
-  "balance-sheet",
-  "cash-flow",
   "readme",
 ];
 

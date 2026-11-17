@@ -24,9 +24,6 @@ function useWidgetLabels(): Record<DashboardWidgetId, string> {
     "financial-position": t("page.overview.financialPosition"),
     "money-movement": t("page.overview.moneyMovement"),
     "recent-activity": t("page.overview.recentActivity"),
-    "income-expenses": t("page.reports.incomeVsExpenses"),
-    "balance-sheet": t("common.balanceSheet"),
-    "cash-flow": t("page.overview.cashFlow"),
     readme: t("page.overview.ledgerNotes"),
   };
 }

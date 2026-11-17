@@ -1,12 +1,15 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 
+/**
+ * The overview's modules. Income vs Expenses and Cash Flow now live inside
+ * Money movement, and the Balance Sheet pies became the holdings shares in
+ * Financial position; a saved layout that still names them loses those ids
+ * (normalizeDashboardLayout keeps known ids only) and keeps the rest.
+ */
 export const DASHBOARD_WIDGET_IDS = [
   "financial-position",
   "money-movement",
   "recent-activity",
-  "income-expenses",
-  "balance-sheet",
-  "cash-flow",
   "readme",
 ] as const;
 

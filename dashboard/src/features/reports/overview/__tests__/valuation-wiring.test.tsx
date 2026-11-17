@@ -17,7 +17,9 @@ const received = vi.hoisted(() => new Map<string, Props[]>());
 function capture(name: string) {
   return (props: Props) => {
     received.set(name, [...(received.get(name) ?? []), props]);
-    return <div data-testid={name} />;
+    // A card that heads itself with another (Accounts with the Net Worth
+    // figure) still renders it, so that one's props arrive too.
+    return <div data-testid={name}>{props.summary as React.ReactNode}</div>;
   };
 }
 const lastProps = (name: string) => received.get(name)?.at(-1);
@@ -64,13 +66,7 @@ vi.mock("@/common/lib/fava-options", () => ({
 vi.mock("../hooks/use-dashboard-layout", () => ({
   useDashboardLayout: () => ({
     layout: {
-      order: [
-        "financial-position",
-        "money-movement",
-        "income-expenses",
-        "balance-sheet",
-        "cash-flow",
-      ],
+      order: ["financial-position", "money-movement"],
       hidden: [],
     },
     setVisible: vi.fn(),
@@ -94,20 +90,18 @@ vi.mock("@/common/components/ledger-permission/write", () => ({
   LedgerWritePermission: () => null,
 }));
 vi.mock("@/common/components/readme-card", () => ({ ReadmeCard: () => null }));
+// The hero chart is the summary's own concern; these cases read the wiring.
+vi.mock("../components/month-hero-chart", () => ({
+  MonthHeroChart: () => null,
+}));
 vi.mock("../components/net-worth-card", () => ({
   NetWorthCard: capture("net-worth"),
 }));
 vi.mock("../components/account-balances-card", () => ({
   AccountBalancesCard: capture("account-balances"),
 }));
-vi.mock("../components/distribution-chart", () => ({
-  DistributionChart: capture("distribution"),
-}));
 vi.mock("../components/money-movement-section", () => ({
   MoneyMovementSection: capture("money-movement"),
-}));
-vi.mock("../components/income-expenses-chart", () => ({
-  IncomeExpensesChart: capture("income-expenses"),
 }));
 vi.mock("../components/cash-flow-sankey", () => ({
   default: capture("cash-flow"),
@@ -196,22 +190,46 @@ describe("overview valuation wiring", () => {
       assets: valuation.market.assetsHierarchyData,
       liabilities: valuation.market.liabilitiesHierarchyData,
     });
-    expect(received.get("distribution")?.map((props) => props.data)).toEqual([
-      valuation.market.assetsHierarchyData,
-      valuation.market.liabilitiesHierarchyData,
-    ]);
-
+    // Money movement draws Income vs Expenses from these same series.
     expect(lastProps("money-movement")).toMatchObject({
       income: overview.incomeIntervalData,
       expenses: overview.expensesIntervalData,
     });
-    expect(lastProps("income-expenses")).toMatchObject({
-      income: overview.incomeIntervalData,
+    // The cash-flow Sankey it carries reads the selected month on its own,
+    // at cost like the other flows, and keeps the balance sheet with them.
+    const movement = lastProps("money-movement") as {
+      flow: React.ReactElement;
+      timeFilter: string;
+    };
+    expect(movement.timeFilter).not.toBe("");
+    expect(movement.flow.props).toMatchObject({
+      ledgerId: "open_ledger/example",
+      time: movement.timeFilter,
     });
-    // The cash-flow Sankey keeps the balance sheet at cost with its flows.
+    render(movement.flow);
+    const reads = vi
+      .mocked(useQuery)
+      .mock.calls.filter(([document]) => document === GetLedgerOverviewDocument)
+      .map(([, options]) => (options as { variables: unknown }).variables);
+    // The month itself, and its opening balances the day before it began.
+    expect(reads).toContainEqual(
+      expect.objectContaining({
+        time: movement.timeFilter,
+        conversion: "at_cost",
+      }),
+    );
+    expect(reads).toContainEqual(
+      expect.objectContaining({
+        time: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+        conversion: "at_cost",
+      }),
+    );
+    // The month's income and spending as read; its balance sheet as the
+    // month's change, which these mocked reads make zero.
     expect(lastProps("cash-flow")).toMatchObject({
-      assetsHierarchyData: overview.assetsHierarchyData,
-      liabilitiesHierarchyData: overview.liabilitiesHierarchyData,
+      incomeHierarchyData: overview.incomeHierarchyData,
+      expensesHierarchyData: overview.expensesHierarchyData,
+      assetsHierarchyData: { balance: {} },
     });
   });
 
@@ -231,6 +249,27 @@ describe("overview valuation wiring", () => {
         time: "",
         interval: "monthly",
       },
+    });
+  });
+
+  it("reads balances again at the close of a month before the data's last", () => {
+    // No journal read here, so the data runs to today and September 2017 is
+    // history: Accounts answers for its close, as the summary does.
+    render(<LedgerOverviewPage />);
+    const movement = lastProps("money-movement") as { timeFilter: string };
+    const monthRead = vi
+      .mocked(useQuery)
+      .mock.calls.find(
+        ([document, options]) =>
+          document === GetLedgerOverviewValuationDocument &&
+          (options as { variables: { time: string } }).variables.time ===
+            movement.timeFilter,
+      );
+    expect(monthRead?.[1]).toMatchObject({ skip: false });
+    expect(lastProps("account-balances")).toMatchObject({
+      time: movement.timeFilter,
+      asOf: "2017-09-30",
+      pending: false,
     });
   });
 
@@ -279,10 +318,12 @@ describe("overview valuation wiring", () => {
 
     expect(received.has("net-worth")).toBe(false);
     expect(received.has("account-balances")).toBe(false);
-    expect(received.has("distribution")).toBe(false);
-    // Once for Financial position and once for Balance sheet.
-    expect(screen.getAllByRole("alert")).toHaveLength(2);
+    // Financial position, the one balance module, says so once.
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+    // The flows, cash flow included, still draw at cost.
     expect(received.has("money-movement")).toBe(true);
-    expect(received.has("cash-flow")).toBe(true);
+    expect(
+      (lastProps("money-movement") as { flow?: unknown }).flow,
+    ).toBeTruthy();
   });
 });

@@ -388,10 +388,6 @@ const enJournal: Record<string, TranslationEntry> = {
     message: "Transaction",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "Transactions",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "Units",
     description: "Table header for units column",

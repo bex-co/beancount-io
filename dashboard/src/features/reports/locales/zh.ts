@@ -29,10 +29,6 @@ const zhReportsShared = {
     message: "收入与支出",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message: "在选定时期内每个区间的总收入和支出对比的柱状图。",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const zhReports = {

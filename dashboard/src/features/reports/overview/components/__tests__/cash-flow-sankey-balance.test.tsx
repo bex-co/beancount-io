@@ -165,14 +165,14 @@ async function mount(children: ReactNode, language?: string) {
 }
 
 describe("CashFlowSankey shows the balancing flows", () => {
-  it("lists a shortfall in Flows and its hover, apart from real accounts", async () => {
+  it("lists cash drawn down in Flows and its hover, apart from real accounts", async () => {
     const option = await mount(
       <CashFlowSankey {...ledger("125")} primaryCurrency="USD" />,
     );
     expect(rows(await table("Cash Flow", "Flows"))).toEqual([
       ["Income:QaSalary", "Cash Flow", "100.00 USD"],
       ["Cash Flow", "Expenses:QaFees", "125.00 USD"],
-      ["Shortfall", "Cash Flow", "25.00 USD"],
+      ["From cash", "Cash Flow", "25.00 USD"],
     ]);
     const shortfall = option.series[0].links[2];
     expect(
@@ -180,14 +180,16 @@ describe("CashFlowSankey shows the balancing flows", () => {
         .formatter({ dataType: "edge", data: shortfall })
         .replace(/\s+/g, " ")
         .trim(),
-    ).toBe("<strong>Shortfall → Cash Flow</strong><br/> 25 USD");
-    // Drawn apart from real accounts, in the surplus color.
+      // The hover reads like Flows: USD keeps its cents.
+    ).toBe("<strong>From cash → Cash Flow</strong><br/> 25.00 USD");
+    // Drawn apart from real accounts, in a neutral grey: paying out more than
+    // came in draws on cash already held, which is neither income nor a loss.
     const scheme = getSankeyColorScheme(false);
     expect(
       option.series[0].data.find((datum) => datum.id === "Shortfall"),
     ).toMatchObject({
-      name: "Shortfall",
-      itemStyle: { color: scheme.savings },
+      name: "From cash",
+      itemStyle: { color: scheme.reserve },
     });
   });
 
@@ -196,7 +198,7 @@ describe("CashFlowSankey shows the balancing flows", () => {
     expect(rows(await table("Cash Flow", "Flows"))).toEqual([
       ["Income:QaSalary", "Cash Flow", "100.00 USD"],
       ["Expenses:QaFees", "Cash Flow", "25.00 USD"],
-      ["Cash Flow", "Savings", "125.00 USD"],
+      ["Cash Flow", "To cash", "125.00 USD"],
     ]);
   });
 
@@ -210,7 +212,7 @@ describe("CashFlowSankey shows the balancing flows", () => {
       ["Cash Flow", "Cashflow"],
       ["Income:QaSalary", "Income:QaSalary"],
       ["Expenses:QaFees", "Expenses:QaFees"],
-      ["Shortfall", "Fehlbetrag"],
+      ["Shortfall", "Aus Barmitteln"],
     ]);
     // Links still name identities, which ECharts resolves through `id`.
     expect(option.series[0].links.at(-1)).toMatchObject({
@@ -218,7 +220,7 @@ describe("CashFlowSankey shows the balancing flows", () => {
       target: "Cash Flow",
     });
     expect(rows(await table("Cashflow", "Zahlungsströme"))).toContainEqual([
-      "Fehlbetrag",
+      "Aus Barmitteln",
       "Cashflow",
       "25,00 USD",
     ]);

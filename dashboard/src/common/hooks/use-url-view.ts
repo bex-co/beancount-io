@@ -48,6 +48,10 @@ export function useUrlView<T extends string>(
           [param]: next === fallback && !writeFallback ? undefined : next,
         }),
         replace: true,
+        // A view switch on the same page: the reader stays where they are.
+        // The router's default would scroll the page back to its top, which
+        // threw a tab halfway down the overview out of sight.
+        resetScroll: false,
       } as never),
     ).then(settle, settle);
   };

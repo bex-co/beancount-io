@@ -249,7 +249,7 @@ const bgSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Финансов преглед и отчети за {ledgerName}. Преглеждайте нетна стойност, приходи, разходи и разпределение на активи.",
+      "Финансов преглед и отчети за {ledgerName}. Преглеждайте нетна стойност, приходи, разходи и салда по сметки.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

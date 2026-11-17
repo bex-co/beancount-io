@@ -78,19 +78,23 @@ describe("RecentActivityCard dates", () => {
   it("formats same-year transaction dates compactly in the active language", () => {
     language = "en";
     const { unmount } = render(<RecentActivityCard {...props} />);
-    // The date is rendered twice (desktop column and mobile line).
-    expect(screen.getAllByText("Feb 3")).toHaveLength(2);
+    // Once, as the heading of the day's rows, at every width.
+    expect(screen.getByRole("heading", { name: "Feb 3" })).toBeInTheDocument();
     unmount();
 
     language = "fr";
     render(<RecentActivityCard {...props} />);
-    expect(screen.getAllByText("3 févr.")).toHaveLength(2);
+    expect(
+      screen.getByRole("heading", { name: "3 févr." }),
+    ).toBeInTheDocument();
   });
 
   it("includes the year when the activity is not in the current calendar year", () => {
     language = "en";
     transaction.date = "2017-09-08";
     render(<RecentActivityCard {...props} />);
-    expect(screen.getAllByText("Sep 8, 2017")).toHaveLength(2);
+    expect(
+      screen.getByRole("heading", { name: "Sep 8, 2017" }),
+    ).toBeInTheDocument();
   });
 });

@@ -1,4 +1,13 @@
 /**
+ * The tooltip surface every chart shares: the app's popover radius, padding
+ * and soft shadow. The app chart themes set it as their default; a tooltip
+ * that brings its own `extraCssText` replaces the theme's, so it starts with
+ * this string too.
+ */
+export const TOOLTIP_SURFACE_CSS =
+  "border-radius:10px;padding:8px 12px;box-shadow:0 12px 32px -12px rgba(15,23,15,0.28);";
+
+/**
  * Shared bounds for the HTML chart tooltips that carry long account paths.
  *
  * When a tooltip would overflow the right edge, ECharts flips it to
@@ -14,6 +23,5 @@
  */
 export const CONFINED_TOOLTIP = {
   confine: true,
-  extraCssText:
-    "max-width:min(17rem,calc(100vw - 2rem));white-space:normal;word-break:break-word;",
+  extraCssText: `${TOOLTIP_SURFACE_CSS}max-width:min(17rem,calc(100vw - 2rem));white-space:normal;word-break:break-word;`,
 } as const;

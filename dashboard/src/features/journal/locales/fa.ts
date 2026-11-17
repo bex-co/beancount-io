@@ -392,10 +392,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "تراکنش",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "تراکنش‌ها",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "واحدها",
     description: "Table header for units column",

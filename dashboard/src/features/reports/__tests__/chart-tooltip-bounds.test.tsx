@@ -172,7 +172,8 @@ describe("overview income and expenses chart", () => {
     const [income] = captured.at(-1)?.series as Array<{
       tooltip: { valueFormatter: (value: number, index: number) => string };
     }>;
-    expect(income!.tooltip.valueFormatter(4792.4, 0)).toBe("4,792.4");
+    // The chart's unit is USD, so its cents show as everywhere else.
+    expect(income!.tooltip.valueFormatter(4792.4, 0)).toBe("4,792.40");
   });
 });
 

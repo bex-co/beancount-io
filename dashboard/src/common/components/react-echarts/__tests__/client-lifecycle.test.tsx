@@ -13,6 +13,8 @@ const state = vi.hoisted(() => ({
     getOption: vi.fn(),
     dispatchAction: vi.fn(),
     on: vi.fn(),
+    // The surface the wrapper listens on for clicks between marks.
+    getZr: () => ({ on: vi.fn() }),
     dispose: vi.fn(),
     resize: vi.fn(),
     showLoading: vi.fn(),

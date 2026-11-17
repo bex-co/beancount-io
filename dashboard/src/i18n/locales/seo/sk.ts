@@ -249,7 +249,7 @@ const skSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Finančný prehľad a správy pre {ledgerName}. Zobrazujte čisté imanie, príjem, výdavky a distribúciu aktív.",
+      "Finančný prehľad a správy pre {ledgerName}. Zobrazujte čisté imanie, príjem, výdavky a zostatky účtov.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

@@ -2,11 +2,10 @@ import { cleanup, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 import { AccountBalancesCard } from "../account-balances-card";
-import { DistributionChart } from "../distribution-chart";
-import { renderInLedger, rows, table } from "./overview-chart-test-utils";
+import { renderInLedger } from "./overview-chart-test-utils";
 
 /**
- * Accounts and the distributions show a parent account's own holdings
+ * Accounts and their shares show a parent account's own holdings
  * (w4/1030). With only leaves read, May said "No accounts found" and "No Data
  * Available" beside a correct Net Worth, and June gave a child 100% of a
  * distribution that left out its parent. Real cards, formatter and
@@ -83,8 +82,8 @@ describe("parent balances on Overview", () => {
   it("lists May's parent accounts instead of saying none exist", async () => {
     await renderInLedger(accountsCard(may));
     expect(screen.queryByText("No accounts found")).toBeNull();
-    expect(screen.getByText("Assets:Wallet")).toBeInTheDocument();
-    expect(screen.getByText("Liabilities:Card")).toBeInTheDocument();
+    expect(screen.getByTitle("Assets:Wallet")).toBeInTheDocument();
+    expect(screen.getByTitle("Liabilities:Card")).toBeInTheDocument();
   });
 
   it("lists June's parents beside their children", async () => {
@@ -95,38 +94,19 @@ describe("parent balances on Overview", () => {
       "Liabilities:Card",
       "Liabilities:Card:Fees",
     ]) {
-      expect(screen.getByText(account)).toBeInTheDocument();
+      expect(screen.getByTitle(account)).toBeInTheDocument();
     }
   });
 
-  it("gives the June distributions their parents' share, counted once", async () => {
-    await renderInLedger(
-      <DistributionChart
-        title="Assets Distribution"
-        data={assets}
-        primaryCurrency="USD"
-      />,
-    );
-    expect(rows(await table("Assets Distribution", "Breakdown"))).toEqual([
-      ["Assets:Wallet", "100.00 USD", "80%"],
-      ["Assets:Wallet:Savings", "25.00 USD", "20%"],
-    ]);
-    cleanup();
-
-    await renderInLedger(
-      <DistributionChart
-        title="Liabilities Distribution"
-        data={liabilities}
-        inverse
-        primaryCurrency="USD"
-      />,
-    );
-    const shares = rows(
-      await table("Liabilities Distribution", "Breakdown"),
-    ).map((row) => [row[0], row[2]]);
-    expect(shares).toEqual([
-      ["Liabilities:Card", "94.12%"],
-      ["Liabilities:Card:Fees", "5.88%"],
-    ]);
+  it("gives June's parents their own share of each side, counted once", async () => {
+    await renderInLedger(accountsCard({ assets, liabilities }));
+    // The holdings list shows each account's share of its side: a parent's
+    // own 100 USD beside its child's 25, not the child alone at 100%.
+    const shareOf = (account: string) =>
+      screen.getByTitle(account).textContent ?? "";
+    expect(shareOf("Assets:Wallet")).toContain("80%");
+    expect(shareOf("Assets:Wallet:Savings")).toContain("20%");
+    expect(shareOf("Liabilities:Card")).toContain("94.1%");
+    expect(shareOf("Liabilities:Card:Fees")).toContain("5.9%");
   });
 });

@@ -390,10 +390,6 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "Transaktion",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "Transaktionen",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "Einheiten",
     description: "Table header for units column",

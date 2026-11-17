@@ -52,6 +52,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
       lazyUpdate = false,
       silent = false,
       onLegendSelectChanged,
+      onSurfaceClick,
     },
     ref,
   ) => {
@@ -64,6 +65,10 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
     } | null>(null);
     const emitLegendSelect = useEffectEvent(
       (selected: Record<string, boolean>) => onLegendSelectChanged?.(selected),
+    );
+    const emitSurfaceClick = useEffectEvent(
+      (chart: ECharts, point: [number, number]) =>
+        onSurfaceClick?.(chart, point),
     );
     const isDark = useIsDarkTheme();
     // Explicit caller theme wins; otherwise follow the resolved app appearance.
@@ -84,6 +89,11 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
           (event as { selected: Record<string, boolean> }).selected,
         ),
       );
+      chart
+        .getZr()
+        .on("click", (event) =>
+          emitSurfaceClick(chart, [event.offsetX, event.offsetY]),
+        );
 
       return () => {
         if (chartInstanceRef.current) {

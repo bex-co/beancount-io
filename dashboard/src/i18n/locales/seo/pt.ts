@@ -249,7 +249,7 @@ const ptSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Visão geral financeira e relatórios de {ledgerName}. Visualize patrimônio líquido, receita, despesas e distribuição de ativos.",
+      "Visão geral financeira e relatórios de {ledgerName}. Visualize patrimônio líquido, receita, despesas e saldos das contas.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

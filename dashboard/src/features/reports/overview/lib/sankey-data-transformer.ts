@@ -216,6 +216,13 @@ interface TransformOptions {
   accountMeta?: AccountMetaMap;
   /** The ledger's operating currency, preferred when the accounts hold it. */
   preferredCurrency?: string | null;
+  /**
+   * When a side collapses into one node (`Income:US`, `Assets:US`,
+   * `Liabilities:US`), draw its parts instead, a level or two further down,
+   * so the diagram names where money came from and went (an employer, a
+   * brokerage, a card) rather than a region repeating the total.
+   */
+  expandSingleSource?: boolean;
 }
 
 /** Amounts in one unit only; accounts holding none of it drop out. */
@@ -256,13 +263,70 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
   const links: SankeyLink[] = [];
 
   // Extract nodes at target depth
-  const incomeAmounts = extractNodesAtDepth(
-    incomeHierarchyData,
-    depth,
-    true,
-    accountMeta,
-    rootTypes,
-  ); // Inverse for income
+  // One node is no breakdown: descend while it stays one, up to two levels.
+  // Nodes are counted in the operating currency where there is one, since
+  // that is the unit the diagram will draw.
+  const preferred = options.preferredCurrency;
+  const namesOf = (group: Map<string, UnitAmounts>) =>
+    [...group]
+      .filter(
+        ([, amounts]) =>
+          !preferred || Number(amounts.get(preferred) ?? 0) !== 0,
+      )
+      .map(([name]) => name);
+  const expandWhileSingle = (
+    hierarchy: SerializableTreeNode | undefined,
+    inverse: boolean,
+    keep: (key: string) => boolean = () => true,
+  ) => {
+    const at = (level: number) => {
+      const group = new Map<string, UnitAmounts>();
+      extractNodesAtDepth(
+        hierarchy,
+        level,
+        inverse,
+        accountMeta,
+        rootTypes,
+      ).forEach((amounts, key) => {
+        if (keep(key)) group.set(key, amounts);
+      });
+      return group;
+    };
+    // Every unit's total, so a deeper level is taken only when it draws the
+    // same money: a name heuristic on an intermediate account (`…:Bank`)
+    // must not drop a descendant declared to be investing.
+    const totals = (group: Map<string, UnitAmounts>) => {
+      const byUnit = new Map<string, string[]>();
+      group.forEach((amounts) =>
+        amounts.forEach((amount, unit) =>
+          byUnit.set(unit, [...(byUnit.get(unit) ?? []), amount]),
+        ),
+      );
+      return [...byUnit]
+        .map(
+          ([unit, amounts]) => `${unit}=${Number(sumDecimalNumbers(amounts))}`,
+        )
+        .sort()
+        .join(";");
+    };
+    let group = at(depth);
+    for (
+      let deeper = depth + 1;
+      options.expandSingleSource &&
+      namesOf(group).length === 1 &&
+      deeper <= depth + 2;
+      deeper++
+    ) {
+      const next = at(deeper);
+      const nextNames = namesOf(next);
+      if (nextNames.length === 0 || totals(next) !== totals(group)) continue;
+      group = next;
+    }
+    return group;
+  };
+
+  const incomeAmounts = expandWhileSingle(incomeHierarchyData, true); // Inverse for income
+
   const expenseAmounts = extractNodesAtDepth(
     expensesHierarchyData,
     depth,
@@ -272,26 +336,13 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
   );
 
   // Filter assets to only include investing (exclude cash-equivalent)
-  const assetAmounts = new Map<string, UnitAmounts>();
-  extractNodesAtDepth(
+  const assetAmounts = expandWhileSingle(
     assetsHierarchyData,
-    depth,
     false,
-    accountMeta,
-    rootTypes,
-  ).forEach((amounts, key) => {
-    if (!isExcludedAccount(key, accountMeta?.get(key), rootTypes)) {
-      assetAmounts.set(key, amounts);
-    }
-  });
-
-  const liabilityAmounts = extractNodesAtDepth(
-    liabilitiesHierarchyData,
-    depth,
-    false,
-    accountMeta,
-    rootTypes,
+    (key) => !isExcludedAccount(key, accountMeta?.get(key), rootTypes),
   );
+
+  const liabilityAmounts = expandWhileSingle(liabilitiesHierarchyData, false);
 
   const groups = [
     incomeAmounts,

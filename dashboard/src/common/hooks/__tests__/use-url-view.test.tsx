@@ -99,4 +99,16 @@ describe("useUrlView", () => {
     };
     expect(call.search({ view: "by-account" })).toEqual({ view: "holdings" });
   });
+
+  it("switches the view without scrolling the page", () => {
+    const { result } = renderHook(() =>
+      useUrlView("/ledger/$ledgerOwner/$ledgerName/", ["a", "b"], "a"),
+    );
+    router.navigate.mockResolvedValue(undefined);
+    act(() => result.current[1]("b"));
+    expect(router.navigate.mock.calls[0]![0]).toMatchObject({
+      replace: true,
+      resetScroll: false,
+    });
+  });
 });

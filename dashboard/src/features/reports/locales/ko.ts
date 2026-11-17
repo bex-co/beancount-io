@@ -29,10 +29,6 @@ const koReportsShared = {
     message: "수입 대 지출",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message: "선택한 기간의 각 구간별 총 수입과 지출을 비교하는 막대 차트.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const koReports = {

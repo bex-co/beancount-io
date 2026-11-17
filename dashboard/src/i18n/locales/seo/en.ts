@@ -210,7 +210,7 @@ const enSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Financial overview and reports for {ledgerName}. View net worth, income, expenses, and asset distribution.",
+      "Financial overview and reports for {ledgerName}. View net worth, income, expenses, and account balances.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

@@ -30,11 +30,6 @@ const ruReportsShared = {
     message: "Доход vs Expenses",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message:
-      "Столбчатая диаграмма сравнения общих доходов и расходов за каждый интервал выбранного периода.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const ruReports = {

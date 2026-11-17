@@ -248,7 +248,7 @@ const faSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "نمای کلی مالی و گزارش‌ها برای {ledgerName}. خالص دارایی، درآمد، هزینه‌ها و توزیع دارایی را مشاهده کنید.",
+      "نمای کلی مالی و گزارش‌ها برای {ledgerName}. خالص دارایی، درآمد، هزینه‌ها و مانده حساب‌ها را مشاهده کنید.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

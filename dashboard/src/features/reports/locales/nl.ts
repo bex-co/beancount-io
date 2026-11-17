@@ -30,11 +30,6 @@ const nlReportsShared = {
     message: "Inkomsten vs uitgaven",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message:
-      "Staafdiagram waarin totale inkomsten en uitgaven worden vergeleken voor elk interval in de geselecteerde periode.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const nlReports = {

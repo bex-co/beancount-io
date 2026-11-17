@@ -231,7 +231,7 @@ const zhSeo: Record<string, TranslationEntry> = {
     description: "Journal page title with ledger name",
   },
   "seo.ledgerOverview.description": {
-    message: "{ledgerName}的财务概览和报告。查看净资产、收入、支出和资产分布。",
+    message: "{ledgerName}的财务概览和报告。查看净资产、收入、支出和账户余额。",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

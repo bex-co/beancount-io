@@ -404,10 +404,6 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "Transacción",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "Transacciones",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "Unidades",
     description: "Table header for units column",

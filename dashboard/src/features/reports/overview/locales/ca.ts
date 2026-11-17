@@ -7,22 +7,14 @@ export interface TranslationEntry {
 }
 
 const caOverview: Record<string, TranslationEntry> = {
-  "page.overview.chartBreakdown": {
-    message: "Desglossament",
-    description: "Disclosure label for the distribution chart data table",
+  "page.overview.periodInProgress": {
+    message: "En curs",
+    description:
+      "Tooltip note on the Income vs Expenses chart for the current month, which has not ended yet",
   },
   "page.overview.chartFlows": {
     message: "Fluxos",
     description: "Disclosure label for the cash flow Sankey links table",
-  },
-  "page.overview.chartShare": {
-    message: "Percentatge del total",
-    description: "Column header for each plotted slice share of the total",
-  },
-  "page.overview.chartMagnitudeShare": {
-    message: "Percentatge del total absolut",
-    description:
-      "Column header for the absolute value share of the total magnitude in a signed distribution",
   },
   "page.overview.netWorthByMonth": {
     message: "Patrimoni net per mes",
@@ -35,35 +27,14 @@ const caOverview: Record<string, TranslationEntry> = {
   },
   ...dashboardOverviewTranslations.ca,
   ...emptyLedgerOverviewTranslations.ca,
-  "page.overview.assetsDistribution": {
-    message: "Distribució d'actius",
-    description: "Title for assets distribution chart",
-  },
-  "page.overview.assetsDistributionDescription": {
-    message: "Representació visual de la composició de {ledgerName} actius",
-    description: "Description for assets distribution chart",
-  },
   "page.overview.cashFlow": {
     message: "Flux de caixa",
     description: "Title for cash flow section",
-  },
-  "page.overview.cashFlowDescription": {
-    message:
-      "Flux de diners des de fonts d'ingressos cap a despeses i inversions",
-    description: "Description for cash flow sankey diagram",
   },
   "page.overview.failedToLoad": {
     message:
       "No s'ha pogut carregar la informació del resum del llibre. Torneu-ho a provar més tard.",
     description: "Error description for overview page",
-  },
-  "page.overview.liabilitiesDistribution": {
-    message: "Distribució de passius",
-    description: "Title for liabilities distribution chart",
-  },
-  "page.overview.liabilitiesDistributionDescription": {
-    message: "Representació visual de la composició dels {ledgerName} passius",
-    description: "Description for liabilities distribution chart",
   },
   "page.overview.loading": {
     message: "Carregant les dades del resum…",
@@ -75,14 +46,14 @@ const caOverview: Record<string, TranslationEntry> = {
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
   "page.overview.cashFlowSavings": {
-    message: "Estalvis",
+    message: "A l’efectiu",
     description:
-      "Cash flow chart node for what the period's income left after its outflows",
+      "Cash flow chart destination for what the period took in (income, borrowing, sales) beyond what it paid out, which stays as cash on hand; not a ledger account, and not the same as income less spending",
   },
   "page.overview.cashFlowShortfall": {
-    message: "Dèficit",
+    message: "De l’efectiu",
     description:
-      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+      "Cash flow chart source for what the period paid out (spending, investing, repaying debt) beyond what came in, drawn from cash already on hand; not a ledger account",
   },
   "page.overview.chartUnitScope": {
     message:

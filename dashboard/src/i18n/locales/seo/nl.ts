@@ -249,7 +249,7 @@ const nlSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Financieel overzicht en rapporten voor {ledgerName}. Bekijk netto vermogen, inkomsten, uitgaven en activaspreiding.",
+      "Financieel overzicht en rapporten voor {ledgerName}. Bekijk netto vermogen, inkomsten, uitgaven en rekeningsaldi.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

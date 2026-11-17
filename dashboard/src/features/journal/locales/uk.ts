@@ -419,10 +419,6 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Транзакція",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "Транзакції",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "Одиниці",
     description: "Table header for units column",

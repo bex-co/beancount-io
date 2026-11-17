@@ -7,22 +7,14 @@ export interface TranslationEntry {
 }
 
 const nlOverview: Record<string, TranslationEntry> = {
-  "page.overview.chartBreakdown": {
-    message: "Uitsplitsing",
-    description: "Disclosure label for the distribution chart data table",
+  "page.overview.periodInProgress": {
+    message: "Lopend",
+    description:
+      "Tooltip note on the Income vs Expenses chart for the current month, which has not ended yet",
   },
   "page.overview.chartFlows": {
     message: "Geldstromen",
     description: "Disclosure label for the cash flow Sankey links table",
-  },
-  "page.overview.chartShare": {
-    message: "Aandeel van totaal",
-    description: "Column header for each plotted slice share of the total",
-  },
-  "page.overview.chartMagnitudeShare": {
-    message: "Aandeel van absoluut totaal",
-    description:
-      "Column header for the absolute value share of the total magnitude in a signed distribution",
   },
   "page.overview.netWorthByMonth": {
     message: "Nettovermogen per maand",
@@ -35,34 +27,14 @@ const nlOverview: Record<string, TranslationEntry> = {
   },
   ...dashboardOverviewTranslations.nl,
   ...emptyLedgerOverviewTranslations.nl,
-  "page.overview.assetsDistribution": {
-    message: "Verdeling van activa",
-    description: "Title for assets distribution chart",
-  },
-  "page.overview.assetsDistributionDescription": {
-    message: "Visuele weergave van {ledgerName} activasamenstelling",
-    description: "Description for assets distribution chart",
-  },
   "page.overview.cashFlow": {
     message: "Kasstromen",
     description: "Title for cash flow section",
-  },
-  "page.overview.cashFlowDescription": {
-    message: "Geldstroom van inkomstenbronnen naar uitgaven en investeringen",
-    description: "Description for cash flow sankey diagram",
   },
   "page.overview.failedToLoad": {
     message:
       "Overzichtsinformatie van grootboek laden mislukt. Probeer het later opnieuw.",
     description: "Error description for overview page",
-  },
-  "page.overview.liabilitiesDistribution": {
-    message: "Verdeling van passiva",
-    description: "Title for liabilities distribution chart",
-  },
-  "page.overview.liabilitiesDistributionDescription": {
-    message: "Visuele weergave van {ledgerName} passivasamenstelling",
-    description: "Description for liabilities distribution chart",
   },
   "page.overview.loading": {
     message: "Overzichtsgegevens laden…",
@@ -74,14 +46,14 @@ const nlOverview: Record<string, TranslationEntry> = {
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
   "page.overview.cashFlowSavings": {
-    message: "Spaargeld",
+    message: "Naar liquide middelen",
     description:
-      "Cash flow chart node for what the period's income left after its outflows",
+      "Cash flow chart destination for what the period took in (income, borrowing, sales) beyond what it paid out, which stays as cash on hand; not a ledger account, and not the same as income less spending",
   },
   "page.overview.cashFlowShortfall": {
-    message: "Tekort",
+    message: "Uit liquide middelen",
     description:
-      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+      "Cash flow chart source for what the period paid out (spending, investing, repaying debt) beyond what came in, drawn from cash already on hand; not a ledger account",
   },
   "page.overview.chartUnitScope": {
     message:

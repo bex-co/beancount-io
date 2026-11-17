@@ -29,11 +29,6 @@ const faReportsShared = {
     message: "درآمد در مقابل هزینه‌ها",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message:
-      "نمودار میله‌ای مقایسه مجموع درآمد و هزینه‌ها برای هر بازه در دوره انتخابی.",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const faReports = {

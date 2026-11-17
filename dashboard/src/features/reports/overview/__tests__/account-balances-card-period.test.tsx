@@ -101,9 +101,10 @@ describe("Overview Accounts card under a Time filter (w3/568)", () => {
   it("keeps current balances and the Accounts link without a filter", async () => {
     await renderCard();
 
+    // Today's balances need no caption; only a period is named.
     expect(
-      screen.getByText("Current asset and liability account balances"),
-    ).toBeInTheDocument();
+      screen.queryByText(/Asset and liability balances at/),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "View all accounts" }),
     ).toHaveAttribute("href", "/ledger/alice/books/accounts");

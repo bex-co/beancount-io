@@ -249,7 +249,7 @@ const caSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Resum financer i informes de {ledgerName}. Visualitzeu el patrimoni net, ingressos, despeses i distribució d'actius.",
+      "Resum financer i informes de {ledgerName}. Visualitzeu el patrimoni net, ingressos, despeses i saldos dels comptes.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

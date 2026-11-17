@@ -164,7 +164,8 @@ describe("real ECharts legend state through wrapper updates", () => {
     const dark = instance(ref);
     expect(document.documentElement).toHaveClass("dark");
     expect(selected(dark)).toEqual(choice);
-    expect(dark.renderToSVGString().toLowerCase()).toContain("#b9b8ce");
+    // The app-dark theme's muted chart text.
+    expect(dark.renderToSVGString().toLowerCase()).toContain("#a1a398");
 
     act(() => media.setDark(false));
     const light = instance(ref);

@@ -1,5 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Geist for the interface, Geist Mono for amounts: self-hosted (OFL-1.1), so
+   no page asks a font service for anything. Scripts Geist does not cover
+   (CJK, Persian) fall back to the system face per glyph. */
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 @import "./features/ai-agent/styles/chat-markdown.css";
 @import "./common/components/diff-viewer/diff-viewer.css";
 @import "./features/reports/export/statement-print.css";
@@ -44,7 +49,7 @@
    still mirrors the marketing site (beancount-cms-v2, src/style.css), but the
    brand color itself now DIVERGES from it: the CMS is still on olive #3F572C. */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
 
@@ -113,6 +118,12 @@
 }
 
 @theme inline {
+  --font-sans:
+    "Geist Variable", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono:
+    "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+
   /* Smaller than Tailwind's smallest default. The public ledger header holds a
      sidebar trigger, a filters button and a sign-in action side by side, and
      the longest translations (German's "Anmelden / Registrieren") overflow a

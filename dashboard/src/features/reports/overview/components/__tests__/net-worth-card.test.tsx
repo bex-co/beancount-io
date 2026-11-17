@@ -756,3 +756,46 @@ describe("NetWorthCard headline", () => {
     expect(screen.queryByText(/-500/)).toBeNull();
   });
 });
+
+describe("NetWorthCard follows the page's month", () => {
+  const valuation: NetWorthValuation = {
+    basis: "market",
+    holdings: [],
+    staleSince: null,
+  } as unknown as NetWorthValuation;
+
+  function renderAt(selectedDate?: string) {
+    return render(
+      <NetWorthCard
+        ledgerOwner="owner"
+        ledgerName="book"
+        valuation={valuation}
+        data={multiMonth}
+        primaryCurrency="USD"
+        today="2026-03-31"
+        selectedDate={selectedDate}
+      />,
+    );
+  }
+
+  it("leads with a past month's close, its change, and the day it is for", () => {
+    renderAt("2026-02-28");
+    // February: 150, up 50 from January.
+    expect(document.body.textContent).toContain("150");
+    expect(document.body.textContent).toContain("+50 USD");
+    expect(screen.getByText("Feb 28, 2026")).toBeInTheDocument();
+    // The valuation note speaks for today's holdings, not February's.
+    expect(screen.queryByText(/valuedAtMarket/)).not.toBeInTheDocument();
+    // The month is marked on the line.
+    const [series] = lineSeries(lastOption());
+    expect(series.markPoint).toMatchObject({
+      data: [{ name: "selected", coord: [1, 150] }],
+    });
+  });
+
+  it("keeps the latest figure for the latest month, dated", () => {
+    renderAt("2026-03-31");
+    expect(document.body.textContent).toContain("-30 USD");
+    expect(screen.getByText("Mar 31, 2026")).toBeInTheDocument();
+  });
+});

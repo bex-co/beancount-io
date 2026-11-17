@@ -20,7 +20,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
@@ -29,14 +28,17 @@ import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { fractionDigitsOf } from "@/common/lib/format/format-number";
-import { getChartColors } from "@/common/lib/chart/color";
-import { formatDateAxis, formatYAxisNumber } from "@/common/lib/chart/chart";
+import { CHART_PALETTE } from "@/common/lib/chart/color";
+import { useIsDarkTheme } from "@/common/hooks/use-theme";
+import { formatDateAxis } from "@/common/lib/chart/chart";
 import type { DataSeries } from "../lib/overview-utils";
 import { isPositiveDecimalNumber } from "@/common/lib/beancount/decimal-number";
 import {
   amountDifference,
+  type CurrencyAmount,
   getBalanceAmounts,
   getComparableAmount,
+  periodPage,
   prioritizeCurrency,
   toLocalISODate,
 } from "../lib/overview-utils";
@@ -63,14 +65,10 @@ function formatMonth(date: string, language: string): string {
 }
 
 /**
- * Y-axis ticks in the language's own digits, like the amounts beside them.
- * Latin-digit languages keep the compact `18.0k` every other chart uses.
+ * Y-axis ticks in the language's own digits and compact notation, like the
+ * amounts beside them: `120K`, not `120.0k`.
  */
 function yAxisTickFormatter(language: string): (value: number) => string {
-  const native = new Intl.NumberFormat(language);
-  if (native.resolvedOptions().numberingSystem === "latn") {
-    return formatYAxisNumber;
-  }
   const compact = new Intl.NumberFormat(language, {
     notation: "compact",
     maximumFractionDigits: 1,
@@ -96,12 +94,15 @@ function NetWorthValuationNote({
   language,
   ledgerOwner,
   ledgerName,
+  staleNoticeShown,
 }: {
   valuation: NetWorthValuation;
   currency: string;
   language: string;
   ledgerOwner: string;
   ledgerName: string;
+  /** The page already says which prices stopped updating, with the fix. */
+  staleNoticeShown: boolean;
 }) {
   const { t } = useTranslations();
   const titleId = useId();
@@ -134,7 +135,8 @@ function NetWorthValuationNote({
     Math.round(Number(unrealized) * 100) !== 0;
 
   const parts = [t("page.overview.valuedAtMarket")];
-  if (staleSince !== null) {
+  const showStale = staleSince !== null && !staleNoticeShown;
+  if (showStale) {
     parts.push(
       t("page.overview.pricesNotUpdated", {
         date: formatPriceDate(staleSince, language),
@@ -150,21 +152,20 @@ function NetWorthValuationNote({
   }
 
   return (
-    <div className="mt-2 space-y-1 text-xs text-muted-foreground sm:text-sm">
+    <div className="mt-3 space-y-1 text-xs text-muted-foreground">
       <Popover>
         <PopoverTrigger asChild>
           <button
             type="button"
             aria-label={`${parts.join(" · ")}. ${t("page.overview.valuationDetails")}`}
-            className={cn(
-              "-mx-1 flex items-start gap-1.5 rounded px-1 text-left underline decoration-dotted underline-offset-4 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-              staleSince !== null && "text-amber-700 dark:text-amber-400",
-            )}
+            className="-mx-1 flex items-start gap-1.5 rounded px-1 text-left underline decoration-muted-foreground/40 decoration-dotted underline-offset-4 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
-            {staleSince !== null && (
+            {showStale && (
+              // The warning is the icon's to carry; the line stays a quiet
+              // note under the figure rather than an alarm across the card.
               <AlertTriangle
                 aria-hidden="true"
-                className="mt-0.5 size-3.5 shrink-0"
+                className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
               />
             )}
             <span>{parts.join(" · ")}</span>
@@ -258,6 +259,48 @@ function NetWorthValuationNote({
   );
 }
 
+/** A digit in any numbering system, then one separator, then a digit. */
+const DECIMAL_PROBE = /\p{Nd}([^\p{Nd}])\p{Nd}/u;
+
+/**
+ * The headline figure, set like a statement: the whole units large, the
+ * fraction and the unit quieter. The split is only visual — assistive
+ * technology and text search read the one formatted amount — and it happens
+ * only where the formatter itself wrote a decimal separator, found by
+ * formatting 1.5 the same way (so `1.234` in German is never cut, and a unit
+ * without minor units is shown whole).
+ */
+function HeadlineAmount({ amount }: { amount: CurrencyAmount }) {
+  const formatNumber = useFormatNumber();
+  const value = amount.exact ?? amount.value;
+  const text = formatNumber(value, amount.currency, fractionDigitsOf(value));
+  const separator = formatNumber("1.5", amount.currency, 1).match(
+    DECIMAL_PROBE,
+  )?.[1];
+  const split = separator ? text.lastIndexOf(separator) : -1;
+  return (
+    <p className="tabular-nums">
+      <span className="sr-only">{`${text} ${amount.currency}`}</span>
+      <span
+        aria-hidden="true"
+        className="flex flex-wrap items-baseline gap-x-2 whitespace-nowrap"
+      >
+        <span className="text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">
+          {split < 0 ? text : text.slice(0, split)}
+          {split >= 0 && (
+            <span className="text-2xl font-medium text-muted-foreground sm:text-3xl">
+              {text.slice(split)}
+            </span>
+          )}
+        </span>
+        <span className="text-sm font-medium tracking-wide text-muted-foreground">
+          {amount.currency}
+        </span>
+      </span>
+    </p>
+  );
+}
+
 /**
  * A series with a single finite point draws no line segment, so it needs a
  * visible marker or the chart looks empty.
@@ -276,9 +319,32 @@ export function NetWorthCard({
   ledgerOwner,
   ledgerName,
   today = toLocalISODate(new Date()),
+  selectedDate,
+  dataThrough,
+  staleNoticeShown = false,
+  trend = true,
 }: {
+  /**
+   * Draw the year's line (and its table) under the figure, in a card of its
+   * own. Off where the page already draws net worth in its own chart: then
+   * only the figure, its change and what the valuation discloses render, with
+   * no card or date, to head the card that lists the accounts it adds up.
+   */
+  trend?: boolean;
   /** The ledger's day (`YYYY-MM-DD`), which the headline is capped at. */
   today?: string;
+  /**
+   * The month the page shows. Its close is the headline when it is before the
+   * latest one, and it is marked on the line.
+   */
+  selectedDate?: string;
+  /**
+   * The ledger's last day with data. The series dates a month by its last
+   * day; the figure for a month the data stops in is as of this day instead.
+   */
+  dataThrough?: string;
+  /** The page already reports stale prices; the note need not repeat it. */
+  staleNoticeShown?: boolean;
   /** Net worth at market value (`at_value`), one point per month. */
   data: DataSeries;
   /** What the latest point discloses; null when it holds nothing to value. */
@@ -292,6 +358,7 @@ export function NetWorthCard({
   const hydrated = useHydrated();
   const language = i18n.language;
   const formatNumber = useFormatNumber();
+  const isDark = useIsDarkTheme();
   // Chart or table is view preference, not scoped to the data. The overview
   // replaces its cards with a spinner on a shared scope change, so this is
   // held in the URL rather than in state that the unmount would discard.
@@ -300,11 +367,37 @@ export function NetWorthCard({
     NET_WORTH_VIEWS,
     DEFAULT_NET_WORTH_VIEW,
   );
-  const visibleData = useMemo(() => data.slice(-12), [data]);
   // The headline and its change stop at the current month (w21/995).
-  const throughNow = throughCurrentMonth(visibleData, today);
-  const latest = throughNow.at(-1);
-  const previous = throughNow.at(-2);
+  const throughNow = useMemo(
+    () => throughCurrentMonth(data, today),
+    [data, today],
+  );
+  // The page's month, when it is one before the latest: the card then reads
+  // that month's close, so it answers for the same month as the summary.
+  const shownIndex = selectedDate
+    ? throughNow.findIndex(
+        (point) => point.date.slice(0, 7) === selectedDate.slice(0, 7),
+      )
+    : -1;
+  const past = shownIndex >= 0 && shownIndex < throughNow.length - 1;
+  const shownAt = past ? shownIndex : throughNow.length - 1;
+  const latest = throughNow[shownAt];
+  const previous = shownAt > 0 ? throughNow[shownAt - 1] : undefined;
+  const asOf =
+    latest && dataThrough && dataThrough < latest.date
+      ? dataThrough
+      : latest?.date;
+  // A year of the line, the page of twelve months holding the shown one.
+  const visibleData = useMemo(() => {
+    if (!past) return data.slice(-12);
+    const page = new Set(
+      periodPage(
+        data.map((point) => point.date),
+        throughNow[shownIndex].date,
+      ),
+    );
+    return data.filter((point) => page.has(point.date));
+  }, [data, past, shownIndex, throughNow]);
   const latestAmounts = prioritizeCurrency(
     getBalanceAmounts(latest?.balance),
     primaryCurrency,
@@ -324,6 +417,23 @@ export function NetWorthCard({
       ? amountDifference(latestComparable, previousComparable)
       : null;
   const falling = change?.startsWith("-") ?? false;
+  // The change as a share of last month, when last month held something to
+  // be a share of. A ratio, so the doubles are fine here.
+  const previousValue = previousComparable
+    ? Number(previousComparable.exact ?? previousComparable.value)
+    : 0;
+  const changeShare =
+    change !== null && previousValue !== 0
+      ? new Intl.NumberFormat(language, {
+          style: "percent",
+          maximumFractionDigits: 1,
+          signDisplay: "exceptZero",
+        }).format(Number(change) / Math.abs(previousValue))
+      : null;
+  const [headline, ...otherUnits] = latestAmounts;
+  const leftOutListed =
+    valuation?.holdings.some((holding) => holding.basis === "notInTotal") ??
+    false;
 
   const chartOption = useMemo<EChartsOption>(() => {
     const formatTick = yAxisTickFormatter(language);
@@ -340,7 +450,8 @@ export function NetWorthCard({
 
     return {
       animationDuration: 500,
-      color: getChartColors(),
+      // The resolved theme's palette, so a live theme switch repaints it.
+      color: [...CHART_PALETTE[isDark ? "dark" : "light"]],
       tooltip: { trigger: "axis" },
       grid: {
         left: 8,
@@ -377,6 +488,14 @@ export function NetWorthCard({
         );
         const data = amounts.map((amount) => amount?.value ?? null);
         const singlePoint = isSinglePointSeries(data);
+        // The page's month on the line, so the trend and the summary above
+        // are read as one story.
+        const markedIndex = selectedDate
+          ? visibleData.findIndex(
+              (point) => point.date.slice(0, 7) === selectedDate.slice(0, 7),
+            )
+          : -1;
+        const marked = markedIndex >= 0 ? data[markedIndex] : null;
         return {
           name: currency,
           type: "line" as const,
@@ -384,9 +503,24 @@ export function NetWorthCard({
           symbol: singlePoint ? ("circle" as const) : ("none" as const),
           symbolSize: singlePoint ? 7 : undefined,
           showSymbol: singlePoint,
-          lineStyle: { width: 2 },
-          areaStyle: { opacity: 0.12 },
+          // A line, not an area: the axis is scaled to the data, and a fill
+          // down to a baseline that is not zero would exaggerate the change.
+          lineStyle: { width: 2.5 },
           data,
+          markPoint:
+            marked === null || singlePoint
+              ? undefined
+              : {
+                  silent: true,
+                  symbol: "circle",
+                  symbolSize: 9,
+                  label: { show: false },
+                  itemStyle: {
+                    borderColor: isDark ? "#131713" : "#ffffff",
+                    borderWidth: 2,
+                  },
+                  data: [{ name: "selected", coord: [markedIndex, marked] }],
+                },
           // The point's own decimal in its unit, not the plotted double
           // (w4/1015).
           tooltip: {
@@ -398,15 +532,118 @@ export function NetWorthCard({
         };
       }),
     };
-  }, [formatNumber, language, primaryCurrency, visibleData]);
+  }, [
+    formatNumber,
+    isDark,
+    language,
+    primaryCurrency,
+    selectedDate,
+    visibleData,
+  ]);
+
+  const changeTag = change !== null && latestComparable && (
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-2 text-sm",
+        trend && "mt-3",
+      )}
+    >
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium whitespace-nowrap tabular-nums",
+          falling
+            ? "bg-rose-500/10 text-rose-700 dark:text-rose-400"
+            : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+        )}
+      >
+        {falling ? (
+          <TrendingDown aria-hidden="true" className="size-3.5" />
+        ) : (
+          <TrendingUp aria-hidden="true" className="size-3.5" />
+        )}
+        {isPositiveDecimalNumber(change) ? "+" : ""}
+        {formatNumber(
+          change,
+          latestComparable.currency,
+          fractionDigitsOf(change),
+        )}{" "}
+        {latestComparable.currency}
+        {changeShare && (
+          <span className="font-normal opacity-80">
+            {" · "}
+            {changeShare}
+          </span>
+        )}
+      </span>
+      <span className="text-muted-foreground">
+        {t("page.overview.fromPreviousMonth")}
+      </span>
+    </div>
+  );
+  const figure = headline ? (
+    <HeadlineAmount amount={headline} />
+  ) : (
+    <FormattedAmounts
+      amounts={latestAmounts}
+      className="text-4xl font-semibold tracking-tight"
+    />
+  );
+  // Units with no price stay beside the figure, not added into it, and
+  // quieter than it: they are not a second net worth. When the valuation note
+  // already counts them as left out, it names them.
+  const unpriced = otherUnits.length > 0 && !leftOutListed && (
+    <FormattedAmounts
+      amounts={otherUnits}
+      className="mt-1 block text-sm text-muted-foreground"
+    />
+  );
+  // What the latest valuation discloses (its basis, cost, stale prices) is
+  // about today's holdings, not a past month's.
+  const valuationNote = valuation && !past && (
+    <NetWorthValuationNote
+      valuation={valuation}
+      currency={primaryCurrency}
+      language={language}
+      ledgerOwner={ledgerOwner}
+      ledgerName={ledgerName}
+      staleNoticeShown={staleNoticeShown}
+    />
+  );
+
+  if (!trend) {
+    // The head of the card that lists what it is made of: the figure and its
+    // change on one line. That card's section names the day.
+    return (
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-muted-foreground">
+          {t("common.netWorth")}
+        </p>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+          {figure}
+          {changeTag}
+        </div>
+        {unpriced}
+        {valuationNote}
+      </div>
+    );
+  }
 
   return (
     <Card className="min-w-0 gap-0 overflow-hidden py-0">
-      <CardHeader className="border-b py-5">
-        <CardTitle>{t("common.netWorth")}</CardTitle>
-        <CardDescription>
-          {t("page.overview.netWorthDescription")}
-        </CardDescription>
+      {/* Title and figure read as one block: no rule between them. */}
+      <CardHeader className="items-center pt-5 pb-0">
+        {/* The day the figure is for: the month the page shows, or the
+            ledger's last day, which may be years ago. */}
+        <CardTitle className="flex flex-wrap items-baseline gap-x-2">
+          {t("common.netWorth")}
+          {latest && (
+            <span className="text-sm font-normal text-muted-foreground tabular-nums">
+              {formatLedgerDate(asOf ?? latest.date, language, {
+                dateStyle: "medium",
+              }) ?? latest.date}
+            </span>
+          )}
+        </CardTitle>
         <CardAction className="flex rounded-lg border bg-muted/30 p-0.5">
           <Button
             type="button"
@@ -435,58 +672,22 @@ export function NetWorthCard({
         </CardAction>
       </CardHeader>
 
-      <CardContent className="px-4 py-5 sm:px-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <FormattedAmounts
-            amounts={latestAmounts}
-            className="text-2xl font-semibold tracking-tight sm:text-3xl"
-          />
-          {change !== null && latestComparable && (
-            <div
-              className={
-                falling
-                  ? "flex items-center gap-1 text-sm text-rose-600 dark:text-rose-400"
-                  : "flex items-center gap-1 text-sm text-emerald-700 dark:text-emerald-400"
-              }
-            >
-              {falling ? (
-                <TrendingDown className="size-4" />
-              ) : (
-                <TrendingUp className="size-4" />
-              )}
-              <span className="tabular-nums">
-                {isPositiveDecimalNumber(change) ? "+" : ""}
-                {formatNumber(
-                  change,
-                  latestComparable.currency,
-                  fractionDigitsOf(change),
-                )}{" "}
-                {latestComparable.currency}
-              </span>
-              <span className="text-muted-foreground">
-                {t("page.overview.fromPreviousMonth")}
-              </span>
-            </div>
-          )}
-        </div>
-        {valuation && (
-          <NetWorthValuationNote
-            valuation={valuation}
-            currency={primaryCurrency}
-            language={language}
-            ledgerOwner={ledgerOwner}
-            ledgerName={ledgerName}
-          />
-        )}
+      <CardContent className="flex flex-1 flex-col px-4 pt-1 pb-5 sm:px-6">
+        {figure}
+        {unpriced}
+        {changeTag}
+        {valuationNote}
 
         {visibleData.length === 0 ? (
           <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
             {t("common.noDataFound")}
           </div>
         ) : view === "chart" ? (
+          // The line takes whatever height the row gives the card, so it
+          // never ends above an empty band beside a taller Accounts list.
           <ReactECharts
             option={chartOption}
-            style={{ height: "230px", width: "100%" }}
+            style={{ flex: "1 1 230px", minHeight: "230px", width: "100%" }}
           />
         ) : (
           // A named, focusable region: the months overflow the box and the

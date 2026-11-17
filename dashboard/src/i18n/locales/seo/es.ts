@@ -249,7 +249,7 @@ const esSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Resumen financiero e informes de {ledgerName}. Vea patrimonio neto, ingresos, gastos y distribución de activos.",
+      "Resumen financiero e informes de {ledgerName}. Vea patrimonio neto, ingresos, gastos y saldos de cuentas.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

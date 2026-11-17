@@ -13,6 +13,8 @@ export interface SankeyColorScheme {
   investing: string;
   financing: string;
   savings: string;
+  /** Cash drawn down to pay for more than came in: neither income nor loss. */
+  reserve: string;
 }
 
 /**
@@ -31,9 +33,10 @@ export function getSankeyColorScheme(isDark: boolean): SankeyColorScheme {
       income: "#00bb85", // --chart-2 sea green - money in
       cashFlow: "#5fc535", // --chart-1 brand green - central hub
       expenses: "#f3813f", // --chart-5 orange - operating outflows
-      investing: "#e068d8", // --chart-4 magenta - investing activities
+      investing: "#719def", // --chart-7 blue - investing activities
       financing: "#f94144", // --chart-8 red - debt/financing
       savings: "#00afaf", // --chart-6 teal - surplus
+      reserve: "#9ba197", // warm grey - cash on hand drawn down
     };
   }
 
@@ -41,9 +44,10 @@ export function getSankeyColorScheme(isDark: boolean): SankeyColorScheme {
     income: "#008455", // --chart-2 sea green - money in
     cashFlow: "#2b7e00", // --chart-1 brand green - central hub
     expenses: "#c25500", // --chart-5 orange - operating outflows
-    investing: "#ad36a7", // --chart-4 magenta - investing activities
+    investing: "#426ec2", // --chart-7 blue - investing activities
     financing: "#d40924", // --chart-8 red - debt/financing
     savings: "#007f7f", // --chart-6 teal - surplus
+    reserve: "#7c8279", // warm grey - cash on hand drawn down
   };
 }
 
@@ -60,11 +64,11 @@ export function getSankeyNodeColor(
 ): string {
   const colors = getSankeyColorScheme(isDark);
 
-  // Special nodes. A shortfall is drawn from what was saved before.
+  // Special nodes. What a period pays out beyond its inflows comes from cash
+  // already on hand: grey, so it reads as neither income nor a loss.
   if (nodeName === CASH_FLOW_NODE) return colors.cashFlow;
-  if (nodeName === SAVINGS_NODE || nodeName === SHORTFALL_NODE) {
-    return colors.savings;
-  }
+  if (nodeName === SAVINGS_NODE) return colors.savings;
+  if (nodeName === SHORTFALL_NODE) return colors.reserve;
 
   // Categorize by account type
   const category = categorizeAccount(nodeName, meta, roots);
@@ -81,4 +85,21 @@ export function getSankeyNodeColor(
     default:
       return colors.cashFlow;
   }
+}
+
+/**
+ * `hex` moved `amount` (0–1) of the way to white: a lighter shade of the same
+ * hue, for a translucent link that would otherwise darken into mud.
+ */
+export function tintColor(hex: string, amount: number): string {
+  const match = /^#([0-9a-f]{6})$/i.exec(hex);
+  if (!match) return hex;
+  const value = parseInt(match[1], 16);
+  const channel = (shift: number) => {
+    const c = (value >> shift) & 0xff;
+    return Math.round(c + (255 - c) * amount)
+      .toString(16)
+      .padStart(2, "0");
+  };
+  return `#${channel(16)}${channel(8)}${channel(0)}`;
 }

@@ -11,7 +11,6 @@ import { LocalizationProvider } from "@/i18n/provider";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 import { formatNumber } from "@/common/lib/format/format-number";
 import { IncomeExpensesChart } from "../income-expenses-chart";
-import { DistributionChart } from "../distribution-chart";
 import CashFlowSankey from "../cash-flow-sankey";
 
 vi.unmock("@/common/hooks/use-translations");
@@ -51,17 +50,6 @@ const expenses = [
   { date: "2026-02-28", balance: { USD: "-5" } },
   { date: "2026-03-31", balance: {} },
 ];
-const assets = node("Assets", {}, [
-  node("Assets:Bank:USD", { EUR: 60 }),
-  node("Assets:Wallet:USD", { EUR: 40 }),
-  node("Assets:TinyA", { EUR: 0.1 }),
-  node("Assets:TinyB", { EUR: 0.2 }),
-  node("Assets:Vacation", { VACHR: 9999 }),
-]);
-const liabilities = node("Liabilities", {}, [
-  node("Liabilities:Card", { EUR: -75 }),
-  node("Liabilities:Loan", { EUR: -25 }),
-]);
 const sankeyProps = {
   incomeHierarchyData: node("Income", {}, [
     node("Income:Salary", { EUR: -100, VACHR: -999 }),
@@ -130,28 +118,6 @@ function assertPeriods(element: HTMLElement, unit: string) {
     ]),
   );
 }
-type DistributionOption = {
-  series: [
-    {
-      type: string;
-      data: Array<{ account?: string; name: string; value: number }>;
-    },
-  ];
-};
-function assertDistribution(
-  element: HTMLElement,
-  unit: string,
-  language = "en",
-) {
-  const series = option<DistributionOption>().series[0];
-  expect(rows(element).map((row) => texts(row).slice(0, 2))).toEqual(
-    series.data.map((item) => [
-      item.account ?? item.name,
-      shown(item.value, unit, language),
-    ]),
-  );
-  return series;
-}
 type FlowsOption = {
   series: [{ links: Array<{ source: string; target: string; value: number }> }];
 };
@@ -159,7 +125,8 @@ function assertFlows(element: HTMLElement, unit: string) {
   expect(rows(element).map(texts)).toEqual(
     option<FlowsOption>().series[0].links.map((link) => [
       link.source,
-      link.target,
+      // Links name identities; Flows shows the remainder's translated label.
+      link.target === "Savings" ? "To cash" : link.target,
       shown(link.value, unit),
     ]),
   );
@@ -188,47 +155,6 @@ describe("Overview chart data alternatives", () => {
     expect(element).not.toHaveTextContent("999");
   });
 
-  it.each([
-    ["Assets Distribution", assets, false],
-    ["Liabilities Distribution", liabilities, true],
-  ] as const)(
-    "exposes %s plotted accounts, amounts and shares in the selected unit",
-    async (title, data, inverse) => {
-      await mount(
-        <DistributionChart
-          title={title}
-          data={data}
-          inverse={inverse}
-          primaryCurrency="EUR"
-        />,
-      );
-      const element = await table(title, "Breakdown");
-      const series = assertDistribution(element, "EUR");
-      expect(
-        within(element)
-          .getAllByRole("columnheader")
-          .map((cell) => cell.textContent),
-      ).toEqual(["Account", "Amount", "Share of total"]);
-      const total = series.data.reduce((sum, item) => sum + item.value, 0);
-      rows(element).forEach((row, index) => {
-        expect(parseFloat(texts(row)[2]!)).toBeCloseTo(
-          (series.data[index].value / total) * 100,
-          1,
-        );
-      });
-      if (!inverse) {
-        expect(rows(element).map((row) => texts(row)[0])).toEqual([
-          "Assets:Wallet:USD",
-          "Assets:Bank:USD",
-          "Other",
-        ]);
-        expect(
-          screen.getByText(/Balances in VACHR are not included/),
-        ).toBeInTheDocument();
-      }
-    },
-  );
-
   it("exposes exact Sankey links including declared investing and computed savings, without omitted-unit totals", async () => {
     await mount(<CashFlowSankey {...sankeyProps} />);
     const element = await table("Cash Flow", "Flows");
@@ -239,32 +165,11 @@ describe("Overview chart data alternatives", () => {
         .map((cell) => cell.textContent),
     ).toEqual(["From", "To", "Amount"]);
     expect(element).toHaveTextContent("Assets:Bank");
-    expect(element).toHaveTextContent("Savings");
+    expect(element).toHaveTextContent("To cash");
     expect(
       screen.getByText(/Balances in VACHR are not included/),
     ).toBeInTheDocument();
     expect(element).not.toHaveTextContent("999");
-  });
-
-  it("follows signed bar fallback ordering and uses absolute-total shares even when net balance is zero", async () => {
-    await mount(
-      <DistributionChart
-        title="Assets Distribution"
-        primaryCurrency="EUR"
-        data={node("Assets", {}, [
-          node("Assets:Negative", { EUR: -20 }),
-          node("Assets:Positive", { EUR: 20 }),
-        ])}
-      />,
-    );
-    const element = await table("Assets Distribution", "Breakdown");
-    expect(assertDistribution(element, "EUR").type).toBe("bar");
-    expect(
-      within(element).getByRole("columnheader", {
-        name: "Share of absolute total",
-      }),
-    ).toBeInTheDocument();
-    expect(rows(element).map((row) => texts(row)[2])).toEqual(["50%", "50%"]);
   });
 
   it("replaces interval rows and selected unit with the settled replacement report", async () => {
@@ -307,30 +212,6 @@ describe("Overview chart data alternatives", () => {
     expect(screen.getByRole("table")).not.toHaveTextContent("USD");
   });
 
-  it("replaces a distribution's entire breakdown after unit/conversion/filter data changes", async () => {
-    const view = await mount(
-      <DistributionChart
-        title="Assets Distribution"
-        data={assets}
-        primaryCurrency="EUR"
-      />,
-    );
-    await table("Assets Distribution", "Breakdown");
-    view.rerender(
-      <DistributionChart
-        title="Assets Distribution"
-        data={node("Assets", { VACHR: 25 })}
-        primaryCurrency="USD"
-      />,
-    );
-    const element = screen.getByRole("table", {
-      name: "Assets Distribution Breakdown",
-    });
-    assertDistribution(element, "VACHR");
-    expect(rows(element)).toHaveLength(1);
-    expect(element).not.toHaveTextContent("EUR");
-  });
-
   it("withholds both canvas and flows while authoritative account roles are pending, then follows changed roles", async () => {
     const view = await mount(
       <CashFlowSankey {...sankeyProps} accountMetaPending />,
@@ -368,32 +249,11 @@ describe("Overview chart data alternatives", () => {
     expect(rows(element).map((row) => texts(row)[3])).toEqual(["—", "—", "—"]);
   });
 
-  it("localizes disclosure and share labels with the actual German catalog", async () => {
-    await mount(
-      <DistributionChart
-        title="Vermögensverteilung"
-        data={assets}
-        primaryCurrency="EUR"
-      />,
-      "de",
-    );
-    const element = await table("Vermögensverteilung", "Aufschlüsselung");
-    expect(
-      within(element).getByRole("columnheader", {
-        name: "Anteil am Gesamtwert",
-      }),
-    ).toBeInTheDocument();
-    assertDistribution(element, "EUR", "de");
-  });
-
-  it.each(["income", "distribution", "flows"])(
+  it.each(["income", "flows"])(
     "keeps empty %s charts free of invented data rows",
     async (kind) => {
       const children: Record<string, ReactNode> = {
         income: <IncomeExpensesChart income={[]} expenses={[]} />,
-        distribution: (
-          <DistributionChart title="Assets Distribution" data={null} />
-        ),
         flows: <CashFlowSankey />,
       };
       await mount(children[kind]);
@@ -420,24 +280,6 @@ describe("Overview chart data alternatives", () => {
         "2474.26 USD",
         "1625.74 USD",
       ]);
-    });
-
-    it("writes a grouped distribution row at the unit's precision", async () => {
-      await mount(
-        <DistributionChart
-          title="Assets Distribution"
-          data={node("Assets", {}, [
-            node("Assets:Bank", { USD: 0.1 }),
-            node("Assets:Cash", { USD: 0.2 }),
-          ])}
-          primaryCurrency="USD"
-        />,
-      );
-      const element = await table("Assets Distribution", "Breakdown");
-
-      for (const row of rows(element)) {
-        expect(texts(row)[1]).toMatch(/^\d+\.\d{2} USD$/);
-      }
     });
 
     it("formats amounts in the reader's language", async () => {

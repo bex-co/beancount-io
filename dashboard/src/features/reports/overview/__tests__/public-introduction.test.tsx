@@ -112,12 +112,6 @@ vi.mock("../components/net-worth-card", () => ({ NetWorthCard: () => null }));
 vi.mock("../components/account-balances-card", () => ({
   AccountBalancesCard: () => null,
 }));
-vi.mock("../components/income-expenses-chart", () => ({
-  IncomeExpensesChart: () => null,
-}));
-vi.mock("../components/distribution-chart", () => ({
-  DistributionChart: () => null,
-}));
 vi.mock("../components/money-movement-section", () => ({
   MoneyMovementSection: () => null,
 }));
@@ -166,7 +160,7 @@ describe("public overview introduction", () => {
     ).toBeTruthy();
     expect(
       container
-        .querySelector("#overview-widget-cash-flow")!
+        .querySelector("#overview-widget-recent-activity")!
         .compareDocumentPosition(readme) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(container.querySelectorAll("#overview-ledger-notes")).toHaveLength(

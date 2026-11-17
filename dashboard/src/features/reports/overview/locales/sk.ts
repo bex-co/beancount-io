@@ -7,22 +7,14 @@ export interface TranslationEntry {
 }
 
 const skOverview: Record<string, TranslationEntry> = {
-  "page.overview.chartBreakdown": {
-    message: "Rozpis",
-    description: "Disclosure label for the distribution chart data table",
+  "page.overview.periodInProgress": {
+    message: "Prebieha",
+    description:
+      "Tooltip note on the Income vs Expenses chart for the current month, which has not ended yet",
   },
   "page.overview.chartFlows": {
     message: "Toky",
     description: "Disclosure label for the cash flow Sankey links table",
-  },
-  "page.overview.chartShare": {
-    message: "Podiel na celku",
-    description: "Column header for each plotted slice share of the total",
-  },
-  "page.overview.chartMagnitudeShare": {
-    message: "Podiel na súčte absolútnych hodnôt",
-    description:
-      "Column header for the absolute value share of the total magnitude in a signed distribution",
   },
   "page.overview.netWorthByMonth": {
     message: "Čisté imanie podľa mesiacov",
@@ -35,34 +27,14 @@ const skOverview: Record<string, TranslationEntry> = {
   },
   ...dashboardOverviewTranslations.sk,
   ...emptyLedgerOverviewTranslations.sk,
-  "page.overview.assetsDistribution": {
-    message: "Rozloženie aktív",
-    description: "Title for assets distribution chart",
-  },
-  "page.overview.assetsDistributionDescription": {
-    message: "Vizuálna reprezentácia zloženia {ledgerName} aktív",
-    description: "Description for assets distribution chart",
-  },
   "page.overview.cashFlow": {
     message: "Peňažný tok",
     description: "Title for cash flow section",
-  },
-  "page.overview.cashFlowDescription": {
-    message: "Tok peňazí zo zdrojov príjmov na výdavky a investície",
-    description: "Description for cash flow sankey diagram",
   },
   "page.overview.failedToLoad": {
     message:
       "Nepodarilo sa načítať informácie o prehľade knihy. Prosím skúste to znova neskôr.",
     description: "Error description for overview page",
-  },
-  "page.overview.liabilitiesDistribution": {
-    message: "Rozloženie záväzkov",
-    description: "Title for liabilities distribution chart",
-  },
-  "page.overview.liabilitiesDistributionDescription": {
-    message: "Vizuálna reprezentácia zloženia {ledgerName} záväzkov",
-    description: "Description for liabilities distribution chart",
   },
   "page.overview.loading": {
     message: "Načítavam údaje prehľadu...",
@@ -74,14 +46,14 @@ const skOverview: Record<string, TranslationEntry> = {
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
   "page.overview.cashFlowSavings": {
-    message: "Úspory",
+    message: "Do hotovosti",
     description:
-      "Cash flow chart node for what the period's income left after its outflows",
+      "Cash flow chart destination for what the period took in (income, borrowing, sales) beyond what it paid out, which stays as cash on hand; not a ledger account, and not the same as income less spending",
   },
   "page.overview.cashFlowShortfall": {
-    message: "Schodok",
+    message: "Z hotovosti",
     description:
-      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+      "Cash flow chart source for what the period paid out (spending, investing, repaying debt) beyond what came in, drawn from cash already on hand; not a ledger account",
   },
   "page.overview.chartUnitScope": {
     message: "Sumy sú zobrazené v {unit}. Zostatky v {others} nie sú zahrnuté.",

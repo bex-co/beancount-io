@@ -10,14 +10,19 @@ import {
   DataZoomInsideComponent,
   GridComponent,
   LegendComponent,
+  MarkPointComponent,
   TitleComponent,
   TooltipComponent,
 } from "echarts/components";
 import { LabelLayout } from "echarts/features";
 import { CanvasRenderer } from "echarts/renderers";
+import { CHART_PALETTE, toCategoricalOrder } from "@/common/lib/chart/color";
+import { TOOLTIP_SURFACE_CSS } from "@/common/lib/chart/tooltip";
 
 // Shared by reports, BQL, budget, and commodity charts. Legend includes plain
 // and scroll legends; Tooltip installs the axis-pointer support used by grids.
+// MarkPoint draws a series' own marked point (the Overview's selected month
+// on the net worth line); without it ECharts drops `markPoint` silently.
 registerCharts([
   BarChart,
   LineChart,
@@ -27,6 +32,7 @@ registerCharts([
   DataZoomInsideComponent,
   GridComponent,
   LegendComponent,
+  MarkPointComponent,
   TitleComponent,
   TooltipComponent,
   LabelLayout,
@@ -34,63 +40,96 @@ registerCharts([
 ]);
 
 /**
- * App dark appearance for canvas charts. Derived from ECharts' built-in dark
- * palette so axis/legend text stays readable, but keeps a transparent chart
- * background so cards/pages show through.
+ * One chart language for the whole app, in both appearances: the --chart-N
+ * series in categorical order (so a category keeps its hue when the theme
+ * flips), the app's sans-serif, quiet axes, and the popover surface for
+ * tooltips. Charts that color by meaning (gain/loss, money in/out, Sankey
+ * roles) still pass their own colors; everything else inherits these.
  */
-const contrastColor = "#B9B8CE";
-registerTheme("app-dark", {
-  darkMode: true,
-  color: [
-    "#4992ff",
-    "#7cffb2",
-    "#fddd60",
-    "#ff6e76",
-    "#58d9f9",
-    "#05c091",
-    "#ff8a45",
-    "#8d48e3",
-    "#dd79ff",
-  ],
-  backgroundColor: "transparent",
-  textStyle: { color: contrastColor },
-  title: {
-    textStyle: { color: "#EEF1FA" },
-    subtextStyle: { color: contrastColor },
-  },
-  legend: {
-    textStyle: { color: contrastColor },
-  },
-  tooltip: {
-    backgroundColor: "rgba(20, 20, 24, 0.92)",
-    borderColor: "#484753",
-    textStyle: { color: "#EEF1FA" },
-  },
-  categoryAxis: {
-    axisLine: { lineStyle: { color: contrastColor } },
-    axisLabel: { color: contrastColor },
-    splitLine: { lineStyle: { color: "#484753" } },
-  },
-  valueAxis: {
-    axisLine: { lineStyle: { color: contrastColor } },
-    axisLabel: { color: contrastColor },
-    splitLine: { lineStyle: { color: "#484753" } },
-  },
-});
+// The app's own face (style.css --font-sans), then the same fallbacks.
+const FONT_FAMILY =
+  '"Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
 
-/**
- * App light appearance. ECharts' default `inactiveColor` for an unselected
- * legend entry is a near-white grey — 1.52:1 against a white card — but these
- * legends are operable: clicking an unselected currency enables its series.
- * Only that colour is overridden, so every other default (palette, axis and
- * selected label colours, transparent background) is untouched.
- */
-registerTheme("app-light", {
-  legend: {
-    // 5.51:1 on white, and still clearly lighter than the selected #54555a.
-    inactiveColor: "#646973",
-  },
-});
+type ChartChrome = {
+  text: string;
+  strongText: string;
+  legendText: string;
+  axisLine: string;
+  splitLine: string;
+  tooltipBackground: string;
+  tooltipBorder: string;
+  inactiveLegend: string;
+};
+
+function appChartTheme(palette: readonly string[], chrome: ChartChrome) {
+  const axis = {
+    axisLine: { lineStyle: { color: chrome.axisLine } },
+    axisTick: { show: false },
+    axisLabel: { color: chrome.text, fontSize: 11 },
+    splitLine: { lineStyle: { color: chrome.splitLine } },
+  };
+  return {
+    color: toCategoricalOrder(palette),
+    backgroundColor: "transparent",
+    textStyle: { color: chrome.text, fontFamily: FONT_FAMILY },
+    title: {
+      textStyle: { color: chrome.strongText },
+      subtextStyle: { color: chrome.text },
+    },
+    legend: {
+      icon: "roundRect",
+      itemWidth: 10,
+      itemHeight: 10,
+      itemGap: 16,
+      textStyle: { color: chrome.legendText, fontSize: 12 },
+      // Clearly lighter than a selected entry, yet readable: these legends
+      // are operable, and an unselected unit is one click from returning.
+      inactiveColor: chrome.inactiveLegend,
+    },
+    tooltip: {
+      backgroundColor: chrome.tooltipBackground,
+      borderColor: chrome.tooltipBorder,
+      borderWidth: 1,
+      textStyle: { color: chrome.strongText, fontSize: 12 },
+      extraCssText: TOOLTIP_SURFACE_CSS,
+    },
+    categoryAxis: axis,
+    valueAxis: { ...axis, axisLine: { show: false } },
+    bar: { itemStyle: { borderRadius: [3, 3, 0, 0] } },
+  };
+}
+
+registerTheme(
+  "app-dark",
+  Object.assign(
+    { darkMode: true },
+    appChartTheme(CHART_PALETTE.dark, {
+      text: "#a1a398",
+      strongText: "#ebebe7",
+      legendText: "#c9cbc1",
+      axisLine: "#333732",
+      splitLine: "#262a26",
+      tooltipBackground: "#131713",
+      tooltipBorder: "#333732",
+      inactiveLegend: "#7d8076",
+    }),
+  ),
+);
+
+registerTheme(
+  "app-light",
+  appChartTheme(CHART_PALETTE.light, {
+    text: "#646973",
+    strongText: "#161a12",
+    legendText: "#3f433b",
+    axisLine: "#e0e0dd",
+    splitLine: "#efefec",
+    tooltipBackground: "#ffffff",
+    tooltipBorder: "#e0e0dd",
+    // 5.51:1 on white, and clearly lighter than a selected entry (#3f433b).
+    inactiveLegend: "#646973",
+  }),
+);
 
 export { init } from "echarts/core";
 

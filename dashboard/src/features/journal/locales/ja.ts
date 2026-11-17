@@ -371,10 +371,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "取引",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "取引",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "単位",
     description: "Table header for units column",

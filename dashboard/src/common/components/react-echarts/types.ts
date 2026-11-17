@@ -20,6 +20,12 @@ export interface EChartsProps {
    * back through `legend.selected` instead of resetting it.
    */
   onLegendSelectChanged?: (selected: Record<string, boolean>) => void;
+  /**
+   * A click anywhere on the drawing surface, not only on a mark: a thin bar is
+   * a hard target, so a caller can map the point to its category itself
+   * (`chart.convertFromPixel`). Wired again whenever the chart is recreated.
+   */
+  onSurfaceClick?: (chart: ECharts, point: [number, number]) => void;
 }
 
 export interface EChartsRef {

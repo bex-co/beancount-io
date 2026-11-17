@@ -370,10 +370,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "거래",
     description: "Singular form of transaction",
   },
-  "journal.transactions": {
-    message: "거래",
-    description: "Plural form of transaction",
-  },
   "journal.unitsHeader": {
     message: "단위",
     description: "Table header for units column",

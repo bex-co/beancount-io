@@ -249,7 +249,7 @@ const frSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerOverview.description": {
     message:
-      "Aperçu financier et rapports pour {ledgerName}. Visualisez la valeur nette, les revenus, les dépenses et la répartition des actifs.",
+      "Aperçu financier et rapports pour {ledgerName}. Visualisez la valeur nette, les revenus, les dépenses et les soldes des comptes.",
     description: "Ledger overview page meta description",
   },
   "seo.ledgerOverview.title": {

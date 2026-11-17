@@ -1,5 +1,11 @@
 import { useContext, useMemo, useState } from "react";
-import { XIcon } from "lucide-react";
+import {
+  CalendarDays,
+  ListFilter,
+  WalletCards,
+  XIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/common/components/ui/button.tsx";
 import { Skeleton } from "@/common/components/ui/skeleton.tsx";
 import { Alert, AlertDescription } from "@/common/components/ui/alert.tsx";
@@ -33,6 +39,12 @@ interface SearchControlComboboxProps {
   allowCustom?: boolean;
   hierarchical?: boolean;
   triggerOn?: "change" | "blur";
+  /**
+   * A leading glyph naming what the field filters by. With it the field also
+   * takes a quiet filled look, so a row of empty filters in the header reads
+   * as controls rather than as a form waiting to be filled in.
+   */
+  icon?: LucideIcon;
 }
 
 /**
@@ -47,6 +59,7 @@ export const SearchControlCombobox = ({
   allowCustom = true,
   hierarchical = false,
   triggerOn = "change",
+  icon: Icon,
 }: SearchControlComboboxProps) => {
   const { t } = useTranslations();
   const defaultPlaceholder = placeholder || t("component.combobox.placeholder");
@@ -64,7 +77,13 @@ export const SearchControlCombobox = ({
   }, [items, hierarchical]);
 
   return (
-    <div className={cn("", className)}>
+    <div className={cn(Icon && "relative", className)}>
+      {Icon && (
+        <Icon
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-2.5 z-10 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+      )}
       <Combobox
         options={options}
         value={selected}
@@ -73,6 +92,11 @@ export const SearchControlCombobox = ({
         allowCustom={allowCustom}
         emptyText={t("component.combobox.noMatchesFound")}
         triggerOn={triggerOn}
+        className={
+          Icon
+            ? "border-transparent bg-muted/60 pl-8 shadow-none hover:bg-muted focus-visible:border-input focus-visible:bg-background dark:bg-muted/40"
+            : undefined
+        }
       />
     </div>
   );
@@ -207,6 +231,7 @@ export const LedgerSearchControls = ({
           onChange={(value) => handleFilterChange("time", value)}
           placeholder={t("component.searchControls.time")}
           className={cn(comboboxClass, !isStack && "min-w-[160px]")}
+          icon={CalendarDays}
           allowCustom={true}
           hierarchical={false}
           triggerOn="blur"
@@ -218,6 +243,7 @@ export const LedgerSearchControls = ({
           onChange={(value) => handleFilterChange("account", value)}
           placeholder={t("component.searchControls.account")}
           className={cn(comboboxClass, !isStack && "min-w-[180px]")}
+          icon={WalletCards}
           allowCustom={true}
           hierarchical={true}
           triggerOn="blur"
@@ -229,6 +255,7 @@ export const LedgerSearchControls = ({
           onChange={(value) => handleFilterChange("filter", value)}
           placeholder={t("component.searchControls.filterByTagPayee")}
           className={cn(comboboxClass, !isStack && "min-w-[180px]")}
+          icon={ListFilter}
           allowCustom={true}
           hierarchical={false}
           triggerOn="blur"

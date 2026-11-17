@@ -7,22 +7,14 @@ export interface TranslationEntry {
 }
 
 const deOverview: Record<string, TranslationEntry> = {
-  "page.overview.chartBreakdown": {
-    message: "Aufschlüsselung",
-    description: "Disclosure label for the distribution chart data table",
+  "page.overview.periodInProgress": {
+    message: "Laufend",
+    description:
+      "Tooltip note on the Income vs Expenses chart for the current month, which has not ended yet",
   },
   "page.overview.chartFlows": {
     message: "Zahlungsströme",
     description: "Disclosure label for the cash flow Sankey links table",
-  },
-  "page.overview.chartShare": {
-    message: "Anteil am Gesamtwert",
-    description: "Column header for each plotted slice share of the total",
-  },
-  "page.overview.chartMagnitudeShare": {
-    message: "Anteil am absoluten Gesamtwert",
-    description:
-      "Column header for the absolute value share of the total magnitude in a signed distribution",
   },
   "page.overview.netWorthByMonth": {
     message: "Nettovermögen nach Monat",
@@ -35,35 +27,14 @@ const deOverview: Record<string, TranslationEntry> = {
   },
   ...dashboardOverviewTranslations.de,
   ...emptyLedgerOverviewTranslations.de,
-  "page.overview.assetsDistribution": {
-    message: "Vermögensverteilung",
-    description: "Title for assets distribution chart",
-  },
-  "page.overview.assetsDistributionDescription": {
-    message: "Visuelle Darstellung {ledgerName} Vermögenszusammensetzung",
-    description: "Description for assets distribution chart",
-  },
   "page.overview.cashFlow": {
     message: "Cashflow",
     description: "Title for cash flow section",
-  },
-  "page.overview.cashFlowDescription": {
-    message: "Geldfluss von Einnahmequellen zu Ausgaben und Investitionen",
-    description: "Description for cash flow sankey diagram",
   },
   "page.overview.failedToLoad": {
     message:
       "Die Übersichtsinformationen zum Hauptbuch konnten nicht geladen werden. Bitte versuchen Sie es später erneut.",
     description: "Error description for overview page",
-  },
-  "page.overview.liabilitiesDistribution": {
-    message: "Verbindlichkeitenverteilung",
-    description: "Title for liabilities distribution chart",
-  },
-  "page.overview.liabilitiesDistributionDescription": {
-    message:
-      "Visuelle Darstellung {ledgerName} Verbindlichkeitenzusammensetzung",
-    description: "Description for liabilities distribution chart",
   },
   "page.overview.loading": {
     message: "Übersichtsdaten werden geladen…",
@@ -75,14 +46,14 @@ const deOverview: Record<string, TranslationEntry> = {
       "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
   },
   "page.overview.cashFlowSavings": {
-    message: "Ersparnisse",
+    message: "In Barmittel",
     description:
-      "Cash flow chart node for what the period's income left after its outflows",
+      "Cash flow chart destination for what the period took in (income, borrowing, sales) beyond what it paid out, which stays as cash on hand; not a ledger account, and not the same as income less spending",
   },
   "page.overview.cashFlowShortfall": {
-    message: "Fehlbetrag",
+    message: "Aus Barmitteln",
     description:
-      "Cash flow chart source for what the period spent beyond its inflows, drawn from earlier savings or credit; not a ledger account",
+      "Cash flow chart source for what the period paid out (spending, investing, repaying debt) beyond what came in, drawn from cash already on hand; not a ledger account",
   },
   "page.overview.chartUnitScope": {
     message:

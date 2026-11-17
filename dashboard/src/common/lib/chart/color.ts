@@ -315,3 +315,78 @@ export const getChartColors = (): string[] => {
       getPrimaryColor(),
   );
 };
+
+/**
+ * --chart-N series numbers in the order a categorical chart (pie slices,
+ * unrelated series) should use them: the brand first, every neighbour at
+ * least ~70° apart on the hue wheel, and --chart-8 — the loss red — last, so
+ * a chart with eight categories or fewer never paints a holding in the color
+ * reserved for losses.
+ */
+const CATEGORICAL_CHART_ORDER = [1, 7, 5, 6, 4, 3, 9, 2, 8] as const;
+
+/**
+ * Static hex values of --chart-1..9 for each theme. ECharts themes are
+ * registered once, before a chart exists and independent of the active
+ * theme, so they cannot read the CSS variables; these mirror style.css and a
+ * test holds them to it.
+ */
+export const CHART_PALETTE = {
+  light: [
+    "#2b7e00",
+    "#008455",
+    "#a46e00",
+    "#ad36a7",
+    "#c25500",
+    "#007f7f",
+    "#426ec2",
+    "#d40924",
+    "#b14f69",
+  ],
+  dark: [
+    "#5fc535",
+    "#00bb85",
+    "#dba341",
+    "#e068d8",
+    "#f3813f",
+    "#00afaf",
+    "#719def",
+    "#f94144",
+    "#f07f9a",
+  ],
+} as const;
+
+/** Reorder a --chart-1..9 list into categorical order. */
+export function toCategoricalOrder(colors: readonly string[]): string[] {
+  return CATEGORICAL_CHART_ORDER.map((series) => colors[series - 1]);
+}
+
+/**
+ * The categorical series color at `index` as a CSS value. For DOM swatches
+ * beside a chart: it follows the theme without JavaScript and renders the
+ * same on the server, where the tokens cannot be read.
+ */
+export const categoricalChartVar = (index: number): string =>
+  `var(--chart-${CATEGORICAL_CHART_ORDER[index % CATEGORICAL_CHART_ORDER.length]})`;
+
+/**
+ * The chart series colors in categorical order, for a canvas whose slices or
+ * series are unrelated categories. Taken from the theme the app has resolved
+ * rather than read from the CSS variables: on a live theme switch a chart
+ * re-renders before the `dark` class lands, and read colors would be the old
+ * theme's. The same category keeps its hue in light and dark.
+ */
+export const getCategoricalChartColors = (isDark: boolean): string[] =>
+  toCategoricalOrder(CHART_PALETTE[isDark ? "dark" : "light"]);
+
+/**
+ * The two money-movement roles, shared by every overview chart and card:
+ * money in is --chart-2 (sea green) and money out --chart-5 (orange), the
+ * same colors the cash-flow Sankey gives income and spending.
+ */
+export const getMoneyFlowColors = (
+  isDark: boolean,
+): { income: string; expenses: string } => {
+  const palette = CHART_PALETTE[isDark ? "dark" : "light"];
+  return { income: palette[1], expenses: palette[4] };
+};

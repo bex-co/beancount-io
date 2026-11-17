@@ -29,10 +29,6 @@ const jaReportsShared = {
     message: "収入対費用",
     description: "Title for income vs expenses chart",
   },
-  "page.reports.incomeVsExpensesDescription": {
-    message: "選択した期間の各インターバルの総収入と費用を比較する棒グラフ。",
-    description: "Description for income vs expenses chart",
-  },
 };
 
 const jaReports = {
