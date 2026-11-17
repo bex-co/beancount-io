@@ -12,6 +12,11 @@ type Query {
   deploymentInfo: DeploymentInfoResponse!
 
   """
+  Whether the signed-in account can sign in through the configured OIDC provider.
+  """
+  oidcLinked: Boolean!
+
+  """
   Describe the CLI authentication request a user code names, so the consent screen can show who is asking before anyone approves.
   """
   getCliAuthRequest(userCode: String!): GetCliAuthRequestResponse!
@@ -359,6 +364,11 @@ type DeploymentInfoResponse {
   Whether signUp would be accepted. False only on a self-hosted deployment that already has an account; the sign-up page is not offered then.
   """
   signUpOpen: Boolean!
+
+  """
+  The OIDC provider's name for the sign-in button, or null when OIDC sign-in is off.
+  """
+  oidcProviderName: String
 }
 
 type GetCliAuthRequestResponse {
@@ -1413,6 +1423,16 @@ type ApiKeyType {
 }
 
 type Mutation {
+  """
+  A short-lived URL that links the configured OIDC provider to the signed-in account. Open it in the browser.
+  """
+  createOidcLinkUrl(next: String): String!
+
+  """
+  Stop signing in to this account through the configured OIDC provider. Needs a password on the account.
+  """
+  unlinkOidc: Boolean!
+
   """delete user account and its associated data"""
   deleteAccount: Boolean!
   updateUsername(username: String!): UserProfileResponse!

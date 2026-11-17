@@ -129,7 +129,20 @@ query DeploymentInfo {
   deploymentInfo {
     selfHost
     signUpOpen
+    oidcProviderName
   }
+}
+
+query OidcLinked {
+  oidcLinked
+}
+
+mutation CreateOidcLinkUrl($next: String) {
+  createOidcLinkUrl(next: $next)
+}
+
+mutation UnlinkOidc {
+  unlinkOidc
 }
 
 mutation SignUp(

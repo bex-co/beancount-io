@@ -364,6 +364,63 @@ const bgAuth: Record<string, TranslationEntry> = {
     message: "Вход",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Вход с {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Вече има акаунт с този имейл. Влезте с паролата си и го свържете от Настройки.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Доставчикът за вход не е потвърдил имейла ви.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Този акаунт е блокиран.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Този вход вече е свързан с друг акаунт.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Този акаунт вече е свързан с друг вход.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "Входът не бе успешен. Опитайте отново.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Акаунтът ви е свързан. Можете да влизате с {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Свържете акаунта си в {name}, за да влизате с него.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Свързване",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Прекратяване на връзката",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      "Акаунтът ви няма парола. Задайте такава чрез „Забравена парола“, преди да прекратите връзката.",
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Влезте в своя акаунт Beancount",
     description: "Login page subtitle",

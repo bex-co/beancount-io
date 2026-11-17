@@ -366,6 +366,63 @@ const deAuth: Record<string, TranslationEntry> = {
     message: "Anmelden",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Mit {name} anmelden",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Diese E-Mail gehört bereits zu einem Konto. Melde dich mit deinem Passwort an und verknüpfe es dann in den Einstellungen.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Dein Anmeldeanbieter hat deine E-Mail nicht bestätigt.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Dieses Konto ist gesperrt.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Diese Anmeldung ist bereits mit einem anderen Konto verknüpft.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Dieses Konto ist bereits mit einer anderen Anmeldung verknüpft.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Dein Konto ist verknüpft. Du kannst dich mit {name} anmelden.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Verknüpfe dein {name}-Konto, um dich damit anzumelden.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Verknüpfen",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Trennen",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      "Dein Konto hat kein Passwort. Lege über „Passwort vergessen“ eines fest, bevor du trennst.",
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Melden Sie sich bei Ihrem Beancount-Konto an",
     description: "Login page subtitle",

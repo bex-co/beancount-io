@@ -368,6 +368,63 @@ const frAuth: Record<string, TranslationEntry> = {
     message: "Se connecter",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Se connecter avec {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Un compte utilise déjà cet e-mail. Connectez-vous avec votre mot de passe, puis liez-le dans les Paramètres.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Votre fournisseur de connexion n'a pas vérifié votre e-mail.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Ce compte est bloqué.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Cette connexion est déjà liée à un autre compte.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Ce compte est déjà associé à une autre connexion.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "La connexion a échoué. Veuillez réessayer.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Votre compte est lié. Vous pouvez vous connecter avec {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Liez votre compte {name} pour vous connecter avec.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Lier",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Dissocier",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      "Votre compte n'a pas de mot de passe. Définissez-en un via « Mot de passe oublié » avant de dissocier.",
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Connectez-vous à votre compte Beancount",
     description: "Login page subtitle",

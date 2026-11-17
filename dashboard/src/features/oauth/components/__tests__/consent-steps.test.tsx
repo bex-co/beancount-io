@@ -21,6 +21,10 @@ const state = vi.hoisted(() => ({
   otpFormProps: null as Record<string, unknown> | null,
 }));
 
+vi.mock("@tanstack/react-router", () => ({
+  useLocation: () => ({ href: "/oauth/consent?uid=abc" }),
+}));
+
 vi.mock("@apollo/client/react", () => ({
   useApolloClient: () => ({ resetStore: state.resetStore }),
 }));
@@ -153,6 +157,18 @@ describe("ConsentLoginStep", () => {
       expect(state.loginFormProps?.["showSignUpLink"]).toBe(signUpOpen);
     },
   );
+
+  it("returns provider sign-in to the consent page", () => {
+    render(
+      <ConsentLoginStep
+        onSuccess={vi.fn()}
+        onForgotPasswordClick={vi.fn()}
+        onRegisterClick={vi.fn()}
+        titleKey="auth.oauthSignInToContinue"
+      />,
+    );
+    expect(state.loginFormProps?.["oidcNext"]).toBe("/oauth/consent?uid=abc");
+  });
 });
 
 describe("ConsentRegisterStep", () => {

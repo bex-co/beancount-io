@@ -12,6 +12,8 @@ import { Token } from "@/common/types/token";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
 import { postLegacyMobileAuthToken } from "@/common/providers/react-native-bridge-provider/legacy-auth-bridge";
+import { getSafeRedirectPath } from "@/common/lib/auth/auth";
+import { hardNavigate } from "@/common/lib/navigation/hard-navigate";
 
 interface AuthWithOneTimeTokenProps {
   oneTimeToken: string;
@@ -48,8 +50,11 @@ const AuthWithOneTimeToken = ({
         postLegacyMobileAuthToken(token.accessToken, "one_time_token");
       }
 
-      if (redirectTo) {
-        await navigate({ to: redirectTo });
+      // It may carry a query or target a cross-app page this router has no
+      // route for, so navigate the document.
+      const next = getSafeRedirectPath(redirectTo);
+      if (next) {
+        hardNavigate(next);
         return;
       }
 

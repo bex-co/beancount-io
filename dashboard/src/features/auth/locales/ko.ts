@@ -280,6 +280,63 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "로그인",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "{name}(으)로 로그인",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "이 이메일을 사용하는 계정이 이미 있습니다. 비밀번호로 로그인한 후 설정에서 연결하세요.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "로그인 제공자가 이메일을 인증하지 않았습니다.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "이 계정은 차단되었습니다.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "이 로그인은 이미 다른 계정에 연결되어 있습니다.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "이 계정은 이미 다른 로그인에 연결되어 있습니다.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "로그인에 실패했습니다. 다시 시도해 주세요.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "계정이 연결되었습니다. {name}(으)로 로그인할 수 있습니다.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "{name} 계정을 연결하면 그 계정으로 로그인할 수 있습니다.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "연결",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "연결 해제",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      '계정에 비밀번호가 없습니다. 연결을 해제하기 전에 "비밀번호 찾기"로 비밀번호를 설정하세요.',
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signUp": {
     message: "회원가입",
     description: "Button label for sign up action",

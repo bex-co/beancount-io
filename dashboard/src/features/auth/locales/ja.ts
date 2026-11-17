@@ -282,6 +282,63 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "サインイン",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "{name} でサインイン",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "このメールアドレスは既に別のアカウントで使われています。パスワードでサインインしてから、設定で連携してください。",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "サインインプロバイダーがメールアドレスを確認していません。",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "このアカウントはブロックされています。",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "このサインインは既に別のアカウントに連携されています。",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "このアカウントは別のサインインにすでにリンクされています。",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "サインインに失敗しました。もう一度お試しください。",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "アカウントは連携済みです。{name} でサインインできます。",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "{name} アカウントを連携すると、それでサインインできます。",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "連携",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "連携を解除",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      "アカウントにパスワードがありません。連携を解除する前に「パスワードをお忘れの場合」から設定してください。",
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signUp": {
     message: "サインアップ",
     description: "Button label for sign up action",

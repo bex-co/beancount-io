@@ -30,6 +30,7 @@ vi.mock("../user-profile-section", () => ({
 }));
 vi.mock("../appearance-section", () => ({ AppearanceSection: () => null }));
 vi.mock("../session-section", () => ({ SessionSection: () => null }));
+vi.mock("../oidc-section", () => ({ OidcSection: () => null }));
 vi.mock("../billing-summary-link", () => ({ BillingSummaryLink: () => null }));
 
 /** A failed General Settings read offers an in-place retry (w4/257). */

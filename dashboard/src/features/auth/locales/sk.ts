@@ -363,6 +363,63 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "Prihlásiť",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Prihlásiť sa cez {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Tento e-mail už používa iný účet. Prihláste sa heslom a potom ho prepojte v Nastaveniach.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Váš poskytovateľ prihlásenia neoveril váš e-mail.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Tento účet je zablokovaný.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Toto prihlásenie je už prepojené s iným účtom.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Tento účet je už prepojený s iným prihlásením.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "Prihlásenie zlyhalo. Skúste to znova.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Váš účet je prepojený. Môžete sa prihlásiť cez {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Prepojte svoj účet {name}, aby ste sa ním mohli prihlásiť.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Prepojiť",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Zrušiť prepojenie",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      "Váš účet nemá heslo. Pred zrušením prepojenia si ho nastavte cez „Zabudnuté heslo“.",
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Prihláste sa do svojho účtu Beancount",
     description: "Login page subtitle",

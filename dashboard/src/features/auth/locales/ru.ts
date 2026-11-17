@@ -366,6 +366,63 @@ const ruAuth: Record<string, TranslationEntry> = {
     message: "Войти",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Войти через {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Аккаунт с этим адресом уже есть. Войдите с паролем, затем привяжите его в настройках.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Ваш провайдер входа не подтвердил адрес почты.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Этот аккаунт заблокирован.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Этот вход уже привязан к другому аккаунту.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Этот аккаунт уже связан с другим входом.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "Не удалось войти. Попробуйте ещё раз.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Аккаунт привязан. Вы можете входить через {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Привяжите аккаунт {name}, чтобы входить через него.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Привязать",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Отвязать",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      "У аккаунта нет пароля. Задайте его через «Забыли пароль», прежде чем отвязывать.",
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Войдите в свой аккаунт Beancount",
     description: "Login page subtitle",

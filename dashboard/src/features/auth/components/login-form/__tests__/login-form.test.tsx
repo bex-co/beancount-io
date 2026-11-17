@@ -19,6 +19,14 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
+const deployment = vi.hoisted(() => ({
+  oidcProviderName: null as string | null,
+}));
+
+vi.mock("@/common/hooks/use-deployment-info", () => ({
+  useDeploymentInfo: () => deployment,
+}));
+
 const defaultProps = {
   onSubmit: vi.fn().mockResolvedValue(undefined),
   isLoading: false,
@@ -67,5 +75,26 @@ describe("LoginForm sign-up link", () => {
     expect(
       screen.getByRole("button", { name: /sign in/i }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("LoginForm provider sign-in", () => {
+  it("offers no provider button when none is set up", () => {
+    deployment.oidcProviderName = null;
+    render(<LoginForm {...defaultProps} />);
+    expect(
+      screen.queryByRole("link", { name: /sign in with/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("starts provider sign-in and returns to the given path", () => {
+    deployment.oidcProviderName = "Keycloak";
+    render(<LoginForm {...defaultProps} oidcNext="/ledger?x=1" />);
+    expect(
+      screen.getByRole("link", { name: "Sign in with Keycloak" }),
+    ).toHaveAttribute(
+      "href",
+      "/api-gateway/auth/oidc/start?next=%2Fledger%3Fx%3D1",
+    );
   });
 });

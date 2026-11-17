@@ -22,6 +22,10 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
+vi.mock("@/common/hooks/use-deployment-info", () => ({
+  useDeploymentInfo: () => ({ oidcProviderName: null }),
+}));
+
 const loginProps = {
   onSubmit: vi.fn(),
   isLoading: false,

@@ -283,6 +283,63 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "Sign In",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Sign in with {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "An account already uses this email. Sign in with your password, then link it in Settings.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Your sign-in provider has not verified your email.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "This account is blocked.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "This sign-in is already linked to another account.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "This account is already linked to a different sign-in.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "Sign-in failed. Please try again.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Your account is linked. You can sign in with {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Link your {name} account to sign in with it.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Link",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Unlink",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      'Your account has no password. Set one with "Forgot password" before you unlink.',
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signUp": {
     message: "Sign Up",
     description: "Button label for sign up action",

@@ -368,6 +368,63 @@ const caAuth: Record<string, TranslationEntry> = {
     message: "Iniciar sessió",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Inicia la sessió amb {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Ja hi ha un compte amb aquest correu. Inicia la sessió amb la contrasenya i enllaça'l a Configuració.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "El teu proveïdor d'inici de sessió no ha verificat el correu.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Aquest compte està bloquejat.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Aquest inici de sessió ja està enllaçat a un altre compte.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Aquest compte ja està vinculat a un altre inici de sessió.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "No s'ha pogut iniciar la sessió. Torna-ho a provar.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "El compte està enllaçat. Pots iniciar la sessió amb {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Enllaça el teu compte de {name} per iniciar la sessió amb ell.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Enllaça",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Desenllaça",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      'El compte no té contrasenya. Defineix-ne una amb "He oblidat la contrasenya" abans de desenllaçar.',
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Inicia sessió al teu compte de Beancount",
     description: "Login page subtitle",

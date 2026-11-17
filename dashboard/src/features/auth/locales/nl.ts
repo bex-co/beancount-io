@@ -364,6 +364,63 @@ const nlAuth: Record<string, TranslationEntry> = {
     message: "Inloggen",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Inloggen met {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Er is al een account met dit e-mailadres. Log in met je wachtwoord en koppel het daarna in Instellingen.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Je inlogprovider heeft je e-mailadres niet bevestigd.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Dit account is geblokkeerd.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Deze login is al gekoppeld aan een ander account.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Dit account is al gekoppeld aan een andere aanmelding.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "Inloggen mislukt. Probeer het opnieuw.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Je account is gekoppeld. Je kunt inloggen met {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Koppel je {name}-account om ermee in te loggen.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Koppelen",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Ontkoppelen",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      'Je account heeft geen wachtwoord. Stel er een in via "Wachtwoord vergeten" voordat je ontkoppelt.',
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Log in op uw Beancount-account",
     description: "Login page subtitle",
