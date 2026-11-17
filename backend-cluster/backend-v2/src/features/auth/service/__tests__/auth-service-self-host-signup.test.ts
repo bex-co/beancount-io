@@ -26,6 +26,10 @@ function createService(existingAccounts = 0) {
   let accounts = existingAccounts;
   const user = {
     getByMail: jest.fn().mockResolvedValue(null),
+    getById: jest.fn(async (_db: unknown, id: string) => ({
+      id,
+      isBlocked: true,
+    })),
     getUserByUsername: jest.fn().mockResolvedValue(null),
     countUsers: jest.fn(async () => accounts),
     // The account exists once create resolves, a turn later than it began.
@@ -174,5 +178,47 @@ describe("registerUser on a self-host", () => {
 
     expect(user.create).toHaveBeenCalledTimes(2);
     expect(user.countUsers).not.toHaveBeenCalled();
+  });
+});
+
+// What the managed service says and sends must not change with ADR029: only a
+// self-hosted stack names its operator instead of beancount.io.
+describe("what an account is told and sent", () => {
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
+
+  it("on the managed service: the welcome mail links beancount.io", async () => {
+    delete process.env.SELF_HOST;
+    const { service, sendgrid } = createService(3);
+
+    await register(service, "managed@example.com");
+    await settle();
+
+    expect(sendgrid.sendMail).toHaveBeenCalledTimes(1);
+    const mail = sendgrid.sendMail.mock.calls[0][0];
+    expect(mail.to).toBe("managed@example.com");
+    expect(mail.subject).toBe("Welcome to Beancount.io!");
+    expect(mail.text).toContain("https://beancount.io/ledger");
+  });
+
+  it("on the managed service: a blocked account is sent to beancount.io/tg", async () => {
+    delete process.env.SELF_HOST;
+    const { service } = createService(3);
+
+    await expect(service.refreshToken("user-1", "t")).rejects.toThrow(
+      "User is banned. If you need help, please contact https://beancount.io/tg.",
+    );
+  });
+
+  it("on a self-host that cannot send mail: no welcome mail, and the operator is named", async () => {
+    process.env.SELF_HOST = "true";
+    const { service, sendgrid } = createService(0);
+
+    await register(service);
+    await settle();
+    expect(sendgrid.sendMail).not.toHaveBeenCalled();
+
+    await expect(service.refreshToken("user-1", "t")).rejects.toThrow(
+      "contact the person who runs this server",
+    );
   });
 });
