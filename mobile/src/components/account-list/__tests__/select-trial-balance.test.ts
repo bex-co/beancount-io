@@ -777,9 +777,16 @@ describe("selectTrialBalanceCategories with a very large chart", () => {
   });
 
   it("builds in well under the quadratic time it took", () => {
-    const start = Date.now();
-    selectTrialBalanceCategories("USD", trial, names);
-    // Several hundred ms on Node before; a generous bound for a loaded machine.
-    expect(Date.now() - start < 150).toBe(true);
+    // Scheduling and GC jitter under parallel-worker load only ever add
+    // time, never subtract it, so the minimum across repeats estimates the
+    // true build cost: a quadratic regression (several hundred ms at 5,000
+    // accounts, w21/976) still fails this bound, while one slow slice no
+    // longer flakes it the way a single wall-clock sample did.
+    const samples = Array.from({ length: 5 }, () => {
+      const start = Date.now();
+      selectTrialBalanceCategories("USD", trial, names);
+      return Date.now() - start;
+    });
+    expect(Math.min(...samples) < 150).toBe(true);
   });
 });
