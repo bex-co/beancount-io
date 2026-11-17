@@ -55,6 +55,14 @@ A layer is a finding only when **all** hold:
    interfaces are a stated convention, never a finding. Same for seams that
    exist so tests can double them, when the tests actually do.
 3. No evidence of a planned second implementation.
+4. **It costs something** (the contract's value bar): a change that has to be
+   made in two places, behavior a reader cannot find without chasing the
+   indirection, or a seam that has let two callers diverge. A one-line alias
+   or a re-export nobody trips over is not a finding.
+
+When two callers reach the same thing through different layers, compare what
+each ends up doing. A difference is a drift bug: prove it with a failing test
+and fix it first.
 
 ### 4. Fix
 

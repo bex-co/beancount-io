@@ -16,9 +16,11 @@ metadata: {"internal": true}
 
 Usage: `/rt-dup-unifier [package-or-path]`
 
-Find two (or more) live copies of the same logic inside one package, prove they
-are semantically the same, keep the best one, repoint all callers, delete the
-rest, and ship via `/ship`.
+Find two (or more) live copies of the same logic inside one package. Copies
+that have drifted apart are the finding this routine exists for: prove which
+side is wrong, fix it, and leave one copy. Copies that are still the same are
+merged when a missed edit to one of them would be a bug. Either way keep the
+best one, repoint all callers, delete the rest, and ship via `/ship`.
 
 ## Contract
 
@@ -45,9 +47,21 @@ dependency: `npx --yes jscpd --min-tokens 50 <pkg>/src --output .internal/jscpd/
 
 ### 3. Prove it
 
-- Read every copy **end to end** — name similarity is not proof.
-- Semantics must be identical, or differ only in ways trivially covered by a
-  parameter that keeps the survivor simpler than the sum of the copies.
+- Read every copy **end to end** — name similarity is not proof — and diff
+  them.
+- **Copies that differ are the best finding, not a reason to skip.** Either
+  the difference is deliberate (say why, and skip) or the copies drifted: one
+  gained a fix, a guard or a case the other never did. That is usually a live
+  bug — an export with its own serializer that missed the escaping the shared
+  one gained; two modules registering the same global name, where the last to
+  load wins. Write the test that fails on the stale copy, then unify onto the
+  correct behavior and ship it as a `fix`. The contract's rule for a proven
+  bug applies: fix it here, do not hand it to `rt-logic-bugfixer`.
+- **Copies that are identical** must clear the contract's value bar: they
+  have to change together, and a missed edit would be a bug (a retry or
+  idempotency rule, a validation, a parser). A parameter that covers a
+  trivial difference is fine when the survivor stays simpler than the sum of
+  the copies.
 - The intended survivor is test-covered for the behavior all callers rely on;
   if not, write those tests first (they are part of the finding).
 
@@ -70,8 +84,9 @@ Compose `/ship` for this one unification. Loop within budget.
 ## What NOT to do
 
 - **Never merge across packages.** Packages are independent by repo rule (no
-  new cross-package imports). Cross-package duplication goes in the summary as
-  a report, nothing more.
+  new cross-package imports). Cross-package copies can still drift: compare
+  them, fix a proven difference inside the package that is wrong, and record
+  the pair in the ledger.
 - If unification requires an abstraction more complex than either original
   (config objects, strategy callbacks, mode flags), skip the finding — a
   slightly duplicated simple thing beats a unified complicated one.

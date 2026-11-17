@@ -58,6 +58,12 @@ Resolve scope per the contract.
 
 ### 3. Prove it
 
+A crossed boundary matters most when it has let two copies of a rule exist: a
+handler that re-does what a service does, a client that re-checks what the
+server decides. Compare the two on their edge cases. Where they disagree,
+that is a user-visible bug: prove it and fix it first. A move that only
+tidies the import graph must still clear the contract's value bar.
+
 Read the violating import in context and quote the stated rule it breaks.
 Confirm the violation is real usage, not a type-only import a rule permits.
 

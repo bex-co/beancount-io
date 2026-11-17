@@ -44,7 +44,14 @@ Find hotspots worth the risk:
   of the same intermediate value.
 
 Pick **one unit** (a function or a small cluster). Convoluted-but-working code
-nobody touches is a weak finding; convoluted code with churn is a strong one.
+nobody touches does not clear the contract's value bar; convoluted code with
+churn does.
+
+While reading it, look for the bug its shape hides; that is worth more than
+the tidy-up. The shapes that hide one: state derived twice that can disagree,
+a default branch that silently takes cases nobody listed, a caller's condition
+re-derived slightly differently, lists that must agree but are written out
+more than once, a value copied after the step that changes it.
 
 ### 3. Prove it (pin first)
 
@@ -75,8 +82,11 @@ Compose `/ship` for this one unit. Loop within budget.
 ## What NOT to do
 
 - **Never fold a behavior change into the refactor.** A bug discovered
-  mid-simplify is a separate `rt-logic-bugfixer` finding — note it, finish
-  the behavior-preserving simplification, report the bug in the summary.
+  mid-simplify is its own finding and comes first: prove it with a failing
+  test and ship the fix by itself (contract, Symptom → owner). Then simplify,
+  if the unit still clears the value bar.
+- Don't ship helpers that are each called once, renamed locals or named
+  conditions as the whole finding: that is below the value bar.
 - Don't remove indirection layers (single-impl interfaces, passthrough
   wrappers) — that is `rt-abstraction-improver`'s job.
 - Don't "simplify" by deleting handling for edge cases you can't prove

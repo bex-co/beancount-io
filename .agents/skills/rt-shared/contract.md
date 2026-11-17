@@ -31,6 +31,42 @@ Never fix on suspicion. A detector hit, a grep match, or a hunch is a
 still-green sabotaged test, a reference sweep that comes up empty, …). No proof
 → no fix; report the candidate as skipped instead.
 
+## Value bar (the tidy routines)
+
+`rt-dup-unifier`, `rt-logic-simplifier`, `rt-abstraction-improver` and
+`rt-abstraction-police` exist to find the bugs that drifted copies, hidden
+state and crossed boundaries cause, and to remove the hazards that cause them.
+Tidier code is a by-product, not a finding. On top of the proof standard, a
+finding counts only when it:
+
+- fixes or prevents a concrete bug, or
+- removes a real hazard: copies that must change together and can drift
+  apart, or a structure that has already caused a bug, or
+- makes a unit that is genuinely hard to change clearly safer to change.
+
+These never count on their own: a rename, removing an alias, binding a
+repeated expression to a local, naming a condition, extracting a helper that
+is called once, moving code without reducing coupling, deduplicating a few
+stable lines. That a change provably preserves behavior is what makes it
+safe, not what makes it worth shipping. Spend the run searching for a finding
+that clears this bar instead of shipping the first provable one. Zero findings
+beats a cosmetic one.
+
+## Ledger
+
+`.agents/skills/rt-shared/ledger.md` carries findings from one run to the
+next, one section per routine. Read your routine's section before
+discovering: finish an open **Deferred** entry before hunting new ones, and
+do not re-examine a **Skipped** entry unless the code it cites has changed.
+
+Update it in the same commit as the finding it belongs to: remove the entries
+this run fixed, add what it deferred, and add what it examined and skipped
+when another run would otherwise repeat the work. One line each,
+`- YYYY-MM-DD <path or symbol> — <finding>; <why deferred or skipped>`, newest
+first, at most 20 entries per routine (drop the oldest Skipped first). A run
+that ships no code but has Deferred entries to record, its own or another
+routine's, commits the ledger alone (`chore(skills): record rt findings`).
+
 ## Verify gates (never ship your own red)
 
 Run the checks the change touches and make them pass before shipping — always
@@ -64,8 +100,13 @@ finding until `/ship` reports the shipped HEAD SHA.
 
 Default budget: **3 shipped findings per invocation**, then stop and summarize:
 
-- **shipped** — SHA + one-liner each
-- **found but skipped** — with the reason (no proof, STOP condition, out of budget)
+- **candidates** — every candidate you examined, one line each (file:line,
+  what it is, verdict). List them all, the ones you dropped at a glance
+  included: this list is how the run's search is judged
+- **shipped** — SHA + what it changes for a user or maintainer (not "cleaner")
+- **found but skipped** — with the reason (no proof, below the value bar, STOP
+  condition, out of budget)
+- **handed off** — what went into the ledger, and under which routine
 - **nothing found** — say so plainly; an empty pass is a valid result
 
 ## Universal STOPs
@@ -89,8 +130,17 @@ Default budget: **3 shipped findings per invocation**, then stop and summarize:
 
 ## Symptom → owner
 
-When you find something outside your defect class, don't fix it — note it in
-the summary and defer to its owner:
+When you find something outside your defect class, never only mention it. The
+summary is not a handoff: nobody reads it after the run.
+
+- **A real bug you can prove** — behavior a user or caller can observe is
+  wrong, and a failing test shows it — is fixed in this run, whichever routine
+  owns the class. It is one finding with its own ship, its test included, and
+  it outranks this routine's own findings. `rt-logic-bugfixer`'s rules still
+  apply to it: the intent must be documented, and an ambiguous intent is a
+  STOP.
+- **Anything else** goes into the ledger under its owner's section as a
+  Deferred entry, so that routine's next run starts there:
 
 | Symptom | Owner |
 | --- | --- |

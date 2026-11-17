@@ -36,10 +36,17 @@ Resolve scope per the contract.
 
 ### 2. Discover
 
-Pick **one** tricky unit — the kinds this repo actually has: auth/session state
-machines, date and period arithmetic, amount sign conventions,
-dedup/fuzzy-match windows, pagination cursors, cache invalidation, balance
-computation. Then model it explicitly: list every state, transition, and edge
+Start with the ledger: a Deferred entry under `rt-logic-bugfixer` is a
+suspected bug another routine handed over, and it comes before a new hunt.
+
+Otherwise pick **one** tricky unit — the kinds this repo actually has:
+auth/session state machines, date and period arithmetic, amount sign
+conventions, dedup/fuzzy-match windows, pagination cursors, cache
+invalidation, balance computation. The richest kind is **two things that must
+agree**: a ranking and the rule its comment promises, a client-side check and
+the server rule it mirrors, an export and what the screen shows, a preview
+and the write it previews, the CLI engine and its mirrored frontend copy.
+Check the pair against each other on the edges. Then model it explicitly: list every state, transition, and edge
 (empty input, boundary dates, negative amounts, timezone/DST edges, off-by-one
 windows, concurrent transitions). From the model, derive candidate-breaking
 inputs.
