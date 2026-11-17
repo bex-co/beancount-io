@@ -19,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DirectiveType, type JournalTransaction } from "@/common/types/journal";
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
+import { formatSourceDecimal } from "@/common/lib/format/format-number";
 import { JournalTable } from "../journal-table";
 import en from "../../locales/en";
 import fa from "../../locales/fa";
@@ -117,6 +118,12 @@ function columnCell(table: HTMLElement, row: HTMLElement, name: string) {
   return within(row).getAllByRole("cell")[headers.indexOf(header)];
 }
 
+// Amounts read as the account page's period table writes them (w2/137); the
+// subject here is where they appear and that each stays isolated.
+function shown(language: "en" | "fa", number: string, currency: string) {
+  return `${formatSourceDecimal(number, true, language)} ${currency}`;
+}
+
 function amounts(container: HTMLElement) {
   return Array.from(container.querySelectorAll("bdi")).map((run) => {
     expect(run).toHaveAttribute("dir", "ltr");
@@ -153,10 +160,22 @@ describe("compact account-journal amounts", () => {
       const balance = balanceLabel.nextElementSibling as HTMLElement;
       expect(change.tagName).toBe("DD");
       expect(balance.tagName).toBe("DD");
-      expect(amounts(change)).toEqual(["-33.7100 USD", "12.3400 EUR"]);
-      expect(amounts(balance)).toEqual(["6377.230000 USD", "0.00000000 EUR"]);
-      expect(compact).not.toHaveTextContent("-0.00020000 BTC");
-      expect(compact).not.toHaveTextContent("4.2500 EUR");
+      const changeAmounts = [
+        shown(language, "-33.7100", "USD"),
+        shown(language, "12.3400", "EUR"),
+      ];
+      const balanceAmounts = [
+        shown(language, "6377.230000", "USD"),
+        shown(language, "0.00000000", "EUR"),
+      ];
+      const unitAmounts = [
+        shown(language, "-0.00020000", "BTC"),
+        shown(language, "4.2500", "EUR"),
+      ];
+      expect(amounts(change)).toEqual(changeAmounts);
+      expect(amounts(balance)).toEqual(balanceAmounts);
+      for (const unit of unitAmounts)
+        expect(compact).not.toHaveTextContent(unit);
       expect(changeLabel.closest("bdi")).toBeNull();
       expect(changeLabel.closest("[dir]")).toHaveAttribute(
         "dir",
@@ -182,12 +201,9 @@ describe("compact account-journal amounts", () => {
       // jsdom exposes both branches; native compiled-CSS checks establish which is visible.
       for (const cell of [unitsColumn, changeColumn, balanceColumn])
         expect(cell).toHaveClass("hidden", "sm:table-cell");
-      expect(amounts(unitsColumn)).toEqual(["-0.00020000 BTC", "4.2500 EUR"]);
-      expect(amounts(changeColumn)).toEqual(["-33.7100 USD", "12.3400 EUR"]);
-      expect(amounts(balanceColumn)).toEqual([
-        "6377.230000 USD",
-        "0.00000000 EUR",
-      ]);
+      expect(amounts(unitsColumn)).toEqual(unitAmounts);
+      expect(amounts(changeColumn)).toEqual(changeAmounts);
+      expect(amounts(balanceColumn)).toEqual(balanceAmounts);
 
       const date = within(row).getByText("2026-10-15", { exact: true });
       await user.click(date);
@@ -237,7 +253,7 @@ describe("compact account-journal amounts", () => {
       within(table).getAllByRole("button", { expanded: false }),
     ).toHaveLength(2);
     expect(
-      within(table).queryByText("6377.230000 USD"),
+      within(table).queryByText(shown("en", "6377.230000", "USD")),
     ).not.toBeInTheDocument();
   });
 });

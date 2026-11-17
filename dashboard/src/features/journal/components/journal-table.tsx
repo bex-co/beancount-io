@@ -8,7 +8,6 @@ import {
 import { formatDateISO } from "@/common/lib/format/format-date-iso";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { JournalDescription } from "./journal-description";
-import { formatAmountWithCurrency } from "./journal-description/utils";
 import { JournalMetadata } from "./journal-metadata";
 import { displayableMetadataEntries } from "./journal-metadata-entries";
 import { JournalPostings } from "./journal-postings";
@@ -26,7 +25,7 @@ import {
   TableRow,
 } from "@/common/components/ui/table";
 import { deriveAccountUnits } from "@/features/journal/lib/derive-account-units";
-import { Amount } from "@/common/components/amount";
+import { LedgerAmount } from "@/common/components/ledger-amount";
 
 export type JournalTableItem = {
   directive: JournalDirectiveType;
@@ -64,9 +63,7 @@ function JournalAmounts({ balance }: JournalAmountsProps) {
     <>
       {Object.entries(balance).map(([currency, amount]) => (
         <span key={currency} className="block">
-          <Amount>
-            {formatAmountWithCurrency({ number: amount, currency })}
-          </Amount>
+          <LedgerAmount number={amount} currency={currency} />
         </span>
       ))}
     </>

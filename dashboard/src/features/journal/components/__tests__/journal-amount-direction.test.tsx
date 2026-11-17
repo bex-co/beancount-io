@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DirectiveType, type JournalTransaction } from "@/common/types/journal";
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
+import { formatSourceDecimal } from "@/common/lib/format/format-number";
 import { JournalTable, type JournalTableItem } from "../journal-table";
 import fa from "../../locales/fa";
 
@@ -94,16 +95,22 @@ describe("journal financial amounts under RTL layout", () => {
       expect(header).toHaveAttribute("scope", "col");
       return within(row).getAllByRole("cell")[headers.indexOf(header)];
     };
+    // Persian digits, as the period table above writes them (w2/137); the
+    // subject here is their isolation.
+    const persian = (number: string, currency: string) =>
+      `${formatSourceDecimal(number, true, "fa")} ${currency}`;
     const units = cellFor(fa["journal.unitsHeader"].message);
-    expectIsolatedAmount(units, "-0.00020000 BTC");
-    expectIsolatedAmount(units, "4 VEA");
-    expect(within(units).queryByText("33.71 USD")).not.toBeInTheDocument();
+    expectIsolatedAmount(units, persian("-0.00020000", "BTC"));
+    expectIsolatedAmount(units, persian("4", "VEA"));
+    expect(
+      within(units).queryByText(persian("33.71", "USD")),
+    ).not.toBeInTheDocument();
     const change = cellFor(fa["journal.change"].message);
-    expectIsolatedAmount(change, "-33.7100 USD");
-    expectIsolatedAmount(change, "12.3400 EUR");
+    expectIsolatedAmount(change, persian("-33.7100", "USD"));
+    expectIsolatedAmount(change, persian("12.3400", "EUR"));
     const balance = cellFor(fa["journal.balanceHeader"].message);
-    expectIsolatedAmount(balance, "-98.7654321 USD");
-    expectIsolatedAmount(balance, "0.00000000 EUR");
+    expectIsolatedAmount(balance, persian("-98.7654321", "USD"));
+    expectIsolatedAmount(balance, persian("0.00000000", "EUR"));
     expect(row).not.toHaveAttribute("dir", "ltr");
     const payee = within(row).getByText("رستوران", { exact: true });
     expect(payee.closest("bdi")).toBeNull();

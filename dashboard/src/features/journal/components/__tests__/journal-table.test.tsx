@@ -782,10 +782,10 @@ describe("JournalTable", () => {
         ),
       ).not.toBeInTheDocument();
       expect(cellForHeader(row as HTMLElement, "Change")).toHaveTextContent(
-        "2433.36 USD",
+        "2,433.36 USD",
       );
       expect(cellForHeader(row as HTMLElement, "Balance")).toHaveTextContent(
-        "4559.80 USD",
+        "4,559.80 USD",
       );
 
       const postingsHeaders = within(table).getAllByRole("columnheader", {
