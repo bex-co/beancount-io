@@ -526,26 +526,17 @@ function withoutCounterSign(series: readonly SeriesPoint[]): SeriesPoint[] {
 }
 
 /**
- * Detect a steady cadence in `series`.
- *
- * Same-day duplicates collapse for gap math (a 0-day gap must not poison the
- * median) but still contribute to per-currency amount medians. Returns null
- * for short, unclassifiable, or high-dispersion series.
+ * Past events bucketed by day, in ascending day order, plus the earliest
+ * pre-entered future event.
  */
-export function detectRecurrence(
-  allPoints: readonly SeriesPoint[],
-  today: string,
-): RecurrenceVerdict | null {
-  const series = withoutCounterSign(allPoints);
-  if (series.length < MIN_EVENT_DATES) {
-    return null;
-  }
-
-  const todayDay = parseLedgerDay(today);
-  if (todayDay === null) {
-    return null;
-  }
-
+function bucketEventDays(
+  series: readonly SeriesPoint[],
+  todayDay: number,
+): {
+  byDay: Map<number, SeriesPoint[]>;
+  eventDays: number[];
+  scheduledDay: number | null;
+} {
   // Only what has happened says how often it happens, when it last did, and
   // whether it is late; a pre-entered future event is the next one (w21/167).
   const byDay = new Map<number, SeriesPoint[]>();
@@ -568,20 +559,42 @@ export function detectRecurrence(
   }
 
   const eventDays = [...byDay.keys()].sort((a, b) => a - b);
-  if (eventDays.length < MIN_EVENT_DATES) {
-    return null;
-  }
+  return { byDay, eventDays, scheduledDay };
+}
 
-  const gaps: number[] = [];
-  for (let i = 1; i < eventDays.length; i++) {
-    gaps.push(eventDays[i]! - eventDays[i - 1]!);
+// The day of tolerance cannot tell such a bill from a biweekly one, so a
+// series with a 15 in it is twice a month only when it fits two days of the
+// month exactly: every payment on one of them (a short month's end counts
+// for a 31st: the bill of the last day), and each repeated. One payment a day off, or two payments
+// sharing a day across February, are what biweekly series look like (w21/799).
+function exactlyTwoDays(
+  eventDays: readonly number[],
+  found: SemiMonthly,
+): boolean {
+  const used = new Map<number, number>();
+  for (const day of eventDays.map(calendarDay)) {
+    const anchor = [found.first, found.second].find(
+      (candidate) =>
+        day.day === candidate ||
+        (candidate === 31 &&
+          day.day === daysInMonth(day.year, day.month) &&
+          candidate > day.day),
+    );
+    if (anchor === undefined) return false;
+    used.set(anchor, (used.get(anchor) ?? 0) + 1);
   }
+  return used.size === 2 && [...used.values()].every((count) => count >= 2);
+}
 
-  const medianGap = median(gaps);
-  if (medianGap === null || medianGap <= 0) {
-    return null;
-  }
-
+/**
+ * The bill's cadence and, for a twice-a-month bill, its two due days — or
+ * null when the gaps disperse too far or fit no cadence band.
+ */
+function classifyBillCadence(
+  eventDays: readonly number[],
+  gaps: readonly number[],
+  medianGap: number,
+): { cadence: Cadence; semiMonthly: SemiMonthly | null } | null {
   // Two stable days a month is its own cadence, not a biweekly one. Gaps of
   // 14 days throughout are biweekly: February is 28 days, so a short biweekly
   // series spanning it shares a day of the month between two payments and fit
@@ -594,34 +607,16 @@ export function detectRecurrence(
   // when it does not fit two days of the month the bill keeps.
   const nearBiweekly =
     gaps.length >= 3 && gaps.every((gap) => Math.abs(gap - 14) <= 1);
-  // The day of tolerance cannot tell such a bill from a biweekly one, so a
-  // series with a 15 in it is twice a month only when it fits two days of the
-  // month exactly: every payment on one of them (a short month's end counts
-  // for a 31st: the bill of the last day), and each repeated. One payment a day off, or two payments
-  // sharing a day across February, are what biweekly series look like (w21/799).
-  const exactlyTwoDays = (found: SemiMonthly): boolean => {
-    const used = new Map<number, number>();
-    for (const day of eventDays.map(calendarDay)) {
-      const anchor = [found.first, found.second].find(
-        (candidate) =>
-          day.day === candidate ||
-          (candidate === 31 &&
-            day.day === daysInMonth(day.year, day.month) &&
-            candidate > day.day),
-      );
-      if (anchor === undefined) return false;
-      used.set(anchor, (used.get(anchor) ?? 0) + 1);
-    }
-    return used.size === 2 && [...used.values()].every((count) => count >= 2);
-  };
   const candidate =
     nearBiweekly && gaps.includes(15) ? semiMonthlyDays(eventDays) : null;
   const twiceAMonth =
-    candidate !== null && exactlyTwoDays(candidate) ? candidate : null;
-  const steadyBiweekly = nearBiweekly && twiceAMonth === null;
-  const semiMonthly = steadyBiweekly
-    ? null
-    : (twiceAMonth ?? semiMonthlyDays(eventDays));
+    candidate !== null && exactlyTwoDays(eventDays, candidate)
+      ? candidate
+      : null;
+  const semiMonthly =
+    nearBiweekly && twiceAMonth === null
+      ? null
+      : (twiceAMonth ?? semiMonthlyDays(eventDays));
   if (!semiMonthly) {
     const dispersion = mad(gaps, medianGap) / medianGap;
     if (dispersion >= MAX_GAP_DISPERSION) {
@@ -633,7 +628,22 @@ export function detectRecurrence(
   if (!cadence) {
     return null;
   }
+  return { cadence, semiMonthly };
+}
 
+/**
+ * The bill's typical amount per currency, the currency it is paid in now,
+ * and whether any of them varies — or null when no charge names a currency
+ * or carries a usable amount.
+ */
+function typicalBillAmounts(
+  byDay: Map<number, SeriesPoint[]>,
+  eventDays: readonly number[],
+): {
+  typicalAmountByCurrency: Record<string, number>;
+  primaryCurrency: string;
+  isApproximate: boolean;
+} | null {
   // In date order, so the latest charges can be told from the old ones.
   const amountsByCurrency = new Map<string, number[]>();
   const chargeCurrencies: string[] = [];
@@ -706,12 +716,33 @@ export function detectRecurrence(
       approximate.add(currency);
     }
   }
-  const isApproximate = approximate.has(primaryCurrency);
 
   if (Object.keys(typicalAmountByCurrency).length === 0) {
     return null;
   }
+  return {
+    typicalAmountByCurrency,
+    primaryCurrency,
+    isApproximate: approximate.has(primaryCurrency),
+  };
+}
 
+/**
+ * The next expected day and whether the bill is late, overdue, or lapsed.
+ */
+function projectBillDue(
+  cadence: Cadence,
+  semiMonthly: SemiMonthly | null,
+  eventDays: readonly number[],
+  medianGap: number,
+  todayDay: number,
+  scheduledDay: number | null,
+): {
+  nextExpectedDay: number;
+  lastDay: number;
+  isOverdue: boolean;
+  isLapsed: boolean;
+} {
   const gapDays = Math.round(medianGap);
   const lastDay = eventDays[eventDays.length - 1]!;
   // A bill kept on one day of the month is due that day: the median of
@@ -732,16 +763,69 @@ export function detectRecurrence(
     todayDay >
       nextExpectedDay + Math.min(LAPSE_PERIODS * gapDays, MAX_LAPSE_DAYS);
   const isOverdue = isLate && !isLapsed;
+  return { nextExpectedDay, lastDay, isOverdue, isLapsed };
+}
+
+/**
+ * Detect a steady cadence in `series`.
+ *
+ * Same-day duplicates collapse for gap math (a 0-day gap must not poison the
+ * median) but still contribute to per-currency amount medians. Returns null
+ * for short, unclassifiable, or high-dispersion series.
+ */
+export function detectRecurrence(
+  allPoints: readonly SeriesPoint[],
+  today: string,
+): RecurrenceVerdict | null {
+  const series = withoutCounterSign(allPoints);
+  if (series.length < MIN_EVENT_DATES) {
+    return null;
+  }
+
+  const todayDay = parseLedgerDay(today);
+  if (todayDay === null) {
+    return null;
+  }
+
+  const { byDay, eventDays, scheduledDay } = bucketEventDays(series, todayDay);
+  if (eventDays.length < MIN_EVENT_DATES) {
+    return null;
+  }
+
+  const gaps = eventDays.slice(1).map((day, i) => day - eventDays[i]!);
+
+  const medianGap = median(gaps);
+  if (medianGap === null || medianGap <= 0) {
+    return null;
+  }
+
+  const classified = classifyBillCadence(eventDays, gaps, medianGap);
+  if (classified === null) {
+    return null;
+  }
+  const { cadence, semiMonthly } = classified;
+
+  const amounts = typicalBillAmounts(byDay, eventDays);
+  if (amounts === null) {
+    return null;
+  }
+
+  const due = projectBillDue(
+    cadence,
+    semiMonthly,
+    eventDays,
+    medianGap,
+    todayDay,
+    scheduledDay,
+  );
 
   return {
     cadence,
-    typicalAmountByCurrency,
-    primaryCurrency,
-    isApproximate,
-    nextExpected: formatLedgerDay(nextExpectedDay),
-    isOverdue,
-    isLapsed,
-    lastPaid: formatLedgerDay(lastDay),
+    ...amounts,
+    nextExpected: formatLedgerDay(due.nextExpectedDay),
+    isOverdue: due.isOverdue,
+    isLapsed: due.isLapsed,
+    lastPaid: formatLedgerDay(due.lastDay),
     ...(scheduledDay === null
       ? {}
       : { scheduled: formatLedgerDay(scheduledDay) }),
