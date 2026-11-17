@@ -1,7 +1,5 @@
 import type { EChartsOption } from "echarts";
 import type { ChartInterval } from "@/common/types/chart";
-import { formatDateAxis, formatYAxisNumber } from "@/common/lib/chart/chart";
-import { defaultSplitLine } from "@/common/components/react-echarts/utils";
 import type { LegendSelectionProps } from "../../lib/legend-selection";
 
 export interface DateAndBalance {
@@ -25,66 +23,6 @@ export interface BaseChartProps extends LegendSelectionProps {
   primarySeries?: string;
   inverted?: boolean;
   labelledBy?: string;
-}
-
-/**
- * Shared helper to create common chart axis configuration
- */
-export function createCommonAxisConfig(
-  dates: string[],
-  interval?: ChartInterval,
-): {
-  xAxis: EChartsOption["xAxis"];
-  yAxis: EChartsOption["yAxis"];
-} {
-  return {
-    xAxis: {
-      type: "category",
-      data: dates,
-      axisLabel: {
-        formatter: (value: string) => {
-          return formatDateAxis(value, interval ?? "monthly");
-        },
-      },
-      axisLine: {
-        lineStyle: {
-          color: "rgba(128, 128, 128, 0.2)",
-          width: 1,
-          type: "solid",
-        },
-      },
-    },
-    yAxis: {
-      type: "value",
-      axisLabel: {
-        formatter: (value: number) => {
-          return formatYAxisNumber(value);
-        },
-        fontSize: 12,
-      },
-      axisLine: {
-        lineStyle: {
-          color: "rgba(128, 128, 128, 0.2)",
-          width: 1,
-          type: "solid",
-        },
-      },
-      splitLine: defaultSplitLine,
-    },
-  };
-}
-
-/**
- * Shared helper to create common chart grid configuration
- */
-export function createCommonGridConfig(): EChartsOption["grid"] {
-  return {
-    left: "0%",
-    right: "0%",
-    bottom: "25px",
-    top: "3%",
-    containLabel: true,
-  };
 }
 
 /**

@@ -11,11 +11,11 @@ import type {
 import { sortUsdFirst } from "@/common/lib/utils/sort";
 import { getChartColors } from "@/common/lib/chart/color";
 import { formatDateAxis } from "@/common/lib/chart/chart";
+import { createEmptyChartOption } from "../income-statement/date-balance-chart/utils";
 import {
   createCommonAxisConfig,
   createCommonGridConfig,
-  createEmptyChartOption,
-} from "../income-statement/date-balance-chart/utils";
+} from "@/common/lib/chart/cartesian-config";
 import { useTranslations } from "@/common/hooks/use-translations";
 import type { ChartInterval } from "@/common/types/chart";
 import {

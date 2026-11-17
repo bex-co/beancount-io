@@ -11,12 +11,11 @@ import type {
 } from "echarts";
 import { sortUsdFirst } from "@/common/lib/utils/sort";
 import { getChartColors } from "@/common/lib/chart/color";
+import { type BaseChartProps, createEmptyChartOption } from "./utils";
 import {
-  type BaseChartProps,
   createCommonAxisConfig,
   createCommonGridConfig,
-  createEmptyChartOption,
-} from "./utils";
+} from "@/common/lib/chart/cartesian-config";
 import { formatDateAxis } from "@/common/lib/chart/chart";
 import { useLegendSelection } from "../../lib/legend-selection";
 import {
