@@ -76,7 +76,6 @@
 
 - [139 — Mobile's committed GraphQL snapshot is stale against the deployed api-gateway](./139.md) — no `latestPriceDate`, ten-minute freshness text, ~1,400 lines of other drift
 - [138 — In Persian, a truncated English commit message or payee loses its beginning](./138.md) — `truncate` without `dir="auto"` cuts LTR text at its start under `dir="rtl"`
-- [136 — In Persian, table column headings sit on the physical left while their values start on the right](./136.md) — shared `TableHead` `text-left`; table counterpart of w2/132
 - [137 — The account page's Units, Change and Balance columns print the raw decimal under a localized period table](./137.md) — `JournalTable` amounts missed by w2/119's `<LedgerAmount>` move
 - [135 — Signed in, a Gallery search for a common term takes 4–5 s per request (under 1.2 s signed out)](./blocked/135.md) — ledger service read every Gitea page of an owner search in turn — **blocked:** fix shipped in `7355c52f1`; the operator redeploys `beancount-ledger`, then the search is re-measured
 

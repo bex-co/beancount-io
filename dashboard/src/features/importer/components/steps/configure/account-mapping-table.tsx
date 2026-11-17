@@ -298,7 +298,7 @@ export function AccountMappingTable({
                 {t("importer.preview.payee")}
               </TableHead>
               <TableHead>{t("importer.preview.description_column")}</TableHead>
-              <TableHead className="w-30 text-right">
+              <TableHead className="w-30 text-end">
                 {t("importer.preview.amount")}
               </TableHead>
               <TableHead className="w-75">
@@ -389,7 +389,7 @@ export function AccountMappingTable({
                     <TableCell className="text-sm">
                       {txn.description || ""}
                     </TableCell>
-                    <TableCell className="text-sm text-right font-medium">
+                    <TableCell className="text-sm text-end font-medium">
                       {/* Sign before digits on a right-to-left page (w4/1047). */}
                       <Amount>{formatImportReviewAmount(txn.amount)}</Amount>
                     </TableCell>

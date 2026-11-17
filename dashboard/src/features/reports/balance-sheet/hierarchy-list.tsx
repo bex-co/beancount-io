@@ -178,14 +178,14 @@ function AmountCells({
 }): ReactNode {
   return (
     <>
-      <td className={cn(CELL_PAD, "w-[25%] text-right")}>
+      <td className={cn(CELL_PAD, "w-[25%] text-end")}>
         <PrimaryCurrencyColumn
           balanceData={balanceData}
           primaryCurrency={primaryCurrency}
           inverted={inverted}
         />
       </td>
-      <td className={cn(CELL_PAD, "w-[25%] text-right")}>
+      <td className={cn(CELL_PAD, "w-[25%] text-end")}>
         <OtherBalancesColumn
           label={label}
           balanceData={balanceData}
@@ -505,10 +505,10 @@ export function HierarchyList({
               <th scope="col" className={cn(CELL_PAD, "w-1/2 text-start")}>
                 {t("common.accountColumn")}
               </th>
-              <th scope="col" className={cn(CELL_PAD, "w-[25%] text-right")}>
+              <th scope="col" className={cn(CELL_PAD, "w-[25%] text-end")}>
                 {primaryCurrency}
               </th>
-              <th scope="col" className={cn(CELL_PAD, "w-[25%] text-right")}>
+              <th scope="col" className={cn(CELL_PAD, "w-[25%] text-end")}>
                 {t("common.otherColumn")}
               </th>
             </tr>

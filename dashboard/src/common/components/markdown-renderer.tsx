@@ -171,7 +171,7 @@ const components: Components = {
   th({ children, ...props }) {
     return (
       <th
-        className="border border-border px-4 py-2 bg-muted font-semibold text-left"
+        className="border border-border px-4 py-2 bg-muted font-semibold text-start"
         {...props}
       >
         {children}
@@ -181,7 +181,7 @@ const components: Components = {
 
   td({ children, ...props }) {
     return (
-      <td className="border border-border px-4 py-2 text-left" {...props}>
+      <td className="border border-border px-4 py-2 text-start" {...props}>
         {children}
       </td>
     );

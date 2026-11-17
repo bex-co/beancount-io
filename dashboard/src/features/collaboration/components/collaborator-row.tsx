@@ -228,7 +228,7 @@ export function CollaboratorRow({
           {getPermissionLabel(collaborator.permission)}
         </Badge>
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="text-end">
         <LedgerAdminPermission>
           <RemoveCollaboratorDialog
             collaborator={collaborator}

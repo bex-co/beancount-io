@@ -38,10 +38,10 @@ function EntriesCountLoadingState() {
           <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("page.statistics.entryType")}
           </TableHead>
-          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+          <TableHead className="text-end whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("page.statistics.count")}
           </TableHead>
-          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+          <TableHead className="text-end whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("page.statistics.percentage")}
           </TableHead>
         </TableRow>
@@ -98,10 +98,10 @@ function EntriesCountTable({
           <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("page.statistics.entryType")}
           </TableHead>
-          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+          <TableHead className="text-end whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("page.statistics.count")}
           </TableHead>
-          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+          <TableHead className="text-end whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("page.statistics.percentage")}
           </TableHead>
         </TableRow>
@@ -119,10 +119,10 @@ function EntriesCountTable({
               <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">
                 {entry.label}
               </TableCell>
-              <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
+              <TableCell className="text-end font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
                 {formatNum(entry.number)}
               </TableCell>
-              <TableCell className="text-right text-muted-foreground text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
+              <TableCell className="text-end text-muted-foreground text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
                 {percentage === null ? (
                   <span
                     aria-label={t("page.statistics.percentageNotApplicable")}

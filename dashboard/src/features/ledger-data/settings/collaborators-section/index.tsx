@@ -194,7 +194,7 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
                       <TableCell>
                         <Skeleton className="h-5 w-15" />
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Skeleton className="h-8 w-8 ml-auto" />
                       </TableCell>
                     </TableRow>
@@ -264,7 +264,7 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
                         {t("collaboration.joined")}
                       </TableHead>
                       <TableHead>{t("collaboration.permission")}</TableHead>
-                      <TableHead className="w-20 text-right">
+                      <TableHead className="w-20 text-end">
                         {t("common.actions")}
                       </TableHead>
                     </TableRow>

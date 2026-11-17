@@ -455,7 +455,7 @@ export function TransactionReviewTable({
                   <TableHead>
                     <Skeleton className="h-4 w-24" />
                   </TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className="text-end">
                     <Skeleton className="h-4 w-16 ml-auto" />
                   </TableHead>
                   <TableHead className="w-[220px]">
@@ -484,7 +484,7 @@ export function TransactionReviewTable({
                     <TableCell>
                       <Skeleton className="h-4 w-40" />
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       <Skeleton className="h-4 w-16 ml-auto" />
                     </TableCell>
                     <TableCell>
@@ -699,7 +699,7 @@ export function TransactionReviewTable({
                 <TableHead>
                   {t("plaid.transactionReview.descriptionColumn")}
                 </TableHead>
-                <TableHead className="text-right">
+                <TableHead className="text-end">
                   {t("plaid.transactionReview.amount")}
                 </TableHead>
                 <TableHead className="w-[220px]">
@@ -806,7 +806,7 @@ export function TransactionReviewTable({
                     <TableCell className="max-w-xs truncate">
                       {transaction.name}
                     </TableCell>
-                    <TableCell className="text-right font-mono">
+                    <TableCell className="text-end font-mono">
                       <Amount>
                         {isExpense ? "-" : "+"}
                         {formatAmount(

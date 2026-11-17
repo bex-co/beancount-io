@@ -704,10 +704,10 @@ export function NetWorthCard({
               </caption>
               <thead className="sticky top-0 bg-card text-xs text-muted-foreground">
                 <tr className="border-b">
-                  <th scope="col" className="px-3 py-2 text-left font-medium">
+                  <th scope="col" className="px-3 py-2 text-start font-medium">
                     {t("page.overview.netWorthMonth")}
                   </th>
-                  <th scope="col" className="px-3 py-2 text-right font-medium">
+                  <th scope="col" className="px-3 py-2 text-end font-medium">
                     {t("common.netWorth")}
                   </th>
                 </tr>
@@ -717,7 +717,7 @@ export function NetWorthCard({
                   <tr key={point.date}>
                     <th
                       scope="row"
-                      className="px-3 py-2.5 text-left font-normal text-muted-foreground"
+                      className="px-3 py-2.5 text-start font-normal text-muted-foreground"
                     >
                       {formatMonth(point.date, language)}
                     </th>
@@ -727,7 +727,7 @@ export function NetWorthCard({
                           getBalanceAmounts(point.balance),
                           primaryCurrency,
                         )}
-                        className="text-right font-medium"
+                        className="text-end font-medium"
                       />
                     </td>
                   </tr>

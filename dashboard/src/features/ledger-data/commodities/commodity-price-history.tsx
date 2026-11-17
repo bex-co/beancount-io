@@ -56,7 +56,7 @@ export function CommodityPriceHistory({
             <TableHeader>
               <TableRow>
                 <TableHead>{t("page.commodities.priceHistoryDate")}</TableHead>
-                <TableHead className="text-right">
+                <TableHead className="text-end">
                   {t("page.commodities.priceHistoryPrice", {
                     quote: commodity.quote,
                   })}
@@ -69,7 +69,7 @@ export function CommodityPriceHistory({
                   <TableCell className="font-mono text-xs tabular-nums">
                     {price.date}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-xs tabular-nums">
+                  <TableCell className="text-end font-mono text-xs tabular-nums">
                     {/* Sign before digits on a right-to-left page (w4/1055). */}
                     <Amount>{price.value}</Amount>
                   </TableCell>

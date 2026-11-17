@@ -289,7 +289,7 @@ export function AccountRow({
         <BalanceCell balance={account.balance} />
       </TableCell>
       <TableCell
-        className="w-12 text-right"
+        className="w-12 text-end"
         onClick={(event) => event.stopPropagation()}
       >
         <AccountActions
@@ -614,8 +614,8 @@ export default function LedgerAccountsPage() {
                   <TableHead className="hidden text-end @xl:table-cell">
                     <Skeleton className="h-4 w-16 ms-auto" />
                   </TableHead>
-                  <TableHead className="text-right">
-                    <Skeleton className="h-4 w-16 ml-auto" />
+                  <TableHead className="text-end">
+                    <Skeleton className="h-4 w-16 ms-auto" />
                   </TableHead>
                 </TableRow>
               </TableHeader>

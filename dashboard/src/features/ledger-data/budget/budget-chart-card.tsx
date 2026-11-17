@@ -569,10 +569,10 @@ export function BudgetChartCard({
                     <TableHead className="min-w-28">
                       {t("page.budget.budgetPeriod")}
                     </TableHead>
-                    <TableHead className="min-w-28 text-right">
+                    <TableHead className="min-w-28 text-end">
                       {t("page.budget.budget")}
                     </TableHead>
-                    <TableHead className="min-w-28 text-right">
+                    <TableHead className="min-w-28 text-end">
                       {t("page.budget.budgetSpending")}
                     </TableHead>
                   </TableRow>
@@ -583,10 +583,10 @@ export function BudgetChartCard({
                       <TableCell className="whitespace-nowrap font-mono text-xs tabular-nums">
                         {row.date}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-right font-mono text-sm tabular-nums">
+                      <TableCell className="whitespace-nowrap text-end font-mono text-sm tabular-nums">
                         {showAmount(row.budget)}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-right font-mono text-sm tabular-nums">
+                      <TableCell className="whitespace-nowrap text-end font-mono text-sm tabular-nums">
                         {showAmount(row.actual)}
                       </TableCell>
                     </TableRow>

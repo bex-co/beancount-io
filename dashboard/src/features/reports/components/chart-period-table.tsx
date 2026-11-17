@@ -71,7 +71,7 @@ export function ChartPeriodTable({
               </TableHead>
             ))
           ) : (
-            <TableHead className="min-w-28 text-right">
+            <TableHead className="min-w-28 text-end">
               {t("page.accountReport.periodAmount")}
             </TableHead>
           )}
@@ -115,7 +115,7 @@ export function ChartPeriodTable({
               <TableCell className="whitespace-nowrap font-mono text-xs tabular-nums">
                 {point.date}
               </TableCell>
-              <TableCell className="text-right font-mono text-sm tabular-nums">
+              <TableCell className="text-end font-mono text-sm tabular-nums">
                 {balances.length === 0
                   ? "—"
                   : balances.map(([currency, value]) => (

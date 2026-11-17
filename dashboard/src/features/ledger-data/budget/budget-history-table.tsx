@@ -91,7 +91,7 @@ export function BudgetHistoryTable({
             <TableHead className="min-w-24">
               {t("page.budget.budgetInterval")}
             </TableHead>
-            <TableHead className="min-w-28 text-right">
+            <TableHead className="min-w-28 text-end">
               {t("page.budget.budgetAmount")}
             </TableHead>
             {canWrite && (
@@ -116,7 +116,7 @@ export function BudgetHistoryTable({
                     {intervalLabel(entry.interval)}
                   </Badge>
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-right font-mono text-sm font-medium tabular-nums">
+                <TableCell className="whitespace-nowrap text-end font-mono text-sm font-medium tabular-nums">
                   {entry.amount}
                 </TableCell>
                 {canWrite && (

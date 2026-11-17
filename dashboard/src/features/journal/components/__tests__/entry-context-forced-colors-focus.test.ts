@@ -66,7 +66,7 @@ describe("forced-colors focus outlines (w4/1061)", () => {
     ],
     [
       "src/features/ledger-data/documents/index.tsx",
-      "text-left font-medium text-primary",
+      "text-start font-medium text-primary",
       OFFSETS[0],
     ],
   ])("%s (%s) carries the outline", (path, marker, offset) => {

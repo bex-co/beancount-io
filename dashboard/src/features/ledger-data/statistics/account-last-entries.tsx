@@ -64,7 +64,7 @@ function AccountLastEntriesLoadingState() {
           <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("page.statistics.lastEntryDate")}
           </TableHead>
-          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+          <TableHead className="text-end whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("journal.balance")}
           </TableHead>
         </TableRow>
@@ -118,7 +118,7 @@ function AccountLastEntriesTable({
           <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("page.statistics.lastEntryDate")}
           </TableHead>
-          <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+          <TableHead className="text-end whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
             {t("journal.balance")}
           </TableHead>
         </TableRow>
@@ -142,7 +142,7 @@ function AccountLastEntriesTable({
             <TableCell className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
               {formatDateISO(entry.date) || "N/A"}
             </TableCell>
-            <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
+            <TableCell className="text-end font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
               {formatBalance(entry.balance)}
             </TableCell>
           </TableRow>

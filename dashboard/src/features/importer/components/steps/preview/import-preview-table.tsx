@@ -134,16 +134,16 @@ export function ImportPreviewTable({
                 <TableHead className="w-[60px]">
                   {t("importer.preview.row")}
                 </TableHead>
-                <TableHead className="w-[120px] pl-4">
+                <TableHead className="w-[120px] ps-4">
                   {t("importer.preview.date")}
                 </TableHead>
-                <TableHead className="w-[150px] pl-4">
+                <TableHead className="w-[150px] ps-4">
                   {t("importer.preview.payee")}
                 </TableHead>
-                <TableHead className="pl-4">
+                <TableHead className="ps-4">
                   {t("importer.preview.description_column")}
                 </TableHead>
-                <TableHead className="w-[120px] text-right">
+                <TableHead className="w-[120px] text-end">
                   {t("importer.preview.amount")}
                 </TableHead>
                 <TableHead className="w-[80px]">

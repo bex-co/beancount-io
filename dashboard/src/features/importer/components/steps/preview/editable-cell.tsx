@@ -157,8 +157,8 @@ export function EditableCell({
     setLocalValue(e.target.value);
   };
 
-  // Check if content should be right-aligned
-  const isRightAligned = className?.includes("text-right");
+  // Numbers sit at the line's end: right in English, left in Persian.
+  const isEndAligned = className?.includes("text-end");
   // The placeholder is a format hint only; without an explicit name the
   // browser would announce the open editor as e.g. textbox "0.00".
   const editorLabel = t("importer.preview.editFieldLabel", {
@@ -223,7 +223,7 @@ export function EditableCell({
             role="alert"
             className={cn(
               "text-xs text-destructive mt-1 whitespace-nowrap",
-              isRightAligned && "text-right",
+              isEndAligned && "text-end",
             )}
           >
             {error}
@@ -262,14 +262,14 @@ export function EditableCell({
       <div
         className={cn(
           "flex w-full flex-col",
-          isRightAligned ? "items-end" : "items-start",
+          isEndAligned ? "items-end" : "items-start",
         )}
       >
         <span
           className={cn(
             "text-sm",
             // Keep parsed line breaks visible instead of collapsing them.
-            multiline && "whitespace-pre-wrap break-words text-left",
+            multiline && "whitespace-pre-wrap break-words text-start",
             !value && "text-muted-foreground",
             className,
           )}
@@ -286,7 +286,7 @@ export function EditableCell({
             id={errorId}
             className={cn(
               "text-xs text-destructive mt-1 whitespace-nowrap",
-              isRightAligned && "text-right",
+              isEndAligned && "text-end",
             )}
           >
             {error}

@@ -127,7 +127,7 @@ export function CollaboratorsTable({
                 {t("collaboration.joined")}
               </TableHead>
               <TableHead>{t("collaboration.permission")}</TableHead>
-              <TableHead className="w-20 text-right">
+              <TableHead className="w-20 text-end">
                 {t("common.actions")}
               </TableHead>
             </TableRow>

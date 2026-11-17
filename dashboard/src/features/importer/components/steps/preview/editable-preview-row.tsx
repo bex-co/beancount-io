@@ -216,7 +216,7 @@ export function EditablePreviewRow({
         </TableCell>
 
         {/* Amount Field */}
-        <TableCell className="text-right">
+        <TableCell className="text-end">
           <Controller
             name="amount"
             control={control}
@@ -234,7 +234,7 @@ export function EditablePreviewRow({
                 error={validationMessage(errors.amount?.message)}
                 placeholder={t("importer.preview.amountPlaceholder")}
                 type="text"
-                className="text-right"
+                className="text-end"
                 numeric
               />
             )}
