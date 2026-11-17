@@ -5,7 +5,7 @@ Copy [ledger-check.yml](ledger-check.yml) into
 workflow checks out the repo and calls the shared action in one line:
 
 ```yaml
-- uses: bex-co/beancount-io/cli/action@18f58fc53356b0b29e0a834552fdf3495451f1d9 # cli-v0.4.0
+- uses: bex-co/beancount-io/cli/action@3dbc8d734300384373039e3f01bb98eba6d3c431 # cli-v0.4.1
   with:
     version: "0.4.1"
     file: main.bean
@@ -37,7 +37,7 @@ repository's `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/bex-co/beancount-io
-    rev: 18f58fc53356b0b29e0a834552fdf3495451f1d9 # cli-v0.4.0
+    rev: 3dbc8d734300384373039e3f01bb98eba6d3c431 # cli-v0.4.1
     hooks:
       - id: bea-check
       - id: bea-format
@@ -61,8 +61,8 @@ including `entries.bean`; installation used a fresh tool directory and
 managed engine. The setup and three cases took 27.36 seconds on that
 machine. On 2026-09-28 the same three cases were repeated with published
 bea 0.3.1 in a fresh tool directory and engine, and on 2026-11-17 with
-published bea 0.4.0, the current pin (uv 0.13.4); the results below were
-unchanged both times.
+published bea 0.4.0 (uv 0.13.4); the results below were unchanged both
+times. The current pin, 0.4.1, changes only `bea cloud ledger clone`.
 
 | Synthetic input | `bea check` exit | `bea format --check` exit | Files unchanged |
 | --- | --- | --- | --- |

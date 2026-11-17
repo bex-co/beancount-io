@@ -58,7 +58,7 @@ On 2026-11-09 `bea cloud status` and `bea cloud ledger list` worked this way wit
 
 Both variables name the dashboard: it forwards `/api-gateway/` to the API, so the CLI needs only that one address.
 
-To get a ledger's Git history, use plain `git`: every ledger's `httpUrl` is `https://<your API address>/git/<owner>/<ledger>.git`, served by the API's Git proxy (Gitea itself has no public address). Mint a personal access token in the dashboard under Settings → API keys and give it as the password; any username works. `bea cloud ledger clone` clones over SSH only, and bex routes no SSH, so on a bex deployment it stops and says the deployment serves no Git over SSH. That message needs `bea` 0.4.0 or later (released 2026-11-17); 0.3.1 stops with an unhelpful `expected str … not NoneType` instead.
+To get a ledger's Git history, use plain `git`: every ledger's `httpUrl` is `https://<your API address>/git/<owner>/<ledger>.git`, served by the API's Git proxy (Gitea itself has no public address). Mint a personal access token in the dashboard under Settings → API keys and give it as the password; any username works. `bea cloud ledger clone` clones over SSH only, and bex routes no SSH, so on a bex deployment it stops. From `bea` 0.4.1 it then explains the HTTPS route above: it prints the `git clone` command for that ledger, says to use a token from Settings → API keys as the password, and says bex cannot serve SSH. 0.4.0 says only that the server serves no Git over SSH, and 0.3.1 stops with an unhelpful `expected str … not NoneType`.
 
 ### 5. Can I use the mobile app?
 
@@ -127,7 +127,7 @@ It is the only target with zero operator inputs, and the platform is ours to imp
 - A documented backup and restore for the bex deployment exists. Done for ledgers on 2026-11-16 (`deploy/bex/README.md`, run on a live stack); accounts and settings in Postgres are not covered.
 - bex retries a failed rollout, or the README keeps the caveat.
 - The closing of sign-up, the private Gitea and `bea ask` with `OPENAI_API_KEY` have been run on a live bex. Done on 2026-11-16; `bea ask` only as far as its configuration error, with no model key set.
-- A `bea` release newer than 0.3.1, so the clone refusal reads as written in question 4. Done: 0.4.0 on PyPI and Homebrew on 2026-11-17, and its published build gives that refusal.
+- A `bea` release newer than 0.3.1, so the clone refusal reads as written in question 4. Done: 0.4.0 on PyPI and Homebrew on 2026-11-17 gives the refusal, and 0.4.1 adds the HTTPS explanation decided that day.
 - There is a way to add a second account, or the copy keeps saying one account per deployment. Decided on 2026-11-17: the launch is one account per deployment, and more accounts wait for user feedback.
 
 ### What did the live run find?

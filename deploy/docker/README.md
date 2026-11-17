@@ -141,7 +141,9 @@ learns the address from Gitea's `ROOT_URL` at start; it never uses
 beancount.io's Git host. See `../bex/README.md`, "Where ledger clone addresses
 come from".) With `SELF_HOST=true` and the SSH overlay below off, ledger
 responses carry `sshUrl: null`, and `bea cloud ledger clone` says this
-deployment serves no Git over SSH instead of trying.
+deployment serves no Git over SSH instead of trying; from `bea` 0.4.1 it
+also prints the HTTPS `git clone` command and says the operator can turn on
+Git over SSH (the SSH overlay below) for `bea` itself to clone.
 
 Git over HTTPS works by default. Users clone `https://<GIT_DOMAIN>/git/<owner>/<ledger>.git`
 with any username and a personal access token as the password, minted in the

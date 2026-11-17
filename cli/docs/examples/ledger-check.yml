@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: bex-co/beancount-io/cli/action@18f58fc53356b0b29e0a834552fdf3495451f1d9 # cli-v0.4.0
+      - uses: bex-co/beancount-io/cli/action@3dbc8d734300384373039e3f01bb98eba6d3c431 # cli-v0.4.1
         with:
           version: "0.4.1"
           file: main.bean
