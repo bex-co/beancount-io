@@ -2,7 +2,10 @@
 
 A self-hosted stack that serves no Git over SSH returns `sshUrl: null`. `bea`
 clones only over SSH, so it must stop with a message naming that cause instead
-of handing git someone else's host or falling back to HTTPS.
+of handing git someone else's host or falling back to HTTPS itself. The reader
+is usually the stack's operator, on a platform (bex) that cannot serve SSH, so
+the refusal also says how to clone over HTTPS with git and a token, and shows
+the command only for an address that is plain https.
 """
 
 from __future__ import annotations
@@ -29,12 +32,15 @@ def _cloud(logged_in: None, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
     return workdir
 
 
-def _ledger(ssh_url: str | None) -> dict[str, object]:
+_HTTP_URL = "https://git.example.test/alice/books.git"
+
+
+def _ledger(ssh_url: str | None, http_url: str = _HTTP_URL) -> dict[str, object]:
     return {
         "id": "alice/books",
         "name": "books",
         "fullName": "alice/books",
-        "httpUrl": "https://git.example.test/alice/books.git",
+        "httpUrl": http_url,
         "sshUrl": ssh_url,
         "private": True,
         "empty": True,
@@ -59,10 +65,42 @@ def test_clone_refuses_a_ledger_without_an_ssh_address(httpx_mock: HTTPXMock, _c
         error = json.loads(result.stderr)["error"]
         assert error["category"] == "validation"
         message = error["message"]
+        guidance = "\n".join(error["details"])
     else:
-        message = result.stderr
-    assert "serves no Git over SSH" in message
-    assert "git.example.test" not in message
+        message = guidance = result.stderr
+    assert "this self-hosted server serves no Git over SSH" in message
+    assert f"Clone it with git over HTTPS instead: git clone {_HTTP_URL}" in guidance
+    assert "personal access token made in the dashboard under Settings → API keys" in guidance
+    assert "ledger.read to clone, ledger.write to push" in guidance
+    assert "A bex deployment cannot: bex routes no SSH." in guidance
+
+
+@pytest.mark.parametrize(
+    "http_url",
+    [
+        "http://git.example.test/alice/books.git",
+        "https://user:secret@git.example.test/alice/books.git",
+        "https://-oProxyCommand=evil/alice/books.git",
+        "https://git.example.test/alice/books.git; rm -rf ~",
+        "ext::sh -c touch% /tmp/pwned",
+        "https://git.example.test/alice/books.git\x1b[2K",
+    ],
+    ids=["plain-http", "credentials", "dash-host", "shell", "ext", "control"],
+)
+def test_the_refusal_shows_no_clone_command_for_an_unsafe_address(
+    httpx_mock: HTTPXMock, _cloud: Path, http_url: str
+) -> None:
+    httpx_mock.add_response(
+        method="GET", url=f"{_API}/api-gateway/v1/ledgers/alice/books", json=_ledger(None, http_url=http_url)
+    )
+
+    result = CliRunner().invoke(app, ["--json", "cloud", "ledger", "clone", "alice/books"])
+
+    assert result.exit_code == 1, result.output
+    details = json.loads(result.stderr)["error"]["details"]
+    assert not any("git clone" in line for line in details)
+    assert details[0].endswith("from its httpUrl (bea --json cloud ledger show prints it).")
+    assert list(_cloud.iterdir()) == []
 
 
 def test_create_with_clone_reports_the_created_ledger_without_an_ssh_address(
@@ -77,6 +115,7 @@ def test_create_with_clone_reports_the_created_ledger_without_an_ssh_address(
     error = json.loads(result.stderr)["error"]
     assert "was created but was not cloned" in error["message"]
     assert "serves no Git over SSH" in error["message"]
+    assert f"git clone {_HTTP_URL}" in error["details"][0]
     assert error["result"]["ssh_url"] is None
 
 

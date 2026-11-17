@@ -4,7 +4,7 @@ Status: Proposed. This is the target experience, written as if released. Nothing
 
 Date: 2026-11-09 (updated 2026-11-14 and 2026-11-16)
 
-Scope: someone who wants their own Beancount.io, for themselves, with no server to look after. A deployment holds one account today (see question 3); a team is not served yet. Docker and local development are covered by their own READMEs.
+Scope: someone who wants their own Beancount.io, for themselves, with no server to look after. A deployment holds one account (see question 3). Whether a deployment should hold more, for a team, is left for later and will follow from what users ask for. Docker and local development are covered by their own READMEs.
 
 Evidence baseline: three live runs of the root Blueprint on an idle bex workspace, all resources deleted after each. The first, on 2026-11-09, ran `main` at `bfe5fdddc`. The second, on 2026-11-16, ran `main` at `34b43768b` (the dashboard and Gitea were redeployed at `8fa681216` during it) and covered what had changed in between. The third, later the same day, started from the Blueprint as it was before Gitea became private (`ae0e4c7ba`), upgraded that stack to `main`, and ran what the second had left unverified.
 
@@ -20,7 +20,7 @@ The second run exercised everything that had changed since the first: sign-up cl
 
 Beancount.io is open source, and today it became a one-click install. From the repository, press **Deploy to bex.co**, pick the workspace that should own it, review the plan, and apply. There is nothing to fill in: every secret is generated, the services find each other, and the address your dashboard gets is the address it uses everywhere.
 
-When the build finishes, open the dashboard's URL and create an account. No verification email, no plan limits. Sign-up closes behind that first account, so make it straight away. Install the `bea` command line, point it at your address with two environment variables, and the same ledger is reachable from your terminal. Coding agents connect through the built-in MCP server, which advertises your address as its issuer, never ours.
+When the build finishes, open the dashboard's URL and create an account. No verification email, no plan limits. Sign-up closes behind that first account, so make it straight away: this release is one person's books per deployment, and we will decide on more accounts from what users tell us. Install the `bea` command line, point it at your address with two environment variables, and the same ledger is reachable from your terminal. Coding agents connect through the built-in MCP server, which advertises your address as its issuer, never ours.
 
 Your ledger is a plain-text file in a Git repository on a disk in your workspace. Clone links point at your deployment: `git clone` over HTTPS, with a personal access token as the password, works against your own server.
 
@@ -43,7 +43,7 @@ You are asked for nothing. If a service shows a failed rollout, trigger a deploy
 
 ### 3. Who can sign up?
 
-The first person to do it. The stack puts no plan limits on anyone and never proves an email address, so it takes sign-ups only until its first account exists: after that the API refuses `signUp`, and the sign-in page and `/auth/sign-up` stop offering it. Sign up as soon as the deploy is up; until you do, anyone who finds the address could be first. There is no way yet to add a second account; deleting the only account reopens sign-up.
+The first person to do it. The stack puts no plan limits on anyone and never proves an email address, so it takes sign-ups only until its first account exists: after that the API refuses `signUp`, and the sign-in page and `/auth/sign-up` stop offering it. Sign up as soon as the deploy is up; until you do, anyone who finds the address could be first. There is no way to add a second account in this release; we will decide whether to add one from user feedback. Deleting the only account reopens sign-up.
 
 ### 4. How do I use the command line?
 
@@ -128,7 +128,7 @@ It is the only target with zero operator inputs, and the platform is ours to imp
 - bex retries a failed rollout, or the README keeps the caveat.
 - The closing of sign-up, the private Gitea and `bea ask` with `OPENAI_API_KEY` have been run on a live bex. Done on 2026-11-16; `bea ask` only as far as its configuration error, with no model key set.
 - A `bea` release newer than 0.3.1, so the clone refusal reads as written in question 4. Done: 0.4.0 on PyPI and Homebrew on 2026-11-17, and its published build gives that refusal.
-- There is a way to add a second account, or the copy keeps saying one account per deployment (it does today).
+- There is a way to add a second account, or the copy keeps saying one account per deployment. Decided on 2026-11-17: the launch is one account per deployment, and more accounts wait for user feedback.
 
 ### What did the live run find?
 

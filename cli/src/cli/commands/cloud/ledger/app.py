@@ -163,7 +163,9 @@ def ledger_create(
             target = directory or manager.default_clone_dir(ledger.name)
         except (manager.UnsafeCloneSource, manager.NoSshCloneUrl) as e:
             raise LedgerError(
-                f"Ledger '{single_line(ledger.full_name)}' was created but was not cloned. {e}", result=ledger.record
+                f"Ledger '{single_line(ledger.full_name)}' was created but was not cloned. {e}",
+                details=e.details,
+                result=ledger.record,
             ) from e
         output.note(f"Cloning repository to '{single_line(str(target))}'...")
         try:
