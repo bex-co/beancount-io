@@ -6,6 +6,7 @@ export * from "./dashboard-scroll-view";
 export * from "./crossfade";
 export * from "./tab-bar-icon";
 export * from "./balance-chart-card";
+export * from "./chart-caption";
 export * from "./segmented-pages";
 export * from "./time-range-pills";
 export * from "./progress";

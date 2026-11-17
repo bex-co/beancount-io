@@ -22,6 +22,7 @@ import {
   seriesToChartArray,
 } from "@/common/series-util";
 import { chartPageHeight } from "./chart-page-height";
+import { chartCaptionStyles } from "@/components/chart-caption";
 import { useGuest } from "@/common/guest/guest-context";
 
 /** The card's three pages, each named by its tab's translation key. */
@@ -70,21 +71,7 @@ const styles = StyleSheet.create({
   },
   // Same inset and type as the chart's own header, which it sits directly
   // above; the chevron trails the last line of a wrapped status.
-  caption: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 16,
-    marginBottom: 2,
-  },
-  captionText: {
-    flexShrink: 1,
-    fontSize: fontSizes.md,
-    fontWeight: fontWeights.medium,
-  },
-  captionChevron: {
-    marginStart: 2,
-    marginBottom: 2,
-  },
+  ...chartCaptionStyles,
 });
 
 type AccountChartsCardProps = {

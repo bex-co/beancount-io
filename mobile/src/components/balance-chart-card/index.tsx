@@ -4,7 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { FadeInView } from "@/components/crossfade";
 import { PressableScale } from "@/components/pressable-scale";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { useTheme } from "@/common/theme";
+import { chartCaptionStyles } from "@/components/chart-caption";
 import { directionalIcon } from "@/common/rtl";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
 import { DashboardCard } from "@/components/dashboard-card";
@@ -73,21 +74,7 @@ type BalanceChartCardProps = {
 // chevron trailing the last line of a wrapped status. It sits above the
 // chart, outside the plot's swipe gesture, which covers the chart's header.
 const styles = StyleSheet.create({
-  caption: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    paddingHorizontal: 16,
-    marginBottom: 2,
-  },
-  captionText: {
-    flexShrink: 1,
-    fontSize: fontSizes.md,
-    fontWeight: fontWeights.medium,
-  },
-  captionChevron: {
-    marginStart: 2,
-    marginBottom: 2,
-  },
+  ...chartCaptionStyles,
 });
 
 /**
