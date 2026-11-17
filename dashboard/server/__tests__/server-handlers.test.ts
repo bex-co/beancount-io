@@ -2,6 +2,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import publicUrl from "../public-url";
 import apiGatewayProxy, { isProxiedPath } from "../api-gateway-proxy";
 
+const proxyRequest = vi.hoisted(() => vi.fn());
+vi.mock("nitro/h3", () => ({
+  defineHandler: (handler: unknown) => handler,
+  proxyRequest,
+}));
+
 // Both handlers are global middleware, so they see every request the dashboard
 // serves. What matters: they do their job for their own paths when the
 // deployment opted in, and are invisible everywhere else.
@@ -37,6 +43,19 @@ describe("api gateway proxy", () => {
     vi.stubEnv("API_PROXY_URL", "");
     expect(apiGatewayProxy(event("/api-gateway/"))).toBeUndefined();
     expect(apiGatewayProxy(event("/.well-known/security.txt"))).toBeUndefined();
+  });
+
+  it("forwards to the backend and leaves a redirect for the browser to follow", () => {
+    vi.stubEnv("API_PROXY_URL", "http://api.internal:4104");
+    apiGatewayProxy(event("/api-gateway/oauth/auth?client_id=app"));
+    const [, target, options] = proxyRequest.mock.calls.at(-1) ?? [];
+    expect(target).toBe(
+      "http://api.internal:4104/api-gateway/oauth/auth?client_id=app",
+    );
+    // Followed here, the authorization endpoint's 303 would never reach the
+    // browser: it would stay on this URL with the sign-in page's HTML.
+    expect(options.fetchOptions).toEqual({ redirect: "manual" });
+    expect(options.headers["x-forwarded-host"]).toBe("dashboard.example.com");
   });
 
   it("does nothing for other paths when it is on", () => {

@@ -29,6 +29,12 @@ export default defineHandler((event) => {
 
   const url = new URL(event.url.pathname + event.url.search, target);
   return proxyRequest(event, url.toString(), {
+    // Hand a redirect to the browser instead of following it here. The OAuth
+    // authorization endpoint answers 303 to the sign-in or consent page, with
+    // the cookies that carry the request across; followed server-side, the
+    // browser is left on /api-gateway/oauth/auth holding that page's HTML and
+    // none of the cookies, and the app shows "Page not found".
+    fetchOptions: { redirect: "manual" },
     headers: {
       "x-forwarded-host": event.url.host,
       "x-forwarded-proto":
