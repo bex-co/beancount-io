@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DirectiveType } from "@/common/types/journal";
+import * as locales from "@/i18n/locales";
 import ca from "@/i18n/locales/ca";
 import en from "@/i18n/locales/en";
 import { FLAG_KEYS } from "@/test/locale-scan";
@@ -177,8 +178,9 @@ describe("Catalan Journal filters render and act", () => {
 });
 
 describe("no locale carries another key's message", () => {
-  it("keeps flag columns literal in every language", async () => {
-    const locales = await import("@/i18n/locales");
+  // Every catalog is imported with the module, not in the test: loading all
+  // fifteen cold takes longer than the 10 s test timeout.
+  it("keeps flag columns literal in every language", () => {
     // zh renders journal.pending as a word rather than the "!" flag. That
     // predates this milestone and is a separate call about Chinese flag
     // columns, so it is excluded here rather than silently asserted away.
