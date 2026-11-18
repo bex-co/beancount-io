@@ -1628,6 +1628,12 @@ a date and a ticker — `--meta 'name:Vanguard 500 Index' --meta
 back in the add envelope in the same tagged form as transaction metadata, so a
 response can be sent again unchanged.
 
+`add price` refuses a negative quote (`--amount '-250 USD'`) and a commodity
+quoted in itself (`-c USD --amount '1 USD'`) with exit **2**, nothing written;
+a zero quote is still recorded, since a delisted security can be worth nothing.
+Beancount parses a negative `price` directive, so `bea check` would not catch
+one. `bea import` marks an importer's price row with either value `invalid`.
+
 `add price` skips an exact date/commodity/amount match anywhere in the root
 ledger's includes. It reports the existing location and exits **0** with
 `written: 0` and `duplicate: true` in JSON. A different amount for the same

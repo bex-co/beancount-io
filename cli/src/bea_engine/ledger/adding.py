@@ -1102,6 +1102,7 @@ def _price(
 
     from bea_engine import managed_load
     from bea_engine.ledger.models import WRITE_INPUT, PriceDirective
+    from bea_engine.ledger.prices import quote_refusal
     from bea_engine.ledger.reader import authored_entries
     from bea_engine.managed_price_cache import managed_source_for_path
     from bea_engine.query import format_error
@@ -1113,6 +1114,9 @@ def _price(
         {"date": _date(request), "currency": currency, "amount": {"number": number, "currency": amount_currency}},
         context=WRITE_INPUT,
     )
+    refusal = quote_refusal(currency, number, amount_currency)
+    if refusal is not None:
+        raise protocol.UsageError(f"{refusal} Nothing was written.")
     snapshot = write.LedgerSnapshot.capture(file)
     target = write.destination(file, into)
     snapshot.require_target(target, into=into)

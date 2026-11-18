@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from bea_engine.ledger import write as ledger_write
-from bea_engine.ledger.prices import reciprocal_agrees
+from bea_engine.ledger.prices import quote_refusal, reciprocal_agrees
 from bea_engine.ledger.text import (
     OPENED_ACCOUNTS,
     bea_command,
@@ -739,7 +739,12 @@ def answer(
             recorded = quotes.setdefault(key, [])
             match = next((quote for quote in recorded if quote.amount.number == entry.amount.number), None)
             other = next((quote for quote in recorded if quote.amount.number != entry.amount.number), None)
-            if match is not None:
+            refusal = quote_refusal(entry.currency, entry.amount.number, entry.amount.currency)
+            if refusal is not None:
+                # The quote `add price` refuses: a negative one parses and
+                # values the holding below zero (w1/277).
+                status, reason, match = "invalid", refusal, None
+            elif match is not None:
                 status, reason = "duplicate", f"Price already recorded at {_quote_origin(match, batch_rows)}."
             elif other is not None:
                 status, conflicts, price_conflicts = "conflict", True, True
@@ -896,6 +901,7 @@ def answer(
 
     shown = [row["entry"] for row in rows if row["include"] or row["status"] == "blocked"]
     proposed = ledger_write.decoded_append(target, original, shown)
+    refused_quotes = [f"Row {row['row']}: {row['reason']}" for row in rows if row["status"] == "invalid"]
     validation_errors: list[str] = []
     validation_warnings: list[str] = []
     # Quotes this import writes that no read of the result would use: a
@@ -949,6 +955,7 @@ def answer(
             texts = [row["entry"] for row in rows if row["include"]]
             validation_errors = [f"Row {row['row']}: {row['reason']}" for row in rows if row["status"] == "invalid"]
 
+    validation_errors = [*refused_quotes, *(error for error in validation_errors if error not in refused_quotes)]
     preview: dict[str, Any] = {
         "source": str(source),
         "config": preview_config,

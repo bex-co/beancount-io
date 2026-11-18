@@ -31,6 +31,22 @@ ONE = Decimal(1)
 ZERO = Decimal()
 
 
+def quote_refusal(currency: str, number: Decimal | None, quote_currency: str) -> str | None:
+    """Why a price directive must not be written, or None when it may.
+
+    Beancount refuses a negative price on a posting but parses one on a
+    `price` directive, so a sign typo recorded at exit 0 and valued the
+    holding below zero; a commodity quoted in itself values nothing (w1/277).
+    A zero quote stays allowed: a delisted security can be worth nothing.
+    Shared by `add price` and import, which must refuse the same quotes.
+    """
+    if number is not None and number < 0:
+        return f"Negative prices are not allowed: {format(number, 'f')} {quote_currency}."
+    if currency == quote_currency:
+        return f"A price of {currency} in {quote_currency} values nothing; quote {currency} in another currency."
+    return None
+
+
 def reciprocal_agrees(typed: Decimal | None, other: Decimal | None) -> bool:
     """Whether a new quote agrees with a same-day reciprocal, at the typed precision.
 
