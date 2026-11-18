@@ -1641,7 +1641,10 @@ put the note in `--meta` instead.
 a date and a ticker — `--meta 'name:Vanguard 500 Index' --meta
 'asset-class:equity'`. The keys are written indented under the directive and come
 back in the add envelope in the same tagged form as transaction metadata, so a
-response can be sent again unchanged.
+response can be sent again unchanged. A symbol the ledger already declares is
+refused with exit **1**, nothing written: the error names that declaration's
+`file:line` and, with `--meta`, the keys to write under it, since
+`add commodity` cannot change an existing declaration.
 
 `add price` refuses a negative quote (`--amount '-250 USD'`) and a commodity
 quoted in itself (`-c USD --amount '1 USD'`) with exit **2**, nothing written;

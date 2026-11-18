@@ -2561,7 +2561,7 @@ def validate_candidate(
     an exchange never made (w5/804).
     """
     from beancount.core import interpolate
-    from beancount.core.data import Balance, Close, Document, Open, Pad, Transaction
+    from beancount.core.data import Balance, Close, Commodity, Document, Open, Pad, Transaction
     from beancount.core.flags import FLAG_PADDING
     from beancount.plugins.unique_prices import UniquePricesError
 
@@ -2652,6 +2652,7 @@ def validate_candidate(
     # minutes.
     account_suggestions: dict[str, str] = {}
     lifecycles: dict[str, list[Any]] | None = None
+    declarations: dict[str, list[Any]] | None = None
     closes_by_location: dict[tuple[Any, Any, Any], Any] | None = None
     cost_holders: dict[str, set[int]] | None = None
     first_inactive_dates: dict[str, Any] | None = None
@@ -2996,6 +2997,19 @@ def validate_candidate(
                 and _proposed_entry(duplicate_close, filenames, original_lines)
             ):
                 hints.append(_duplicate_close_hint(existing_close, duplicate_close, filenames))
+        if isinstance(error.entry, Commodity) and error.message.startswith("Duplicate commodity directives for "):
+            if declarations is None:
+                declarations = {}
+                for entry in entries:
+                    if isinstance(entry, Commodity):
+                        declarations.setdefault(entry.currency, []).append(entry)
+            declared = declarations.get(error.entry.currency, [])
+            # As with opens, Beancount blames the later-dated declaration,
+            # which can be the existing one (w5/658).
+            existing = next((e for e in declared if _within_original(e, filenames, original_line_counts)), None)
+            proposed = next((e for e in declared if _proposed_entry(e, filenames, original_lines)), None)
+            if existing is not None and proposed is not None:
+                hints.append(_duplicate_commodity_hint(existing, proposed, filenames))
         if isinstance(error, UniquePricesError):
             hints.append(_unique_prices_hint(error.entry, filenames, original_lines))
         if is_invalid_pad_account(error):
@@ -3802,6 +3816,33 @@ def _duplicate_close_hint(existing: Any, duplicate: Any, filenames: dict[Path, P
     return (
         f"The proposed close would close {existing.account} on {duplicate.date}, but it is already closed "
         f"{existing.date} at {where}; an account closes once \u2014 edit that close's date."
+    )
+
+
+def _duplicate_commodity_hint(existing: Any, proposed: Any, filenames: dict[Path, Path]) -> str:
+    """One remedy for a second `commodity`: a symbol is declared once, so edit the first (w1/286).
+
+    The usual reason to declare a symbol again is to give it metadata, which
+    belongs under the existing declaration.
+    """
+    from bea_engine.ledger.writer import format_entry
+
+    hint = f"{existing.currency} is already declared at {_location(existing, filenames)}; a commodity is declared once."
+    changed = {
+        key: value
+        for key, value in proposed.meta.items()
+        if key not in ("filename", "lineno")
+        and not key.startswith("__")
+        and (key not in existing.meta or existing.meta[key] != value)
+    }
+    if not changed:
+        return hint
+    rendered = format_entry(proposed._replace(meta={"filename": "", "lineno": 0, **changed}))
+    lines = [line.strip() for line in rendered.splitlines()[1:] if line.strip()]
+    verb = "set" if any(key in existing.meta for key in changed) else "add"
+    return (
+        f"{hint} To {verb} {', '.join(lines)}, edit that directive's metadata "
+        "(bea add commodity cannot change an existing commodity)."
     )
 
 
