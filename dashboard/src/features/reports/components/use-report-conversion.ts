@@ -31,7 +31,8 @@ export function resolveReportConversion(
 ): ConversionOption {
   if (
     stored &&
-    (PRESENTATION_CONVERSIONS.has(stored) || operatingCurrencies.includes(stored))
+    (PRESENTATION_CONVERSIONS.has(stored) ||
+      operatingCurrencies.includes(stored))
   ) {
     return stored as ConversionOption;
   }

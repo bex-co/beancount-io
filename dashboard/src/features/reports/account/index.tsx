@@ -400,8 +400,11 @@ export default function AccountPage() {
       value: "changesOverTime",
     },
   ];
-  const { primaryCurrency, operatingCurrencies, ledgerName: ledgerDisplayName } =
-    useLedger();
+  const {
+    primaryCurrency,
+    operatingCurrencies,
+    ledgerName: ledgerDisplayName,
+  } = useLedger();
   // In the URL too, so a shared scope edit regroups by the reader\'s choice.
   const [timeInterval, setTimeInterval] = useReportInterval(
     "/ledger/$ledgerOwner/$ledgerName/account/$accountName",

@@ -35,7 +35,9 @@ describe("useReportConversion", () => {
   });
 
   it("opens the next report page for the same ledger with the choice made on the last one", () => {
-    const balanceSheet = renderHook(() => useReportConversion(LEDGER_A, ["USD"]));
+    const balanceSheet = renderHook(() =>
+      useReportConversion(LEDGER_A, ["USD"]),
+    );
     act(() => balanceSheet.result.current[1]("units"));
     expect(balanceSheet.result.current[0]).toBe("units");
     balanceSheet.unmount();
@@ -78,10 +80,12 @@ describe("useReportConversion", () => {
   it("accepts the ledger's primary currency but not a currency it does not offer", () => {
     cookies.set(reportConversionCookieKey(LEDGER_A), "EUR");
     expect(
-      renderHook(() => useReportConversion(LEDGER_A, ["EUR"])).result.current[0],
+      renderHook(() => useReportConversion(LEDGER_A, ["EUR"])).result
+        .current[0],
     ).toBe("EUR");
     expect(
-      renderHook(() => useReportConversion(LEDGER_A, ["USD"])).result.current[0],
+      renderHook(() => useReportConversion(LEDGER_A, ["USD"])).result
+        .current[0],
     ).toBe("at_cost");
   });
 

@@ -44,7 +44,9 @@ describe("ConversionSelect", () => {
   });
 
   it("should render with custom currency value", () => {
-    render(<ConversionSelect {...defaultProps} value="EUR" currencies={["EUR"]} />);
+    render(
+      <ConversionSelect {...defaultProps} value="EUR" currencies={["EUR"]} />,
+    );
 
     // When value is EUR and EUR is offered, it shows the converted label
     expect(screen.getByText(/Converted to EUR/)).toBeInTheDocument();
@@ -63,9 +65,7 @@ describe("ConversionSelect", () => {
     const selector = screen.getByRole("combobox");
     selector.focus();
     await userEvent.keyboard("{Enter}");
-    const options = within(
-      document.body,
-    ).getAllByRole("option");
+    const options = within(document.body).getAllByRole("option");
     // at_cost, at_value, units, plus one item per operating currency.
     expect(options).toHaveLength(5);
     expect(
