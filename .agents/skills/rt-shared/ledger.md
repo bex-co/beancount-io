@@ -1,4 +1,4 @@
-# rt-* ledger
+# rt-\* ledger
 
 Findings carried from one routine run to the next. The rules are in
 [`contract.md`](contract.md#ledger): read your section before discovering,
