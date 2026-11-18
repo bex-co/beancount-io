@@ -173,7 +173,7 @@ Environment tab (an environment variable you add there is kept across syncs):
 | `OPENAI_API_KEY` (and optionally `OPENAI_BASE_URL`) | `bea ask`: its model proxy forwards to OpenAI with this key. With none it answers "Model proxy is not configured. Set OPENAI_API_KEY." |
 | `TEMP_ASSETS_AWS_S3_*`, `PERM_ASSETS_AWS_S3_*` (`BUCKET`, `ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`) | receipt and attachment uploads |
 | `SEND_GRID_API_KEY` | mail: password recovery and, if you turn `SELF_HOST` off, sign-up codes |
-| `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` (and optionally `OIDC_NAME`, `OIDC_LINK_BY_EMAIL`, `OIDC_ALLOWED_EMAILS`) | sign-in with your own identity provider; see the backend-v2 README |
+| `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` (and optionally `OIDC_NAME`, `OIDC_LINK_BY_EMAIL`, `OIDC_ALLOWED_EMAILS`) | sign-in with your own identity provider, and more accounts; see [More accounts](#more-accounts-your-own-identity-provider) |
 
 ## Self-hosting: no verification page, no plan limits
 
@@ -194,8 +194,9 @@ still fails instead of opening up. With it on:
   your model key. Afterwards `signUp` answers `FORBIDDEN`, the sign-in page
   offers no "Sign up", and `/auth/sign-up` sends the visitor to sign in. The
   first account is whoever signs up first, so **sign up as soon as the deploy
-  is up**. There is no way yet to add a second account; deleting the only
-  account reopens sign-up.
+  is up**. Deleting the only account reopens sign-up. Sign-up never reopens
+  for a second person: more accounts come only through your own identity
+  provider ([More accounts](#more-accounts-your-own-identity-provider)).
 - The sign-up page leaves out the hosted service's Terms and Privacy Policy
   line: those do not bind a stack its own operator runs.
 - The email address is **not** proven to belong to the person signing up, and
@@ -211,6 +212,28 @@ go back to a managed setup, set `SELF_HOST` to
 `"false"` (an omitted env var is kept, so removing the line from `bex.yaml`
 alone does not turn it off) and set `SEND_GRID_API_KEY`.
 
+### More accounts: your own identity provider
+
+Sign-up stays closed, but an OpenID Connect provider you connect can add
+accounts. On `beancount-api`, in the Environment tab:
+
+1. Set `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`, and register
+   `https://<dashboard address>/api-gateway/auth/oidc/callback` as the
+   client's redirect URI. The sign-in page then offers "Sign in with
+   `OIDC_NAME`" (default "SSO").
+2. List who may join in `OIDC_ALLOWED_EMAILS`, comma-separated:
+   `alice@example.com`, `@example.com` (that domain), or `@*.example.com` (its
+   subdomains). A verified email on the list gets an account, with a default
+   ledger and no password, the first time it signs in. Without the list the
+   provider signs in accounts already linked to it and creates none.
+
+Everyone it lets in shares your disk and model key, with no plan limits. With a
+provider anyone can join, such as a public one, list addresses, not a domain
+like `@gmail.com`. Linking an existing account, `OIDC_LINK_BY_EMAIL`, and why
+`OIDC_ISSUER` must not change once accounts are linked are in the
+[backend-v2 README](../../backend-cluster/backend-v2/README.md). This has not
+yet been run on a live bex.
+
 ### Upgrading a stack that is already running
 
 Read this before you sync a newer Blueprint into a stack that holds data. Four
@@ -218,7 +241,8 @@ things behave differently, and the last one needs a backup first:
 
 - **Sign-up closes.** A stack that already has any account stops taking
   sign-ups: `signUp` answers `FORBIDDEN` and the sign-in page drops "Sign up".
-  Existing accounts keep working. There is no way yet to add another account.
+  Existing accounts keep working; more come only through your own identity
+  provider ([More accounts](#more-accounts-your-own-identity-provider)).
 - **More `SELF_HOST` values count as on.** Only `true` used to; now `1`, `yes`,
   `y` and `on` do too. A stack that had one of those set was running as a
   managed deployment (email verification, plan limits) and becomes a self-host,

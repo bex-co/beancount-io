@@ -192,7 +192,8 @@ created has no password, so its user can't sign in and link the new ID.
 OIDC is off.
 
 Upgrading a running self-host changes three things. A stack that already has an
-account stops taking sign-ups, and there is no way yet to add another. Only
+account stops taking sign-ups, and only an OIDC provider with
+`OIDC_ALLOWED_EMAILS` adds another. Only
 `true` used to turn `SELF_HOST` on, so a stack that had `1`, `yes`, `y` or `on`
 set was running as a managed deployment and now becomes a self-host (set
 `false` to keep the old behavior). And `bea ask`'s model proxy now forwards to
