@@ -1109,6 +1109,13 @@ def _price(
     currency = _text(request, "currency")
     number = _decimal(request, "number")
     amount_currency = _text(request, "amount_currency")
+    # A quote with no valid value is refused before the ledger is even read,
+    # so neither --force nor an already recorded twin can bless it (w1/277).
+    from bea_engine.ledger.prices import bad_quote_reason
+
+    quote_reason = bad_quote_reason(currency, amount_currency, number)
+    if quote_reason is not None:
+        raise protocol.UsageError(f"{quote_reason} Nothing was written.")
     directive = PriceDirective.model_validate(
         {"date": _date(request), "currency": currency, "amount": {"number": number, "currency": amount_currency}},
         context=WRITE_INPUT,

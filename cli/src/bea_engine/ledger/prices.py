@@ -57,6 +57,24 @@ def reciprocal_agrees(typed: Decimal | None, other: Decimal | None) -> bool:
             return False
 
 
+def bad_quote_reason(currency: str, quote_currency: str, number: Decimal | None) -> str | None:
+    """Why a quote must not be written, or None when its value may be.
+
+    Shared by `add price` and import, which must refuse the same values
+    (w1/277): a negative quote would value a holding below zero — Beancount
+    itself refuses one on a posting, and `add transaction` passes that
+    refusal on — and a commodity priced in itself values nothing. A zero
+    quote stays allowed: a delisted security can be worth 0. A quote with
+    no number is not judged here; it never reaches `add price`, and import
+    leaves its handling to the existing row validation.
+    """
+    if number is not None and number < 0:
+        return f"Negative prices are not allowed: {format(number, 'f')} {quote_currency}."
+    if currency == quote_currency:
+        return f"The quote currency must be another commodity: {currency} cannot be priced in itself."
+    return None
+
+
 Quote = tuple[date, str, str, Decimal]
 """One price point in entry order: day, base, quote, rate."""
 

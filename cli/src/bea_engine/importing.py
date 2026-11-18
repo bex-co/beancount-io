@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from bea_engine.ledger import write as ledger_write
-from bea_engine.ledger.prices import reciprocal_agrees
+from bea_engine.ledger.prices import bad_quote_reason, reciprocal_agrees
 from bea_engine.ledger.text import (
     OPENED_ACCOUNTS,
     bea_command,
@@ -737,9 +737,16 @@ def answer(
             # (w5/302).
             key = (entry.date, entry.currency, entry.amount.currency)
             recorded = quotes.setdefault(key, [])
+            quote_reason = bad_quote_reason(entry.currency, entry.amount.currency, entry.amount.number)
             match = next((quote for quote in recorded if quote.amount.number == entry.amount.number), None)
             other = next((quote for quote in recorded if quote.amount.number != entry.amount.number), None)
-            if match is not None:
+            if quote_reason is not None:
+                # The same values `add price` refuses (w1/277): a row that
+                # cannot be priced cannot join the import, and --apply then
+                # refuses the whole batch rather than writing around it.
+                status, conflicts = "conflict", True
+                reason = f"{quote_reason} Correct the row in the source file."
+            elif match is not None:
                 status, reason = "duplicate", f"Price already recorded at {_quote_origin(match, batch_rows)}."
             elif other is not None:
                 status, conflicts, price_conflicts = "conflict", True, True

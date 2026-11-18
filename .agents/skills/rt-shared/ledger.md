@@ -51,6 +51,7 @@ newest first.
 
 ### Skipped
 
+- 2026-11-18 monaco `beancount` language Deferred above — already carried by branch `bex-agent/ags-dbu0pfuc1l2s739d3n5g` (2026-11-17, same fix); skipping to avoid duplicate work.
 - 2026-11-17 `dashboard/src/features/ledger-data/holdings/utils.ts:71` `tableToCSV` — FIXED: now serializes through shared `rowsToCSV({ quoteAll: true })`; `-33.71 USD` leaves neutralized, signed plain numbers stay numeric; `holdings-amount-direction.test.tsx` expectation updated.
 
 ## rt-logic-simplifier
