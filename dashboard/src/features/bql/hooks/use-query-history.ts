@@ -21,28 +21,20 @@ function readHistory(raw: string): string[] {
 }
 
 /**
- * What is stored right now, read at write time. Each tab's hook state is a
- * snapshot from when it mounted, so applying an add or remove to it alone
- * would write the other tabs' newer entries away (w5/1172). Merging the
- * stored list with this tab's state instead keeps the union: entries only
- * this tab knows about (a write that updated state but never persisted) go
- * first, then everything stored — the same read-at-write-time merge the
- * Overview layout applies to its stored layout.
+ * What is stored right now, read at write time, or null when storage cannot
+ * be read. Each tab's hook state is a snapshot from when it mounted, so an add
+ * or remove applied to it would write the other tabs' newer entries away and
+ * bring back the ones they deleted (w5/1172). Applying it to the stored list
+ * instead keeps every tab's queries and every tab's deletions. This tab's own
+ * state is the base only when storage is unavailable.
  */
-function readStoredHistory(): string[] {
+function readStoredHistory(): string[] | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw === null) return [];
-    return readHistory(raw);
+    return raw === null ? [] : readHistory(raw);
   } catch {
-    return [];
+    return null;
   }
-}
-
-/** Newest-first union of the stored list and this tab's state. */
-function mergeHistories(stored: string[], memory: string[]): string[] {
-  const seen = new Set(stored);
-  return [...memory.filter((q) => !seen.has(q)), ...stored];
 }
 
 export function useQueryHistory() {
@@ -57,8 +49,8 @@ export function useQueryHistory() {
       if (!query.trim()) return;
 
       setHistory((prev) => {
-        const merged = mergeHistories(readStoredHistory(), prev);
-        const filtered = merged.filter((q) => q !== query);
+        const base = readStoredHistory() ?? prev;
+        const filtered = base.filter((q) => q !== query);
         return [query, ...filtered].slice(0, MAX_HISTORY_SIZE);
       });
     },
@@ -72,7 +64,7 @@ export function useQueryHistory() {
   const removeQuery = useCallback(
     (query: string) => {
       setHistory((prev) =>
-        mergeHistories(readStoredHistory(), prev).filter((q) => q !== query),
+        (readStoredHistory() ?? prev).filter((q) => q !== query),
       );
     },
     [setHistory],

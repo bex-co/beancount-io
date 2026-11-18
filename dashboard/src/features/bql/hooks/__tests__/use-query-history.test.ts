@@ -262,6 +262,30 @@ describe("useQueryHistory", () => {
     }
   });
 
+  it("does not resurrect a query that both tabs had loaded and one deleted", () => {
+    const restore = installMemoryStorage();
+    try {
+      localStorage.setItem(
+        "beancount-query-history",
+        JSON.stringify(["query2", "query1"]),
+      );
+      const tabA = renderHook(() => useQueryHistory());
+      const tabB = renderHook(() => useQueryHistory());
+      expect(tabB.result.current.history).toEqual(["query2", "query1"]);
+
+      act(() => {
+        tabA.result.current.removeQuery("query1");
+      });
+      act(() => {
+        tabB.result.current.addQuery("query3");
+      });
+
+      expect(readStoredHistory()).toEqual(["query3", "query2"]);
+    } finally {
+      restore();
+    }
+  });
+
   it("does not resurrect a query another instance deleted", () => {
     const restore = installMemoryStorage();
     try {
