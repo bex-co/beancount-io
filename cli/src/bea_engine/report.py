@@ -1045,13 +1045,22 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
     # order and the running balance passed through amounts the parent never
     # held (w5/1056).
     from fava.beans import abc
+    from fava.beans.flags import FLAG_SUMMARIZE
 
     ordered: list[tuple[Any, str]] = []
     for entry in period_entries:
         if isinstance(entry, abc.Transaction):
+            # A period clamp's `<summarize>` transaction pairs each position of
+            # the summarized account with a plug on `Opening-Balances`. Only
+            # the account's own legs (the even ones) are its opening balance;
+            # listing the plugs ran an equity register through amounts it
+            # never held and named an account never opened (w1/279).
+            postings = entry.postings
+            if entry.flag == FLAG_SUMMARIZE and (entry.meta or {}).get("filename") == "<summarize>":
+                postings = postings[::2]
             ordered += [
                 (TransactionPosting(entry, posting), posting.account)
-                for posting in entry.postings
+                for posting in postings
                 if posting.account in wanted
             ]
         elif isinstance(entry, Balance) and entry.account in wanted:
