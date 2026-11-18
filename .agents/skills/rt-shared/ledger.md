@@ -34,6 +34,15 @@ newest first.
 
 ### Skipped
 
+- 2026-11-18 cli `bea_engine`/`cli` mirror pairs (`amounts`, `csv_mapper`, `paths`, `display_width`, `include_glob`, `ledger/text`, `protocol`/`query`/`write` vs `output`, `write` vs `launch`/`provision`, `managed_price_cache` vs `update`) — Deferred comparison done: identical or deliberately adapted (engine handles ENAMETOOLONG at point of use; descriptor/long-name helpers are frontend-only; convention vote lives only in the engine extraction copy); no non-deliberate drift.
+- 2026-11-18 cli `list.py` `_account/_currency/_type/_plain_command` factories — differ by one filter option each; parameterizing needs config objects, more complex than the copies.
+- 2026-11-18 cli `report.py` per-command bodies — Typer command definitions differing per report; shared parts already factored (`_ask`/`_emit_json`/`_csv_output`).
+- 2026-11-18 cli `add.py` balance/price `_write` blocks — differ in request name and post-handling; unification needs mode flags.
+- 2026-11-18 cli `cloud/ledger/app.py` vs `init.py` `--module`/`--property-name` options — shared option spelling, but help-text drift is cosmetic, below the value bar.
+- 2026-11-18 cli `provision.py` vs `utils.py` lock tails — different locks (provision timeout/announce vs simple exclusive); shared unlock tail is six stable lines.
+- 2026-11-18 cli `agent_guidance.py` templates — template text overlap, not logic.
+- 2026-11-18 `bea_engine/query.py` `GuardedShell` vs `PreciseShell` — deliberately different shells; shared one-liners already delegate to module helpers.
+- 2026-11-18 `bea_engine/reader.py` `list_*` functions and `updating.py`/`main.py`/`managed_load.py`/`models.py`/`report.py` small pairs — same-signature skeletons or option declarations; parameterizing needs dispatch/mode abstractions.
 - 2026-11-17 mobile `ledger-guard.tsx` settings button ×3 — `settings-entry.test.ts` asserts the source appears three times.
 - 2026-11-17 dashboard `use-local-storage-state.ts` vs `use-session-storage-state.ts` — merging needs a storage parameter plus a cross-tab-sync mode flag, more complex than the copies.
 
