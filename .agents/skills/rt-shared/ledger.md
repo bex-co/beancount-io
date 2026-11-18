@@ -60,6 +60,11 @@ newest first.
 
 ### Skipped
 
+- 2026-11-18 `mobile/src/common/decimal-number.ts` vs `dashboard/src/common/lib/beancount/decimal-number.ts` — 138-case differential fuzz plus 60-input parser crash-fuzz agree with zero divergence; out-of-contract inputs (non-decimal strings, zero denominators, negative digits) throw identically on both sides and no caller passes them.
+- 2026-11-18 mobile vs dashboard budget twins (`daysInBudgetPeriod`, week-start, unknown-cadence default, newest-signed-entry direction) — both Monday-start weeks, monthly default, DST-safe day counts, zero-sign normalized away by `parseDecimal`; agree on every probed edge.
+- 2026-11-18 `mobile/src/common/entry-write.ts` nonce/fingerprint retry machine + `single-flight.ts` + `use-single-entry-write.ts` unification — retries rebuild identical variables so the requestId is stable, the nonce renews after every save, same-screen double taps collapse to one write; no divergence from the pre-unification hooks.
+- 2026-11-18 `mobile/.../select-account-journal.ts` paging (`mergeAccountJournalItems`, `hasMoreAccountJournal`) and dashboard `formatPercentageCell` number path — covered by existing tests; the query returns decimal strings so the number path is defensive-only.
+
 - 2026-11-18 mobile `detect-recurrence.ts` — 60k-case fuzz over cadences/jitter/refunds/zeros/pre-entered points plus 23 exact next-date oracles all hold; no divergence from documented intent found.
 - 2026-11-18 `cli/src/bea_engine/csv_mapper.py` vs `cli/csv_mapper.py` mirror — `_DATE_FORMATS`, `detect_delimiter`, `read_header`, `parse_delimiter/encoding`, pending-status pin all agree; `_strptime` strictness unreachable via built-in formats; `open_records` surplus refusal is extraction-only by design (preview comes from the engine); engine `infer_mapping` `_spec_column` drift is dead code with no callers.
 - 2026-11-17 `dashboard/src/features/ledger-data/holdings/utils.ts:71` `tableToCSV` — FIXED: now serializes through shared `rowsToCSV({ quoteAll: true })`; `-33.71 USD` leaves neutralized, signed plain numbers stay numeric; `holdings-amount-direction.test.tsx` expectation updated.
