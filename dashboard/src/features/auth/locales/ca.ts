@@ -398,6 +398,11 @@ const caAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "Aquest correu no té permís per iniciar la sessió aquí.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "No s'ha pogut iniciar la sessió. Torna-ho a provar.",
     description: "Generic error when provider sign-in fails",

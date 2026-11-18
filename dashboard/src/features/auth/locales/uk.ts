@@ -394,6 +394,11 @@ const ukAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "З цією адресою тут не можна увійти.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "Не вдалося увійти. Спробуйте ще раз.",
     description: "Generic error when provider sign-in fails",

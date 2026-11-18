@@ -394,6 +394,11 @@ const nlAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "Met dit e-mailadres kun je hier niet inloggen.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "Inloggen mislukt. Probeer het opnieuw.",
     description: "Generic error when provider sign-in fails",

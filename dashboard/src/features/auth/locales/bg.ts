@@ -394,6 +394,11 @@ const bgAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "С този имейл не може да се влиза тук.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "Входът не бе успешен. Опитайте отново.",
     description: "Generic error when provider sign-in fails",

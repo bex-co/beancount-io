@@ -6,6 +6,7 @@ const OIDC_ERROR_KEYS = {
   blocked: "auth.oidcErrorBlocked",
   already_linked: "auth.oidcErrorAlreadyLinked",
   account_linked: "auth.oidcErrorAccountLinked",
+  not_allowed: "auth.oidcErrorNotAllowed",
   failed: "auth.oidcErrorFailed",
 } as const;
 
