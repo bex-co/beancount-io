@@ -157,13 +157,6 @@ describe("useUnstarLedger", () => {
 
       expect(mockMutate).toHaveBeenCalledTimes(2);
     });
-
-    it("should configure refetchQueries correctly", () => {
-      renderHook(() => useUnstarLedger(testLedgerId));
-
-      // Verify useMutation was configured with refetchQueries
-      expect(vi.mocked).toBeDefined();
-    });
   });
 
   describe("Success State", () => {
@@ -208,25 +201,6 @@ describe("useUnstarLedger", () => {
       await waitFor(() => {
         expect(mockToast.success).toHaveBeenCalled();
       });
-    });
-
-    it("should update isStarred to false on success", async () => {
-      const successData = {
-        unstarLedger: {
-          success: true,
-          isStarred: false,
-          message: null,
-        },
-      };
-
-      mockMutationResult.data = successData;
-
-      const { result } = renderHook(() => useUnstarLedger(testLedgerId));
-
-      await result.current.unstarLedger();
-
-      // Verify the data was set correctly (data persists after mutation)
-      expect(successData.unstarLedger.isStarred).toBe(false);
     });
   });
 
