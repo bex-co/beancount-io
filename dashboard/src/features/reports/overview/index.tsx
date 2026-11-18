@@ -552,6 +552,23 @@ export default function LedgerOverviewPage() {
     ),
   };
 
+  // Literal class sets, one per reader, so Tailwind sees every name.
+  const headLayout = publicReader
+    ? {
+        grid: "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-6 @6xl/overview-head:grid-cols-[minmax(0,1fr)_minmax(0,26rem)_auto] @6xl/overview-head:gap-x-6",
+        actions:
+          "col-start-2 row-start-1 flex shrink-0 items-center gap-1.5 @6xl/overview-head:col-start-3",
+        ask: "col-span-full row-start-2 max-w-3xl @6xl/overview-head:col-span-1 @6xl/overview-head:col-start-2 @6xl/overview-head:row-start-1 @6xl/overview-head:max-w-none @6xl/overview-head:-mt-1.5",
+        summary: "col-span-full row-start-3 @6xl/overview-head:row-start-2",
+      }
+    : {
+        grid: "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-6 @4xl/overview-head:grid-cols-[minmax(0,1fr)_minmax(0,26rem)_auto] @4xl/overview-head:gap-x-6",
+        actions:
+          "col-start-2 row-start-1 flex shrink-0 items-center gap-1.5 @4xl/overview-head:col-start-3",
+        ask: "col-span-full row-start-2 max-w-3xl @4xl/overview-head:col-span-1 @4xl/overview-head:col-start-2 @4xl/overview-head:row-start-1 @4xl/overview-head:max-w-none @4xl/overview-head:-mt-1.5",
+        summary: "col-span-full row-start-3 @4xl/overview-head:row-start-2",
+      };
+
   const visibleWidgetIds = layout.order.filter(
     (id) => !layout.hidden.includes(id),
   );
@@ -570,12 +587,17 @@ export default function LedgerOverviewPage() {
           and the question box. Writers already know which page this is, so
           the sentence describing the dashboard is kept for public readers,
           who arrive without that context. */}
-      <header className={SECTION_ENTRANCE} style={sectionDelay(0)}>
-        {/* One grid: the name and the actions on the first row, with the
-            question box between them where there is room, so it never stands
-            between the month's summary and the figures; on a narrow screen
-            it follows the summary. */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)_auto] lg:gap-x-6">
+      <header
+        className={`@container/overview-head ${SECTION_ENTRANCE}`}
+        style={sectionDelay(0)}
+      >
+        {/* One grid: the name and the actions on the first row, and the
+            question box beside them where the header itself has room —
+            measured on the header, not the window, which a sidebar narrows.
+            A public reader's long title and introduction need more of that
+            room before the box sits beside them. Otherwise the box follows
+            the name, ahead of the month and its figures. */}
+        <div className={headLayout.grid}>
           <div className="min-w-0">
             <h1
               ref={overviewHeading}
@@ -597,7 +619,7 @@ export default function LedgerOverviewPage() {
               />
             )}
           </div>
-          <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-1.5 lg:col-start-3">
+          <div className={headLayout.actions}>
             <LedgerWritePermission>
               <Button
                 asChild
@@ -639,7 +661,7 @@ export default function LedgerOverviewPage() {
             />
           </div>
           {heroShown && (
-            <div className="col-span-full">
+            <div className={headLayout.summary}>
               <MonthSummary
                 dates={month.dates}
                 selectedDate={month.selectedDate}
@@ -653,7 +675,7 @@ export default function LedgerOverviewPage() {
               />
             </div>
           )}
-          <div className="col-span-full max-w-3xl lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:max-w-none lg:-mt-1.5">
+          <div className={headLayout.ask}>
             <QuickAskInput />
           </div>
         </div>
