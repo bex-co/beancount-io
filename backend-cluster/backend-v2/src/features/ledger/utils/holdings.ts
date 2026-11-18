@@ -438,8 +438,11 @@ export function composeHoldings(params: {
       found[1] = found[1].plus(basisBN);
       found[2].add(name);
       found[3] = found[3].plus(marketBN);
-      // One quote per (commodity, held) pair, so merged rows agree; a
-      // disagreement keeps the first rather than inventing a blend.
+      // Lots costed in USD and EUR that both convert into USD share this
+      // group (w1/288): it keeps the first quote rather than inventing a
+      // blend, but a quote beats none, so a lot valued at cost first does
+      // not hide the next one's quote.
+      found[4] ??= price;
     }
   }
 

@@ -709,7 +709,11 @@ def _holdings(
     A group none of whose lots is still held is fully sold and left out
     (w22/m3/t001). Net units are not that test: +2 HOOL long and -2 HOOL
     short net to 0 HOOL while both lots, and their -40 USD of basis, are
-    still held (w5/947); such a group has no average cost.
+    still held (w5/947); such a group has no average cost. A commodity's lots
+    costed in different currencies are one group once a currency conversion
+    has valued them all into one currency (w1/288); under `units`, `at_cost`
+    and `at_value`, or when a leg has no rate, each cost currency keeps its
+    own row, which its average cost's currency tells apart.
 
     Cash is told apart by its commodity, not by a missing cost (w1/253): an
     uncosted position is cash when its commodity is money in this ledger
@@ -778,17 +782,19 @@ def _holdings(
         else:
             lots[(*prefix, "")] = [number, Decimal(0), names, False, 0]
     operating = list(prices.operating_currencies)
-    groups = []
+    # Valued groups by the row they show in, each with the fractional digits
+    # the text table shows its average cost in: at least those of the finest
+    # lot cost (w1/267), since a per-unit figure rounded to the posting
+    # precision read a 0.0042 USD lot as 0.00 USD. Under a currency
+    # conversion the row is the scope, the commodity, and the currencies its
+    # market value and basis came out in, so lots costed in USD and in EUR
+    # that both value into USD are one holding (w1/288); otherwise it is the
+    # lot-group's own key, one row per cost currency.
+    rows: dict[tuple[str, ...], list[tuple[dict[str, Any], int]]] = {}
     missing: list[tuple[str, str]] = []
     # Legs of uncosted positions no quote values: shown in units, not at cost.
     in_units: set[tuple[str, str]] = set()
-    # Per group, in order: the fractional digits the text table shows the
-    # average cost in, at least those of the finest lot cost (w1/267). A
-    # per-unit figure rounded to the posting precision read a 0.0042 USD lot
-    # as 0.00 USD. Frontend-only, like `display_precision`.
-    cost_digits: list[int] = []
     for key, (units, basis, accounts, basis_known, digits) in sorted(lots.items()):
-        cost_digits.append(digits)
         commodity, held = key[-2], key[-1]
         if not held:
             # No cost currency to value into: the first operating currency
@@ -802,7 +808,7 @@ def _holdings(
                 if candidates:
                     in_units.add((commodity, candidates[0]))
                 # Nothing to value into: the position stays in its units.
-                groups.append(_uncosted_unvalued(key, group_by, accounts, commodity, units))
+                rows[key] = [(_uncosted_unvalued(key, group_by, accounts, commodity, units), digits)]
                 continue
         valued = _value_holding(
             prices,
@@ -831,7 +837,11 @@ def _holdings(
                 _quote_source(sources, held, target, valued.leg_date) if valued.leg_date is not None else None
             ),
         }
-        groups.append(group)
+        row = key if target is None else (*key[:-1], valued.currency, valued.basis_currency)
+        rows.setdefault(row, []).append((group, digits))
+    groups = [_merged_holding([group for group, _ in parts], group_by) for parts in rows.values()]
+    # Frontend-only, like `display_precision`: one entry per group, in order.
+    cost_digits = [max(digits for _, digits in parts) for parts in rows.values()]
     valuation = _holdings_valuation(missing, in_units, end, allow_errors, filtered.ledger, ledger_errors)
     totals: dict[str, dict[str, Decimal]] = {"cost_basis": {}, "market_value": {}}
     for group in groups:
@@ -852,6 +862,51 @@ def _holdings(
         # leaves those positions out instead of counting them as zero.
         "cost_basis_complete": all(group["cost_basis"] is not None for group in groups),
     }
+
+
+def _merged_holding(parts: list[dict[str, Any]], group_by: str) -> dict[str, Any]:
+    """One holding from groups of one commodity valued into the same currencies (w1/288).
+
+    Lots costed in USD and EUR, both valued into USD, listed as two identical
+    `10 VT` rows. The merged group sums units, cost basis and market value
+    and unions the accounts; its average cost and basis are null when any
+    part's basis is unknown, as an uncosted position makes its group's. It
+    keeps the latest quote, and a stale source behind any part, so the
+    market value still reads stale when one of its legs is.
+    """
+    first, *rest = parts
+    if not rest:
+        return first
+    # Summed from the first part, not from 0: `0 + x` rounds a 29-digit
+    # token quantity before any real sum does (w5/1074).
+    units: Decimal = first["units"]["number"]
+    market: Decimal = first["market_value"]["number"]
+    basis: Decimal | None = first["cost_basis"]["number"] if first["cost_basis"] is not None else None
+    for part in rest:
+        units += part["units"]["number"]
+        market += part["market_value"]["number"]
+        basis = basis + part["cost_basis"]["number"] if basis is not None and part["cost_basis"] is not None else None
+    basis_currency = first["cost_basis"]["currency"] if basis is not None else None
+    quoted = max(parts, key=lambda part: part["price_date"] or date.min)
+    group: dict[str, Any] = (
+        {"account": first["account"]}
+        if group_by == "account"
+        else {"accounts": sorted({name for part in parts for name in part["accounts"]})}
+    )
+    group |= {
+        "commodity": first["commodity"],
+        "units": {"number": units, "currency": first["commodity"]},
+        "average_cost": {"number": basis / units, "currency": basis_currency} if basis is not None and units else None,
+        "cost_basis": {"number": basis, "currency": basis_currency} if basis is not None else None,
+        "market_value": {"number": market, "currency": first["market_value"]["currency"]},
+        "price": quoted["price"],
+        "price_date": quoted["price_date"],
+    }
+    for field in ("price_source", "conversion_source"):
+        known = [source for part in (quoted, *parts) if (source := part[field]) is not None]
+        stale = [source for source in known if source.get("freshness") == "stale"]
+        group[field] = (stale or known or [None])[0]
+    return group
 
 
 def _fraction_digits(number: Decimal) -> int:

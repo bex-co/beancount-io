@@ -679,6 +679,99 @@ describe("composeHoldings", () => {
     });
   });
 
+  // w1/288: 10 VT bought at 100 USD and 10 at 90 EUR. Valued into USD they
+  // are one holding, as `bea report holdings` lists them; without a
+  // conversion each cost currency keeps its own group.
+  describe("lots costed in two currencies", () => {
+    const lots = (eurAccount = "Assets:BrokerA"): Cell[][] => {
+      const usd = [
+        "Assets:BrokerA",
+        "VT",
+        "USD",
+        map("VT", "10"),
+        map("USD", "1000"),
+      ];
+      const eur = [eurAccount, "VT", "EUR", map("VT", "10"), map("EUR", "900")];
+      // In the detail query's order: account, currency, cost currency.
+      return eurAccount === "Assets:BrokerA" ? [eur, usd] : [usd, eur];
+    };
+    const consistent: Cell[][] = [
+      ["2024-03-01", "VT", map("USD", "110")],
+      ["2024-03-01", "VT", map("EUR", "100")],
+      ["2024-03-01", "EUR", map("USD", "1.1")],
+    ];
+    const compose = (
+      conversionTarget: string | null,
+      groupBy: "account" | "commodity",
+      rows: Cell[][],
+      prices: Cell[][] = consistent,
+    ) =>
+      composeHoldings({
+        ...base,
+        ...valueHoldingRows({
+          columns: COLUMNS.slice(0, 5),
+          rows,
+          prices,
+          conversionTarget,
+          asOf: "2026-10-25",
+        }),
+        conversionTarget,
+        groupBy,
+        prices,
+        operatingCurrencies: ["USD"],
+      });
+
+    it.each([
+      ["account", lots(), { account: "Assets:BrokerA" }],
+      [
+        "commodity",
+        lots("Assets:BrokerB"),
+        { accounts: ["Assets:BrokerA", "Assets:BrokerB"] },
+      ],
+    ] as const)(
+      "lists one %s group under a conversion",
+      (groupBy, rows, scope) => {
+        const result = compose("USD", groupBy, [...rows]);
+        expect(result.groups).toEqual([
+          {
+            ...scope,
+            commodity: "VT",
+            units: { number: "20", currency: "VT" },
+            average_cost: { number: "99.5", currency: "USD" },
+            cost_basis: { number: "1990", currency: "USD" },
+            market_value: { number: "2200", currency: "USD" },
+            price: { number: "110", currency: "USD" },
+          },
+        ]);
+        expect(result.valuation).toBe("complete");
+      },
+    );
+
+    it("keeps one group per cost currency without a conversion", () => {
+      const result = compose(null, "account", lots());
+      expect(result.groups.map((group) => group.average_cost)).toEqual([
+        { number: "90", currency: "EUR" },
+        { number: "100", currency: "USD" },
+      ]);
+    });
+
+    it("keeps a part's quote when the first part has none", () => {
+      // The QA repro: no VT quote in EUR, so that lot is valued at cost
+      // through its cost currency; the merged group still carries the USD
+      // lot's quote instead of dropping it.
+      const result = compose("USD", "account", lots(), [
+        ["2024-03-01", "VT", map("USD", "110")],
+        ["2024-03-01", "EUR", map("USD", "1.2")],
+      ]);
+      expect(result.groups).toHaveLength(1);
+      expect(result.groups[0]).toMatchObject({
+        units: { number: "20", currency: "VT" },
+        cost_basis: { number: "2080", currency: "USD" },
+        price: { number: "110", currency: "USD" },
+      });
+    });
+  });
+
   it("answers empty holdings with complete valuation", () => {
     const result = composeHoldings({ ...base, rows: [] });
     expect(result.groups).toEqual([]);

@@ -2011,6 +2011,12 @@ basis, and market value, grouped by account or — with `--group-by commodity`
 — by commodity across accounts; `--account / -a` narrows the positions. A
 group stays while any of its lots is held, even when long and short lots net
 to zero units; such a group has no average cost (`null` under `--json`).
+Under a currency conversion, lots of one commodity costed in different
+currencies (`10 VT {100 USD}` and `10 VT {90 EUR}`) are one group once
+valued into that currency: `20 VT` at an average `104 USD`. Under `units`,
+`at_cost` and `at_value`, or when a cost currency has no rate into the
+target, each cost currency keeps its own group, which its average cost's
+currency tells apart.
 Cash is told apart by its commodity: an uncosted balance in an operating
 currency, or in a currency lots are costed in (EUR beside `{140 EUR}` lots), is
 cash and left out. Being quoted in does not make a commodity money: with
