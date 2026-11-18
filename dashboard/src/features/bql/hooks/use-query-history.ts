@@ -20,6 +20,23 @@ function readHistory(raw: string): string[] {
     : [];
 }
 
+/**
+ * What is stored right now, read at write time, or null when storage cannot
+ * be read. Each tab's hook state is a snapshot from when it mounted, so an add
+ * or remove applied to it would write the other tabs' newer entries away and
+ * bring back the ones they deleted (w5/1172). Applying it to the stored list
+ * instead keeps every tab's queries and every tab's deletions. This tab's own
+ * state is the base only when storage is unavailable.
+ */
+function readStoredHistory(): string[] | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw === null ? [] : readHistory(raw);
+  } catch {
+    return null;
+  }
+}
+
 export function useQueryHistory() {
   const [history, setHistory, removeHistory] = useLocalStorageState<string[]>(
     STORAGE_KEY,
@@ -32,9 +49,9 @@ export function useQueryHistory() {
       if (!query.trim()) return;
 
       setHistory((prev) => {
-        const filtered = prev.filter((q) => q !== query);
-        const updated = [query, ...filtered];
-        return updated.slice(0, MAX_HISTORY_SIZE);
+        const base = readStoredHistory() ?? prev;
+        const filtered = base.filter((q) => q !== query);
+        return [query, ...filtered].slice(0, MAX_HISTORY_SIZE);
       });
     },
     [setHistory],
@@ -46,7 +63,9 @@ export function useQueryHistory() {
 
   const removeQuery = useCallback(
     (query: string) => {
-      setHistory((prev) => prev.filter((q) => q !== query));
+      setHistory((prev) =>
+        (readStoredHistory() ?? prev).filter((q) => q !== query),
+      );
     },
     [setHistory],
   );

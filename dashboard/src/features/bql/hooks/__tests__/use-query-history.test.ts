@@ -200,6 +200,117 @@ describe("useQueryHistory", () => {
     setItemSpy.mockRestore();
   });
 
+  // Two tabs are two hook instances over one shared storage: the second
+  // tab mounts before the first tab writes, so its update must merge with
+  // what is stored, not with the snapshot it mounted with (w5/1172). The
+  // global setup's Storage is a non-persisting stub, so these tests back it
+  // with a real in-memory map for their duration.
+  function installMemoryStorage(): () => void {
+    const store = new Map<string, string>();
+    const spies = [
+      vi
+        .spyOn(localStorage, "getItem")
+        .mockImplementation((key: string) =>
+          store.has(key) ? (store.get(key) as string) : null,
+        ),
+      vi
+        .spyOn(localStorage, "setItem")
+        .mockImplementation((key: string, value: string) => {
+          store.set(key, String(value));
+        }),
+      vi.spyOn(localStorage, "removeItem").mockImplementation((key: string) => {
+        store.delete(key);
+      }),
+      vi.spyOn(localStorage, "clear").mockImplementation(() => {
+        store.clear();
+      }),
+    ];
+    return () => spies.forEach((spy) => spy.mockRestore());
+  }
+
+  function readStoredHistory(): string[] {
+    return JSON.parse(localStorage.getItem("beancount-query-history") ?? "[]");
+  }
+
+  it("keeps both tabs' queries when two instances write in turn", () => {
+    const restore = installMemoryStorage();
+    try {
+      const tabA = renderHook(() => useQueryHistory());
+      const tabB = renderHook(() => useQueryHistory());
+
+      act(() => {
+        tabA.result.current.addQuery("SELECT 'qa-a1' AS probe");
+      });
+      act(() => {
+        tabA.result.current.addQuery("SELECT 'qa-a2' AS probe");
+      });
+      act(() => {
+        tabB.result.current.addQuery("SELECT 'qa-b1' AS probe");
+      });
+
+      const stored = readStoredHistory();
+      expect(stored).toEqual([
+        "SELECT 'qa-b1' AS probe",
+        "SELECT 'qa-a2' AS probe",
+        "SELECT 'qa-a1' AS probe",
+      ]);
+      // A tab opened later lists every tab's queries.
+      const tabC = renderHook(() => useQueryHistory());
+      expect(tabC.result.current.history).toEqual(stored);
+    } finally {
+      restore();
+    }
+  });
+
+  it("does not resurrect a query that both tabs had loaded and one deleted", () => {
+    const restore = installMemoryStorage();
+    try {
+      localStorage.setItem(
+        "beancount-query-history",
+        JSON.stringify(["query2", "query1"]),
+      );
+      const tabA = renderHook(() => useQueryHistory());
+      const tabB = renderHook(() => useQueryHistory());
+      expect(tabB.result.current.history).toEqual(["query2", "query1"]);
+
+      act(() => {
+        tabA.result.current.removeQuery("query1");
+      });
+      act(() => {
+        tabB.result.current.addQuery("query3");
+      });
+
+      expect(readStoredHistory()).toEqual(["query3", "query2"]);
+    } finally {
+      restore();
+    }
+  });
+
+  it("does not resurrect a query another instance deleted", () => {
+    const restore = installMemoryStorage();
+    try {
+      const tabA = renderHook(() => useQueryHistory());
+      const tabB = renderHook(() => useQueryHistory());
+
+      act(() => {
+        tabA.result.current.addQuery("query1");
+      });
+      act(() => {
+        tabA.result.current.addQuery("query2");
+      });
+      act(() => {
+        tabA.result.current.removeQuery("query1");
+      });
+      act(() => {
+        tabB.result.current.addQuery("query3");
+      });
+
+      expect(readStoredHistory()).toEqual(["query3", "query2"]);
+    } finally {
+      restore();
+    }
+  });
+
   it("should return stable function references across renders", () => {
     const { result, rerender } = renderHook(() => useQueryHistory());
 
