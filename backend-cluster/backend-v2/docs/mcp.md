@@ -1309,7 +1309,14 @@ plugin: an `@` annotation on a posting is not a price (w1/229). A holding with n
 directive is valued at cost, and holdings answers `valuation: "partial"` naming
 the missing leg. A position with no cost basis has no cost to fall back on: it
 stays in its own units, and its `missing_price_summary` line says `shown in
-units` instead of `valued at cost` (w1/266).
+units` instead of `valued at cost` (w1/266). Under a currency conversion a
+holding is valued at its commodity's own quote in that currency when the
+ledger has one, as `bea report holdings` and stock beancount convert it, and
+only otherwise through the currency it was costed in: 10 VT bought at 90 EUR
+in a USD ledger that quotes VT at 110 USD is worth 1,100 USD, with no VT
+quote in EUR needed. Its cost basis still converts through that cost
+currency, and stays in it, with that leg named missing, when the cost
+currency has no quote in the conversion currency (w1/290).
 
 When an explicit currency `conversion` did not reach everything, the summary
 also carries `missingPrices`: one `{from, to}` leg per currency that stayed

@@ -90,7 +90,10 @@ describe("valueHoldingRows", () => {
       conversionTarget,
       asOf: "2026-10-25",
     });
-  /** The three columns it adds: market value, quote, conversion rate. */
+  /**
+   * The four columns it adds: market value, quote, conversion rate, and the
+   * quote in the conversion currency.
+   */
   const added = (valued: ReturnType<typeof value>) =>
     valued.rows[0]!.slice(DETAIL.length);
 
@@ -104,8 +107,9 @@ describe("valueHoldingRows", () => {
       "market_value",
       "price",
       "conv_rate",
+      "direct_price",
     ]);
-    expect(added(valued)).toEqual([map("USD", "96"), "16", ""]);
+    expect(added(valued)).toEqual([map("USD", "96"), "16", "", ""]);
   });
 
   it("takes the later of two directives on one day", () => {
@@ -113,18 +117,18 @@ describe("valueHoldingRows", () => {
       ["2026-10-01", "QAX", map("USD", "15.00")],
       ["2026-10-01", "QAX", map("USD", "17.00")],
     ]);
-    expect(added(valued)).toEqual([map("USD", "102"), "17", ""]);
+    expect(added(valued)).toEqual([map("USD", "102"), "17", "", ""]);
   });
 
   it("uses a pair's inverse when only the other direction is quoted", () => {
     const valued = value([["2026-10-01", "USD", map("QAX", "0.0625")]]);
-    expect(added(valued)).toEqual([map("USD", "96"), "16", ""]);
+    expect(added(valued)).toEqual([map("USD", "96"), "16", "", ""]);
   });
 
   // w1/229: the sale was `-4 QAX {12.34 USD} @ 15.00 USD`. The engine derives a
   // price from it; stock beancount and the statements have none.
   it("values a lot with no directive at cost, with no quote", () => {
-    expect(added(value([]))).toEqual([map("USD", "74.04"), "", ""]);
+    expect(added(value([]))).toEqual([map("USD", "74.04"), "", "", ""]);
   });
 
   it("quotes the conversion leg from the held currency to the target", () => {
@@ -136,18 +140,32 @@ describe("valueHoldingRows", () => {
       [qax()],
       "EUR",
     );
-    expect(added(valued)).toEqual([map("USD", "96"), "16", "0.92"]);
+    expect(added(valued)).toEqual([map("USD", "96"), "16", "0.92", ""]);
   });
 
-  it("asks for no rate when the target is the held currency, or none is set", () => {
+  // w1/290: the composer values the lot at this quote when there is one.
+  it("quotes the commodity itself in the conversion currency", () => {
+    const valued = value(
+      [
+        ["2026-10-01", "QAX", map("USD", "16.00")],
+        ["2026-10-01", "USD", map("EUR", "0.92")],
+        ["2026-10-01", "QAX", map("EUR", "15.00")],
+      ],
+      [qax()],
+      "EUR",
+    );
+    expect(added(valued)).toEqual([map("USD", "96"), "16", "0.92", "15"]);
+  });
+
+  it("asks for no rate or target quote when the target is the held currency, or none is set", () => {
     const prices: Cell[][] = [["2026-10-01", "QAX", map("USD", "16.00")]];
-    expect(added(value(prices, [qax()], "USD"))[2]).toBe("");
-    expect(added(value(prices, [qax()], null))[2]).toBe("");
+    expect(added(value(prices, [qax()], "USD")).slice(2)).toEqual(["", ""]);
+    expect(added(value(prices, [qax()], null)).slice(2)).toEqual(["", ""]);
   });
 
   it("leaves a row it cannot read for the composer to skip", () => {
     const valued = value([], [["Assets:Broker", "QAX", "USD", "", ""]]);
-    expect(added(valued)).toEqual(["", "", ""]);
+    expect(added(valued)).toEqual(["", "", "", ""]);
   });
 });
 
@@ -755,19 +773,236 @@ describe("composeHoldings", () => {
       ]);
     });
 
+    // w1/290: the QA repro has no VT quote in EUR, but VT's USD quote values
+    // the EUR lot directly, as `bea report holdings` values it: 2,200 USD
+    // and complete, where routing it through its cost currency valued it at
+    // cost (2,180 USD) and called the holdings partial.
+    it.each([
+      ["account", lots(), { account: "Assets:BrokerA" }],
+      [
+        "commodity",
+        lots("Assets:BrokerB"),
+        { accounts: ["Assets:BrokerA", "Assets:BrokerB"] },
+      ],
+    ] as const)(
+      "values the %s group's EUR lot at VT's USD quote",
+      (groupBy, rows, scope) => {
+        const result = compose(
+          "USD",
+          groupBy,
+          [...rows],
+          [
+            ["2024-03-01", "VT", map("USD", "110")],
+            ["2024-03-01", "EUR", map("USD", "1.2")],
+          ],
+        );
+        expect(result.groups).toEqual([
+          {
+            ...scope,
+            commodity: "VT",
+            units: { number: "20", currency: "VT" },
+            average_cost: { number: "104", currency: "USD" },
+            cost_basis: { number: "2080", currency: "USD" },
+            market_value: { number: "2200", currency: "USD" },
+            price: { number: "110", currency: "USD" },
+          },
+        ]);
+        expect(result.totals).toEqual({
+          cost_basis: { USD: "2080" },
+          market_value: { USD: "2200" },
+        });
+        expect(result.valuation).toBe("complete");
+        expect(result.missing_prices).toEqual([]);
+      },
+    );
+
     it("keeps a part's quote when the first part has none", () => {
-      // The QA repro: no VT quote in EUR, so that lot is valued at cost
-      // through its cost currency; the merged group still carries the USD
-      // lot's quote instead of dropping it.
-      const result = compose("USD", "account", lots(), [
-        ["2024-03-01", "VT", map("USD", "110")],
-        ["2024-03-01", "EUR", map("USD", "1.2")],
-      ]);
+      // The EUR lot has no VT quote in EUR or USD, so it is valued at cost;
+      // the merged group still carries the GBP lot's converted quote
+      // instead of dropping it.
+      const gbp = [
+        "Assets:BrokerA",
+        "VT",
+        "GBP",
+        map("VT", "10"),
+        map("GBP", "750"),
+      ];
+      const result = compose(
+        "USD",
+        "account",
+        [lots()[0]!, gbp],
+        [
+          ["2024-03-01", "VT", map("GBP", "80")],
+          ["2024-03-01", "GBP", map("USD", "1.375")],
+          ["2024-03-01", "EUR", map("USD", "1.2")],
+        ],
+      );
       expect(result.groups).toHaveLength(1);
       expect(result.groups[0]).toMatchObject({
         units: { number: "20", currency: "VT" },
-        cost_basis: { number: "2080", currency: "USD" },
+        cost_basis: { number: "2111.25", currency: "USD" },
+        market_value: { number: "2180", currency: "USD" },
         price: { number: "110", currency: "USD" },
+      });
+      expect(result.missing_prices).toEqual([{ from: "VT", to: "EUR" }]);
+    });
+  });
+
+  // w1/290, porting w5/1033 and w5/1117 from `bea report holdings`: a quote in
+  // the conversion currency values a lot directly, and its basis converts
+  // through the cost currency on its own leg.
+  describe("a quote in the conversion currency", () => {
+    // 2 HOOL bought at 100 EUR; EUR is 1.25 USD and HOOL 150 USD.
+    const hool: Cell[] = [
+      "Assets:Broker",
+      "HOOL",
+      "EUR",
+      map("HOOL", "2"),
+      map("EUR", "200"),
+    ];
+    const RATE: Cell[] = ["2026-01-31", "EUR", map("USD", "1.25")];
+    const DIRECT: Cell[] = ["2026-01-31", "HOOL", map("USD", "150")];
+    const OLDER: Cell[] = ["2026-01-10", "HOOL", map("EUR", "100")];
+    const compose = (
+      prices: Cell[][],
+      rows: Cell[][] = [hool],
+      groupBy: "account" | "commodity" = "account",
+      conversionTarget: string | null = "USD",
+    ) =>
+      composeHoldings({
+        ...base,
+        ...valueHoldingRows({
+          columns: COLUMNS.slice(0, 5),
+          rows,
+          prices,
+          conversionTarget,
+          asOf: "2026-10-25",
+        }),
+        conversionTarget,
+        groupBy,
+        prices,
+        operatingCurrencies: ["USD"],
+      });
+
+    it.each([
+      ["account", "an older EUR quote", [OLDER, RATE, DIRECT]],
+      ["commodity", "an older EUR quote", [OLDER, RATE, DIRECT]],
+      ["account", "the USD quote alone", [RATE, DIRECT]],
+      ["commodity", "the USD quote alone", [RATE, DIRECT]],
+    ] as const)(
+      "values the %s group at the USD quote beside %s",
+      (groupBy, _label, prices) => {
+        const result = compose([...prices], [hool], groupBy);
+        expect(result.groups).toHaveLength(1);
+        expect(result.groups[0]).toMatchObject({
+          units: { number: "2", currency: "HOOL" },
+          average_cost: { number: "125", currency: "USD" },
+          cost_basis: { number: "250", currency: "USD" },
+          market_value: { number: "300", currency: "USD" },
+          price: { number: "150", currency: "USD" },
+        });
+        expect(result.valuation).toBe("complete");
+        expect(result.missing_prices).toEqual([]);
+      },
+    );
+
+    it("still values through the cost currency without a USD quote", () => {
+      const result = compose([OLDER, RATE]);
+      expect(result.groups[0]).toMatchObject({
+        market_value: { number: "250", currency: "USD" },
+        price: { number: "125", currency: "USD" },
+      });
+      expect(result.valuation).toBe("complete");
+    });
+
+    it.each(["account", "commodity"] as const)(
+      "keeps the %s group's USD market value when only the basis has no rate",
+      (groupBy) => {
+        const result = compose([OLDER, DIRECT], [hool], groupBy);
+        expect(result.groups).toHaveLength(1);
+        expect(result.groups[0]).toMatchObject({
+          average_cost: { number: "100", currency: "EUR" },
+          cost_basis: { number: "200", currency: "EUR" },
+          market_value: { number: "300", currency: "USD" },
+          price: { number: "150", currency: "USD" },
+        });
+        expect(result.totals).toEqual({
+          cost_basis: { EUR: "200" },
+          market_value: { USD: "300" },
+        });
+        expect(result.valuation).toBe("partial");
+        expect(result.missing_prices).toEqual([{ from: "EUR", to: "USD" }]);
+      },
+    );
+
+    it("keeps a lot whose basis has no rate apart from one whose basis converts", () => {
+      const usd: Cell[] = [
+        "Assets:Broker",
+        "HOOL",
+        "USD",
+        map("HOOL", "1"),
+        map("USD", "140"),
+      ];
+      const result = compose([DIRECT], [hool, usd]);
+      expect(
+        result.groups.map((group) => [
+          group.units.number,
+          group.cost_basis,
+          group.market_value,
+        ]),
+      ).toEqual([
+        [
+          "2",
+          { number: "200", currency: "EUR" },
+          { number: "300", currency: "USD" },
+        ],
+        [
+          "1",
+          { number: "140", currency: "USD" },
+          { number: "150", currency: "USD" },
+        ],
+      ]);
+      expect(result.totals.market_value).toEqual({ USD: "450" });
+    });
+
+    it.each([
+      ["with", [RATE, DIRECT]],
+      ["without", [DIRECT]],
+    ] as const)(
+      "values priced units joining the lot at the USD quote, %s a basis rate",
+      (_label, prices) => {
+        // A third HOOL bought at a price but no cost: the group's basis is
+        // unknown, so the missing EUR rate costs it nothing.
+        const priced: Cell[] = [
+          "Assets:Broker",
+          "HOOL",
+          null,
+          map("HOOL", "1"),
+          map("HOOL", "1"),
+        ];
+        const result = compose([...prices], [priced, hool]);
+        expect(result.groups).toEqual([
+          {
+            account: "Assets:Broker",
+            commodity: "HOOL",
+            units: { number: "3", currency: "HOOL" },
+            average_cost: null,
+            cost_basis: null,
+            market_value: { number: "450", currency: "USD" },
+            price: { number: "150", currency: "USD" },
+          },
+        ]);
+        expect(result.valuation).toBe("complete");
+        expect(result.missing_prices).toEqual([]);
+      },
+    );
+
+    it("asks for no quote in a conversion currency without a conversion", () => {
+      const result = compose([OLDER, RATE, DIRECT], [hool], "account", null);
+      expect(result.groups[0]).toMatchObject({
+        cost_basis: { number: "200", currency: "EUR" },
+        market_value: { number: "200", currency: "EUR" },
+        price: { number: "100", currency: "EUR" },
       });
     });
   });

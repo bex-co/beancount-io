@@ -59,7 +59,8 @@ type HoldingsColumn =
   | "book_value"
   | "market_value"
   | "price"
-  | "conv_rate";
+  | "conv_rate"
+  | "direct_price";
 
 /**
  * The detail query: per-(account, commodity, cost currency) units and book
@@ -181,10 +182,13 @@ function priceLookup(priceRows: BqlCell[][], asOf: string) {
 }
 
 /**
- * Add the market value, the quote and the conversion rate to each detail row
- * from the ledger's price directives (w1/229). A lot with no quote is valued at
- * cost, as the composer reports; a conversion with no quote leaves the lot in
- * its held currency, as the composer reports too.
+ * Add the market value, the quote, the conversion rate and the quote in the
+ * conversion currency to each detail row from the ledger's price directives
+ * (w1/229). A lot with no quote is valued at cost, as the composer reports; a
+ * conversion with no quote leaves the lot in its held currency, as the
+ * composer reports too. The last column is the commodity's own quote in the
+ * conversion currency, which the composer values the lot at when there is
+ * one (w1/290).
  */
 export function valueHoldingRows(params: {
   columns: string[];
@@ -197,7 +201,7 @@ export function valueHoldingRows(params: {
   const quote = priceLookup(prices, asOf);
   const at = (name: string): number => columns.indexOf(name);
   return {
-    columns: [...columns, "market_value", "price", "conv_rate"],
+    columns: [...columns, "market_value", "price", "conv_rate", "direct_price"],
     rows: rows.map((row) => {
       const commodity = row[at("currency")];
       const held = row[at("cost_currency")];
@@ -213,22 +217,22 @@ export function valueHoldingRows(params: {
         unitsText === null ||
         basisText === null
       ) {
-        return [...row, "", "", ""];
+        return [...row, "", "", "", ""];
       }
       const price = quote(commodity, held);
       const market =
         price === null
           ? new BigNumber(basisText)
           : new BigNumber(unitsText).times(price);
-      const rate =
-        conversionTarget === null || conversionTarget === held
-          ? null
-          : quote(held, conversionTarget);
+      const converts = conversionTarget !== null && conversionTarget !== held;
+      const rate = converts ? quote(held, conversionTarget) : null;
+      const direct = converts ? quote(commodity, conversionTarget) : null;
       return [
         ...row,
         { [held]: plain(market) },
         price === null ? "" : plain(price),
         rate === null ? "" : plain(rate),
+        direct === null ? "" : plain(direct),
       ];
     }),
   };
@@ -286,6 +290,84 @@ function quoteCurrencies(prices: BqlCell[][], commodity: string): string[] {
   return [...found].sort();
 }
 
+/** One costed lot valued at the as-of date. */
+type ValuedLot = {
+  basis: BigNumber;
+  market: BigNumber;
+  /** The quote behind the market value, in its currency; null at cost. */
+  price: string | null;
+  /** The currency the market value and its quote are in. */
+  currency: string;
+  /** The currency the basis is in: still the cost currency without its rate. */
+  basisCurrency: string;
+};
+
+/** One holding: its lots of one commodity valued into the same currencies. */
+type HeldLot = ValuedLot & {
+  units: BigNumber;
+  accounts: Set<string>;
+  /** False once a position bought with a price but no cost joins (w1/253). */
+  basisKnown: boolean;
+  /** The cost currency before any conversion. */
+  held: string;
+};
+
+/**
+ * Value one costed lot, the CLI's `_value_holding`. A quote in the requested
+ * currency values the lot directly, as Beancount's own conversion does
+ * (w5/1033, w1/290): routed through the cost currency, a lot with no quote
+ * there was valued at cost, and an older one there misvalued it. The basis
+ * still converts through the cost currency; without that rate it stays in it
+ * beside the market value (w5/1117), and the composer names the missing rate.
+ * Without a direct quote the lot values through its cost currency: at its
+ * quote there, else at cost, converted when the leg has a rate.
+ */
+function valueLot(lot: {
+  units: BigNumber;
+  basis: BigNumber;
+  /** In the cost currency: at its quote there, else at cost. */
+  market: BigNumber;
+  /** The commodity's quote in its cost currency. */
+  price: string | null;
+  /** The cost currency's quote in the target. */
+  rate: string | null;
+  /** The commodity's quote in the target. */
+  direct: string | null;
+  commodity: string;
+  held: string;
+  target: string | null;
+  miss: (from: string, to: string) => void;
+}): ValuedLot {
+  const { units, basis, market, price, commodity, held, target, miss } = lot;
+  const unconverted = { basis, market, price, currency: held };
+  if (target === null || target === held) {
+    if (price === null) miss(commodity, held);
+    return { ...unconverted, basisCurrency: held };
+  }
+  const rate = lot.rate === null ? null : new BigNumber(lot.rate);
+  if (lot.direct !== null) {
+    return {
+      basis: rate === null ? basis : basis.times(rate),
+      market: units.times(lot.direct),
+      price: lot.direct,
+      currency: target,
+      basisCurrency: rate === null ? held : target,
+    };
+  }
+  if (price === null) miss(commodity, held);
+  if (rate === null) {
+    miss(held, target);
+    return { ...unconverted, basisCurrency: held };
+  }
+  return {
+    basis: basis.times(rate),
+    market: market.times(rate),
+    price: price === null ? null : plain(new BigNumber(price).times(rate)),
+    currency: target,
+    basisCurrency: target,
+  };
+}
+
 export function composeHoldings(params: {
   columns: string[];
   rows: BqlCell[][];
@@ -319,26 +401,23 @@ export function composeHoldings(params: {
     params.priceCurrencies ?? [],
     operating,
   );
-  // (scope..., commodity, cost currency) -> [units, cost basis, accounts,
-  // market value, price, basis known, held]. The CLI's lot table, keyed the
-  // same way; `held` is the cost currency before any conversion.
-  const lots = new Map<
-    string,
-    [
-      BigNumber,
-      BigNumber,
-      Set<string>,
-      BigNumber,
-      string | null,
-      boolean,
-      string,
-    ]
-  >();
+  // (scope..., commodity, market currency, basis currency) -> one holding,
+  // the CLI's rows: under a conversion, lots costed in USD and EUR that both
+  // value into USD are one holding (w1/288), but a lot whose basis had no
+  // rate stays apart from one whose basis converted.
+  const lots = new Map<string, HeldLot>();
   // (scope..., commodity) -> [units, accounts]: uncosted, non-cash positions
   // (`3 AAPL @ 200 USD`), holdings with an unknown basis (w1/253).
   const uncosted = new Map<string, [BigNumber, Set<string>]>();
-  const keyOf = (scope: string[], commodity: string, held: string): string =>
-    JSON.stringify([...scope, commodity, held]);
+  const keyOf = (
+    scope: string[],
+    commodity: string,
+    currency: string,
+    basisCurrency: string,
+  ): string => JSON.stringify([...scope, commodity, currency, basisCurrency]);
+  /** A key's (scope..., commodity) prefix, as {@link uncosted} keys it. */
+  const prefixOf = (key: string): string =>
+    JSON.stringify((JSON.parse(key) as string[]).slice(0, -2));
   // Each missing leg remembers how its holdings are shown without it: a
   // costed lot at cost, an uncosted position with no quote in its own units
   // (w1/266). One leg can cover both kinds under per-account grouping.
@@ -399,50 +478,43 @@ export function composeHoldings(params: {
     if (units === null || basis === null || market === null) continue;
     const unitsBN = new BigNumber(units);
     if (unitsBN.isZero()) continue;
-    let price = quoteIn(row[at("price")]);
-    if (price === null) miss(commodity, held);
-    let basisBN = new BigNumber(basis);
-    let marketBN = new BigNumber(market);
-    let converted = false;
-    if (conversionTarget !== null && conversionTarget !== held) {
-      const rate = quoteIn(row[at("conv_rate")]);
-      if (rate === null) {
-        miss(held, conversionTarget);
-      } else {
-        const rateBN = new BigNumber(rate);
-        basisBN = basisBN.times(rateBN);
-        marketBN = marketBN.times(rateBN);
-        price =
-          price === null ? null : plain(new BigNumber(price).times(rateBN));
-        converted = true;
-      }
-    }
+    const valued = valueLot({
+      units: unitsBN,
+      basis: new BigNumber(basis),
+      market: new BigNumber(market),
+      price: quoteIn(row[at("price")]),
+      rate: quoteIn(row[at("conv_rate")]),
+      direct: quoteIn(row[at("direct_price")]),
+      commodity,
+      held,
+      target: conversionTarget,
+      miss,
+    });
     const key = keyOf(
       groupBy === "account" ? [name] : [],
       commodity,
-      converted ? conversionTarget! : held,
+      valued.currency,
+      valued.basisCurrency,
     );
     const found = lots.get(key);
     if (found === undefined) {
-      lots.set(key, [
-        unitsBN,
-        basisBN,
-        new Set([name]),
-        marketBN,
-        price,
-        true,
+      lots.set(key, {
+        ...valued,
+        units: unitsBN,
+        accounts: new Set([name]),
+        basisKnown: true,
         held,
-      ]);
+      });
     } else {
-      found[0] = found[0].plus(unitsBN);
-      found[1] = found[1].plus(basisBN);
-      found[2].add(name);
-      found[3] = found[3].plus(marketBN);
-      // Lots costed in USD and EUR that both convert into USD share this
+      found.units = found.units.plus(unitsBN);
+      found.basis = found.basis.plus(valued.basis);
+      found.accounts.add(name);
+      found.market = found.market.plus(valued.market);
+      // Lots costed in USD and EUR that both value into USD share this
       // group (w1/288): it keeps the first quote rather than inventing a
       // blend, but a quote beats none, so a lot valued at cost first does
       // not hide the next one's quote.
-      found[4] ??= price;
+      found.price ??= valued.price;
     }
   }
 
@@ -450,28 +522,31 @@ export function composeHoldings(params: {
     const prefix = JSON.parse(pendingKey) as string[];
     const commodity = prefix[prefix.length - 1]!;
     const costed = [...lots.keys()].filter(
-      (key) =>
-        JSON.stringify((JSON.parse(key) as string[]).slice(0, -1)) ===
-        pendingKey,
+      (key) => prefixOf(key) === pendingKey,
     );
     if (costed.length === 1) {
       // Joins the one costed group of its commodity, valued at its quote; an
       // unquoted group counts only its costed part, already named missing.
       const found = lots.get(costed[0]!)!;
-      const held = found[6];
+      const { held, currency } = found;
+      // A group valued into the requested currency by the commodity's own
+      // quote there (w1/290) values these units at it too; otherwise they
+      // go through the cost currency, as the group did.
+      const direct = currency === held ? null : quote(commodity, currency);
       const price = quote(commodity, held);
-      if (price !== null) {
+      if (direct !== null) {
+        found.market = found.market.plus(unitsBN.times(direct));
+      } else if (price !== null) {
         let market = unitsBN.times(price);
-        const convertedTo = (JSON.parse(costed[0]!) as string[]).at(-1)!;
-        if (convertedTo !== held) {
-          const rate = quote(held, convertedTo);
+        if (currency !== held) {
+          const rate = quote(held, currency);
           market = rate === null ? market : market.times(rate);
         }
-        found[3] = found[3].plus(market);
+        found.market = found.market.plus(market);
       }
-      found[0] = found[0].plus(unitsBN);
-      for (const n of names) found[2].add(n);
-      found[5] = false;
+      found.units = found.units.plus(unitsBN);
+      for (const n of names) found.accounts.add(n);
+      found.basisKnown = false;
       continue;
     }
     // No cost currency to value into: the first operating currency (or other
@@ -509,15 +584,17 @@ export function composeHoldings(params: {
     }
     // Keyed apart from every costed group, as the CLI keys it; the group's
     // currency rides in the value.
-    lots.set(JSON.stringify([...prefix, ""]), [
-      unitsBN,
-      new BigNumber(0),
-      names,
+    lots.set(JSON.stringify([...prefix, "", ""]), {
+      units: unitsBN,
+      basis: new BigNumber(0),
+      accounts: names,
       market,
       price,
-      false,
+      basisKnown: false,
+      held: currency,
       currency,
-    ]);
+      basisCurrency: currency,
+    });
   }
 
   const groups: HoldingsGroup[] = [];
@@ -538,14 +615,16 @@ export function composeHoldings(params: {
   const ordered = [...lots.entries()].sort(([a], [b]) =>
     a < b ? -1 : a > b ? 1 : 0,
   );
-  for (const [
-    key,
-    [unitsBN, basisBN, accounts, marketBN, price, basisKnown, valuedIn],
-  ] of ordered) {
+  for (const [key, lot] of ordered) {
+    const { units: unitsBN, basis: basisBN, market: marketBN, price } = lot;
+    const { accounts, basisKnown, currency, basisCurrency } = lot;
+    // Valued by a direct quote while its basis had no rate into the target
+    // (w5/1117): that rate is missing only while there is a basis to convert,
+    // so priced units that joined the group leave it unasked, as in the CLI.
+    if (basisKnown && basisCurrency !== currency) miss(basisCurrency, currency);
     if (unitsBN.isZero()) continue;
     const parts = JSON.parse(key) as string[];
-    const heldCurrency = parts[parts.length - 1] || valuedIn;
-    const commodity = parts[parts.length - 2]!;
+    const commodity = parts[parts.length - 3]!;
     const average = plain(basisBN.dividedBy(unitsBN));
     const group: HoldingsGroup = {
       ...(groupBy === "account"
@@ -554,17 +633,17 @@ export function composeHoldings(params: {
       commodity,
       units: { number: plain(unitsBN), currency: commodity },
       average_cost: basisKnown
-        ? { number: average, currency: heldCurrency }
+        ? { number: average, currency: basisCurrency }
         : null,
       cost_basis: basisKnown
-        ? { number: plain(basisBN), currency: heldCurrency }
+        ? { number: plain(basisBN), currency: basisCurrency }
         : null,
-      market_value: { number: plain(marketBN), currency: heldCurrency },
-      price: price === null ? null : { number: price, currency: heldCurrency },
+      market_value: { number: plain(marketBN), currency },
+      price: price === null ? null : { number: price, currency },
     };
     groups.push(group);
-    if (basisKnown) total("cost_basis", heldCurrency, basisBN);
-    total("market_value", heldCurrency, marketBN);
+    if (basisKnown) total("cost_basis", basisCurrency, basisBN);
+    total("market_value", currency, marketBN);
   }
 
   const legs = [...missing.values()].sort((a, b) =>

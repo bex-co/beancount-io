@@ -233,6 +233,53 @@ describe("LedgerFinanceService.getHoldings", () => {
     });
   });
 
+  // w1/290: the w1/288 QA ledger's detail rows. 10 VT bought at 100 USD and
+  // 10 at 90 EUR, VT quoted at 110 USD and EUR at 1.2 USD, no VT quote in
+  // EUR. `bea report holdings` values the EUR lot at the USD quote: one
+  // 20 VT holding worth 2,200 USD, complete. Routed through its cost
+  // currency the lot was valued at cost, 2,180 USD and partial, on REST,
+  // GraphQL and MCP alike, which all answer from this method.
+  it("values a lot at its quote in the operating currency, as bea does", async () => {
+    answerShell(
+      [
+        ["Assets:BrokerA", "VT", "EUR", { VT: "10" }, { EUR: "900" }],
+        ["Assets:BrokerA", "VT", "USD", { VT: "10" }, { USD: "1000" }],
+        ["Assets:Cash", "USD", null, { USD: "9000" }, { USD: "9000" }],
+        ["Assets:EurCash", "EUR", null, { EUR: "9100" }, { EUR: "9100" }],
+        ["Equity:Opening", "EUR", null, { EUR: "-10000" }, { EUR: "-10000" }],
+        ["Equity:Opening", "USD", null, { USD: "-10000" }, { USD: "-10000" }],
+      ],
+      [
+        ["2024-03-01", "VT", { USD: "110" }],
+        ["2024-03-01", "EUR", { USD: "1.2" }],
+      ],
+      [[null]],
+    );
+
+    const result = await service.getHoldings({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+    });
+
+    expect(result.groups).toEqual([
+      {
+        account: "Assets:BrokerA",
+        commodity: "VT",
+        units: { number: "20", currency: "VT" },
+        average_cost: { number: "104", currency: "USD" },
+        cost_basis: { number: "2080", currency: "USD" },
+        market_value: { number: "2200", currency: "USD" },
+        price: { number: "110", currency: "USD" },
+      },
+    ]);
+    expect(result.totals).toEqual({
+      cost_basis: { USD: "2080" },
+      market_value: { USD: "2200" },
+    });
+    expect(result.valuation).toBe("complete");
+    expect(result.missing_prices).toEqual([]);
+  });
+
   // w1/204: interpolated into the price lookup, an unknown target found no
   // price and answered valuation "partial" as if it were real.
   it.each(["bogus", "usd", "EUR"])(
