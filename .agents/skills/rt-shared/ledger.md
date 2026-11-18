@@ -67,10 +67,14 @@ newest first.
 
 ### Deferred
 
+- 2026-11-18 w5/1173 reports `ConversionSelect`/`use-report-conversion.ts` — selector offers only the first operating currency; expose the full list and accept any of them (backend already converts); out of this run's budget.
+- 2026-11-18 w5/1130 `beancount-query-history` key is per-browser not per-user — sign-out leaks one user's queries to the next visitor; scope the key per user when fixing (kept global here so this run's merge behavior carries over).
 - 2026-11-17 `dashboard/src/common/lib/editor/monaco-beancount-language.ts` vs `monaco-beancount-language-vscode.ts` — both register the global `beancount` language and themes, so the last editor opened re-highlights the others; keep the `-vscode` module only.
 
 ### Skipped
 
+- 2026-11-18 `mobile/src/common/map-in-batches.ts` `size <= 0` infinite loop — sole caller passes a positive `BUDGET_PANEL_BATCH`; unreachable, defensive-only, below the bar.
+- 2026-11-18 `mobile/src/common/{account-frecency,balance-display,balance-util,ledger-conflict,ledger-owner-rename}.ts` — bucket boundaries, units/money selection, `resolveCurrencyBalance` EUR-ledger pin (w21/058), conflict whole-word match (w21/387), owner-prefix rewrite all match their documented intent; examined, no divergence.
 - 2026-11-18 `mobile/src/common/suggestion-utils.ts` deriveTwoPostingSuggestions oldest-direction tie-break — journal is newest-first (ledger-journal-service), so w21/833's purchase-wins-tie holds; examined, no divergence.
 - 2026-11-18 `mobile/src/common/account-search.ts` fuzzyMatch cubic exact-substring bonus — per-length bound holds (exact min `l^3+4l` beats scattered max); examined, no divergence.
 - 2026-11-18 `mobile/src/common/merchant-key.ts` — mobile-only, no dashboard twin; fold/trim/NFC/quote/whitespace/lowercase order sound; examined, no divergence.

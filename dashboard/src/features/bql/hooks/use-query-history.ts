@@ -20,6 +20,31 @@ function readHistory(raw: string): string[] {
     : [];
 }
 
+/**
+ * What is stored right now, read at write time. Each tab's hook state is a
+ * snapshot from when it mounted, so applying an add or remove to it alone
+ * would write the other tabs' newer entries away (w5/1172). Merging the
+ * stored list with this tab's state instead keeps the union: entries only
+ * this tab knows about (a write that updated state but never persisted) go
+ * first, then everything stored — the same read-at-write-time merge the
+ * Overview layout applies to its stored layout.
+ */
+function readStoredHistory(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return [];
+    return readHistory(raw);
+  } catch {
+    return [];
+  }
+}
+
+/** Newest-first union of the stored list and this tab's state. */
+function mergeHistories(stored: string[], memory: string[]): string[] {
+  const seen = new Set(stored);
+  return [...memory.filter((q) => !seen.has(q)), ...stored];
+}
+
 export function useQueryHistory() {
   const [history, setHistory, removeHistory] = useLocalStorageState<string[]>(
     STORAGE_KEY,
@@ -32,9 +57,9 @@ export function useQueryHistory() {
       if (!query.trim()) return;
 
       setHistory((prev) => {
-        const filtered = prev.filter((q) => q !== query);
-        const updated = [query, ...filtered];
-        return updated.slice(0, MAX_HISTORY_SIZE);
+        const merged = mergeHistories(readStoredHistory(), prev);
+        const filtered = merged.filter((q) => q !== query);
+        return [query, ...filtered].slice(0, MAX_HISTORY_SIZE);
       });
     },
     [setHistory],
@@ -46,7 +71,9 @@ export function useQueryHistory() {
 
   const removeQuery = useCallback(
     (query: string) => {
-      setHistory((prev) => prev.filter((q) => q !== query));
+      setHistory((prev) =>
+        mergeHistories(readStoredHistory(), prev).filter((q) => q !== query),
+      );
     },
     [setHistory],
   );
