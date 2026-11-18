@@ -322,4 +322,42 @@ describe("useQueryHistory", () => {
     expect(result.current.addQuery).toBe(addQuery1);
     expect(result.current.removeQuery).toBe(removeQuery1);
   });
+
+  // One browser, two users: sign-out must not leak the first user's queries
+  // to the next visitor (w5/1130). Each signed-in user gets their own key.
+  it("keeps each signed-in user's history under their own key", () => {
+    const restore = installMemoryStorage();
+    try {
+      const alice = renderHook(() => useQueryHistory("alice-id"));
+      act(() => {
+        alice.result.current.addQuery("SELECT 'qa-alice' AS probe");
+      });
+
+      // Bob signs in on the same browser: Alice's queries are not his.
+      const bob = renderHook(() => useQueryHistory("bob-id"));
+      expect(bob.result.current.history).toEqual([]);
+      act(() => {
+        bob.result.current.addQuery("SELECT 'qa-bob' AS probe");
+      });
+
+      expect(
+        JSON.parse(
+          localStorage.getItem("beancount-query-history.alice-id") ?? "[]",
+        ),
+      ).toEqual(["SELECT 'qa-alice' AS probe"]);
+      expect(
+        JSON.parse(
+          localStorage.getItem("beancount-query-history.bob-id") ?? "[]",
+        ),
+      ).toEqual(["SELECT 'qa-bob' AS probe"]);
+      // Nobody writes the shared legacy bucket anymore.
+      expect(localStorage.getItem("beancount-query-history")).toBeNull();
+      // Alice's history is intact when she returns.
+      expect(
+        renderHook(() => useQueryHistory("alice-id")).result.current.history,
+      ).toEqual(["SELECT 'qa-alice' AS probe"]);
+    } finally {
+      restore();
+    }
+  });
 });

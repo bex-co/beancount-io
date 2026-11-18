@@ -61,8 +61,19 @@ vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({ ledgerName: "example" }),
 }));
 
+const rootProfile = vi.hoisted(() => ({
+  profile: null as null | { id: string },
+}));
+
+vi.mock("@/common/hooks/use-root-context", () => ({
+  useRootContext: () => ({ userProfile: rootProfile.profile }),
+}));
+
+const seenStorageKeys = vi.hoisted(() => [] as string[]);
+
 vi.mock("@/common/hooks/use-local-storage-state", () => ({
   useLocalStorageState: (_key: string, initial: unknown) => {
+    seenStorageKeys.push(_key);
     const [state, setState] = useState(initial);
     return [state, setState, vi.fn()];
   },
@@ -243,10 +254,24 @@ describe("LedgerQueryPage", () => {
     monacoHarness.registeredKeybinding = null;
     monacoHarness.editorValue = "select * from accounts";
     monacoHarness.mountGate = null;
+    seenStorageKeys.length = 0;
+    rootProfile.profile = null;
     mockExecuteQuery.mockReset();
     mockExecuteQuery.mockResolvedValue({
       data: { queryShell: tableResult([["Assets:Cash"]]) },
     });
+  });
+
+  it("keys the query history by the signed-in user", () => {
+    rootProfile.profile = { id: "qa-user-1" };
+    renderPage();
+    expect(seenStorageKeys).toContain("beancount-query-history.qa-user-1");
+    expect(seenStorageKeys).not.toContain("beancount-query-history");
+  });
+
+  it("falls back to the shared history bucket when signed out", () => {
+    renderPage();
+    expect(seenStorageKeys).toContain("beancount-query-history");
   });
 
   it("registers the Ctrl/Cmd+Enter shortcut", async () => {

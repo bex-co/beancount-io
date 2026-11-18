@@ -1,8 +1,21 @@
 import { useCallback } from "react";
 import { useLocalStorageState } from "@/common/hooks/use-local-storage-state";
 
-const STORAGE_KEY = "beancount-query-history";
+const LEGACY_STORAGE_KEY = "beancount-query-history";
 const MAX_HISTORY_SIZE = 50;
+
+/**
+ * One browser can serve several users in turn, and sign-out must not leak
+ * the first user's queries to the next visitor (w5/1130): a signed-in user's
+ * history lives under their own key. Without an identity — signed-out
+ * readers of a shared ledger — the historical shared bucket applies, exactly
+ * as before.
+ */
+export function queryHistoryKey(userId?: string | null): string {
+  return userId
+    ? `${LEGACY_STORAGE_KEY}.${encodeURIComponent(userId)}`
+    : LEGACY_STORAGE_KEY;
+}
 
 export interface QueryHistoryItem {
   query: string;
@@ -28,18 +41,25 @@ function readHistory(raw: string): string[] {
  * instead keeps every tab's queries and every tab's deletions. This tab's own
  * state is the base only when storage is unavailable.
  */
-function readStoredHistory(): string[] | null {
+function readStoredHistory(storageKey: string): string[] | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     return raw === null ? [] : readHistory(raw);
   } catch {
     return null;
   }
 }
 
-export function useQueryHistory() {
+/**
+ * The BQL history for one identity: pass the signed-in user's id so their
+ * queries never surface for whoever signs in next on the same browser. The
+ * key is captured per mount — a sign-out replaces the document, so the hook
+ * never has to switch buckets mid-session.
+ */
+export function useQueryHistory(userId?: string | null) {
+  const storageKey = queryHistoryKey(userId);
   const [history, setHistory, removeHistory] = useLocalStorageState<string[]>(
-    STORAGE_KEY,
+    storageKey,
     [],
     { deserializer: readHistory },
   );
@@ -49,12 +69,12 @@ export function useQueryHistory() {
       if (!query.trim()) return;
 
       setHistory((prev) => {
-        const base = readStoredHistory() ?? prev;
+        const base = readStoredHistory(storageKey) ?? prev;
         const filtered = base.filter((q) => q !== query);
         return [query, ...filtered].slice(0, MAX_HISTORY_SIZE);
       });
     },
-    [setHistory],
+    [setHistory, storageKey],
   );
 
   const clearHistory = useCallback(() => {
@@ -64,10 +84,10 @@ export function useQueryHistory() {
   const removeQuery = useCallback(
     (query: string) => {
       setHistory((prev) =>
-        (readStoredHistory() ?? prev).filter((q) => q !== query),
+        (readStoredHistory(storageKey) ?? prev).filter((q) => q !== query),
       );
     },
-    [setHistory],
+    [setHistory, storageKey],
   );
 
   return {
