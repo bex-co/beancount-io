@@ -53,6 +53,31 @@ const sameFile = (cited: string, own: string) => {
 };
 
 /**
+ * The editor's words for one cited `file:line`, or null to keep the server's
+ * citation: a line of another file, or one the entry neither holds nor nears.
+ */
+function relocatedCitation(
+  file: string,
+  line: string,
+  where: EntryLocation,
+  // Blank lines the server dropped from the top of the draft before it
+  // validated: its lines start that many below the editor's (w21/939).
+  leadingBlank: number,
+  i18n: Translate,
+): string | null {
+  if (!sameFile(file, where.filename)) return null;
+  const editorLine = Number(line) - where.lineno + 1 + leadingBlank;
+  if (editorLine >= 1 && editorLine <= where.lineCount) {
+    return ` (${i18n.t("ledgerRefusalLine", { line: String(editorLine) })})`;
+  }
+  // Only a line that touches the entry is "near" it; a balance assertion
+  // hundreds of lines on keeps its own location (w21/619).
+  const beyond = editorLine < 1 ? 1 - editorLine : editorLine - where.lineCount;
+  if (beyond > NEAR_ENTRY_LINES) return null;
+  return ` (${i18n.t("ledgerRefusalNearEntry")})`;
+}
+
+/**
  * The refusal's detail as a person can use it (w21/369). The server joins its
  * errors with `message (file:line)` and a parse error often repeats, so the
  * same message appears several times; each is shown once. The citation is a
@@ -66,29 +91,17 @@ function tidyRefusalDetail(
   detail: string,
   i18n: Translate,
   where?: EntryLocation,
-  // Blank lines the server dropped from the top of the draft before it
-  // validated: its lines start that many below the editor's (w21/939).
   leadingBlank = 0,
 ): string {
   const seen = new Set<string>();
   const parts: string[] = [];
   for (const part of detail.split("; ")) {
     const text = where
-      ? part.replace(/ \(([^()]+):(\d+)\)$/, (_all, file: string, line) => {
-          const editorLine = Number(line) - where.lineno + 1 + leadingBlank;
-          if (!sameFile(file, where.filename)) return _all;
-          if (editorLine >= 1 && editorLine <= where.lineCount) {
-            return ` (${i18n.t("ledgerRefusalLine", { line: String(editorLine) })})`;
-          }
-          // Only a line that touches the entry is "near" it; a balance
-          // assertion hundreds of lines on, or a line of another file, keeps
-          // its own location (w21/619).
-          const beyond =
-            editorLine < 1 ? 1 - editorLine : editorLine - where.lineCount;
-          return beyond <= NEAR_ENTRY_LINES
-            ? ` (${i18n.t("ledgerRefusalNearEntry")})`
-            : _all;
-        })
+      ? part.replace(
+          / \(([^()]+):(\d+)\)$/,
+          (cited, file: string, line: string) =>
+            relocatedCitation(file, line, where, leadingBlank, i18n) ?? cited,
+        )
       : part;
     if (seen.has(text)) continue;
     seen.add(text);
@@ -307,22 +320,6 @@ function isTransportFailure(error: unknown): boolean {
  * as "Network request failed" used to reach the screen raw, in English, under
  * copy about ledger validation (w21/117).
  */
-/**
- * The refusal of an entry past the ledger owner's plan limit (ADR 001 D14). The
- * server can't say who asked, so the words hold for the owner and for a
- * collaborator, and they offer nothing to buy.
- */
-function ownerLimitMessage(error: unknown, i18n: Translate): string | null {
-  for (const { code, limitOwner, limit } of graphQLErrorExtensions(error)) {
-    if (code !== "RESOURCE_LIMIT_REACHED") continue;
-    if (limitOwner !== "LEDGER_OWNER" || typeof limit !== "number") continue;
-    return i18n.t("ledgerOwnerLimitReached", {
-      limit: limit.toLocaleString(),
-    });
-  }
-  return null;
-}
-
 export function ledgerWriteFailureMessage(
   error: unknown,
   i18n: Translate,
@@ -332,28 +329,42 @@ export function ledgerWriteFailureMessage(
   // checksum read): nothing was deleted, whatever the transport said.
   kind: "save" | "delete" | "delete-unsent" = "save",
 ): string | null {
-  const ownerLimit = ownerLimitMessage(error, i18n);
-  if (ownerLimit !== null) return ownerLimit;
-  // Still being written after every retry (w3/m61): it may have landed.
-  // Matched by name: importing the class would pull Apollo and the cache
-  // invalidation into every reader of this module.
-  if (error instanceof Error && error.name === "EntryWriteMaybeSavedError") {
-    return i18n.t(
-      kind === "save" ? "ledgerWriteUnconfirmed" : "ledgerDeleteUnconfirmed",
-    );
-  }
   const offline =
     kind === "save" ? "ledgerWriteOffline" : "ledgerDeleteOffline";
   const unconfirmed =
     kind === "save" ? "ledgerWriteUnconfirmed" : "ledgerDeleteUnconfirmed";
+  // One walk of the error's GraphQL extensions; every code rule below reads
+  // these instead of re-deriving them.
+  const extensions = graphQLErrorExtensions(error);
+  const codes = extensions.flatMap(({ code }) =>
+    typeof code === "string" ? [code] : [],
+  );
+  // A refusal of an entry past the ledger owner's plan limit (ADR 001 D14).
+  // The server can't say who asked, so the words hold for the owner and for a
+  // collaborator, and they offer nothing to buy.
+  for (const { code, limitOwner, limit } of extensions) {
+    if (code !== "RESOURCE_LIMIT_REACHED") continue;
+    if (limitOwner !== "LEDGER_OWNER" || typeof limit !== "number") continue;
+    return i18n.t("ledgerOwnerLimitReached", {
+      limit: limit.toLocaleString(),
+    });
+  }
+  // Still being written after every retry (w3/m61): it may have landed.
+  // Matched by name: importing the class would pull Apollo and the cache
+  // invalidation into every reader of this module.
+  if (error instanceof Error && error.name === "EntryWriteMaybeSavedError") {
+    return i18n.t(unconfirmed);
+  }
   const refusal = describeLedgerRefusal(error, i18n, context);
   if (refusal) return refusal;
-  const codes = graphQLErrorCodes(error);
   if (codes.includes("BAD_USER_INPUT")) {
     const token = tokenRefusal(error, i18n);
     if (token !== undefined) return token;
     const single = singleEntryRefusal(error, i18n);
     if (single !== undefined) return single;
+    // Otherwise the ledger's own text below: BAD_USER_INPUT is one of its
+    // codes, so an input the app has no words for is still the server's
+    // wording, not a null.
   }
   if (codes.some((code) => LEDGER_TEXT_CODES.has(code))) {
     return error instanceof Error && error.message.trim()
@@ -370,20 +381,21 @@ export function ledgerWriteFailureMessage(
   ) {
     return i18n.t(unconfirmed);
   }
+  // A response means the server was reached, so the write may have committed:
+  // "You're offline. Nothing was saved." was wrong, and invited a retry that
+  // wrote a duplicate (w21/327).
   if (responseStatus(error) !== null) return i18n.t(unconfirmed);
-  if (isTransportFailure(error)) {
-    // A request that never left (the token refresh failed first) saved
-    // nothing. Any other transport failure is also what a connection that
-    // drops after the request was sent looks like, and then the write may
-    // have committed: "Nothing was saved" invited a retry that wrote the entry
-    // twice (w21/351).
-    return i18n.t(
-      PRE_SEND_FAILURE.test(errorText(error)) || kind === "delete-unsent"
-        ? offline
-        : unconfirmed,
-    );
-  }
-  return null;
+  if (!isTransportFailure(error)) return null;
+  // A request that never left (the token refresh failed first) saved
+  // nothing. Any other transport failure is also what a connection that
+  // drops after the request was sent looks like, and then the write may
+  // have committed: "Nothing was saved" invited a retry that wrote the entry
+  // twice (w21/351).
+  return i18n.t(
+    PRE_SEND_FAILURE.test(errorText(error)) || kind === "delete-unsent"
+      ? offline
+      : unconfirmed,
+  );
 }
 
 /**

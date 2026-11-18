@@ -523,6 +523,112 @@ describe("ledgerWriteFailureMessage with a single-entry refusal", () => {
   });
 });
 
+// The chain's order is the copy: each rule below pins one precedence the
+// next edit must keep.
+describe("ledgerWriteFailureMessage precedence", () => {
+  const words = { t: (key: string) => key };
+  const coded = (message: string, codes: string[]) =>
+    Object.assign(new Error(message), {
+      graphQLErrors: codes.map((code) => ({ message, extensions: { code } })),
+    });
+  const withRefusal = (error: Error) =>
+    Object.assign(error, {
+      graphQLErrors: [
+        {
+          message: "Validation failed",
+          extensions: {
+            code: "VALIDATION_FAILED",
+            field: "entries",
+            newLedgerErrors: DUPLICATE_OPEN,
+          },
+        },
+        ...((error as unknown as { graphQLErrors: unknown[] }).graphQLErrors ??
+          []),
+      ],
+    });
+
+  it("reads a would-break refusal before any code copy", () => {
+    const detail = {
+      t: (key: string, params?: Record<string, string>) =>
+        key === "ledgerWouldBreak" ? `Would break: ${params?.detail}` : key,
+    };
+    for (const codes of [["RATE_LIMITED"], ["SERVICE_UNAVAILABLE"]]) {
+      expect(
+        ledgerWriteFailureMessage(withRefusal(coded("x", codes)), detail),
+      ).toBe(`Would break: ${DUPLICATE_OPEN}`);
+    }
+  });
+
+  it("reads the owner's limit before the refusal", () => {
+    const atLimit = withRefusal(new Error("Ledger limit reached"));
+    atLimit.graphQLErrors.push({
+      message: "Ledger limit reached",
+      extensions: {
+        code: "RESOURCE_LIMIT_REACHED",
+        limitOwner: "LEDGER_OWNER",
+        limit: 1000,
+      },
+    });
+    expect(ledgerWriteFailureMessage(atLimit, words)).toBe(
+      "ledgerOwnerLimitReached",
+    );
+  });
+
+  it("names a token refusal before a 5xx copy", () => {
+    const named = {
+      t: (key: string, params?: Record<string, string>) =>
+        `${key}(${params?.value ?? ""})`,
+    };
+    expect(
+      ledgerWriteFailureMessage(
+        coded(
+          'entry 0: postings[0].account "Assets:Cash" is not a valid account',
+          ["BAD_USER_INPUT", "SERVICE_UNAVAILABLE"],
+        ),
+        named,
+      ),
+    ).toBe("ledgerInvalidAccount(Assets:Cash)");
+  });
+
+  it("names rate limiting before the transport copy", () => {
+    expect(
+      ledgerWriteFailureMessage(
+        Object.assign(coded("Too many requests", ["RATE_LIMITED"]), {
+          networkError: new Error("Network request failed"),
+        }),
+        words,
+      ),
+    ).toBe("ledgerWriteRateLimited");
+  });
+
+  it("keeps a maybe-saved write unconfirmed even when it looks pre-send", () => {
+    const maybe = new Error("OAuth refresh failed");
+    maybe.name = "EntryWriteMaybeSavedError";
+    expect(ledgerWriteFailureMessage(maybe, words)).toBe(
+      "ledgerWriteUnconfirmed",
+    );
+  });
+
+  it("says a delete is unconfirmed when a response came back, even unsent", () => {
+    expect(
+      ledgerWriteFailureMessage(
+        Object.assign(new Error("Response not successful"), {
+          networkError: new Error("Received status code 502"),
+        }),
+        words,
+        undefined,
+        "delete-unsent",
+      ),
+    ).toBe("ledgerDeleteUnconfirmed");
+  });
+
+  it("leaves a ledger validation with no text to the screen", () => {
+    expect(ledgerWriteFailureMessage(coded("", ["UNBALANCED"]), words)).toBe(
+      null,
+    );
+  });
+});
+
 // w21/935: every offline delete said "The server didn't confirm the save".
 describe("ledgerWriteFailureMessage for a delete", () => {
   const offline = new Error("Network request failed");
