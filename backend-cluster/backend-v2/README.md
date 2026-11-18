@@ -165,14 +165,28 @@ unless you set `OIDC_LINK_BY_EMAIL=true`:
 
 - A linked ID signs in to its account.
 - A new ID with a verified email that no account uses gets a new account, with
-  no password and a default ledger. This works even when sign-up is closed,
-  because the operator's provider vouches for the user.
+  no password and a default ledger, when `OIDC_ALLOWED_EMAILS` lets it in. This
+  works even when sign-up is closed, because the operator's provider vouches
+  for the user. Without `OIDC_ALLOWED_EMAILS` no account is created.
 - A new ID whose email an account already uses is refused. That user signs in
   with their password and links the provider in Settings. With
   `OIDC_LINK_BY_EMAIL=true` the ID is linked to that account and signs in to
   it instead. Turn it on only when you trust the provider's verified emails,
   because whoever controls an email there gets the account that uses it.
 - An unverified email or a blocked account is refused.
+
+`OIDC_ALLOWED_EMAILS` is a comma-separated list of verified emails that may use
+the provider: `alice@example.com` for one address, `@example.com` for every
+address at that domain, and `@*.example.com` for its subdomains but not
+`example.com` itself. Case doesn't matter. When it is set, every sign-in and
+every link checks it, not only sign-up. An entry in any other form stops the
+server at start. With a provider anyone can join, such as a public one, list
+only the addresses or domains you trust: `@gmail.com` lets anyone with a Gmail
+address sign up here.
+
+Don't change `OIDC_ISSUER` once accounts are linked. Links are stored per
+issuer, so every linked user then counts as a new ID. An account the provider
+created has no password, so its user can't sign in and link the new ID.
 
 `deploymentInfo { oidcProviderName }` returns the button name, or null when
 OIDC is off.

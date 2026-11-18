@@ -27,6 +27,7 @@ export type OidcLoginError =
   | "blocked"
   | "already_linked"
   | "account_linked"
+  | "not_allowed"
   | "failed";
 
 export interface OidcCallbackParams {
@@ -73,6 +74,28 @@ class OidcLoginFailure extends Error {
 }
 
 const base64Url = (bytes: Buffer) => bytes.toString("base64url");
+
+/** Entries come from `parseOidcAllowedEmails`, lowercased. */
+const emailAllowed = (email: string, allowed: string[]) => {
+  const domain = email.slice(email.lastIndexOf("@") + 1);
+  return allowed.some((entry) =>
+    entry.startsWith("@*.")
+      ? domain.endsWith(entry.slice(2))
+      : entry.startsWith("@")
+        ? domain === entry.slice(1)
+        : email === entry,
+  );
+};
+
+/** The lowercased email, or "" when the provider hasn't verified it. */
+const verifiedEmail = (claims: JWTPayload) => {
+  // Some providers send the claim as a string.
+  const verified =
+    claims.email_verified === true || claims.email_verified === "true";
+  return verified && typeof claims.email === "string"
+    ? claims.email.trim().toLowerCase()
+    : "";
+};
 const randomToken = () => base64Url(randomBytes(32));
 
 export class OidcLoginService implements IOidcLoginService {
@@ -157,6 +180,7 @@ export class OidcLoginService implements IOidcLoginService {
     try {
       if (!params.code) throw new OidcLoginFailure("failed");
       const claims = await this.verifiedClaims(params.code, record);
+      this.assertAllowed(claims);
       const userId = record.linkUserId
         ? await this.link(record.linkUserId, claims.sub!)
         : await this.findOrCreateUser(claims, params.ip);
@@ -327,18 +351,17 @@ export class OidcLoginService implements IOidcLoginService {
       return linked;
     }
 
-    const email =
-      typeof claims.email === "string" ? claims.email.trim().toLowerCase() : "";
-    // Some providers send the claim as a string.
-    const verified =
-      claims.email_verified === true || claims.email_verified === "true";
-    if (!email || !verified) throw new OidcLoginFailure("email_unverified");
+    const email = verifiedEmail(claims);
+    if (!email) throw new OidcLoginFailure("email_unverified");
     const existing = await this.models.user.getByMail(this.db, email);
     if (existing) {
       if (!this.settings().linkByEmail) {
         throw new OidcLoginFailure("email_in_use");
       }
       return this.link(existing.id, sub);
+    }
+    if (!this.settings().allowedEmails.length) {
+      throw new OidcLoginFailure("not_allowed");
     }
     return this.auth.registerOidcUser({
       email,
@@ -370,6 +393,17 @@ export class OidcLoginService implements IOidcLoginService {
     });
     if (!created) throw new OidcLoginFailure("already_linked");
     return userId;
+  }
+
+  /** With an allowlist, every sign-in and link needs a verified email on it. */
+  private assertAllowed(claims: JWTPayload) {
+    const allowed = this.settings().allowedEmails;
+    if (!allowed.length) return;
+    const email = verifiedEmail(claims);
+    if (!email) throw new OidcLoginFailure("email_unverified");
+    if (!emailAllowed(email, allowed)) {
+      throw new OidcLoginFailure("not_allowed");
+    }
   }
 
   private async assertNotBlocked(userId: string): Promise<void> {

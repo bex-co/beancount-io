@@ -211,6 +211,13 @@
       "when": 1794885736773,
       "tag": "0029_oidc_identities",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794989277119,
+      "tag": "0030_oidc_identities_user_fk",
+      "breakpoints": true
     }
   ]
 }
