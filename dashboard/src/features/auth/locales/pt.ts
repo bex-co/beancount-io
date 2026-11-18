@@ -365,6 +365,63 @@ const ptAuth: Record<string, TranslationEntry> = {
     message: "Entrar",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Entrar com {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Já existe uma conta com este e-mail. Entre com sua senha e vincule-a em Configurações.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Seu provedor de login não verificou seu e-mail.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Esta conta está bloqueada.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Este login já está vinculado a outra conta.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Esta conta já está vinculada a outro início de sessão.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "Falha ao entrar. Tente novamente.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Sua conta está vinculada. Você pode entrar com {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Vincule sua conta {name} para entrar com ela.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Vincular",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Desvincular",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      'Sua conta não tem senha. Defina uma em "Esqueci minha senha" antes de desvincular.',
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Entre na sua conta Beancount",
     description: "Login page subtitle",

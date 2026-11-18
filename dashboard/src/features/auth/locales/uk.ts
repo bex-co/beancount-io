@@ -364,6 +364,63 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "Увійти",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Увійти через {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Обліковий запис із цією адресою вже існує. Увійдіть за паролем, а потім прив'яжіть його в налаштуваннях.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Ваш провайдер входу не підтвердив адресу пошти.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Цей обліковий запис заблоковано.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Цей вхід уже прив'язано до іншого облікового запису.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Цей обліковий запис уже пов’язано з іншим входом.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "Не вдалося увійти. Спробуйте ще раз.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Обліковий запис прив'язано. Ви можете входити через {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Прив'яжіть обліковий запис {name}, щоб входити через нього.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Прив'язати",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Відв'язати",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      "Обліковий запис не має пароля. Задайте його через «Забули пароль», перш ніж відв'язувати.",
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Увійдіть у свій обліковий запис Beancount",
     description: "Login page subtitle",

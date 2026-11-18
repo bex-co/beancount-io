@@ -5,6 +5,7 @@ import {
   Observable,
 } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
+import { MANAGED_DEPLOYMENT } from "@/common/lib/deployment-info";
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
@@ -110,6 +111,11 @@ async function setup(page: Page, language: "en" | "de" = "en") {
                 },
               },
             });
+            observer.complete();
+            return;
+          }
+          if (operation.operationName === "DeploymentInfo") {
+            observer.next({ data: { deploymentInfo: MANAGED_DEPLOYMENT } });
             observer.complete();
             return;
           }

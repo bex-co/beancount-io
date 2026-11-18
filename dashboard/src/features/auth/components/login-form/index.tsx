@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ScriptRequiredNotice } from "@/features/auth/components/script-required-notice";
 import { useHydrated } from "@/features/auth/lib/use-hydrated";
+import { useDeploymentInfo } from "@/common/hooks/use-deployment-info";
 
 type LoginFormData = {
   email: string;
@@ -26,6 +27,8 @@ export type LoginFormProps = {
   onForgotPasswordClick?: () => void;
   onRegisterClick?: () => void;
   onRecoveryClick?: (email: string) => void;
+  /** Where "Sign in with …" returns to. */
+  oidcNext?: string;
 };
 
 export function LoginForm({
@@ -37,8 +40,10 @@ export function LoginForm({
   onForgotPasswordClick,
   onRegisterClick,
   onRecoveryClick,
+  oidcNext,
 }: LoginFormProps) {
   const { t } = useTranslations();
+  const { oidcProviderName } = useDeploymentInfo();
 
   const loginSchema = useMemo(
     () =>
@@ -178,6 +183,18 @@ export function LoginForm({
           ? `${t("auth.signIn")}...`
           : t("auth.signIn")}
       </Button>
+
+      {oidcProviderName && (
+        <Button asChild variant="outline" className="w-full" size="lg">
+          <a
+            href={`/api-gateway/auth/oidc/start${
+              oidcNext ? `?next=${encodeURIComponent(oidcNext)}` : ""
+            }`}
+          >
+            {t("auth.signInWith", { name: oidcProviderName })}
+          </a>
+        </Button>
+      )}
 
       {showSignUpLink && (
         <div className="text-sm text-muted-foreground">

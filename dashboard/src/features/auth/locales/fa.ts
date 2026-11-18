@@ -363,6 +363,63 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "ورود",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "ورود با {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "حسابی با این ایمیل از قبل وجود دارد. با رمز عبور خود وارد شوید و سپس آن را در تنظیمات پیوند دهید.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "ارائه‌دهندهٔ ورود، ایمیل شما را تأیید نکرده است.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "این حساب مسدود است.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "این ورود قبلاً به حساب دیگری پیوند داده شده است.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "این حساب از قبل به ورود دیگری متصل است.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "ورود ناموفق بود. لطفاً دوباره تلاش کنید.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "حساب شما پیوند داده شده است. می‌توانید با {name} وارد شوید.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "حساب {name} خود را پیوند دهید تا با آن وارد شوید.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "پیوند",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "لغو پیوند",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      "حساب شما رمز عبور ندارد. پیش از لغو پیوند، با «فراموشی رمز عبور» یکی تنظیم کنید.",
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "وارد حساب Beancount خود شوید",
     description: "Login page subtitle",

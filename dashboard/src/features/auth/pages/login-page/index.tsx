@@ -15,6 +15,7 @@ import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { postLegacyMobileAuthToken } from "@/common/providers/react-native-bridge-provider/legacy-auth-bridge";
 import type { Token } from "@/common/types/token";
+import { oidcErrorKey } from "@/features/auth/lib/oidc-error";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -77,6 +78,13 @@ export default function LoginPage() {
               </AlertDescription>
             </Alert>
           )}
+          {search.oidcError && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                {t(oidcErrorKey(search.oidcError))}
+              </AlertDescription>
+            </Alert>
+          )}
           {recovering ? (
             <SignInRecovery
               key={search.recovery ?? "request"}
@@ -101,6 +109,7 @@ export default function LoginPage() {
               serverError={serverError}
               onRecoveryClick={isRateLimited ? setRecoveryEmail : undefined}
               showSignUpLink={signUpOpen}
+              oidcNext={search.next}
             />
           )}
         </div>

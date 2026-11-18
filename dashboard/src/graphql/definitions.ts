@@ -589,6 +589,8 @@ export type DenyCliAuthSessionResponse = {
 
 export type DeploymentInfoResponse = {
   __typename: 'DeploymentInfoResponse';
+  /** The OIDC provider's name for the sign-in button, or null when OIDC sign-in is off. */
+  oidcProviderName: Maybe<Scalars['String']['output']>;
   /** True on a deployment its operator runs for their own users (SELF_HOST). The sign-in and sign-up pages read it to drop what only makes sense on the hosted service. */
   selfHost: Scalars['Boolean']['output'];
   /** Whether signUp would be accepted. False only on a self-hosted deployment that already has an account; the sign-up page is not offered then. */
@@ -1473,6 +1475,8 @@ export type Mutation = {
   createLedger: Ledger;
   /** Create a new file in a specific ledger */
   createLedgerFile: LedgerFileContent;
+  /** A short-lived URL that links the configured OIDC provider to the signed-in account. Open it in the browser. */
+  createOidcLinkUrl: Scalars['String']['output'];
   createOneTimeToken: CreateOneTimeTokenResponse;
   /** Create a Plaid Link token for connecting bank accounts */
   createPlaidLinkToken: PlaidLinkToken;
@@ -1557,6 +1561,8 @@ export type Mutation = {
   syncPlaidTransactions: PlaidSyncResult;
   /** Unfollow a user */
   unfollowUser: FollowUserResponse;
+  /** Stop signing in to this account through the configured OIDC provider. Needs a password on the account. */
+  unlinkOidc: Scalars['Boolean']['output'];
   /** Unlink a Plaid Item (remove from Plaid and delete from database) */
   unlinkPlaidItem: Scalars['Boolean']['output'];
   /** Unstar a specific ledger */
@@ -1683,6 +1689,11 @@ export type MutationCreateLedgerFileArgs = {
   ledgerId: Scalars['String']['input'];
   message?: InputMaybe<Scalars['String']['input']>;
   path: Scalars['String']['input'];
+};
+
+
+export type MutationCreateOidcLinkUrlArgs = {
+  next?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -2613,6 +2624,8 @@ export type Query = {
   listPublicKeys: Array<PublicKey>;
   /** List all user owned ledgers for the current user */
   listUserOwnedLedgers: Array<Ledger>;
+  /** Whether the signed-in account can sign in through the configured OIDC provider. */
+  oidcLinked: Scalars['Boolean']['output'];
   /** Preview a ledger setup (ADR026) without creating anything: the files, account list, and validation result the specification would produce. */
   previewLedgerSetup: LedgerSetupPreview;
   /** Previews switching your plan to a price: the kind of change, when it takes effect, and what is charged today. Requires a full signed-in session. */
@@ -4346,7 +4359,24 @@ export type ResetPasswordMutation = { resetPassword: { __typename: 'ResetPasswor
 export type DeploymentInfoQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type DeploymentInfoQuery = { deploymentInfo: { __typename: 'DeploymentInfoResponse', selfHost: boolean, signUpOpen: boolean } };
+export type DeploymentInfoQuery = { deploymentInfo: { __typename: 'DeploymentInfoResponse', selfHost: boolean, signUpOpen: boolean, oidcProviderName: string | null } };
+
+export type OidcLinkedQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type OidcLinkedQuery = { oidcLinked: boolean };
+
+export type CreateOidcLinkUrlMutationVariables = Exact<{
+  next?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type CreateOidcLinkUrlMutation = { createOidcLinkUrl: string };
+
+export type UnlinkOidcMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type UnlinkOidcMutation = { unlinkOidc: boolean };
 
 export type SignUpMutationVariables = Exact<{
   email: Scalars['String']['input'];
@@ -4933,7 +4963,10 @@ export const DeploymentFeatureFlagsDocument = {"kind":"Document","definitions":[
 export const SendForgotPasswordLinkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SendForgotPasswordLink"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"sendForgotPasswordLink"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<SendForgotPasswordLinkMutation, SendForgotPasswordLinkMutationVariables>;
 export const ValidateEmailTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ValidateEmailToken"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"token"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"validateEmailToken"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"token"},"value":{"kind":"Variable","name":{"kind":"Name","value":"token"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"isValid"}}]}}]}}]} as unknown as DocumentNode<ValidateEmailTokenQuery, ValidateEmailTokenQueryVariables>;
 export const ResetPasswordDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ResetPassword"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"token"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"newPassword"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"resetPassword"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"token"},"value":{"kind":"Variable","name":{"kind":"Name","value":"token"}}},{"kind":"Argument","name":{"kind":"Name","value":"newPassword"},"value":{"kind":"Variable","name":{"kind":"Name","value":"newPassword"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<ResetPasswordMutation, ResetPasswordMutationVariables>;
-export const DeploymentInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"DeploymentInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deploymentInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"selfHost"}},{"kind":"Field","name":{"kind":"Name","value":"signUpOpen"}}]}}]}}]} as unknown as DocumentNode<DeploymentInfoQuery, DeploymentInfoQueryVariables>;
+export const DeploymentInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"DeploymentInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deploymentInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"selfHost"}},{"kind":"Field","name":{"kind":"Name","value":"signUpOpen"}},{"kind":"Field","name":{"kind":"Name","value":"oidcProviderName"}}]}}]}}]} as unknown as DocumentNode<DeploymentInfoQuery, DeploymentInfoQueryVariables>;
+export const OidcLinkedDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"OidcLinked"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"oidcLinked"}}]}}]} as unknown as DocumentNode<OidcLinkedQuery, OidcLinkedQueryVariables>;
+export const CreateOidcLinkUrlDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateOidcLinkUrl"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"next"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createOidcLinkUrl"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"next"},"value":{"kind":"Variable","name":{"kind":"Name","value":"next"}}}]}]}}]} as unknown as DocumentNode<CreateOidcLinkUrlMutation, CreateOidcLinkUrlMutationVariables>;
+export const UnlinkOidcDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnlinkOidc"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unlinkOidc"}}]}}]} as unknown as DocumentNode<UnlinkOidcMutation, UnlinkOidcMutationVariables>;
 export const SignUpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SignUp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"password"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"firstName"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"lastName"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"inviteBy"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"inviteSrc"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"username"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"withDefaultLedger"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"signUp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}},{"kind":"Argument","name":{"kind":"Name","value":"password"},"value":{"kind":"Variable","name":{"kind":"Name","value":"password"}}},{"kind":"Argument","name":{"kind":"Name","value":"firstName"},"value":{"kind":"Variable","name":{"kind":"Name","value":"firstName"}}},{"kind":"Argument","name":{"kind":"Name","value":"lastName"},"value":{"kind":"Variable","name":{"kind":"Name","value":"lastName"}}},{"kind":"Argument","name":{"kind":"Name","value":"inviteBy"},"value":{"kind":"Variable","name":{"kind":"Name","value":"inviteBy"}}},{"kind":"Argument","name":{"kind":"Name","value":"inviteSrc"},"value":{"kind":"Variable","name":{"kind":"Name","value":"inviteSrc"}}},{"kind":"Argument","name":{"kind":"Name","value":"username"},"value":{"kind":"Variable","name":{"kind":"Name","value":"username"}}},{"kind":"Argument","name":{"kind":"Name","value":"withDefaultLedger"},"value":{"kind":"Variable","name":{"kind":"Name","value":"withDefaultLedger"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"sessionId"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}},{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"tokenExpireAt"}}]}}]}}]} as unknown as DocumentNode<SignUpMutation, SignUpMutationVariables>;
 export const VerifySignUpOtpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"VerifySignUpOtp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"otp"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"verifySignUpOtp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}}},{"kind":"Argument","name":{"kind":"Name","value":"otp"},"value":{"kind":"Variable","name":{"kind":"Name","value":"otp"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}}]}}]}}]} as unknown as DocumentNode<VerifySignUpOtpMutation, VerifySignUpOtpMutationVariables>;
 export const ConfirmCliAuthSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConfirmCliAuthSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userCode"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"confirmCliAuthSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userCode"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userCode"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<ConfirmCliAuthSessionMutation, ConfirmCliAuthSessionMutationVariables>;

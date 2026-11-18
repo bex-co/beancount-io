@@ -357,6 +357,61 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "登录",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "使用 {name} 登录",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message: "此邮箱已被一个账户使用。请用密码登录，然后在设置中关联。",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "你的登录提供方尚未验证你的邮箱。",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "此账户已被封禁。",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "此登录已关联到另一个账户。",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "此账户已关联到另一个登录方式。",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "登录失败，请重试。",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "你的账户已关联，可以使用 {name} 登录。",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "关联你的 {name} 账户即可用它登录。",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "关联",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "取消关联",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message: "你的账户没有密码。取消关联前，请通过“忘记密码”设置一个。",
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "登录你的 Beancount 账户",
     description: "Login page subtitle",

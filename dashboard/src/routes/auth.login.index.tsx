@@ -4,10 +4,12 @@ import { z } from "zod";
 import { searchEnum, searchString } from "@/common/lib/search-params/tolerant";
 import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
 import { loginBeforeLoad } from "@/features/auth/pages/login-page/loader";
+import { oidcErrorSearch } from "@/features/auth/lib/oidc-error";
 
 const loginSearchSchema = z.object({
   next: searchString(),
   reason: searchEnum(["expired"]),
+  oidcError: oidcErrorSearch(),
   recovery: z
     .unknown()
     .transform((value) =>

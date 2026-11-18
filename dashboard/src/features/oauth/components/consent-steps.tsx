@@ -1,4 +1,5 @@
 import { useApolloClient } from "@apollo/client/react";
+import { useLocation } from "@tanstack/react-router";
 import type en from "@/i18n/locales/en";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useDeploymentInfo } from "@/common/hooks/use-deployment-info";
@@ -57,6 +58,7 @@ export function ConsentLoginStep({
   // Read here, not passed in, so every consent page (MCP, mobile, identity)
   // drops "Sign Up" on a self-hosted stack that has closed sign-up.
   const { signUpOpen } = useDeploymentInfo();
+  const { href } = useLocation();
 
   const { onSubmit, isLoading, serverError } = useLoginForm({
     onSuccess: async () => {
@@ -82,6 +84,7 @@ export function ConsentLoginStep({
         onForgotPasswordClick={onForgotPasswordClick}
         onRegisterClick={onRegisterClick}
         showSignUpLink={signUpOpen}
+        oidcNext={href}
       />
     </div>
   );

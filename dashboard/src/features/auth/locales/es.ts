@@ -368,6 +368,63 @@ const esAuth: Record<string, TranslationEntry> = {
     message: "Iniciar sesión",
     description: "Button label for sign in action",
   },
+  "auth.signInWith": {
+    message: "Iniciar sesión con {name}",
+    description:
+      "Button label to sign in with the identity provider set up by the operator; {name} is its name",
+  },
+  "auth.oidcErrorEmailInUse": {
+    message:
+      "Ya hay una cuenta con este correo. Inicia sesión con tu contraseña y vincúlala en Configuración.",
+    description:
+      "Error after provider sign-in when the email already belongs to an account",
+  },
+  "auth.oidcErrorEmailUnverified": {
+    message: "Tu proveedor de inicio de sesión no ha verificado tu correo.",
+    description:
+      "Error after provider sign-in when the provider has not verified the email",
+  },
+  "auth.oidcErrorBlocked": {
+    message: "Esta cuenta está bloqueada.",
+    description: "Error after provider sign-in when the account is blocked",
+  },
+  "auth.oidcErrorAlreadyLinked": {
+    message: "Este inicio de sesión ya está vinculado a otra cuenta.",
+    description:
+      "Error when the provider identity is already linked to another account",
+  },
+  "auth.oidcErrorAccountLinked": {
+    message: "Esta cuenta ya está vinculada a otro inicio de sesión.",
+    description:
+      "Error when the account is already linked to a different provider identity",
+  },
+  "auth.oidcErrorFailed": {
+    message: "No se pudo iniciar sesión. Inténtalo de nuevo.",
+    description: "Generic error when provider sign-in fails",
+  },
+  "auth.oidcLinked": {
+    message: "Tu cuenta está vinculada. Puedes iniciar sesión con {name}.",
+    description:
+      "Settings text when the account is linked to the provider; {name} is its name",
+  },
+  "auth.oidcNotLinked": {
+    message: "Vincula tu cuenta de {name} para iniciar sesión con ella.",
+    description:
+      "Settings text when the account is not linked to the provider; {name} is its name",
+  },
+  "auth.oidcLink": {
+    message: "Vincular",
+    description: "Settings button to link the provider",
+  },
+  "auth.oidcUnlink": {
+    message: "Desvincular",
+    description: "Settings button to unlink the provider",
+  },
+  "auth.oidcUnlinkNeedsPassword": {
+    message:
+      'Tu cuenta no tiene contraseña. Crea una con "Olvidé mi contraseña" antes de desvincular.',
+    description: "Error when unlinking an account that has no password",
+  },
   "auth.signInToAccount": {
     message: "Inicia sesión en tu cuenta de Beancount",
     description: "Login page subtitle",

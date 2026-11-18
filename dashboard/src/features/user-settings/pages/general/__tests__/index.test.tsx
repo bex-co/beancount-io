@@ -28,6 +28,8 @@ vi.mock("../billing-summary-link", () => ({
   ),
 }));
 
+vi.mock("../oidc-section", () => ({ OidcSection: () => null }));
+
 vi.mock("../session-section", () => ({
   SessionSection: () => (
     <div data-testid="session-section">Session Section</div>

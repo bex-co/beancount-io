@@ -17,6 +17,7 @@ import { UserProfileSection } from "./user-profile-section";
 import { AppearanceSection } from "./appearance-section";
 import { BillingSummaryLink } from "./billing-summary-link";
 import { SessionSection } from "./session-section";
+import { OidcSection } from "./oidc-section";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
@@ -213,6 +214,7 @@ export default function GeneralSettingsPage() {
             {!hidesBilling && <BillingSummaryLink />}
             <UserProfileSection userData={data} />
             <AppearanceSection />
+            <OidcSection />
             <SessionSection />
           </div>
         )}
