@@ -30,18 +30,18 @@ afterEach(() => {
 
 describe("useReportConversion", () => {
   it("starts at cost when the ledger has no stored choice", () => {
-    const { result } = renderHook(() => useReportConversion(LEDGER_A, "USD"));
+    const { result } = renderHook(() => useReportConversion(LEDGER_A, ["USD"]));
     expect(result.current[0]).toBe("at_cost");
   });
 
   it("opens the next report page for the same ledger with the choice made on the last one", () => {
-    const balanceSheet = renderHook(() => useReportConversion(LEDGER_A, "USD"));
+    const balanceSheet = renderHook(() => useReportConversion(LEDGER_A, ["USD"]));
     act(() => balanceSheet.result.current[1]("units"));
     expect(balanceSheet.result.current[0]).toBe("units");
     balanceSheet.unmount();
 
     const incomeStatement = renderHook(() =>
-      useReportConversion(LEDGER_A, "USD"),
+      useReportConversion(LEDGER_A, ["USD"]),
     );
     expect(incomeStatement.result.current[0]).toBe("units");
     expect(setCookieCalls).toEqual([
@@ -53,17 +53,17 @@ describe("useReportConversion", () => {
   });
 
   it("keeps each ledger's choice separate", () => {
-    const { result } = renderHook(() => useReportConversion(LEDGER_A, "USD"));
+    const { result } = renderHook(() => useReportConversion(LEDGER_A, ["USD"]));
     act(() => result.current[1]("at_value"));
 
-    const other = renderHook(() => useReportConversion(LEDGER_B, "USD"));
+    const other = renderHook(() => useReportConversion(LEDGER_B, ["USD"]));
     expect(other.result.current[0]).toBe("at_cost");
   });
 
   it("follows the ledger when a mounted page switches ledgers", () => {
     cookies.set(reportConversionCookieKey(LEDGER_B), "units");
     const { result, rerender } = renderHook(
-      ({ ledgerId }) => useReportConversion(ledgerId, "USD"),
+      ({ ledgerId }) => useReportConversion(ledgerId, ["USD"]),
       { initialProps: { ledgerId: LEDGER_A } },
     );
     act(() => result.current[1]("at_value"));
@@ -78,11 +78,19 @@ describe("useReportConversion", () => {
   it("accepts the ledger's primary currency but not a currency it does not offer", () => {
     cookies.set(reportConversionCookieKey(LEDGER_A), "EUR");
     expect(
-      renderHook(() => useReportConversion(LEDGER_A, "EUR")).result.current[0],
+      renderHook(() => useReportConversion(LEDGER_A, ["EUR"])).result.current[0],
     ).toBe("EUR");
     expect(
-      renderHook(() => useReportConversion(LEDGER_A, "USD")).result.current[0],
+      renderHook(() => useReportConversion(LEDGER_A, ["USD"])).result.current[0],
     ).toBe("at_cost");
+  });
+
+  it("accepts a stored choice in any of the ledger's operating currencies, not just the first", () => {
+    cookies.set(reportConversionCookieKey(LEDGER_A), "EUR");
+    expect(
+      renderHook(() => useReportConversion(LEDGER_A, ["USD", "EUR"])).result
+        .current[0],
+    ).toBe("EUR");
   });
 });
 

@@ -13,7 +13,11 @@ interface ConversionSelectProps {
   onValueChange: (value: ConversionOption) => void;
   placeholder?: string;
   className?: string;
-  currency?: string;
+  /**
+   * Every currency the selector offers to convert to, in display order —
+   * the ledger's operating currencies. Duplicates are shown once.
+   */
+  currencies?: readonly string[];
 }
 
 /**
@@ -25,8 +29,9 @@ export function ConversionSelect({
   onValueChange,
   placeholder,
   className = "w-fit",
-  currency = "USD",
+  currencies = ["USD"],
 }: ConversionSelectProps) {
+  const offered = [...new Set(currencies)];
   const { t } = useTranslations();
   const defaultPlaceholder =
     placeholder || t("component.conversionSelect.placeholder");
@@ -53,9 +58,11 @@ export function ConversionSelect({
         <SelectItem value="units">
           {t("component.conversionSelect.units")}
         </SelectItem>
-        <SelectItem value={currency}>
-          {t("component.conversionSelect.convertedTo")} {currency}
-        </SelectItem>
+        {offered.map((offeredCurrency) => (
+          <SelectItem key={offeredCurrency} value={offeredCurrency}>
+            {t("component.conversionSelect.convertedTo")} {offeredCurrency}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

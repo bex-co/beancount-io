@@ -20,18 +20,18 @@ export function reportConversionCookieKey(ledgerId: string): string {
 
 /**
  * A stored conversion applies only while the page still offers it: cost,
- * market value, units, or the ledger's own primary currency. Anything else — a
- * currency from an earlier operating-currency option, a hand-edited cookie —
+ * market value, units, or one of the ledger's operating currencies. Anything
+ * else — a currency the ledger stopped declaring, a hand-edited cookie —
  * falls back to the default rather than querying an option the page cannot
  * show.
  */
 export function resolveReportConversion(
   stored: string | undefined,
-  primaryCurrency: string,
+  operatingCurrencies: readonly string[],
 ): ConversionOption {
   if (
     stored &&
-    (PRESENTATION_CONVERSIONS.has(stored) || stored === primaryCurrency)
+    (PRESENTATION_CONVERSIONS.has(stored) || operatingCurrencies.includes(stored))
   ) {
     return stored as ConversionOption;
   }
@@ -68,10 +68,14 @@ export function storedReportConversion(ledgerId: string): ConversionOption {
  * The cookie is read for the current ledger on every render rather than once,
  * so a report page that stays mounted across a ledger switch follows the new
  * ledger instead of carrying the old one's choice.
+ *
+ * The second argument is every currency the selector offers — the ledger's
+ * operating currencies — so a choice stored when the ledger declared several
+ * still validates after it is reordered to a different first one.
  */
 export function useReportConversion(
   ledgerId: string,
-  primaryCurrency: string,
+  operatingCurrencies: readonly string[],
 ): [ConversionOption, (value: ConversionOption) => void] {
   const [chosen, setChosen] = useState<{ ledgerId: string; value: string }>();
 
@@ -92,5 +96,5 @@ export function useReportConversion(
     [ledgerId],
   );
 
-  return [resolveReportConversion(stored, primaryCurrency), setConversion];
+  return [resolveReportConversion(stored, operatingCurrencies), setConversion];
 }

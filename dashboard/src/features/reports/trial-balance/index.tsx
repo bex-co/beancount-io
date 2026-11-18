@@ -39,12 +39,13 @@ export default function TrialBalancePage() {
   const ledgerFilters = useLedgerSearchParams();
   const {
     primaryCurrency,
+    operatingCurrencies,
     ledgerName: ledgerDisplayName,
     ledgerData,
   } = useLedger();
   const [conversion, setConversion] = useReportConversion(
     ledgerId,
-    primaryCurrency,
+    operatingCurrencies,
   );
   // Owned here, not in the content: the pending branch below unmounts it.
   // The selected chart is view preference, not scoped to the data: it
@@ -108,6 +109,7 @@ export default function TrialBalancePage() {
     <TrialBalanceContent
       trialBalanceData={trialBalanceData}
       primaryCurrency={primaryCurrency}
+      operatingCurrencies={operatingCurrencies}
       ledgerDisplayName={ledgerDisplayName ?? ledgerName}
       ledgerOwner={ledgerOwner}
       ledgerNameParam={ledgerName}

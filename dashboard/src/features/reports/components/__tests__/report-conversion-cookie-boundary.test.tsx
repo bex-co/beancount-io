@@ -96,28 +96,31 @@ async function onServer<T>(
 
 function ConversionProbe({
   ledgerId = LEDGER,
-  currency = "USD",
+  currencies = ["USD"],
 }: {
   ledgerId?: string;
-  currency?: string;
+  currencies?: readonly string[];
 }) {
-  const [conversion, setConversion] = useReportConversion(ledgerId, currency);
+  const [conversion, setConversion] = useReportConversion(
+    ledgerId,
+    currencies,
+  );
   return (
     <>
       <output>{conversion}</output>
       <ConversionSelect
         value={conversion}
         onValueChange={setConversion}
-        currency={currency}
+        currencies={currencies}
       />
     </>
   );
 }
 
-function probe(ledgerId = LEDGER, currency = "USD") {
+function probe(ledgerId = LEDGER, currencies: readonly string[] = ["USD"]) {
   return (
     <LocalizationProvider localization={createLocalization()}>
-      <ConversionProbe ledgerId={ledgerId} currency={currency} />
+      <ConversionProbe ledgerId={ledgerId} currencies={currencies} />
     </LocalizationProvider>
   );
 }
@@ -125,10 +128,10 @@ function probe(ledgerId = LEDGER, currency = "USD") {
 async function serverConversion(
   header: string,
   ledgerId = LEDGER,
-  currency = "USD",
+  currencies: readonly string[] = ["USD"],
 ) {
   const markup = await onServer(header, () =>
-    renderToString(probe(ledgerId, currency)),
+    renderToString(probe(ledgerId, currencies)),
   );
   const container = document.createElement("div");
   container.innerHTML = markup;
@@ -202,7 +205,7 @@ async function prefetchReports(header: string, ledgerId = LEDGER) {
 describe("report conversion across the browser/server cookie boundary", () => {
   it("hydrates a browser-written Units choice without replacing server markup and prefetches matching reports", async () => {
     const set = vi.spyOn(Cookies, "set");
-    const page = renderHook(() => useReportConversion(LEDGER, "USD"));
+    const page = renderHook(() => useReportConversion(LEDGER, ["USD"]));
     act(() => page.result.current[1]("units"));
     page.unmount();
     const key = reportConversionCookieKey(LEDGER);
@@ -280,7 +283,7 @@ describe("report conversion across the browser/server cookie boundary", () => {
   it("retains the At Cost default on the server, client, and every loader without a cookie", async () => {
     expect(document.cookie).toBe("");
     expect(
-      renderHook(() => useReportConversion(LEDGER, "USD")).result.current[0],
+      renderHook(() => useReportConversion(LEDGER, ["USD"])).result.current[0],
     ).toBe("at_cost");
     expect(await serverConversion("")).toBe("at_cost");
     expect(await prefetchReports("")).toEqual([
@@ -295,7 +298,7 @@ describe("report conversion across the browser/server cookie boundary", () => {
     Cookies.set(reportConversionCookieKey(LEDGER), "units");
     Cookies.set(reportConversionCookieKey(OTHER_LEDGER), "at_value");
     const { result, rerender } = renderHook(
-      ({ ledgerId }) => useReportConversion(ledgerId, "USD"),
+      ({ ledgerId }) => useReportConversion(ledgerId, ["USD"]),
       { initialProps: { ledgerId: LEDGER } },
     );
     expect(result.current[0]).toBe("units");
@@ -322,7 +325,7 @@ describe("report conversion across the browser/server cookie boundary", () => {
     async (choice) => {
       Cookies.set(reportConversionCookieKey(LEDGER), choice);
       expect(
-        renderHook(() => useReportConversion(LEDGER, "USD")).result.current[0],
+        renderHook(() => useReportConversion(LEDGER, ["USD"])).result.current[0],
       ).toBe(choice);
       expect(await serverConversion(document.cookie)).toBe(choice);
       expect(
@@ -334,13 +337,13 @@ describe("report conversion across the browser/server cookie boundary", () => {
   it("validates the stored primary currency while retaining the loader's documented prefetch behavior", async () => {
     Cookies.set(reportConversionCookieKey(LEDGER), "EUR");
     expect(
-      renderHook(() => useReportConversion(LEDGER, "EUR")).result.current[0],
+      renderHook(() => useReportConversion(LEDGER, ["EUR"])).result.current[0],
     ).toBe("EUR");
-    expect(await serverConversion(document.cookie, LEDGER, "EUR")).toBe("EUR");
+    expect(await serverConversion(document.cookie, LEDGER, ["EUR"])).toBe("EUR");
     expect(
-      renderHook(() => useReportConversion(LEDGER, "USD")).result.current[0],
+      renderHook(() => useReportConversion(LEDGER, ["USD"])).result.current[0],
     ).toBe("at_cost");
-    expect(await serverConversion(document.cookie, LEDGER, "USD")).toBe(
+    expect(await serverConversion(document.cookie, LEDGER, ["USD"])).toBe(
       "at_cost",
     );
     // Loaders do not know the primary currency yet; safe currency names pass
@@ -358,7 +361,7 @@ describe("report conversion across the browser/server cookie boundary", () => {
     async (choice) => {
       Cookies.set(reportConversionCookieKey(LEDGER), choice);
       expect(
-        renderHook(() => useReportConversion(LEDGER, "USD")).result.current[0],
+        renderHook(() => useReportConversion(LEDGER, ["USD"])).result.current[0],
       ).toBe("at_cost");
       expect(await serverConversion(document.cookie)).toBe("at_cost");
       expect(

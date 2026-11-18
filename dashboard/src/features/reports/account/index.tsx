@@ -400,14 +400,15 @@ export default function AccountPage() {
       value: "changesOverTime",
     },
   ];
-  const { primaryCurrency, ledgerName: ledgerDisplayName } = useLedger();
+  const { primaryCurrency, operatingCurrencies, ledgerName: ledgerDisplayName } =
+    useLedger();
   // In the URL too, so a shared scope edit regroups by the reader\'s choice.
   const [timeInterval, setTimeInterval] = useReportInterval(
     "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
   );
   const [conversion, setConversion] = useReportConversion(
     ledgerId,
-    primaryCurrency,
+    operatingCurrencies,
   );
   // The units chosen in each chart's legend, held above the pending state
   // that unmounts the charts while a new period reads (w4/m51, w4/1025).
@@ -533,7 +534,7 @@ export default function AccountPage() {
             <ConversionSelect
               value={conversion}
               onValueChange={setConversion}
-              currency={primaryCurrency}
+              currencies={operatingCurrencies}
             />
           </div>
         </div>
