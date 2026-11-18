@@ -62,6 +62,29 @@ describe("api gateway proxy", () => {
     vi.stubEnv("API_PROXY_URL", "http://api.internal:4104");
     expect(apiGatewayProxy(event("/auth/login"))).toBeUndefined();
   });
+
+  it("passes the client's Accept on, which the MCP endpoint requires", async () => {
+    vi.stubEnv("API_PROXY_URL", "http://api.internal:4104");
+    const mcpRequest = event("/api-gateway/mcp");
+    const accept = "application/json, text/event-stream";
+    (mcpRequest as { req: { headers: Headers } }).req.headers.set(
+      "accept",
+      accept,
+    );
+    apiGatewayProxy(mcpRequest);
+    const [proxied, , options] = proxyRequest.mock.calls.at(-1) ?? [];
+    // h3's own header filter, given the proxy's options: by default it drops
+    // Accept, and the MCP endpoint then answers 406.
+    const { getProxyRequestHeaders } =
+      await vi.importActual<typeof import("nitro/h3")>("nitro/h3");
+    expect(
+      getProxyRequestHeaders(proxied, {
+        forwardHeaders: options.forwardHeaders,
+        filterHeaders: options.filterHeaders,
+      }).accept,
+    ).toBe(accept);
+    expect(getProxyRequestHeaders(proxied).accept).toBeUndefined();
+  });
 });
 
 describe("public url endpoint", () => {

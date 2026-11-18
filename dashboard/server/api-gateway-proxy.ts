@@ -35,6 +35,10 @@ export default defineHandler((event) => {
     // browser is left on /api-gateway/oauth/auth holding that page's HTML and
     // none of the cookies, and the app shows "Page not found".
     fetchOptions: { redirect: "manual" },
+    // h3 drops Accept from a proxied request by default. The MCP endpoint
+    // answers 406 unless the client accepts both JSON and an event stream, so
+    // without it no MCP client could use this host.
+    forwardHeaders: ["accept"],
     headers: {
       "x-forwarded-host": event.url.host,
       "x-forwarded-proto":
