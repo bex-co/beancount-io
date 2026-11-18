@@ -179,12 +179,20 @@ def _register(data: Mapping[str, Any]) -> Table:
         "cost_date",
         "balance_currency",
         "balance",
+        "asserted",
+        "asserted_currency",
+        "difference",
     ]
     rows: list[Row] = []
     for line, row in enumerate(data["rows"], start=1):
         amount = _one_amount(row["amount"])
         cost = row["cost"]
         cost_cells = [*_one_amount(cost), _text(cost.get("date")) if cost else ""]
+        # A balance assertion moves nothing: `amount` stays empty so the
+        # column sums to the balance, and the asserted figure (with the
+        # difference when it failed) has its own columns (w1/289).
+        difference = row["difference"]
+        assertion = [*_one_amount(row["asserted"]), _text(difference["number"]) if difference else ""]
         head = [
             str(line),
             _text(row["date"]),
@@ -199,7 +207,7 @@ def _register(data: Mapping[str, Any]) -> Table:
         # once per currency, and `line` says they are one posting.
         balance = row["balance"] or {}
         for currency in sorted(balance) or [""]:
-            rows.append([*head, currency, _text(balance.get(currency))])
+            rows.append([*head, currency, _text(balance.get(currency)), *assertion])
     return header, rows
 
 

@@ -232,7 +232,7 @@ def test_register_renders_the_closing_row(tmp_path: Path) -> None:
     assert "—" not in closing
     csv_out = _bea(tmp_path, "--file", str(ledger), "report", "register", "Assets:Brokerage", "--format", "csv")
     assert csv_out.returncode == 0, csv_out.stderr
-    assert csv_out.stdout.splitlines()[-1] == "2,2026-01-10,Assets:Brokerage,closing,,,,,,,,USD,1700"
+    assert csv_out.stdout.splitlines()[-1] == "2,2026-01-10,Assets:Brokerage,closing,,,,,,,,USD,1700,,,"
 
 
 def test_register_json(tmp_path: Path) -> None:

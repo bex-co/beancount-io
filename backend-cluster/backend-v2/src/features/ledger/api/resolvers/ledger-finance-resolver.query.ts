@@ -309,6 +309,18 @@ class RegisterPosting {
 }
 
 @ObjectType()
+class RegisterAssertion {
+  @Field(() => String)
+  account: string;
+
+  @Field(() => String)
+  number: string;
+
+  @Field(() => String)
+  currency: string;
+}
+
+@ObjectType()
 class RegisterRow {
   @Field(() => String)
   date: string;
@@ -330,6 +342,20 @@ class RegisterRow {
 
   @Field(() => GraphQLJSONObject)
   balance: Record<string, string>;
+
+  @Field(() => RegisterAssertion, {
+    nullable: true,
+    description:
+      "A balance row's asserted account and amount; the row moves nothing, so it has no postings. Null on transaction rows.",
+  })
+  asserted?: RegisterAssertion | null;
+
+  @Field(() => HoldingsMoney, {
+    nullable: true,
+    description:
+      "A failed balance assertion's accumulated minus asserted amount; null when the check passed and on transaction rows.",
+  })
+  difference?: HoldingsMoney | null;
 }
 
 @ObjectType()

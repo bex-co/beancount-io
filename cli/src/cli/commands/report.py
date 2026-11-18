@@ -724,7 +724,13 @@ def register(
 def _row_cells(row: dict[str, Any], conversion: str, precision: Mapping[str, int], show_account: bool) -> list[str]:
     """One register row's cells; the account column appears when rows sit below the requested account."""
     if row["entry"] == "balance":
-        description = "Balance check"
+        # The assertion moves nothing, so its figure sits in the description
+        # with AMOUNT blank, and a failed one says so on its own row (w1/289).
+        asserted = _money(row["asserted"], conversion, precision)
+        if row["difference"] is None:
+            description = f"Balance check: {asserted}"
+        else:
+            description = f"Balance check failed: {asserted} asserted"
     elif row["entry"] == "closing":
         description = "Valued at the as-of date"
     else:

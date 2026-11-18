@@ -145,7 +145,10 @@ def test_register_running_balance(tmp_path: Path) -> None:
     assert rows[0]["narration"] == "Payday"
     assert rows[0]["amount"] == {"number": "3000", "currency": "USD"}
     assert rows[1]["amount"] == {"number": "-80", "currency": "USD"}
-    assert rows[2]["amount"] == {"number": "2920", "currency": "USD"}
+    # The assertion moves nothing: its figure is `asserted`, not `amount` (w1/289).
+    assert rows[2]["amount"] is None
+    assert rows[2]["asserted"] == {"number": "2920", "currency": "USD"}
+    assert rows[2]["difference"] is None
     assert all(row["cost"] is None for row in rows)
 
 

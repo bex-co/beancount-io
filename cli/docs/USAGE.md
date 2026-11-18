@@ -2043,7 +2043,16 @@ trial-balance total: when a market conversion values the holdings
 differently at the as-of date than at the last posting, one closing row
 (`entry: "closing"`, dated the as-of date, no amount, text description
 `Valued at the as-of date`) carries the end-date valuation. Under `units`
-and `at_cost` there is no closing row. The text table adds an ACCOUNT
+and `at_cost` there is no closing row. A `balance` assertion in the subtree
+is a row too (`entry: "balance"`), and it moves nothing: its `amount` is
+`null` (blank AMOUNT, empty CSV `amount` cell), so the amount column still
+sums to the balance. The asserted figure is `asserted`; text reads
+`Balance check: 70.00 USD`. A failed assertion (shown with
+`--allow-errors`) reads `Balance check failed: 80.00 USD asserted`, and its
+`difference` is Beancount's accumulated minus asserted (`-10.00 USD` when the
+account held 10.00 USD less); a passing one has `difference: null`. CSV
+carries both in the trailing `asserted`, `asserted_currency` and
+`difference` columns. The text table adds an ACCOUNT
 column whenever a row posted below the requested account, even when every
 row hit the same subaccount. A market value from a stale
 managed quote reads `1,700 USD (stale)`; under `--json` each group names the

@@ -164,16 +164,39 @@ describe("mapRegisterRows", () => {
       change: { USD: "-10.00" },
       balance: { USD: "90.00" },
     });
+    expect(rows[0]).toMatchObject({ asserted: null, difference: null });
+    // A balance assertion moves nothing: no posting, its figure under
+    // `asserted` (w1/289).
     expect(rows[1]).toMatchObject({
       entry: "balance",
       payee: null,
-      postings: [
-        {
-          account: "Assets:Broker:A",
-          amount: { number: "90.00", currency: "USD" },
-          cost: null,
-        },
-      ],
+      postings: [],
+      asserted: {
+        account: "Assets:Broker:A",
+        number: "90.00",
+        currency: "USD",
+      },
+      difference: null,
+    });
+  });
+
+  it("carries a failed assertion's difference", () => {
+    const failed = balance("2021-03-01");
+    failed.entry = {
+      ...failed.entry,
+      amount: { number: "100.00", currency: "USD" },
+      diff_amount: { number: "-10.00", currency: "USD" },
+    } as AccountJournalEntryPublic["entry"];
+    const [row] = mapRegisterRows([failed], "Assets:Broker");
+    expect(row).toMatchObject({
+      entry: "balance",
+      postings: [],
+      asserted: {
+        account: "Assets:Broker:A",
+        number: "100.00",
+        currency: "USD",
+      },
+      difference: { number: "-10.00", currency: "USD" },
     });
   });
 

@@ -1069,11 +1069,12 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
     The `--account` pattern selects the register's root: the one matched
     account every other matched posting account sits under, refused when the
     pattern spans several trees. The rows are that subtree's postings (plus
-    its balance assertions, which move nothing), oldest first, each naming
-    its own account. Each row's running balance is valued at that row's date
-    (w1/252); when a later quote moves the value, a closing row dated the
-    as-of date carries the end-date valuation, so the last row is still the
-    trial-balance total (w22/m3/t002).
+    its balance assertions, which move nothing: no `amount`, the figure in
+    `asserted`), oldest first, each naming its own account. Each row's
+    running balance is valued at that row's date (w1/252); when a later
+    quote moves the value, a closing row dated the as-of date carries the
+    end-date valuation, so the last row is still the trial-balance total
+    (w22/m3/t002).
     """
     from beancount.core.data import Balance
 
@@ -1162,9 +1163,16 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
                         if cost is not None
                         else None
                     ),
+                    "asserted": None,
+                    "difference": None,
                 }
             )
         elif isinstance(row, Balance):
+            # An assertion moves nothing, so it has no amount: the asserted
+            # figure in `amount` read as a deposit and made the column stop
+            # summing to the balance. A failed one carries Beancount's
+            # `diff_amount`, accumulated minus asserted (w1/289).
+            diff = row.diff_amount
             rows.append(
                 {
                     "date": row.date,
@@ -1172,8 +1180,10 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
                     "account": name,
                     "payee": None,
                     "narration": None,
-                    "amount": {"number": row.amount.number, "currency": row.amount.currency},
+                    "amount": None,
                     "cost": None,
+                    "asserted": {"number": row.amount.number, "currency": row.amount.currency},
+                    "difference": {"number": diff.number, "currency": diff.currency} if diff is not None else None,
                 }
             )
         else:
@@ -1205,6 +1215,8 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
                     "narration": None,
                     "amount": None,
                     "cost": None,
+                    "asserted": None,
+                    "difference": None,
                     "balance": closing,
                 }
             )

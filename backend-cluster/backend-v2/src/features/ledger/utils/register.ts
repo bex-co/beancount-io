@@ -22,13 +22,22 @@ import {
  * interpolating balances the price map could not price), and a time
  * window carries the opening balance forward (Fava's clamp) instead of
  * restarting at zero.
+ *
+ * A balance assertion moves nothing, so its row has no postings: the
+ * asserted figure is `asserted` (with the account it names), and a failed
+ * one carries Fava's `diff_amount`, accumulated minus asserted, as
+ * `difference` — the CLI's `asserted` / `difference` (w1/289).
  */
+
+type RegisterMoney = { number: string; currency: string };
 
 type RegisterPosting = {
   account: string;
-  amount: { number: string; currency: string };
+  amount: RegisterMoney;
   cost: { number: string; currency: string; date: string } | null;
 };
+
+type RegisterAssertion = RegisterMoney & { account: string };
 
 export type RegisterRow = {
   date: string;
@@ -38,6 +47,8 @@ export type RegisterRow = {
   postings: RegisterPosting[];
   change: Record<string, string>;
   balance: Record<string, string>;
+  asserted: RegisterAssertion | null;
+  difference: RegisterMoney | null;
 };
 
 export type RegisterResult = {
@@ -112,10 +123,7 @@ export function selectRegisterRoot(
   return root;
 }
 
-function mapAmount(amount: JournalAmountPublic): {
-  number: string;
-  currency: string;
-} {
+function mapAmount(amount: JournalAmountPublic): RegisterMoney {
   return { number: amount.number, currency: amount.currency };
 }
 
@@ -164,6 +172,8 @@ export function mapRegisterRows(
           .map(mapPosting),
         change: { ...item.change },
         balance: { ...item.balance },
+        asserted: null,
+        difference: null,
       });
     } else if (entry.directive_type === DirectiveType.Balance) {
       const balance = entry as JournalBalancePublic;
@@ -172,17 +182,14 @@ export function mapRegisterRows(
         entry: "balance",
         payee: null,
         narration: null,
-        postings: isSubtree(root, balance.account)
-          ? [
-              {
-                account: balance.account,
-                amount: mapAmount(balance.amount),
-                cost: null,
-              },
-            ]
-          : [],
+        postings: [],
         change: { ...item.change },
         balance: { ...item.balance },
+        asserted: { account: balance.account, ...mapAmount(balance.amount) },
+        difference:
+          balance.diff_amount === undefined || balance.diff_amount === null
+            ? null
+            : mapAmount(balance.diff_amount),
       });
     }
   }
