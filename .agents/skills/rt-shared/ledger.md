@@ -71,6 +71,12 @@ newest first.
 
 ### Skipped
 
+- 2026-11-18 `mobile/src/common/suggestion-utils.ts` deriveTwoPostingSuggestions oldest-direction tie-break — journal is newest-first (ledger-journal-service), so w21/833's purchase-wins-tie holds; examined, no divergence.
+- 2026-11-18 `mobile/src/common/account-search.ts` fuzzyMatch cubic exact-substring bonus — per-length bound holds (exact min `l^3+4l` beats scattered max); examined, no divergence.
+- 2026-11-18 `mobile/src/common/merchant-key.ts` — mobile-only, no dashboard twin; fold/trim/NFC/quote/whitespace/lowercase order sound; examined, no divergence.
+- 2026-11-18 `dashboard/.../holdings/utils.ts` roundDecimalString + `export/model.ts` invertDecimal/sumBalanceRecords — zero paths, half-up rounding and exact-decimal sums agree; examined, no divergence.
+- 2026-11-18 `dashboard/.../cash-flow/lib/model.ts` weight/inference keying + withinBalancingTolerance — matches beancount 3.2.3 `infer_tolerances`/`is_small` semantics; examined, no divergence.
+- 2026-11-18 `mobile/src/common/series-util.ts` carryBalanceToToday/latestBalance/baseline agreement — agree by construction (value remap, borrowed-point baseline); duplicate-date input unreachable via pointsToMonthlySeries; examined, no divergence.
 - 2026-11-18 `mobile/src/common/decimal-number.ts` vs `dashboard/src/common/lib/beancount/decimal-number.ts` — 138-case differential fuzz plus 60-input parser crash-fuzz agree with zero divergence; out-of-contract inputs (non-decimal strings, zero denominators, negative digits) throw identically on both sides and no caller passes them.
 - 2026-11-18 mobile vs dashboard budget twins (`daysInBudgetPeriod`, week-start, unknown-cadence default, newest-signed-entry direction) — both Monday-start weeks, monthly default, DST-safe day counts, zero-sign normalized away by `parseDecimal`; agree on every probed edge.
 - 2026-11-18 `mobile/src/common/entry-write.ts` nonce/fingerprint retry machine + `single-flight.ts` + `use-single-entry-write.ts` unification — retries rebuild identical variables so the requestId is stable, the nonce renews after every save, same-screen double taps collapse to one write; no divergence from the pre-unification hooks.
