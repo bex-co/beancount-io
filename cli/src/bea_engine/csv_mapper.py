@@ -1918,7 +1918,8 @@ class CsvImporter:
                     number = self._pair_number(row, where)
                 if self._mapping.sign == "ledger":
                     number = _negated(number)
-                currency = self._constant_currency or self._cell(row, where, "currency") or self._currency
+                cell_currency = "" if self._constant_currency else self._cell(row, where, "currency")
+                currency = self._constant_currency or cell_currency or self._currency
                 if not currency and self._known_currencies is not None and not self._known_currencies:
                     # `currency=CODE` is refused on a ledger that knows no
                     # commodity, so advising it first sent the next run into
@@ -1963,6 +1964,11 @@ class CsvImporter:
                 counter, flag, rule, attribution = self._categorize(row, where, payee, narration, category_header)
                 meta = new_metadata(filepath, line)
                 meta["_csv_rule"] = rule
+                if cell_currency:
+                    # The export itself names this row's commodity, so a
+                    # mismatch with the account is not fixed by relabelling it
+                    # with `currency=CODE` (w1/280).
+                    meta["_csv_currency_column"] = columns["currency"]
                 meta.update(attribution)
                 # A bank's reference is matched exactly, so ` payment-2026`
                 # stays distinct from `payment-2026`; trimmed, the second

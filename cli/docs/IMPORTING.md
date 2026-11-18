@@ -225,7 +225,10 @@ in the same batch, does not block its rows. On a ledger that loads
 it; the account staged that way does not block the import that first posts to
 it. A currency mismatch offers a fix the run can apply first and widening the
 `open` directive last, since widening it would book the foreign amounts as the
-wrong commodity: on a CSV run's source account, the `--csv currency=` setting;
+wrong commodity: on a CSV run's source account, the `--csv currency=` setting,
+unless the export's own mapped currency column named the row's commodity, when
+it is importing those rows into an account open for that currency with
+`--account` instead, since `currency=` would relabel money the file states;
 on a rule, category or `--default-account` account, choosing an account open
 for that currency; and for a Python importer, having the importer post a
 currency the account allows. An account under a root the ledger

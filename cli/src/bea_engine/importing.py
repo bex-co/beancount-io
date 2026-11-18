@@ -549,7 +549,7 @@ def answer(
 
     stage_opens = reports_unused_accounts(options)
     # Blocked rows with what they were before the block, for the second look below.
-    held: list[tuple[dict[str, Any], Any, str, str | None]] = []
+    held: list[tuple[dict[str, Any], Any, str, str | None, str | None]] = []
     # The rows this import writes so far, which an assertion after them counts.
     included: list[Any] = []
     balance_rows: list[tuple[dict[str, Any], Any]] = []
@@ -735,6 +735,7 @@ def answer(
                 _index_twin(fingerprints, entry, account, ledger=False)
                 batch_rows[id(entry)] = index + 1
         rule = entry.meta.pop("_csv_rule", None) if isinstance(entry, Transaction) else None
+        currency_column = entry.meta.pop("_csv_currency_column", None) if isinstance(entry, Transaction) else None
         text = format_entry(entry) if isinstance(entry, Transaction) else _directive_text(entry)
         if isinstance(entry, Price):
             # One quote per commodity and day, by value, as `add price` keeps
@@ -816,6 +817,7 @@ def answer(
                 stage_opens,
                 ledger=file,
                 source=account if nocode_mode else None,
+                currency_column=currency_column,
                 windows=windows,
                 lifecycles=lifecycles,
                 opening_balances=opening_balances,
@@ -852,7 +854,7 @@ def answer(
         if include and isinstance(entry, Balance):
             balance_rows.append((row_dict, entry))
         if status == "blocked":
-            held.append((row_dict, entry, *unblocked))
+            held.append((row_dict, entry, *unblocked, currency_column))
 
     # Written through the batch validation, which a pad passes: a wrong
     # statement amount in a currency an already used pad has not padded was
@@ -877,7 +879,7 @@ def answer(
     # `bea add transaction` to the same account succeeded (w5/134). So the
     # accounts are read again from the ledger as the import would leave it.
     opened_after = open_currencies
-    if any(name not in open_currencies for _, entry, _, _ in held for name, _ in _entry_accounts(entry)):
+    if any(name not in open_currencies for _, entry, *_ in held for name, _ in _entry_accounts(entry)):
         proposed_rows = [row for row in rows if row["include"] or row["status"] == "blocked"]
         entries_after = _entries_after(
             snapshot, target, original, [row["entry"] for row in proposed_rows], [row["row"] for row in proposed_rows]
@@ -886,7 +888,7 @@ def answer(
         windows_after = _active_windows(entries_after)
         lifecycles_after = ledger_write._lifecycles(entries_after, snapshot.contents)
         opened_after = after
-        for row_dict, entry, was, why in held:
+        for row_dict, entry, was, why, currency_column in held:
             still = _blocked_reason(
                 entry,
                 after,
@@ -895,6 +897,7 @@ def answer(
                 stage_opens,
                 ledger=file,
                 source=account if nocode_mode else None,
+                currency_column=currency_column,
                 windows=windows_after,
                 lifecycles=lifecycles_after,
                 opening_balances=opening_balances,
@@ -1379,9 +1382,11 @@ def _writable(entry: Any, row: int, importer: Any, logs: io.StringIO) -> Any:
     if _invalid_name(entry) is not None:
         # Blocked with `add`'s own words for the name, and never written (w5/637).
         return entry
-    if isinstance(entry, Transaction) and "_csv_rule" in entry.meta:
-        # The column mapper's note of the rule it applied, taken off before the row is written.
-        text = format_entry(entry._replace(meta={k: v for k, v in entry.meta.items() if k != "_csv_rule"}))
+    if isinstance(entry, Transaction) and ("_csv_rule" in entry.meta or "_csv_currency_column" in entry.meta):
+        # The column mapper's notes of the rule it applied and the column that
+        # named the commodity, taken off before the row is written.
+        meta = {k: v for k, v in entry.meta.items() if k not in {"_csv_rule", "_csv_currency_column"}}
+        text = format_entry(entry._replace(meta=meta))
     problem = ledger_write.one_entry_problem(text)
     if problem is not None:
         raise _with_output(LedgerError(f"{unwritable}: it {problem}"), logs)
@@ -2843,6 +2848,7 @@ def _blocked_reason(
     *,
     ledger: Path,
     source: str | None = None,
+    currency_column: str | None = None,
     windows: dict[str, tuple[Any, Any]] | None = None,
     lifecycles: dict[str, list[Any]] | None = None,
     opening_balances: dict[tuple[str, Any], list[Any]] | None = None,
@@ -2855,7 +2861,8 @@ def _blocked_reason(
     that posts there. `stage_opens` is a ledger loading `nounused`, where the
     open is refused until used unless staged with `--allow-errors`. An account
     under a root the ledger does not use (from a Python importer) gets no
-    `add open` remedy: that command would refuse it too.
+    `add open` remedy: that command would refuse it too. `currency_column`
+    is the CSV column that named this row's commodity, if one did.
     """
     invalid = _invalid_name(entry)
     if invalid is not None:
@@ -2911,6 +2918,13 @@ def _blocked_reason(
             # the source account (w5/318).
             blocked = f"Cannot post {currency} to '{name}' (open for {choices} only)."
             widen = f"or add {currency} to its open directive"
+            if source is not None and name == source and currency_column is not None:
+                # The export states the row's currency itself: `currency=CODE`
+                # would relabel that money, not correct it (w1/280).
+                return (
+                    f"{blocked} The export's {currency_column} column names {currency} for this row; import "
+                    f"{currency} rows into an account open for {currency} with --account, {widen}."
+                )
             if source is not None and name == source:
                 return (
                     f"{blocked} Post {instead} instead — name the row's commodity with --csv currency=CODE — {widen}."
