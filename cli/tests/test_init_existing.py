@@ -422,6 +422,53 @@ def test_errors_keep_their_location_when_the_folder_name_holds_a_colon(tmp_path:
     assert [(item["kind"], item["location"]) for item in data["attention"]] == [("option-unknown", "main.bean:1")]
 
 
+@pytest.mark.parametrize("as_json", [False, True])
+def test_a_broken_include_is_located_at_the_include_that_wrote_it(tmp_path: Path, as_json: bool) -> None:
+    """w1/284: the loader reports these at `<load>:0`; the include line is where they are, folder-relative."""
+    books = tmp_path / "books"
+    books.mkdir()
+    (books / "main.bean").write_text(
+        'option "operating_currency" "USD"\ninclude "a.bean"\ninclude "a.bean"\ninclude "prices.bean"\n'
+    )
+    (books / "a.bean").write_text("2026-01-01 open Assets:Cash USD\n")
+    run = bea(["--no-input", *(["--json"] if as_json else []), "init", "--existing", str(books)], tmp_path)
+    assert run.returncode == 0, run.stderr
+    missing = "matches no file (looked for prices.bean)"
+    repeated = 'include "a.bean" loads a.bean, already included at main.bean:2'
+    if as_json:
+        data = json.loads(run.stdout)["data"]
+        assert [(error["file"], error["line"], error["message"]) for error in data["errors"]] == [
+            (str(books / "main.bean"), 4, f'include "prices.bean" {missing}'),
+            (str(books / "main.bean"), 3, repeated),
+        ]
+        assert [(item["location"], item["message"]) for item in data["attention"]] == [
+            ("main.bean:4", f'include "prices.bean" {missing}'),
+            ("main.bean:3", repeated),
+        ]
+    else:
+        assert f'  main.bean:4: include "prices.bean" {missing}' in run.stdout.splitlines()
+        assert f"  main.bean:3: {repeated}" in run.stdout.splitlines()
+        assert "<load>" not in run.stdout and str(books) + os.sep not in run.stdout.split("Next:")[0]
+
+
+def test_an_include_cycle_names_the_files_it_passes_through_relative_to_the_folder(tmp_path: Path) -> None:
+    """w1/284: a cycle through a subfolder is placed at its include, and every file it names is folder-relative."""
+    books = tmp_path / "books"
+    (books / "sub").mkdir(parents=True)
+    (books / "main.bean").write_text('include "sub/b.bean"\n2026-01-01 open Assets:Cash USD\n')
+    (books / "sub" / "b.bean").write_text('include "../main.bean"\n')
+    run = bea(["--no-input", "--json", "init", "--existing", str(books / "main.bean")], tmp_path)
+    assert run.returncode == 0, run.stderr
+    data = json.loads(run.stdout)["data"]
+    cycle = 'include "../main.bean" leads back to main.bean, which includes this file (an include cycle)'
+    assert [(error["file"], error["line"], error["message"]) for error in data["errors"]] == [
+        (str(books / "sub" / "b.bean"), 1, cycle)
+    ]
+    assert [(item["location"], item["message"]) for item in data["attention"]] == [
+        (os.path.join("sub", "b.bean") + ":1", cycle)
+    ]
+
+
 def test_a_plugin_on_the_first_line_after_a_bom_is_located(tmp_path: Path) -> None:
     books = tmp_path / "bom"
     books.mkdir()

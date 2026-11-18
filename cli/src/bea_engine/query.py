@@ -3210,9 +3210,9 @@ def format_error(error: Any, ledger_file: Path | str | None = None) -> str:
         duplicate = _duplicate_message(error, message)
         if duplicate is not None:
             return duplicate
-        include = _include_message(message, ledger_file, source)
+        include = include_error(error, ledger_file)
         if include is not None:
-            return include
+            return f"{include[0]}:{include[1]}: {include[2]}"
         message = _booking_message(error, message)
     return f"{source.get('filename', '<ledger>')}:{source.get('lineno', 0)}: {message}"
 
@@ -3416,45 +3416,61 @@ def is_unlocated_include(error: Any) -> bool:
     )
 
 
-def _include_message(message: str, ledger_file: Path | str | None, source: Any) -> str | None:
-    """An include the loader reports at `<load>:0`, placed at the line that wrote it.
+def include_error(
+    error: Any, ledger_file: Path | str | None, show: Callable[[str], str] = str
+) -> tuple[str, int, str] | None:
+    """An include the loader reports at `<load>:0`, as `(file, line, message)` at the line that wrote it.
 
     The loader keeps include strings without their lines. An include that
     matches nothing quotes its pattern relative to a directory it does not
     name (w1/269); a file loaded a second time, or an include leading back to
     a file already being loaded, names only that file (w1/273). The include
     closure is walked again from the root as the loader walks it, and every
-    include behind this error is named.
+    include behind this error is named. `file` is the including file's
+    absolute path; `show` renders every path the message names, so a caller
+    that locates errors itself, such as `describe` (w1/284), can name them
+    the way it names `file`.
     """
-    if ledger_file is None or not isinstance(source, dict) or source.get("filename") != "<load>":
+    message = getattr(error, "message", error)
+    source = getattr(error, "source", None)
+    if (
+        ledger_file is None
+        or not isinstance(message, str)
+        or not isinstance(source, dict)
+        or source.get("filename") != "<load>"
+    ):
         return None
     if (match := _MISSING_INCLUDE.match(message)) is not None:
         pattern = match["pattern"]
+        walk = _include_walk(Path(ledger_file))
         lines = [
-            (f"{path}:{line}", f'include "{pattern}" matches no file', f"(looked for {searched})")
-            for path, line, target, searched in _include_walk(Path(ledger_file)).misses
+            (path, line, f'include "{pattern}" matches no file', f"(looked for {show(searched)})")
+            for path, line, target, searched in walk.misses
             if target == pattern
         ]
     elif (match := _REPEATED_INCLUDE.match(message)) is not None:
+        walk = _include_walk(Path(ledger_file))
         lines = [
-            (f"{path}:{line}", f'include "{target}"', reason)
-            for path, line, target, repeated, reason in _include_walk(Path(ledger_file)).repeats
+            (path, line, f'include "{target}"', _repeat_reason(repeated, path, walk.loaded, show))
+            for path, line, target, repeated in walk.repeats
             if repeated == match["path"]
         ]
     else:
         return None
     if not lines:
         return None
-    (where, what, why), *others = lines
-    text = f"{where}: {what} {why}"
-    for other, _, other_why in others:
-        text += f"; also {other} {other_why}"
-    return text
+    (path, line, what, why), *others = lines
+    text = f"{what} {why}"
+    for other, other_line, _, other_why in others:
+        text += f"; also {show(other)}:{other_line} {other_why}"
+    return path, line, text
 
 
 class _IncludeWalk(NamedTuple):
     misses: list[tuple[str, int, str, str]]  # (file, line, target, searched path)
-    repeats: list[tuple[str, int, str, str, str]]  # (file, line, target, loaded path, reason)
+    repeats: list[tuple[str, int, str, str]]  # (file, line, target, loaded path)
+    # Each file read, with the include that first loaded it (None for the root).
+    loaded: dict[str, tuple[str, int] | None]
 
 
 def _include_walk(root: Path) -> _IncludeWalk:
@@ -3472,8 +3488,7 @@ def _include_walk(root: Path) -> _IncludeWalk:
     from bea_engine.ledger.text import iter_includes
 
     misses: list[tuple[str, int, str, str]] = []
-    repeats: list[tuple[str, int, str, str, str]] = []
-    # Each file read, with the include that first loaded it (None for the root).
+    repeats: list[tuple[str, int, str, str]] = []
     loaded: dict[str, tuple[str, int] | None] = {}
     queue: list[tuple[str, tuple[str, int, str] | None]] = [(os.path.normpath(os.path.abspath(root)), None)]
     while queue:
@@ -3481,7 +3496,7 @@ def _include_walk(root: Path) -> _IncludeWalk:
         if current in loaded:
             if origin is not None:
                 includer, line, target = origin
-                repeats.append((includer, line, target, current, _repeat_reason(current, includer, loaded)))
+                repeats.append((includer, line, target, current))
             continue
         if not os.path.exists(current):
             continue
@@ -3500,22 +3515,24 @@ def _include_walk(root: Path) -> _IncludeWalk:
             for path in found:
                 path = os.path.normpath(os.path.join(os.path.dirname(current), path))
                 queue.append((path, (current, span.line, span.target)))
-    return _IncludeWalk(misses, repeats)
+    return _IncludeWalk(misses, repeats, loaded)
 
 
-def _repeat_reason(path: str, includer: str, loaded: dict[str, tuple[str, int] | None]) -> str:
+def _repeat_reason(
+    path: str, includer: str, loaded: dict[str, tuple[str, int] | None], show: Callable[[str], str]
+) -> str:
     """Why loading `path` again from `includer` is refused: a cycle, or where it was first included."""
     if path == includer:
         return "includes this file itself (an include cycle)"
     ancestor: str | None = includer
     while ancestor is not None:
         if ancestor == path:
-            return f"leads back to {path}, which includes this file (an include cycle)"
+            return f"leads back to {show(path)}, which includes this file (an include cycle)"
         first = loaded.get(ancestor)
         ancestor = first[0] if first is not None else None
     first = loaded.get(path)
-    where = f"{first[0]}:{first[1]}" if first is not None else path
-    return f"loads {path}, already included at {where}"
+    where = f"{show(first[0])}:{first[1]}" if first is not None else show(path)
+    return f"loads {show(path)}, already included at {where}"
 
 
 _UNKNOWN_CONFIG = object()

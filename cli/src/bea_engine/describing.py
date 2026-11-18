@@ -68,24 +68,41 @@ def describe(file: Path) -> dict[str, Any]:
         "operating_currencies": [str(value) for value in options.get("operating_currency") or ()],
         "open_accounts": sorted(opened - closed),
         "plugins": plugins,
-        "errors": [_error(error, format_error(error, ledger_file=file), file) for error in others],
+        "errors": [_error(error, file) for error in others],
         "beancount_version": beancount_version,
     }
 
 
-def _error(error: Any, formatted: str, root: Path) -> dict[str, Any]:
+def _error(error: Any, root: Path) -> dict[str, Any]:
     """One loader error as `{file, line, message, option}`, read from the error, not its rendering.
 
     `option` names an option this Beancount does not know, which is how a
-    Beancount 2 option removed in Beancount 3 reads.
+    Beancount 2 option removed in Beancount 3 reads. An include the loader
+    reports at `<load>:0` is located at the include that wrote it, and the
+    paths its message names read as "Needs attention" names locations (w1/284).
     """
-    source = getattr(error, "source", None) or {}
-    filename, line = str(source.get("filename") or root), int(source.get("lineno") or 0)
-    prefix = f"{source.get('filename', '<ledger>')}:{source.get('lineno', 0)}: "
-    message = formatted.removeprefix(prefix)
+    from bea_engine.query import format_error, include_error
+
+    include = include_error(error, root, show=lambda path: _shown(path, root.parent))
+    if include is not None:
+        filename, line, message = include
+    else:
+        source = getattr(error, "source", None) or {}
+        filename, line = str(source.get("filename") or root), int(source.get("lineno") or 0)
+        prefix = f"{source.get('filename', '<ledger>')}:{source.get('lineno', 0)}: "
+        message = format_error(error, ledger_file=root).removeprefix(prefix)
     raw = getattr(error, "message", None)
     match = _UNKNOWN_OPTION.match(raw) if isinstance(raw, str) else None
     return {"file": filename, "line": line, "message": message, "option": match[1] if match else None}
+
+
+def _shown(path: str, folder: Path) -> str:
+    """`path` relative to the ledger folder when it is inside it, else whole, as `init` shows a location."""
+    try:
+        shown = os.path.relpath(path, folder)
+    except ValueError:
+        return path
+    return path if shown.startswith("..") else shown
 
 
 def _relative(path: Path, folder: Path) -> str:
