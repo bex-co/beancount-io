@@ -913,6 +913,9 @@ def answer(
     refused_quotes = [f"Row {row['row']}: {row['reason']}" for row in rows if row["status"] == "invalid"]
     validation_errors: list[str] = []
     validation_warnings: list[str] = []
+    # The shared refusal's headline when no row is the cause: the ledger
+    # already had an inactive pad, which `--allow-errors` cannot pass (w1/282).
+    ledger_refusal: str | None = None
     # Quotes this import writes that no read of the result would use: a
     # generated reciprocal, a later-sorting quote or a written one wins the day
     # (w5/903). Judged on the candidate ledger the validation already loads.
@@ -953,6 +956,8 @@ def answer(
         validation_errors = exc.details or [str(exc)]
         # What `--allow-errors` tolerated still travels with the failure (w5/461).
         validation_warnings = list(exc.ledger_errors)
+        if isinstance(exc, ledger_write.CandidateRejected) and exc.preexisting_only:
+            ledger_refusal = str(exc)
         # Errors the appended rows carry are those rows', as bulk add names
         # them: an unbalanced row previewed as `new`, counted ready, and
         # `--apply` refused the import naming no row (w5/638).
@@ -1081,7 +1086,9 @@ def answer(
             )
         if validation_errors:
             raise LedgerError(
-                "Import would leave the ledger invalid; nothing was written.",
+                ledger_refusal
+                if ledger_refusal is not None and not refused_quotes
+                else "Import would leave the ledger invalid; nothing was written.",
                 details=validation_errors,
                 ledger_errors=validation_warnings,
                 result=preview,

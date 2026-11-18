@@ -1416,11 +1416,14 @@ Examples below assume their accounts were opened and their dates, balances,
 and document paths are valid for your ledger. Every add command, and `import`,
 accepts `--allow-errors` for a semantic error already in the books, such as a
 balance assertion that still fails; without the flag the write refuses and
-names the existing errors. Import and the price/balance pre-checks say
-`The ledger already has N error(s); nothing was written. Pass --allow-errors
-to write anyway.` Syntax errors instead say to fix the syntax first, and
-import refuses both preview and apply without reporting rows ready, even
-with the flag. An error the write itself would introduce —
+names the existing errors. A write refused only for errors the books
+already had says `The ledger already has N error(s); nothing was written.
+Pass --allow-errors to write anyway.` When those errors include a syntax
+error, it says instead to fix the syntax first; when they include a pad that
+names an unknown or inactive account, to open the account or correct the pad
+first. Neither yields to the flag, and the refusal says so whether or not you
+passed it. On a syntax error, import refuses both preview and apply without reporting rows
+ready, even with the flag. An error the write itself would introduce —
 an unknown account, a currency violation, a new balance failure — is refused
 even with the flag. The two exceptions are the first halves of a two-step: the
 staged pad of the pad flow below, and an account opened on a ledger that loads

@@ -3166,7 +3166,7 @@ def validate_candidate(
                 )
         # An error on an appended line is the write's own; only books whose
         # every error sits elsewhere are worth a load of the version before.
-        if not allow_errors and not (any_appended or syntax_errors or invalid_pad_accounts):
+        if not allow_errors and not any_appended:
             if before_errors is None:
                 root = snapshot.root if snapshot else file
                 before_errors = (
@@ -3176,16 +3176,16 @@ def validate_candidate(
                 _preexisting_errors(errors, before_errors, filenames, original_lines, _own_lifecycle_accounts)
             ) == len(errors):
                 # The write adds nothing wrong; the books were already broken,
-                # which is the case --allow-errors exists for. The repair hints
-                # for those errors stand; advice on dating a new assertion
-                # does not (w5/396).
+                # which is the case --allow-errors exists for, unless a syntax
+                # error or an inactive pad is among them (w1/282). The repair
+                # hints for those errors stand; advice on dating a new
+                # assertion does not (w5/396).
                 plain = [
                     replace(record, hints=[hint for hint in record.hints if hint != _BALANCE_DATE_HINT])
                     for record in records
                 ]
                 raise CandidateRejected(
-                    f"The ledger already has {len(errors)} error(s); nothing was written. "
-                    "Pass --allow-errors to write anyway.",
+                    _preexisting_headline(errors, len(errors)),
                     details=_collapse_repeats(plain),
                     locations=locations,
                     records=plain,
@@ -3209,7 +3209,10 @@ def validate_candidate(
         if new_records:
             message = f"The change would introduce {len(new_records)} new ledger error(s); nothing was written."
         else:
-            message = "The change would leave the ledger invalid; nothing was written."
+            # Nothing the write adds is wrong: every blocking error is a syntax
+            # error or an inactive pad the flag tolerated as already there, and
+            # no flag writes past either (w1/282).
+            message = _preexisting_headline([errors[index] for index in blocking], len(tolerated))
         # The errors the flag tolerated travel with the refusal, so a `--json`
         # caller still learns the ledger was already broken (w5/461). Nothing
         # was written, so they are the ledger's as it stands: read from the
@@ -3231,6 +3234,7 @@ def validate_candidate(
             locations=[locations[index] for index in blocking],
             records=[records[index] for index in blocking],
             ledger_errors=_collapse_repeats(current),
+            preexisting_only=not new_records,
         )
     messages = [*messages, *_average_inheritance_warnings(entries, options, filenames, original_lines)]
     return messages
@@ -3244,44 +3248,46 @@ def is_syntax_error(error: Any) -> bool:
     return isinstance(error, ParserSyntaxError | LexerError)
 
 
-def preexisting_refusal(errors: list[Any], ledger_errors: list[str]) -> LedgerError:
-    """The strict pre-check's refusal of a ledger that already has errors.
+def _preexisting_headline(errors: list[Any], count: int) -> str:
+    """The refusal of a write that adds nothing wrong to a ledger with `count` errors.
 
     Syntax errors and pads with inactive accounts cannot be tolerated by the
     shared validation, so advising `--allow-errors` for either sends the user
     round in a loop (w5/508, w5/682).
     """
     if any(is_syntax_error(error) for error in errors):
-        return LedgerError(
-            f"The ledger already has {len(ledger_errors)} error(s), including a syntax error; nothing was written. "
-            "Fix the syntax error first: --allow-errors never writes past one.",
-            details=ledger_errors,
+        return (
+            f"The ledger already has {count} error(s), including a syntax error; nothing was written. "
+            "Fix the syntax error first: --allow-errors never writes past one."
         )
-    pads = sorted(
-        {
-            (error.entry.date, error.entry.account, error.entry.source_account)
-            for error in errors
-            if is_invalid_pad_account(error)
-        }
-    )
-    if pads:
-        return LedgerError(
-            f"The ledger already has {len(ledger_errors)} error(s), including an invalid pad account; "
+    if any(is_invalid_pad_account(error) for error in errors):
+        return (
+            f"The ledger already has {count} error(s), including an invalid pad account; "
             "nothing was written. Open missing accounts or correct the pad account/date first: "
-            "--allow-errors cannot bypass an inactive pad account.",
-            details=[
-                *ledger_errors,
-                *(
-                    f"Pad dated {date}: {account} and {source} must both be active on that date."
-                    for date, account, source in pads
-                ),
-            ],
+            "--allow-errors cannot bypass an inactive pad account."
         )
-    return LedgerError(
-        f"The ledger already has {len(ledger_errors)} error(s); nothing was written. "
-        "Pass --allow-errors to write anyway.",
-        details=ledger_errors,
-    )
+    return f"The ledger already has {count} error(s); nothing was written. Pass --allow-errors to write anyway."
+
+
+def preexisting_refusal(errors: list[Any], ledger_errors: list[str]) -> LedgerError:
+    """The strict pre-check's refusal of a ledger that already has errors."""
+    details = ledger_errors
+    if not any(is_syntax_error(error) for error in errors):
+        pads = sorted(
+            {
+                (error.entry.date, error.entry.account, error.entry.source_account)
+                for error in errors
+                if is_invalid_pad_account(error)
+            }
+        )
+        details = [
+            *ledger_errors,
+            *(
+                f"Pad dated {date}: {account} and {source} must both be active on that date."
+                for date, account, source in pads
+            ),
+        ]
+    return LedgerError(_preexisting_headline(errors, len(ledger_errors)), details=details)
 
 
 def is_invalid_pad_account(error: Any) -> bool:
