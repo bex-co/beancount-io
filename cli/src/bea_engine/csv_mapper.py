@@ -232,6 +232,37 @@ def _split_amount_sign(value: str) -> tuple[str, str, int]:
     return sign, text.strip(), negations
 
 
+def _is_amount_spelling(core: str) -> bool:
+    """Whether the core parses as a number under either decimal convention.
+
+    Only a complete spelling votes below: `oops.1,00` has EU-shaped
+    separators but is not a number under any convention, so it must not vote.
+    Counting it indicted the whole column as mixing conventions instead of
+    refusing the one cell with "cannot parse amount" (the Smart Import
+    dashboard port guards its vote the same way).
+    """
+    text = core.strip()
+    if text[:1] in ("+", "-"):
+        # A second sign (`-$-5`) stays on the core after the split; the sign
+        # carries no convention information, and the cell is refused later.
+        text = text[1:]
+    try:
+        _comma_decimal_to_point("", "", "", text)
+        return True
+    except UsageError:
+        pass
+    whole = text.partition(".")[0]
+    if "," in whole and not _COMMA_GROUPING.fullmatch(whole):
+        return False
+    if "," in text.partition(".")[2]:
+        return False
+    try:
+        Decimal(require_decimal_notation(text.replace(",", "")))
+    except (InvalidOperation, ValueError):
+        return False
+    return True
+
+
 def _separator_vote(core: str) -> str | None:
     """Vote on a cell's decimal convention: 'us', 'eu', 'eu-weak', or None.
 
@@ -241,6 +272,8 @@ def _separator_vote(core: str) -> str | None:
     and was refused (w5/906).
     """
     core = _THOUSAND_SEPARATOR_FILLER.sub("", core)
+    if not _is_amount_spelling(core):
+        return None
     if "." in core and "," in core:
         return "eu" if core.rfind(",") > core.rfind(".") else "us"
     if _COMMA_DECIMAL_TAIL.match(core):

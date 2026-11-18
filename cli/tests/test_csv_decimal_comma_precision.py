@@ -206,3 +206,30 @@ class TestAmountParser:
     def test_point_column_refuses_a_comma_that_is_not_grouping(self, cell: str) -> None:
         with pytest.raises(UsageError, match="cannot parse amount"):
             _parse_amount_cell("Row 1", "Amount", cell, decimal_comma=False)
+
+    @pytest.mark.parametrize(
+        ("cells", "decimal_comma"),
+        [
+            # A cell that is not a number under either convention casts no
+            # vote: `oops.1,00` reads "eu" by separator position alone, and
+            # used to indict the whole column as mixing conventions instead
+            # of being refused itself.
+            (["1,234.56", "oops.1,00"], False),
+            (["1.000,00", "oops.1,00"], True),
+            (["oops.1,00"], False),
+            (["1,234.56abc", "1.000,00"], True),
+        ],
+    )
+    def test_a_non_number_casts_no_convention_vote(self, cells: list[str], decimal_comma: bool) -> None:
+        assert _resolve_decimal_comma(list(enumerate(cells, 1))) is decimal_comma
+
+
+def test_a_non_number_beside_a_proof_is_refused_as_its_cell(tmp_path: Path, ledger: Path) -> None:
+    body = 'Date,Description,Amount\n2024-03-01,Big,"1,234.56"\n2024-03-02,Typo,"oops.1,00"\n'
+    before = ledger.read_bytes()
+    for extra in ((), ("--apply",)):
+        result = _import(tmp_path, ledger, body, "date=Date,amount=Amount,narration=Description", *extra)
+        assert result.returncode == 2, result.stdout
+        assert "cannot parse amount 'oops.1,00'" in result.stderr
+        assert "mix decimal conventions" not in result.stderr
+        assert ledger.read_bytes() == before
