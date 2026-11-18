@@ -481,6 +481,11 @@ the new ledger opens (`Assets:Checking`, `Assets:Savings`, `Assets:Cash`, and
 currency; `ACCOUNT NUMBER CUR` is accepted when `CUR` is that `--currency`.
 Any other value exits **2** before anything is created, naming its problem;
 an unknown or non-asset/liability account lists the accounts it accepts.
+The number keeps Beancount's sign: a card that owes 50 opens at `-50`. An
+unsigned positive number on a `Liabilities:` account opens it in credit, which
+counts toward net worth, so `init` writes it as given and notes the sign on
+stderr (in `--json`, under `warnings`); an explicit `+50` is a deliberate
+credit balance and gets no note.
 
 ### Setup presets and modules
 

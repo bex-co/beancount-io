@@ -229,6 +229,22 @@ def _opening_amount(value: str) -> Decimal:
         raise typer.BadParameter(str(exc)) from exc
 
 
+def _in_credit_warning(account: str, amount: Decimal, currency: str) -> str:
+    """The note for a liability that an unsigned positive number opens in credit (w1/285).
+
+    Beancount keeps the sign, so a card statement's 250 owed is -250. Typing
+    the statement figure opened the card 250 in credit, net worth 500 too
+    high, with no word, where the pad already says so (w5/827). An explicit
+    `+` is a deliberate credit balance, as the hosted setup reads it.
+    """
+    number = f"{amount:f}"
+    return (
+        f"Liabilities balances are negative in Beancount, so an amount owed of {number} {currency} is entered as "
+        f"-{number}; {account} opens at +{number} {currency}, in credit, which counts toward net worth. "
+        f"To open it in credit on purpose, write +{number}."
+    )
+
+
 def _opening_balance_parts(balance: str, currency: str | None, allowed: tuple[str, ...]) -> tuple[str, str]:
     """Split one `--opening-balance` value into its account and number.
 
@@ -569,6 +585,9 @@ def init(
     added = module_accounts(preset, module, property_name).accounts
     allowed_opening = (*preset_accounts, *added) if preset_accounts is not None else _ACCOUNTS
     balances: dict[str, Decimal] = {}
+    # Unsigned positive liability openings; the `+` that marks a deliberate
+    # credit is gone once the number is parsed.
+    in_credit: list[str] = []
     for balance in opening_balance or []:
         account, number = _opening_balance_parts(balance, currency, allowed_opening)
         if account in balances:
@@ -577,6 +596,8 @@ def init(
             balances[account] = _opening_amount(number)
         except typer.BadParameter as exc:
             raise UsageError(f"--opening-balance {balance!r}: {exc.message}") from None
+        if account.startswith("Liabilities:") and balances[account] > 0 and not number.startswith("+"):
+            in_credit.append(account)
     prompted = currency is None
     if currency is None:
         if not ctx.can_prompt:
@@ -593,6 +614,8 @@ def init(
             # Beside the answer it is about, before the next question, so a
             # typo can be caught before the ledger exists.
             output.note(warnings[-1])
+    noted = len(warnings) if prompted else 0
+    warnings += [_in_credit_warning(account, balances[account], currency) for account in in_credit]
     if date is None and ctx.can_prompt:
         day = ctx.prompt(
             "Earliest date you will record (opening balances must be as of this date)",
@@ -630,9 +653,8 @@ def init(
     if ctx.json_output:
         output.emit(data, target=output.file_target(file))
     else:
-        if not prompted:
-            for warning in warnings:
-                output.note(warning)
+        for warning in warnings[noted:]:
+            output.note(warning)
         # A preset may open nothing; only a result without the key is the fixed chart.
         accounts = data["accounts"] if "accounts" in data else list(_ACCOUNTS)
         output.success(f"Created {file} with {len(accounts)} accounts in {currency}.")
