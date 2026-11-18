@@ -865,6 +865,42 @@ def zero_units_at_total_cost(posting: Any) -> bool:
     )
 
 
+def self_rate_tail(posting: Any) -> str | None:
+    """The refusal tail when a posting is held at a cost or priced in its own commodity, else None.
+
+    `10 USD @ 2 USD` balances by weight (20 USD), so Beancount accepts it,
+    but the account gains 10 USD while 20 USD leaves the other legs: the
+    books stop summing to zero, with exit 0 and a passing check (w1/278).
+    A rate in the units' own commodity is never what was meant (w5/098),
+    and `@ 1 USD`, which changes nothing, still turns into a self-quote
+    under `implicit_prices` (w1/277). Takes a parsed Beancount posting or a
+    bulk row's posting model; units or a currency still to be inferred
+    cannot be judged and pass.
+    """
+    from beancount.core.number import MISSING
+
+    units = posting.units
+    currency = getattr(units, "currency", None)
+    if units is None or units is MISSING or currency is None or currency is MISSING:
+        return None
+    cost = getattr(posting, "cost", None)
+    costed = getattr(cost, "currency", None) == currency
+    priced = any(
+        getattr(getattr(posting, field, None), "currency", None) == currency for field in ("price", "price_total")
+    )
+    if not (costed or priced):
+        return None
+    what = {(True, True): "held at a cost and priced", (True, False): "held at a cost"}.get((costed, priced), "priced")
+    drop = "cost and price" if costed and priced else "cost" if costed else "price"
+    sample = "{…}" if costed else "@ …"
+    return (
+        f"is {what} in its own commodity {currency}, which is never what was meant: Beancount balances "
+        "the posting by that rate's weight, not its units, so at any rate but 1 the books stop summing to zero. "
+        f"Drop the {drop}, or name the commodity that was really bought: "
+        f"'{posting.account} NUMBER COMMODITY {sample}'."
+    )
+
+
 def elided_units_zero_rate_tail(posting: Any) -> str | None:
     """The booking-failure tail when a posting elides its units beside a zero cost or price.
 

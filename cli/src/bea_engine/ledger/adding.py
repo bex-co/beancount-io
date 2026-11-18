@@ -1407,6 +1407,10 @@ def _transaction(
         # After the units are settled, so a missing commodity is named before a
         # missing total currency on a doubly bare posting (w5/800 keeps `3 {{240}}`).
         _refuse_currency_less_total(number, posting)
+        # A typed commodity is judged too, not only a defaulted one (w1/278).
+        self_rate = managed_load.self_rate_tail(posting._replace(units=units))
+        if self_rate is not None:
+            raise protocol.UsageError(f"--posting {number} {self_rate} Nothing was written.")
         # Parsed postings keep the input order, so the raw line with the `@@`
         # spelling sits at the same index; incomplete prices raised above.
         meta: dict[str, Any] = {}

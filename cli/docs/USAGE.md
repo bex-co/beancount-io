@@ -1553,7 +1553,14 @@ currency, the CLI uses the account's sole allowed currency, otherwise the
 ledger's sole operating currency. Ambiguous currencies require an explicit
 symbol, and so does a posting with a cost or a price when that default would be
 the rate's own currency: `3 {80 USD}` is refused (exit 2) rather than written as
-`3 USD {80 USD}`. Other directive types keep their explicit dates. Only `add transaction`
+`3 USD {80 USD}`. A typed commodity held at a cost or priced in itself is
+refused the same way (exit 2, naming the posting, nothing written):
+`10 USD @ 2 USD`, `10 USD @@ 20 USD`, `10 USD {2 USD}` and even `10 USD @ 1 USD`.
+Beancount balances such a posting by the rate's weight, not its units, so the
+books stop summing to zero. Drop the price or cost, or name the commodity
+really bought (`10 EUR @ 2 USD`). `add transactions` refuses such a row,
+`bea ask` refuses such a proposal, and `bea import` marks such an importer row
+`invalid`. Other directive types keep their explicit dates. Only `add transaction`
 defaults the date to today; the other types require it. The transaction flag
 defaults to `*`; `!` marks an entry for review.
 

@@ -266,6 +266,20 @@ class Posting(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def rate_in_another_commodity(self, info: ValidationInfo) -> Posting:
+        # `10 USD @ 2 USD` balances by weight and was written at exit 0, with
+        # books that no longer sum to zero (w1/278). Only a write is refused.
+        context = info.context
+        if not (isinstance(context, dict) and context.get("write_input")):
+            return self
+        from bea_engine.managed_load import self_rate_tail
+
+        tail = self_rate_tail(self)
+        if tail is not None:
+            raise ValueError(f"the posting {tail}")
+        return self
+
+    @model_validator(mode="after")
     def cost_needs_units(self, info: ValidationInfo) -> Posting:
         # Beancount's printer renders nothing for a cost beside missing units,
         # so the lot would be dropped and the posting written as a bare

@@ -31,12 +31,14 @@ def _ledger(tmp_path: Path, existing: list[str]) -> Path:
 
 
 def _add(root: Path, currency: str, json_output: bool) -> Result:
+    # Priced in another, declared commodity: a rate in its own is refused (w1/278).
+    quote = "USD" if currency == "EUR" else "EUR"
     return runner.invoke(
         app,
         [
             *(["--json"] if json_output else []), "--file", str(root), "add", "transaction", "FX",
-            "--date", "2026-01-05", "-p", f"Assets:Bank 100 {currency} @ 1.05 EUR",
-            "-p", "Assets:Bank -105 EUR", "--allow-errors",
+            "--date", "2026-01-05", "-p", f"Assets:Bank 100 {currency} @ 1.05 {quote}",
+            "-p", f"Assets:Bank -105 {quote}", "--allow-errors",
         ],
     )  # fmt: skip
 

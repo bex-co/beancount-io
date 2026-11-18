@@ -35,6 +35,7 @@ def answer(
 ) -> dict[str, Any]:
     """Validate (and optionally append) raw directive text against a ledger."""
     entries = _parse_directives(text)
+    _refuse_self_rates(entries)
     _refuse_documents_outside(text, entries, file, into)
     snapshot = _snapshot_for(file, token)
     _refuse_invisible_new_accounts(entries, file, snapshot)
@@ -88,6 +89,17 @@ def _refuse_documents_outside(text: str, entries: list[Any], file: Path, into: P
                 "Write rejected: an AI-proposed document must name a file inside the ledger's folder; "
                 "this one is outside it. Move the file into the ledger's folder first."
             )
+
+
+def _refuse_self_rates(entries: list[Any]) -> None:
+    """Refuse a posting held at a cost or priced in its own commodity, as `add` refuses it (w1/278)."""
+    from bea_engine import managed_load
+
+    for entry in entries:
+        for posting in getattr(entry, "postings", None) or []:
+            tail = managed_load.self_rate_tail(posting)
+            if tail is not None:
+                raise protocol.UsageError(f"Write rejected: {posting.account} {tail}")
 
 
 def _parse_directives(text: str) -> list[Any]:

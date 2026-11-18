@@ -722,6 +722,12 @@ def answer(
                     f"to {account}; this row may be its other side, worded by this bank.",
                     counterpart,
                 )
+            tails = ((p.account, managed_load.self_rate_tail(p)) for p in entry.postings)
+            self_rate = next((f"{name} {tail}" for name, tail in tails if tail is not None), None)
+            if self_rate is not None and status in {"new", "possible_duplicate"}:
+                # The posting `add transaction` refuses: it balances by weight,
+                # and the books stop summing to zero (w1/278).
+                status, reason, match = "invalid", self_rate, None
             if status == "new" or (status == "possible_duplicate" and duplicates == "include"):
                 for identity in ids:
                     identities[identity] = entry

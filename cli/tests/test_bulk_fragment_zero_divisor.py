@@ -101,16 +101,16 @@ def test_partial_batch_appends_the_valid_row_and_names_the_rejected_one(tmp_path
 
 def test_safe_divisors_and_zero_like_labels_still_write(tmp_path: Path) -> None:
     rows = [
-        _row("half", "Expenses:Food", "100/0.5 USD @ 1 USD"),
-        _row("tenth", "Expenses:Food", "100/10 USD @ 1 USD"),
+        _row("half", "Assets:Brokerage", "100/0.5 EUR @ 1 USD"),
+        _row("tenth", "Assets:Brokerage", "100/10 EUR @ 1 USD"),
         _row("label", "Assets:Brokerage", '1 HOOL {100 USD, "lot 1/0"}'),
     ]
     result = _add(tmp_path, rows)
 
     assert result.returncode == 0, result.stderr or result.stdout
     text = (tmp_path / "main.bean").read_text(encoding="utf-8")
-    assert "200 USD @ 1 USD" in text
-    assert "10 USD @ 1 USD" in text
+    assert "200 EUR @ 1 USD" in text
+    assert "10 EUR @ 1 USD" in text
     assert '"lot 1/0"' in text
     check = _bea(tmp_path, "--json", "--file", str(tmp_path / "main.bean"), "check")
     assert check.returncode == 0, check.stderr or check.stdout
