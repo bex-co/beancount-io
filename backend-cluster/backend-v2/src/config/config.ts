@@ -309,6 +309,28 @@ export interface OidcLoginConfig {
   name: string;
   /** Sign a new ID in to the account that has its verified email. */
   linkByEmail: boolean;
+  /**
+   * Verified emails that may sign in, link and sign up: `alice@example.com`,
+   * `@example.com` or `@*.example.com`. Empty: no sign-up; sign-in and link are not checked.
+   */
+  allowedEmails: string[];
+}
+
+const OIDC_ALLOWED_EMAIL =
+  /^(?:[^\s@,*]+@|@(?:\*\.)?)[a-z0-9-]+(?:\.[a-z0-9-]+)*$/;
+
+export function parseOidcAllowedEmails(value: string | undefined): string[] {
+  const entries = (value ?? "")
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+  const invalid = entries.find((entry) => !OIDC_ALLOWED_EMAIL.test(entry));
+  if (invalid !== undefined) {
+    throw new Error(
+      `OIDC_ALLOWED_EMAILS entry "${invalid}" must be alice@example.com, @example.com or @*.example.com`,
+    );
+  }
+  return entries;
 }
 
 function readOidcLogin(): OidcLoginConfig | undefined {
@@ -322,6 +344,7 @@ function readOidcLogin(): OidcLoginConfig | undefined {
     clientSecret,
     name: process.env.OIDC_NAME || "SSO",
     linkByEmail: process.env.OIDC_LINK_BY_EMAIL === "true",
+    allowedEmails: parseOidcAllowedEmails(process.env.OIDC_ALLOWED_EMAILS),
   };
 }
 

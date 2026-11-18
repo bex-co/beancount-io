@@ -7,10 +7,12 @@ const CLIENT_ID = "beancount";
 const DASHBOARD = "https://money.example.com";
 
 let keys: Awaited<ReturnType<typeof generateKeyPair>>;
+let otherKeys: Awaited<ReturnType<typeof generateKeyPair>>;
 let jwks: { keys: object[] };
 
 beforeAll(async () => {
   keys = await generateKeyPair("RS256");
+  otherKeys = await generateKeyPair("RS256");
   jwks = { keys: [{ ...(await exportJWK(keys.publicKey)), alg: "RS256" }] };
 });
 
@@ -18,14 +20,15 @@ const idToken = (
   claims: Record<string, unknown>,
   nonce: string,
   issuer: string,
+  tamper?: "nonce" | "signature" | "audience",
 ) =>
-  new SignJWT({ nonce, ...claims })
+  new SignJWT({ nonce: tamper === "nonce" ? "other-nonce" : nonce, ...claims })
     .setProtectedHeader({ alg: "RS256" })
     .setIssuer(issuer)
-    .setAudience(CLIENT_ID)
+    .setAudience(tamper === "audience" ? "other-app" : CLIENT_ID)
     .setIssuedAt()
     .setExpirationTime("5m")
-    .sign(keys.privateKey);
+    .sign(tamper === "signature" ? otherKeys.privateKey : keys.privateKey);
 
 function setup(options: {
   claims?: Record<string, unknown>;
@@ -37,6 +40,8 @@ function setup(options: {
   issuer?: string;
   passwordless?: boolean;
   providerDown?: boolean;
+  allowedEmails?: string[];
+  tamper?: "nonce" | "signature" | "audience";
 }) {
   const issuer = options.issuer ?? ISSUER;
   const states = new Map<string, OidcLoginState>();
@@ -129,6 +134,7 @@ function setup(options: {
           },
           nonce,
           issuer,
+          options.tamper,
         ),
       });
     }
@@ -150,6 +156,7 @@ function setup(options: {
               clientSecret: "s",
               name: "Home",
               linkByEmail: options.linkByEmail ?? false,
+              allowedEmails: options.allowedEmails ?? ["@example.com"],
             },
       dashboard: { url: DASHBOARD },
       oauth: { issuer: DASHBOARD },
@@ -205,7 +212,10 @@ describe("OidcLoginService", () => {
 
   it.each([
     ["email_in_use", { existingEmail: true }],
-    ["email_unverified", { claims: { email_verified: false } }],
+    [
+      "email_unverified",
+      { claims: { email_verified: false }, allowedEmails: [] },
+    ],
     ["blocked", { linkedUserId: "user-1", blocked: true }],
   ])("refuses with %s", async (reason, options) => {
     const { signIn, auth, models } = setup(options);
@@ -214,6 +224,89 @@ describe("OidcLoginService", () => {
     expect(url.searchParams.get("oidcError")).toBe(reason);
     expect(auth.registerOidcUser).not.toHaveBeenCalled();
     expect(models.magicLinkToken.regenerateToken).not.toHaveBeenCalled();
+  });
+
+  it.each(["nonce", "signature", "audience"] as const)(
+    "refuses an ID token with the wrong %s",
+    async (tamper) => {
+      const { signIn, models } = setup({ linkedUserId: "user-1", tamper });
+      const url = await signIn();
+      expect(url.searchParams.get("oidcError")).toBe("failed");
+      expect(models.magicLinkToken.regenerateToken).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ["person@example.com", "person@example.com", true],
+    ["person@example.com", "other@example.com", false],
+    ["@example.com", "Person@Example.com", true],
+    ["@example.com", "person@mail.example.com", false],
+    ["@example.com", "person@myexample.com", false],
+    ["@*.example.com", "person@mail.example.com", true],
+    ["@*.example.com", "person@example.com", false],
+    ["@*.example.com", "person@mail.myexample.com", false],
+  ])("with %s allowed, signs up %s: %s", async (entry, email, allowed) => {
+    const { signIn, auth } = setup({
+      allowedEmails: [entry],
+      claims: { email },
+    });
+    const url = await signIn();
+    expect(auth.registerOidcUser).toHaveBeenCalledTimes(allowed ? 1 : 0);
+    expect(url.searchParams.get("oidcError")).toBe(
+      allowed ? null : "not_allowed",
+    );
+  });
+
+  it("creates no account without an allowlist", async () => {
+    const { signIn, auth } = setup({ allowedEmails: [] });
+    const url = await signIn();
+    expect(url.searchParams.get("oidcError")).toBe("not_allowed");
+    expect(auth.registerOidcUser).not.toHaveBeenCalled();
+  });
+
+  it("signs in to a linked account without an allowlist", async () => {
+    const { signIn } = setup({ linkedUserId: "user-1", allowedEmails: [] });
+    const url = await signIn();
+    expect(url.searchParams.get("oneTimeToken")).toBe("once-user-1");
+  });
+
+  it.each([
+    ["not_allowed", { claims: { email: "person@example.org" } }],
+    ["email_unverified", { claims: { email_verified: false } }],
+  ])(
+    "refuses a linked account with %s when the allowlist is set",
+    async (reason, options) => {
+      const { signIn, models } = setup({ linkedUserId: "user-1", ...options });
+      const url = await signIn();
+      expect(url.searchParams.get("oidcError")).toBe(reason);
+      expect(models.magicLinkToken.regenerateToken).not.toHaveBeenCalled();
+    },
+  );
+
+  it("refuses to link by email outside the allowlist", async () => {
+    const { signIn, models } = setup({
+      existingEmail: true,
+      linkByEmail: true,
+      allowedEmails: ["@example.org"],
+    });
+    const url = await signIn();
+    expect(url.searchParams.get("oidcError")).toBe("not_allowed");
+    expect(models.oidcIdentity.link).not.toHaveBeenCalled();
+  });
+
+  it("refuses to link an email outside the allowlist from Settings", async () => {
+    const { service, signIn, models } = setup({
+      allowedEmails: ["@example.org"],
+    });
+    const linkUrl = new URL(await service.createLinkUrl("user-1"));
+    const url = await signIn({
+      linkTicket: linkUrl.searchParams.get("link")!,
+      next: "/settings/general",
+      sessionUserId: "user-1",
+    });
+    expect(url.pathname).toBe("/settings/general");
+    expect(url.searchParams.get("oidcError")).toBe("not_allowed");
+    expect(models.oidcIdentity.link).not.toHaveBeenCalled();
   });
 
   it("signs in to the account with the same email when set to link by email", async () => {

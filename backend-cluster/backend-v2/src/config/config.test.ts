@@ -5,6 +5,7 @@ import {
   getMcpRegistryAuthProof,
   getOAuthPublicUrl,
   parseGitPublicUrl,
+  parseOidcAllowedEmails,
   parseOpenAIBaseUrl,
   parseTrustedProxyHops,
 } from "./config";
@@ -252,6 +253,37 @@ describe("config", () => {
     ])("refuses to start on GIT_PUBLIC_URL=%s", async (value) => {
       process.env.GIT_PUBLIC_URL = value;
       await expect(import("./config")).rejects.toThrow(/GIT_PUBLIC_URL/);
+    });
+  });
+
+  describe("parseOidcAllowedEmails", () => {
+    it("reads addresses, domains and subdomains, lowercased", () => {
+      expect(
+        parseOidcAllowedEmails(
+          " Alice@Example.com, @example.org,@*.Example.net ",
+        ),
+      ).toEqual(["alice@example.com", "@example.org", "@*.example.net"]);
+    });
+
+    it("is empty when unset or blank", () => {
+      expect(parseOidcAllowedEmails(undefined)).toEqual([]);
+      expect(parseOidcAllowedEmails(" ")).toEqual([]);
+    });
+
+    it("refuses an entry that is not an address, domain or subdomain", () => {
+      for (const entry of [
+        "example.com",
+        "*@example.com",
+        "alice@*.example.com",
+        "@*example.com",
+        "@",
+        "alice@",
+        "/.*/",
+      ]) {
+        expect(() => parseOidcAllowedEmails(entry)).toThrow(
+          /OIDC_ALLOWED_EMAILS/,
+        );
+      }
     });
   });
 

@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { users } from "../user-model/schema";
 
 /**
  * Accounts linked to the configured OIDC provider. The provider's `sub` is the
@@ -10,7 +11,9 @@ export const oidcIdentities = pgTable(
     id: text("id").primaryKey(),
     issuer: text("issuer").notNull(),
     sub: text("sub").notNull(),
-    userId: text("user_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => [

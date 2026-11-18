@@ -173,7 +173,7 @@ Environment tab (an environment variable you add there is kept across syncs):
 | `OPENAI_API_KEY` (and optionally `OPENAI_BASE_URL`) | `bea ask`: its model proxy forwards to OpenAI with this key. With none it answers "Model proxy is not configured. Set OPENAI_API_KEY." |
 | `TEMP_ASSETS_AWS_S3_*`, `PERM_ASSETS_AWS_S3_*` (`BUCKET`, `ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`) | receipt and attachment uploads |
 | `SEND_GRID_API_KEY` | mail: password recovery and, if you turn `SELF_HOST` off, sign-up codes |
-| `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` (and optionally `OIDC_NAME`, `OIDC_LINK_BY_EMAIL`) | sign-in with your own identity provider; see the backend-v2 README |
+| `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` (and optionally `OIDC_NAME`, `OIDC_LINK_BY_EMAIL`, `OIDC_ALLOWED_EMAILS`) | sign-in with your own identity provider; see the backend-v2 README |
 
 ## Self-hosting: no verification page, no plan limits
 
