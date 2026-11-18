@@ -2,6 +2,7 @@ import {
   formatDecimalCell,
   formatInventoryCellText,
 } from "@/common/lib/format/inventory-cell";
+import { rowsToCSV } from "@/common/lib/export/csv";
 
 /** Derived ratio column — rounded for display; quantity columns stay verbatim. */
 export const UNREALIZED_PROFIT_PCT_COLUMN = "unrealized_profit_pct";
@@ -63,7 +64,13 @@ export const csvObjectToString = formatInventoryCellText;
 export { formatDecimalCell };
 
 /**
- * Converts table data (headers and rows) to CSV format
+ * Converts table data (headers and rows) to CSV format.
+ *
+ * Cells are formatted exactly as the table shows (percentage column matches
+ * on-screen rounding) and then serialized through the shared CSV writer, so
+ * quoting and spreadsheet-formula neutralization (CWE-1236) match every
+ * other export. CSV quoting alone does not stop formula evaluation: a
+ * `"-33.71 USD"` amount cell must leave here neutralized, not bare.
  * @param headers Array of header names
  * @param rows Array of row arrays (cells can be any type)
  * @returns CSV string
@@ -76,30 +83,26 @@ export function tableToCSV(
     return "";
   }
 
-  // Create CSV header row
-  const headerRow = headers.map((header) => `"${header}"`).join(",");
-
-  // Create CSV data rows — percentage column matches on-screen rounding.
-  const dataRows = rows.map((row) =>
-    row
-      .map((cell, cellIndex) => {
-        // Handle null/undefined values
-        if (cell === null || cell === undefined) {
-          return '""';
-        }
-        // For objects, convert to string representation
-        const value =
-          typeof cell === "object"
+  // Format cells as the table shows them; the shared writer owns quoting
+  // and spreadsheet-formula safety. Nulls pass through so the writer emits
+  // the same '""' empty cell this function historically produced.
+  return rowsToCSV(
+    [
+      headers,
+      ...rows.map((row) =>
+        row.map((cell, cellIndex) => {
+          if (cell === null || cell === undefined) {
+            return cell;
+          }
+          // For objects, convert to string representation
+          return typeof cell === "object"
             ? formatInventoryCellText(cell)
             : formatHoldingsCell(cell, headers[cellIndex]);
-        // Escape quotes and wrap in quotes
-        const escapedValue = value.replace(/"/g, '""');
-        return `"${escapedValue}"`;
-      })
-      .join(","),
+        }),
+      ),
+    ],
+    { quoteAll: true },
   );
-
-  return [headerRow, ...dataRows].join("\n");
 }
 
 /**

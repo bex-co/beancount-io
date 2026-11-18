@@ -249,6 +249,21 @@ describe("Holdings Utils", () => {
       expect(result).toContain("200 EUR");
     });
 
+    it("neutralizes spreadsheet formulas like the shared CSV exporter (CWE-1236)", () => {
+      const result = tableToCSV(
+        ["account", "market_value", "quantity"],
+        [["Assets:Cash", { USD: "-33.71", EUR: "100.25" }, "-0.004"]],
+      );
+
+      // "-33.71 USD" is not a plain number, so a spreadsheet would evaluate
+      // the leading minus as a formula: it must be neutralized, exactly as
+      // neutralizeSpreadsheetFormula does for every other CSV export.
+      expect(result).toContain("\"'-33.71 USD");
+      // A signed plain number stays a numeric cell, not a neutralized one.
+      expect(result).toContain('"-0.004"');
+      expect(result).not.toContain('"=HYPERLINK');
+    });
+
     it("should handle number values", () => {
       const headers = ["Product", "Price", "Quantity"];
       const rows = [
