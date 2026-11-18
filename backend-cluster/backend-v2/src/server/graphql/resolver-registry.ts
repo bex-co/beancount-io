@@ -9,6 +9,7 @@ import type {
 import { AccountResolver } from "@/features/auth/api/account-resolver";
 import { AuthResolver } from "@/features/auth/api/auth-resolver";
 import { CliAuthResolver } from "@/features/auth/api/cli-auth-resolver";
+import { OidcLoginResolver } from "@/features/auth/api/oidc-login-resolver";
 import { LedgerQueryResolver } from "@/features/ledger/api/resolvers/ledger-resolver.query";
 import { LedgerMutationResolver } from "@/features/ledger/api/resolvers/ledger-resolver.mutation";
 import { LedgerFinanceQueryResolver } from "@/features/ledger/api/resolvers/ledger-finance-resolver.query";
@@ -77,6 +78,7 @@ export const resolvers: Resolvers = [
   AccountResolver,
   AuthResolver,
   CliAuthResolver,
+  OidcLoginResolver,
   SubscriptionResolver,
   StoreBillingResolver,
   LedgerPublicKeyQueryResolver,
@@ -131,6 +133,7 @@ export function buildResolverContainer(
     [AccountResolver, new AccountResolver(services.account)],
     [AuthResolver, new AuthResolver(services.auth, workflows.authSession)],
     [CliAuthResolver, new CliAuthResolver(services.cliAuth)],
+    [OidcLoginResolver, new OidcLoginResolver(services.oidcLogin)],
     [UserProfileResolver, new UserProfileResolver(services.userProfile)],
     [PullRequestResolver, new PullRequestResolver(workflows.pullRequest)],
     [FeedResolver, new FeedResolver(services.feed)],

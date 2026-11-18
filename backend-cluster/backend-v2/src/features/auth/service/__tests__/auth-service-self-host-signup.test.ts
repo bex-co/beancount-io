@@ -6,8 +6,12 @@ import {
 import { AuthService } from "../auth-service";
 import { ErrorCategory, ForbiddenError } from "@/shared/errors";
 import type { IsPwnedPassword } from "@/features/auth/operations/is-pwned-password";
+import { createLedger } from "@/features/ledger/operations/create-ledger";
 
 jest.mock("@/foundation/redis/redis-admission", () => mockFakeRedisAdmission);
+jest.mock("@/features/ledger/operations/create-ledger", () => ({
+  createLedger: jest.fn().mockResolvedValue(undefined),
+}));
 
 // A self-hosted server (SELF_HOST) has no email verification and no plan
 // limits, so it takes sign-ups only until its first account exists. A managed
@@ -44,22 +48,36 @@ function createService(existingAccounts = 0) {
   };
   const jwt = {
     create: jest.fn().mockResolvedValue({ token: "t", expireAt: "x" }),
+    verify: jest.fn(async () => ({ userId: `user-${accounts}` })),
+    revoke: jest.fn().mockResolvedValue(undefined),
   };
+  const oidcIdentity = { link: jest.fn().mockResolvedValue(true) };
   const createUser = jest.fn().mockResolvedValue({});
   const sendgrid = { sendMail: jest.fn().mockResolvedValue(undefined) };
   const isPwnedPassword = jest.fn<ReturnType<IsPwnedPassword>, [string]>(
     async () => false,
   );
   const service = new AuthService(
-    { user, signupOtpSession, jwt } as any,
+    { user, signupOtpSession, jwt, oidcIdentity } as any,
     { transaction: (run: (tx: unknown) => unknown) => run({}) } as any,
     sendgrid as any,
     {} as any,
-    { getAdminClient: () => ({ admin: { createUser } }) } as any,
+    {
+      getAdminClient: () => ({ admin: { createUser } }),
+      getApiContext: async () => ({ favaApiClient: {} }),
+    } as any,
     { favaApi: { adminUser: "admin", adminPassword: "pw" } } as any,
     isPwnedPassword,
   );
-  return { service, user, signupOtpSession, createUser, sendgrid };
+  return {
+    service,
+    user,
+    signupOtpSession,
+    createUser,
+    sendgrid,
+    oidcIdentity,
+    jwt,
+  };
 }
 
 let emailCounter = 0;
@@ -151,6 +169,33 @@ describe("registerUser on a self-host", () => {
 
     expect(user.create).not.toHaveBeenCalled();
     expect(createUser).not.toHaveBeenCalled();
+  });
+
+  it("still creates an account for a new OIDC sign-in", async () => {
+    process.env.SELF_HOST = "true";
+    const { service, user, oidcIdentity, jwt } = createService(1);
+    const oidc = { issuer: "https://id.example.com", sub: "abc" };
+
+    const userId = await service.registerOidcUser({
+      email: nextEmail(),
+      firstName: "Person",
+      lastName: "Example",
+      ip: "unknown",
+      oidcIdentity: oidc,
+    });
+
+    expect(userId).toBe("user-2");
+    expect(createLedger).toHaveBeenCalledTimes(1);
+    expect(jwt.revoke).toHaveBeenCalledWith(expect.anything(), "t");
+
+    expect(user.create).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ password: null }),
+    );
+    expect(oidcIdentity.link).toHaveBeenCalledWith(expect.anything(), {
+      ...oidc,
+      userId: "user-2",
+    });
   });
 
   it("lets exactly one of two simultaneous first sign-ups through", async () => {

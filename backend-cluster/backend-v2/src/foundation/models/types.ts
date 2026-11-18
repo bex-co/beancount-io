@@ -18,6 +18,8 @@ import { IPlaidSyncLogModel } from "@/features/plaid/data/plaid-sync-log-model";
 import { IFeatureUsageModel } from "@/features/feature-usage/data/feature-usage-model";
 import { ICliAuthSessionModel } from "@/features/auth/data/cli-auth-session-model";
 import type { IOauthGrantModel } from "@/features/oauth/data/oauth-grant-model";
+import type { IOidcIdentityModel } from "@/features/auth/data/oidc-identity-model";
+import type { IOidcLoginStateModel } from "@/features/auth/data/oidc-login-state-model";
 
 /**
  * Database-agnostic models container interface.
@@ -40,6 +42,8 @@ export interface IModels {
   emailToken: IEmailTokenModel;
   authMail: IAuthMailModel;
   magicLinkToken: IMagicLinkTokenModel;
+  oidcIdentity: IOidcIdentityModel;
+  oidcLoginState: IOidcLoginStateModel;
   signupOtpSession: ISignupOtpSessionModel;
   user: IUserModel;
   plaidItem: IPlaidItemModel;

@@ -99,9 +99,10 @@ describe("op-class coverage", () => {
     // 85 since w22/m6:t003 added `getLedgerCapitalGains`, the gains report;
     // 86 since w7/m3:t001 added `storeBillingIdentity` (ADR 001 D13);
     // 87 since `deploymentInfo`, the sign-in and sign-up pages' anonymous probe
-    // of a self-hosted deployment (a sign-up ceremony: no REST or MCP twin).
+    // of a self-hosted deployment (a sign-up ceremony: no REST or MCP twin);
+    // 88 since `oidcLinked`, the Settings check for a linked OIDC sign-in.
     expect(graphqlOps.filter((op) => op.startsWith("GQL Query.")).length).toBe(
-      87,
+      88,
     );
     // 63 since w2/m28:t005 added `appendLedgerText`, the Beancount-text
     // dialect of `bulkEntries`, on all three surfaces; 64 since w2/m32 added
@@ -111,10 +112,11 @@ describe("op-class coverage", () => {
     // recovery request and email-code password sign-in ceremonies; 69 since
     // w23/m42 added `revertLedgerCommit`, the undo of one commit; 70 since
     // w1/m43 added `renameLedgerAccount` on all three surfaces; 71 since
-    // w1/m45 added `moveLedgerEntrySources`.
+    // w1/m45 added `moveLedgerEntrySources`; 73 since `createOidcLinkUrl`
+    // and `unlinkOidc`, the Settings link and unlink for OIDC sign-in.
     expect(
       graphqlOps.filter((op) => op.startsWith("GQL Mutation.")).length,
-    ).toBe(71);
+    ).toBe(73);
   });
 
   it("gives every GraphQL root field exactly one explicit access mode", () => {

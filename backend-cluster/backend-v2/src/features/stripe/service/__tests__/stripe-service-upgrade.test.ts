@@ -60,6 +60,8 @@ describe("StripeService.upgradeSubscription", () => {
       oauthGrant: {} as any,
       emailToken: {} as any,
       magicLinkToken: {} as any,
+      oidcIdentity: {} as any,
+      oidcLoginState: {} as any,
       signupOtpSession: {} as any,
       cliAuthSession: {} as any,
       user: {} as any,

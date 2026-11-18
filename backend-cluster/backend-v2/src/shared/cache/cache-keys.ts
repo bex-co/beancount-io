@@ -52,6 +52,10 @@ export const CACHE_KEYS = {
     /** Atomic signup OTP verification budget, shared across re-issued sessions. */
     signupOtpAttemptsByEmail: (email: string) =>
       `auth:signup_otp_attempts:email:${email}`,
+    /** OIDC sign-in state by the `state` value sent to the provider. */
+    oidcLoginState: (state: string) => `auth:oidc_login_state:${state}`,
+    /** One-time ticket that starts linking the provider to an account. */
+    oidcLinkTicket: (ticket: string) => `auth:oidc_link_ticket:${ticket}`,
     /** CLI auth session by id. */
     cliAuthSessionById: (id: string) => `auth:cli_auth_session:${id}`,
     /** CLI auth session id by device-code digest (the CLI's private verifier). */

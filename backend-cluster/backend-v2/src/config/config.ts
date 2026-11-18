@@ -297,6 +297,32 @@ export interface AppConfig {
   metricsApiToken: string;
   adminToken: string;
   oauth: OAuthConfig;
+  /** Sign-in through an outside OpenID Connect provider; unset when off. */
+  oidcLogin?: OidcLoginConfig;
+}
+
+export interface OidcLoginConfig {
+  issuer: string;
+  clientId: string;
+  clientSecret: string;
+  /** The provider's name on the sign-in button. */
+  name: string;
+  /** Sign a new ID in to the account that has its verified email. */
+  linkByEmail: boolean;
+}
+
+function readOidcLogin(): OidcLoginConfig | undefined {
+  const issuer = process.env.OIDC_ISSUER || "";
+  const clientId = process.env.OIDC_CLIENT_ID || "";
+  const clientSecret = process.env.OIDC_CLIENT_SECRET || "";
+  if (!issuer || !clientId || !clientSecret) return undefined;
+  return {
+    issuer,
+    clientId,
+    clientSecret,
+    name: process.env.OIDC_NAME || "SSO",
+    linkByEmail: process.env.OIDC_LINK_BY_EMAIL === "true",
+  };
 }
 
 /**
@@ -590,4 +616,5 @@ export const config: AppConfig = {
     // equivalent to unset, so the optional client is simply not registered.
     discourseClientSecret: process.env.OAUTH_DISCOURSE_CLIENT_SECRET || "",
   },
+  oidcLogin: readOidcLogin(),
 };

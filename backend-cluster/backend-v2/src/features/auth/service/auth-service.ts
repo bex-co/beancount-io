@@ -72,12 +72,23 @@ import type { SignupOtpSession } from "@/features/auth/data/signup-otp-session-m
 
 type RegisterUserParams = {
   email: string;
+  /** Already hashed. */
   password: string;
   firstName: string;
   lastName: string;
   username?: string | null;
   ip: string;
 };
+
+export type RegisterOidcUserParams = Omit<
+  RegisterUserParams,
+  "password" | "username"
+> & { oidcIdentity: { issuer: string; sub: string } };
+
+/** How the new account signs in: a hashed password or an OIDC provider ID. */
+type AccountLogin =
+  | { password: string }
+  | { oidcIdentity: { issuer: string; sub: string } };
 
 type CreateSignUpSessionParams = {
   email: string;
@@ -167,6 +178,8 @@ const DISPOSABLE_EMAIL_DOMAINS = new Set([
 
 export interface IAuthService {
   registerUser(params: RegisterUserParams): Promise<AuthResponse>;
+  /** Returns the new account's id. */
+  registerOidcUser(params: RegisterOidcUserParams): Promise<string>;
   loginUser(params: LoginUserParams): Promise<AuthResponse>;
   requestSignInRecovery(
     email: string,
@@ -215,6 +228,7 @@ export class AuthService implements IAuthService {
       | "emailToken"
       | "signupOtpSession"
       | "paidCustomer"
+      | "oidcIdentity"
     >,
     private readonly db: DbExecutor,
     private readonly sendgrid: ISendGrid,
@@ -244,7 +258,32 @@ export class AuthService implements IAuthService {
   public registerUser = async (
     params: RegisterUserParams,
   ): Promise<AuthResponse> => {
-    const { email, password, firstName, lastName, username } = params;
+    const { token, expireAt } = await this.createAccount(params, {
+      password: params.password,
+    });
+    return { token, expireAt };
+  };
+
+  /** A new account for an OIDC identity: no password, with the default ledger. */
+  public registerOidcUser = async (
+    params: RegisterOidcUserParams,
+  ): Promise<string> => {
+    const { userId, token } = await this.createAccount(params, {
+      oidcIdentity: params.oidcIdentity,
+    });
+    await this.createDefaultLedger(token);
+    // The caller signs in through a one-time token, so this session is unused.
+    await this.models.jwt.revoke(this.db, token);
+    return userId;
+  };
+
+  private createAccount = async (
+    params: Omit<RegisterUserParams, "password">,
+    login: AccountLogin,
+  ): Promise<AuthResponse & { userId: string }> => {
+    const { email, firstName, lastName, username } = params;
+    const password = "password" in login ? login.password : null;
+    const oidcIdentity = "oidcIdentity" in login ? login.oidcIdentity : null;
     const locale = "en";
     if (username) assertValidUsername(username);
     const ledger_username =
@@ -272,7 +311,9 @@ export class AuthService implements IAuthService {
       : LOCK_KEYS.USER.register(email);
     const result = await lock.acquire(lockKey, () => {
       return this.db.transaction(async (tx) => {
-        await this.assertSignUpOpen(tx);
+        // The operator's own provider vouches for an OIDC account, so the
+        // closed self-host sign-up does not apply to it.
+        if (!oidcIdentity) await this.assertSignUpOpen(tx);
         const user = await this.models.user.create(tx, {
           email,
           password,
@@ -284,6 +325,15 @@ export class AuthService implements IAuthService {
           ledger_password,
         });
         const userId = user.id;
+        if (
+          oidcIdentity &&
+          !(await this.models.oidcIdentity.link(tx, {
+            ...oidcIdentity,
+            userId,
+          }))
+        ) {
+          throw new ConflictError("User", "This sign-in is already linked");
+        }
 
         const { token, expireAt } = await this.models.jwt.create(tx, userId);
 
@@ -319,7 +369,7 @@ export class AuthService implements IAuthService {
           });
         }
 
-        return { token, expireAt };
+        return { userId, token, expireAt };
       });
     });
     return result;

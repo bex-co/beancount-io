@@ -12,6 +12,8 @@ import { JwtPostgresModel } from "@/features/auth/data/jwt-model";
 import { EmailTokenRedisModel } from "@/features/auth/data/email-token-model";
 import { AuthMailPostgresModel } from "@/features/auth/data/auth-mail-model";
 import { MagicLinkTokenRedisModel } from "@/features/auth/data/magic-link-token-model";
+import { OidcIdentityPostgresModel } from "@/features/auth/data/oidc-identity-model";
+import { OidcLoginStateRedisModel } from "@/features/auth/data/oidc-login-state-model";
 import { SignupOtpSessionRedisModel } from "@/features/auth/data/signup-otp-session-model";
 import { UserPostgresModel } from "@/features/auth/data/user-model";
 import { PlaidItemPostgresModel } from "@/features/plaid/data/plaid-item-model";
@@ -40,6 +42,10 @@ export class PostgresRedisImpl implements IModels {
   public authMail: AuthMailPostgresModel;
 
   public magicLinkToken: MagicLinkTokenRedisModel;
+
+  public oidcIdentity: OidcIdentityPostgresModel;
+
+  public oidcLoginState: OidcLoginStateRedisModel;
 
   public signupOtpSession: SignupOtpSessionRedisModel;
 
@@ -79,6 +85,7 @@ export class PostgresRedisImpl implements IModels {
     this.auditEvent = new AuditEventPostgresModel();
 
     this.oauthGrant = new OauthGrantPostgresModel();
+    this.oidcIdentity = new OidcIdentityPostgresModel();
 
     this.jwt = new JwtPostgresModel({
       secret: this.config.jwt.secret,
@@ -95,5 +102,6 @@ export class PostgresRedisImpl implements IModels {
       cache: this.cache,
     });
     this.cliAuthSession = new CliAuthSessionRedisModel({ cache: this.cache });
+    this.oidcLoginState = new OidcLoginStateRedisModel({ cache: this.cache });
   }
 }
