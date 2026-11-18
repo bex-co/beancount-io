@@ -218,6 +218,27 @@ describe("checkTransactionBalance", () => {
     });
   });
 
+  // The write path accepts a leading `+` and a bare `.5` (DECIMAL_NUMBER in
+  // entry-build; `.5` renders as `0.5`, w23/043), and Beancount reads their
+  // decimals like any other spelling: `+100.00` implies 0.005 and `.50`
+  // implies 0.005, so dust inside that tolerance balances. The pre-check used
+  // to read no decimals from either spelling and refused what the engines book
+  // (beancount 3.2.3 `infer_tolerances` keys both at their decimal precision).
+  it("infers tolerance from plus-signed and leading-dot numbers", () => {
+    expect(
+      checkTransactionBalance([
+        posting("Expenses:Food", "+100.00"),
+        posting("Assets:Cash", "-99.996"),
+      ]).ok,
+    ).toBe(true);
+    expect(
+      checkTransactionBalance([
+        posting("Expenses:Food", ".50"),
+        posting("Assets:Cash", "-0.503"),
+      ]).ok,
+    ).toBe(true);
+  });
+
   it("names a residual with its sign, as the engines do", () => {
     const check = checkTransactionBalance([
       posting("Expenses:Food", "5.00"),

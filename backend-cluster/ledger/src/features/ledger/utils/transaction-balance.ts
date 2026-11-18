@@ -46,12 +46,21 @@ export type BalanceFailure =
       residuals: string[];
     };
 
-/** Decimals implied by a literal (`"124.6845"` → 4, `"10"` → 0). */
+/**
+ * Decimals implied by a literal (`"124.6845"` → 4, `"10"` → 0), as Beancount
+ * reads its `Decimal` exponent. The write path accepts a leading `+` and a
+ * bare `.5` (entry-build renders the latter as `0.5`, w23/043), and both carry
+ * their fraction's precision (`"+100.00"` → 2, `".50"` → 2) — they are not
+ * whole numbers.
+ */
 function impliedDecimals(literal: string): number {
-  const match = /^-?\d+(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/.exec(literal.trim());
+  const match =
+    /^[+-]?(?:\d+(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?\d+))?$/.exec(
+      literal.trim(),
+    );
   if (!match) return 0;
-  const frac = match[1] ?? "";
-  const exp = match[2] !== undefined ? Number(match[2]) : 0;
+  const frac = match[1] ?? match[2] ?? "";
+  const exp = match[3] !== undefined ? Number(match[3]) : 0;
   return Math.max(0, frac.length - exp);
 }
 
