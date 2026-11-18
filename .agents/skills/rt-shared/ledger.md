@@ -50,9 +50,9 @@ newest first.
 
 ### Deferred
 
-- 2026-11-18 `dashboard/src/common/components/react-echarts/__tests__/lazy-chart.test.tsx` "reserves the chart dimensions while loading and forwards its ref when ready" — red on main twice (CI (dashboard) run 44295607244, both attempts, commit a95dfa7d3; green at 73a6d7599 with 826 files, red with 827). The real `./client` module renders instead of the `vi.mock("../client")` mock, so echarts throws `xAxis "0" not found`, the ErrorBoundary shows `ChartLoadError`, and `findByTestId("ready-chart")` times out. Findings so far: `../index` imports `./client` twice (an eager `if (!import.meta.env.SSR) void loadClient()` preload, then `React.lazy`); with Vitest 4.0.17 a second dynamic import that arrives while an async mock factory is pending gets the real module (reproduced with two concurrent `import("../client")` calls); but a synchronous factory with the gate moved into the component via `use(gate.promise)` still loaded the real client when the file ran alone, while the whole `react-echarts` directory passes with or without that change — so the trigger also depends on which files share the run. Run it from a non-symlinked path: on macOS `/tmp` is `/private/tmp`, and a worktree there makes the mock path never match. Fix the root cause in the test (or the preload), not with a retry.
-
 ### Skipped
+
+- 2026-11-18 `dashboard/.../react-echarts` dir siblings (`client-lifecycle`, `client-legend-state`, `runtime`, `chart-empty`, `lazy-chart-error`) — 20/20 green in-suite on the fix commit; no flake, nothing to change.
 
 - 2026-11-18 `mobile/.../date-format.test.ts` "formats thousands of dates quickly" (<300ms) — inner op measures 9–58ms; 20/20 green, margin too wide to call a flake.
 - 2026-11-18 `mobile/.../select-trial-balance.test.ts` min-of-5 build timing — already hardened (min across repeats); 20/20 green.

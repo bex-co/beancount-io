@@ -9,7 +9,13 @@ import { ChartEmpty } from "./chart-empty";
 import { ReactEChartsServer } from "./server";
 import type { EChartsProps, EChartsRef } from "./types";
 
-const loadClient = () => import("./client");
+let clientPromise: Promise<typeof import("./client")> | null = null;
+// One shared import for the chunk: the preload below and React.lazy must
+// resolve to the same module. Two concurrent dynamic imports of "./client"
+// can settle on different identities (under Vitest the second one misses the
+// mock and loads the real client), leaving LazyChart suspended on — or
+// rendering — the wrong module.
+const loadClient = () => (clientPromise ??= import("./client"));
 const LazyChart = lazy(() =>
   loadClient().then((module) => ({ default: module.ReactEChartsClient })),
 );
