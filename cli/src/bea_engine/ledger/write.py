@@ -2656,6 +2656,7 @@ def validate_candidate(
     cost_holders: dict[str, set[int]] | None = None
     first_inactive_dates: dict[str, Any] | None = None
     last_inactive_dates: dict[str, Any] | None = None
+    pad_locations: set[tuple[Any, Any]] | None = None
     source_line_counts: dict[Path, int] = {}
     roots = ledger_roots(options)
     records: list[_ErrorRecord] = []
@@ -2857,9 +2858,14 @@ def validate_candidate(
             # Named for the directive that failed: a note or a pad is no transaction (w5/393).
             # A pad's own padding transaction is the pad the user wrote, and
             # naming both alike keeps them one paragraph (w1/118).
+            # A `P` flag alone does not make one: any transaction may carry
+            # it, so only the one at a pad's own line is that pad's (w1/283).
             noun = type(error.entry).__name__.lower() if error.entry is not None else "directive"
             if isinstance(error.entry, Transaction) and error.entry.flag == FLAG_PADDING:
-                noun = "pad"
+                if pad_locations is None:
+                    pad_locations = {_meta_location(entry) for entry in entries if isinstance(entry, Pad)}
+                if _meta_location(error.entry) in pad_locations:
+                    noun = "pad"
             discovered = _discovered_document(error.entry)
             if discovered is not None:
                 # No directive to edit: the file was auto-discovered, so name
@@ -3688,14 +3694,11 @@ def _pad_leg_currency_hint(
     if pad is None:
         # A pad already in the books: the padding transaction carries its
         # pad's own location.
-        meta = entry.meta or {}
         pad = next(
             (
                 candidate
                 for candidate in entries
-                if isinstance(candidate, Pad)
-                and (candidate.meta or {}).get("filename") == meta.get("filename")
-                and (candidate.meta or {}).get("lineno") == meta.get("lineno")
+                if isinstance(candidate, Pad) and _meta_location(candidate) == _meta_location(entry)
             ),
             None,
         )
@@ -3969,6 +3972,12 @@ def _location(entry: Any, filenames: dict[Path, Path]) -> str:
     for staged, original in filenames.items():
         filename = filename.replace(str(staged), str(original))
     return f"{filename}:{entry.meta.get('lineno')}"
+
+
+def _meta_location(entry: Any) -> tuple[Any, Any]:
+    """An entry's `(filename, lineno)` as loaded: a padding transaction carries its pad's."""
+    meta = entry.meta or {}
+    return meta.get("filename"), meta.get("lineno")
 
 
 def _error_key(error: Any, filenames: dict[Path, Path]) -> tuple[str, int | None, str]:

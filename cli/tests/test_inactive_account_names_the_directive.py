@@ -82,3 +82,71 @@ def test_json_document_refusal_names_the_document(tmp_path: Path) -> None:
     flat = json.dumps(json.loads(result.stdout or result.stderr))
     assert "Correct the document date or edit that directive;" in flat
     assert "Correct the transaction date" not in flat
+
+
+def test_a_transaction_flagged_p_is_no_pad(tmp_path: Path) -> None:
+    # Any capital letter is a flag: `P` on a transaction the user wrote does
+    # not make it the padding of a pad the ledger lacks (w1/283).
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(LEDGER)
+    result = _bea(
+        tmp_path,
+        "-f",
+        str(ledger),
+        "add",
+        "transaction",
+        "Paid back",
+        "--date",
+        EARLY,
+        "--flag",
+        "P",
+        "-p",
+        "Expenses:Food 5 USD",
+        "-p",
+        "Assets:Cash",
+    )
+
+    assert result.returncode == 1, result.stderr
+    assert ledger.read_text() == LEDGER
+    flat = " ".join(result.stderr.split())
+    assert f"Account opened 2026-01-01 at {ledger}:2. Correct the transaction date or edit that directive;" in flat
+    assert f"Account opened 2026-01-01 at {ledger}:3. Correct the transaction date or edit that directive;" in flat
+    assert "Correct the pad date" not in flat
+
+
+def test_an_existing_transaction_flagged_p_is_no_pad(tmp_path: Path) -> None:
+    # The same transaction already in the file is named the same way by any
+    # later write's refusal (w1/283).
+    content = LEDGER + f'\n{EARLY} P "Paid back"\n  Expenses:Food 5 USD\n  Assets:Cash\n'
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(content)
+    result = _bea(tmp_path, "-f", str(ledger), "add", "note", "--date", "2026-02-01", "-a", "Assets:Cash", "-m", "x")
+
+    assert result.returncode == 1, result.stderr
+    assert ledger.read_text() == content
+    flat = " ".join(result.stderr.split())
+    assert f"{ledger}:5: Invalid reference to inactive account 'Assets:Cash'" in flat
+    assert "Correct the transaction date or edit that directive;" in flat
+    assert "Correct the pad date" not in flat
+
+
+def test_a_real_pad_is_still_named_a_pad(tmp_path: Path) -> None:
+    # Control: Beancount's padding transaction for a pad before the open is
+    # the pad's, one paragraph with it (w1/118), named "pad" (w5/393).
+    content = (
+        LEDGER
+        + "2026-01-01 open Equity:Opening USD\n"
+        + f"{EARLY} pad Assets:Cash Equity:Opening\n2026-01-02 balance Assets:Cash 100 USD\n"
+    )
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(content)
+    result = _bea(tmp_path, "-f", str(ledger), "add", "note", "--date", "2026-02-01", "-a", "Assets:Cash", "-m", "x")
+
+    assert result.returncode == 1, result.stderr
+    assert ledger.read_text() == content
+    flat = " ".join(result.stderr.split())
+    assert flat.count("Invalid reference to inactive account 'Assets:Cash'") == 1, flat
+    assert flat.count("Invalid reference to inactive account 'Equity:Opening'") == 1, flat
+    assert f"{ledger}:5: Invalid reference to inactive account 'Assets:Cash'" in flat
+    assert "Correct the pad date or edit that directive;" in flat
+    assert "Correct the transaction date" not in flat
