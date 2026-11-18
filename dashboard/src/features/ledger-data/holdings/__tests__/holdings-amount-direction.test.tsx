@@ -201,8 +201,11 @@ describe("holdings amount reading direction", () => {
           name: language === "fa" ? "خروجی CSV" : "Export CSV",
         }),
       );
+      // Amount cells that open with a sign are not plain numbers, so the
+      // shared CSV writer neutralizes them against formula evaluation
+      // (CWE-1236); signed plain numbers stay numeric cells.
       expect(downloadCSV).toHaveBeenCalledExactlyOnceWith(
-        '"account","units","market_value","price","quantity"\n"Assets:کارگزاری","-13 VACHR\r\n-0.0000000000000000000123456789 ETH\r\n+4.0000 ACME","-33.71 USD\r\n100.2500 EUR","9007199254740993.0000000001","-0.004"',
+        '"account","units","market_value","price","quantity"\n"Assets:کارگزاری","\'-13 VACHR\r\n-0.0000000000000000000123456789 ETH\r\n+4.0000 ACME","\'-33.71 USD\r\n100.2500 EUR","9007199254740993.0000000001","-0.004"',
         expect.stringMatching(/^holdings-export-\d{4}-\d{2}-\d{2}\.csv$/),
       );
       account.focus();

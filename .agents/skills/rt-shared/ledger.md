@@ -47,10 +47,11 @@ newest first.
 
 ### Deferred
 
-- 2026-11-17 `dashboard/src/features/ledger-data/holdings/utils.ts:71` `tableToCSV` — writes cells without the shared `rowsToCSV` formula neutralization (CWE-1236), so `-33.71 USD` opens as a formula; route it through `rowsToCSV({ quoteAll: true })` and update `holdings-amount-direction.test.tsx`.
 - 2026-11-17 `dashboard/src/common/lib/editor/monaco-beancount-language.ts` vs `monaco-beancount-language-vscode.ts` — both register the global `beancount` language and themes, so the last editor opened re-highlights the others; keep the `-vscode` module only.
 
 ### Skipped
+
+- 2026-11-17 `dashboard/src/features/ledger-data/holdings/utils.ts:71` `tableToCSV` — FIXED: now serializes through shared `rowsToCSV({ quoteAll: true })`; `-33.71 USD` leaves neutralized, signed plain numbers stay numeric; `holdings-amount-direction.test.tsx` expectation updated.
 
 ## rt-logic-simplifier
 
