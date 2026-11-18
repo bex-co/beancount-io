@@ -726,6 +726,22 @@ def _usable_rules(entry: dict[str, Any], notes: list[str]) -> None:
         entry["rules"] = None
 
 
+def _remembered_rules(
+    prior: dict[str, Any] | None, rules_is_descriptor: bool, csv_rules_arg: Path | None
+) -> str | None:
+    """The `--rules` to remember for this source.
+
+    A descriptor cannot be replayed, so the prior entry's rules carry forward
+    instead of being wiped (w5/792). Shared by the CSV and OFX refresh paths:
+    the two copies were identical, and a fix to one but not the other would
+    wipe one kind's remembered rules.
+    """
+    if rules_is_descriptor:
+        carried = prior.get("rules") if prior is not None else None
+        return carried if isinstance(carried, str) and not is_descriptor_path(carried) else None
+    return str(csv_rules_arg) if csv_rules_arg is not None else None
+
+
 def _recall_csv(
     file: Path, source: Path, account: str | None = None, *, notes: list[str], skip: int | None = None
 ) -> dict[str, Any] | None:
@@ -1774,13 +1790,7 @@ def import_entries(
                         f"Discarded remembered settings for {source.name}: "
                         f"{', '.join(discarded)}. Re-pass them to keep them across refreshes."
                     )
-            if rules_is_descriptor:
-                # A descriptor cannot be replayed, so the prior entry's
-                # rules carry forward instead of being wiped (w5/792).
-                carried = prior.get("rules") if prior is not None else None
-                stored_rules = carried if isinstance(carried, str) and not is_descriptor_path(carried) else None
-            else:
-                stored_rules = str(csv_rules_arg) if csv_rules_arg is not None else None
+            stored_rules = _remembered_rules(prior, rules_is_descriptor, csv_rules_arg)
             csv_to_remember = {
                 "headers": headers,
                 "mapping": stored_mapping,
@@ -1866,13 +1876,7 @@ def import_entries(
                         f"Discarded remembered settings for {source.name}: "
                         f"{', '.join(ofx_discarded)}. Re-pass them to keep them across refreshes."
                     )
-            if rules_is_descriptor:
-                # A descriptor cannot be replayed, so the prior entry's
-                # rules carry forward instead of being wiped (w5/792).
-                carried = prior.get("rules") if prior is not None else None
-                stored_rules = carried if isinstance(carried, str) and not is_descriptor_path(carried) else None
-            else:
-                stored_rules = str(csv_rules_arg) if csv_rules_arg is not None else None
+            stored_rules = _remembered_rules(prior, rules_is_descriptor, csv_rules_arg)
             if ofx_identity is not None:
                 ofx_to_remember = {
                     "acctid": ofx_identity[1],
