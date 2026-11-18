@@ -1,4 +1,4 @@
-import { act, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import en from "@/i18n/locales/en";
 import { renderGallery, results } from "./gallery-test-harness";
@@ -85,8 +85,16 @@ describe("Gallery search continuation", () => {
       ).toBeInTheDocument();
       expect(gallery.input).toHaveFocus();
 
-      // A ledger from a later page is reachable with the result keys.
-      await gallery.user.keyboard("{ArrowDown>107/}");
+      // A ledger from a later page is reachable with the result keys. One
+      // act() batches the 107 keyDowns into a single render: 107 discrete
+      // presses rerender the 107-row list each time (~4s idle, past the 10s
+      // timeout under full-suite load), while the handler only reads keyDown
+      // and only the end state is asserted below.
+      act(() => {
+        for (let i = 0; i < 107; i += 1) {
+          fireEvent.keyDown(gallery.input, { key: "ArrowDown" });
+        }
+      });
       const last = gallery.getByRole("option", { name: /open_ledger-107/ });
       expect(gallery.input).toHaveAttribute("aria-activedescendant", last.id);
       await gallery.user.keyboard("{Enter}");
