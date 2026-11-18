@@ -65,7 +65,23 @@ when another run would otherwise repeat the work. One line each,
 `- YYYY-MM-DD <path or symbol> — <finding>; <why deferred or skipped>`, newest
 first, at most 20 entries per routine (drop the oldest Skipped first). A run
 that ships no code but has Deferred entries to record, its own or another
-routine's, commits the ledger alone (`chore(skills): record rt findings`).
+routine's, commits the ledger alone (`chore(skills): record rt findings`). Skipped
+entries alone do not: they ride along with the run's code or Deferred change,
+and a run that has only Skipped entries lists them in its summary and ships
+nothing.
+
+## Board items and ledger entries
+
+- **Check it is still open.** Before working a `.pm` board item or a ledger
+  entry, read its current file on `origin/main`, and
+  `git log origin/main --since=24.hours --oneline` for its id and for the files
+  it names. If it is closed or already fixed, skip it with that reason: another
+  session may have taken it since the board or ledger was written.
+- **One test per definition-of-done bullet.** When a change fixes a board
+  item, every bullet of its definition of done gets a test that fails on the
+  code before the fix for exactly that bullet's scenario, and the summary says
+  which test covers which bullet. A test that passes before the fix proves
+  nothing, however close its name is to the bullet.
 
 ## Verify gates (never ship your own red)
 
