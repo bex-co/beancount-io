@@ -386,6 +386,11 @@ const zhAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "此邮箱不能在这里登录。",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "登录失败，请重试。",
     description: "Generic error when provider sign-in fails",

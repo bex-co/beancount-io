@@ -393,6 +393,11 @@ const skAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "S týmto e-mailom sa tu nedá prihlásiť.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "Prihlásenie zlyhalo. Skúste to znova.",
     description: "Generic error when provider sign-in fails",

@@ -398,6 +398,11 @@ const frAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "Cet e-mail n'est pas autorisé à se connecter ici.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "La connexion a échoué. Veuillez réessayer.",
     description: "Generic error when provider sign-in fails",

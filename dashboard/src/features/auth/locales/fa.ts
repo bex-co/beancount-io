@@ -393,6 +393,11 @@ const faAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "با این ایمیل نمی\u200cتوان اینجا وارد شد.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "ورود ناموفق بود. لطفاً دوباره تلاش کنید.",
     description: "Generic error when provider sign-in fails",

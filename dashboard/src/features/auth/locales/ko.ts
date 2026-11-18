@@ -310,6 +310,11 @@ const koAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "이 이메일로는 여기에 로그인할 수 없습니다.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "로그인에 실패했습니다. 다시 시도해 주세요.",
     description: "Generic error when provider sign-in fails",

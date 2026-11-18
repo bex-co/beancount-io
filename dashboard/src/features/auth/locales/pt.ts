@@ -395,6 +395,11 @@ const ptAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "Este e-mail não tem permissão para entrar aqui.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "Falha ao entrar. Tente novamente.",
     description: "Generic error when provider sign-in fails",

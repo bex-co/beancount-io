@@ -398,6 +398,11 @@ const esAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "Este correo no tiene permiso para iniciar sesión aquí.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "No se pudo iniciar sesión. Inténtalo de nuevo.",
     description: "Generic error when provider sign-in fails",

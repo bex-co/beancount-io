@@ -313,6 +313,11 @@ const enAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "This email isn't allowed to sign in here.",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "Sign-in failed. Please try again.",
     description: "Generic error when provider sign-in fails",

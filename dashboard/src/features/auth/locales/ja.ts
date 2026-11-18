@@ -312,6 +312,11 @@ const jaAuth: Record<string, TranslationEntry> = {
     description:
       "Error when the account is already linked to a different provider identity",
   },
+  "auth.oidcErrorNotAllowed": {
+    message: "このメールアドレスではここにサインインできません。",
+    description:
+      "Error when the operator has not allowed this email to sign in with the provider",
+  },
   "auth.oidcErrorFailed": {
     message: "サインインに失敗しました。もう一度お試しください。",
     description: "Generic error when provider sign-in fails",
