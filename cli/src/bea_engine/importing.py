@@ -3337,47 +3337,13 @@ def _hash_import_ids(
     )
     blind_legs = sorted((p.units.number, p.units.currency, _lot_text(p)) for p in _source_postings(entry, account))
 
-    def spelled_with_negative_zero() -> str:
-        # The release before zero lost its sign printed every zero amount, cost
-        # and price as `-0` for a `-0.00` source, and an export that now reads
-        # `0.00` must still find that id (w5/920).
-        token = _NEGATIVE_ZERO.set(True)
-        try:
-            rebuilt = sorted(
-                (p.units.number, p.units.currency, _lot_text(p) + ("" if p.account == account else f" [{p.account}]"))
-                for p in _source_postings(entry, account)
-            )
-            return "+".join(_exact_amount(number, currency) + lot for number, currency, lot in rebuilt)
-        finally:
-            _NEGATIVE_ZERO.reset(token)
-
-    def spelled_without_empty_labels() -> str:
-        # Ids written before an explicit empty label counted printed none; a
-        # row with one must still find that id (w5/981).
-        token = _EMPTY_LABEL_HIDDEN.set(True)
-        try:
-            rebuilt = sorted(
-                (p.units.number, p.units.currency, _lot_text(p) + ("" if p.account == account else f" [{p.account}]"))
-                for p in _source_postings(entry, account)
-            )
-            return "+".join(_exact_amount(number, currency) + lot for number, currency, lot in rebuilt)
-        finally:
-            _EMPTY_LABEL_HIDDEN.reset(token)
-
-    def spelled_with_former_compound() -> str:
-        token = _FORMER_COMPOUND.set(True)
-        try:
-            rebuilt = sorted(
-                (p.units.number, p.units.currency, _lot_text(p) + ("" if p.account == account else f" [{p.account}]"))
-                for p in _source_postings(entry, account)
-            )
-            return "+".join(_exact_amount(number, currency) + lot for number, currency, lot in rebuilt)
-        finally:
-            _FORMER_COMPOUND.reset(token)
-
     def spelled_with_older_lot_spellings(*older_spellings: ContextVar[bool]) -> str:
         # An id written when several changes had not landed carries them all;
         # each alone leaves the others' differences in the hash (w5/1009).
+        # The single-spelling wrappers below delegate here so the historic
+        # rebuild stays one copy: five copies drifted only by their flag, and
+        # a fix to the rebuild in one but not the others would mint different
+        # lookup ids for the same row.
         tokens = [(spelling, spelling.set(True)) for spelling in older_spellings]
         try:
             rebuilt = sorted(
@@ -3389,18 +3355,24 @@ def _hash_import_ids(
             for spelling, token in reversed(tokens):
                 spelling.reset(token)
 
+    def spelled_with_negative_zero() -> str:
+        # The release before zero lost its sign printed every zero amount, cost
+        # and price as `-0` for a `-0.00` source, and an export that now reads
+        # `0.00` must still find that id (w5/920).
+        return spelled_with_older_lot_spellings(_NEGATIVE_ZERO)
+
+    def spelled_without_empty_labels() -> str:
+        # Ids written before an explicit empty label counted printed none; a
+        # row with one must still find that id (w5/981).
+        return spelled_with_older_lot_spellings(_EMPTY_LABEL_HIDDEN)
+
+    def spelled_with_former_compound() -> str:
+        return spelled_with_older_lot_spellings(_FORMER_COMPOUND)
+
     def spelled_with_raw_labels() -> str:
         # Ids written before labels compared as the loader reads them hashed
         # the label as typed; a decomposed `Café` must still find that id (w5/999).
-        token = _RAW_LABELS.set(True)
-        try:
-            rebuilt = sorted(
-                (p.units.number, p.units.currency, _lot_text(p) + ("" if p.account == account else f" [{p.account}]"))
-                for p in _source_postings(entry, account)
-            )
-            return "+".join(_exact_amount(number, currency) + lot for number, currency, lot in rebuilt)
-        finally:
-            _RAW_LABELS.reset(token)
+        return spelled_with_older_lot_spellings(_RAW_LABELS)
 
     per_legs = sorted(
         (p.units.number, p.units.currency, _lot_text(p, per_only=True, historic=True))
