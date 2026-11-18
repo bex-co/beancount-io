@@ -8,6 +8,7 @@ import errno
 import fnmatch
 import glob
 import hashlib
+import itertools
 import logging
 import operator
 import os
@@ -1911,6 +1912,11 @@ def _collapse_repeats(records: list[_ErrorRecord]) -> list[str]:
     The repeats can sit in other included files. A bare number reads as a line
     of the file the message names, so an occurrence elsewhere carries its own
     file (w5/146).
+
+    Only records that say the same thing past their location are one problem:
+    a note and a transaction naming one inactive account are told to correct
+    different directives, and folding one into the other's paragraph printed
+    the first one's remedy for both (w1/281).
     """
     distinct: dict[tuple[str, str, int | None, Path], _ErrorRecord] = {}
     for record in records:
@@ -1921,10 +1927,10 @@ def _collapse_repeats(records: list[_ErrorRecord]) -> list[str]:
             )
         else:
             same.hints.extend(hint for hint in record.hints if hint not in same.hints)
-    order: list[tuple[str, tuple[str, ...]]] = []
-    grouped: dict[tuple[str, tuple[str, ...]], list[_ErrorRecord]] = {}
+    order: list[tuple[str, str, tuple[str, ...]]] = []
+    grouped: dict[tuple[str, str, tuple[str, ...]], list[_ErrorRecord]] = {}
     for record in distinct.values():
-        key = (record.kind, tuple(record.hints))
+        key = (record.kind, _unlocated(record), tuple(record.hints))
         if key not in grouped:
             grouped[key] = []
             order.append(key)
@@ -1945,6 +1951,33 @@ def _collapse_repeats(records: list[_ErrorRecord]) -> list[str]:
         messages.append(message)
         messages.extend(occurrences[0].hints)
     return [escape_format_characters(message) for message in messages]
+
+
+def _unlocated(record: _ErrorRecord) -> str:
+    """The record's text after the location it starts with: what it says, wherever it is."""
+    for prefix in (f"{record.source}:{record.lineno}: ", "Proposed append (not written): "):
+        if record.message.startswith(prefix):
+            return record.message[len(prefix) :]
+    return record.message
+
+
+def _in_line_order(errors: list[Any]) -> list[Any]:
+    """The errors, each run reported at one line sorted by its message.
+
+    Upstream reports one entry's inactive accounts by iterating a set, so
+    those errors arrive in an order the hash seed picks, and with them which
+    pad error carries the pad hint. Identical runs printed different refusals
+    (w1/281). Errors on different lines keep their order.
+    """
+
+    def line(error: Any) -> tuple[Any, Any]:
+        source = getattr(error, "source", None) or {}
+        return source.get("filename"), source.get("lineno")
+
+    ordered: list[Any] = []
+    for _, run in itertools.groupby(errors, key=line):
+        ordered.extend(sorted(run, key=lambda error: str(getattr(error, "message", error))))
+    return ordered
 
 
 #: How far `including_root` looks: the leaf's directory and this many above it.
@@ -2571,7 +2604,7 @@ def validate_candidate(
     if inspect is not None:
         inspect(entries, filenames)
     type_errors = managed_load.data_type_errors(entries, options)
-    errors = [*errors, *type_errors]
+    errors = _in_line_order([*errors, *type_errors])
     original_line_counts = {path: len(lines) for path, lines in original_lines.items()}
     # The error set before the write, matched so the same failure after the
     # append reads as the same error. Appends land at end of file over
@@ -3190,7 +3223,7 @@ def validate_candidate(
                 [],
                 Path((error.source or {}).get("filename", str(file))),
             )
-            for error in before_errors or []
+            for error in _in_line_order(before_errors or [])
         ]
         raise CandidateRejected(
             message,
