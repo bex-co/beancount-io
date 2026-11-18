@@ -213,171 +213,52 @@ describe("SendGrid", () => {
         }),
       );
     });
-
-    it("should send template ID when provided", async () => {
-      const sg = new SendGrid({
-        apiKey: "test-key",
-        retryLimit: 3,
-      });
-
-      mockSend.mockResolvedValue([{ statusCode: 202 }]);
-
-      await sg.sendMail({
-        to: "recipient@example.com",
-        templateId: "d-123456789",
-        dynamicTemplateData: { name: "John" },
-      });
-
-      expect(mockSend).toHaveBeenCalledWith(
-        expect.objectContaining({
-          templateId: "d-123456789",
-          dynamicTemplateData: { name: "John" },
-        }),
-      );
-    });
   });
 
-  describe("sendTemplate", () => {
-    it("should successfully send template email", async () => {
-      const sg = new SendGrid({
-        apiKey: "test-key",
-        retryLimit: 3,
-      });
-
-      mockSend.mockResolvedValue([{ statusCode: 202 }]);
-
-      await sg.sendTemplate({
-        to: "recipient@example.com",
-        templateId: "d-123456789",
-        dynamicTemplateData: { name: "John", date: "2024-01-01" },
-      });
-
-      expect(mockSend).toHaveBeenCalledTimes(1);
-      expect(mockSend).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: "recipient@example.com",
-          from: "noreply@mail.beancount.io",
-          templateId: "d-123456789",
-          dynamicTemplateData: { name: "John", date: "2024-01-01" },
-        }),
-      );
+  it("does not expose provider errors, recipients, credentials or message content", async () => {
+    const operation = "sendMail";
+    const secret = "synthetic-private-reset-token";
+    const providerError = Object.assign(new Error(secret), {
+      name: secret,
+      response: { body: { errors: [{ message: secret }] } },
+      request: { headers: { authorization: secret }, body: { to: secret } },
     });
-
-    it("should use custom from address in template email", async () => {
-      const sg = new SendGrid({
-        apiKey: "test-key",
-        retryLimit: 3,
-      });
-
-      mockSend.mockResolvedValue([{ statusCode: 202 }]);
-
-      await sg.sendTemplate({
-        to: "recipient@example.com",
-        templateId: "d-123456789",
-        dynamicTemplateData: { name: "John" },
-        from: "custom@example.com",
-      });
-
-      expect(mockSend).toHaveBeenCalledWith(
-        expect.objectContaining({
-          from: "custom@example.com",
-        }),
-      );
-    });
-
-    it("should retry and succeed on second attempt", async () => {
-      const sg = new SendGrid({
-        apiKey: "test-key",
-        retryLimit: 3,
-      });
-
-      const error = new Error("Network error");
-      mockSend
-        .mockRejectedValueOnce(error)
-        .mockResolvedValueOnce([{ statusCode: 202 }]);
-
-      await sg.sendTemplate({
-        to: "recipient@example.com",
-        templateId: "d-123456789",
-        dynamicTemplateData: { name: "John" },
-      });
-
-      expect(mockSend).toHaveBeenCalledTimes(2);
-      expect(logger.error).toHaveBeenCalledTimes(1);
-      expect(logger.error).toHaveBeenCalledWith("Email delivery failed", {
-        operation: "sendTemplate",
-        errorCategory: "MAIL_PROVIDER_FAILURE",
-      });
-    });
-
-    it("should throw error after all retries fail", async () => {
-      const sg = new SendGrid({
-        apiKey: "test-key",
-        retryLimit: 2,
-      });
-
-      const error = new Error("Persistent error");
-      mockSend.mockRejectedValue(error);
-
-      await expect(
-        sg.sendTemplate({
-          to: "recipient@example.com",
-          templateId: "d-123456789",
-          dynamicTemplateData: { name: "John" },
-        }),
-      ).rejects.toBeInstanceOf(ServiceUnavailableError);
-
-      expect(mockSend).toHaveBeenCalledTimes(2);
-      expect(logger.error).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  it.each(["sendMail", "sendTemplate"] as const)(
-    "does not expose provider errors, recipients, credentials or message content through %s",
-    async (operation) => {
-      const secret = "synthetic-private-reset-token";
-      const providerError = Object.assign(new Error(secret), {
-        name: secret,
-        response: { body: { errors: [{ message: secret }] } },
-        request: { headers: { authorization: secret }, body: { to: secret } },
-      });
-      mockSend.mockRejectedValue(providerError);
-      const sg = new SendGrid({ apiKey: secret, retryLimit: 2 });
-      const failure = await sg[operation]({
+    mockSend.mockRejectedValue(providerError);
+    const sg = new SendGrid({ apiKey: secret, retryLimit: 2 });
+    const failure = await sg
+      .sendMail({
         to: `${secret}@example.com`,
         from: `${secret}@example.org`,
         subject: secret,
         html: secret,
         text: secret,
-        templateId: secret,
-        dynamicTemplateData: { otp: secret },
-      }).catch((error: unknown) => error);
+      })
+      .catch((error: unknown) => error);
 
-      expect(failure).toBeInstanceOf(ServiceUnavailableError);
-      expect(failure).toMatchObject({
-        category: "SERVICE_UNAVAILABLE",
-        metadata: { service: "Email delivery", retryAfter: 5 },
-      });
-      expect(JSON.stringify(failure)).not.toContain(secret);
-      expect((failure as Error).message).not.toContain(secret);
-      expect((failure as Error).stack).not.toContain(secret);
-      expect((failure as { cause?: unknown }).cause).toBeUndefined();
-      expect(mockSend).toHaveBeenCalledTimes(2);
-      expect((logger.error as jest.Mock).mock.calls).toEqual([
-        [
-          "Email delivery failed",
-          { operation, errorCategory: "MAIL_PROVIDER_FAILURE" },
-        ],
-        [
-          "Email delivery failed",
-          { operation, errorCategory: "MAIL_PROVIDER_FAILURE" },
-        ],
-      ]);
-      expect(
-        JSON.stringify((logger.error as jest.Mock).mock.calls),
-      ).not.toContain(secret);
-    },
-  );
+    expect(failure).toBeInstanceOf(ServiceUnavailableError);
+    expect(failure).toMatchObject({
+      category: "SERVICE_UNAVAILABLE",
+      metadata: { service: "Email delivery", retryAfter: 5 },
+    });
+    expect(JSON.stringify(failure)).not.toContain(secret);
+    expect((failure as Error).message).not.toContain(secret);
+    expect((failure as Error).stack).not.toContain(secret);
+    expect((failure as { cause?: unknown }).cause).toBeUndefined();
+    expect(mockSend).toHaveBeenCalledTimes(2);
+    expect((logger.error as jest.Mock).mock.calls).toEqual([
+      [
+        "Email delivery failed",
+        { operation, errorCategory: "MAIL_PROVIDER_FAILURE" },
+      ],
+      [
+        "Email delivery failed",
+        { operation, errorCategory: "MAIL_PROVIDER_FAILURE" },
+      ],
+    ]);
+    expect(
+      JSON.stringify((logger.error as jest.Mock).mock.calls),
+    ).not.toContain(secret);
+  });
 });
 
 describe("ConsoleSendGrid", () => {
@@ -401,39 +282,34 @@ describe("ConsoleSendGrid", () => {
     });
   });
 
-  it.each(["sendMail", "sendTemplate"] as const)(
-    "%s logs only the recipient count, including for OTP and reset messages",
-    async (operation) => {
-      const secret = "synthetic-private-otp-reset-token";
-      const sg = new ConsoleSendGrid({
-        apiKey: secret,
-        retryLimit: 3,
-        defaultFrom: `${secret}@example.org`,
-      });
-      jest.clearAllMocks();
+  it("logs only the recipient count, including for OTP and reset messages", async () => {
+    const secret = "synthetic-private-otp-reset-token";
+    const sg = new ConsoleSendGrid({
+      apiKey: secret,
+      retryLimit: 3,
+      defaultFrom: `${secret}@example.org`,
+    });
+    jest.clearAllMocks();
 
-      await sg[operation]({
-        to: [`${secret}@example.com`, "other@example.com"],
-        from: `${secret}@example.org`,
-        subject: secret,
-        html: `<a href="${secret}">${secret}</a>`,
-        text: secret,
-        templateId: secret,
-        dynamicTemplateData: { otp: secret, url: secret },
-      });
+    await sg.sendMail({
+      to: [`${secret}@example.com`, "other@example.com"],
+      from: `${secret}@example.org`,
+      subject: secret,
+      html: `<a href="${secret}">${secret}</a>`,
+      text: secret,
+    });
 
-      expect((logger.debug as jest.Mock).mock.calls).toEqual([
-        [
-          "Email delivery suppressed in development",
-          { operation, recipientCount: 2 },
-        ],
-      ]);
-      expect(
-        JSON.stringify((logger.debug as jest.Mock).mock.calls),
-      ).not.toContain(secret);
-      expect(sendgrid.send).not.toHaveBeenCalled();
-    },
-  );
+    expect((logger.debug as jest.Mock).mock.calls).toEqual([
+      [
+        "Email delivery suppressed in development",
+        { operation: "sendMail", recipientCount: 2 },
+      ],
+    ]);
+    expect(
+      JSON.stringify((logger.debug as jest.Mock).mock.calls),
+    ).not.toContain(secret);
+    expect(sendgrid.send).not.toHaveBeenCalled();
+  });
 
   it("counts a single recipient without logging the address", async () => {
     const sg = new ConsoleSendGrid({ apiKey: "synthetic-key", retryLimit: 2 });

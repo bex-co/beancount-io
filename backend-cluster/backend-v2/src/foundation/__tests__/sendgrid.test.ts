@@ -28,24 +28,34 @@ describe("SendGrid", () => {
       expect(send.mock.calls[0][0].asm).toEqual({ groupId: 42 });
     });
 
-    it("leaves the request unchanged without a group or tracking choice", async () => {
+    it("sends no group when the mail has none", async () => {
       await new SendGrid(opts).sendMail({ to: "a@example.com", text: "t" });
 
       expect(send.mock.calls[0][0]).not.toHaveProperty("asm");
-      expect(send.mock.calls[0][0]).not.toHaveProperty("trackingSettings");
     });
 
-    it("turns off the account's open pixel and link rewriting when untracked", async () => {
-      await new SendGrid(opts).sendMail({
-        to: "a@example.com",
-        text: "t",
-        untracked: true,
-      });
+    // The account tracks every mail by default: a pixel, and each link
+    // rewritten through a SendGrid redirect. A reset link must stay ours.
+    it.each([
+      ["a plain mail", { to: "a@example.com", text: "t" }],
+      [
+        "a mail in a group",
+        {
+          to: "a@example.com",
+          html: "<a href='x'>x</a>",
+          asm: { groupId: 42 },
+        },
+      ],
+    ])(
+      "turns off the open pixel and link rewriting for %s",
+      async (_, mail) => {
+        await new SendGrid(opts).sendMail(mail);
 
-      expect(send.mock.calls[0][0].trackingSettings).toEqual({
-        clickTracking: { enable: false, enableText: false },
-        openTracking: { enable: false },
-      });
-    });
+        expect(send.mock.calls[0][0].trackingSettings).toEqual({
+          clickTracking: { enable: false, enableText: false },
+          openTracking: { enable: false },
+        });
+      },
+    );
   });
 });

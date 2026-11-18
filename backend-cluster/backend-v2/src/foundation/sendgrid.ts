@@ -17,35 +17,25 @@ type Mail = {
   subject?: string;
   html?: string;
   text?: string;
-  templateId?: string;
-  dynamicTemplateData?: Record<string, unknown>;
   /**
    * The unsubscribe group the mail belongs to. SendGrid then adds the
    * List-Unsubscribe headers and drops it for anyone who left the group.
    */
   asm?: { groupId: number };
-  /**
-   * Turn off the open pixel and link rewriting that the SendGrid account
-   * applies to every mail by default, so the links stay the URLs we wrote.
-   */
-  untracked?: boolean;
 };
 
+/**
+ * The SendGrid account turns on an open pixel and link rewriting for every
+ * mail by default. Every mail turns both off, so a reset or sign-in link is the
+ * URL we wrote rather than a SendGrid redirect, and nobody is tracked.
+ */
 const UNTRACKED: MailDataRequired["trackingSettings"] = {
   clickTracking: { enable: false, enableText: false },
   openTracking: { enable: false },
 };
 
-type TemplateMailParams = {
-  to: string | Array<string>;
-  templateId: string;
-  dynamicTemplateData: Record<string, unknown>;
-  from?: string;
-};
-
 export interface ISendGrid {
   sendMail(data: Mail): Promise<void>;
-  sendTemplate(params: TemplateMailParams): Promise<void>;
 }
 
 export class SendGrid implements ISendGrid {
@@ -64,10 +54,8 @@ export class SendGrid implements ISendGrid {
       subject: data.subject || "",
       html: data.html,
       text: data.text,
-      templateId: data.templateId,
-      dynamicTemplateData: data.dynamicTemplateData,
+      trackingSettings: UNTRACKED,
       ...(data.asm && { asm: { groupId: data.asm.groupId } }),
-      ...(data.untracked && { trackingSettings: UNTRACKED }),
     } as MailDataRequired;
 
     for (let i = this.opts.retryLimit; i > 0; i -= 1) {
@@ -77,30 +65,6 @@ export class SendGrid implements ISendGrid {
       } catch {
         emailLogger.error("Email delivery failed", {
           operation: "sendMail",
-          errorCategory: "MAIL_PROVIDER_FAILURE",
-        });
-        if (i === 1) {
-          throw new ServiceUnavailableError("Email delivery", 5);
-        }
-      }
-    }
-  }
-
-  public async sendTemplate(params: TemplateMailParams): Promise<void> {
-    const mailData: MailDataRequired = {
-      to: params.to,
-      from: params.from || this.opts.defaultFrom || "noreply@mail.beancount.io",
-      templateId: params.templateId,
-      dynamicTemplateData: params.dynamicTemplateData,
-    } as MailDataRequired;
-
-    for (let i = this.opts.retryLimit; i > 0; i -= 1) {
-      try {
-        await sendgrid.send(mailData);
-        return;
-      } catch {
-        emailLogger.error("Email delivery failed", {
-          operation: "sendTemplate",
           errorCategory: "MAIL_PROVIDER_FAILURE",
         });
         if (i === 1) {
@@ -125,13 +89,6 @@ export class ConsoleSendGrid implements ISendGrid {
     emailLogger.debug("Email delivery suppressed in development", {
       operation: "sendMail",
       recipientCount: Array.isArray(data.to) ? data.to.length : 1,
-    });
-  }
-
-  public async sendTemplate(params: TemplateMailParams): Promise<void> {
-    emailLogger.debug("Email delivery suppressed in development", {
-      operation: "sendTemplate",
-      recipientCount: Array.isArray(params.to) ? params.to.length : 1,
     });
   }
 }
