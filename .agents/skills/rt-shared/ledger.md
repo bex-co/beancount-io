@@ -24,6 +24,8 @@ newest first.
 
 ### Deferred
 
+- 2026-11-18 cli/ full `make deadcode` vulture scan — unrunnable where only Python 3.11 exists (requires-python >=3.12; interpreter download blocked); ruff F401/F841 plus `if False`/commented-def sweeps clean, rerun vulture where Python 3.12+ exists.
+
 ### Skipped
 
 ## rt-dup-unifier
