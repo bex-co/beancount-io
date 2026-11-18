@@ -221,6 +221,7 @@ def _balances(
     # Valuation covers only the accounts being shown: an unrelated unpriced
     # holding must not make a USD checking balance fail.
     previous = _summary_pair(filtered.ledger)
+    balances = [balance for tree in pruned.values() if tree is not None for balance in _tree_balances(tree, previous)]
     metadata = (
         _metadata(filtered, resolved_conversion, ledger_errors)
         # `_metadata` judges emptiness by a report `--account`, which balance
@@ -237,12 +238,7 @@ def _balances(
         }
         | _valuation(
             resolved_conversion,
-            (
-                (filtered.end_date, balance)
-                for tree in pruned.values()
-                if tree is not None
-                for balance in _tree_balances(tree, previous)
-            ),
+            ((filtered.end_date, balance) for balance in balances),
             allow_errors,
             filtered.ledger,
             ledger_errors,
@@ -252,6 +248,10 @@ def _balances(
     return metadata | {
         "display_precision": _display_precision(filtered),
         **{name: (_tree_json(tree) if tree is not None else None) for name, tree in pruned.items()},
+        # With no terms this is the trial balance, adjustment line included.
+        "valuation_adjustment": _trial_adjustment(
+            filtered, resolved_conversion, data.valuation_adjustment, balances, scoped=bool(accounts)
+        ),
     }
 
 
@@ -573,14 +573,10 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
     }
     sections = _prune_sections(sections, filtered.account, filtered.ledger.root_accounts)
     previous = _summary_pair(filtered.ledger)
+    balances = [balance for tree in sections.values() if tree is not None for balance in _tree_balances(tree, previous)]
     metadata = _metadata(filtered, conversion, ledger_errors) | _valuation(
         conversion,
-        (
-            (filtered.end_date, balance)
-            for tree in sections.values()
-            if tree is not None
-            for balance in _tree_balances(tree, previous)
-        ),
+        ((filtered.end_date, balance) for balance in balances),
         allow_errors,
         filtered.ledger,
         ledger_errors,
@@ -589,7 +585,31 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
     return metadata | {
         "display_precision": _display_precision(filtered),
         **{name: (_tree_json(tree) if tree is not None else None) for name, tree in sections.items()},
+        "valuation_adjustment": _trial_adjustment(
+            filtered, conversion, data.valuation_adjustment, balances, scoped=bool(filtered.account)
+        ),
     }
+
+
+def _trial_adjustment(
+    filtered: Any, conversion: str, adjustment: Any, balances: Iterable[Mapping[str, Decimal]], *, scoped: bool
+) -> dict[str, Decimal | None] | None:
+    """The trial balance's valuation adjustment line, or None where it reconciles nothing (w1/287).
+
+    The five valued trees leave a holding's unrealized gain and a currency's
+    translation unbalanced; this line carries them, so the sections sum to
+    zero. Withheld as the balance sheet's is: under `units` (no residual is
+    computed), for an account filter (the residual is the whole ledger's),
+    with loader errors (it would absorb an unbalanced entry), and while a
+    balance holds a commodity the report could not value. Unlike the sheet's,
+    it may span commodities: at cost it is the conversions a priced exchange
+    leaves, which a trial balance must show to net.
+    """
+    if adjustment is None or scoped or filtered.ledger.load_errors:
+        return None
+    if any(_unvalued(balance, conversion) for balance in balances):
+        return None
+    return _headline(adjustment, conversion)
 
 
 @dataclasses.dataclass

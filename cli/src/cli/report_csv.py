@@ -107,7 +107,11 @@ def _balance_sheet(data: Mapping[str, Any]) -> Table:
 
 def _trial_balance(data: Mapping[str, Any]) -> Table:
     names = ("assets", "liabilities", "equity", "income", "expenses")
-    return BALANCE_COLUMNS, [row for name in names for row in _tree_rows(name, data[name])]
+    rows = [row for name in names for row in _tree_rows(name, data[name])]
+    # The residual that nets the valued sections, when the report derived one (w1/287).
+    if data.get("valuation_adjustment") is not None:
+        rows += _amount_rows(["valuation_adjustment", "valuation_adjustment", ""], data["valuation_adjustment"])
+    return BALANCE_COLUMNS, rows
 
 
 def _cash_flow(data: Mapping[str, Any]) -> Table:

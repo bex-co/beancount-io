@@ -174,13 +174,21 @@ def check_profit(sheet: dict[str, Any], income: dict[str, Any]) -> Check:
 
 
 def check_trial_balance(trial: dict[str, Any], sheet: dict[str, Any], income: dict[str, Any]) -> Check:
-    check = Check("Trial balance agrees with the statements", "each root total in the trial balance equals the same root in its statement")
-    pairs = [(trial[r], sheet[r]) for r in ("assets", "liabilities", "equity")] + [(trial[r], income[r]) for r in ("income", "expenses")]
+    check = Check(
+        "Trial balance agrees with the statements",
+        "each root total in the trial balance equals the same root in its statement, and its valuation adjustment the balance sheet's",
+    )
+    pairs = [(total(trial[r]), total(sheet[r])) for r in ("assets", "liabilities", "equity")]
+    pairs += [(total(trial[r]), total(income[r])) for r in ("income", "expenses")]
+    # A valued trial balance nets through the balance sheet's adjustment line; the
+    # sheet withholds its own when it spans commodities, and bea 0.4.1 and older have none.
+    if trial.get("valuation_adjustment") is not None and sheet.get("equity_reconciled"):
+        pairs.append((dec(trial["valuation_adjustment"]), dec(sheet["valuation_adjustment"])))
     differences: dict[str, Decimal] = {}
     unvalued = False
     for one, other in pairs:
-        negated = {c: None if v is None else -v for c, v in total(other).items()}
-        diff, bad = residuals(total(one), negated)
+        negated = {c: None if v is None else -v for c, v in other.items()}
+        diff, bad = residuals(one, negated)
         unvalued = unvalued or bad
         for currency, value in diff.items():
             differences[currency] = differences.get(currency, Decimal(0)) + abs(value)

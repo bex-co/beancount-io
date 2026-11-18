@@ -10,6 +10,7 @@ from beancount.core import flags
 from beancount.core.data import Directive, Transaction
 
 from .chart import ChartModule, DateAndBalance, DateAndBalanceWithAccountBalance
+from ..core.conversion import UNITS
 from ..core.inventory import SimpleCounterInventory
 
 
@@ -67,6 +68,9 @@ class TrialBalanceData:
     equity_hierarchy: SerialisedTreeNode
     expenses_hierarchy: SerialisedTreeNode
     assets_hierarchy: SerialisedTreeNode
+    #: Beancount.io change: what the five trees leave unbalanced once valued;
+    #: None under `units`, where lots at cost cannot net (w1/287).
+    valuation_adjustment: SimpleCounterInventory | None
 
 
 @dataclass(frozen=True)
@@ -132,15 +136,39 @@ class FinancialStatementsModule:
         filtered: FilteredLedger,
         conversion: str | Conversion,
     ) -> TrialBalanceData:
-        """Compute trial balance data."""
+        """Compute trial balance data.
+
+        Beancount.io change: valued at market, the five trees no longer net to
+        zero (a holding's unrealized gain, a currency's translation), so their
+        residual is returned as the balance sheet derives its valuation
+        adjustment. The period clamp's conversion booking folds into it, as on
+        the balance sheet, so a `-t` report splits equity as the unclamped one
+        does (w1/287). `units` keeps that booking and has no residual.
+        """
         chart = ChartModule()
         options = filtered.ledger.options
+        valued = conversion not in ("units", UNITS)
+        trees = {
+            name: chart.hierarchy(
+                _without_clamp_conversions(filtered) if valued and name == "equity" else filtered,
+                options[f"name_{name}"],
+                conversion,
+            )
+            for name in ("assets", "liabilities", "equity", "income", "expenses")
+        }
+        adjustment = None
+        if valued:
+            adjustment = SimpleCounterInventory()
+            for tree in trees.values():
+                for currency, amount in tree.balance_children.items():
+                    adjustment.add(currency, -amount)
         return TrialBalanceData(
-            income_hierarchy=chart.hierarchy(filtered, options["name_income"], conversion),
-            liabilities_hierarchy=chart.hierarchy(filtered, options["name_liabilities"], conversion),
-            equity_hierarchy=chart.hierarchy(filtered, options["name_equity"], conversion),
-            expenses_hierarchy=chart.hierarchy(filtered, options["name_expenses"], conversion),
-            assets_hierarchy=chart.hierarchy(filtered, options["name_assets"], conversion),
+            income_hierarchy=trees["income"],
+            liabilities_hierarchy=trees["liabilities"],
+            equity_hierarchy=trees["equity"],
+            expenses_hierarchy=trees["expenses"],
+            assets_hierarchy=trees["assets"],
+            valuation_adjustment=adjustment,
         )
 
     def balance_sheet(

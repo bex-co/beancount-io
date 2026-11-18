@@ -208,6 +208,26 @@ def _print_tree(
         _print_tree(child, depth + 1, conversion=conversion, precision=precision)
 
 
+def _print_trial_balance(data: dict[str, Any]) -> None:
+    """The five trees, with the valuation adjustment that nets them after Equity (w1/287).
+
+    The line shows only when it holds something: a ledger with no holdings or
+    priced exchanges nets without it, and JSON and CSV still carry the zero.
+    """
+    conversion = str(data["conversion"])
+    _heading("Trial Balance", data)
+    precision = _precision(data)
+    adjustment = data.get("valuation_adjustment") or {}
+    for name in ("assets", "liabilities", "equity", "income", "expenses"):
+        tree = data[name]
+        if tree is None:
+            continue
+        typer.echo("")
+        _print_tree(tree, conversion=conversion, precision=precision)
+        if name == "equity" and any(_as_decimal(number) != 0 for number in adjustment.values()):
+            typer.echo(f"  {'Valuation/translation adjustment:':<46}  {_amounts(adjustment, conversion, precision)}")
+
+
 def _filter_text(metadata: dict[str, Any]) -> str:
     """The account filter as typed: several `balance` terms each quoted, so two never read as one."""
     terms = metadata.get("account_filters") or []
@@ -582,15 +602,7 @@ def trial_balance(
     if csv_target is not None:
         _emit_csv("trial-balance", file, data, csv_target)
         return
-    conversion = str(data["conversion"])
-    _heading("Trial Balance", data)
-    precision = _precision(data)
-    for name in ("assets", "liabilities", "equity", "income", "expenses"):
-        tree = data[name]
-        if tree is None:
-            continue
-        typer.echo("")
-        _print_tree(tree, conversion=conversion, precision=precision)
+    _print_trial_balance(data)
 
 
 @report_app.command("holdings", cls=SingleValueCommand)
@@ -946,12 +958,5 @@ def balance(
     if context.current().json_output:
         _emit_json(file, data)
         return
-    conversion = str(data["conversion"])
-    _heading("Trial Balance", data)
-    precision = _precision(data)
-    trees = [data[name] for name in ("assets", "liabilities", "equity", "income", "expenses")]
     # `_heading` already said "No accounts match …" from `account_filter_empty`.
-    for tree in trees:
-        if tree is not None:
-            typer.echo("")
-            _print_tree(tree, conversion=conversion, precision=precision)
+    _print_trial_balance(data)

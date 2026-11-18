@@ -268,7 +268,6 @@ HOOL_NEVER = "HOOL has no EUR price at any date; shown in units"
 HOOL_ROUTED = "HOOL → EUR has no price before 2026-01-01; earlier rows shown in HOOL"
 # The mixed ledger pays EUR for its held USD-cost lot, leaving a genuine USD
 # conversion residual that stays unvalued in December.
-USD_ROUTED = "USD → EUR has no price before 2026-01-01; earlier rows shown in USD"
 # That ledger also holds a lot at a cost in EUR, which the USD route cannot
 # value, so the route is qualified (w5/905).
 HOOL_ROUTED_MIXED = (
@@ -278,25 +277,23 @@ HOOL_ROUTED_MIXED = (
 
 
 @pytest.mark.parametrize(
-    ("text", "lines", "sheet_lines"),
+    ("text", "lines"),
     [
-        (SOLD_USD_LOT, [HOOL_NEVER], [HOOL_NEVER]),
-        (LATER_USD_LOT, [HOOL_NEVER], [HOOL_NEVER]),
-        (SOLD_AND_HELD_USD_LOTS, [HOOL_ROUTED_MIXED, USD_ROUTED], [HOOL_ROUTED_MIXED]),
+        (SOLD_USD_LOT, [HOOL_NEVER]),
+        (LATER_USD_LOT, [HOOL_NEVER]),
+        (SOLD_AND_HELD_USD_LOTS, [HOOL_ROUTED_MIXED]),
     ],
     ids=["sold-before-the-row", "bought-after-the-row", "one-held-one-sold"],
 )
-def test_a_route_counts_only_for_lots_held_unvalued(
-    tmp_path: Path, text: str, lines: list[str], sheet_lines: list[str]
-) -> None:
+def test_a_route_counts_only_for_lots_held_unvalued(tmp_path: Path, text: str, lines: list[str]) -> None:
     """A USD-cost lot sold before the row, or bought after it, routes nothing (w5/748)."""
     ledger = _ledger(tmp_path, text)
 
     assert _partial(tmp_path, ledger, "balance", "-t", "2025-12")["missing_price_summary"] == lines
-    # The sheet folds the clamp's conversion bookings into its adjustment
-    # (w5/789), so it no longer shows — or warns for — their USD residual;
-    # `balance` still lists the row and keeps both notices.
-    assert _refusal(tmp_path, ledger, "report", "balance-sheet", "-t", "2025-12")["details"] == sheet_lines
+    # The sheet (w5/789) and the trial balance (w1/287) both fold the clamp's
+    # conversion bookings into their adjustment, so neither shows — or warns
+    # for — the USD residual of the 2025-12-01 exchange.
+    assert _refusal(tmp_path, ledger, "report", "balance-sheet", "-t", "2025-12")["details"] == lines
     shown = _bea(tmp_path, "--file", str(ledger), "balance", "-t", "2025-12", "--allow-errors")
     for line in lines:
         assert line in shown.stderr.splitlines(), shown.stderr

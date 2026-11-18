@@ -2214,7 +2214,27 @@ Unconverted `units` reports, and `at_cost` or `at_value` reports whose net
 worth or adjustment still spans more than one commodity (foreign cash has no
 cost), do not claim an equity reconciliation or invent a valuation adjustment
 across unlike commodities. `equity_reconciled` states
-whether the derived reconciliation is available. Reports run with loader
+whether the derived reconciliation is available.
+
+A trial balance (`report trial-balance`, and `bea balance` with no argument)
+nets to zero at every valuation but `units`. Valued at market, a holding's
+unrealized gain and a currency's translation leave the five trees unbalanced,
+so the report derives the same residual the balance sheet does. It is the
+`Valuation/translation adjustment:` line after Equity in text (shown when it
+is not zero), `valuation_adjustment` in JSON, and a `valuation_adjustment` row
+in CSV. At cost it is the conversion a priced exchange such as
+`90 EUR @ 1.10 USD` leaves (`-90 EUR 99 USD`), so unlike the balance sheet's
+it may span commodities. As on the balance sheet, the conversion booking that
+`--time` closes a period with folds into this line instead of showing as
+`Equity:Conversions:Current`. A period therefore splits equity the same way
+with and without `--time`. The line is `null` under `units`, with `--account`
+or `balance` terms (the residual belongs to the whole ledger), with loader
+errors, and while a balance holds a commodity the report could not value.
+Only `units` can leave a residual: lots at cost and foreign cash do not net in
+their own units, so there the equity tree keeps the conversions row and no
+line is derived.
+
+Reports run with loader
 errors also carry `ledger_valid: false` and `ledger_errors` in JSON.
 Every report lists `unrooted_accounts`: posted accounts outside the root
 ledger's five account roots. They arise when an include sets its own

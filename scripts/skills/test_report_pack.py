@@ -55,8 +55,8 @@ class ReportPack(unittest.TestCase):
             check=False,
         )
 
-    def tampering(self, replace: str, new: str) -> Path:
-        """A `bea` that alters one field of the cash-flow JSON before the script reads it."""
+    def tampering(self, replace: str, new: str, kind: str = "cash-flow") -> Path:
+        """A `bea` that alters one field of one report's JSON (cash flow by default) before the script reads it."""
         return _executable(
             self.root / "tampered-bea",
             textwrap.dedent(
@@ -65,7 +65,7 @@ class ReportPack(unittest.TestCase):
                 import subprocess, sys
                 done = subprocess.run(["{self.real}", *sys.argv[1:]], capture_output=True, text=True)
                 out = done.stdout
-                if "cash-flow" in sys.argv and "--json" in sys.argv:
+                if {kind!r} in sys.argv and "--json" in sys.argv:
                     assert {replace!r} in out, "tamper target missing"
                     out = out.replace({replace!r}, {new!r}, 1)
                 sys.stdout.write(out)
@@ -140,6 +140,51 @@ class ReportPack(unittest.TestCase):
         self.assertIn("| Closing cash is independently recomputed | FAIL", summary)
         self.assertIn("| Balance sheet balances | pass", summary)
         self.assertIn("FAIL", done.stdout)
+
+    def valued(self) -> Path:
+        """A June with a priced holding and a priced exchange: valued at market, its trial balance nets only through the adjustment line (w1/287)."""
+        ledger = self.root / "valued.beancount"
+        ledger.write_text(
+            textwrap.dedent(
+                """\
+                option "operating_currency" "USD"
+                2026-06-01 open Assets:Wallet USD
+                2026-06-01 open Assets:Euro EUR
+                2026-06-01 open Assets:Broker
+                2026-06-01 open Equity:Opening-Balances
+                2026-06-02 * "Opening"
+                  Assets:Wallet 1000.00 USD
+                  Equity:Opening-Balances
+                2026-06-10 * "Buy"
+                  Assets:Broker 5 AAPL {100.00 USD}
+                  Assets:Wallet -500.00 USD
+                2026-06-20 * "Exchange"
+                  Assets:Euro 90.00 EUR @ 1.10 USD
+                  Assets:Wallet -99.00 USD
+                2026-06-30 price AAPL 120.00 USD
+                2026-06-30 price EUR 1.20 USD
+                """
+            ),
+            encoding="utf-8",
+        )
+        return ledger
+
+    def test_holdings_valued_at_market_tie_the_trial_balance_through_its_adjustment(self) -> None:
+        done = self.build(self.valued())
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        summary = (self.root / "pack" / "SUMMARY.md").read_text()
+        self.assertIn("| Trial balance agrees with the statements | pass |", summary)
+        self.assertNotIn("FAIL", summary)
+        trial = (self.root / "pack" / "trial-balance.csv").read_text()
+        self.assertIn("valuation_adjustment,valuation_adjustment,,USD,-109.0000", trial)
+
+    def test_a_trial_balance_adjustment_the_sheet_does_not_share_fails_the_tie_out(self) -> None:
+        tampered = self.tampering('"valuation_adjustment": {"USD": "-109.0000"}', '"valuation_adjustment": {"USD": "-108.0000"}', kind="trial-balance")
+        done = self.build(self.valued(), bea=tampered)
+        self.assertEqual(done.returncode, 3, done.stdout + done.stderr)
+        summary = (self.root / "pack" / "SUMMARY.md").read_text()
+        self.assertIn("| Trial balance agrees with the statements | FAIL — difference 1.0000 USD", summary)
+        self.assertIn("| Balance sheet balances | pass", summary)
 
     def test_an_unpriced_holding_stops_the_build_unless_book_value_is_chosen(self) -> None:
         done = self.build(FILES / "eval3_ledger.beancount")

@@ -21,7 +21,7 @@ Each compares figures produced by different reports (or by an independent query)
 | --- | --- |
 | Balance sheet balances | assets + liabilities + total equity (equity plus current earnings and any valuation adjustment) = 0 |
 | Profit ties across statements | income-statement net profit + balance-sheet current earnings = 0 |
-| Trial balance agrees with the statements | each root total in the trial balance equals the same root in the balance sheet or income statement |
+| Trial balance agrees with the statements | each root total in the trial balance equals the same root in the balance sheet or income statement, and the trial balance's valuation adjustment (the line that nets holdings valued at market) equals the balance sheet's whenever the sheet reconciles its equity |
 | Cash rolls forward | opening cash + net change = closing cash; a gap passes only up to the cash-flow report's disclosed `rounding_residual` |
 | Closing cash is independently recomputed | a BQL sum of the cash accounts' postings through the period end equals closing cash |
 
