@@ -3883,6 +3883,15 @@ def _interpolated_leg_hint(
             remedies.append(
                 f"for a new lot, record the cost in {target} at the actual per-unit cost: {example}; {keep_lot}"
             )
+        elif posting.price is not None and posting.units.currency == target:
+            # Re-pricing a leg already in the target cannot help: its price is
+            # what moved the weight out of the target (w1/276).
+            priced_in = posting.price.currency
+            example = shlex.quote(f"{posting.account} NUMBER {priced_in} @ RATE {target}")
+            remedies.append(
+                f"drop the {priced_in} price from {shlex.quote(leg)}, which is already in {target} "
+                f"(the price makes it weigh {priced_in}); if the amount was in {priced_in}, write {example}"
+            )
         else:
             example = shlex.quote(f"{leg} @ RATE {target}")
             remedies.append(f"price the {posting.units.currency} leg at the rate paid: {example}")
