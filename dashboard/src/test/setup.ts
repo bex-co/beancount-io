@@ -51,7 +51,7 @@ vi.mock("monaco-editor", () => ({
 
 // Global translation mock - returns English translations with parameter replacement
 vi.mock("@/common/hooks/use-translations", async () => {
-  const { en } = await import("@/i18n/locales");
+  const { default: en } = await import("@/i18n/locales/en");
 
   return {
     useTranslations: () => ({
@@ -153,7 +153,7 @@ vi.mock("@/i18n", () => ({
 
 // Mock react-i18next for components using useTranslation
 vi.mock("react-i18next", async () => {
-  const { en } = await import("@/i18n/locales");
+  const { default: en } = await import("@/i18n/locales/en");
 
   return {
     useTranslation: () => ({
