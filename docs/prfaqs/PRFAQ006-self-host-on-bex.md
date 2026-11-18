@@ -1,12 +1,12 @@
 # PRFAQ006 — Self-host Beancount.io on bex in one click
 
-Status: Proposed. This is the target experience, written as if released. Nothing in it is marked planned any more: what it describes is built, and follows the decisions of [ADR 0029](../adrs/ADR029-deploy-self-hosting-contract.md). Except where a question says otherwise, it was exercised on a live bex workspace, on 2026-11-09 and again on 2026-11-16.
+Status: Proposed. This is the target experience, written as if released. Nothing in it is marked planned any more: what it describes is built, and follows the decisions of [ADR 0029](../adrs/ADR029-deploy-self-hosting-contract.md). Except where a question says otherwise, it was exercised on a live bex workspace, on 2026-11-09, 2026-11-16 and 2026-11-18.
 
 Date: 2026-11-09 (updated 2026-11-14, 2026-11-16 and 2026-11-18)
 
 Scope: someone who wants their own Beancount.io, for themselves, with no server to look after. Sign-up takes one account per deployment; more come only through the operator's own identity provider (see question 3). Whether to offer anything beyond that for a team, such as invitations, is left for later and will follow from what users ask for. Docker and local development are covered by their own READMEs.
 
-Evidence baseline: three live runs of the root Blueprint on an idle bex workspace, all resources deleted after each. The first, on 2026-11-09, ran `main` at `bfe5fdddc`. The second, on 2026-11-16, ran `main` at `34b43768b` (the dashboard and Gitea were redeployed at `8fa681216` during it) and covered what had changed in between. The third, later the same day, started from the Blueprint as it was before Gitea became private (`ae0e4c7ba`), upgraded that stack to `main`, and ran what the second had left unverified.
+Evidence baseline: four live runs of the root Blueprint on a bex workspace, all resources deleted after each. The first, on 2026-11-09, ran `main` at `bfe5fdddc`. The second, on 2026-11-16, ran `main` at `34b43768b` (the dashboard and Gitea were redeployed at `8fa681216` during it) and covered what had changed in between. The third, later the same day, started from the Blueprint as it was before Gitea became private (`ae0e4c7ba`), upgraded that stack to `main`, and ran what the second had left unverified. The fourth, on 2026-11-18, ran `main` at `0a90302df` and walked through this document as a new customer would; see [What did the fourth live run find?](#what-did-the-fourth-live-run-find).
 
 The second run exercised everything that had changed since the first: sign-up closing once the first account exists; Gitea as a private service with ledgers cloned and pushed through the API's Git proxy; the forgot-password page on a server without mail and the operator's one-time reset link; the configuration errors for AI, uploads and `bea ask`; and the places that used to name beancount.io on a self-hosted stack. The third run covered the upgrade of an existing deployment, a backup and restore, the browser sign-in of `bea cloud login`, the mobile app's sign-in protocol, a blocked account, and a 200 MB push; see [What did the third live run find?](#what-did-the-third-live-run-find). What no run covered is listed under [What is not verified?](#what-is-not-verified).
 
@@ -14,29 +14,31 @@ The second run exercised everything that had changed since the first: sign-up cl
 
 *Proposed launch copy. This is not a current product announcement.*
 
-**Run your own Beancount.io in one click, and keep every byte of your books**
+**Run your own Beancount.io from one button**
 
-*Press **Deploy to bex.co**, wait for the build, sign up. The dashboard, API, ledger engine and Git storage run in your workspace, on your address.*
+*Now in beta: press Deploy to bex.co, and about half an hour later the whole Beancount.io stack runs in your own bex workspace, on its own address. Nothing to fill in, no plan limits, about 33 USD a month in hosting, and MIT-licensed software.*
 
-Beancount.io is open source, and today it became a one-click install. From the repository, press **Deploy to bex.co**, pick the workspace that should own it, review the plan, and apply. There is nothing to fill in: every secret is generated, the services find each other, and the address your dashboard gets is the address it uses everywhere.
+Beancount keeps your finances in a plain-text file you own. Until now, putting a web app and an agent endpoint on top of that file meant either using our hosted service or assembling six services yourself. From today, anyone with a bex workspace can run all of Beancount.io for themselves, in beta.
 
-When the build finishes, open the dashboard's URL and create an account. No verification email, no plan limits. Sign-up closes behind that first account, so make it straight away. Install the `bea` command line, point it at your address with two environment variables, and the same ledger is reachable from your terminal. Coding agents connect through the built-in MCP server, which advertises your address as its issuer, never ours.
+Press **Deploy to bex.co** in the repository's README, choose the workspace that should own it, and approve the plan bex shows you. There is nothing to fill in: every secret is generated for your stack. About half an hour later the dashboard is live on its own address. Open it and create your account; sign-up then closes, so nobody else gets in unless you let them in through your own identity provider.
 
-Your ledger is a plain-text file in a Git repository on a disk in your workspace. Clone links point at your deployment: `git clone` over HTTPS, with a personal access token as the password, works against your own server.
+Your ledger is a Git repository on a disk in your workspace. Work on it from the dashboard, from the `bea` command line, from a coding agent through the built-in MCP server, or with plain `git` and a personal access token. Each of them is pointed at your address, never ours, and the stack sends no analytics or usage data to Beancount.io.
 
-Optional pieces stay optional. Add an Anthropic or OpenAI key for receipt scanning, categorisation and the assistant; add an S3 bucket for receipt uploads; add a mail key for password reset. Until you do, each feature says plainly what to set, and nothing else is affected.
+Optional pieces stay off until you add them: a model key for receipt scanning, categorisation and the assistant, an S3 bucket for receipt uploads, a mail key for password reset. Until then each feature says plainly what to set, and nothing else is affected.
+
+In beta, a deployment takes one sign-up, updates are started by hand, Git works over HTTPS only, and there is no tested restore yet for the accounts and settings kept in Postgres. The Self-host section of the [README](../../README.md#self-host) has the button and the guide; questions go to [GitHub issues](https://github.com/bex-co/beancount-io/issues) or the [Telegram chat](https://t.me/beancount).
 
 ## Customer FAQ
 
 ### 1. What do I get, and what does it cost?
 
-The dashboard (the address you use), the API (it also has an address of its own, see 8), the ledger service and Gitea (both private, with no public address; Gitea keeps its repositories on a 10 GB disk), one managed Postgres and one Key Value store. bex's preview showed about **33 USD a month** at the current Starter plans, billed to your workspace. Delete the resources to stop it. The software is MIT-licensed.
+The dashboard (the address you use), the API (it also has an address of its own, see 8), the ledger service and Gitea (both private, with no public address; Gitea keeps its repositories on a 10 GB disk), one managed Postgres and one Key Value store. bex's preview shows **32.97 USD a month** at the current plans, billed to your workspace: 4.90 each for the dashboard, the API and the ledger service, 6.65 for Gitea with its 10 GB disk, 4.41 for Postgres and 7.21 for the Key Value store (preview of 2026-11-18). A model provider, a mail provider or an S3 bucket you add bills you separately. Delete the resources to stop paying; that also deletes your data (question 15). The software is MIT-licensed.
 
 ### 2. How do I install it?
 
 1. Open the **Deploy to bex.co** button in the [README](../../README.md#self-host) or [`deploy/bex/`](../../deploy/bex/README.md).
 2. Choose the workspace that should own it, review the plan, and apply. Nothing is created until you approve.
-3. Wait. The first build is the slow part: about **27 minutes** to a working sign-up on an idle workspace, longer when bex's single build queue is busy.
+3. Wait. The first build is the slow part: **27 to 30 minutes** to a working sign-up in our runs, longer when bex's single build queue is busy.
 4. Open the dashboard service's URL and sign up.
 
 You are asked for nothing. If a service shows a failed rollout, trigger a deploy of it again from the bex dashboard; bex does not retry it.
@@ -60,7 +62,7 @@ On 2026-11-16 `bea cloud login` signed in through the browser this way, and `bea
 
 Both variables name the dashboard: it forwards `/api-gateway/` to the API, so the CLI needs only that one address.
 
-To get a ledger's Git history, use plain `git`: every ledger's `httpUrl` is `https://<your API address>/git/<owner>/<ledger>.git`, served by the API's Git proxy (Gitea itself has no public address). Mint a personal access token in the dashboard under Settings → API keys and give it as the password; any username works. `bea cloud ledger clone` clones over SSH only, and bex routes no SSH, so on a bex deployment it stops. From `bea` 0.4.1 it then explains the HTTPS route above: it prints the `git clone` command for that ledger, says to use a token from Settings → API keys as the password, and says bex cannot serve SSH. 0.4.0 says only that the server serves no Git over SSH, and 0.3.1 stops with an unhelpful `expected str … not NoneType`.
+To get a ledger's Git history, use plain `git`: every ledger's `httpUrl` is `https://<your API address>/git/<owner>/<ledger>.git`, served by the API's Git proxy (Gitea itself has no public address). Make a personal access token in the dashboard under Settings → Personal access tokens and give it as the password; any username works. `bea cloud ledger clone` clones over SSH only, and bex routes no SSH, so on a bex deployment it stops. From `bea` 0.4.1 it then explains the HTTPS route above: it prints the `git clone` command for that ledger, says to use a personal access token as the password, and says bex cannot serve SSH. (0.4.1 calls the settings page "API keys"; it is "Personal access tokens", and the next release says so.) 0.4.0 says only that the server serves no Git over SSH, and 0.3.1 stops with an unhelpful `expected str … not NoneType`.
 
 ### 5. Can I use the mobile app?
 
@@ -85,11 +87,11 @@ With no mail provider configured, the forgot-password page tells you the server 
 
 ### 8. Is the admin API exposed?
 
-The API service has its own public address and serves `/api/admin/*` there, guarded by the generated `ADMIN_TOKEN` (find it in the API service's environment). Treat that token like a root credential. The dashboard address does not forward `/api/admin`. Of the six services, only the dashboard and the API have a public address; the ledger service and Gitea are private.
+The API service has its own public address and serves `/api/admin/*` there, guarded by the generated `ADMIN_TOKEN` (find it in the API service's environment). Treat that token like a root credential: wrong tokens are refused but never locked out, so it is only as safe as it is secret. The dashboard address does not forward `/api/admin`. Of the six services, only the dashboard and the API have a public address; the ledger service and Gitea are private.
 
 ### 9. How do I update it?
 
-A Blueprint made from the button has no push webhook. To take a change: sync the Blueprint for manifest changes, then trigger a deploy of the service with the new commit ([Rolling out a change](../../deploy/bex/README.md#rolling-out-a-change)). Builds queue one at a time, so a full rollout can take most of an hour. A stack created before Gitea became a private service (before 2026-11-14) needs a backup first: bex cannot change Gitea's type in place, so finishing that upgrade deletes the Gitea service and its disk ([Upgrading a stack that is already running](../../deploy/bex/README.md#upgrading-a-stack-that-is-already-running)).
+A Blueprint made from the button has no push webhook. To take a change: sync the Blueprint for manifest changes, then trigger a deploy of the service with the new commit ([Rolling out a change](../../deploy/bex/README.md#rolling-out-a-change)). Builds queue one at a time, so a full rollout can take most of an hour. Your stack runs the commit of `main` it was built from; the stack has no numbered releases or release notes yet, so read the commit log and the upgrade notes in the bex README before you update. A stack created before Gitea became a private service (before 2026-11-14) needs a backup first: bex cannot change Gitea's type in place, so finishing that upgrade deletes the Gitea service and its disk ([Upgrading a stack that is already running](../../deploy/bex/README.md#upgrading-a-stack-that-is-already-running)).
 
 ### 10. Can I use my own domain?
 
@@ -101,7 +103,7 @@ The books are Git repositories on the Gitea disk; accounts, API keys and setting
 
 ### 12. Is my data private?
 
-Your books stay on your disk and in your database. Nothing is sent to us and there is no analytics: the browser analytics script is included only when a build sets a measurement ID, and the Blueprint's build does not. A few things do leave the workspace, and these are all of them that we know of:
+Your books stay on your disk and in your database. Nothing is sent to the Beancount.io service and there is no analytics: the browser analytics script is included only when a build sets a measurement ID, and the Blueprint's build does not. A few things do leave the workspace, and these are all of them that we know of:
 
 | What leaves | Where it goes | When |
 | --- | --- | --- |
@@ -116,6 +118,38 @@ Your books stay on your disk and in your database. Nothing is sent to us and the
 | A sign-in request naming your client ID and the deployment's callback address, then the API's code exchange with your client secret | The OpenID Connect provider you configure (`OIDC_ISSUER`) | Only with `OIDC_*`, when someone signs in or links an account with it; the API also fetches the provider's discovery document and signing keys. The provider learns who signed in to your deployment, and when. |
 
 Your own ledger is a text file you can read and diff.
+
+### 13. Someone signed up before me. What now?
+
+Delete their account, then sign up yourself. With the `ADMIN_TOKEN` (question 8), `GET /api/admin/recent-users` on the API's address shows the account's email, and `POST /api/admin/login-as` with that email returns a one-time link, good for five minutes, that signs you in as that account. There, Settings → Danger Zone → **Delete Account** removes it, and sign-up opens again. Run on bex on 2026-11-18.
+
+### 14. How do I connect a coding agent?
+
+Point the MCP client at `https://<your dashboard address>/api-gateway/mcp`. In Claude Code, `claude mcp add --transport http beancount https://<your dashboard address>/api-gateway/mcp`, then sign in from `/mcp`; the consent page it opens is your deployment's. A client that takes a header can instead send a personal access token from Settings → Personal access tokens as `Authorization: Bearer <token>`. The [MCP docs](../../backend-cluster/backend-v2/docs/mcp.md) have notes for each client.
+
+On 2026-11-18 a client with a personal access token listed the tools and ran queries on a bex deployment at this address. Signing in through OAuth, as Claude Code does, was checked as far as the discovery documents and the authorization redirect, not with a real client. A stack built before 2026-11-18 serves MCP at this address only after its dashboard is deployed again (question 9).
+
+### 15. Can I bring my existing books, and can I leave?
+
+To bring a ledger in, create one in the dashboard, then merge your files or Git history into it and push, with a personal access token that has `ledger.write`. The ledger reads `main.bean`, so make that your main file or have it `include` yours. These are the steps of a restore ([Back up and restore](../../deploy/bex/README.md#back-up-and-restore)): a forced push is refused, so the history goes in as a merge. From the hosted beancount.io, clone each ledger there and push it here the same way; accounts, API keys, settings and uploaded receipts do not move. On 2026-11-18 a 6,600-line ledger with its own history went into a new ledger on bex this way and checked with no errors.
+
+To leave, clone each ledger (question 11): every file and its history, readable by Beancount, Fava and `bea` without us. Deleting the resources in bex deletes the disk and the database for good, so clone first.
+
+### 16. Who runs the machines, and who can reach my data?
+
+bex does. Your services, disk and database run on bex's infrastructure, in your workspace and on your bill, the way any cloud host runs your servers. bex and Beancount.io come from the same company, Stargately, Inc., but the Beancount.io service is not part of your stack: nothing flows to it (question 12), and it holds none of your stack's secrets, which are generated inside your workspace. bex's [privacy policy](https://bex.co/privacy-policy) and [terms](https://bex.co/terms-of-service) govern the hosting. This FAQ does not yet say where the machines are, whether disks and database backups are encrypted at rest, or which bex staff can reach them. If you need those answers first, run the [Docker target](../../deploy/docker/README.md) on a server you control.
+
+Accounts that sign in with a password have no second factor. To require one, sign in through your own identity provider (question 3) and turn it on there.
+
+### 17. Why this, and not the hosted service or Fava on my laptop?
+
+- **The hosted service at beancount.io:** nothing to run, and mail and AI are already set up. Your books live on our service, under its plans.
+- **Fava or `bea` on your own computer:** free and fully local, but tied to that computer: no phone app, no address to share, and no agent endpoint while it is off.
+- **This:** the hosted product's features on your own address and bill, with no plan limits. You pay bex about 33 USD a month and look after the stack yourself.
+
+### 18. Where do I get help, and how do I know the stack is healthy?
+
+In the bex dashboard each service shows its state and its logs. A deploy that missed bex's readiness deadline shows as failed and needs a deploy by hand (question 2). From a checkout of the repository, `dashboard/scripts/qa/run-self-host-sign-up.mjs` checks a fresh deploy end to end in a real browser ([Check a deployment](../../deploy/bex/README.md#check-a-deployment)). Ask in [GitHub issues](https://github.com/bex-co/beancount-io/issues) or the [Telegram chat](https://t.me/beancount); there is no support agreement for self-hosted stacks.
 
 ## Internal FAQ
 
@@ -132,7 +166,13 @@ It is the only target with zero operator inputs, and the platform is ours to imp
 - bex retries a failed rollout, or the README keeps the caveat.
 - The closing of sign-up, the private Gitea and `bea ask` with `OPENAI_API_KEY` have been run on a live bex. Done on 2026-11-16; `bea ask` only as far as its configuration error, with no model key set.
 - A `bea` release newer than 0.3.1, so the clone refusal reads as written in question 4. Done: 0.4.0 on PyPI and Homebrew on 2026-11-17 gives the refusal, and 0.4.1 adds the HTTPS explanation decided that day.
+- At least three people outside the team deploy from the button with no help from us, and one of them is quoted, with permission, in the press release. Not done: every run so far was ours, so the press release has no quote yet.
+- Question 16 says where bex runs the stack, whether disks and database backups are encrypted at rest, and who at bex can reach them. Not done.
 - There is a way to add a second account, or the copy keeps saying one account per deployment. Decided on 2026-11-17: sign-up takes one account per deployment, and more wait for user feedback. Since 2026-11-18 an operator's OpenID Connect provider adds accounts for the emails `OIDC_ALLOWED_EMAILS` lists, and none without it (#198, #199, #209); question 3 says so, the press release does not, and no bex run has exercised it.
+
+### How will we know it worked?
+
+The stack reports nothing to us, by design, so the measures come from outside it: the number of Blueprints bex creates from this repository and how many reach a live dashboard, how many of those stacks are still running after a month, and GitHub issues and Telegram questions about self-hosting. A rising count of stacks deleted within a day would say the first half hour loses people.
 
 ### What did the live run find?
 
@@ -176,6 +216,25 @@ It found three defects, all fixed and rerun on that stack:
 - No OAuth sign-in could start on a bex deployment. The dashboard's same-origin API proxy followed the authorization endpoint's redirect itself, so the browser was left on a "Page not found". This stopped the mobile app's sign-in and an MCP client's authorization; the proxy now hands the redirect to the browser.
 - The mobile and identity consent pages still offered "Sign Up" on a stack that had closed sign-up. They now read the same answer as the sign-in page.
 
+### What did the fourth live run find?
+
+On 2026-11-18 a new stack was created from the Blueprint (`main` at `0a90302df`) and used the way this document tells a customer to. It took 30 minutes from creation to a working sign-up.
+
+| Check | Result |
+| --- | --- |
+| Someone signs up first (question 13) | A stranger's sign-up closed sign-up. `GET /api/admin/recent-users` showed the address, `POST /api/admin/login-as` signed the operator in as that account, Settings → Danger Zone → Delete Account removed it, and sign-up opened again for the owner. |
+| `bea cloud login` | With `bea` 0.4.1 from PyPI, the device page showed the client, device and address; after **Authorize**, `bea cloud status` (`ENTERPRISE`) and `bea cloud ledger list` worked. |
+| Clone | `bea cloud ledger clone` printed the HTTPS command and the token advice; `git clone` with a personal access token worked. |
+| Bringing books in (question 15) | A 6,600-line ledger with its own history was merged into a new ledger and pushed, and a forced push was refused. With `main.bean` including it, `checkLedger` over MCP reported no errors and 1,051 transactions. |
+| MCP (question 14) | An MCP client with a personal access token, pointed at `https://<dashboard address>/api-gateway/mcp`, listed 47 tools and ran a BQL query and `checkLedger`, after the fix below. Without a token the endpoint answers 401 with a challenge whose resource metadata, OAuth discovery and authorization redirect all name the dashboard's address. |
+| First ledger | The first-ledger form offers a sample ledger. Overview, income statement, balance sheet, journal, files and the clone menu (the API's own HTTPS address) all rendered it. |
+
+It found:
+
+- Defect, fixed: an MCP client pointed at the dashboard's address got 406, because the dashboard's same-origin proxy dropped the `Accept` header the MCP endpoint requires; the API's own address worked. The proxy forwards it since `321d2b16f`. A stack built before that needs its dashboard deployed again.
+- The settings page is "Personal access tokens", but `bea` 0.4.1 and these documents said "API keys". The documents are corrected, and `bea`'s message is corrected for its next release.
+- Not fixed: the sign-up and sign-in pages of a self-hosted stack still show the hosted service's panel ("Join thousands of satisfied users…", "enterprise-grade security"), and the sign-up form asks for at least 8 characters where the sign-in form says 6.
+
 ### What is not verified?
 
-The mobile app on a phone (its sign-in protocol was replayed from a desktop browser), sign-in and account creation through an OpenID Connect provider, restoring accounts and settings from a Postgres backup, a custom domain, Plaid, mail delivery with a real key, and any AI feature with a real model key.
+The mobile app on a phone (its sign-in protocol was replayed from a desktop browser), an MCP client that signs in through OAuth (only token-authenticated MCP was run), sign-in and account creation through an OpenID Connect provider, restoring accounts and settings from a Postgres backup, a custom domain, Plaid, mail delivery with a real key, and any AI feature with a real model key.

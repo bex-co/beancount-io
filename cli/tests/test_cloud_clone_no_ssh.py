@@ -70,7 +70,7 @@ def test_clone_refuses_a_ledger_without_an_ssh_address(httpx_mock: HTTPXMock, _c
         message = guidance = result.stderr
     assert "this self-hosted server serves no Git over SSH" in message
     assert f"Clone it with git over HTTPS instead: git clone {_HTTP_URL}" in guidance
-    assert "personal access token made in the dashboard under Settings → API keys" in guidance
+    assert "personal access token made in the dashboard under Settings → Personal access tokens" in guidance
     assert "ledger.read to clone, ledger.write to push" in guidance
     assert "A bex deployment cannot: bex routes no SSH." in guidance
 

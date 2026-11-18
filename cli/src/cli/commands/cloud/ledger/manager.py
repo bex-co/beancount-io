@@ -237,7 +237,7 @@ def no_ssh_clone_details(ledger: LedgerInfo) -> list[str]:
         if command
         else "Clone it with git over HTTPS instead, from its httpUrl (bea --json cloud ledger show prints it).",
         "When git asks for a password, give a personal access token made in the dashboard under Settings → "
-        "API keys: ledger.read to clone, ledger.write to push. Any username works.",
+        "Personal access tokens: ledger.read to clone, ledger.write to push. Any username works.",
         "For bea itself to clone it, the server's operator has to turn on Git over SSH (the SSH proxy). "
         "A bex deployment cannot: bex routes no SSH.",
     ]

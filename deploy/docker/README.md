@@ -147,7 +147,7 @@ Git over SSH (the SSH overlay below) for `bea` itself to clone.
 
 Git over HTTPS works by default. Users clone `https://<GIT_DOMAIN>/git/<owner>/<ledger>.git`
 with any username and a personal access token as the password, minted in the
-dashboard under Settings → API keys (`/settings/api-keys`); every user of a
+dashboard under Settings → Personal access tokens (`/settings/api-keys`); every user of a
 self-hosted stack can mint one. The account password is still accepted for
 now, with a `remote:` hint to switch, because backend-v2's
 `gitHttp.passwordAuth` ships as `warn`. It is a code setting in

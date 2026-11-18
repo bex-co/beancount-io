@@ -61,11 +61,9 @@ API and its public pages are not on the internet, and only the API and the
 ledger service reach it, by its internal address. Git over HTTP is the job of
 the API's own Git proxy (`backend-v2` `git-proxy-handler.ts`), which
 authenticates a request before it forwards it to Gitea. The clone address the
-API reports is learned from Gitea's own `ROOT_URL` (see
-[Where ledger clone addresses come from](#where-ledger-clone-addresses-come-from)),
-and a private Gitea's is a loopback one, so cloning from your own deployment
-is not wired up yet
-([ADR 029](../../docs/adrs/ADR029-deploy-self-hosting-contract.md), decision 3).
+API reports is therefore the API's own, `https://<api address>/git/<owner>/<repo>.git`
+(see [Where ledger clone addresses come from](#where-ledger-clone-addresses-come-from)),
+never Gitea's, which on a private service is a loopback one.
 There is no Gitea web page to
 open, by design: ledgers are used through the dashboard, `bea` and the API. A
 private service has no `RENDER_EXTERNAL_URL`, so Gitea keeps its default
@@ -416,7 +414,7 @@ bex serves Git over HTTPS only: it has no TCP routing (nor does Render, whose pu
 
 **Run on a live bex on 2026-11-16.** The platform set `RENDER_EXTERNAL_URL` for the API service, so the clone address was `https://<api address>/git/<owner>/<repo>.git`; cloning with a personal access token, a small push, a 20 MB push and a 200 MB push (84 seconds) worked through the platform's ingress, and the repositories survived a restart and a redeploy of Gitea. Not examined: how many proxies sit in front for the per-address rate limit (`TRUSTED_PROXY_HOPS`). If a platform gives the API no address, the clone address falls back to the one Gitea reports, which is `http://localhost:3000/<owner>/<repo>.git` here (Gitea's `ROOT_URL` stays at its default when it has no public address); set `GIT_PUBLIC_URL` yourself in that case. Decision 3 in [ADR 029](../../docs/adrs/ADR029-deploy-self-hosting-contract.md) has the reasoning.
 
-To clone over HTTPS, use any username and a personal access token as the password, minted in the dashboard under Settings → API keys (`/settings/api-keys`). The account password still works for now, with a `remote:` hint to switch: backend-v2's `gitHttp.passwordAuth` ships as `warn`. It lives in `backend-cluster/backend-v2/src/config/config.ts` as `allow`, `warn`, or `deny`, and is not an environment variable, so refusing passwords is a code change and a redeploy. A Git client that keeps offering an old password is cleared with `printf 'protocol=https\nhost=<git host>\n\n' | git credential reject`, the host's Keychain item on macOS, or its line in `~/.git-credentials`.
+To clone over HTTPS, use any username and a personal access token as the password, minted in the dashboard under Settings → Personal access tokens (`/settings/api-keys`). The account password still works for now, with a `remote:` hint to switch: backend-v2's `gitHttp.passwordAuth` ships as `warn`. It lives in `backend-cluster/backend-v2/src/config/config.ts` as `allow`, `warn`, or `deny`, and is not an environment variable, so refusing passwords is a code change and a redeploy. A Git client that keeps offering an old password is cleared with `printf 'protocol=https\nhost=<git host>\n\n' | git credential reject`, the host's Keychain item on macOS, or its line in `~/.git-credentials`.
 
 ## Things that bit us, so they don't bite you again
 
