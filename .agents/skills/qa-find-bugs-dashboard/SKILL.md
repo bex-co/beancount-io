@@ -48,6 +48,14 @@ matches local HEAD before declaring a source fix missing from production.
   not verify the native print dialog. Run visible-browser, native-dialog, or
   actual screen-reader checks only when explicitly requested. Otherwise record
   that coverage as unverified and continue the background journeys.
+- Stripe Checkout refuses every promotion code typed in an automated headless
+  browser, including valid unrestricted ones. That is Stripe's bot guard, not a
+  dashboard bug, so do not file it. Applying a code on Stripe's page needs a
+  visible browser, so run that check only on request. A fresh Chrome profile
+  started with `--remote-debugging-port` and driven over CDP (no
+  `navigator.webdriver`) accepted the code on 2026-11-15. Otherwise, check the
+  discount through Stripe's API (an invoice preview) and record the Checkout
+  page as unverified.
 - Record the browser mode and session ownership with the run evidence. Reuse
   the owned headless browser with fresh contexts as needed, and close only this
   run's contexts, browsers, and helper processes during cleanup.
