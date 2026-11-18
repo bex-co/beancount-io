@@ -82,13 +82,6 @@ describe("useCreateSubscriptionSession", () => {
   });
 
   describe("Mutation Execution", () => {
-    it("should call useMutation with correct mutation", () => {
-      renderHook(() => useCreateSubscriptionSession());
-
-      // useMutation should have been called with the CREATE_SUBSCRIPTION_SESSION mutation
-      expect(vi.mocked).toBeDefined();
-    });
-
     it("should pass variables to mutation function", async () => {
       const variables = {
         clientId: "test-client",
