@@ -26,6 +26,11 @@ import { computeTrialBalanceReconciliation } from "./lib/trial-balance-summary";
 interface TrialBalanceContentProps {
   trialBalanceData: GetLedgerTrialBalanceQuery["getLedgerTrialBalance"];
   primaryCurrency: string;
+  /**
+   * Every currency the conversion selector offers, in ledger order. Defaults
+   * to the primary alone, matching the single-currency selector of old.
+   */
+  operatingCurrencies?: readonly string[];
   ledgerDisplayName: string;
   ledgerOwner: string;
   ledgerNameParam: string;
@@ -49,6 +54,7 @@ interface TrialBalanceContentProps {
 export function TrialBalanceContent({
   trialBalanceData,
   primaryCurrency,
+  operatingCurrencies = [primaryCurrency],
   ledgerDisplayName,
   ledgerOwner,
   ledgerNameParam,
@@ -203,7 +209,7 @@ export function TrialBalanceContent({
                 <ConversionSelect
                   value={conversion}
                   onValueChange={onConversionChange}
-                  currency={primaryCurrency}
+                  currencies={operatingCurrencies}
                 />
               </div>
             </ClientOnly>

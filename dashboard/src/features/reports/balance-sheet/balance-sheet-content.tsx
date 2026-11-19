@@ -34,6 +34,11 @@ import type { FiscalYearEnd } from "../export/reporting-period";
 interface BalanceSheetContentProps {
   balanceSheetData: GetLedgerBalanceSheetQuery["getLedgerBalanceSheet"];
   primaryCurrency: string;
+  /**
+   * Every currency the conversion selector offers, in ledger order. Defaults
+   * to the primary alone, matching the single-currency selector of old.
+   */
+  operatingCurrencies?: readonly string[];
   reportingEntityName: string;
   reportingEntitySource: ReportingEntitySource;
   ledgerDisplayName: string;
@@ -72,6 +77,7 @@ interface BalanceSheetContentProps {
 export function BalanceSheetContent({
   balanceSheetData,
   primaryCurrency,
+  operatingCurrencies = [primaryCurrency],
   reportingEntityName,
   reportingEntitySource,
   ledgerDisplayName,
@@ -234,7 +240,7 @@ export function BalanceSheetContent({
                 <ConversionSelect
                   value={conversion}
                   onValueChange={onConversionChange}
-                  currency={primaryCurrency}
+                  currencies={operatingCurrencies}
                 />
               </div>
             </ClientOnly>

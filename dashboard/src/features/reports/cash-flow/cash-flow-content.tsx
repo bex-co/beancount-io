@@ -51,6 +51,11 @@ interface CashFlowContentProps {
   closingCashAccounts: CashAccountSnapshot[];
   cashAccountRows: CashAccountStatusRow[];
   primaryCurrency: string;
+  /**
+   * Every currency the conversion selector offers, in ledger order. Defaults
+   * to the primary alone, matching the single-currency selector of old.
+   */
+  operatingCurrencies?: readonly string[];
   reportingEntityName: string;
   reportingEntitySource: ReportingEntitySource;
   ledgerDisplayName: string;
@@ -110,6 +115,7 @@ export function CashFlowContent({
   closingCashAccounts,
   cashAccountRows,
   primaryCurrency,
+  operatingCurrencies = [primaryCurrency],
   reportingEntityName,
   reportingEntitySource,
   ledgerDisplayName,
@@ -267,7 +273,7 @@ export function CashFlowContent({
                 <ConversionSelect
                   value={conversion}
                   onValueChange={onConversionChange}
-                  currency={primaryCurrency}
+                  currencies={operatingCurrencies}
                 />
               </div>
             </ClientOnly>

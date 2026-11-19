@@ -43,6 +43,10 @@ vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({ ledgerName: "example" }),
 }));
 
+vi.mock("@/common/hooks/use-root-context", () => ({
+  useRootContext: () => ({ userProfile: null }),
+}));
+
 vi.mock("@/common/hooks/use-local-storage-state", () => ({
   useLocalStorageState: (_key: string, initial: unknown) => {
     const [state, setState] = useState(

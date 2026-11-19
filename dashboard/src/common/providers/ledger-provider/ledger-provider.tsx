@@ -15,6 +15,10 @@ export function LedgerProvider({
   children,
 }: LedgerProviderProps) {
   const primaryCurrency = ledgerData.options.operatingCurrency[0] ?? "USD";
+  const operatingCurrencies =
+    ledgerData.options.operatingCurrency.length > 0
+      ? [...ledgerData.options.operatingCurrency]
+      : ["USD"];
   const ledgerDisplayName = ledgerData.name;
   const ledgerDescription = ledgerData.description ?? null;
   return (
@@ -24,6 +28,7 @@ export function LedgerProvider({
         ledgerOwner,
         ledgerData,
         primaryCurrency,
+        operatingCurrencies,
         ledgerDisplayName,
         ledgerDescription,
       }}

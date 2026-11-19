@@ -59,6 +59,7 @@ export default function LedgerCashFlowPage() {
     ledgerName: ledgerDisplayName,
     ledgerData,
     primaryCurrency,
+    operatingCurrencies,
   } = useLedger();
   const ledgerFilters = useLedgerSearchParams();
   const reportingEntityTitle = (ledgerData.options.title ?? "").trim();
@@ -68,7 +69,7 @@ export default function LedgerCashFlowPage() {
   );
   const [conversion, setConversion] = useReportConversion(
     ledgerId,
-    primaryCurrency,
+    operatingCurrencies,
   );
   // Owned here, not in the content: the pending branch below unmounts it.
   // The selected chart is view preference, not scoped to the data: it
@@ -220,7 +221,7 @@ export default function LedgerCashFlowPage() {
               <ConversionSelect
                 value={conversion}
                 onValueChange={setConversion}
-                currency={primaryCurrency}
+                currencies={operatingCurrencies}
               />
             </div>
           </ClientOnly>
@@ -259,6 +260,7 @@ export default function LedgerCashFlowPage() {
       closingCashAccounts={closingCashAccounts}
       cashAccountRows={cashAccountRows}
       primaryCurrency={primaryCurrency}
+      operatingCurrencies={operatingCurrencies}
       reportingEntityName={
         reportingEntityTitle || ledgerDisplayName || ledgerName
       }

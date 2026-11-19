@@ -37,6 +37,11 @@ import type { LegendSelection } from "../lib/legend-selection";
 interface IncomeStatementContentProps {
   incomeStatementData: GetLedgerIncomeStatementQuery["getLedgerIncomeStatement"];
   primaryCurrency: string;
+  /**
+   * Every currency the conversion selector offers, in ledger order. Defaults
+   * to the primary alone, matching the single-currency selector of old.
+   */
+  operatingCurrencies?: readonly string[];
   reportingEntityName: string;
   reportingEntitySource: ReportingEntitySource;
   ledgerDisplayName: string;
@@ -76,6 +81,7 @@ interface IncomeStatementContentProps {
 export function IncomeStatementContent({
   incomeStatementData,
   primaryCurrency,
+  operatingCurrencies = [primaryCurrency],
   reportingEntityName,
   reportingEntitySource,
   ledgerDisplayName,
@@ -259,7 +265,7 @@ export function IncomeStatementContent({
                 <ConversionSelect
                   value={conversion}
                   onValueChange={onConversionChange}
-                  currency={primaryCurrency}
+                  currencies={operatingCurrencies}
                 />
               </div>
             </ClientOnly>

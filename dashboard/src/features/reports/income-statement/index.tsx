@@ -48,6 +48,7 @@ export default function LedgerIncomeStatementPage() {
     ledgerName: ledgerDisplayName,
     ledgerData,
     primaryCurrency,
+    operatingCurrencies,
   } = useLedger();
   const ledgerFilters = useLedgerSearchParams();
   const reportingEntityTitle = (ledgerData.options.title ?? "").trim();
@@ -57,7 +58,7 @@ export default function LedgerIncomeStatementPage() {
   );
   const [conversion, setConversion] = useReportConversion(
     ledgerId,
-    primaryCurrency,
+    operatingCurrencies,
   );
   // Owned here, not in the content: the pending branch below unmounts it.
   // The selected chart is view preference, not scoped to the data: it
@@ -140,6 +141,7 @@ export default function LedgerIncomeStatementPage() {
     <IncomeStatementContent
       incomeStatementData={incomeStatementData}
       primaryCurrency={primaryCurrency}
+      operatingCurrencies={operatingCurrencies}
       reportingEntityName={
         reportingEntityTitle || ledgerDisplayName || ledgerName
       }

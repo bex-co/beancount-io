@@ -24,6 +24,7 @@ import { useQueryHistory } from "../hooks/use-query-history";
 import { QueryResultCard } from "../components/query-result-card";
 import { BQL_LANGUAGE_ID, registerBqlLanguage } from "../lib/bql-language";
 import { useLedger } from "@/common/hooks/use-ledger";
+import { useRootContext } from "@/common/hooks/use-root-context";
 import { track } from "@/common/analytics";
 import {
   BQL_QUERY_SNIPPETS,
@@ -52,7 +53,10 @@ export default function LedgerQueryPage() {
     urlQuery?.trim() ? urlQuery.trim() : DEFAULT_QUERY,
   );
   const isDarkTheme = useIsDarkTheme();
-  const { history, addQuery, removeQuery } = useQueryHistory();
+  // Signed-in history is keyed by user id: one browser can serve several
+  // users in turn, and sign-out must not leak queries to the next visitor.
+  const { userProfile } = useRootContext();
+  const { history, addQuery, removeQuery } = useQueryHistory(userProfile?.id);
   // The URL's query is the one startup runs. Until it heads the history, no
   // other stored card opens itself on mount, since opening an unread card
   // runs it (w4/1098).

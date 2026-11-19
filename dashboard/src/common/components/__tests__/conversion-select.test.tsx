@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { ConversionSelect, type ConversionOption } from "../conversion-select";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ConversionSelect } from "../conversion-select";
+import type { ConversionOption } from "@/common/types/chart";
 
 describe("ConversionSelect", () => {
   const mockOnValueChange = vi.fn();
@@ -42,10 +44,53 @@ describe("ConversionSelect", () => {
   });
 
   it("should render with custom currency value", () => {
-    render(<ConversionSelect {...defaultProps} value="USD" currency="EUR" />);
+    render(
+      <ConversionSelect {...defaultProps} value="EUR" currencies={["EUR"]} />,
+    );
 
-    // When value is USD but currency is EUR, it shows the value
-    expect(screen.getByRole("combobox")).toBeInTheDocument();
+    // When value is EUR and EUR is offered, it shows the converted label
+    expect(screen.getByText(/Converted to EUR/)).toBeInTheDocument();
+  });
+
+  it("should offer every operating currency, not just the first", async () => {
+    render(
+      <ConversionSelect
+        {...defaultProps}
+        value="EUR"
+        currencies={["USD", "EUR"]}
+      />,
+    );
+
+    expect(screen.getByText(/Converted to EUR/)).toBeInTheDocument();
+    const selector = screen.getByRole("combobox");
+    selector.focus();
+    await userEvent.keyboard("{Enter}");
+    const options = within(document.body).getAllByRole("option");
+    // at_cost, at_value, units, plus one item per operating currency.
+    expect(options).toHaveLength(5);
+    expect(
+      screen.getByRole("option", { name: "Converted to USD" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Converted to EUR" }),
+    ).toBeInTheDocument();
+  });
+
+  it("should show a repeated operating currency only once", async () => {
+    render(
+      <ConversionSelect
+        {...defaultProps}
+        value="at_cost"
+        currencies={["USD", "USD"]}
+      />,
+    );
+
+    const selector = screen.getByRole("combobox");
+    selector.focus();
+    await userEvent.keyboard("{Enter}");
+    expect(
+      screen.getAllByRole("option", { name: "Converted to USD" }),
+    ).toHaveLength(1);
   });
 
   it("should have correct default className", () => {

@@ -6,6 +6,8 @@ export type LedgerProviderContextType = {
   ledgerOwner: string;
   ledgerData: GetLedgerQuery["getLedger"];
   primaryCurrency: string;
+  /** Every declared operating currency, in ledger order; never empty. */
+  operatingCurrencies: string[];
   ledgerDisplayName: string;
   ledgerDescription: string | null;
 };

@@ -41,6 +41,7 @@ export default function LedgerBalanceSheetPage() {
   const {
     ledgerName: ledgerDisplayName,
     primaryCurrency,
+    operatingCurrencies,
     ledgerData,
   } = useLedger();
   const ledgerFilters = useLedgerSearchParams();
@@ -51,7 +52,7 @@ export default function LedgerBalanceSheetPage() {
   );
   const [conversion, setConversion] = useReportConversion(
     ledgerId,
-    primaryCurrency,
+    operatingCurrencies,
   );
   // Owned here, not in the content: the pending branch below unmounts it.
   // The selected chart is view preference, not scoped to the data: it
@@ -115,6 +116,7 @@ export default function LedgerBalanceSheetPage() {
     <BalanceSheetContent
       balanceSheetData={balanceSheetData}
       primaryCurrency={primaryCurrency}
+      operatingCurrencies={operatingCurrencies}
       reportingEntityName={
         reportingEntityTitle || ledgerDisplayName || ledgerName
       }
