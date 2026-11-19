@@ -68,6 +68,7 @@ newest first.
 ## rt-logic-bugfixer
 
 ### Deferred
+
 - 2026-11-17 `dashboard/src/common/lib/editor/monaco-beancount-language.ts` vs `monaco-beancount-language-vscode.ts` — both register the global `beancount` language and themes, so the last editor opened re-highlights the others; keep the `-vscode` module only.
 
 ### Skipped
