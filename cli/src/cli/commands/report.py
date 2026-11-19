@@ -800,32 +800,48 @@ def capital_gains(
     _heading("Capital Gains", data)
     precision = _precision(data)
     rows = data["rows"]
-    if not rows:
+    unpriced = data.get("unpriced_reductions") or []
+    if not rows and not unpriced:
         typer.echo("No sales.")
         return
-    output.table(
-        ["SOLD", "ACCOUNT", "COMMODITY", "ACQUIRED", "HELD", "QTY", "PROCEEDS", "BASIS", "GAIN"],
-        [
+    if rows:
+        output.table(
+            ["SOLD", "ACCOUNT", "COMMODITY", "ACQUIRED", "HELD", "QTY", "PROCEEDS", "BASIS", "GAIN"],
             [
-                str(row["sold"]),
-                row["account"],
-                row["commodity"],
-                "" if row["acquired"] is None else str(row["acquired"]),
-                _held(row),
-                _money(row["quantity"], conversion, precision),
-                _money(row["proceeds"], conversion, precision),
-                _money(row["basis"], conversion, precision),
-                _money(row["gain"], conversion, precision),
-            ]
-            for row in rows
-        ],
-    )
+                [
+                    str(row["sold"]),
+                    row["account"],
+                    row["commodity"],
+                    "" if row["acquired"] is None else str(row["acquired"]),
+                    _held(row),
+                    _money(row["quantity"], conversion, precision),
+                    _money(row["proceeds"], conversion, precision),
+                    _money(row["basis"], conversion, precision),
+                    _money(row["gain"], conversion, precision),
+                ]
+                for row in rows
+            ],
+        )
     totals = data["totals"]
     typer.echo("")
     typer.echo(f"  {'One year or less:':<20} {_amounts(totals['one_year_or_less'], conversion, precision)}")
     typer.echo(f"  {'More than one year:':<20} {_amounts(totals['more_than_one_year'], conversion, precision)}")
     if totals["holding_unknown"]:
         typer.echo(f"  {'Holding unknown:':<20} {_amounts(totals['holding_unknown'], conversion, precision)}")
+    if unpriced:
+        typer.echo("")
+        typer.echo(f"  {_unpriced_note(unpriced)}")
+
+
+def _unpriced_note(unpriced: list[dict[str, object]]) -> str:
+    """The note naming lot reductions the report could not price (w1/308)."""
+    locations = ", ".join(str(item["location"]) for item in unpriced)
+    if len(unpriced) == 1:
+        return f"1 lot reduction without a price is not counted: {locations} (add @ PRICE to report it as a sale)"
+    return (
+        f"{len(unpriced)} lot reductions without a price are not counted: "
+        f"{locations} (add @ PRICE to report them as sales)"
+    )
 
 
 def _held(row: dict[str, Any]) -> str:

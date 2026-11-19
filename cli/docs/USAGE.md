@@ -2078,7 +2078,11 @@ less vs more than one year by calendar date, with no tax rules attached: a
 lot is more than one year only when it sold after its acquisition date's
 anniversary (29 February's is 28 February), so a lot held exactly one year
 stays short even across a leap day, and `held_days` stays the plain count;
-splits and transfers carry no price and stay out. A closed lot is whatever a
+splits and transfers carry no price and stay out. A sale written without an
+`@` price is neither, and the report never guesses its proceeds: it stays
+out of the rows and totals but is disclosed — `--json` lists it under
+`unpriced_reductions` with its file and line, and text prints a note after
+the totals naming each one. A closed lot is whatever a
 priced posting actually reduced, long or short: covering a short (or settling
 a costed foreign-currency payable) reports the opening cost as proceeds and
 the cover price as basis, and opening a short realizes nothing.

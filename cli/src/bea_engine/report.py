@@ -1341,12 +1341,32 @@ def _refuse_window_outside_time(
         )
 
 
+def _same_transaction_offsets(entry: Any, posting: Any) -> bool:
+    """Whether the transaction moves the reduced commodity back in elsewhere.
+
+    A split or an own-account transfer offsets its reduction with an
+    augmentation of the same commodity in the same transaction; a sale to
+    cash does not, and neither does a cover paid in another currency.
+    """
+    direction = posting.units.number > 0
+    for other in entry.postings:
+        if other is posting or other.units is None or not isinstance(other.units.number, Decimal):
+            continue
+        if other.units.currency != posting.units.currency:
+            continue
+        if (other.units.number > 0) != direction:
+            return True
+    return False
+
+
 def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledger_errors: list[str]) -> dict[str, Any]:
     """Realized gain/loss per reduction, from the booked cost and price.
 
     A closed lot is a reducing posting that carries both: splits and
     own-account transfers reduce without a price, so they are movements,
-    not sales. FIFO vs specific-lot is the ledger's own booking —
+    not sales — and any other priceless reduction is disclosed under
+    `unpriced_reductions`, never priced by guessing (w1/308).
+    FIFO vs specific-lot is the ledger's own booking —
     Beancount matched the lot at load, and the posting's cost names it,
     acquisition date included. Proceeds and basis stay in their own
     currencies, and totals never sum across currencies. The one-year boundary
@@ -1360,6 +1380,7 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
     matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
     start, end = bounds
     rows: list[dict[str, Any]] = []
+    unpriced: list[dict[str, Any]] = []
     # A reduction is a posting that shrinks a lot the account already holds,
     # in either direction: a sale out of a long lot, or a cover (a payment
     # settling a costed payable) into a short one. Reading only negative
@@ -1392,6 +1413,28 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
             # partial read, whose number is the parser's MISSING sentinel and
             # crashed the multiplication (w5/1043).
             if price is None or not isinstance(price.number, Decimal):
+                # Any other priceless reduction is a sale the report cannot
+                # price (w1/308): disclose it under `unpriced_reductions`,
+                # never guess its proceeds. The MISSING-sentinel price above
+                # is a partial-read artifact, not a sale, and stays silent.
+                if price is None and not _same_transaction_offsets(entry, posting):
+                    if (start is not None and entry.date < start) or (end is not None and entry.date > end):
+                        continue
+                    if matches is not None and not matches(posting.account):
+                        continue
+                    quantity = min(before.copy_abs(), units.number.copy_abs())
+                    meta = entry.meta or {}
+                    location = f"{Path(str(meta.get('filename', '?'))).name}:{meta.get('lineno', '?')}"
+                    unpriced.append(
+                        {
+                            "date": entry.date,
+                            "location": location,
+                            "account": posting.account,
+                            "commodity": units.currency,
+                            "quantity": {"number": quantity, "currency": units.currency},
+                            "cost": {"number": quantity * cost.number, "currency": cost.currency},
+                        }
+                    )
                 continue
             # A partial read keeps a posting whose price currency the parser
             # refused against its cost; its gain would subtract 100 USD from
@@ -1461,6 +1504,7 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
         "display_precision": _display_precision(filtered),
         "rows": rows,
         "totals": totals,
+        "unpriced_reductions": unpriced,
     }
 
 
