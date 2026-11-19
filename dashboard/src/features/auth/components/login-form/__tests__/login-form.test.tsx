@@ -118,4 +118,12 @@ describe("LoginForm password rule", () => {
     });
     expect(screen.queryByText(/at least/i)).not.toBeInTheDocument();
   });
+
+  it("states no length in the password field", () => {
+    render(<LoginForm {...defaultProps} />);
+    expect(screen.getByLabelText("Password")).toHaveAttribute(
+      "placeholder",
+      "Enter your password",
+    );
+  });
 });

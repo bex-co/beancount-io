@@ -143,7 +143,7 @@ const ruAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Введите пароль (мин. 6 символов)",
+    message: "Введите пароль",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

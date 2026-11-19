@@ -116,7 +116,7 @@ const jaAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "パスワードを入力してください（最低6文字）",
+    message: "パスワードを入力してください",
     description: "Placeholder for password input with requirement",
   },
   "auth.firstName": {

@@ -119,8 +119,9 @@ const enAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Enter your password (min 6 characters)",
-    description: "Placeholder for password input with requirement",
+    message: "Enter your password",
+    description:
+      "Placeholder for the sign-in password field; states no length rule, since an existing password may predate the sign-up minimum",
   },
   "auth.firstName": {
     message: "First Name",

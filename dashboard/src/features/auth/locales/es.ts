@@ -143,7 +143,7 @@ const esAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Ingrese su contraseña (mínimo 6 caracteres)",
+    message: "Ingrese su contraseña",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

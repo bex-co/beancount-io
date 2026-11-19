@@ -144,7 +144,7 @@ const frAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Saisissez votre mot de passe (minimum 6 caractères)",
+    message: "Saisissez votre mot de passe",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

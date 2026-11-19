@@ -143,7 +143,7 @@ const nlAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Voer uw wachtwoord in (min. 6 tekens)",
+    message: "Voer uw wachtwoord in",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

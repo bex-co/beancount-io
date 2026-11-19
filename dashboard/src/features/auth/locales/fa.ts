@@ -143,7 +143,7 @@ const faAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "رمز عبور خود را وارد کنید (حداقل ۶ کاراکتر)",
+    message: "رمز عبور خود را وارد کنید",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

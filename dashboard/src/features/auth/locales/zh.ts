@@ -142,7 +142,7 @@ const zhAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "输入你的密码（至少6个字符）",
+    message: "输入你的密码",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

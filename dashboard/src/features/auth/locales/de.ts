@@ -143,7 +143,7 @@ const deAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Geben Sie Ihr Passwort ein (mind. 6 Zeichen)",
+    message: "Geben Sie Ihr Passwort ein",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

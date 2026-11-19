@@ -143,7 +143,7 @@ const bgAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Въведете паролата си (мин. 6 символа)",
+    message: "Въведете паролата си",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

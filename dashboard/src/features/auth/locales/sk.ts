@@ -143,7 +143,7 @@ const skAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Zadajte heslo (min 6 znakov)",
+    message: "Zadajte heslo",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

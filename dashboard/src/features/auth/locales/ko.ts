@@ -115,7 +115,7 @@ const koAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "비밀번호를 입력하세요 (최소 6자)",
+    message: "비밀번호를 입력하세요",
     description: "Placeholder for password input with requirement",
   },
   "auth.firstName": {

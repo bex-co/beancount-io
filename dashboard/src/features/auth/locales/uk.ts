@@ -143,7 +143,7 @@ const ukAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Введіть пароль (мінімум 6 символів)",
+    message: "Введіть пароль",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

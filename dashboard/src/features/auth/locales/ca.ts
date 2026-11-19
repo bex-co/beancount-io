@@ -143,7 +143,7 @@ const caAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Introduïu la vostra contrasenya (mínim 6 caràcters)",
+    message: "Introduïu la vostra contrasenya",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {

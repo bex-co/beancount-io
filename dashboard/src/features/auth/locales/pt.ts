@@ -143,7 +143,7 @@ const ptAuth: Record<string, TranslationEntry> = {
     description: "Placeholder for new password input",
   },
   "auth.enterYourPassword": {
-    message: "Digite sua senha (mín. 6 caracteres)",
+    message: "Digite sua senha",
     description: "Placeholder for password input with requirement",
   },
   "auth.failedToResetPassword": {
