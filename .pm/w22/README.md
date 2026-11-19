@@ -13,7 +13,7 @@
 - [x] **m8** — [Self-hosted deployments: no verification page, no plan limits](./done/m8/README.md) (7 tasks) ← self-host request 2026-11-07
 - [x] **m9** — [One-click "Deploy to bex" for the self-hosted stack](./done/m9/README.md) (8 tasks) ← deploy-badge request 2026-11-07
 - [ ] **m10** — [Bank Sync: set one target account for every selected staged row](./blocked/m10/README.md) (8 tasks) ← promoted from `w22/051` 2026-11-14 (user report 2026-11-08); user routed to w22 via /pmx — **blocked:** shipped except t004, the browser check (Persian RTL layout, hover tooltip, one Apply and Submit with staged rows), which needs a Plaid sandbox bank connected to the QA ledger (the owner's yes) and a dashboard build that carries the control; t008 Closeout waits on it
-- [ ] **m12** — [`bea` signs Git in on a self-hosted stack: nothing to paste](./m12/README.md) (12 tasks) ← owner request 2026-11-18, reviewing the self-hosted launch post
+- [ ] **m12** — [`bea` signs Git in on a self-hosted stack: nothing to paste](./blocked/m12/README.md) (12 tasks) ← owner request 2026-11-18, reviewing the self-hosted launch post — **blocked:** built and shipped except the live check on a temporary bex stack (t006, needs a bex API token) and the `bea` release (t007, needs the owner's approval of the tag); t008 and t011 finish after those
 
 ## Dropped
 
