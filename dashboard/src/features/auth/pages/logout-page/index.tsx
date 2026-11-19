@@ -6,6 +6,7 @@ import { useMutation } from "@apollo/client/react";
 import { LogoutDocument } from "@/graphql/definitions";
 import { clearUserId } from "@/common/analytics";
 import { redirectToLogin } from "@/features/auth/lib/redirect-to-login";
+import { clearStoredQueryHistories } from "@/features/bql/hooks/use-query-history";
 
 /**
  * Logout page component
@@ -35,6 +36,10 @@ export default function LogoutPage() {
       // Clear analytics identity so post-logout events aren't attributed to
       // the previous user.
       clearUserId();
+
+      // The next visitor of this browser must not see this user's BQL
+      // queries (w5/1130).
+      clearStoredQueryHistories();
 
       // Show success status
       setStatus("success");

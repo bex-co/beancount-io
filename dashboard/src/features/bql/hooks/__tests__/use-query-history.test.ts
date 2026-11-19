@@ -1,6 +1,9 @@
 import { renderHook, act } from "@testing-library/react";
 import { useQueryHistory } from "../use-query-history";
 
+const LEGACY_KEY = "beancount-query-history";
+const SIGNED_OUT_KEY = "beancount-query-history:signed-out";
+
 describe("useQueryHistory", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -120,7 +123,7 @@ describe("useQueryHistory", () => {
   });
 
   it("should handle corrupted localStorage data gracefully", () => {
-    localStorage.setItem("beancount-query-history", "invalid json");
+    localStorage.setItem(SIGNED_OUT_KEY, "invalid json");
 
     const { result } = renderHook(() => useQueryHistory());
 
@@ -166,7 +169,7 @@ describe("useQueryHistory", () => {
 
     const { result } = renderHook(() => useQueryHistory());
 
-    expect(getItemSpy).toHaveBeenCalledWith("beancount-query-history");
+    expect(getItemSpy).toHaveBeenCalledWith(SIGNED_OUT_KEY);
     expect(result.current.history).toEqual(savedHistory);
 
     getItemSpy.mockRestore();
@@ -189,7 +192,7 @@ describe("useQueryHistory", () => {
 
     // Should not crash; error is logged via useLocalStorageState
     expect(consoleSpy).toHaveBeenCalledWith(
-      `Failed to write localStorage key "beancount-query-history":`,
+      `Failed to write localStorage key "${SIGNED_OUT_KEY}":`,
       expect.any(Error),
     );
 
@@ -229,7 +232,7 @@ describe("useQueryHistory", () => {
   }
 
   function readStoredHistory(): string[] {
-    return JSON.parse(localStorage.getItem("beancount-query-history") ?? "[]");
+    return JSON.parse(localStorage.getItem(SIGNED_OUT_KEY) ?? "[]");
   }
 
   it("keeps both tabs' queries when two instances write in turn", () => {
@@ -266,7 +269,7 @@ describe("useQueryHistory", () => {
     const restore = installMemoryStorage();
     try {
       localStorage.setItem(
-        "beancount-query-history",
+        SIGNED_OUT_KEY,
         JSON.stringify(["query2", "query1"]),
       );
       const tabA = renderHook(() => useQueryHistory());
@@ -351,11 +354,60 @@ describe("useQueryHistory", () => {
         ),
       ).toEqual(["SELECT 'qa-bob' AS probe"]);
       // Nobody writes the shared legacy bucket anymore.
-      expect(localStorage.getItem("beancount-query-history")).toBeNull();
+      expect(localStorage.getItem(LEGACY_KEY)).toBeNull();
       // Alice's history is intact when she returns.
       expect(
         renderHook(() => useQueryHistory("alice-id")).result.current.history,
       ).toEqual(["SELECT 'qa-alice' AS probe"]);
+    } finally {
+      restore();
+    }
+  });
+  // Before w5/1130 every user and every signed-out visitor shared one
+  // unscoped key. Its queries cannot be attributed to anyone, so neither a
+  // signed-out visitor nor the next account may inherit them.
+  it.each([
+    ["a signed-out visitor", null],
+    ["a signed-in user", "carol-id"],
+  ])("drops the unscoped legacy bucket for %s", (_case, userId) => {
+    const restore = installMemoryStorage();
+    try {
+      localStorage.setItem(
+        LEGACY_KEY,
+        JSON.stringify(["SELECT 'qa-previous-user' AS probe"]),
+      );
+
+      const { result } = renderHook(() => useQueryHistory(userId));
+
+      expect(result.current.history).toEqual([]);
+      expect(localStorage.getItem(LEGACY_KEY)).toBeNull();
+    } finally {
+      restore();
+    }
+  });
+
+  it("keeps a signed-out visitor's history apart from a signed-in user's", () => {
+    const restore = installMemoryStorage();
+    try {
+      const signedIn = renderHook(() => useQueryHistory("dave-id"));
+      act(() => {
+        signedIn.result.current.addQuery("SELECT 'qa-dave' AS probe");
+      });
+
+      const signedOut = renderHook(() => useQueryHistory(null));
+      expect(signedOut.result.current.history).toEqual([]);
+      act(() => {
+        signedOut.result.current.addQuery("SELECT 'qa-visitor' AS probe");
+      });
+
+      expect(JSON.parse(localStorage.getItem(SIGNED_OUT_KEY) ?? "[]")).toEqual([
+        "SELECT 'qa-visitor' AS probe",
+      ]);
+      expect(
+        JSON.parse(
+          localStorage.getItem("beancount-query-history.dave-id") ?? "[]",
+        ),
+      ).toEqual(["SELECT 'qa-dave' AS probe"]);
     } finally {
       restore();
     }

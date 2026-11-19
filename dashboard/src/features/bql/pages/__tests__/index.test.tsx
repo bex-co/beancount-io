@@ -269,9 +269,10 @@ describe("LedgerQueryPage", () => {
     expect(seenStorageKeys).not.toContain("beancount-query-history");
   });
 
-  it("falls back to the shared history bucket when signed out", () => {
+  it("keeps a signed-out visitor's history in its own bucket", () => {
     renderPage();
-    expect(seenStorageKeys).toContain("beancount-query-history");
+    expect(seenStorageKeys).toContain("beancount-query-history:signed-out");
+    expect(seenStorageKeys).not.toContain("beancount-query-history");
   });
 
   it("registers the Ctrl/Cmd+Enter shortcut", async () => {

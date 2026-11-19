@@ -73,7 +73,7 @@ newest first.
 ### Skipped
 
 - 2026-11-18 w5/1173 reports `ConversionSelect`/`use-report-conversion.ts` — FIXED: selector offers every operating currency and the hook validates against the full list; `ConversionOption` widened past the hard-coded `"USD"`.
-- 2026-11-18 w5/1130 BQL `use-query-history.ts` — FIXED: history keyed per signed-in user id (`beancount-query-history.<id>`), shared legacy bucket only when signed out; BQL page passes `userProfile?.id`.
+- 2026-11-18 w5/1130 BQL `use-query-history.ts` — FIXED: history keyed per signed-in user id (`beancount-query-history.<id>`), signed-out visitors get `beancount-query-history:signed-out`, the unscoped legacy bucket is dropped on mount, and logout removes every stored history; BQL page passes `userProfile?.id`.
 - 2026-11-18 `mobile/src/common/map-in-batches.ts` `size <= 0` infinite loop — sole caller passes a positive `BUDGET_PANEL_BATCH`; unreachable, defensive-only, below the bar.
 - 2026-11-18 `mobile/src/common/{account-frecency,balance-display,balance-util,ledger-conflict,ledger-owner-rename}.ts` — bucket boundaries, units/money selection, `resolveCurrencyBalance` EUR-ledger pin (w21/058), conflict whole-word match (w21/387), owner-prefix rewrite all match their documented intent; examined, no divergence.
 - 2026-11-18 `mobile/src/common/suggestion-utils.ts` deriveTwoPostingSuggestions oldest-direction tie-break — journal is newest-first (ledger-journal-service), so w21/833's purchase-wins-tie holds; examined, no divergence.

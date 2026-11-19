@@ -73,4 +73,48 @@ describe("LogoutPage", () => {
 
     warn.mockRestore();
   });
+  // w5/1130: sign-out leaves no BQL query text behind for the next visitor.
+  it("removes every stored BQL query history before replacing the document", async () => {
+    const store = new Map<string, string>([
+      [
+        "beancount-query-history.alice-id",
+        JSON.stringify(["SELECT 'qa-alice' AS probe"]),
+      ],
+      [
+        "beancount-query-history.expired-bob-id",
+        JSON.stringify(["SELECT 'qa-bob' AS probe"]),
+      ],
+      [
+        "beancount-query-history:signed-out",
+        JSON.stringify(["SELECT 'qa-visitor' AS probe"]),
+      ],
+      [
+        "beancount-query-history",
+        JSON.stringify(["SELECT 'qa-legacy' AS probe"]),
+      ],
+      ["beancount-theme", "dark"],
+    ]);
+    vi.stubGlobal("localStorage", {
+      get length() {
+        return store.size;
+      },
+      key: (index: number) => [...store.keys()][index] ?? null,
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => store.set(key, value),
+      removeItem: (key: string) => store.delete(key),
+      clear: () => store.clear(),
+    } satisfies Storage);
+
+    try {
+      render(<LogoutPage />);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1400);
+      });
+
+      expect(mockRedirectToLogin).toHaveBeenCalledOnce();
+      expect([...store.keys()]).toEqual(["beancount-theme"]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
