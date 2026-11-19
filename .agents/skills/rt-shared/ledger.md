@@ -58,8 +58,6 @@ newest first.
 
 ### Deferred
 
-- 2026-11-19 `dashboard/src/features/bql/pages/__tests__/index.test.tsx` "editor focus when Monaco finishes loading (w4/974) > leaves focus where the reader already moved it" — failed once on main (`CI (dashboard)` run 44468016285 on `ee5307632`, the Run button lost focus after the URL query auto-ran) and passed on the next three main runs with no change to the page; found by triage from Actions history, which this sandbox cannot read.
-
 ### Skipped
 
 - 2026-11-19 mobile 19 timer-adjacent suites (`token-manager`, `foreground-refresh`, `invalidate-persistence`, `ledger-write`, `entry-write`, `use-single-entry-write`, `write-during-refresh`, `map-in-batches`, `second-link`, `authorization-completion`, `chart-accessibility`, `invalidate-ledger`, `root-field-selections`, `unsaved-edits-link`, `settle-within`, `user-avatar`, `editor-recovery`, `retry-reuses-upload`, `receipt-cancel`) — 20/20 green each in isolation (incl. under full-suite load); full `test:unit` gate green twice (5227 passed, 1 skipped).
