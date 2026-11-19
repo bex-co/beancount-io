@@ -2303,13 +2303,14 @@ def _same_day_purchases_first(
     booked as a short position with an explicit cost. A row selling a
     commodity at cost that another row of the same date buys at cost into
     the same account moves after that date's other rows, keeping the slots
-    each date held; nothing else changes order.
+    each date held, and after any other moved row that buys a lot it sells;
+    nothing else changes order.
 
     A sale that already books in input order stays where it is: the ledger
-    holds the lot through its date, or an earlier row bought it — the same
-    date listed before it, or any earlier date anywhere in the input, since
-    rows book chronologically. Only a sale with no position to book
-    against moves after its same-day purchase (w5/730).
+    holds the lot through its date, or an earlier row bought it — a row of
+    the same date listed before it that stays put itself, or any earlier date
+    anywhere in the input, since rows book chronologically. Only a sale with
+    no position to book against moves after its same-day purchase (w5/730).
 
     `eager` drops that test: every sale with a same-day purchase of its lot
     moves behind it, and a purchase whose units are left to booking counts.
@@ -2363,34 +2364,62 @@ def _same_day_purchases_first(
         rows = [valid[position] for position in positions]
         bought = [lots(directive, negative=False) for _, directive in rows]
         buyers = Counter(lot for own in bought for lot in own)
-        selling = [
-            any(buyers[lot] > (lot in own) for lot in lots(directive, negative=True))
+        # The lots each row sells that another row of the date buys.
+        supplied = [
+            {lot for lot in lots(directive, negative=True) if buyers[lot] > (lot in own)}
             for (_, directive), own in zip(rows, bought, strict=True)
         ]
-        if not any(selling):
+        if not any(supplied):
             continue
         date = rows[0][1].date
-        before = set(earlier[date])
+        # Only a row that stays where it is supplies the rows listed after it:
+        # a sale judged to book against a transfer that then moves would be
+        # written ahead of it and open a short instead (w1/302).
+        staying = set(earlier[date])
         gated = []
-        for (_, directive), own, moves in zip(rows, bought, selling, strict=True):
-            gated.append(
-                moves
-                and (
-                    eager
-                    or any(
-                        buyers[lot] > (lot in own) and lot not in before and not file_holds(*lot, date)
-                        for lot in lots(directive, negative=True)
-                    )
-                )
-            )
-            before |= own
+        for own, needed in zip(bought, supplied, strict=True):
+            moves = bool(needed) and (eager or any(lot not in staying and not file_holds(*lot, date) for lot in needed))
+            gated.append(moves)
+            if not moves:
+                staying |= own
         if not any(gated):
             continue
-        rearranged = [row for row, sells in zip(rows, gated, strict=True) if not sells]
-        rearranged += [row for row, sells in zip(rows, gated, strict=True) if sells]
+        moved = [number for number, moves in enumerate(gated) if moves]
+        rearranged = [row for row, moves in zip(rows, gated, strict=True) if not moves]
+        rearranged += [rows[number] for number in _suppliers_first(moved, bought, supplied)]
         for position, row in zip(positions, rearranged, strict=True):
             ordered[position] = row
     return ordered
+
+
+def _suppliers_first(
+    moved: list[int], bought: list[set[tuple[str, str]]], supplied: list[set[tuple[str, str]]]
+) -> list[int]:
+    """`moved` with each row after the moved rows that buy a lot it sells, else in input order.
+
+    The rows that move behind a date's others still depend on each other: in a
+    newest-first custody chain the sale from B and the A→B transfer that
+    fills B both move behind the purchase into A, and the sale must follow
+    the transfer (w1/302). A cycle keeps the input order of the rows in it.
+    """
+    from collections import Counter
+
+    pending = Counter(lot for number in moved for lot in bought[number])
+    remaining = list(moved)
+    placed: list[int] = []
+    while remaining:
+        ready = next(
+            (
+                number
+                for number in remaining
+                if all(pending[lot] == (lot in bought[number]) for lot in supplied[number])
+            ),
+            remaining[0],
+        )
+        remaining.remove(ready)
+        pending.subtract(bought[ready])
+        placed.append(ready)
+    return placed
 
 
 def _only_preexisting(batch_error: protocol.LedgerError) -> bool:

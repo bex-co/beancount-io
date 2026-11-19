@@ -127,3 +127,62 @@ def test_a_genuinely_unbalanced_purchase_is_still_refused(tmp_path: Path) -> Non
 
     assert refused.returncode == 1
     assert (tmp_path / "main.bean").read_text() == SPLIT_BASE
+
+
+SALE_BASE = """option "operating_currency" "USD"
+2025-01-01 commodity HOOL
+2025-01-01 open Assets:Cash USD
+2025-01-01 open Assets:BrokerA HOOL
+2025-01-01 open Assets:BrokerB HOOL
+2025-01-01 open Income:Gains USD
+2025-01-01 open Equity:Open
+2025-01-02 * "Seed"
+  Assets:Cash  10000 USD
+  Equity:Open
+"""
+CHAIN = {
+    "Buy into A": [
+        {"account": "Assets:BrokerA", "amount": "10 HOOL {50 USD}"},
+        {"account": "Assets:Cash", "amount": "-500 USD"},
+    ],
+    "Transfer A->B": [
+        {"account": "Assets:BrokerA", "amount": "-5 HOOL {50 USD}"},
+        {"account": "Assets:BrokerB", "amount": "5 HOOL {50 USD}"},
+    ],
+    "Sell from B": [
+        {"account": "Assets:BrokerB", "amount": "-5 HOOL {50 USD} @ 60 USD"},
+        {"account": "Assets:Cash", "amount": "300 USD"},
+        {"account": "Income:Gains", "amount": "-50 USD"},
+    ],
+}
+
+
+@pytest.mark.parametrize("flags", [[], ["--partial"]], ids=["atomic", "partial"])
+@pytest.mark.parametrize(
+    "listed",
+    [
+        ["Sell from B", "Transfer A->B", "Buy into A"],
+        ["Transfer A->B", "Sell from B", "Buy into A"],
+        ["Transfer A->B", "Buy into A", "Sell from B"],
+    ],
+    ids=["newest-first", "transfer-sell-buy", "transfer-buy-sell"],
+)
+def test_an_explicit_cost_sale_follows_the_transfer_that_supplies_it(
+    tmp_path: Path, listed: list[str], flags: list[str]
+) -> None:
+    """Both orders validate, but a sale ahead of its transfer opens a short and realizes nothing (w1/302)."""
+    rows = [{"date": "2025-02-01", "narration": name, "postings": CHAIN[name]} for name in listed]
+
+    data = _add(tmp_path, SALE_BASE, rows, *flags)
+
+    assert data["written"] == 3
+    text = (tmp_path / "main.bean").read_text()
+    order = [text.index(f'"{name}"') for name in ("Buy into A", "Transfer A->B", "Sell from B")]
+    assert order == sorted(order), text
+    report = _bea(tmp_path, "report", "capital-gains")
+    assert report.returncode == 0, report.stderr
+    sales = [
+        (row["account"], row["sold"], row["quantity"]["number"], row["gain"]["number"])
+        for row in json.loads(report.stdout)["data"]["rows"]
+    ]
+    assert sales == [("Assets:BrokerB", "2025-02-01", "5", "50")]
