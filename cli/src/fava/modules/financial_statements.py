@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from copy import copy
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from decimal import Decimal
+from typing import TYPE_CHECKING, TypeGuard
 
 from beancount.core import flags
 from beancount.core.data import Directive, Transaction
+from beancount.parser.options import get_previous_accounts
 
 from .chart import ChartModule, DateAndBalance, DateAndBalanceWithAccountBalance
 from ..core.conversion import UNITS
@@ -21,30 +24,56 @@ if TYPE_CHECKING:  # pragma: no cover
     from ..util.date import Interval
 
 
-def _is_clamp_conversion(entry: Directive) -> bool:
-    """Whether an entry is the period clamp's conversion booking (w5/789)."""
-    return (
-        isinstance(entry, Transaction)
-        and entry.flag == flags.FLAG_CONVERSIONS
-        and entry.meta.get("filename") == "<conversions>"
-    )
+def _is_clamp_booking(entry: Directive, flag: str, filename: str) -> TypeGuard[Transaction]:
+    """Whether an entry is one of the period clamp's synthetic transactions.
+
+    A booking a user wrote themselves carries their own flag and file.
+    """
+    return isinstance(entry, Transaction) and entry.flag == flag and entry.meta.get("filename") == filename
 
 
-def _without_clamp_conversions(filtered: FilteredLedger) -> FilteredLedger:
-    """The filtered ledger without the time clamp's conversion bookings.
+def _period_equity_view(filtered: FilteredLedger) -> FilteredLedger:
+    """The filtered ledger as a period's equity tree reads it, without the clamp's plugs.
 
     `TimeFilter` closes the period with a conversion transaction that books
-    the cost residual into the conversions account, so a filtered balance
-    sheet showed that line where the unfiltered report folds the same amount
-    into the valuation adjustment. Presentation hierarchies leave those
-    synthetic bookings out; the residual adjustment absorbs them (w5/789).
-    A booking a user wrote themselves carries their own flag and file, so it
-    stays.
+    the cost residual into the conversions account (w5/789). It opens the
+    period with one `<summarize>` transaction per account: the account's own
+    position, then a plug on `Opening-Balances` at that position's cost. A lot
+    at cost plugs in its cost currency, but foreign cash or shares bought with
+    `@` plug in their own units, so `Opening-Balances` held them at the closing
+    rate: it read a balance the ledger never had, and the period's translation
+    never reached the adjustment (w1/296). Both bookings stay out of the equity
+    tree. Each account keeps its own opening leg, as the register does (w1/279),
+    and the residual valuation adjustment absorbs the rest, as it does without
+    `--time`. Plugs in one currency net to zero, so a single-currency ledger
+    reads the same either way.
+
+    One case keeps the plugs: pre-period earnings in a commodity no other
+    account held at the start, such as foreign cash spent abroad. Only the
+    plug nets them, so the period values without a price for that commodity
+    (w5/790).
     """
     if filtered.time is None:
         return filtered
+    previous = set(get_previous_accounts(filtered.ledger.options)[:2])
+    paired: dict[str, Decimal] = defaultdict(Decimal)
+    held: set[str] = set()
+    for entry in filtered.entries:
+        if _is_clamp_booking(entry, flags.FLAG_SUMMARIZE, "<summarize>"):
+            for posting in entry.postings[::2]:
+                if posting.account in previous:
+                    paired[posting.units.currency] += posting.units.number or 0
+                else:
+                    held.add(posting.units.currency)
+    keep_plugs = any(number and currency not in held for currency, number in paired.items())
     view = copy(filtered)
-    view.entries = [entry for entry in filtered.entries if not _is_clamp_conversion(entry)]
+    view.entries = []
+    for entry in filtered.entries:
+        if _is_clamp_booking(entry, flags.FLAG_CONVERSIONS, "<conversions>"):
+            continue
+        if not keep_plugs and _is_clamp_booking(entry, flags.FLAG_SUMMARIZE, "<summarize>"):
+            entry = entry._replace(postings=entry.postings[::2])
+        view.entries.append(entry)
     return view
 
 
@@ -141,16 +170,17 @@ class FinancialStatementsModule:
         Beancount.io change: valued at market, the five trees no longer net to
         zero (a holding's unrealized gain, a currency's translation), so their
         residual is returned as the balance sheet derives its valuation
-        adjustment. The period clamp's conversion booking folds into it, as on
-        the balance sheet, so a `-t` report splits equity as the unclamped one
-        does (w1/287). `units` keeps that booking and has no residual.
+        adjustment. The period clamp's conversion booking and opening plugs
+        fold into it, as on the balance sheet, so a `-t` report splits equity
+        as the unclamped one does (w1/287, w1/296). `units` keeps those
+        bookings and has no residual.
         """
         chart = ChartModule()
         options = filtered.ledger.options
         valued = conversion not in ("units", UNITS)
         trees = {
             name: chart.hierarchy(
-                _without_clamp_conversions(filtered) if valued and name == "equity" else filtered,
+                _period_equity_view(filtered) if valued and name == "equity" else filtered,
                 options[f"name_{name}"],
                 conversion,
             )
@@ -182,7 +212,7 @@ class FinancialStatementsModule:
         options = filtered.ledger.options
         assets = chart.hierarchy(filtered, options["name_assets"], conversion)
         liabilities = chart.hierarchy(filtered, options["name_liabilities"], conversion)
-        equity = chart.hierarchy(_without_clamp_conversions(filtered), options["name_equity"], conversion)
+        equity = chart.hierarchy(_period_equity_view(filtered), options["name_equity"], conversion)
         earnings = SimpleCounterInventory()
         for name in (options["name_income"], options["name_expenses"]):
             for currency, amount in chart.hierarchy(filtered, name, conversion).balance_children.items():

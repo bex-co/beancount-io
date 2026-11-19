@@ -2242,8 +2242,14 @@ in CSV. At cost it is the conversion a priced exchange such as
 `90 EUR @ 1.10 USD` leaves (`-90 EUR 99 USD`), so unlike the balance sheet's
 it may span commodities. As on the balance sheet, the conversion booking that
 `--time` closes a period with folds into this line instead of showing as
-`Equity:Conversions:Current`. A period therefore splits equity the same way
-with and without `--time`. The line is `null` under `units`, with `--account`
+`Equity:Conversions:Current`. The opening entries it starts the period with
+fold in too: each account opens at its own balance, so foreign cash or shares
+bought with `@` before the period leave their translation here, not in
+`Equity:Opening-Balances`. A period therefore splits equity the same way
+with and without `--time`. One exception: when earlier earnings hold a
+commodity no account held at the period start, such as foreign cash spent on
+a trip, `Opening-Balances` keeps the offsetting amount, so the period needs no
+price for that commodity. The line is `null` under `units`, with `--account`
 or `balance` terms (the residual belongs to the whole ledger), with loader
 errors, and while a balance holds a commodity the report could not value.
 On books that already net, the line is zero. Under a currency conversion,
