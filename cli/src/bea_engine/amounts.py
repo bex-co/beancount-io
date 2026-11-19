@@ -14,7 +14,12 @@ _QUOTED_OR_COMMENT = re.compile(r'"(?:[^"\\]|\\.)*"|;[^\r\n]*')
 """Quoted strings and comments, inside which an `@@` is text, not a price."""
 
 _ZERO_DIVISOR = re.compile(r"/\s*[-+]?(?:0+(?:\.0*)?|\.0+)(?![\d.]|[A-Z0-9'._-]*[A-Z])")
-_NOT_ARITHMETIC = re.compile(r'"(?:[^"\\]|\\.)*"|;[^\n]*|^[*:#!&?%][^\n]*', re.MULTILINE)
+#: Ledger text no amount arithmetic is in: strings, `;` comments, `#tag`
+#: and `^link` tokens (a hierarchical `#proj/0` holds a `/0` that is not a
+#: divisor), and the org-mode and other lines Beancount skips at a line start.
+#: Twin of `cli.amounts._NOT_ARITHMETIC`: the two execution environments
+#: cannot import each other, so keep the alternatives in step (w5/759).
+_NOT_ARITHMETIC = re.compile(r'"(?:[^"\\]|\\.)*"|;[^\n]*|#[^\s;"\']*|\^[^\s;"\']*|^[*:#!&?%][^\n]*', re.MULTILINE)
 
 
 # A slash currency is one token to Beancount's lexer, the longest match at
@@ -124,7 +129,8 @@ def zero_divisor_line(text: str) -> int | None:
 
     The frontend twin in `cli.amounts` protects batch syntax scans. This copy
     protects text already read by the engine, including piped formatter input.
-    Strings, comments and skipped org-mode lines contain no amount arithmetic.
+    Strings, comments, tags, links and skipped org-mode lines contain no
+    amount arithmetic.
     """
     code = _NOT_ARITHMETIC.sub(lambda found: re.sub(r"[^\n]", " ", found.group()), text)
     for number, line in enumerate(code.split("\n"), start=1):

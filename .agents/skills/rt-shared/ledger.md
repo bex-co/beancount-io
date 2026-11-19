@@ -42,7 +42,7 @@ newest first.
 
 ### Deferred
 
-- 2026-11-17 `cli/src/bea_engine/*` vs `cli/src/cli/*` (`csv_mapper`, `include_glob`, `amounts`, `display_width`, `ledger/text`) — mirrored on purpose across the ADR014 engine boundary and cannot be merged; they can still drift, so compare each pair and fix any difference that is not deliberate.
+- 2026-11-17 `cli/src/bea_engine/*` vs `cli/src/cli/*` (`csv_mapper`, `include_glob`, `amounts`, `display_width`, `ledger/text`) — mirrored on purpose across the ADR014 engine boundary and cannot be merged; they can still drift, so compare each pair and fix any difference that is not deliberate. 2026-11-19 update: the `amounts` pair had one non-deliberate drift — engine `zero_divisor_line` did not blank `#tag`/`^link` (w5/759 fixed the frontend twin only), fixed in this run's `fix(cli)` commit with engine-twin regression tests; remaining pairs still to compare.
 
 ### Skipped
 
