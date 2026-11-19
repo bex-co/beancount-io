@@ -10,6 +10,8 @@ Evidence baseline: four live runs of the root Blueprint on a bex workspace, all 
 
 The second run exercised everything that had changed since the first: sign-up closing once the first account exists; Gitea as a private service with ledgers cloned and pushed through the API's Git proxy; the forgot-password page on a server without mail and the operator's one-time reset link; the configuration errors for AI, uploads and `bea ask`; and the places that used to name beancount.io on a self-hosted stack. The third run covered the upgrade of an existing deployment, a backup and restore, the browser sign-in of `bea cloud login`, the mobile app's sign-in protocol, a blocked account, and a 200 MB push; see [What did the third live run find?](#what-did-the-third-live-run-find). What no run covered is listed under [What is not verified?](#what-is-not-verified).
 
+The screenshots are from the fourth run, except sign-up, sign-in and Delete Account, which were taken again on 2026-11-19 on a stack built after those pages stopped showing the hosted service's copy (`5ed926c92`, `a72752a2c`). Platform-assigned hostnames are shown as `xxxx`, and the device name and IP address on the CLI authorization page are placeholders.
+
 ## Press release
 
 *Proposed launch copy. This is not a current product announcement.*
@@ -18,11 +20,17 @@ The second run exercised everything that had changed since the first: sign-up cl
 
 *Now in beta: press Deploy to bex.co, and about half an hour later the whole Beancount.io stack runs in your own bex workspace, on its own address. Nothing to fill in, no plan limits, about 33 USD a month in hosting, and MIT-licensed software.*
 
+![The Overview page of a new bex deployment with the sample ledger: net worth, and income and expenses by month](../images/PRFAQ006-overview.webp)
+
 Beancount keeps your finances in a plain-text file you own. Until now, putting a web app and an agent endpoint on top of that file meant either using our hosted service or assembling six services yourself. From today, anyone with a bex workspace can run all of Beancount.io for themselves, in beta.
 
 Press **Deploy to bex.co** in the repository's README, choose the workspace that should own it, and approve the plan bex shows you. There is nothing to fill in: every secret is generated for your stack. About half an hour later the dashboard is live on its own address. Open it and create your account; sign-up then closes, so nobody else gets in unless you let them in through your own identity provider.
 
+![Sign-up on a new deployment, with no email step; beside the form, the page says the copy is run by its owner and the books are plain text in Git](../images/PRFAQ006-sign-up.webp)
+
 Your ledger is a Git repository on a disk in your workspace. Work on it from the dashboard, from the `bea` command line, from a coding agent through the built-in MCP server, or with plain `git` and a personal access token. Each of them is pointed at your address, never ours, and the stack sends no analytics or usage data to Beancount.io.
+
+![An MCP client pointed at the deployment's own address with a personal access token: 47 tools, and a BQL query over the ledger](../images/PRFAQ006-mcp-client.webp)
 
 Optional pieces stay off until you add them: a model key for receipt scanning, categorisation and the assistant, an S3 bucket for receipt uploads, a mail key for password reset. Until then each feature says plainly what to set, and nothing else is affected.
 
@@ -34,6 +42,8 @@ In beta, a deployment takes one sign-up, updates are started by hand, Git works 
 
 The dashboard (the address you use), the API (it also has an address of its own, see 8), the ledger service and Gitea (both private, with no public address; Gitea keeps its repositories on a 10 GB disk), one managed Postgres and one Key Value store. bex's preview shows **32.97 USD a month** at the current plans, billed to your workspace: 4.90 each for the dashboard, the API and the ledger service, 6.65 for Gitea with its 10 GB disk, 4.41 for Postgres and 7.21 for the Key Value store (preview of 2026-11-18). A model provider, a mail provider or an S3 bucket you add bills you separately. Delete the resources to stop paying; that also deletes your data (question 15). The software is MIT-licensed.
 
+![Settings → Billing on a self-hosted stack: the Enterprise plan, with AI tokens, ledgers, directives and collaborators unlimited](../images/PRFAQ006-no-plan-limits.webp)
+
 ### 2. How do I install it?
 
 1. Open the **Deploy to bex.co** button in the [README](../../README.md#self-host) or [`deploy/bex/`](../../deploy/bex/README.md).
@@ -43,9 +53,13 @@ The dashboard (the address you use), the API (it also has an address of its own,
 
 You are asked for nothing. If a service shows a failed rollout, trigger a deploy of it again from the bex dashboard; bex does not retry it.
 
+![The Self-host section of the README, with the Deploy to bex.co button](../images/PRFAQ006-deploy-button.webp)
+
 ### 3. Who can sign up?
 
 The first person to do it. The stack puts no plan limits on anyone and never proves an email address, so it takes sign-ups only until its first account exists: after that the API refuses `signUp`, and the sign-in page and `/auth/sign-up` stop offering it. Sign up as soon as the deploy is up; until you do, anyone who finds the address could be first. Deleting the only account reopens sign-up.
+
+![Sign-in once the first account exists: there is no sign-up link](../images/PRFAQ006-sign-in-closed.webp)
 
 Sign-up never reopens for a second person. The one way to add accounts is your own OpenID Connect provider: set `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`, and list who may join in `OIDC_ALLOWED_EMAILS` (an address, `@example.com`, or `@*.example.com`). A verified email on that list gets an account the first time it signs in with the provider; without the list, the provider creates no accounts. With a provider anyone can join, list addresses rather than a public domain such as `@gmail.com`. This arrived after the live runs and has not been run on bex; the steps are in [More accounts](../../deploy/bex/README.md#more-accounts-your-own-identity-provider). Anything beyond it, such as inviting someone without a provider, will follow from what users ask for.
 
@@ -60,9 +74,15 @@ bea cloud ledger list
 
 On 2026-11-16 `bea cloud login` signed in through the browser this way, and `bea cloud status` and `bea cloud ledger list` then worked with the stored credential (the third live run); on 2026-11-09 the last two also worked with a token in `BEA_TOKEN`.
 
+![The page bea cloud login opens in the browser: the client, device, system and IP address asking for access](../images/PRFAQ006-bea-authorize.webp)
+
+![bea 0.4.1 against a bex deployment: bea cloud login, bea cloud status on the Enterprise plan, and bea cloud ledger list](../images/PRFAQ006-bea-login.webp)
+
 Both variables name the dashboard: it forwards `/api-gateway/` to the API, so the CLI needs only that one address.
 
 To get a ledger's Git history, use plain `git`: every ledger's `httpUrl` is `https://<your API address>/git/<owner>/<ledger>.git`, served by the API's Git proxy (Gitea itself has no public address). Make a personal access token in the dashboard under Settings → Personal access tokens and give it as the password; any username works. `bea cloud ledger clone` clones over SSH only, and bex routes no SSH, so on a bex deployment it stops. From `bea` 0.4.1 it then explains the HTTPS route above: it prints the `git clone` command for that ledger, says to use a personal access token as the password, and says bex cannot serve SSH. (0.4.1 calls the settings page "API keys"; it is "Personal access tokens", and the next release says so.) 0.4.0 says only that the server serves no Git over SSH, and 0.3.1 stops with an unhelpful `expected str … not NoneType`.
+
+![bea cloud ledger clone on a deployment without SSH prints the HTTPS route, then git clone over HTTPS with a personal access token](../images/PRFAQ006-bea-clone.webp)
 
 ### 5. Can I use the mobile app?
 
@@ -84,6 +104,8 @@ Add variables in the bex dashboard's Environment tab; they survive Blueprint syn
 ### 7. I forgot my password and mail isn't set up. What now?
 
 With no mail provider configured, the forgot-password page tells you the server cannot send email and that the person who runs it can help. That person calls `POST /api/admin/password-reset-link` on the API's address with the `ADMIN_TOKEN` ([A user forgot their password](../../deploy/bex/README.md#a-user-forgot-their-password)) and gets a one-time link, good for an hour, on which you set a new password. On a one-person deployment you are both people.
+
+![The forgot-password page on a server with no mail provider: it says the server cannot send email and to ask the person who runs it](../images/PRFAQ006-no-mail.webp)
 
 ### 8. Is the admin API exposed?
 
@@ -123,15 +145,21 @@ Your own ledger is a text file you can read and diff.
 
 Delete their account, then sign up yourself. With the `ADMIN_TOKEN` (question 8), `GET /api/admin/recent-users` on the API's address shows the account's email, and `POST /api/admin/login-as` with that email returns a one-time link, good for five minutes, that signs you in as that account. There, Settings → Danger Zone → **Delete Account** removes it, and sign-up opens again. Run on bex on 2026-11-18.
 
+![Settings → Danger Zone → Delete Account, confirmed by typing the account's username](../images/PRFAQ006-delete-account.webp)
+
 ### 14. How do I connect a coding agent?
 
 Point the MCP client at `https://<your dashboard address>/api-gateway/mcp`. In Claude Code, `claude mcp add --transport http beancount https://<your dashboard address>/api-gateway/mcp`, then sign in from `/mcp`; the consent page it opens is your deployment's. A client that takes a header can instead send a personal access token from Settings → Personal access tokens as `Authorization: Bearer <token>`. The [MCP docs](../../backend-cluster/backend-v2/docs/mcp.md) have notes for each client.
+
+![Settings → Personal access tokens: a token with ledger.read and ledger.write](../images/PRFAQ006-access-tokens.webp)
 
 On 2026-11-18 a client with a personal access token listed the tools and ran queries on a bex deployment at this address. Signing in through OAuth, as Claude Code does, was checked as far as the discovery documents and the authorization redirect, not with a real client. A stack built before 2026-11-18 serves MCP at this address only after its dashboard is deployed again (question 9).
 
 ### 15. Can I bring my existing books, and can I leave?
 
 To bring a ledger in, create one in the dashboard, then merge your files or Git history into it and push, with a personal access token that has `ledger.write`. The ledger reads `main.bean`, so make that your main file or have it `include` yours. These are the steps of a restore ([Back up and restore](../../deploy/bex/README.md#back-up-and-restore)): a forced push is refused, so the history goes in as a merge. From the hosted beancount.io, clone each ledger there and push it here the same way; accounts, API keys, settings and uploaded receipts do not move. On 2026-11-18 a 6,600-line ledger with its own history went into a new ledger on bex this way and checked with no errors.
+
+![A ledger's Git Clone menu: the API's HTTPS address, with a personal access token as the password](../images/PRFAQ006-git-clone-menu.webp)
 
 To leave, clone each ledger (question 11): every file and its history, readable by Beancount, Fava and `bea` without us. Deleting the resources in bex deletes the disk and the database for good, so clone first.
 
