@@ -115,6 +115,11 @@ newest first.
 
 ### Skipped
 
+- 2026-11-19 cli `report.py` `_cash_flow` — 241 lines but every branch pins a past w5/10xx/11xx cash-flow fix; extracting it further is single-use helpers, below the value bar.
+- 2026-11-19 cli `ledger/adding.py` `_transaction` — 200 lines of sequential validation gates with early refusals, no interleaved concerns to split.
+- 2026-11-19 cli `ledger/updating.py` `_transactions` preview/apply branches — shared steps already live in `_plan_rows`/`_validate_plans`/`_row_payload` helpers; the two-phase shape is deliberate, not drift.
+- 2026-11-19 cli `report.py` `_display_precision`/`_typed_precision`/`_written_transaction_precision` — precision-capping logic where each branch pins a past over-precision fix (w5/093, w5/946); below the value bar.
+- 2026-11-19 cli `bea_engine/csv_mapper.py` `extract` — 165 lines but sequential stages with early `continue`s, no deep nesting or re-derived state.
 - 2026-11-18 mobile `resolve-app-link.ts` — switch dispatch over ledger paths, flat with early returns; churn is new-route fixes, not convolution.
 - 2026-11-18 mobile `account-search.ts` (`fuzzyMatch`, `filterAccounts`) — scoring is factored with the cubic-exact proof in comments; no interleaving to split.
 - 2026-11-18 mobile `number-utils.ts` / `valuation.ts` (`selectValuation`) — long but already split into named helpers by prior runs; remaining length is domain breadth, not nesting.
