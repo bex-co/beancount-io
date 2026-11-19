@@ -462,29 +462,55 @@ def _moved_closes(before: list[Any], after: list[Any]) -> list[Any]:
     ]
 
 
-def _funded_close_refusal(
-    entries: list[Any], account: str, date: datetime.date, closing: str
-) -> protocol.LedgerError | None:
-    """Why closing `account` on `date` must not go ahead unforced, when `closing` is the close requested."""
-    held, stranded = _remaining_balance(entries, account, date)
-    own = account == closing
+_FUNDED = tuple[str, datetime.date, dict[str, Decimal], list[str]]
+
+
+def _holding(account: str, date: datetime.date, held: dict[str, Decimal], stranded: list[str]) -> str:
+    """What `account` still holds at its close on `date`, as units or as lots that cancel only in units."""
     day = date.isoformat()
     if stranded:
-        subject = f"{account} still holds {', '.join(stranded)} on {day}: the units cancel but the lots do not."
+        return f"{account} still holds {', '.join(stranded)} on {day}: the units cancel but the lots do not"
+    amounts = ", ".join(f"{_plain(number)} {currency}" for currency, number in sorted(held.items()))
+    return f"{account} still holds {amounts} on {day}"
+
+
+def _funded_close_refusal(funded: list[_FUNDED], closing: str) -> protocol.LedgerError:
+    """Why closing `closing` must not go ahead unforced, naming every funded account the write closes.
+
+    Under close_tree several can be funded: one refusal names them all, so one
+    attempt shows every balance to move and what --force closes with it
+    (w1/312).
+    """
+    if len(funded) > 1:
+        day = min(date for _, date, *_ in funded).isoformat()
+        descendants = [account for account, *_ in funded if account != closing]
+        names = descendants[0] if len(descendants) == 1 else f"{', '.join(descendants[:-1])} and {descendants[-1]}"
+        moves = "Move those balances out"
+        if any(stranded for *_, stranded in funded):
+            moves += ", posting each stranded lot's cost,"
+        count = {2: "both", 3: "all three", 4: "all four", 5: "all five"}.get(len(funded), f"all {len(funded)}")
+        return protocol.LedgerError(
+            " ".join(f"{_holding(*account)}." for account in funded)
+            + f" The close_tree plugin closes {names} with {closing}. {moves} with transactions dated on or "
+            f"before {day}, then close {closing}, or pass --force to close {count} with their balances. "
+            "Nothing was written."
+        )
+    account, date, held, stranded = funded[0]
+    own = account == closing
+    day = date.isoformat()
+    subject = _holding(account, date, held, stranded)
+    if stranded:
+        subject += "."
         remedy = (
             f"Close those lots with a transaction posting each one's cost, dated on or before {day}, then "
             f"close {closing}, or pass --force to close {'it' if own else 'them'} with them."
         )
-    elif held:
-        amounts = ", ".join(f"{_plain(number)} {currency}" for currency, number in sorted(held.items()))
-        subject = f"{account} still holds {amounts} on {day}"
+    else:
         subject += "." if own else f", and the close_tree plugin closes it with {closing}."
         remedy = (
             f"Move that balance out of {account} with a transaction dated on or before {day}, then close "
             f"{'it' if own else closing}, or pass --force to close {'it' if own else 'them'} with the balance."
         )
-    else:
-        return None
     return protocol.LedgerError(f"{subject} {remedy} Nothing was written.")
 
 
@@ -513,17 +539,22 @@ def _close(
     # the close_tree plugin closes with this one are closed by the same write,
     # so they are judged the same way (w5/910), each at the date the ledger as
     # it would stand closes it: a descendant whose generated close this write
-    # moves earlier is closed by it too (w5/1062).
+    # moves earlier is closed by it too (w5/1062). One refusal names every
+    # funded account the write closes, so one attempt shows all the money to
+    # move and what --force would close with it (w1/312).
     def judge(candidate: list[Any], _staged: dict[Path, Path]) -> None:
         moved = sorted(
             (close.account, close.date)
             for close in _moved_closes(entries, candidate)
             if close.account != directive.account
         )
+        funded: list[_FUNDED] = []
         for account, date in [(directive.account, directive.date), *moved]:
-            refusal = _funded_close_refusal(candidate, account, date, directive.account)
-            if refusal is not None:
-                raise refusal
+            held, stranded = _remaining_balance(candidate, account, date)
+            if held or stranded:
+                funded.append((account, date, held, stranded))
+        if funded:
+            raise _funded_close_refusal(funded, directive.account)
 
     # An account closes once. When the ledger already declares this one's
     # close, the write fails as a duplicate close, whose hint names that close
