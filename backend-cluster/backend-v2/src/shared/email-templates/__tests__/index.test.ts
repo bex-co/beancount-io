@@ -1,37 +1,8 @@
 import * as EmailTemplates from "../index";
 
 describe("Email Templates Index", () => {
-  describe("exports", () => {
-    it("should export renderWelcomeHtml", () => {
-      expect(EmailTemplates.renderWelcomeHtml).toBeDefined();
-      expect(typeof EmailTemplates.renderWelcomeHtml).toBe("function");
-    });
-
-    it("should export renderWelcomeText", () => {
-      expect(EmailTemplates.renderWelcomeText).toBeDefined();
-      expect(typeof EmailTemplates.renderWelcomeText).toBe("function");
-    });
-
-    it("should export renderPasswordResetHtml", () => {
-      expect(EmailTemplates.renderPasswordResetHtml).toBeDefined();
-      expect(typeof EmailTemplates.renderPasswordResetHtml).toBe("function");
-    });
-
-    it("should export renderPasswordResetText", () => {
-      expect(EmailTemplates.renderPasswordResetText).toBeDefined();
-      expect(typeof EmailTemplates.renderPasswordResetText).toBe("function");
-    });
-
-    it("should export renderSignupOtpHtml", () => {
-      expect(EmailTemplates.renderSignupOtpHtml).toBeDefined();
-      expect(typeof EmailTemplates.renderSignupOtpHtml).toBe("function");
-    });
-
-    it("should export renderSignupOtpText", () => {
-      expect(EmailTemplates.renderSignupOtpText).toBeDefined();
-      expect(typeof EmailTemplates.renderSignupOtpText).toBe("function");
-    });
-  });
+  // No export-existence tests: every render function below is called, so a
+  // removed export already fails its execution test (and typechecking).
 
   describe("function execution", () => {
     it("renderWelcomeHtml should work", () => {
