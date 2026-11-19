@@ -742,6 +742,7 @@ class TestFeedCache:
             "revision": "r1",
             "next_refresh_at": now + 300,
             "last_error": None,
+            "failed_credential": None,
         }
 
     def test_second_resolve_within_window_fetches_nothing(self, feed_server: str, tmp_path: Path) -> None:
@@ -2463,6 +2464,237 @@ def test_authenticated_price_crosses_real_helper_process(tmp_path: Path, credent
     for file in (tmp_path / "cache").rglob("*"):
         if file.is_file():
             assert b"synthetic-process-credential" not in file.read_bytes()
+
+
+# --------------------------------------------------------------------------- #
+# An auth failure's retry window holds against its own credential (w1/309)
+# --------------------------------------------------------------------------- #
+
+_PROD_FEED_URL = "https://beancount.io/prices/BTC-USD"
+
+
+def _login_wall() -> Any:
+    """An opener answering every request with the deployment's signed-out redirect."""
+    from email.message import Message
+    from unittest.mock import Mock
+    from urllib.error import HTTPError
+
+    headers = Message()
+    headers["Location"] = "http://beancount.io/auth/login?next=%2Fprices%2FBTC-USD"
+    opener = Mock()
+    opener.open.side_effect = HTTPError(_PROD_FEED_URL, 302, "Found", headers, None)
+    return opener
+
+
+def _feed_opener() -> Any:
+    from io import BytesIO
+    from unittest.mock import Mock
+    from urllib.response import addinfourl
+
+    opener = Mock()
+    opener.open.return_value = addinfourl(
+        BytesIO(b"2026-09-11 price BTC 92000 USD\n"), {"ETag": '"r1"'}, _PROD_FEED_URL, 200
+    )
+    return opener
+
+
+def _use_credential(monkeypatch: pytest.MonkeyPatch, credential: str | None) -> None:
+    """Stand in for the frontend: `token:<t>` relays a bearer, `login:<state>` a login problem."""
+    monkeypatch.delenv("BEA_MANAGED_PRICE_TOKEN", raising=False)
+    monkeypatch.delenv("BEA_MANAGED_PRICE_AUTH_ERROR", raising=False)
+    if credential is None:
+        return
+    kind, value = credential.split(":", 1)
+    monkeypatch.setenv("BEA_MANAGED_PRICE_TOKEN" if kind == "token" else "BEA_MANAGED_PRICE_AUTH_ERROR", value)
+
+
+class TestAuthFailureRetryWindow:
+    @pytest.mark.parametrize(
+        ("refused", "brought"),
+        [
+            pytest.param(None, "token:synthetic-new-credential", id="signed-out-then-BEA_TOKEN"),
+            pytest.param("token:synthetic-old-credential", "token:synthetic-new-credential", id="token-replaced"),
+            pytest.param("login:expired", "token:synthetic-new-credential", id="expired-then-login"),
+        ],
+    )
+    def test_another_credential_fetches_inside_the_window(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, refused: str | None, brought: str
+    ) -> None:
+        """Following the error's own advice works at once, not a minute later."""
+        _use_credential(monkeypatch, refused)
+        failed = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=_login_wall(), now=1000)
+        assert failed.blob is None
+        assert "fetch failed (auth)" in (failed.head.last_error or "")
+        assert failed.head.next_refresh_at == 1060
+
+        _use_credential(monkeypatch, brought)
+        opener = _feed_opener()
+        resolved = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=opener, now=1001)
+
+        assert opener.open.call_count == 1
+        assert resolved.blob is not None and resolved.blob.revision == "r1"
+        assert resolved.head.last_error is None
+        assert resolved.head.failed_credential is None
+        assert resolved.head.next_refresh_at == 1001 + 300
+
+    def test_signing_out_after_a_rejected_token_fetches_again(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """A logout is a different credential too, so the error moves on to the true cause."""
+        _use_credential(monkeypatch, "token:synthetic-rejected-credential")
+        rejected = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=_login_wall(), now=1000)
+        assert "Credential rejected" in (rejected.head.last_error or "")
+
+        _use_credential(monkeypatch, None)
+        opener = _login_wall()
+        signed_out = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=opener, now=1001)
+
+        assert opener.open.call_count == 1
+        assert "Not logged in" in (signed_out.head.last_error or "")
+        assert signed_out.head.next_refresh_at == 1061
+
+    @pytest.mark.parametrize(
+        "credential",
+        [None, "token:synthetic-rejected-credential", "login:expired"],
+        ids=["signed-out", "rejected-token", "expired-login"],
+    )
+    def test_the_same_credential_waits_out_the_window(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, credential: str | None
+    ) -> None:
+        _use_credential(monkeypatch, credential)
+        failed = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=_login_wall(), now=1000)
+
+        opener = _feed_opener()
+        waiting = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=opener, now=1059)
+        after = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=_login_wall(), now=1061)
+
+        assert opener.open.call_count == 0
+        assert waiting == failed
+        assert after.head.last_error == failed.head.last_error
+        assert after.head.next_refresh_at == 1121
+
+    @pytest.mark.parametrize(("code", "reason"), [(503, "provider"), (403, "forbidden"), (404, "not-found")])
+    def test_a_failure_that_is_not_auth_waits_out_the_window_whatever_the_credential(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, code: int, reason: str
+    ) -> None:
+        """A new token cannot cure an outage or an unknown source, so it buys no early retry."""
+        from email.message import Message
+        from unittest.mock import Mock
+        from urllib.error import HTTPError
+
+        _use_credential(monkeypatch, None)
+        down = Mock()
+        down.open.side_effect = HTTPError(_PROD_FEED_URL, code, "", Message(), None)
+        failed = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=down, now=1000)
+        assert f"fetch failed ({reason})" in (failed.head.last_error or "")
+        assert failed.head.failed_credential is None
+
+        _use_credential(monkeypatch, "token:synthetic-new-credential")
+        opener = _feed_opener()
+        waiting = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=opener, now=1059)
+        retried = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=opener, now=1061)
+
+        assert waiting == failed
+        assert opener.open.call_count == 1
+        assert retried.blob is not None and retried.head.last_error is None
+
+    def test_the_head_keeps_a_fingerprint_never_the_token(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        secret = "synthetic-rejected-credential"
+        _use_credential(monkeypatch, f"token:{secret}")
+        failed = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=_login_wall(), now=1000)
+
+        head = feed_dir(_PROD_FEED_URL, tmp_path) / "head.json"
+        assert secret.encode() not in head.read_bytes()
+        assert json.loads(head.read_text())["failed_credential"] == failed.head.failed_credential
+        assert (failed.head.failed_credential or "").startswith("sha256:")
+        assert secret not in (failed.head.failed_credential or "")
+
+    def test_a_manual_refresh_keeps_the_failed_credential(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        _use_credential(monkeypatch, None)
+        failed = resolve_feed(_PROD_FEED_URL, "BTC-USD", root=tmp_path, opener=_login_wall(), now=1000)
+
+        zeroed = zero_next_refresh(_PROD_FEED_URL, tmp_path)
+
+        assert zeroed.next_refresh_at == 0.0
+        assert zeroed.last_error == failed.head.last_error
+        assert zeroed.failed_credential == failed.head.failed_credential == "none"
+
+
+def test_bea_token_set_after_a_signed_out_failure_loads_at_once(tmp_path: Path) -> None:
+    """The w1/309 repro end to end: real frontend, credential loader and engine; only HTTPS is fake."""
+    transport = tmp_path / "transport"
+    transport.mkdir()
+    hits = tmp_path / "hits.log"
+    (transport / "sitecustomize.py").write_text(
+        textwrap.dedent("""\
+        import email.message
+        import io
+        import os
+        import urllib.error
+        import urllib.request
+        import urllib.response
+        class Transport:
+            def open(self, request, **kwargs):
+                bearer = request.get_header('Authorization')
+                with open(os.environ['W1_309_HITS'], 'a') as log:
+                    log.write('bearer\\n' if bearer else 'anonymous\\n')
+                if bearer != 'Bearer synthetic-process-credential':
+                    headers = email.message.Message()
+                    headers['Location'] = 'http://beancount.io/auth/login?next=%2Fprices%2FBTC-USD'
+                    raise urllib.error.HTTPError(request.full_url, 302, 'Found', headers, None)
+                body = b'; alias: BTC-USD\\n; commodity: BTC\\n; quote: USD\\n2026-09-11 price BTC 92000 USD\\n'
+                return urllib.response.addinfourl(io.BytesIO(body), {'ETag': '"signed-in-r1"'}, request.full_url, 200)
+        urllib.request.build_opener = lambda *args, **kwargs: Transport()
+    """)
+    )
+    (tmp_path / "config").mkdir()
+    ledger = tmp_path / "main.bean"
+    ledger.write_text(
+        'option "operating_currency" "USD"\n'
+        'include "https://beancount.io/prices/BTC-USD"\n'
+        "2024-01-01 open Assets:Bank USD\n"
+        "2024-01-01 open Assets:Crypto BTC\n"
+        "2024-01-01 open Equity:Opening\n"
+        '2024-01-02 * "Fund"\n  Assets:Bank  4000 USD\n  Equity:Opening\n'
+        '2024-01-02 * "Buy"\n  Assets:Crypto  0.1 BTC {40000 USD}\n  Assets:Bank  -4000 USD\n'
+    )
+    env = _cli_env(tmp_path, "https://beancount.io")
+    env["MANAGED_PRICE_ORIGINS"] = "https://beancount.io"
+    env["PYTHONPATH"] = os.pathsep.join((str(SOURCE_ROOT), str(transport)))
+    env["W1_309_HITS"] = str(hits)
+
+    def bea(*args: str, token: str | None = None) -> subprocess.CompletedProcess[str]:
+        run_env = dict(env, BEA_TOKEN=token) if token else env
+        return subprocess.run(
+            [sys.executable, "-m", "cli.main", "--file", str(ledger), *args],
+            env=run_env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            stdin=subprocess.DEVNULL,
+        )
+
+    signed_out = bea("check")
+    assert signed_out.returncode == 1
+    assert "fetch failed (auth): Not logged in." in signed_out.stderr
+    # Signed out again inside the window: the failure is replayed, nothing is fetched.
+    assert bea("check").returncode == 1
+    assert hits.read_text().splitlines() == ["anonymous"]
+
+    signed_in = bea("check", token="synthetic-process-credential")
+    status = bea("--json", "price", "status", token="synthetic-process-credential")
+
+    assert signed_in.returncode == 0, signed_in.stderr
+    assert "Not logged in" not in signed_in.stderr
+    assert hits.read_text().splitlines() == ["anonymous", "bearer"]
+    assert status.returncode == 0, status.stderr
+    source = json.loads(status.stdout)["data"]["sources"][0]
+    assert source["revision"] == "signed-in-r1"
+    assert source["error"] is None
 
 
 @pytest.mark.parametrize(

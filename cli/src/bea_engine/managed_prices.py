@@ -289,6 +289,29 @@ def _is_login_redirect(location: str, url: str) -> bool:
 _MALFORMED_REPLY = "the price service sent a malformed HTTP response"
 
 
+def _relayed_credential(url: str) -> tuple[bool, str, str | None]:
+    """Whether `url` may carry the frontend's credential, then the bearer and login problem it carries."""
+    if not isinstance(parse_managed_price_url(url, DEFAULT_ORIGINS), AllowedUrl):
+        return False, "", None
+    return True, os.environ.get("BEA_MANAGED_PRICE_TOKEN", ""), os.environ.get("BEA_MANAGED_PRICE_AUTH_ERROR")
+
+
+def credential_fingerprint(url: str) -> str:
+    """Which credential a fetch of `url` carries, in a form safe to cache (w1/309).
+
+    A short digest of the bearer, never the bearer itself: the feed cache
+    keeps it beside an auth failure so a later run can tell whether that
+    failure was about the credential it brings. A login problem the frontend
+    reported stands for itself, and no credential at all reads `none`.
+    """
+    _, token, auth_state = _relayed_credential(url)
+    if auth_state:
+        return f"login-{auth_state}"
+    if not token:
+        return "none"
+    return "sha256:" + sha256(token.encode("utf-8", "surrogatepass")).hexdigest()[:16]
+
+
 def fetch_managed_price_feed(
     url: str,
     *,
@@ -341,9 +364,7 @@ def _exchange(
 ) -> NotModified | FetchedFeed | FetchFailed:
     """The request, the answer and the capped body, each read bounded by the socket timeout."""
     request = Request(url, method="GET", headers={"Accept": "text/plain", "User-Agent": _USER_AGENT})
-    trusted = isinstance(parse_managed_price_url(url, DEFAULT_ORIGINS), AllowedUrl)
-    token = os.environ.get("BEA_MANAGED_PRICE_TOKEN", "") if trusted else ""
-    auth_state = os.environ.get("BEA_MANAGED_PRICE_AUTH_ERROR") if trusted else None
+    trusted, token, auth_state = _relayed_credential(url)
     if auth_state or (
         token and (not token.isascii() or any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in token))
     ):

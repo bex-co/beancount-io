@@ -2448,7 +2448,10 @@ the report. Freshness does not change the separate missing-price valuation
 rules; use `--strict-prices` to reject stale sources.
 Missing/rejected login points to `bea cloud login` or `BEA_TOKEN`; 403 means
 account access is denied, 404 means an unknown source, and 5xx means the service
-is unavailable. A ledger may load at most 16 distinct managed sources: a 17th
+is unavailable. A failed fetch waits a minute before the next load tries again,
+except that a login failure is retried at once by a run with a different
+credential: a new `BEA_TOKEN`, a `bea cloud login`, or a `bea cloud logout`.
+A ledger may load at most 16 distinct managed sources: a 17th
 is not fetched and is reported as unavailable — the load error names its
 include, file and line and the limit, and `price status` lists it. `status`
 and `refresh` take no arguments; anything else after `bea price` still

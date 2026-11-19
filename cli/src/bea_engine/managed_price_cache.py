@@ -11,7 +11,7 @@ use in `ledger/write.py`):
 
 ```
 <sha256(url)[:32]>/
-  head.json              # revision, next_refresh_at, last_error
+  head.json              # revision, next_refresh_at, last_error, failed_credential
   <revision>.beancount   # exact validated bytes
   <revision>.json        # etag, sha256 of the text, fetched_at, feed summary
 ```
@@ -38,7 +38,7 @@ import stat
 import tempfile
 import time
 from contextlib import suppress
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, date, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -52,6 +52,7 @@ from bea_engine.managed_prices import (
     PricePoint,
     ValidFeed,
     check_feed_identity,
+    credential_fingerprint,
     feed_revision_id,
     fetch_managed_price_feed,
     is_feed_commodity,
@@ -88,11 +89,17 @@ SUPERSEDED_GRACE_SECONDS = REFRESH_SECONDS
 
 @dataclass(frozen=True)
 class PriceFeedHead:
-    """The mutable pointer: serving revision, next refresh, last error."""
+    """The mutable pointer: serving revision, next refresh, last error.
+
+    `failed_credential` is set only when the last refresh failed for auth:
+    the fingerprint (never the token) of the credential that fetch carried,
+    so the retry window holds against that credential and no other (w1/309).
+    """
 
     revision: str | None
     next_refresh_at: float
     last_error: str | None
+    failed_credential: str | None = None
 
 
 @dataclass(frozen=True)
@@ -154,10 +161,12 @@ def _read_text(path: Path) -> str:
 def _read_head(directory: Path) -> PriceFeedHead:
     try:
         raw = json.loads(_read_text(directory / "head.json"))
+        failed_credential = raw.get("failed_credential")
         return PriceFeedHead(
             revision=raw.get("revision"),
             next_refresh_at=float(raw.get("next_refresh_at", 0)),
             last_error=raw.get("last_error"),
+            failed_credential=failed_credential if isinstance(failed_credential, str) else None,
         )
     except (OSError, ValueError, TypeError, AttributeError):
         return PriceFeedHead(revision=None, next_refresh_at=0.0, last_error=None)
@@ -331,7 +340,7 @@ def _persist_head(directory: Path, head: PriceFeedHead) -> PriceFeedHead:
     problem = _try_write(directory / "head.json", json.dumps(asdict(head)))
     if problem is None:
         return head
-    return PriceFeedHead(revision=head.revision, next_refresh_at=head.next_refresh_at, last_error=problem)
+    return replace(head, last_error=problem)
 
 
 def latest_price_date(feed: FeedSummary) -> str | None:
@@ -396,7 +405,12 @@ def resolve_feed(
     # A refresh time further out than any window sets was written under a
     # clock running fast; honored, it suppressed refreshes for days (w5/645).
     believable = head.next_refresh_at <= at + max(refresh_seconds, retry_seconds)
-    if at < head.next_refresh_at and believable and (previous is not None or head.revision is None):
+    # An auth failure waits out its window only against the credential it
+    # refused: a run that brings another one (a new BEA_TOKEN, a login, a
+    # logout) fetches at once instead of replaying "Not logged in" (w1/309).
+    credential = credential_fingerprint(url)
+    held = head.failed_credential is None or head.failed_credential == credential
+    if at < head.next_refresh_at and believable and held and (previous is not None or head.revision is None):
         resolved = ResolvedFeed(blob=previous, head=head)
         _enforce_strict(url, resolved, at, strict, refresh_error=head.last_error)
         return resolved
@@ -416,6 +430,7 @@ def resolve_feed(
         return resolved
 
     message: str | None = None
+    failed_credential: str | None = None
     if result.kind == "fetched":
         pair = (previous.feed.commodity, previous.feed.quote) if previous else None
         validation = check_feed_identity(validate_managed_price_text(result.text), alias, pair)
@@ -470,6 +485,8 @@ def resolve_feed(
         message = "server answered 304 without a cached revision to reuse"
     else:
         message = f"fetch failed ({result.reason}): {result.message}"
+        if result.reason == "auth":
+            failed_credential = credential
         # Only the cache knows whether anything is left to serve (w5/644).
         if result.reason == "provider" and previous is not None:
             message = message.rstrip(".") + "; cached prices remain usable."
@@ -481,6 +498,7 @@ def resolve_feed(
         revision=previous.revision if previous is not None else None,
         next_refresh_at=at + retry_seconds,
         last_error=message,
+        failed_credential=failed_credential,
     )
     # The fetch failure is the error worth reporting; an unwritable cache
     # only means the next load retries sooner.
@@ -548,7 +566,6 @@ def managed_source_for_path(path: Path, root: Path | None = None) -> str | None:
 def zero_next_refresh(url: str, root: Path | None = None) -> PriceFeedHead:
     """Force the next load to re-resolve: the manual refresh of ADR 015 section 5."""
     directory = feed_dir(url, root)
-    head = _read_head(directory)
-    refreshed = PriceFeedHead(revision=head.revision, next_refresh_at=0.0, last_error=head.last_error)
+    refreshed = replace(_read_head(directory), next_refresh_at=0.0)
     write_text_atomic(directory / "head.json", json.dumps(asdict(refreshed)))
     return refreshed
