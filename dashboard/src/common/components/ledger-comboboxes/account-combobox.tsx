@@ -21,7 +21,13 @@ interface AccountComboboxProps extends ComboboxFieldProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
-  filterPrefix?: string;
+  /**
+   * The ledger's root names to list, under the names the ledger itself uses
+   * (`option "name_assets"`). An account is listed when it is a root or sits
+   * beneath one; `IncomeTax` is not under `Income`, the same rule as
+   * `isUnderAccountRoot`.
+   */
+  filterRoots?: readonly string[];
 }
 
 /**
@@ -35,7 +41,7 @@ export function AccountCombobox({
   placeholder,
   disabled = false,
   className,
-  filterPrefix,
+  filterRoots,
   ...fieldProps
 }: AccountComboboxProps) {
   const { t } = useTranslations();
@@ -51,12 +57,14 @@ export function AccountCombobox({
   });
   const { data } = query;
 
-  // Convert accounts to ComboboxOption format, optionally filtering by prefix
+  // Convert accounts to ComboboxOption format, optionally filtering by root
   const options: ComboboxOption[] = useMemo(() => {
     if (!data?.getLedgerAccounts) return [];
 
-    const accounts = filterPrefix
-      ? data.getLedgerAccounts.filter((a) => a.startsWith(filterPrefix))
+    const accounts = filterRoots
+      ? data.getLedgerAccounts.filter((a) =>
+          filterRoots.some((root) => a === root || a.startsWith(`${root}:`)),
+        )
       : data.getLedgerAccounts;
 
     return accounts.map((account) => ({
@@ -64,7 +72,7 @@ export function AccountCombobox({
       label: account,
       indent: account.split(":").length - 1, // Calculate indent based on colon separators
     }));
-  }, [data, filterPrefix]);
+  }, [data, filterRoots]);
 
   const fallback = useSuggestionsFallback(
     query,

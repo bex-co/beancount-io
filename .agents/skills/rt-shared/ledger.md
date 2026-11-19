@@ -78,6 +78,8 @@ newest first.
 
 ### Skipped
 
+- 2026-11-19 dashboard importer duplicate/amount agreement (`import-duplicates.ts` decimalKey vs `csv-validator.ts` exactDecimalValueKey vs journal postings) — both sides normalize to exact decimal value, one-for-one consumption pinned by tests; examined, no divergence.
+- 2026-11-19 mobile `account-close-dates.ts` (open/close/list/seed/name-key predicates) — read against its tests and callers (`use-account-close-dates`, budget card); boundary semantics agree with the documented w21 intents; examined, no divergence.
 - 2026-11-18 w5/1173 reports `ConversionSelect`/`use-report-conversion.ts` — FIXED: selector offers every operating currency and the hook validates against the full list; `ConversionOption` widened past the hard-coded `"USD"`.
 - 2026-11-18 w5/1130 BQL `use-query-history.ts` — FIXED: history keyed per signed-in user id (`beancount-query-history.<id>`), signed-out visitors get `beancount-query-history:signed-out`, the unscoped legacy bucket is dropped on mount, and logout removes every stored history; BQL page passes `userProfile?.id`.
 - 2026-11-18 `mobile/src/common/map-in-batches.ts` `size <= 0` infinite loop — sole caller passes a positive `BUDGET_PANEL_BATCH`; unreachable, defensive-only, below the bar.
