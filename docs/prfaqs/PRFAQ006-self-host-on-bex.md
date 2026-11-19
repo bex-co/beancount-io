@@ -1,12 +1,12 @@
 # PRFAQ006 — Self-host Beancount.io on bex in one click
 
-Status: Proposed. This is the target experience, written as if released. Nothing in it is marked planned any more: what it describes is built, and follows the decisions of [ADR 0029](../adrs/ADR029-deploy-self-hosting-contract.md). Except where a question says otherwise, it was exercised on a live bex workspace, on 2026-11-09, 2026-11-16 and 2026-11-18.
+Status: Proposed. This is the target experience, written as if released. Nothing in it is marked planned any more: what it describes is built, and follows the decisions of [ADR 0029](../adrs/ADR029-deploy-self-hosting-contract.md). Except where a question says otherwise, it was exercised on a live bex workspace, on 2026-11-09, 2026-11-16, 2026-11-18 and 2026-11-19.
 
-Date: 2026-11-09 (updated 2026-11-14, 2026-11-16 and 2026-11-18)
+Date: 2026-11-09 (updated 2026-11-14, 2026-11-16, 2026-11-18 and 2026-11-19)
 
 Scope: someone who wants their own Beancount.io, for themselves, with no server to look after. Sign-up takes one account per deployment; more come only through the operator's own identity provider (see question 3). Whether to offer anything beyond that for a team, such as invitations, is left for later and will follow from what users ask for. Docker and local development are covered by their own READMEs.
 
-Evidence baseline: four live runs of the root Blueprint on a bex workspace, all resources deleted after each. The first, on 2026-11-09, ran `main` at `bfe5fdddc`. The second, on 2026-11-16, ran `main` at `34b43768b` (the dashboard and Gitea were redeployed at `8fa681216` during it) and covered what had changed in between. The third, later the same day, started from the Blueprint as it was before Gitea became private (`ae0e4c7ba`), upgraded that stack to `main`, and ran what the second had left unverified. The fourth, on 2026-11-18, ran `main` at `0a90302df` and walked through this document as a new customer would; see [What did the fourth live run find?](#what-did-the-fourth-live-run-find).
+Evidence baseline: five live runs of the root Blueprint on a bex workspace, all resources deleted after each. The first, on 2026-11-09, ran `main` at `bfe5fdddc`. The second, on 2026-11-16, ran `main` at `34b43768b` (the dashboard and Gitea were redeployed at `8fa681216` during it) and covered what had changed in between. The third, later the same day, started from the Blueprint as it was before Gitea became private (`ae0e4c7ba`), upgraded that stack to `main`, and ran what the second had left unverified. The fourth, on 2026-11-18, ran `main` at `0a90302df` and walked through this document as a new customer would; see [What did the fourth live run find?](#what-did-the-fourth-live-run-find). The fifth, on 2026-11-19, ran `main` at `ee5307632` and ran what was still unverified: accounts through an OpenID Connect provider, an MCP client signing in through OAuth, the mobile app, and restoring the database; see [What did the fifth live run find?](#what-did-the-fifth-live-run-find).
 
 The second run exercised everything that had changed since the first: sign-up closing once the first account exists; Gitea as a private service with ledgers cloned and pushed through the API's Git proxy; the forgot-password page on a server without mail and the operator's one-time reset link; the configuration errors for AI, uploads and `bea ask`; and the places that used to name beancount.io on a self-hosted stack. The third run covered the upgrade of an existing deployment, a backup and restore, the browser sign-in of `bea cloud login`, the mobile app's sign-in protocol, a blocked account, and a 200 MB push; see [What did the third live run find?](#what-did-the-third-live-run-find). What no run covered is listed under [What is not verified?](#what-is-not-verified).
 
@@ -18,7 +18,7 @@ The screenshots are from the fourth run, except sign-up, sign-in and Delete Acco
 
 **Run your own Beancount.io from one button**
 
-*Beta. One button deploys all of Beancount.io (the web app, the API, the MCP server and your ledgers in Git) into your own bex workspace, at its own address, in about half an hour. Nothing to configure, no plan limits, about 33 USD a month in hosting, MIT-licensed.*
+*One button deploys all of Beancount.io (the web app, the API, the MCP server and your ledgers in Git) into your own bex workspace, at its own address, in about half an hour. Nothing to configure, no plan limits, about 33 USD a month in hosting, MIT-licensed.*
 
 ![The Overview page of a new bex deployment with the sample ledger: net worth, and income and expenses by month](../images/PRFAQ006-overview.webp)
 
@@ -34,7 +34,7 @@ Your ledger is a Git repository on a disk in your workspace, and every way in po
 
 Optional pieces stay off until you add them: a model key for receipt scanning, categorisation and the assistant; an S3 bucket for receipt uploads; a mail key for password reset. Until then, each of those features names the setting it needs, and nothing else is affected.
 
-This is a beta, with edges you should hear about from us first: one sign-up per deployment (more accounts come through your own OpenID Connect provider), updates you start by hand, Git over HTTPS only, and no tested restore yet for the accounts and settings kept in Postgres. bex is built by the same company as Beancount.io; the hosting runs under bex's terms, and the Beancount.io service is not part of your stack.
+A few things work their own way. A deployment takes one sign-up, and more accounts come through your own OpenID Connect provider. You choose when to update it. Git runs over HTTPS. bex backs the database up continuously, and your ledgers are Git repositories you can clone. bex is built by the same company as Beancount.io; the hosting runs under bex's terms, and the Beancount.io service is not part of your stack.
 
 To start, open the Self-host section of the [README](../../README.md#self-host). Tell us what breaks in [GitHub issues](https://github.com/bex-co/beancount-io/issues) or the [Telegram chat](https://t.me/beancount).
 
@@ -63,7 +63,7 @@ The first person to do it. The stack puts no plan limits on anyone and never pro
 
 ![Sign-in once the first account exists: there is no sign-up link](../images/PRFAQ006-sign-in-closed.webp)
 
-Sign-up never reopens for a second person. The one way to add accounts is your own OpenID Connect provider: set `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`, and list who may join in `OIDC_ALLOWED_EMAILS` (an address, `@example.com`, or `@*.example.com`). A verified email on that list gets an account the first time it signs in with the provider; without the list, the provider creates no accounts. With a provider anyone can join, list addresses rather than a public domain such as `@gmail.com`. This arrived after the live runs and has not been run on bex; the steps are in [More accounts](../../deploy/bex/README.md#more-accounts-your-own-identity-provider). Anything beyond it, such as inviting someone without a provider, will follow from what users ask for.
+Sign-up never reopens for a second person. The one way to add accounts is your own OpenID Connect provider: set `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET`, and list who may join in `OIDC_ALLOWED_EMAILS` (an address, `@example.com`, or `@*.example.com`). A verified email on that list gets an account the first time it signs in with the provider; without the list, the provider creates no accounts. With a provider anyone can join, list addresses rather than a public domain such as `@gmail.com`. Run on bex on 2026-11-19 with a test provider and sign-up closed: an address on the list got an account at its first sign-in, and an address off the list was turned away. The steps are in [More accounts](../../deploy/bex/README.md#more-accounts-your-own-identity-provider). Anything beyond it, such as inviting someone without a provider, will follow from what users ask for.
 
 ### 4. How do I use the command line?
 
@@ -88,7 +88,7 @@ To get a ledger's Git history, use plain `git`: every ledger's `httpUrl` is `htt
 
 ### 5. Can I use the mobile app?
 
-The App Store and Google Play apps keep a server-address override for self-hosted deployments, and they sign in with the custom-scheme redirect rather than a verified link ([ADR 013](../adrs/ADR013-mobile-verified-https-oauth-redirect.md)). On 2026-11-16 we replayed the app's sign-in against a bex deployment from a desktop browser, with the app's own client, redirect and scopes: discovery, the consent page, the redirect back to the app, the token exchange, a ledger read with the app's token, and a token refresh all worked, after one fix (see the third live run). Enter the dashboard's address as the server address. The app itself has not been run against a bex deployment on a phone, so its screens are unconfirmed.
+The App Store and Google Play apps keep a server-address override for self-hosted deployments, and they sign in with the custom-scheme redirect rather than a verified link ([ADR 013](../adrs/ADR013-mobile-verified-https-oauth-redirect.md)). On 2026-11-16 we replayed the app's sign-in against a bex deployment from a desktop browser, with the app's own client, redirect and scopes: discovery, the consent page, the redirect back to the app, the token exchange, a ledger read with the app's token, and a token refresh all worked, after one fix (see the third live run). Enter the dashboard's address as the server address. On 2026-11-19 the iOS app (a development build of the store version, on the iOS simulator) took the address, passed its connection test, signed in through the deployment's own pages, and showed the account's ledger. Android has not been run against a bex deployment.
 
 ### 6. What doesn't work until I configure it?
 
@@ -99,7 +99,7 @@ The App Store and Google Play apps keep a server-address override for self-hoste
 | `bea ask` | `OPENAI_API_KEY` (and optionally `OPENAI_BASE_URL`) | The call fails with a configuration error naming `OPENAI_API_KEY`. |
 | Password reset and other mail | `SEND_GRID_API_KEY` | See the next question. |
 | Bank connections | `PLAID_*` | Not tested on a self-hosted stack. |
-| Sign-in with your own identity provider, and more accounts | `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_ALLOWED_EMAILS` | Password sign-in only, and one account (question 3). Not tested on bex. |
+| Sign-in with your own identity provider, and more accounts | `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_ALLOWED_EMAILS` | Password sign-in only, and one account (question 3). Run on bex on 2026-11-19. |
 
 Add variables in the bex dashboard's Environment tab; they survive Blueprint syncs. No plan limits apply, so the assistant has no monthly token cap: add a model key after you have signed up, once sign-up has closed. Every account on the stack, including those your `OIDC_ALLOWED_EMAILS` lets in, uses that key.
 
@@ -123,7 +123,7 @@ Yes. Give the dashboard and API hosts a shared parent domain, set `AUTH_COOKIE_D
 
 ### 11. How do I back up my books?
 
-The books are Git repositories on the Gitea disk; accounts, API keys and settings are rows in the managed Postgres. Each ledger: `git clone --mirror` over HTTPS (question 4) is a complete copy of its files and history, and [Back up and restore](../../deploy/bex/README.md#back-up-and-restore) shows how to put it back on a stack. Both were run on a live bex on 2026-11-16; a restore is a merge into a new ledger of the same name, because a forced push is refused. The Postgres side is not covered: we have not documented or tried restoring accounts and settings from a dump.
+The books are Git repositories on the Gitea disk; accounts, API keys and settings are rows in the managed Postgres. Each ledger: `git clone --mirror` over HTTPS (question 4) is a complete copy of its files and history, and [Back up and restore](../../deploy/bex/README.md#back-up-and-restore) shows how to put it back on a stack. Both were run on a live bex on 2026-11-16; a restore is a merge into a new ledger of the same name, because a forced push is refused. Postgres is backed up by bex, continuously; bex restores it as it was at an earlier time into a new database, and [The database](../../deploy/bex/README.md#the-database) copies that back over the stack's own. Run on bex on 2026-11-19 (the fifth run).
 
 ### 12. Is my data private?
 
@@ -155,7 +155,7 @@ Point the MCP client at `https://<your dashboard address>/api-gateway/mcp`. In C
 
 ![Settings → Personal access tokens: a token with ledger.read and ledger.write](../images/PRFAQ006-access-tokens.webp)
 
-On 2026-11-18 a client with a personal access token listed the tools and ran queries on a bex deployment at this address. Signing in through OAuth, as Claude Code does, was checked as far as the discovery documents and the authorization redirect, not with a real client. A stack built before 2026-11-18 serves MCP at this address only after its dashboard is deployed again (question 9).
+On 2026-11-18 a client with a personal access token listed the tools and ran queries on a bex deployment at this address. On 2026-11-19 the official MCP TypeScript SDK (1.32.2, the OAuth client Claude Code builds on) signed in through OAuth on a bex deployment: it registered itself, the deployment's own pages signed the user in and asked which ledger to allow, and with the token it received, refresh token included, it listed 47 tools and ran a query. A stack built before 2026-11-18 serves MCP at this address only after its dashboard is deployed again (question 9).
 
 ### 15. Can I bring my existing books, and can I leave?
 
@@ -189,17 +189,19 @@ It is the only target with zero operator inputs, and the platform is ours to imp
 
 ### What has to be true before we say "one click" without a beta caveat?
 
+Decided by the owner on 2026-11-18: it launches as a normal release, not a beta. The outside-user quote, the answers about bex's machines, and bex retrying a failed rollout do not gate the launch. What was only unverified was run on a live bex on 2026-11-19 ([What did the fifth live run find?](#what-did-the-fifth-live-run-find)). The list below is kept as the record.
+
 - The clone URL is the deployment's own (ADR 0029, decision 3). Built, and run on bex on 2026-11-16.
 - Mail-less recovery is stated on screen and has a documented operator path (decision 4). Built, and run on bex on 2026-11-16.
 - The self-host checklist passes after every deploy (decision 6). The smoke script passes on bex with 15 checks, including closed sign-up, clone addresses on the stack, and the OAuth sign-in the mobile app uses. Mail-less recovery and the absence of beancount.io addresses are still checked by hand.
-- A documented backup and restore for the bex deployment exists. Done for ledgers on 2026-11-16 (`deploy/bex/README.md`, run on a live stack); accounts and settings in Postgres are not covered.
+- A documented backup and restore for the bex deployment exists. Done for ledgers on 2026-11-16 and for the database on 2026-11-19 (`deploy/bex/README.md`, each run on a live stack).
 - bex retries a failed rollout, or the README keeps the caveat.
 - The closing of sign-up, the private Gitea and `bea ask` with `OPENAI_API_KEY` have been run on a live bex. Done on 2026-11-16; `bea ask` only as far as its configuration error, with no model key set.
 - A `bea` release newer than 0.3.1, so the clone refusal reads as written in question 4. Done: 0.4.0 on PyPI and Homebrew on 2026-11-17 gives the refusal, and 0.4.1 adds the HTTPS explanation decided that day.
 - `bea cloud git setup` in a released `bea`, run on a live bex, so question 4 reads as written. Not done: built on 2026-11-18 (`cli/docs/USAGE.md`, "Cloud: Git sign-in on a self-hosted server"), with the release and the live run still to do.
 - At least three people outside the team deploy from the button with no help from us, and one of them is quoted, with permission, in the press release. Not done: every run so far was ours, so the press release has no quote yet.
 - Question 16 says where bex runs the stack, whether disks and database backups are encrypted at rest, and who at bex can reach them. Not done.
-- There is a way to add a second account, or the copy keeps saying one account per deployment. Decided on 2026-11-17: sign-up takes one account per deployment, and more wait for user feedback. Since 2026-11-18 an operator's OpenID Connect provider adds accounts for the emails `OIDC_ALLOWED_EMAILS` lists, and none without it (#198, #199, #209); question 3 says so, the press release does not, and no bex run has exercised it.
+- There is a way to add a second account, or the copy keeps saying one account per deployment. Decided on 2026-11-17: sign-up takes one account per deployment, and more wait for user feedback. Since 2026-11-18 an operator's OpenID Connect provider adds accounts for the emails `OIDC_ALLOWED_EMAILS` lists, and none without it (#198, #199, #209); question 3 says so, and the fifth run exercised it on bex on 2026-11-19.
 
 ### How will we know it worked?
 
@@ -266,6 +268,24 @@ It found:
 - The settings page is "Personal access tokens", but `bea` 0.4.1 and these documents said "API keys". The documents are corrected, and `bea`'s message is corrected for its next release.
 - The sign-up and sign-in pages of a self-hosted stack showed the hosted service's panel ("Join thousands of satisfied users…", "enterprise-grade security"), the Delete Account dialog said it removes your data "from our servers", and the sign-up form asked for at least 8 characters where the sign-in form said 6. Since `5ed926c92` and `a72752a2c` a self-hosted stack's panel says who runs it and that the books are plain text in Git, the dialog says only that the account and its data are deleted, and sign-in neither sets nor states a length floor. A stack built before that needs its dashboard deployed again.
 
+### What did the fifth live run find?
+
+On 2026-11-19 a new stack was created from the Blueprint (`main` at `ee5307632`) to run what the earlier runs had left unverified. It took 27 minutes to a working sign-up. Every resource, including a test identity provider and a restored database, was deleted afterwards.
+
+| Check | Result |
+| --- | --- |
+| More accounts (question 3) | A test OpenID Connect provider on bex, with `OIDC_ALLOWED_EMAILS` naming one address and sign-up closed: that address got an account and a default ledger at its first sign-in; an address off the list was told it isn't allowed to sign in here and got no account. |
+| MCP through OAuth (question 14) | The MCP TypeScript SDK 1.32.2 registered a client, signed the owner in on the deployment's pages, asked which ledger to allow, exchanged the code for a token with a refresh token, listed 47 tools and ran `runBqlQuery`. |
+| Mobile app (question 5) | The iOS app on the simulator took the dashboard's address, passed its connection test, signed in through the provider above on the deployment's own pages, and showed the account's ledger. |
+| Restoring the database (question 11) | After a token was revoked and another created, bex restored the database as it was before into a new one; with the API and Gitea suspended, `pg_dump` and `pg_restore` copied it back. The revoked token cloned a ledger and answered MCP again, the newer one was gone, and password sign-in and the ledgers were unchanged. |
+
+It found:
+
+- Not fixed, small: an MCP client that requests no scope (SDK 1.20.2 does, when the challenge names none) reaches a consent page whose **Approve access** returns `access_denied`. Current clients read the scopes from the resource metadata and are unaffected. Naming the scopes in the 401 challenge would let older clients through.
+- Not fixed: the mobile app's welcome screen offers **Sign Up** on a server whose sign-up is closed; the web pages no longer do.
+- Not fixed: the Blueprint's database is reachable from any address (bex's default allow-list is `0.0.0.0/0`), guarded by its generated password and TLS. The Key Value store is private.
+- bex, not this repository: the connection details bex shows for a restored database name a database (`app`) and a user that cannot read the restored data, its public certificate failed to issue, and its external address timed out on many connection attempts. [The database](../../deploy/bex/README.md#the-database) works around the first two; retries got through the third.
+
 ### What is not verified?
 
-The mobile app on a phone (its sign-in protocol was replayed from a desktop browser), an MCP client that signs in through OAuth (only token-authenticated MCP was run), sign-in and account creation through an OpenID Connect provider, restoring accounts and settings from a Postgres backup, a custom domain, Plaid, mail delivery with a real key, and any AI feature with a real model key.
+The Android app, and either app on a physical phone; Claude Code itself (its OAuth client was run through the SDK it builds on); a custom domain, Plaid, mail delivery with a real key, and any AI feature with a real model key.

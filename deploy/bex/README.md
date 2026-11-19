@@ -8,7 +8,7 @@ lives at the repo root as [`bex.yaml`](../../bex.yaml).
 Click, choose the workspace that should own it, review the plan, and apply.
 Nothing is created until you approve the preview.
 
-> **Beta.** The first build is slow: bex builds one image at a time, so the four
+> **Note.** The first build is slow: bex builds one image at a time, so the four
 > services can take 20–40 minutes to go live when its queue is busy. A rollout
 > that misses bex's readiness deadline is marked failed and is not retried; if a
 > service shows that, trigger a deploy of it again from the dashboard. A
@@ -229,8 +229,12 @@ Everyone it lets in shares your disk and model key, with no plan limits. With a
 provider anyone can join, such as a public one, list addresses, not a domain
 like `@gmail.com`. Linking an existing account, `OIDC_LINK_BY_EMAIL`, and why
 `OIDC_ISSUER` must not change once accounts are linked are in the
-[backend-v2 README](../../backend-cluster/backend-v2/README.md). This has not
-yet been run on a live bex.
+[backend-v2 README](../../backend-cluster/backend-v2/README.md).
+
+Run on a live bex on 2026-11-19 with a test provider and sign-up closed: an
+address on the list got an account and its default ledger at its first sign-in,
+also from the mobile app, and an address off the list was told it isn't allowed
+to sign in here and got no account.
 
 ### Upgrading a stack that is already running
 
@@ -273,13 +277,13 @@ things behave differently, and the last one needs a backup first:
 
 ## Back up and restore
 
-A ledger is a Git repository, so a clone is a complete backup of its files and
-history. Accounts, API keys and settings live in the managed Postgres; this
-procedure does not cover them, and restoring a Postgres dump into a new stack
-has not been tried.
+The ledgers are Git repositories on Gitea's disk; accounts, personal access
+tokens and settings live in the managed Postgres. Back up each its own way.
 
-Back up. Git has to sign in; on a machine with `bea`, run `bea cloud git setup`
-once ([Cloning a ledger](#cloning-a-ledger)) and Git asks for nothing:
+### Ledgers
+
+A clone is a complete backup of a ledger's files and history. Git has to sign
+in; on a machine with `bea`, run `bea cloud git setup` once ([Cloning a ledger](#cloning-a-ledger)) and Git asks for nothing:
 
 ```zsh
 git clone --mirror https://<api address>/git/<owner>/<ledger>.git
@@ -318,6 +322,46 @@ Run on a live stack on 2026-11-16, after its Gitea service and disk had been
 deleted: the restored ledger opened in the dashboard with the backup's files
 and every earlier commit, under one merge commit. `-X theirs` makes the backup
 win where the new ledger's starter file has the same name.
+
+### The database
+
+bex backs the managed Postgres up continuously and can restore it as it was at
+an earlier time. It restores into a new database and never in place, so you
+copy that database's contents back over the stack's own:
+
+1. In bex, open `beancount-backend-db`, choose **Recovery**, pick a time at
+   least ten minutes ago, and restore. bex creates a new database holding the
+   data as of that time (API: `POST /v1/postgres/<id>/recovery` with
+   `restoreTime` and `restoreName`).
+2. Suspend `beancount-api` and `beancount-gitea`, so nothing writes while you
+   restore.
+3. Copy the restored data over the stack's database with PostgreSQL 16's
+   `pg_dump` and `pg_restore` (the `postgres:16` Docker image has both). Use
+   `beancount-backend-db`'s external connection string for both ends, and for
+   the copy change only the host to the copy's (`dpg-<copy id>.db.bex.co`):
+   the copy keeps the original database's name (`backend`) and owner. Do not
+   use the connection details bex shows for the copy; they name a database
+   (`app`) and a user that cannot read the restored data.
+
+   ```zsh
+   read -rs DB_URL; export DB_URL   # beancount-backend-db's external connection string
+   COPY_URL="${DB_URL/@<database host>/@<copy host>}"
+   pg_dump -Fc --no-owner --no-privileges "$COPY_URL" > backend.dump
+   pg_restore --clean --if-exists --no-owner --no-privileges -d "$DB_URL" backend.dump
+   ```
+
+   `pg_restore` reports that it may not drop the `vector` and
+   `pg_stat_statements` extensions; those errors are expected and change
+   nothing. If the copy's certificate is still being issued, add
+   `?sslmode=verify-full` to `COPY_URL` and save the CA bex shows for the copy
+   as `~/.postgresql/root.crt`.
+4. Resume `beancount-gitea` and `beancount-api`, then delete the copy.
+
+Run on a live stack on 2026-11-19: restored to a time before one token was
+revoked and another created, the revoked token cloned a ledger and answered MCP
+again, the newer one was gone, and password sign-in and the ledgers were
+unchanged. bex's external database address timed out on many connection
+attempts that day; when it does, retry.
 
 ## A user forgot their password
 
