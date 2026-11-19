@@ -256,7 +256,7 @@ function isCutWord(token: Token): boolean {
 }
 
 /** Split a SELECT list on depth-0 commas (strings/comments/parens aware). */
-function splitTopLevel(list: string): string[] {
+export function splitTopLevel(list: string): string[] {
   const items: string[] = [];
   let depth = 0;
   let start = 0;

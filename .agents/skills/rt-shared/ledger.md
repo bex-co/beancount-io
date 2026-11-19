@@ -78,6 +78,8 @@ newest first.
 
 ### Skipped
 
+- 2026-11-19 backend-cluster/ledger `discrepancyKey` spelling agreement (parsed balance `amount` vs engine `balances.amount` cell) — live-engine probes agree on every spelling (trailing/leading zeros, exponents, signs); both sides share one producer; examined, no divergence.
+- 2026-11-19 backend-cluster/ledger balances subquery/CTE/UNION/quoted-alias/OVER-window shapes — the engine refuses each with its own error, never a silent NULL; examined, no divergence.
 - 2026-11-19 dashboard importer duplicate/amount agreement (`import-duplicates.ts` decimalKey vs `csv-validator.ts` exactDecimalValueKey vs journal postings) — both sides normalize to exact decimal value, one-for-one consumption pinned by tests; examined, no divergence.
 - 2026-11-19 mobile `account-close-dates.ts` (open/close/list/seed/name-key predicates) — read against its tests and callers (`use-account-close-dates`, budget card); boundary semantics agree with the documented w21 intents; examined, no divergence.
 - 2026-11-18 w5/1173 reports `ConversionSelect`/`use-report-conversion.ts` — FIXED: selector offers every operating currency and the hook validates against the full list; `ConversionOption` widened past the hard-coded `"USD"`.
@@ -96,8 +98,6 @@ newest first.
 - 2026-11-18 `mobile/.../select-account-journal.ts` paging (`mergeAccountJournalItems`, `hasMoreAccountJournal`) and dashboard `formatPercentageCell` number path — covered by existing tests; the query returns decimal strings so the number path is defensive-only.
 
 - 2026-11-18 mobile `detect-recurrence.ts` — 60k-case fuzz over cadences/jitter/refunds/zeros/pre-entered points plus 23 exact next-date oracles all hold; no divergence from documented intent found.
-- 2026-11-18 `cli/src/bea_engine/csv_mapper.py` vs `cli/csv_mapper.py` mirror — `_DATE_FORMATS`, `detect_delimiter`, `read_header`, `parse_delimiter/encoding`, pending-status pin all agree; `_strptime` strictness unreachable via built-in formats; `open_records` surplus refusal is extraction-only by design (preview comes from the engine); engine `infer_mapping` `_spec_column` drift is dead code with no callers.
-- 2026-11-17 `dashboard/src/features/ledger-data/holdings/utils.ts:71` `tableToCSV` — FIXED: now serializes through shared `rowsToCSV({ quoteAll: true })`; `-33.71 USD` leaves neutralized, signed plain numbers stay numeric; `holdings-amount-direction.test.tsx` expectation updated.
 
 ## rt-logic-simplifier
 
