@@ -729,9 +729,7 @@ def _balance(
         if match is not None:
             source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
             held = write.book_units(loaded, account, currency, date)
-            return _duplicate_answer(
-                [_recorded_warning(held, source)], source, write.destination(file, into)
-            )
+            return _duplicate_answer([_recorded_warning(held, source)], source, write.destination(file, into))
         book = write.book_units(loaded, account, currency, date)
         difference = number - book
         if abs(difference) <= _balance_tolerance(entries[1], options):

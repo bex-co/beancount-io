@@ -95,8 +95,7 @@ def test_matching_book_writes_assertion_alone_with_exact_wording(tmp_path: Path)
     assert data["written"] == 1
     assert data["pad"] is None
     assert data["warnings"] == [
-        "Book balance already matches 3357.83 USD; omitted the pad from "
-        "--pad-from and wrote the assertion alone."
+        "Book balance already matches 3357.83 USD; omitted the pad from --pad-from and wrote the assertion alone."
     ]
     text = root.read_text()
     assert "2024-03-10 balance Assets:Bank:Checking" in text
