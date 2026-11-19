@@ -5,6 +5,10 @@ it has no strings to join, so `bea add transaction` with no narration, a bulk
 add of the help's minimal row, a CSV row with empty payee and narration cells,
 `query -f beancount PRINT` and `list transaction --details` all left a trailing
 space that `git diff --check` reports as a whitespace error.
+
+Only that space goes: a payee or narration with a line break ends the first
+physical line inside the string, and its trailing spaces are the ledger's own
+text, which exports must keep (w1/300).
 """
 
 from __future__ import annotations
@@ -18,10 +22,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from beancount import loader
 from beancount.core.amount import Amount
 from beancount.core.data import EMPTY_SET, Posting, Transaction
+from beancount.parser.printer import EntryPrinter
 
-from bea_engine.ledger.writer import format_entry
+from bea_engine.ledger.writer import DirectivePrinter, format_entry
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = """option "operating_currency" "USD"
@@ -143,3 +149,37 @@ def test_print_and_list_details_render_a_bare_header_without_trailing_space(tmp_
     listed = _bea(tmp_path, "list", "transaction", "--details")
     assert listed.returncode == 0, listed.stderr
     assert sorted(_headers(listed.stdout)) == ["2026-01-05 *", "2026-01-06 * #x"]
+
+
+MULTILINE = [
+    _entry(narration="Dinner   \nwith friends"),
+    _entry(payee="Payee   \n", narration="x"),
+    _entry(payee="Cafe  \n  ", tags=frozenset({"x"})),
+]
+
+
+@pytest.mark.parametrize("entry", MULTILINE)
+def test_printer_keeps_spaces_before_a_line_break_inside_a_string(entry: Transaction) -> None:
+    assert DirectivePrinter()(entry) == EntryPrinter()(entry)
+
+
+def test_print_and_list_details_keep_a_multiline_header_byte_for_byte(tmp_path: Path) -> None:
+    (tmp_path / "main.bean").write_text(
+        LEDGER + '\n2026-01-05 ! "Dinner   \nwith friends"\n  Expenses:Misc  1.00 USD\n  Assets:Cash\n'
+        '\n2026-01-06 * "Payee   \n" "x"\n  Expenses:Misc  1.00 USD\n  Assets:Cash\n'
+    )
+    expected = ['2026-01-05 ! "Dinner   \nwith friends"', '2026-01-06 * "Payee   \n" "x"']
+    listed = _bea(tmp_path, "list", "transaction", "--details")
+    assert listed.returncode == 0, listed.stderr
+    printed = _bea(tmp_path, "query", "-f", "beancount", "PRINT")
+    assert printed.returncode == 0, printed.stderr
+    exported = _bea(tmp_path, "query", "-f", "beancount", "-o", "export.bean", "PRINT")
+    assert exported.returncode == 0, exported.stderr
+    for text in (listed.stdout, printed.stdout, (tmp_path / "export.bean").read_text()):
+        assert all(header in text for header in expected), text
+    entries, errors, _ = loader.load_file(str(tmp_path / "export.bean"))
+    assert not errors
+    assert [(e.payee, e.narration) for e in entries if isinstance(e, Transaction)] == [
+        (None, "Dinner   \nwith friends"),
+        ("Payee   \n", "x"),
+    ]

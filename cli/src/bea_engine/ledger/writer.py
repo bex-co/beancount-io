@@ -119,12 +119,15 @@ class DirectivePrinter(EntryPrinter):
                     for p in entry.postings
                 ]
             )
-            # Upstream writes `<date> <flag> ` with nothing after the flag when
-            # the header has no payee, narration, tag or link; `git diff --check`
-            # flags that space (w1/295). Every other header ends in a token.
-            first, separator, rest = str(super().__call__(entry)).partition("\n")  # type: ignore[no-untyped-call]
-            return first.rstrip(" ") + separator + rest
-        return str(super().__call__(entry))  # type: ignore[no-untyped-call]
+        text = str(super().__call__(entry))  # type: ignore[no-untyped-call]
+        if isinstance(entry, Transaction) and not (entry.payee or entry.narration or entry.tags or entry.links):
+            # Upstream writes `<date> <flag> ` with nothing after the flag;
+            # `git diff --check` flags that space (w1/295). Any other header
+            # is left alone: a multiline payee or narration ends its first
+            # line inside the string, with the ledger's own spaces (w1/300).
+            first, separator, rest = text.partition("\n")
+            return first.removesuffix(" ") + separator + rest
+        return text
 
     def render_posting_strings(self, posting: Any) -> tuple[str, str, str]:
         flag_account, position_str, weight_str = self._posting_strings(posting)
