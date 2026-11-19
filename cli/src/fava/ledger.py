@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from functools import cached_property
 from typing import TYPE_CHECKING
 
-from .beans.abc import Close, Commodity, Custom, Directive, Open, Query
+from .beans.abc import Close, Commodity, Custom, Directive, Open, Price, Query
 from .beans.account import account_tester, get_entry_accounts
 from .beans.prices import FavaPriceMap
 from .core.bcio_options import BcioOptionError, BcioOptions, parse_bcio_options
@@ -38,6 +38,14 @@ if TYPE_CHECKING:  # pragma: no cover
 # report period: a commodity, a `custom "fava-option"` or a stored query
 # conventionally carries a placeholder date decades before the first entry.
 PERIOD_DECLARATIONS = Open | Close | Commodity | Custom | Query
+
+
+def _is_feed_quote(entry: Directive) -> bool:
+    """Whether an entry is a managed price feed's quote, read from its cached revision."""
+    from bea_engine.ledger.reader import _in_managed_cache
+
+    filename = (entry.meta or {}).get("filename")
+    return isinstance(entry, Price) and isinstance(filename, str) and _in_managed_cache(filename)
 
 
 class FavaLedger:
@@ -210,10 +218,20 @@ class FilteredLedger:
         # interval series stopped at the filtered account's last entry while
         # the headline covered the full period.
         period_entries = ledger.all_entries if account else self.entries
+        # A managed feed's quotes value holdings; they are not the ledger's
+        # own activity. Its backfill reaches years before the first entry, so
+        # the period started at the feed's oldest quote (w1/315). The end still
+        # reaches the newest quote, and a ledger with nothing else dated falls
+        # back to the feed's dates.
         for entry in period_entries:
-            if not isinstance(entry, PERIOD_DECLARATIONS):
+            if not isinstance(entry, PERIOD_DECLARATIONS) and not _is_feed_quote(entry):
                 self._date_first = entry.date
                 break
+        else:
+            for entry in period_entries:
+                if not isinstance(entry, PERIOD_DECLARATIONS):
+                    self._date_first = entry.date
+                    break
         for entry in reversed(period_entries):
             if not isinstance(entry, PERIOD_DECLARATIONS):
                 self._date_last = entry.date + timedelta(1)

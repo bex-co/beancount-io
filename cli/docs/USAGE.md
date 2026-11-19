@@ -2418,6 +2418,16 @@ allowlisted origins and redirects never receive it. Offline reads and ordinary
 ledgers do not require login. Select supported pairs at
 [Live Prices](https://beancount.io/live-prices).
 
+A feed's quotes value holdings; they are not ledger activity. A feed backfills
+years of quotes, but a report's period still starts at the ledger's own first
+dated fact, so a ledger begun in 2026 does not report from the feed's first
+quote or open its series with empty months. The period's end still reaches the
+feed's newest quote, so a report values holdings at the latest market price
+with no new entry. Only a ledger with no dated fact of its own takes its start
+from the feed. A `bea price export` snapshot is an ordinary local file you
+keep, and its prices bound the period like any `price` you write, so the
+exported ledger's reports may start earlier.
+
 A price you declare yourself wins: a ledger-authored price for the same date
 and pair shadows the managed point, and the shadowed count is reported. Feed
 entries are read-only — a write targeting one fails naming the managed
