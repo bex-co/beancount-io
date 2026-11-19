@@ -12,12 +12,13 @@
 import type { DirectiveJson } from "@rustledger/wasm";
 import type { JournalAmountPublic } from "@/foundation/ledger-api-types";
 import {
+  costNumberToPerUnit,
   getDirectiveSourceId,
   makeAccountNameMatcher,
   type EntrySourceLocation,
 } from "@/foundation/rustledger";
 import { documentFilePath } from "@/foundation/rustledger/document-validation";
-import type { PostingCostJson, PostingJson } from "@rustledger/wasm";
+import type { PostingJson } from "@rustledger/wasm";
 
 /** beancount class name for each rustledger directive tag. */
 const DIRECTIVE_CLASS: Record<DirectiveJson["type"], string> = {
@@ -52,29 +53,6 @@ export interface LegacyJournalArgs {
   detailed?: boolean;
 }
 
-/** Per-unit cost number for a rustledger cost (mirrors `Cost.number`). */
-function costNumberToPerUnit(
-  number: PostingCostJson["number"],
-  unitsNumber: string | undefined,
-): string {
-  if (!number) return "0";
-  switch (number.kind) {
-    case "per_unit":
-      return number.value;
-    case "total": {
-      if (!unitsNumber) return number.value;
-      const units = Math.abs(parseFloat(unitsNumber));
-      if (!units) return number.value;
-      return String(parseFloat(number.value) / units);
-    }
-    case "compound":
-    case "per_unit_from_total":
-      return number.per_unit;
-    default:
-      return "0";
-  }
-}
-
 /**
  * Render a posting's `amount` position string, exactly as fava's
  * `_serialise_posting`: units + optional `{cost}` + optional ` @ price`.
@@ -86,10 +64,11 @@ function renderPositionString(posting: PostingJson): string {
   let str = `${posting.units.number} ${posting.units.currency}`;
   if (posting.cost) {
     const parts: string[] = [];
-    const perUnit = costNumberToPerUnit(
-      posting.cost.number,
-      posting.units.number,
-    );
+    // The wire leaves `number` unset on a number-less cost (a bare date or
+    // label); the shared helper takes the defined `CostNumberJson`.
+    const perUnit = posting.cost.number
+      ? costNumberToPerUnit(posting.cost.number, posting.units.number)
+      : "0";
     parts.push(`${perUnit} ${posting.cost.currency ?? ""}`.trim());
     if (posting.cost.date) parts.push(posting.cost.date);
     if (posting.cost.label) parts.push(`"${posting.cost.label}"`);

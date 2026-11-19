@@ -139,8 +139,13 @@ function serializeAmount(amount: AmountValue): JournalAmountPublic {
  * Extract the per-unit cost number from a rustledger `CostNumberJson`. Fava's
  * `JournalCost.number` is the per-unit `Cost.number` (a booked lot), so we take
  * the per-unit component for each cost-number kind.
+ *
+ * Shared with the V1 legacy journal (`ledger-legacy-journal.ts`), whose own
+ * copy divided totals with binary floats: the single implementation keeps
+ * both journal shapes on the exact-decimal per-unit every other total-cost
+ * site agrees on (`total-cost.ts`).
  */
-function costNumberToPerUnit(
+export function costNumberToPerUnit(
   number: CostNumberJson,
   unitsNumber: string | undefined,
 ): string {

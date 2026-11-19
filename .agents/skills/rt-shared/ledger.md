@@ -40,6 +40,8 @@ newest first.
 
 ### Skipped
 
+- 2026-11-19 mobile `filterLedgers` (`components/ledger-drawer/drawer-ledgers.ts` generic vs `screens/ledger-selection/discovery-store.ts`) — identical 3-line wrappers over the shared `ledgerMatchesQuery`; unifying saves nothing and would drag drawer imports into the discovery screen; below the value bar.
+- 2026-11-19 dashboard `toIntervalEnum` (`features/ledger-data/budget/budget-chart-card.tsx` vs `budget-history-table.tsx`) — 4 identical lines, `Object.values`-driven so no missed-edit hazard; below the value bar.
 - 2026-11-18 cli `bea_engine`/`cli` mirror pairs (`amounts`, `csv_mapper`, `paths`, `display_width`, `include_glob`, `ledger/text`, `protocol`/`query`/`write` vs `output`, `write` vs `launch`/`provision`, `managed_price_cache` vs `update`) — Deferred comparison done: identical or deliberately adapted (engine handles ENAMETOOLONG at point of use; descriptor/long-name helpers are frontend-only; convention vote lives only in the engine extraction copy); no non-deliberate drift.
 - 2026-11-18 cli `list.py` `_account/_currency/_type/_plain_command` factories — differ by one filter option each; parameterizing needs config objects, more complex than the copies.
 - 2026-11-18 cli `report.py` per-command bodies — Typer command definitions differing per report; shared parts already factored (`_ask`/`_emit_json`/`_csv_output`).
