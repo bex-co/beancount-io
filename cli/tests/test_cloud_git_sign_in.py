@@ -245,6 +245,78 @@ def test_undo_signed_out_still_removes_the_local_setup_and_names_the_live_token(
     assert not helper.state_path().exists()
 
 
+_USERS_OWN = ["", "store --file ~/.git-example-store"]
+"""The user's own helpers for the address before `setup`: Git's documented reset, then their helper."""
+
+
+def _values() -> list[str]:
+    """Every helper value the global config lists for the address, in order; an empty one kept apart."""
+    return _git("--null", "--get-all", _KEY).split("\0")[:-1]
+
+
+def _seed(*values: str) -> None:
+    for value in values:
+        _git("--add", _KEY, value)
+
+
+def test_undo_leaves_the_users_own_reset_and_helper_for_the_address(httpx_mock: HTTPXMock, signed_in: None) -> None:
+    """w1/310: `--undo` used to delete every empty value, the user's reset included."""
+    _seed(*_USERS_OWN)
+    _self_hosted(httpx_mock)
+    assert _setup().exit_code == 0
+    assert _values()[:2] == _USERS_OWN and len(_values()) == 4
+    _revoke(httpx_mock)
+
+    result = _setup("--undo")
+
+    assert result.exit_code == 0, result.output
+    # The machine-wide `store` stays reset for this address, as the user had it.
+    assert _values() == _USERS_OWN
+
+
+def test_setup_from_another_bea_path_replaces_only_its_own_pair(monkeypatch: pytest.MonkeyPatch) -> None:
+    _seed(*_USERS_OWN)
+    monkeypatch.setattr(helper, "helper_command", lambda: "!/old/bin/bea cloud git credential")
+    assert helper.install_helper(_GIT)
+    monkeypatch.setattr(helper, "helper_command", lambda: "!/new/bin/bea cloud git credential")
+
+    assert helper.install_helper(_GIT)
+
+    assert _values() == [*_USERS_OWN, "", "!/new/bin/bea cloud git credential"]
+
+
+_BEA_X = "!/x/bea cloud git credential"
+_BEA_Y = "!/y/bea cloud git credential"
+
+
+@pytest.mark.parametrize(
+    ("configured", "kept"),
+    [
+        (["", "", _BEA_X], [""]),
+        (["store", _BEA_X], ["store"]),
+        (["", "store", "", _BEA_X, "", "osxkeychain"], ["", "store", "", "osxkeychain"]),
+        (["", "", _BEA_X, "", _BEA_Y], [""]),
+        (["", "", _BEA_X, _BEA_Y], [""]),
+    ],
+    ids=["user-reset-before-the-pair", "bea-without-its-reset", "user-values-after-the-pair", "two-pairs", "two-paths"],
+)
+def test_undo_takes_out_each_bea_value_and_the_reset_just_before_it(configured: list[str], kept: list[str]) -> None:
+    _seed(*configured)
+
+    assert helper.remove_helper(_GIT)
+
+    assert _values() == kept
+
+
+def test_undo_without_a_bea_value_changes_nothing(git_config: Path) -> None:
+    _seed(*_USERS_OWN)
+    before = git_config.read_text()
+
+    assert not helper.remove_helper(_GIT)
+
+    assert git_config.read_text() == before
+
+
 @pytest.mark.parametrize("json_output", [False, True], ids=["human", "json"])
 def test_setup_refuses_on_the_managed_service_and_points_at_ssh_keys(
     httpx_mock: HTTPXMock, signed_in: None, git_config: Path, json_output: bool

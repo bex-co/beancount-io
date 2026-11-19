@@ -2724,7 +2724,9 @@ What it does, and the decisions behind it (w22/m12):
   Manager entry cannot answer first with something stale, and
   `!<path to bea> cloud git credential`. The path is the `bea` you ran, so Git
   finds it whatever its own `PATH` holds. No other host's configuration
-  changes. Running `setup` again changes nothing and mints nothing.
+  changes, and helper values of your own for that address, an empty reset
+  included, stay where they are. Running `setup` again changes nothing and
+  mints nothing; run from another `bea` path, it replaces only its own pair.
 - **The managed service is refused.** There Git signs in with an SSH key
   (Settings → SSH keys) and `bea cloud ledger clone` clones over SSH; `setup`
   exits **1**, writes nothing, and says so. A server too old to say whether it

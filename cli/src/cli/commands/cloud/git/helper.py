@@ -240,15 +240,31 @@ def install_helper(git_url: str) -> bool:
     return True
 
 
+def _written_by_setup(configured: list[str], index: int) -> bool:
+    """Whether `configured[index]` is half of a pair `install_helper` wrote: bea, or the empty value just before it."""
+    value = configured[index]
+    if _OURS.search(value):
+        return True
+    return value == "" and index + 1 < len(configured) and bool(_OURS.search(configured[index + 1]))
+
+
 def remove_helper(git_url: str, configured: list[str] | None = None) -> bool:
-    """Take out exactly what `install_helper` wrote for `git_url`. False when nothing was there."""
+    """Take out exactly what `install_helper` wrote for `git_url`. False when nothing was there.
+
+    The user's own values stay, in order, including an empty reset of their
+    own: removing every empty value would let a helper configured for every
+    host answer for this address again (w1/310). `git config` can only unset
+    by value, not by position, so when anything is ours the key is rewritten.
+    """
     if configured is None:
         configured = configured_helpers(git_url)
-    if not any(_OURS.search(value) for value in configured):
+    kept = [value for index, value in enumerate(configured) if not _written_by_setup(configured, index)]
+    if len(kept) == len(configured):
         return False
-    # Exit 5 is "nothing matched", which a hand-edited section can produce.
-    _git_config("--unset-all", _config_key(git_url), _OURS.pattern, accept=(0, 5))
-    _git_config("--unset-all", _config_key(git_url), "^$", accept=(0, 5))
+    # Exit 5 is "no such key", which a concurrent edit can produce.
+    _git_config("--unset-all", _config_key(git_url), accept=(0, 5))
+    for value in kept:
+        _git_config("--add", _config_key(git_url), value)
     return True
 
 
