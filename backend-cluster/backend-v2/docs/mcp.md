@@ -1349,6 +1349,19 @@ snake-case field names on REST/MCP. GraphQL exposes camel-case equivalents, incl
 `account_balances` → `accountBalances`. Currency and account dictionary keys,
 and decimal strings inside them, are unchanged.
 
+The trial balance (`beancount://{owner}/{name}/trial-balance`, REST
+`GET /api-gateway/v1/ledgers/{owner}/{name}/trial-balance`, GraphQL
+`getLedgerTrialBalance`) returns the five account trees and
+`valuation_adjustment` (GraphQL `valuationAdjustment`), the line that makes
+valued roots net (w1/291). Every balance map the ledger service returns drops
+a currency that nets to zero, so on books that already net the line is `{}`
+under every conversion; it is `null` under `units` and `units_by_cost`.
+`bea report trial-balance --json` spells the same zero `{"USD": "0"}` under a
+currency conversion, the operating-currency default included, as it spells
+its other headline totals, and `{}` under `at_cost` and `at_value`. The two
+spellings are deliberate and mean the same zero: read a missing currency as
+zero instead of comparing keys (w31/032).
+
 Collaborator reads also require `ledger.admin` and current administrative
 access, even though they do not modify data:
 

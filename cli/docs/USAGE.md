@@ -2246,6 +2246,14 @@ it may span commodities. As on the balance sheet, the conversion booking that
 with and without `--time`. The line is `null` under `units`, with `--account`
 or `balance` terms (the residual belongs to the whole ledger), with loader
 errors, and while a balance holds a commodity the report could not value.
+On books that already net, the line is zero. Under a currency conversion,
+the operating-currency default included, JSON spells it `{"USD": "0"}`, as
+it spells the balance sheet's adjustment and the other headline totals.
+Under `at_cost` and `at_value` it is `{}`. The hosted trial balance (REST,
+GraphQL and MCP) drops a currency that nets to zero from every balance map,
+so it reads `{}` under every conversion. The two spellings are deliberate
+and mean the same zero: read a missing currency as zero instead of comparing
+keys.
 Only `units` can leave a residual: lots at cost and foreign cash do not net in
 their own units, so there the equity tree keeps the conversions row and no
 line is derived.
