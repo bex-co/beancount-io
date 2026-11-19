@@ -76,6 +76,17 @@ def test_tagged_file_formats(tmp_path: Path) -> None:
     assert "#proj/0 ^inv/0" in ledger.read_text()
 
 
+def test_tagged_file_renders_to_stdout(tmp_path: Path) -> None:
+    ledger = tmp_path / "tag.bean"
+    ledger.write_text(
+        'option "operating_currency" "USD"\n2020-01-01 open Assets:Cash USD\n2020-01-01 open Income:Gains\n\n' + TAG
+    )
+    proc = _bea(tmp_path, "format", str(ledger))
+    assert proc.returncode == 0, proc.stderr
+    assert "Division by zero" not in proc.stdout + proc.stderr
+    assert "#proj/0 ^inv/0" in proc.stdout
+
+
 def test_parenthesised_zero_names_the_crashing_file(tmp_path: Path) -> None:
     books = tmp_path / "books"
     books.mkdir()
