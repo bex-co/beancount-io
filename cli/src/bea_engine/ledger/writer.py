@@ -119,6 +119,11 @@ class DirectivePrinter(EntryPrinter):
                     for p in entry.postings
                 ]
             )
+            # Upstream writes `<date> <flag> ` with nothing after the flag when
+            # the header has no payee, narration, tag or link; `git diff --check`
+            # flags that space (w1/295). Every other header ends in a token.
+            first, separator, rest = str(super().__call__(entry)).partition("\n")  # type: ignore[no-untyped-call]
+            return first.rstrip(" ") + separator + rest
         return str(super().__call__(entry))  # type: ignore[no-untyped-call]
 
     def render_posting_strings(self, posting: Any) -> tuple[str, str, str]:
