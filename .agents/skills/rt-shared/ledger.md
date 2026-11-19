@@ -27,6 +27,7 @@ newest first.
 
 ### Deferred
 
+- 2026-11-19 backend-v2 expired TEMPORARY `__Host-authSess` retirement shim (`src/server/middleware/orphaned-host-cookie-middleware.ts`, mounted in `src/server/start-server.ts:114-127`, test in `src/server/middleware/__tests__/orphaned-host-cookie-middleware.test.ts`) — marked safe-to-delete after 2026-10-21; confirm no stranded-window tokens remain, then delete shim + mount + test.
 - 2026-11-19 ledger `getUserApiClient` on `IGiteaClientFactory`/`RequestScopedGiteaClientFactory` (`backend-cluster/ledger/src/foundation/clients/gitea-client-factory.ts`) — zero callers in ledger (every service uses `getPublicApiClient`), but the method is live in the backend-v2 donor (`ledger-workflow.ts` ×4); decide transplant fidelity vs removal.
 - 2026-11-18 cli/ full `make deadcode` vulture scan — unrunnable where only Python 3.11 exists (requires-python >=3.12; interpreter download blocked); ruff F401/F841 plus `if False`/commented-def sweeps clean, rerun vulture where Python 3.12+ exists.
 
@@ -129,6 +130,12 @@ newest first.
 ### Deferred
 
 ### Skipped
+
+- 2026-11-19 backend-v2 `plaid-sync` scheduler `enabled: false` (`src/scheduler/job-scheduler.ts:105-109`) — deliberate fallback documented in ADR028 (gap G7 "the fallback sync is off", decision D3 to enable it is pending); scheduler test pins "plaid-sync always disabled"; pending decision, not a finding.
+- 2026-11-19 mobile `config.features.agentChat: false` — owner-gated off, permanently out of scope per this routine's skill and `mobile/.pm/DO_NOT_DO.md`; the route guard and home card stay.
+- 2026-11-19 backend `featureFlags` GraphQL field + REST `/api-gateway/v1/feature-flags` + MCP resource — cross-package contract consumed by mobile/CLI; removal is a universal STOP, reported not fixed.
+- 2026-11-19 deployment-fact switches (`SELF_HOST`, `ASK_AI_MODE`/`AGENT_MODE`, `SSH_PROXY_ENABLED`, `OIDC_*`, `OAUTH_JWKS_FROM_AUTH_SECRET`, dashboard `emailDelivery`/`selfHost`/`spendingReportSubscription`, `analyticsEnabled`) — vary by environment (self-host vs managed, sandbox vs bql) by design; deliberate, not single-value.
+- 2026-11-19 CLI user-managed switches (engine `beangulp`/`beanprice` enablement, `BEA_NO_*`, `BEANCOUNT_DISABLE_LOAD_CACHE`, `CI`, `BEA_TOKEN`) — vary per user invocation; deliberate opt-outs, not shipped-feature gates.
 
 ## rt-useless-test-pruner
 
