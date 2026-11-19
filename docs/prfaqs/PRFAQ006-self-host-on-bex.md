@@ -233,7 +233,7 @@ It found:
 
 - Defect, fixed: an MCP client pointed at the dashboard's address got 406, because the dashboard's same-origin proxy dropped the `Accept` header the MCP endpoint requires; the API's own address worked. The proxy forwards it since `321d2b16f`. A stack built before that needs its dashboard deployed again.
 - The settings page is "Personal access tokens", but `bea` 0.4.1 and these documents said "API keys". The documents are corrected, and `bea`'s message is corrected for its next release.
-- Not fixed: the sign-up and sign-in pages of a self-hosted stack still show the hosted service's panel ("Join thousands of satisfied users…", "enterprise-grade security"), the Delete Account dialog says it removes your data "from our servers", and the sign-up form asks for at least 8 characters where the sign-in form says 6.
+- The sign-up and sign-in pages of a self-hosted stack showed the hosted service's panel ("Join thousands of satisfied users…", "enterprise-grade security"), the Delete Account dialog said it removes your data "from our servers", and the sign-up form asked for at least 8 characters where the sign-in form said 6. Since `a9e3f5af7` a self-hosted stack's panel says who runs it and that the books are plain text in Git, the dialog says only that the account and its data are deleted, and sign-in sets no length floor. A stack built before that needs its dashboard deployed again.
 
 ### What is not verified?
 
