@@ -14,6 +14,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -287,3 +288,98 @@ def test_an_expense_account_filter_lists_no_holdings(tmp_path: Path) -> None:
     data = _data(tmp_path, FLOWS, "-a", "Expenses:Travel")
 
     assert data["groups"] == []
+
+
+# w1/314: 3 HOOL costed at 30 USD and 2 HOOL bought `@ 40 USD` in one account,
+# nothing quoting HOOL. The 2 HOOL joined the costed group and counted in its
+# units, but the group was valued at its basis, which they lack, so they fell
+# out of the market value: `5 HOOL … 90.00 USD`, "valued at cost". In another
+# account they read `2 HOOL`. A costed group only takes them when a quote
+# values them, so grouping and account layout no longer change the totals.
+UNQUOTED = """option "operating_currency" "USD"
+2026-01-01 open Assets:Bank USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Assets:Broker2
+2026-01-01 open Equity:Opening-Balances USD
+2026-01-02 * "Opening"
+  Assets:Bank  1000.00 USD
+  Equity:Opening-Balances
+2026-02-01 * "Buy, lot tracked"
+  Assets:Broker  3 HOOL {30.00 USD}
+  Assets:Bank   -90.00 USD
+2026-02-02 * "Buy, no lot"
+  Assets:Broker  2 HOOL @ 40.00 USD
+  Assets:Bank   -80.00 USD
+"""
+IN_UNITS = "HOOL has no USD price at any date; costed lots valued at cost, the rest shown in units"
+
+
+def _held(data: dict[str, object]) -> list[tuple[str, dict[str, str], dict[str, str] | None]]:
+    """Each row's units, market value and cost basis, by units."""
+    return sorted(
+        (group["units"]["number"], group["market_value"], group["cost_basis"])  # type: ignore[index]
+        for group in data["groups"]  # type: ignore[attr-defined]
+    )
+
+
+@pytest.mark.parametrize("group_by", ["account", "commodity"])
+@pytest.mark.parametrize("uncosted_in", ["Assets:Broker", "Assets:Broker2"])
+def test_unquoted_uncosted_units_keep_their_own_row_in_units(tmp_path: Path, group_by: str, uncosted_in: str) -> None:
+    text = UNQUOTED.replace("  Assets:Broker  2 HOOL", f"  {uncosted_in}  2 HOOL")
+    data = _data(tmp_path, text, "--allow-errors", "--group-by", group_by)
+
+    assert _held(data) == [
+        ("2", {"number": "2", "currency": "HOOL"}, None),
+        ("3", {"number": "90.00", "currency": "USD"}, {"number": "90.00", "currency": "USD"}),
+    ]
+    assert data["totals"] == {"cost_basis": {"USD": "90.00"}, "market_value": {"HOOL": "2", "USD": "90.00"}}
+    assert data["cost_basis_complete"] is False
+    assert data["missing_prices"] == [{"from": "HOOL", "to": "USD"}]
+    assert data["missing_price_summary"] == [IN_UNITS]
+
+
+def test_unquoted_uncosted_units_in_text_and_csv(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, UNQUOTED)
+    text = _bea(tmp_path, "--file", str(ledger), "report", "holdings", "--allow-errors")
+    assert text.returncode == 0, text.stderr
+    assert re.search(r"Cost basis:\s+90\.00 USD \(excludes positions without a cost basis\)", text.stdout)
+    assert re.search(r"Market value:\s+2 HOOL\s+90\.00 USD", text.stdout)
+    assert IN_UNITS in text.stderr
+
+    table = _bea(tmp_path, "--file", str(ledger), "report", "holdings", "--allow-errors", "--format", "csv")
+    assert table.returncode == 0, table.stderr
+    rows = list(csv.DictReader(io.StringIO(table.stdout)))
+    assert sorted(
+        (row["units"], row["market_value"], row["market_value_currency"], row["cost_basis"]) for row in rows
+    ) == [
+        ("2", "2", "HOOL", ""),
+        ("3", "90.00", "USD", "90.00"),
+    ]
+
+
+def test_unquoted_uncosted_units_strict_hint_names_both_treatments(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, UNQUOTED)
+    strict = _bea(tmp_path, "--file", str(ledger), "report", "holdings")
+
+    assert strict.returncode == 1
+    assert "--allow-errors to value the costed lots at cost and show the rest in units." in strict.stderr
+    assert IN_UNITS in strict.stderr
+
+
+def test_a_quote_only_after_the_period_end_keeps_them_in_units(tmp_path: Path) -> None:
+    text = UNQUOTED + "2026-03-15 price HOOL 35.00 USD\n"
+    data = _data(tmp_path, text, "--allow-errors", "-t", "2026-02-28")
+
+    assert _held(data)[0] == ("2", {"number": "2", "currency": "HOOL"}, None)
+    assert data["missing_price_summary"] == [
+        "HOOL → USD has no price before 2026-03-15; "
+        "earlier holdings costed lots valued at cost, the rest shown in units"
+    ]
+
+
+@pytest.mark.parametrize("group_by", ["account", "commodity"])
+def test_a_quote_still_merges_uncosted_units_into_the_costed_group(tmp_path: Path, group_by: str) -> None:
+    data = _data(tmp_path, UNQUOTED + "2026-02-15 price HOOL 35.00 USD\n", "--group-by", group_by)
+
+    assert _held(data) == [("5", {"number": "175.00", "currency": "USD"}, None)]
+    assert data["valuation"] == "complete"

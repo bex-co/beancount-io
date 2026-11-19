@@ -711,8 +711,8 @@ def _value_holding(
         # No quote straight into the requested currency: value through the
         # cost currency, converting into the target when its leg has a rate.
         quote_date, price = prices.get_price_point((commodity, held), end)
-        # Unquoted, a group values at cost; a group that also holds
-        # uncosted units counts only its costed part (named missing).
+        # Unquoted, a group values at cost (named missing). Uncosted units
+        # join a group only when a quote values them (w1/314).
         market = units * price if price is not None else basis
         missing = [] if price is not None else [(commodity, held)]
         currency = held
@@ -760,8 +760,9 @@ def _holdings(
     uncosted position is cash when its commodity is money in this ledger
     (`_money_currencies`: operating and cost currencies, w1/255). Any other uncosted position (`3 AAPL @ 200 USD`)
     is a holding with an unknown basis: it joins the costed group of the
-    same commodity when there is exactly one, else forms its own, and its
-    group reports `cost_basis` and `average_cost` as null. Only a balance
+    same commodity when there is exactly one and a period-end quote values
+    it, else forms its own (w1/314), and its group reports `cost_basis` and
+    `average_cost` as null. Only a balance
     sheet position counts: an uncosted balance under Income, Expenses or
     Equity (`Expenses:Travel 100 EUR @ 1.1 USD`) is a flow, not a holding
     (w1/256).
@@ -815,7 +816,16 @@ def _holdings(
             found[4] = max(found[4], _fraction_digits(cost.number))
     for prefix, (number, names) in uncosted.items():
         costed = [key for key in lots if key[:-1] == prefix]
-        if len(costed) == 1:
+        # Uncosted units join the one costed group of their commodity only
+        # when a period-end quote, in its cost currency or the requested one,
+        # values them. An unquoted group is valued at its basis, which these
+        # units do not have, so they keep their own row in units, as they do
+        # in another account (w1/314).
+        if len(costed) == 1 and any(
+            prices.get_price((prefix[-1], currency), end) is not None
+            for currency in (costed[0][-1], target)
+            if currency
+        ):
             found = lots[costed[0]]
             found[0] += number
             found[2] |= names

@@ -590,6 +590,77 @@ describe("composeHoldings", () => {
       ]);
     });
 
+    // w1/314: 3 HOOL costed at 30 USD and 2 HOOL bought `@ 40 USD` in one
+    // account, nothing quoting HOOL. Joined to the costed group, the 2 HOOL
+    // were counted in its units but valued at its basis, which they lack, so
+    // they dropped out of the market value; in another account they read
+    // `2 HOOL`. A group only takes them when a quote values them.
+    describe("uncosted units beside an unquoted costed group", () => {
+      const hool = (uncostedIn: string): Cell[][] => [
+        ["Assets:Bank", "USD", null, map("USD", "830"), map("USD", "830")],
+        ["Assets:Broker", "HOOL", "USD", map("HOOL", "3"), map("USD", "90")],
+        [uncostedIn, "HOOL", null, map("HOOL", "2"), map("HOOL", "2")],
+      ];
+      // Rows by units, so the second account's row order does not matter.
+      const shown = (result: ReturnType<typeof compose>) =>
+        result.groups
+          .map((group) => [
+            group.units.number,
+            group.market_value,
+            group.cost_basis,
+          ])
+          .sort(([a], [b]) => String(a).localeCompare(String(b)));
+      const separate = [
+        ["2", { number: "2", currency: "HOOL" }, null],
+        [
+          "3",
+          { number: "90", currency: "USD" },
+          { number: "90", currency: "USD" },
+        ],
+      ];
+
+      it.each([
+        ["account", "Assets:Broker"],
+        ["commodity", "Assets:Broker"],
+        ["account", "Assets:Broker2"],
+        ["commodity", "Assets:Broker2"],
+      ] as const)(
+        "shows them in units by %s when they sit in %s",
+        (groupBy, uncostedIn) => {
+          const result = compose({ groupBy }, hool(uncostedIn), []);
+          expect(shown(result)).toEqual(separate);
+          expect(result.totals).toEqual({
+            cost_basis: { USD: "90" },
+            market_value: { HOOL: "2", USD: "90" },
+          });
+          expect(result.cost_basis_complete).toBe(false);
+          expect(result.missing_price_summary).toEqual([
+            "HOOL has no USD quote at 2026-10-25; costed lots valued at cost, the rest shown in units",
+          ]);
+        },
+      );
+
+      it("shows them in units when the only quote is after the as-of date", () => {
+        const result = compose({}, hool("Assets:Broker"), [
+          ["2026-11-01", "HOOL", map("USD", "35")],
+        ]);
+        expect(shown(result)).toEqual(separate);
+      });
+
+      it.each(["account", "commodity"] as const)(
+        "still merges them by %s when a quote values them",
+        (groupBy) => {
+          const result = compose({ groupBy }, hool("Assets:Broker"), [
+            ["2026-02-15", "HOOL", map("USD", "35")],
+          ]);
+          expect(shown(result)).toEqual([
+            ["5", { number: "175", currency: "USD" }, null],
+          ]);
+          expect(result.valuation).toBe("complete");
+        },
+      );
+    });
+
     it("leaves uncosted cash in an operating currency out", () => {
       const result = compose(
         { operatingCurrencies: ["USD", "EUR"], priceCurrencies: [] },

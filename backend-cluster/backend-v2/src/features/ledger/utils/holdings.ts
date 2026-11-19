@@ -598,32 +598,41 @@ export function composeHoldings(params: {
     }
   }
 
+  /**
+   * What uncosted units add to the market value of the costed group they
+   * join: a group valued into the requested currency by the commodity's own
+   * quote there (w1/290) values them at it too; otherwise they go through
+   * the cost currency, as the group did. Null when no quote values them.
+   */
+  const joinedMarket = (
+    group: HeldLot,
+    commodity: string,
+    units: BigNumber,
+  ): BigNumber | null => {
+    const { held, currency } = group;
+    const direct = currency === held ? null : quote(commodity, currency);
+    if (direct !== null) return units.times(direct);
+    const price = quote(commodity, held);
+    if (price === null) return null;
+    const rate = currency === held ? null : quote(held, currency);
+    return rate === null ? units.times(price) : units.times(price).times(rate);
+  };
+
   for (const [pendingKey, [unitsBN, names]] of uncosted) {
     const prefix = JSON.parse(pendingKey) as string[];
     const commodity = prefix[prefix.length - 1]!;
     const costed = [...lots.keys()].filter(
       (key) => prefixOf(key) === pendingKey,
     );
-    if (costed.length === 1) {
-      // Joins the one costed group of its commodity, valued at its quote; an
-      // unquoted group counts only its costed part, already named missing.
-      const found = lots.get(costed[0]!)!;
-      const { held, currency } = found;
-      // A group valued into the requested currency by the commodity's own
-      // quote there (w1/290) values these units at it too; otherwise they
-      // go through the cost currency, as the group did.
-      const direct = currency === held ? null : quote(commodity, currency);
-      const price = quote(commodity, held);
-      if (direct !== null) {
-        found.market = found.market.plus(unitsBN.times(direct));
-      } else if (price !== null) {
-        let market = unitsBN.times(price);
-        if (currency !== held) {
-          const rate = quote(held, currency);
-          market = rate === null ? market : market.times(rate);
-        }
-        found.market = found.market.plus(market);
-      }
+    const found = costed.length === 1 ? lots.get(costed[0]!)! : undefined;
+    // Joins the one costed group of its commodity only when a quote values
+    // these units. An unquoted group is valued at its basis, which they do
+    // not have, so they keep their own row in units, as in another account
+    // (w1/314, the CLI's rule).
+    const joined =
+      found === undefined ? null : joinedMarket(found, commodity, unitsBN);
+    if (found !== undefined && joined !== null) {
+      found.market = found.market.plus(joined);
       found.units = found.units.plus(unitsBN);
       for (const n of names) found.accounts.add(n);
       found.basisKnown = false;

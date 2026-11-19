@@ -2054,8 +2054,12 @@ balance under Income, Expenses or Equity (`Expenses:Travel 100 EUR @ 1.1 USD`)
 is a flow and never a holding. Every other
 uncosted position — shares bought as `3 AAPL @ 200 USD` — is a holding with an
 unknown basis: it joins the costed group of the same commodity when there is
-exactly one, is valued at the period-end quote, and its group's average cost
-and cost basis are `null` (text `—`). The cost-basis total then leaves those
+exactly one and a period-end quote (in that group's cost currency or the
+requested one) values it, and its group's average cost and cost basis are
+`null` (text `—`). With no such quote it keeps its own row in its units, as it
+would in another account, beside the costed lots valued at cost (`2 HOOL` and
+`90.00 USD`; "costed lots valued at cost, the rest shown in units"), so the
+grouping never changes the totals. The cost-basis total then leaves those
 groups out, and `cost_basis_complete` is `false` (text: "excludes positions
 without a cost basis").
 `register` takes the account as a positional argument instead of `--account`
