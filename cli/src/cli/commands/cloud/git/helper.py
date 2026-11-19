@@ -23,6 +23,7 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import urlsplit
 
 from cli.errors import BeaError, UsageError
 
@@ -38,6 +39,8 @@ _EXPIRY_MARGIN = timedelta(minutes=5)
 _HELPER_ARGUMENTS = "cloud git credential"
 #: A helper value `setup` wrote, whatever path to `bea` it recorded.
 _OURS = re.compile(rf" {re.escape(_HELPER_ARGUMENTS)}$")
+#: The ports an address may leave out.
+_DEFAULT_PORTS = {"http": 80, "https": 443}
 #: Where a token `bea` could not revoke is revoked by hand.
 REVOKE_REMEDY = "Revoke it in the dashboard under Settings → Personal access tokens."
 
@@ -76,7 +79,7 @@ class GitSignIn:
         """
         from cli.config import settings
 
-        return settings().api_url == self.api_url
+        return same_server(settings().api_url, self.api_url)
 
     @property
     def token_label(self) -> str:
@@ -122,6 +125,38 @@ def clear_state() -> None:
     state_path().unlink(missing_ok=True)
 
 
+def server_identity(url: str) -> str | None:
+    """`url` reduced to the server it names, or None when it names none.
+
+    Git matches `credential.<url>.helper` regardless of the host's case and an
+    explicit default port, then sends the host as the URL spells it; a copied
+    `BEA_API_URL` may carry a trailing `/` or capitals that httpx absorbs.
+    Compared raw, each of those got Git no password and let `cloud logout`
+    leave the Git token alive without a word (w1/294). So the scheme and host
+    are lowercased, the scheme's default port dropped and the path's trailing
+    `/` stripped; another host, port, path or user stays another server.
+    """
+    try:
+        parts = urlsplit(url)
+        hostname, port = parts.hostname, parts.port
+    except ValueError:
+        return None
+    scheme = parts.scheme.lower()
+    if scheme not in _DEFAULT_PORTS or not hostname:
+        return None
+    host = f"[{hostname}]" if ":" in hostname else hostname
+    if port is not None and port != _DEFAULT_PORTS[scheme]:
+        host += f":{port}"
+    user, at, _ = parts.netloc.rpartition("@")
+    return f"{scheme}://{user}{at}{host}{parts.path.rstrip('/')}"
+
+
+def same_server(url: str, other: str) -> bool:
+    """Whether two addresses name one server, however each is spelled."""
+    identity = server_identity(url)
+    return identity is not None and identity == server_identity(other)
+
+
 def git_address(http_url: str) -> str:
     """The address Git's helper is registered for: a ledger's `httpUrl` without its path.
 
@@ -133,15 +168,15 @@ def git_address(http_url: str) -> str:
     from cli.commands.cloud.ledger.manager import plain_https_address
 
     parts = plain_https_address(http_url, loopback_http=True)
-    if parts is None or parts.hostname is None:
+    address = None if parts is None else server_identity(f"{parts.scheme}://{parts.netloc}")
+    if address is None:
         from cli.utils import single_line
 
         raise BeaError(
             f"Unexpected server response: the ledger's Git address {single_line(http_url)!r} is not a plain "
             "https:// address; refusing to register a credential helper for it. Nothing was changed."
         )
-    host = f"[{parts.hostname}]" if ":" in parts.hostname else parts.hostname
-    return f"{parts.scheme}://{host}{f':{parts.port}' if parts.port is not None else ''}"
+    return address
 
 
 def helper_command() -> str:

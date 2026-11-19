@@ -52,10 +52,13 @@ def git_setup(
     client = authenticated_client()
     helper.require_self_hosted(client)
     git_url = helper.first_ledger_address(client)
-    api_url = settings().api_url
+    # Settings already refused a value that names no server.
+    api_url = helper.server_identity(settings().api_url) or settings().api_url
 
     state = helper.load_state()
-    if state is not None and (state.api_url, state.git_url) != (api_url, git_url):
+    if state is not None and not (
+        helper.same_server(state.api_url, api_url) and helper.same_server(state.git_url, git_url)
+    ):
         # One registration at a time: the token and the Git config entry of the
         # server set up before would otherwise be orphaned without a word.
         from cli.errors import UsageError
@@ -195,8 +198,12 @@ def _registered(request: dict[str, str]) -> GitSignIn | None:
     """The stored registration when Git is asking about its address, else None."""
     from . import helper
 
+    protocol, host = request.get("protocol"), request.get("host")
+    if not protocol or not host:
+        return None
     state = helper.load_state()
-    if state is None or f"{request.get('protocol')}://{request.get('host')}" != state.git_url:
+    # Git sends the host as the URL spells it: `Git.Example.com`, `git.example.com:443`.
+    if state is None or not helper.same_server(f"{protocol}://{host}", state.git_url):
         return None
     return state if state.is_current_server() else None
 

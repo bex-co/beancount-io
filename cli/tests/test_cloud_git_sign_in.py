@@ -558,6 +558,144 @@ def test_logout_leaves_another_servers_git_token_alone(httpx_mock: HTTPXMock, si
     assert helper.load_state() == before
 
 
+# --- one server, however it is spelled (w1/294) ------------------------------
+
+
+@pytest.mark.parametrize("host", ["Git.Example.TEST", "git.example.test:443"], ids=["capitals", "default-port"])
+def test_get_answers_whatever_case_and_default_port_git_spells_the_host(host: str) -> None:
+    # Git runs the helper for these, since its config match ignores both, then
+    # sends the host exactly as the URL spells it.
+    _stored()
+
+    result = _credential("get", f"protocol=https\nhost={host}\n\n")
+
+    assert (result.exit_code, result.stdout, result.stderr) == (0, "username=bea\npassword=bcio_stored\n", "")
+
+
+_RESPELLED_API = [f"{_API}/", "https://API.example", "https://api.example:443/"]
+
+
+@pytest.mark.parametrize("api_url", _RESPELLED_API, ids=["trailing-slash", "capitals", "default-port"])
+def test_get_answers_when_bea_api_url_names_the_same_server_another_way(
+    api_url: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _stored()
+    monkeypatch.setenv("BEA_API_URL", api_url)
+
+    result = _credential("get", _REQUEST)
+
+    assert (result.exit_code, result.stdout) == (0, "username=bea\npassword=bcio_stored\n")
+
+
+@pytest.mark.parametrize("api_url", _RESPELLED_API, ids=["trailing-slash", "capitals", "default-port"])
+def test_logout_signs_git_out_when_bea_api_url_names_the_same_server_another_way(
+    api_url: str, httpx_mock: HTTPXMock, signed_in: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _stored()
+    monkeypatch.setenv("BEA_API_URL", api_url)
+    _revoke(httpx_mock)
+    httpx_mock.add_response(method="POST", url=f"{_API}/api-gateway/v1/logout", json={"success": True})
+
+    result = CliRunner().invoke(app, ["cloud", "logout"])
+
+    assert result.exit_code == 0, result.output
+    assert [(r.method, r.url.path) for r in httpx_mock.get_requests()] == [
+        ("DELETE", "/api-gateway/v1/api-keys/key_1"),
+        ("POST", "/api-gateway/v1/logout"),
+    ]
+    state = helper.load_state()
+    assert state is not None and (state.token, state.key_id) == (None, None)
+
+
+def test_undo_revokes_the_token_when_bea_api_url_gains_a_trailing_slash(
+    httpx_mock: HTTPXMock, signed_in: None, git_config: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    helper.install_helper(_GIT)
+    _stored()
+    monkeypatch.setenv("BEA_API_URL", f"{_API}/")
+    _revoke(httpx_mock)
+
+    result = _setup("--undo")
+
+    assert result.exit_code == 0, result.output
+    assert "its token is revoked" in result.stdout
+    assert git_config.read_text() == _SEEDED_CONFIG
+    assert not helper.state_path().exists()
+
+
+def test_get_mints_when_the_token_lapsed_and_bea_api_url_gains_a_trailing_slash(
+    httpx_mock: HTTPXMock, signed_in: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _stored(expires_at=(datetime.now(tz=UTC) - timedelta(hours=1)).isoformat())
+    monkeypatch.setenv("BEA_API_URL", f"{_API}/")
+    _mint(httpx_mock, key_id="key_2", plaintext="bcio_second")
+    _revoke(httpx_mock, key_id="key_1")
+
+    result = _credential("get", _REQUEST)
+
+    assert (result.exit_code, result.stdout) == (0, "username=bea\npassword=bcio_second\n"), result.stderr
+
+
+def test_setup_stores_the_server_once_however_bea_api_url_spells_it(
+    httpx_mock: HTTPXMock, signed_in: None, git_config: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("BEA_API_URL", "https://API.example/")
+    _flags(httpx_mock, selfHost=True)
+    _ledgers(httpx_mock, _ledger("https://Git.Example.test:443/alice/books.git"))
+    _mint(httpx_mock)
+    assert _setup().exit_code == 0
+    state = helper.load_state()
+    assert state is not None and (state.api_url, state.git_url) == (_API, _GIT)
+    assert _helper_for(f"{_GIT}/alice/books.git").endswith(" cloud git credential")
+    # Run again under the exact spelling: the same server, not "another server".
+    after_first = git_config.read_text()
+    monkeypatch.setenv("BEA_API_URL", _API)
+    _flags(httpx_mock, selfHost=True)
+    _ledgers(httpx_mock, _ledger())
+
+    result = _setup()
+
+    assert result.exit_code == 0, result.output
+    assert "nothing changed" in result.stdout
+    assert git_config.read_text() == after_first
+
+
+def test_setup_accepts_a_registration_stored_under_another_spelling(
+    httpx_mock: HTTPXMock, signed_in: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _stored(api_url=f"{_API}/")
+    monkeypatch.setenv("BEA_API_URL", "https://API.example")
+    _flags(httpx_mock, selfHost=True)
+    _ledgers(httpx_mock, _ledger())
+
+    result = _setup()
+
+    assert result.exit_code == 0, result.output
+    assert "another server" not in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("url", "other"),
+    [
+        ("https://api.example", "https://other-api.example"),
+        ("https://api.example", "https://api.example:8443"),
+        ("https://api.example", "http://api.example"),
+        ("https://api.example/v1", "https://api.example/v2"),
+        ("https://api.example", "https://alice@api.example"),
+        ("https://api.example", "not a url"),
+        ("not a url", "not a url"),
+    ],
+)
+def test_another_host_port_scheme_path_or_user_stays_another_server(url: str, other: str) -> None:
+    assert not helper.same_server(url, other)
+
+
+def test_a_ledgers_git_address_is_stored_lower_case_without_its_default_port() -> None:
+    assert helper.git_address("https://Git.Example.test:443/alice/books.git") == _GIT
+    assert helper.git_address("http://LOCALHOST:80/alice/books.git") == "http://localhost"
+    assert helper.git_address("https://[::1]:8443/alice/books.git") == "https://[::1]:8443"
+
+
 # --- Git itself ------------------------------------------------------------
 
 
@@ -615,3 +753,34 @@ def test_git_sends_the_token_bea_hands_it_without_prompting(
     assert "terminal prompts disabled" not in done.stderr, done.stderr
     assert seen[0] is None
     assert seen[1] == "Basic " + base64.b64encode(b"bea:bcio_stored").decode()
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        f"{_GIT}/alice/books.git",
+        "https://Git.Example.TEST/alice/books.git",
+        "https://git.example.test:443/alice/books.git",
+    ],
+    ids=["as-registered", "capitals", "default-port"],
+)
+def test_git_gets_the_token_however_the_clone_url_spells_the_registered_host(
+    url: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Git's own config match and request for each spelling, with nothing stubbed on Git's side (w1/294)."""
+    monkeypatch.setattr(helper, "helper_command", lambda: f"!{sys.executable} -m cli.main cloud git credential")
+    helper.install_helper(_GIT)
+    _stored()
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src"), "GIT_TERMINAL_PROMPT": "0", "BEA_NO_UPDATE_NOTIFIER": "1"}
+
+    done = subprocess.run(
+        ["git", "credential", "fill"],
+        input=f"url={url}\n\n",
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+
+    assert done.returncode == 0, done.stderr
+    assert "password=bcio_stored\n" in done.stdout

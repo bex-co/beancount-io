@@ -2684,7 +2684,11 @@ What it does, and the decisions behind it (w22/m12):
 One server at a time: `setup` for a second server exits **2** until the first
 is undone. `BEA_API_URL` must name the same server in the shell where Git
 runs, as for every `bea cloud` command; pointed elsewhere, the helper answers
-nothing. Under `--json`, `setup` emits `git_url`, `helper`, `config_changed`
+nothing. One server spelled two ways is still one server, for `BEA_API_URL`
+and for the clone URL's host alike: the case of the scheme and host, an
+explicit default port (`:443`) and a trailing `/` make no difference to the
+helper, `logout` or `--undo`, while another host, port or path does. Under
+`--json`, `setup` emits `git_url`, `helper`, `config_changed`
 and the token's `id`, `name`, `expires_at` and `minted`, never the token.
 
 `bea cloud git credential get|store|erase` is the helper Git runs; it is not
