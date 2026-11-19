@@ -31,6 +31,11 @@ Never fix on suspicion. A detector hit, a grep match, or a hunch is a
 still-green sabotaged test, a reference sweep that comes up empty, …). No proof
 → no fix; report the candidate as skipped instead.
 
+A fix to one of two copies that a boundary keeps apart (another package, or
+ADR014's engine/frontend split in `cli/`) ships with a drift guard in the same
+commit, whichever routine finds it; see "Guard every twin" in
+[`rt-dup-unifier`](../rt-dup-unifier/SKILL.md).
+
 ## Value bar (the tidy routines)
 
 `rt-dup-unifier`, `rt-logic-simplifier`, `rt-abstraction-improver` and

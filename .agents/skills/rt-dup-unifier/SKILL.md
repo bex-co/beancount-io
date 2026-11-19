@@ -83,10 +83,18 @@ Compose `/ship` for this one unification. Loop within budget.
 
 ## What NOT to do
 
-- **Never merge across packages.** Packages are independent by repo rule (no
-  new cross-package imports). Cross-package copies can still drift: compare
-  them, fix a proven difference inside the package that is wrong, and record
-  the pair in the ledger.
+- **Never merge across a boundary.** Packages are independent by repo rule (no
+  new cross-package imports), and ADR014 keeps engine modules off the `cli`
+  frontend's import path, so a `bea_engine` copy and its `cli` twin stay two
+  copies. Such copies can still drift: compare them, fix a proven difference
+  on the side that is wrong, and record the pair in the ledger.
+- **Guard every twin a test can see both sides of.** When one test can import
+  or read both copies (the engine/cli twins from `cli/tests`, for example),
+  add a drift guard: a test that fails when the two disagree, by comparing
+  the shared constants, patterns or tables directly or by running both over
+  the same inputs. A fix for a drifted twin ships with its guard in the same
+  commit; without one the fix is incomplete. When no test can see both sides,
+  say so in the pair's ledger entry.
 - If unification requires an abstraction more complex than either original
   (config objects, strategy callbacks, mode flags), skip the finding — a
   slightly duplicated simple thing beats a unified complicated one.
