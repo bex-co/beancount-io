@@ -39,12 +39,15 @@ def test_duplicate_with_matching_book_omits_pad_with_recorded_location(tmp_path:
     )
 
     assert result.exit_code == 0, result.output
-    data = json.loads(result.stdout)["data"]
+    payload = json.loads(result.stdout)
+    data = payload["data"]
     assert data["written"] == 0
     assert data["duplicate"] is True
     assert data["pad"] is None
     assert data["source"] == {"filename": str(root), "lineno": 4}
-    assert data["target"] == str(root)
+    # The frontend lifts the engine's target into the envelope.
+    assert payload["target"] == {"file": str(root), "into": str(root)}
+    assert "target" not in data
     assert "ledger_errors" not in data
     assert data["warnings"] == [
         f"Book balance already matches 0.00 USD; omitted the pad from --pad-from "
@@ -53,18 +56,24 @@ def test_duplicate_with_matching_book_omits_pad_with_recorded_location(tmp_path:
     assert root.read_text() == OPENS + "2026-01-25 balance Assets:Cash 0.00 USD\n"
 
 
-def test_duplicate_without_pad_from_carries_ledger_errors(tmp_path: Path) -> None:
+def test_duplicate_without_pad_from_answers_without_a_warning(tmp_path: Path) -> None:
     root = tmp_path / "main.bean"
     root.write_text(OPENS + "2026-01-25 balance Assets:Cash 0.00 USD\n")
 
     result = _add(root, "--date", "2026-01-25", "-a", "Assets:Cash", "--amount", "0.00 USD")
 
     assert result.exit_code == 0, result.output
-    data = json.loads(result.stdout)["data"]
+    payload = json.loads(result.stdout)
+    data = payload["data"]
     assert data["written"] == 0
     assert data["duplicate"] is True
+    assert data["pad"] is None
+    assert data["source"] == {"filename": str(root), "lineno": 4}
     assert data["warnings"] == []
-    assert data["ledger_errors"] == []
+    assert payload["target"] == {"file": str(root), "into": str(root)}
+    # The engine's ledger_errors become the frontend's stderr banner, never data.
+    assert "ledger_errors" not in data
+    assert root.read_text() == OPENS + "2026-01-25 balance Assets:Cash 0.00 USD\n"
 
 
 def test_matching_book_writes_assertion_alone_with_exact_wording(tmp_path: Path) -> None:
