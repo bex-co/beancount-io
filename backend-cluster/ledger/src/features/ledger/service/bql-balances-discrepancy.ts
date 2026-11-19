@@ -1,6 +1,7 @@
 import { BadUserInputError } from "@/shared/errors";
 import type { QueryResult } from "@rustledger/wasm";
-import { selectClauses } from "./bql-select-aliases";
+import type { QueryWord } from "./bql-select-aliases";
+import { selectClauses, splitTopLevel } from "./bql-select-aliases";
 
 /**
  * `balances.discrepancy` (w23/196, m19).
@@ -35,6 +36,92 @@ const AGGREGATE =
   /\b(?:sum|count|min|max|avg|first|last|only|any_value|every)\s*\(/i;
 const BARE_DISCREPANCY = /^discrepancy(?:\s+as\s+[A-Za-z_][\w$]*)?$/i;
 const FROM_BALANCES = /^\s*#?\s*balances\b/i;
+const REDUNDANT_ALIAS = /^discrepancy\s+as\s+discrepancy$/i;
+const BARE_ALIAS = /^discrepancy\s+as\s+([A-Za-z_][\w$]*)$/i;
+
+/**
+ * Bare items aliased back onto `discrepancy`: each contributes its own head
+ * mention plus the alias, so both are explained and the projection fills.
+ */
+function redundantAliasSelfMentions(trimmed: string[]): number {
+  return trimmed.filter((item) => REDUNDANT_ALIAS.test(item)).length;
+}
+
+/**
+ * True when an alias of a bare `discrepancy` projection is read anywhere but
+ * in the item that defines it: `ORDER BY d`, `WHERE d IS NOT NULL`, or even a
+ * later SELECT item. Item spans come from re-walking the lossless comma split,
+ * so the defining occurrence itself never counts. The one forgiven occurrence
+ * is the table name after FROM (`AS balances ... FROM balances` aliases the
+ * column, not the table).
+ */
+function leaksDiscrepancyAlias(
+  words: QueryWord[],
+  items: string[],
+  listStart: number,
+  tableWord: QueryWord | undefined,
+): boolean {
+  const spans: Array<{ start: number; end: number }> = [];
+  let cursor = listStart;
+  for (const item of items) {
+    spans.push({ start: cursor, end: cursor + item.length });
+    cursor += item.length + 1;
+  }
+  for (let i = 0; i < items.length; i += 1) {
+    const alias = BARE_ALIAS.exec((items[i] as string).trim())?.[1];
+    if (alias === undefined || alias.toLowerCase() === "discrepancy") continue;
+    const span = spans[i] as { start: number; end: number };
+    for (const word of words) {
+      if (word.text.toLowerCase() !== alias.toLowerCase()) continue;
+      if (word.start >= span.start && word.end <= span.end) continue;
+      if (tableWord !== undefined && word.start === tableWord.start) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * True when a depth-0 ORDER BY term addresses a bare `discrepancy` SELECT item
+ * by 1-based position (`ORDER BY 4`, with or without a direction). Positions
+ * cannot be resolved once `*` expands on the engine, so a wildcard list is
+ * left to the engine — and to the named check above.
+ */
+function ordersByDiscrepancyPosition(
+  query: string,
+  words: QueryWord[],
+  trimmed: string[],
+  listEnd: number,
+): boolean {
+  if (trimmed.some((item) => item === "*")) return false;
+  const orderAt = words.findIndex(
+    (word, index) =>
+      word.depth === 0 &&
+      word.start >= listEnd &&
+      word.text.toLowerCase() === "order" &&
+      words[index + 1]?.depth === 0 &&
+      words[index + 1]?.text.toLowerCase() === "by",
+  );
+  if (orderAt === -1) return false;
+  const clauseStart = (words[orderAt + 1] as QueryWord).end;
+  const cut = words.find(
+    (word) =>
+      word.depth === 0 &&
+      word.start >= clauseStart &&
+      /^(?:from|where|group|order|limit|having|pivot)$/i.test(word.text),
+  );
+  const clause = query.slice(clauseStart, cut?.start ?? query.length);
+  return splitTopLevel(clause).some((term) => {
+    const position = /^\s*[+-]?(\d+)\b/.exec(term);
+    if (!position) return false;
+    const index = Number(position[1]) - 1;
+    return (
+      index >= 0 &&
+      index < trimmed.length &&
+      BARE_DISCREPANCY.test(trimmed[index] as string)
+    );
+  });
+}
 
 /** Decides how a query reading `balances.discrepancy` is answered. */
 export function planDiscrepancy(query: string): DiscrepancyPlan {
@@ -62,8 +149,16 @@ export function planDiscrepancy(query: string): DiscrepancyPlan {
   const distinct = /^\s*distinct\b/i.test(query.slice(start, end));
   const aggregated = AGGREGATE.test(query.slice(start, end));
   // `discrepancy` anywhere but as a bare SELECT item: a filter, an ordering,
-  // a function argument or a computed column.
-  const misused = mentions > bare.length;
+  // a function argument or a computed column. An alias of a bare projection
+  // (`AS d` then `ORDER BY d` or `WHERE d IS NOT NULL`) and a SELECT position
+  // holding one (`ORDER BY 4`) reach the same NULL cell without naming it, so
+  // they refuse the same way; a redundant alias (`AS discrepancy`) still names
+  // the plain projection and fills.
+  const fromIndex = words.indexOf(from);
+  const misused =
+    mentions > bare.length + redundantAliasSelfMentions(trimmed) ||
+    leaksDiscrepancyAlias(words, items, start, words[fromIndex + 1]) ||
+    ordersByDiscrepancyPosition(query, words, trimmed, end);
   if (misused || (mentions > 0 && (grouped || distinct || aggregated))) {
     throw new BadUserInputError(
       `Invalid BQL query: balances.discrepancy cannot be used here. ${SUPPORTED}`,

@@ -132,6 +132,20 @@ describe("balances.discrepancy through the shell", () => {
     expect(parseMock).not.toHaveBeenCalled();
   });
 
+  it("refuses ORDER BY that reaches discrepancy by position or alias", async () => {
+    for (const query of [
+      "SELECT date, account, amount, discrepancy FROM balances ORDER BY 4",
+      "SELECT discrepancy AS d FROM balances ORDER BY d",
+      "SELECT discrepancy AS d FROM balances WHERE d IS NOT NULL",
+    ]) {
+      const error = await service()
+        .queryShell(params(query))
+        .catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(BadUserInputError);
+    }
+    expect(queryMock).not.toHaveBeenCalled();
+  });
+
   it("refuses discrepancy as a filter instead of answering over NULL", async () => {
     const error = await service()
       .queryShell(params("SELECT account FROM balances WHERE discrepancy"))

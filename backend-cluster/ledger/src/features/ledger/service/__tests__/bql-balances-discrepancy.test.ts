@@ -52,6 +52,43 @@ describe("planDiscrepancy", () => {
       expect(planDiscrepancy(query)).toEqual({ kind: "none" });
   });
 
+  it("refuses ORDER BY that reaches discrepancy by SELECT position instead of by name", () => {
+    for (const query of [
+      "SELECT date, account, amount, discrepancy FROM balances ORDER BY 4",
+      "SELECT date, account, amount, discrepancy FROM balances ORDER BY 4 DESC",
+    ])
+      expect(() => planDiscrepancy(query)).toThrow(
+        /balances\.discrepancy cannot be used here/,
+      );
+  });
+
+  it("still fills when ORDER BY names a real column or its position", () => {
+    expect(
+      fill("SELECT date, account, amount, discrepancy FROM balances ORDER BY date"),
+    ).toMatchObject({ columns: [3] });
+    expect(
+      fill("SELECT date, account, amount, discrepancy FROM balances ORDER BY 1"),
+    ).toMatchObject({ columns: [3] });
+  });
+
+  it("refuses a discrepancy alias used outside its own projection", () => {
+    for (const query of [
+      "SELECT discrepancy AS d FROM balances ORDER BY d",
+      "SELECT discrepancy AS d FROM balances ORDER BY D DESC",
+      "SELECT discrepancy AS d FROM balances WHERE d IS NOT NULL",
+      "SELECT discrepancy AS d, d FROM balances",
+    ])
+      expect(() => planDiscrepancy(query)).toThrow(
+        /balances\.discrepancy cannot be used here/,
+      );
+  });
+
+  it("fills a redundant alias: it names the same plain projection", () => {
+    expect(
+      fill("SELECT discrepancy AS discrepancy FROM balances"),
+    ).toMatchObject({ columns: [0] });
+  });
+
   it("refuses discrepancy where the engine would evaluate it over NULL", () => {
     for (const query of [
       "SELECT account FROM balances WHERE discrepancy",
