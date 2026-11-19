@@ -52,12 +52,28 @@ const COLUMNS = [
   "book_value",
 ].map((name) => ({ name, dtype: "str" }));
 
-const PRICE_COLUMNS = ["date", "currency", "amount"].map((name) => ({
+const PRICE_COLUMNS = ["date", "currency", "amount", "quote"].map((name) => ({
   name,
   dtype: "str",
 }));
 
-const table = (rows: unknown[][]) => ({ result: { types: COLUMNS, rows } });
+/** The detail query's columns as the engine answers them: one row per lot. */
+const LOT_COLUMNS = [
+  "account",
+  "currency",
+  "cost_currency",
+  "cost_number",
+  "cost_date",
+  "cost_label",
+  "units",
+  "book_value",
+].map((name) => ({ name, dtype: "str" }));
+
+let detailColumns = COLUMNS;
+
+const table = (rows: unknown[][]) => ({
+  result: { types: detailColumns, rows },
+});
 
 /** The shell answers the detail query and the price-directive query apart (w1/229). */
 const answerShell = (
@@ -84,6 +100,7 @@ describe("LedgerFinanceService.getHoldings", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    detailColumns = COLUMNS;
     (authorizeLedger as jest.Mock).mockResolvedValue({
       ledgerRepoId: 1,
       ownerUserId: USER_ID,
@@ -136,7 +153,10 @@ describe("LedgerFinanceService.getHoldings", () => {
     expect(mockShell.queryShellPost).toHaveBeenCalledWith(
       "testowner",
       "testledger",
-      { query: "SELECT date, currency, amount FROM prices ORDER BY date" },
+      {
+        query:
+          "SELECT date, currency, amount, currency(amount) AS quote FROM prices ORDER BY date",
+      },
     );
   });
 
@@ -275,6 +295,117 @@ describe("LedgerFinanceService.getHoldings", () => {
     expect(result.totals).toEqual({
       cost_basis: { USD: "2080" },
       market_value: { USD: "2200" },
+    });
+    expect(result.valuation).toBe("complete");
+    expect(result.missing_prices).toEqual([]);
+  });
+
+  // w1/292: the engine's rows for a synthetic ledger, compared side by side
+  // with `bea report holdings` on the same ledger. HOOL is held long in one
+  // account and short in another, netting to zero; DEAD is a delisted share
+  // quoted at 0 USD after 40 USD; VT was bought in EUR and in GBP with no USD
+  // quote, its GBP quote the later one. bea keeps the HOOL group with no
+  // average cost, values DEAD at nothing, and shows VT at the GBP lot's
+  // quote. The hosted answer dropped HOOL, valued DEAD at 400 USD and showed
+  // VT at the EUR lot's quote, on REST, GraphQL and MCP alike.
+  it("answers holdings as bea does on zero quotes, zero units and merged quotes", async () => {
+    detailColumns = LOT_COLUMNS;
+    const lot = (
+      account: string,
+      commodity: string,
+      held: string,
+      cost: string,
+      units: string,
+      basis: string,
+    ) => [
+      account,
+      commodity,
+      held,
+      cost,
+      "2024-01-03",
+      null,
+      { [commodity]: units },
+      { [held]: basis },
+    ];
+    answerShell(
+      [
+        [
+          "Assets:Cash",
+          "USD",
+          null,
+          null,
+          null,
+          null,
+          { USD: "9" },
+          { USD: "9" },
+        ],
+        lot("Assets:Broker", "DEAD", "USD", "50", "10", "500"),
+        lot("Assets:Broker", "VT", "EUR", "90", "10", "900"),
+        lot("Assets:Broker", "VT", "GBP", "80", "10", "800"),
+        lot("Assets:Long", "HOOL", "USD", "100", "2", "200"),
+        // A lot bought and sold again: no units left.
+        ["Assets:Long", "HOOL", "USD", "90", "2024-01-02", null, {}, {}],
+        lot("Assets:Short", "HOOL", "USD", "120", "-2", "-240"),
+      ],
+      [
+        ["2024-03-01", "VT", { EUR: "100" }, "EUR"],
+        ["2024-06-01", "DEAD", { USD: "40" }, "USD"],
+        ["2024-06-01", "EUR", { USD: "1.10" }, "USD"],
+        ["2024-06-01", "GBP", { USD: "1.30" }, "USD"],
+        ["2024-06-01", "HOOL", { USD: "150" }, "USD"],
+        ["2024-06-01", "VT", { GBP: "85" }, "GBP"],
+        ["2025-01-01", "DEAD", {}, "USD"],
+      ],
+      [[null]],
+    );
+
+    const result = await service.getHoldings({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      groupBy: "commodity",
+    });
+
+    expect(mockShell.queryShellPost).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      {
+        query: expect.stringContaining(
+          "GROUP BY account, currency, cost_currency, cost_number, cost_date, cost_label",
+        ),
+      },
+    );
+    expect(result.groups).toEqual([
+      {
+        accounts: ["Assets:Broker"],
+        commodity: "DEAD",
+        units: { number: "10", currency: "DEAD" },
+        average_cost: { number: "50", currency: "USD" },
+        cost_basis: { number: "500", currency: "USD" },
+        market_value: { number: "0", currency: "USD" },
+        price: { number: "0", currency: "USD" },
+      },
+      {
+        accounts: ["Assets:Long", "Assets:Short"],
+        commodity: "HOOL",
+        units: { number: "0", currency: "HOOL" },
+        average_cost: null,
+        cost_basis: { number: "-40", currency: "USD" },
+        market_value: { number: "0", currency: "USD" },
+        price: { number: "150", currency: "USD" },
+      },
+      {
+        accounts: ["Assets:Broker"],
+        commodity: "VT",
+        units: { number: "20", currency: "VT" },
+        average_cost: { number: "101.5", currency: "USD" },
+        cost_basis: { number: "2030", currency: "USD" },
+        market_value: { number: "2205", currency: "USD" },
+        price: { number: "110.5", currency: "USD" },
+      },
+    ]);
+    expect(result.totals).toEqual({
+      cost_basis: { USD: "2490" },
+      market_value: { USD: "2205" },
     });
     expect(result.valuation).toBe("complete");
     expect(result.missing_prices).toEqual([]);

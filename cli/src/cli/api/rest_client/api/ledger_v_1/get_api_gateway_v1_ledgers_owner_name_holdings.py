@@ -138,9 +138,12 @@ def sync_detailed(
     regular expression. Cash (an uncosted balance in an operating currency or a currency lots are costed
     in; with no operating currency declared, also any posting-price or price-directive quote currency),
     uncosted balances outside Assets and Liabilities (a priced expense such as `100 EUR @ 1.1 USD` is a
-    flow, not a position), and fully-sold groups are left out; a position bought with a price but no
-    cost is a holding whose group has a null `cost_basis` and `average_cost`, and `cost_basis_complete`
-    is false. Groups without a quote value at cost and are named in `missing_prices`.
+    flow, not a position), and fully-sold groups are left out, but long and short lots still held that
+    net to zero units stay, with a null `average_cost`; a position bought with a price but no cost is a
+    holding whose group has a null `cost_basis` and `average_cost`, and `cost_basis_complete` is false.
+    A quote of zero values a group at nothing; groups without a quote value at cost and are named in
+    `missing_prices`. A group merged from lots costed in different currencies shows the latest of their
+    quotes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -197,9 +200,12 @@ def sync(
     regular expression. Cash (an uncosted balance in an operating currency or a currency lots are costed
     in; with no operating currency declared, also any posting-price or price-directive quote currency),
     uncosted balances outside Assets and Liabilities (a priced expense such as `100 EUR @ 1.1 USD` is a
-    flow, not a position), and fully-sold groups are left out; a position bought with a price but no
-    cost is a holding whose group has a null `cost_basis` and `average_cost`, and `cost_basis_complete`
-    is false. Groups without a quote value at cost and are named in `missing_prices`.
+    flow, not a position), and fully-sold groups are left out, but long and short lots still held that
+    net to zero units stay, with a null `average_cost`; a position bought with a price but no cost is a
+    holding whose group has a null `cost_basis` and `average_cost`, and `cost_basis_complete` is false.
+    A quote of zero values a group at nothing; groups without a quote value at cost and are named in
+    `missing_prices`. A group merged from lots costed in different currencies shows the latest of their
+    quotes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -251,9 +257,12 @@ async def asyncio_detailed(
     regular expression. Cash (an uncosted balance in an operating currency or a currency lots are costed
     in; with no operating currency declared, also any posting-price or price-directive quote currency),
     uncosted balances outside Assets and Liabilities (a priced expense such as `100 EUR @ 1.1 USD` is a
-    flow, not a position), and fully-sold groups are left out; a position bought with a price but no
-    cost is a holding whose group has a null `cost_basis` and `average_cost`, and `cost_basis_complete`
-    is false. Groups without a quote value at cost and are named in `missing_prices`.
+    flow, not a position), and fully-sold groups are left out, but long and short lots still held that
+    net to zero units stay, with a null `average_cost`; a position bought with a price but no cost is a
+    holding whose group has a null `cost_basis` and `average_cost`, and `cost_basis_complete` is false.
+    A quote of zero values a group at nothing; groups without a quote value at cost and are named in
+    `missing_prices`. A group merged from lots costed in different currencies shows the latest of their
+    quotes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -308,9 +317,12 @@ async def asyncio(
     regular expression. Cash (an uncosted balance in an operating currency or a currency lots are costed
     in; with no operating currency declared, also any posting-price or price-directive quote currency),
     uncosted balances outside Assets and Liabilities (a priced expense such as `100 EUR @ 1.1 USD` is a
-    flow, not a position), and fully-sold groups are left out; a position bought with a price but no
-    cost is a holding whose group has a null `cost_basis` and `average_cost`, and `cost_basis_complete`
-    is false. Groups without a quote value at cost and are named in `missing_prices`.
+    flow, not a position), and fully-sold groups are left out, but long and short lots still held that
+    net to zero units stay, with a null `average_cost`; a position bought with a price but no cost is a
+    holding whose group has a null `cost_basis` and `average_cost`, and `cost_basis_complete` is false.
+    A quote of zero values a group at nothing; groups without a quote value at cost and are named in
+    `missing_prices`. A group merged from lots costed in different currencies shows the latest of their
+    quotes.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

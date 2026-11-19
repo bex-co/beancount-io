@@ -1318,6 +1318,15 @@ quote in EUR needed. Its cost basis still converts through that cost
 currency, and stays in it, with that leg named missing, when the cost
 currency has no quote in the conversion currency (w1/290).
 
+Holdings agree with `bea report holdings` on three more rules (w1/292). A
+`price` directive of zero is a quote: a delisted share quoted at `0 USD` is
+worth nothing, not its cost or an older quote. A group is left out only when
+every lot in it is sold: +2 HOOL held long and -2 HOOL held short net to
+0 HOOL but stay, with their -40 USD cost basis and a null `average_cost`. A
+group merged from lots costed in different currencies shows the latest of
+their quotes, and of two quotes from one day, the quote of the lot whose cost
+currency sorts first.
+
 When an explicit currency `conversion` did not reach everything, the summary
 also carries `missingPrices`: one `{from, to}` leg per currency that stayed
 unconverted because the ledger has no price path to `to` — the same shape holdings

@@ -220,7 +220,8 @@ class HoldingsGroup {
   @Field(() => HoldingsMoney)
   units: HoldingsMoney;
 
-  // Null when part of the group was bought with a price but no cost (w1/253).
+  // Null when part of the group was bought with a price but no cost (w1/253),
+  // or when its long and short lots net to zero units (w1/292).
   @Field(() => HoldingsMoney, { nullable: true })
   averageCost: HoldingsMoney | null;
 

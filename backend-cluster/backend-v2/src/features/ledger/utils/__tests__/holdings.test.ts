@@ -50,15 +50,21 @@ describe("holdingsDetailQuery", () => {
     const query = holdingsDetailQuery();
     expect(query).toContain("units(sum(position)) AS units");
     expect(query).toContain("cost(sum(position)) AS book_value");
-    expect(query).toContain("GROUP BY account, currency, cost_currency");
+    // One row per lot, so a sold lot is told apart from a long and a short
+    // lot that net to zero (w1/292).
+    expect(query).toContain(
+      "GROUP BY account, currency, cost_currency, cost_number, cost_date, cost_label",
+    );
     // The engine's value() and getprice() include prices implied by `@`
     // annotations, which no statement uses (w1/229).
     expect(query).not.toMatch(/value\(|getprice|conv_rate/);
   });
 
   it("reads the price directives from the prices table", () => {
+    // The quote currency rides beside the amount: the shell drops a zero
+    // amount from its cell (w1/292).
     expect(HOLDINGS_PRICES_QUERY).toBe(
-      "SELECT date, currency, amount FROM prices ORDER BY date",
+      "SELECT date, currency, amount, currency(amount) AS quote FROM prices ORDER BY date",
     );
   });
 });
@@ -91,11 +97,14 @@ describe("valueHoldingRows", () => {
       asOf: "2026-10-25",
     });
   /**
-   * The four columns it adds: market value, quote, conversion rate, and the
+   * The four values it adds: market value, quote, conversion rate, and the
    * quote in the conversion currency.
    */
   const added = (valued: ReturnType<typeof value>) =>
-    valued.rows[0]!.slice(DETAIL.length);
+    valued.rows[0]!.slice(DETAIL.length, DETAIL.length + 4);
+  /** The two dates it adds after them: the quote's and the direct quote's. */
+  const dates = (valued: ReturnType<typeof value>) =>
+    valued.rows[0]!.slice(DETAIL.length + 4);
 
   it("values at the latest directive on or before the day", () => {
     const valued = value([
@@ -108,8 +117,11 @@ describe("valueHoldingRows", () => {
       "price",
       "conv_rate",
       "direct_price",
+      "price_date",
+      "direct_date",
     ]);
     expect(added(valued)).toEqual([map("USD", "96"), "16", "", ""]);
+    expect(dates(valued)).toEqual(["2026-10-25", ""]);
   });
 
   it("takes the later of two directives on one day", () => {
@@ -155,6 +167,29 @@ describe("valueHoldingRows", () => {
       "EUR",
     );
     expect(added(valued)).toEqual([map("USD", "96"), "16", "0.92", "15"]);
+    expect(dates(valued)).toEqual(["2026-10-01", "2026-10-01"]);
+  });
+
+  // w1/292: the engine's cell for `price DEAD 0 USD` is `{}`, with USD in the
+  // quote column. `bea report holdings` values the lot at nothing; read as
+  // no quote, the lot was valued at an older quote, or at cost.
+  it("values a lot quoted at zero at nothing", () => {
+    const valued = value([
+      ["2026-09-01", "QAX", map("USD", "15.00"), "USD"],
+      ["2026-10-01", "QAX", {}, "USD"],
+    ]);
+    expect(added(valued)).toEqual([map("USD", "0"), "0", "", ""]);
+    expect(dates(valued)).toEqual(["2026-10-01", ""]);
+  });
+
+  it("takes no inverse from a zero quote", () => {
+    // A zero rate has none: the reverse pair keeps its previous quote, as
+    // the CLI's price map does.
+    const valued = value([
+      ["2026-09-01", "USD", map("QAX", "0.0625"), "QAX"],
+      ["2026-10-01", "USD", {}, "QAX"],
+    ]);
+    expect(added(valued)).toEqual([map("USD", "96"), "16", "", ""]);
   });
 
   it("asks for no rate or target quote when the target is the held currency, or none is set", () => {
@@ -165,7 +200,14 @@ describe("valueHoldingRows", () => {
 
   it("leaves a row it cannot read for the composer to skip", () => {
     const valued = value([], [["Assets:Broker", "QAX", "USD", "", ""]]);
-    expect(added(valued)).toEqual(["", "", "", ""]);
+    expect(valued.rows[0]!.slice(DETAIL.length)).toEqual([
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ]);
   });
 });
 
@@ -1003,6 +1045,343 @@ describe("composeHoldings", () => {
         cost_basis: { number: "200", currency: "EUR" },
         market_value: { number: "200", currency: "EUR" },
         price: { number: "100", currency: "EUR" },
+      });
+    });
+  });
+
+  // w1/292: three ways the hosted composer parted from `bea report holdings`,
+  // each checked side by side against the CLI on a synthetic ledger. The rows
+  // are the engine's own: one per lot, a zero amount as `{}` beside its quote
+  // currency.
+  describe("parity with bea report holdings", () => {
+    const LOT_COLUMNS = [
+      "account",
+      "currency",
+      "cost_currency",
+      "cost_number",
+      "cost_date",
+      "cost_label",
+      "units",
+      "book_value",
+    ];
+    const lot = (
+      account: string,
+      commodity: string,
+      held: string,
+      cost: string,
+      date: string,
+      units: string | null,
+      basis: string | null,
+    ): Cell[] => [
+      account,
+      commodity,
+      held,
+      cost,
+      date,
+      null,
+      units === null ? {} : map(commodity, units),
+      basis === null ? {} : map(held, basis),
+    ];
+    const compose = (
+      rows: Cell[][],
+      prices: Cell[][],
+      groupBy: "account" | "commodity",
+      conversionTarget: string | null = "USD",
+    ) =>
+      composeHoldings({
+        ...base,
+        ...valueHoldingRows({
+          columns: LOT_COLUMNS,
+          rows,
+          prices,
+          conversionTarget,
+          asOf: "2026-11-18",
+        }),
+        conversionTarget,
+        groupBy,
+        prices,
+        operatingCurrencies: ["USD"],
+      });
+
+    describe("a zero quote", () => {
+      // 10 DEAD bought at 50 USD, quoted at 40 USD, then at 0 USD.
+      const dead = [
+        lot("Assets:Broker", "DEAD", "USD", "50", "2024-01-03", "10", "500"),
+      ];
+      const PRICES: Cell[][] = [
+        ["2024-06-01", "DEAD", map("USD", "40"), "USD"],
+        ["2025-01-01", "DEAD", {}, "USD"],
+      ];
+
+      it.each(["account", "commodity"] as const)(
+        "values the %s group at nothing, not at its older quote",
+        (groupBy) => {
+          const result = compose(dead, PRICES, groupBy);
+          expect(result.groups[0]).toMatchObject({
+            cost_basis: { number: "500", currency: "USD" },
+            market_value: { number: "0", currency: "USD" },
+            price: { number: "0", currency: "USD" },
+          });
+          expect(result.totals.market_value).toEqual({ USD: "0" });
+          expect(result.valuation).toBe("complete");
+        },
+      );
+
+      it("values a lot with only a zero quote at nothing, not at cost", () => {
+        const result = compose(dead, [PRICES[1]!], "account");
+        expect(result.groups[0]!.market_value).toEqual({
+          number: "0",
+          currency: "USD",
+        });
+        expect(result.missing_prices).toEqual([]);
+        expect(result.valuation).toBe("complete");
+      });
+
+      it("values the zero quote's commodity directly under a conversion", () => {
+        // Costed in EUR: DEAD's own USD quote of zero values it.
+        const eur = [
+          lot("Assets:Broker", "DEAD", "EUR", "45", "2024-01-03", "10", "450"),
+        ];
+        const result = compose(
+          eur,
+          [
+            ["2024-06-01", "EUR", map("USD", "1.1"), "USD"],
+            ["2025-01-01", "DEAD", {}, "USD"],
+          ],
+          "account",
+        );
+        expect(result.groups[0]).toMatchObject({
+          cost_basis: { number: "495", currency: "USD" },
+          market_value: { number: "0", currency: "USD" },
+          price: { number: "0", currency: "USD" },
+        });
+        expect(result.valuation).toBe("complete");
+      });
+
+      it("values an uncosted position at a zero quote", () => {
+        const priced: Cell[] = [
+          "Assets:Broker",
+          "DEAD",
+          null,
+          null,
+          null,
+          null,
+          map("DEAD", "3"),
+          map("DEAD", "3"),
+        ];
+        const result = compose([priced], PRICES, "account");
+        expect(result.groups[0]).toMatchObject({
+          cost_basis: null,
+          market_value: { number: "0", currency: "USD" },
+          price: { number: "0", currency: "USD" },
+        });
+        expect(result.valuation).toBe("complete");
+      });
+
+      it("counts a zero quote's currency as money without an operating currency", () => {
+        // XYZ is quoted only in ABC, at zero: ABC is money, so an uncosted
+        // ABC balance is cash, as in the CLI.
+        const result = composeHoldings({
+          ...base,
+          rows: [["Assets:Wallet", "ABC", "", map("ABC", "5"), {}, {}, ""]],
+          prices: [["2025-01-01", "XYZ", {}, "ABC"]],
+          operatingCurrencies: [],
+        });
+        expect(result.groups).toEqual([]);
+      });
+    });
+
+    describe("lots that net to zero units", () => {
+      // +2 HOOL long at 100 USD, -2 HOOL short at 120 USD, HOOL at 150 USD.
+      const long = lot(
+        "Assets:Long",
+        "HOOL",
+        "USD",
+        "100",
+        "2026-01-02",
+        "2",
+        "200",
+      );
+      const short = lot(
+        "Assets:Short",
+        "HOOL",
+        "USD",
+        "120",
+        "2026-01-03",
+        "-2",
+        "-240",
+      );
+      const HOOL: Cell[] = ["2026-01-31", "HOOL", map("USD", "150"), "USD"];
+
+      it("keeps a commodity group whose accounts net to zero", () => {
+        const result = compose([long, short], [HOOL], "commodity");
+        expect(result.groups).toEqual([
+          {
+            accounts: ["Assets:Long", "Assets:Short"],
+            commodity: "HOOL",
+            units: { number: "0", currency: "HOOL" },
+            average_cost: null,
+            cost_basis: { number: "-40", currency: "USD" },
+            market_value: { number: "0", currency: "USD" },
+            price: { number: "150", currency: "USD" },
+          },
+        ]);
+        expect(result.totals).toEqual({
+          cost_basis: { USD: "-40" },
+          market_value: { USD: "0" },
+        });
+        expect(result.cost_basis_complete).toBe(true);
+      });
+
+      it("keeps one account's long and short lots that net to zero", () => {
+        // Booking NONE: +3 ACME at 10 USD and -3 at 12 USD stay two lots.
+        const rows = [
+          lot("Assets:Mixed", "ACME", "USD", "10", "2026-01-04", "3", "30"),
+          lot("Assets:Mixed", "ACME", "USD", "12", "2026-01-05", "-3", "-36"),
+        ];
+        const result = compose(
+          rows,
+          [["2026-01-31", "ACME", map("USD", "11"), "USD"]],
+          "account",
+        );
+        expect(result.groups).toEqual([
+          {
+            account: "Assets:Mixed",
+            commodity: "ACME",
+            units: { number: "0", currency: "ACME" },
+            average_cost: null,
+            cost_basis: { number: "-6", currency: "USD" },
+            market_value: { number: "0", currency: "USD" },
+            price: { number: "11", currency: "USD" },
+          },
+        ]);
+      });
+
+      it.each(["account", "commodity"] as const)(
+        "still leaves out a %s group whose every lot is sold",
+        (groupBy) => {
+          const sold = [
+            lot("Assets:Long", "HOOL", "USD", "100", "2026-01-02", null, null),
+            lot("Assets:Short", "HOOL", "USD", "120", "2026-01-03", null, null),
+          ];
+          const result = compose(sold, [HOOL], groupBy);
+          expect(result.groups).toEqual([]);
+          expect(result.totals).toEqual({ cost_basis: {}, market_value: {} });
+        },
+      );
+
+      it("keeps uncosted positions that net to zero across accounts", () => {
+        const uncosted = (account: string, units: string): Cell[] => [
+          account,
+          "HOOL",
+          null,
+          null,
+          null,
+          null,
+          map("HOOL", units),
+          map("HOOL", units),
+        ];
+        const result = compose(
+          [uncosted("Assets:A", "3"), uncosted("Assets:B", "-3")],
+          [HOOL],
+          "commodity",
+        );
+        expect(result.groups).toEqual([
+          {
+            accounts: ["Assets:A", "Assets:B"],
+            commodity: "HOOL",
+            units: { number: "0", currency: "HOOL" },
+            average_cost: null,
+            cost_basis: null,
+            market_value: { number: "0", currency: "USD" },
+            price: { number: "150", currency: "USD" },
+          },
+        ]);
+      });
+    });
+
+    describe("the quote a merged group keeps", () => {
+      // 10 VT at 90 EUR and 10 at 80 GBP, no VT quote in USD: each lot is
+      // valued through its own cost currency, at quotes of different dates.
+      const eur = lot(
+        "Assets:Broker",
+        "VT",
+        "EUR",
+        "90",
+        "2024-01-03",
+        "10",
+        "900",
+      );
+      const gbp = lot(
+        "Assets:Broker",
+        "VT",
+        "GBP",
+        "80",
+        "2024-01-03",
+        "10",
+        "800",
+      );
+      const RATES: Cell[][] = [
+        ["2024-06-01", "EUR", map("USD", "1.10"), "USD"],
+        ["2024-06-01", "GBP", map("USD", "1.30"), "USD"],
+      ];
+
+      it.each([
+        ["the GBP lot's later", "2024-03-01", "2024-06-01", "110.5"],
+        ["the EUR lot's later", "2024-06-01", "2024-03-01", "110"],
+      ])("shows %s quote", (_label, eurDate, gbpDate, price) => {
+        const result = compose(
+          [eur, gbp],
+          [
+            [eurDate, "VT", map("EUR", "100"), "EUR"],
+            [gbpDate, "VT", map("GBP", "85"), "GBP"],
+            ...RATES,
+          ],
+          "account",
+        );
+        expect(result.groups).toHaveLength(1);
+        expect(result.groups[0]).toMatchObject({
+          units: { number: "20", currency: "VT" },
+          market_value: { number: "2205", currency: "USD" },
+          price: { number: price, currency: "USD" },
+        });
+      });
+
+      it("breaks a same-day tie by cost currency, not by account order", () => {
+        // Under commodity grouping the GBP lot's account sorts first; the
+        // CLI still lists the EUR part first and keeps its quote.
+        const gbpFirst = lot(
+          "Assets:A",
+          "VT",
+          "GBP",
+          "80",
+          "2024-01-03",
+          "10",
+          "800",
+        );
+        const eurSecond = lot(
+          "Assets:B",
+          "VT",
+          "EUR",
+          "90",
+          "2024-01-03",
+          "10",
+          "900",
+        );
+        const result = compose(
+          [gbpFirst, eurSecond],
+          [
+            ["2024-06-01", "VT", map("EUR", "100"), "EUR"],
+            ["2024-06-01", "VT", map("GBP", "85"), "GBP"],
+            ...RATES,
+          ],
+          "commodity",
+        );
+        expect(result.groups).toHaveLength(1);
+        expect(result.groups[0]!.price).toEqual({
+          number: "110",
+          currency: "USD",
+        });
       });
     });
   });
