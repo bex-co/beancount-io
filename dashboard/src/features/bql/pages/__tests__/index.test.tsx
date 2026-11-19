@@ -750,7 +750,14 @@ describe("LedgerQueryPage", () => {
       const run = await screen.findByRole("button", {
         name: "bql.executeQuery",
       });
+      // The bookmarked URL auto-runs on mount and disables Run while the
+      // query is in flight. focus() on a disabled button is a silent no-op,
+      // so without this wait the late mount sees body focus and steals it.
+      await waitFor(() => {
+        expect(run).toBeEnabled();
+      });
       run.focus();
+      expect(run).toHaveFocus();
 
       await release();
       expect(run).toHaveFocus();
