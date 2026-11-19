@@ -14,6 +14,9 @@ newest first.
 
 ### Skipped
 
+- 2026-11-19 ledger `RequestScopedGiteaClientFactory`/`IGiteaClientFactory` (`foundation/clients/gitea-client-factory.ts`) — one-product factory shape, but ~30 test files stub `getPublicApiClient` (one pins its args) and `scripts/verify-rustledger.ts` monkey-patches it; seam is load-bearing for tests, blast radius ~40 files.
+- 2026-11-19 ledger `ILedgerGeneratedFileWriter`/`ILedgerEntryWriter` (zero refs outside their defining service files) — live narrow contracts in the backend-v2 donor (workflows consume both, `composition/layers.ts` wires both); ledger copies are transplant fidelity, removing them diverges the transplant for no behavioral gain.
+
 ## rt-abstraction-police
 
 ### Deferred
@@ -24,6 +27,7 @@ newest first.
 
 ### Deferred
 
+- 2026-11-19 ledger `getUserApiClient` on `IGiteaClientFactory`/`RequestScopedGiteaClientFactory` (`backend-cluster/ledger/src/foundation/clients/gitea-client-factory.ts`) — zero callers in ledger (every service uses `getPublicApiClient`), but the method is live in the backend-v2 donor (`ledger-workflow.ts` ×4); decide transplant fidelity vs removal.
 - 2026-11-18 cli/ full `make deadcode` vulture scan — unrunnable where only Python 3.11 exists (requires-python >=3.12; interpreter download blocked); ruff F401/F841 plus `if False`/commented-def sweeps clean, rerun vulture where Python 3.12+ exists.
 
 ### Skipped
