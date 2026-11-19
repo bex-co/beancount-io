@@ -121,13 +121,16 @@ describe("ConversionSelect", () => {
     expect(trigger).toHaveAttribute("data-slot", "select-trigger");
   });
 
-  it("should pass onValueChange to Select component", () => {
-    // This is an integration test to verify the prop is connected
-    // The actual onChange behavior requires a real interaction which is
-    // difficult to test with Radix components in jsdom
+  it("should pass onValueChange to Select component", async () => {
     render(<ConversionSelect {...defaultProps} />);
 
-    expect(screen.getByRole("combobox")).toBeInTheDocument();
+    const selector = screen.getByRole("combobox");
+    selector.focus();
+    await userEvent.keyboard("{Enter}");
+    await userEvent.click(
+      within(document.body).getByRole("option", { name: "Units" }),
+    );
+    expect(mockOnValueChange).toHaveBeenCalledWith("units");
   });
 
   it("should use default USD currency when not specified", () => {
