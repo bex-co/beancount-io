@@ -2,6 +2,27 @@
 
 **Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
+## Current Glama/PR outcome — 2026-11-18 UTC
+
+[048](blocked/048.md) has fresh [maintainer feedback](https://github.com/punkpeye/awesome-mcp-servers/pull/18050#issuecomment-6931379253):
+claim the existing Glama source record, obtain a real quality evaluation (any
+grade is accepted), then add the genuine source badge to the existing PR18050.
+The publisher completed login; the public verified-maintainer marker and real
+score badge now establish that the source listing is claimed (maintenance A).
+Do not repeat the owner-login request. Worker browser control is the remaining
+access fault: the old isolated HTTP sessions do not preserve the intended
+window, while the regular Chrome connector lists tabs but navigation/inspection
+throws `timeoutMs`, including after a control-REPL reset. Native self-control of
+the desktop client is disallowed; no existing login state was cleared.
+
+The original PR's genuine badge update is now published in external commit
+4085ade130ed49e24733eec4db99d809094496c8. Upstream [check-submission passes](https://github.com/punkpeye/awesome-mcp-servers/actions/runs/44257192522/job/134641614286),
+and `has-glama` replaces `missing-glama`. The original PR remains open/unmerged.
+Real source quality evaluation is not proven by maintenance A; supported
+evaluation and eventual upstream merge remain. The latest targeted public
+checks also leave Docker6042, MCP.so6071, remote-list2753 and Cline3230 open,
+with no new review feedback. No duplicate applications or reminders were sent.
+
 ## Current OpenAI outcome — 2026-11-04 UTC
 
 [t010](blocked/m11/done/t010.md) is **done and archived**: after explicit owner
@@ -189,7 +210,7 @@ with their original owners. No item closes from a receipt or green check alone.
 | [m12/t003](blocked/m12/t003.md) | Google selects the existing account for Connected Apps preview or opens supported self-serve access; worker registers and verifies actual domain/auth/tool sync. One access request is accepted; no registered app or app-review receipt yet. ManualNov7or actual selection.1root. |
 | [042](blocked/042.md) | PulseMCP imports the already active registry record or opens supported intake/correction; worker verifies public/native result. ManualNov1or actual change.1root. |
 | [047](blocked/047.md) | MCP.so maintainers review/merge/import PR6071; worker verifies the canonical public entry. ManualNov3or actual feedback/publication.1root. |
-| [048](blocked/048.md) | Publisher confirms the actual new Glama GitHub read-access authorization. Worker completes organization claim and supported quality configuration; Glama passes real source checks; worker adds the actual badge to existing PR18050 and maintainers merge. Source approval/publication itself is already verified.1root. |
+| [048](blocked/048.md) | Owner login/claim wait cleared; genuine source badge published on the existing PR and upstream check passes on Nov18 (`has-glama`). Obtain supported source quality evaluation/feedback and verify eventual merge. Worker browser control remains faulty; maintenance A alone does not prove source quality checks. No repeat publisher login action is pending. |
 
 The remaining34leaves defer directly or transitively to these38roots. Each
 implementation task and standing closing task retains its full acceptance and
@@ -443,7 +464,7 @@ Prioritize the major correctness findings (PRINT/FROM/JOURNAL, authored location
 
 ## Inbox
 
-- [048](blocked/048.md) — Awesome MCP Servers PR18050 submitted; **blocked:** Glama source review/quality-score badge and upstream merge. Source intake receipt confirmed2026-10-30; next manual check not before2026-10-31T00:17:30Z or actual feedback earlier. Separate from remote-only PR2753; no duplicate submissions.
+- [048](blocked/048.md) — Original PR18050 now carries the genuine claimed-source badge; external commit4085ade and upstream check pass on Nov18, with `has-glama`. **blocked:** supported real source evaluation/feedback, worker browser-control recovery where needed, then maintainer merge. Login/claim and missing-badge gates are cleared; no repeat owner login action is pending.
 
 - [047](blocked/047.md) — MCP.so publication follow-through — submission041 is archived with actual PR6071 receipt; **blocked:** maintainer review/import, live listing and advertised native verification. No fee or website-login decision pending.
 - [042](blocked/042.md) — PulseMCP — **blocked:** official interim registry step already met (active1.0.0); await platform auto-import or supported reopening/correction, then public/native verification. No user action now.
