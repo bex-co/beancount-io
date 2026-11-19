@@ -495,6 +495,7 @@ def _close(
 
     from bea_engine import managed_load
     from bea_engine.ledger.models import CloseDirective
+    from bea_engine.ledger.reader import entry_generated
 
     roots = root_names_of(file) if into is None else None
     directive = CloseDirective(date=_date(request), account=parse_account(_text(request, "account"), roots))
@@ -524,9 +525,19 @@ def _close(
             if refusal is not None:
                 raise refusal
 
+    # An account closes once. When the ledger already declares this one's
+    # close, the write fails as a duplicate close, whose hint names that close
+    # to edit; a balance, its own or a descendant's, would send the user to a
+    # move-out the close refuses or to a --force that only reaches the
+    # duplicate (w1/293). A close the close_tree plugin generated is not one
+    # the ledger declares: the explicit close replaces it.
+    declared = any(
+        isinstance(entry, Close) and entry.account == directive.account and not entry_generated(entry, "close")
+        for entry in entries
+    )
     text = writer.format_entry(Close(meta={}, date=directive.date, account=directive.account))
     validated = write.validate_append(
-        file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot, inspect=judge
+        file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot, inspect=None if declared else judge
     )
     # Write against the ledger this decision read (w5/115), without loading it again.
     return _appended(file, directive, allow_errors=allow_errors, into=into, snapshot=snapshot, validated=validated)
