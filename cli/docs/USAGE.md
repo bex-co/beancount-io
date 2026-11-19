@@ -1303,7 +1303,12 @@ balance tolerances included), typed metadata, import row amounts, query JSON
 and CSV, and balance and report JSON — spells amounts in fixed-point decimal notation
 (`0.00000001`, never `1E-8`) so tiny values can be fed back into input without
 losing precision. Native posting
-arithmetic such as `84/2 EUR` works. A zero divisor, literal (`100/0`,
+arithmetic such as `84/2 EUR` works and is written evaluated (`42 EUR`). A
+quotient that does not terminate, such as `100/3 USD` in a `--posting`, a bulk
+`amount`, or `add balance --amount`, is refused and nothing is written:
+Beancount would store it rounded to 28 digits, and every report in that
+currency would print that many decimals. The refusal names an amount to write
+instead, such as `33.33 USD`. A zero divisor, literal (`100/0`,
 `100/(0)`) or computed (`100/(2-2)`), is refused as a usage error before it
 reaches the engine, because Beancount evaluates amount arithmetic while
 parsing and a zero divisor crashes it.

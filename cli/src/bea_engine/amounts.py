@@ -217,6 +217,35 @@ def require_plain_decimal(value: Any) -> Any:
     return value
 
 
+class Repeating(Decimal):
+    """A quotient that does not terminate (`100/3`), at Beancount's own 28-digit reading.
+
+    `parse_exact` marks each one, so a write can refuse it instead of storing
+    `33.33333333333333333333333333 USD`: every report in that currency then
+    printed 26 decimals, and the trial balance grew a rounding line (w1/313).
+    The grammar divides a `@@` total into a unit price, which is marked too;
+    only the amounts written as units or asserted balances are refused.
+    """
+
+
+def refuse_repeating(subject: str, number: Any, currency: Any) -> None:
+    """Refuse an amount whose arithmetic does not terminate, naming what to write instead.
+
+    `subject` names the input as the user typed it, such as `--amount '100/3
+    USD'`. Exact arithmetic (`84/2`, `10/4`) is not marked and passes.
+    """
+    if not isinstance(number, Repeating):
+        return
+    unit = f" {currency}" if isinstance(currency, str) else ""
+    places = max(2, 1 - number.adjusted())
+    example = number.quantize(Decimal(1).scaleb(-places))
+    raise ValueError(
+        f"{subject} does not divide exactly: Beancount would store {format(number, 'f')}{unit}, and every report "
+        f"in its currency would then print that many decimal places. Write the amount to the precision you mean, "
+        f"such as {format(example, 'f')}{unit}."
+    )
+
+
 def parse_exact(text: str) -> tuple[list[Any], list[Any], dict[str, Any]]:
     """Beancount's `parser.parse_string`, with every typed number kept digit for digit.
 
@@ -225,8 +254,8 @@ def parse_exact(text: str) -> tuple[list[Any], list[Any], dict[str, Any]]:
     28 significant digits while its positive twin was read exactly, and the
     rounded figure was what `bea` then wrote (w5/263). A parse that rounded is
     repeated under a context wide enough for any number the text can spell.
-    Only a quotient that does not terminate (`1/3`) fills that precision, and
-    it keeps Beancount's own 28-digit reading.
+    Only a quotient that does not terminate (`1/3`) fills that precision; it
+    keeps Beancount's own 28-digit reading, marked `Repeating` (w1/313).
     """
     from beancount.parser import parser as beancount_parser
 
@@ -246,9 +275,15 @@ def parse_exact(text: str) -> tuple[list[Any], list[Any], dict[str, Any]]:
 
 
 def _typed_digits(rounded: Any, exact: Any, precision: int) -> Any:
-    """`rounded`, with each number the wider parse read exactly taken from `exact`."""
+    """`rounded`, with each number the wider parse read exactly taken from `exact`.
+
+    A number that fills even the wide precision does not terminate, and keeps
+    its rounded reading marked `Repeating`.
+    """
     if isinstance(exact, Decimal):
-        return rounded if len(exact.as_tuple().digits) >= precision else exact
+        if len(exact.as_tuple().digits) < precision:
+            return exact
+        return Repeating(rounded) if isinstance(rounded, Decimal) else rounded
     if isinstance(exact, list) and isinstance(rounded, list) and len(exact) == len(rounded):
         return [_typed_digits(*pair, precision) for pair in zip(rounded, exact, strict=True)]
     if isinstance(exact, tuple) and hasattr(exact, "_fields") and type(exact) is type(rounded):

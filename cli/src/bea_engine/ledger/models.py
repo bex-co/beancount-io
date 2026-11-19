@@ -21,6 +21,7 @@ from pydantic import (
 from bea_engine.amounts import (
     JsonFloat,
     parse_exact,
+    refuse_repeating,
     refuse_scientific_notation,
     refuse_zero_divisor,
     require_plain_decimal,
@@ -365,6 +366,7 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
         refuse("no amount found")
     if units.currency is MISSING:
         refuse("no currency found")
+    refuse_repeating(f"amount {amount!r}", units.number, units.currency)
     fields: dict[str, Any] = {
         "units": {"number": format(units.number, "f"), "currency": units.currency},
     }

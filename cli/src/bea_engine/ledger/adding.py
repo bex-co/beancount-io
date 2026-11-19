@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from bea_engine import protocol
-from bea_engine.amounts import JsonFloat, parse_decimal_number, parse_exact
+from bea_engine.amounts import JsonFloat, parse_decimal_number, parse_exact, refuse_repeating
 from bea_engine.ledger import write, writer
 from bea_engine.ledger.text import (
     checked_operating_currencies,
@@ -1109,6 +1109,10 @@ def _parse_balance_amount(text: str) -> tuple[Decimal, str, Decimal | None]:
         raise protocol.UsageError("Supply a balance number, for example '1538 ~ 1 EUR'.")
     if entry.tolerance is not None and entry.tolerance < 0:
         raise protocol.UsageError("Balance tolerance must be nonnegative.")
+    try:
+        refuse_repeating(f"--amount {text!r}", entry.amount.number, entry.amount.currency)
+    except ValueError as exc:
+        raise protocol.UsageError(f"{exc} Nothing was written.") from None
     return entry.amount.number, entry.amount.currency, entry.tolerance
 
 
@@ -1370,6 +1374,15 @@ def _transaction(
         raise protocol.UsageError(message, details=details)
     entry = entries[0]
     for number, posting in enumerate(entry.postings, start=1):
+        try:
+            typed = postings[number - 1] if number <= len(postings) else posting.account
+            refuse_repeating(
+                f"--posting {number} {typed!r}",
+                getattr(posting.units, "number", None),
+                getattr(posting.units, "currency", None),
+            )
+        except ValueError as exc:
+            raise protocol.UsageError(f"{exc} Nothing was written.") from None
         if managed_load.zero_units_at_total_cost(posting):
             # Booking divides the total by the units, and raised (w5/538).
             raise protocol.UsageError(f"--posting {number} {managed_load.ZERO_UNITS_TOTAL_COST} Nothing was written.")

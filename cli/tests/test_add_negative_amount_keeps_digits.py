@@ -81,8 +81,9 @@ def test_posting_flag_with_a_price_keeps_the_negative_digits(tmp_path: Path) -> 
     assert f" -{WIDE} SHIB @ 2 USD" in _written(tmp_path)
 
 
-def test_a_repeating_quotient_keeps_beancounts_reading_beside_a_wide_number(tmp_path: Path) -> None:
-    result = _transaction(
+def test_a_repeating_quotient_beside_a_wide_number_is_refused(tmp_path: Path) -> None:
+    """The quotient that fills even the wide precision is refused, not written as 28 threes (w1/313)."""
+    refused = _transaction(
         tmp_path,
         f"Assets:Wallet -{WIDE} SHIB",
         "Assets:Wallet -1/3 SHIB",
@@ -90,10 +91,22 @@ def test_a_repeating_quotient_keeps_beancounts_reading_beside_a_wide_number(tmp_
         "Equity:Opening",
     )
 
+    assert refused.returncode == 2, refused.stdout + refused.stderr
+    assert "--posting 2 'Assets:Wallet -1/3 SHIB' does not divide exactly" in " ".join(refused.stderr.split())
+    assert _written(tmp_path) == ""
+
+    result = _transaction(
+        tmp_path,
+        f"Assets:Wallet -{WIDE} SHIB",
+        "Assets:Wallet -0.33 SHIB",
+        f"Equity:Opening {WIDE} SHIB",
+        "Equity:Opening",
+    )
+
     assert result.returncode == 0, result.stderr
     written = _written(tmp_path)
     assert f" -{WIDE} SHIB" in written
-    assert f" -0.{'3' * 28} SHIB" in written
+    assert ROUNDED not in written
 
 
 def test_an_inferred_leg_beside_a_wide_number_is_refused_at_its_line(tmp_path: Path) -> None:

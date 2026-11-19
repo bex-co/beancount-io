@@ -208,12 +208,12 @@ def test_a_ledger_that_balances_exactly_has_no_rounding_line(tmp_path: Path) -> 
         assert "Rounding residual" not in _run(tmp_path, EXACT, "report", report)
 
 
-def test_a_split_written_by_bea_add_reads_as_rounding(tmp_path: Path) -> None:
-    write_ledger(tmp_path, SPLIT.split('2024-01-02 * "Split bill"')[0])
+def test_a_split_the_ledger_spells_as_arithmetic_reads_as_rounding(tmp_path: Path) -> None:
+    # `bea add` refuses `10/3 USD` (w1/313), but a ledger may spell it natively,
+    # and Beancount evaluates it to 28 digits on load.
+    legs = "  Expenses:Food 10/3 USD\n  Expenses:Rent 10/3 USD\n  Assets:Cash -6.67 USD\n"
+    write_ledger(tmp_path, SPLIT.split('2024-01-02 * "Split bill"')[0] + '2024-01-02 * "split"\n' + legs)
     ledger = str(tmp_path / "main.beancount")
-    legs = ["-p", "Expenses:Food 10/3 USD", "-p", "Expenses:Rent 10/3 USD", "-p", "Assets:Cash -6.67 USD"]
-    added = bea(["-f", ledger, "add", "transaction", "split", *legs], tmp_path)
-    assert added.returncode == 0, added.stdout + added.stderr
 
     run = bea(["-f", ledger, "--json", "report", "trial-balance"], tmp_path)
     assert run.returncode == 0, run.stdout + run.stderr
