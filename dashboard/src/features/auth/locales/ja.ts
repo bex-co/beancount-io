@@ -208,10 +208,6 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "パスワード",
     description: "Label for password input field",
   },
-  "auth.passwordMinLength": {
-    message: "パスワードは6文字以上で入力してください",
-    description: "Validation error when password is too short",
-  },
   "auth.passwordMaxLength": {
     message: "パスワードは128文字以下で入力してください",
     description: "Validation error when password exceeds the maximum length",
@@ -424,6 +420,28 @@ const jaAuth: Record<string, TranslationEntry> = {
     message:
       "会計ニーズにBeancountを信頼する何千人もの満足ユーザーに加わりましょう",
     description: "Loved by users feature description",
+  },
+  "auth.selfHosted": {
+    message: "セルフホスト",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "この Beancount.io は Beancount.io のサービスではなく、所有者が運営しています。帳簿はこのサーバー上に保存されます。",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "プレーンテキストの帳簿",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "帳簿は Git リポジトリ内のプレーンテキストの Beancount ファイルなので、いつでもクローン、バックアップ、移行できます。",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
   },
   "auth.verifyYourEmail": {
     message: "メールアドレスを確認する",

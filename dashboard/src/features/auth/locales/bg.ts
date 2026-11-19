@@ -214,6 +214,28 @@ const bgAuth: Record<string, TranslationEntry> = {
       "Присъединете се към хиляди доволни потребители, които се доверяват на Beancount за своите счетоводни нужди",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Самостоятелно хостван",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Този Beancount.io се поддържа от своя собственик, а не от услугата Beancount.io. Вашето счетоводство се съхранява на неговия собствен сървър.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Счетоводство в обикновен текст",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Вашият леджър е обикновен текст на Beancount в Git хранилище, така че можете да го клонирате, архивирате или преместите, когато пожелаете.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Нова парола",
     description: "Label for new password field",
@@ -255,10 +277,6 @@ const bgAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Парола",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "Паролата трябва да бъде поне 6 символа",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "Паролата трябва да бъде най-много 128 символа",

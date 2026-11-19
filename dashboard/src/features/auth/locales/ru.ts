@@ -214,6 +214,28 @@ const ruAuth: Record<string, TranslationEntry> = {
       "Присоединяйтесь к тысячам довольных пользователей, которые доверяют Beancount для своих бухгалтерских потребностей",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Собственный хостинг",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Этот Beancount.io обслуживает его владелец, а не сервис Beancount.io. Ваш учёт хранится на его собственном сервере.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Учёт в простом тексте",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Ваш журнал — это простой текст Beancount в Git-репозитории: его можно клонировать, сохранить в резервную копию или перенести в любой момент.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Новый пароль",
     description: "Label for new password field",
@@ -255,10 +277,6 @@ const ruAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Пароль",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "Пароль должен содержать не менее 6 символов",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "Пароль должен содержать не более 128 символов",

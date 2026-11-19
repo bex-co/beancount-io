@@ -112,7 +112,7 @@ const frUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Cette action ne peut pas être annulée. Ceci supprimera définitivement votre compte et retirera toutes vos données de nos serveurs.",
+      "Cette action ne peut pas être annulée. Ceci supprimera définitivement votre compte et toutes vos données.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

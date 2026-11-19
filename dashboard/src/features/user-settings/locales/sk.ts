@@ -112,7 +112,7 @@ const skUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Túto akciu nie je možné vrátiť späť. Natrvalo vymaže váš účet a odstráni všetky vaše údaje z našich serverov.",
+      "Túto akciu nie je možné vrátiť späť. Natrvalo vymaže váš účet a všetky vaše údaje.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

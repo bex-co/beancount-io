@@ -112,7 +112,7 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Esta ação não pode ser desfeita. Isso excluirá permanentemente sua conta e removerá todos os seus dados de nossos servidores.",
+      "Esta ação não pode ser desfeita. Isso excluirá permanentemente sua conta e todos os seus dados.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

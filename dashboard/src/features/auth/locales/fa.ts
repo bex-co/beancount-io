@@ -214,6 +214,28 @@ const faAuth: Record<string, TranslationEntry> = {
       "به هزاران کاربر راضی بپیوندید که به Beancount برای نیازهای حسابداری خود اعتماد دارند",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "میزبانی شخصی",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "این Beancount.io را مالک آن اداره می‌کند، نه سرویس Beancount.io. حساب‌های شما روی سرور خود آن نگهداری می‌شوند.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "دفاتر متن ساده",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "دفترکل شما متن سادهٔ Beancount در یک مخزن Git است، پس هر زمان بخواهید می‌توانید آن را کلون کنید، از آن نسخهٔ پشتیبان بگیرید یا جابه‌جایش کنید.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "رمز عبور جدید",
     description: "Label for new password field",
@@ -255,10 +277,6 @@ const faAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "رمز عبور",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "رمز عبور باید حداقل ۶ کاراکتر باشد",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "رمز عبور باید حداکثر ۱۲۸ کاراکتر باشد",

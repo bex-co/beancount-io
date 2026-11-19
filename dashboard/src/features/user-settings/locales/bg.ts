@@ -112,7 +112,7 @@ const bgUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Това действие не може да бъде отменено. Това ще изтрие окончателно вашия акаунт и ще премахне всички ваши данни от нашите сървъри.",
+      "Това действие не може да бъде отменено. Това ще изтрие окончателно вашия акаунт и всички ваши данни.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

@@ -112,7 +112,7 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Цю дію неможливо скасувати. Це назавжди видалить ваш обліковий запис і видалить всі ваші дані з наших серверів.",
+      "Цю дію неможливо скасувати. Це назавжди видалить ваш обліковий запис і всі ваші дані.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

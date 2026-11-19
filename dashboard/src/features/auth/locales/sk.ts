@@ -214,6 +214,28 @@ const skAuth: Record<string, TranslationEntry> = {
       "Pridajte sa k tisíckam spokojných používateľov, ktorí dôverujú Beancount pre svoje účtovné potreby",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Vlastný hosting",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Tento Beancount.io prevádzkuje jeho vlastník, nie služba Beancount.io. Vaše účtovníctvo je uložené na jeho vlastnom serveri.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Účtovníctvo v čistom texte",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Vaša účtovná kniha je čistý text Beancount v repozitári Git, takže ju môžete kedykoľvek naklonovať, zálohovať alebo presunúť.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Nové heslo",
     description: "Label for new password field",
@@ -255,10 +277,6 @@ const skAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Heslo",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "Heslo musí mať aspoň 6 znakov",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "Heslo musí mať najviac 128 znakov",

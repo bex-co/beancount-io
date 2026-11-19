@@ -210,10 +210,6 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "Password",
     description: "Label for password input field",
   },
-  "auth.passwordMinLength": {
-    message: "Password must be at least 6 characters",
-    description: "Validation error when password is too short",
-  },
   "auth.passwordMaxLength": {
     message: "Password must be at most 128 characters",
     description: "Validation error when password exceeds the maximum length",
@@ -424,6 +420,28 @@ const enAuth: Record<string, TranslationEntry> = {
     message:
       "Join thousands of satisfied users who trust Beancount for their accounting needs",
     description: "Loved by users feature description",
+  },
+  "auth.selfHosted": {
+    message: "Self-hosted",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "This Beancount.io is run by its owner, not by the Beancount.io service. Your books are kept on its own server.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Plain-text books",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Your ledger is plain Beancount text in a Git repository, so you can clone it, back it up or move it whenever you like.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
   },
   "auth.verifyYourEmail": {
     message: "Verify your email",

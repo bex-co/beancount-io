@@ -1,8 +1,8 @@
-import { Lock, BarChart3, Heart } from "lucide-react";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useRegisterForm } from "@/features/auth/hooks/use-register-form";
 import { RegisterForm } from "@/features/auth/components/register-form";
+import { AuthFeaturePanel } from "@/features/auth/components/auth-feature-panel";
 import { useDeploymentInfo } from "@/common/hooks/use-deployment-info";
 
 type RegisterPageProps = {
@@ -26,30 +26,6 @@ export default function RegisterPage({
   const { onSubmit, isLoading, serverError, defaultUsername } = useRegisterForm(
     { withDefaultLedger, inviteSrc, inviteBy, onSuccess, onSignedIn },
   );
-
-  const features = [
-    {
-      icon: Lock,
-      title: t("auth.secureAccess"),
-      description: t("auth.secureAccessDescription"),
-      iconColor: "text-chart-1",
-      iconBg: "bg-chart-1/10",
-    },
-    {
-      icon: BarChart3,
-      title: t("auth.realTimeInsights"),
-      description: t("auth.realTimeInsightsDescription"),
-      iconColor: "text-chart-2",
-      iconBg: "bg-chart-2/10",
-    },
-    {
-      icon: Heart,
-      title: t("auth.lovedByUsers"),
-      description: t("auth.lovedByUsersDescription"),
-      iconColor: "text-chart-4",
-      iconBg: "bg-chart-4/10",
-    },
-  ];
 
   return (
     <>
@@ -78,30 +54,7 @@ export default function RegisterPage({
           </div>
         </main>
 
-        <aside className="hidden lg:flex flex-1 items-center justify-center bg-muted/30 py-12 px-4 sm:px-6 lg:px-8">
-          <div className="w-full max-w-md space-y-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="space-y-4">
-                  <div
-                    className={`w-16 h-16 rounded-full ${feature.iconBg} flex items-center justify-center`}
-                  >
-                    <Icon className={`w-8 h-8 ${feature.iconColor}`} />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold text-foreground">
-                      {feature.title}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </aside>
+        <AuthFeaturePanel />
       </div>
     </>
   );

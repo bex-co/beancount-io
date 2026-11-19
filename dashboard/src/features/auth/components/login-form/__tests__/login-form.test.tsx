@@ -98,3 +98,24 @@ describe("LoginForm provider sign-in", () => {
     );
   });
 });
+
+describe("LoginForm password rule", () => {
+  // Sign-up asks for 8 characters; an older account's password may be
+  // shorter. Sign-in sends whatever was typed and lets the server decide.
+  it("sends a password shorter than sign-up's minimum to the server", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<LoginForm {...defaultProps} onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText(/^email/i), "reader@example.com");
+    await user.type(screen.getByLabelText("Password"), "abc12");
+    await user.click(screen.getByRole("button", { name: "Sign In" }));
+
+    expect(onSubmit).toHaveBeenCalledOnce();
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      email: "reader@example.com",
+      password: "abc12",
+    });
+    expect(screen.queryByText(/at least/i)).not.toBeInTheDocument();
+  });
+});

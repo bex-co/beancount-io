@@ -215,6 +215,28 @@ const deAuth: Record<string, TranslationEntry> = {
       "Schließen Sie sich Tausenden zufriedener Benutzer an, die Beancount für ihre Buchhaltungsanforderungen vertrauen",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Selbst gehostet",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Dieses Beancount.io wird von seinem Eigentümer betrieben, nicht vom Dienst Beancount.io. Ihre Buchhaltung liegt auf seinem eigenen Server.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Bücher als reiner Text",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Ihr Hauptbuch ist reiner Beancount-Text in einem Git-Repository. Sie können es jederzeit klonen, sichern oder umziehen.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Neues Passwort",
     description: "Label for new password field",
@@ -256,10 +278,6 @@ const deAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Passwort",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "Das Passwort muss mindestens 6 Zeichen lang sein",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "Das Passwort darf höchstens 128 Zeichen lang sein",

@@ -113,7 +113,7 @@ const deUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Diese Aktion kann nicht rückgängig gemacht werden. Dies löscht Ihr Konto dauerhaft und entfernt alle Ihre Daten von unseren Servern.",
+      "Diese Aktion kann nicht rückgängig gemacht werden. Dies löscht Ihr Konto und alle Ihre Daten dauerhaft.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

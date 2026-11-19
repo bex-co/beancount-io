@@ -215,6 +215,28 @@ const esAuth: Record<string, TranslationEntry> = {
       "Únete a miles de usuarios satisfechos que confían en Beancount para sus necesidades contables",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Autoalojado",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Este Beancount.io lo gestiona su propietario, no el servicio Beancount.io. Su contabilidad se guarda en su propio servidor.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Contabilidad en texto plano",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Su libro es texto plano de Beancount en un repositorio Git, así que puede clonarlo, hacer una copia de seguridad o moverlo cuando quiera.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Nueva Contraseña",
     description: "Label for new password field",
@@ -257,10 +279,6 @@ const esAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Contraseña",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "La contraseña debe tener al menos 6 caracteres",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "La contraseña debe tener como máximo 128 caracteres",

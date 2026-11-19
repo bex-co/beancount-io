@@ -112,7 +112,7 @@ const ruUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Это действие нельзя отменить. Учётная запись будет удалена навсегда, а все ваши данные — с наших серверов.",
+      "Это действие нельзя отменить. Учётная запись и все ваши данные будут удалены навсегда.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

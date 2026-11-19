@@ -113,7 +113,7 @@ const caUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Aquesta acció no es pot desfer. Això eliminarà permanentment el vostre compte i eliminarà totes les vostres dades dels nostres servidors.",
+      "Aquesta acció no es pot desfer. Això eliminarà permanentment el vostre compte i totes les vostres dades.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

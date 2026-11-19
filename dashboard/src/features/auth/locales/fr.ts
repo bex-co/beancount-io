@@ -216,6 +216,28 @@ const frAuth: Record<string, TranslationEntry> = {
       "Rejoignez des milliers d'utilisateurs satisfaits qui font confiance à Beancount pour leurs besoins comptables",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Auto-hébergé",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Ce Beancount.io est géré par son propriétaire, et non par le service Beancount.io. Votre comptabilité est conservée sur son propre serveur.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Comptabilité en texte brut",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Votre grand livre est du texte brut Beancount dans un dépôt Git : vous pouvez le cloner, le sauvegarder ou le déplacer quand vous le souhaitez.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Nouveau mot de passe",
     description: "Label for new password field",
@@ -257,10 +279,6 @@ const frAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Mot de passe",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "Le mot de passe doit contenir au moins 6 caractères",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "Le mot de passe doit contenir au maximum 128 caractères",

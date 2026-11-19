@@ -206,10 +206,6 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "비밀번호",
     description: "Label for password input field",
   },
-  "auth.passwordMinLength": {
-    message: "비밀번호는 최소 6자 이상이어야 합니다",
-    description: "Validation error when password is too short",
-  },
   "auth.passwordMaxLength": {
     message: "비밀번호는 최대 128자 이하여야 합니다",
     description: "Validation error when password exceeds the maximum length",
@@ -421,6 +417,28 @@ const koAuth: Record<string, TranslationEntry> = {
     message:
       "회계 요구에 Beancount를 신뢰하는 수천 명의 만족한 사용자들과 함께하세요",
     description: "Loved by users feature description",
+  },
+  "auth.selfHosted": {
+    message: "셀프 호스팅",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "이 Beancount.io는 Beancount.io 서비스가 아니라 소유자가 운영합니다. 원장은 이 서버에 보관됩니다.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "일반 텍스트 원장",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "원장은 Git 저장소에 있는 일반 텍스트 Beancount 파일이므로 언제든지 복제하고, 백업하고, 옮길 수 있습니다.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
   },
   "auth.verifyYourEmail": {
     message: "이메일을 확인하세요",

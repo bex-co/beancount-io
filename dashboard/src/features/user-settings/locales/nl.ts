@@ -112,7 +112,7 @@ const nlUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "Deze actie kan niet ongedaan gemaakt worden. Dit zal uw account permanent verwijderen en al uw gegevens van onze servers verwijderen.",
+      "Deze actie kan niet ongedaan gemaakt worden. Dit verwijdert uw account en al uw gegevens permanent.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

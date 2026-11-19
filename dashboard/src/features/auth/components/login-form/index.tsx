@@ -53,10 +53,12 @@ export function LoginForm({
           .min(1, t("auth.emailRequired"))
           .email(t("auth.emailInvalid"))
           .transform((email) => email.toLowerCase().trim()),
+        // No length floor: the 8 characters of `password-rule.ts` bind a
+        // password being chosen, and an account's older one may be shorter.
+        // A floor here only contradicted the one sign-up states.
         password: z
           .string()
           .min(1, t("auth.passwordRequired"))
-          .min(6, t("auth.passwordMinLength"))
           .max(128, t("auth.passwordMaxLength")),
       }),
     [t],

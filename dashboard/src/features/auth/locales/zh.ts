@@ -210,6 +210,28 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "加入数千名信任 Beancount 满足其会计需求的满意用户",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "自托管",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "这个 Beancount.io 由它的所有者运行，而不是由 Beancount.io 服务运行。你的账本保存在它自己的服务器上。",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "纯文本账本",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "你的账本是 Git 仓库里的纯文本 Beancount 文件，可以随时克隆、备份或迁移。",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "新密码",
     description: "Label for new password field",
@@ -251,10 +273,6 @@ const zhAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "密码",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "密码至少需要6个字符",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "密码最多不能超过128个字符",

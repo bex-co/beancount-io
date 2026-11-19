@@ -111,7 +111,7 @@ const faUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "این عملیات قابل بازگشت نیست. حساب شما و تمام داده‌هایتان از سرورهای ما به‌طور دائمی حذف خواهند شد.",
+      "این عملیات قابل بازگشت نیست. حساب شما و تمام داده‌هایتان به‌طور دائمی حذف خواهند شد.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

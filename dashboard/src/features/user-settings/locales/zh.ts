@@ -110,8 +110,7 @@ const zhUserSettings: Record<string, TranslationEntry> = {
     description: "Placeholder text for deletion confirmation input",
   },
   "userSettings.deleteAccountDialogDescription": {
-    message:
-      "此操作无法撤销。这将永久删除你的账户并从我们的服务器中删除你的所有数据。",
+    message: "此操作无法撤销。这将永久删除你的账户及你的所有数据。",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

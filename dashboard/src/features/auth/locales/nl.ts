@@ -214,6 +214,28 @@ const nlAuth: Record<string, TranslationEntry> = {
       "Sluit u aan bij duizenden tevreden gebruikers die Beancount vertrouwen voor hun boekhoudbehoeften",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Zelf gehost",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Deze Beancount.io wordt beheerd door de eigenaar, niet door de Beancount.io-dienst. Uw boekhouding staat op deze eigen server.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Boekhouding in platte tekst",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Uw grootboek is platte Beancount-tekst in een Git-repository, dus u kunt het klonen, er een back-up van maken of het verhuizen wanneer u maar wilt.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Nieuw wachtwoord",
     description: "Label for new password field",
@@ -255,10 +277,6 @@ const nlAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Wachtwoord",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "Wachtwoord moet minimaal 6 tekens bevatten",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "Wachtwoord mag maximaal 128 tekens bevatten",

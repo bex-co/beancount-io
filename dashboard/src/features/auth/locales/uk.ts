@@ -214,6 +214,28 @@ const ukAuth: Record<string, TranslationEntry> = {
       "Приєднуйтесь до тисяч задоволених користувачів, які довіряють Beancount для своїх облікових потреб",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Власний хостинг",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Цей Beancount.io обслуговує його власник, а не сервіс Beancount.io. Ваш облік зберігається на його власному сервері.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Облік у простому тексті",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Ваш журнал — це простий текст Beancount у Git-репозиторії, тож його можна будь-коли клонувати, зберегти в резервну копію або перенести.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Новий пароль",
     description: "Label for new password field",
@@ -255,10 +277,6 @@ const ukAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Пароль",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "Пароль має містити щонайменше 6 символів",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "Пароль має містити не більше 128 символів",

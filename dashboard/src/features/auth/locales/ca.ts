@@ -215,6 +215,28 @@ const caAuth: Record<string, TranslationEntry> = {
       "Uneix-te a milers d'usuaris satisfets que confien en Beancount per a les seves necessitats comptables",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Allotjat pel propietari",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Aquest Beancount.io el gestiona el seu propietari, no el servei Beancount.io. La vostra comptabilitat es desa al seu propi servidor.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Comptabilitat en text pla",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "El vostre llibre és text pla de Beancount en un repositori Git, així que el podeu clonar, fer-ne una còpia de seguretat o moure'l quan vulgueu.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Contrasenya nova",
     description: "Label for new password field",
@@ -257,10 +279,6 @@ const caAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Contrasenya",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "La contrasenya ha de tenir almenys 6 caràcters",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "La contrasenya ha de tenir com a màxim 128 caràcters",

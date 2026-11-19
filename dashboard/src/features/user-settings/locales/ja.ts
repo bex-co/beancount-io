@@ -95,7 +95,7 @@ const jaUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "この操作は元に戻せません。アカウントが完全に削除され、すべてのデータがサーバーから削除されます。",
+      "この操作は元に戻せません。アカウントとすべてのデータが完全に削除されます。",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {

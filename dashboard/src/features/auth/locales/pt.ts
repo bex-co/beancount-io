@@ -214,6 +214,28 @@ const ptAuth: Record<string, TranslationEntry> = {
       "Junte-se a milhares de usuários satisfeitos que confiam no Beancount para suas necessidades contábeis",
     description: "Loved by users feature description",
   },
+  "auth.selfHosted": {
+    message: "Auto-hospedado",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's security claim",
+  },
+  "auth.selfHostedDescription": {
+    message:
+      "Este Beancount.io é administrado pelo proprietário, não pelo serviço Beancount.io. Sua contabilidade fica no próprio servidor dele.",
+    description:
+      "Feature description on a self-hosted deployment: who runs it, and where the books are stored",
+  },
+  "auth.plainTextBooks": {
+    message: "Contabilidade em texto simples",
+    description:
+      "Feature title beside the sign-in and sign-up forms of a self-hosted deployment, in place of the hosted service's user count",
+  },
+  "auth.plainTextBooksDescription": {
+    message:
+      "Seu razão é texto simples do Beancount em um repositório Git, então você pode cloná-lo, fazer backup ou movê-lo quando quiser.",
+    description:
+      "Feature description on a self-hosted deployment: the ledger is plain text in Git the user can take",
+  },
   "auth.newPassword": {
     message: "Nova Senha",
     description: "Label for new password field",
@@ -255,10 +277,6 @@ const ptAuth: Record<string, TranslationEntry> = {
   "auth.password": {
     message: "Senha",
     description: "Label for password input field",
-  },
-  "auth.passwordMinLength": {
-    message: "A senha deve ter pelo menos 6 caracteres",
-    description: "Validation error when password is too short",
   },
   "auth.passwordMaxLength": {
     message: "A senha deve ter no máximo 128 caracteres",

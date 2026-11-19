@@ -99,7 +99,7 @@ const enUserSettings: Record<string, TranslationEntry> = {
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
-      "This action cannot be undone. This will permanently delete your account and remove all your data from our servers.",
+      "This action cannot be undone. This will permanently delete your account and all of your data.",
     description: "Detailed warning in delete account dialog",
   },
   "userSettings.deleteAccountQuestion": {
