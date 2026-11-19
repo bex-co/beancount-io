@@ -25,6 +25,7 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { toast } from "sonner";
 import { Authenticated } from "@/common/components/authenticated";
 import { useLedger } from "@/common/providers/ledger-provider";
+import { useDeploymentInfo } from "@/common/hooks/use-deployment-info";
 
 interface LedgerCloneUrlMenuProps {
   ledgerId: string;
@@ -102,6 +103,40 @@ export function CloneUrlInput({
         )}
       </Button>
     </div>
+  );
+}
+
+/**
+ * What Git needs to sign in over HTTPS, under the HTTP clone URL.
+ *
+ * Git asks for a password there; the account password is being phased out on
+ * that endpoint in favor of a token (w3/m68). A self-hosted server also signs
+ * Git in through bea (w22/m12), so there the command comes first; the managed
+ * service keeps SSH keys for that. Its own component so the deployment is
+ * asked only once someone opens the HTTP tab, not on every ledger page.
+ */
+function HttpsCredentialHint() {
+  const { t } = useTranslations();
+  const { selfHost } = useDeploymentInfo();
+  return (
+    <p className="mt-2 text-xs text-muted-foreground">
+      {selfHost && (
+        <>
+          {t("ledgerEditor.httpsBeaHint", {
+            command: "bea cloud git setup",
+          })}{" "}
+        </>
+      )}
+      {t("ledgerEditor.httpsCredentialHint")}{" "}
+      <Authenticated>
+        <Link
+          to="/settings/api-keys"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          {t("ledgerEditor.createAccessToken")}
+        </Link>
+      </Authenticated>
+    </p>
   );
 }
 
@@ -217,19 +252,7 @@ export default function LedgerCloneUrlMenu({
                   copyLabel={t("ledgerEditor.copyHttpCloneUrl")}
                   labelledBy={`${httpTabId} ${headingId}`}
                 />
-                {/* Git asks for a password here; the account password is being
-                    phased out on this endpoint in favor of a token (w3/m68). */}
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {t("ledgerEditor.httpsCredentialHint")}{" "}
-                  <Authenticated>
-                    <Link
-                      to="/settings/api-keys"
-                      className="underline underline-offset-2 hover:text-foreground"
-                    >
-                      {t("ledgerEditor.createAccessToken")}
-                    </Link>
-                  </Authenticated>
-                </p>
+                <HttpsCredentialHint />
               </TabsContent>
               {sshUrl && (
                 <TabsContent value="ssh">

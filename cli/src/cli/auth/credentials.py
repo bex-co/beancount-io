@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from cli.config import config_dir, credentials_path
+from cli.config import credentials_path
 from cli.errors import AuthError
 
 ENVIRONMENT = "environment"
@@ -72,14 +72,19 @@ class Credentials:
 
 
 def save_credentials(token: str, expire_at: str) -> None:
-    # Create the file as 0600 inside a 0700 directory from the start — a
-    # write-then-chmod sequence leaks the token under a permissive umask.
     token = _validate_token(token, source=FILE)
-    directory = config_dir()
-    path = credentials_path()
+    write_private(credentials_path(), json.dumps({"token": token, "expireAt": expire_at}, indent=2))
+
+
+def write_private(path: Path, payload: str) -> None:
+    """Write a secret into the configuration directory, readable by its owner alone.
+
+    Create the file as 0600 inside a 0700 directory from the start — a
+    write-then-chmod sequence leaks the token under a permissive umask.
+    """
+    directory = path.parent
     directory.mkdir(parents=True, exist_ok=True)
     directory.chmod(stat.S_IRWXU)
-    payload = json.dumps({"token": token, "expireAt": expire_at}, indent=2)
     tmp_path = path.with_name(path.name + ".tmp")
     tmp_path.unlink(missing_ok=True)
     fd = os.open(tmp_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
@@ -98,7 +103,7 @@ def save_credentials(token: str, expire_at: str) -> None:
 _MAX_STORED_BYTES = 64 * 1024
 
 
-def _read_stored(path: Path) -> str | None:
+def read_private(path: Path) -> str | None:
     """The stored credential's text, or None when there is no file.
 
     Every local command reads this at engine launch, so it must never wait:
@@ -162,7 +167,7 @@ def load_credentials() -> Credentials | None:
     if token:
         return Credentials(token=_validate_token(token, source=ENVIRONMENT), expire_at=None, source=ENVIRONMENT)
     path = credentials_path()
-    text = _read_stored(path)
+    text = read_private(path)
     if text is None:
         return None
     # A file that is present but unusable is not "logged out": that answer let

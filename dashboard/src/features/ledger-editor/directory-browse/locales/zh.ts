@@ -31,6 +31,12 @@ const zhDirectoryBrowse: Record<
     message: "复制 HTTP 克隆地址",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsBeaHint": {
+    message:
+      "使用 bea 命令行时，运行一次 {command}，Git 就会自动登录。不使用时：",
+    description:
+      "Above the username and password hint under the HTTPS clone URL, on a self-hosted server only: the bea CLI command that makes Git sign in by itself. {command} is the literal command `bea cloud git setup`",
+  },
   "ledgerEditor.httpsCredentialHint": {
     message: "用户名：任意。密码：个人访问令牌，而不是账户密码。",
     description:

@@ -372,8 +372,12 @@ describe("directory page heading and real embedded README", () => {
       );
       await screen.findByRole("heading", { name: "SSH settings destination" });
       expect(router.state.location.pathname).toBe("/settings/ssh-keys");
+      // Every request names this ledger, except the one question the HTTP tab
+      // asks the deployment (is it self-hosted) to word its sign-in hint.
       expect(
-        requests.every(({ variables }) => variables.ledgerId === "alice/books"),
+        requests
+          .filter(({ name }) => name !== "DeploymentInfo")
+          .every(({ variables }) => variables.ledgerId === "alice/books"),
       ).toBe(true);
     },
   );

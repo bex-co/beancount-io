@@ -19,6 +19,7 @@ bea ask ["question"]                      # requires beancount-io[ask] and hoste
 # Cloud — the beancount.io hosted service
 bea cloud login | logout | status
 bea cloud ledger list | create [--clone] | show | clone | delete
+bea cloud git setup [--undo]              # self-hosted: Git signs in over HTTPS through bea
 
 # CLI maintenance
 bea upgrade [--check]
@@ -2593,7 +2594,8 @@ logging in — it is never written to disk, and `cloud status` reports
 `source: environment`.
 
 `cloud logout` revokes the stored session and deletes the credential file
-after an attempted revocation, including when that attempt fails. An invalid
+after an attempted revocation, including when that attempt fails. It first
+revokes the Git token `cloud git setup` minted, if any (see the next section). An invalid
 endpoint is refused before any revocation attempt, keeping the credential. Failed attempts
 say the session may still be valid and can be revoked from the dashboard.
 Connection failures (including connection timeouts and failed proxy tunnel setup)
@@ -2620,6 +2622,69 @@ A credential the server rejects is reported against the source
 actually in use: `BEA_TOKEN` takes precedence over the stored file
 unconditionally, so that failure tells you to correct or unset the variable
 rather than to log in, which would not change which credential is sent.
+
+## Cloud: Git sign-in on a self-hosted server
+
+On a self-hosted server, `bea cloud git setup` makes plain `git clone`,
+`git pull` and `git push` over HTTPS sign in through `bea`, the way
+`gh auth setup-git` does for GitHub: no prompt, and no token to copy into a
+URL, a `.git/config` or shell history. Run it once per machine, after
+`bea cloud login`.
+
+```bash norun
+# Needs a self-hosted server, a login and Git.
+bea cloud login
+bea cloud git setup
+git clone https://git.example.com/alice/books.git
+```
+
+What it does, and the decisions behind it (w22/m12):
+
+- **Git's password is a personal access token `bea` mints for itself**, not
+  the login. The token is named `bea git on <hostname>`, holds `ledger.read`
+  and `ledger.write` and nothing else, and expires after 90 days. It is listed
+  in the dashboard under Settings → Personal access tokens, where it can be
+  revoked like any other. `bea` keeps it in `git-credential.json` beside
+  `credentials.json` (`0600`). When it lapses, the next Git command gets a
+  fresh one for as long as the login is valid.
+- **The Git address is read from the server**, from the `http_url` of the
+  first ledger the account can reach, because Git may be served from another
+  address than the API (`BEA_API_URL`). An account with no ledger yet exits
+  **2** and says to create one first. An address that is not plain `https://`
+  (no credentials in it; plain `http://` only on this machine) is refused.
+- **Only that address is touched.** `setup` writes two values to the global
+  Git config under `credential.<git address>.helper`: an empty one, which
+  resets Git's helper list for that address so a Keychain or Git Credential
+  Manager entry cannot answer first with something stale, and
+  `!<path to bea> cloud git credential`. The path is the `bea` you ran, so Git
+  finds it whatever its own `PATH` holds. No other host's configuration
+  changes. Running `setup` again changes nothing and mints nothing.
+- **The managed service is refused.** There Git signs in with an SSH key
+  (Settings → SSH keys) and `bea cloud ledger clone` clones over SSH; `setup`
+  exits **1**, writes nothing, and says so. A server too old to say whether it
+  is self-hosted is refused the same way.
+- **`bea cloud logout` signs Git out too**: it revokes the token before the
+  session and removes it from this machine. If the server cannot be reached
+  the local copy still goes, and the error names the token to revoke in the
+  dashboard. The Git config entry stays; signed out, the helper answers
+  nothing and Git prompts as usual. After the next `bea cloud login` Git
+  signs in again without another `setup`.
+- **`bea cloud git setup --undo`** removes exactly the two config values and
+  revokes the token. Signed out, it still removes the local setup, exits
+  **1**, and names the token it could not revoke.
+
+One server at a time: `setup` for a second server exits **2** until the first
+is undone. `BEA_API_URL` must name the same server in the shell where Git
+runs, as for every `bea cloud` command; pointed elsewhere, the helper answers
+nothing. Under `--json`, `setup` emits `git_url`, `helper`, `config_changed`
+and the token's `id`, `name`, `expires_at` and `minted`, never the token.
+
+`bea cloud git credential get|store|erase` is the helper Git runs; it is not
+listed in `--help`. It speaks Git's credential protocol on stdin and stdout,
+answers only for the registered address, exits **0** whatever happens, and
+reports a problem (signed out, server unreachable) as one line on stderr so
+Git falls back to its prompt. `erase`, which Git sends when the server refused
+the password, forgets the stored token so the next `get` mints another.
 
 ## Cloud: hosted ledgers
 
@@ -2672,7 +2737,7 @@ credentials, so a malformed name exits **2** naming the rule and a slugified
 suggestion rather than exiting **3** with "Not logged in", which would say
 nothing about the name.
 
-Cloning uses `git clone` over SSH, so it needs Git and working SSH access. It uses the SSH command git would (`GIT_SSH_COMMAND`, `core.sshCommand`, then `GIT_SSH`); unattended (`--json`, `--no-input`, no terminal) it only adds `-o BatchMode=yes` to that command and closes git's stdin, so a host-key or password prompt fails instead of hanging. A clone target git would refuse (`./<name>` or `--dir` naming a file or a non-empty directory) is refused with exit **2** before the ledger is created. If a clone fails after the ledger was created, the command exits nonzero and prints the manual `git clone` command, target included — the ledger exists either way. A ledger whose `ssh_url` is null (only a self-hosted deployment that serves no Git over SSH answers that) is not cloned: the command exits **1**, writes nothing to disk, says the server serves no Git over SSH, and explains the other way in: `git clone` the ledger's HTTPS address with a personal access token from the dashboard (Settings → Personal access tokens) as the password, or have the operator turn on Git over SSH, which a bex deployment cannot. The `git clone` command is printed only for a plain `https://` address with no credentials in it. Under `--json` it is a `validation` error envelope with the explanation in `error.details`; `create --clone` also carries the created ledger in `error.result`. `bea` does not try another host or protocol itself.
+Cloning uses `git clone` over SSH, so it needs Git and working SSH access. It uses the SSH command git would (`GIT_SSH_COMMAND`, `core.sshCommand`, then `GIT_SSH`); unattended (`--json`, `--no-input`, no terminal) it only adds `-o BatchMode=yes` to that command and closes git's stdin, so a host-key or password prompt fails instead of hanging. A clone target git would refuse (`./<name>` or `--dir` naming a file or a non-empty directory) is refused with exit **2** before the ledger is created. If a clone fails after the ledger was created, the command exits nonzero and prints the manual `git clone` command, target included — the ledger exists either way. A ledger whose `ssh_url` is null (only a self-hosted deployment that serves no Git over SSH answers that) is not cloned: the command exits **1**, writes nothing to disk, says the server serves no Git over SSH, and explains the other way in: run `bea cloud git setup` once and `git clone` the ledger's HTTPS address (on a machine without `bea`, give git a personal access token from the dashboard, Settings → Personal access tokens, as the password), or have the operator turn on Git over SSH, which a bex deployment cannot. The `git clone` command is printed only for a plain `https://` address with no credentials in it. Under `--json` it is a `validation` error envelope with the explanation in `error.details`; `create --clone` also carries the created ledger in `error.result`. `bea` does not try another host or protocol itself.
 
 ## Updating
 
@@ -2744,7 +2809,7 @@ advertised to a Homebrew installation before the tap can install them.
 
 ## JSON output
 
-Global `--json` provides structured results for `check`, local-file `query`, `list <type>`, `balance`, `report`, `price status`, `engine status`, and hosted reads such as `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `price refresh`, `price export`, `engine enable`, `cloud ledger create`, and `cloud ledger delete` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata with the same fields as `cloud ledger show`, delete the deleted ledger's id, or with `--dry-run` the destroy preview). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
+Global `--json` provides structured results for `check`, local-file `query`, `list <type>`, `balance`, `report`, `price status`, `engine status`, and hosted reads such as `cloud status`, `cloud ledger list`, and `cloud ledger show`. `init`, `import`, `format`, `add`, `price refresh`, `price export`, `engine enable`, `cloud ledger create`, `cloud ledger delete`, and `cloud git setup` also emit an envelope so a script can confirm what was written (create returns the new ledger's metadata with the same fields as `cloud ledger show`, delete the deleted ledger's id, or with `--dry-run` the destroy preview). Usage failures, including unknown commands and missing global option values, follow the same JSON error contract.
 
 The envelope is always:
 
@@ -2810,7 +2875,7 @@ Commands that cannot produce JSON keep their own shapes: `ask`, `doctor`,
 `bean-price` reject JSON mode (`price status`, `refresh` and `export` answer
 with the envelope), `cloud login` requires interaction,
 successful `cloud logout` and `cloud ledger clone` emit no JSON success object
-(use their exit status), and help and completion output stay textual.
+(use their exit status), `cloud git credential` speaks Git's protocol only, and help and completion output stay textual.
 `upgrade` can stream package-manager output to stderr even in JSON mode. The
 [directive models](https://github.com/bex-co/beancount-io/blob/main/cli/src/bea_engine/ledger/models.py)
 define the exact object fields for directive listings and bulk input.

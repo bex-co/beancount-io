@@ -16,10 +16,13 @@ class GetApiGatewayV1FeatureFlagsResponse200:
         spending_report_subscription (bool):
         email_delivery (bool): Whether this deployment can send email. False on a server with no mail provider, where
             password-reset mail never arrives and the operator restores access.
+        self_host (bool): Whether the operator runs this whole stack for their own users (`SELF_HOST`). False on the
+            managed service.
     """
 
     spending_report_subscription: bool
     email_delivery: bool
+    self_host: bool
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -27,12 +30,15 @@ class GetApiGatewayV1FeatureFlagsResponse200:
 
         email_delivery = self.email_delivery
 
+        self_host = self.self_host
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "spendingReportSubscription": spending_report_subscription,
                 "emailDelivery": email_delivery,
+                "selfHost": self_host,
             }
         )
 
@@ -45,9 +51,12 @@ class GetApiGatewayV1FeatureFlagsResponse200:
 
         email_delivery = d.pop("emailDelivery")
 
+        self_host = d.pop("selfHost")
+
         get_api_gateway_v1_feature_flags_response_200 = cls(
             spending_report_subscription=spending_report_subscription,
             email_delivery=email_delivery,
+            self_host=self_host,
         )
 
         get_api_gateway_v1_feature_flags_response_200.additional_properties = d

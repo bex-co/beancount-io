@@ -32,6 +32,12 @@ const skDirectoryBrowse: Record<
     message: "Kopírovať HTTP URL klonu",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsBeaHint": {
+    message:
+      "S príkazovým riadkom bea spustite raz {command} a Git sa prihlási za vás. Bez neho:",
+    description:
+      "Above the username and password hint under the HTTPS clone URL, on a self-hosted server only: the bea CLI command that makes Git sign in by itself. {command} is the literal command `bea cloud git setup`",
+  },
   "ledgerEditor.httpsCredentialHint": {
     message:
       "Používateľské meno: ľubovoľné. Heslo: osobný prístupový token, nie heslo k účtu.",

@@ -32,6 +32,12 @@ const ruDirectoryBrowse: Record<
     message: "Скопировать HTTP URL клонирования",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsBeaHint": {
+    message:
+      "С командной строкой bea выполните {command} один раз, и Git будет входить за вас. Без неё:",
+    description:
+      "Above the username and password hint under the HTTPS clone URL, on a self-hosted server only: the bea CLI command that makes Git sign in by itself. {command} is the literal command `bea cloud git setup`",
+  },
   "ledgerEditor.httpsCredentialHint": {
     message:
       "Имя пользователя: любое. Пароль: персональный токен доступа, а не пароль от аккаунта.",

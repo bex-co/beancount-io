@@ -106,6 +106,7 @@ describe("public configuration across real adapters", () => {
       expect(await flags.json()).toEqual({
         spendingReportSubscription: false,
         emailDelivery: false,
+        selfHost: false,
       });
       const g = await graphql({
         schema,
@@ -118,13 +119,18 @@ describe("public configuration across real adapters", () => {
         featureFlags: {
           spendingReportSubscription: false,
           emailDelivery: false,
+          selfHost: false,
         },
       });
       for (const [uri, expected] of [
         ["health", "OK"],
         [
           "feature-flags?userId=someone",
-          { spendingReportSubscription: false, emailDelivery: false },
+          {
+            spendingReportSubscription: false,
+            emailDelivery: false,
+            selfHost: false,
+          },
         ],
       ] as const) {
         const r = await client.readResource({
@@ -143,6 +149,7 @@ describe("public configuration across real adapters", () => {
     expect(await flags.json()).toEqual({
       spendingReportSubscription: false,
       emailDelivery: false,
+      selfHost: false,
     });
     const r = await client.readResource({
       uri: "beancount://configuration/feature-flags",
@@ -151,6 +158,7 @@ describe("public configuration across real adapters", () => {
     expect("text" in content && JSON.parse(content.text)).toEqual({
       spendingReportSubscription: false,
       emailDelivery: false,
+      selfHost: false,
     });
     const g = await graphql({
       schema,
@@ -159,7 +167,11 @@ describe("public configuration across real adapters", () => {
     });
     expect(g.errors).toBeUndefined();
     expect(g.data).toEqual({
-      featureFlags: { spendingReportSubscription: false, emailDelivery: false },
+      featureFlags: {
+        spendingReportSubscription: false,
+        emailDelivery: false,
+        selfHost: false,
+      },
     });
   });
 
@@ -184,6 +196,7 @@ describe("public configuration across real adapters", () => {
       const expected = {
         spendingReportSubscription: false,
         emailDelivery: true,
+        selfHost: false,
       };
       expect(await flags.json()).toEqual(expected);
       expect("text" in content && JSON.parse(content.text)).toEqual(expected);
@@ -191,6 +204,36 @@ describe("public configuration across real adapters", () => {
     } finally {
       appConfig.env = saved.env;
       appConfig.sendGrid.apiKey = saved.apiKey;
+    }
+  });
+
+  it("reports a self-hosted stack on every surface", async () => {
+    // `bea cloud git setup` reads this over REST to decide whether to sign Git
+    // in over HTTPS; the three surfaces must give it the same answer.
+    const saved = appConfig.selfHost;
+    appConfig.selfHost = true;
+    try {
+      rest.setIdentity(undefined);
+      const flags = await fetch(`${rest.url}/api-gateway/v1/feature-flags`);
+      const r = await client.readResource({
+        uri: "beancount://configuration/feature-flags",
+      });
+      const content = r.contents[0];
+      const g = await graphql({
+        schema,
+        source: "{featureFlags}",
+        contextValue: { identity: undefined },
+      });
+      const expected = {
+        spendingReportSubscription: false,
+        emailDelivery: false,
+        selfHost: true,
+      };
+      expect(await flags.json()).toEqual(expected);
+      expect("text" in content && JSON.parse(content.text)).toEqual(expected);
+      expect(g.data).toEqual({ featureFlags: expected });
+    } finally {
+      appConfig.selfHost = saved;
     }
   });
 

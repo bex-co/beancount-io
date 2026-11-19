@@ -2024,8 +2024,10 @@ not a check of database or ledger-service readiness.
 
 `beancount://configuration/feature-flags{?userId}` matches GraphQL
 `featureFlags(userId: ...)` and `GET /api-gateway/v1/feature-flags?userId=...`.
-The legacy `userId` argument is optional, but currently does
-not change the static `{ "spendingReportSubscription": false }` result.
+The legacy `userId` argument is optional and does not change the result, which
+is the same for every caller: `spendingReportSubscription` (always `false`),
+`emailDelivery` (whether this deployment can send mail) and `selfHost` (whether
+the operator runs this stack for their own users).
 
 These REST and GraphQL reads allow anonymous callers. MCP still requires its
 transport credential, but neither resource requires ledger scopes or a ledger

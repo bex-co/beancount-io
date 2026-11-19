@@ -7,7 +7,7 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import SplitResult, urlsplit
 
 from cli.api.client import call, unwrap
 from cli.api.rest_client.api.ledger_v_1 import (
@@ -206,37 +206,54 @@ class NoSshCloneUrl(BeaError):
     Only a self-hosted stack answers `sshUrl: null` (backend-v2 never marks the
     managed service so), and there the reader is often the operator, on a
     platform that cannot serve SSH at all (bex routes none). So the details say
-    how to get the ledger anyway: git over HTTPS with a personal access token
-    (owner decision, 2026-11-17).
+    how to get the ledger anyway: git over HTTPS, signed in by `bea cloud git
+    setup` or, where there is no `bea`, with a personal access token (owner
+    decisions, 2026-11-17 and 2026-11-18).
     """
+
+
+_LOOPBACK = {"localhost", "127.0.0.1", "::1"}
+
+
+def plain_https_address(http_url: str, *, loopback_http: bool = False) -> SplitResult | None:
+    """The parts of a server-supplied Git address that is plain https, or None for anything else.
+
+    Plain means no credentials in it, no option look-alike host, and no
+    whitespace or control characters. `loopback_http` also admits `http://`
+    for a server on this machine.
+    """
+    try:
+        parts = urlsplit(http_url)
+        hostname, _ = parts.hostname, parts.port
+    except ValueError:
+        return None
+    if (
+        not hostname
+        or hostname.startswith("-")
+        or parts.username is not None
+        or parts.password is not None
+        or re.search(r"[\s\x00-\x1f\x7f]", http_url)
+        or not (parts.scheme == "https" or (loopback_http and parts.scheme == "http" and hostname in _LOOPBACK))
+    ):
+        return None
+    return parts
 
 
 def _https_clone_command(http_url: str) -> str | None:
     """`git clone <http_url>`, safe to paste into a shell, or None for an address that is not plain https."""
-    try:
-        parts = urlsplit(http_url)
-        hostname = parts.hostname
-    except ValueError:
-        return None
-    if (
-        parts.scheme != "https"
-        or not hostname
-        or hostname.startswith("-")
-        or parts.username is not None
-        or re.search(r"[\s\x00-\x1f\x7f]", http_url)
-    ):
-        return None
-    return f"git clone {shlex.quote(http_url)}"
+    return f"git clone {shlex.quote(http_url)}" if plain_https_address(http_url) else None
 
 
 def no_ssh_clone_details(ledger: LedgerInfo) -> list[str]:
     """How to get a ledger that `bea` cannot clone because its server serves no Git over SSH."""
     command = _https_clone_command(ledger.http_url)
     return [
-        f"Clone it with git over HTTPS instead: {command}"
+        f"Clone it with git over HTTPS instead: run 'bea cloud git setup' once, then: {command}"
         if command
-        else "Clone it with git over HTTPS instead, from its httpUrl (bea --json cloud ledger show prints it).",
-        "When git asks for a password, give a personal access token made in the dashboard under Settings → "
+        else "Clone it with git over HTTPS instead: run 'bea cloud git setup' once, then git clone its httpUrl "
+        "(bea --json cloud ledger show prints it).",
+        "After 'bea cloud git setup', Git signs in through bea and asks for no password. On a machine without "
+        "bea, give git a personal access token as the password, made in the dashboard under Settings → "
         "Personal access tokens: ledger.read to clone, ledger.write to push. Any username works.",
         "For bea itself to clone it, the server's operator has to turn on Git over SSH (the SSH proxy). "
         "A bex deployment cannot: bex routes no SSH.",

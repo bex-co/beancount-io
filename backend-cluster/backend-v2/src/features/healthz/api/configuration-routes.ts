@@ -44,6 +44,10 @@ export const CONFIGURATION_V1_ROUTES = [
             description:
               "Whether this deployment can send email. False on a server with no mail provider, where password-reset mail never arrives and the operator restores access.",
           }),
+          selfHost: z.boolean().openapi({
+            description:
+              "Whether the operator runs this whole stack for their own users (`SELF_HOST`). False on the managed service.",
+          }),
         }),
       ),
     },

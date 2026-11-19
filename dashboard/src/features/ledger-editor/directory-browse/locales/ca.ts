@@ -32,6 +32,12 @@ const caDirectoryBrowse: Record<
     message: "Copia l’URL de clonatge HTTP",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsBeaHint": {
+    message:
+      "Amb la línia d'ordres bea, executeu {command} una vegada i Git iniciarà la sessió per vosaltres. Sense ella:",
+    description:
+      "Above the username and password hint under the HTTPS clone URL, on a self-hosted server only: the bea CLI command that makes Git sign in by itself. {command} is the literal command `bea cloud git setup`",
+  },
   "ledgerEditor.httpsCredentialHint": {
     message:
       "Usuari: qualsevol. Contrasenya: un testimoni d'accés personal, no la contrasenya del compte.",

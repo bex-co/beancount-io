@@ -32,6 +32,12 @@ const nlDirectoryBrowse: Record<
     message: "HTTP-kloon-URL kopiëren",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsBeaHint": {
+    message:
+      "Met de bea-opdrachtregel voer je {command} één keer uit en meldt Git zich voor je aan. Zonder:",
+    description:
+      "Above the username and password hint under the HTTPS clone URL, on a self-hosted server only: the bea CLI command that makes Git sign in by itself. {command} is the literal command `bea cloud git setup`",
+  },
   "ledgerEditor.httpsCredentialHint": {
     message:
       "Gebruikersnaam: willekeurig. Wachtwoord: een persoonlijk toegangstoken, niet je accountwachtwoord.",

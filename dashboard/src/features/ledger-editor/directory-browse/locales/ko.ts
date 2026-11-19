@@ -31,6 +31,12 @@ const koDirectoryBrowse: Record<
     message: "HTTP 클론 URL 복사",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsBeaHint": {
+    message:
+      "bea 명령줄을 쓰면 {command}을(를) 한 번 실행하는 것으로 Git이 대신 로그인합니다. 쓰지 않는다면:",
+    description:
+      "Above the username and password hint under the HTTPS clone URL, on a self-hosted server only: the bea CLI command that makes Git sign in by itself. {command} is the literal command `bea cloud git setup`",
+  },
   "ledgerEditor.httpsCredentialHint": {
     message:
       "사용자 이름: 아무거나. 비밀번호: 계정 비밀번호가 아닌 개인 액세스 토큰.",

@@ -22032,11 +22032,16 @@
                     "emailDelivery": {
                       "type": "boolean",
                       "description": "Whether this deployment can send email. False on a server with no mail provider, where password-reset mail never arrives and the operator restores access."
+                    },
+                    "selfHost": {
+                      "type": "boolean",
+                      "description": "Whether the operator runs this whole stack for their own users (`SELF_HOST`). False on the managed service."
                     }
                   },
                   "required": [
                     "spendingReportSubscription",
-                    "emailDelivery"
+                    "emailDelivery",
+                    "selfHost"
                   ]
                 }
               }

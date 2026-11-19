@@ -256,6 +256,7 @@ describe("documented lenient values", () => {
     expect(await response.json()).toEqual({
       spendingReportSubscription: false,
       emailDelivery: false,
+      selfHost: false,
     });
   });
 });

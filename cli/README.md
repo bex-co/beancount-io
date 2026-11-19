@@ -149,6 +149,15 @@ bea doctor region --help
 Every flag, default, and help string is listed in the generated
 [command reference](https://github.com/bex-co/beancount-io/blob/main/cli/docs/REFERENCE.md).
 
+### Git on a self-hosted server
+
+On a self-hosted Beancount.io server, `bea cloud git setup` (after
+`bea cloud login`, in the release after 0.4.1) makes plain `git clone`,
+`git pull` and `git push` over HTTPS sign in through `bea`: no prompt and no
+token to paste. See the
+[usage guide](https://github.com/bex-co/beancount-io/blob/main/cli/docs/USAGE.md#cloud-git-sign-in-on-a-self-hosted-server).
+The managed service uses SSH keys and `bea cloud ledger clone`.
+
 ### Managed price includes
 
 In `bea` 0.3.0 and later, sign in with `bea cloud login` (or set `BEA_TOKEN` for automation), choose

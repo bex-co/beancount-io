@@ -5,6 +5,7 @@ describe("readFeatureFlags emailDelivery", () => {
     const flags = await readFeatureFlags({
       env: "production",
       sendGrid: { apiKey: "" },
+      selfHost: false,
     });
     expect(flags.emailDelivery).toBe(false);
   });
@@ -13,6 +14,7 @@ describe("readFeatureFlags emailDelivery", () => {
     const flags = await readFeatureFlags({
       env: "production",
       sendGrid: { apiKey: "SG.test-key" },
+      selfHost: false,
     });
     expect(flags.emailDelivery).toBe(true);
   });
@@ -21,7 +23,19 @@ describe("readFeatureFlags emailDelivery", () => {
     const flags = await readFeatureFlags({
       env: "development",
       sendGrid: { apiKey: "SG.test-key" },
+      selfHost: false,
     });
     expect(flags.emailDelivery).toBe(false);
+  });
+});
+
+describe("readFeatureFlags selfHost", () => {
+  it.each([true, false])("repeats the deployment's setting: %s", async (on) => {
+    const flags = await readFeatureFlags({
+      env: "production",
+      sendGrid: { apiKey: "" },
+      selfHost: on,
+    });
+    expect(flags.selfHost).toBe(on);
   });
 });

@@ -1,21 +1,22 @@
 # w22 · m12 — `bea` signs Git in on a self-hosted stack: nothing to paste
 
-**Worker:** worker1 **Goal:** on a self-hosted deployment, a person who has run `bea cloud login` runs `bea cloud git setup` once, and from then on plain `git clone`, `git pull` and `git push` over HTTPS sign in with no prompt and no token to copy, the way `gh auth setup-git` works for GitHub **Status:** todo
+**Worker:** worker1 **Goal:** on a self-hosted deployment, a person who has run `bea cloud login` runs `bea cloud git setup` once, and from then on plain `git clone`, `git pull` and `git push` over HTTPS sign in with no prompt and no token to copy, the way `gh auth setup-git` works for GitHub **Status:** todo (t001–t005, t009, t010, t012 done)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Decide the credential Git is given, and where `bea` learns the Git host | 1h | — |
-| t002 | `bea cloud git setup`: register `bea` as Git's credential helper for one server | 2h | t001 |
-| t003 | `bea cloud git credential`: answer Git's credential protocol | 1h30m | t001 |
-| t004 | `bea cloud logout` signs Git out too | 45m | t002, t003 |
-| t005 | Point `bea cloud ledger clone`'s no-SSH advice at the helper | 30m | t002 |
+| t001 | Decide the credential Git is given, and where `bea` learns the Git host — **DONE** | 1h | — |
+| t012 | The server says it is self-hosted on REST, GraphQL and MCP — **DONE** | 30m | t001 |
+| t002 | `bea cloud git setup`: register `bea` as Git's credential helper for one server — **DONE** | 2h | t001, t012 |
+| t003 | `bea cloud git credential`: answer Git's credential protocol — **DONE** | 1h30m | t001 |
+| t004 | `bea cloud logout` signs Git out too — **DONE** | 45m | t002, t003 |
+| t005 | Point `bea cloud ledger clone`'s no-SSH advice at the helper — **DONE** | 30m | t002 |
 | t006 | Live check on a temporary bex stack | 1h | t004, t005 |
 | t007 | Release `bea` with the helper | 45m | t006 |
-| t008 | Adoption surface | 45m | t007 |
-| t009 | Simplify | 30m | t008 |
-| t010 | Test coverage | 1h | t008 |
+| t008 | Adoption surface | 45m | t007, t012 |
+| t009 | Simplify — **DONE** | 30m | t008 |
+| t010 | Test coverage — **DONE** | 1h | t008 |
 | t011 | Closeout | 15m | t009, t010 |
 
 ## Definition of done

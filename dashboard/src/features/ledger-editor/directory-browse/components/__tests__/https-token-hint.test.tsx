@@ -2,6 +2,7 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { DeploymentInfoDocument } from "@/graphql/definitions";
 import LedgerCloneUrlMenu from "../ledger-clone-url-menu";
 
 /**
@@ -31,10 +32,26 @@ vi.mock("@/common/providers/ledger-provider", () => ({
   }),
 }));
 
-async function openHttpsTab() {
+function deployment(selfHost: boolean) {
+  return {
+    request: { query: DeploymentInfoDocument },
+    result: {
+      data: {
+        deploymentInfo: {
+          __typename: "DeploymentInfoResponse" as const,
+          selfHost,
+          signUpOpen: false,
+          oidcProviderName: null,
+        },
+      },
+    },
+  };
+}
+
+async function openHttpsTab(selfHost = false) {
   const user = userEvent.setup();
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mocks={[deployment(selfHost)]}>
       <LedgerCloneUrlMenu ledgerId="alice/books" />
     </MockedProvider>,
   );
@@ -62,5 +79,30 @@ describe("HTTPS clone credentials", () => {
     expect(
       screen.getByRole("link", { name: "Create a personal access token" }),
     ).toHaveAttribute("href", "/settings/api-keys");
+  });
+
+  it("names bea cloud git setup first on a self-hosted server, and the token second", async () => {
+    // There `bea` signs Git in by itself (w22/m12), so the hint leads with the
+    // command and keeps the token for a machine without bea.
+    const user = await openHttpsTab(true);
+    await user.click(screen.getByRole("tab", { name: "HTTP" }));
+
+    const hint = (await screen.findByText(/bea cloud git setup/)).closest("p");
+    const text = hint?.textContent ?? "";
+    expect(text.indexOf("bea cloud git setup")).toBeGreaterThanOrEqual(0);
+    expect(text.indexOf("bea cloud git setup")).toBeLessThan(
+      text.indexOf("a personal access token"),
+    );
+    expect(
+      screen.getByRole("link", { name: "Create a personal access token" }),
+    ).toHaveAttribute("href", "/settings/api-keys");
+  });
+
+  it("does not mention bea cloud git setup on the managed service", async () => {
+    const user = await openHttpsTab(false);
+    await user.click(screen.getByRole("tab", { name: "HTTP" }));
+
+    await screen.findByText(/Password: a personal access token/);
+    expect(screen.queryByText(/bea cloud git setup/)).toBeNull();
   });
 });

@@ -32,6 +32,12 @@ const jaDirectoryBrowse: Record<
     message: "HTTPクローンURLをコピー",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsBeaHint": {
+    message:
+      "bea コマンドラインをお使いなら、{command} を一度実行すれば Git が自動でサインインします。使わない場合：",
+    description:
+      "Above the username and password hint under the HTTPS clone URL, on a self-hosted server only: the bea CLI command that makes Git sign in by itself. {command} is the literal command `bea cloud git setup`",
+  },
   "ledgerEditor.httpsCredentialHint": {
     message:
       "ユーザー名：任意。パスワード：アカウントのパスワードではなく、個人アクセストークン。",

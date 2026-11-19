@@ -8,10 +8,16 @@ remote capability grows a target option, it does not move.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import typer
 
 from cli import context, output
+from cli.commands.cloud.git.app import git_app
 from cli.commands.cloud.ledger.app import ledger_app
+
+if TYPE_CHECKING:
+    from cli.api.rest_client.client import AuthenticatedClient
 
 cloud_app = typer.Typer(
     help="Hosted ledgers and AI proxy; see 'cloud login'.",
@@ -19,6 +25,7 @@ cloud_app = typer.Typer(
     rich_markup_mode=None,
 )
 cloud_app.add_typer(ledger_app, name="ledger")
+cloud_app.add_typer(git_app, name="git")
 
 
 @cloud_app.command("login")
@@ -54,7 +61,7 @@ def cloud_login() -> None:
 
 @cloud_app.command("logout")
 def cloud_logout() -> None:
-    """Revoke the token and clear stored credentials."""
+    """Revoke the session and the Git token, and clear stored credentials."""
     context.current().require_network("cloud logout")
     import os
 
@@ -91,6 +98,9 @@ def cloud_logout() -> None:
             "If it held a live session, revoke it from the dashboard."
         ) from exc
     if creds is None:
+        # No session is left to revoke a Git token with; it still leaves this disk.
+        if (git_left := _sign_git_out(None)) is not None:
+            raise BeaError(f"Already logged out, but {git_left}")
         output.success("Already logged out.")
         return
     import httpx
@@ -100,6 +110,10 @@ def cloud_logout() -> None:
     # Built before the request: a malformed BEA_API_URL is a usage error with
     # the credential kept, not a "failed revocation" after deleting it (w5/521).
     client = bearer_client(creds.token)
+    # First, while the session can still revoke it: the token `cloud git setup`
+    # minted for Git, which must not outlive the login (w22/m12).
+    git_left = _sign_git_out(client)
+    also_git = f" Also, {git_left}" if git_left else ""
     # What went wrong with the revocation: the error class, the outcome as a
     # clause, and the server's request id. Worded only once the local removal
     # is known, so neither half claims what the other did (w5/589).
@@ -156,20 +170,46 @@ def cloud_logout() -> None:
         if failure is None:
             raise BeaError(
                 f"Revoked the session on the server, but could not remove the local credential {kept}. "
-                "The token there no longer works; delete the file yourself."
+                f"The token there no longer works; delete the file yourself.{also_git}"
             ) from error
         kind, outcome, request_id = failure
         raise kind(
-            f"Could not remove the local credential {kept}; delete it yourself. Also, {outcome}",
+            f"Could not remove the local credential {kept}; delete it yourself. Also, {outcome}{also_git}",
             request_id=request_id,
         ) from error
     if failure is not None:
         kind, outcome, request_id = failure
-        raise kind(f"Removed the local credential, but {outcome}", request_id=request_id)
+        raise kind(f"Removed the local credential, but {outcome}{also_git}", request_id=request_id)
+    if git_left:
+        raise BeaError(f"Logged out, but {git_left}")
     output.success("Logged out.")
 
 
 _STILL_VALID = "The session may still be valid: revoke it from the dashboard."
+
+
+def _sign_git_out(client: AuthenticatedClient | None) -> str | None:
+    """End Git's sign-in with the session: revoke the token `cloud git setup` minted and forget it.
+
+    Returns None when Git holds nothing for this server or the token is
+    revoked, otherwise the clause that names the token left alive. The local
+    copy goes either way, as the login's does. The Git config entry stays:
+    with no token and no login the helper answers nothing, and Git prompts.
+    """
+    from cli.commands.cloud.git import helper
+
+    state = helper.load_state()
+    if state is None or not state.key_id or not state.is_current_server():
+        return None
+    named = f"the Git token {state.token_label}"
+    unrevoked = helper.try_revoke(client, state)
+    problem = f"{named} could not be revoked ({unrevoked}). {helper.REVOKE_REMEDY}" if unrevoked else None
+    try:
+        helper.forget_token(state, revoked=problem is None)
+    except OSError as error:
+        kept = f"{named} could not be removed from {helper.state_path()} ({error.strerror}); delete the file yourself."
+        problem = f"{problem} Also, {kept}" if problem else kept
+    return problem
 
 
 def _failure_name(exc: BaseException) -> str:

@@ -33,6 +33,12 @@ const deDirectoryBrowse: Record<
     message: "HTTP-Klon-URL kopieren",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsBeaHint": {
+    message:
+      "Mit der bea-Befehlszeile führen Sie einmal {command} aus, und Git meldet sich für Sie an. Ohne sie:",
+    description:
+      "Above the username and password hint under the HTTPS clone URL, on a self-hosted server only: the bea CLI command that makes Git sign in by itself. {command} is the literal command `bea cloud git setup`",
+  },
   "ledgerEditor.httpsCredentialHint": {
     message:
       "Benutzername: beliebig. Passwort: ein persönliches Zugriffstoken, nicht Ihr Kontopasswort.",

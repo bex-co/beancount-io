@@ -278,10 +278,22 @@ history. Accounts, API keys and settings live in the managed Postgres; this
 procedure does not cover them, and restoring a Postgres dump into a new stack
 has not been tried.
 
-Back up, with a personal access token that can read the ledger:
+Back up. Git has to sign in; on a machine with `bea`, run `bea cloud git setup`
+once ([Cloning a ledger](#cloning-a-ledger)) and Git asks for nothing:
 
 ```zsh
-git clone --mirror https://<any name>:<token>@<api address>/git/<owner>/<ledger>.git
+git clone --mirror https://<api address>/git/<owner>/<ledger>.git
+```
+
+On a machine without `bea` (a backup job), hand Git a personal access token
+that can read the ledger through a one-off credential helper. Never put the
+token in the URL: Git would save it in the clone's `.git/config`.
+
+```zsh
+read -rs BCIO_TOKEN; export BCIO_TOKEN     # paste the token; it stays off the screen and out of history
+git -c credential.helper= \
+    -c 'credential.helper=!f() { echo username=token; echo "password=$BCIO_TOKEN"; }; f' \
+    clone --mirror https://<api address>/git/<owner>/<ledger>.git
 ```
 
 Restore into a stack where the ledger is gone or cannot be opened. The server
@@ -290,10 +302,12 @@ of the new ledger's first commit instead of replacing it:
 
 1. In the dashboard, delete the ledger if it is still listed, and create one
    with the same name.
-2. Clone the new ledger, merge the backup into it, and push:
+2. Clone the new ledger, merge the backup into it, and push. Git signs in as
+   above: through `bea cloud git setup`, or with the same two `-c` options on
+   the `clone` and the `push` and a token that has `ledger.write`:
 
    ```zsh
-   git clone https://<any name>:<token>@<api address>/git/<owner>/<ledger>.git restore
+   git clone https://<api address>/git/<owner>/<ledger>.git restore
    cd restore
    git fetch ../<ledger>.git main
    git merge --allow-unrelated-histories -X theirs -m "Restore from backup" FETCH_HEAD
@@ -410,11 +424,25 @@ API host.
 
 The AI assistant leaves out its pull-request link here: that link is a page of Gitea's own, and Gitea has no public address, while the proxy forwards git's requests and nothing else.
 
-bex serves Git over HTTPS only: it has no TCP routing (nor does Render, whose public ports are HTTP(S) alone), so `SSH_PROXY_ENABLED` is `false` and ledger responses (REST, GraphQL and MCP alike) carry `sshUrl: null`. `bea cloud ledger clone`, which clones over SSH, refuses such a ledger; from `bea` 0.4.1 it also prints the `git clone <httpUrl>` command and says to use a personal access token as the password. The dashboard's clone menu shows only the HTTP address. Clone with `git clone <httpUrl>` instead.
+bex serves Git over HTTPS only: it has no TCP routing (nor does Render, whose public ports are HTTP(S) alone), so `SSH_PROXY_ENABLED` is `false` and ledger responses (REST, GraphQL and MCP alike) carry `sshUrl: null`. `bea cloud ledger clone`, which clones over SSH, refuses such a ledger; from `bea` 0.4.1 it also prints the `git clone <httpUrl>` command and says how Git signs in. The dashboard's clone menu shows only the HTTP address. Clone with `git clone <httpUrl>` instead.
 
 **Run on a live bex on 2026-11-16.** The platform set `RENDER_EXTERNAL_URL` for the API service, so the clone address was `https://<api address>/git/<owner>/<repo>.git`; cloning with a personal access token, a small push, a 20 MB push and a 200 MB push (84 seconds) worked through the platform's ingress, and the repositories survived a restart and a redeploy of Gitea. Not examined: how many proxies sit in front for the per-address rate limit (`TRUSTED_PROXY_HOPS`). If a platform gives the API no address, the clone address falls back to the one Gitea reports, which is `http://localhost:3000/<owner>/<repo>.git` here (Gitea's `ROOT_URL` stays at its default when it has no public address); set `GIT_PUBLIC_URL` yourself in that case. Decision 3 in [ADR 029](../../docs/adrs/ADR029-deploy-self-hosting-contract.md) has the reasoning.
 
-To clone over HTTPS, use any username and a personal access token as the password, minted in the dashboard under Settings → Personal access tokens (`/settings/api-keys`). The account password still works for now, with a `remote:` hint to switch: backend-v2's `gitHttp.passwordAuth` ships as `warn`. It lives in `backend-cluster/backend-v2/src/config/config.ts` as `allow`, `warn`, or `deny`, and is not an environment variable, so refusing passwords is a code change and a redeploy. A Git client that keeps offering an old password is cleared with `printf 'protocol=https\nhost=<git host>\n\n' | git credential reject`, the host's Keychain item on macOS, or its line in `~/.git-credentials`.
+#### Cloning a ledger
+
+With `bea` (the release after 0.4.1), sign Git in once per machine and then use plain `git`, with no prompt and no token to copy:
+
+```zsh
+export BEA_API_URL=https://<your dashboard address>
+export BEA_DASHBOARD_URL=https://<your dashboard address>
+bea cloud login
+bea cloud git setup
+git clone https://<api address>/git/<owner>/<ledger>.git
+```
+
+`bea cloud git setup` registers `bea` as Git's credential helper for this stack's Git address alone and mints a personal access token for Git (`ledger.read` and `ledger.write`, 90 days, named `bea git on <hostname>`, listed under Settings → Personal access tokens). `bea cloud logout` revokes it; `bea cloud git setup --undo` removes the Git config entry too. It works only on a self-hosted stack: the server says so through `selfHost` in `GET /api-gateway/v1/feature-flags`, so the stack must run a build from 2026-11-18 or later. `cli/docs/USAGE.md` ("Cloud: Git sign-in on a self-hosted server") has the details. Built and tested against real `git` and a stub server; a run against a live bex stack is still to be recorded here.
+
+Without `bea`, use any username and a personal access token as the password, minted in the dashboard under Settings → Personal access tokens (`/settings/api-keys`). The account password still works for now, with a `remote:` hint to switch: backend-v2's `gitHttp.passwordAuth` ships as `warn`. It lives in `backend-cluster/backend-v2/src/config/config.ts` as `allow`, `warn`, or `deny`, and is not an environment variable, so refusing passwords is a code change and a redeploy. A Git client that keeps offering an old password is cleared with `printf 'protocol=https\nhost=<git host>\n\n' | git credential reject`, the host's Keychain item on macOS, or its line in `~/.git-credentials`.
 
 ## Things that bit us, so they don't bite you again
 

@@ -32,6 +32,12 @@ const faDirectoryBrowse: Record<
     message: "کپی نشانی کلون HTTP",
     description: "Accessible name for copying the HTTP clone URL",
   },
+  "ledgerEditor.httpsBeaHint": {
+    message:
+      "با خط فرمان bea یک بار {command} را اجرا کنید تا Git به\u200cجای شما وارد شود. بدون آن:",
+    description:
+      "Above the username and password hint under the HTTPS clone URL, on a self-hosted server only: the bea CLI command that makes Git sign in by itself. {command} is the literal command `bea cloud git setup`",
+  },
   "ledgerEditor.httpsCredentialHint": {
     message:
       "نام کاربری: هر چیزی. گذرواژه: یک توکن دسترسی شخصی، نه گذرواژه حساب شما.",

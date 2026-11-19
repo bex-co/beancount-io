@@ -1391,7 +1391,7 @@ Usage: bea cloud login [OPTIONS]
 
 ### `bea cloud logout`
 
-Revoke the token and clear stored credentials.
+Revoke the session and the Git token, and clear stored credentials.
 
 ```text
 Usage: bea cloud logout [OPTIONS]
@@ -1486,3 +1486,15 @@ Usage: bea cloud ledger clone [OPTIONS] {full_name}
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
 | `--dir` | path |  | Local directory for the git clone |
+
+### `bea cloud git setup`
+
+Make Git sign in to this self-hosted server through bea.
+
+```text
+Usage: bea cloud git setup [OPTIONS]
+```
+
+| Option | Type | Default | Help |
+| --- | --- | --- | --- |
+| `--undo` | flag |  | Remove what setup wrote to the Git config and revoke the token it minted |

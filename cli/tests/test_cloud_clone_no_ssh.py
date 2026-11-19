@@ -4,8 +4,10 @@ A self-hosted stack that serves no Git over SSH returns `sshUrl: null`. `bea`
 clones only over SSH, so it must stop with a message naming that cause instead
 of handing git someone else's host or falling back to HTTPS itself. The reader
 is usually the stack's operator, on a platform (bex) that cannot serve SSH, so
-the refusal also says how to clone over HTTPS with git and a token, and shows
-the command only for an address that is plain https.
+the refusal also says how to clone over HTTPS with git: `bea cloud git setup`
+first, so Git signs in through bea (w22/m12), and a personal access token for
+a machine without bea. It shows the clone command only for an address that is
+plain https.
 """
 
 from __future__ import annotations
@@ -69,8 +71,11 @@ def test_clone_refuses_a_ledger_without_an_ssh_address(httpx_mock: HTTPXMock, _c
     else:
         message = guidance = result.stderr
     assert "this self-hosted server serves no Git over SSH" in message
-    assert f"Clone it with git over HTTPS instead: git clone {_HTTP_URL}" in guidance
-    assert "personal access token made in the dashboard under Settings → Personal access tokens" in guidance
+    # The helper comes first and the clone command follows it; the token is the fallback.
+    assert f"run 'bea cloud git setup' once, then: git clone {_HTTP_URL}" in guidance
+    assert guidance.index("bea cloud git setup") < guidance.index("personal access token")
+    assert "On a machine without bea, give git a personal access token as the password" in guidance
+    assert "made in the dashboard under Settings → Personal access tokens" in guidance
     assert "ledger.read to clone, ledger.write to push" in guidance
     assert "A bex deployment cannot: bex routes no SSH." in guidance
 
@@ -98,8 +103,10 @@ def test_the_refusal_shows_no_clone_command_for_an_unsafe_address(
 
     assert result.exit_code == 1, result.output
     details = json.loads(result.stderr)["error"]["details"]
-    assert not any("git clone" in line for line in details)
-    assert details[0].endswith("from its httpUrl (bea --json cloud ledger show prints it).")
+    # No command to paste: the address appears nowhere, only the field to read it from.
+    assert not any(http_url in line or "git clone h" in line for line in details)
+    assert details[0].endswith("then git clone its httpUrl (bea --json cloud ledger show prints it).")
+    assert "bea cloud git setup" in details[0]
     assert list(_cloud.iterdir()) == []
 
 
@@ -115,7 +122,7 @@ def test_create_with_clone_reports_the_created_ledger_without_an_ssh_address(
     error = json.loads(result.stderr)["error"]
     assert "was created but was not cloned" in error["message"]
     assert "serves no Git over SSH" in error["message"]
-    assert f"git clone {_HTTP_URL}" in error["details"][0]
+    assert f"run 'bea cloud git setup' once, then: git clone {_HTTP_URL}" in error["details"][0]
     assert error["result"]["ssh_url"] is None
 
 
