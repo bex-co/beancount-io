@@ -31,6 +31,7 @@ import {
   CurrencyCombobox,
 } from "@/common/components/ledger-comboboxes";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useLedger } from "@/common/hooks/use-ledger";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
 import {
   exceedsLedgerDigits,
@@ -72,6 +73,19 @@ export function ReceiptReviewForm({
   error,
 }: ReceiptReviewFormProps) {
   const { t } = useTranslations();
+  const { ledgerData } = useLedger();
+
+  // The ledger's own root names: the payment method the reader promises is
+  // "an Assets or Liabilities account", and a ledger with
+  // `option "name_assets"` names no `Assets:` account (w5/1189).
+  const assetsRoot = ledgerData.options.nameAssets || "Assets";
+  const liabilitiesRoot = ledgerData.options.nameLiabilities || "Liabilities";
+  const expensesRoot = ledgerData.options.nameExpenses || "Expenses";
+  const paymentRoots = useMemo(
+    () => [assetsRoot, liabilitiesRoot],
+    [assetsRoot, liabilitiesRoot],
+  );
+  const expenseRoots = useMemo(() => [expensesRoot], [expensesRoot]);
 
   const reviewFormSchema = useMemo(
     () =>
@@ -143,8 +157,8 @@ export function ReceiptReviewForm({
   const previewDate = watched.date || "YYYY-MM-DD";
   const previewText = [
     `${previewDate} * ${beancountString(watched.payee || "Payee")} ${beancountString(watched.description || "Description")}`,
-    `  ${watched.expenseAccount || "Expenses:Account"}  ${watched.amount || "0.00"} ${watched.currency || primaryCurrency}`,
-    `  ${watched.paymentAccount || "Assets:Account"}  -${watched.amount || "0.00"} ${watched.currency || primaryCurrency}`,
+    `  ${watched.expenseAccount || `${expensesRoot}:Account`}  ${watched.amount || "0.00"} ${watched.currency || primaryCurrency}`,
+    `  ${watched.paymentAccount || `${assetsRoot}:Account`}  -${watched.amount || "0.00"} ${watched.currency || primaryCurrency}`,
   ].join("\n");
 
   return (
@@ -285,7 +299,7 @@ export function ReceiptReviewForm({
                           value={field.value}
                           onValueChange={field.onChange}
                           placeholder={t("receipt.review.selectExpenseAccount")}
-                          filterPrefix="Expenses:"
+                          filterRoots={expenseRoots}
                         />
                       </FormControl>
                       <FormMessage />
@@ -307,7 +321,7 @@ export function ReceiptReviewForm({
                           value={field.value}
                           onValueChange={field.onChange}
                           placeholder={t("receipt.review.selectPaymentAccount")}
-                          filterPrefix="Assets:"
+                          filterRoots={paymentRoots}
                         />
                       </FormControl>
                       <FormMessage />

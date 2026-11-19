@@ -7,6 +7,17 @@ import { ReceiptReviewForm } from "../receipt-review-form";
 vi.mock("@/common/hooks/use-date-locale", () => ({
   useDateLocale: () => enUS,
 }));
+vi.mock("@/common/hooks/use-ledger", () => ({
+  useLedger: () => ({
+    ledgerData: {
+      options: {
+        nameAssets: "Assets",
+        nameLiabilities: "Liabilities",
+        nameExpenses: "Expenses",
+      },
+    },
+  }),
+}));
 vi.mock("@/common/components/ledger-comboboxes", () => ({
   AccountCombobox: ({ value }: { value: string }) => (
     <input aria-label="Account" value={value} readOnly />
