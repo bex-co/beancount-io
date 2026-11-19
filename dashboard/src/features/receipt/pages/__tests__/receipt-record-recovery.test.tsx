@@ -25,7 +25,17 @@ vi.mock("@/common/hooks/use-ledger-permission", () => ({
   useLedgerPermission: () => ({ canWrite: true }),
 }));
 vi.mock("@/common/hooks/use-ledger", () => ({
-  useLedger: () => ({ primaryCurrency: "USD" }),
+  useLedger: () => ({
+    primaryCurrency: "USD",
+    // ReceiptReviewForm reads the ledger's own root names from here.
+    ledgerData: {
+      options: {
+        nameAssets: "Assets",
+        nameLiabilities: "Liabilities",
+        nameExpenses: "Expenses",
+      },
+    },
+  }),
 }));
 vi.mock("@/common/hooks/use-date-locale", () => ({
   useDateLocale: () => enUS,
