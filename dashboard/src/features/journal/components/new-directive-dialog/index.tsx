@@ -170,7 +170,13 @@ export function NewDirectiveDialog({
             </DialogTitle>
             <TabsList className="grid w-full grid-cols-4 sm:w-auto sm:shrink-0">
               {TABS.map(({ value, label }) => (
-                <TabsTrigger key={value} value={value} disabled={pending}>
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  disabled={pending}
+                  // Room inside the pill on a narrow phone.
+                  className="max-[389px]:px-1 max-[389px]:text-[13px]"
+                >
                   {t(label)}
                 </TabsTrigger>
               ))}

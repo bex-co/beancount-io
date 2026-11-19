@@ -520,11 +520,6 @@ const ruCommon: Record<string, TranslationEntry> = {
       "Просмотр доходов и расходов для {ledgerName}. Отслеживайте доходы, затраты и рентабельность с течением времени.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "Просматривайте и фильтруйте все транзакции в {ledgerName}. Ищите по дате, счету, описанию или получателю.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "Финансовая панель для {ledgerName}. Просматривайте балансы счетов, тренды чистой стоимости и сводки доходов/расходов.",
@@ -699,8 +694,13 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Фильтры",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "Готово",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "Фильтры отчёта",
+    message: "Фильтры",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

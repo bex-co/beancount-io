@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DirectiveType } from "@/common/types/journal";
@@ -86,6 +86,8 @@ function renderFilters(
     ...overrides,
   };
   render(<JournalFilters {...props} />);
+  // The type chips sit in the Entry types panel; open it as a reader would.
+  fireEvent.click(screen.getByRole("button", { expanded: false }));
   return props;
 }
 
@@ -147,8 +149,9 @@ describe("Catalan Journal filters render and act", () => {
     });
     expect(pending).toHaveTextContent("!");
 
+    // "Other" is every other flag, so it carries no single glyph of its own.
     const other = screen.getByRole("button", { name: "Altres transaccions" });
-    expect(other).toHaveTextContent("x");
+    expect(other).toHaveTextContent(/^Altres$/);
 
     const linked = screen.getByRole("button", { name: "Documents vinculats" });
     expect(linked).toHaveTextContent("V");

@@ -54,6 +54,102 @@ const frJournal: Record<string, TranslationEntry> = {
     description:
       "Accessible name for the static posting count when all rows are forced open",
   },
+  "journal.entryCount_one": {
+    message: "{shown} écriture",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.entryCount_many": {
+    message: "{shown} écritures",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.entryCount_other": {
+    message: "{shown} écritures",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.multiplePostings": {
+    message: "Plusieurs écritures",
+    description:
+      "In a Journal row's amount column, for an entry no single amount sums up, such as a payroll",
+  },
+  "journal.entryHeader": {
+    message: "Écriture",
+    description:
+      "Column header (for screen readers) over each Journal entry's name and details",
+  },
+  "journal.showLabel": {
+    message: "Afficher",
+    description:
+      "Caption before the Journal's display toggles (Metadata, Postings): what each row shows",
+  },
+  "journal.otherStatus": {
+    message: "Autres",
+    description:
+      "Beside the literal flag on the Journal's third flag filter: transactions with a flag other than cleared (*) or pending (!)",
+  },
+  "journal.entryTypes": {
+    message: "Types d'écriture",
+    description:
+      "On narrow screens, the Journal's control that lists and opens the entry-type and display choices",
+  },
+  "journal.allEntryTypes": {
+    message: "Tous",
+    description:
+      "Shown in the Journal's entry-type control when no type is chosen, so every type is listed",
+  },
+  "journal.editSource": {
+    message: "Modifier la source",
+    description:
+      "On a phone, the button in an entry's dialog that reveals the entry's source text for editing",
+  },
+  "journal.balanceMatches": {
+    message: "Concorde",
+    description:
+      "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
+  },
+  "journal.balanceOffBy": {
+    message: "Écart de {amount}",
+    description:
+      "Beside a balance assertion in the Journal that does not match; {amount} is the difference with its currency",
+  },
+  "journal.layoutLabel": {
+    message: "Disposition",
+    description:
+      "Name of the Journal's choice between one line per entry and entries grouped by day",
+  },
+  "journal.densityCompact": {
+    message: "Condensé",
+    description:
+      "Journal layout: one line per entry with date and status columns, for reconciling",
+  },
+  "journal.densityComfortable": {
+    message: "Aéré",
+    description:
+      "Journal layout: entries grouped under their day, two lines each, for reading",
+  },
+  "journal.statusLabel": {
+    message: "Statut",
+    description:
+      "Name of the Journal's group of transaction filters by flag: all, cleared (*), pending (!), other",
+  },
+  "journal.viewLabel": {
+    message: "Affichage",
+    description:
+      "Button on the Journal's filter bar, on phones and tablets, that opens what each row shows and the layout",
+  },
+  "journal.openRegister": {
+    message: "Voir {account} avec son solde courant",
+    description:
+      "Link above the Journal when it is filtered to one account, to that account's register, which shows the balance after every entry; {account} is the full account name",
+  },
+  "journal.readFailedLedgerUnchanged": {
+    message:
+      "Votre registre n'a pas changé. Réessayez, ou revenez dans une minute.",
+    description:
+      "Under the Journal's error heading when its entries could not be read because of a server error, beside a Try Again button",
+  },
   "journal.account": {
     message: "Compte",
     description: "Singular form of account, used as tab label",

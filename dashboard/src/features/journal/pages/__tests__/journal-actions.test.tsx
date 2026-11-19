@@ -29,7 +29,9 @@ vi.mock("@tanstack/react-router", () => ({
     search?: unknown;
     "aria-label"?: string;
   }) => {
-    capturedLinkSearch = search;
+    // The page has other links (an account's register); the toolbar CTA is
+    // the one that carries a search.
+    if (search !== undefined) capturedLinkSearch = search;
     return (
       <a href="#" data-to={to} aria-label={ariaLabel}>
         {children}
@@ -221,6 +223,28 @@ describe("journal action URLs", () => {
       action: "new-entry",
       directive: "transaction",
     });
+  });
+
+  it("links a Journal filtered to one account to that account's register", () => {
+    render(<LedgerJournalPage />);
+
+    // The register keeps the balance after every entry, for reconciling.
+    expect(
+      screen.getByRole("link", { name: /journal\.openRegister/ }),
+    ).toHaveAttribute(
+      "data-to",
+      "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+    );
+  });
+
+  it("names the filters in force over the list, where the header folds them away", () => {
+    render(<LedgerJournalPage />);
+
+    // Shown below the header's inline width (a container query hides it
+    // wider); each value in full, with Clear all beside them.
+    expect(screen.getByTitle("year")).toHaveTextContent("year");
+    expect(screen.getByTitle("Assets:Cash")).toHaveTextContent("Assets:Cash");
+    expect(screen.getByTitle("coffee")).toHaveTextContent("coffee");
   });
 
   it("does not open or offer the mutation to a read-only user", () => {

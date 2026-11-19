@@ -8,8 +8,7 @@ import {
   parseDecimalNumber,
   sumDecimalNumbers,
 } from "@/common/lib/beancount/decimal-number";
-import type { CurrencyAmount } from "./overview-utils";
-import { prioritizeCurrency } from "./overview-utils";
+import { type CurrencyAmount, prioritizeCurrency } from "./currency-amount";
 
 export type TransactionSummaryKind =
   | "income"

@@ -507,11 +507,6 @@ const koCommon: Record<string, TranslationEntry> = {
       "{ledgerName}의 수입과 지출을 봅니다. 수익, 비용, 수익성을 시간별로 추적할 수 있습니다.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "{ledgerName}의 모든 거래를 탐색하고 필터링합니다. 날짜, 계정, 적요 또는 수취인으로 검색할 수 있습니다.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "{ledgerName}의 재무 대시보드. 계좌 잔액, 순자산 트렌드, 수입/지출 요약을 볼 수 있습니다.",
@@ -686,8 +681,13 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "필터",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "완료",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "보고서 필터",
+    message: "필터",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

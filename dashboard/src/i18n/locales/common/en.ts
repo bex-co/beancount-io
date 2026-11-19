@@ -512,11 +512,6 @@ const enCommon: Record<string, TranslationEntry> = {
       "View income and expenses for {ledgerName}. Track revenue, costs, and profitability over time.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "Browse and filter all transactions in {ledgerName}. Search by date, account, narration, or payee.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "Financial dashboard for {ledgerName}. View account balances, net worth trends, and income/expense summaries.",
@@ -793,8 +788,13 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Filters",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "Done",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "Report filters",
+    message: "Filters",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

@@ -21,6 +21,92 @@ const jaJournal: Record<string, TranslationEntry> = {
     description:
       "Accessible name for the static posting count when all rows are forced open",
   },
+  "journal.entryCount_other": {
+    message: "{shown} 件のエントリ",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.multiplePostings": {
+    message: "複数の仕訳",
+    description:
+      "In a Journal row's amount column, for an entry no single amount sums up, such as a payroll",
+  },
+  "journal.entryHeader": {
+    message: "エントリ",
+    description:
+      "Column header (for screen readers) over each Journal entry's name and details",
+  },
+  "journal.showLabel": {
+    message: "表示",
+    description:
+      "Caption before the Journal's display toggles (Metadata, Postings): what each row shows",
+  },
+  "journal.otherStatus": {
+    message: "その他",
+    description:
+      "Beside the literal flag on the Journal's third flag filter: transactions with a flag other than cleared (*) or pending (!)",
+  },
+  "journal.entryTypes": {
+    message: "エントリの種類",
+    description:
+      "On narrow screens, the Journal's control that lists and opens the entry-type and display choices",
+  },
+  "journal.allEntryTypes": {
+    message: "すべて",
+    description:
+      "Shown in the Journal's entry-type control when no type is chosen, so every type is listed",
+  },
+  "journal.editSource": {
+    message: "ソースを編集",
+    description:
+      "On a phone, the button in an entry's dialog that reveals the entry's source text for editing",
+  },
+  "journal.balanceMatches": {
+    message: "一致",
+    description:
+      "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
+  },
+  "journal.balanceOffBy": {
+    message: "{amount} の差異",
+    description:
+      "Beside a balance assertion in the Journal that does not match; {amount} is the difference with its currency",
+  },
+  "journal.layoutLabel": {
+    message: "表示形式",
+    description:
+      "Name of the Journal's choice between one line per entry and entries grouped by day",
+  },
+  "journal.densityCompact": {
+    message: "コンパクト",
+    description:
+      "Journal layout: one line per entry with date and status columns, for reconciling",
+  },
+  "journal.densityComfortable": {
+    message: "ゆったり",
+    description:
+      "Journal layout: entries grouped under their day, two lines each, for reading",
+  },
+  "journal.statusLabel": {
+    message: "状態",
+    description:
+      "Name of the Journal's group of transaction filters by flag: all, cleared (*), pending (!), other",
+  },
+  "journal.viewLabel": {
+    message: "表示",
+    description:
+      "Button on the Journal's filter bar, on phones and tablets, that opens what each row shows and the layout",
+  },
+  "journal.openRegister": {
+    message: "{account} を残高の推移とともに表示",
+    description:
+      "Link above the Journal when it is filtered to one account, to that account's register, which shows the balance after every entry; {account} is the full account name",
+  },
+  "journal.readFailedLedgerUnchanged": {
+    message:
+      "台帳には何も変更はありません。もう一度試すか、少し待ってから開き直してください。",
+    description:
+      "Under the Journal's error heading when its entries could not be read because of a server error, beside a Try Again button",
+  },
   "journal.account": {
     message: "勘定科目",
     description: "Singular form of account, used as tab label",

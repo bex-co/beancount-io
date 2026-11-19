@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DirectiveType } from "@/common/types/journal";
 import en from "@/i18n/locales/en";
@@ -95,6 +95,8 @@ describe("Russian Journal filters render their own names", () => {
         onShowPostingsChange={vi.fn()}
       />,
     );
+    // The type chips sit in the Entry types panel; open it as a reader would.
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
     for (const label of ["Открыть", "Заметка", "Метаданные", "Проводки"]) {
       expect(screen.getByRole("button", { name: label })).toBeVisible();
     }
@@ -124,8 +126,9 @@ describe("Russian Journal filters render their own names", () => {
     expect(
       screen.getByRole("button", { name: "Ожидающие транзакции" }),
     ).toHaveTextContent("!");
+    // "Other" is every other flag, so it carries no single glyph of its own.
     expect(
       screen.getByRole("button", { name: "Прочие транзакции" }),
-    ).toHaveTextContent("x");
+    ).not.toHaveTextContent("x");
   });
 });

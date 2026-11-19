@@ -103,14 +103,15 @@ export function ExportJournalButton({
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 pointer-coarse:h-11"
           disabled={isExporting}
           aria-label={
             isExporting ? t("journal.exporting") : t("journal.export")
           }
         >
           <Download className="h-4 w-4" />
-          <span className="hidden sm:inline">
+          {/* Named at every width: a bare download arrow says less. */}
+          <span>
             {isExporting ? t("journal.exporting") : t("journal.export")}
           </span>
         </Button>
@@ -127,11 +128,16 @@ export function ExportJournalButton({
           <Button
             variant="outline"
             onClick={() => setIsDialogOpen(false)}
+            className="pointer-coarse:h-11"
             disabled={isExporting}
           >
             {t("common.cancel")}
           </Button>
-          <Button onClick={handleExport} loading={isExporting}>
+          <Button
+            onClick={handleExport}
+            loading={isExporting}
+            className="pointer-coarse:h-11"
+          >
             {t("journal.export")}
           </Button>
         </DialogFooter>

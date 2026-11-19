@@ -12,8 +12,9 @@ import { JournalMetadata } from "./journal-metadata";
 import { displayableMetadataEntries } from "./journal-metadata-entries";
 import { JournalPostings } from "./journal-postings";
 import { journalEntryLabel } from "./journal-entry-label";
-import { Button } from "@/common/components/ui/button";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { JournalPostingToggle } from "./journal-posting-toggle";
+import { JournalDays, type JournalMoney } from "./journal-days";
+import { JournalLines } from "./journal-lines";
 import { cn } from "@/common/lib/utils/utils";
 import { getClickableRowProps } from "@/common/components/clickable-row";
 import {
@@ -48,6 +49,14 @@ interface JournalTableProps {
   withChildren?: boolean;
   ledgerOwner?: string;
   ledgerName?: string;
+  /**
+   * `days` reads as a ledger: entries under day headings, each with its
+   * amount. The Journal page uses it; an account's journal keeps its
+   * Change and Balance columns.
+   */
+  layout?: "columns" | "days" | "lines";
+  /** The ledger's names the `days` layout needs to sum an entry. */
+  money?: JournalMoney;
 }
 
 interface JournalAmountsProps {
@@ -212,74 +221,6 @@ function journalColumns(isAccountJournal: boolean): JournalColumnDef[] {
     POSTINGS_DESKTOP_COL,
     POSTINGS_MOBILE_COL,
   ];
-}
-
-interface JournalPostingToggleProps {
-  directive: JournalDirectiveType;
-  entry: string;
-  position: number;
-  controls?: string;
-  onClick?: () => void;
-  expanded: boolean;
-  /** When true, postings are forced visible globally — show a static indicator. */
-  forcedOpen?: boolean;
-}
-
-function JournalPostingToggle({
-  directive,
-  entry,
-  position,
-  controls,
-  onClick,
-  expanded,
-  forcedOpen = false,
-}: JournalPostingToggleProps) {
-  const { t } = useTranslations();
-  if (!isJournalTransaction(directive)) {
-    return null;
-  }
-  const amount = directive.postings?.length || 0;
-
-  if (forcedOpen) {
-    return (
-      <span className="inline-flex h-7 min-w-8 items-center justify-center gap-1 px-1.5 text-muted-foreground">
-        <ChevronDown className="size-3.5" aria-hidden />
-        <span className="text-xs tabular-nums" aria-hidden>
-          {amount}
-        </span>
-        <span className="sr-only">
-          {t("journal.visibleEntryPostings", {
-            count: amount,
-            entry,
-            position,
-          })}
-        </span>
-      </span>
-    );
-  }
-
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className="h-7 min-w-8 gap-1 px-1.5 text-muted-foreground hover:text-foreground"
-      onClick={onClick}
-      aria-label={t(
-        expanded ? "journal.hideEntryPostings" : "journal.showEntryPostings",
-        { count: amount, entry, position },
-      )}
-      aria-expanded={expanded}
-      aria-controls={controls}
-    >
-      {expanded ? (
-        <ChevronDown className="size-3.5" />
-      ) : (
-        <ChevronRight className="size-3.5" />
-      )}
-      <span className="text-xs tabular-nums">{amount}</span>
-    </Button>
-  );
 }
 
 interface JournalTableHeaderProps {
@@ -579,12 +520,43 @@ export function JournalTable({
   withChildren = true,
   ledgerOwner,
   ledgerName,
+  layout = "columns",
+  money,
 }: JournalTableProps) {
   const { t } = useTranslations();
   const columns = journalColumns(isAccountJournal);
   const label = isAccountJournal
     ? t("journal.accountJournalTable")
     : t("journal.journalTable");
+
+  if (layout === "lines" && money && !isAccountJournal) {
+    return (
+      <JournalLines
+        data={data}
+        money={money}
+        showMetadata={showMetadata}
+        showPostings={showPostings}
+        onEntryClick={onEntryClick}
+        ledgerOwner={ledgerOwner}
+        ledgerName={ledgerName}
+        label={label}
+      />
+    );
+  }
+  if (layout === "days" && money && !isAccountJournal) {
+    return (
+      <JournalDays
+        data={data}
+        money={money}
+        showMetadata={showMetadata}
+        showPostings={showPostings}
+        onEntryClick={onEntryClick}
+        ledgerOwner={ledgerOwner}
+        ledgerName={ledgerName}
+        label={label}
+      />
+    );
+  }
 
   return (
     <div className="journal">

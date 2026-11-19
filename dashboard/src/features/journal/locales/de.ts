@@ -39,6 +39,97 @@ const deJournal: Record<string, TranslationEntry> = {
     description:
       "Accessible name for the static posting count when all rows are forced open",
   },
+  "journal.entryCount_one": {
+    message: "{shown} Eintrag",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.entryCount_other": {
+    message: "{shown} Einträge",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.multiplePostings": {
+    message: "Mehrere Buchungen",
+    description:
+      "In a Journal row's amount column, for an entry no single amount sums up, such as a payroll",
+  },
+  "journal.entryHeader": {
+    message: "Eintrag",
+    description:
+      "Column header (for screen readers) over each Journal entry's name and details",
+  },
+  "journal.showLabel": {
+    message: "Anzeigen",
+    description:
+      "Caption before the Journal's display toggles (Metadata, Postings): what each row shows",
+  },
+  "journal.otherStatus": {
+    message: "Andere",
+    description:
+      "Beside the literal flag on the Journal's third flag filter: transactions with a flag other than cleared (*) or pending (!)",
+  },
+  "journal.entryTypes": {
+    message: "Eintragstypen",
+    description:
+      "On narrow screens, the Journal's control that lists and opens the entry-type and display choices",
+  },
+  "journal.allEntryTypes": {
+    message: "Alle",
+    description:
+      "Shown in the Journal's entry-type control when no type is chosen, so every type is listed",
+  },
+  "journal.editSource": {
+    message: "Quelle bearbeiten",
+    description:
+      "On a phone, the button in an entry's dialog that reveals the entry's source text for editing",
+  },
+  "journal.balanceMatches": {
+    message: "Stimmt",
+    description:
+      "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
+  },
+  "journal.balanceOffBy": {
+    message: "Abweichung {amount}",
+    description:
+      "Beside a balance assertion in the Journal that does not match; {amount} is the difference with its currency",
+  },
+  "journal.layoutLabel": {
+    message: "Ansicht",
+    description:
+      "Name of the Journal's choice between one line per entry and entries grouped by day",
+  },
+  "journal.densityCompact": {
+    message: "Kompakt",
+    description:
+      "Journal layout: one line per entry with date and status columns, for reconciling",
+  },
+  "journal.densityComfortable": {
+    message: "Großzügig",
+    description:
+      "Journal layout: entries grouped under their day, two lines each, for reading",
+  },
+  "journal.statusLabel": {
+    message: "Status",
+    description:
+      "Name of the Journal's group of transaction filters by flag: all, cleared (*), pending (!), other",
+  },
+  "journal.viewLabel": {
+    message: "Anzeige",
+    description:
+      "Button on the Journal's filter bar, on phones and tablets, that opens what each row shows and the layout",
+  },
+  "journal.openRegister": {
+    message: "{account} mit laufendem Saldo anzeigen",
+    description:
+      "Link above the Journal when it is filtered to one account, to that account's register, which shows the balance after every entry; {account} is the full account name",
+  },
+  "journal.readFailedLedgerUnchanged": {
+    message:
+      "An Ihrem Hauptbuch hat sich nichts geändert. Versuchen Sie es noch einmal oder kommen Sie in einer Minute wieder.",
+    description:
+      "Under the Journal's error heading when its entries could not be read because of a server error, beside a Try Again button",
+  },
   "journal.account": {
     message: "Konto",
     description: "Singular form of account, used as tab label",

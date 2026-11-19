@@ -174,7 +174,7 @@ describe("malformed saved Journal filters", () => {
 
       expect(screen.getByText("Empty")).toBeInTheDocument();
       expect(lastQuery()).toMatchObject({
-        directiveTypes: ["Transaction"],
+        directiveTypes: ["Transaction", "Balance"],
         transactionSubtypes: undefined,
         documentSubtypes: undefined,
         customSubtypes: undefined,

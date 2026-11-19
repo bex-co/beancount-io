@@ -521,11 +521,6 @@ const ukCommon: Record<string, TranslationEntry> = {
       "Перегляд доходів та витрат для {ledgerName}. Відстежуйте доходи, витрати та прибутковість з часом.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "Переглядайте та фільтруйте всі транзакції в {ledgerName}. Шукайте за датою, рахунком, описом або отримувачем.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "Фінансова панель для {ledgerName}. Переглядайте баланси рахунків, тренди чистої вартості та підсумки доходів/витрат.",
@@ -700,8 +695,13 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Фільтри",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "Готово",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "Фільтри звіту",
+    message: "Фільтри",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

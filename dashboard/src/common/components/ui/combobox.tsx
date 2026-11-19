@@ -38,6 +38,12 @@ interface ComboboxProps extends ComboboxFieldProps {
   className?: string;
   disabled?: boolean;
   triggerOn?: "change" | "blur"; // When to trigger onValueChange for custom values
+  /**
+   * Open the suggestions as soon as the field gains focus. Off where a form
+   * focuses the field for the reader: the list then waits for a click, a
+   * keystroke or ArrowDown instead of covering the rest of the form.
+   */
+  openOnFocus?: boolean;
   /** Rendered under the field, e.g. a failed-suggestions notice. */
   notice?: React.ReactNode;
 }
@@ -52,6 +58,7 @@ export function Combobox({
   className,
   disabled = false,
   triggerOn = "change",
+  openOnFocus = true,
   notice,
   id,
   "aria-describedby": ariaDescribedBy,
@@ -141,7 +148,7 @@ export function Combobox({
   };
 
   const handleInputFocus = () => {
-    setOpen(true);
+    if (openOnFocus) setOpen(true);
   };
 
   const handleInputBlur = () => {
@@ -264,6 +271,9 @@ export function Combobox({
               value={inputValue}
               onChange={handleInputChange}
               onFocus={handleInputFocus}
+              onClick={() => {
+                if (!open) setOpen(true);
+              }}
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
               placeholder={defaultPlaceholder}
@@ -288,7 +298,8 @@ export function Combobox({
                 type="button"
                 onClick={handleClear}
                 onMouseDown={(e) => e.preventDefault()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm hover:bg-muted p-1 z-10 cursor-pointer"
+                // 24px at least, the smallest target a pointer can reliably hit.
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-sm hover:bg-muted p-1.5 z-10 cursor-pointer"
                 aria-label={t("common.clearInput")}
                 tabIndex={-1}
               >

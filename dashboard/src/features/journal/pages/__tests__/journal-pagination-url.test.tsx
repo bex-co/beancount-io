@@ -370,7 +370,13 @@ describe("journal pagination in the URL", () => {
         expect(screen.getByTestId("first-journal-row")).toHaveTextContent(
           "entry-0",
         );
-        expect(screen.getByText("1–60 / 300")).toBeVisible();
+        // The new scope's range, visible beside the pagination (its live
+        // region announces the same words).
+        expect(
+          screen
+            .getAllByText("Showing 1–60 of 300")
+            .some((element) => !element.classList.contains("sr-only")),
+        ).toBe(true);
         expect(screen.getByRole("button", { name: "Export" })).toBeVisible();
       } finally {
         await act(async () => release());
@@ -469,6 +475,7 @@ describe("journal pagination in the URL", () => {
     const router = await mountAt("/ledger/alice/books/journal?offset=120");
     expect(queriedOffset()).toBe(120);
 
+    await user.click(screen.getByRole("button", { name: /^Entry types/ }));
     await user.click(screen.getByRole("button", { name: "Balance" }));
 
     await waitFor(() => {

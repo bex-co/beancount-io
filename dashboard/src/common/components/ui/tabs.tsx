@@ -74,7 +74,7 @@ function TabsTrigger({
             "h-[calc(100%-1px)] flex-1 rounded-md border border-transparent px-2 py-1 text-sm",
             "text-foreground dark:text-muted-foreground",
             "data-[state=active]:bg-background data-[state=active]:shadow-sm",
-            "dark:data-[state=active]:text-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30",
+            "dark:data-[state=active]:text-foreground dark:data-[state=active]:border-border dark:data-[state=active]:bg-input/10",
             "transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1",
             "forced-colors:border-[Canvas]",
             "data-[state=active]:forced-selected",

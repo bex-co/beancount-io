@@ -5,6 +5,14 @@ import {
   sumDecimalNumbers,
 } from "@/common/lib/beancount/decimal-number";
 import { fractionDigitsOf } from "@/common/lib/format/format-number";
+import {
+  type CurrencyAmount,
+  prioritizeCurrency,
+} from "@/common/lib/beancount/currency-amount";
+
+// The amount type and its ordering live with the ledger helpers every
+// feature shares; the Overview's modules keep importing them from here.
+export { type CurrencyAmount, prioritizeCurrency };
 import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import { parseConcreteTimeFilter } from "@/features/reports/export/reporting-period";
 import {
@@ -32,17 +40,6 @@ export type HierarchyNode = {
   account: string;
   balance?: Record<string, unknown> | null;
   children?: HierarchyNode[];
-};
-
-export type CurrencyAmount = {
-  currency: string;
-  value: number;
-  /**
-   * The decimal the ledger sent, when there is one. Text and differences use
-   * it: a double rounds a large balance (9007199254740993) before either sees
-   * it (w4/m52). `value` stays for sorting and chart coordinates.
-   */
-  exact?: string;
 };
 
 export type AccountBalanceRow = {
@@ -188,17 +185,6 @@ export function amountDifference(
     decimalOf(latest),
     negateDecimalNumber(decimalOf(previous)),
   ]);
-}
-
-export function prioritizeCurrency(
-  amounts: CurrencyAmount[],
-  preferredCurrency: string,
-): CurrencyAmount[] {
-  return [...amounts].sort((a, b) => {
-    if (a.currency === preferredCurrency) return -1;
-    if (b.currency === preferredCurrency) return 1;
-    return a.currency.localeCompare(b.currency);
-  });
 }
 
 export function getComparableAmount(

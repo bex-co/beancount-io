@@ -490,9 +490,15 @@ describe("EntryContextDialog", () => {
         screen.getByText("journal.generatedEntryExplanation"),
       ).toBeInTheDocument();
       expect(screen.getByText("2024-02-01")).toBeInTheDocument();
+      // The dialog's heading names the entry; the panel repeats it in place.
       expect(
-        screen.getByText("(Padding inserted for Balance of 10.00 USD)"),
+        screen.getByRole("heading", {
+          name: "(Padding inserted for Balance of 10.00 USD)",
+        }),
       ).toBeInTheDocument();
+      expect(
+        screen.getAllByText("(Padding inserted for Balance of 10.00 USD)"),
+      ).toHaveLength(2);
       expect(screen.getByText("Assets:Cash")).toBeInTheDocument();
       expect(screen.getByText("10.00 USD")).toBeInTheDocument();
       expect(screen.getByText("Equity:Opening-Balances")).toBeInTheDocument();

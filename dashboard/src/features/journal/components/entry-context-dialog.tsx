@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/common/components/ui/table";
+import { isJournalTransaction } from "@/common/types/journal";
 import type {
   JournalDirectiveType,
   JournalTransaction,
@@ -28,6 +29,10 @@ import { useBlocker, useRouter } from "@tanstack/react-router";
 import { EntryContextPanel } from "@/features/journal/components/entry-context-panel";
 import { hasActiveMonacoWidget } from "@/features/journal/components/entry-editor-escape";
 import { LedgerAmount } from "@/common/components/ledger-amount";
+import { useIsMobile } from "@/common/hooks/use-mobile";
+import { JournalPostings } from "./journal-postings";
+import { formatLedgerDate } from "@/common/lib/format/ledger-date";
+import { directiveTypeLabel } from "@/common/lib/beancount/directive-type-label";
 
 interface EntryContextDialogProps {
   open: boolean;
@@ -143,6 +148,20 @@ function GeneratedEntryPanel({
   );
 }
 
+/** Who or what the entry was, or its kind: the dialog's heading. */
+function entryHeadline(
+  entry: JournalDirectiveType | null,
+  t: (key: string) => string,
+): string {
+  if (!entry) return "";
+  const parts: string[] = [];
+  if ("payee" in entry && entry.payee) parts.push(entry.payee);
+  if ("narration" in entry && entry.narration) parts.push(entry.narration);
+  return parts.length
+    ? parts.join(" · ")
+    : directiveTypeLabel(entry.directive_type, t);
+}
+
 /** The date, payee and narration a reader would recognise the entry by. */
 function describeEntry(entry: JournalDirectiveType | null): string {
   if (!entry) return "";
@@ -165,7 +184,9 @@ export function EntryContextDialog({
   returnFocusRef,
   fallbackFocusRef,
 }: EntryContextDialogProps) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
+  // Below `md` the entry reads as postings first, its source behind a tap.
+  const phonePreview = useIsMobile();
   const generatedEntry = isGeneratedEntry(entry) ? entry : null;
   const entryHash = entry?.entry_hash ?? "";
   const skipFocusRestoreRef = useRef(false);
@@ -224,35 +245,63 @@ export function EntryContextDialog({
         // rather than leave Radix pointing at a missing description.
         {...(entryLabel ? {} : { "aria-describedby": undefined })}
       >
-        <VisuallyHidden>
-          <DialogTitle>{t("journal.entryContext")}</DialogTitle>
-          {entryLabel && (
-            <DialogDescription>
-              {t("journal.entryContextDescription", { entry: entryLabel })}
-            </DialogDescription>
+        {/* The entry by name, as a reader would recognise it, and its day;
+            the dialog opened on a file location with no heading at all. */}
+        <DialogHeader className="pr-8 text-left">
+          <DialogTitle className="text-lg leading-snug [overflow-wrap:anywhere]">
+            {entryHeadline(entry, t) || t("journal.entryContext")}
+          </DialogTitle>
+          {entry?.date && (
+            <p className="text-sm text-muted-foreground tabular-nums">
+              {formatLedgerDate(entry.date, i18n.language, {
+                dateStyle: "full",
+              }) ?? entry.date}
+            </p>
           )}
-        </VisuallyHidden>
+          {entryLabel && (
+            <VisuallyHidden>
+              <DialogDescription>
+                {t("journal.entryContextDescription", { entry: entryLabel })}
+              </DialogDescription>
+            </VisuallyHidden>
+          )}
+        </DialogHeader>
         <div className="flex-1 overflow-y-auto">
           {generatedEntry ? (
             <GeneratedEntryPanel entry={generatedEntry} />
           ) : (
-            <EntryContextPanel
-              key={`${ledgerId}:${entryHash}`}
-              entryHash={entryHash}
-              ledgerId={ledgerId}
-              entry={entry}
-              skip={!open || !entryHash}
-              onSourceNavigate={() => {
-                skipFocusRestoreRef.current = true;
-              }}
-              onDirtyChange={setDirty}
-              onPendingChange={setWriting}
-              confirmLeave={requestLeave}
-              onSuccess={() => {
-                onOpenChange(false);
-                onSuccess?.();
-              }}
-            />
+            <>
+              {phonePreview && entry && isJournalTransaction(entry) && (
+                // What the entry did, readable at a phone's width; its
+                // source stays one tap away.
+                <div className="mb-4 overflow-hidden rounded-lg border">
+                  <JournalPostings
+                    directive={entry}
+                    showPostings
+                    compact
+                    card
+                  />
+                </div>
+              )}
+              <EntryContextPanel
+                key={`${ledgerId}:${entryHash}`}
+                entryHash={entryHash}
+                ledgerId={ledgerId}
+                entry={entry}
+                collapseSource={phonePreview}
+                skip={!open || !entryHash}
+                onSourceNavigate={() => {
+                  skipFocusRestoreRef.current = true;
+                }}
+                onDirtyChange={setDirty}
+                onPendingChange={setWriting}
+                confirmLeave={requestLeave}
+                onSuccess={() => {
+                  onOpenChange(false);
+                  onSuccess?.();
+                }}
+              />
+            </>
           )}
         </div>
         <Dialog

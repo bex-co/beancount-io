@@ -32,7 +32,6 @@ import {
   type LedgerPostingInput,
 } from "@/graphql/definitions";
 
-import { ScrollArea } from "@/common/components/ui/scroll-area";
 import { track } from "@/common/analytics";
 
 import {
@@ -65,6 +64,8 @@ import { useAccountAvailability } from "./use-account-availability";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
 import { isCurrencyToken } from "@/common/lib/beancount/currency-token";
 import { useReportDirty } from "@/common/hooks/use-report-dirty";
+import { cn } from "@/common/lib/utils/utils";
+import { useIsMobile } from "@/common/hooks/use-mobile";
 
 interface TransactionFormProps {
   ledgerId: string;
@@ -105,6 +106,9 @@ export function TransactionForm({
   const [error, setError] = useState<string | null>(null);
   const postingRowsRef = useRef<HTMLDivElement>(null);
   const { primaryCurrency } = useLedger();
+  // Postings are cards below `lg`, with no column names over them: a
+  // placeholder there names the field in a word, where an example was cut.
+  const postingCards = useIsMobile(1024);
 
   // Zod validation schema for posting with translations
   // Allow empty accounts and amounts for flexibility
@@ -190,6 +194,9 @@ export function TransactionForm({
         "[data-transaction-payee] [role='combobox'], [data-transaction-payee] input",
       );
       if (!payee) return;
+      // Not on a touch screen: focus there raises the keyboard over the
+      // form before the reader has chosen where to start.
+      if (window.matchMedia?.("(pointer: coarse)").matches) return;
       // Respect a field the reader already chose in this form while the
       // handoff was pending (w4/1075); only an untouched mount — or focus
       // held by another form/dialog control — defaults to Payee.
@@ -418,13 +425,17 @@ export function TransactionForm({
             </Alert>
           )}
 
-          <div className="grid grid-cols-1 gap-2 md:flex md:items-start md:gap-2">
+          {/* Every field named above itself: a placeholder goes the moment
+              the reader types. Date and status share a line on a phone. */}
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-3 sm:grid-cols-[12rem_auto_minmax(0,1fr)] lg:grid-cols-[10rem_auto_minmax(0,1fr)_minmax(0,1fr)]">
             <FormField
               control={form.control}
               name="date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="sr-only">{t("journal.date")}</FormLabel>
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
+                    {t("journal.date")}
+                  </FormLabel>
                   <FormControl>
                     <DatePicker
                       disabled={pending}
@@ -443,21 +454,23 @@ export function TransactionForm({
               name="flag"
               render={({ field }) => (
                 <FormItem>
+                  <FormLabel
+                    aria-hidden="true"
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    {t("common.status")}
+                  </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger
-                        className="h-9 w-9 [&>svg]:hidden"
+                        className="h-9 w-auto gap-2"
                         aria-label={t("common.status")}
                       >
+                        {/* The ledger's flag, then what it means. */}
                         <SelectValue>
-                          <span aria-hidden="true">
-                            {field.value === "*" && "*"}
-                            {field.value === "!" && "!"}
-                          </span>
-                          <span className="sr-only">
-                            {field.value === "*" && t("journal.clearedStatus")}
-                            {field.value === "!" && t("journal.pendingStatus")}
-                          </span>
+                          <span className="font-mono">{field.value}</span>{" "}
+                          {field.value === "*" && t("journal.clearedStatus")}
+                          {field.value === "!" && t("journal.pendingStatus")}
                         </SelectValue>
                       </SelectTrigger>
                     </FormControl>
@@ -479,12 +492,18 @@ export function TransactionForm({
               control={form.control}
               name="payee"
               render={({ field }) => (
-                <FormItem className="flex-1" data-transaction-payee>
-                  <FormLabel className="sr-only">
+                <FormItem
+                  className="col-span-2 sm:col-span-3 lg:col-span-1"
+                  data-transaction-payee
+                >
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
                     {t("journal.payee")}
                   </FormLabel>
                   <FormControl>
                     <PayeesCombobox
+                      // The form puts the cursor here; the suggestions wait
+                      // for the reader, not cover the postings below.
+                      openOnFocus={false}
                       ledgerId={ledgerId}
                       value={field.value ?? ""}
                       onValueChange={field.onChange}
@@ -500,8 +519,8 @@ export function TransactionForm({
               control={form.control}
               name="narration"
               render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel className="sr-only">
+                <FormItem className="col-span-2 sm:col-span-3 lg:col-span-1">
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
                     {t("journal.narration")}
                   </FormLabel>
                   <FormControl>
@@ -518,16 +537,32 @@ export function TransactionForm({
             />
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium">{t("common.postings")}</h3>
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">{t("common.postings")}</h3>
+            {/* Column names where each posting is one line; every field
+                also carries its own name for assistive technology. */}
+            <div
+              aria-hidden="true"
+              className={cn(
+                "hidden gap-2 px-1 text-xs font-medium text-muted-foreground lg:grid",
+                fields.length > 2
+                  ? "lg:grid-cols-[1.5rem_minmax(0,2fr)_minmax(0,1fr)_7rem_2.25rem]"
+                  : "lg:grid-cols-[1.5rem_minmax(0,2fr)_minmax(0,1fr)_7rem]",
+              )}
+            >
+              <span />
+              <span>{t("journal.account")}</span>
+              <span>{t("journal.amountLabel")}</span>
+              <span>{t("journal.currencyLabel")}</span>
             </div>
 
-            <ScrollArea className="h-[220px]">
-              <div ref={postingRowsRef} className="space-y-2 pr-4 pt-1 pl-1">
+            {/* Its own scroller only where the dialog is wide and the rows are
+                lines, and only once they outgrow it; on a phone the dialog
+                scrolls, and a second scroller inside it hid postings. */}
+            <div className="lg:max-h-[22rem] lg:overflow-y-auto">
+              <div ref={postingRowsRef} className="space-y-2 p-1">
                 {fields.map((field, index) => {
                   const autoBalance = autoBalanceInfo.balances.get(index);
-                  const isLastRow = index === fields.length - 1;
 
                   return (
                     <div
@@ -535,8 +570,23 @@ export function TransactionForm({
                       data-posting-row={index}
                       className="space-y-1"
                     >
-                      <div className="grid grid-cols-1 gap-2 md:flex md:items-start md:gap-2">
-                        <div className="flex items-center justify-center w-6 h-9 text-xs text-muted-foreground font-medium shrink-0">
+                      {/* A card per posting on a phone or tablet: the account
+                          across, its amount and currency beneath. One line
+                          per posting where the dialog is wide. */}
+                      <div
+                        className={cn(
+                          "grid items-start gap-2 rounded-lg border p-2 lg:rounded-none lg:border-0 lg:p-0",
+                          // A column for Remove only once there is one to
+                          // show, so the rows end where the fields above do.
+                          fields.length > 2
+                            ? "grid-cols-[minmax(0,1fr)_6.5rem_auto] lg:grid-cols-[1.5rem_minmax(0,2fr)_minmax(0,1fr)_7rem_2.25rem]"
+                            : "grid-cols-[minmax(0,1fr)_6.5rem] lg:grid-cols-[1.5rem_minmax(0,2fr)_minmax(0,1fr)_7rem]",
+                        )}
+                      >
+                        <div
+                          aria-hidden="true"
+                          className="hidden h-9 items-center justify-center text-xs font-medium text-muted-foreground lg:flex"
+                        >
                           {index + 1}
                         </div>
 
@@ -544,7 +594,7 @@ export function TransactionForm({
                           control={form.control}
                           name={`postings.${index}.account`}
                           render={({ field }) => (
-                            <FormItem className="flex-2">
+                            <FormItem className="col-span-full lg:col-span-1">
                               <FormLabel className="sr-only">
                                 {t("journal.postingAccount", {
                                   number: index + 1,
@@ -555,7 +605,11 @@ export function TransactionForm({
                                   ledgerId={ledgerId}
                                   value={field.value}
                                   onValueChange={field.onChange}
-                                  placeholder={t("journal.accountPlaceholder")}
+                                  placeholder={
+                                    postingCards
+                                      ? t("journal.account")
+                                      : t("journal.accountPlaceholder")
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -567,7 +621,7 @@ export function TransactionForm({
                           control={form.control}
                           name={`postings.${index}.amount`}
                           render={({ field }) => (
-                            <FormItem className="flex-1 relative">
+                            <FormItem className="relative">
                               <FormLabel className="sr-only">
                                 {t("journal.postingAmount", {
                                   number: index + 1,
@@ -578,7 +632,9 @@ export function TransactionForm({
                                   placeholder={
                                     autoBalance
                                       ? autoBalance.amount
-                                      : t("journal.amountPlaceholder")
+                                      : postingCards
+                                        ? t("journal.amountLabel")
+                                        : t("journal.amountPlaceholder")
                                   }
                                   className={
                                     autoBalance && !field.value
@@ -605,7 +661,9 @@ export function TransactionForm({
                           control={form.control}
                           name={`postings.${index}.currency`}
                           render={({ field }) => (
-                            <FormItem className="w-48">
+                            // The account needs the width; a currency code
+                            // does not.
+                            <FormItem>
                               <FormLabel className="sr-only">
                                 {t("journal.postingCurrency", {
                                   number: index + 1,
@@ -630,44 +688,48 @@ export function TransactionForm({
                             variant="ghost"
                             size="sm"
                             onClick={() => removePosting(index)}
-                            className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                            className="h-9 w-9 shrink-0 p-0 text-muted-foreground hover:text-destructive"
                             aria-label={t("journal.removePosting", {
                               number: index + 1,
                             })}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
-                        ) : isLastRow ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={addPosting}
-                            className="h-9 w-9 p-0 text-muted-foreground hover:text-primary shrink-0"
-                            aria-label={t("journal.addPosting")}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        ) : (
-                          <div className="h-9 w-9 shrink-0" />
-                        )}
+                        ) : null}
                       </div>
                       <AccountAvailabilityNotice
                         check={accounts}
                         account={watchedPostings?.[index]?.account ?? ""}
                         day={day}
-                        className="md:pl-8"
+                        className="lg:pl-8"
                       />
                     </div>
                   );
                 })}
               </div>
-            </ScrollArea>
+            </div>
+            {/* Named, under the rows it adds to. Past two rows a blank one
+                is always waiting, so the choice is not needed. */}
+            {fields.length <= 2 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={addPosting}
+                className="gap-1.5 text-muted-foreground hover:text-foreground lg:ml-8 pointer-coarse:h-11"
+              >
+                <Plus aria-hidden="true" className="size-4" />
+                {t("journal.addPosting")}
+              </Button>
+            )}
           </div>
 
-          <div className="flex justify-end">
+          {/* Always in reach: on a phone the button rides the bottom of the
+              scrolling form instead of waiting below every posting. */}
+          <div className="sticky bottom-0 -mx-1 flex justify-end border-t bg-background px-1 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
             <Button
               type="submit"
+              className="pointer-coarse:h-11"
               disabled={accounts.blocks(postingAccounts, day)}
               loading={pending}
             >

@@ -514,11 +514,6 @@ const nlCommon: Record<string, TranslationEntry> = {
       "Weergave van inkomsten en uitgaven voor {ledgerName}. Volg inkomsten, uitgaven en winstgevendheid in de tijd.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "Bekijk en filter alle transacties in {ledgerName}. Zoek op datum, rekening, beschrijving of begunstigde.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "Financieel dashboard voor {ledgerName}. Bekijk rekeningsaldi, trends in nettovermogen en samenvattingen van inkomsten/uitgaven.",
@@ -693,8 +688,13 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Filters",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "Klaar",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "Rapportfilters",
+    message: "Filters",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

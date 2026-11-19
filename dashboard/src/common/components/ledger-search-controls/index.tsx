@@ -94,7 +94,8 @@ export const SearchControlCombobox = ({
         triggerOn={triggerOn}
         className={
           Icon
-            ? "border-transparent bg-muted/60 pl-8 shadow-none hover:bg-muted focus-visible:border-input focus-visible:bg-background dark:bg-muted/40"
+            ? // An edge that says "field" (3:1), not a grey patch.
+              "border-input bg-background pl-8 shadow-none hover:bg-muted/40 focus-visible:bg-background"
             : undefined
         }
       />
@@ -161,9 +162,11 @@ export const LedgerSearchControls = ({
           isStack ? "flex w-full flex-col gap-3" : "flex items-center gap-2",
         )}
       >
-        <Skeleton className={cn("h-9", isStack ? "w-full" : "w-24")} />
-        <Skeleton className={cn("h-9", isStack ? "w-full" : "w-24")} />
-        <Skeleton className={cn("h-9", isStack ? "w-full" : "w-24")} />
+        {/* As wide as the fields that replace them (236px each inline), so
+            the header's controls do not move when the fields arrive. */}
+        <Skeleton className={cn("h-9", isStack ? "w-full" : "w-[14.75rem]")} />
+        <Skeleton className={cn("h-9", isStack ? "w-full" : "w-[14.75rem]")} />
+        <Skeleton className={cn("h-9", isStack ? "w-full" : "w-[14.75rem]")} />
       </div>
     );
   }

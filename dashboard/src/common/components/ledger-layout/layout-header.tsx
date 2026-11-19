@@ -30,6 +30,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetClose,
+  SheetFooter,
 } from "@/common/components/ui/sheet.tsx";
 import { Badge } from "@/common/components/ui/badge.tsx";
 import { LedgerSearchControls } from "@/common/components/ledger-search-controls";
@@ -44,13 +46,7 @@ import { LedgerOutOfDateIndicator } from "./ledger-out-of-date-indicator";
 import { LedgerWritePermission } from "../ledger-permission/write.tsx";
 import { shouldShowLedgerFilters } from "./ledger-filter-pages";
 
-export function LayoutHeader({
-  ledgerId,
-  isCompact = false,
-}: {
-  ledgerId: string;
-  isCompact?: boolean;
-}) {
+export function LayoutHeader({ ledgerId }: { ledgerId: string }) {
   const { isMobile, openMobile } = useSidebar();
   const location = useLocation();
   const { t, i18n } = useTranslations();
@@ -92,12 +88,16 @@ export function LayoutHeader({
     <header
       className={cn(
         "@container/ledger-header shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60",
-        isCompact ? "h-12" : "h-16",
+        // By the viewport, not a hook: a hook's answer arrives after the
+        // first paint, and the whole page jumped 16px when it did.
+        "h-12 md:h-16",
       )}
     >
       <div className="flex h-full items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          {showTrigger && <SidebarTrigger className="-ml-1" />}
+          {showTrigger && (
+            <SidebarTrigger className="-ml-1 pointer-coarse:size-11" />
+          )}
         </div>
         <div className="flex items-center gap-2">
           {shouldShowFilters && (
@@ -114,7 +114,7 @@ export function LayoutHeader({
                     ref={filtersOpenerRef}
                     variant="outline"
                     size="sm"
-                    className="@min-[52rem]/ledger-header:hidden"
+                    className="@min-[52rem]/ledger-header:hidden pointer-coarse:h-11"
                     aria-label={t("component.searchControls.filters")}
                     disabled={!hydrated}
                   >
@@ -134,8 +134,15 @@ export function LayoutHeader({
                 </SheetTrigger>
                 <SheetContent
                   side="bottom"
-                  className="max-h-[85vh] gap-0 overflow-y-auto"
+                  className="max-h-[85vh] gap-0 overflow-y-auto sm:mx-auto sm:max-w-lg sm:rounded-t-xl"
                   onCloseAutoFocus={returnFromFilters}
+                  // Opened onto its title, not into the Time field: focusing
+                  // that field opened its suggestion list over the sheet
+                  // before the reader had chosen anything.
+                  onOpenAutoFocus={(event) => {
+                    event.preventDefault();
+                    (event.currentTarget as HTMLElement | null)?.focus();
+                  }}
                 >
                   <SheetHeader className="text-left">
                     <SheetTitle>
@@ -145,9 +152,18 @@ export function LayoutHeader({
                       {t("component.searchControls.filtersDescription")}
                     </SheetDescription>
                   </SheetHeader>
-                  <div className="px-4 pb-6 pt-2">
+                  <div className="px-4 pt-2">
                     <LedgerSearchControls ledgerId={ledgerId} layout="stack" />
                   </div>
+                  {/* Filters apply as they are chosen; this is the way back
+                      to the results. */}
+                  <SheetFooter className="pb-6">
+                    <SheetClose asChild>
+                      <Button className="w-full pointer-coarse:h-11">
+                        {t("component.searchControls.done")}
+                      </Button>
+                    </SheetClose>
+                  </SheetFooter>
                 </SheetContent>
               </Sheet>
             </>
@@ -174,7 +190,7 @@ export function LayoutHeader({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 rounded-full hover:bg-accent data-[state=open]:bg-accent"
+                      className="h-8 w-8 rounded-full hover:bg-accent data-[state=open]:bg-accent pointer-coarse:size-11"
                       aria-label={t("common.helpAndSupport")}
                     >
                       <CircleHelp className="h-4 w-4" />

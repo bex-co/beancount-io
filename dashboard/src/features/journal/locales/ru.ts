@@ -69,6 +69,107 @@ const ruJournal: Record<string, TranslationEntry> = {
     description:
       "Accessible name for the static posting count when all rows are forced open",
   },
+  "journal.entryCount_one": {
+    message: "{shown} запись",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.entryCount_few": {
+    message: "{shown} записи",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.entryCount_many": {
+    message: "{shown} записей",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.entryCount_other": {
+    message: "{shown} записи",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.multiplePostings": {
+    message: "Несколько проводок",
+    description:
+      "In a Journal row's amount column, for an entry no single amount sums up, such as a payroll",
+  },
+  "journal.entryHeader": {
+    message: "Запись",
+    description:
+      "Column header (for screen readers) over each Journal entry's name and details",
+  },
+  "journal.showLabel": {
+    message: "Показать",
+    description:
+      "Caption before the Journal's display toggles (Metadata, Postings): what each row shows",
+  },
+  "journal.otherStatus": {
+    message: "Прочие",
+    description:
+      "Beside the literal flag on the Journal's third flag filter: transactions with a flag other than cleared (*) or pending (!)",
+  },
+  "journal.entryTypes": {
+    message: "Типы записей",
+    description:
+      "On narrow screens, the Journal's control that lists and opens the entry-type and display choices",
+  },
+  "journal.allEntryTypes": {
+    message: "Все",
+    description:
+      "Shown in the Journal's entry-type control when no type is chosen, so every type is listed",
+  },
+  "journal.editSource": {
+    message: "Изменить исходный текст",
+    description:
+      "On a phone, the button in an entry's dialog that reveals the entry's source text for editing",
+  },
+  "journal.balanceMatches": {
+    message: "Сходится",
+    description:
+      "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
+  },
+  "journal.balanceOffBy": {
+    message: "Расхождение {amount}",
+    description:
+      "Beside a balance assertion in the Journal that does not match; {amount} is the difference with its currency",
+  },
+  "journal.layoutLabel": {
+    message: "Макет",
+    description:
+      "Name of the Journal's choice between one line per entry and entries grouped by day",
+  },
+  "journal.densityCompact": {
+    message: "Компактно",
+    description:
+      "Journal layout: one line per entry with date and status columns, for reconciling",
+  },
+  "journal.densityComfortable": {
+    message: "Свободно",
+    description:
+      "Journal layout: entries grouped under their day, two lines each, for reading",
+  },
+  "journal.statusLabel": {
+    message: "Статус",
+    description:
+      "Name of the Journal's group of transaction filters by flag: all, cleared (*), pending (!), other",
+  },
+  "journal.viewLabel": {
+    message: "Вид",
+    description:
+      "Button on the Journal's filter bar, on phones and tablets, that opens what each row shows and the layout",
+  },
+  "journal.openRegister": {
+    message: "Открыть {account} с текущим остатком",
+    description:
+      "Link above the Journal when it is filtered to one account, to that account's register, which shows the balance after every entry; {account} is the full account name",
+  },
+  "journal.readFailedLedgerUnchanged": {
+    message:
+      "В вашей книге ничего не изменилось. Попробуйте ещё раз или вернитесь через минуту.",
+    description:
+      "Under the Journal's error heading when its entries could not be read because of a server error, beside a Try Again button",
+  },
   "journal.account": {
     message: "Счёт",
     description: "Singular form of account, used as tab label",

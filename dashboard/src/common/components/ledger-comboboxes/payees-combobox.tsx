@@ -21,6 +21,8 @@ interface PayeesComboboxProps extends ComboboxFieldProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  /** See `Combobox`: off where the form focuses the field itself. */
+  openOnFocus?: boolean;
 }
 
 /**
@@ -34,6 +36,7 @@ export function PayeesCombobox({
   placeholder,
   disabled = false,
   className,
+  openOnFocus,
   ...fieldProps
 }: PayeesComboboxProps) {
   const { t } = useTranslations();
@@ -79,6 +82,7 @@ export function PayeesCombobox({
       emptyText={t("journal.noPayeesFound")}
       disabled={disabled}
       className={className}
+      openOnFocus={openOnFocus}
       {...fieldProps}
       aria-describedby={fallback.describedBy}
       notice={fallback.notice}

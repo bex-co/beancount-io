@@ -513,11 +513,6 @@ const faCommon: Record<string, TranslationEntry> = {
       "نمای درآمد و هزینه برای {ledgerName}. پیگیری درآمد، هزینه و سودآوری در طول زمان.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "مشاهده و فیلتر تمام تراکنش‌ها در {ledgerName}. جستجو بر اساس تاریخ، حساب، توضیحات یا دریافت‌کننده.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "داشبورد مالی برای {ledgerName}. بررسی موجودی حساب‌ها، روندهای خالص دارایی و خلاصه درآمد/هزینه.",
@@ -692,8 +687,13 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "فیلترها",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "انجام شد",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "فیلترهای گزارش",
+    message: "فیلترها",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

@@ -13,7 +13,7 @@ import {
   type JournalTransaction,
 } from "@/common/types/journal";
 import { GetLedgerJournalDocument } from "@/graphql/definitions";
-import { summarizeTransaction } from "../lib/transaction-summary";
+import { summarizeTransaction } from "@/common/lib/beancount/transaction-summary";
 import { FormattedAmounts } from "./formatted-amounts";
 import { NEW_TRANSACTION_ACTION_SEARCH } from "@/common/lib/ledger-action-search";
 import { recentTransactionsVariables } from "../lib/recent-transactions";

@@ -36,7 +36,7 @@ export function RelatedLinks({ links }: RelatedLinksProps) {
             key={link.to}
             to={link.to}
             {...EXACT_PAGE_LINK}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors underline decoration-muted-foreground/30 hover:decoration-foreground/50 underline-offset-4"
+            className="inline-flex min-h-6 items-center text-sm text-muted-foreground hover:text-foreground transition-colors underline decoration-muted-foreground/30 hover:decoration-foreground/50 underline-offset-4 pointer-coarse:min-h-11"
           >
             {link.label}
           </Link>

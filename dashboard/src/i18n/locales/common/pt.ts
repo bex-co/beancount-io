@@ -517,11 +517,6 @@ const ptCommon: Record<string, TranslationEntry> = {
       "Visualize receitas e despesas de {ledgerName}. Acompanhe receitas, custos e rentabilidade ao longo do tempo.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "Navegue e filtre todas as transações em {ledgerName}. Pesquise por data, conta, descrição ou beneficiário.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "Painel financeiro para {ledgerName}. Visualize saldos de contas, tendências de patrimônio líquido e resumos de receitas/despesas.",
@@ -696,8 +691,13 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Filtros",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "Concluído",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "Filtros do relatório",
+    message: "Filtros",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

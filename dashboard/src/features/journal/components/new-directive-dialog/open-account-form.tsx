@@ -154,6 +154,7 @@ export function OpenAccountForm({
           <div className="flex justify-end">
             <Button
               type="submit"
+              className="pointer-coarse:h-11"
               disabled={!form.formState.isValid}
               loading={pending}
             >

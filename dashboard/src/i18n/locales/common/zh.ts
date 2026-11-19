@@ -496,11 +496,6 @@ const zhCommon: Record<string, TranslationEntry> = {
       "查看{ledgerName}的收入和支出。跟踪收入、成本和盈利能力随时间的变化。",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "浏览和过滤{ledgerName}中的所有交易。按日期、账户、描述或收款人搜索。",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "{ledgerName}的财务仪表板。查看账户余额、净资产趋势和收入/支出摘要。",
@@ -672,8 +667,13 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "筛选",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "完成",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "报表筛选",
+    message: "筛选",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

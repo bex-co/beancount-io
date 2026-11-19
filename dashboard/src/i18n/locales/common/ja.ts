@@ -508,11 +508,6 @@ const jaCommon: Record<string, TranslationEntry> = {
       "{ledgerName}の収入と支出を表示します。収益、コスト、収益性を時系列で追跡できます。",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "{ledgerName}のすべての取引を閲覧・フィルタリングします。日付、アカウント、説明、または支払先で検索できます。",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "{ledgerName}の財務ダッシュボード。口座残高、純資産トレンド、収入/支出の概要を表示できます。",
@@ -687,8 +682,13 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "フィルタ",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "完了",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "レポートフィルタ",
+    message: "フィルタ",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

@@ -62,6 +62,8 @@ function PaginationLink({
           variant: isActive ? "outline" : "ghost",
           size,
         }),
+        // A finger's width on a touch screen.
+        "pointer-coarse:min-h-11 pointer-coarse:min-w-11",
         className,
       )}
       {...props}

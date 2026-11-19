@@ -10,18 +10,24 @@ function detectMobileFromUA(): boolean {
   return MOBILE_UA_REGEX.test(getUserAgent());
 }
 
-export function useIsMobile() {
+/** Narrower than `breakpoint` (768 by default) once the viewport is known. */
+export function useIsMobile(breakpoint = MOBILE_BREAKPOINT) {
   const [isMobile, setIsMobile] = React.useState<boolean>(detectMobileFromUA);
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    // Without matchMedia (some test environments) the width alone decides.
+    if (typeof window.matchMedia !== "function") {
+      setIsMobile(window.innerWidth < breakpoint);
+      return;
+    }
+    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
     const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+      setIsMobile(window.innerWidth < breakpoint);
     };
     mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    setIsMobile(window.innerWidth < breakpoint);
     return () => mql.removeEventListener("change", onChange);
-  }, []);
+  }, [breakpoint]);
 
   return isMobile;
 }

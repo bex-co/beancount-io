@@ -82,7 +82,9 @@
   --accent-foreground: oklch(0.26 0.02 130);
   --destructive: oklch(0.55 0.24 27);
   --border: oklch(0.905 0.004 106);
-  --input: oklch(0.905 0.004 106);
+  /* A field's edge at 3:1 against the page and muted surfaces (WCAG
+     1.4.11): the box is what says "type here". */
+  --input: oklch(0.62 0.01 110);
   --ring: oklch(0.52 0.17 138);
 
   /* Semantic money colors — positive/negative amounts, deltas, diffs.
@@ -197,7 +199,9 @@
   --accent-foreground: oklch(0.91 0.008 106);
   --destructive: oklch(0.65 0.22 25);
   --border: oklch(0.28 0.01 142);
-  --input: oklch(0.27 0.012 138);
+  /* 3:1 against the page, cards and muted surfaces; fills that tint with
+     it (bg-input/10) keep the old depth. */
+  --input: oklch(0.55 0.012 138);
   --ring: oklch(0.7344 0.2016 138.3122);
 
   --gain: oklch(0.7 0.15 150);

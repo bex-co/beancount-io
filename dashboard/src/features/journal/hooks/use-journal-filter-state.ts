@@ -3,7 +3,20 @@ import { decodeStringList } from "@/common/lib/storage/decode-string-list";
 import { DirectiveType } from "@/common/types/journal";
 import { JOURNAL_SUBTYPES } from "@/features/journal/components/journal-filter-buttons";
 
-const DEFAULT_DIRECTIVE_TYPES: DirectiveType[] = [DirectiveType.TRANSACTION];
+// Balance assertions are listed by default: they are the reconciliation
+// checkpoints, sparse enough not to crowd the transactions between them.
+const DEFAULT_DIRECTIVE_TYPES: DirectiveType[] = [
+  DirectiveType.TRANSACTION,
+  DirectiveType.BALANCE,
+];
+const DENSITIES = new Set(["compact", "comfortable"]);
+
+/**
+ * How the Journal lays out its entries. `compact` is one line per entry with
+ * a date and status column, for reconciling against a statement line by
+ * line; `comfortable` groups entries under their day, for reading.
+ */
+export type JournalDensity = "compact" | "comfortable";
 const DEFAULT_STRING_FILTER: string[] = [];
 
 // Saved filters are decoded before they reach the filters or the query: a
@@ -66,6 +79,18 @@ export function useJournalFilterState(scope: string) {
     `${scope}.showPostings`,
     false,
   );
+  const [density, setDensity] = useLocalStorageState<JournalDensity>(
+    `${scope}.density`,
+    "compact",
+    {
+      deserializer: (raw: string) => {
+        const value = JSON.parse(raw) as unknown;
+        return typeof value === "string" && DENSITIES.has(value)
+          ? (value as JournalDensity)
+          : "compact";
+      },
+    },
+  );
   return {
     selectedDirectiveTypes,
     setSelectedDirectiveTypes,
@@ -78,6 +103,8 @@ export function useJournalFilterState(scope: string) {
     showMetadata,
     setShowMetadata,
     showPostings,
+    density,
+    setDensity,
     setShowPostings,
   };
 }

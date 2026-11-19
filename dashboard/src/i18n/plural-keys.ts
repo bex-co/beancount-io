@@ -26,6 +26,7 @@ export const PLURAL_BASE_KEYS = [
   "importer.finish.successMessage",
   "importer.preview.errorsCount",
   "importer.preview.validCount",
+  "journal.entryCount",
   "journal.hideEntryPostings",
   "journal.showEntryPostings",
   "journal.visibleEntryPostings",

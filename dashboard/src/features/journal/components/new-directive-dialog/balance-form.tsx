@@ -179,13 +179,18 @@ export function BalanceForm({
             </Alert>
           )}
 
-          <div className="grid grid-cols-1 gap-2 md:flex md:items-start md:gap-2">
+          {/* The statement's balance, as the transaction form lays out its
+              fields: each named above itself, the account across a phone,
+              the amount and its currency beneath. */}
+          <div className="grid grid-cols-[minmax(0,1fr)_7rem] items-start gap-x-2 gap-y-3 lg:grid-cols-[10rem_minmax(0,1fr)_9rem_7rem]">
             <FormField
               control={form.control}
               name="date"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="sr-only">{t("journal.date")}</FormLabel>
+                <FormItem className="col-span-2 sm:col-span-1 lg:col-span-1">
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
+                    {t("journal.date")}
+                  </FormLabel>
                   <FormControl>
                     <DatePicker
                       disabled={pending}
@@ -203,8 +208,8 @@ export function BalanceForm({
               control={form.control}
               name="account"
               render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel className="sr-only">
+                <FormItem className="col-span-2 lg:col-span-1">
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
                     {t("journal.accountLabel")}
                   </FormLabel>
                   <FormControl>
@@ -229,8 +234,8 @@ export function BalanceForm({
               control={form.control}
               name="amount"
               render={({ field }) => (
-                <FormItem className="w-32">
-                  <FormLabel className="sr-only">
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
                     {t("journal.amountLabel")}
                   </FormLabel>
                   <FormControl>
@@ -248,8 +253,8 @@ export function BalanceForm({
               control={form.control}
               name="currency"
               render={({ field }) => (
-                <FormItem className="w-48">
-                  <FormLabel className="sr-only">
+                <FormItem>
+                  <FormLabel className="text-xs font-medium text-muted-foreground">
                     {t("journal.currencyLabel")}
                   </FormLabel>
                   <FormControl>
@@ -266,9 +271,10 @@ export function BalanceForm({
             />
           </div>
 
-          <div className="flex justify-end">
+          <div className="sticky bottom-0 -mx-1 flex justify-end border-t bg-background px-1 py-3 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
             <Button
               type="submit"
+              className="pointer-coarse:h-11"
               disabled={
                 !form.formState.isValid || accounts.blocks([account], day)
               }

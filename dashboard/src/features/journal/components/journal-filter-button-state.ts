@@ -15,8 +15,11 @@ import { cn } from "@/common/lib/utils/utils";
  */
 export function filterButtonState(active: boolean) {
   return cn(
+    // Pressed reads at a glance: the brand colour's edge (over 3:1 against
+    // the card) and a tint, not a fill one shade off the toolbar's; the
+    // label stays in the text colour, which the tint keeps above 4.5:1.
     active
-      ? "border-border shadow-xs forced-selected"
+      ? "border-primary/80 bg-primary/10 font-medium text-foreground hover:bg-primary/15 shadow-xs forced-selected"
       : cn(
           "border-transparent text-muted-foreground",
           "forced-colors:border-[Canvas]",

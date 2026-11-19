@@ -23,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/common/components/ui/table";
-import { Loader2, Trash2, Save, ChevronDown } from "lucide-react";
+import { Loader2, Trash2, Save, ChevronDown, Code2 } from "lucide-react";
 import { MonacoEditor as Editor } from "@/common/components/monaco-editor";
 import {
   GetLedgerEntryContextDocument,
@@ -90,6 +90,12 @@ export interface EntryContextPanelProps {
    * go, so an owner can confirm discarding unsaved changes first.
    */
   confirmLeave?: (proceed: () => void) => void;
+  /**
+   * Keep the source editor behind an "Edit source" disclosure: a phone shows
+   * the entry's postings above it instead, and a raw editor that narrow is
+   * for editing, not reading.
+   */
+  collapseSource?: boolean;
 }
 
 /** A save that missed because the entry changed or vanished since loading. */
@@ -151,8 +157,10 @@ function EntryContextMain({
   ledgerId,
   onDirtyChange,
   onPendingChange,
+  collapseSource = false,
 }: {
   ledgerId: string;
+  collapseSource?: boolean;
   onDirtyChange?: (dirty: boolean) => void;
   onPendingChange?: (pending: boolean) => void;
   data: GetLedgerEntryContextQuery["getLedgerEntryContext"];
@@ -192,6 +200,8 @@ function EntryContextMain({
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
   const isDark = useIsDarkTheme();
   const isMobile = useIsMobile();
+  const [editorHeight, setEditorHeight] = useState(isMobile ? 200 : 100);
+  const [sourceOpen, setSourceOpen] = useState(!collapseSource);
   const location = readEntrySourceLocation(data?.entry);
   const locationLabel = location
     ? `${location.filename}:${location.lineno}`
@@ -444,50 +454,101 @@ function EntryContextMain({
         </div>
       ) : null}
 
-      <Card>
-        <CardContent className="p-0">
-          <div className={cn(isMobile ? "h-[200px]" : "h-[100px]")}>
-            <Editor
-              height={isMobile ? "200px" : "100px"}
-              language="beancount"
-              value={sourceText}
-              onChange={(value) => {
-                if (readOnly) return;
-                setSourceText(value || "");
-              }}
-              theme={isDark ? "vs-dark" : "light"}
-              beforeMount={(monaco) => {
-                registerBeancountLanguage(monaco);
-              }}
-              options={{
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                wordWrap: "on",
-                lineNumbers: "on",
-                readOnly,
-              }}
-            />
-          </div>
-          {editable && hasChanges && (
-            <div className="p-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20">
-              {t("journal.sourceModified")}
+      {!sourceOpen ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full pointer-coarse:h-11"
+          aria-expanded={false}
+          onClick={() => setSourceOpen(true)}
+        >
+          <Code2 className="h-4 w-4" aria-hidden="true" />
+          {t("journal.editSource")}
+        </Button>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <div
+              style={{ height: editorHeight }}
+              // Monaco's own keyboard button for iPads floated, unlabelled,
+              // over the postings; tapping the editor raises the keyboard.
+              className="[&_.iPadShowKeyboard]:!hidden"
+            >
+              <Editor
+                height={editorHeight}
+                // As tall as the entry, within bounds: a fixed box cut off a
+                // phone's last line and scrolled a short entry's empty space.
+                onMount={(editor) => {
+                  const fit = () =>
+                    setEditorHeight(
+                      Math.min(Math.max(editor.getContentHeight(), 96), 420),
+                    );
+                  editor.onDidContentSizeChange(fit);
+                  fit();
+                }}
+                language="beancount"
+                value={sourceText}
+                onChange={(value) => {
+                  if (readOnly) return;
+                  setSourceText(value || "");
+                }}
+                theme={isDark ? "vs-dark" : "light"}
+                beforeMount={(monaco) => {
+                  registerBeancountLanguage(monaco);
+                }}
+                options={{
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  wordWrap: "on",
+                  // Lines wrap between words only: never inside an account
+                  // name (no colon) or an amount (no full stop).
+                  wordWrapBreakAfterCharacters: " \t})]?|/&,;",
+                  // A phone's width goes to the entry, not to the gutter.
+                  lineNumbers: isMobile ? "off" : "on",
+                  // No overview ruler: its cursor mark read as a stray dash at
+                  // the editor's corner.
+                  overviewRulerLanes: 0,
+                  hideCursorInOverviewRuler: true,
+                  overviewRulerBorder: false,
+                  folding: !isMobile,
+                  lineDecorationsWidth: isMobile ? 6 : 10,
+                  // Room under the last line for the touch keyboard button
+                  // Monaco places there on iOS, so it covers no text.
+                  padding: { top: 8, bottom: isMobile ? 48 : 8 },
+                  readOnly,
+                }}
+              />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {editable && hasChanges && (
+              <div className="p-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20">
+                {t("journal.sourceModified")}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {editable ? (
         <div className="flex gap-2 justify-end">
+          {/* Quieter than Save: deleting asks again, and should not be the
+              loudest thing in the dialog. */}
           <Button
             ref={deleteButtonRef}
-            variant="destructive"
+            variant="outline"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive pointer-coarse:h-11"
             onClick={() => setConfirmDeleteOpen(true)}
             disabled={pending}
           >
             <Trash2 className="h-4 w-4 mr-2" />
             {t("common.delete")}
           </Button>
-          <Button onClick={handleSave} disabled={!hasChanges || pending}>
+          <Button
+            onClick={handleSave}
+            disabled={!hasChanges || pending}
+            // Grey, not a faded green: in the dark theme a faded primary
+            // still read as a button to press.
+            className="disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none pointer-coarse:h-11"
+          >
             {isSaving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -519,13 +580,17 @@ function EntryContextMain({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className="pointer-coarse:h-11"
+            >
               {t("journal.entryDeleteCancel")}
             </AlertDialogCancel>
             <Button
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={isDeleting}
+              className="pointer-coarse:h-11"
             >
               {isDeleting ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -558,6 +623,7 @@ export function EntryContextPanel({
   onPendingChange,
   confirmLeave,
   onSaved,
+  collapseSource,
 }: EntryContextPanelProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -740,6 +806,7 @@ export function EntryContextPanel({
           ledgerId={ledgerId}
           onDirtyChange={onDirtyChange}
           onPendingChange={onPendingChange}
+          collapseSource={collapseSource}
         />
       </>
     );

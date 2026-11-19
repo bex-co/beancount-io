@@ -521,11 +521,6 @@ const skCommon: Record<string, TranslationEntry> = {
       "Zobrazenie príjmov a výdavkov pre {ledgerName}. Sledujte príjmy, náklady a ziskovosť v čase.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "Prehliadajte a filtrujte všetky transakcie v {ledgerName}. Vyhľadávajte podľa dátumu, účtu, popisu alebo príjemcu.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "Finančný prehľad pre {ledgerName}. Prezrite si zostatky účtov, trendy čistého imania a súhrny príjmov/výdavkov.",
@@ -700,8 +695,13 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Filtre",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "Hotovo",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "Filtre zostavy",
+    message: "Filtre",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

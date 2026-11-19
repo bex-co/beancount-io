@@ -517,11 +517,6 @@ const caCommon: Record<string, TranslationEntry> = {
       "Vista d'ingressos i despeses per a {ledgerName}. Seguiu ingressos, despeses i rendibilitat al llarg del temps.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "Visualitzeu i filtreu totes les transaccions a {ledgerName}. Cerqueu per data, compte, descripció o beneficiari.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "Tauler financer per a {ledgerName}. Reviseu saldos de comptes, tendències de patrimoni net i resums d'ingressos/despeses.",
@@ -696,8 +691,13 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Filtres",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "Fet",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "Filtres de l'informe",
+    message: "Filtres",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

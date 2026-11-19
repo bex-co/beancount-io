@@ -3,6 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { JournalFilters } from "@/features/journal/components/journal-filters";
 import { DirectiveType } from "@/common/types/journal";
 
+/** The type chips sit in the Entry types panel; open it as a reader would. */
+const openEntryTypes = () =>
+  fireEvent.click(screen.getByRole("button", { expanded: false }));
+
 const defaultProps = {
   selectedDirectiveTypes: [] as DirectiveType[],
   onDirectiveTypesChange: vi.fn(),
@@ -26,6 +30,7 @@ describe("JournalFilters", () => {
   describe("directive type buttons", () => {
     it("renders all main directive type buttons", () => {
       render(<JournalFilters {...defaultProps} />);
+      openEntryTypes();
 
       expect(
         screen.getByRole("button", { name: /transaction/i }),
@@ -50,6 +55,7 @@ describe("JournalFilters", () => {
           onDirectiveTypesChange={onDirectiveTypesChange}
         />,
       );
+      openEntryTypes();
 
       fireEvent.click(screen.getByRole("button", { name: /transaction/i }));
 
@@ -65,6 +71,7 @@ describe("JournalFilters", () => {
           selectedDirectiveTypes={[DirectiveType.PRICE]}
         />,
       );
+      openEntryTypes();
 
       expect(screen.getByRole("button", { name: "Price" })).toHaveAttribute(
         "aria-pressed",
@@ -81,6 +88,7 @@ describe("JournalFilters", () => {
           onDirectiveTypesChange={onDirectiveTypesChange}
         />,
       );
+      openEntryTypes();
 
       fireEvent.click(screen.getByRole("button", { name: "Note" }));
 
@@ -143,6 +151,7 @@ describe("JournalFilters", () => {
           onTransactionSubtypesChange={onTransactionSubtypesChange}
         />,
       );
+      openEntryTypes();
 
       fireEvent.click(screen.getByRole("button", { name: "Transaction" }));
 
@@ -232,6 +241,7 @@ describe("JournalFilters", () => {
           selectedDirectiveTypes={[DirectiveType.DOCUMENT]}
         />,
       );
+      openEntryTypes();
 
       expect(
         screen.getByRole("button", { name: /discovered documents/i }),
@@ -251,6 +261,7 @@ describe("JournalFilters", () => {
           onDocumentSubtypesChange={onDocumentSubtypesChange}
         />,
       );
+      openEntryTypes();
 
       fireEvent.click(screen.getByRole("button", { name: "Document" }));
 

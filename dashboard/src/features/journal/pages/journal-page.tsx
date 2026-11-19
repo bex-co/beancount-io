@@ -1,4 +1,3 @@
-import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerJournalDocument } from "@/graphql/definitions";
@@ -15,7 +14,15 @@ import {
 } from "@/features/journal/components/journal-table";
 import { type JournalDirectiveType } from "@/common/types/journal";
 import { Button } from "@/common/components/ui/button";
-import { Plus } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  ListFilter,
+  Plus,
+  Scale,
+  WalletCards,
+  XIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   useEffect,
@@ -23,6 +30,7 @@ import {
   useMemo,
   useRef,
   type Dispatch,
+  type ReactNode,
   type SetStateAction,
 } from "react";
 import { useJournalFilterState } from "@/features/journal/hooks/use-journal-filter-state";
@@ -38,6 +46,7 @@ import {
   JournalEmptyState,
 } from "@/features/journal/components/journal-states";
 import { createLedgerId } from "@/common/lib/utils/encode";
+import { cn } from "@/common/lib/utils/utils";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -68,6 +77,16 @@ const JournalContent = () => {
     from: "/ledger/$ledgerOwner/$ledgerName/journal",
   });
   const { canWrite } = useLedgerPermission();
+  const { primaryCurrency, ledgerData } = useLedger();
+  const accountFilter = ledgerSearchParams.searchParams.account;
+  // What each row needs to say how much moved, in the ledger's own names.
+  // Beancount's own root names where the ledger has not renamed them.
+  const incomeRoot = ledgerData?.options?.nameIncome || "Income";
+  const expensesRoot = ledgerData?.options?.nameExpenses || "Expenses";
+  const money = useMemo(
+    () => ({ primaryCurrency, incomeRoot, expensesRoot, accountFilter }),
+    [accountFilter, expensesRoot, incomeRoot, primaryCurrency],
+  );
 
   // Filter state — persisted per ledger in localStorage. The keys carry the
   // ledger id so one ledger's selections never hide another's entries; the
@@ -86,6 +105,8 @@ const JournalContent = () => {
     setShowMetadata,
     showPostings,
     setShowPostings,
+    density,
+    setDensity,
   } = useJournalFilterState(`journal.${ledgerId}`);
 
   const filterKey = useMemo(
@@ -264,30 +285,20 @@ const JournalContent = () => {
 
   return (
     <>
-      <div
-        ref={entryFallbackRef}
-        tabIndex={-1}
-        className="overflow-hidden rounded-xl border bg-card shadow-sm outline-none"
-      >
-        <div className="flex flex-col gap-3 border-b bg-muted/20 p-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0 flex-1">
-            <JournalFilters
-              selectedDirectiveTypes={selectedDirectiveTypes}
-              onDirectiveTypesChange={setSelectedDirectiveTypes}
-              selectedTransactionSubtypes={selectedTransactionSubtypes}
-              onTransactionSubtypesChange={setSelectedTransactionSubtypes}
-              selectedDocumentSubtypes={selectedDocumentSubtypes}
-              onDocumentSubtypesChange={setSelectedDocumentSubtypes}
-              selectedCustomSubtypes={selectedCustomSubtypes}
-              onCustomSubtypesChange={setSelectedCustomSubtypes}
-              showMetadata={showMetadata}
-              onShowMetadataChange={setShowMetadata}
-              showPostings={showPostings}
-              onShowPostingsChange={setShowPostings}
-            />
-          </div>
+      <JournalHeading
+        summary={
+          // Unknown while it loads, and when the read failed: "0 entries"
+          // would say the ledger is empty.
+          (loading && total === 0) || failure
+            ? undefined
+            : t("journal.entryCount", {
+                count: total,
+                shown: formatCount(total),
+              })
+        }
+        actions={
           <Authenticated>
-            <div className="flex shrink-0 gap-2 self-end lg:self-auto">
+            <div className="flex shrink-0 items-center gap-2">
               <ExportJournalButton
                 ledgerId={ledgerId}
                 account={ledgerSearchParams.searchParams.account}
@@ -295,7 +306,10 @@ const JournalContent = () => {
                 time={ledgerSearchParams.searchParams.time}
               />
               {canWrite && (
-                <Button asChild className="flex items-center gap-2">
+                <Button
+                  asChild
+                  className="flex items-center gap-2 pointer-coarse:h-11"
+                >
                   <Link
                     ref={newEntryLinkRef}
                     to="/ledger/$ledgerOwner/$ledgerName/journal"
@@ -306,41 +320,76 @@ const JournalContent = () => {
                     })}
                   >
                     <Plus className="h-4 w-4" aria-hidden />
-                    {/* The visible label names the link at every width (WCAG
-                        2.5.3); below `sm` it stays for screen readers only. */}
-                    <span className="sr-only sm:not-sr-only">
-                      {t("journal.newEntry")}
-                    </span>
+                    {t("journal.newEntry")}
                   </Link>
                 </Button>
               )}
             </div>
           </Authenticated>
+        }
+      />
+      <div
+        ref={entryFallbackRef}
+        tabIndex={-1}
+        // Clipped to its corners without becoming a scroller, so the list's
+        // column and day headings can stay pinned as the page scrolls.
+        className="overflow-clip rounded-xl border bg-card shadow-sm outline-none"
+      >
+        <div className="border-b bg-muted/20 px-2 py-2 sm:px-3">
+          <JournalFilters
+            selectedDirectiveTypes={selectedDirectiveTypes}
+            onDirectiveTypesChange={setSelectedDirectiveTypes}
+            selectedTransactionSubtypes={selectedTransactionSubtypes}
+            onTransactionSubtypesChange={setSelectedTransactionSubtypes}
+            selectedDocumentSubtypes={selectedDocumentSubtypes}
+            onDocumentSubtypesChange={setSelectedDocumentSubtypes}
+            selectedCustomSubtypes={selectedCustomSubtypes}
+            onCustomSubtypesChange={setSelectedCustomSubtypes}
+            showMetadata={showMetadata}
+            onShowMetadataChange={setShowMetadata}
+            showPostings={showPostings}
+            onShowPostingsChange={setShowPostings}
+            density={density}
+            onDensityChange={setDensity}
+          />
         </div>
-
-        <div className="flex items-center justify-between border-b px-3 py-2 text-xs text-muted-foreground sm:text-sm">
-          <span>{t("common.results")}</span>
-          <span className="font-medium tabular-nums text-foreground">
-            {loading
-              ? "…"
-              : `${formatCount(firstVisibleEntry)}–${formatCount(lastVisibleEntry)} / ${formatCount(total)}`}
-          </span>
-        </div>
+        <JournalScope ledgerOwner={ledgerOwner} ledgerName={ledgerName} />
 
         {failure ? (
-          <div className="p-4">
+          <div>
             <JournalErrorState
-              message={t(getErrorMessageKey(failure))}
+              message={
+                // The server's own "try again later" sat above a Try Again
+                // button; here, say what a failed read leaves untouched.
+                getErrorMessageKey(failure) === "common.errors.internal"
+                  ? t("journal.readFailedLedgerUnchanged")
+                  : t(getErrorMessageKey(failure))
+              }
               onRetry={retry}
               retrying={retrying}
             />
           </div>
         ) : loading ? (
-          <JournalLoadingState />
+          <JournalLoadingState density={density} />
         ) : journalTableData.length === 0 ? (
-          <JournalEmptyState />
+          <JournalEmptyState
+            onClearFilters={
+              ledgerSearchParams.searchParams.time ||
+              ledgerSearchParams.searchParams.account ||
+              ledgerSearchParams.searchParams.filter
+                ? () =>
+                    ledgerSearchParams.setSearchParams({
+                      time: "",
+                      account: "",
+                      filter: "",
+                    })
+                : undefined
+            }
+          />
         ) : (
           <JournalTable
+            layout={density === "compact" ? "lines" : "days"}
+            money={money}
             data={journalTableData}
             showMetadata={showMetadata}
             showPostings={showPostings}
@@ -353,7 +402,29 @@ const JournalContent = () => {
             }}
           />
         )}
-        <div className="flex justify-end border-t bg-muted/10 px-3 pb-3">
+        <div
+          className={cn(
+            "flex flex-wrap items-center justify-between gap-x-4 gap-y-1 [&>div]:mt-0",
+            // Nothing to page through: no strip left under the message.
+            !loading && journalTableData.length === 0
+              ? "p-0"
+              : "border-t bg-muted/10 px-3 py-2",
+          )}
+        >
+          {/* Where this page sits in the whole; the live region inside the
+              pagination announces it. */}
+          <span
+            aria-hidden="true"
+            className="text-xs text-muted-foreground tabular-nums"
+          >
+            {!loading && total > 0
+              ? t("common.showingResultsRange", {
+                  first: formatCount(firstVisibleEntry),
+                  last: formatCount(lastVisibleEntry),
+                  total: formatCount(total),
+                })
+              : ""}
+          </span>
           <JournalPagination
             total={paginationTotal}
             limit={limit}
@@ -425,22 +496,172 @@ const JournalContent = () => {
   );
 };
 
+/**
+ * The page's name at every width, the ledger it reads and how many entries
+ * match, with the page's actions beside it. On a phone the heading was for
+ * screen readers only, so the page opened on a strip of filter chips.
+ */
+function JournalHeading({
+  summary,
+  actions,
+}: {
+  summary?: string;
+  actions?: ReactNode;
+}) {
+  const { t } = useTranslations();
+  const { ledgerName } = useParams({
+    from: "/ledger/$ledgerOwner/$ledgerName/journal",
+  });
+  const { ledgerName: ledgerDisplayName } = useLedger();
+  return (
+    // Below `sm` the actions take their own row, always: wrapping by width
+    // let the entry count, arriving after load, push them down a line.
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t("journal.journal")}
+        </h1>
+        <p className="mt-0.5 truncate text-sm text-muted-foreground tabular-nums">
+          {ledgerDisplayName ?? ledgerName}
+          {summary && <span> · {summary}</span>}
+        </p>
+      </div>
+      {actions}
+    </div>
+  );
+}
+
+/**
+ * What narrows the list, above it: on a phone or tablet the filters in
+ * force (the header folds them into a sheet there), and, filtered to one
+ * account, the way to its register and running balance. Rendered in the
+ * page's server fallback too, so the list does not move down on hydration.
+ */
+function JournalScope({
+  ledgerOwner,
+  ledgerName,
+}: {
+  ledgerOwner: string;
+  ledgerName: string;
+}) {
+  const { t } = useTranslations();
+  const { searchParams, setSearchParams } = useLedgerSearchParams();
+  const accountFilter = searchParams.account;
+  return (
+    <>
+      {(searchParams.time || accountFilter || searchParams.filter) && (
+        // Narrower than the header's inline filters (52rem of header, the
+        // page's 49rem), the header folds them into a sheet behind a
+        // count; the ones in force are named here, over the list they
+        // narrowed, with the way to clear them.
+        <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2 @min-[49rem]/journal-page:hidden sm:px-5">
+          {(
+            [
+              [
+                CalendarDays,
+                t("component.searchControls.time"),
+                searchParams.time,
+              ],
+              [
+                WalletCards,
+                t("component.searchControls.account"),
+                accountFilter,
+              ],
+              [
+                ListFilter,
+                t("component.searchControls.filterByTagPayee"),
+                searchParams.filter,
+              ],
+            ] as const
+          )
+            .filter(([, , value]) => value)
+            .map(([Icon, label, value]) => (
+              <span
+                key={label}
+                className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-full border bg-muted/50 px-2.5 py-1 text-[13px]"
+              >
+                <Icon
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 text-muted-foreground"
+                />
+                <span className="sr-only">{label}: </span>
+                <span title={value} className="min-w-0 truncate">
+                  {value}
+                </span>
+              </span>
+            ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              setSearchParams({
+                time: "",
+                account: "",
+                filter: "",
+              })
+            }
+            className="ms-auto h-8 gap-1 px-2 text-muted-foreground hover:text-foreground pointer-coarse:h-11"
+          >
+            <XIcon aria-hidden="true" className="size-3.5" />
+            {t("component.searchControls.clearAll")}
+          </Button>
+        </div>
+      )}
+      {accountFilter && (
+        // Reconciling one account wants its balance after every entry:
+        // the account's register keeps that running total.
+        <div className="border-b bg-primary/[0.04] px-3 py-2 text-sm sm:px-5">
+          <Link
+            to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+            params={{ ledgerOwner, ledgerName, accountName: accountFilter }}
+            className="inline-flex min-h-6 max-w-full items-center gap-1.5 rounded-sm font-medium text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:min-h-11"
+          >
+            <Scale aria-hidden="true" className="size-4 shrink-0" />
+            <span className="min-w-0 [overflow-wrap:anywhere]">
+              {t("journal.openRegister", { account: accountFilter })}
+            </span>
+            <ArrowRight
+              aria-hidden="true"
+              className="size-3.5 shrink-0 rtl:-scale-x-100"
+            />
+          </Link>
+        </div>
+      )}
+    </>
+  );
+}
+
 const LedgerJournalPage = () => {
   const { t } = useTranslations();
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/journal",
   });
-  const { ledgerName: ledgerDisplayName } = useLedger();
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <PageHeader
-        title={t("journal.journal")}
-        description={t("common.pageDescription.journal", {
-          ledgerName: ledgerDisplayName ?? ledgerName,
-        })}
-      />
-      <ClientOnly fallback={<JournalLoadingState />}>
+    // A reading width on very wide screens: a row's name, accounts and
+    // amount stay within one sweep of the eye.
+    <div className="@container/journal-page space-y-4 sm:space-y-5 2xl:mx-auto 2xl:w-full 2xl:max-w-[88rem]">
+      <ClientOnly
+        fallback={
+          <>
+            {/* The actions' room held, so they do not arrive and push the
+                journal down where they wrap under the title. */}
+            <JournalHeading
+              actions={
+                <div aria-hidden="true" className="flex shrink-0 gap-2">
+                  <div className="size-9 rounded-md border pointer-coarse:size-11 sm:w-24" />
+                  <div className="h-9 w-32 rounded-md bg-primary/20 pointer-coarse:h-11" />
+                </div>
+              }
+            />
+            <div className="overflow-clip rounded-xl border bg-card shadow-sm">
+              <div className="h-12 border-b bg-muted/20" />
+              <JournalScope ledgerOwner={ledgerOwner} ledgerName={ledgerName} />
+              <JournalLoadingState />
+            </div>
+          </>
+        }
+      >
         <JournalContent key={createLedgerId(ledgerOwner, ledgerName)} />
       </ClientOnly>
       <RelatedLinks

@@ -69,6 +69,107 @@ const skJournal: Record<string, TranslationEntry> = {
     description:
       "Accessible name for the static posting count when all rows are forced open",
   },
+  "journal.entryCount_one": {
+    message: "{shown} záznam",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.entryCount_few": {
+    message: "{shown} záznamy",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.entryCount_many": {
+    message: "{shown} záznamu",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.entryCount_other": {
+    message: "{shown} záznamov",
+    description:
+      "Beside the Journal heading: how many entries match the filters. {shown} is the count, formatted",
+  },
+  "journal.multiplePostings": {
+    message: "Viacero zápisov",
+    description:
+      "In a Journal row's amount column, for an entry no single amount sums up, such as a payroll",
+  },
+  "journal.entryHeader": {
+    message: "Záznam",
+    description:
+      "Column header (for screen readers) over each Journal entry's name and details",
+  },
+  "journal.showLabel": {
+    message: "Zobraziť",
+    description:
+      "Caption before the Journal's display toggles (Metadata, Postings): what each row shows",
+  },
+  "journal.otherStatus": {
+    message: "Ostatné",
+    description:
+      "Beside the literal flag on the Journal's third flag filter: transactions with a flag other than cleared (*) or pending (!)",
+  },
+  "journal.entryTypes": {
+    message: "Typy záznamov",
+    description:
+      "On narrow screens, the Journal's control that lists and opens the entry-type and display choices",
+  },
+  "journal.allEntryTypes": {
+    message: "Všetky",
+    description:
+      "Shown in the Journal's entry-type control when no type is chosen, so every type is listed",
+  },
+  "journal.editSource": {
+    message: "Upraviť zdroj",
+    description:
+      "On a phone, the button in an entry's dialog that reveals the entry's source text for editing",
+  },
+  "journal.balanceMatches": {
+    message: "Sedí",
+    description:
+      "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
+  },
+  "journal.balanceOffBy": {
+    message: "Rozdiel {amount}",
+    description:
+      "Beside a balance assertion in the Journal that does not match; {amount} is the difference with its currency",
+  },
+  "journal.layoutLabel": {
+    message: "Rozloženie",
+    description:
+      "Name of the Journal's choice between one line per entry and entries grouped by day",
+  },
+  "journal.densityCompact": {
+    message: "Kompaktné",
+    description:
+      "Journal layout: one line per entry with date and status columns, for reconciling",
+  },
+  "journal.densityComfortable": {
+    message: "Priestranné",
+    description:
+      "Journal layout: entries grouped under their day, two lines each, for reading",
+  },
+  "journal.statusLabel": {
+    message: "Stav",
+    description:
+      "Name of the Journal's group of transaction filters by flag: all, cleared (*), pending (!), other",
+  },
+  "journal.viewLabel": {
+    message: "Zobrazenie",
+    description:
+      "Button on the Journal's filter bar, on phones and tablets, that opens what each row shows and the layout",
+  },
+  "journal.openRegister": {
+    message: "Zobraziť {account} s priebežným zostatkom",
+    description:
+      "Link above the Journal when it is filtered to one account, to that account's register, which shows the balance after every entry; {account} is the full account name",
+  },
+  "journal.readFailedLedgerUnchanged": {
+    message:
+      "Vo vašej knihe sa nič nezmenilo. Skúste to znova alebo sa vráťte o minútu.",
+    description:
+      "Under the Journal's error heading when its entries could not be read because of a server error, beside a Try Again button",
+  },
   "journal.account": {
     message: "Účet",
     description: "Singular form of account, used as tab label",

@@ -99,7 +99,7 @@ describe("AccountJournalTable filter wiring", () => {
           query: expect.objectContaining({
             account: "Income:US:Hoogle:Salary",
             filterAccount: undefined,
-            directiveTypes: [DirectiveType.TRANSACTION],
+            directiveTypes: [DirectiveType.TRANSACTION, DirectiveType.BALANCE],
             transactionSubtypes: undefined,
             documentSubtypes: undefined,
             customSubtypes: undefined,
@@ -118,7 +118,7 @@ describe("AccountJournalTable filter wiring", () => {
         variables: {
           ledgerId: "open_ledger/example",
           query: expect.objectContaining({
-            directiveTypes: [DirectiveType.TRANSACTION],
+            directiveTypes: [DirectiveType.TRANSACTION, DirectiveType.BALANCE],
             transactionSubtypes: ["pending"],
           }),
         },
@@ -164,10 +164,14 @@ describe("AccountJournalTable filter wiring", () => {
       />,
     );
 
+    // The type chips sit in the Entry types panel.
+    fireEvent.click(screen.getByRole("button", { expanded: false }));
     fireEvent.click(screen.getByRole("button", { name: "journal.open" }));
     fireEvent.click(
       screen.getByRole("button", { name: "journal.transaction" }),
     );
+    // Balance is listed by default too; Open alone needs it off as well.
+    fireEvent.click(screen.getByRole("button", { name: "journal.balance" }));
 
     expect(mockUseQuery).toHaveBeenLastCalledWith(
       expect.anything(),

@@ -26,7 +26,6 @@ import { LedgerLayoutBackgroundQueries } from "./ledger-layout-background-querie
 import { LedgerProvider } from "@/common/providers/ledger-provider";
 import { LedgerSidebar } from "./ledger-sidebar";
 import { cn } from "@/common/lib/utils/utils.ts";
-import { useIsMobile } from "@/common/hooks/use-mobile.ts";
 import { LayoutHeader } from "./layout-header";
 import { isReactNative } from "@/common/providers/react-native-bridge-provider/react-native-bridge";
 import { useRefreshFailedToast } from "@/common/hooks/use-refresh-failed-toast";
@@ -117,7 +116,6 @@ export function LedgerLayout() {
   };
   useRefreshFailedToast(keepShown ? error : undefined, handleRetry);
 
-  const isMobile = useIsMobile();
   const isCommitWorkspace = /\/(?:commits|commit\/[^/]+)\/?$/.test(
     location.pathname,
   );
@@ -165,9 +163,7 @@ export function LedgerLayout() {
               aria-busy={isRoutePending || undefined}
               className="flex flex-1 flex-col min-w-0 w-full outline-none"
             >
-              {!isReactNative() && (
-                <LayoutHeader ledgerId={ledgerId} isCompact={isMobile} />
-              )}
+              {!isReactNative() && <LayoutHeader ledgerId={ledgerId} />}
               <BillingStatusBanner />
               <FailedRenewalBanner />
               <div
@@ -175,7 +171,8 @@ export function LedgerLayout() {
                 className={cn(
                   "relative flex min-h-0 flex-1 flex-col",
                   isCommitWorkspace ? "overflow-hidden" : "overflow-auto",
-                  isMobile ? "p-2" : "p-4 sm:p-6",
+                  // The viewport decides, from the first paint.
+                  "p-2 md:p-6",
                 )}
               >
                 <div className="max-w-full flex-1 flex flex-col min-h-0">

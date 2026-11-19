@@ -215,6 +215,7 @@ export function NoteForm({
           <div className="flex justify-end">
             <Button
               type="submit"
+              className="pointer-coarse:h-11"
               disabled={
                 !form.formState.isValid || accounts.blocks([account], day)
               }

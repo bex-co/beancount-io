@@ -154,7 +154,8 @@ describe("Account Journal choices across a scope remount", () => {
   it("keeps the entry types, subtypes and display toggles", () => {
     const first = render(<AccountPage />);
     expect(filters()).toMatchObject({
-      selectedDirectiveTypes: ["Transaction"],
+      // Balance assertions are reconciliation checkpoints, listed by default.
+      selectedDirectiveTypes: ["Transaction", "Balance"],
       showMetadata: true,
       showPostings: false,
     });
@@ -193,7 +194,8 @@ describe("Account Journal choices across a scope remount", () => {
   it("starts from the defaults for a fresh account", () => {
     render(<AccountPage />);
     expect(filters()).toMatchObject({
-      selectedDirectiveTypes: ["Transaction"],
+      // Balance assertions are reconciliation checkpoints, listed by default.
+      selectedDirectiveTypes: ["Transaction", "Balance"],
       selectedTransactionSubtypes: [],
       showMetadata: true,
       showPostings: false,

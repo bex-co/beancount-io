@@ -513,11 +513,6 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Преглед на приходи и разходи за {ledgerName}. Проследявайте приходи, разходи и рентабилност във времето.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "Преглеждайте и филтрирайте всички транзакции в {ledgerName}. Търсете по дата, сметка, описание или получател.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "Финансово табло за {ledgerName}. Преглед на салда по сметки, тенденции в нетната стойност и обобщения на приходи/разходи.",
@@ -692,8 +687,13 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Филтри",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "Готово",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "Филтри на отчета",
+    message: "Филтри",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {

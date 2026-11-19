@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { Plus, FileEdit, Sparkles, Link, ScanLine } from "lucide-react";
+import { FileUp, FileEdit, Sparkles, Link, ScanLine } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,7 +72,7 @@ export function ImportDropdown() {
           className="hidden md:inline-flex h-8 w-8 rounded-full hover:bg-accent data-[state=open]:bg-accent"
           aria-label={t("common.import")}
         >
-          <Plus className="h-4 w-4" />
+          <FileUp className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

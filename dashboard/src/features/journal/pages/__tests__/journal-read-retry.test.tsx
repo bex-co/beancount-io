@@ -143,8 +143,11 @@ async function setup() {
   const t = localization.i18n.t.bind(localization.i18n);
   const tryAgain = () =>
     screen.getByRole("button", { name: t("common.tryAgain") });
+  // The error view: its heading, and the reason under it.
   const failed = () =>
-    screen.queryByText(new RegExp(t("journal.errorLoadingJournalEntries")));
+    screen
+      .queryByText(new RegExp(t("journal.errorLoadingJournalEntries")))
+      ?.closest<HTMLElement>('[role="alert"]') ?? null;
   return { requests, router, t, tryAgain, failed, user: userEvent.setup() };
 }
 

@@ -58,7 +58,11 @@ export function UserAvatarButton({
       size="icon-sm"
       onClick={onClick}
       {...props}
-      className={cn("relative rounded-full hover:bg-accent p-0", className)}
+      // A finger's width on touch; the avatar inside keeps its size.
+      className={cn(
+        "relative rounded-full hover:bg-accent p-0 pointer-coarse:size-11",
+        className,
+      )}
     >
       <Avatar className="h-8 w-8">
         <AvatarFallback>{userInitial}</AvatarFallback>

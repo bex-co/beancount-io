@@ -515,11 +515,6 @@ const deCommon: Record<string, TranslationEntry> = {
       "Einnahmen- und Ausgabenansicht für {ledgerName}. Verfolgen Sie Einnahmen, Ausgaben und Rentabilität im Zeitverlauf.",
     description: "Description for income statement page",
   },
-  "common.pageDescription.journal": {
-    message:
-      "Alle Transaktionen in {ledgerName} anzeigen und filtern. Suchen Sie nach Datum, Konto, Beschreibung oder Zahlungsempfänger.",
-    description: "Description for journal page",
-  },
   "common.pageDescription.overview": {
     message:
       "Finanz-Dashboard für {ledgerName}. Überprüfen Sie Kontostände, Vermögensentwicklung und Einnahmen-/Ausgabenzusammenfassungen.",
@@ -694,8 +689,13 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Filter",
     description: "Button that opens reporting filters on narrow layouts",
   },
+  "component.searchControls.done": {
+    message: "Fertig",
+    description:
+      "Button at the foot of the phone filter sheet: filters apply as they are chosen, so this returns to the results",
+  },
   "component.searchControls.filtersTitle": {
-    message: "Berichtsfilter",
+    message: "Filter",
     description: "Title of the narrow reporting filters sheet",
   },
   "component.searchControls.filtersDescription": {
