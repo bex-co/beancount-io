@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import pytest
 
+from bea_engine import amounts as engine_amounts
 from bea_engine.amounts import zero_divisor_line
+from cli import amounts as frontend_amounts
 
 
 @pytest.mark.parametrize(
@@ -36,3 +38,11 @@ def test_a_literal_divisor_still_flags() -> None:
 
 def test_a_divisor_in_a_comment_still_passes() -> None:
     assert zero_divisor_line('2020-01-05 * "a" ; /0 in comment\n  Assets:Cash  1 USD\n') is None
+
+
+def test_the_twins_blank_the_same_text() -> None:
+    # The two copies cannot import each other (ADR014), so pin them equal: the
+    # tag/link blanking drifted once when only the frontend twin changed.
+    assert engine_amounts._NOT_ARITHMETIC.pattern == frontend_amounts._NOT_ARITHMETIC.pattern
+    assert engine_amounts._NOT_ARITHMETIC.flags == frontend_amounts._NOT_ARITHMETIC.flags
+    assert engine_amounts._ZERO_DIVISOR.pattern == frontend_amounts._ZERO_DIVISOR.pattern
