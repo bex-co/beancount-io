@@ -1,4 +1,5 @@
 import { Fragment, useId, useMemo, useState } from "react";
+import { AccountName } from "@/common/components/account-name";
 import { ArrowRight } from "lucide-react";
 import {
   type JournalDirectiveType,
@@ -133,7 +134,7 @@ function LineRows({
           balance ? balanceRowTone(balance) : "hover:bg-muted/30",
         )}
       >
-        <td className="py-2 ps-3 align-top font-mono text-xs leading-5 whitespace-nowrap text-muted-foreground tabular-nums sm:ps-5 sm:text-[13px] pointer-coarse:py-2.5 pointer-coarse:leading-6">
+        <td className="py-2 ps-3 align-top text-xs leading-5 whitespace-nowrap text-muted-foreground tabular-nums sm:ps-5 sm:text-[13px] pointer-coarse:py-2.5 pointer-coarse:leading-6">
           {/* The day on every line, as a statement prints it; month and day
               where a phone has no room for the year. */}
           <time dateTime={directive.date}>
@@ -362,12 +363,11 @@ function LineRows({
           {balance && (
             // The account the statement is for, where transactions show
             // theirs.
-            <span
+            <AccountName
+              account={balance.account}
               title={balance.account}
-              className="hidden min-w-0 truncate @4xl/journal:block"
-            >
-              {balance.account}
-            </span>
+              className="hidden text-[13px] @4xl/journal:block"
+            />
           )}
           {flow && shortFlow && (
             // Where the list is not yet wide enough for full names: the
@@ -376,12 +376,18 @@ function LineRows({
               title={`${flow.from} → ${flow.to}`}
               className="hidden min-w-0 items-center gap-1.5 @4xl/journal:flex @5xl/journal:hidden"
             >
-              <span className="min-w-0 truncate">{shortFlow.from}</span>
+              {/* Last parts only: in the foreground, as every account's
+                  last part is. */}
+              <span className="min-w-0 truncate font-medium text-foreground">
+                {shortFlow.from}
+              </span>
               <ArrowRight
                 aria-hidden="true"
                 className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
               />
-              <span className="min-w-0 truncate">{shortFlow.to}</span>
+              <span className="min-w-0 truncate font-medium text-foreground">
+                {shortFlow.to}
+              </span>
               {flow.more > 0 && (
                 <span className="shrink-0 whitespace-nowrap">+{flow.more}</span>
               )}
@@ -389,16 +395,20 @@ function LineRows({
           )}
           {flow && (
             <span className="hidden min-w-0 items-center gap-1.5 @5xl/journal:flex">
-              <span title={flow.from} className="min-w-0 truncate">
-                {flow.from}
-              </span>
+              <AccountName
+                account={flow.from}
+                title={flow.from}
+                className="text-[13px]"
+              />
               <ArrowRight
                 aria-hidden="true"
                 className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
               />
-              <span title={flow.to} className="min-w-0 truncate">
-                {flow.to}
-              </span>
+              <AccountName
+                account={flow.to}
+                title={flow.to}
+                className="text-[13px]"
+              />
               {flow.more > 0 && (
                 <span className="shrink-0 whitespace-nowrap">+{flow.more}</span>
               )}
@@ -528,7 +538,7 @@ export function JournalLines({
         {/* Named columns, pinned while the reader scrolls a long page. */}
         {/* Flush with the top of the scrolling page, past its padding, so
             no row shows above the header or through a gap. */}
-        <thead className="sticky -top-2 z-[1] md:-top-6 bg-muted text-xs text-muted-foreground">
+        <thead className="sticky -top-4 z-[1] md:-top-6 bg-muted text-xs text-muted-foreground">
           <tr className="border-b border-border/60">
             <th
               scope="col"
@@ -592,7 +602,7 @@ export function JournalLines({
                   <tr aria-hidden="true" className="md:hidden">
                     <td
                       colSpan={5}
-                      className="border-b border-border/50 bg-muted/40 py-1 ps-3 font-mono text-xs font-medium text-muted-foreground tabular-nums"
+                      className="border-b border-border/50 bg-muted/40 py-1 ps-3 text-xs font-medium text-muted-foreground tabular-nums"
                     >
                       {year}
                     </td>

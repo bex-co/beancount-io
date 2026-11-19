@@ -1245,6 +1245,16 @@ const ptCommon: Record<string, TranslationEntry> = {
     description:
       "Accessible name of the button that hides the failed-renewal banner for this session",
   },
+  "common.collapseSidebar": {
+    message: "Recolher a barra lateral",
+    description:
+      "Control at the bottom of the ledger sidebar that collapses it to its icon rail",
+  },
+  "common.expandSidebar": {
+    message: "Expandir a barra lateral",
+    description:
+      "Control at the bottom of the ledger sidebar's icon rail that expands it to show its labels",
+  },
 };
 
 export default ptCommon;

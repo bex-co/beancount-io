@@ -66,12 +66,12 @@ describe.each(surfaces)("Open Account in $name on a skipped day", (surface) => {
     mutate.mockReset();
     mutate.mockResolvedValue({ data: { bulkEntries: { success: true } } });
     surface.render();
-    const date = screen.getByPlaceholderText("MM/DD/YYYY");
+    const date = screen.getByPlaceholderText("YYYY-MM-DD");
     fireEvent.change(date, { target: { value: "12/30/2011" } });
     fireEvent.blur(date);
     fireEvent.change(surface.field(), { target: { value: "Assets:Wallet" } });
 
-    expect(date).toHaveValue("12/30/2011");
+    expect(date).toHaveValue("2011-12-30");
     expect(date).not.toHaveAttribute("aria-invalid");
     await waitFor(() => expect(surface.submit()).toBeEnabled());
     fireEvent.click(surface.submit());

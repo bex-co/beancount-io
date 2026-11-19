@@ -274,6 +274,12 @@ function rulesFor(container: HTMLElement) {
 
 describe("LayoutHeader available-width filters", () => {
   it("emits complementary header-container rules using the actual expanded and icon-rail sidebar widths", async () => {
+    // A desktop window, where the sidebar sits beside the page and Ctrl+B
+    // collapses it to the rail and back.
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 1440,
+    });
     const { container, localization, router, user } = await setup("de");
     const header = container.querySelector("header")!;
     const time = screen.getByPlaceholderText(
@@ -333,6 +339,14 @@ describe("LayoutHeader available-width filters", () => {
     expect(sidebar).toHaveAttribute("data-state", "collapsed");
     await user.keyboard("{Control>}b{/Control}");
     expect(sidebar).toHaveAttribute("data-state", "expanded");
+    // On screen beside the page, the sidebar carries its own control (the
+    // ledger sidebar's footer); the header's toggle is a phone's way into
+    // its drawer only.
+    expect(
+      within(header).queryByRole("button", {
+        name: localization.i18n.t("common.toggleSidebar"),
+      }),
+    ).not.toBeInTheDocument();
     expect(router.state.location.search).toEqual({
       time: 2026,
       account: "Assets:Cash",

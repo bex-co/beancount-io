@@ -1223,6 +1223,16 @@ const koCommon: Record<string, TranslationEntry> = {
     description:
       "Accessible name of the button that hides the failed-renewal banner for this session",
   },
+  "common.collapseSidebar": {
+    message: "사이드바 접기",
+    description:
+      "Control at the bottom of the ledger sidebar that collapses it to its icon rail",
+  },
+  "common.expandSidebar": {
+    message: "사이드바 펼치기",
+    description:
+      "Control at the bottom of the ledger sidebar's icon rail that expands it to show its labels",
+  },
 };
 
 export default koCommon;

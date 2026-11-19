@@ -56,7 +56,7 @@ describe("AddBudgetDialog on a skipped day", () => {
         defaultCurrency="USD"
       />,
     );
-    const date = screen.getByPlaceholderText("MM/DD/YYYY");
+    const date = screen.getByPlaceholderText("YYYY-MM-DD");
     fireEvent.change(date, { target: { value: "2011-12-30" } });
     fireEvent.blur(date);
     fireEvent.change(screen.getByTestId("account-combobox"), {
@@ -66,7 +66,7 @@ describe("AddBudgetDialog on a skipped day", () => {
       target: { value: "500" },
     });
 
-    expect(date).toHaveValue("12/30/2011");
+    expect(date).toHaveValue("2011-12-30");
     const submit = screen.getByRole("button", { name: /add budget/i });
     await waitFor(() => expect(submit).toBeEnabled());
     fireEvent.click(submit);

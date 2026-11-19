@@ -51,7 +51,17 @@ function findSidebarTriggerOnPage(): HTMLElement | null {
   return document.querySelector<HTMLElement>('[data-slot="sidebar-trigger"]');
 }
 
-const SIDEBAR_SHEET_BREAKPOINT = 1024;
+/**
+ * Three tiers by screen width. A phone (below 768px) opens the sidebar as a
+ * sheet over the page. A tablet or small laptop (768–1279px) keeps it as the
+ * icon rail, so navigation is always one tap away, and opens it over the page
+ * rather than beside it, so the content never narrows. From 1280px it sits
+ * beside the page, open by default, and the reader's open or collapsed choice
+ * is kept. The rail's look before hydration comes from the `rail` variant in
+ * style.css, which answers the same media query.
+ */
+const SIDEBAR_SHEET_BREAKPOINT = 768;
+const SIDEBAR_RAIL_BREAKPOINT = 1280;
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = `${SIDEBAR_WIDTH_ICON_PX}px`;
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
@@ -63,6 +73,11 @@ type SidebarContextProps = {
   openMobile: boolean;
   setOpenMobile: React.Dispatch<React.SetStateAction<boolean>>;
   isMobile: boolean;
+  /** 768–1279px: the sidebar rests as its rail and opens over the page. */
+  isTablet: boolean;
+  /** The sidebar opened over the page on a tablet; never persisted. */
+  openTablet: boolean;
+  setOpenTablet: (open: boolean) => void;
   toggleSidebar: () => void;
   /**
    * Element that opened the narrow (Sheet) sidebar. The Sheet is controlled and
@@ -102,10 +117,13 @@ function SidebarProvider({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
-  // Pass isHydrated to useIsMobile
-  // A portrait tablet gets the content's full width, as a phone does: the
-  // sidebar is a sheet below `lg`, not a pinned 256px column.
   const isMobile = useIsMobile(SIDEBAR_SHEET_BREAKPOINT);
+  const belowRailBreakpoint = useIsMobile(SIDEBAR_RAIL_BREAKPOINT);
+  const isTablet = belowRailBreakpoint && !isMobile;
+  // Opening over the page is a moment's choice: a reload, a navigation away
+  // from the tablet range, or a link inside closes it.
+  const [openTablet, setOpenTablet] = React.useState(false);
+  if (!isTablet && openTablet) setOpenTablet(false);
   const [openMobile, _setOpenMobile] = React.useState(false);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
   const mobileOpenerRef = React.useRef<HTMLElement | null>(null);
@@ -168,8 +186,10 @@ function SidebarProvider({
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
-  }, [isMobile, setOpen, setOpenMobile]);
+    if (isMobile) return setOpenMobile((open) => !open);
+    if (isTablet) return setOpenTablet((open) => !open);
+    return setOpen((open) => !open);
+  }, [isMobile, isTablet, setOpen, setOpenMobile]);
 
   // Adds a keyboard shortcut to toggle the sidebar (client-only).
   React.useEffect(() => {
@@ -194,7 +214,9 @@ function SidebarProvider({
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? "expanded" : "collapsed";
+  // On a tablet the rail is the resting state whatever was chosen on a wider
+  // screen; that choice is kept for when the screen is wide again.
+  const state = (isTablet ? openTablet : open) ? "expanded" : "collapsed";
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
@@ -202,6 +224,9 @@ function SidebarProvider({
       open,
       setOpen,
       isMobile,
+      isTablet,
+      openTablet,
+      setOpenTablet,
       openMobile,
       setOpenMobile,
       toggleSidebar,
@@ -215,6 +240,8 @@ function SidebarProvider({
       open,
       setOpen,
       isMobile,
+      isTablet,
+      openTablet,
       openMobile,
       setOpenMobile,
       toggleSidebar,
@@ -265,8 +292,16 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
 }) {
-  const { isMobile, state, openMobile, setOpenMobile, mobileOpenerRef } =
-    useSidebar();
+  const {
+    isMobile,
+    isTablet,
+    openTablet,
+    setOpenTablet,
+    state,
+    openMobile,
+    setOpenMobile,
+    mobileOpenerRef,
+  } = useSidebar();
   const { t } = useTranslations();
 
   // Track hydration for this component to prevent conditional rendering mismatch
@@ -275,6 +310,18 @@ function Sidebar({
   React.useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  // Opened over the page on a tablet: Escape closes it, as a click outside
+  // or on a link inside does.
+  const overlayOpen = isTablet && openTablet;
+  React.useEffect(() => {
+    if (!overlayOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenTablet(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [overlayOpen, setOpenTablet]);
 
   if (collapsible === "none") {
     return (
@@ -331,13 +378,23 @@ function Sidebar({
 
   return (
     <div
-      className="group peer text-sidebar-foreground hidden lg:block"
+      className="group peer text-sidebar-foreground hidden md:block"
       data-state={state}
       data-collapsible={state === "collapsed" ? collapsible : ""}
+      // On a tablet the rail is the resting look from the first paint, before
+      // the width is known to script (style.css, the `rail` variant).
+      data-rail={openTablet ? undefined : "auto"}
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
     >
+      {overlayOpen && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-30 bg-black/20"
+          onClick={() => setOpenTablet(false)}
+        />
+      )}
       {/* This is what handles the sidebar gap on desktop */}
       <div
         data-slot="sidebar-gap"
@@ -347,25 +404,46 @@ function Sidebar({
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
-            ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
+            ? "rail:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+            : "rail:w-(--sidebar-width-icon)",
+          // Opened over the page on a tablet, it leaves the page its width:
+          // the rail's, or none for a sidebar that slides away.
+          collapsible === "icon" && "max-xl:w-(--sidebar-width-icon)",
+          collapsible === "offcanvas" && "max-xl:w-0",
         )}
       />
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear lg:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          overlayOpen && "z-40 shadow-xl",
           "group-data-[dragging=true]/sidebar-wrapper:transition-none",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+          // A sidebar that slides away rests away on a tablet, from the first
+          // paint, until opened over the page.
+          collapsible === "offcanvas" &&
+            (side === "left"
+              ? "max-xl:group-data-[rail=auto]:left-[calc(var(--sidebar-width)*-1)]"
+              : "max-xl:group-data-[rail=auto]:right-[calc(var(--sidebar-width)*-1)]"),
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
-            ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            ? "p-2 rail:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
+            : "rail:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
           className,
         )}
         {...props}
+        onClick={(event) => {
+          props.onClick?.(event);
+          // A link followed from the sidebar opened over the page closes it.
+          if (
+            overlayOpen &&
+            (event.target as Element).closest?.("a[href]") !== null
+          ) {
+            setOpenTablet(false);
+          }
+        }}
       >
         <div
           data-sidebar="sidebar"
@@ -384,7 +462,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar, open, openMobile, isMobile } = useSidebar();
+  const { toggleSidebar, state, openMobile, isMobile } = useSidebar();
   const { t } = useTranslations();
 
   return (
@@ -395,7 +473,7 @@ function SidebarTrigger({
       size="icon"
       // A disclosure control with one constant name gave no way to tell the
       // two states apart. Report whichever sidebar this trigger governs.
-      aria-expanded={isMobile ? openMobile : open}
+      aria-expanded={isMobile ? openMobile : state === "expanded"}
       className={cn("size-7", className)}
       onClick={(event) => {
         onClick?.(event);
@@ -512,6 +590,8 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
     }
   };
 
+  // Only where the sidebar sits beside the page (from 1280px): on a tablet it
+  // opens over the page and has no width of its own to drag.
   return (
     <div
       data-sidebar="rail"
@@ -534,7 +614,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
       onKeyDown={handleKeyDown}
       title={t("common.toggleSidebar")}
       className={cn(
-        "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex",
+        "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] xl:flex",
         "cursor-col-resize touch-none select-none",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
@@ -617,7 +697,7 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="sidebar-content"
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto rail:overflow-hidden",
         className,
       )}
       {...props}
@@ -649,7 +729,7 @@ function SidebarGroupLabel({
       data-sidebar="group-label"
       className={cn(
         "text-sidebar-foreground/70 ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
-        "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
+        "rail:-mt-8 rail:opacity-0",
         className,
       )}
       {...props}
@@ -672,7 +752,7 @@ function SidebarGroupAction({
         "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         // Increases the hit area of the button on mobile.
         "after:absolute after:-inset-2 lg:after:hidden",
-        "group-data-[collapsible=icon]:hidden",
+        "rail:hidden",
         className,
       )}
       {...props}
@@ -717,7 +797,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground rail:size-8! rail:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -728,7 +808,7 @@ const sidebarMenuButtonVariants = cva(
       size: {
         default: "h-8 text-sm",
         sm: "h-7 text-xs",
-        lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!",
+        lg: "h-12 text-sm rail:p-0!",
       },
     },
     defaultVariants: {
@@ -808,7 +888,7 @@ function SidebarMenuAction({
         "peer-data-[size=sm]/menu-button:top-0.5",
         "peer-data-[size=default]/menu-button:top-1",
         "peer-data-[size=lg]/menu-button:top-3",
-        "group-data-[collapsible=icon]:hidden",
+        "rail:hidden",
         showOnHover &&
           "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 lg:opacity-0",
         className,
@@ -832,7 +912,7 @@ function SidebarMenuBadge({
         "peer-data-[size=sm]/menu-button:top-1",
         "peer-data-[size=default]/menu-button:top-1.5",
         "peer-data-[size=lg]/menu-button:top-2.5",
-        "group-data-[collapsible=icon]:hidden",
+        "rail:hidden",
         className,
       )}
       {...props}
@@ -889,7 +969,7 @@ function SidebarMenuSub({ className, ...props }: React.ComponentProps<"ul">) {
       data-sidebar="menu-sub"
       className={cn(
         "border-sidebar-border mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5",
-        "group-data-[collapsible=icon]:hidden",
+        "rail:hidden",
         className,
       )}
       {...props}
@@ -935,7 +1015,7 @@ function SidebarMenuSubButton({
         "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
         size === "sm" && "text-xs",
         size === "md" && "text-sm",
-        "group-data-[collapsible=icon]:hidden",
+        "rail:hidden",
         className,
       )}
       {...props}

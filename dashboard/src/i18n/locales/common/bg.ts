@@ -1238,6 +1238,16 @@ const bgCommon: Record<string, TranslationEntry> = {
     description:
       "Accessible name of the button that hides the failed-renewal banner for this session",
   },
+  "common.collapseSidebar": {
+    message: "Свиване на страничната лента",
+    description:
+      "Control at the bottom of the ledger sidebar that collapses it to its icon rail",
+  },
+  "common.expandSidebar": {
+    message: "Разгъване на страничната лента",
+    description:
+      "Control at the bottom of the ledger sidebar's icon rail that expands it to show its labels",
+  },
 };
 
 export default bgCommon;

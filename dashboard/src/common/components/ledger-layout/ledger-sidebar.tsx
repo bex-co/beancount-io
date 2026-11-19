@@ -11,6 +11,8 @@ import {
   FileSpreadsheet,
   Folder,
   MessageSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
   ScanLine,
   Search,
   Settings,
@@ -90,6 +92,34 @@ const NO_GROUPS: ReadonlySet<string> = new Set();
  * remain reachable through grouped disclosure while primary workflows stay at
  * the first level.
  */
+/**
+ * Collapse and expand, on the sidebar itself: from a tablet up the sidebar is
+ * always on screen, so its control lives with it, not in the page header
+ * (only a phone's drawer needs that). On a tablet it opens the sidebar over
+ * the page; Ctrl+B and, on a desktop, the sidebar's edge do the same.
+ */
+function SidebarCollapseToggle() {
+  const { state, toggleSidebar } = useSidebar();
+  const { t } = useTranslations();
+  const expanded = state === "expanded";
+  const label = expanded
+    ? t("common.collapseSidebar")
+    : t("common.expandSidebar");
+  const Icon = expanded ? PanelLeftClose : PanelLeftOpen;
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        tooltip={label}
+        onClick={toggleSidebar}
+        className="text-muted-foreground hover:text-foreground"
+      >
+        <Icon className="rtl:-scale-x-100" />
+        <span>{label}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
 export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
   const { setOpenMobile, isMobile, state } = useSidebar();
   const { ledgerOwner, ledgerName } = decodeLedgerId(ledgerId);
@@ -500,9 +530,10 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
               icon: Settings,
               path: `${ledgerPath}/settings`,
             })}
+            {!isMobile && <SidebarCollapseToggle />}
           </SidebarMenu>
           {/* Usage card can't shrink to the icon rail; hide it when collapsed. */}
-          <div className="group-data-[collapsible=icon]:hidden">
+          <div className="rail:hidden">
             <LedgerOwnerPermission>
               <DirectiveUsageIndicator ledgerId={ledgerId} />
             </LedgerOwnerPermission>

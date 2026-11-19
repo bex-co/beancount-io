@@ -302,7 +302,8 @@ describe("accounts list filters in the URL", () => {
       expect(input).toHaveFocus();
       expect(clear).not.toBeInTheDocument();
       expect(typeChip("Assets")).toHaveAttribute("aria-pressed", "true");
-      expect(accountNames()).toEqual(["Assets:Cash", "Assets:Bank:Checking"]);
+      // Sorted by name within the type.
+      expect(accountNames()).toEqual(["Assets:Bank:Checking", "Assets:Cash"]);
 
       // No click or programmatic refocus: these keys must reach the input
       // after its focused Clear button disappears.

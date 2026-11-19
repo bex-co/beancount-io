@@ -79,11 +79,6 @@ const deAccounts: Record<string, TranslationEntry> = {
     message: "Konten",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "Alle Beancount-Konten in {ledgerName}",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "Alle Typen",
     description: "Filter option to show all event types",
@@ -109,10 +104,6 @@ const deAccounts: Record<string, TranslationEntry> = {
     message: "Dies fügt eine Schließ-Direktive für {account} am {date} hinzu.",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "Schließdatum",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "Geschlossen",
@@ -141,10 +132,6 @@ const deAccounts: Record<string, TranslationEntry> = {
     message: "Eintraginhalt wird geladen...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "Neu",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "Keine Konten gefunden",
     description: "Empty state title when no accounts exist or match filters",
@@ -171,10 +158,6 @@ const deAccounts: Record<string, TranslationEntry> = {
     message: "Konten suchen...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "Status",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "Typ",
     description: "Table column header for type",
@@ -187,6 +170,72 @@ const deAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "Konto {account} gelöscht",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_one": {
+    message: "{shown} Konto",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_other": {
+    message: "{shown} Konten",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "Kontoblatt öffnen",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "Nur ein Konto mit Saldo null kann geschlossen werden.",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "Nur ein Konto ohne Buchungen kann gelöscht werden.",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "Salden nicht berechnet",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "Summen je Zeitraum:",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "Sonstige",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "Summen:",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message:
+      "An Ihrem Hauptbuch hat sich nichts geändert. Versuchen Sie es noch einmal oder kommen Sie in einer Minute wieder.",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "inkl. Unterkonten",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "Negative Salden sind Ihre Schulden",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "Kein Kontoname enthält „{query}“.",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

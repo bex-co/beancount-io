@@ -136,8 +136,8 @@ describe("Accounts table identity", () => {
       expect(table?.closest('[aria-hidden="true"]')).not.toBeNull();
       expect(status).toContainElement(table);
       expect(screen.queryByRole("table")).not.toBeInTheDocument();
-      expect(table?.querySelectorAll("thead th")).toHaveLength(7);
-      expect(table?.querySelectorAll("tbody tr")).toHaveLength(8);
+      // Five type headings and the 24 rows under them.
+      expect(table?.querySelectorAll("tbody tr")).toHaveLength(29);
     },
   );
 
@@ -151,23 +151,22 @@ describe("Accounts table identity", () => {
       const name = labels["page.accounts.accounts"].message;
       const table = await screen.findByRole("table", { name });
       expect(table.tagName).toBe("TABLE");
+      // Five column headings, and a heading for each type in the list.
       expect(within(table).getAllByRole("columnheader")).toHaveLength(7);
-      for (const key of [
-        "account",
-        "status",
-        "openDate",
-        "closeDate",
-        "entries",
-        "balance",
-      ]) {
+      for (const key of ["account", "openDate", "entries", "balance"]) {
         expect(
           within(table).getByRole("columnheader", {
             name: labels[`page.accounts.${key}`].message,
           }),
         ).toBeInTheDocument();
       }
-      expect(within(table).getAllByRole("row")).toHaveLength(3);
-      expect(within(table).getAllByRole("cell")).toHaveLength(14);
+      for (const type of ["Assets", "Expenses"]) {
+        expect(
+          within(table).getByRole("columnheader", { name: new RegExp(type) }),
+        ).toHaveAttribute("scope", "colgroup");
+      }
+      expect(within(table).getAllByRole("row")).toHaveLength(5);
+      expect(within(table).getAllByRole("cell")).toHaveLength(10);
       // The balance in the reader's digits, as Overview writes it (w2/119).
       expect(
         within(table).getAllByText(
@@ -181,7 +180,7 @@ describe("Accounts table identity", () => {
         within(table).getAllByText(
           labels["page.accounts.balanceNotComputed"].message,
         ),
-      ).toHaveLength(2);
+      ).toHaveLength(1);
       const account = within(table).getByRole("button", {
         name: "Assets:Bank:Checking",
       });

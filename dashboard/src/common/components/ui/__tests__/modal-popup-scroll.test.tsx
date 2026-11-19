@@ -65,7 +65,7 @@ describe("picker popups inside modals", () => {
     expect(popup.className).toContain("overflow-y-auto");
 
     fireEvent.click(day);
-    expect(screen.getByRole("textbox")).toHaveValue("08/30/2026");
+    expect(screen.getByRole("textbox")).toHaveValue("2026-08-30");
   });
 
   it("lets an account list in a sheet scroll and still type into its field", () => {

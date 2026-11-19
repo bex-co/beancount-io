@@ -77,11 +77,6 @@ const ruAccounts: Record<string, TranslationEntry> = {
     message: "Счета",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "Все счета Beancount в {ledgerName}",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "Все типы",
     description: "Filter option to show all event types",
@@ -107,10 +102,6 @@ const ruAccounts: Record<string, TranslationEntry> = {
     message: "Это добавит директиву закрытия для {account} на {date}.",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "Дата закрытия",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "Закрыт",
@@ -138,10 +129,6 @@ const ruAccounts: Record<string, TranslationEntry> = {
     message: "Загрузка содержимого записи...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "Новый",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "Счета не найдены",
     description: "Empty state title when no accounts exist or match filters",
@@ -168,10 +155,6 @@ const ruAccounts: Record<string, TranslationEntry> = {
     message: "Поиск счетов...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "Статус",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "Тип",
     description: "Table column header for type",
@@ -184,6 +167,82 @@ const ruAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "Аккаунт {account} удален",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_one": {
+    message: "{shown} счёт",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_few": {
+    message: "{shown} счёта",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_many": {
+    message: "{shown} счетов",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_other": {
+    message: "{shown} счёта",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "Открыть карточку счёта",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "Закрыть можно только счёт с нулевым остатком.",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "Удалить можно только счёт без проводок.",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "Остатки не рассчитываются",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "Итоги за период:",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "Прочие",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "Итоги:",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message:
+      "В вашей книге ничего не изменилось. Попробуйте ещё раз или вернитесь через минуту.",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "с субсчетами",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "Отрицательный остаток — это ваш долг",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "Нет счёта, в названии которого есть «{query}».",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

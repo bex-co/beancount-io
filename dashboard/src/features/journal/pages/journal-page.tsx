@@ -1,4 +1,5 @@
 import { RelatedLinks } from "@/common/components/related-links";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerJournalDocument } from "@/graphql/definitions";
 import {
@@ -514,20 +515,12 @@ function JournalHeading({
   });
   const { ledgerName: ledgerDisplayName } = useLedger();
   return (
-    // Below `sm` the actions take their own row, always: wrapping by width
-    // let the entry count, arriving after load, push them down a line.
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
-      <div className="min-w-0">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {t("journal.journal")}
-        </h1>
-        <p className="mt-0.5 truncate text-sm text-muted-foreground tabular-nums">
-          {ledgerDisplayName ?? ledgerName}
-          {summary && <span> · {summary}</span>}
-        </p>
-      </div>
-      {actions}
-    </div>
+    <LedgerPageHeading
+      title={t("journal.journal")}
+      context={ledgerDisplayName ?? ledgerName}
+      meta={summary}
+      actions={actions}
+    />
   );
 }
 
@@ -638,9 +631,9 @@ const LedgerJournalPage = () => {
   });
 
   return (
-    // A reading width on very wide screens: a row's name, accounts and
-    // amount stay within one sweep of the eye.
-    <div className="@container/journal-page space-y-4 sm:space-y-5 2xl:mx-auto 2xl:w-full 2xl:max-w-[88rem]">
+    // The ledger pages' shared column: a reading width on very wide
+    // screens, so a row's name, accounts and amount stay within one sweep.
+    <LedgerPage className="@container/journal-page space-y-4 sm:space-y-5">
       <ClientOnly
         fallback={
           <>
@@ -680,7 +673,7 @@ const LedgerJournalPage = () => {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 };
 

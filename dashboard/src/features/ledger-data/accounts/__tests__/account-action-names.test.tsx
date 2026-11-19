@@ -211,7 +211,9 @@ describe("account row action names", () => {
       trigger.focus();
       await user.keyboard("{ArrowDown}");
       await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Close" })).toHaveFocus(),
+        expect(
+          screen.getByRole("menuitem", { name: "Open register" }),
+        ).toHaveFocus(),
       );
       await user.keyboard("{Escape}");
       await waitFor(() => {
@@ -241,10 +243,16 @@ describe("account row action names", () => {
       trigger.focus();
       await user.keyboard("{ArrowDown}");
       await waitFor(() =>
-        expect(screen.getByRole("menuitem", { name: "Close" })).toHaveFocus(),
+        expect(
+          screen.getByRole("menuitem", { name: "Open register" }),
+        ).toHaveFocus(),
       );
-      if (action === "Delete") await user.keyboard("{End}");
-      expect(screen.getByRole("menuitem", { name: action })).toHaveFocus();
+      await user.keyboard(action === "Delete" ? "{End}" : "{ArrowDown}");
+      expect(
+        screen.getByRole("menuitem", {
+          name: action === "Close" ? "Close Account" : action,
+        }),
+      ).toHaveFocus();
       await user.keyboard("{Enter}");
       const dialog = await screen.findByRole("dialog", {
         name: `${action} Account`,

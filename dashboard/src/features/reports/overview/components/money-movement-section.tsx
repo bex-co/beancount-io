@@ -17,7 +17,7 @@ import {
   isPeriodIncomplete,
   periodPage,
 } from "../lib/overview-utils";
-import { AccountName } from "./account-name";
+import { AccountName } from "@/common/components/account-name";
 import { FormattedAmounts } from "./formatted-amounts";
 import { ShareMeter } from "./share-meter";
 import { IncomeExpensesChart } from "./income-expenses-chart";

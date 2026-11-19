@@ -76,11 +76,6 @@ const enAccounts: Record<string, TranslationEntry> = {
     message: "Accounts",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "All beancount accounts in {ledgerName}",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "All Types",
     description: "Filter option to show all event types",
@@ -106,10 +101,6 @@ const enAccounts: Record<string, TranslationEntry> = {
     message: "This will add a close directive for {account} on {date}.",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "Close Date",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "Closed",
@@ -138,10 +129,6 @@ const enAccounts: Record<string, TranslationEntry> = {
     message: "Loading entry content...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "New",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "No accounts found",
     description: "Empty state title when no accounts exist or match filters",
@@ -168,10 +155,6 @@ const enAccounts: Record<string, TranslationEntry> = {
     message: "Search accounts...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "Status",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "Type",
     description: "Table column header for type",
@@ -184,6 +167,72 @@ const enAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "Account {account} deleted",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_one": {
+    message: "{shown} account",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_other": {
+    message: "{shown} accounts",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "Open register",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "Only an account with a zero balance can be closed.",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "Only an account with no postings can be deleted.",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "Balances not computed",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "Totals by period:",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "Other",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "Totals:",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message:
+      "Nothing in your ledger has changed. Try once more, or come back in a minute.",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "with sub-accounts",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "Negative balances are what you owe",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "No account name contains “{query}”.",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

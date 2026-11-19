@@ -1200,6 +1200,16 @@ const zhCommon: Record<string, TranslationEntry> = {
     description:
       "Accessible name of the button that hides the failed-renewal banner for this session",
   },
+  "common.collapseSidebar": {
+    message: "收起侧边栏",
+    description:
+      "Control at the bottom of the ledger sidebar that collapses it to its icon rail",
+  },
+  "common.expandSidebar": {
+    message: "展开侧边栏",
+    description:
+      "Control at the bottom of the ledger sidebar's icon rail that expands it to show its labels",
+  },
 };
 
 export default zhCommon;

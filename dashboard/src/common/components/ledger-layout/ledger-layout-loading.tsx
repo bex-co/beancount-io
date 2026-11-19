@@ -25,7 +25,9 @@ import { useTranslations } from "@/common/hooks/use-translations";
 function LedgerSidebarSkeleton() {
   const { t } = useTranslations();
   return (
-    <Sidebar>
+    // The ledger sidebar's own collapse, so the loading shell rests as the
+    // same rail on a tablet and nothing moves when the page arrives.
+    <Sidebar collapsible="icon">
       <SidebarNavigation label={t("common.ledgerNavigation")}>
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2">
@@ -58,10 +60,10 @@ function LedgerSidebarSkeleton() {
  * Loading skeleton header component
  */
 function LoadingHeader() {
-  const { state, isMobile, openMobile } = useSidebar();
+  const { isMobile, openMobile } = useSidebar();
 
-  // Only show trigger when sidebar is hidden
-  const showTrigger = isMobile ? !openMobile : state === "collapsed";
+  // As the loaded header: only a phone's drawer needs it.
+  const showTrigger = isMobile && !openMobile;
 
   return (
     <header className="hidden sm:block h-16 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">

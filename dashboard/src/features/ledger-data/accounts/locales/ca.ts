@@ -78,11 +78,6 @@ const caAccounts: Record<string, TranslationEntry> = {
     message: "Comptes",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "Tots els comptes de beancount a {ledgerName}",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "Tots els tipus",
     description: "Filter option to show all event types",
@@ -109,10 +104,6 @@ const caAccounts: Record<string, TranslationEntry> = {
       "Això afegirà una directiva de tancament per a {account} el {date}.",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "Data de tancament",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "Tancada",
@@ -142,10 +133,6 @@ const caAccounts: Record<string, TranslationEntry> = {
     message: "S'està carregant el contingut de l'entrada...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "Nou",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "No s'han trobat comptes",
     description: "Empty state title when no accounts exist or match filters",
@@ -172,10 +159,6 @@ const caAccounts: Record<string, TranslationEntry> = {
     message: "Cerca comptes...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "Estat",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "Tipus",
     description: "Table column header for type",
@@ -188,6 +171,77 @@ const caAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "Compte {account} suprimit",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_one": {
+    message: "{shown} compte",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_many": {
+    message: "{shown} de comptes",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_other": {
+    message: "{shown} comptes",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "Obre el registre",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "Només es pot tancar un compte amb saldo zero.",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "Només es pot eliminar un compte sense registres.",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "Saldos no calculats",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "Totals per període:",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "Altres",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "Totals:",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message:
+      "No ha canviat res del vostre llibre. Torneu-ho a provar o torneu d'aquí a un minut.",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "amb els subcomptes",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "Un saldo negatiu és el que deveu",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "Cap nom de compte conté «{query}».",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

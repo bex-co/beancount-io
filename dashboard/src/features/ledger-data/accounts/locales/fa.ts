@@ -77,11 +77,6 @@ const faAccounts: Record<string, TranslationEntry> = {
     message: "حساب‌ها",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "همه حساب‌های beancount در {ledgerName}",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "همه انواع",
     description: "Filter option to show all event types",
@@ -107,10 +102,6 @@ const faAccounts: Record<string, TranslationEntry> = {
     message: "این یک دستور بستن برای {account} در تاریخ {date} اضافه می‌کند.",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "تاریخ بستن",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "بسته",
@@ -139,10 +130,6 @@ const faAccounts: Record<string, TranslationEntry> = {
     message: "در حال بارگذاری محتوای ورودی...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "جدید",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "هیچ حسابی یافت نشد",
     description: "Empty state title when no accounts exist or match filters",
@@ -169,10 +156,6 @@ const faAccounts: Record<string, TranslationEntry> = {
     message: "جستجوی حساب‌ها...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "وضعیت",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "نوع",
     description: "Table column header for type",
@@ -185,6 +168,72 @@ const faAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "حساب {account} حذف شد",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_one": {
+    message: "{shown} حساب",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_other": {
+    message: "{shown} حساب",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "باز کردن دفتر حساب",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "فقط حسابی با مانده صفر را می‌توان بست.",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "فقط حسابی بدون سند را می‌توان حذف کرد.",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "مانده‌ها محاسبه نمی‌شوند",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "جمع‌ها به تفکیک دوره:",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "سایر",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "جمع‌ها:",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message:
+      "در دفتر شما چیزی تغییر نکرده است. دوباره امتحان کنید یا یک دقیقه دیگر برگردید.",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "با زیرحساب‌ها",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "مانده منفی یعنی بدهی شما",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "هیچ نام حسابی شامل «{query}» نیست.",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

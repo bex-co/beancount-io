@@ -1,4 +1,5 @@
 import { useId, useMemo, useState, type ReactNode } from "react";
+import { AccountName } from "@/common/components/account-name";
 import { ArrowRight } from "lucide-react";
 import {
   type JournalDirectiveType,
@@ -390,9 +391,10 @@ function DayEntryRows({
                 />
               ) : balance ? (
                 <div className="mt-0.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-base leading-6 sm:text-sm sm:leading-5">
-                  <span className="min-w-0 font-mono text-[13px] [overflow-wrap:anywhere] text-muted-foreground">
-                    {balance.account}
-                  </span>
+                  <AccountName
+                    account={balance.account}
+                    className="text-[13px] text-muted-foreground"
+                  />
                   <BalanceCheck directive={balance} />
                 </div>
               ) : (
@@ -617,7 +619,7 @@ export function JournalDays({
               <TableHead
                 scope="rowgroup"
                 colSpan={4}
-                className="sticky -top-2 z-[1] h-auto bg-muted px-4 py-1.5 text-xs font-medium tracking-wide text-muted-foreground tabular-nums sm:px-5 md:-top-6"
+                className="sticky -top-4 z-[1] h-auto bg-muted px-4 py-1.5 text-xs font-medium tracking-wide text-muted-foreground tabular-nums sm:px-5 md:-top-6"
               >
                 <time dateTime={day.date}>
                   {formatDay(day.date, i18n.language)}

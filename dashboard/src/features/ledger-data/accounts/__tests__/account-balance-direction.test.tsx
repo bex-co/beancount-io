@@ -179,8 +179,12 @@ describe("account balance reading direction", () => {
       const context = screen.getByTestId("reading-context");
       expect(context).toHaveAttribute("dir", language === "fa" ? "rtl" : "ltr");
       for (const text of amountsIn(language)) {
+        // Narrow, the balance sits under the name; wide, in its column.
+        // Each width shows one of the two copies.
         const copies = within(row).getAllByText(text);
         expect(copies).toHaveLength(2);
+        expect(copies[0].closest(".\\@lg\\:hidden")).not.toBeNull();
+        expect(copies[1].closest(".\\@lg\\:block")).not.toBeNull();
         for (const amount of copies) {
           expect(amount.textContent).toBe(text);
           const isolated = amount.closest('bdi[dir="ltr"]');
@@ -193,9 +197,10 @@ describe("account balance reading direction", () => {
       expect(account.closest("[dir]")).toBe(context);
       expect(row).not.toHaveAttribute("dir");
       expect(table).not.toHaveAttribute("dir");
+      // An open account goes unmarked; only a closed one says so.
       expect(
-        within(row).getByText(language === "fa" ? "باز" : "Open"),
-      ).toBeInTheDocument();
+        within(row).queryByText(language === "fa" ? "باز" : "Open"),
+      ).not.toBeInTheDocument();
     },
   );
 
@@ -203,22 +208,23 @@ describe("account balance reading direction", () => {
     "preserves %s native rows, unknown/empty balances, and keyboard account navigation",
     async (language) => {
       const { router, table, account, row, requests } = await setup(language);
-      expect(within(table).getAllByRole("row")).toHaveLength(5);
-      expect(within(row).getAllByRole("cell")).toHaveLength(7);
+      // The column headings, a heading per type (Assets, Income), 4 accounts.
+      expect(within(table).getAllByRole("row")).toHaveLength(7);
+      expect(within(row).getAllByRole("cell")).toHaveLength(5);
       expect(row).not.toHaveAttribute("role");
       expect(row).not.toHaveAttribute("tabindex");
-      expect(within(row).getAllByRole("cell")[5].textContent).toBe(
+      expect(within(row).getAllByRole("cell")[3].textContent).toBe(
         amountsIn(language).join(""),
       );
       const emptyRow = within(table)
         .getByRole("button", { name: "Assets:Empty" })
         .closest("tr")!;
-      expect(within(emptyRow).getAllByRole("cell")[5].textContent).toBe("-");
+      expect(within(emptyRow).getAllByRole("cell")[3].textContent).toBe("0");
       expect(
         within(table).getAllByText(
           language === "fa" ? "محاسبه نشده" : "Not computed",
         ),
-      ).toHaveLength(2);
+      ).toHaveLength(1);
       act(() => account.focus());
       await userEvent.setup().keyboard("{Enter}");
       await screen.findByRole("heading", { name: "Account detail" });
@@ -239,64 +245,50 @@ describe("account balance reading direction", () => {
   );
 });
 
-function compactBalance(row: HTMLElement) {
-  const accountCell = within(row).getAllByRole("cell")[0];
-  const compact = [...accountCell.querySelectorAll<HTMLElement>("*")].find(
-    (element) => element.classList.contains("@xl:hidden"),
-  );
-  expect(
-    compact,
-    "balance under the account name below the @xl container breakpoint",
-  ).toBeDefined();
-  expect(compact?.tagName).toBe("DL");
-  const value = compact?.querySelector("dd");
-  expect(value).not.toBeNull();
-  return value!;
-}
-
-describe("compact Accounts balances", () => {
+describe("Accounts balances at every width", () => {
   it.each(["en", "fa"] as const)(
-    "keeps every %s balance below its account name and retains the desktop balance column",
+    "keeps every %s balance under the name when narrow and in its own column when wide",
     async (language) => {
-      const { table, row, account } = await setup(language);
+      const { table, row } = await setup(language);
       expect(table.closest(".\\@container")).not.toBeNull();
-      const compact = compactBalance(row);
-      expect(compact.parentElement?.querySelector("dt")).toHaveTextContent(
-        language === "fa" ? "موجودی" : "Balance",
-      );
-      expect(compact.textContent).toBe(amountsIn(language).join(""));
-      expect(
-        account.compareDocumentPosition(compact) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-      const desktop = within(row).getAllByRole("cell")[5];
-      expect(desktop).toHaveClass("hidden", "@xl:table-cell");
-      expect(desktop.textContent).toBe(amountsIn(language).join(""));
+      const [, postings, opened, balance] = within(row).getAllByRole("cell");
+      // Narrow, the postings and open-date cells keep their place in the
+      // grid at no width (a hidden cell would pull the balance into its
+      // column); only their contents hide.
+      for (const cell of [postings, opened, balance]) {
+        expect(cell).not.toHaveClass("hidden");
+      }
+      expect(balance.textContent).toBe(amountsIn(language).join(""));
+      const [name] = within(row).getAllByRole("cell");
+      // The narrow copy: at the end of the name cell's first line (the
+      // parent path under the name is narrow-only too).
+      const narrow = [
+        ...name.querySelectorAll<HTMLElement>(".\\@lg\\:hidden"),
+      ].find((element) => element.classList.contains("text-end"));
+      expect(narrow?.textContent).toBe(amountsIn(language).join(""));
       for (const text of amountsIn(language)) {
-        const compactAmount = within(compact).getByText(text);
-        expect(compactAmount.closest('bdi[dir="ltr"]')?.textContent).toBe(text);
+        expect(
+          within(balance).getByText(text).closest('bdi[dir="ltr"]')
+            ?.textContent,
+        ).toBe(text);
       }
       for (const [name, text] of [
-        ["Assets:Empty", "-"],
+        ["Assets:Empty", "0"],
         ["Assets:Zero", `${formatSourceDecimal("0.00", true, language)} USD`],
         ["Income:Salary", language === "fa" ? "محاسبه نشده" : "Not computed"],
       ]) {
         const stateRow = within(table)
           .getByRole("button", { name })
           .closest("tr")!;
-        expect(compactBalance(stateRow).textContent).toBe(text);
-        expect(within(stateRow).getAllByRole("cell")[5].textContent).toBe(text);
+        expect(within(stateRow).getAllByRole("cell")[3].textContent).toBe(text);
       }
     },
   );
 
   it.each(["en", "fa"] as const)(
-    "preserves %s status, row action focus, and account-prefix keyboard navigation",
+    "preserves %s row action focus and account-prefix keyboard navigation",
     async (language) => {
       const { router, table, row, requests } = await setup(language);
-      expect(within(row).getAllByRole("cell")[1]).toHaveTextContent(
-        language === "fa" ? "باز" : "Open",
-      );
       const emptyRow = within(table)
         .getByRole("button", { name: "Assets:Empty" })
         .closest("tr")!;
@@ -309,10 +301,10 @@ describe("compact Accounts balances", () => {
       const user = userEvent.setup();
       act(() => trigger.focus());
       await user.keyboard("{ArrowDown}");
-      const close = await screen.findByRole("menuitem", {
-        name: language === "fa" ? "بستن" : "Close",
+      const openRegister = await screen.findByRole("menuitem", {
+        name: language === "fa" ? "باز کردن دفتر حساب" : "Open register",
       });
-      await waitFor(() => expect(close).toHaveFocus());
+      await waitFor(() => expect(openRegister).toHaveFocus());
       await user.keyboard("{Escape}");
       await waitFor(() => expect(trigger).toHaveFocus());
       const prefix = within(row).getByRole("button", { name: "Assets:بانک" });

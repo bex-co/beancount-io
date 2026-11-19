@@ -53,6 +53,9 @@ interface DatePickerProps {
  * Values are `yyyy-MM-dd` days, so a day the browser timezone skipped (e.g.
  * 2011-12-30 in Pacific/Apia) stays enterable, in the calendar too.
  */
+/** Every date field shows a date the way the ledger writes it. */
+const DISPLAY_PATTERN = ISO_PATTERN;
+
 export function DatePicker({
   id,
   label,
@@ -67,17 +70,20 @@ export function DatePicker({
   const { t } = useTranslations();
   // Same resolved locale as the calendar popup: one source for both halves
   // of this control, never the browser locale.
-  const displayPattern = getDisplayPattern(useDateLocale());
-  // The hint is derived from the pattern actually parsed, so the two cannot
-  // drift apart; the tooltip additionally names the ISO fallback.
-  const hint = getPatternHint(displayPattern);
-  const isoHint = getPatternHint(ISO_PATTERN);
+  // A date is shown as the ledger writes it, yyyy-MM-dd, on every page and
+  // in every language; one typed in the language's own order is still
+  // read, and then shown the ledger's way.
+  const typedPattern = getDisplayPattern(useDateLocale());
+  // The placeholder shows the ledger's way; the tooltip names both orders
+  // the field reads, each derived from the pattern actually parsed.
+  const hint = getPatternHint(DISPLAY_PATTERN);
+  const typedHint = getPatternHint(typedPattern);
   const [open, setOpen] = React.useState(false);
   const [month, setMonth] = React.useState<Date | undefined>(
     value ? isoDateToCalendar(value) : undefined,
   );
   const [inputValue, setInputValue] = React.useState(
-    formatIsoDate(value, displayPattern),
+    formatIsoDate(value, DISPLAY_PATTERN),
   );
   const showMonthOf = (day: string | undefined) => {
     if (!day) return;
@@ -103,7 +109,7 @@ export function DatePicker({
     draftRef.current = inputValue;
   }, [inputValue]);
   const syncedValueRef = React.useRef(value);
-  const syncedPatternRef = React.useRef(displayPattern);
+  const syncedPatternRef = React.useRef(typedPattern);
 
   React.useEffect(() => {
     if (isEditing) return;
@@ -117,7 +123,7 @@ export function DatePicker({
     // it there, so a language switch still re-renders a valid date (m22).
     const draftPattern = syncedPatternRef.current;
     syncedValueRef.current = value;
-    syncedPatternRef.current = displayPattern;
+    syncedPatternRef.current = typedPattern;
     const draft = draftRef.current.trim();
     if (heldDraft) {
       if (echoRef.current === null || echoRef.current.value === value) {
@@ -126,7 +132,7 @@ export function DatePicker({
       }
       echoRef.current = null;
       setHeldDraft(false);
-      setInputValue(formatIsoDate(value, displayPattern));
+      setInputValue(formatIsoDate(value, DISPLAY_PATTERN));
       showMonthOf(value);
       return;
     }
@@ -140,16 +146,16 @@ export function DatePicker({
     // A language change re-renders the same selected day in the new
     // pattern; the stored date is never reinterpreted (m22), and a
     // mid-edit draft is left untouched until blur or commit.
-    setInputValue(formatIsoDate(value, displayPattern));
+    setInputValue(formatIsoDate(value, DISPLAY_PATTERN));
     showMonthOf(value);
-  }, [value, displayPattern, isEditing, heldDraft]);
+  }, [value, typedPattern, isEditing, heldDraft]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
     setIsEditing(true);
     setInputValue(next);
 
-    const parsed = parseStrictCalendarDate(next, displayPattern);
+    const parsed = parseStrictCalendarDate(next, typedPattern);
     setHeldDraft(parsed === undefined);
     echoRef.current = null;
     onChange(parsed);
@@ -164,7 +170,7 @@ export function DatePicker({
     setHeldDraft(date === undefined);
     echoRef.current = null;
     onChange(date);
-    setInputValue(formatIsoDate(date, displayPattern));
+    setInputValue(formatIsoDate(date, DISPLAY_PATTERN));
     showMonthOf(date);
   };
 
@@ -201,15 +207,18 @@ export function DatePicker({
           disabled={disabled}
           value={inputValue}
           placeholder={hint}
-          title={t("common.dateInputFormat", { pattern: hint, iso: isoHint })}
+          title={t("common.dateInputFormat", {
+            pattern: typedHint,
+            iso: hint,
+          })}
           className="bg-background pr-10"
           onChange={handleInputChange}
           onBlur={() => {
             setIsEditing(false);
             // Normalize only a draft that parses; invalid text stays for the
             // user to correct.
-            if (value && parseStrictCalendarDate(inputValue, displayPattern)) {
-              setInputValue(formatIsoDate(value, displayPattern));
+            if (value && parseStrictCalendarDate(inputValue, typedPattern)) {
+              setInputValue(formatIsoDate(value, DISPLAY_PATTERN));
             }
           }}
           onKeyDown={(e) => {
@@ -226,7 +235,7 @@ export function DatePicker({
             formInvalid === true ||
             formInvalid === "true" ||
             (inputValue.trim().length > 0 &&
-              !parseStrictCalendarDate(inputValue, displayPattern)) ||
+              !parseStrictCalendarDate(inputValue, typedPattern)) ||
             (required && heldDraft && !isEditing && !inputValue.trim())
               ? true
               : undefined

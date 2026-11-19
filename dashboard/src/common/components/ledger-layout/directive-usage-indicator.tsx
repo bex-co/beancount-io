@@ -25,7 +25,7 @@ import { getNextTier } from "@/common/lib/subscription/tier-config";
  *
  * No collapsed/icon-only variant: the sidebar collapses to an icon rail, and
  * this usage card can't shrink to that width, so its wrapper in
- * `ledger-sidebar.tsx` hides it (`group-data-[collapsible=icon]:hidden`) when
+ * `ledger-sidebar.tsx` hides it (`rail:hidden`) when
  * collapsed rather than rendering a cramped partial state here.
  */
 export const DirectiveUsageIndicator = memo(

@@ -25,7 +25,7 @@ import {
   type FiscalYearEnd,
 } from "../../export/reporting-period";
 import { formatStatementDate } from "../../export/date";
-import { AccountName } from "./account-name";
+import { AccountName } from "@/common/components/account-name";
 import { FormattedAmounts } from "./formatted-amounts";
 
 type Side = AccountBalanceRow["kind"];
@@ -111,7 +111,7 @@ function BalanceSide({
       <div className="flex items-baseline gap-3 px-5 pt-4 pb-3">
         <h3
           id={headingId}
-          className="flex-1 text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase"
+          className="flex-1 text-sm font-semibold text-foreground"
         >
           {kind === "asset" ? t("common.assets") : t("common.liabilities")}
         </h3>

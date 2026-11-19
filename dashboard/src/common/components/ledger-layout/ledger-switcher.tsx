@@ -76,7 +76,7 @@ function LedgerSwitcherButtonContent({
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
           <img src="/lgasset/logo.png" alt="" className="h-8 w-8 rounded" />
         </div>
-        <div className="flex flex-col items-start min-w-0 group-data-[collapsible=icon]:hidden">
+        <div className="flex flex-col items-start min-w-0 rail:hidden">
           <Link
             to="/ledger/$username"
             params={{ username: owner ?? "" }}
@@ -93,7 +93,7 @@ function LedgerSwitcherButtonContent({
         </div>
       </div>
       {showSelectIcon && (
-        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50 group-data-[collapsible=icon]:hidden" />
+        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50 rail:hidden" />
       )}
     </div>
   );
@@ -234,7 +234,7 @@ function LedgerAuthenticatedSwitcher({
 
         {/* Parts 2 & 3: Owner link and Repo popover trigger.
             Hidden when the sidebar is collapsed to the icon rail. */}
-        <div className="flex flex-col justify-center min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+        <div className="flex flex-col justify-center min-w-0 flex-1 rail:hidden">
           {owner && (
             <Link
               to="/ledger/$username"

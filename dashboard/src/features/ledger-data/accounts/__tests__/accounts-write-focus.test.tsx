@@ -93,7 +93,12 @@ async function writeAndReload(
   await user.click(
     screen.getByRole("button", { name: /Actions for Assets:Qa/ }),
   );
-  await user.click(await screen.findByRole("menuitem", { name: action }));
+  // The menu says what Close closes: the account.
+  await user.click(
+    await screen.findByRole("menuitem", {
+      name: action === "Close" ? "Close Account" : action,
+    }),
+  );
   await user.click(screen.getByRole("button", { name: "confirm" }));
   expect(document.activeElement).toBe(document.body);
 

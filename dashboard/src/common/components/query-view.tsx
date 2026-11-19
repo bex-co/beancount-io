@@ -21,6 +21,8 @@ interface QueryViewProps<T> {
    * mapped to a localized, user-safe message (never the raw error.message).
    */
   errorMessage?: string;
+  /** Draw the error without its own card, inside the page's. */
+  errorFramed?: boolean;
   /**
    * Offered on the error state as Try Again, usually the query's `refetch`.
    * While the promise it returns is pending, the error state stays, busy
@@ -41,6 +43,7 @@ export function QueryView<T>({
   data,
   loadingSlot,
   errorMessage,
+  errorFramed,
   onRetry,
   isEmpty,
   emptySlot,
@@ -66,6 +69,7 @@ export function QueryView<T>({
         error={failure}
         onRetry={onRetry && retry}
         retrying={retrying}
+        framed={errorFramed}
       />
     );
   }

@@ -204,6 +204,7 @@ export function OpenAccountDialog({
                 <Button
                   type="button"
                   variant="outline"
+                  className="pointer-coarse:h-11"
                   onClick={() => requestLeave(dismiss)}
                 >
                   {t("common.cancel")}
@@ -212,6 +213,9 @@ export function OpenAccountDialog({
                   type="submit"
                   disabled={!form.formState.isValid}
                   loading={pending}
+                  // Unavailable reads as unavailable in both themes, not as
+                  // a dimmed version of the brand colour.
+                  className="disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none pointer-coarse:h-11"
                 >
                   {t("page.accounts.openAccount")}
                 </Button>

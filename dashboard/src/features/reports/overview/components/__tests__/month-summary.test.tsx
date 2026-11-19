@@ -126,7 +126,7 @@ describe("the month summary", () => {
         today="2026-09-10"
       />,
     );
-    expect(summary()).toBe("September 2026 · through Sep 10");
+    expect(summary()).toBe("September 2026 · through 2026-09-10");
   });
 
   it("opens a ledger that stopped long ago on its last whole month, and says when it stopped", async () => {
@@ -138,7 +138,7 @@ describe("the month summary", () => {
         today="2035-11-10"
       />,
     );
-    expect(summary()).toBe("August 2026Last entry Sep 8, 2026 (9 years ago)");
+    expect(summary()).toBe("August 2026Last entry 2026-09-08 (9 years ago)");
   });
 
   it("steps the month from the dateline", async () => {

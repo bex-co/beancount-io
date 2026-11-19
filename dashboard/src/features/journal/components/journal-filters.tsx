@@ -3,7 +3,7 @@ import { DirectiveType } from "@/common/types/journal";
 import { cn } from "@/common/lib/utils/utils";
 import { Separator } from "@/common/components/ui/separator";
 import { useState, useSyncExternalStore } from "react";
-import { filterButtonState } from "./journal-filter-button-state";
+import { filterChip } from "@/common/components/filter-chip";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
   Popover,
@@ -275,19 +275,14 @@ export function JournalFilters({
         onClick={() => handleButtonClick(button)}
         title={button.titleKey ? t(button.titleKey) : undefined}
         aria-pressed={isButtonActive(button)}
-        className={cn(
-          "h-8 shrink-0 border text-xs pointer-coarse:h-11",
-          filterButtonState(isButtonActive(button)),
-          // In the panel, an unchosen type still reads as a choice.
-          !isButtonActive(button) && "border-border text-foreground/80",
-        )}
+        className={filterChip(isButtonActive(button))}
       >
         {t(button.labelKey)}
       </Button>
 
       {/* Kinds of document or custom entry, inside the type they narrow. */}
       {button.id === "document" && isButtonActive(button) && (
-        <div className="flex gap-0.5 rounded-full bg-muted/70 p-0.5">
+        <div className="flex gap-1">
           {documentSubtypeButtons.map((subButton) => (
             <Button
               key={subButton.id}
@@ -300,8 +295,8 @@ export function JournalFilters({
               }
               aria-pressed={isButtonActive(subButton)}
               className={cn(
-                "h-7 min-w-7 rounded-full border px-2 font-mono text-xs pointer-coarse:size-11",
-                filterButtonState(isButtonActive(subButton)),
+                filterChip(isButtonActive(subButton)),
+                "min-w-8 font-mono",
               )}
               disabled={isButtonDisabled(subButton)}
             >
@@ -312,7 +307,7 @@ export function JournalFilters({
       )}
 
       {button.id === "custom" && isButtonActive(button) && (
-        <div className="flex gap-0.5 rounded-full bg-muted/70 p-0.5">
+        <div className="flex gap-1">
           {customSubtypeButtons.map((subButton) => (
             <Button
               key={subButton.id}
@@ -325,8 +320,8 @@ export function JournalFilters({
               }
               aria-pressed={isButtonActive(subButton)}
               className={cn(
-                "h-7 min-w-7 rounded-full border px-2 font-mono text-xs pointer-coarse:size-11",
-                filterButtonState(isButtonActive(subButton)),
+                filterChip(isButtonActive(subButton)),
+                "min-w-8 font-mono",
               )}
               disabled={isButtonDisabled(subButton)}
             >
@@ -346,7 +341,7 @@ export function JournalFilters({
     <div
       role="group"
       aria-label={t("journal.statusLabel")}
-      className="flex w-fit max-w-full flex-wrap gap-0.5 rounded-[1.125rem] bg-muted/70 p-0.5"
+      className="flex w-fit max-w-full flex-wrap gap-1"
     >
       <Button
         variant={
@@ -355,10 +350,7 @@ export function JournalFilters({
         size="sm"
         onClick={() => onTransactionSubtypesChange([])}
         aria-pressed={selectedTransactionSubtypes.length === 0}
-        className={cn(
-          "h-7 rounded-full border px-2.5 text-xs pointer-coarse:h-11 pointer-coarse:px-4",
-          filterButtonState(selectedTransactionSubtypes.length === 0),
-        )}
+        className={filterChip(selectedTransactionSubtypes.length === 0)}
       >
         {t("journal.allEntryTypes")}
       </Button>
@@ -371,10 +363,7 @@ export function JournalFilters({
           title={subButton.titleKey ? t(subButton.titleKey) : undefined}
           aria-label={subButton.titleKey ? t(subButton.titleKey) : undefined}
           aria-pressed={isButtonActive(subButton)}
-          className={cn(
-            "h-7 min-w-7 gap-1 rounded-full border px-2.5 text-xs pointer-coarse:h-11",
-            filterButtonState(isButtonActive(subButton)),
-          )}
+          className={cn(filterChip(isButtonActive(subButton)), "min-w-8")}
           disabled={isButtonDisabled(subButton)}
         >
           {/* The ledger's own flag, then what it means. "Other" is every
@@ -397,10 +386,7 @@ export function JournalFilters({
       onClick={() => handleButtonClick(button)}
       title={button.titleKey ? t(button.titleKey) : undefined}
       aria-pressed={isButtonActive(button)}
-      className={cn(
-        "h-8 shrink-0 border text-xs pointer-coarse:h-11",
-        filterButtonState(isButtonActive(button)),
-      )}
+      className={filterChip(isButtonActive(button))}
     >
       {t(button.labelKey)}
     </Button>
@@ -413,7 +399,7 @@ export function JournalFilters({
     <div
       role="group"
       aria-label={t("journal.layoutLabel")}
-      className="flex gap-0.5 rounded-md bg-muted/70 p-0.5"
+      className="flex gap-1"
     >
       {(
         [
@@ -429,10 +415,7 @@ export function JournalFilters({
           title={label}
           aria-pressed={density === value}
           onClick={() => onDensityChange?.(value)}
-          className={cn(
-            "h-7 gap-1.5 border px-2 text-xs pointer-coarse:h-11 pointer-coarse:min-w-11",
-            filterButtonState(density === value),
-          )}
+          className={filterChip(density === value, { iconOnly: !withWords })}
         >
           <Icon aria-hidden="true" className="size-3.5" />
           <span className={withWords ? undefined : "sr-only"}>{label}</span>

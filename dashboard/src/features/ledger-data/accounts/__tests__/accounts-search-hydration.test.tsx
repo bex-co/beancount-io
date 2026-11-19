@@ -111,7 +111,8 @@ describe("Accounts search before and after hydration", () => {
     const pills = [
       ...container.querySelectorAll<HTMLButtonElement>("button[aria-pressed]"),
     ];
-    expect(pills.map((p) => p.textContent)).toEqual([
+    // Each pill also counts its type (none, in this empty ledger).
+    expect(pills.map((p) => p.textContent?.replace(/0$/, ""))).toEqual([
       "All Types",
       "Assets",
       "Liabilities",

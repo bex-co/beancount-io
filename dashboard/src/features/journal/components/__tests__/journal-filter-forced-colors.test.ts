@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { compileAppCss, parseRules } from "@/test/tailwind";
-import { filterButtonState } from "../journal-filter-button-state";
+import { filterButtonState } from "@/common/components/filter-chip";
 
 /**
  * Forced colors drops the box-shadow and maps both states' text and border

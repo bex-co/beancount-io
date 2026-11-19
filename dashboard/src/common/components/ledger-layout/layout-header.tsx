@@ -78,7 +78,9 @@ export function LayoutHeader({ ledgerId }: { ledgerId: string }) {
   // On desktop the sidebar now collapses to an icon rail (not fully off), so
   // keep the toggle always visible to make collapsing discoverable. On mobile
   // it opens the off-canvas sheet, so only show it while the sheet is closed.
-  const showTrigger = isMobile ? !openMobile : true;
+  // Only a phone needs it here: its sidebar is a drawer with no other way
+  // in. Wider, the sidebar is always on screen and carries its own control.
+  const showTrigger = isMobile && !openMobile;
   const shouldShowFilters = shouldShowLedgerFilters(location.pathname);
   const activeFilterCount = Object.values(searchParams).filter(
     (value) => value !== "",

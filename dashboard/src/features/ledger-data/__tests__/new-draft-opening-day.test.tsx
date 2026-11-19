@@ -73,7 +73,7 @@ function Harness({ Dialog }: { Dialog: Dialog }) {
 
 /** Local civil time, the clock `todayIsoDate()` reads. */
 const at = (day: number) => vi.setSystemTime(new Date(2026, 9, day, 12));
-const date = () => screen.getByPlaceholderText("MM/DD/YYYY");
+const date = () => screen.getByPlaceholderText("YYYY-MM-DD");
 
 /**
  * Both dialogs stay mounted while closed. A draft opened after the dialog
@@ -97,7 +97,7 @@ describe.each<[string, Dialog, string]>([
     at(22);
 
     fireEvent.click(screen.getByRole("button", { name: "Start draft" }));
-    expect(date()).toHaveValue("10/22/2026");
+    expect(date()).toHaveValue("2026-10-22");
   });
 
   it("keeps a chosen date across midnight, and a reopened draft starts on the new day", () => {
@@ -112,7 +112,7 @@ describe.each<[string, Dialog, string]>([
     fireEvent.change(screen.getByLabelText(accountLabel), {
       target: { value: "Assets:Cash" },
     });
-    expect(date()).toHaveValue("10/23/2026");
+    expect(date()).toHaveValue("2026-10-23");
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     // Add Budget asks before discarding a typed draft (w2/123).
@@ -120,7 +120,7 @@ describe.each<[string, Dialog, string]>([
       fireEvent.click(screen.getByRole("button", { name: "Discard" }));
     }
     fireEvent.click(screen.getByRole("button", { name: "Start draft" }));
-    expect(date()).toHaveValue("10/24/2026");
+    expect(date()).toHaveValue("2026-10-24");
     expect(screen.getByLabelText(accountLabel)).toHaveValue("");
   });
 });

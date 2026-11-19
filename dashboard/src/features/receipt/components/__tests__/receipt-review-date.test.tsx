@@ -58,7 +58,7 @@ describe("ReceiptReviewForm date prefill", () => {
       />,
     );
 
-    expect(container.querySelector("#receipt-date")).toHaveValue("12/30/2011");
+    expect(container.querySelector("#receipt-date")).toHaveValue("2011-12-30");
     expect(screen.getByText(/^2011-12-30 \* "Cafe"/)).toBeInTheDocument();
 
     await userEvent

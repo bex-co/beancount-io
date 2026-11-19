@@ -80,7 +80,8 @@ describe("DatePicker calendar clear (w4/1070)", () => {
     }
     render(<EchoingDatePicker />);
     const input = screen.getByRole("textbox");
-    expect(input).toHaveValue("10/01/2026");
+    // Shown as the ledger writes it, in every language.
+    expect(input).toHaveValue("2026-10-01");
 
     const day = () =>
       document.querySelector<HTMLElement>('[data-day="10/1/2026"]')!;
@@ -91,7 +92,7 @@ describe("DatePicker calendar clear (w4/1070)", () => {
     // No phantom selection remains: choosing the same day selects it again.
     await user.click(screen.getByRole("button", { name: "Select date" }));
     await user.click(day());
-    expect(input).toHaveValue("10/01/2026");
+    expect(input).toHaveValue("2026-10-01");
   });
 });
 
@@ -125,7 +126,7 @@ describe("DatePicker typing contract", () => {
     render(<ControlledDatePicker initial={"2025-06-15"} onValue={onValue} />);
 
     const input = screen.getByRole("textbox");
-    expect(input).toHaveValue("06/15/2025");
+    expect(input).toHaveValue("2025-06-15");
 
     await user.clear(input);
     expect(input).toHaveValue("");
@@ -188,7 +189,7 @@ describe("DatePicker calendar year range", () => {
     expect(screen.queryByRole("button", { name: /February 29/ })).toBeNull();
     await user.click(screen.getByRole("button", { name: /February 28/ }));
     expect(onValue).toHaveBeenLastCalledWith("0001-02-28");
-    expect(screen.getByRole("textbox")).toHaveValue("02/28/0001");
+    expect(screen.getByRole("textbox")).toHaveValue("0001-02-28");
   });
 
   it("offers no year past 9999", async () => {
@@ -248,25 +249,25 @@ describe("DatePicker calendar year range", () => {
 });
 
 describe("DatePicker locale ordering", () => {
-  it("shows the month-first hint and ISO fallback under English", () => {
+  it("shows the ledger's order and names the month-first one it also reads under English", () => {
     render(<ControlledDatePicker onValue={vi.fn()} />);
 
     const input = screen.getByRole("textbox");
-    expect(input).toHaveAttribute("placeholder", "MM/DD/YYYY");
+    expect(input).toHaveAttribute("placeholder", "YYYY-MM-DD");
     expect(input).toHaveAttribute(
       "title",
       "Enter a date as MM/DD/YYYY or YYYY-MM-DD",
     );
   });
 
-  it("shows the day-first hint and reads day-first input under French", async () => {
+  it("names the day-first order and reads day-first input under French", async () => {
     mocks.dateLocale = fr;
     const user = userEvent.setup();
     const onValue = vi.fn();
     render(<ControlledDatePicker onValue={onValue} />);
 
     const input = screen.getByRole("textbox");
-    expect(input).toHaveAttribute("placeholder", "DD/MM/YYYY");
+    expect(input).toHaveAttribute("placeholder", "YYYY-MM-DD");
     expect(input).toHaveAttribute(
       "title",
       "Enter a date as DD/MM/YYYY or YYYY-MM-DD",
@@ -277,18 +278,19 @@ describe("DatePicker locale ordering", () => {
     expect(onValue).toHaveBeenLastCalledWith("2025-06-15");
   });
 
-  it("re-renders the same date on language change without republishing (m22)", () => {
+  it("keeps the same date on language change without republishing (m22)", () => {
     const onValue = vi.fn();
     const { rerender } = render(
       <ControlledDatePicker initial={"2025-06-15"} onValue={onValue} />,
     );
-    expect(screen.getByRole("textbox")).toHaveValue("06/15/2025");
+    expect(screen.getByRole("textbox")).toHaveValue("2025-06-15");
 
     mocks.dateLocale = fr;
     rerender(<ControlledDatePicker initial={"2025-06-15"} onValue={onValue} />);
 
-    // Same selected day in French clothes; the stored date is untouched.
-    expect(screen.getByRole("textbox")).toHaveValue("15/06/2025");
+    // The same day, still written the ledger's way; the stored date is
+    // untouched.
+    expect(screen.getByRole("textbox")).toHaveValue("2025-06-15");
     expect(onValue).not.toHaveBeenCalled();
   });
 
@@ -341,7 +343,7 @@ describe("DatePicker inside react-hook-form", () => {
     render(<FormDatePicker defaultDate="2026-10-15" />);
 
     const input = screen.getByRole("textbox");
-    expect(input).toHaveValue("10/15/2026");
+    expect(input).toHaveValue("2026-10-15");
     await user.clear(input);
     await user.type(input, "2026-02-30");
     await user.tab();
@@ -350,16 +352,16 @@ describe("DatePicker inside react-hook-form", () => {
     expect(input).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("still normalizes a valid ISO draft on blur", async () => {
+  it("still normalizes a valid draft on blur", async () => {
     const user = userEvent.setup();
     render(<FormDatePicker defaultDate="2026-10-15" />);
 
     const input = screen.getByRole("textbox");
     await user.clear(input);
-    await user.type(input, "2026-02-28");
+    await user.type(input, "02/28/2026");
     await user.tab();
 
-    expect(input).toHaveValue("02/28/2026");
+    expect(input).toHaveValue("2026-02-28");
     expect(input).not.toHaveAttribute("aria-invalid");
   });
 });
@@ -385,7 +387,7 @@ describe("DatePicker in a timezone that skipped a day", () => {
       await user.type(input, typed);
       expect(onValue).toHaveBeenLastCalledWith("2011-12-30");
       await user.tab();
-      expect(input).toHaveValue("12/30/2011");
+      expect(input).toHaveValue("2011-12-30");
       expect(input).not.toHaveAttribute("aria-invalid");
     }
   });
@@ -414,7 +416,7 @@ describe("DatePicker in a timezone that skipped a day", () => {
       screen.getByRole("button", { name: "Thursday, December 29th, 2011" }),
     );
     expect(onValue).toHaveBeenLastCalledWith("2011-12-29");
-    expect(screen.getByRole("textbox")).toHaveValue("12/29/2011");
+    expect(screen.getByRole("textbox")).toHaveValue("2011-12-29");
   });
 
   it("commits the local Today", async () => {
@@ -535,7 +537,7 @@ describe("DatePicker draft after an earlier valid edit (w4/239)", () => {
     await user.tab();
 
     await user.click(screen.getByRole("button", { name: "Reset" }));
-    expect(input).toHaveValue("12/01/2026");
+    expect(input).toHaveValue("2026-12-01");
     expect(input).not.toHaveAttribute("aria-invalid");
   });
 });

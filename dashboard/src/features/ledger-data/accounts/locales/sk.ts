@@ -78,11 +78,6 @@ const skAccounts: Record<string, TranslationEntry> = {
     message: "Účty",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "Všetky beancount účty v {ledgerName}",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "Všetky typy",
     description: "Filter option to show all event types",
@@ -108,10 +103,6 @@ const skAccounts: Record<string, TranslationEntry> = {
     message: "Toto pridá direktívu uzavretia pre {account} dňa {date}.",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "Dátum uzavretia",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "Uzavretý",
@@ -140,10 +131,6 @@ const skAccounts: Record<string, TranslationEntry> = {
     message: "Načítavam obsah záznamu...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "Nový",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "Nenašli sa žiadne účty",
     description: "Empty state title when no accounts exist or match filters",
@@ -170,10 +157,6 @@ const skAccounts: Record<string, TranslationEntry> = {
     message: "Hľadať účty...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "Stav",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "Typ",
     description: "Table column header for type",
@@ -186,6 +169,82 @@ const skAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "Účet {account} bol odstránený",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_one": {
+    message: "{shown} účet",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_few": {
+    message: "{shown} účty",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_many": {
+    message: "{shown} účtu",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_other": {
+    message: "{shown} účtov",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "Otvoriť kartu účtu",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "Zatvoriť možno len účet s nulovým zostatkom.",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "Odstrániť možno len účet bez zápisov.",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "Zostatky sa nepočítajú",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "Súčty za obdobie:",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "Ostatné",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "Súčty:",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message:
+      "Vo vašej knihe sa nič nezmenilo. Skúste to znova alebo sa vráťte o minútu.",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "s podúčtami",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "Záporný zostatok je to, čo dlhujete",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "Žiadny názov účtu neobsahuje „{query}“.",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

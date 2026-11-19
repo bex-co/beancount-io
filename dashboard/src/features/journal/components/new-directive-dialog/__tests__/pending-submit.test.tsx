@@ -435,11 +435,11 @@ describe.each([
     await waitFor(() => expect(held).toHaveLength(1));
     await act(async () => {});
     expect(held).toHaveLength(1);
-    expect(screen.getByPlaceholderText("MM/DD/YYYY")).toBeDisabled();
+    expect(screen.getByPlaceholderText("YYYY-MM-DD")).toBeDisabled();
 
     await act(async () => held[0]!.reject());
     await waitFor(() =>
-      expect(screen.getByPlaceholderText("MM/DD/YYYY")).toBeEnabled(),
+      expect(screen.getByPlaceholderText("YYYY-MM-DD")).toBeEnabled(),
     );
     fireEvent.submit(form);
     await waitFor(() => expect(held).toHaveLength(2));

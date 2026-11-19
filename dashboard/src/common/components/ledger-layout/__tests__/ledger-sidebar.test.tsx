@@ -1,10 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LedgerSidebar } from "../ledger-sidebar";
 
 const mocks = vi.hoisted(() => ({
   setOpenMobile: vi.fn(),
+  toggleSidebar: vi.fn(),
+  sidebar: { isMobile: false, state: "expanded" },
   errorsDocument: {},
   eventsDocument: {},
   errors: [] as Array<{ message: string }>,
@@ -100,9 +102,9 @@ vi.mock("@/common/components/ui/sidebar.tsx", () => ({
   ),
   SidebarRail: () => null,
   useSidebar: () => ({
-    isMobile: false,
-    state: "expanded",
+    ...mocks.sidebar,
     setOpenMobile: mocks.setOpenMobile,
+    toggleSidebar: mocks.toggleSidebar,
   }),
 }));
 
@@ -356,5 +358,38 @@ describe("LedgerSidebar", () => {
       );
       expect(screen.getByRole("link", { name: "Trial Balance" })).toBeVisible();
     });
+  });
+});
+
+describe("LedgerSidebar's own collapse control", () => {
+  afterEach(() => {
+    mocks.sidebar = { isMobile: false, state: "expanded" };
+  });
+
+  it("offers Collapse while open and Expand on the rail, from a tablet up", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <LedgerSidebar ledgerId="alice/book" currentPath="/ledger/alice/book" />,
+    );
+    await user.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    expect(mocks.toggleSidebar).toHaveBeenCalledTimes(1);
+
+    mocks.sidebar = { isMobile: false, state: "collapsed" };
+    rerender(
+      <LedgerSidebar ledgerId="alice/book" currentPath="/ledger/alice/book" />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Expand sidebar" }),
+    ).toBeInTheDocument();
+  });
+
+  it("leaves a phone's drawer to the header's control", () => {
+    mocks.sidebar = { isMobile: true, state: "expanded" };
+    render(
+      <LedgerSidebar ledgerId="alice/book" currentPath="/ledger/alice/book" />,
+    );
+    expect(
+      screen.queryByRole("button", { name: /sidebar/i }),
+    ).not.toBeInTheDocument();
   });
 });

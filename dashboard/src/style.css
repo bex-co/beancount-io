@@ -11,6 +11,21 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* The sidebar as its icon rail: collapsed by the reader, or on a tablet or
+   small laptop (768–1279px), where it rests as the rail unless opened over
+   the page. The media query answers from the first paint, before script
+   knows the width (components/ui/sidebar.tsx, the three tiers). */
+@custom-variant rail {
+  &:is([data-slot="sidebar"][data-collapsible="icon"] *) {
+    @slot;
+  }
+  @media (width >= 48rem) and (width < 80rem) {
+    &:is([data-slot="sidebar"][data-rail="auto"] *) {
+      @slot;
+    }
+  }
+}
+
 /* The selected look of a pressed, highlighted or chosen control in forced
    colors (w4/m43). Add it behind the control's own state variant, such as
    `aria-pressed:forced-selected` or `data-[state=active]:forced-selected`.

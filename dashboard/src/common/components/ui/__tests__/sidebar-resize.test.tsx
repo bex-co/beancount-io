@@ -64,6 +64,12 @@ describe("SidebarRail drag-to-resize", () => {
     Cookies.remove(SIDEBAR_WIDTH_COOKIE, { path: "/" });
     Cookies.remove(SIDEBAR_STATE_COOKIE, { path: "/" });
 
+    // A desktop window: from 1280px the sidebar sits beside the page, where
+    // it can be resized and its open state is kept.
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 1440,
+    });
     originalMatchMedia = window.matchMedia;
     Object.defineProperty(window, "matchMedia", {
       writable: true,
@@ -91,6 +97,10 @@ describe("SidebarRail drag-to-resize", () => {
       writable: true,
       configurable: true,
       value: originalMatchMedia,
+    });
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 1024,
     });
     Cookies.remove(SIDEBAR_WIDTH_COOKIE, { path: "/" });
     Cookies.remove(SIDEBAR_STATE_COOKIE, { path: "/" });

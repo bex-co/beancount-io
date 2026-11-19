@@ -76,11 +76,6 @@ const koAccounts: Record<string, TranslationEntry> = {
     message: "계정",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "{ledgerName}의 모든 복식부기 계정",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "모든 유형",
     description: "Filter option to show all event types",
@@ -106,10 +101,6 @@ const koAccounts: Record<string, TranslationEntry> = {
     message: "{date}에 {account}의 폐쇄 지시문을 추가합니다.",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "폐쇄일",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "폐쇄됨",
@@ -137,10 +128,6 @@ const koAccounts: Record<string, TranslationEntry> = {
     message: "항목 내용 불러오는 중...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "새로 만들기",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "계정을 찾을 수 없습니다",
     description: "Empty state title when no accounts exist or match filters",
@@ -167,10 +154,6 @@ const koAccounts: Record<string, TranslationEntry> = {
     message: "계정 검색...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "상태",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "유형",
     description: "Table column header for type",
@@ -183,6 +166,67 @@ const koAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "계정 {account} 삭제됨",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_other": {
+    message: "계정 {shown}개",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "계정 원장 열기",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "잔액이 0인 계정만 닫을 수 있습니다.",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "게시가 없는 계정만 삭제할 수 있습니다.",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "잔액은 계산되지 않음",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "기간별 합계:",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "기타",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "합계:",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message:
+      "원장은 변경되지 않았습니다. 다시 시도하거나 잠시 후 다시 열어 주세요.",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "하위 계정 포함",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "음수 잔액은 갚아야 할 금액입니다",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "'{query}'이(가) 포함된 계정 이름이 없습니다.",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

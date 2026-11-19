@@ -171,8 +171,10 @@ export function LedgerLayout() {
                 className={cn(
                   "relative flex min-h-0 flex-1 flex-col",
                   isCommitWorkspace ? "overflow-hidden" : "overflow-auto",
-                  // The viewport decides, from the first paint.
-                  "p-2 md:p-6",
+                  // The viewport decides, from the first paint. One gutter
+                  // for every ledger page: 16px on a phone, 24px wider.
+                  // Pinned table headings offset by the same amounts.
+                  "p-4 md:p-6",
                 )}
               >
                 <div className="max-w-full flex-1 flex flex-col min-h-0">

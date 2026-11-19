@@ -74,11 +74,6 @@ const zhAccounts: Record<string, TranslationEntry> = {
     message: "账户",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "在 {ledgerName} 中的所有 beancount 账户",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "所有类型",
     description: "Filter option to show all event types",
@@ -104,10 +99,6 @@ const zhAccounts: Record<string, TranslationEntry> = {
     message: "这将为 {account} 在 {date} 添加关闭指令。",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "关闭日期",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "已关闭",
@@ -135,10 +126,6 @@ const zhAccounts: Record<string, TranslationEntry> = {
     message: "加载条目内容中...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "新建",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "未找到账户",
     description: "Empty state title when no accounts exist or match filters",
@@ -165,10 +152,6 @@ const zhAccounts: Record<string, TranslationEntry> = {
     message: "搜索账户...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "状态",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "类型",
     description: "Table column header for type",
@@ -181,6 +164,66 @@ const zhAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "帐户 {account} 已删除",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_other": {
+    message: "{shown} 个账户",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "打开账户明细",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "只有余额为零的账户才能关闭。",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "只有没有过账的账户才能删除。",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "不计算余额",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "按期间汇总：",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "其他",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "合计：",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message: "账本没有任何改动。请再试一次，或稍后再来。",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "含子账户",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "负余额即你所欠的金额",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "没有账户名称包含“{query}”。",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

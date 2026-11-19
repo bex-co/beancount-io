@@ -78,11 +78,6 @@ const jaAccounts: Record<string, TranslationEntry> = {
     message: "口座",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "{ledgerName}のすべての複式帳簿口座",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "すべてのタイプ",
     description: "Filter option to show all event types",
@@ -108,10 +103,6 @@ const jaAccounts: Record<string, TranslationEntry> = {
     message: "{date}に{account}の閉鎖ディレクティブを追加します。",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "閉鎖日",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "閉鎖済み",
@@ -139,10 +130,6 @@ const jaAccounts: Record<string, TranslationEntry> = {
     message: "エントリコンテンツを読み込み中...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "新規",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "口座が見つかりません",
     description: "Empty state title when no accounts exist or match filters",
@@ -169,10 +156,6 @@ const jaAccounts: Record<string, TranslationEntry> = {
     message: "口座を検索...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "ステータス",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "タイプ",
     description: "Table column header for type",
@@ -185,6 +168,67 @@ const jaAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "アカウント {account} が削除されました",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_other": {
+    message: "{shown} 口座",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "口座の明細を開く",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "残高がゼロの口座のみ閉鎖できます。",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "ポスティングのない口座のみ削除できます。",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "残高は未計算",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "期間ごとの合計:",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "その他",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "合計:",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message:
+      "台帳には何も変更はありません。もう一度試すか、少し待ってから開き直してください。",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "子口座を含む",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "マイナス残高は支払うべき額です",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "「{query}」を含む口座名はありません。",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

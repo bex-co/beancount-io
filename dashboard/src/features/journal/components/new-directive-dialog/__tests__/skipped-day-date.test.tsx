@@ -115,7 +115,7 @@ async function typeDate(typed: string) {
   const input = screen.getByRole("textbox", { name: "Date" });
   fireEvent.change(input, { target: { value: typed } });
   fireEvent.blur(input);
-  await waitFor(() => expect(input).toHaveValue("12/30/2011"));
+  await waitFor(() => expect(input).toHaveValue("2011-12-30"));
   expect(input).not.toHaveAttribute("aria-invalid");
   return user;
 }

@@ -28,6 +28,11 @@ interface ReportErrorStateProps {
   onRetry?: () => void;
   /** A retry is in flight: Try Again is busy and refuses another. */
   retrying?: boolean;
+  /**
+   * Drawn in a card of its own (the default), or bare, for a page whose
+   * own card already frames the place the content would be.
+   */
+  framed?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
@@ -118,6 +123,22 @@ export function ReportLoadingState({
  * Features accessible error icon, alert-style presentation, and optional retry
  * Fully accessible with proper ARIA attributes
  */
+function ErrorFrame({
+  framed,
+  children,
+}: {
+  framed: boolean;
+  children: ReactNode;
+}) {
+  return framed ? (
+    <Card className="overflow-hidden">
+      <CardContent>{children}</CardContent>
+    </Card>
+  ) : (
+    <div className="px-4">{children}</div>
+  );
+}
+
 export function ReportErrorState({
   title,
   message,
@@ -125,6 +146,7 @@ export function ReportErrorState({
   onRetry,
   retrying = false,
   className,
+  framed = true,
 }: ReportErrorStateProps = {}) {
   const { t } = useTranslations();
   const errorTitle = title || t("component.errorState.title");
@@ -136,45 +158,43 @@ export function ReportErrorState({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <Card className="overflow-hidden">
-        <CardContent>
-          <div
-            className="flex items-center justify-center py-12 sm:py-16 animate-in fade-in duration-300"
-            role="alert"
-            aria-live="assertive"
-          >
-            <div className="text-center space-y-4 max-w-sm mx-auto px-4">
-              {/* Error icon with subtle background */}
-              <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-destructive/10 animate-in zoom-in-50 duration-300">
-                <AlertCircle
-                  className="h-6 w-6 sm:h-7 sm:w-7 text-destructive"
-                  aria-hidden="true"
-                />
-              </div>
-              {/* Error title */}
-              <h3 className="text-base sm:text-lg font-semibold text-foreground">
-                {errorTitle}
-              </h3>
-              {/* Error message */}
-              <p className="text-sm sm:text-base text-muted-foreground">
-                {errorMessage}
-              </p>
-              {/* Optional retry button */}
-              {onRetry && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onRetry}
-                  loading={retrying}
-                  className="mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200"
-                >
-                  {t("common.tryAgain")}
-                </Button>
-              )}
+      <ErrorFrame framed={framed}>
+        <div
+          className="flex items-center justify-center py-12 sm:py-16 animate-in fade-in duration-300"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="text-center space-y-4 max-w-sm mx-auto px-4">
+            {/* Error icon with subtle background */}
+            <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-destructive/10 animate-in zoom-in-50 duration-300">
+              <AlertCircle
+                className="h-6 w-6 sm:h-7 sm:w-7 text-destructive"
+                aria-hidden="true"
+              />
             </div>
+            {/* Error title */}
+            <h3 className="text-base sm:text-lg font-semibold text-foreground">
+              {errorTitle}
+            </h3>
+            {/* Error message */}
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {errorMessage}
+            </p>
+            {/* Optional retry button */}
+            {onRetry && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRetry}
+                loading={retrying}
+                className="mt-2 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200 pointer-coarse:h-11 pointer-coarse:px-5"
+              >
+                {t("common.tryAgain")}
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </ErrorFrame>
     </div>
   );
 }

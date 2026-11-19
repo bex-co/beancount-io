@@ -79,11 +79,6 @@ const nlAccounts: Record<string, TranslationEntry> = {
     message: "Rekeningen",
     description: "Page title for the accounts list page",
   },
-  "page.accounts.allAccountsIn": {
-    message: "Alle beancount rekeningen in {ledgerName}",
-    description:
-      "Page description showing all accounts. {ledgerName} is replaced with the ledger display name.",
-  },
   "page.accounts.allTypes": {
     message: "Alle typen",
     description: "Filter option to show all event types",
@@ -109,10 +104,6 @@ const nlAccounts: Record<string, TranslationEntry> = {
     message: "Dit voegt een sluitingsdirectief toe voor {account} op {date}.",
     description:
       "Description shown in close account dialog. {account} is the account name, {date} is the close date.",
-  },
-  "page.accounts.closeDate": {
-    message: "Sluitingsdatum",
-    description: "Table column header for account close date",
   },
   "page.accounts.closed": {
     message: "Gesloten",
@@ -141,10 +132,6 @@ const nlAccounts: Record<string, TranslationEntry> = {
     message: "Inhoudsitem laden...",
     description: "Loading message when fetching entry content in delete dialog",
   },
-  "page.accounts.new": {
-    message: "Nieuw",
-    description: "Button text to create a new account",
-  },
   "page.accounts.noAccountsFound": {
     message: "Geen rekeningen gevonden",
     description: "Empty state title when no accounts exist or match filters",
@@ -171,10 +158,6 @@ const nlAccounts: Record<string, TranslationEntry> = {
     message: "Rekeningen zoeken...",
     description: "Placeholder text for accounts search input",
   },
-  "page.accounts.status": {
-    message: "Status",
-    description: "Table column header for account status (Open/Closed)",
-  },
   "page.accounts.type": {
     message: "Type",
     description: "Table column header for type",
@@ -187,6 +170,72 @@ const nlAccounts: Record<string, TranslationEntry> = {
   "page.accounts.accountDeletedToast": {
     message: "Account {account} verwijderd",
     description: "Toast shown after deleting an account",
+  },
+  "page.accounts.accountCount_one": {
+    message: "{shown} rekening",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.accountCount_other": {
+    message: "{shown} rekeningen",
+    description:
+      "Account count under the Accounts page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.accounts.openRegister": {
+    message: "Grootboekkaart openen",
+    description:
+      "Menu item on an Accounts row that opens that account's register (its running list of postings)",
+  },
+  "page.accounts.closeNeedsZeroBalance": {
+    message: "Alleen een rekening met saldo nul kan worden gesloten.",
+    description:
+      "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
+  },
+  "page.accounts.deleteNeedsNoPostings": {
+    message: "Alleen een rekening zonder boekingen kan worden verwijderd.",
+    description:
+      "Why Delete is unavailable for an account, shown under the greyed Delete item in its row menu",
+  },
+  "page.accounts.balancesNotComputed": {
+    message: "Saldi niet berekend",
+    description:
+      "Note in an account type's heading on the Accounts page when no balance is computed for that type (Equity)",
+  },
+  "page.accounts.periodTotals": {
+    message: "Totalen per periode:",
+    description:
+      "In the Income and Expenses headings on the Accounts page, before a link to the Income Statement, which has their totals by period",
+  },
+  "page.accounts.otherType": {
+    message: "Overige",
+    description:
+      "Heading on the Accounts page for accounts outside the five account types",
+  },
+  "page.accounts.totalsOn": {
+    message: "Totalen:",
+    description:
+      "In the Equity heading on the Accounts page, before a link to the Balance Sheet, which has Equity's totals",
+  },
+  "page.accounts.readFailedLedgerUnchanged": {
+    message:
+      "Er is niets veranderd in uw grootboek. Probeer het opnieuw of kom over een minuut terug.",
+    description:
+      "Message when the Accounts list could not be read, above Try Again: nothing was changed",
+  },
+  "page.accounts.withSubAccounts": {
+    message: "incl. subrekeningen",
+    description:
+      "Under a parent account's figure on the Accounts page: the total is what its sub-accounts hold, the parent itself holding nothing",
+  },
+  "page.accounts.liabilitiesOwed": {
+    message: "Een negatief saldo is wat u verschuldigd bent",
+    description:
+      "Note in the Liabilities heading on the Accounts page: Beancount records money owed as a negative balance",
+  },
+  "page.accounts.noMatchFor": {
+    message: "Geen rekeningnaam bevat ‘{query}’.",
+    description:
+      "Accounts page when a search finds nothing; {query} is what was typed",
   },
 };
 

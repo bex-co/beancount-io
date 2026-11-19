@@ -1,7 +1,6 @@
 import { ChevronLeft, ChevronRight, History } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import {
   type DataSeries,
   type IntervalDataSeries,
@@ -57,16 +56,12 @@ export function MonthSummary({
   const dormant = isLedgerDormant(dataThrough, today);
   const throughLabel = incomplete
     ? t("page.overview.dataThrough", {
-        date:
-          formatLedgerDate(dataThrough, language, {
-            month: "short",
-            day: "numeric",
-          }) ?? dataThrough,
+        // A ledger date, written as the ledger writes it, as every list
+        // on these pages does.
+        date: dataThrough,
       })
     : null;
-  const lastEntryDate =
-    formatLedgerDate(dataThrough, language, { dateStyle: "medium" }) ??
-    dataThrough;
+  const lastEntryDate = dataThrough;
   const lastEntry = dormant
     ? t("page.overview.lastEntry", {
         date: lastEntryDate,
@@ -114,7 +109,7 @@ export function MonthSummary({
             >
               <ChevronLeft className="size-4" />
             </Button>
-            <span className="min-w-[9.5rem] text-center font-mono text-[0.8125rem] font-semibold tracking-[0.12em] text-foreground uppercase sm:text-sm sm:tracking-[0.14em]">
+            <span className="min-w-[9.5rem] text-center text-sm font-semibold text-foreground">
               {formatPeriodMonth(selectedDate, language)}
               {throughLabel && !lastEntry && (
                 <span className="text-muted-foreground"> · {throughLabel}</span>

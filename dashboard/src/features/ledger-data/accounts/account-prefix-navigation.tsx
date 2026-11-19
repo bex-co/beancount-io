@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/common/lib/utils/utils";
 
@@ -23,71 +23,64 @@ export function AccountPrefixNavigation({
   const activePrefixIndex = focusedPrefixIndex ?? hoveredPrefixIndex;
 
   return (
-    // grid minmax(0,1fr) lets the table column shrink below the account
-    // name's intrinsic width so the name can truncate; a plain flex row
-    // would force the cell to the full name width.
+    // The whole name, always: its last part is what tells two accounts
+    // apart, so the name wraps after a colon rather than losing its end.
+    // The parent path is quiet and the last part carries the weight; in a
+    // narrow list only the last part shows here, the row setting the parent
+    // path under it.
     <div
-      className="grid max-w-full grid-cols-[minmax(0,1fr)] text-left outline-none"
+      className="grid max-w-full grid-cols-[minmax(0,1fr)] text-start outline-none"
       title={accountName}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-baseline gap-1.5">
         <span
-          className="min-w-0 max-w-[55cqw] truncate font-mono text-sm focus-within:text-clip @xl:max-w-none"
+          className="flex min-w-0 flex-wrap items-baseline text-base leading-snug [overflow-wrap:break-word] sm:text-sm sm:leading-6"
           onMouseLeave={() => setHoveredPrefixIndex(null)}
-          onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) {
-              event.currentTarget.scrollLeft = 0;
-            }
-          }}
         >
           {segments.map((segment, index) => {
             const accountPrefix = segments.slice(0, index + 1).join(":");
             const isInActivePrefix =
               activePrefixIndex !== null && index <= activePrefixIndex;
+            const isLeaf = index === segments.length - 1;
 
             return (
-              <button
-                key={accountPrefix}
-                type="button"
-                className={cn(
-                  "cursor-pointer py-0.5 outline-none transition-colors duration-150 motion-reduce:transition-none focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring/50",
-                  index === 0 && isInActivePrefix && "rounded-l-sm",
-                  index === activePrefixIndex && "rounded-r-sm",
-                  isInActivePrefix
-                    ? isClosed
+              <Fragment key={accountPrefix}>
+                <button
+                  type="button"
+                  className={cn(
+                    "min-w-6 cursor-pointer py-0.5 outline-none sm:py-0 pointer-coarse:pointer-events-none transition-colors duration-150 motion-reduce:transition-none focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring/50",
+                    index === 0 && isInActivePrefix && "rounded-s-sm",
+                    index === activePrefixIndex && "rounded-e-sm",
+                    isLeaf
+                      ? "text-start font-medium @max-lg:basis-full @max-lg:text-base"
+                      : "text-center @max-lg:hidden",
+                    // The part a click opens, highlighted in the neutral
+                    // hover of every row: green marks choices and money.
+                    isInActivePrefix
                       ? "bg-muted text-foreground"
-                      : "bg-primary/10 text-primary"
-                    : isClosed
-                      ? "text-muted-foreground hover:text-muted-foreground/80"
-                      : "text-primary hover:text-primary/80",
-                )}
-                aria-label={accountPrefix}
-                title={accountPrefix}
-                onMouseEnter={() => setHoveredPrefixIndex(index)}
-                onFocus={(event) => {
-                  setFocusedPrefixIndex(index);
-                  const viewport = event.currentTarget.parentElement;
-                  if (!viewport) return;
-                  const visible = viewport.getBoundingClientRect();
-                  const focused = event.currentTarget.getBoundingClientRect();
-                  if (focused.left < visible.left) {
-                    viewport.scrollLeft += focused.left - visible.left;
-                  } else if (focused.right > visible.right) {
-                    viewport.scrollLeft += focused.right - visible.right;
-                  }
-                }}
-                onBlur={() => setFocusedPrefixIndex(null)}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onAccountClick(accountPrefix);
-                }}
-              >
-                {index === 0 ? segment : `:${segment}`}
-              </button>
+                      : isClosed || !isLeaf
+                        ? "text-muted-foreground hover:text-foreground"
+                        : "text-foreground hover:text-primary",
+                  )}
+                  aria-label={accountPrefix}
+                  title={accountPrefix}
+                  onMouseEnter={() => setHoveredPrefixIndex(index)}
+                  onFocus={() => setFocusedPrefixIndex(index)}
+                  onBlur={() => setFocusedPrefixIndex(null)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onAccountClick(accountPrefix);
+                  }}
+                >
+                  {isLeaf ? segment : `${segment}:`}
+                </button>
+                {/* A line may break after each colon, never inside a part. */}
+                {!isLeaf && <wbr />}
+              </Fragment>
             );
           })}
         </span>
-        <ChevronRight className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-60 group-focus-within:opacity-60" />
+        <ChevronRight className="size-3.5 shrink-0 self-center opacity-0 transition-opacity group-hover:opacity-60 group-focus-within:opacity-60 motion-reduce:transition-none rtl:rotate-180" />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
+import { LedgerPage } from "@/common/components/ledger-page";
 import {
   useMemo,
   useRef,
@@ -575,14 +576,13 @@ export default function LedgerOverviewPage() {
   const narrativeOnly = Boolean(reportState) || !hasActivity;
 
   return (
-    // On a phone the shell's 8px edge is too tight for a page that reads
-    // like an article; the page adds 8px more, a 16px gutter.
+    // The ledger pages' shared column and gutter.
     // An article's page: the headline and its chart sit on the page itself,
     // and the modules under them are quiet tinted panels, with no outline or
     // shadow, so nothing frames a figure more loudly than the headline.
     // A module marked plain sits on the page like the hero, so the page
     // alternates between open charts and panels of detail.
-    <div className="mx-auto w-full max-w-[1360px] space-y-10 pb-4 max-sm:px-2 md:space-y-14 [&_[data-slot=card]:not([data-plain])]:rounded-2xl [&_[data-slot=card]:not([data-plain])]:border-0 [&_[data-slot=card]:not([data-plain])]:bg-muted/50 [&_[data-slot=card]:not([data-plain])]:shadow-none">
+    <LedgerPage className="space-y-10 pb-4 md:space-y-14 [&_[data-slot=card]:not([data-plain])]:rounded-xl [&_[data-slot=card]:not([data-plain])]:border-0 [&_[data-slot=card]:not([data-plain])]:bg-muted/50 [&_[data-slot=card]:not([data-plain])]:shadow-none">
       {/* The page's own header, not a card: the ledger's name, its actions,
           and the question box. Writers already know which page this is, so
           the sentence describing the dashboard is kept for public readers,
@@ -605,7 +605,9 @@ export default function LedgerOverviewPage() {
               // The ledger's name labels the page; the month's summary
               // below is what it says, so that is the larger type. A
               // public reader arrives without context: the title leads.
-              className={`font-semibold tracking-tight outline-none ${publicReader ? "text-2xl sm:text-3xl" : "truncate text-lg"}`}
+              // The ledger pages' title size; on its home page the
+              // ledger's own name is the title.
+              className={`text-2xl font-semibold tracking-tight outline-none ${publicReader ? "" : "truncate"}`}
             >
               {displayName}
             </h1>
@@ -621,12 +623,7 @@ export default function LedgerOverviewPage() {
           </div>
           <div className={headLayout.actions}>
             <LedgerWritePermission>
-              <Button
-                asChild
-                size="sm"
-                variant="secondary"
-                className="rounded-full px-3"
-              >
+              <Button asChild variant="outline" className="pointer-coarse:h-11">
                 <Link
                   to="/ledger/$ledgerOwner/$ledgerName/import"
                   params={{ ledgerOwner, ledgerName }}
@@ -755,6 +752,6 @@ export default function LedgerOverviewPage() {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }
