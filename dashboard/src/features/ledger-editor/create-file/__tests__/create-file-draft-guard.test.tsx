@@ -78,7 +78,7 @@ vi.mock("@/common/components/monaco-editor", () => ({
   ),
 }));
 
-vi.mock("@/common/lib/editor/monaco-beancount-language", () => ({
+vi.mock("@/common/lib/editor/monaco-beancount-language-vscode", () => ({
   registerBeancountLanguage: vi.fn(),
 }));
 

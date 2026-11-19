@@ -82,8 +82,6 @@ newest first.
 
 ### Deferred
 
-- 2026-11-17 `dashboard/src/common/lib/editor/monaco-beancount-language.ts` vs `monaco-beancount-language-vscode.ts` — both register the global `beancount` language and themes, so the last editor opened re-highlights the others; keep the `-vscode` module only.
-
 ### Skipped
 
 - 2026-11-19 backend-cluster/ledger `discrepancyKey` spelling agreement (parsed balance `amount` vs engine `balances.amount` cell) — live-engine probes agree on every spelling (trailing/leading zeros, exponents, signs); both sides share one producer; examined, no divergence.

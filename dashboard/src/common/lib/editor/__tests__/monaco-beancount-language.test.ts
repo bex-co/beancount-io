@@ -5,6 +5,11 @@ import {
   beancountLanguageConfig,
   beancountTokenProvider,
 } from "../monaco-beancount-language";
+import {
+  registerBeancountLanguage as canonicalRegisterBeancountLanguage,
+  beancountLanguageConfig as canonicalLanguageConfig,
+  beancountTokenProvider as canonicalTokenProvider,
+} from "../monaco-beancount-language-vscode";
 
 // Mock console methods
 const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -17,6 +22,10 @@ const mockLanguages = {
   register: vi.fn(),
   setLanguageConfiguration: vi.fn(),
   setMonarchTokensProvider: vi.fn(),
+  registerFoldingRangeProvider: vi.fn(),
+  FoldingRangeKind: {
+    Region: 3,
+  },
 };
 
 const mockEditor = {
@@ -78,31 +87,18 @@ describe("Monaco Beancount Language", () => {
       expect(beancountTokenProvider.tokenPostfix).toBe(".beancount");
     });
 
-    it("should define beancount keywords", () => {
-      expect(beancountTokenProvider.keywords).toBeDefined();
-      expect(beancountTokenProvider.keywords).toContain("include");
-      expect(beancountTokenProvider.keywords).toContain("plugin");
-      expect(beancountTokenProvider.keywords).toContain("balance");
-      expect(beancountTokenProvider.keywords).toContain("open");
-      expect(beancountTokenProvider.keywords).toContain("close");
+    it("should alias the canonical token provider (single grammar)", () => {
+      expect(beancountTokenProvider).toBe(canonicalTokenProvider);
     });
 
-    it("should define account root types", () => {
-      expect(beancountTokenProvider.accountRoots).toBeDefined();
-      expect(beancountTokenProvider.accountRoots).toContain("Assets");
-      expect(beancountTokenProvider.accountRoots).toContain("Liabilities");
-      expect(beancountTokenProvider.accountRoots).toContain("Equity");
-      expect(beancountTokenProvider.accountRoots).toContain("Income");
-      expect(beancountTokenProvider.accountRoots).toContain("Expenses");
+    it("should alias the canonical language configuration", () => {
+      expect(beancountLanguageConfig).toBe(canonicalLanguageConfig);
     });
 
-    it("should define operators", () => {
-      expect(beancountTokenProvider.operators).toBeDefined();
-      expect(beancountTokenProvider.operators).toContain("+");
-      expect(beancountTokenProvider.operators).toContain("-");
-      expect(beancountTokenProvider.operators).toContain("*");
-      expect(beancountTokenProvider.operators).toContain("/");
-      expect(beancountTokenProvider.operators).toContain("=");
+    it("should alias the canonical registration function (single guard)", () => {
+      expect(registerBeancountLanguage).toBe(
+        canonicalRegisterBeancountLanguage,
+      );
     });
 
     it("should have tokenizer rules", () => {
