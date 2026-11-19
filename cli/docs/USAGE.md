@@ -2297,8 +2297,8 @@ Under `at_cost` and `at_value` it is `{}`. The hosted trial balance (REST,
 GraphQL and MCP) drops a currency that nets to zero from every balance map,
 so it reads `{}` under every conversion. The two spellings are deliberate
 and mean the same zero: read a missing currency as zero instead of comparing
-keys. The hosted trial balance has no rounding line yet: its
-`valuation_adjustment` still includes the accepted rounding.
+keys. The hosted trial balance returns both lines too, as
+`valuation_adjustment` and `rounding_residual`.
 Only `units` can leave a residual: lots at cost and foreign cash do not net in
 their own units, so there the equity tree keeps the conversions row and no
 line is derived.

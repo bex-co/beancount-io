@@ -1351,16 +1351,23 @@ and decimal strings inside them, are unchanged.
 
 The trial balance (`beancount://{owner}/{name}/trial-balance`, REST
 `GET /api-gateway/v1/ledgers/{owner}/{name}/trial-balance`, GraphQL
-`getLedgerTrialBalance`) returns the five account trees and
-`valuation_adjustment` (GraphQL `valuationAdjustment`), the line that makes
-valued roots net (w1/291). Every balance map the ledger service returns drops
-a currency that nets to zero, so on books that already net the line is `{}`
-under every conversion; it is `null` under `units` and `units_by_cost`.
+`getLedgerTrialBalance`) returns the five account trees and the two lines
+that make valued roots net. `valuation_adjustment` (GraphQL
+`valuationAdjustment`) is what valuing moves: a holding's unrealized gain, a
+currency's translation, at cost a priced exchange's conversion (w1/291).
+`rounding_residual` (GraphQL `roundingResidual`) is the rounding Beancount's
+tolerance accepted in transactions no price weighs: two `3.333 USD` legs
+against `-6.67 USD` leave `0.004 USD` there, not in the valuation line
+(w1/305). Every balance map the ledger service returns drops a currency that
+nets to zero, so a line with nothing in it is `{}` under every conversion;
+both are `null` under `units` and `units_by_cost`.
 `bea report trial-balance --json` spells the same zero `{"USD": "0"}` under a
 currency conversion, the operating-currency default included, as it spells
 its other headline totals, and `{}` under `at_cost` and `at_value`. The two
 spellings are deliberate and mean the same zero: read a missing currency as
-zero instead of comparing keys (w31/032).
+zero instead of comparing keys (w31/032). With a time filter the hosted
+rounding line starts at the period's first day, because the hosted opening
+balances net the earlier transactions.
 
 Collaborator reads also require `ledger.admin` and current administrative
 access, even though they do not modify data:

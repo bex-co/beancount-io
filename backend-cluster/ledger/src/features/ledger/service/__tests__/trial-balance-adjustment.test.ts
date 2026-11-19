@@ -145,11 +145,12 @@ function sum(...balances: Array<Record<string, string> | null>) {
   );
 }
 
-/** The five roots plus the adjustment line. */
+/** The five roots plus the adjustment and rounding lines. */
 const net = (report: TrialBalanceDataPublic) =>
   sum(
     ...ROOTS.map((root) => report[root].balance_children),
     report.valuation_adjustment,
+    report.rounding_residual,
   );
 
 function accounts(node: Tree): string[] {
@@ -191,6 +192,7 @@ describe("a valued trial balance of holdings and a priced exchange (w1/291)", ()
       expect(report.valuation_adjustment).toEqual(
         LINE[form.replace(", time", "")],
       );
+      expect(report.rounding_residual).toEqual({});
       expect(net(report)).toEqual({});
       expect(report.equity_hierarchy_data.balance_children).toEqual({
         USD: "-1000.00",
@@ -237,6 +239,7 @@ describe("a valued trial balance of holdings and a priced exchange (w1/291)", ()
           trial.income_hierarchy_data.balance_children,
           trial.expenses_hierarchy_data.balance_children,
           trial.valuation_adjustment,
+          trial.rounding_residual,
         ),
       );
     },
@@ -252,6 +255,7 @@ describe("a valued trial balance of holdings and a priced exchange (w1/291)", ()
       });
 
       expect(report.valuation_adjustment).toBeNull();
+      expect(report.rounding_residual).toBeNull();
       expect(accounts(report.equity_hierarchy_data)).toContain(
         "Equity:Conversions:Current",
       );
@@ -269,6 +273,7 @@ describe("a valued trial balance of holdings and a priced exchange (w1/291)", ()
     const report = await finance().getTrialBalance(params);
 
     expect(report.valuation_adjustment).toBeNull();
+    expect(report.rounding_residual).toBeNull();
   });
 
   it("keeps the line when the ledger has only warnings", async () => {
@@ -292,6 +297,7 @@ describe("the adjustment line elsewhere (w1/291)", () => {
     for (const time of [undefined, "2024-01"]) {
       const report = await finance().getTrialBalance({ ...params, time });
       expect(report.valuation_adjustment).toEqual({});
+      expect(report.rounding_residual).toEqual({});
       expect(net(report)).toEqual({});
     }
   });
@@ -310,6 +316,7 @@ describe("the adjustment line elsewhere (w1/291)", () => {
 
     expect(report.assets_hierarchy_data.balance_children).toHaveProperty("PTS");
     expect(report.valuation_adjustment).toBeNull();
+    expect(report.rounding_residual).toBeNull();
   });
 
   it("leaves a conversion the ledger wrote itself in equity", async () => {
@@ -334,5 +341,155 @@ describe("the adjustment line elsewhere (w1/291)", () => {
       ).toEqual({ USD: "-1.00" });
       expect(net(report)).toEqual({});
     }
+  });
+});
+
+/**
+ * w1/305: on a USD-only ledger with no prices, two 3.333 USD legs against
+ * -6.67 USD leave 0.004 USD inside Beancount's tolerance. The hosted trial
+ * balance reported it as a valuation/translation adjustment; it is now its
+ * own `rounding_residual` line, as `bea`'s is (w1/304), and valuation holds
+ * only what valuing moves.
+ */
+const SPLIT = (date: string, currency: string, account: string) =>
+  txn(date, [
+    units("Expenses:Food", "3.333", currency),
+    units("Expenses:Rent", "3.333", currency),
+    units(account, "-6.67", currency),
+  ]);
+
+/** w1/304's repro, scripted. */
+const ROUNDING: DirectiveJson[] = [
+  ...["Assets:Cash", "Expenses:Food", "Expenses:Rent", "Equity:Opening"].map(
+    open,
+  ),
+  txn("2024-01-01", [
+    units("Assets:Cash", "100.00", "USD"),
+    units("Equity:Opening", "-100.00", "USD"),
+  ]),
+  SPLIT("2024-01-02", "USD", "Assets:Cash"),
+];
+
+describe("the rounding the ledger's tolerance accepted (w1/305)", () => {
+  it.each([
+    { conversion: undefined, time: undefined },
+    { conversion: undefined, time: "2024-01" },
+    { conversion: "USD", time: undefined },
+    { conversion: "at_cost", time: undefined },
+    { conversion: "at_value", time: "2024-01" },
+  ])(
+    "is a rounding residual beside a zero valuation adjustment ($conversion, $time)",
+    async ({ conversion, time }) => {
+      configure(ROUNDING);
+
+      const report = await finance().getTrialBalance({
+        ...params,
+        conversion,
+        time,
+      });
+
+      expect(report.rounding_residual).toEqual({ USD: "0.004" });
+      expect(report.valuation_adjustment).toEqual({});
+      expect(net(report)).toEqual({});
+    },
+  );
+
+  it.each(["units", "units_by_cost"])(
+    "derives neither line under %s",
+    async (conversion) => {
+      configure(ROUNDING);
+
+      const report = await finance().getTrialBalance({ ...params, conversion });
+
+      expect(report.valuation_adjustment).toBeNull();
+      expect(report.rounding_residual).toBeNull();
+    },
+  );
+
+  it("keeps every digit the ledger wrote", async () => {
+    configure([
+      ...ROUNDING.slice(0, -1),
+      txn("2024-01-02", [
+        units("Expenses:Food", "3.333333333333333333333333333", "USD"),
+        units("Expenses:Rent", "3.333333333333333333333333333", "USD"),
+        units("Assets:Cash", "-6.67", "USD"),
+      ]),
+    ]);
+
+    const report = await finance().getTrialBalance(params);
+
+    expect(report.rounding_residual).toEqual({
+      USD: "0.003333333333333333333333334",
+    });
+    expect(report.valuation_adjustment).toEqual({});
+  });
+
+  it.each(FORMS)(
+    "leaves holdings and a priced exchange their adjustment ($form)",
+    async ({ form, conversion, time }) => {
+      configure([...HOLDINGS, SPLIT("2024-01-25", "USD", "Assets:Wallet")]);
+
+      const report = await finance().getTrialBalance({
+        ...params,
+        conversion,
+        time,
+      });
+
+      // The same amounts; subtracting the rounding may widen the scale, as
+      // Python's `Decimal` does in `bea`.
+      expect(sum(report.valuation_adjustment)).toEqual(
+        sum(LINE[form.replace(", time", "")]),
+      );
+      expect(report.rounding_residual).toEqual({ USD: "0.004" });
+      expect(net(report)).toEqual({});
+    },
+  );
+
+  it("values foreign rounding at the as-of price, as the roots are", async () => {
+    configure([...HOLDINGS, SPLIT("2024-01-25", "EUR", "Assets:Euro")]);
+
+    const market = await finance().getTrialBalance(params);
+    const cost = await finance().getTrialBalance({
+      ...params,
+      conversion: "at_cost",
+    });
+
+    expect(market.rounding_residual).toEqual({ USD: "0.00480" });
+    expect(new BigNumber(market.valuation_adjustment?.USD ?? "")).toEqual(
+      new BigNumber("-109"),
+    );
+    expect(net(market)).toEqual({});
+    expect(cost.rounding_residual).toEqual({ EUR: "0.004" });
+    expect(sum(cost.valuation_adjustment)).toEqual({ EUR: "-90", USD: "99" });
+    expect(net(cost)).toEqual({});
+  });
+
+  it("starts at the period's first day: the opening balances net earlier rounding", async () => {
+    configure([...ROUNDING, SPLIT("2024-02-05", "USD", "Assets:Cash")]);
+
+    const whole = await finance().getTrialBalance(params);
+    const february = await finance().getTrialBalance({
+      ...params,
+      time: "2024-02",
+    });
+
+    expect(whole.rounding_residual).toEqual({ USD: "0.008" });
+    expect(february.rounding_residual).toEqual({ USD: "0.004" });
+    expect(february.valuation_adjustment).toEqual({});
+    expect(net(february)).toEqual({});
+  });
+
+  it("withholds both lines while the ledger has an error", async () => {
+    configure(ROUNDING, [
+      {
+        message: "Transaction does not balance",
+        severity: "error",
+      } as BeancountError,
+    ]);
+
+    const report = await finance().getTrialBalance(params);
+
+    expect(report.valuation_adjustment).toBeNull();
+    expect(report.rounding_residual).toBeNull();
   });
 });

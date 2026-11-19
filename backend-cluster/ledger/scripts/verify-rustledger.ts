@@ -573,12 +573,14 @@ async function verifyTrialBalanceAdjustment(): Promise<void> {
         report.income_hierarchy_data.balance_children,
         report.expenses_hierarchy_data.balance_children,
         report.valuation_adjustment ?? {},
+        report.rounding_residual ?? {},
       ]) {
         for (const [currency, number] of Object.entries(balance)) {
           net.set(currency, (net.get(currency) ?? 0) + Number(number));
         }
       }
       deepStrictEqual(report.valuation_adjustment, line);
+      deepStrictEqual(report.rounding_residual, {});
       deepStrictEqual(report.equity_hierarchy_data.balance_children, {
         USD: "-1000.00",
       });
@@ -595,11 +597,53 @@ async function verifyTrialBalanceAdjustment(): Promise<void> {
   });
   assert(
     units.valuation_adjustment === null &&
+      units.rounding_residual === null &&
       units.equity_hierarchy_data.children.some(
         (child) => child.account === "Equity:Conversions",
       ),
     "a units trial balance derives no adjustment and keeps the conversions row",
   );
+}
+
+/**
+ * w1/305: the engine accepts a split that leaves 0.004 USD inside the 0.005
+ * tolerance `-6.67 USD` implies, and the trial balance reports it as its own
+ * `rounding_residual` beside a zero valuation adjustment, as `bea` does
+ * (w1/304). w1/304's repro, through the real engine.
+ */
+async function verifyTrialBalanceRounding(): Promise<void> {
+  const source = `option "operating_currency" "USD"
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Expenses:Food USD
+2024-01-01 open Expenses:Rent USD
+2024-01-01 open Equity:Opening USD
+2024-01-01 * "Opening"
+  Assets:Cash  100.00 USD
+  Equity:Opening
+2024-01-02 * "Split bill"
+  Expenses:Food  3.333 USD
+  Expenses:Rent  3.333 USD
+  Assets:Cash   -6.67 USD
+`;
+  const finance = new LedgerFinanceService(
+    singleFileRepoFactory(source) as never,
+    {} as never,
+  );
+  const params = { ledgerId: "synthetic/rounding", userId: undefined };
+  for (const conversion of [undefined, "at_cost", "at_value"]) {
+    for (const time of [undefined, "2024-01"]) {
+      const report = await finance.getTrialBalance({
+        ...params,
+        conversion,
+        time,
+      });
+      assert(
+        JSON.stringify(report.valuation_adjustment) === "{}" &&
+          JSON.stringify(report.rounding_residual) === '{"USD":"0.004"}',
+        `the split's 0.004 USD is rounding, not valuation (${conversion ?? "market"}, time ${time ?? "none"}; got ${JSON.stringify(report.valuation_adjustment)} and ${JSON.stringify(report.rounding_residual)})`,
+      );
+    }
+  }
 }
 
 /**
@@ -1039,6 +1083,7 @@ async function main(): Promise<void> {
   await verifyTransactionLookups();
   await verifyBalanceSheetCurrentEarnings();
   await verifyTrialBalanceAdjustment();
+  await verifyTrialBalanceRounding();
   await verifyWindowedPlaintextExport();
   await verifyJournalRoundTrip();
 

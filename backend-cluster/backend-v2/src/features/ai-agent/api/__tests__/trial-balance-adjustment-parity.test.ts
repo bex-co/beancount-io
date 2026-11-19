@@ -24,6 +24,11 @@ import type { McpRequestContext } from "../mcp-context";
  * service derives it; REST, GraphQL and MCP each return it unchanged, `null`
  * included, alongside the five trees, so an agent on any surface can see the
  * books balance.
+ *
+ * w1/305: the rounding Beancount's tolerance accepted is its own
+ * `rounding_residual` line beside it, as `bea`'s is (w1/304). On w1/304's
+ * repro (two 3.333 USD legs against -6.67 USD) every surface returns the
+ * 0.004 USD there and a zero (`{}`) valuation adjustment.
  */
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const root = (account: string, balance: Record<string, string>) => ({
@@ -39,7 +44,8 @@ const valued = {
   equity_hierarchy_data: root("Equity", { USD: "-1000.00" }),
   expenses_hierarchy_data: root("Expenses", {}),
   assets_hierarchy_data: root("Assets", { USD: "1109.0000" }),
-  valuation_adjustment: { USD: "-109.0000" },
+  valuation_adjustment: { USD: "-109.0000" } as Record<string, string> | null,
+  rounding_residual: {} as Record<string, string> | null,
 };
 const units = {
   ...valued,
@@ -49,12 +55,23 @@ const units = {
     USD: "401.00",
   }),
   valuation_adjustment: null,
+  rounding_residual: null,
+};
+/** w1/304's repro: the split's 0.004 USD is rounding, and nothing is valued. */
+const rounded = {
+  income_hierarchy_data: root("Income", {}),
+  liabilities_hierarchy_data: root("Liabilities", {}),
+  equity_hierarchy_data: root("Equity", { USD: "-100.00" }),
+  expenses_hierarchy_data: root("Expenses", { USD: "6.666" }),
+  assets_hierarchy_data: root("Assets", { USD: "93.33" }),
+  valuation_adjustment: {},
+  rounding_residual: { USD: "0.004" },
 };
 const envelope = (data: unknown) => ({ data: { success: true, data } });
 let resolver: LedgerFinanceQueryResolver;
 let schemaPromise: ReturnType<typeof buildSchema> | undefined;
 
-async function fixture(payload: typeof valued | typeof units) {
+async function fixture(payload: typeof valued) {
   const auth = new AuthorizationService(
     { check: jest.fn().mockResolvedValue(true) },
     jest.fn(),
@@ -102,6 +119,7 @@ async function fixture(payload: typeof valued | typeof units) {
         const body = await response.json();
         return {
           line: body.valuation_adjustment,
+          rounding: body.rounding_residual,
           equity: body.equity_hierarchy_data.balance_children,
         };
       }
@@ -114,6 +132,7 @@ async function fixture(payload: typeof valued | typeof units) {
         const body = JSON.parse(content.text);
         return {
           line: body.valuation_adjustment,
+          rounding: body.rounding_residual,
           equity: body.equity_hierarchy_data.balance_children,
         };
       }
@@ -122,16 +141,18 @@ async function fixture(payload: typeof valued | typeof units) {
         .join("");
       const result = await graphql({
         schema,
-        source: `{ getLedgerTrialBalance(ledgerId: "alice/main"${args}) { valuationAdjustment equityHierarchyData { balanceChildren } } }`,
+        source: `{ getLedgerTrialBalance(ledgerId: "alice/main"${args}) { valuationAdjustment roundingResidual equityHierarchyData { balanceChildren } } }`,
         contextValue: { identity: pinnedReadToken },
       });
       expect(result.errors).toBeUndefined();
       const data = result.data?.getLedgerTrialBalance as {
         valuationAdjustment: unknown;
+        roundingResidual: unknown;
         equityHierarchyData: { balanceChildren: unknown };
       };
       return {
         line: data.valuationAdjustment,
+        rounding: data.roundingResidual,
         equity: data.equityHierarchyData.balanceChildren,
       };
     },
@@ -149,6 +170,7 @@ describe.each(["rest", "gql", "mcp"])("the trial balance via %s", (surface) => {
     try {
       expect(await f.read(surface, { time: "2024-01" })).toEqual({
         line: { USD: "-109.0000" },
+        rounding: {},
         equity: { USD: "-1000.00" },
       });
       expect(f.reports.getLedgerTrialBalance).toHaveBeenCalledWith(
@@ -166,8 +188,27 @@ describe.each(["rest", "gql", "mcp"])("the trial balance via %s", (surface) => {
     try {
       expect(await f.read(surface, { conversion: "units" })).toEqual({
         line: null,
+        rounding: null,
         equity: { USD: "-1000.00" },
       });
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("returns accepted rounding as its own line beside a zero adjustment (w1/305)", async () => {
+    const f = await fixture(rounded);
+    try {
+      expect(await f.read(surface, { conversion: "at_cost" })).toEqual({
+        line: {},
+        rounding: { USD: "0.004" },
+        equity: { USD: "-100.00" },
+      });
+      expect(f.reports.getLedgerTrialBalance).toHaveBeenCalledWith(
+        "alice",
+        "main",
+        { conversion: "at_cost" },
+      );
     } finally {
       await f.close();
     }

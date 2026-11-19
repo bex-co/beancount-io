@@ -95,6 +95,27 @@ describe("computeTrialBalanceReconciliation", () => {
     expect(hasTrialBalanceReconciliationDifference(difference)).toBe(false);
   });
 
+  // w1/305: the rounding the ledger's tolerance accepted is its own line.
+  it("nets a split bill's accepted rounding through the rounding line", () => {
+    const roots = [
+      rootNode("Equity", { USD: "-100.00" }, true),
+      rootNode("Assets", { USD: "93.33" }),
+      rootNode("Expenses", { USD: "6.666" }),
+    ];
+
+    expect(
+      hasTrialBalanceReconciliationDifference(
+        computeTrialBalanceReconciliation(roots, {}),
+      ),
+    ).toBe(true);
+    const difference = computeTrialBalanceReconciliation(
+      roots,
+      {},
+      { USD: "0.004" },
+    );
+    expect(hasTrialBalanceReconciliationDifference(difference)).toBe(false);
+  });
+
   it("shows the exact per-unit difference when roots do not reconcile", () => {
     const difference = computeTrialBalanceReconciliation([
       rootNode("Assets", { USD: "100" }),

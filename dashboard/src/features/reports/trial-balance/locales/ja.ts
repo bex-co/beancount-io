@@ -61,6 +61,11 @@ const jaTrialBalance: Record<string, TranslationEntry> = {
     description:
       "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
   },
+  "page.trialBalance.roundingResidual": {
+    message: "端数差額",
+    description:
+      "Trial balance summary row: the rounding the ledger's tolerance accepted when a transaction balanced only within it, so the roots net to zero",
+  },
 };
 
 export default jaTrialBalance;

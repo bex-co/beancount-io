@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import type { DirectiveJson } from "@rustledger/wasm";
+import type { DirectiveJson, PostingJson } from "@rustledger/wasm";
 import type { PriceMap } from "./price-map";
 import { LotInventory, parseConversion } from "./lot-inventory";
 
@@ -204,24 +204,115 @@ export function accountHierarchy(
   );
 }
 
+type ScaledSums = Map<string, { value: BigNumber; scale: number }>;
+
+/** Net `value` into `sums[currency]`, keeping the widest scale. */
+function addScaled(
+  sums: ScaledSums,
+  currency: string,
+  value: BigNumber,
+  scale: number,
+): void {
+  const sum = sums.get(currency);
+  sums.set(currency, {
+    value: sum ? sum.value.plus(value) : value,
+    scale: Math.max(sum?.scale ?? 0, scale),
+  });
+}
+
+/** Stringify `sums` at their scales, dropping the currencies that net. */
+function nonZero(sums: ScaledSums): Record<string, string> {
+  const out: Record<string, string> = {};
+  sums.forEach(({ value, scale }, currency) => {
+    if (!value.isZero()) out[currency] = value.toFixed(scale);
+  });
+  return out;
+}
+
+/**
+ * Whether a price, not a booked cost, weighs one of a transaction's legs: a
+ * currency exchange. A price on a costed posting does not set its weight (the
+ * booked cost does), so only a price-weighted leg counts. `bea`'s
+ * `priced_exchange` (w5/1078).
+ */
+function pricedExchange(postings: readonly PostingJson[]): boolean {
+  return postings.some(
+    (posting) =>
+      posting.price !== undefined &&
+      posting.cost === undefined &&
+      posting.units !== undefined &&
+      posting.price.currency !== posting.units.currency,
+  );
+}
+
+/**
+ * The rounding Beancount's tolerance accepted in `directives`, valued under
+ * `target`: the at-cost remainder of every transaction no price weighs, negated
+ * so it nets them. Two `3.333 USD` legs against `-6.67 USD` leave 0.004 USD.
+ */
+function acceptedRounding(
+  directives: readonly DirectiveJson[],
+  target: string,
+  priceMap: PriceMap,
+  date: string | undefined,
+): ScaledSums {
+  const booked = new LotInventory();
+  for (const directive of directives) {
+    if (directive.type !== "transaction") continue;
+    if (pricedExchange(directive.postings)) continue;
+    directive.postings.forEach((posting) => booked.addPosting(posting));
+  }
+  const left = new LotInventory();
+  booked
+    .reduceScaled({ kind: "at_cost" }, priceMap, date)
+    .forEach(({ value, scale }, currency) => {
+      if (value.isZero()) return;
+      left.addPosting({
+        account: "",
+        units: { number: value.negated().toFixed(scale), currency },
+      });
+    });
+  return left.reduceScaled(parseConversion(target), priceMap, date);
+}
+
+/** A valued trial balance's two lines, which together net its five roots. */
+export interface TrialBalanceLines {
+  valuation_adjustment: Record<string, string>;
+  rounding_residual: Record<string, string>;
+}
+
 /**
  * What a valued trial balance's five roots leave unbalanced, negated, so the
- * roots plus this line sum to zero in every currency: a holding's unrealized
- * gain, a currency's translation and, at cost, the conversion a priced
- * exchange leaves. It is `bea report trial-balance`'s `valuation_adjustment`
- * (w1/287, w1/291). Currencies that net drop out, so books that already
- * balance read `{}`.
+ * roots plus these lines sum to zero in every currency, split as
+ * `bea report trial-balance` splits it (w1/287, w1/291, w1/304):
+ *
+ * - `rounding_residual`: the rounding Beancount's tolerance accepted, the
+ *   at-cost remainder of each transaction no price weighs, valued at `date`.
+ *   It is the same residual with the trees read at cost, less what priced
+ *   exchanges leave there, so a ledger with nothing to value gives it the
+ *   whole residual, digit for digit.
+ * - `valuation_adjustment`: the rest, what valuing moves: a holding's
+ *   unrealized gain, a currency's translation and, at cost, the conversion a
+ *   priced exchange leaves.
+ *
+ * `directives` is the stream the roots were built from. Under a time filter
+ * its opening entries net the earlier transactions at cost, so the rounding
+ * starts at the period's first day. Currencies that net drop out, so books
+ * that already balance read `{}` on both lines.
  *
  * Null when `target` is a currency and a root still holds a commodity the
  * conversion could not value: the residual would pass units off as an
  * adjustment. The caller withholds it under `units`, where nothing is valued.
  */
-export function trialBalanceAdjustment(
+export function trialBalanceLines(
   roots: readonly AccountTreeNode[],
+  directives: readonly DirectiveJson[],
   target: string,
-): Record<string, string> | null {
+  priceMap: PriceMap,
+  date: string | undefined,
+): TrialBalanceLines | null {
   const currencyTarget = target !== "at_cost" && target !== "at_value";
-  const sums = new Map<string, { value: BigNumber; scale: number }>();
+  const residual: ScaledSums = new Map();
   for (const root of roots) {
     for (const [currency, number] of Object.entries(root.balance_children)) {
       const value = new Amount(number);
@@ -229,18 +320,18 @@ export function trialBalanceAdjustment(
       if (currencyTarget && currency !== target) return null;
       const dot = number.indexOf(".");
       const scale = dot === -1 ? 0 : number.length - dot - 1;
-      const sum = sums.get(currency);
-      sums.set(currency, {
-        value: sum ? sum.value.plus(value) : value,
-        scale: Math.max(sum?.scale ?? 0, scale),
-      });
+      addScaled(residual, currency, value.negated(), scale);
     }
   }
-  const adjustment: Record<string, string> = {};
-  sums.forEach(({ value, scale }, currency) => {
-    if (!value.isZero()) adjustment[currency] = value.negated().toFixed(scale);
-  });
-  return adjustment;
+  const rounding = acceptedRounding(directives, target, priceMap, date);
+  const valuation: ScaledSums = new Map(residual);
+  rounding.forEach(({ value, scale }, currency) =>
+    addScaled(valuation, currency, value.negated(), scale),
+  );
+  return {
+    valuation_adjustment: nonZero(valuation),
+    rounding_residual: nonZero(rounding),
+  };
 }
 
 /** Per-account own (non-cumulative) units balance, zero-dropped + stringified. */

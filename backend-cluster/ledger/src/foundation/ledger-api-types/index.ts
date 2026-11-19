@@ -3178,9 +3178,14 @@ export interface TrialBalanceDataPublic {
   assets_hierarchy_data: SerializableTreeNodePublic;
   /**
    * Valuation Adjustment
-   * What the five valued roots leave unbalanced, negated per currency (a holding's unrealized gain, a currency's translation, at cost a priced exchange's conversion), so the roots plus this sum to zero; `{}` when they already net. The equity tree leaves the time filter's conversion booking to it. Null under `units` and `units_by_cost`, with ledger errors, and while a root holds a commodity the conversion could not value.
+   * What valuing leaves the five roots unbalanced by, negated per currency (a holding's unrealized gain, a currency's translation, at cost a priced exchange's conversion); the roots plus this and `rounding_residual` sum to zero. `{}` when there is none. The equity tree leaves the time filter's conversion booking to it. Null under `units` and `units_by_cost`, with ledger errors, and while a root holds a commodity the conversion could not value.
    */
   valuation_adjustment: Record<string, string> | null;
+  /**
+   * Rounding Residual
+   * The rest of what the five roots leave unbalanced, negated per currency: the rounding Beancount's tolerance accepted in transactions no price weighs (two `3.333 USD` legs against `-6.67 USD` leave `0.004 USD`), valued like the roots. With a time filter it starts at the period's first day, since the opening balances net earlier transactions. `{}` when there is none; null whenever `valuation_adjustment` is.
+   */
+  rounding_residual: Record<string, string> | null;
 }
 
 /**

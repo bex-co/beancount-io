@@ -25,7 +25,7 @@ import {
   resolveConversion,
   TimeFilterParseError,
   AdvancedFilterParseError,
-  trialBalanceAdjustment,
+  trialBalanceLines,
   windowEndInclusive,
   withoutClampConversions,
   type IntervalKey,
@@ -319,28 +319,35 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     );
     const tree = (root: string, stream = directives) =>
       accountHierarchy(stream, root, target, priceMap, valuationDate);
-    // Valued, the five trees net only through an adjustment line, and the
-    // clamp's conversion booking folds into it, as `bea` does: with and
-    // without `time` the equity tree is the booked equity and the line is
+    // Valued, the five trees net only through two lines, valuation and the
+    // rounding the ledger's tolerance accepted (w1/305), and the clamp's
+    // conversion booking folds into the first, as `bea` does: with and
+    // without `time` the equity tree is the booked equity and the lines are
     // the same (w1/291). `units` values nothing and keeps the booking.
     const valued = target !== "units" && target !== "units_by_cost";
+    const booked = valued ? withoutClampConversions(directives) : directives;
     const trees = {
       income_hierarchy_data: tree(roots.income),
       liabilities_hierarchy_data: tree(roots.liabilities),
-      equity_hierarchy_data: tree(
-        roots.equity,
-        valued ? withoutClampConversions(directives) : directives,
-      ),
+      equity_hierarchy_data: tree(roots.equity, booked),
       expenses_hierarchy_data: tree(roots.expenses),
       assets_hierarchy_data: tree(roots.assets),
     };
+    // Withheld with ledger errors: they would absorb an unbalanced entry.
+    const lines =
+      valued && !ledgerErrors
+        ? trialBalanceLines(
+            Object.values(trees),
+            booked,
+            target,
+            priceMap,
+            valuationDate,
+          )
+        : null;
     return {
       ...trees,
-      // Withheld with ledger errors: it would absorb an unbalanced entry.
-      valuation_adjustment:
-        valued && !ledgerErrors
-          ? trialBalanceAdjustment(Object.values(trees), target)
-          : null,
+      valuation_adjustment: lines?.valuation_adjustment ?? null,
+      rounding_residual: lines?.rounding_residual ?? null,
     };
   }
 

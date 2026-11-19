@@ -159,30 +159,35 @@ export function TrialBalanceContent({
   ]);
 
   const trialBalanceSummaryRows = useMemo((): HierarchySummaryRow[] => {
-    const adjustment = (trialBalanceData.valuationAdjustment ?? null) as Record<
-      string,
-      string
-    > | null;
+    const line = (value: unknown) =>
+      (value ?? null) as Record<string, string> | null;
+    // The server's lines for what valuation (w1/291) and the ledger's
+    // accepted rounding (w1/305) leave unbalanced.
+    const lines = [
+      {
+        label: t("page.trialBalance.valuationAdjustment"),
+        balance: line(trialBalanceData.valuationAdjustment),
+      },
+      {
+        label: t("page.trialBalance.roundingResidual"),
+        balance: line(trialBalanceData.roundingResidual),
+      },
+    ];
     const reconciliationDifference = computeTrialBalanceReconciliation(
       hierarchyData,
-      adjustment,
+      ...lines.map(({ balance }) => balance),
     );
     if (Object.keys(reconciliationDifference).length === 0) {
       return [];
     }
 
     return [
-      // The server's line for what valuation leaves unbalanced; an equity
-      // line, so it is displayed with the credit roots' sign (w1/291).
-      ...(adjustment && hasTrialBalanceReconciliationDifference(adjustment)
-        ? [
-            {
-              label: t("page.trialBalance.valuationAdjustment"),
-              balance: adjustment,
-              inverted: invertIncomeLiabilitiesEquity,
-            },
-          ]
-        : []),
+      // Equity lines, so they are displayed with the credit roots' sign.
+      ...lines.flatMap(({ label, balance }) =>
+        balance && hasTrialBalanceReconciliationDifference(balance)
+          ? [{ label, balance, inverted: invertIncomeLiabilitiesEquity }]
+          : [],
+      ),
       {
         label: t("reports.export.reconciliationDifference"),
         balance: reconciliationDifference,

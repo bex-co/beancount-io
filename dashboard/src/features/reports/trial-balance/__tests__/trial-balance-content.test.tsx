@@ -222,6 +222,54 @@ describe("TrialBalanceContent", () => {
     },
   );
 
+  // w1/305: on a USD-only ledger, two 3.333 USD legs against -6.67 USD leave
+  // 0.004 USD the tolerance accepted. It is rounding, not valuation, so it
+  // gets its own line and the valuation line stays away.
+  it.each([false, true])(
+    "shows accepted rounding under its own label and nets through it (credits inverted=%s)",
+    (invert) => {
+      hierarchyListMock.mockClear();
+      render(
+        <Harness
+          invert={invert}
+          onConversionChange={vi.fn()}
+          data={
+            {
+              assetsHierarchyData: hierarchyNode("Assets", { USD: "93.33" }),
+              expensesHierarchyData: hierarchyNode("Expenses", {
+                USD: "6.666",
+              }),
+              equityHierarchyData: hierarchyNode("Equity", {
+                USD: "-100.00",
+              }),
+              liabilitiesHierarchyData: hierarchyNode("Liabilities", {}),
+              incomeHierarchyData: hierarchyNode("Income", {}),
+              valuationAdjustment: {},
+              roundingResidual: { USD: "0.004" },
+            } as unknown as TrialBalanceData
+          }
+        />,
+      );
+
+      const props = hierarchyListMock.mock.calls.at(-1)?.[0] as {
+        summaryRows?: Array<Record<string, unknown>>;
+      };
+
+      expect(props.summaryRows).toEqual([
+        {
+          label: "Rounding residual",
+          balance: { USD: "0.004" },
+          inverted: invert,
+        },
+        {
+          label: "Reconciliation Difference",
+          balance: { USD: "0.000" },
+          bold: true,
+        },
+      ]);
+    },
+  );
+
   it.each([null, {}])(
     "shows no adjustment line when the server derives none (%j)",
     (valuationAdjustment) => {
@@ -233,6 +281,7 @@ describe("TrialBalanceContent", () => {
             {
               ...trialBalanceData,
               valuationAdjustment,
+              roundingResidual: valuationAdjustment,
             } as unknown as TrialBalanceData
           }
         />,
