@@ -2146,6 +2146,11 @@ too:
   and the refused value, quoted when it is a string so a typo or a trailing
   space shows:
   `budgets.bean:2: Budget for Expenses:Rent ignored: unknown interval "montly" (use daily, weekly, monthly, quarterly or yearly)`.
+  A first value that is not an account name (a number, a date, an amount, or a
+  quoted word such as `"Food"`) is refused the same way, and the report still
+  prints every valid budget:
+  `budgets.bean:5: Budget ignored: first value 42 is not an account (custom "budget" ACCOUNT INTERVAL NUMBER CURRENCY)`.
+  A quoted account name (`"Expenses:Food"`) budgets that account.
 - It takes `--time`, `--interval`, `--account`, `--format csv`; there is no
   `--conversion`.
 

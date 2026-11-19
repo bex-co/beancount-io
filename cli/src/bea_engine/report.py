@@ -480,7 +480,12 @@ def _budget_error(error: Any) -> str:
     """
     values = getattr(error.entry, "values", None) or []
     subject = f"Budget for {values[0].value}" if values else "Budget"
-    if error.message == "Invalid interval for budget entry":
+    if error.message == "Invalid account for budget entry":
+        # No account to name: the refused first value is the subject (w1/301).
+        subject = "Budget"
+        shape = 'custom "budget" ACCOUNT INTERVAL NUMBER CURRENCY'
+        why = f"first value {_as_written(values[0])} is not an account ({shape})"
+    elif error.message == "Invalid interval for budget entry":
         why = f"unknown interval {_as_written(values[1])} (use daily, weekly, monthly, quarterly or yearly)"
     elif error.message.startswith("Invalid amount for budget entry"):
         why = f"amount {_as_written(values[2])} is not NUMBER CURRENCY"

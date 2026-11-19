@@ -5,8 +5,10 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from decimal import Decimal
 from fractions import Fraction
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
+from beancount.core.account import TYPE as ACCOUNT_TYPE
+from beancount.core.account import is_valid as is_valid_account
 from beancount.core.amount import Amount
 
 from fava.helpers import BeancountError
@@ -121,6 +123,18 @@ def parse_budgets(
 
     for entry in (entry for entry in custom_entries if entry.type == "budget"):
         try:
+            # Beancount.io: custom syntax permits any value first, but a
+            # budget's row is keyed by it. A number, date or amount there
+            # crashed the report's sort; a quoted `"Food"` became a row.
+            if not _names_account(entry.values[0]):
+                errors.append(
+                    BudgetError(
+                        entry.meta,
+                        "Invalid account for budget entry",
+                        entry,
+                    ),
+                )
+                continue
             interval = INTERVALS.get(str(entry.values[1].value).lower())
             if not interval:
                 errors.append(
@@ -157,6 +171,23 @@ def parse_budgets(
             )
 
     return budgets, errors
+
+
+def _names_account(value: Any) -> bool:
+    """Whether a custom value names an account (Beancount.io change, w1/301).
+
+    An unquoted account is one the loader already read as such. A quoted
+    string counts when it is spelled as one the loader would read, including
+    a CJK or Thai leaf `is_valid` refuses (w5/829).
+    """
+    if value.dtype == ACCOUNT_TYPE:
+        return True
+    name = value.value
+    if not isinstance(name, str):
+        return False
+    from bea_engine.ledger.text import _loads_as_account
+
+    return is_valid_account(name) or _loads_as_account(name)
 
 
 def _matching_budgets(

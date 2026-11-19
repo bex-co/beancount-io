@@ -404,6 +404,71 @@ def test_malformed_budget_amounts_keep_valid_budgets_and_actuals(tmp_path: Path,
     assert ledger.read_text() == text
 
 
+FIRST_VALUE = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank USD
+2026-01-01 open Expenses:Food USD
+2026-01-01 open Equity:Opening
+2026-01-02 * "Open"
+  Assets:Bank 1000 USD
+  Equity:Opening
+2026-01-05 * "Lunch"
+  Expenses:Food 10.00 USD
+  Assets:Bank
+2026-01-01 custom "budget" Expenses:Food "monthly" 100.00 USD
+"""
+
+
+@pytest.mark.parametrize("first", ["42", "2026-01-01", "TRUE", "42 USD", '"Food"', '""'])
+def test_a_budget_whose_first_value_is_not_an_account_is_ignored_not_fatal(tmp_path: Path, first: str) -> None:
+    """A number, date, boolean or amount first crashed the report; a quoted word became a row (w1/301).
+
+    The valid Food budget and its actuals still report, the refused line is
+    one located diagnostic with its value as written, and the exit is 0 as
+    for every other ignored budget line.
+    """
+    text = FIRST_VALUE + f'2026-01-01 custom "budget" {first} "monthly" 50.00 USD\n'
+    ledger = write_ledger(tmp_path, text)
+    error = (
+        f"{ledger}:{text.count(chr(10))}: Budget ignored: first value {first} is not an account"
+        ' (custom "budget" ACCOUNT INTERVAL NUMBER CURRENCY)'
+    )
+    base = ["-f", str(ledger), "report", "budget", "-t", "2026-01"]
+    structured = bea(["--json", *base], tmp_path)
+    assert structured.returncode == 0, structured.stderr
+    data = json.loads(structured.stdout)["data"]
+    assert data["budget_errors"] == [error]
+    food = _rows(data)
+    assert list(food) == [("Expenses:Food", "USD")]
+    row = food[("Expenses:Food", "USD")]
+    assert (row["status"], row["budget"], row["actual"], row["variance"]) == ("budgeted", "100.00", "10.00", "-90.00")
+    for options in ([], ["--format", "csv"]):
+        run = bea([*base, *options], tmp_path)
+        assert run.returncode == 0, run.stderr
+        assert run.stderr.splitlines() == [error]
+        assert "Expenses:Food" in run.stdout
+    narrowed = bea(["--json", "-f", str(ledger), "report", "budget", "--allow-errors", "-a", "Expenses:Food"], tmp_path)
+    assert narrowed.returncode == 0, narrowed.stderr
+    assert json.loads(narrowed.stdout)["data"]["budget_errors"] == [error]
+    assert ledger.read_text() == text
+
+
+def test_a_quoted_account_name_still_budgets_that_account(tmp_path: Path) -> None:
+    """A string spelled as an account, a CJK leaf included, is an account (w1/301, w5/829)."""
+    text = (
+        FIRST_VALUE.replace("Expenses:Food USD\n", "Expenses:Food USD\n2026-01-01 open Expenses:Food:中餐 USD\n")
+        + '2026-01-01 custom "budget" "Expenses:Food" "monthly" 40.00 USD\n'
+        + '2026-01-01 custom "budget" "Expenses:Food:中餐" "monthly" 30.00 USD\n'
+        + '2026-01-01 custom "budget" Expenses:Food:中餐 "weekly" 7.00 USD\n'
+    )
+    data = _report(["-t", "2026-01"], tmp_path, text)
+    assert data["budget_errors"] == []
+    rows = _rows(data)
+    assert rows[("Expenses:Food", "USD")]["budget"] == "40.00"
+    # The later unquoted line replaces the quoted one: the same account.
+    assert rows[("Expenses:Food:中餐", "USD")]["budget"] == "31.00"
+
+
 def test_text_labels_the_gaps(tmp_path: Path) -> None:
     ledger = write_ledger(tmp_path, LEDGER)
     run = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01"], tmp_path)
