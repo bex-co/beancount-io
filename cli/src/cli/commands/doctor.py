@@ -275,9 +275,15 @@ def _refuse_undecodable(ledger: str) -> None:
                 raise LedgerError(decode_error_message(member, exc)) from exc
 
 
-#: How `bea check` words a plugin that cannot be imported or crashes, and a
-#: transaction booking cannot do the arithmetic for.
-_LOAD_FAILURES = ('Cannot import plugin "', '" failed while running: ', "Beancount cannot book this transaction: ")
+#: How `bea check` words a plugin that cannot be imported or crashes, a
+#: transaction booking cannot do the arithmetic for, and a `custom` with no
+#: values, which crashes upstream's pad plugin (w1/299).
+_LOAD_FAILURES = (
+    'Cannot import plugin "',
+    '" failed while running: ',
+    "Beancount cannot book this transaction: ",
+    "\" has no values, which Beancount's pad plugin cannot read; ",
+)
 
 
 def _refuse_load_failures(op: str, ledger: str) -> None:
@@ -285,7 +291,8 @@ def _refuse_load_failures(op: str, ledger: str) -> None:
 
     Upstream logs a plugin's traceback and carries on without the plugin, so
     `roundtrip` printed it and then "Congratulations" with exit 0, and
-    `missing-open` answered for entries the plugin never ran on (w5/439).
+    `missing-open` answered for entries the plugin never ran on (w5/439); a
+    `custom` with no values fails the pad plugin the same way (w1/299).
     And its booking raises on arithmetic it cannot do — a zero-unit posting at
     a total cost, an inferred amount wider than 28 digits — so every loading
     operation died on a bare `DivisionByZero` traceback where `check` names

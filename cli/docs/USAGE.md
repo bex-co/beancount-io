@@ -440,10 +440,11 @@ unchanged. A nonzero upstream status is never rewritten.
 Every operation that loads the ledger (all but `lex`, `parse` and
 `list-options`) first exits 1, without running upstream, on a ledger `bea check`
 rejects for a string that is not UTF-8, for a plugin that cannot be imported
-or fails while running, or for a transaction booking cannot do the arithmetic
-for, with check's own one-line message. Upstream logs the first two and carries
-on, so its answer would describe a ledger other than yours, and dies on the
-third with a bare `DivisionByZero` or `InvalidOperation` traceback. A ledger
+or fails while running, for a `custom` with no values, or for a transaction
+booking cannot do the arithmetic for, with check's own one-line message.
+Upstream logs the first three and carries on, so its answer would describe a
+ledger other than yours, and dies on the last with a bare `DivisionByZero` or
+`InvalidOperation` traceback. A ledger
 with only other errors (an unopened account, a failed balance) still runs.
 
 Every operation reads a BOM-marked file, and NFC and NFD spellings of one
@@ -695,6 +696,13 @@ the 28 significant digits it keeps — is reported the same way, as `FILE:LINE:
 Beancount cannot book this transaction: …`, where bean-check raises an
 uncaught error; every other read reports it at that line too, and leaves
 that transaction out.
+A `custom` directive with no values (`custom "reminder"`) is reported the same
+way, once per directive and in the file that holds it: `FILE:LINE: custom
+"reminder" has no values, which Beancount's pad plugin cannot read; give it a
+value (custom "reminder" "text") or delete the line.` bean-check instead
+reports the pad plugin's traceback at `<load>:0` and, since no `pad` was
+applied, fails every balance a pad covers. bea applies the pads, so those
+balances, and every read with `--allow-errors`, are as the pads make them.
 `bea --debug check` keeps bean-check's traceback for ordinary exceptions;
 a terminating plugin is refused before bean-check can run it again.
 Metadata named `filename` or `lineno`, on a directive, a posting or in a

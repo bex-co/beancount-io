@@ -55,7 +55,8 @@ def check(
     a ledger bean-check already accepted under them. A plugin that failed to
     load fails under any of those options, so that pass answers
     `{"valid": false, "errors": [...], "plugin_failures": [...]}` for one, as
-    it does with `booking_failures` for a transaction bean-check raises on.
+    it does with `booking_failures` for a transaction bean-check raises on and
+    `valueless_customs` for a `custom` with no values, which fails its pad plugin.
     `clean` says whether bean-check itself would find nothing: no loader
     error and none from the validations it adds.
     """
@@ -1074,7 +1075,7 @@ def _validate(file: Path, *, documents_only: bool = False) -> dict[str, Any]:
     from beancount.core.data import Document
 
     from bea_engine.compat import is_reserved_location
-    from bea_engine.managed_load import data_type_errors, is_booking_failure
+    from bea_engine.managed_load import data_type_errors, is_booking_failure, is_valueless_custom
     from bea_engine.query import format_error, is_plugin_failure, is_unlocated_include
     from fava.core.loader import load_file
 
@@ -1104,7 +1105,10 @@ def _validate(file: Path, *, documents_only: bool = False) -> dict[str, Any]:
     # bean-check reports an include that matches nothing (w1/269), or that
     # loads a file a second time (w1/273), at `<load>:0`: no file or line.
     includes = [format_error(error, ledger_file=file) for error in errors if is_unlocated_include(error)]
-    if failed or unbookable or reserved or includes:
+    # A `custom` with no values fails bean-check's pad plugin at `<load>:0`,
+    # and every balance a pad covers with it (w1/299).
+    customs = [format_error(error, ledger_file=file) for error in errors if is_valueless_custom(error)]
+    if failed or unbookable or reserved or includes or customs:
         # bean-check prints these as a traceback at `<load>:0`, raises on the
         # transaction booking cannot do the arithmetic for (w5/538), or accepts
         # metadata that overwrites an entry's location (w5/630); the caller,
@@ -1114,6 +1118,7 @@ def _validate(file: Path, *, documents_only: bool = False) -> dict[str, Any]:
             "errors": [format_error(error, ledger_file=file) for error in errors],
             "plugin_failures": failed,
             "booking_failures": unbookable,
+            "valueless_customs": customs,
             "reserved_keys": reserved,
             "include_errors": includes,
             "root_hint": hint,

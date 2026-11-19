@@ -603,12 +603,13 @@ def _native_shell(source: str, *, interactive: bool, format: str, numberify: boo
         from beancount import loader
 
         from bea_engine.ledger.write import keep_load_cache_private
-        from bea_engine.managed_load import _record_plugin_configs
+        from bea_engine.managed_load import _pad_past_valueless_customs, _record_plugin_configs
 
         # Native sources bypass managed_load, including its cache setup.
         # Apply the same policy before the shell's first automatic load.
         keep_load_cache_private()
         _record_plugin_configs(loader)
+        _pad_past_valueless_customs()
 
     class GuardedShell(BQLShell):  # type: ignore[misc]
         source_file = file

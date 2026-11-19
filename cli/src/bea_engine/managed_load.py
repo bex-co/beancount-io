@@ -382,6 +382,7 @@ def _load_with_sources(
     keep_load_cache_private()
     _record_plugin_configs(loader)
     _book_past_unbookable()
+    _pad_past_valueless_customs()
 
     at = time.time() if now is None else now
     want_offline = _env_flag(OFFLINE_ENV) if offline is None else offline
@@ -563,7 +564,7 @@ def _load_with_sources(
 
 
 #: Bumped when what a managed load returns changes shape, so no older cache answers.
-_MANAGED_CACHE_FORMAT = 3
+_MANAGED_CACHE_FORMAT = 4
 
 
 def _managed_cache_file(entry: Path) -> Path | None:
@@ -1039,6 +1040,63 @@ def _validate_past_unbookable() -> None:
             listed[:] = [_validate_balances if function is original else function for function in listed]
 
 
+#: What every `custom` with no values is reported as, after its quoted type (w1/299).
+VALUELESS_CUSTOM = "has no values, which Beancount's pad plugin cannot read"
+
+
+def is_valueless_custom(error: Any) -> bool:
+    """Whether a loader error is a `custom` with no values `_pad_past_valueless_customs` reported."""
+    from beancount.core.data import Custom
+
+    message = getattr(error, "message", None)
+    entry = getattr(error, "entry", None)
+    return isinstance(message, str) and VALUELESS_CUSTOM in message and isinstance(entry, Custom)
+
+
+def _valueless_custom_message(entry: Any) -> str:
+    from bea_engine.ledger.text import single_line
+    from bea_engine.ledger.writer import escape_string
+
+    written = f'custom "{single_line(escape_string(entry.type))}"'
+    return f'{written} {VALUELESS_CUSTOM}; give it a value ({written} "text") or delete the line.'
+
+
+def _pad_past_valueless_customs() -> None:
+    """Have the pad plugin report a `custom` with no values at its own line (w1/299).
+
+    Beancount parses `custom "reminder"` with `values=None`, and the pad
+    plugin, which runs on every ledger, iterates every custom's values while
+    it gathers postings by account. It raised, the loader reported that at
+    `<load>:0`, and since no pad was applied, each balance a pad covers
+    failed too: `check` named neither the line to fix nor a true failure. The
+    plugin now pads with those customs holding an empty list of values, as
+    every reader here already treats them, and reports each one at its line
+    with the remedy `bea add custom` gives (w3/232). The error is the plugin's
+    own `PadError`, so Beancount's load cache stays readable by upstream tools.
+    """
+    from beancount.core.data import Custom
+    from beancount.ops import pad
+
+    if getattr(pad.pad, "_bea_pads_past_valueless_customs", False):
+        return
+    original: Any = pad.pad
+
+    def _pad(entries: Any, options_map: Any) -> Any:
+        if not any(isinstance(entry, Custom) and entry.values is None for entry in entries):
+            return original(entries, options_map)
+        readable = [
+            entry._replace(values=[]) if isinstance(entry, Custom) and entry.values is None else entry
+            for entry in entries
+        ]
+        padded, errors = original(readable, options_map)
+        valueless = [new for new, old in zip(readable, entries, strict=True) if new is not old]
+        located = [pad.PadError(entry.meta, _valueless_custom_message(entry), entry) for entry in valueless]
+        return padded, [*errors, *located]
+
+    _pad._bea_pads_past_valueless_customs = True  # type: ignore[attr-defined]
+    pad.pad = _pad
+
+
 def _interrupted_validation(exc: BaseException, code: Any) -> tuple[list[Any], Any] | None:
     """Upstream balance validation's progress when `exc` left it: errors so far, the raising entry."""
     trace = exc.__traceback__
@@ -1181,9 +1239,10 @@ def _changed_since(snapshot: LedgerSnapshot) -> bool:
 #: What ends a load cache `_load_fresh` wrote. Unpickling stops at the pickle's
 #: own end, so upstream tools read a marked cache exactly as they did, and one
 #: they write themselves replaces the file, mark included. Its revision moves
-#: when the engine parses differently, so no older cache answers: one kept the
-#: location a `filename:` key overwrote (w5/630).
-_ENGINE_CACHE_MARK = b"\nbea-engine-load 2\n"
+#: when the engine loads differently, so no older cache answers: one kept the
+#: location a `filename:` key overwrote (w5/630), one a valueless `custom`'s
+#: unlocated pad failure (w1/299).
+_ENGINE_CACHE_MARK = b"\nbea-engine-load 3\n"
 
 
 def _engine_wrote(cache: Path) -> bool:

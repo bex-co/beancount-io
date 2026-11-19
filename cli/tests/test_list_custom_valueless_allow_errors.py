@@ -1,8 +1,8 @@
 """`list custom --allow-errors` reads a `custom` directive that has no values (w5/172).
 
 Beancount parses `custom "marker"` with `values=None`. The ledger fails `check`
-on an upstream plugin error, but `--allow-errors` is the documented way to read
-it; the reader iterated the missing values and died with a raw `TypeError`.
+at that line (w1/299), but `--allow-errors` is the documented way to read it;
+the reader iterated the missing values and died with a raw `TypeError`.
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ def test_valueless_custom_is_listed_with_no_values(tmp_path: Path) -> None:
     rows = [line.split() for line in result.stdout.splitlines()[2:] if line.strip()]
     assert rows == [["2024-01-02", "marker"], ["2024-01-03", "budget", "text:x"]]
     assert "TypeError" not in result.stdout
-    assert "beancount.ops.pad" in result.stderr
+    assert f'{tmp_path / "main.bean"}:2: custom "marker" has no values' in result.stderr
 
 
 def test_valueless_custom_json_has_empty_values(tmp_path: Path) -> None:
@@ -73,4 +73,4 @@ def test_event_control_still_lists(tmp_path: Path) -> None:
     result = _bea(tmp_path, "-f", "main.bean", "list", "event", "--allow-errors")
     assert result.returncode == 0, result.stderr or result.stdout
     assert "Paris" in result.stdout
-    assert "beancount.ops.pad" in result.stderr
+    assert f'{tmp_path / "main.bean"}:2: custom "marker" has no values' in result.stderr

@@ -155,12 +155,15 @@ def check(ctx: typer.Context) -> None:
             root_hint = loaded.get("root_hint")
             failed = [str(line) for line in loaded.get("plugin_failures") or []]
             unbookable = [str(line) for line in loaded.get("booking_failures") or []]
+            # A `custom` with no values: bean-check's pad plugin fails on it at
+            # `<load>:0`, and every balance a pad covers fails after it (w1/299).
+            customs = [str(line) for line in loaded.get("valueless_customs") or []]
             # Metadata overwriting an entry's location: bean-check accepts it
             # under any option, `--debug` included (w5/630).
             reserved = [str(line) for line in loaded.get("reserved_keys") or []]
             if current.debug:
-                failed, unbookable = [], []
-            if reserved and (args or as_json) and not (failed or unbookable):
+                failed, unbookable, customs = [], [], []
+            if reserved and (args or as_json) and not (failed or unbookable or customs):
                 # Not a crash: bean-check loads past the key, so with its own
                 # options it still reports the rest, and the key is added to
                 # its answer. Short-circuited, `-C`, `-v` and `--json` showed
@@ -170,14 +173,14 @@ def check(ctx: typer.Context) -> None:
             # (w1/273): bean-check names no include line. With bean-check's own
             # options, its output stays native, as USAGE documents.
             includes = [] if args else [str(line) for line in loaded.get("include_errors") or []]
-            if failed or unbookable or reserved or includes:
+            if failed or unbookable or customs or reserved or includes:
                 # bean-check reports a plugin that cannot load as a traceback at
                 # `<load>:0`, and a transaction booking cannot do the arithmetic
                 # for as an uncaught `DivisionByZero` or `InvalidOperation` (w5/538);
                 # the helper names the directive's file and line, as `--json check`
                 # and every other read do. The other load errors are listed only
                 # when no option could have changed them (w5/256).
-                crashed = [*failed, *unbookable, *reserved]
+                crashed = [*failed, *unbookable, *customs, *reserved]
                 if as_json:
                     _emit_json_errors(file, crashed, 1)
                 if args:

@@ -79,7 +79,7 @@ doing money arithmetic, and a float would silently round.
 | command                             | answers                                                    |
 | ----------------------------------- | ---------------------------------------------------------- |
 | `describe --file PATH`              | `{"root", "files", "operating_currencies", "open_accounts", "plugins", "errors", "beancount_version"}` for `bea init --existing`; each plugin has its `file`/`line`, whether it `loaded`, and its `source` (`beancount`, `beside-ledger`, `package`); each error is `{file, line, message, option}`; never fails for ledger errors |
-| `check --file PATH`                 | `{"valid": true, "errors": []}`; with `--documents-only`, a failed plugin, an include that matches no file, or one that loads a file twice answers `{"valid": false, "errors": [...], "plugin_failures": [...], "include_errors": [...]}` |
+| `check --file PATH`                 | `{"valid": true, "errors": []}`; with `--documents-only`, a failed plugin, a `custom` with no values, an include that matches no file, or one that loads a file twice answers `{"valid": false, "errors": [...], "plugin_failures": [...], "valueless_customs": [...], "include_errors": [...]}` |
 | `query --file PATH --query BQL`     | the query's columns and rows                               |
 | `list --file PATH --type TYPE`      | `{"items": [...], "truncated": false, "errors": []}`       |
 | `add --file PATH --type TYPE --request JSON` | `{"written": 1, "directive": {...}, "warnings": [], "target": "..."}` |
