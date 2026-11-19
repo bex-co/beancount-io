@@ -137,7 +137,7 @@ async function submit500({ pickAccount = true } = {}) {
   fireEvent.change(screen.getByRole("spinbutton", { name: /amount/i }), {
     target: { value: "500" },
   });
-  const button = screen.getByRole("button", { name: /add budget/i });
+  const button = screen.getByRole("button", { name: /^(add|update) budget$/i });
   await waitFor(() => expect(button).toBeEnabled());
   fireEvent.click(button);
 }
@@ -211,6 +211,8 @@ describe("AddBudgetDialog acknowledgement versus the list read", () => {
 
     await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
     expect(onOpenChange).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: /add budget/i })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: /^(add|update) budget$/i }),
+    ).toBeEnabled();
   });
 });

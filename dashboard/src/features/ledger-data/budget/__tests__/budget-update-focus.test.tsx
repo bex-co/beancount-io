@@ -108,6 +108,21 @@ function setup({ refreshFails = false } = {}) {
               return;
             }
             case "GetLedgerJournal": {
+              // The page also reads the ledger's latest entry (to know which
+              // period to summarise); only the budget list is the refresh.
+              const query = (
+                operation.variables as { query?: { customSubtypes?: string[] } }
+              ).query;
+              if (!query?.customSubtypes?.includes("budget")) {
+                respond({
+                  getLedgerJournal: {
+                    __typename: "JournalResult",
+                    total: 0,
+                    data: [],
+                  },
+                });
+                return;
+              }
               reads += 1;
               const answer = () => {
                 if (refreshFails && reads > 1) {
@@ -204,7 +219,9 @@ describe("Budget Update focus across the list refresh (w4/1110)", () => {
     // Cancel control: the still-mounted trigger keeps its restore.
     opener.focus();
     await user.keyboard("{Enter}");
-    let dialog = await screen.findByRole("dialog", { name: "Add Budget" });
+    let dialog = await screen.findByRole("dialog", {
+      name: /^Update budget for /,
+    });
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
@@ -214,35 +231,37 @@ describe("Budget Update focus across the list refresh (w4/1110)", () => {
 
     // Successful update: 150 dated today by the form's default.
     await user.keyboard("{Enter}");
-    dialog = await screen.findByRole("dialog", { name: "Add Budget" });
+    dialog = await screen.findByRole("dialog", { name: /^Update budget for / });
     await user.type(
       within(dialog).getByRole("spinbutton", { name: /amount/i }),
       "150",
     );
-    const submit = within(dialog).getByRole("button", { name: "Add Budget" });
+    const submit = within(dialog).getByRole("button", {
+      name: "Update Budget",
+    });
     await waitFor(() => expect(submit).toBeEnabled());
     submit.focus();
     await user.keyboard("{Enter}");
 
-    // The acknowledged write closes the dialog; the held refresh replaces
-    // the card (and the old trigger) with the skeleton.
+    // The acknowledged write closes the dialog. The shown cards stay while
+    // the list refreshes (a shown page is never swapped for its loading
+    // view), so focus is back on the Update action it left, and stays on
+    // it once the refresh settles.
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
     expect(writes).toHaveLength(1);
-    await waitFor(() => expect(opener.isConnected).toBe(false));
-    expect(screen.queryByRole("button", { name: UPDATE_NAME })).toBeNull();
+    await waitFor(() => expect(opener).toHaveFocus());
 
     releaseRefresh();
     const replacement = await screen.findByRole("button", {
       name: UPDATE_NAME,
     });
-    expect(replacement).not.toBe(opener);
     await waitFor(() => expect(replacement).toHaveFocus());
 
     // Immediate Enter from the restored position opens the intended form.
     await user.keyboard("{Enter}");
-    dialog = await screen.findByRole("dialog", { name: "Add Budget" });
+    dialog = await screen.findByRole("dialog", { name: /^Update budget for / });
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
     await waitFor(() => expect(replacement).toHaveFocus());
@@ -255,17 +274,23 @@ describe("Budget Update focus across the list refresh (w4/1110)", () => {
     const opener = await mountPage(client);
     opener.focus();
     await user.keyboard("{Enter}");
-    const dialog = await screen.findByRole("dialog", { name: "Add Budget" });
+    const dialog = await screen.findByRole("dialog", {
+      name: /^Update budget for /,
+    });
     await user.type(
       within(dialog).getByRole("spinbutton", { name: /amount/i }),
       "150",
     );
-    const submit = within(dialog).getByRole("button", { name: "Add Budget" });
+    const submit = within(dialog).getByRole("button", {
+      name: "Update Budget",
+    });
     await waitFor(() => expect(submit).toBeEnabled());
     await user.click(submit);
-    await waitFor(() => expect(opener.isConnected).toBe(false));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
 
-    // While the list is replaced, the user deliberately moves to the
+    // While the list refreshes, the user deliberately moves to the
     // persistent header action; the settled refresh must not take it back.
     const headerAdd = screen.getByRole("button", { name: /add budget/i });
     headerAdd.focus();
@@ -280,12 +305,16 @@ describe("Budget Update focus across the list refresh (w4/1110)", () => {
     const opener = await mountPage(client);
     opener.focus();
     await user.keyboard("{Enter}");
-    const dialog = await screen.findByRole("dialog", { name: "Add Budget" });
+    const dialog = await screen.findByRole("dialog", {
+      name: /^Update budget for /,
+    });
     await user.type(
       within(dialog).getByRole("spinbutton", { name: /amount/i }),
       "150",
     );
-    const submit = within(dialog).getByRole("button", { name: "Add Budget" });
+    const submit = within(dialog).getByRole("button", {
+      name: "Update Budget",
+    });
     await waitFor(() => expect(submit).toBeEnabled());
     await user.click(submit);
 

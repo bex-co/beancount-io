@@ -183,7 +183,7 @@ function normalizeInterval(interval: string): string {
   return normalized === "daily" ? "day" : normalized.replace(/ly$/, "");
 }
 
-function getIntervalStart(date: Date, interval: string): Date {
+export function getIntervalStart(date: Date, interval: string): Date {
   switch (normalizeInterval(interval)) {
     case "day":
       return startOfDay(date);
@@ -330,4 +330,35 @@ export function readSparseBalanceAmount(
   const exact = parseDecimalNumber(String(value));
   if (exact === null) return null;
   return direction < 0 ? negateDecimalNumber(exact) : exact;
+}
+
+/**
+ * A budget period by name, in the reader's language: "September 2025" for a
+ * month, "Q3 2025" for a quarter, "2025" for a year, and its first day for a
+ * week or a day. `start` is the period's first day, `yyyy-MM-dd`.
+ */
+export function budgetPeriodName(
+  start: string,
+  interval: string,
+  language: string,
+  quarterOf: (quarter: number, year: number) => string,
+  weekOf: (day: string) => string,
+): string {
+  const [year, month] = start.split("-").map(Number);
+  switch (interval.toUpperCase()) {
+    case "MONTHLY":
+      return new Intl.DateTimeFormat(language, {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      }).format(Date.UTC(year, month - 1, 1));
+    case "QUARTERLY":
+      return quarterOf(Math.floor((month - 1) / 3) + 1, year);
+    case "YEARLY":
+      return String(year);
+    case "WEEKLY":
+      return weekOf(start);
+    default:
+      return start;
+  }
 }

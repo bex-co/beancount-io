@@ -230,6 +230,81 @@ const zhBudget: Record<string, TranslationEntry> = {
     message: "差额",
     description: "Label for budget variance (spending minus budget)",
   },
+  "page.budget.budgetCount_other": {
+    message: "{shown} 个预算",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetQuarterName": {
+    message: "{year}年第{quarter}季度",
+    description:
+      "A quarter's name on the Budget page; {quarter} is 1\u20134, {year} the year",
+  },
+  "page.budget.budgetWeekOf": {
+    message: "{date} 当周",
+    description:
+      "A week's name on the Budget page; {date} is its first day, yyyy-MM-dd",
+  },
+  "page.budget.budgetOfTarget": {
+    message: "目标 {target}",
+    description:
+      "Under a budget's actual in the narrow summary, its target; {target} is an amount with its currency",
+  },
+  "page.budget.budgetNoMatchFor": {
+    message: "没有包含“{query}”的预算账户。",
+    description:
+      "Budget page when a search finds no budget; {query} is what was typed",
+  },
+  "page.budget.budgetReadFailedLedgerUnchanged": {
+    message: "账本没有任何改动。请再试一次，或稍后再来。",
+    description:
+      "Message when the Budget page could not read its budgets, above Try Again: nothing was changed",
+  },
+  "page.budget.budgetSummaryCaption": {
+    message:
+      "先列未达成的目标，再列已达成的，最后列仍在进行中的；每组内按偏离目标的百分比从大到小排列。",
+    description:
+      "Caption of the Budget page's summary table: what it lists and how it is ordered",
+  },
+  "page.budget.budgetEntriesEnd": {
+    message: "记录截至 {date}，因此数字以最后一个完整月份的月末 {day} 为准。",
+    description:
+      "Under the Budget summary's caption when the ledger stopped: {date} is its last entry, {day} the day whose periods are shown",
+  },
+  "page.budget.budgetTargetsHeading": {
+    message: "目标",
+    description: "Heading over a budget card's list of dated targets",
+  },
+  "page.budget.budgetTargetsHelp": {
+    message: "每个目标自其日期起生效，直到下一个目标；它们共同构成虚线。",
+    description:
+      "Under the Targets heading on a budget card: how dated targets apply",
+  },
+  "page.budget.budgetBackToSummary": {
+    message: "返回汇总",
+    description:
+      "Link at the end of a budget card back to the Budget page's summary",
+  },
+  "page.budget.budgetEntriesEndBeforeSpan": {
+    message: "记录截至 {date}，早于此时间范围的开始。",
+    description:
+      "Under the Budget summary's caption when the chosen time span starts after the ledger's last entry {date}",
+  },
+  "page.budget.budgetInProgress": {
+    message: "进行中",
+    description:
+      "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetLegendMissed": {
+    message: "未达目标",
+    description:
+      "Chart key for a red bar: a period on the wrong side of its target",
+  },
+  "page.budget.budgetLegendNotJudged": {
+    message: "未评判",
+    description:
+      "Chart key for a pale bar: a period with no target yet, or one still running, so not judged",
+  },
 };
 
 export default zhBudget;

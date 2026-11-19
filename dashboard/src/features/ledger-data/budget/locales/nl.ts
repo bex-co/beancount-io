@@ -232,6 +232,90 @@ const nlBudget: Record<string, TranslationEntry> = {
     message: "Verschil",
     description: "Label for budget variance (spending minus budget)",
   },
+  "page.budget.budgetCount_one": {
+    message: "{shown} budget",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetCount_other": {
+    message: "{shown} budgetten",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetQuarterName": {
+    message: "K{quarter} {year}",
+    description:
+      "A quarter's name on the Budget page; {quarter} is 1\u20134, {year} the year",
+  },
+  "page.budget.budgetWeekOf": {
+    message: "Week van {date}",
+    description:
+      "A week's name on the Budget page; {date} is its first day, yyyy-MM-dd",
+  },
+  "page.budget.budgetOfTarget": {
+    message: "van {target}",
+    description:
+      "Under a budget's actual in the narrow summary, its target; {target} is an amount with its currency",
+  },
+  "page.budget.budgetNoMatchFor": {
+    message: "Geen rekening met budget bevat ‘{query}’.",
+    description:
+      "Budget page when a search finds no budget; {query} is what was typed",
+  },
+  "page.budget.budgetReadFailedLedgerUnchanged": {
+    message:
+      "Er is niets veranderd in uw grootboek. Probeer het opnieuw of kom over een minuut terug.",
+    description:
+      "Message when the Budget page could not read its budgets, above Try Again: nothing was changed",
+  },
+  "page.budget.budgetSummaryCaption": {
+    message:
+      "Eerst gemiste doelen, dan behaalde, dan nog lopende; binnen elke groep de grootste procentuele afwijking van het doel eerst.",
+    description:
+      "Caption of the Budget page's summary table: what it lists and how it is ordered",
+  },
+  "page.budget.budgetEntriesEnd": {
+    message:
+      "De boekingen eindigen op {date}; de cijfers gelden per {day}, het einde van de laatste volledige maand.",
+    description:
+      "Under the Budget summary's caption when the ledger stopped: {date} is its last entry, {day} the day whose periods are shown",
+  },
+  "page.budget.budgetTargetsHeading": {
+    message: "Doelen",
+    description: "Heading over a budget card's list of dated targets",
+  },
+  "page.budget.budgetTargetsHelp": {
+    message:
+      "Elk doel geldt vanaf de datum tot het volgende; samen vormen ze de stippellijn.",
+    description:
+      "Under the Targets heading on a budget card: how dated targets apply",
+  },
+  "page.budget.budgetBackToSummary": {
+    message: "Terug naar overzicht",
+    description:
+      "Link at the end of a budget card back to the Budget page's summary",
+  },
+  "page.budget.budgetEntriesEndBeforeSpan": {
+    message:
+      "De boekingen eindigen op {date}, vóór het begin van deze periode.",
+    description:
+      "Under the Budget summary's caption when the chosen time span starts after the ledger's last entry {date}",
+  },
+  "page.budget.budgetInProgress": {
+    message: "Loopt",
+    description:
+      "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetLegendMissed": {
+    message: "Doel gemist",
+    description:
+      "Chart key for a red bar: a period on the wrong side of its target",
+  },
+  "page.budget.budgetLegendNotJudged": {
+    message: "Niet beoordeeld",
+    description:
+      "Chart key for a pale bar: a period with no target yet, or one still running, so not judged",
+  },
 };
 
 export default nlBudget;

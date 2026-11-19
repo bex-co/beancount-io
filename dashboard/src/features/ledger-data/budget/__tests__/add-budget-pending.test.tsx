@@ -81,7 +81,9 @@ function Harness({ locked = false }: { locked?: boolean }) {
 }
 
 const amount = () => screen.getByRole("spinbutton", { name: /amount/i });
-const submitButton = () => screen.getByRole("button", { name: /add budget/i });
+// Add or, from a card, Update.
+const submitButton = () =>
+  screen.getByRole("button", { name: /^(add|update) budget$/i });
 const settle = async (outcome: "success" | "failure") => {
   const pending = deferred.shift()!;
   await act(async () => {

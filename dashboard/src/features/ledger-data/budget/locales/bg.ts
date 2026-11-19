@@ -232,6 +232,89 @@ const bgBudget: Record<string, TranslationEntry> = {
     message: "Отклонение",
     description: "Label for budget variance (spending minus budget)",
   },
+  "page.budget.budgetCount_one": {
+    message: "{shown} бюджет",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetCount_other": {
+    message: "{shown} бюджета",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetQuarterName": {
+    message: "{quarter}. трим. {year}",
+    description:
+      "A quarter's name on the Budget page; {quarter} is 1\u20134, {year} the year",
+  },
+  "page.budget.budgetWeekOf": {
+    message: "Седмица от {date}",
+    description:
+      "A week's name on the Budget page; {date} is its first day, yyyy-MM-dd",
+  },
+  "page.budget.budgetOfTarget": {
+    message: "от {target}",
+    description:
+      "Under a budget's actual in the narrow summary, its target; {target} is an amount with its currency",
+  },
+  "page.budget.budgetNoMatchFor": {
+    message: "Няма сметка с бюджет, чието име съдържа „{query}“.",
+    description:
+      "Budget page when a search finds no budget; {query} is what was typed",
+  },
+  "page.budget.budgetReadFailedLedgerUnchanged": {
+    message:
+      "В книгата ви нищо не е променено. Опитайте отново или се върнете след минута.",
+    description:
+      "Message when the Budget page could not read its budgets, above Try Again: nothing was changed",
+  },
+  "page.budget.budgetSummaryCaption": {
+    message:
+      "Първо пропуснатите цели, после изпълнените, после още текущите; във всяка група първо най-голямото отклонение като дял от целта.",
+    description:
+      "Caption of the Budget page's summary table: what it lists and how it is ordered",
+  },
+  "page.budget.budgetEntriesEnd": {
+    message:
+      "Записите приключват на {date}, затова стойностите са към {day}, края на последния пълен месец.",
+    description:
+      "Under the Budget summary's caption when the ledger stopped: {date} is its last entry, {day} the day whose periods are shown",
+  },
+  "page.budget.budgetTargetsHeading": {
+    message: "Цели",
+    description: "Heading over a budget card's list of dated targets",
+  },
+  "page.budget.budgetTargetsHelp": {
+    message:
+      "Всяка цел важи от датата си до следващата; заедно те чертаят пунктирната линия.",
+    description:
+      "Under the Targets heading on a budget card: how dated targets apply",
+  },
+  "page.budget.budgetBackToSummary": {
+    message: "Обратно към обобщението",
+    description:
+      "Link at the end of a budget card back to the Budget page's summary",
+  },
+  "page.budget.budgetEntriesEndBeforeSpan": {
+    message: "Записите приключват на {date}, преди началото на този период.",
+    description:
+      "Under the Budget summary's caption when the chosen time span starts after the ledger's last entry {date}",
+  },
+  "page.budget.budgetInProgress": {
+    message: "В ход",
+    description:
+      "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetLegendMissed": {
+    message: "Пропусната цел",
+    description:
+      "Chart key for a red bar: a period on the wrong side of its target",
+  },
+  "page.budget.budgetLegendNotJudged": {
+    message: "Без оценка",
+    description:
+      "Chart key for a pale bar: a period with no target yet, or one still running, so not judged",
+  },
 };
 
 export default bgBudget;

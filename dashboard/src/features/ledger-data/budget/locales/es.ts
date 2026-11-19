@@ -232,6 +232,95 @@ const esBudget: Record<string, TranslationEntry> = {
     message: "Diferencia",
     description: "Label for budget variance (spending minus budget)",
   },
+  "page.budget.budgetCount_one": {
+    message: "{shown} presupuesto",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetCount_many": {
+    message: "{shown} de presupuestos",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetCount_other": {
+    message: "{shown} presupuestos",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetQuarterName": {
+    message: "T{quarter} {year}",
+    description:
+      "A quarter's name on the Budget page; {quarter} is 1\u20134, {year} the year",
+  },
+  "page.budget.budgetWeekOf": {
+    message: "Semana del {date}",
+    description:
+      "A week's name on the Budget page; {date} is its first day, yyyy-MM-dd",
+  },
+  "page.budget.budgetOfTarget": {
+    message: "de {target}",
+    description:
+      "Under a budget's actual in the narrow summary, its target; {target} is an amount with its currency",
+  },
+  "page.budget.budgetNoMatchFor": {
+    message: "Ninguna cuenta con presupuesto contiene «{query}».",
+    description:
+      "Budget page when a search finds no budget; {query} is what was typed",
+  },
+  "page.budget.budgetReadFailedLedgerUnchanged": {
+    message:
+      "Tu libro no ha cambiado. Inténtalo de nuevo o vuelve en un minuto.",
+    description:
+      "Message when the Budget page could not read its budgets, above Try Again: nothing was changed",
+  },
+  "page.budget.budgetSummaryCaption": {
+    message:
+      "Primero los objetivos incumplidos, luego los cumplidos y después los que siguen en curso; en cada grupo, primero la mayor desviación porcentual del objetivo.",
+    description:
+      "Caption of the Budget page's summary table: what it lists and how it is ordered",
+  },
+  "page.budget.budgetEntriesEnd": {
+    message:
+      "Los asientos terminan el {date}; las cifras son a {day}, el final del último mes completo.",
+    description:
+      "Under the Budget summary's caption when the ledger stopped: {date} is its last entry, {day} the day whose periods are shown",
+  },
+  "page.budget.budgetTargetsHeading": {
+    message: "Objetivos",
+    description: "Heading over a budget card's list of dated targets",
+  },
+  "page.budget.budgetTargetsHelp": {
+    message:
+      "Cada objetivo rige desde su fecha hasta el siguiente; juntos trazan la línea discontinua.",
+    description:
+      "Under the Targets heading on a budget card: how dated targets apply",
+  },
+  "page.budget.budgetBackToSummary": {
+    message: "Volver al resumen",
+    description:
+      "Link at the end of a budget card back to the Budget page's summary",
+  },
+  "page.budget.budgetEntriesEndBeforeSpan": {
+    message:
+      "Los asientos terminan el {date}, antes de que empiece este período.",
+    description:
+      "Under the Budget summary's caption when the chosen time span starts after the ledger's last entry {date}",
+  },
+  "page.budget.budgetInProgress": {
+    message: "En curso",
+    description:
+      "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetLegendMissed": {
+    message: "Objetivo incumplido",
+    description:
+      "Chart key for a red bar: a period on the wrong side of its target",
+  },
+  "page.budget.budgetLegendNotJudged": {
+    message: "Sin valorar",
+    description:
+      "Chart key for a pale bar: a period with no target yet, or one still running, so not judged",
+  },
 };
 
 export default esBudget;

@@ -231,6 +231,84 @@ const koBudget: Record<string, TranslationEntry> = {
     message: "차이",
     description: "Label for budget variance (spending minus budget)",
   },
+  "page.budget.budgetCount_other": {
+    message: "예산 {shown}개",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetQuarterName": {
+    message: "{year}년 {quarter}분기",
+    description:
+      "A quarter's name on the Budget page; {quarter} is 1\u20134, {year} the year",
+  },
+  "page.budget.budgetWeekOf": {
+    message: "{date} 주",
+    description:
+      "A week's name on the Budget page; {date} is its first day, yyyy-MM-dd",
+  },
+  "page.budget.budgetOfTarget": {
+    message: "목표 {target}",
+    description:
+      "Under a budget's actual in the narrow summary, its target; {target} is an amount with its currency",
+  },
+  "page.budget.budgetNoMatchFor": {
+    message: "'{query}'이(가) 포함된 예산 계정이 없습니다.",
+    description:
+      "Budget page when a search finds no budget; {query} is what was typed",
+  },
+  "page.budget.budgetReadFailedLedgerUnchanged": {
+    message:
+      "원장은 변경되지 않았습니다. 다시 시도하거나 잠시 후 다시 열어 주세요.",
+    description:
+      "Message when the Budget page could not read its budgets, above Try Again: nothing was changed",
+  },
+  "page.budget.budgetSummaryCaption": {
+    message:
+      "미달 목표, 달성 목표, 진행 중인 목표 순이며, 각 그룹에서는 목표 대비 차이 비율이 큰 것부터 표시합니다.",
+    description:
+      "Caption of the Budget page's summary table: what it lists and how it is ordered",
+  },
+  "page.budget.budgetEntriesEnd": {
+    message:
+      "기록이 {date}에 끝나므로 수치는 마지막 온전한 달의 말일인 {day} 기준입니다.",
+    description:
+      "Under the Budget summary's caption when the ledger stopped: {date} is its last entry, {day} the day whose periods are shown",
+  },
+  "page.budget.budgetTargetsHeading": {
+    message: "목표",
+    description: "Heading over a budget card's list of dated targets",
+  },
+  "page.budget.budgetTargetsHelp": {
+    message:
+      "각 목표는 그 날짜부터 다음 목표까지 유지되며, 함께 점선을 그립니다.",
+    description:
+      "Under the Targets heading on a budget card: how dated targets apply",
+  },
+  "page.budget.budgetBackToSummary": {
+    message: "요약으로 돌아가기",
+    description:
+      "Link at the end of a budget card back to the Budget page's summary",
+  },
+  "page.budget.budgetEntriesEndBeforeSpan": {
+    message: "기록이 이 기간이 시작되기 전인 {date}에 끝납니다.",
+    description:
+      "Under the Budget summary's caption when the chosen time span starts after the ledger's last entry {date}",
+  },
+  "page.budget.budgetInProgress": {
+    message: "진행 중",
+    description:
+      "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetLegendMissed": {
+    message: "목표 미달",
+    description:
+      "Chart key for a red bar: a period on the wrong side of its target",
+  },
+  "page.budget.budgetLegendNotJudged": {
+    message: "판정 없음",
+    description:
+      "Chart key for a pale bar: a period with no target yet, or one still running, so not judged",
+  },
 };
 
 export default koBudget;

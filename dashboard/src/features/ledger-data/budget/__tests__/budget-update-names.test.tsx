@@ -158,8 +158,9 @@ describe("Budget update triggers identify their card", () => {
       });
       opener.focus();
       await user.keyboard("{Enter}");
+      // The dialog says which budget it updates.
       const dialog = await screen.findByRole("dialog", {
-        name: i18n.t("page.budget.budgetAddBudget"),
+        name: updateName(language, "Expenses:Groceries", "EUR"),
       });
       const account = within(dialog).getByRole("textbox", {
         name: i18n.t("page.accounts.account"),
@@ -202,14 +203,14 @@ describe("Budget update triggers identify their card", () => {
       });
       await user.click(opener);
       const dialog = await screen.findByRole("dialog");
-      await user.type(
-        within(dialog).getByRole("spinbutton", {
-          name: i18n.t("page.budget.budgetAmount"),
-        }),
-        "125.5",
-      );
+      // It starts from the target in force; the reader replaces it.
+      const amount = within(dialog).getByRole("spinbutton", {
+        name: i18n.t("page.budget.budgetAmount"),
+      });
+      await user.clear(amount);
+      await user.type(amount, "125.5");
       const submit = within(dialog).getByRole("button", {
-        name: i18n.t("page.budget.budgetAddBudget"),
+        name: i18n.t("page.budget.budgetAddEntry"),
       });
       await waitFor(() => expect(submit).toBeEnabled());
       await user.click(submit);

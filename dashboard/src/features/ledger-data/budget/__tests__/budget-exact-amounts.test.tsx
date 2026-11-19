@@ -105,10 +105,10 @@ describe("Budget card exact amounts", () => {
     expect(lastTooltip(chartOptions.at(-1)!, "2025-12-31")).toBe(
       "2025-12-31 Budget: 9,007,199,254,740,993.00 USD Actual: 9,007,199,254,740,992.00 USD",
     );
-    // The dated history keeps the amount as written.
+    // The dated history keeps every digit, grouped as the card writes it.
     const history = screen.getByRole("table", { name: `${ACCOUNT} USD` });
     expect(
-      within(history).getByText("9007199254740993 USD"),
+      within(history).getByText("9,007,199,254,740,993 USD"),
     ).toBeInTheDocument();
   });
 

@@ -255,7 +255,10 @@ describe("Budget search Clear focus on the owning page", () => {
       const input = searchBox();
       await user.type(input, "no-matching-budget");
       expectHistories([]);
-      expect(screen.getByText(en["common.noResultsFound"])).toBeInTheDocument();
+      // The no-match message repeats what was searched.
+      expect(
+        screen.getByText("No budgeted account contains “no-matching-budget”."),
+      ).toBeInTheDocument();
       const clearButtons = screen.getAllByRole("button", { name: "Clear" });
       expect(clearButtons).toHaveLength(2);
       const reset = clearButtons.find((button) => button !== searchClear())!;

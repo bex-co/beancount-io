@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHydrated, useParams } from "@tanstack/react-router";
+import { useQuery } from "@apollo/client/react";
 import { format, subYears } from "date-fns";
-import { BudgetInterval } from "@/graphql/definitions";
+import {
+  BudgetInterval,
+  GetLedgerJournalDocument,
+} from "@/graphql/definitions";
 import { createLedgerId } from "@/common/lib/utils/encode";
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
+import { DirectiveType } from "@/common/types/journal";
+import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
 import { Card, CardContent } from "@/common/components/ui/card";
@@ -14,14 +20,21 @@ import { QueryView } from "@/common/components/query-view";
 import { AddBudgetDialog } from "./add-budget-dialog";
 import { DeleteBudgetDialog } from "./delete-budget-dialog";
 import { BudgetChartCard } from "./budget-chart-card";
-import { BudgetFilterPills } from "./budget-filter-pills";
+import { BudgetFilterPills, BudgetFilterSelect } from "./budget-filter-pills";
 import { useLedger } from "@/common/hooks/use-ledger";
 import type { ConversionOption } from "@/common/types/chart";
 import type { BudgetGroup } from "./types";
 import { useBudgetEntries } from "./use-budget-entries";
 import { groupBudgetEntries } from "./budget-utils";
 import { LedgerWritePermission } from "@/common/components/ledger-permission/write";
+import { cn } from "@/common/lib/utils/utils";
 import { useFormatCount } from "@/common/hooks/use-format-count";
+import { BudgetSummary } from "./budget-summary";
+import { budgetKey, budgetSummaryDay } from "./budget-snapshot";
+
+/** The id of a budget's card, for its summary row to lead to. */
+const anchorOf = (group: BudgetGroup) =>
+  `budget-${budgetKey(group).replace(/[^A-Za-z0-9_-]+/g, "-")}`;
 
 function getLast12MonthsRange(): string {
   const end = new Date();
@@ -29,26 +42,33 @@ function getLast12MonthsRange(): string {
   return `${format(start, "yyyy-MM-dd")} - ${format(end, "yyyy-MM-dd")}`;
 }
 
+/** The loaded page's shape: its card of filters and summary rows, then a budget. */
 function BudgetLoadingSkeleton() {
   return (
-    <div className="space-y-4">
-      {Array.from({ length: 2 }).map((_, i) => (
-        <div
-          key={i}
-          className="rounded-xl border bg-card p-4 shadow-sm space-y-4"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-8 w-24" />
-          </div>
-          <Skeleton className="h-[250px] w-full" />
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, j) => (
-              <Skeleton key={j} className="h-4 w-full" />
-            ))}
-          </div>
+    <div className="space-y-4 sm:space-y-5">
+      <div className="overflow-clip rounded-xl border bg-card shadow-sm">
+        <div className="space-y-2 border-b bg-muted/20 px-2 py-2 sm:px-3">
+          <Skeleton className="h-9 w-full @4xl:w-64" />
+          <Skeleton className="h-8 w-3/4" />
         </div>
-      ))}
+        <div className="h-8 border-b bg-muted" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-start justify-between gap-4 border-b px-4 py-2 last:border-b-0"
+          >
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <Skeleton className="h-4 w-24" />
+          </div>
+        ))}
+      </div>
+      <div className="space-y-4 rounded-xl border bg-card p-6 shadow-sm">
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-[260px] w-full" />
+      </div>
     </div>
   );
 }
@@ -109,7 +129,7 @@ export default function LedgerBudgetPage() {
     setDeleteTarget(group);
   };
 
-  const intervalOptions = useMemo(
+  const allIntervalOptions = useMemo(
     () => [
       { value: "ALL", label: t("page.budget.budgetIntervalAll") },
       {
@@ -195,10 +215,80 @@ export default function LedgerBudgetPage() {
   };
 
   const { entries, loading, error, retry } = useBudgetEntries(ledgerId);
+  const { ledgerName: ledgerDisplayName } = useLedger();
+
+  // The ledger's last entry: a ledger that stopped long ago is summarised
+  // for the last month its data covers, not for an empty current one.
+  const latestEntry = useQuery(GetLedgerJournalDocument, {
+    variables: {
+      ledgerId,
+      query: {
+        directiveTypes: [DirectiveType.TRANSACTION],
+        offset: 0,
+        limit: 1,
+      },
+    },
+    skip: !ledgerId,
+    fetchPolicy: "cache-first",
+  });
+  const dataThrough =
+    (
+      latestEntry.data?.getLedgerJournal?.data as
+        | Array<{ date?: string }>
+        | undefined
+    )?.[0]?.date ?? null;
+  const today = format(new Date(), "yyyy-MM-dd");
+  const quietDay = budgetSummaryDay(today, dataThrough);
+  // A span that begins after the entries end (This year or Last 12 months
+  // on a ledger that stopped) holds no period with data: it is read for
+  // today, as a live ledger is, and the note says why it is empty.
+  const spanStart =
+    selectedTimeSpan === "this-year"
+      ? `${today.slice(0, 4)}-01-01`
+      : selectedTimeSpan === "last-12-months"
+        ? rollingRange?.slice(0, 10)
+        : undefined;
+  const spanAfterEntries = spanStart !== undefined && quietDay < spanStart;
+  const asOf = spanAfterEntries ? today : quietDay;
+  // What the chosen span means in dates, said beside the control.
+  const thisYear = Number(today.slice(0, 4));
+  const spanDates =
+    selectedTimeSpan === "this-year"
+      ? `${thisYear}-01-01 – ${thisYear}-12-31`
+      : selectedTimeSpan === "last-year"
+        ? `${thisYear - 1}-01-01 – ${thisYear - 1}-12-31`
+        : selectedTimeSpan === "last-12-months" && rollingRange
+          ? rollingRange.replace(" - ", " – ")
+          : undefined;
+  // A date in running text never breaks at its hyphens ("2025-" / "09-30").
+  const wholeDate = (day: string) => day.replace(/-/g, "-\u2060");
+  const summaryNote = [
+    dataThrough && spanAfterEntries
+      ? t("page.budget.budgetEntriesEndBeforeSpan", {
+          date: wholeDate(dataThrough),
+        })
+      : dataThrough && asOf !== today
+        ? t("page.budget.budgetEntriesEnd", {
+            date: wholeDate(dataThrough),
+            day: wholeDate(asOf),
+          })
+        : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const asOfReady = !latestEntry.loading;
 
   const budgetGroups = useMemo(
     () => (entries ? groupBudgetEntries(entries) : null),
     [entries],
+  );
+
+  // Only the cadences the ledger's budgets use, and All.
+  const usedIntervals = new Set(
+    (budgetGroups ?? []).map((g) => g.interval.toUpperCase()),
+  );
+  const intervalOptions = allIntervalOptions.filter(
+    (option) => option.value === "ALL" || usedIntervals.has(option.value),
   );
 
   useEffect(() => {
@@ -207,9 +297,21 @@ export default function LedgerBudgetPage() {
     const frame = requestAnimationFrame(() => {
       pendingUpdateFocusRef.current = null;
       // Focus the user deliberately moved (a later opening, a new target)
-      // is theirs; only a position lost to the replacement is restored.
+      // is theirs; only a position lost to the replacement is restored. A
+      // failed refresh takes the list away, so focus still in it moves too.
       const active = document.activeElement;
-      if (active && active !== document.body && active.isConnected) return;
+      const inList = Boolean(active?.closest("[data-budget-list]"));
+      if (
+        active &&
+        active !== document.body &&
+        active.isConnected &&
+        !(error && inList)
+      )
+        return;
+      if (error) {
+        (headerAddRef.current ?? searchInputRef.current)?.focus();
+        return;
+      }
       const replacement = document.querySelector<HTMLElement>(
         `[data-budget-update="${CSS.escape(`${pending.account}::${pending.currency}`)}"]`,
       );
@@ -231,6 +333,20 @@ export default function LedgerBudgetPage() {
 
   const hasListFilters = search.trim() !== "" || selectedInterval !== "ALL";
 
+  // The cards follow the summary's order, worst first, once it is settled;
+  // until then one placeholder holds their place, so nothing reorders on
+  // screen.
+  const [cardOrder, setCardOrder] = useState<string[] | null>(null);
+  const orderedCards = (() => {
+    if (!cardOrder) return null;
+    const rank = new Map(cardOrder.map((key, index) => [key, index]));
+    if (!filteredGroups.every((group) => rank.has(budgetKey(group))))
+      return null;
+    return [...filteredGroups].sort(
+      (a, b) => rank.get(budgetKey(a))! - rank.get(budgetKey(b))!,
+    );
+  })();
+
   // The no-results Clear leaves with its results; hand focus to the search,
   // as the field's own clear icon does, for the next query (w4/340).
   const clearListFilters = () => {
@@ -240,58 +356,73 @@ export default function LedgerBudgetPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader
-          showOnMobile
-          className="min-w-0"
-          title={t("page.budget.budget")}
-          description={t("page.budget.budgetDescription")}
-        />
-        <LedgerWritePermission>
-          {/* Server-rendered before its click handler exists: a click then
-              opened nothing, so it waits for hydration (w4/962). */}
-          <Button
-            ref={headerAddRef}
-            disabled={!hydrated}
-            onClick={(event) => openAddBudget(event.currentTarget)}
-            className="shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            {t("page.budget.budgetAddBudget")}
-          </Button>
-        </LedgerWritePermission>
-      </div>
+    <LedgerPage className="@container space-y-4 pb-6 sm:space-y-5">
+      <LedgerPageHeading
+        title={t("page.budget.budget")}
+        context={ledgerDisplayName ?? ledgerName}
+        meta={
+          budgetGroups && budgetGroups.length > 0
+            ? t("page.budget.budgetCount", {
+                count: budgetGroups.length,
+                shown: formatCount(budgetGroups.length),
+              })
+            : undefined
+        }
+        actions={
+          <LedgerWritePermission>
+            {/* Server-rendered before its click handler exists: a click then
+                opened nothing, so it waits for hydration (w4/962). */}
+            <Button
+              ref={headerAddRef}
+              disabled={!hydrated}
+              onClick={(event) => openAddBudget(event.currentTarget)}
+              className="shrink-0 self-start sm:self-auto pointer-coarse:h-11"
+            >
+              <Plus className="h-4 w-4" />
+              {t("page.budget.budgetAddBudget")}
+            </Button>
+          </LedgerWritePermission>
+        }
+      />
 
       <QueryView
-        loading={loading}
+        loading={loading && !budgetGroups}
         error={error}
         onRetry={retry}
+        // The server's own "try again later" sat beside a Try Again button;
+        // say instead what a failed read leaves untouched.
+        errorMessage={
+          error && getErrorMessageKey(error) === "common.errors.internal"
+            ? t("page.budget.budgetReadFailedLedgerUnchanged")
+            : undefined
+        }
         data={budgetGroups}
         loadingSlot={<BudgetLoadingSkeleton />}
         isEmpty={(groups) => groups.length === 0}
         emptySlot={<BudgetEmptyState onAdd={openAddBudget} />}
       >
         {(groups) => (
-          <div className="space-y-6">
-            <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-              <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="relative min-w-0 flex-1 sm:max-w-sm">
-                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <div data-budget-list className="space-y-4 sm:space-y-5">
+            {/* One card, as the Journal and Accounts: what narrows the list
+                in its top bar, every budget at a glance under it. */}
+            <div className="overflow-clip rounded-xl border bg-card shadow-sm">
+              <div className="flex flex-col gap-2 border-b bg-muted/20 px-2 py-2 sm:px-3 @4xl:flex-row @4xl:flex-wrap @4xl:items-center @4xl:gap-x-4">
+                <div className="relative w-full @4xl:w-72 @4xl:flex-none">
+                  <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     ref={searchInputRef}
                     aria-label={t("page.budget.budgetSearchPlaceholder")}
                     placeholder={t("page.budget.budgetSearchPlaceholder")}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    className="bg-background pl-9 pr-9"
+                    className="bg-background ps-9 pe-9 pointer-coarse:h-11"
                   />
                   {search && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon-sm"
-                      className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      className="absolute end-0.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-coarse:size-10"
                       aria-label={t("common.clearInput")}
                       onClick={() => {
                         setSearch("");
@@ -302,66 +433,111 @@ export default function LedgerBudgetPage() {
                     </Button>
                   )}
                 </div>
-                <div
-                  className="shrink-0 text-sm tabular-nums text-muted-foreground"
-                  aria-live="polite"
-                >
-                  <span className="font-medium text-foreground">
-                    {formatCount(filteredGroups.length)}
-                  </span>{" "}
-                  / {formatCount(groups.length)}{" "}
-                  {t("common.results").toLowerCase()}
-                </div>
-              </div>
-              <div className="grid gap-4 border-t bg-muted/20 p-4 lg:grid-cols-2">
+                {/* Wide, each filter is a row of chips. Narrow, the two are
+                    selects side by side, so the toolbar is two rows and the
+                    first budgets show on the first screen. */}
                 <BudgetFilterPills
                   label={t("page.budget.budgetIntervalFilterLabel")}
                   options={intervalOptions}
                   value={selectedInterval}
                   onChange={setSelectedInterval}
+                  className="hidden @lg:flex"
                 />
                 <BudgetFilterPills
                   label={t("page.budget.budgetTimeSpanFilterLabel")}
+                  detail={spanDates ?? ""}
                   options={timeSpanOptions}
                   value={selectedTimeSpan}
                   onChange={selectTimeSpan}
+                  className="hidden @lg:flex"
                 />
+                <div className="grid grid-cols-1 gap-2 min-[22rem]:grid-cols-2 @lg:hidden">
+                  <BudgetFilterSelect
+                    label={t("page.budget.budgetIntervalFilterLabel")}
+                    options={intervalOptions}
+                    value={selectedInterval}
+                    onChange={setSelectedInterval}
+                  />
+                  <BudgetFilterSelect
+                    label={t("page.budget.budgetTimeSpanFilterLabel")}
+                    detail={spanDates ?? ""}
+                    options={timeSpanOptions}
+                    value={selectedTimeSpan}
+                    onChange={selectTimeSpan}
+                  />
+                </div>
+                <div
+                  className={cn(
+                    "shrink-0 text-sm tabular-nums text-muted-foreground @4xl:ms-auto",
+                    !hasListFilters && "sr-only",
+                  )}
+                  aria-live="polite"
+                >
+                  <span className="font-medium text-foreground">
+                    {formatCount(filteredGroups.length)}
+                  </span>{" "}
+                  / {formatCount(groups.length)}
+                </div>
               </div>
-            </div>
-
-            {filteredGroups.length === 0 && (
-              <div className="rounded-xl border border-dashed bg-card/50 p-10 text-center">
-                <p className="text-sm text-muted-foreground">
-                  {t("common.noResultsFound")}
-                </p>
-                {hasListFilters && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-4"
-                    onClick={clearListFilters}
-                  >
-                    {t("common.clearInput")}
-                  </Button>
-                )}
-              </div>
-            )}
-
-            <div className="grid gap-4">
-              {filteredGroups.map((group) => (
-                <BudgetChartCard
-                  key={`${group.account}::${group.currency}`}
-                  group={group}
+              {filteredGroups.length === 0 ? (
+                <div className="px-4 py-10 text-center">
+                  <p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">
+                    {search.trim()
+                      ? t("page.budget.budgetNoMatchFor", {
+                          query: search.trim(),
+                        })
+                      : t("common.noResultsFound")}
+                  </p>
+                  {hasListFilters && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 pointer-coarse:h-11"
+                      onClick={clearListFilters}
+                    >
+                      <X className="size-3.5" />
+                      {t("common.clearInput")}
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <BudgetSummary
+                  groups={filteredGroups}
+                  ready={asOfReady}
+                  anchorOf={anchorOf}
+                  id="budget-summary"
+                  note={summaryNote || undefined}
+                  onOrder={setCardOrder}
                   ledgerId={ledgerId}
                   conversion={conversion}
                   primaryCurrency={primaryCurrency}
                   time={timeFilter}
-                  onDelete={openDeleteBudget}
-                  onUpdateSuccess={rememberUpdateFocus}
+                  asOf={asOf}
                 />
-              ))}
+              )}
             </div>
+
+            {orderedCards === null && filteredGroups.length > 0 && (
+              <div className="space-y-4 rounded-xl border bg-card p-6 shadow-sm">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-[260px] w-full" />
+              </div>
+            )}
+            {(orderedCards ?? []).map((group) => (
+              <BudgetChartCard
+                key={budgetKey(group)}
+                anchorId={anchorOf(group)}
+                group={group}
+                ledgerId={ledgerId}
+                conversion={conversion}
+                primaryCurrency={primaryCurrency}
+                time={timeFilter}
+                asOf={asOf}
+                onDelete={openDeleteBudget}
+                onUpdateSuccess={rememberUpdateFocus}
+              />
+            ))}
           </div>
         )}
       </QueryView>
@@ -389,6 +565,6 @@ export default function LedgerBudgetPage() {
         returnFocusRef={deleteReturnFocusRef}
         fallbackFocusRef={headerAddRef}
       />
-    </div>
+    </LedgerPage>
   );
 }

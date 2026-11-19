@@ -31,6 +31,7 @@ export const PLURAL_BASE_KEYS = [
   "journal.showEntryPostings",
   "journal.visibleEntryPostings",
   "page.accounts.accountCount",
+  "page.budget.budgetCount",
   "page.gallery.ledgersFound",
   "page.gallery.ledgersShownMoreAvailable",
   "page.overview.atCostCount",

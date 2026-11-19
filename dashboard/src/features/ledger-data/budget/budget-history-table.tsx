@@ -13,6 +13,8 @@ import {
 } from "@/common/components/ui/table";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { LedgerAmount } from "@/common/components/ledger-amount";
+import { absDecimalNumber } from "@/common/lib/beancount/decimal-number";
 import type { BudgetGroup } from "./types";
 
 interface BudgetHistoryTableProps {
@@ -85,17 +87,16 @@ export function BudgetHistoryTable({
       <Table aria-labelledby={ariaLabelledBy}>
         <TableHeader className="bg-muted/40">
           <TableRow className="hover:bg-transparent">
-            <TableHead className="min-w-28">
-              {t("page.budget.budgetDate")}
-            </TableHead>
-            <TableHead className="min-w-24">
+            <TableHead>{t("page.budget.budgetDate")}</TableHead>
+            {/* On a phone the cadence sits under the date, so the row fits. */}
+            <TableHead className="hidden sm:table-cell">
               {t("page.budget.budgetInterval")}
             </TableHead>
-            <TableHead className="min-w-28 text-end">
+            <TableHead className="text-end">
               {t("page.budget.budgetAmount")}
             </TableHead>
             {canWrite && (
-              <TableHead className="w-14">
+              <TableHead className="w-12 pointer-coarse:w-14">
                 <span className="sr-only">{t("common.actions")}</span>
               </TableHead>
             )}
@@ -108,23 +109,29 @@ export function BudgetHistoryTable({
                 key={entry.entry_hash}
                 className={index === 0 ? "group bg-muted/15" : "group"}
               >
-                <TableCell className="whitespace-nowrap font-mono text-xs tabular-nums">
-                  {entry.date}
+                <TableCell className="text-base tabular-nums sm:text-sm">
+                  <span className="whitespace-nowrap">{entry.date}</span>
+                  <span className="block text-xs text-muted-foreground sm:hidden">
+                    {intervalLabel(entry.interval)}
+                  </span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Badge variant="outline" className="text-xs">
                     {intervalLabel(entry.interval)}
                   </Badge>
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-end font-mono text-sm font-medium tabular-nums">
-                  {entry.amount}
+                <TableCell className="whitespace-nowrap text-end text-base font-medium tabular-nums sm:text-sm">
+                  {/* The target as the card states it: grouped, and as a
+                      size even where income is written negative. */}
+                  <AmountText amount={entry.amount} />
                 </TableCell>
                 {canWrite && (
                   <TableCell>
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      className="text-muted-foreground transition-opacity hover:bg-destructive/10 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+                      // Always in view: touch has no hover to reveal it.
+                      className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive pointer-coarse:size-11"
                       onClick={(event) =>
                         onDelete(
                           {
@@ -150,4 +157,10 @@ export function BudgetHistoryTable({
       </Table>
     </div>
   );
+}
+
+function AmountText({ amount }: { amount: string }) {
+  const [number, currency] = amount.trim().split(/\s+/);
+  if (!number || !currency) return <>{amount}</>;
+  return <LedgerAmount number={absDecimalNumber(number)} currency={currency} />;
 }

@@ -87,6 +87,8 @@ interface AddBudgetDialogProps {
   lockedInterval?: BudgetInterval;
   defaultInterval?: BudgetInterval;
   defaultCurrency?: string;
+  /** The amount to start from: the target in force, when updating one. */
+  defaultAmount?: string;
   /** Optional registered opener (single-button callers). */
   trigger?: ReactNode;
   /** Explicit opener when multiple controls share this dialog. */
@@ -104,6 +106,7 @@ export function AddBudgetDialog({
   lockedInterval,
   defaultInterval,
   defaultCurrency = "USD",
+  defaultAmount,
   trigger,
   returnFocusRef,
   fallbackFocusRef,
@@ -134,7 +137,7 @@ export function AddBudgetDialog({
       date: todayIsoDate(),
       account: lockedAccount ?? "",
       interval: lockedInterval ?? defaultInterval ?? BudgetInterval.Monthly,
-      number: "",
+      number: defaultAmount ?? "",
       currency: defaultCurrency,
     },
     mode: "onChange",
@@ -145,7 +148,7 @@ export function AddBudgetDialog({
       date: todayIsoDate(),
       account: lockedAccount ?? "",
       interval: lockedInterval ?? defaultInterval ?? BudgetInterval.Monthly,
-      number: "",
+      number: defaultAmount ?? "",
       currency: defaultCurrency,
     });
     setError(null);
@@ -250,9 +253,20 @@ export function AddBudgetDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle>{t("page.budget.budgetAddBudget")}</DialogTitle>
+          {/* Opened from a budget's card it changes that budget: it says so,
+              names the account, and starts from the target in force. */}
+          <DialogTitle>
+            {lockedAccount
+              ? t("page.budget.budgetUpdateForAccount", {
+                  account: lockedAccount,
+                  currency: defaultCurrency,
+                })
+              : t("page.budget.budgetAddBudget")}
+          </DialogTitle>
           <DialogDescription>
-            {t("page.budget.budgetDescription")}
+            {lockedAccount
+              ? t("page.budget.budgetAccountHelp")
+              : t("page.budget.budgetDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -304,9 +318,12 @@ export function AddBudgetDialog({
                         />
                       )}
                     </FormControl>
-                    <FormDescription>
-                      {t("page.budget.budgetAccountHelp")}
-                    </FormDescription>
+                    {/* Updating, the dialog's own description says it. */}
+                    {!lockedAccount && (
+                      <FormDescription>
+                        {t("page.budget.budgetAccountHelp")}
+                      </FormDescription>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -374,7 +391,7 @@ export function AddBudgetDialog({
                   control={form.control}
                   name="currency"
                   render={({ field }) => (
-                    <FormItem className="w-48">
+                    <FormItem className="w-28 shrink-0 sm:w-48">
                       <FormLabel>{t("page.budget.budgetCurrency")}</FormLabel>
                       <FormControl>
                         <CurrencyCombobox
@@ -394,6 +411,7 @@ export function AddBudgetDialog({
                 <Button
                   type="button"
                   variant="outline"
+                  className="pointer-coarse:h-11"
                   onClick={() => requestLeave(dismiss)}
                 >
                   {t("common.cancel")}
@@ -402,8 +420,11 @@ export function AddBudgetDialog({
                   type="submit"
                   disabled={!form.formState.isValid}
                   loading={pending}
+                  className="disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none pointer-coarse:h-11"
                 >
-                  {t("page.budget.budgetAddBudget")}
+                  {lockedAccount
+                    ? t("page.budget.budgetAddEntry")
+                    : t("page.budget.budgetAddBudget")}
                 </Button>
               </div>
             </fieldset>

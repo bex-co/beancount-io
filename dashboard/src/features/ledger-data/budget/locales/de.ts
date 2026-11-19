@@ -232,6 +232,89 @@ const deBudget: Record<string, TranslationEntry> = {
     message: "Abweichung",
     description: "Label for budget variance (spending minus budget)",
   },
+  "page.budget.budgetCount_one": {
+    message: "{shown} Budget",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetCount_other": {
+    message: "{shown} Budgets",
+    description:
+      "Budget count under the Budget page title, after the ledger name; {shown} is the formatted number",
+  },
+  "page.budget.budgetQuarterName": {
+    message: "Q{quarter} {year}",
+    description:
+      "A quarter's name on the Budget page; {quarter} is 1\u20134, {year} the year",
+  },
+  "page.budget.budgetWeekOf": {
+    message: "Woche ab {date}",
+    description:
+      "A week's name on the Budget page; {date} is its first day, yyyy-MM-dd",
+  },
+  "page.budget.budgetOfTarget": {
+    message: "von {target}",
+    description:
+      "Under a budget's actual in the narrow summary, its target; {target} is an amount with its currency",
+  },
+  "page.budget.budgetNoMatchFor": {
+    message: "Kein Konto mit Budget enthält „{query}“.",
+    description:
+      "Budget page when a search finds no budget; {query} is what was typed",
+  },
+  "page.budget.budgetReadFailedLedgerUnchanged": {
+    message:
+      "An Ihrem Hauptbuch hat sich nichts geändert. Versuchen Sie es noch einmal oder kommen Sie in einer Minute wieder.",
+    description:
+      "Message when the Budget page could not read its budgets, above Try Again: nothing was changed",
+  },
+  "page.budget.budgetSummaryCaption": {
+    message:
+      "Zuerst verfehlte Ziele, dann erreichte, dann noch laufende; innerhalb jeder Gruppe die größte prozentuale Abweichung vom Ziel zuerst.",
+    description:
+      "Caption of the Budget page's summary table: what it lists and how it is ordered",
+  },
+  "page.budget.budgetEntriesEnd": {
+    message:
+      "Die Einträge enden am {date}; die Zahlen gelten zum {day}, dem Ende des letzten vollen Monats.",
+    description:
+      "Under the Budget summary's caption when the ledger stopped: {date} is its last entry, {day} the day whose periods are shown",
+  },
+  "page.budget.budgetTargetsHeading": {
+    message: "Ziele",
+    description: "Heading over a budget card's list of dated targets",
+  },
+  "page.budget.budgetTargetsHelp": {
+    message:
+      "Jedes Ziel gilt ab seinem Datum bis zum nächsten; zusammen ergeben sie die gestrichelte Linie.",
+    description:
+      "Under the Targets heading on a budget card: how dated targets apply",
+  },
+  "page.budget.budgetBackToSummary": {
+    message: "Zurück zur Übersicht",
+    description:
+      "Link at the end of a budget card back to the Budget page's summary",
+  },
+  "page.budget.budgetEntriesEndBeforeSpan": {
+    message: "Die Einträge enden am {date}, vor Beginn dieses Zeitraums.",
+    description:
+      "Under the Budget summary's caption when the chosen time span starts after the ledger's last entry {date}",
+  },
+  "page.budget.budgetInProgress": {
+    message: "Läuft",
+    description:
+      "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetLegendMissed": {
+    message: "Ziel verfehlt",
+    description:
+      "Chart key for a red bar: a period on the wrong side of its target",
+  },
+  "page.budget.budgetLegendNotJudged": {
+    message: "Nicht bewertet",
+    description:
+      "Chart key for a pale bar: a period with no target yet, or one still running, so not judged",
+  },
 };
 
 export default deBudget;

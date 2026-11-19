@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LedgerProvider } from "@/common/providers/ledger-provider";
 import {
@@ -99,17 +99,19 @@ describe("Budget card header containment (w4/1109)", () => {
     "lets the header grid item shrink so the title can truncate (%s)",
     async (account) => {
       await mountCard(account);
-      const title = screen.getByText(account);
+      const title = screen.getByRole("heading", { name: account });
       const header = title.closest('[data-slot="card-header"]')!;
       // The header's direct grid child is the flex wrapper; it is the item
       // whose automatic minimum admitted the long name's intrinsic width.
       const gridItem = header.firstElementChild!;
       expect(gridItem.className.split(/\s+/)).toContain("min-w-0");
-      // The nested title container still shrinks, and the title truncates
-      // visually while keeping the full account path as its text.
+      // The nested title container still shrinks, and the account's path
+      // gives way while its last part stays whole and the heading keeps the
+      // full account as its name.
       expect(title.parentElement!.className.split(/\s+/)).toContain("min-w-0");
-      expect(title.className.split(/\s+/)).toContain("truncate");
-      expect(title).toHaveTextContent(account);
+      expect(title.className.split(/\s+/)).toContain("min-w-0");
+      const path = account.slice(0, account.lastIndexOf(":"));
+      expect(within(title).getByText(path)).toHaveClass("truncate");
     },
   );
 
