@@ -266,14 +266,38 @@ class LedgerSnapshot:
             raise UsageError(
                 f"Write destination {target} is not included by {self.root}. {base} {correction} Nothing was written."
             )
+        include = self._include_advice(resolved)
+        # Nothing includes the file, so a missing directory is never the
+        # whole problem: advice naming only the directory got a second,
+        # different refusal once it was followed (w1/316).
         if not resolved.parent.is_dir():
+            state = "is not a directory" if resolved.parent.exists() else "does not exist"
             raise UsageError(
-                f"Write destination directory {resolved.parent} does not exist. {base} Create the directory first."
+                f"Write destination {target} is not included by {self.root}, and its directory {resolved.parent} "
+                f"{state}. {base} Create the directory and the file, and add {include}. Nothing was written."
             )
+        if resolved.is_dir():
+            raise UsageError(
+                f"Write destination {target} is a directory, not a file. {base} Pass --into a file the root "
+                "includes. Nothing was written."
+            )
+        create = "Add" if resolved.exists() else "Create it and add"
         raise UsageError(
-            f"Write destination {target} is not included by {self.root}. "
-            f"{base} Create it and add an include directive to the root first."
+            f"Write destination {target} is not included by {self.root}. {base} {create} {include}. "
+            "Nothing was written."
         )
+
+    def _include_advice(self, resolved: Path) -> str:
+        """The include line that would take in `resolved`, and a directory glob when one fits."""
+        relative = os.path.relpath(resolved, self.root.parent)
+        advice = f"include {literal_include(relative)} to the root"
+        directory = os.path.dirname(relative)
+        # A glob over the root's own directory would include the root itself,
+        # and one above it reaches files that are not the books.
+        if directory and Path(directory).parts[0] != os.pardir:
+            spelled = os.path.join(glob.escape(directory), "*" + glob.escape(resolved.suffix))
+            advice += f" (or a glob such as include {_quoted_include(spelled)})"
+        return advice
 
     def _cwd_into_hint(self, into: Path | None) -> str | None:
         """A root-relative correction when interpreting the path from cwd names a ledger member."""
@@ -508,13 +532,18 @@ def literal_include(path: Path | str) -> str:
     `2024 [old].bean` read as a character class that matched nothing, and
     `q?.bean` also took in the `q2.bean` beside it (w5/247).
     """
+    return _quoted_include(glob.escape(str(path)))
+
+
+def _quoted_include(pattern: str) -> str:
+    """The include string for a glob pattern, as Beancount reads it back."""
     from beancount.utils import misc_utils
 
     escape_string: Callable[[str], str] = misc_utils.escape_string
     # `escape_string` leaves line breaks and tabs raw; a raw newline inside
     # the string split the include over two lines, which no later rewrite of
     # the staged copy or an exported root could locate (w5/301).
-    quoted = escape_string(glob.escape(str(path)))
+    quoted = escape_string(pattern)
     return '"' + quoted.replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t") + '"'
 
 
