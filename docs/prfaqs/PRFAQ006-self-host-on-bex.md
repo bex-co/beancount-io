@@ -18,23 +18,25 @@ The screenshots are from the fourth run, except sign-up, sign-in and Delete Acco
 
 **Run your own Beancount.io from one button**
 
-*Now in beta: press Deploy to bex.co, and about half an hour later the whole Beancount.io stack runs in your own bex workspace, on its own address. Nothing to fill in, no plan limits, about 33 USD a month in hosting, and MIT-licensed software.*
+*Beta. One button deploys all of Beancount.io (the web app, the API, the MCP server and your ledgers in Git) into your own bex workspace, at its own address, in about half an hour. Nothing to configure, no plan limits, about 33 USD a month in hosting, MIT-licensed.*
 
 ![The Overview page of a new bex deployment with the sample ledger: net worth, and income and expenses by month](../images/PRFAQ006-overview.webp)
 
-Beancount keeps your finances in a plain-text file you own. Until now, putting a web app and an agent endpoint on top of that file meant either using our hosted service or assembling six services yourself. From today, anyone with a bex workspace can run all of Beancount.io for themselves, in beta.
+Beancount keeps your finances in plain text you own. The software around that text has been harder to own: a web app, a command line and an agent endpoint on top of your ledger meant either trusting our hosted service with your books or wiring six services together yourself. From today, anyone with a bex workspace can run all of Beancount.io for themselves.
 
-Press **Deploy to bex.co** in the repository's README, choose the workspace that should own it, and approve the plan bex shows you. There is nothing to fill in: every secret is generated for your stack. About half an hour later the dashboard is live on its own address. Open it and create your account; sign-up then closes, so nobody else gets in unless you let them in through your own identity provider.
+Press **Deploy to bex.co** in the README, pick the workspace that should own the stack, and approve the plan bex shows you. You type in nothing: every secret is generated inside your workspace. About half an hour later the dashboard is live. Create your account and sign-up closes behind you; nobody else gets in unless you let them in through your own identity provider.
 
 ![Sign-up on a new deployment, with no email step; beside the form, the page says the copy is run by its owner and the books are plain text in Git](../images/PRFAQ006-sign-up.webp)
 
-Your ledger is a Git repository on a disk in your workspace. Work on it from the dashboard, from the `bea` command line, from a coding agent through the built-in MCP server, or with plain `git` and a personal access token. Each of them is pointed at your address, never ours, and the stack sends no analytics or usage data to Beancount.io.
+Your ledger is a Git repository on a disk in your workspace, and every way in points at your address, not ours: the dashboard, the `bea` command line, a coding agent through the built-in MCP server, or plain `git` with a personal access token. There are no plan limits on ledgers, directives or AI usage, and the stack sends no analytics or usage data to Beancount.io.
 
 ![An MCP client pointed at the deployment's own address with a personal access token: 47 tools, and a BQL query over the ledger](../images/PRFAQ006-mcp-client.webp)
 
-Optional pieces stay off until you add them: a model key for receipt scanning, categorisation and the assistant, an S3 bucket for receipt uploads, a mail key for password reset. Until then each feature says plainly what to set, and nothing else is affected.
+Optional pieces stay off until you add them: a model key for receipt scanning, categorisation and the assistant; an S3 bucket for receipt uploads; a mail key for password reset. Until then, each of those features names the setting it needs, and nothing else is affected.
 
-In beta, a deployment takes one sign-up, updates are started by hand, Git works over HTTPS only, and there is no tested restore yet for the accounts and settings kept in Postgres. The Self-host section of the [README](../../README.md#self-host) has the button and the guide; questions go to [GitHub issues](https://github.com/bex-co/beancount-io/issues) or the [Telegram chat](https://t.me/beancount).
+This is a beta, with edges you should hear about from us first: one sign-up per deployment (more accounts come through your own OpenID Connect provider), updates you start by hand, Git over HTTPS only, and no tested restore yet for the accounts and settings kept in Postgres. bex is built by the same company as Beancount.io; the hosting runs under bex's terms, and the Beancount.io service is not part of your stack.
+
+To start, open the Self-host section of the [README](../../README.md#self-host). Tell us what breaks in [GitHub issues](https://github.com/bex-co/beancount-io/issues) or the [Telegram chat](https://t.me/beancount).
 
 ## Customer FAQ
 
