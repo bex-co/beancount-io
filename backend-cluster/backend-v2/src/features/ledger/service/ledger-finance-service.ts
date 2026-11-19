@@ -516,12 +516,23 @@ export class LedgerFinanceService
       ledgerId,
       identity,
     );
-    const [options, transactions] = await Promise.all([
+    // Lots opened before the window are still lots, so the inventory reads
+    // the whole journal; `time` only decides which reductions are reported,
+    // by the entries its own read keeps (w1/307). Its clamp's opening
+    // summaries never reach the journal, so they cannot stand in.
+    const [options, transactions, windowed] = await Promise.all([
       this.reportOptions(favaApiClient, ledgerOwner, ledgerName),
-      this.journalTransactions(favaApiClient, ledgerOwner, ledgerName, time),
+      this.journalTransactions(favaApiClient, ledgerOwner, ledgerName),
+      time
+        ? this.journalTransactions(favaApiClient, ledgerOwner, ledgerName, time)
+        : null,
     ]);
     return composeGains({
       transactions,
+      window:
+        windowed === null
+          ? null
+          : new Set(windowed.map((entry) => entry.entry_hash)),
       account,
       roots: this.rootsOf(options),
       start,
@@ -529,12 +540,12 @@ export class LedgerFinanceService
     });
   }
 
-  /** The window's transactions, newest-first, all pages. */
+  /** The transactions in `time`'s window, or all of them; newest-first, all pages. */
   private async journalTransactions(
     favaApiClient: Pick<FavaApiClient, "journal">,
     ledgerOwner: string,
     ledgerName: string,
-    time: string | undefined,
+    time?: string,
   ): Promise<JournalTransactionPublic[]> {
     const items = await this.pageAll((offset) =>
       unwrapFavaResponse(

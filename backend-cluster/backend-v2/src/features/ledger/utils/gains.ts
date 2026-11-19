@@ -2,19 +2,27 @@ import BigNumber from "bignumber.js";
 import { BadUserInputError } from "@/shared/errors";
 import { matchesAccountPattern } from "./account-matcher";
 import type {
+  JournalCostPublic,
   JournalPostingPublic,
   JournalTransactionPublic,
 } from "@/foundation/fava";
 
 /**
- * Realized gain/loss per closed lot, mirroring `bea report capital-gains`
- * (`cli/src/bea_engine/report.py`).
+ * Realized gain/loss per reduction, mirroring `bea report capital-gains`
+ * (`_capital_gains` in `cli/src/bea_engine/report.py`).
  *
- * A closed lot is a reducing posting that carries both booked cost and
- * price — FIFO vs specific-lot is the ledger's own booking, already
- * resolved in the posting's cost. Proceeds and basis stay in their own
- * currencies, and totals never sum across currencies. The one-year
- * boundary is a bare day count with no tax logic. No quotes are read,
+ * A reduction is a posting that shrinks a lot its account already holds,
+ * in either direction: a sale out of a long lot, or a cover (a payment
+ * settling a costed payable) into a short one. Each account's costed
+ * inventory is followed from the first transaction, whatever the window,
+ * and a row reports only what a priced posting actually closed. Reading
+ * negative postings alone dropped every cover and listed each short
+ * opening as a zero-gain sale (w1/307, the CLI's w5/1035). Splits and
+ * own-account transfers reduce without a price: movements, not sales.
+ * FIFO vs specific-lot is the ledger's own booking, already resolved in
+ * the posting's cost. Proceeds and basis stay in their own currencies,
+ * and totals never sum across currencies. The one-year boundary is the
+ * acquisition date's anniversary, with no tax logic. No quotes are read,
  * so every figure is exact booked arithmetic; number strings are
  * normalized rather than scale-preserved, as in holdings.
  */
@@ -105,113 +113,154 @@ function plain(value: BigNumber): string {
   return /[eE]/.test(text) ? value.toFixed() : text;
 }
 
+/** A number from the journal, or null when it is not one (an unresolved cost). */
+function decimal(text: string | undefined | null): BigNumber | null {
+  if (text === undefined || text === null || text === "") return null;
+  const value = new BigNumber(text);
+  return value.isFinite() ? value : null;
+}
+
 /**
- * Closed lots, oldest sale first. `transactions` arrive newest-first
- * from the journal and are read back to front; each reducing posting
- * with booked cost and price closes one lot.
+ * Beancount's inventory key, `(units.currency, Cost)`: `100` and `100.00`
+ * are one lot, as `Decimal` equality makes them.
+ */
+function lotKey(currency: string, cost: JournalCostPublic, number: BigNumber) {
+  return JSON.stringify([
+    currency,
+    number.toFixed(),
+    cost.currency,
+    cost.date,
+    cost.label ?? null,
+  ]);
+}
+
+/**
+ * Closed lots, oldest sale first. `transactions` is the whole journal,
+ * newest-first, and is read back to front so every lot is known before
+ * it is reduced. `window` holds the entry hashes the `time` filter keeps,
+ * or null without one; like `start`/`end` and `account`, it narrows the
+ * rows and never the inventory.
  */
 export function composeGains(params: {
   transactions: readonly JournalTransactionPublic[];
+  window: ReadonlySet<string> | null;
   account: string | undefined;
   roots: readonly string[];
   start: string | null;
   end: string | null;
 }): GainsResult {
-  const { transactions, account, roots, start, end } = params;
+  const { transactions, window, account, roots, start, end } = params;
   const rows: GainsRow[] = [];
+  const held = new Map<string, Map<string, BigNumber>>();
+  for (const entry of [...transactions].reverse()) {
+    // The engine could not book it, so no lot moved (the journal lists it
+    // only so it can be fixed).
+    if (entry.not_booked === true) continue;
+    const reported =
+      (window === null || window.has(entry.entry_hash)) &&
+      (start === null || entry.date >= start) &&
+      (end === null || entry.date <= end);
+    for (const posting of entry.postings) {
+      const units = decimal(posting.units.number);
+      const cost = posting.cost;
+      const costNumber = decimal(cost?.number);
+      if (units === null || !cost || costNumber === null) continue;
+      let lots = held.get(posting.account);
+      if (lots === undefined) {
+        lots = new Map();
+        held.set(posting.account, lots);
+      }
+      const key = lotKey(posting.units.currency, cost, costNumber);
+      const before = lots.get(key) ?? new BigNumber(0);
+      const after = before.plus(units);
+      if (after.isZero()) lots.delete(key);
+      else lots.set(key, after);
+      // An augmentation: opening or adding to a lot, long or short.
+      if (before.isZero() || before.gt(0) === units.gt(0)) {
+        continue;
+      }
+      if (!reported) continue;
+      if (
+        account !== undefined &&
+        !matchesAccountPattern(account, posting.account, roots)
+      ) {
+        continue;
+      }
+      const row = closedLot(posting, cost, entry.date, before, units);
+      if (row !== null) rows.push(row);
+    }
+  }
+  return { rows, totals: bucketTotals(rows) };
+}
+
+/** Gains per currency, bucketed by holding period. */
+function bucketTotals(rows: readonly GainsRow[]): GainsResult["totals"] {
   const totals = {
     one_year_or_less: new Map<string, BigNumber>(),
     more_than_one_year: new Map<string, BigNumber>(),
     holding_unknown: new Map<string, BigNumber>(),
   };
-  const ordered = [...transactions].reverse();
-  for (const entry of ordered) {
-    if (start !== null && entry.date < start) continue;
-    if (end !== null && entry.date > end) continue;
-    for (const posting of entry.postings) {
-      const row = closedLot(posting, entry.date, account, roots);
-      if (row === null) continue;
-      rows.push(row);
-      const bucket =
-        row.long_held === null
-          ? totals.holding_unknown
-          : row.long_held
-            ? totals.more_than_one_year
-            : totals.one_year_or_less;
-      const currency = row.gain.currency;
-      bucket.set(
-        currency,
-        (bucket.get(currency) ?? new BigNumber(0)).plus(row.gain.number),
-      );
-    }
+  for (const row of rows) {
+    const bucket =
+      row.long_held === null
+        ? totals.holding_unknown
+        : row.long_held
+          ? totals.more_than_one_year
+          : totals.one_year_or_less;
+    const currency = row.gain.currency;
+    bucket.set(
+      currency,
+      (bucket.get(currency) ?? new BigNumber(0)).plus(row.gain.number),
+    );
   }
   const summed = (bucket: Map<string, BigNumber>): Record<string, string> =>
     Object.fromEntries(
       [...bucket.entries()].map(([code, value]) => [code, plain(value)]),
     );
   return {
-    rows,
-    totals: {
-      one_year_or_less: summed(totals.one_year_or_less),
-      more_than_one_year: summed(totals.more_than_one_year),
-      holding_unknown: summed(totals.holding_unknown),
-    },
+    one_year_or_less: summed(totals.one_year_or_less),
+    more_than_one_year: summed(totals.more_than_one_year),
+    holding_unknown: summed(totals.holding_unknown),
   };
 }
 
 /**
- * One posting's closed lot, or null when the posting is not a booked
- * sale: non-negative units, unresolved cost, or no price. Cost and
- * price currencies always match — the loader refuses a mixed posting
- * before any report sees it — so the gain carries the cost currency.
+ * What one reducing posting closed, or null when it is no sale: no price
+ * (a split or an own-account transfer), or a price in another currency
+ * than the cost, whose difference would carry no single currency. A sale
+ * out of a long lot takes the price as proceeds and the cost as basis; a
+ * cover into a short one swaps them, so the opening cost is the proceeds.
+ * The quantity is what the lot held, at most: a posting can only close
+ * what was there.
  */
 function closedLot(
   posting: JournalPostingPublic,
+  cost: JournalCostPublic,
   sold: string,
-  account: string | undefined,
-  roots: readonly string[],
+  before: BigNumber,
+  units: BigNumber,
 ): GainsRow | null {
-  const units = posting.units;
-  const cost = posting.cost;
   const price = posting.price;
-  let quantity: BigNumber;
-  try {
-    quantity = new BigNumber(units.number);
-  } catch {
-    return null;
-  }
-  if (!quantity.isNegative()) return null;
-  if (cost === undefined || cost === null) return null;
-  if (price === undefined || price === null) return null;
-  let costNumber: BigNumber;
-  let priceNumber: BigNumber;
-  try {
-    costNumber = new BigNumber(cost.number);
-    priceNumber = new BigNumber(price.number);
-  } catch {
-    return null;
-  }
-  if (
-    account !== undefined &&
-    !matchesAccountPattern(account, posting.account, roots)
-  ) {
-    return null;
-  }
-  const bought = quantity.negated();
-  const proceeds = bought.times(priceNumber);
-  const basis = bought.times(costNumber);
+  const priceNumber = decimal(price?.number);
+  if (!price || priceNumber === null) return null;
+  if (price.currency !== cost.currency) return null;
+  const quantity = BigNumber.min(before.abs(), units.abs());
+  const atPrice = quantity.times(priceNumber);
+  const atCost = quantity.times(cost.number);
+  const [proceeds, basis] = before.gt(0)
+    ? [atPrice, atCost]
+    : [atCost, atPrice];
   // A dateless cost serializes as `""`; the CLI reads it as no date.
   const acquired: string | null = cost.date === "" ? null : cost.date;
-  const held = acquired === null ? null : heldDays(acquired, sold);
   return {
     account: posting.account,
-    commodity: units.currency,
+    commodity: posting.units.currency,
     acquired,
     sold,
-    held_days: held,
+    held_days: acquired === null ? null : heldDays(acquired, sold),
     long_held: acquired === null ? null : heldLong(acquired, sold),
-    quantity: { number: plain(bought), currency: units.currency },
-    proceeds: { number: plain(proceeds), currency: price.currency },
+    quantity: { number: plain(quantity), currency: posting.units.currency },
+    proceeds: { number: plain(proceeds), currency: cost.currency },
     basis: { number: plain(basis), currency: cost.currency },
     gain: { number: plain(proceeds.minus(basis)), currency: cost.currency },
   };

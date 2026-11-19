@@ -221,7 +221,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     segment: "capital-gains",
     summary: "Get realized capital gains",
     description:
-      "One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes when a reducing posting carries booked cost and price; splits and own-account transfers carry no price and are left out. `fromDate`/`toDate` bound the sale date, `account` filters the posting account, and `time` scopes the window; all figures stay in their booked currencies.",
+      "One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes when a posting with a price reduces a lot its account holds, long or short: covering a short (or settling a costed foreign-currency payable) reports the opening cost as proceeds and the cover price as basis, and opening a short realizes nothing. Splits and own-account transfers carry no price and are left out. Lots are followed from the ledger's first transaction; `time` and `fromDate`/`toDate` bound the sale date and `account` filters the posting account, narrowing only the rows. All figures stay in their booked currencies.",
     query: z
       .object({
         account: filterQuery.shape.account,

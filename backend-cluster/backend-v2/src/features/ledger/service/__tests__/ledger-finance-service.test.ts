@@ -763,7 +763,8 @@ describe("LedgerFinanceService.getRegister", () => {
 describe("LedgerFinanceService.getCapitalGains", () => {
   let service: LedgerFinanceService;
 
-  const sale = (date: string) => ({
+  const lot = { number: "100.00", currency: "USD", date: "2023-01-10" };
+  const move = (date: string, number: string, price: string | null) => ({
     date,
     entry_hash: `h-${date}`,
     directive_type: "Transaction",
@@ -771,12 +772,14 @@ describe("LedgerFinanceService.getCapitalGains", () => {
     postings: [
       {
         account: "Assets:Broker",
-        units: { number: "-10", currency: "HOOL" },
-        cost: { number: "100.00", currency: "USD", date: "2023-01-10" },
-        price: { number: "150.00", currency: "USD" },
+        units: { number, currency: "HOOL" },
+        cost: lot,
+        price: price === null ? null : { number: price, currency: "USD" },
       },
     ],
   });
+  const buy = move("2023-01-10", "20", null);
+  const sale = (date: string) => move(date, "-10", "150.00");
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -799,7 +802,7 @@ describe("LedgerFinanceService.getCapitalGains", () => {
 
   it("composes closed lots from the journal", async () => {
     mockJournal.getJournal.mockResolvedValue(
-      ok({ items: [sale("2024-03-15")], total: 1, is_empty: false }),
+      ok({ items: [sale("2024-03-15"), buy], total: 2, is_empty: false }),
     );
 
     const result = await service.getCapitalGains({
@@ -854,30 +857,43 @@ describe("LedgerFinanceService.getCapitalGains", () => {
     expect(mockReports.getLedgerOptions).not.toHaveBeenCalled();
   });
 
-  it("pages the journal and forwards time", async () => {
-    mockJournal.getJournal
-      .mockResolvedValueOnce(
-        ok({ items: [sale("2024-03-15")], total: 2, is_empty: false }),
-      )
-      .mockResolvedValueOnce(
-        ok({ items: [sale("2023-03-15")], total: 2, is_empty: false }),
-      );
+  it("pages the whole journal and narrows the rows to time's window", async () => {
+    // Newest first over two pages; the lot opens before the window.
+    const whole = [sale("2024-03-15"), sale("2023-03-15"), buy];
+    mockJournal.getJournal.mockImplementation(
+      async (_owner: string, _name: string, query: Record<string, unknown>) =>
+        query.time === undefined
+          ? ok({
+              items: whole.slice(
+                Number(query.offset),
+                Number(query.offset) + 2,
+              ),
+              total: whole.length,
+              is_empty: false,
+            })
+          : ok({ items: [sale("2024-03-15")], total: 1, is_empty: false }),
+    );
 
     const result = await service.getCapitalGains({
       ledgerId: LEDGER_ID,
       identity: IDENTITY,
-      time: "2023 - 2024",
+      time: "2024",
     });
 
-    expect(mockJournal.getJournal).toHaveBeenCalledTimes(2);
-    expect(mockJournal.getJournal).toHaveBeenCalledWith(
-      "testowner",
-      "testledger",
-      expect.objectContaining({ time: "2023 - 2024" }),
+    const queries = mockJournal.getJournal.mock.calls.map(([, , query]) => [
+      query.time,
+      query.offset,
+    ]);
+    expect(queries).toEqual(
+      expect.arrayContaining([
+        [undefined, 0],
+        [undefined, 2],
+        ["2024", 0],
+      ]),
     );
-    expect(result.rows.map((row) => row.sold)).toEqual([
-      "2023-03-15",
-      "2024-03-15",
+    expect(queries).toHaveLength(3);
+    expect(result.rows.map((row) => [row.sold, row.basis.number])).toEqual([
+      ["2024-03-15", "1000"],
     ]);
   });
 });
