@@ -2252,8 +2252,10 @@ bought with `@` before the period leave their translation here, not in
 `Equity:Opening-Balances`. A period therefore splits equity the same way
 with and without `--time`. One exception: when earlier earnings hold a
 commodity no account held at the period start, such as foreign cash spent on
-a trip, `Opening-Balances` keeps the offsetting amount, so the period needs no
-price for that commodity. The line is `null` under `units`, with `--account`
+a trip, and the report has no price for it at the as-of date,
+`Opening-Balances` keeps the offsetting amount, so the period needs no price
+for that commodity. A spent commodity that has a price changes nothing. The
+line is `null` under `units`, with `--account`
 or `balance` terms (the residual belongs to the whole ledger), with loader
 errors, and while a balance holds a commodity the report could not value.
 On books that already net, the line is zero. Under a currency conversion,

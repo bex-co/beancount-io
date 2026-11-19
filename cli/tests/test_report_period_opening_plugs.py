@@ -7,7 +7,8 @@ plugs landed on `Opening-Balances` in their own units and were valued at the
 closing rate. February's sheet opened at -1,010.00 USD where the ledger holds
 -1,000.00 and January closed at -1,000.00, with a 0.00 adjustment for a month
 in which EUR rose. The equity tree now leaves the plugs out, so a period splits
-equity as the unfiltered report does.
+equity as the unfiltered report does. An earlier trip whose yen were spent in
+full no longer brings them back: the yen have a price (w1/298).
 """
 
 from __future__ import annotations
@@ -83,7 +84,22 @@ option "operating_currency" "USD"
   Expenses:Food  30.00 USD
   Assets:Bank
 """
+# A January trip whose yen were spent in full: the previous earnings hold a
+# currency no account holds at the period start, but one the report can value,
+# so the euros' and the shares' plugs still leave (w1/298).
+TRIP = """\
+2026-01-01 open Assets:Yen JPY
+2026-01-01 open Expenses:Travel
+2026-01-12 * "Buy yen"
+  Assets:Yen  10000 JPY @ 0.0070 USD
+  Assets:Wallet  -70.00 USD
+2026-01-12 price JPY 0.0070 USD
+2026-01-14 * "Tokyo hotel"
+  Expenses:Travel  10000 JPY
+  Assets:Yen
+"""
 HELD = {"cash": (CASH, "-10"), "shares": (SHARES, "-20")}
+SPENT = {name: (text.replace(TAIL, TRIP + TAIL), adjustment) for name, (text, adjustment) in HELD.items()}
 REPORTS = ("balance-sheet", "trial-balance")
 PERIOD = ("-t", "2026-02")
 
@@ -102,6 +118,17 @@ def _data(tmp_path: Path, text: str, *argv: str) -> dict[str, Any]:
 def _split(data: dict[str, Any]) -> dict[str, Any]:
     """The equity split: the tree, the adjustment and, on a sheet, the total."""
     return {key: data.get(key) for key in ("equity", "valuation_adjustment", "equity_total")}
+
+
+def _node(data: dict[str, Any], account: str) -> dict[str, Decimal]:
+    """An equity account's own balance, wherever it sits in the tree."""
+    stack = [data["equity"]]
+    while stack:
+        node = stack.pop()
+        if node["account"] == account:
+            return {currency: Decimal(number) for currency, number in node["balance"].items()}
+        stack.extend(node["children"])
+    raise AssertionError(f"{account} is not in the equity tree")
 
 
 def _opening(data: dict[str, Any]) -> dict[str, str]:
@@ -147,6 +174,68 @@ def test_text_and_csv_split_equity_alike(tmp_path: Path, holding: str, report: s
     plain_csv = _run(tmp_path, text, "report", report, "--format", "csv")
     ranged_csv = _run(tmp_path, text, "report", report, *PERIOD, "--format", "csv")
     assert _equity_rows(ranged_csv) == _equity_rows(plain_csv)
+
+
+@pytest.mark.parametrize("report", REPORTS)
+@pytest.mark.parametrize("holding", sorted(SPENT))
+def test_a_spent_priced_currency_keeps_the_split(tmp_path: Path, holding: str, report: str) -> None:
+    text, adjustment = SPENT[holding]
+    plain = _data(tmp_path, text, "report", report)
+    ranged = _data(tmp_path, text, "report", report, *PERIOD)
+
+    # The register's split: the ledger's own opening equity, the trip as
+    # previous earnings, and the period's translation in the adjustment.
+    assert _node(ranged, "Equity:Opening-Balances") == {"USD": Decimal("-1000")}
+    assert _node(ranged, "Equity:Earnings:Previous") == {"USD": Decimal("70")}
+    assert Decimal(ranged["valuation_adjustment"]["USD"]) == Decimal(adjustment)
+    assert ranged["valuation_adjustment"] == plain["valuation_adjustment"]
+    assert ranged.get("equity_total") == plain.get("equity_total")
+
+
+@pytest.mark.parametrize("report", REPORTS)
+@pytest.mark.parametrize("holding", sorted(SPENT))
+def test_a_spent_priced_currency_keeps_the_split_in_text_and_csv(tmp_path: Path, holding: str, report: str) -> None:
+    text, adjustment = SPENT[holding]
+
+    lines = [line.split() for line in _equity_lines(_run(tmp_path, text, "report", report, *PERIOD))]
+    assert ["Opening-Balances", "-1,000.00", "USD"] in lines
+    assert ["Previous", "70.00", "USD"] in lines
+    assert [line[-2:] for line in lines if line[0] == "Valuation/translation"] == [[f"{adjustment}.00", "USD"]]
+
+    csv_text = _run(tmp_path, text, "report", report, *PERIOD, "--format", "csv")
+    rows = {row["item"]: row for row in _equity_rows(csv_text)}
+    assert Decimal(rows["Equity:Opening-Balances"]["amount"]) == Decimal("-1000")
+    assert Decimal(rows["Equity:Earnings:Previous"]["amount"]) == Decimal("70")
+    assert Decimal(rows["valuation_adjustment"]["amount"]) == Decimal(adjustment)
+
+
+def test_a_spent_report_currency_keeps_the_split(tmp_path: Path) -> None:
+    # The dollars a January gig paid were all exchanged for euros: the report
+    # currency is the spent one, and it needs no price to value.
+    text = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Euro EUR
+2026-01-01 open Assets:Wallet USD
+2026-01-01 open Income:Gig USD
+2026-01-01 open Equity:Opening-Balances EUR
+2026-01-02 * "Opening"
+  Assets:Euro  1000.00 EUR
+  Equity:Opening-Balances
+2026-01-02 price EUR 1.10 USD
+2026-01-10 * "Gig"
+  Assets:Wallet  55.00 USD
+  Income:Gig
+2026-01-11 * "Exchange"
+  Assets:Euro  50.00 EUR @ 1.10 USD
+  Assets:Wallet  -55.00 USD
+2026-02-15 price EUR 1.20 USD
+"""
+    plain = _data(tmp_path, text, "report", "balance-sheet")
+    ranged = _data(tmp_path, text, "report", "balance-sheet", *PERIOD)
+
+    assert _node(ranged, "Equity:Opening-Balances") == _node(plain, "Equity:Opening-Balances")
+    assert ranged["valuation_adjustment"] == plain["valuation_adjustment"] == {"USD": "-5.0000"}
+    assert ranged["equity_total"] == plain["equity_total"]
 
 
 def test_february_opens_where_january_closed(tmp_path: Path) -> None:

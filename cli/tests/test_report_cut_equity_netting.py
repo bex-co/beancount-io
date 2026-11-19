@@ -4,7 +4,7 @@ A settled pre-period currency trade leaves the clamp's summary pair split:
 `Earnings:Previous` holds +100 USD while `Opening-Balances` holds the
 offsetting -100 USD. Judged one by one, each leg demands a USD price; judged
 by their combined balance the period values cleanly, and a made-up USD price
-changes nothing.
+changes no total.
 """
 
 from __future__ import annotations
@@ -85,7 +85,7 @@ def test_cut_equity_pair_values_without_foreign_price(tmp_path: Path) -> None:
     assert json.loads(trial.stdout)["data"]["valuation"] == "complete"
 
 
-def test_made_up_foreign_price_changes_nothing(tmp_path: Path) -> None:
+def test_made_up_foreign_price_changes_no_total(tmp_path: Path) -> None:
     (tmp_path / "main.bean").write_text(LEDGER)
     plain = _run(tmp_path, "report", "balance-sheet", "-t", "2026-02", as_json=True)
     assert plain.returncode == 0, plain.stderr
@@ -94,11 +94,21 @@ def test_made_up_foreign_price_changes_nothing(tmp_path: Path) -> None:
     (tmp_path / "main.bean").write_text(priced)
     with_price = _run(tmp_path, "report", "balance-sheet", "-t", "2026-02", as_json=True)
     assert with_price.returncode == 0, with_price.stderr
+    whole = _run(tmp_path, "report", "balance-sheet", as_json=True)
+    assert whole.returncode == 0, whole.stderr
 
     priced_data = json.loads(with_price.stdout)["data"]
     plain_data = json.loads(plain.stdout)["data"]
+    whole_data = json.loads(whole.stdout)["data"]
 
-    # Only the split between the two equity lines moves with the price; every
-    # total is identical to the cent.
+    # Priced, the spent dollars need no plug, so the period splits equity as
+    # the whole ledger does: `Opening-Balances` at its own -1,000.00 EUR and
+    # the trade's difference from the price in the adjustment (w1/298).
+    opening = next(node for node in priced_data["equity"]["children"] if node["account"] == "Equity:Opening-Balances")
+    assert opening["balance"] == {"EUR": "-1000.00"}
+    assert priced_data["valuation_adjustment"] == whole_data["valuation_adjustment"] == {"EUR": "42.0000"}
+    # Only the equity split moves with the price; every total is identical to
+    # the cent.
     assert priced_data.pop("equity") != plain_data.pop("equity")
+    assert priced_data.pop("valuation_adjustment") != plain_data.pop("valuation_adjustment")
     assert priced_data == plain_data

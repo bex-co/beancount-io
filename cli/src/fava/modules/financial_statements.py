@@ -13,8 +13,8 @@ from beancount.core.data import Directive, Transaction
 from beancount.parser.options import get_previous_accounts
 
 from .chart import ChartModule, DateAndBalance, DateAndBalanceWithAccountBalance
-from ..core.conversion import UNITS
-from ..core.inventory import SimpleCounterInventory
+from ..core.conversion import UNITS, cost_or_value
+from ..core.inventory import CounterInventory, SimpleCounterInventory
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -32,7 +32,19 @@ def _is_clamp_booking(entry: Directive, flag: str, filename: str) -> TypeGuard[T
     return isinstance(entry, Transaction) and entry.flag == flag and entry.meta.get("filename") == filename
 
 
-def _period_equity_view(filtered: FilteredLedger) -> FilteredLedger:
+def _valued(currency: str, number: Decimal, filtered: FilteredLedger, conversion: str | Conversion) -> bool:
+    """Whether the report's conversion values `number currency` at the period's as-of date.
+
+    A conversion leaves what it has no price for in its own commodity; the
+    currency a report converts into is valued as it stands.
+    """
+    if isinstance(conversion, str) and currency in conversion.split(","):
+        return True
+    balance = CounterInventory({(currency, None): number})
+    return currency not in cost_or_value(balance, conversion, filtered.ledger.prices, filtered.end_date)
+
+
+def _period_equity_view(filtered: FilteredLedger, conversion: str | Conversion) -> FilteredLedger:
     """The filtered ledger as a period's equity tree reads it, without the clamp's plugs.
 
     `TimeFilter` closes the period with a conversion transaction that books
@@ -49,9 +61,11 @@ def _period_equity_view(filtered: FilteredLedger) -> FilteredLedger:
     reads the same either way.
 
     One case keeps the plugs: pre-period earnings in a commodity no other
-    account held at the start, such as foreign cash spent abroad. Only the
-    plug nets them, so the period values without a price for that commodity
-    (w5/790).
+    account held at the start, such as foreign cash spent abroad, that the
+    report cannot value at its as-of date. Only the plug nets them, so the
+    period values without a price for that commodity (w5/790). A spent
+    commodity the report can value needs no netting, so it no longer brings
+    every other plug back (w1/298).
     """
     if filtered.time is None:
         return filtered
@@ -65,7 +79,10 @@ def _period_equity_view(filtered: FilteredLedger) -> FilteredLedger:
                     paired[posting.units.currency] += posting.units.number or 0
                 else:
                     held.add(posting.units.currency)
-    keep_plugs = any(number and currency not in held for currency, number in paired.items())
+    keep_plugs = any(
+        number and currency not in held and not _valued(currency, number, filtered, conversion)
+        for currency, number in paired.items()
+    )
     view = copy(filtered)
     view.entries = []
     for entry in filtered.entries:
@@ -180,7 +197,7 @@ class FinancialStatementsModule:
         valued = conversion not in ("units", UNITS)
         trees = {
             name: chart.hierarchy(
-                _period_equity_view(filtered) if valued and name == "equity" else filtered,
+                _period_equity_view(filtered, conversion) if valued and name == "equity" else filtered,
                 options[f"name_{name}"],
                 conversion,
             )
@@ -212,7 +229,7 @@ class FinancialStatementsModule:
         options = filtered.ledger.options
         assets = chart.hierarchy(filtered, options["name_assets"], conversion)
         liabilities = chart.hierarchy(filtered, options["name_liabilities"], conversion)
-        equity = chart.hierarchy(_period_equity_view(filtered), options["name_equity"], conversion)
+        equity = chart.hierarchy(_period_equity_view(filtered, conversion), options["name_equity"], conversion)
         earnings = SimpleCounterInventory()
         for name in (options["name_income"], options["name_expenses"]):
             for currency, amount in chart.hierarchy(filtered, name, conversion).balance_children.items():
