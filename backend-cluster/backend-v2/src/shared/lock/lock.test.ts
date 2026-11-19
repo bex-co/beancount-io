@@ -1,13 +1,8 @@
 import { lock } from "./lock";
 
 describe("lock", () => {
-  it("should be defined", () => {
-    expect(lock).toBeDefined();
-  });
-
-  it("should have acquire method", () => {
-    expect(typeof lock.acquire).toBe("function");
-  });
+  // No existence tests: every test below calls lock.acquire, so a missing
+  // lock or acquire method already fails there (and in typechecking).
 
   it("should acquire and release lock", async () => {
     const result = await lock.acquire("test-key", async () => {
