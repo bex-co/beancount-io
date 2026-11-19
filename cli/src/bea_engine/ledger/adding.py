@@ -592,6 +592,40 @@ def _balance(
     snapshot.require_target(target, into=into)
     before, errors, before_options = managed_load.load_file(file, snapshot=snapshot, check_types=True)
     ledger_errors = [format_error(error, ledger_file=file) for error in errors]
+
+    def _duplicate_answer(
+        warnings: list[str], source: dict[str, Any], target_now: Path | None = None
+    ) -> dict[str, Any]:
+        # One shape for both duplicate exits: the early match and the one the
+        # unused-pad retry finds. A second hand-built copy once lost
+        # `directive` from exactly one branch's answer (w5/323). The retry
+        # re-resolves its target like the other late answers do, instead of
+        # reusing the pre-write one.
+        return {
+            "written": 0,
+            "directive": directive.model_dump(mode="json"),
+            "pad": None,
+            "warnings": warnings,
+            "duplicate": True,
+            "source": source,
+            "target": str(target if target_now is None else target_now),
+            **({"ledger_errors": ledger_errors} if pad_from is None else {}),
+        }
+
+    def _recorded_warning(held: Decimal, source: dict[str, Any]) -> str:
+        return (
+            f"{_already_matches(held, number, currency, tolerance)}; "
+            f"omitted the pad from --pad-from (assertion already recorded at "
+            f"{source['filename']}:{source['lineno']})."
+        )
+
+    def _wrote_assertion_alone(warning: str) -> dict[str, Any]:
+        result = _appended(file, directive, allow_errors=allow_errors, into=into, snapshot=snapshot) | {"pad": None}
+        alone_warnings = list(result.get("warnings") or [])
+        alone_warnings.append(warning)
+        result["warnings"] = alone_warnings
+        return result
+
     if (
         pad_from is None
         and ledger_errors
@@ -618,21 +652,8 @@ def _balance(
         if pad_from is not None:
             held = write.book_units(before, account, currency, date)
             if abs(number - held) <= _balance_tolerance(match, before_options):
-                warnings.append(
-                    f"{_already_matches(held, number, currency, tolerance)}; "
-                    f"omitted the pad from --pad-from (assertion already recorded at "
-                    f"{source['filename']}:{source['lineno']})."
-                )
-        return {
-            "written": 0,
-            "directive": directive.model_dump(mode="json"),
-            "pad": None,
-            "warnings": warnings,
-            "duplicate": True,
-            "source": source,
-            "target": str(target),
-            **({"ledger_errors": ledger_errors} if pad_from is None else {}),
-        }
+                warnings.append(_recorded_warning(held, source))
+        return _duplicate_answer(warnings, source)
     conflict = _balance_conflict(authored, date, account, number, currency, tolerance)
     if conflict is not None and not request.get("force"):
         raise _conflict_refusal(conflict, account, date, number, currency, tolerance)
@@ -707,31 +728,15 @@ def _balance(
         match = _balance_match(authored, date, account, number, currency, tolerance)
         if match is not None:
             source = {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
-            stands = _already_matches(write.book_units(loaded, account, currency, date), number, currency, tolerance)
-            return {
-                "written": 0,
-                "directive": directive.model_dump(mode="json"),
-                "pad": None,
-                "warnings": [
-                    f"{stands}; "
-                    f"omitted the pad from --pad-from (assertion already recorded at "
-                    f"{source['filename']}:{source['lineno']})."
-                ],
-                "duplicate": True,
-                "source": source,
-                "target": str(write.destination(file, into)),
-            }
+            held = write.book_units(loaded, account, currency, date)
+            return _duplicate_answer([_recorded_warning(held, source)], source, write.destination(file, into))
         book = write.book_units(loaded, account, currency, date)
         difference = number - book
         if abs(difference) <= _balance_tolerance(entries[1], options):
-            result = _appended(file, directive, allow_errors=allow_errors, into=into, snapshot=snapshot) | {"pad": None}
-            warnings = list(result.get("warnings") or [])
-            warnings.append(
+            return _wrote_assertion_alone(
                 f"{_already_matches(book, number, currency, tolerance)}; omitted the pad from "
                 "--pad-from and wrote the assertion alone."
             )
-            result["warnings"] = warnings
-            return result
         # The book does not match, so the new pad went unused because an
         # existing pad fills this assertion instead (Beancount pads every
         # currency of the next assertion after the latest pad) — or the new
@@ -766,14 +771,10 @@ def _balance(
                 f"assertion, so a pad from {source_account} would go unused; nothing was written.",
                 details=[advice],
             ) from exc
-        result = _appended(file, directive, allow_errors=allow_errors, into=into, snapshot=snapshot) | {"pad": None}
-        warnings = list(result.get("warnings") or [])
-        warnings.append(
+        return _wrote_assertion_alone(
             f"The existing pad at {pad_at} ({cover.date} from {cover.source_account}) fills this assertion, "
             f"inserting {_plain(difference)} {currency}; omitted the pad from --pad-from and wrote the assertion alone."
         )
-        result["warnings"] = warnings
-        return result
     # The model shape every other branch and `list pad`/`list balance` use:
     # this answer was a raw-namedtuple `directives` array carrying Beancount's
     # internal `diff_amount`, so `data.directive` vanished exactly when the
