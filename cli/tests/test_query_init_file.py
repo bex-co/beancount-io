@@ -114,6 +114,22 @@ def test_an_init_output_elsewhere_still_redirects_the_result(tmp_path: Path, led
 
 
 @pytest.mark.parametrize("native", [False, True], ids=["file", "source"])
+def test_an_init_output_reads_dash_quotes_and_tilde_as_the_shell_does(
+    tmp_path: Path, ledger: Path, native: bool
+) -> None:
+    # w1/303: an init line reaches the same `.output` as the prompt.
+    _init(tmp_path, '.output "~/init out.txt"\n.output -')
+
+    done = _bea(tmp_path, *_where(ledger, native), QUERY)
+
+    assert done.returncode == 0, done.stderr
+    assert "2" in done.stdout, "`.output -` sends the result back to stdout"
+    assert not (tmp_path / "-").exists()
+    assert (tmp_path / "home" / "init out.txt").is_file()
+    assert ledger.read_text(encoding="utf-8") == LEDGER
+
+
+@pytest.mark.parametrize("native", [False, True], ids=["file", "source"])
 def test_an_explicit_output_outranks_an_init_output(tmp_path: Path, ledger: Path, native: bool) -> None:
     other, export = tmp_path / "other.txt", tmp_path / "export.txt"
     _init(tmp_path, f".output {other}")

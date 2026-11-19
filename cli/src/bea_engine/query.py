@@ -489,34 +489,59 @@ def _refuse_alias(destination: Path, root: Path, context: Any, *, spelling: Path
         )
 
 
+def _shell_destination(arg: str) -> str | None:
+    """Read a `.output` argument the way `-o` reads a destination (w1/303).
+
+    No outer shell strips quotes or expands `~` inside the query shell: raw,
+    `.output -` wrote a file named `-` and `"my out.csv"` kept its quotes. One
+    pair of matching quotes is removed (not `shlex`, so a Windows path keeps its
+    backslashes), `-` is the original stream (``""``; `./-` is still a file),
+    and a leading `~` expands. None: an unresolvable home, already reported.
+    """
+    if len(arg) >= 2 and arg[0] == arg[-1] and arg[0] in "\"'":
+        arg = arg[1:-1]
+    if arg == "-":
+        return ""
+    if not arg.startswith("~"):
+        return arg
+    try:
+        return str(expand_path(Path(arg), ".output"))
+    except protocol.UsageError:
+        protocol.note(f"Cannot write to {arg}: could not determine home directory.")
+        return None
+
+
 def _redirect_output(shell: Any, arg: str, stream: TextIO, file: Path | None) -> None:
     """Protect loaded inputs and keep the current stream when redirection fails."""
-    if arg and file is not None:
-        member = _find_alias(Path(arg), file, shell.context)
+    target = _shell_destination(arg)
+    if target is None:
+        return
+    if target and file is not None:
+        member = _find_alias(Path(target), file, shell.context)
         if member is not None:
             protocol.note(
-                f"Refusing to write query output to {arg}: it is one of the ledger files under query ({member})."
+                f"Refusing to write query output to {target}: it is one of the ledger files under query ({member})."
             )
             return
         from bea_engine.ledger.write import refuse_encrypted_destination
 
         try:
             if (getattr(shell.context, "options", None) or {}).get("include"):
-                refuse_encrypted_destination(Path(arg), _loaded_files(file, shell.context), "Query output")
+                refuse_encrypted_destination(Path(target), _loaded_files(file, shell.context), "Query output")
         except protocol.UsageError as exc:
             protocol.note(str(exc))
             return
-        pattern = _claiming_include(Path(arg), file)
+        pattern = _claiming_include(Path(target), file)
         if pattern is not None:
             protocol.note(
-                f"Refusing to write query output to {arg}: the include pattern {pattern} would make it "
+                f"Refusing to write query output to {target}: the include pattern {pattern} would make it "
                 "part of the ledger under query."
             )
             return
     try:
-        destination = open(arg, "w", encoding="utf-8") if arg else stream
+        destination = open(target, "w", encoding="utf-8") if target else stream
     except OSError as exc:
-        protocol.note(f"Cannot write to {arg}: {exc.strerror or exc}.")
+        protocol.note(f"Cannot write to {target}: {exc.strerror or exc}.")
         return
     if shell.outfile is not stream:
         shell.outfile.close()

@@ -1022,7 +1022,10 @@ native option's value do not activate bea's own flags. Use a separate `-h` or
 command's parser and the output-destination checks above.
 
 In the interactive query shell, `.output FILE` redirects results and `.output`
-restores the original output stream. A failed redirection reports the path and
+or `.output -` restores the original output stream. `FILE` is read as `-o`
+reads it: a leading `~/` expands to the home directory, and one pair of
+surrounding quotes is removed, so `.output "my export.csv"` names a path with a
+space (`./-` names a file called `-`). A failed redirection reports the path and
 reason on stderr, keeps the current output destination, and leaves the shell usable.
 
 One-shot queries carry exactly one statement: an empty or whitespace-only
