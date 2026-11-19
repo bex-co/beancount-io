@@ -50,6 +50,26 @@ describe("serialiseV1Directive", () => {
     );
   });
 
+  it("renders a total cost at its exact decimal per-unit value, like the journal", () => {
+    const directive = {
+      ...tx("2024-01-01", "total cost", "10"),
+      postings: [
+        {
+          account: "Assets:Broker",
+          units: { number: "10", currency: "HOOL" },
+          cost: {
+            number: { kind: "total", value: "1000.00" },
+            currency: "USD",
+          },
+        },
+      ],
+    } as unknown as DirectiveJson;
+    const out = serialiseV1Directive(directive);
+    expect((out.postings as Array<{ amount: string }>)[0].amount).toBe(
+      "10 HOOL {100.00 USD}",
+    );
+  });
+
   it("renders Event with description only (type overwritten, Python parity)", () => {
     const out = serialiseV1Directive({
       type: "event",
