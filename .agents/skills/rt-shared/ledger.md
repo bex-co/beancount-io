@@ -141,8 +141,16 @@ newest first.
 
 ### Deferred
 
+- 2026-11-19 dashboard `sidebar.test.tsx` "should export useSidebar hook" (`dashboard/src/common/components/ui/__tests__/sidebar.test.tsx:69`) — export-existence shape like this run's F1–F3 (asserts only `toBeDefined` + `typeof`); out of budget, take first next run.
+
 ### Skipped
 
+- 2026-11-19 backend-v2 `metrics-definitions.test.ts` `toBeInstanceOf(Histogram/Counter/Gauge)` — pins each metric's type; swapping a type turns its own test red, so the proof rule keeps them.
+- 2026-11-19 backend-v2 `error-logging-plugin.test.ts` "should return an object with didEncounterErrors handler" — dropping the handler from the plugin's return turns it red; weak but real wiring pin.
+- 2026-11-19 backend-v2 `legacy-posting-amount.test.ts` "is what the legacy workflow parses..." — source-grep pin on the `parsePostingAmount(posting.amount)` call site goes red when the workflow stops using it; real.
+- 2026-11-19 cli zero-divisor twins (`test_engine_zero_divisor_tags` vs `test_format_crash_isolation` `test_tags_and_links_hold_no_divisor`) — identical bodies are a deliberate ADR014 mirror pinning both twins, plus a pattern-equality guard; sabotaging one twin reds only its own.
+- 2026-11-19 cli near-duplicate pairs (`test_human_import_warns_with_renamed_roots` across close-drained/close-tree files, `test_plain_check_names_it_too` across missing/repeated-include files) — differ in asserted account/location helper per feature; each reds under its own sabotage.
+- 2026-11-19 cli 48h AST assert sweep (36 recent test files) — every test function carries real asserts; subprocess-based suite, no mock/tautology shapes.
 - 2026-11-19 dashboard `conversion-select.test.tsx` "should use default USD currency when not specified" — near-duplicate of the "renders with USD value" twin above it (both render value="USD" and assert the Converted-to-USD label); corrupting the label turns both red, so the proof rule keeps them.
 - 2026-11-19 mock-API self-assertion shape (`expect(vi.mocked|vi|jest).toBeDefined()`) repo-wide (mobile/dashboard/ledger/backend-v2/skills) — zero hits; the 2026-11-18 dashboard instances stay pruned.
 - 2026-11-19 brace-aware expect-free `it` sweep (dashboard/mobile/backend-cluster/ledger, 577 files) — every flag was a `throw`-assertion mobile test or a parser miss on `test(`/multi-line bodies; sampled the flags, all real.
