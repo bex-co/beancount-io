@@ -121,6 +121,10 @@ newest first.
 
 ### Skipped
 
+- 2026-11-19 dashboard `conversion-select.test.tsx` "should use default USD currency when not specified" — near-duplicate of the "renders with USD value" twin above it (both render value="USD" and assert the Converted-to-USD label); corrupting the label turns both red, so the proof rule keeps them.
+- 2026-11-19 mock-API self-assertion shape (`expect(vi.mocked|vi|jest).toBeDefined()`) repo-wide (mobile/dashboard/ledger/backend-v2/skills) — zero hits; the 2026-11-18 dashboard instances stay pruned.
+- 2026-11-19 brace-aware expect-free `it` sweep (dashboard/mobile/backend-cluster/ledger, 577 files) — every flag was a `throw`-assertion mobile test or a parser miss on `test(`/multi-line bodies; sampled the flags, all real.
+- 2026-11-19 cli AST assert-free-function sweep — hits assert via `_refuse_*`/`run_doc`/raising-validator helpers as in the 2026-11-18 sweep; no new shape.
 - 2026-11-18 duplicate neighboring `it` bodies repo-wide (dup-body sweep, ~30 files incl. star/unstar init-loading twins, ssh-keys twins, encode twins) — twins go red under sabotage, so the skill's proof rule keeps them; no vacuous twin found.
 - 2026-11-18 cli/tests assertion-less-per-function sweep (~40 hits) — every hit asserts via local `_assert_*`/`_refuse_*`/`run_doc`/`_applies`/`_replays` helpers or raising validators; sampled 8 files, all real.
 - 2026-11-18 `expect(vi.mocked(...))` with-args call assertions (reconciliation-page, write-outcome, create-file-pending) — real wiring pins, not the bare-`vi.mocked` shape; left in place.
