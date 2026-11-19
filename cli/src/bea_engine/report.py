@@ -462,12 +462,44 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
         "display_precision": precision,
         "variance_signs": "actual_minus_budget",
         "has_budgets": bool(budgeted),
-        "budget_errors": [error.message for error in module.errors],
+        "budget_errors": [_budget_error(error) for error in module.errors],
         "periods": periods,
         "missing_prices": [],
         "missing_price_dates": [],
         "missing_price_summary": [],
     }
+
+
+def _budget_error(error: Any) -> str:
+    """One ignored budget line as `file:line: Budget for ACCOUNT ignored: why` (w1/297).
+
+    Fava's messages name neither the line nor what it refused, so two bad
+    lines read as one repeated message and a typo or a trailing space in the
+    interval stays invisible. The location prints as a ledger error's does;
+    the account and the refused value come from the directive itself.
+    """
+    values = getattr(error.entry, "values", None) or []
+    subject = f"Budget for {values[0].value}" if values else "Budget"
+    if error.message == "Invalid interval for budget entry":
+        why = f"unknown interval {_as_written(values[1])} (use daily, weekly, monthly, quarterly or yearly)"
+    elif error.message.startswith("Invalid amount for budget entry"):
+        why = f"amount {_as_written(values[2])} is not NUMBER CURRENCY"
+    elif error.message == "Failed to parse budget entry":
+        why = "expected ACCOUNT INTERVAL NUMBER CURRENCY"
+    else:
+        why = error.message
+    return format_error(error._replace(message=f"{subject} ignored: {why}"))
+
+
+def _as_written(value: Any) -> str:
+    """A `custom` directive's value as the ledger spells it: a string quoted, so its spaces show."""
+    if value.dtype is str:
+        import json
+
+        return json.dumps(value.value, ensure_ascii=False)
+    if value.dtype is bool:
+        return "TRUE" if value.value else "FALSE"
+    return str(value.value)
 
 
 def _scoped_earnings(filtered: Any, conversion: str, unfiltered: Any) -> Any:

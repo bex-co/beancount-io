@@ -2134,6 +2134,10 @@ too:
 - A budget line Fava cannot read (an unknown interval or an amount without the
   `NUMBER CURRENCY` shape) is reported on stderr and
   under `budget_errors` in `--json`, and its account falls to `unbudgeted`.
+  Each diagnostic names its line the way a ledger error does, then the account
+  and the refused value, quoted when it is a string so a typo or a trailing
+  space shows:
+  `budgets.bean:2: Budget for Expenses:Rent ignored: unknown interval "montly" (use daily, weekly, monthly, quarterly or yearly)`.
 - It takes `--time`, `--interval`, `--account`, `--format csv`; there is no
   `--conversion`.
 

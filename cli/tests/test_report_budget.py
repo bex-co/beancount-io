@@ -72,6 +72,15 @@ def _report(argv: list[str], tmp_path: Path, ledger_text: str = LEDGER) -> dict[
     return json.loads(run.stdout)["data"]
 
 
+def _ignored(ledger: Path, line: int, account: str, why: str) -> str:
+    """An ignored budget line's diagnostic: its location, account and what was refused (w1/297)."""
+    return f"{ledger}:{line}: Budget for {account} ignored: {why}"
+
+
+def _bad_interval(written: str) -> str:
+    return f"unknown interval {written} (use daily, weekly, monthly, quarterly or yearly)"
+
+
 def _rows(data: dict[str, Any]) -> dict[tuple[str, str], dict[str, Any]]:
     assert len(data["periods"]) == 1
     return {(row["account"], row["currency"]): row for row in data["periods"][0]["rows"]}
@@ -159,8 +168,9 @@ def test_quotes_and_invalid_budgets_do_not_inflate_budget_or_other_report_precis
     )
     data = _report(["-t", "2026-01"], tmp_path, text)
     assert _rows(data)[("Expenses:Food", "USD")]["budget"] == "100.49"
-    assert data["budget_errors"] == ["Invalid interval for budget entry"]
     ledger = tmp_path / "main.beancount"
+    line = HEAD.count("\n") + 2
+    assert data["budget_errors"] == [_ignored(ledger, line, "Expenses:Fun", _bad_interval('"invalid"'))]
     budget = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01"], tmp_path)
     assert budget.returncode == 0, budget.stderr
     assert "100.49 USD" in budget.stdout and "100.49000000" not in budget.stdout
@@ -304,10 +314,58 @@ def test_a_ledger_without_budgets_says_so(tmp_path: Path) -> None:
 def test_an_invalid_budget_directive_is_reported_not_silently_zero(tmp_path: Path) -> None:
     text = LEDGER + '2026-01-01 custom "budget" Expenses:Fun "fortnightly-ish" 50.00 USD\n'
     data = _report(["-t", "2026-01"], tmp_path, text)
-    assert data["budget_errors"] == ["Invalid interval for budget entry"]
+    ledger = tmp_path / "main.beancount"
+    error = _ignored(ledger, LEDGER.count("\n") + 1, "Expenses:Fun", _bad_interval('"fortnightly-ish"'))
+    assert data["budget_errors"] == [error]
     assert _rows(data)[("Expenses:Fun", "USD")]["status"] == "unbudgeted"
-    run = bea(["-f", str(tmp_path / "main.beancount"), "report", "budget", "-t", "2026-01"], tmp_path)
-    assert "Budget directive ignored: Invalid interval" in run.stderr
+    run = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01"], tmp_path)
+    assert run.stderr.splitlines() == [error]
+
+
+def test_each_ignored_budget_names_its_file_line_account_and_refused_value(tmp_path: Path) -> None:
+    """Three bad lines read as three diagnostics, never one repeated message (w1/297).
+
+    A typo and a trailing space in the interval show inside the quotes, and the
+    two Travel lines say which one failed for which reason.
+    """
+    ledger = write_ledger(
+        tmp_path,
+        'option "operating_currency" "USD"\n'
+        'include "budgets.bean"\n'
+        "2026-01-01 open Assets:Cash USD\n"
+        "2026-01-01 open Expenses:Food USD\n"
+        "2026-01-01 open Expenses:Rent USD\n"
+        "2026-01-01 open Expenses:Travel USD\n"
+        '2026-01-05 * "Food"\n  Expenses:Food  30.00 USD\n  Assets:Cash\n'
+        '2026-01-06 * "Rent"\n  Expenses:Rent  900.00 USD\n  Assets:Cash\n'
+        '2026-01-07 * "Trip"\n  Expenses:Travel  80.00 USD\n  Assets:Cash\n',
+    )
+    budgets = tmp_path / "budgets.bean"
+    budgets.write_text(
+        '2026-01-01 custom "budget" Expenses:Food "monthly" 100.00 USD\n'
+        '2026-01-01 custom "budget" Expenses:Rent "montly" 1000.00 USD\n'
+        '2026-01-01 custom "budget" Expenses:Travel "Monthly " 50.00 USD\n'
+        '2026-01-01 custom "budget" Expenses:Travel "monthly" 50\n'
+    )
+    expected = [
+        _ignored(budgets, 2, "Expenses:Rent", _bad_interval('"montly"')),
+        _ignored(budgets, 3, "Expenses:Travel", _bad_interval('"Monthly "')),
+        _ignored(budgets, 4, "Expenses:Travel", "amount 50 is not NUMBER CURRENCY"),
+    ]
+    base = ["-f", str(ledger), "report", "budget", "-t", "2026-01"]
+    structured = bea(["--json", *base], tmp_path)
+    assert structured.returncode == 0, structured.stderr
+    data = json.loads(structured.stdout)["data"]
+    assert data["budget_errors"] == expected
+    rows = _rows(data)
+    food = rows[("Expenses:Food", "USD")]
+    assert (food["status"], food["budget"], food["actual"]) == ("budgeted", "100.00", "30.00")
+    assert food["variance"] == "-70.00"
+    assert rows[("Expenses:Rent", "USD")]["status"] == rows[("Expenses:Travel", "USD")]["status"] == "unbudgeted"
+    for options in ([], ["--format", "csv"]):
+        run = bea([*base, *options], tmp_path)
+        assert run.returncode == 0, run.stderr
+        assert run.stderr.splitlines() == expected
 
 
 @pytest.mark.parametrize("amount", ["100", '"100 USD"', "TRUE"])
@@ -326,7 +384,9 @@ def test_malformed_budget_amounts_keep_valid_budgets_and_actuals(tmp_path: Path,
 """
     )
     data = _report(["-t", "2026-01"], tmp_path, text)
-    assert data["budget_errors"] == ["Invalid amount for budget entry: expected NUMBER CURRENCY"]
+    ledger = tmp_path / "main.beancount"
+    error = _ignored(ledger, HEAD.count("\n") + 1, "Expenses:Fun", f"amount {amount} is not NUMBER CURRENCY")
+    assert data["budget_errors"] == [error]
     rows = _rows(data)
     assert len(rows) == 2
     fun = rows[("Expenses:Fun", "USD")]
@@ -336,11 +396,10 @@ def test_malformed_budget_amounts_keep_valid_budgets_and_actuals(tmp_path: Path,
     allowed = _report(["-t", "2026-01", "--allow-errors"], tmp_path, text)
     assert allowed["periods"] == data["periods"]
     assert allowed["budget_errors"] == data["budget_errors"]
-    ledger = tmp_path / "main.beancount"
     run = bea(["-f", str(ledger), "report", "budget", "-t", "2026-01"], tmp_path)
     assert run.returncode == 0, run.stderr
     assert "Expenses:Fun" in run.stdout and "Expenses:Rent" in run.stdout
-    assert run.stderr.count("Budget directive ignored: Invalid amount") == 1
+    assert run.stderr.count(error) == 1
     assert "AttributeError" not in run.stderr
     assert ledger.read_text() == text
 
@@ -369,8 +428,8 @@ def test_csv_rows_match_the_json_rows(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "declaration,error",
     [
-        ('"fortnightly-ish" 100.00 USD', "Invalid interval for budget entry"),
-        ('"monthly" 100', "Invalid amount for budget entry: expected NUMBER CURRENCY"),
+        ('"fortnightly-ish" 100.00 USD', _bad_interval('"fortnightly-ish"')),
+        ('"monthly" 100', "amount 100 is not NUMBER CURRENCY"),
         (None, None),
     ],
 )
@@ -385,6 +444,8 @@ def test_ignored_budget_diagnostics_reach_text_and_both_csv_destinations(
     if declaration is not None:
         text += f'2026-01-01 custom "budget" Expenses:Fun {declaration}\n'
     ledger = write_ledger(tmp_path, text)
+    if error is not None:
+        error = _ignored(ledger, text.count("\n"), "Expenses:Fun", error)
     base = ["-f", str(ledger), "report", "budget", "-t", "2026-01"]
     structured = bea(["--json", *base], tmp_path)
     assert structured.returncode == 0, structured.stderr
@@ -401,8 +462,8 @@ def test_ignored_budget_diagnostics_reach_text_and_both_csv_destinations(
         if error is None:
             assert run.stderr == ""
         else:
-            assert run.stderr.count(f"Budget directive ignored: {error}") == 1
-        assert "Budget directive ignored" not in run.stdout
+            assert run.stderr.count(error) == 1
+        assert "ignored:" not in run.stdout
         assert ledger.read_text() == text
         if not options:
             assert "Expenses:Fun" in run.stdout and "50.00 USD" in run.stdout

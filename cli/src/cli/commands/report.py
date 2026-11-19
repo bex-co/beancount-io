@@ -912,7 +912,8 @@ def budget(
         _emit_json(file, data)
         return
     for error in data["budget_errors"]:
-        output.note(f"Budget directive ignored: {error}")
+        # The engine names the line, the account and what it refused.
+        output.note(error)
     if csv_target is not None:
         _emit_csv("budget", file, data, csv_target)
         return
