@@ -456,4 +456,152 @@ describe("composeGains", () => {
       expect(result.rows).toEqual([]);
     });
   });
+
+  describe("reductions without a price (w1/308)", () => {
+    const lot = { number: "150.00", currency: "USD", date: "2024-01-10" };
+    const leg = (account: string, number: string, currency = "USD") => ({
+      account,
+      number,
+      currency,
+    });
+    // The note's repro: a buy, an own-account transfer, a priced sale and
+    // a sale to cash written without `@`, whose 150 USD gain was booked.
+    const repro = [
+      txn("2024-03-11", [
+        { account: "Assets:Broker", number: "-5", currency: "AAPL", cost: lot },
+        leg("Assets:Bank", "900.00"),
+        leg("Income:Gains", "-150.00"),
+      ]),
+      txn("2024-03-10", [
+        {
+          account: "Assets:Broker",
+          number: "-3",
+          currency: "AAPL",
+          cost: lot,
+          price: { number: "170.00", currency: "USD" },
+        },
+        leg("Assets:Bank", "510.00"),
+        leg("Income:Gains", "-60.00"),
+      ]),
+      txn("2024-02-01", [
+        { account: "Assets:Broker", number: "-2", currency: "AAPL", cost: lot },
+        { account: "Assets:Broker2", number: "2", currency: "AAPL", cost: lot },
+      ]),
+      txn("2024-01-10", [
+        { account: "Assets:Broker", number: "10", currency: "AAPL", cost: lot },
+        leg("Assets:Bank", "-1500.00"),
+      ]),
+    ];
+    const UNPRICED = {
+      date: "2024-03-11",
+      entry_hash: "h-2024-03-11",
+      account: "Assets:Broker",
+      commodity: "AAPL",
+      acquired: "2024-01-10",
+      quantity: { number: "5", currency: "AAPL" },
+      cost: { number: "150", currency: "USD" },
+    };
+
+    it("lists a sale without a price instead of dropping it, and keeps the priced total", () => {
+      const result = composeGains({ ...base, transactions: repro });
+      expect(result.rows.map((row) => [row.sold, row.gain])).toEqual([
+        ["2024-03-10", { number: "60", currency: "USD" }],
+      ]);
+      expect(result.totals.one_year_or_less).toEqual({ USD: "60" });
+      // The transfer takes AAPL back in within its transaction: not listed.
+      expect(result.unpriced_reductions).toEqual([UNPRICED]);
+    });
+
+    it("lists it when it is the only reduction, so the report is not just empty", () => {
+      const result = composeGains({
+        ...base,
+        transactions: repro,
+        start: "2024-03-11",
+      });
+      expect(result.rows).toEqual([]);
+      expect(result.unpriced_reductions).toEqual([UNPRICED]);
+    });
+
+    it("lists no split, which takes the commodity back in at a new cost", () => {
+      const old = { number: "100", currency: "USD", date: "2024-01-02" };
+      const result = composeGains({
+        ...base,
+        transactions: [
+          txn("2024-02-01", [
+            {
+              account: "Assets:Broker",
+              number: "-5",
+              currency: "X",
+              cost: old,
+            },
+            {
+              account: "Assets:Broker",
+              number: "10",
+              currency: "X",
+              cost: { number: "50", currency: "USD", date: "2024-01-02" },
+            },
+          ]),
+          txn("2024-01-02", [
+            { account: "Assets:Broker", number: "5", currency: "X", cost: old },
+            leg("Assets:Bank", "-500"),
+          ]),
+        ],
+      });
+      expect(result.rows).toEqual([]);
+      expect(result.unpriced_reductions).toEqual([]);
+    });
+
+    it("lists a short cover written without a price", () => {
+      const short = { number: "60", currency: "USD", date: "2024-03-01" };
+      const result = composeGains({
+        ...base,
+        transactions: [
+          txn("2024-03-05", [
+            {
+              account: "Assets:Short",
+              number: "2",
+              currency: "X",
+              cost: short,
+            },
+            leg("Assets:Bank", "-100"),
+            leg("Income:Gains", "-20"),
+          ]),
+          txn("2024-03-01", [
+            {
+              account: "Assets:Short",
+              number: "-2",
+              currency: "X",
+              cost: short,
+            },
+            leg("Assets:Bank", "120"),
+          ]),
+        ],
+      });
+      expect(result.rows).toEqual([]);
+      expect(result.unpriced_reductions).toEqual([
+        {
+          date: "2024-03-05",
+          entry_hash: "h-2024-03-05",
+          account: "Assets:Short",
+          commodity: "X",
+          acquired: "2024-03-01",
+          quantity: { number: "2", currency: "X" },
+          cost: { number: "60", currency: "USD" },
+        },
+      ]);
+    });
+
+    it.each([
+      ["a to-date before it", { end: "2024-03-10" }],
+      ["a window without it", { window: new Set(["h-2024-03-10"]) }],
+      ["another account", { account: "Assets:Broker2" }],
+    ])("narrows the list like the rows under %s", (_, narrowing) => {
+      const result = composeGains({
+        ...base,
+        ...narrowing,
+        transactions: repro,
+      });
+      expect(result.unpriced_reductions).toEqual([]);
+    });
+  });
 });

@@ -2077,11 +2077,20 @@ bounding the sales (both ends inclusive). Rows bucket into held one year or
 less vs more than one year by calendar date, with no tax rules attached: a
 lot is more than one year only when it sold after its acquisition date's
 anniversary (29 February's is 28 February), so a lot held exactly one year
-stays short even across a leap day, and `held_days` stays the plain count;
-splits and transfers carry no price and stay out. A closed lot is whatever a
-priced posting actually reduced, long or short: covering a short (or settling
-a costed foreign-currency payable) reports the opening cost as proceeds and
-the cover price as basis, and opening a short realizes nothing.
+stays short even across a leap day, and `held_days` stays the plain count.
+A closed lot is whatever a priced posting actually reduced, long or short:
+covering a short (or settling a costed foreign-currency payable) reports the
+opening cost as proceeds and the cover price as basis, and opening a short
+realizes nothing. A reduction without a price states no proceeds, so it is
+never a row. Splits and own-account transfers are such reductions, and the
+same transaction takes the commodity back in, so they stay out. Any other
+one, such as a sale to cash written without `@ PRICE`, still booked its gain,
+so the report names it instead of totalling short: text ends with
+`1 lot reduction without a price is not counted: main.bean:25 (add @ PRICE to
+report it as a sale).` (never a bare `No sales.`), `--json` lists each under
+`unpriced_reductions` (date, `file`, `line`, account, commodity, acquired,
+quantity and per-unit `cost`), and CSV adds it as a row with empty proceeds,
+basis and gain and its location in `unpriced_at`.
 `cash-flow` is a direct-method statement at cost: operating, investing and
 financing rows explain the change in cash and cash equivalents over `--time`
 intersected with `--from-date / --to-date` (both inclusive), and cash held
@@ -2177,7 +2186,8 @@ The table holds the figures `--json` carries, with these rules:
   `trial-balance` and `cash-flow` share the columns
   `section,item,date,currency,amount`; `holdings`, `register` and
   `capital-gains` have their own, one row per holding, posting (repeated per
-  currency of its running balance, `line` identifies the posting) and lot.
+  currency of its running balance, `line` identifies the posting) and lot
+  (then one per reduction without a price, located by `unpriced_at`).
 - An empty period prints the header alone and exits 0. `--json` and
   `--format csv` cannot be combined.
 

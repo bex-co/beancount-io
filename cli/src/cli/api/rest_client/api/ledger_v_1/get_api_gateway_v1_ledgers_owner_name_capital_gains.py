@@ -124,10 +124,14 @@ def sync_detailed(
      One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes
     when a posting with a price reduces a lot its account holds, long or short: covering a short (or
     settling a costed foreign-currency payable) reports the opening cost as proceeds and the cover price
-    as basis, and opening a short realizes nothing. Splits and own-account transfers carry no price and
-    are left out. Lots are followed from the ledger's first transaction; `time` and `fromDate`/`toDate`
-    bound the sale date and `account` filters the posting account, narrowing only the rows. All figures
-    stay in their booked currencies.
+    as basis, and opening a short realizes nothing. A reduction without a price states no proceeds, so
+    it is no row: a split or an own-account transfer (the same transaction takes the same commodity back
+    in) is left out, and any other one, such as a sale written without `@`, is listed in
+    `unpriced_reductions` with its date, `entry_hash` (getEntryContext returns its file and line),
+    account, commodity, acquired date, quantity and per-unit cost, so the totals never leave a sale out
+    silently. Lots are followed from the ledger's first transaction; `time` and `fromDate`/`toDate`
+    bound the sale date and `account` filters the posting account, narrowing only the rows and
+    `unpriced_reductions`. All figures stay in their booked currencies.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -177,10 +181,14 @@ def sync(
      One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes
     when a posting with a price reduces a lot its account holds, long or short: covering a short (or
     settling a costed foreign-currency payable) reports the opening cost as proceeds and the cover price
-    as basis, and opening a short realizes nothing. Splits and own-account transfers carry no price and
-    are left out. Lots are followed from the ledger's first transaction; `time` and `fromDate`/`toDate`
-    bound the sale date and `account` filters the posting account, narrowing only the rows. All figures
-    stay in their booked currencies.
+    as basis, and opening a short realizes nothing. A reduction without a price states no proceeds, so
+    it is no row: a split or an own-account transfer (the same transaction takes the same commodity back
+    in) is left out, and any other one, such as a sale written without `@`, is listed in
+    `unpriced_reductions` with its date, `entry_hash` (getEntryContext returns its file and line),
+    account, commodity, acquired date, quantity and per-unit cost, so the totals never leave a sale out
+    silently. Lots are followed from the ledger's first transaction; `time` and `fromDate`/`toDate`
+    bound the sale date and `account` filters the posting account, narrowing only the rows and
+    `unpriced_reductions`. All figures stay in their booked currencies.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -225,10 +233,14 @@ async def asyncio_detailed(
      One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes
     when a posting with a price reduces a lot its account holds, long or short: covering a short (or
     settling a costed foreign-currency payable) reports the opening cost as proceeds and the cover price
-    as basis, and opening a short realizes nothing. Splits and own-account transfers carry no price and
-    are left out. Lots are followed from the ledger's first transaction; `time` and `fromDate`/`toDate`
-    bound the sale date and `account` filters the posting account, narrowing only the rows. All figures
-    stay in their booked currencies.
+    as basis, and opening a short realizes nothing. A reduction without a price states no proceeds, so
+    it is no row: a split or an own-account transfer (the same transaction takes the same commodity back
+    in) is left out, and any other one, such as a sale written without `@`, is listed in
+    `unpriced_reductions` with its date, `entry_hash` (getEntryContext returns its file and line),
+    account, commodity, acquired date, quantity and per-unit cost, so the totals never leave a sale out
+    silently. Lots are followed from the ledger's first transaction; `time` and `fromDate`/`toDate`
+    bound the sale date and `account` filters the posting account, narrowing only the rows and
+    `unpriced_reductions`. All figures stay in their booked currencies.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -276,10 +288,14 @@ async def asyncio(
      One row per closed lot — quantity, proceeds, basis, gain — plus one-year bucket totals. A lot closes
     when a posting with a price reduces a lot its account holds, long or short: covering a short (or
     settling a costed foreign-currency payable) reports the opening cost as proceeds and the cover price
-    as basis, and opening a short realizes nothing. Splits and own-account transfers carry no price and
-    are left out. Lots are followed from the ledger's first transaction; `time` and `fromDate`/`toDate`
-    bound the sale date and `account` filters the posting account, narrowing only the rows. All figures
-    stay in their booked currencies.
+    as basis, and opening a short realizes nothing. A reduction without a price states no proceeds, so
+    it is no row: a split or an own-account transfer (the same transaction takes the same commodity back
+    in) is left out, and any other one, such as a sale written without `@`, is listed in
+    `unpriced_reductions` with its date, `entry_hash` (getEntryContext returns its file and line),
+    account, commodity, acquired date, quantity and per-unit cost, so the totals never leave a sale out
+    silently. Lots are followed from the ledger's first transaction; `time` and `fromDate`/`toDate`
+    bound the sale date and `account` filters the posting account, narrowing only the rows and
+    `unpriced_reductions`. All figures stay in their booked currencies.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

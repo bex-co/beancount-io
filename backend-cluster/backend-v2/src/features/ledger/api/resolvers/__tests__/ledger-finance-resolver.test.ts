@@ -445,6 +445,17 @@ describe("LedgerFinanceQueryResolver", () => {
           more_than_one_year: { USD: "500" },
           holding_unknown: {},
         },
+        unpriced_reductions: [
+          {
+            date: "2024-04-01",
+            entry_hash: "a1b2",
+            account: "Assets:Broker",
+            commodity: "HOOL",
+            acquired: null,
+            quantity: { number: "2", currency: "HOOL" },
+            cost: { number: "100", currency: "USD" },
+          },
+        ],
       });
 
       const result = await resolver.getLedgerCapitalGains(
@@ -467,6 +478,17 @@ describe("LedgerFinanceQueryResolver", () => {
         longHeld: true,
         gain: { number: "500", currency: "USD" },
       });
+      expect(result.unpricedReductions).toEqual([
+        {
+          date: "2024-04-01",
+          entryHash: "a1b2",
+          account: "Assets:Broker",
+          commodity: "HOOL",
+          acquired: null,
+          quantity: { number: "2", currency: "HOOL" },
+          cost: { number: "100", currency: "USD" },
+        },
+      ]);
     });
 
     it("should propagate errors thrown by the service", async () => {

@@ -24,9 +24,13 @@ the acquisition date's anniversary, so a lot held exactly one year is
 short even when that year had 366 days). Both bounds are inclusive, so the to-date is
 the year's last day, where the queries below compare against the next
 year's first day (`$year_end`). A closed lot is a reducing posting that
-carries both cost and price: splits and own-account transfers reduce lots
-without a price and stay out. Amounts are in each row's cost currency —
-never sum across currencies.
+carries both cost and price. A reduction without a price states no proceeds,
+so it is never a row: splits and own-account transfers (the same transaction
+takes the commodity back in) stay out silently, and any other one is listed
+under `unpriced_reductions` with its `file` and `line`. `bea` 0.4.1 and
+earlier lack that field and drop such a sale without notice, so there the
+tie-out below is the only sign of one. Amounts are in each row's cost
+currency — never sum across currencies.
 
 **Tie-out.** The per-lot gains must equal what was actually booked to the
 ledger's gains account(s) that year — the one thing the command does not
@@ -40,8 +44,10 @@ bea --file "$ledger" --json --no-input query "SELECT -sum(number) AS booked_gain
 
 Quote both outputs. If they disagree, say so and show both figures — a
 difference means a gain was booked somewhere the lot rows do not explain
-(a typed-in gain, a missing price, a differently named account). Never
-adjust a row or a total to force the tie.
+(a typed-in gain, a missing price, a differently named account). Each entry
+in `unpriced_reductions` is one such sale: name its `file:line` and say that
+adding the sale price (`@ PRICE`) to that posting reports it. Never adjust a
+row or a total to force the tie.
 
 The queries behind the command, for windows it does not carve (a custom
 predicate, a per-lot filter the flags cannot express) — the per-lot rows:
@@ -64,5 +70,5 @@ bea --file "$ledger" --json --no-input query "SELECT year(date) * 10000 + month(
 position still held — those are beancount-ask's holdings recipes in its
 `references/bql-recipes.md`), positions without prices, wash sales, FX gains on
 cash balances, and any tax form or jurisdiction rule. A reduction whose
-posting carries no price is not a sale here; if the user says one was,
-that is a fact to surface, not to price by guessing.
+posting carries no price is not counted as a sale here; it appears under
+`unpriced_reductions` for the user to price, never priced by guessing.

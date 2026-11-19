@@ -17,8 +17,12 @@ import type {
  * inventory is followed from the first transaction, whatever the window,
  * and a row reports only what a priced posting actually closed. Reading
  * negative postings alone dropped every cover and listed each short
- * opening as a zero-gain sale (w1/307, the CLI's w5/1035). Splits and
- * own-account transfers reduce without a price: movements, not sales.
+ * opening as a zero-gain sale (w1/307, the CLI's w5/1035). A reduction
+ * without a price states no proceeds, so it is never a row. Splits and
+ * own-account transfers are such reductions, offset in the same transaction
+ * by the same commodity coming back in. Any other one — a sale to cash
+ * written without `@` — still booked its gain, so it is listed in
+ * `unpriced_reductions` by its entry hash rather than dropped (w1/308).
  * FIFO vs specific-lot is the ledger's own booking, already resolved in
  * the posting's cost. Proceeds and basis stay in their own currencies,
  * and totals never sum across currencies. The one-year boundary is the
@@ -40,6 +44,21 @@ type GainsRow = {
   gain: { number: string; currency: string };
 };
 
+/**
+ * A lot reduction the rows leave out for want of a price. The CLI names its
+ * `file` and `line`; the hosted journal carries neither, so the entry hash
+ * stands in — getEntryContext returns the entry's file, line and text.
+ */
+type UnpricedReduction = {
+  date: string;
+  entry_hash: string;
+  account: string;
+  commodity: string;
+  acquired: string | null;
+  quantity: { number: string; currency: string };
+  cost: { number: string; currency: string };
+};
+
 export type GainsResult = {
   rows: GainsRow[];
   totals: {
@@ -47,6 +66,7 @@ export type GainsResult = {
     more_than_one_year: Record<string, string>;
     holding_unknown: Record<string, string>;
   };
+  unpriced_reductions: UnpricedReduction[];
 };
 
 /** Strict `YYYY-MM-DD`, valid calendar date — `date.fromisoformat`. */
@@ -151,6 +171,7 @@ export function composeGains(params: {
 }): GainsResult {
   const { transactions, window, account, roots, start, end } = params;
   const rows: GainsRow[] = [];
+  const unpriced: UnpricedReduction[] = [];
   const held = new Map<string, Map<string, BigNumber>>();
   for (const entry of [...transactions].reverse()) {
     // The engine could not book it, so no lot moved (the journal lists it
@@ -186,11 +207,54 @@ export function composeGains(params: {
       ) {
         continue;
       }
+      if (!posting.price) {
+        if (!offsetInEntry(entry.postings, posting.units.currency, units)) {
+          unpriced.push({
+            date: entry.date,
+            entry_hash: entry.entry_hash,
+            account: posting.account,
+            commodity: posting.units.currency,
+            acquired: cost.date === "" ? null : cost.date,
+            quantity: {
+              number: plain(BigNumber.min(before.abs(), units.abs())),
+              currency: posting.units.currency,
+            },
+            cost: { number: plain(costNumber), currency: cost.currency },
+          });
+        }
+        continue;
+      }
       const row = closedLot(posting, cost, entry.date, before, units);
       if (row !== null) rows.push(row);
     }
   }
-  return { rows, totals: bucketTotals(rows) };
+  return {
+    rows,
+    totals: bucketTotals(rows),
+    unpriced_reductions: unpriced,
+  };
+}
+
+/**
+ * Whether the transaction takes the reduced commodity back in — a split
+ * (the old lot out, the new one in) or an own-account transfer (one
+ * account out, another in) — rather than selling it, as
+ * `_offset_in_entry` decides for the CLI.
+ */
+function offsetInEntry(
+  postings: readonly JournalPostingPublic[],
+  currency: string,
+  units: BigNumber,
+): boolean {
+  return postings.some((other) => {
+    const number = decimal(other.units.number);
+    return (
+      number !== null &&
+      other.units.currency === currency &&
+      !number.isZero() &&
+      number.gt(0) !== units.gt(0)
+    );
+  });
 }
 
 /** Gains per currency, bucketed by holding period. */
@@ -225,9 +289,9 @@ function bucketTotals(rows: readonly GainsRow[]): GainsResult["totals"] {
 }
 
 /**
- * What one reducing posting closed, or null when it is no sale: no price
- * (a split or an own-account transfer), or a price in another currency
- * than the cost, whose difference would carry no single currency. A sale
+ * What one priced reducing posting closed, or null when its price is in
+ * another currency than the cost, whose difference would carry no single
+ * currency, or has no number. A sale
  * out of a long lot takes the price as proceeds and the cost as basis; a
  * cover into a short one swaps them, so the opening cost is the proceeds.
  * The quantity is what the lot held, at most: a posting can only close

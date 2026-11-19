@@ -403,6 +403,11 @@ suite's minimum version no longer needs it.
   `--ofx`), the account and rules are remembered per ACCTID, and the run
   needs the `beangulp` engine feature (`bea engine enable beangulp`).
   On 0.3.1, run the manual normalization stages instead.
+- **Unpriced sales in `report capital-gains` (after 0.4.1).** A lot
+  reduction without a price that is no split or own-account transfer is
+  listed under `unpriced_reductions` and named after the text totals. 0.4.1
+  and earlier leave it out without notice; only the booked-gains tie-out
+  shows the gap.
 
 ## Failure and resume
 

@@ -800,8 +800,12 @@ def capital_gains(
     _heading("Capital Gains", data)
     precision = _precision(data)
     rows = data["rows"]
+    unpriced = data.get("unpriced_reductions") or []
     if not rows:
-        typer.echo("No sales.")
+        # A bare "No sales." under a reduction that booked a gain without a
+        # price read as nothing realized (w1/308).
+        typer.echo("No priced sales." if unpriced else "No sales.")
+        _unpriced_note(unpriced)
         return
     output.table(
         ["SOLD", "ACCOUNT", "COMMODITY", "ACQUIRED", "HELD", "QTY", "PROCEEDS", "BASIS", "GAIN"],
@@ -826,6 +830,24 @@ def capital_gains(
     typer.echo(f"  {'More than one year:':<20} {_amounts(totals['more_than_one_year'], conversion, precision)}")
     if totals["holding_unknown"]:
         typer.echo(f"  {'Holding unknown:':<20} {_amounts(totals['holding_unknown'], conversion, precision)}")
+    _unpriced_note(unpriced)
+
+
+def _unpriced_note(unpriced: list[dict[str, Any]]) -> None:
+    """Name each lot reduction the totals leave out for want of a price (w1/308)."""
+    if not unpriced:
+        return
+    # A sale booked across several lots is one entry: name its line once.
+    where = ", ".join(dict.fromkeys(f"{item['file']}:{item['line']}" for item in unpriced))
+    if len(unpriced) == 1:
+        note = f"1 lot reduction without a price is not counted: {where} (add @ PRICE to report it as a sale)."
+    else:
+        note = (
+            f"{len(unpriced)} lot reductions without a price are not counted: {where} "
+            "(add @ PRICE to report them as sales)."
+        )
+    typer.echo("")
+    typer.echo(note)
 
 
 def _held(row: dict[str, Any]) -> str:

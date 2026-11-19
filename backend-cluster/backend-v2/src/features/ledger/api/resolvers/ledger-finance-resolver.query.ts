@@ -431,9 +431,44 @@ class GainsRow {
 }
 
 @ObjectType()
+class GainsUnpricedReduction {
+  @Field(() => String)
+  date: string;
+
+  @Field(() => String, {
+    description:
+      "The reducing transaction's entry hash; getEntryContext returns its file, line and text.",
+  })
+  entryHash: string;
+
+  @Field(() => String)
+  account: string;
+
+  @Field(() => String)
+  commodity: string;
+
+  @Field(() => String, { nullable: true })
+  acquired?: string | null;
+
+  @Field(() => HoldingsMoney)
+  quantity: HoldingsMoney;
+
+  @Field(() => HoldingsMoney, {
+    description: "The lot's booked cost per unit.",
+  })
+  cost: HoldingsMoney;
+}
+
+@ObjectType()
 class GainsData {
   @Field(() => [GainsRow])
   rows: GainsRow[];
+
+  @Field(() => [GainsUnpricedReduction], {
+    description:
+      "Lot reductions without a price that the same transaction does not offset with the same commodity (a split or an own-account transfer does): sales the rows and totals leave out because no proceeds were stated. Adding @ PRICE to the posting reports one as a sale.",
+  })
+  unpricedReductions: GainsUnpricedReduction[];
 
   @Field(() => GraphQLJSONObject)
   totals: {
@@ -732,6 +767,15 @@ export class LedgerFinanceQueryResolver {
         gain: row.gain,
       })),
       totals: data.totals,
+      unpricedReductions: data.unpriced_reductions.map((item) => ({
+        date: item.date,
+        entryHash: item.entry_hash,
+        account: item.account,
+        commodity: item.commodity,
+        acquired: item.acquired,
+        quantity: item.quantity,
+        cost: item.cost,
+      })),
     };
   }
 

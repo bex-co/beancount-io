@@ -1344,14 +1344,20 @@ def _refuse_window_outside_time(
 def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledger_errors: list[str]) -> dict[str, Any]:
     """Realized gain/loss per reduction, from the booked cost and price.
 
-    A closed lot is a reducing posting that carries both: splits and
-    own-account transfers reduce without a price, so they are movements,
-    not sales. FIFO vs specific-lot is the ledger's own booking —
-    Beancount matched the lot at load, and the posting's cost names it,
-    acquisition date included. Proceeds and basis stay in their own
-    currencies, and totals never sum across currencies. The one-year boundary
-    is the acquisition date's anniversary, a calendar date with no
-    jurisdiction rules attached (w22/m4/t001, w1/249).
+    A closed lot is a reducing posting that carries both. FIFO vs
+    specific-lot is the ledger's own booking — Beancount matched the lot at
+    load, and the posting's cost names it, acquisition date included.
+    Proceeds and basis stay in their own currencies, and totals never sum
+    across currencies. The one-year boundary is the acquisition date's
+    anniversary, a calendar date with no jurisdiction rules attached
+    (w22/m4/t001, w1/249).
+
+    A reduction without a price states no proceeds, so it is never a row.
+    Splits and own-account transfers are such reductions, offset in the same
+    transaction by the same commodity coming back in. Any other one — a sale
+    to cash written without `@` — still booked its gain, so it is listed in
+    `unpriced_reductions` rather than dropped: the report says what it left
+    out instead of totalling short (w1/308).
     """
     from beancount.core.data import Transaction
     from beancount.core.inventory import Inventory
@@ -1360,6 +1366,7 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
     matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
     start, end = bounds
     rows: list[dict[str, Any]] = []
+    unpriced: list[dict[str, Any]] = []
     # A reduction is a posting that shrinks a lot the account already holds,
     # in either direction: a sale out of a long lot, or a cover (a payment
     # settling a costed payable) into a short one. Reading only negative
@@ -1386,18 +1393,6 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
             lots.add_position(posting)
             if before == 0 or (before > 0) == (units.number > 0):
                 continue
-            price = posting.price
-            # Splits and own-account transfers reduce without a price: they
-            # are movements, not sales. Nor does an unfinished `@ USD` in a
-            # partial read, whose number is the parser's MISSING sentinel and
-            # crashed the multiplication (w5/1043).
-            if price is None or not isinstance(price.number, Decimal):
-                continue
-            # A partial read keeps a posting whose price currency the parser
-            # refused against its cost; its gain would subtract 100 USD from
-            # 150 EUR and call the difference USD (w5/1046).
-            if price.currency != cost.currency:
-                continue
             if (start is not None and entry.date < start) or (end is not None and entry.date > end):
                 continue
             if matches is not None and not matches(posting.account):
@@ -1405,6 +1400,31 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
             # `abs()` rounds to the 28-digit context; `copy_abs()` keeps the
             # exact posted magnitudes so the clamp cannot overstate a close.
             quantity = min(before.copy_abs(), units.number.copy_abs())
+            price = posting.price
+            if price is None:
+                if not _offset_in_entry(entry.postings, units):
+                    unpriced.append(
+                        {
+                            "date": entry.date,
+                            "file": entry.meta.get("filename"),
+                            "line": entry.meta.get("lineno"),
+                            "account": posting.account,
+                            "commodity": units.currency,
+                            "acquired": cost.date,
+                            "quantity": {"number": quantity, "currency": units.currency},
+                            "cost": {"number": cost.number, "currency": cost.currency},
+                        }
+                    )
+                continue
+            # An unfinished `@ USD` in a partial read has the parser's MISSING
+            # sentinel for a number, which crashed the multiplication (w5/1043).
+            if not isinstance(price.number, Decimal):
+                continue
+            # A partial read keeps a posting whose price currency the parser
+            # refused against its cost; its gain would subtract 100 USD from
+            # 150 EUR and call the difference USD (w5/1046).
+            if price.currency != cost.currency:
+                continue
             proceeds: dict[str, Any]
             basis: dict[str, Any]
             if before > 0:
@@ -1461,7 +1481,25 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
         "display_precision": _display_precision(filtered),
         "rows": rows,
         "totals": totals,
+        "unpriced_reductions": unpriced,
     }
+
+
+def _offset_in_entry(postings: Any, units: Any) -> bool:
+    """Whether the transaction takes `units`' commodity back in: a split or an own-account transfer, not a sale.
+
+    A transfer reduces one account and augments another; a split reduces
+    the old lot and augments the new one. Either way the same commodity
+    moves the other way within the one transaction.
+    """
+    return any(
+        other.units is not None
+        and isinstance(other.units.number, Decimal)
+        and other.units.currency == units.currency
+        and other.units.number != 0
+        and (other.units.number > 0) != (units.number > 0)
+        for other in postings
+    )
 
 
 # Cash-flow classification mirrors the dashboard statement (ADR003/ADR023):

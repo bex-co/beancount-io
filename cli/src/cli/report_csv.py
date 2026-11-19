@@ -229,6 +229,9 @@ def _capital_gains(data: Mapping[str, Any]) -> Table:
         "basis_currency",
         "gain",
         "gain_currency",
+        "unpriced_at",
+        "cost",
+        "cost_currency",
     ]
     rows: list[Row] = []
     for row in data["rows"]:
@@ -245,6 +248,29 @@ def _capital_gains(data: Mapping[str, Any]) -> Table:
                 *_one_amount(row["proceeds"]),
                 *_one_amount(row["basis"]),
                 *_one_amount(row["gain"]),
+                "",
+                "",
+                "",
+            ]
+        )
+    # A reduction without a price states no proceeds, so its proceeds, basis
+    # and gain stay empty, never zero; `unpriced_at` names where to add one
+    # (w1/308).
+    for item in data.get("unpriced_reductions") or []:
+        rows.append(
+            [
+                _text(item["date"]),
+                _text(item["account"]),
+                _text(item["commodity"]),
+                _text(item["acquired"]),
+                "",
+                "",
+                _text(item["quantity"]["number"]),
+                *_one_amount(None),
+                *_one_amount(None),
+                *_one_amount(None),
+                f"{item['file']}:{item['line']}",
+                *_one_amount(item["cost"]),
             ]
         )
     return header, rows
@@ -282,7 +308,7 @@ def _budget(data: Mapping[str, Any]) -> Table:
 
 
 #: Columns holding user text, which `--spreadsheet-safe` neutralizes.
-_TEXT_COLUMNS = frozenset({"item", "account", "commodity", "payee", "narration"})
+_TEXT_COLUMNS = frozenset({"item", "account", "commodity", "payee", "narration", "unpriced_at"})
 
 _TABLES: dict[str, Callable[[Mapping[str, Any]], Table]] = {
     "overview": _overview,
