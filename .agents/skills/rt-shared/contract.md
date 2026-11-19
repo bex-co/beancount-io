@@ -82,6 +82,13 @@ nothing.
   `git log origin/main --since=24.hours --oneline` for its id and for the files
   it names. If it is closed or already fixed, skip it with that reason: another
   session may have taken it since the board or ledger was written.
+- **Check again before you push.** An item can close while you work on it.
+  Right before you push a fix for a board item or open its PR, run
+  `git fetch origin main`, read the item's file on `origin/main` again, and
+  run `git log HEAD..origin/main --oneline` for its id and the files it
+  names. If the item has closed or a commit on main already fixed it, push
+  nothing and report it as superseded by that commit. If main changed the
+  files you touched, rebase onto it and rerun your checks before you push.
 - **One test per definition-of-done bullet.** When a change fixes a board
   item, every bullet of its definition of done gets a test that fails on the
   code before the fix for exactly that bullet's scenario, and the summary says
