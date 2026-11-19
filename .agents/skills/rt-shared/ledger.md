@@ -54,6 +54,11 @@ newest first.
 
 ### Skipped
 
+- 2026-11-19 mobile 19 timer-adjacent suites (`token-manager`, `foreground-refresh`, `invalidate-persistence`, `ledger-write`, `entry-write`, `use-single-entry-write`, `write-during-refresh`, `map-in-batches`, `second-link`, `authorization-completion`, `chart-accessibility`, `invalidate-ledger`, `root-field-selections`, `unsaved-edits-link`, `settle-within`, `user-avatar`, `editor-recovery`, `retry-reuses-upload`, `receipt-cancel`) — 20/20 green each in isolation (incl. under full-suite load); full `test:unit` gate green twice (5227 passed, 1 skipped).
+- 2026-11-19 dashboard `ledger-collection.test.tsx` — 400ms sleeps settle a 250ms debounce; 10/10 green; assertions hold even if the debounce lands late.
+- 2026-11-19 dashboard `gallery-url-search.test.tsx` — 350ms sleeps settle a 300ms debounce behind a minimum-length gate; short queries never fetch by construction, not by timing.
+- 2026-11-19 ledger `entries-concurrent-write.test.ts` — sequential mocked-HTTP assertions, no timing; 10/10 green; `--detectOpenHandles` clean.
+- 2026-11-19 cli pty/signal suites (`test_query_shell_hangup`, `test_native_interrupt_is_silent`) — unrunnable in this sandbox (requires-python >=3.12; system has 3.11, no uv, interpreter download blocked); not examined.
 - 2026-11-18 `dashboard/.../react-echarts` dir siblings (`client-lifecycle`, `client-legend-state`, `runtime`, `chart-empty`, `lazy-chart-error`) — 20/20 green in-suite on the fix commit; no flake, nothing to change.
 
 - 2026-11-18 `mobile/.../date-format.test.ts` "formats thousands of dates quickly" (<300ms) — inner op measures 9–58ms; 20/20 green, margin too wide to call a flake.

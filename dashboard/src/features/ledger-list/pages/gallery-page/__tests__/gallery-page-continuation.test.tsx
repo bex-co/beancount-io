@@ -89,14 +89,21 @@ describe("Gallery search continuation", () => {
       // act() batches the 107 keyDowns into a single render: 107 discrete
       // presses rerender the 107-row list each time (~4s idle, past the 10s
       // timeout under full-suite load), while the handler only reads keyDown
-      // and only the end state is asserted below.
+      // and only the end state is asserted below. The last option is read by
+      // its id straight off the input: matching accessible names scans all
+      // 107 options (~6s idle, past the timeout on its own under load).
       act(() => {
         for (let i = 0; i < 107; i += 1) {
           fireEvent.keyDown(gallery.input, { key: "ArrowDown" });
         }
       });
-      const last = gallery.getByRole("option", { name: /open_ledger-107/ });
-      expect(gallery.input).toHaveAttribute("aria-activedescendant", last.id);
+      const activeId = gallery.input.getAttribute("aria-activedescendant");
+      const last = gallery.baseElement.ownerDocument.getElementById(
+        activeId ?? "",
+      );
+      expect(last?.getAttribute("role")).toBe("option");
+      expect(last).toHaveTextContent("open_ledger-107");
+      expect(gallery.input).toHaveAttribute("aria-activedescendant", last?.id);
       await gallery.user.keyboard("{Enter}");
       await gallery.findByRole("heading", { name: "Ledger destination" });
       expect(gallery.router.state.location.pathname).toBe(
