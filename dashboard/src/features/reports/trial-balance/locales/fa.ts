@@ -56,6 +56,11 @@ const faTrialBalance: Record<string, TranslationEntry> = {
     message: "نمای کامل از تمام حساب‌ها با مانده‌های آن‌ها در تمام انواع حساب",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "تعدیل ارزش‌گذاری و تسعیر ارز",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default faTrialBalance;

@@ -57,6 +57,11 @@ const skTrialBalance: Record<string, TranslationEntry> = {
       "Komplexný prehľad všetkých účtov s ich zostatkami naprieč všetkými typmi účtov",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Úprava z precenenia a prepočtu mien",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default skTrialBalance;

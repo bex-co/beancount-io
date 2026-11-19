@@ -526,6 +526,83 @@ ${custom ? 'option "name_equity" "Capital"\noption "name_income" "Revenue"\nopti
 }
 
 /**
+ * w1/291: a valued trial balance nets through its `valuation_adjustment` line,
+ * which takes the time clamp's conversion booking, as `bea`'s does (w1/287).
+ * w1/287's repro, through the real engine: a lot quoted above its cost and a
+ * currency bought with an `@` price.
+ */
+async function verifyTrialBalanceAdjustment(): Promise<void> {
+  const source = `option "operating_currency" "USD"
+2024-01-01 open Assets:Wallet USD
+2024-01-01 open Assets:Euro EUR
+2024-01-01 open Assets:Broker
+2024-01-01 open Equity:Opening-Balances
+2024-01-02 * "Opening"
+  Assets:Wallet 1000.00 USD
+  Equity:Opening-Balances
+2024-01-10 * "Buy"
+  Assets:Broker 5 AAPL {100.00 USD}
+  Assets:Wallet -500.00 USD
+2024-01-20 * "Exchange"
+  Assets:Euro 90.00 EUR @ 1.10 USD
+  Assets:Wallet -99.00 USD
+2024-01-31 price AAPL 120.00 USD
+2024-01-31 price EUR 1.20 USD
+`;
+  const finance = new LedgerFinanceService(
+    singleFileRepoFactory(source) as never,
+    {} as never,
+  );
+  const params = { ledgerId: "synthetic/trial", userId: undefined };
+  const forms: Array<[string | undefined, Record<string, string>]> = [
+    [undefined, { USD: "-109.0000" }],
+    ["at_cost", { USD: "99.00", EUR: "-90.00" }],
+  ];
+  for (const [conversion, line] of forms) {
+    for (const time of [undefined, "2024-01"]) {
+      const report = await finance.getTrialBalance({
+        ...params,
+        conversion,
+        time,
+      });
+      const net = new Map<string, number>();
+      for (const balance of [
+        report.assets_hierarchy_data.balance_children,
+        report.liabilities_hierarchy_data.balance_children,
+        report.equity_hierarchy_data.balance_children,
+        report.income_hierarchy_data.balance_children,
+        report.expenses_hierarchy_data.balance_children,
+        report.valuation_adjustment ?? {},
+      ]) {
+        for (const [currency, number] of Object.entries(balance)) {
+          net.set(currency, (net.get(currency) ?? 0) + Number(number));
+        }
+      }
+      deepStrictEqual(report.valuation_adjustment, line);
+      deepStrictEqual(report.equity_hierarchy_data.balance_children, {
+        USD: "-1000.00",
+      });
+      assert(
+        [...net.values()].every((value) => Math.abs(value) < 1e-9),
+        `trial balance (${conversion ?? "market"}, time ${time ?? "none"}) nets through its valuation adjustment`,
+      );
+    }
+  }
+  const units = await finance.getTrialBalance({
+    ...params,
+    conversion: "units",
+    time: "2024-01",
+  });
+  assert(
+    units.valuation_adjustment === null &&
+      units.equity_hierarchy_data.children.some(
+        (child) => child.account === "Equity:Conversions",
+      ),
+    "a units trial balance derives no adjustment and keeps the conversions row",
+  );
+}
+
+/**
  * A date-windowed plaintext export must load on its own: the window's opening
  * summaries carry a pre-window cost lot that an in-window sale reduces, and
  * the pad directives back the assertions that follow them.
@@ -961,6 +1038,7 @@ async function main(): Promise<void> {
   await verifyPoisonedWorkerRecovery();
   await verifyTransactionLookups();
   await verifyBalanceSheetCurrentEarnings();
+  await verifyTrialBalanceAdjustment();
   await verifyWindowedPlaintextExport();
   await verifyJournalRoundTrip();
 

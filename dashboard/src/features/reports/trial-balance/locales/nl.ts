@@ -57,6 +57,11 @@ const nlTrialBalance: Record<string, TranslationEntry> = {
       "Uitgebreid overzicht van alle rekeningen met hun saldi voor alle rekeningtypen",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Waarderings- en omrekeningsverschil",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default nlTrialBalance;

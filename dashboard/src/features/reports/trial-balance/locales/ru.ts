@@ -57,6 +57,11 @@ const ruTrialBalance: Record<string, TranslationEntry> = {
     message: "Полный обзор всех счетов с балансами по всем типам счетов",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Корректировка переоценки и пересчёта валют",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default ruTrialBalance;

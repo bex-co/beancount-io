@@ -210,6 +210,7 @@ describe("LedgerFinanceQueryResolver", () => {
         equity_hierarchy_data: createMockTreeNode("Equity"),
         expenses_hierarchy_data: createMockTreeNode("Expenses"),
         assets_hierarchy_data: createMockTreeNode("Assets"),
+        valuation_adjustment: { USD: "-109.0000" },
       });
 
       const result = await resolver.getLedgerTrialBalance(
@@ -223,6 +224,25 @@ describe("LedgerFinanceQueryResolver", () => {
       );
       expect(result.incomeHierarchyData.account).toBe("Income");
       expect(result.assetsHierarchyData.account).toBe("Assets");
+      expect(result.valuationAdjustment).toEqual({ USD: "-109.0000" });
+    });
+
+    it("reads a missing valuation adjustment as null (w1/291)", async () => {
+      mockFinanceService.getTrialBalance.mockResolvedValue({
+        income_hierarchy_data: createMockTreeNode("Income"),
+        liabilities_hierarchy_data: createMockTreeNode("Liabilities"),
+        equity_hierarchy_data: createMockTreeNode("Equity"),
+        expenses_hierarchy_data: createMockTreeNode("Expenses"),
+        assets_hierarchy_data: createMockTreeNode("Assets"),
+      });
+
+      const result = await resolver.getLedgerTrialBalance(
+        ledgerId,
+        {},
+        mockContext,
+      );
+
+      expect(result.valuationAdjustment).toBeNull();
     });
 
     it("should propagate errors thrown by the service", async () => {

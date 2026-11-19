@@ -21,7 +21,10 @@ import { useChartsVisibility } from "../components/use-charts-visibility";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { filterAccountHierarchy } from "../balance-sheet/utils";
 import type { HierarchySummaryRow } from "../balance-sheet/hierarchy-list-types";
-import { computeTrialBalanceReconciliation } from "./lib/trial-balance-summary";
+import {
+  computeTrialBalanceReconciliation,
+  hasTrialBalanceReconciliationDifference,
+} from "./lib/trial-balance-summary";
 
 interface TrialBalanceContentProps {
   trialBalanceData: GetLedgerTrialBalanceQuery["getLedgerTrialBalance"];
@@ -156,20 +159,37 @@ export function TrialBalanceContent({
   ]);
 
   const trialBalanceSummaryRows = useMemo((): HierarchySummaryRow[] => {
-    const reconciliationDifference =
-      computeTrialBalanceReconciliation(hierarchyData);
+    const adjustment = (trialBalanceData.valuationAdjustment ?? null) as Record<
+      string,
+      string
+    > | null;
+    const reconciliationDifference = computeTrialBalanceReconciliation(
+      hierarchyData,
+      adjustment,
+    );
     if (Object.keys(reconciliationDifference).length === 0) {
       return [];
     }
 
     return [
+      // The server's line for what valuation leaves unbalanced; an equity
+      // line, so it is displayed with the credit roots' sign (w1/291).
+      ...(adjustment && hasTrialBalanceReconciliationDifference(adjustment)
+        ? [
+            {
+              label: t("page.trialBalance.valuationAdjustment"),
+              balance: adjustment,
+              inverted: invertIncomeLiabilitiesEquity,
+            },
+          ]
+        : []),
       {
         label: t("reports.export.reconciliationDifference"),
         balance: reconciliationDifference,
         bold: true,
       },
     ];
-  }, [hierarchyData, t]);
+  }, [hierarchyData, trialBalanceData, invertIncomeLiabilitiesEquity, t]);
 
   return (
     <div className="space-y-6">

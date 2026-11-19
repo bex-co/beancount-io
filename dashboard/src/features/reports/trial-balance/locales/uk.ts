@@ -57,6 +57,11 @@ const ukTrialBalance: Record<string, TranslationEntry> = {
       "Комплексний огляд всіх рахунків із їх залишками по всіх типах рахунків",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Коригування переоцінки та перерахунку валют",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default ukTrialBalance;

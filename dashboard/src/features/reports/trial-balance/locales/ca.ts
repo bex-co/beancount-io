@@ -61,6 +61,11 @@ const caTrialBalance: Record<string, TranslationEntry> = {
       "Visió general completa de tots els comptes amb els seus saldos per a tots els tipus de compte",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Ajust de valoració i conversió",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default caTrialBalance;

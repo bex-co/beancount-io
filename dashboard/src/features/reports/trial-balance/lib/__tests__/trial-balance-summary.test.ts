@@ -64,6 +64,37 @@ describe("computeTrialBalanceReconciliation", () => {
     expect(difference).toEqual({ USD: "-33809", ACME: "150" });
   });
 
+  // w1/291: valued at market, holdings and currencies leave the roots out by
+  // their unrealized gain and translation; the server's line carries it.
+  it("nets valued roots through the valuation adjustment line", () => {
+    const roots = [
+      rootNode("Equity", { USD: "-1000.00" }, true),
+      rootNode("Assets", { USD: "1109.0000" }),
+    ];
+
+    expect(
+      hasTrialBalanceReconciliationDifference(
+        computeTrialBalanceReconciliation(roots),
+      ),
+    ).toBe(true);
+    const difference = computeTrialBalanceReconciliation(roots, {
+      USD: "-109.0000",
+    });
+    expect(hasTrialBalanceReconciliationDifference(difference)).toBe(false);
+  });
+
+  it("nets an at-cost exchange through a line in two currencies", () => {
+    const difference = computeTrialBalanceReconciliation(
+      [
+        rootNode("Equity", { USD: "-1000.00" }, true),
+        rootNode("Assets", { USD: "901.00", EUR: "90.00" }),
+      ],
+      { USD: "99.00", EUR: "-90.00" },
+    );
+
+    expect(hasTrialBalanceReconciliationDifference(difference)).toBe(false);
+  });
+
   it("shows the exact per-unit difference when roots do not reconcile", () => {
     const difference = computeTrialBalanceReconciliation([
       rootNode("Assets", { USD: "100" }),

@@ -56,6 +56,11 @@ const koTrialBalance: Record<string, TranslationEntry> = {
     message: "모든 계정 유형에 걸쳐 잔액이 있는 모든 계정의 포괄적인 개요",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "평가 및 환산 조정",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default koTrialBalance;

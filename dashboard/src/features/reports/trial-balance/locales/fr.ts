@@ -62,6 +62,11 @@ const frTrialBalance: Record<string, TranslationEntry> = {
       "Vue d'ensemble complète de tous les comptes avec leurs soldes pour tous les types de comptes",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Écart de valorisation et de conversion",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default frTrialBalance;

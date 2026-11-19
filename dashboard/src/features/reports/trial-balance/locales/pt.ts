@@ -57,6 +57,11 @@ const ptTrialBalance: Record<string, TranslationEntry> = {
       "Visão geral abrangente de todas as contas com seus saldos em todos os tipos de conta",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Ajuste de avaliação e conversão",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default ptTrialBalance;

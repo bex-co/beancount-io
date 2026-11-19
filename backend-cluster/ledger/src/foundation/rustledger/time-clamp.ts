@@ -665,6 +665,7 @@ function conversions(
   conversionAccount: string,
   conversionCurrency: string,
   date: string,
+  inserted?: WeakSet<DirectiveJson>,
 ): DirectiveJson[] {
   // compute_entries_balance reduced by cost — the net cost across all postings.
   const costBalance = new Map<string, ScaledDecimal>();
@@ -713,6 +714,7 @@ function conversions(
     postings,
   };
 
+  inserted?.add(conversionEntry);
   // Insert before the first entry on/after `date` (i.e. at the truncation end).
   const index = indexOnOrAfter(directives, date);
   return [
@@ -806,6 +808,13 @@ export function balanceSheetCap(
 // ── clamp (public) ───────────────────────────────────────────────────────────
 
 /**
+ * The conversion bookings {@link clampDirectives} inserted, by identity: the
+ * flag and narration are not enough, since a ledger may write its own `C`
+ * transaction, and that one must stay (w1/291).
+ */
+const clampConversionEntries = new WeakSet<DirectiveJson>();
+
+/**
  * `summarize.clamp(entries, begin, end, ...)` — the four-step summarization that
  * Fava's `TimeFilter` applies. `begin`/`end` are ISO `YYYY-MM-DD` (inclusive
  * begin, exclusive end), as produced by {@link "./directive-filter".parseDateRange}.
@@ -832,6 +841,18 @@ export function clampDirectives(
     accounts.accountCurrentConversions,
     accounts.conversionCurrency,
     end,
+    clampConversionEntries,
   );
   return entries;
+}
+
+/**
+ * The stream without the period clamp's conversion booking. A valued trial
+ * balance folds that booking into its valuation adjustment, as `bea` does, so
+ * a `time` filter splits equity the way the unfiltered report does (w1/291).
+ */
+export function withoutClampConversions(
+  directives: DirectiveJson[],
+): DirectiveJson[] {
+  return directives.filter((entry) => !clampConversionEntries.has(entry));
 }

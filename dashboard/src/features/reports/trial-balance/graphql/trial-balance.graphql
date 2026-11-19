@@ -58,5 +58,6 @@ query GetLedgerTrialBalance(
       cost
       costChildren
     }
+    valuationAdjustment
   }
 }

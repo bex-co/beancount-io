@@ -59,6 +59,11 @@ const esTrialBalance: Record<string, TranslationEntry> = {
       "Vista general completa de todas las cuentas con sus saldos en todos los tipos de cuenta",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Ajuste por valoración y conversión",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default esTrialBalance;

@@ -56,6 +56,11 @@ const jaTrialBalance: Record<string, TranslationEntry> = {
     message: "すべての口座タイプにわたる残高を含むすべての口座の包括的な概要",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "評価・換算差額",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default jaTrialBalance;

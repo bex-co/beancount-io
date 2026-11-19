@@ -161,6 +161,13 @@ class TrialBalanceData {
 
   @Field(() => SerializableTreeNode)
   assetsHierarchyData: SerializableTreeNode;
+
+  @Field(() => GraphQLJSONObject, {
+    nullable: true,
+    description:
+      "What the five valued roots leave unbalanced, negated per currency (a holding's unrealized gain, a currency's translation, at cost a priced exchange's conversion), so the roots plus this sum to zero; {} when they already net. The equity tree leaves the time filter's conversion booking to it. Null under units and units_by_cost, with ledger errors, and while a root holds a commodity the conversion could not value.",
+  })
+  valuationAdjustment: Record<string, string> | null;
 }
 
 @ArgsType()
@@ -605,6 +612,8 @@ export class LedgerFinanceQueryResolver {
       equityHierarchyData: this.mapTreeNode(data.equity_hierarchy_data),
       expensesHierarchyData: this.mapTreeNode(data.expenses_hierarchy_data),
       assetsHierarchyData: this.mapTreeNode(data.assets_hierarchy_data),
+      // A ledger service older than w1/291 sends no line.
+      valuationAdjustment: data.valuation_adjustment ?? null,
     };
   }
 

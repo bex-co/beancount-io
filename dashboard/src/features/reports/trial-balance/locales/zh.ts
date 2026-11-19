@@ -56,6 +56,11 @@ const zhTrialBalance: Record<string, TranslationEntry> = {
     message: "所有账户类型的账户余额综合概览",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "估值及折算调整",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default zhTrialBalance;

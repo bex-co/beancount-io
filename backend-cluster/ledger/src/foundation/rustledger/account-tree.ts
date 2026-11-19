@@ -204,6 +204,45 @@ export function accountHierarchy(
   );
 }
 
+/**
+ * What a valued trial balance's five roots leave unbalanced, negated, so the
+ * roots plus this line sum to zero in every currency: a holding's unrealized
+ * gain, a currency's translation and, at cost, the conversion a priced
+ * exchange leaves. It is `bea report trial-balance`'s `valuation_adjustment`
+ * (w1/287, w1/291). Currencies that net drop out, so books that already
+ * balance read `{}`.
+ *
+ * Null when `target` is a currency and a root still holds a commodity the
+ * conversion could not value: the residual would pass units off as an
+ * adjustment. The caller withholds it under `units`, where nothing is valued.
+ */
+export function trialBalanceAdjustment(
+  roots: readonly AccountTreeNode[],
+  target: string,
+): Record<string, string> | null {
+  const currencyTarget = target !== "at_cost" && target !== "at_value";
+  const sums = new Map<string, { value: BigNumber; scale: number }>();
+  for (const root of roots) {
+    for (const [currency, number] of Object.entries(root.balance_children)) {
+      const value = new Amount(number);
+      if (value.isZero()) continue;
+      if (currencyTarget && currency !== target) return null;
+      const dot = number.indexOf(".");
+      const scale = dot === -1 ? 0 : number.length - dot - 1;
+      const sum = sums.get(currency);
+      sums.set(currency, {
+        value: sum ? sum.value.plus(value) : value,
+        scale: Math.max(sum?.scale ?? 0, scale),
+      });
+    }
+  }
+  const adjustment: Record<string, string> = {};
+  sums.forEach(({ value, scale }, currency) => {
+    if (!value.isZero()) adjustment[currency] = value.negated().toFixed(scale);
+  });
+  return adjustment;
+}
+
 /** Per-account own (non-cumulative) units balance, zero-dropped + stringified. */
 export function accountOwnUnitBalances(
   directives: DirectiveJson[],

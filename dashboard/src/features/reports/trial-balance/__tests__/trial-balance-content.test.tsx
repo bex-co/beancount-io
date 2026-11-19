@@ -176,6 +176,78 @@ describe("TrialBalanceContent", () => {
     },
   );
 
+  // w1/291: holdings valued at market leave the roots out by their gain; the
+  // server's adjustment line carries it, so correct books reconcile to zero.
+  it.each([false, true])(
+    "shows the valuation adjustment line and nets through it (credits inverted=%s)",
+    (invert) => {
+      hierarchyListMock.mockClear();
+      render(
+        <Harness
+          invert={invert}
+          onConversionChange={vi.fn()}
+          data={
+            {
+              assetsHierarchyData: hierarchyNode("Assets", {
+                USD: "1109.0000",
+              }),
+              expensesHierarchyData: hierarchyNode("Expenses", {}),
+              equityHierarchyData: hierarchyNode("Equity", {
+                USD: "-1000.00",
+              }),
+              liabilitiesHierarchyData: hierarchyNode("Liabilities", {}),
+              incomeHierarchyData: hierarchyNode("Income", {}),
+              valuationAdjustment: { USD: "-109.0000" },
+            } as unknown as TrialBalanceData
+          }
+        />,
+      );
+
+      const props = hierarchyListMock.mock.calls.at(-1)?.[0] as {
+        summaryRows?: Array<Record<string, unknown>>;
+      };
+
+      expect(props.summaryRows).toEqual([
+        {
+          label: "Valuation/translation adjustment",
+          balance: { USD: "-109.0000" },
+          inverted: invert,
+        },
+        {
+          label: "Reconciliation Difference",
+          balance: { USD: "0.0000" },
+          bold: true,
+        },
+      ]);
+    },
+  );
+
+  it.each([null, {}])(
+    "shows no adjustment line when the server derives none (%j)",
+    (valuationAdjustment) => {
+      hierarchyListMock.mockClear();
+      render(
+        <Harness
+          onConversionChange={vi.fn()}
+          data={
+            {
+              ...trialBalanceData,
+              valuationAdjustment,
+            } as unknown as TrialBalanceData
+          }
+        />,
+      );
+
+      const props = hierarchyListMock.mock.calls.at(-1)?.[0] as {
+        summaryRows?: Array<{ label: string }>;
+      };
+
+      expect(props.summaryRows?.map((row) => row.label)).toEqual([
+        "Reconciliation Difference",
+      ]);
+    },
+  );
+
   it("shows the assets chart by default", () => {
     renderContent();
 

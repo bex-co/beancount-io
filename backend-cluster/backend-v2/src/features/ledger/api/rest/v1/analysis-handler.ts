@@ -137,7 +137,7 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     segment: "trial-balance",
     summary: "Get the trial balance",
     description:
-      "Each account's balance per currency, as signed trees under the five roots (Assets, Liabilities, Equity, Income, Expenses): debits positive, credits negative. No debit or credit totals are returned.",
+      "Each account's balance per currency, as signed trees under the five roots (Assets, Liabilities, Equity, Income, Expenses): debits positive, credits negative. No debit or credit totals are returned. Valued in a currency or at cost or value, `valuation_adjustment` is what the roots leave unbalanced, negated (a holding's unrealized gain, a currency's translation, at cost a priced exchange's conversion), so the roots plus it sum to zero; the equity tree leaves the time filter's conversion booking to it. It is null under `units` and `units_by_cost`, with ledger errors, and while a root holds a commodity the conversion could not value.",
     query: trialBalanceQuery,
     uriPath: "",
     fetch: (s, { ledgerId, identity, query }) =>

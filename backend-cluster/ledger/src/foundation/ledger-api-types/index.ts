@@ -3176,6 +3176,11 @@ export interface TrialBalanceDataPublic {
   expenses_hierarchy_data: SerializableTreeNodePublic;
   /** A serializable tree node for account hierarchy. */
   assets_hierarchy_data: SerializableTreeNodePublic;
+  /**
+   * Valuation Adjustment
+   * What the five valued roots leave unbalanced, negated per currency (a holding's unrealized gain, a currency's translation, at cost a priced exchange's conversion), so the roots plus this sum to zero; `{}` when they already net. The equity tree leaves the time filter's conversion booking to it. Null under `units` and `units_by_cost`, with ledger errors, and while a root holds a commodity the conversion could not value.
+   */
+  valuation_adjustment: Record<string, string> | null;
 }
 
 /**

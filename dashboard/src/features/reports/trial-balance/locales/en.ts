@@ -57,6 +57,11 @@ const enTrialBalance: Record<string, TranslationEntry> = {
     message: "Visual representation of {ledgerName} equity composition",
     description: "Description for equity hierarchy visualization",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Valuation/translation adjustment",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default enTrialBalance;

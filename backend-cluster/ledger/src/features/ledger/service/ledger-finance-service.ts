@@ -25,7 +25,9 @@ import {
   resolveConversion,
   TimeFilterParseError,
   AdvancedFilterParseError,
+  trialBalanceAdjustment,
   windowEndInclusive,
+  withoutClampConversions,
   type IntervalKey,
   type IntervalWindow,
   type PriceMap,
@@ -300,6 +302,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       operatingCurrency,
       allCommodities,
       roots,
+      ledgerErrors,
     } = await this.loadReportDirectives(ledgerId, userId, {
       account,
       filter,
@@ -314,42 +317,30 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       operatingCurrency,
       allCommodities,
     );
-    return {
-      income_hierarchy_data: accountHierarchy(
-        directives,
-        roots.income,
-        target,
-        priceMap,
-        valuationDate,
-      ),
-      liabilities_hierarchy_data: accountHierarchy(
-        directives,
-        roots.liabilities,
-        target,
-        priceMap,
-        valuationDate,
-      ),
-      equity_hierarchy_data: accountHierarchy(
-        directives,
+    const tree = (root: string, stream = directives) =>
+      accountHierarchy(stream, root, target, priceMap, valuationDate);
+    // Valued, the five trees net only through an adjustment line, and the
+    // clamp's conversion booking folds into it, as `bea` does: with and
+    // without `time` the equity tree is the booked equity and the line is
+    // the same (w1/291). `units` values nothing and keeps the booking.
+    const valued = target !== "units" && target !== "units_by_cost";
+    const trees = {
+      income_hierarchy_data: tree(roots.income),
+      liabilities_hierarchy_data: tree(roots.liabilities),
+      equity_hierarchy_data: tree(
         roots.equity,
-        target,
-        priceMap,
-        valuationDate,
+        valued ? withoutClampConversions(directives) : directives,
       ),
-      expenses_hierarchy_data: accountHierarchy(
-        directives,
-        roots.expenses,
-        target,
-        priceMap,
-        valuationDate,
-      ),
-      assets_hierarchy_data: accountHierarchy(
-        directives,
-        roots.assets,
-        target,
-        priceMap,
-        valuationDate,
-      ),
+      expenses_hierarchy_data: tree(roots.expenses),
+      assets_hierarchy_data: tree(roots.assets),
+    };
+    return {
+      ...trees,
+      // Withheld with ledger errors: it would absorb an unbalanced entry.
+      valuation_adjustment:
+        valued && !ledgerErrors
+          ? trialBalanceAdjustment(Object.values(trees), target)
+          : null,
     };
   }
 
@@ -421,14 +412,18 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     window?: IntervalWindow;
     /** Price date for tree balances; latest prices when absent. */
     valuationDate?: string;
+    /** Whether the ledger has an error bean-check fails on (not a warning). */
+    ledgerErrors: boolean;
   }> {
     const {
       directives,
+      errors,
       options,
       reportAccounts,
       fiscalYearEnd,
       unrealizedAccount,
     } = await this.loadSnapshot(ledgerId, userId);
+    const ledgerErrors = errors.some((error) => error.severity !== "warning");
     const { roots, clamp } = reportAccounts;
     // Fava's `at_value`/default valuation converts to the ledger's operating
     // currency; use the first declared one (bean-example: "USD"), defaulting to
@@ -468,6 +463,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
           roots,
           clamp,
           unrealizedAccount,
+          ledgerErrors,
         };
       }
       const range = parseDateRange(selectors.time, fiscalYearEnd);
@@ -493,6 +489,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
         unrealizedAccount,
         window,
         valuationDate: windowEndInclusive(window),
+        ledgerErrors,
       };
     } catch (error) {
       if (

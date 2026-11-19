@@ -57,6 +57,11 @@ const bgTrialBalance: Record<string, TranslationEntry> = {
       "Всеобхватен преглед на всички сметки с техните баланси за всички типове сметки",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Корекция от преоценка и валутни курсове",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default bgTrialBalance;

@@ -58,6 +58,11 @@ const deTrialBalance: Record<string, TranslationEntry> = {
       "Umfassende Übersicht aller Konten mit ihren Salden über alle Kontotypen hinweg",
     description: "Description for trial balance overview",
   },
+  "page.trialBalance.valuationAdjustment": {
+    message: "Bewertungs- und Umrechnungsdifferenz",
+    description:
+      "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
+  },
 };
 
 export default deTrialBalance;

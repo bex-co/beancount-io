@@ -14670,6 +14670,21 @@
           },
           "assets_hierarchy_data": {
             "$ref": "#/components/schemas/SerializableTreeNodePublic"
+          },
+          "valuation_adjustment": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valuation Adjustment",
+            "description": "What the five valued roots leave unbalanced, negated per currency (a holding's unrealized gain, a currency's translation, at cost a priced exchange's conversion), so the roots plus this sum to zero; `{}` when they already net. The equity tree leaves the time filter's conversion booking to it. Null under `units` and `units_by_cost`, with ledger errors, and while a root holds a commodity the conversion could not value."
           }
         },
         "type": "object",
@@ -14678,7 +14693,8 @@
           "liabilities_hierarchy_data",
           "equity_hierarchy_data",
           "expenses_hierarchy_data",
-          "assets_hierarchy_data"
+          "assets_hierarchy_data",
+          "valuation_adjustment"
         ],
         "title": "TrialBalanceDataPublic",
         "description": "Public schema for trial balance data for visualization."
