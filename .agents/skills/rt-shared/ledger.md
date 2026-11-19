@@ -32,6 +32,12 @@ newest first.
 
 ### Skipped
 
+- 2026-11-19 knip-clean with installed deps (mobile incl. production knip + graphql-operations-check, dashboard, ledger, backend-v2) — zero hits; cli ruff F401/F841 clean tree-wide and vulture min-confidence-100 clean on every file it can parse.
+- 2026-11-19 cli `ask/agent.py`, `api/client.py`, `bea_engine/importing.py` (vulture-unparseable on 3.11, PEP 695 syntax) — manual occurrence sweep: every top-level symbol has exactly one use; nothing dead.
+- 2026-11-19 `scripts/skills/test_beancount_skills.py` (vulture-unparseable f-string) — single-occurrence names are all `Test*` classes found by unittest discovery plus the `load_tests` protocol hook; nothing dead.
+- 2026-11-19 vulture `setUpClass(cls)` unused-variable hits (8× in `scripts/skills/test_verify_*.py`) — `cls` is signature-required for the unittest classmethod override; false positives, left in place.
+- 2026-11-19 agent-box `vitest.setup.ts` knip hit with no node_modules — referenced by `vitest.config.ts` `setupFiles`; detector-environment artifact, no ignore added.
+
 ## rt-dup-unifier
 
 ### Deferred
