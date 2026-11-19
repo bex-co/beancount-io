@@ -98,6 +98,7 @@ def _balance_sheet(data: Mapping[str, Any]) -> Table:
     rows += _amount_rows(["current_earnings", "current_earnings", ""], data["current_earnings"])
     if data.get("equity_reconciled"):
         rows += _amount_rows(["valuation_adjustment", "valuation_adjustment", ""], data["valuation_adjustment"])
+        rows += _amount_rows(["rounding_residual", "rounding_residual", ""], data["rounding_residual"])
         rows += _amount_rows(["equity_total", "equity_total", ""], data["equity_total"])
     rows += _amount_rows(["net_worth", "net_worth", ""], data["net_worth"])
     for point in data["net_worth_series"]:
@@ -108,9 +109,11 @@ def _balance_sheet(data: Mapping[str, Any]) -> Table:
 def _trial_balance(data: Mapping[str, Any]) -> Table:
     names = ("assets", "liabilities", "equity", "income", "expenses")
     rows = [row for name in names for row in _tree_rows(name, data[name])]
-    # The residual that nets the valued sections, when the report derived one (w1/287).
-    if data.get("valuation_adjustment") is not None:
-        rows += _amount_rows(["valuation_adjustment", "valuation_adjustment", ""], data["valuation_adjustment"])
+    # The residual that nets the valued sections, when the report derived one (w1/287),
+    # split into valuation and accepted rounding (w1/304).
+    for name in ("valuation_adjustment", "rounding_residual"):
+        if data.get(name) is not None:
+            rows += _amount_rows([name, name, ""], data[name])
     return BALANCE_COLUMNS, rows
 
 

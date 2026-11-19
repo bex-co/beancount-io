@@ -208,24 +208,35 @@ def _print_tree(
         _print_tree(child, depth + 1, conversion=conversion, precision=precision)
 
 
-def _print_trial_balance(data: dict[str, Any]) -> None:
-    """The five trees, with the valuation adjustment that nets them after Equity (w1/287).
+def _nonzero(balance: Mapping[str, Any]) -> bool:
+    return any(_as_decimal(number) != 0 for number in balance.values())
 
-    The line shows only when it holds something: a ledger with no holdings or
-    priced exchanges nets without it, and JSON and CSV still carry the zero.
+
+def _print_trial_balance(data: dict[str, Any]) -> None:
+    """The five trees, with the valuation adjustment and rounding lines that net them after Equity (w1/287).
+
+    Each line shows only when it holds something: a ledger with no holdings or
+    priced exchanges nets without the first, one whose transactions balance
+    exactly without the second (w1/304), and JSON and CSV still carry the zero.
     """
     conversion = str(data["conversion"])
     _heading("Trial Balance", data)
     precision = _precision(data)
-    adjustment = data.get("valuation_adjustment") or {}
+    lines = {
+        "Valuation/translation adjustment:": data.get("valuation_adjustment") or {},
+        "Rounding residual:": data.get("rounding_residual") or {},
+    }
     for name in ("assets", "liabilities", "equity", "income", "expenses"):
         tree = data[name]
         if tree is None:
             continue
         typer.echo("")
         _print_tree(tree, conversion=conversion, precision=precision)
-        if name == "equity" and any(_as_decimal(number) != 0 for number in adjustment.values()):
-            typer.echo(f"  {'Valuation/translation adjustment:':<46}  {_amounts(adjustment, conversion, precision)}")
+        if name != "equity":
+            continue
+        for label, balance in lines.items():
+            if _nonzero(balance):
+                typer.echo(f"  {label:<46}  {_amounts(balance, conversion, precision)}")
 
 
 def _filter_text(metadata: dict[str, Any]) -> str:
@@ -569,6 +580,10 @@ def balance_sheet(
     if data.get("equity_reconciled"):
         adjustment = _amounts(data["valuation_adjustment"] or {}, conversion, precision)
         typer.echo(f"  {'Valuation/translation adjustment (credit):':<46}  {adjustment}")
+        # What the ledger's tolerance accepted, shown when there was some (w1/304).
+        rounding = data["rounding_residual"]
+        if _nonzero(rounding):
+            typer.echo(f"  {'Rounding residual (credit):':<46}  {_amounts(rounding, conversion, precision)}")
         equity_total = _amounts(data["equity_total"] or {}, conversion, precision)
         typer.echo(f"  {'Total equity (credit):':<46}  {equity_total}")
     # The credit lines above carry the opposite sign to the income statement's

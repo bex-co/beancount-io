@@ -2241,9 +2241,9 @@ now use `-(income + expenses)` consistently. Overview JSON income/expense series
 are interval flows; asset/liability series are balances as of each date.
 
 Balance sheets include signed `current_earnings`, a derived
-`valuation_adjustment`, and `equity_total` so converted assets, liabilities,
-and total equity reconcile. A balance sheet's `net_profit` (and
-`current_earnings`, its credit-signed twin) follows the income statement's
+`valuation_adjustment` and `rounding_residual`, and `equity_total` so
+converted assets, liabilities, and total equity reconcile. A balance
+sheet's `net_profit` (and `current_earnings`, its credit-signed twin) follows the income statement's
 rule, so the two reports always give the same `net_profit`: under a currency
 conversion it names that currency, `null` when part of it could not be valued
 and `"0"` when there is no income or expense. These are report values and do not create ledger
@@ -2254,13 +2254,27 @@ cost), do not claim an equity reconciliation or invent a valuation adjustment
 across unlike commodities. `equity_reconciled` states
 whether the derived reconciliation is available.
 
+The two derived lines carry different things. Valuation/translation is what
+valuing moves: a holding's unrealized gain and a currency's translation.
+Rounding is what Beancount's tolerance accepted when a transaction balanced
+only within it: two `3.333 USD` legs against `-6.67 USD` leave 0.004 USD, and
+`bea check` passes. It is each price-free transaction's remainder at cost, as
+in the cash flow's `rounding_residual`, valued like the trees; a priced
+exchange's remainder stays translation. The balance sheet prints
+`Rounding residual (credit):` after the valuation line when it is not zero,
+and JSON and CSV carry it beside `valuation_adjustment` whenever that line is
+derived. On books whose transactions all balance exactly it is zero.
+
 A trial balance (`report trial-balance`, and `bea balance` with no argument)
 nets to zero at every valuation but `units`. Valued at market, a holding's
 unrealized gain and a currency's translation leave the five trees unbalanced,
-so the report derives the same residual the balance sheet does. It is the
-`Valuation/translation adjustment:` line after Equity in text (shown when it
-is not zero), `valuation_adjustment` in JSON, and a `valuation_adjustment` row
-in CSV. At cost it is the conversion a priced exchange such as
+so the report derives the same residual the balance sheet does, split the
+same way. Valuation is the `Valuation/translation adjustment:` line after
+Equity in text (shown when it is not zero), `valuation_adjustment` in JSON,
+and a `valuation_adjustment` row in CSV. Accepted rounding is the
+`Rounding residual:` line after it (shown when it is not zero),
+`rounding_residual` in JSON, and a `rounding_residual` row in CSV. At cost
+the valuation line is the conversion a priced exchange such as
 `90 EUR @ 1.10 USD` leaves (`-90 EUR 99 USD`), so unlike the balance sheet's
 it may span commodities. As on the balance sheet, the conversion booking that
 `--time` closes a period with folds into this line instead of showing as
@@ -2272,18 +2286,19 @@ with and without `--time`. One exception: when earlier earnings hold a
 commodity no account held at the period start, such as foreign cash spent on
 a trip, and the report has no price for it at the as-of date,
 `Opening-Balances` keeps the offsetting amount, so the period needs no price
-for that commodity. A spent commodity that has a price changes nothing. The
-line is `null` under `units`, with `--account`
+for that commodity. A spent commodity that has a price changes nothing.
+Both lines are `null` under `units`, with `--account`
 or `balance` terms (the residual belongs to the whole ledger), with loader
 errors, and while a balance holds a commodity the report could not value.
-On books that already net, the line is zero. Under a currency conversion,
-the operating-currency default included, JSON spells it `{"USD": "0"}`, as
-it spells the balance sheet's adjustment and the other headline totals.
+On books that already net, both are zero. Under a currency conversion,
+the operating-currency default included, JSON spells a zero line `{"USD": "0"}`, as
+it spells the balance sheet's lines and the other headline totals.
 Under `at_cost` and `at_value` it is `{}`. The hosted trial balance (REST,
 GraphQL and MCP) drops a currency that nets to zero from every balance map,
 so it reads `{}` under every conversion. The two spellings are deliberate
 and mean the same zero: read a missing currency as zero instead of comparing
-keys.
+keys. The hosted trial balance has no rounding line yet: its
+`valuation_adjustment` still includes the accepted rounding.
 Only `units` can leave a residual: lots at cost and foreign cash do not net in
 their own units, so there the equity tree keeps the conversions row and no
 line is derived.

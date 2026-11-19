@@ -176,14 +176,17 @@ def check_profit(sheet: dict[str, Any], income: dict[str, Any]) -> Check:
 def check_trial_balance(trial: dict[str, Any], sheet: dict[str, Any], income: dict[str, Any]) -> Check:
     check = Check(
         "Trial balance agrees with the statements",
-        "each root total in the trial balance equals the same root in its statement, and its valuation adjustment the balance sheet's",
+        "each root total in the trial balance equals the same root in its statement, and its valuation adjustment and rounding residual the balance sheet's",
     )
     pairs = [(total(trial[r]), total(sheet[r])) for r in ("assets", "liabilities", "equity")]
     pairs += [(total(trial[r]), total(income[r])) for r in ("income", "expenses")]
-    # A valued trial balance nets through the balance sheet's adjustment line; the
-    # sheet withholds its own when it spans commodities, and bea 0.4.1 and older have none.
-    if trial.get("valuation_adjustment") is not None and sheet.get("equity_reconciled"):
-        pairs.append((dec(trial["valuation_adjustment"]), dec(sheet["valuation_adjustment"])))
+    # A valued trial balance nets through the balance sheet's adjustment and rounding
+    # lines; the sheet withholds them when it spans commodities. bea 0.4.1 and older
+    # have no adjustment line, and older releases than w1/304 no separate rounding line.
+    if sheet.get("equity_reconciled"):
+        for line in ("valuation_adjustment", "rounding_residual"):
+            if trial.get(line) is not None:
+                pairs.append((dec(trial[line]), dec(sheet[line])))
     differences: dict[str, Decimal] = {}
     unvalued = False
     for one, other in pairs:

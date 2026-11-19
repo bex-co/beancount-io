@@ -248,10 +248,8 @@ def _balances(
     return metadata | {
         "display_precision": _display_precision(filtered),
         **{name: (_tree_json(tree) if tree is not None else None) for name, tree in pruned.items()},
-        # With no terms this is the trial balance, adjustment line included.
-        "valuation_adjustment": _trial_adjustment(
-            filtered, resolved_conversion, data.valuation_adjustment, balances, scoped=bool(accounts)
-        ),
+        # With no terms this is the trial balance, adjustment lines included.
+        **_trial_lines(filtered, resolved_conversion, data, balances, scoped=bool(accounts)),
     }
 
 
@@ -578,7 +576,7 @@ def _balance_sheet(
     # `at_cost` leaves cost-less holdings (foreign cash) in their own units, so
     # an "adjustment" across unlike commodities was just the FX trade, claimed
     # as reconciled (w5/505): only a single-commodity view reconciles.
-    single = len(_sum(assets, liabilities)) <= 1 and len(data.valuation_adjustment) <= 1
+    single = len(_sum(assets, liabilities)) <= 1 and len(_sum(data.valuation_adjustment, data.rounding_residual)) <= 1
     reconciled = (
         not incomplete and not filtered.ledger.load_errors and conversion != "units" and single and not filtered.account
     )
@@ -594,6 +592,8 @@ def _balance_sheet(
         # Named in the conversion currency, as the headlines are: an empty
         # inventory printed "—" beside `Net Worth: 0.00 USD` (w5/506).
         "valuation_adjustment": _headline(data.valuation_adjustment, conversion) if reconciled else None,
+        # What the ledger's tolerance accepted, kept out of the valuation line (w1/304).
+        "rounding_residual": _headline(data.rounding_residual, conversion) if reconciled else None,
         "equity_total": _headline(data.equity_total, conversion) if reconciled else None,
         "equity_reconciled": reconciled,
         "net_worth": worth,
@@ -622,31 +622,35 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
     return metadata | {
         "display_precision": _display_precision(filtered),
         **{name: (_tree_json(tree) if tree is not None else None) for name, tree in sections.items()},
-        "valuation_adjustment": _trial_adjustment(
-            filtered, conversion, data.valuation_adjustment, balances, scoped=bool(filtered.account)
-        ),
+        **_trial_lines(filtered, conversion, data, balances, scoped=bool(filtered.account)),
     }
 
 
-def _trial_adjustment(
-    filtered: Any, conversion: str, adjustment: Any, balances: Iterable[Mapping[str, Decimal]], *, scoped: bool
-) -> dict[str, Decimal | None] | None:
-    """The trial balance's valuation adjustment line, or None where it reconciles nothing (w1/287).
+def _trial_lines(
+    filtered: Any, conversion: str, data: Any, balances: Iterable[Mapping[str, Decimal]], *, scoped: bool
+) -> dict[str, dict[str, Decimal | None] | None]:
+    """The trial balance's valuation adjustment and rounding lines, None where they reconcile nothing (w1/287).
 
     The five valued trees leave a holding's unrealized gain and a currency's
-    translation unbalanced; this line carries them, so the sections sum to
-    zero. Withheld as the balance sheet's is: under `units` (no residual is
-    computed), for an account filter (the residual is the whole ledger's),
-    with loader errors (it would absorb an unbalanced entry), and while a
+    translation unbalanced; the valuation line carries them, and the rounding
+    line what the ledger's tolerance accepted (w1/304), so the sections sum
+    to zero. Withheld as the balance sheet's are: under `units` (no residual
+    is computed), for an account filter (the residual is the whole ledger's),
+    with loader errors (they would absorb an unbalanced entry), and while a
     balance holds a commodity the report could not value. Unlike the sheet's,
-    it may span commodities: at cost it is the conversions a priced exchange
-    leaves, which a trial balance must show to net.
+    the valuation line may span commodities: at cost it is the conversions a
+    priced exchange leaves, which a trial balance must show to net.
     """
-    if adjustment is None or scoped or filtered.ledger.load_errors:
-        return None
-    if any(_unvalued(balance, conversion) for balance in balances):
-        return None
-    return _headline(adjustment, conversion)
+    withheld = (
+        data.valuation_adjustment is None
+        or scoped
+        or filtered.ledger.load_errors
+        or any(_unvalued(balance, conversion) for balance in balances)
+    )
+    return {
+        name: None if withheld else _headline(getattr(data, name), conversion)
+        for name in ("valuation_adjustment", "rounding_residual")
+    }
 
 
 @dataclasses.dataclass
@@ -1568,6 +1572,7 @@ def _cash_flow(
 
     from fava.core.conversion import cost_or_value
     from fava.core.inventory import CounterInventory
+    from fava.modules.financial_statements import priced_exchange
 
     matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
     root_types = _root_type_map(filtered.ledger.options)
@@ -1635,16 +1640,7 @@ def _cash_flow(
             dropped = sorted({account for account in legs if not matches(account)})
             if kept and dropped:
                 split.append((entry, kept, dropped))
-        # A price on a costed posting does not set its weight (the booked cost
-        # does), so only a price-weighted leg makes this a currency exchange
-        # (w5/1078).
-        is_priced = any(
-            posting.price is not None
-            and posting.cost is None
-            and posting.units is not None
-            and posting.price.currency != posting.units.currency
-            for posting in entry.postings
-        )
+        is_priced = priced_exchange(entry)
         if is_priced:
             priced.append(entry)
         own = CounterInventory()

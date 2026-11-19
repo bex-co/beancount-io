@@ -186,6 +186,48 @@ class ReportPack(unittest.TestCase):
         self.assertIn("| Trial balance agrees with the statements | FAIL — difference 1.0000 USD", summary)
         self.assertIn("| Balance sheet balances | pass", summary)
 
+    def split(self) -> Path:
+        """A June bill split three ways leaves 0.004 USD inside Beancount's tolerance: rounding, not valuation (w1/304)."""
+        ledger = self.root / "split.beancount"
+        ledger.write_text(
+            textwrap.dedent(
+                """\
+                option "operating_currency" "USD"
+                2026-06-01 open Assets:Cash USD
+                2026-06-01 open Expenses:Food USD
+                2026-06-01 open Expenses:Rent USD
+                2026-06-01 open Equity:Opening USD
+                2026-06-01 * "Opening"
+                  Assets:Cash  100.00 USD
+                  Equity:Opening
+                2026-06-02 * "Split bill"
+                  Expenses:Food  3.333 USD
+                  Expenses:Rent  3.333 USD
+                  Assets:Cash   -6.67 USD
+                """
+            ),
+            encoding="utf-8",
+        )
+        return ledger
+
+    def test_accepted_rounding_ties_out_on_its_own_line(self) -> None:
+        done = self.build(self.split())
+        self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+        summary = (self.root / "pack" / "SUMMARY.md").read_text()
+        self.assertIn("| Trial balance agrees with the statements | pass |", summary)
+        self.assertNotIn("FAIL", summary)
+        for name in ("trial-balance.csv", "balance-sheet.csv"):
+            report = (self.root / "pack" / name).read_text()
+            self.assertIn("rounding_residual,rounding_residual,,USD,0.004", report)
+            self.assertIn("valuation_adjustment,valuation_adjustment,,USD,0", report)
+
+    def test_a_trial_balance_rounding_the_sheet_does_not_share_fails_the_tie_out(self) -> None:
+        tampered = self.tampering('"rounding_residual": {"USD": "0.004"}', '"rounding_residual": {"USD": "0.005"}', kind="trial-balance")
+        done = self.build(self.split(), bea=tampered)
+        self.assertEqual(done.returncode, 3, done.stdout + done.stderr)
+        summary = (self.root / "pack" / "SUMMARY.md").read_text()
+        self.assertIn("| Trial balance agrees with the statements | FAIL — difference 0.001 USD", summary)
+
     def test_an_unpriced_holding_stops_the_build_unless_book_value_is_chosen(self) -> None:
         done = self.build(FILES / "eval3_ledger.beancount")
         self.assertEqual(done.returncode, 1)
