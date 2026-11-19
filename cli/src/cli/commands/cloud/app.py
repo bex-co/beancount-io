@@ -18,6 +18,7 @@ from cli.commands.cloud.ledger.app import ledger_app
 
 if TYPE_CHECKING:
     from cli.api.rest_client.client import AuthenticatedClient
+    from cli.commands.cloud.git.helper import GitSignIn
 
 cloud_app = typer.Typer(
     help="Hosted ledgers and AI proxy; see 'cloud login'.",
@@ -98,10 +99,21 @@ def cloud_logout() -> None:
             "If it held a live session, revoke it from the dashboard."
         ) from exc
     if creds is None:
-        # No session is left to revoke a Git token with; it still leaves this disk.
-        if (git_left := _sign_git_out(None)) is not None:
+        # No session is left to revoke a Git token with. A token still on this
+        # disk leaves it unrevoked, and that is a failure.
+        git = _git_sign_in()
+        if git is not None and git.token and (git_left := _sign_git_out(None, git)) is not None:
             raise BeaError(f"Already logged out, but {git_left}")
         output.success("Already logged out.")
+        if git is not None:
+            # Only the id of a token this disk no longer holds: this logout
+            # changes nothing, so failing would fail every run alike (w1/311).
+            # The id stays for a signed-in logout or the next mint to revoke.
+            output.note(
+                f"The Git token {git.token_label} may still be valid: bea could not revoke it. Revoke it in the "
+                "dashboard under Settings → Personal access tokens, or run 'bea cloud login' then "
+                "'bea cloud logout', which revokes it."
+            )
         return
     import httpx
 
@@ -112,7 +124,8 @@ def cloud_logout() -> None:
     client = bearer_client(creds.token)
     # First, while the session can still revoke it: the token `cloud git setup`
     # minted for Git, which must not outlive the login (w22/m12).
-    git_left = _sign_git_out(client)
+    git = _git_sign_in()
+    git_left = _sign_git_out(client, git) if git is not None else None
     also_git = f" Also, {git_left}" if git_left else ""
     # What went wrong with the revocation: the error class, the outcome as a
     # clause, and the server's request id. Worded only once the local removal
@@ -188,19 +201,26 @@ def cloud_logout() -> None:
 _STILL_VALID = "The session may still be valid: revoke it from the dashboard."
 
 
-def _sign_git_out(client: AuthenticatedClient | None) -> str | None:
-    """End Git's sign-in with the session: revoke the token `cloud git setup` minted and forget it.
-
-    Returns None when Git holds nothing for this server or the token is
-    revoked, otherwise the clause that names the token left alive. The local
-    copy goes either way, as the login's does. The Git config entry stays:
-    with no token and no login the helper answers nothing, and Git prompts.
-    """
+def _git_sign_in() -> GitSignIn | None:
+    """Git's sign-in for this server, when `bea` minted it a token that may not be revoked yet."""
     from cli.commands.cloud.git import helper
 
     state = helper.load_state()
     if state is None or not state.key_id or not state.is_current_server():
         return None
+    return state
+
+
+def _sign_git_out(client: AuthenticatedClient | None, state: GitSignIn) -> str | None:
+    """End Git's sign-in with the session: revoke the token `cloud git setup` minted and forget it.
+
+    Returns None when the token is revoked, otherwise the clause that names
+    the token left alive. The local copy goes either way, as the login's does.
+    The Git config entry stays: with no token and no login the helper answers
+    nothing, and Git prompts.
+    """
+    from cli.commands.cloud.git import helper
+
     named = f"the Git token {state.token_label}"
     unrevoked = helper.try_revoke(client, state)
     problem = f"{named} could not be revoked ({unrevoked}). {helper.REVOKE_REMEDY}" if unrevoked else None

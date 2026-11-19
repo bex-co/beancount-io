@@ -602,6 +602,45 @@ def test_logout_with_the_server_unreachable_clears_local_state_and_names_the_tok
     state = helper.load_state()
     # Gone from this disk, and its id kept so a later login can still retire it.
     assert state is not None and (state.token, state.key_id) == (None, "key_1")
+    # Signed out now, and nothing left to remove: a second logout succeeds (w1/311).
+    again = CliRunner().invoke(app, ["cloud", "logout"])
+    assert (again.exit_code, again.stdout) == (0, "Already logged out.\n"), again.output
+    assert helper.load_state() == state
+
+
+def test_signed_out_logout_that_only_remembers_the_tokens_id_succeeds_and_says_how_to_retire_it() -> None:
+    # What a logout that could not revoke the token leaves behind, or Git's erase (w1/311).
+    before = _stored(token=None, expires_at=None)
+
+    for _ in range(2):
+        result = CliRunner().invoke(app, ["cloud", "logout"])
+
+        assert (result.exit_code, result.stdout) == (0, "Already logged out.\n"), result.output
+        assert result.stderr.count("\n") == 1
+        assert "The Git token 'bea git on laptop' may still be valid" in result.stderr
+        assert "Settings → Personal access tokens" in result.stderr
+        assert "'bea cloud login' then 'bea cloud logout'" in result.stderr
+        # The id stays, so a signed-in logout or the next mint still revokes it.
+        assert helper.load_state() == before
+
+    result = CliRunner().invoke(app, ["--json", "cloud", "logout"])
+
+    assert (result.exit_code, result.stdout, result.stderr) == (0, "", "")
+    assert helper.load_state() == before
+
+
+def test_signed_out_logout_with_the_token_still_stored_removes_it_and_fails_once() -> None:
+    _stored()
+
+    result = CliRunner().invoke(app, ["cloud", "logout"])
+
+    # A live secret left this disk unrevoked: that is a failure to report.
+    assert result.exit_code == 1, result.output
+    assert "Already logged out, but the Git token 'bea git on laptop' could not be revoked" in result.stderr
+    state = helper.load_state()
+    assert state is not None and (state.token, state.key_id) == (None, "key_1")
+    # The next run has nothing left to remove.
+    assert CliRunner().invoke(app, ["cloud", "logout"]).exit_code == 0
 
 
 def test_logout_treats_a_token_the_server_no_longer_has_as_revoked(httpx_mock: HTTPXMock, signed_in: None) -> None:

@@ -2734,9 +2734,12 @@ What it does, and the decisions behind it (w22/m12):
 - **`bea cloud logout` signs Git out too**: it revokes the token before the
   session and removes it from this machine. If the server cannot be reached
   the local copy still goes, and the error names the token to revoke in the
-  dashboard. The Git config entry stays; signed out, the helper answers
-  nothing and Git prompts as usual. After the next `bea cloud login` Git
-  signs in again without another `setup`.
+  dashboard. A later signed-out logout has nothing left to remove: it says
+  `Already logged out.`, exits **0**, and notes that token on stderr, which
+  the next `bea cloud login` then `bea cloud logout` revokes. The Git config
+  entry stays; signed out, the helper answers nothing and Git prompts as
+  usual. After the next `bea cloud login` Git signs in again without another
+  `setup`.
 - **`bea cloud git setup --undo`** removes exactly the two config values and
   revokes the token. Signed out, it still removes the local setup, exits
   **1**, and names the token it could not revoke.
