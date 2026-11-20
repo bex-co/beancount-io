@@ -2138,7 +2138,13 @@ trial-balance total: when a market conversion values the holdings
 differently at the as-of date than at the last posting, one closing row
 (`entry: "closing"`, dated the as-of date, no amount, text description
 `Valued at the as-of date`) carries the end-date valuation. Under `units`
-and `at_cost` there is no closing row. A `balance` assertion in the subtree
+and `at_cost` there is no closing row. An income or expenses register
+follows the statements' flow rule instead: each posting is valued at the
+price on its own date, the running balance is the sum of those values, and
+no later quote revalues it, so it has no closing row and its last row is
+the trial-balance total (two 100.00 EUR trips at 1.00 and 2.00 USD read
+100.00, then 300.00 USD). A posting with no quote on its day stays in its
+own commodity and names that day in `missing_price_dates`. A `balance` assertion in the subtree
 is a row too (`entry: "balance"`), and it moves nothing: its `amount` is
 `null` (blank AMOUNT, empty CSV `amount` cell), so the amount column still
 sums to the balance. The asserted figure is `asserted`; text reads

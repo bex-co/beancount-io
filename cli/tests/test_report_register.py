@@ -113,8 +113,8 @@ def _write(tmp_path: Path, text: str) -> Path:
     return ledger
 
 
-def _trial_total(ledger: Path, account: str) -> dict[str, str]:
-    data = _engine(ledger, "trial-balance", "--account", account)
+def _trial_total(ledger: Path, account: str, *args: str, section: str = "assets") -> dict[str, str]:
+    data = _engine(ledger, "trial-balance", "--account", account, *args)
 
     def find(node: dict[str, Any]) -> dict[str, Any] | None:
         if node["account"] == account:
@@ -125,7 +125,7 @@ def _trial_total(ledger: Path, account: str) -> dict[str, str]:
                 return found
         return None
 
-    node = find(data["assets"])
+    node = find(data[section])
     assert node is not None
     return node["balance_children"]
 
@@ -291,3 +291,85 @@ def test_register_row_before_the_first_quote_is_missing_at_its_own_date(tmp_path
     ]
     data = _engine(ledger, "register", "--account", "Assets:Broker", "--conversion", "USD", "--allow-errors")
     assert [row["balance"] for row in data["rows"]] == [{"STK": "1"}, {"STK": "2"}, {"USD": "400"}]
+
+
+# Two 100 EUR trips at 1.00 and 2.00 USD, then a 3.00 quote after the last
+# posting (w1/337, the w1/m49 repro).
+TRIPS = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Euro EUR
+2026-01-01 open Expenses:Travel EUR
+2026-01-01 open Equity:Opening EUR
+2026-01-01 price EUR 1.00 USD
+2026-01-02 * "Opening"
+  Assets:Euro  1000.00 EUR
+  Equity:Opening
+2026-01-15 * "Trip one"
+  Expenses:Travel  100.00 EUR
+  Assets:Euro
+2026-02-01 price EUR 2.00 USD
+2026-02-15 * "Trip two"
+  Expenses:Travel  100.00 EUR
+  Assets:Euro
+2026-03-01 price EUR 3.00 USD
+"""
+
+
+def test_register_values_an_expense_on_its_own_date(tmp_path: Path) -> None:
+    # A flow is worth what it was when it happened: the running balance is
+    # the sum of each posting's own-date value, never revalued by a later
+    # quote, so it needs no closing row and ends at the trial balance (w1/337).
+    ledger = _write(tmp_path, TRIPS)
+    for account in ("Expenses:Travel", "Expenses"):
+        data = _engine(ledger, "register", "--account", account)
+        assert data["valuation"] == "complete"
+        assert [(row["date"], row["entry"], row["balance"]) for row in data["rows"]] == [
+            ("2026-01-15", "transaction", {"USD": "100.0000"}),
+            ("2026-02-15", "transaction", {"USD": "300.0000"}),
+        ]
+        assert data["rows"][-1]["balance"] == _trial_total(ledger, account, section="expenses")
+
+
+def test_register_expense_window_ends_at_the_window_total(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, TRIPS)
+    window = ("--time", "2026-02 - 2026-03")
+    data = _engine(ledger, "register", "--account", "Expenses:Travel", *window)
+    assert [(row["date"], row["entry"], row["balance"]) for row in data["rows"]] == [
+        ("2026-02-15", "transaction", {"USD": "200.0000"}),
+    ]
+    assert data["rows"][-1]["balance"] == _trial_total(ledger, "Expenses:Travel", *window, section="expenses")
+
+
+def test_register_expense_with_no_quote_on_its_day_stays_in_units(tmp_path: Path) -> None:
+    # A posting before its commodity's first quote stays in that commodity,
+    # missing on its own date only, and a later quote does not value it.
+    ledger = _write(tmp_path, TRIPS.replace("2026-01-01 price EUR 1.00 USD\n", ""))
+    code, payload = _engine_raw(ledger, "register", "--account", "Expenses:Travel")
+    assert code == 1
+    assert payload["error"]["result"]["missing_price_dates"] == [{"from": "EUR", "to": "USD", "date": "2026-01-15"}]
+    data = _engine(ledger, "register", "--account", "Expenses:Travel", "--allow-errors")
+    assert data["valuation"] == "partial"
+    assert [row["balance"] for row in data["rows"]] == [
+        {"EUR": "100.00"},
+        {"EUR": "100.00", "USD": "200.0000"},
+    ]
+    assert data["rows"][-1]["balance"] == _trial_total(ledger, "Expenses:Travel", "--allow-errors", section="expenses")
+
+
+def test_register_expense_in_units_and_at_cost_keeps_its_units(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, TRIPS)
+    for conversion in ("units", "at_cost"):
+        data = _engine(ledger, "register", "--account", "Expenses:Travel", "--conversion", conversion)
+        assert [row["balance"] for row in data["rows"]] == [{"EUR": "100.00"}, {"EUR": "200.00"}]
+
+
+def test_register_asset_beside_a_flow_keeps_its_closing_row(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, TRIPS)
+    data = _engine(ledger, "register", "--account", "Assets:Euro")
+    assert [(row["date"], row["entry"], row["balance"]) for row in data["rows"]] == [
+        ("2026-01-02", "transaction", {"USD": "1000.0000"}),
+        ("2026-01-15", "transaction", {"USD": "900.0000"}),
+        ("2026-02-15", "transaction", {"USD": "1600.0000"}),
+        ("2026-03-01", "closing", {"USD": "2400.0000"}),
+    ]
+    assert data["rows"][-1]["balance"] == _trial_total(ledger, "Assets:Euro")

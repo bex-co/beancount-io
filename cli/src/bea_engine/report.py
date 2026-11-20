@@ -1150,13 +1150,18 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
     running balance is valued at that row's date (w1/252); when a later
     quote moves the value, a closing row dated the as-of date carries the
     end-date valuation, so the last row is still the trial-balance total
-    (w22/m3/t002).
+    (w22/m3/t002). An income or expenses register is a flow, as on the
+    statements (w1/m49): each posting is valued on its own date, the
+    running balance is the sum of those values, and no later quote
+    revalues it, so it needs no closing row (w1/337).
     """
     from beancount.core.data import Balance
 
+    from fava.core.conversion import UNITS, cost_or_value
     from fava.core.group_entries import TransactionPosting, group_entries_by_account
     from fava.core.inventory import CounterInventory
     from fava.core.tree import _converted
+    from fava.modules.chart import _flow_roots, _reads_prices, _under_roots
 
     if not filtered.account:
         raise protocol.UsageError(
@@ -1221,10 +1226,26 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
     running = CounterInventory()
     balances: list[tuple[date | None, Mapping[str, Decimal]]] = []
     prices = filtered.ledger.prices
+    # A flow keeps the values its postings had on their own dates, read back
+    # as units: valuing the whole running inventory at each row's date ran
+    # January's euros at February's rate, past the trial-balance total
+    # (w1/337).
+    flows = root is not None and _under_roots(root, _flow_roots(filtered)) and _reads_prices(conversion)
+    read_as = UNITS if flows else conversion
     for row, name in ordered:
         if isinstance(row, TransactionPosting):
             posting = row.posting
-            running.add_position(posting)
+            if flows:
+                own = CounterInventory()
+                own.add_position(posting)
+                value = cost_or_value(own, conversion, prices, row.transaction.date)
+                for currency, number in value.items():
+                    running.add((currency, None), number)
+                # What the posting could not be valued in is missing on its
+                # own date, not on every later row that still carries it.
+                balances.append((row.transaction.date, value))
+            else:
+                running.add_position(posting)
             cost = posting.cost
             rows.append(
                 {
@@ -1269,13 +1290,14 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
         # must not value an earlier balance (w1/252). A running position
         # worth exactly zero is `0 USD`, not empty (w5/1055).
         when = rows[-1]["date"]
-        balance = _balance_map(_converted(running, conversion, prices, when))
+        balance = _balance_map(_converted(running, read_as, prices, when))
         rows[-1]["balance"] = balance
-        balances.append((when, balance))
+        if not flows:
+            balances.append((when, balance))
     metadata = _metadata(filtered, conversion, ledger_errors)
     if not rows:
         balances.append((filtered.end_date, {}))
-    elif conversion not in ("units", "at_cost"):
+    elif conversion not in ("units", "at_cost") and not flows:
         # A quote that moved after the last posting leaves the last row short
         # of the trial-balance total, which values at the report's end. One
         # closing row, dated the as-of date and moving nothing, carries that
