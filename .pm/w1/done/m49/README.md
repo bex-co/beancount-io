@@ -1,6 +1,6 @@
 # w1 · m49 — A period's income and expenses have one value, whatever the interval
 
-**Worker:** worker1 **Goal:** under a currency conversion or `at_value`, every Income and Expenses posting is valued at the price on its own date, so an income statement's account trees, `Net Profit` and interval rows agree at every interval, in `bea` and in the hosted ledger service **Status:** in progress (t001, t002, t003, t004, t005 done)
+**Worker:** worker1 **Goal:** under a currency conversion or `at_value`, every Income and Expenses posting is valued at the price on its own date, so an income statement's account trees, `Net Profit` and interval rows agree at every interval, in `bea` and in the hosted ledger service **Status:** done
 
 ## Tasks (in order)
 
@@ -11,8 +11,16 @@
 | t003 | Hosted ledger service: the income statement, overview and trial balance value flows at their own date — **DONE** | 60m | — |
 | t004 | Adoption surface — **DONE** | 20m | t002, t003 |
 | t005 | Simplify — **DONE** | 20m | t004 |
-| t006 | Test coverage | 30m | t004 |
-| t007 | Closeout | 15m | t005, t006 |
+| t006 | Test coverage — **DONE** | 30m | t004 |
+| t007 | Closeout — **DONE** | 15m | t005, t006 |
+
+## Closeout
+
+**Done 2026-11-20** (`/loopx w1`). `bea` in `6f37b1c36` and `6b1d210b1`, the hosted ledger service in `b6b184099` and `b0c02b26c`; every definition-of-done check holds ([t007](./done/t007.md)). Decisions taken on the way, all in `cli/docs/USAGE.md`:
+
+- A flow dated before its commodity's first price stays in that commodity in its row and in the headline, so net profit reads `null` until a price on or before that day exists, and `missing_price_dates` names the day. This replaces w1/125's expectation that the income statement's headline take a later quote; balances still do.
+- Under `--time`, income and expenses from before the period are `Equity:Earnings:Previous`, an equity balance valued at the as-of date like every balance, so their translation sits there rather than in the valuation line. Total equity is the same with and without `--time`; the valuation line differs by that translation.
+- Hosted, the rule follows the account rather than the caller: every read of an income or expenses tree or total (the statements, the account report, the interval-totals read, `/hierarchy`) values it by day. The hosted overview's cumulative `income_data`/`expenses_data` series still value each point at its date, and the hosted balance sheet is unchanged (Out of scope).
 
 ## Definition of done
 
@@ -60,7 +68,7 @@ The trees come from `ChartModule.hierarchy` (`cli/src/fava/modules/chart.py`), w
 ## Source + Goal linkage
 
 - **Source:** promoted from inbox note w1/336 (routine cli-qa, 2026-11-20) during `/loopx w1` triage on 2026-11-20: the fix spans the `bea` engine, its usage guide and the hosted ledger service, more than an hour across several tasks.
-- **Evidence:** reproduced at `90a86ab44` with `bea 0.5.0` from the checkout (repro above). `cli/docs/USAGE.md` already promises "actual period rows with the same signed income and expenses as the account trees" and that "a later quote cannot value an earlier interval"; the headline breaks both for January's trip. [w5/617](../../w5/done/617.md) treated weekly rows that summed to 960 under a 965 headline as a bug, and [w1/252](../done/252.md) values register rows at their own date. Translating income and expenses at the rate on the day they happened, and balances at the closing rate, is the usual convention for foreign-currency books.
+- **Evidence:** reproduced at `90a86ab44` with `bea 0.5.0` from the checkout (repro above). `cli/docs/USAGE.md` already promises "actual period rows with the same signed income and expenses as the account trees" and that "a later quote cannot value an earlier interval"; the headline breaks both for January's trip. [w5/617](../../../w5/done/617.md) treated weekly rows that summed to 960 under a 965 headline as a bug, and [w1/252](../252.md) values register rows at their own date. Translating income and expenses at the rate on the day they happened, and balances at the closing rate, is the usual convention for foreign-currency books.
 - **Goal linkage:** **A1 — Agent-native accounting**: an agent that totals `periods[].net_profit` from `--json`, or reconciles the monthly table against the headline, gets one answer instead of two, and that answer is what the spending cost on the days it happened.
 - **Expected outcome:** a person or agent keeping books with foreign-currency spending sees one figure for a period's income and expenses in every view — headline, rows at any interval, overview, balance sheet, trial balance — in `bea` and on the hosted surfaces.
 - **Why now:** the default conversion is the operating currency, so every single-operating-currency ledger with foreign spending and a moving rate shows the split today.
