@@ -324,9 +324,12 @@ bea --file books/main.bean update transaction --id "$ID" --account Expenses:Dini
 bea --file books/main.bean list transaction --flag '!'
 ```
 
+The row's own source is refused here as it is at import: moving the queue leg
+onto the account the row was imported from would leave every posting there
+and cancel out, so `bea update transaction` exits **2** and writes nothing.
 For a longer queue, `bea update transactions --from queue.csv` applies a whole
-`id,account,flag` mapping in one previewed write per file; see [Updating
-directives](USAGE.md#updating-directives).
+`id,account,flag` mapping in one previewed write per file, rejecting such a
+row while the others write; see [Updating directives](USAGE.md#updating-directives).
 
 ```bash
 cat > category.csv <<'EOF'

@@ -1942,7 +1942,12 @@ bea list transaction --flag '!'
 
 `--id` takes the row's import-id, a `ref` metadata value, or `file:line`; an
 id shared by two rows is refused rather than guessed at. A bare `--account`
-retargets the queue's leg, while `OLD=NEW` names another leg. `--flag`,
+retargets the queue's leg, while `OLD=NEW` names another leg. A retarget
+onto the entry's only other account (the queue leg of a row imported from
+`Assets:Checking`, moved to `Assets:Checking`) would post against its own
+source and cancel out, so it exits **2** and writes nothing, as `bea import`
+refuses that account; a batch rejects that row. Merging the leg into another
+account the entry splits to beside its source still writes. `--flag`,
 `--tag`, and `--narration` retouch the header. Every form previews a diff and
 writes only with `--apply`, and only the entry's own lines change. The preview
 validates the edit as the apply does: one the ledger would refuse (an unknown

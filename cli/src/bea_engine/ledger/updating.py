@@ -420,6 +420,23 @@ def holding_account(options: dict[str, Any]) -> str:
 _POSTING_LINE = re.compile(r"^(\s+)((?:[*!&#?%]\s*|[A-Z]\s+)?)([^\s;]+)(.*)$")
 
 
+def _refuse_cancelling(entry: Any, held: list[str], old: str, new: str) -> None:
+    """Refuse moving the leg onto the entry's only other account.
+
+    Retargeting the review leg of a row imported from Assets:Checking onto
+    Assets:Checking posts `+5` and `-5` to one account: written with exit 0,
+    and the charge is gone from its balance (w1/328), as `bea import` refuses
+    for a counter account equal to its source (w5/468). Merging into another
+    account the entry already posts to, beside a third one, stays allowed.
+    """
+    if old != new and set(held) == {old, new}:
+        raise protocol.UsageError(
+            f"The entry at {_where(entry)} already posts to {new}; moving {old} there leaves every posting on "
+            f"{new}, so the entry would post against its own source and cancel out. Name the account its money "
+            "goes to or comes from. Nothing was written."
+        )
+
+
 def _retarget_accounts(entry: Any, options: dict[str, Any], changes: _Changes) -> tuple[str, str]:
     """The (old, new) posting accounts the change retargets.
 
@@ -442,10 +459,12 @@ def _retarget_accounts(entry: Any, options: dict[str, Any], changes: _Changes) -
                 f"No posting to {old} in the entry at {_where(entry)}; it posts to {', '.join(held)}. "
                 "Nothing was written."
             )
+        _refuse_cancelling(entry, held, old, new)
         return old, new
     new = parse_account(changes.account)
     candidates = [account for account in held if account == holding_account(options)]
     if len(candidates) == 1:
+        _refuse_cancelling(entry, held, candidates[0], new)
         return candidates[0], new
     if not candidates and len(held) == 1:
         return held[0], new
