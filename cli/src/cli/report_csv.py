@@ -287,6 +287,7 @@ def _budget(data: Mapping[str, Any]) -> Table:
         "actual",
         "variance",
         "status",
+        "covered_by",
     ]
     rows: list[Row] = []
     for period in data["periods"]:
@@ -302,13 +303,14 @@ def _budget(data: Mapping[str, Any]) -> Table:
                     _text(row["actual"]),
                     _text(row["variance"]),
                     _text(row["status"]),
+                    _text(row["covered_by"]),
                 ]
             )
     return header, rows
 
 
 #: Columns holding user text, which `--spreadsheet-safe` neutralizes.
-_TEXT_COLUMNS = frozenset({"item", "account", "commodity", "payee", "narration", "unpriced_at"})
+_TEXT_COLUMNS = frozenset({"item", "account", "covered_by", "commodity", "payee", "narration", "unpriced_at"})
 
 _TABLES: dict[str, Callable[[Mapping[str, Any]], Table]] = {
     "overview": _overview,

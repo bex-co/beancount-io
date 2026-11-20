@@ -363,7 +363,9 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
     earned, positive); variance is actual minus budget, so a positive expense
     variance is overspending. A currency without a budget keeps `budget` null
     and no variance — absent is not zero. Spending under Income and Expenses
-    accounts no budget covers is listed as `unbudgeted`.
+    accounts no budget covers is listed as `unbudgeted`; one covered only by
+    an ancestor's budget the account filter leaves out is listed as `covered`,
+    naming that budget's account in `covered_by`.
     """
     from collections import defaultdict
 
@@ -428,12 +430,21 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
                         "actual": spent,
                         "variance": None if budget is None else spent - budget,
                         "status": "budgeted",
+                        "covered_by": None,
                     }
                 )
         for account in sorted(per_account):
             kind = kind_of(account)
-            if kind == "other" or any(account == name or account.startswith(name + ":") for name in budgeted):
+            if kind == "other":
                 continue
+            covering = [name for name in budgeted if account == name or account.startswith(name + ":")]
+            # Only a budget the filter keeps has a row this account's actual
+            # rolls into. One the filter leaves out (`-a Expenses:Food:Dining`
+            # under a budget on Expenses:Food) still covers the account, so its
+            # row names that budget instead of dropping the money (w1/318).
+            if any(in_scope(name) for name in covering):
+                continue
+            covered_by = max(covering, key=len) if covering else None
             sign = -1 if kind == "income" else 1
             for currency, number in sorted(actual_of(per_account, [account], span.end_inclusive).items()):
                 rows.append(
@@ -444,7 +455,8 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
                         "budget": None,
                         "actual": sign * number,
                         "variance": None,
-                        "status": "unbudgeted",
+                        "status": "unbudgeted" if covered_by is None else "covered",
+                        "covered_by": covered_by,
                     }
                 )
         periods.append({"begin": span.begin, "end": span.end_inclusive, "rows": rows})

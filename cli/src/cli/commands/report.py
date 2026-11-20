@@ -977,10 +977,15 @@ def budget(
             def show(number: Any, currency: str = currency) -> str:
                 return _money({"number": number, "currency": currency}, None, precision)
 
+            if row["status"] == "covered":
+                # Its budget is on an ancestor the filter leaves out (w1/318).
+                budget_cell = f"in {row['covered_by']}"
+            else:
+                budget_cell = "no budget" if row["budget"] is None else show(row["budget"])
             cells.append(
                 [
                     row["account"] + (" (unbudgeted)" if row["status"] == "unbudgeted" else ""),
-                    "no budget" if row["budget"] is None else show(row["budget"]),
+                    budget_cell,
                     show(row["actual"]),
                     "—" if row["variance"] is None else show(row["variance"]),
                 ]

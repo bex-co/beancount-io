@@ -2170,6 +2170,13 @@ too:
 - A currency with no budget keeps `budget` and `variance` null (`no budget` in
   the table): absent is never zero. A declared `0.00` budget is a budget. Income
   and expense accounts that no budget covers are listed `unbudgeted`.
+- When `--account` selects an account but leaves out the ancestor whose budget
+  covers it (`-a Expenses:Food:Dining` under a budget on `Expenses:Food`), the
+  account's actual is still reported, with `budget` and `variance` null and
+  status `covered`. `covered_by` names the nearest budgeted ancestor, and the
+  table's BUDGET cell reads `in Expenses:Food`; widen the filter to see that
+  budget's row. While the budgeted ancestor is in the filter, the child stays
+  rolled into its row. `covered_by` is null on every other row.
 - A budget line Fava cannot read (an unknown interval or an amount without the
   `NUMBER CURRENCY` shape) is reported on stderr and
   under `budget_errors` in `--json`, and its account falls to `unbudgeted`.

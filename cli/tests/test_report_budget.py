@@ -227,6 +227,7 @@ def test_a_child_budget_keeps_direct_parent_activity(tmp_path: Path, root: str, 
         "actual": "30.00",
         "variance": None,
         "status": "unbudgeted",
+        "covered_by": None,
     }
     assert rows[(child, "USD")]["actual"] == "20.00"
     exact = _rows(_report(["-t", "2026-01", "-a", f"^{parent}$"], tmp_path, text))
@@ -700,6 +701,7 @@ def test_budget_only_account_matches_are_nonempty_without_opens_or_postings(
         "actual": "0",
         "variance": "-100.00",
         "status": "budgeted",
+        "covered_by": None,
     }
     ledger = tmp_path / "main.beancount"
     exported = tmp_path / "budget-only.csv"
@@ -749,3 +751,120 @@ def test_budget_filter_emptiness_tracks_active_dates_and_unmatched_accounts(tmp_
             assert run.returncode == 0, run.stderr
             assert f"No accounts match {pattern}." in run.stderr
     assert (tmp_path / "main.beancount").read_text() == text
+
+
+COVERED_LEDGER = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Expenses:Food USD
+2026-01-01 open Expenses:Food:Dining USD
+2026-01-01 open Expenses:Rent USD
+2026-01-01 open Income:Job USD
+2026-01-01 open Income:Job:Bonus USD
+2026-01-01 custom "budget" Expenses:Food "monthly" 300.00 USD
+2026-01-01 custom "budget" Expenses:Rent "monthly" 1000.00 USD
+2026-01-01 custom "budget" Income:Job "monthly" 4000.00 USD
+2026-01-01 * "Groceries"
+  Expenses:Food  100.00 USD
+  Assets:Cash
+2026-01-10 * "Restaurant"
+  Expenses:Food:Dining  50.00 USD
+  Assets:Cash
+2026-01-15 * "Rent"
+  Expenses:Rent  1000.00 USD
+  Assets:Cash
+2026-01-20 * "Bonus"
+  Assets:Cash  500.00 USD
+  Income:Job:Bonus
+"""
+
+
+def _covered(account: str, kind: str, actual: str, covered_by: str) -> dict[str, Any]:
+    return {
+        "account": account,
+        "account_type": kind,
+        "currency": "USD",
+        "budget": None,
+        "actual": actual,
+        "variance": None,
+        "status": "covered",
+        "covered_by": covered_by,
+    }
+
+
+@pytest.mark.parametrize(
+    "account,kind,actual,parent",
+    [
+        ("Expenses:Food:Dining", "expenses", "50.00", "Expenses:Food"),
+        # Income reads as earned: the bonus is +500, not Beancount's -500.
+        ("Income:Job:Bonus", "income", "500.00", "Income:Job"),
+    ],
+)
+def test_a_child_whose_budget_the_filter_leaves_out_is_reported_as_covered(
+    tmp_path: Path, account: str, kind: str, actual: str, parent: str
+) -> None:
+    # w1/318: the parent's budget row is filtered out, and the child was
+    # skipped as covered by it, so the report said "No accounts match".
+    data = _report(["-t", "2026-01", "-a", account], tmp_path, COVERED_LEDGER)
+    assert data["account_filter_empty"] is False
+    assert data["account_filter_periods"] == []
+    assert data["periods"][0]["rows"] == [_covered(account, kind, actual, parent)]
+    ledger = tmp_path / "main.beancount"
+    base = ["-f", str(ledger), "report", "budget", "-t", "2026-01", "-a", account]
+    text = bea(base, tmp_path)
+    assert text.returncode == 0, text.stderr
+    assert "No accounts match" not in text.stderr
+    assert "Nothing budgeted or spent." not in text.stdout
+    line = next(row for row in text.stdout.splitlines() if row.startswith(account))
+    assert line.split() == [account, "in", parent, actual, "USD", "—"]
+    table = bea([*base, "--format", "csv"], tmp_path)
+    assert table.returncode == 0, table.stderr
+    assert "No accounts match" not in table.stderr
+    rows = list(csv.DictReader(io.StringIO(table.stdout)))
+    assert [(r["account"], r["budget"], r["actual"], r["variance"], r["status"], r["covered_by"]) for r in rows] == [
+        (account, "", actual, "", "covered", parent)
+    ]
+    assert ledger.read_text() == COVERED_LEDGER
+
+
+def test_a_regex_filter_keeps_a_covered_childs_spending_beside_budgeted_rows(tmp_path: Path) -> None:
+    data = _report(["-t", "2026-01", "-a", "Dining|Rent"], tmp_path, COVERED_LEDGER)
+    rows = _rows(data)
+    assert rows[("Expenses:Rent", "USD")]["status"] == "budgeted"
+    assert rows[("Expenses:Food:Dining", "USD")] == _covered(
+        "Expenses:Food:Dining", "expenses", "50.00", "Expenses:Food"
+    )
+    # The income statement under the same filter reports 1,050.00 USD.
+    assert sum(Decimal(row["actual"]) for row in rows.values()) == Decimal("1050.00")
+    run = bea(
+        ["-f", str(tmp_path / "main.beancount"), "report", "budget", "-t", "2026-01", "-a", "Dining|Rent"], tmp_path
+    )
+    assert run.returncode == 0, run.stderr
+    assert "Expenses:Food:Dining" in run.stdout and "in Expenses:Food" in run.stdout
+
+
+@pytest.mark.parametrize("argv", [[], ["-a", "Food"], ["-a", "Expenses:Food"]])
+def test_a_child_stays_rolled_into_its_budget_while_the_filter_keeps_it(tmp_path: Path, argv: list[str]) -> None:
+    rows = _rows(_report(["-t", "2026-01", *argv], tmp_path, COVERED_LEDGER))
+    assert ("Expenses:Food:Dining", "USD") not in rows
+    assert all(row["status"] == "budgeted" and row["covered_by"] is None for row in rows.values())
+    food = rows[("Expenses:Food", "USD")]
+    assert (food["budget"], food["actual"], food["variance"]) == ("300.00", "150.00", "-150.00")
+
+
+def test_covered_names_the_nearest_budget_and_any_kept_budget_absorbs_the_child(tmp_path: Path) -> None:
+    brunch = "Expenses:Food:Dining:Brunch"
+    text = COVERED_LEDGER + (
+        f"2026-01-01 open {brunch} USD\n"
+        '2026-01-01 custom "budget" Expenses:Food:Dining "monthly" 80.00 USD\n'
+        f'2026-01-12 * "Brunch"\n  {brunch}  20.00 USD\n  Assets:Cash\n'
+    )
+    # Expenses:Food and Expenses:Food:Dining both cover it; the nearer one is named.
+    alone = _rows(_report(["-t", "2026-01", "-a", "Brunch"], tmp_path, text))
+    assert alone == {(brunch, "USD"): _covered(brunch, "expenses", "20.00", "Expenses:Food:Dining")}
+    # A kept ancestor budget, even when the nearer one is left out, is the row
+    # the child's actual rolls into.
+    rolled = _rows(_report(["-t", "2026-01", "-a", "^Expenses:Food$|Brunch"], tmp_path, text))
+    assert list(rolled) == [("Expenses:Food", "USD")]
+    food = rolled[("Expenses:Food", "USD")]
+    assert (food["status"], food["actual"], food["covered_by"]) == ("budgeted", "120.00", None)
