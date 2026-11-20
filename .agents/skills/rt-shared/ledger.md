@@ -148,6 +148,9 @@ newest first.
 
 ### Deferred
 
+- 2026-11-20 ledger `src/shared/logger/index.test.ts` existence tests ("should be defined", four method-existence, "should have child method", "should create a child logger") — mirror the pruned backend-v2 logger six (e4fbb81b7); proof observed 2026-11-20: empty `LOGGABLE_CONTEXT_KEYS` reds 4 allowlist tests while all 7 stay green; deferred for single-package scope, take next run.
+- 2026-11-20 ledger `src/shared/lock/lock.test.ts` "should be defined" + "should have acquire method" — mirror the pruned backend-v2 lock two; proof recipe: stub `acquire` to return a wrong answer (observed 2026-11-20: 5 behavior tests red, both green); deferred for single-package scope, take next run.
+
 ### Skipped
 
 - 2026-11-20 cli 13 new test files (`test_update_self_cancel`, `test_balance_pad_omit_messages`, `test_into_unincluded_missing_directory`, +10) — AST sweep: every test function carries real asserts; subprocess-based suite, no mock/tautology shapes.
