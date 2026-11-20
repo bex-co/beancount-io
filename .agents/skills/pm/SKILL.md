@@ -95,7 +95,14 @@ Create the next `tNNN.md` from the task template and add its row to the mileston
 4. If no open tasks remain in the milestone, **move the whole milestone** to `wN/done/mN/` and check its box (`- [x]`) in the workstream `README.md`.
 5. **Verify the exit condition before returning:** the completed task exists only under `done/`; and, when no open tasks remain, the milestone exists only at `wN/done/mN/`, its `README.md` says `**Status:** done`, and the workstream checkbox is checked. Do not report success until these moves and status updates are complete.
 
-For an **inbox note** `wN/NNN.md` (including one under `blocked/`): append a `---` separator and one `**Resolved <YYYY-MM-DD>** — <what changed>, shipped in `<SHA>` (`<package>`)` paragraph, so the public record says what closed it; move the file to `wN/done/NNN.md`; remove its bullet from the workstream `README.md` if it is listed there. Verify the open path no longer exists before returning.
+For an **inbox note** `wN/NNN.md` (including one under `blocked/`), work in this order, so that the close is one commit that carries the final text:
+
+1. Append a `---` separator and one `**Resolved <YYYY-MM-DD>** — <what changed>, shipped in `<SHA>` (`<package>`)` paragraph, so the public record says what closed it.
+2. Move the file to `wN/done/NNN.md`.
+3. Remove its bullet from the workstream `README.md` if it is listed there.
+4. Verify the open path no longer exists before returning.
+
+Whoever commits the close stages it after step 3, as the whole workstream directory: `git add -- .pm/wN`. That records the old path's removal and the new path's text together. `git mv` alone is not enough, because it stages the note as it was before step 1.
 
 Show the intended moves before mutating if the user passed `DRY_RUN=1`.
 

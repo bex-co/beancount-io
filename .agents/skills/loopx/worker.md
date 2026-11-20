@@ -55,6 +55,16 @@ Do the actual engineering, following `depends_on` order inside a milestone:
 
 Invoke **`/ship`** ([`.agents/skills/ship/SKILL.md`](../ship/SKILL.md)) for the item's changes: code and the `.pm/` moves together, or the board move alone when triage ended the item without code. `/ship` ends at a successful push. It has no test gate of its own, so the checks in step 2 are your gate: run them before invoking it. The orchestrator reads CI for your commits afterwards, and a workflow your push turns red comes back to the loop as a fix.
 
+Stage the board as a directory, after `/ship`'s pull and after your last edit: `git add -- .pm/<wN>`. This records both sides of every move, with the text the item ends with. Do not stage a move path by path. `git mv` stages a note as it was before you appended its **Resolved** or **Blocked** paragraph. A pull's autostash can restore only half of a staged move. `git add` fails on an old path whose removal is already staged. Before you commit, check that the index holds the outcome:
+
+```bash
+git status --short -- .pm                                # each line: second column blank, no ??
+git show :.pm/<wN>/done/<NNN>.md | grep '^\*\*Resolved'  # a closed note carries its paragraph
+git ls-files -- <the item's old path>                    # prints nothing
+```
+
+If a check fails, stage again and recheck. A slip leaves a public commit where the note sits in `done/` with nothing that says what closed it.
+
 One board outcome per ship: never fold two outcomes into one commit. A milestone large enough to need it may ship at task boundaries, provided every ship is green and self-contained.
 
 If `/ship` surfaces a failure it cannot fix (a rebase conflict it can't resolve, a rejected push), that is a block.
