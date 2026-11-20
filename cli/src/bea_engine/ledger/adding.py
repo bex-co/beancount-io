@@ -746,6 +746,10 @@ def _balance(
             f"{sign} Padding to {_balance_amount(number, currency, tolerance)} would insert "
             f"{_plain(number - held)} {currency}. Pass --force to pad to it anyway. Nothing was written."
         )
+    if not request.get("force"):
+        same_day = _same_day_pad_refusal(before, account, date, number, currency, tolerance, held, before_options)
+        if same_day is not None:
+            raise same_day
     entries = [
         Pad({}, padded, account, parse_account(str(pad_from))),
         Balance({}, date, account, BcAmount(number, currency), tolerance, None),
@@ -880,6 +884,60 @@ def _balance(
         "source": None,
         "target": str(write.destination(file, into)),
     }
+
+
+def _same_day_pad_refusal(
+    entries: list[Any],
+    account: str,
+    date: datetime.date,
+    number: Decimal,
+    currency: str,
+    tolerance: Decimal | None,
+    held: Decimal,
+    options: dict[str, Any],
+) -> protocol.UsageError | None:
+    """Why padding to a balance the assertion day's own postings reach must not go ahead unforced, or None.
+
+    A statement's closing balance is the balance at the end of its last day,
+    and Beancount checks an assertion at the start of its day. Dated on that
+    day with --pad-from, the pad absorbed exactly the day's transactions and
+    counted them twice with exit 0, where the plain assertion fails with the
+    start-of-day hint (w1/339). Only the day's postings explaining the whole
+    gap refuses: a gap they leave open is still the adjustment --pad-from is for.
+    """
+    from beancount.core.amount import Amount as BcAmount
+    from beancount.core.data import Balance, Transaction
+
+    if date == datetime.date.max:
+        return None
+    allowed = _balance_tolerance(Balance({}, date, account, BcAmount(number, currency), tolerance, None), options)
+    following = date + datetime.timedelta(days=1)
+    closing = write.book_units(entries, account, currency, following)
+    if abs(number - closing) > allowed or abs(number - held) <= allowed:
+        return None
+    prefix = f"{account}:"
+    moves = [
+        f"{entry.meta.get('filename')}:{entry.meta.get('lineno')} "
+        f"{entry.payee or entry.narration or 'transaction'}: {_plain(posting.units.number)} {currency}"
+        + ("" if posting.account == account else f" in {posting.account}")
+        for entry in entries
+        if isinstance(entry, Transaction) and entry.date == date
+        for posting in entry.postings
+        if (posting.account == account or posting.account.startswith(prefix))
+        and posting.units is not None
+        and posting.units.currency == currency
+        and posting.units.number
+    ]
+    asserted = _balance_amount(number, currency, tolerance)
+    return protocol.UsageError(
+        f"{account} holds {_plain(held)} {currency} at the start of {date.isoformat()} and {_plain(closing)} "
+        f"{currency} at its end: that day's own postings reach {asserted}. Balance assertions run at the start "
+        f"of the day, before that day's transactions, so padding to {asserted} would insert "
+        f"{_plain(number - held)} {currency} and count them twice. For a statement's closing balance, use the "
+        f"following day's date: --date {following.isoformat()} needs no pad. Pass --force to pad anyway. "
+        "Nothing was written.",
+        details=moves,
+    )
 
 
 def _balance_match(

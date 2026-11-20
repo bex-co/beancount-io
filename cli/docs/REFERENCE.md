@@ -527,7 +527,7 @@ Usage: bea add balance [OPTIONS]
 | `--amount` | str | required | 'NUMBER [~ TOLERANCE] CURRENCY' (pass once) |
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
-| `--force` | flag |  | Record another assertion when the date/account already has one, or pad to an amount whose sign is refused |
+| `--force` | flag |  | Record another assertion when the date/account already has one, or pad to an amount whose sign is refused or that the assertion day's own transactions reach |
 | `--pad-from` | str |  | Explicitly add a pad and this balance assertion together; source account |
 | `--pad-date` | str |  | Pad date; defaults to the day before the balance assertion |
 

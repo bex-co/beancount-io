@@ -1525,7 +1525,12 @@ Beancount, so an assertion that is exactly such an account's balance negated is
 almost always a statement's positive figure. `add balance` names the sign in
 that case. With `--pad-from`, it refuses (exit **2**) and says what the pad would
 insert, unless you pass `--force`. A generated opening adjustment for such an
-account with a positive amount also offers the negative one.
+account with a positive amount also offers the negative one. A balance assertion
+runs at the start of its day, so a statement's closing balance is asserted on the
+following day. When the asserted amount is what the account holds at the end of
+`--date` but not at its start, the pad would only count that day's own
+transactions twice: `--pad-from` refuses (exit **2**), names those postings and
+the `--date` to retry with, which needs no pad, unless you pass `--force`.
 Under `--json` every `add balance` answer has one layout: `directive` is the
 assertion and `pad` the inserted pad (or `null` when none was written), each in
 the shape `list balance` and `list pad` return, beside `written`, `duplicate`
