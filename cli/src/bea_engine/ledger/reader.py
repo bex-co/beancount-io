@@ -676,7 +676,7 @@ def _to_transaction(entry: Any, shared: frozenset[tuple[str, int]] = frozenset()
         tags=sorted(entry.tags),
         links=sorted(entry.links),
         meta=metadata_to_json(entry.meta),
-        source=SourceLocation(filename=entry.meta["filename"], lineno=entry.meta["lineno"]),
+        source=_source_of(entry),
         generated=entry_generated(entry, "transaction", shared),
     )
 
@@ -1006,8 +1006,9 @@ def _source_of(entry: Any) -> SourceLocation | None:
     """Where the directive is written, or `None` when it is written nowhere.
 
     Beancount stamps a statement it found in the `option "documents"` folder
-    with the root file at line 0, a line no file has (w1/341): `entry_generated`
-    already reads below line 1 as no location.
+    with the root file at line 0, a line no file has (w1/341), and a plugin
+    commonly stamps a transaction it makes the same way (w1/342):
+    `entry_generated` already reads below line 1 as no location.
     """
     meta = entry.meta or {}
     filename, lineno = meta.get("filename"), meta.get("lineno")

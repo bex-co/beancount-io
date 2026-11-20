@@ -427,6 +427,9 @@ def _run(name: str, spec: _Spec, limit: int, allow_errors: bool, *, details: boo
                 suffix = " (generated)" if item.get("generated") else ""
                 # A comment, so the redirected stream is still a ledger (w5/985).
                 typer.echo("; " + single_line(f"{item['source']['filename']}:{item['source']['lineno']}{suffix}"))
+            elif item.get("generated"):
+                # A plugin's row written at no line is still marked generated (w1/342).
+                typer.echo("; (generated)")
             # A terminal shows control characters inert; a redirect gets the
             # ledger's own strings, so the text parses back (w5/834).
             typer.echo(inert_text(rendered) if sys.stdout is not None and sys.stdout.isatty() else rendered)

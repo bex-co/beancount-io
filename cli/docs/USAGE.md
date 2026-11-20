@@ -1230,6 +1230,8 @@ A `document` row's `filename` is relative to the file that wrote the directive
 A statement Beancount found in the `option "documents"` folder was written by
 no directive: its `source` is `null`, its `WRITTEN IN` cell is empty, it is
 marked `generated`, and its `filename` is relative to the root ledger's folder.
+A transaction a plugin made at no line (stamped line 0) likewise lists with
+`source: null` and `generated`, and `--details` heads it `; (generated)`.
 
 ```bash
 bea list transaction
