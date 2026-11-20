@@ -40,11 +40,12 @@ def test_missing_price_diagnostics_summarize_one_line_per_commodity(book: Path, 
     error = json.loads(result.stderr)["error"]
     assert error["details"] == ["EUR → USD has no price before 2026-06-01; earlier rows shown in EUR"]
     assert not any("2026-06-30" in detail for detail in error["details"])
-    assert {"from": "EUR", "to": "USD", "date": "2026-01-31"} in error["result"]["missing_price_dates"]
+    # The meal is valued on its own day, so that is the date it needs a price on (w1/m49).
+    assert {"from": "EUR", "to": "USD", "date": "2026-01-15"} in error["result"]["missing_price_dates"]
     partial = json.loads(runner.invoke(app, [*command, "--allow-errors"]).stdout)["data"]
-    assert {"from": "EUR", "to": "USD", "date": "2026-01-31"} in partial["missing_price_dates"]
+    assert {"from": "EUR", "to": "USD", "date": "2026-01-15"} in partial["missing_price_dates"]
     with book.open("a") as stream:
-        stream.write("2026-01-31 price EUR 1.05 USD\n")
+        stream.write("2026-01-15 price EUR 1.05 USD\n")
     fixed = runner.invoke(app, command)
     assert fixed.exit_code == 0, fixed.output
     assert json.loads(fixed.stdout)["data"]["valuation"] == "complete"

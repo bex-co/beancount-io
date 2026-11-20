@@ -1,4 +1,5 @@
-;; A ledger whose only quote postdates the activity: 4.50 EUR at 1.09 is 4.9050 USD.
+;; A ledger whose only quote postdates the activity: the -4.50 EUR left in cash is
+;; -4.9050 USD at 1.09, while the lunch itself, before any quote, stays in EUR.
 option "operating_currency" "USD"
 
 2026-01-01 open Assets:Cash EUR

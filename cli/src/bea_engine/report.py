@@ -222,6 +222,13 @@ def _balances(
     # holding must not make a USD checking balance fail.
     previous = _summary_pair(filtered.ledger)
     balances = [balance for tree in pruned.values() if tree is not None for balance in _tree_balances(tree, previous)]
+    flows = ("income", "expenses")
+    dated = [
+        (filtered.end_date, balance)
+        for name, tree in pruned.items()
+        if tree is not None and name not in flows
+        for balance in _tree_balances(tree, previous)
+    ] + _flow_dates(filtered, resolved_conversion, _tree_accounts(pruned[name] for name in flows))
     metadata = (
         _metadata(filtered, resolved_conversion, ledger_errors)
         # `_metadata` judges emptiness by a report `--account`, which balance
@@ -238,7 +245,7 @@ def _balances(
         }
         | _valuation(
             resolved_conversion,
-            ((filtered.end_date, balance) for balance in balances),
+            dated,
             allow_errors,
             filtered.ledger,
             ledger_errors,
@@ -272,10 +279,15 @@ def _overview(
     trees = tuple(sections[name] for name in ("assets", "liabilities", "income", "expenses"))
     previous = _summary_pair(filtered.ledger)
     balances = [
-        (filtered.end_date, balance) for tree in trees if tree is not None for balance in _tree_balances(tree, previous)
+        (filtered.end_date, balance)
+        for tree in trees[:2]
+        if tree is not None
+        for balance in _tree_balances(tree, previous)
     ]
-    for series in (data.assets_data, data.liabilities_data, data.income_interval_data, data.expenses_interval_data):
+    for series in (data.assets_data, data.liabilities_data):
         balances.extend((point.date, point.balance) for point in series)
+    # Income and expenses, in the trees and the series alike, are valued day by day.
+    balances.extend(_flow_dates(filtered, conversion))
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger, ledger_errors, _tree_accounts(trees))
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
     empty = type(data.assets_hierarchy.balance_children)()
@@ -318,12 +330,8 @@ def _income_statement(
         filtered.ledger.root_accounts,
     )
     trees = (sections["income"], sections["expenses"])
-    previous = _summary_pair(filtered.ledger)
-    balances = [
-        (filtered.end_date, balance) for tree in trees if tree is not None for balance in _tree_balances(tree, previous)
-    ]
-    for series in (data.income_data, data.expenses_data):
-        balances.extend((point.date, point.balance) for point in series)
+    # The trees and the rows are the same postings, each valued on its own day.
+    balances = _flow_dates(filtered, conversion)
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger, ledger_errors, _tree_accounts(trees))
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
     empty = type(data.income_hierarchy.balance_children)()
@@ -574,10 +582,12 @@ def _balance_sheet(
     balances = [
         (filtered.end_date, balance) for tree in trees if tree is not None for balance in _tree_balances(tree, previous)
     ]
-    balances.append((filtered.end_date, earnings))
     # The equity lines are as-of figures like the headline: only a commodity
-    # still unvalued at the report date withholds them, not an earlier row's gap.
-    incomplete = any(_unvalued(balance, conversion) for _, balance in balances)
+    # still unvalued at the report date withholds them, not an earlier row's
+    # gap. Earnings are valued day by day, so they are judged by their total
+    # here and dated by their days below (w1/m49).
+    incomplete = _unvalued(earnings, conversion) or any(_unvalued(balance, conversion) for _, balance in balances)
+    balances.extend(_flow_dates(filtered, conversion))
     balances.extend((point.date, point.balance) for point in data.net_worth_data)
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger, ledger_errors, _tree_accounts(trees))
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
@@ -627,9 +637,15 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
     sections = _prune_sections(sections, filtered.account, filtered.ledger.root_accounts)
     previous = _summary_pair(filtered.ledger)
     balances = [balance for tree in sections.values() if tree is not None for balance in _tree_balances(tree, previous)]
+    dated = [
+        (filtered.end_date, balance)
+        for name, tree in sections.items()
+        if tree is not None and name not in ("income", "expenses")
+        for balance in _tree_balances(tree, previous)
+    ] + _flow_dates(filtered, conversion)
     metadata = _metadata(filtered, conversion, ledger_errors) | _valuation(
         conversion,
-        ((filtered.end_date, balance) for balance in balances),
+        dated,
         allow_errors,
         filtered.ledger,
         ledger_errors,
@@ -2492,6 +2508,24 @@ def _valuation(
         "missing_price_dates": dated,
         "missing_price_summary": summary,
     }
+
+
+def _flow_dates(
+    filtered: Any, conversion: str, accounts: Collection[str] | None = None
+) -> list[tuple[date | None, Mapping[str, Decimal]]]:
+    """Income and expenses as `_valuation` judges them: each day valued on that day (w1/m49).
+
+    The trees and interval rows value every flow posting on its own date, so
+    a missing price is missing there, and the dates a report asks for prices
+    on are those days, not its as-of date or a row's end. `accounts` limits
+    them to the accounts a report shows; by default they are the in-scope
+    income and expenses. A per-unit conversion asks for no price.
+    """
+    if conversion in CONVERSIONS:
+        return []
+    from fava.modules.chart import ChartModule
+
+    return [(point.date, point.balance) for point in ChartModule().flow_days(filtered, conversion, accounts)]
 
 
 def _balance_map(balance: Mapping[str, Decimal]) -> dict[str, Decimal]:

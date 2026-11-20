@@ -750,11 +750,25 @@ class TestPartialValuation:
     def test_a_stale_quote_values_each_interval_at_its_own_date(self, monkeypatch: pytest.MonkeyPatch) -> None:
         self._terminal(monkeypatch)
 
+        result = runner.invoke(app, ["--file", str(EUR_PRECISION), "report", "balance-sheet"])
+
+        assert result.exit_code == 0, result.stderr
+        # The cash is valued at the as-of quote; the June point before it is not.
+        assert "-4.91 USD" in result.stdout
+        assert "2026-06-30  Unavailable USD" in result.stdout
+        assert "earlier rows shown in EUR" in result.stderr
+
+    def test_a_later_quote_values_no_earlier_flow(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """The lunch has no price on its own day, in the headline or its row (w1/m49)."""
+        self._terminal(monkeypatch)
+
         result = runner.invoke(app, ["--file", str(EUR_PRECISION), "report", "income-statement"])
 
         assert result.exit_code == 0, result.stderr
-        assert "4.50 EUR" in result.stdout
-        assert "4.91 USD" in result.stdout
+        assert "Dining                                        4.50 EUR" in result.stdout
+        assert "2026-06-30  0.00 USD  4.50 EUR" in result.stdout
+        assert "Net Profit: Unavailable USD" in result.stdout
+        assert "4.91 USD" not in result.stdout
         assert "earlier rows shown in EUR" in result.stderr
 
 
@@ -766,19 +780,19 @@ class TestDisplayPrecision:
 
     def test_text_rounds_half_up_while_json_keeps_full_precision(self, monkeypatch: pytest.MonkeyPatch) -> None:
         self._terminal(monkeypatch)
-        text = runner.invoke(app, ["--file", str(EUR_PRECISION), "report", "income-statement"])
+        text = runner.invoke(app, ["--file", str(EUR_PRECISION), "report", "balance-sheet"])
 
         assert text.exit_code == 0, text.stderr
-        assert "4.91 USD" in text.stdout
+        assert "-4.91 USD" in text.stdout
         assert "4.9050" not in text.stdout
 
         monkeypatch.setattr("cli.context._stdout_is_a_terminal", lambda: False)
         strobed = runner.invoke(
-            app, ["--file", str(EUR_PRECISION), "--json", "report", "income-statement", "--allow-errors"]
+            app, ["--file", str(EUR_PRECISION), "--json", "report", "balance-sheet", "--allow-errors"]
         )
 
         assert strobed.exit_code == 0, strobed.stderr
-        assert envelope(strobed)["data"]["expenses"]["balance_children"] == {"USD": "4.9050"}
+        assert envelope(strobed)["data"]["assets"]["balance_children"] == {"USD": "-4.9050"}
 
     def test_query_output_ignores_report_precision(self, monkeypatch: pytest.MonkeyPatch) -> None:
         self._terminal(monkeypatch)

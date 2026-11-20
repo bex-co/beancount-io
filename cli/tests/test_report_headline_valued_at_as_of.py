@@ -3,8 +3,12 @@
 Every interval row fed the valuation, and the headlines read `null` whenever
 any row lacked a price. Holding EUR from January with its first quote in
 February is ordinary, yet the balance sheet said net worth `null` beside
-assets of 155.00 USD and a March series point of 155.00, and the income
-statement printed "Net Profit: Unavailable USD" under "Income -55.00 USD".
+assets of 155.00 USD and a March series point of 155.00.
+
+Income and expenses are flows, valued on the day they happened (w1/m49): the
+January consulting fee has no price on its day, so it stays 50 EUR in the
+income statement's headline as in its row, and the profit reads `null` in
+both. Only balances take the as-of quote.
 """
 
 from __future__ import annotations
@@ -79,23 +83,29 @@ def test_late_first_quote_keeps_the_headlines(tmp_path: Path) -> None:
 
     sheet = _data(tmp_path, ledger, "balance-sheet")
     assert sheet["net_worth"] == {"USD": "155.00"}
-    assert sheet["net_profit"] == {"USD": "55.00"}
+    # The fee, valued on its own day, has no price: the same profit as the statement's.
+    assert sheet["net_profit"] == {"USD": None}
     assert sheet["net_worth_series"][0] == {"date": "2026-01-31", "balance": {"USD": None}}
     assert sheet["net_worth_series"][-1] == {"date": "2026-03-15", "balance": {"USD": "155.00"}}
-    # The rows still say what they could not value.
+    # The rows still say what they could not value, and the fee its own day.
     assert sheet["valuation"] == "partial"
-    assert sheet["missing_price_dates"] == [{"from": "EUR", "to": "USD", "date": "2026-01-31"}]
+    assert sheet["missing_price_dates"] == [
+        {"from": "EUR", "to": "USD", "date": "2026-01-10"},
+        {"from": "EUR", "to": "USD", "date": "2026-01-31"},
+    ]
 
     statement = _data(tmp_path, ledger, "income-statement")
-    assert statement["net_profit"] == {"USD": "55.00"}
+    assert statement["income"]["balance_children"] == {"EUR": "-50"}
+    assert statement["net_profit"] == {"USD": None}
     assert statement["periods"][0]["net_profit"] == {"USD": None}
+    assert statement["missing_price_dates"] == [{"from": "EUR", "to": "USD", "date": "2026-01-10"}]
 
     overview = _data(tmp_path, ledger, "overview")
     assert overview["totals"]["net_worth"] == {"USD": "155.00"}
 
     text = _bea(tmp_path, "--file", str(ledger), "report", "income-statement", "--allow-errors")
     assert text.returncode == 0, text.stderr
-    assert "Net Profit: 55.00 USD" in text.stdout
+    assert "Net Profit: Unavailable USD" in text.stdout
 
 
 def test_unpriced_at_as_of_still_nulls_the_headlines(tmp_path: Path) -> None:

@@ -2357,7 +2357,13 @@ that produced it.
 Account trees retain Beancount signs: income, liabilities, and equity are
 normally negative. `net_profit` is `-(income + expenses)`, so a gain is positive
 and a loss negative. The income statement includes actual period rows with
-the same signed income and expenses as the account trees. Net profit remains
+the same signed income and expenses as the account trees. Under a currency
+conversion (the default) or `at_value`, each income and expense posting is
+valued at the price on its own date, in the trees and the rows alike, so the
+rows add up to the headline at every interval: a 100.00 EUR trip in January
+at 1.00 USD and another in February at 2.00 USD read 300.00 USD by month,
+week or year, not 400.00 at the February rate. Balances (assets,
+liabilities, equity, net worth) are valued at the as-of date. Net profit remains
 positive for a gain; JSON labels this with `net_profit_signs: "positive_for_gain"`.
 Older versions returned positive revenue in the period rows; consumers should
 now use `-(income + expenses)` consistently. Overview JSON income/expense series
@@ -2378,7 +2384,11 @@ across unlike commodities. `equity_reconciled` states
 whether the derived reconciliation is available.
 
 The two derived lines carry different things. Valuation/translation is what
-valuing moves: a holding's unrealized gain and a currency's translation.
+valuing moves: a holding's unrealized gain and a currency's translation,
+including that of the period's income and expenses, valued on their own
+dates while balances take the as-of rate. With the two trips above, earnings
+read 300.00 USD, the EUR left in the account 1,600.00 USD, and the
+adjustment 100.00 USD.
 Rounding is what Beancount's tolerance accepted when a transaction balanced
 only within it: two `3.333 USD` legs against `-6.67 USD` leave 0.004 USD, and
 `bea check` passes. It is each price-free transaction's remainder at cost, as
@@ -2390,9 +2400,10 @@ derived. On books whose transactions all balance exactly it is zero.
 
 A trial balance (`report trial-balance`, and `bea balance` with no argument)
 nets to zero at every valuation but `units`. Valued at market, a holding's
-unrealized gain and a currency's translation leave the five trees unbalanced,
-so the report derives the same residual the balance sheet does, split the
-same way. Valuation is the `Valuation/translation adjustment:` line after
+unrealized gain and a currency's translation leave the five trees unbalanced
+(Income and Expenses are valued on their own dates, as on the income
+statement), so the report derives the same residual the balance sheet does,
+split the same way. Valuation is the `Valuation/translation adjustment:` line after
 Equity in text (shown when it is not zero), `valuation_adjustment` in JSON,
 and a `valuation_adjustment` row in CSV. Accepted rounding is the
 `Rounding residual:` line after it (shown when it is not zero),
@@ -2405,7 +2416,11 @@ it may span commodities. As on the balance sheet, the conversion booking that
 fold in too: each account opens at its own balance, so foreign cash or shares
 bought with `@` before the period leave their translation here, not in
 `Equity:Opening-Balances`. A period therefore splits equity the same way
-with and without `--time`. One exception: when earlier earnings hold a
+with and without `--time`, with one difference in what the earnings line
+holds: under `--time`, income and expenses from before the period are
+`Equity:Earnings:Previous`, an equity balance valued at the as-of date like
+every balance, so their translation sits there rather than in the valuation
+line; total equity is the same. One exception: when earlier earnings hold a
 commodity no account held at the period start, such as foreign cash spent on
 a trip, and the report has no price for it at the as-of date,
 `Opening-Balances` keeps the offsetting amount, so the period needs no price
@@ -2437,6 +2452,10 @@ parsing that file. No report section can hold them, so stderr names them;
 Reports convert what has a price and keep the rest in units. Each interval
 row is valued at its own date, so a later quote cannot value an earlier
 interval: earlier rows stay in the source commodity while later rows convert.
+Income and expenses are valued at each posting's own date, so one dated
+before its commodity's first price stays in that commodity in its row and in
+the headline alike, and `missing_price_dates` names the posting's date: add
+a price on or before it.
 A missing price never fails a terminal report — stderr carries one summary
 line per commodity, for example `VACHR has no USD price at any date; shown in
 units` or `EUR → USD has no price before 2026-08-31; earlier rows shown in
@@ -2455,7 +2474,8 @@ amounts in their source currencies, and sets combined net profit/net worth to
 as-of date, still holds a commodity it could not value. A gap only in an
 earlier row (a holding bought before its first quote) leaves the headline
 valued; `valuation: "partial"` and `missing_price_dates` still describe the
-rows. The same rule applies row by row: an income
+rows. Net profit is the sum of its postings' values, so a flow that could not
+be valued on its own date leaves it `null` in the headline as in its row. The same rule applies row by row: an income
 statement period and a net-worth series point whose balance still holds a
 commodity the report could not value read `null` too, so no interval series
 contradicts the headline above it with per-unit amounts. Rows that did convert

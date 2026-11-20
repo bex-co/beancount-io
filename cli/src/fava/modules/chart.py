@@ -8,10 +8,10 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ..beans.abc import Transaction
+from ..beans.abc import Open, Transaction
 from ..beans.account import account_tester
 from ..beans.helpers import slice_entry_dates
-from ..core.conversion import cost_or_value
+from ..core.conversion import AT_COST, UNITS, cost_or_value
 from ..core.filters import account_predicate
 from ..core.inventory import CounterInventory
 from ..core.tree import Tree, _converted
@@ -19,9 +19,10 @@ from ..util import listify
 
 
 if TYPE_CHECKING:  # pragma: no cover
-    from collections.abc import Iterable, Mapping, Sequence
+    from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 
     from ..beans.abc import Directive
+    from ..beans.prices import FavaPriceMap
 
     from ..core.conversion import Conversion
     from ..core.inventory import SimpleCounterInventory
@@ -46,6 +47,52 @@ def _under_roots(account: str, roots: str | tuple[str, ...]) -> bool:
     share a prefix were classified as each other's accounts (w5/921).
     """
     return account.partition(":")[0] in ((roots,) if isinstance(roots, str) else roots)
+
+
+def _account_days(
+    entries: Iterable[Directive],
+    include: Callable[[str], bool],
+) -> dict[tuple[str, date], CounterInventory]:
+    """The included accounts' postings in `entries`, netted per account and day."""
+    days: dict[tuple[str, date], CounterInventory] = defaultdict(CounterInventory)
+    for entry in entries:
+        for posting in getattr(entry, "postings", []):
+            if include(posting.account):
+                days[posting.account, entry.date].add_position(posting)
+    return days
+
+
+def _flow_inventories(
+    entries: Iterable[Directive],
+    include: Callable[[str], bool],
+    conversion: str | Conversion,
+    prices: FavaPriceMap,
+) -> tuple[dict[str, CounterInventory], str | Conversion]:
+    """Each included account's postings in `entries`, and the conversion that reads them.
+
+    Beancount.io change: income and expenses are flows, worth what they were
+    on the day they happened. A tree valued the whole period at the as-of
+    date while each interval row used its own end, so once a rate moved the
+    rows no longer added up to the headline above them, and the same days
+    totalled differently by month and by year (w1/m49). Under a conversion
+    that reads prices, an account's postings of one day are valued at that
+    day's price, as `convert(position, 'USD', date)` does; what the
+    conversion cannot value that day stays in its own commodity, and nothing
+    later revalues it. Those values are read back as `units`. `units` and
+    `at_cost` read no price, so they keep the positions and the conversion.
+    """
+    inventories: dict[str, CounterInventory] = defaultdict(CounterInventory)
+    if conversion in ("units", "at_cost", UNITS, AT_COST):
+        for entry in entries:
+            for posting in getattr(entry, "postings", []):
+                if include(posting.account):
+                    inventories[posting.account].add_position(posting)
+        return inventories, conversion
+    for (account, day), inventory in _account_days(entries, include).items():
+        valued = inventories[account]
+        for currency, number in cost_or_value(inventory, conversion, prices, day).items():
+            valued.add((currency, None), number)
+    return inventories, UNITS
 
 
 def _flow_ranges(
@@ -174,14 +221,30 @@ class ChartModule:
         begin: date | None = None,
         end: date | None = None,
     ) -> SerialisedTreeNode:
-        """Render an account tree."""
-        if begin is not None and end is not None:
-            tree = Tree(slice_entry_dates(filtered.entries, begin, end))
+        """Render an account tree.
+
+        Beancount.io change: the income and expenses roots value each posting
+        on its own date (:func:`_flow_inventories`), as their interval rows do.
+        """
+        entries = (
+            slice_entry_dates(filtered.entries, begin, end)
+            if begin is not None and end is not None
+            else filtered.entries
+        )
+        prices = filtered.ledger.prices
+        options = filtered.ledger.options
+        if account_name in (options["name_income"], options["name_expenses"]):
+            flows, conversion = _flow_inventories(
+                entries, lambda account: _under_roots(account, account_name), conversion, prices
+            )
+            tree = Tree([entry for entry in entries if isinstance(entry, Open)])
+            for account, balance in sorted(flows.items()):
+                tree.insert(account, balance)
         else:
-            tree = Tree(filtered.entries)
+            tree = Tree(entries)
         node = tree.get(account_name).serialise(
             conversion,
-            filtered.ledger.prices,
+            prices,
             end - ONE_DAY if end is not None else filtered.end_date,
         )
         return _omit_empty_clamp_phantoms(node, filtered)
@@ -222,28 +285,26 @@ class ChartModule:
         intervals = _flow_ranges(filtered, interval)
 
         for date_range in intervals:
-            inventory = CounterInventory()
-            entries = slice_entry_dates(filtered.entries, date_range.begin, date_range.end)
-            account_inventories: dict[str, CounterInventory] = defaultdict(
-                CounterInventory,
+            # Each posting valued on its own date, as the account trees are.
+            account_inventories, read_as = _flow_inventories(
+                slice_entry_dates(filtered.entries, date_range.begin, date_range.end),
+                lambda account: _under_roots(account, accounts) and in_scope(account),
+                conversion,
+                prices,
             )
-            for entry in entries:
-                for posting in getattr(entry, "postings", []):
-                    if _under_roots(posting.account, accounts) and in_scope(posting.account):
-                        account_inventories[posting.account].add_position(
-                            posting,
-                        )
-                        inventory.add_position(posting)
+            inventory = CounterInventory()
+            for acct_value in account_inventories.values():
+                inventory.add_inventory(acct_value)
             balance = cost_or_value(
                 inventory,
-                conversion,
+                read_as,
                 prices,
                 date_range.end_inclusive,
             )
             account_balances = {
                 account: cost_or_value(
                     acct_value,
-                    conversion,
+                    read_as,
                     prices,
                     date_range.end_inclusive,
                 )
@@ -254,6 +315,36 @@ class ChartModule:
                 balance,
                 account_balances,
             )
+
+    @listify
+    def flow_days(
+        self,
+        filtered: FilteredLedger,
+        conversion: str | Conversion,
+        accounts: Collection[str] | None = None,
+    ) -> Iterable[DateAndBalance]:
+        """Each day's income or expenses of one account, valued on that day.
+
+        A flow is valued on its own date (:func:`_flow_inventories`), so a
+        price missing for it is missing on that date, not on the report's
+        as-of date or a row's end: a report names these dates as the ones that
+        need a price (w1/m49). `accounts` limits the days to the accounts a
+        report shows; by default they are the in-scope income and expenses.
+        """
+        if accounts is None:
+            options = filtered.ledger.options
+            flows = (options["name_income"], options["name_expenses"])
+            in_scope = account_predicate(filtered.account, filtered.ledger.root_accounts)
+
+            def include(account: str) -> bool:
+                return _under_roots(account, flows) and in_scope(account)
+
+        else:
+            include = accounts.__contains__
+        prices = filtered.ledger.prices
+        days = _account_days(filtered.entries, include)
+        for (_, day), inventory in sorted(days.items(), key=lambda item: item[0][1]):
+            yield DateAndBalance(day, cost_or_value(inventory, conversion, prices, day))
 
     @listify
     def account_balance(

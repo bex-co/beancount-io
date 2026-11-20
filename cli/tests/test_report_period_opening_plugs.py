@@ -63,10 +63,11 @@ SHARES = (
 )
 AT_COST = SHARES.replace("2 AAPL @ 50.00 USD", "2 AAPL {50.00 USD}")
 # Euros received as a gift before the period: the previous earnings hold a
-# currency an asset holds too, so their plug leaves as well.
+# currency an asset holds too, so their plug leaves as well. The gift comes on
+# the day EUR is first quoted, so it has a value on its own date (w1/m49).
 GIFT = CASH.replace(
     '2026-01-10 * "Exchange"',
-    '2026-01-01 open Income:Gift EUR\n2026-01-05 * "Gift"\n  Assets:Euro  50.00 EUR\n  Income:Gift\n'
+    '2026-01-01 open Income:Gift EUR\n2026-01-10 * "Gift"\n  Assets:Euro  50.00 EUR\n  Income:Gift\n'
     '2026-01-10 * "Exchange"',
 )
 PLAIN = """\
@@ -260,8 +261,15 @@ def test_earlier_earnings_in_a_held_currency_split_alike(tmp_path: Path) -> None
 
     # Only current versus previous earnings move with the period.
     assert _opening(ranged) == _opening(plain)
-    assert ranged["valuation_adjustment"] == plain["valuation_adjustment"]
     assert ranged["equity_total"] == plain["equity_total"]
+    # Unfiltered, the gift is this period's income, worth 55.00 USD on its day,
+    # and the euros' rise to 1.20 is translation. Under `--time` it is an
+    # earlier period's earnings, an equity balance valued at the as-of date
+    # like every balance: Earnings:Previous carries the 5.00 (w1/m49).
+    assert plain["current_earnings"] == {"USD": "-55.0000"}
+    assert plain["valuation_adjustment"] == {"USD": "-15.0000"}
+    assert _node(ranged, "Equity:Earnings:Previous") == {"USD": Decimal("-60")}
+    assert ranged["valuation_adjustment"] == {"USD": "-10.0000"}
 
 
 @pytest.mark.parametrize("text", [AT_COST, PLAIN], ids=["at-cost", "usd-only"])
