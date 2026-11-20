@@ -43,9 +43,9 @@ def _row(item: Any) -> dict[str, Any]:
     Listings opt back in for the rows a plugin synthesized, which keeps a
     plugin-free ledger's answer byte-identical.
 
-    A transaction's units opt in to `inferred` the same way: only a lot whose
-    number the ledger line leaves to booking carries it, so bulk input can
-    write that line number-less again (w5/1018).
+    A transaction's units opt in to `inferred` the same way: only a posting
+    whose number the ledger line leaves to booking carries it, so bulk input
+    can write that line number-less again (w5/1018, w1/327).
     """
     data: dict[str, Any] = item.model_dump(mode="json")
     if item.generated:

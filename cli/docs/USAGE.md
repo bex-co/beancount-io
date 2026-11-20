@@ -1261,19 +1261,27 @@ postings. Under `--json`, `postings` always stays the complete entry
 adds a `matching_postings` array holding exactly the postings the filter
 selected, in entry order; without `--account` the key is absent.
 `bea add transactions` ignores it on input, so a filtered listing can be fed
-straight back in. A lot posting whose ledger line leaves its quantity to
-interpolation (`Assets:Broker HOOL {5 USD}` beside an explicit cash leg)
-lists the booked quantity with `"inferred": true` in its `units`; the key is
-absent everywhere else. It matters because booking dates a stated quantity's
-lot with the transaction date but leaves an interpolated one undated, so two
-such purchases form one lot a later partial sale reduces. `bea add
-transactions` writes a posting marked `inferred` number-less again, keeping
-that lot, and refuses the row (`Row N, postings.<i>.units`) when the stated
-number is not what booking then interpolates; drop the key to write the
-number as stated instead. `--details`
+straight back in. A posting whose ledger line leaves its number to booking
+(an omitted cash leg, or `Assets:Broker HOOL {5 USD}` beside an explicit cash
+leg) lists the booked amount with `"inferred": true` in its `units`, when it
+is the transaction's only such posting; an undated lot's quantity is always
+marked. The key is absent from stated amounts, including a quantity whose
+cost or price booking filled in (`3 HOOL {USD}`), and from legs where one
+line booked several postings or several lines were left open, since bulk
+input lets only one posting per row omit its number. `bea add transactions`
+writes a posting marked `inferred` number-less again, so booking infers the
+same amount: a `{{100.00 USD}}` purchase of 3 units does not come back as a
+`-99.99999999999999999999999999 USD` literal that every report then prints
+to 26 decimals, and an interpolated lot quantity stays undated (booking dates
+a stated quantity's lot with the transaction date, so two such purchases
+would no longer form the one lot a later partial sale reduces). It refuses
+the row (`Row N, postings.<i>.units`) when the stated number is not what
+booking then interpolates, as when another posting was edited; drop the key
+to write the number as stated instead. `--details`
 labels its output as transactions rendered in Beancount syntax and shows every
-posting and its metadata, including inferred amounts. Amounts on opposite sides
-are not combined into a zero total.
+posting and its metadata, including inferred amounts; only an undated lot's
+inferred quantity is left open, so the text reloads as the same lot. Amounts
+on opposite sides are not combined into a zero total.
 
 
 ## Adding directives

@@ -165,10 +165,16 @@ def test_null_numbers_in_the_listing_still_replay(tmp_path: Path) -> None:
     _assert_same_books(tmp_path, book, rows)
 
 
-def test_a_shared_explicit_cost_date_lists_and_replays_unmarked(tmp_path: Path) -> None:
+def test_a_shared_explicit_cost_date_lists_and_replays(tmp_path: Path) -> None:
     book, _ = _source(tmp_path, dated=True)
     rows = _listed(tmp_path, book)
-    assert all("inferred" not in p["units"] for row in rows for p in row["postings"])
+    # Booking still infers the purchases' quantities, so they are marked like
+    # any other interpolated leg (w1/327); the stated date keeps the lot.
+    assert [["inferred" in p["units"] for p in row["postings"]] for row in rows] == [
+        [False, True],
+        [False, True],
+        [False, False, False],
+    ]
     assert {row["postings"][0 if row["narration"] == "Trade sale" else 1]["cost"]["date"] for row in rows} == {
         "2023-12-31"
     }

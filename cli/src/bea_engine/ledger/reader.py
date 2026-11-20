@@ -532,14 +532,41 @@ def _to_amount(bc_amount: Any) -> Amount:
     return Amount(number=Decimal(str(bc_amount.number)), currency=bc_amount.currency)
 
 
-def _number_left_open(posting: Any) -> bool:
-    """Whether the ledger line a lot posting was read from leaves its units number to booking (w5/1018).
+def _inferred_units(entry: Any) -> list[bool]:
+    """Per posting, whether a listing marks its units `inferred` (w5/1018, w1/327).
 
-    Booking interpolates such a number without dating the lot, so a listing
-    has to say so for a replay to keep that lot: the booked posting itself
-    carries no trace of it. Asked only of a lot without a date, since booking
-    dates every stated augmentation; a reduction of an undated lot is asked
-    too, and its line states the number.
+    An undated lot whose line leaves its quantity to booking is always
+    marked: a stated number would date the lot on replay. Any other posting
+    booking interpolated (`__automatic__`) is marked when its own line leaves
+    the units number open and it is the transaction's only such posting. A
+    replay then writes it number-less, so booking infers the same amount
+    instead of the file gaining its quotient as a literal (`{{100.00 USD}}`
+    over 3 units infers 28 digits). Bulk input lets one posting per row omit
+    its number, and a line booking split across currencies books more than
+    one posting, so those keep their stated numbers. `__automatic__` is also
+    set when booking fills in a cost or price; that line states its units,
+    so it is not marked.
+    """
+    lots = [
+        p.cost is not None and p.cost.date is None and p.units is not None and _number_left_open(p)
+        for p in entry.postings
+    ]
+    interpolated = [
+        not lot and p.units is not None and bool((p.meta or {}).get("__automatic__")) and _number_left_open(p)
+        for p, lot in zip(entry.postings, lots, strict=True)
+    ]
+    if sum(lots) + sum(interpolated) == 1:
+        return [lot or other for lot, other in zip(lots, interpolated, strict=True)]
+    return lots
+
+
+def _number_left_open(posting: Any) -> bool:
+    """Whether the ledger line a posting was read from leaves its units number to booking (w5/1018).
+
+    The booked posting itself carries no trace of it: booking leaves a lot it
+    interpolates the quantity of undated, and marks a filled-in cost or price
+    `__automatic__` as it does an omitted number. `_inferred_units` says
+    which postings are asked.
     """
     meta = posting.meta or {}
     filename = meta.get("filename")
@@ -569,7 +596,11 @@ def _posting_text(lines: Sequence[str], index: int) -> str:
 
 @cache
 def _line_leaves_number_open(line: str, account: str) -> bool:
-    """Whether `line` parses as a posting to `account` whose units have no number."""
+    """Whether `line` parses as a posting to `account` whose units have no number.
+
+    A bare `Assets:Cash` has no units at all, which the parser leaves MISSING
+    itself; `Assets:Cash  USD` leaves only the number MISSING (w1/327).
+    """
     from beancount.core.amount import Amount as BcAmount
     from beancount.core.number import MISSING
     from beancount.parser import parser
@@ -582,10 +613,8 @@ def _line_leaves_number_open(line: str, account: str) -> bool:
     (parsed,) = entries[0].postings
     # The parser leaves an absent number MISSING, which the typed fields hide.
     units: Any = parsed.units
-    return (
-        unicodedata.normalize("NFC", parsed.account) == account
-        and isinstance(units, BcAmount)
-        and getattr(units, "number", None) is MISSING
+    return unicodedata.normalize("NFC", parsed.account) == account and (
+        units is MISSING or (isinstance(units, BcAmount) and getattr(units, "number", None) is MISSING)
     )
 
 
@@ -610,7 +639,7 @@ def _to_transaction(entry: Any, shared: frozenset[tuple[str, int]] = frozenset()
     # A loaded transaction may legitimately have no postings (Beancount accepts
     # one), so reads use the header model; only input requires a posting.
     postings = []
-    for p in entry.postings:
+    for p, inferred in zip(entry.postings, _inferred_units(entry), strict=True):
         cost = None
         if p.cost is not None:
             cost = Cost(
@@ -627,7 +656,6 @@ def _to_transaction(entry: Any, shared: frozenset[tuple[str, int]] = frozenset()
             )
         units = None
         if p.units is not None:
-            inferred = cost is not None and cost.date is None and _number_left_open(p)
             units = Units(number=Decimal(str(p.units.number)), currency=p.units.currency, inferred=inferred)
         postings.append(
             Posting(

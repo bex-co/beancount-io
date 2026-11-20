@@ -151,14 +151,17 @@ class Units(BaseModel):
     that open. Prices and every other amount keep a required number.
 
     `inferred` says the ledger line leaves this number to interpolation even
-    though a listing reports the booked figure. It matters for a lot: native
-    booking gives a stated quantity the transaction's date as its cost date,
-    but an interpolated one keeps an unknown date, so two such purchases
-    share one lot a partial sale can reduce. Replayed with explicit numbers
-    they became two dated lots and the sale ambiguous (w5/1018). Bulk input
-    with `inferred` writes the posting number-less again and refuses a row
-    whose stated number differs from what booking then interpolates. Excluded
-    from dumps; only a listing opts back in, for the postings it marks.
+    though a listing reports the booked figure. For a lot, native booking
+    gives a stated quantity the transaction's date as its cost date, but an
+    interpolated one keeps an unknown date, so two such purchases share one
+    lot a partial sale can reduce. Replayed with explicit numbers they became
+    two dated lots and the sale ambiguous (w5/1018). For any other omitted
+    leg, the booked figure is a quotient with every digit of the arithmetic
+    (`{{100.00 USD}}` over 3 units), which written out became the ledger's
+    precision in every report (w1/327). Bulk input with `inferred` writes the
+    posting number-less again and refuses a row whose stated number differs
+    from what booking then interpolates. Excluded from dumps; only a listing
+    opts back in, for the postings it marks.
     """
 
     model_config = ConfigDict(extra="forbid")

@@ -561,6 +561,17 @@ def format_transaction(directive: TransactionHeader, *, loaded: bool = False) ->
         if p.price_total is not None:
             price = None
             meta[TOTAL_PRICE_META] = BcAmount(p.price_total.number, p.price_total.currency)
+        # A null number interpolates at booking, as the flag spelling does;
+        # the printer reads MISSING, not None (w5/801). So does one a listing
+        # marks `inferred` when it is written, so booking infers it again
+        # rather than the file gaining its quotient as a literal (w5/1018,
+        # w1/327). Shown as loaded (`--details`), an inferred amount keeps its
+        # booked number, except an undated lot's quantity: a stated number
+        # would date the lot natively (w5/1088).
+        left_open = p.units is not None and (
+            p.units.number is None
+            or (p.units.inferred and (not loaded or (p.cost is not None and p.cost.date is None)))
+        )
         cost = None
         if p.cost is not None:
             # A total with no per-unit number is a total cost, `{{total}}`, as
@@ -572,17 +583,7 @@ def format_transaction(directive: TransactionHeader, *, loaded: bool = False) ->
         postings.append(
             Posting(
                 account=p.account,
-                # A null number interpolates at booking, as the flag spelling
-                # does; the printer reads MISSING, not None (w5/801). So does
-                # one a listing marks `inferred`, shown as loaded or not: a
-                # stated number would date the lot natively (w5/1018, w5/1088).
-                units=BcAmount(
-                    cast(
-                        Decimal,
-                        MISSING if p.units.number is None or p.units.inferred else p.units.number,
-                    ),
-                    p.units.currency,
-                )
+                units=BcAmount(cast(Decimal, MISSING if left_open else p.units.number), p.units.currency)
                 if p.units
                 else None,
                 cost=cost,

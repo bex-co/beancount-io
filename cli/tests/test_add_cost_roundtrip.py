@@ -129,7 +129,8 @@ def test_native_option_expiry_with_empty_cost_returns_json_after_one_write(tmp_p
     assert len(transactions) == 2
     expiry = next(entry for entry in transactions if entry["narration"] == "Expire option")
     assert expiry["postings"][0]["cost"]["number"] == "150"
-    assert expiry["postings"][1]["units"] == {"number": "-150", "currency": "USD"}
+    # The premium leg was left to booking, and the listing says so (w1/327).
+    assert expiry["postings"][1]["units"] == {"number": "-150", "currency": "USD", "inferred": True}
     report = _bea(tmp_path, "--json", "--file", str(ledger), "report", "income-statement", "--time", "2026-06")
     assert report.returncode == 0, report.stderr
     assert json.loads(report.stdout)["data"]["net_profit"] == {"USD": "150"}
