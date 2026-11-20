@@ -141,8 +141,6 @@ newest first.
 
 ### Deferred
 
-- 2026-11-19 dashboard `sidebar.test.tsx` "should export useSidebar hook" (`dashboard/src/common/components/ui/__tests__/sidebar.test.tsx:69`) — export-existence shape like this run's F1–F3 (asserts only `toBeDefined` + `typeof`); out of budget, take first next run.
-
 ### Skipped
 
 - 2026-11-19 backend-v2 `metrics-definitions.test.ts` `toBeInstanceOf(Histogram/Counter/Gauge)` — pins each metric's type; swapping a type turns its own test red, so the proof rule keeps them.
