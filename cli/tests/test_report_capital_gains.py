@@ -156,6 +156,10 @@ def test_loss_is_a_negative_gain(tmp_path: Path) -> None:
     assert row["basis"] == {"number": "1500", "currency": "USD"}
     assert row["gain"] == {"number": "-100", "currency": "USD"}
     assert data["totals"]["one_year_or_less"] == {"USD": "-100"}
+    # The booked `Income:Gains 100 USD` is a loss in Beancount signs; the
+    # report's -100 is not, and its JSON says which convention it uses (w1/332).
+    assert data["gain_signs"] == "positive_for_gain"
+    assert "balance_signs" not in data
 
 
 def test_date_bounds_are_inclusive(tmp_path: Path) -> None:

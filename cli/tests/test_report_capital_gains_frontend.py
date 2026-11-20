@@ -55,6 +55,16 @@ def test_capital_gains_text_table(tmp_path: Path) -> None:
     assert "Holding unknown" not in proc.stdout
 
 
+def test_capital_gains_heading_states_its_gain_sign(tmp_path: Path) -> None:
+    """No figure is an account balance, and a gain reads positive: the heading says so (w1/332)."""
+    ledger = _write(tmp_path, LEDGER)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "capital-gains")
+    assert proc.returncode == 0, proc.stderr
+    heading = proc.stdout.splitlines()[2]
+    assert heading == "Gain is proceeds minus basis: positive for a gain, negative for a loss."
+    assert "Beancount signs" not in proc.stdout
+
+
 def test_capital_gains_range_bounds_rows_and_totals(tmp_path: Path) -> None:
     ledger = _write(tmp_path, LEDGER)
     proc = _bea(

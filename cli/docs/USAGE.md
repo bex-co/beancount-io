@@ -2146,7 +2146,12 @@ managed quote reads `1,700 USD (stale)`; under `--json` each group names the
 source behind its quotes in `price_source` / `conversion_source`.
 `capital-gains` lists one row per closed lot — acquired and sold dates,
 quantity, proceeds, basis, and gain — with `--from-date / --to-date`
-bounding the sales (both ends inclusive). Rows bucket into held one year or
+bounding the sales (both ends inclusive). Gain is proceeds minus basis,
+positive for a gain and negative for a loss: the opposite of the Beancount
+sign on the booked gains posting (`Income:Gains -300.00 USD` books a 300 USD
+gain). No figure in the report is an account balance, so the text heading
+states this convention instead of the Beancount-signs line, and JSON carries
+`gain_signs: "positive_for_gain"` and no `balance_signs`. Rows bucket into held one year or
 less vs more than one year by calendar date, with no tax rules attached: a
 lot is more than one year only when it sold after its acquisition date's
 anniversary (29 February's is 28 February), so a lot held exactly one year
@@ -2238,7 +2243,9 @@ too:
   JSON and CSV keep the calculated value.
 - A budgeted account's actual is its whole subtree (`Expenses:Food` includes
   `Expenses:Food:Dining`), in the currencies it posted, never converted. Income
-  reads as earned, so both sides are positive.
+  reads as earned, so both sides are positive. JSON labels this with
+  `actual_signs: "positive_as_spent_or_earned"` and carries no `balance_signs`,
+  since no row is an account balance.
 - `variance` is actual minus budget: a positive expense variance is
   overspending, a positive income variance is earning ahead of plan.
 - A currency with no budget keeps `budget` and `variance` null (`no budget` in

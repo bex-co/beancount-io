@@ -185,6 +185,14 @@ def test_income_reads_as_earned_and_a_positive_variance_means_ahead(tmp_path: Pa
     assert (salary["budget"], salary["actual"], salary["variance"]) == ("3000.00", "3100", "100.00")
 
 
+def test_json_states_the_actual_sign_and_claims_no_beancount_balance_sign(tmp_path: Path) -> None:
+    """Earned income reads positive, not as a Beancount credit; JSON says so (w1/332)."""
+    data = _report(["-t", "2026-01"], tmp_path)
+    assert data["actual_signs"] == "positive_as_spent_or_earned"
+    assert data["variance_signs"] == "actual_minus_budget"
+    assert "balance_signs" not in data
+
+
 def test_a_currency_with_no_budget_keeps_budget_and_variance_null(tmp_path: Path) -> None:
     rows = _rows(_report(["-t", "2026-01"], tmp_path))
     euro = rows[("Expenses:Food", "EUR")]

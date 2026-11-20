@@ -461,6 +461,9 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
                 )
         periods.append({"begin": span.begin, "end": span.end_inclusive, "rows": rows})
     metadata = _metadata(filtered, "units", ledger_errors, interval)
+    # Actuals read as spent or earned, both positive, and no row is an
+    # account balance: the shared Beancount-signs key would misstate them (w1/332).
+    del metadata["balance_signs"]
     # A custom budget can produce a row without an open or any postings.
     # This report's emptiness follows its rows, rather than balance trees.
     empty = bool(filtered.account) and not any(period["rows"] for period in periods)
@@ -470,6 +473,7 @@ def _budget(filtered: Any, interval: str, ledger_errors: list[str]) -> dict[str,
     )
     return metadata | {
         "display_precision": precision,
+        "actual_signs": "positive_as_spent_or_earned",
         "variance_signs": "actual_minus_budget",
         "has_budgets": bool(budgeted),
         "budget_errors": [_budget_error(error) for error in module.errors],
@@ -1523,8 +1527,13 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
         "missing_price_dates": [],
         "missing_price_summary": [],
     }
+    # Gain is proceeds minus basis, positive for a gain: the opposite of the
+    # booked gains posting's Beancount sign, and no figure here is an account
+    # balance, so the shared Beancount-signs key would misstate it (w1/332).
+    del metadata["balance_signs"]
     return metadata | {
         "display_precision": _display_precision(filtered),
+        "gain_signs": "positive_for_gain",
         "rows": rows,
         "totals": totals,
         "unpriced_reductions": unpriced,

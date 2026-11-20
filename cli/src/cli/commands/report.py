@@ -269,7 +269,8 @@ def _heading(
         # Only reports that print an explicit profit figure may promise its sign;
         # the balance sheet's earnings line carries the opposite (credit) sign and
         # explains itself where it is printed. Cash flow brings its own convention:
-        # its rows are cash impact, only its bottom lines are balances.
+        # its rows are cash impact, only its bottom lines are balances. Budget and
+        # capital gains print no balance at all, so they state theirs instead.
         convention = convention or "Account balances use Beancount signs (credits negative)"
         typer.echo(f"{convention}; profit is positive for a gain." if profit_line else f"{convention}.")
     for source in metadata.get("price_sources", []):
@@ -805,7 +806,9 @@ def capital_gains(
         _emit_csv("capital-gains", file, data, csv_target)
         return
     conversion = str(data["conversion"])
-    _heading("Capital Gains", data)
+    # No figure here is an account balance, and a gain reads positive, the
+    # opposite of its booked Income:Gains posting (w1/332).
+    _heading("Capital Gains", data, convention="Gain is proceeds minus basis: positive for a gain, negative for a loss")
     precision = _precision(data)
     rows = data["rows"]
     unpriced = data.get("unpriced_reductions") or []
