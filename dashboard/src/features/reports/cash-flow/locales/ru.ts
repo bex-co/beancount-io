@@ -88,6 +88,17 @@ const ruCashFlow: Record<string, TranslationEntry> = {
       "Денежные средства и эквиваленты на начало и конец периода для {ledgerName} с чистым изменением за период",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "Ни у одного счёта в {assets} нет названия вроде {names}, и ни один не объявляет {role} в своей директиве открытия. Добавьте {role} под директивой открытия каждого банковского счёта или кошелька.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "Ни один счёт не считается денежными средствами",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message:
       "Данные о движении денежных средств не найдены для этой главной книги.",

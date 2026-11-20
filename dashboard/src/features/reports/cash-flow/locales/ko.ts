@@ -83,6 +83,17 @@ const koCashFlow: Record<string, TranslationEntry> = {
     message: "{ledgerName}의 기초·기말 현금 및 현금성자산과 기간 순변동",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "{assets} 아래에 {names} 같은 이름의 계정이 없고, 개설 지시문에서 {role}을(를) 선언한 계정도 없습니다. 각 은행 계좌나 지갑 계정의 개설 지시문 아래에 {role}을(를) 추가하세요.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "현금으로 간주되는 계정이 없습니다",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "이 장부의 현금흐름 데이터를 찾을 수 없습니다.",
     description: "Empty state message for cash flow statement",

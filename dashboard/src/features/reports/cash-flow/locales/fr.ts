@@ -88,6 +88,17 @@ const frCashFlow: Record<string, TranslationEntry> = {
       "Trésorerie et équivalents en début et en fin de période pour {ledgerName}, avec la variation nette sur la période",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "Aucun compte de {assets} ne porte un nom comme {names}, et aucun ne déclare {role} dans sa directive d'ouverture. Ajoutez {role} sous la directive d'ouverture de chaque compte bancaire ou portefeuille.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "Aucun compte n'est traité comme trésorerie",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "Aucune donnée de flux de trésorerie trouvée pour ce grand livre.",
     description: "Empty state message for cash flow statement",

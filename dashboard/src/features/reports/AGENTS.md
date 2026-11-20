@@ -89,7 +89,11 @@ balances, and `cashActivityFilter` narrows the reader's filter to
 `(filter) any(account:"^A$", …)` for the five interval reads only. The closing
 balances keep the reader's filter. Until membership is known there is no
 activity read, never an unfiltered one; an empty cash set matches no
-transaction (w4/m56). Eligibility is per transaction: one that mixes cash and
+transaction (w4/m56). A ledger that has accounts but an empty cash set gets
+its own empty state, not `page.cashFlow.noData`: it says no account counts as
+cash, cites `CASH_ACCOUNT_NAMES` (`config.ts`, kept in step with the patterns)
+under the ledger's own assets root, and gives the `cash-flow-role: "cash"`
+remedy, as `bea report cash-flow` does (w1/321). Eligibility is per transaction: one that mixes cash and
 noncash legs (a paycheck with a 401k deferral, a purchase split between cash
 and a card) still reports its noncash legs at full value, which only
 per-posting data could separate.

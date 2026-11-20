@@ -85,6 +85,17 @@ const jaCashFlow: Record<string, TranslationEntry> = {
     message: "{ledgerName}の期首・期末の現金および現金同等物と期間中の純増減",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "{assets} に {names} のような名前の勘定科目がなく、開設ディレクティブで {role} を宣言している勘定科目もありません。各銀行口座やウォレットの開設ディレクティブの下に {role} を追加してください。",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "現金として扱われる勘定科目がありません",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "この元帳のキャッシュフローデータが見つかりません。",
     description: "Empty state message for cash flow statement",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveCashFlowRole, CASH_FLOW_ROLE_META_KEY } from "../role-resolver";
+import { CASH_ACCOUNT_NAMES, CASH_EQUIVALENT_PATTERNS } from "../../config";
 
 function meta(value: unknown): Record<string, unknown> {
   return { [CASH_FLOW_ROLE_META_KEY]: value };
@@ -151,5 +152,19 @@ describe("resolveCashFlowRole — heuristic mapping", () => {
     expect(resolveCashFlowRole("Equity:OpeningBalances").role).toBe(
       "financing",
     );
+  });
+});
+
+describe("CASH_ACCOUNT_NAMES — the names the no-cash empty state cites", () => {
+  it("are the names CASH_EQUIVALENT_PATTERNS count as cash, one per pattern", () => {
+    expect(CASH_ACCOUNT_NAMES).toHaveLength(CASH_EQUIVALENT_PATTERNS.length);
+    CASH_ACCOUNT_NAMES.forEach((name, index) => {
+      expect(CASH_EQUIVALENT_PATTERNS[index]!.test(`Assets:US:${name}`)).toBe(
+        true,
+      );
+      expect(resolveCashFlowRole(`Assets:US:${name}`, undefined).role).toBe(
+        "cash",
+      );
+    });
   });
 });

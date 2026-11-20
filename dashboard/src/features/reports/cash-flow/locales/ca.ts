@@ -88,6 +88,17 @@ const caCashFlow: Record<string, TranslationEntry> = {
       "Efectiu i equivalents a l'inici i al final del període de {ledgerName} amb la variació neta del període",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "Cap compte de {assets} no té un nom com {names}, i cap no declara {role} a la seva directiva d'obertura. Afegiu {role} sota la directiva d'obertura de cada compte bancari o moneder.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "Cap compte no compta com a efectiu",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "No s'han trobat dades de flux de caixa per a aquest llibre.",
     description: "Empty state message for cash flow statement",

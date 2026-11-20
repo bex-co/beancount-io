@@ -86,6 +86,17 @@ const skCashFlow: Record<string, TranslationEntry> = {
       "Peňažné prostriedky a ich ekvivalenty na začiatku a na konci obdobia pre {ledgerName} s čistou zmenou za obdobie",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "Žiadny účet v {assets} nemá názov ako {names} a žiadny nedeklaruje {role} vo svojej direktíve otvorenia. Pridajte {role} pod direktívu otvorenia každého bankového účtu alebo peňaženky.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "Žiadny účet sa nepočíta ako peňažné prostriedky",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message:
       "Pre tento účtovný denník sa nenašli žiadne údaje o peňažných tokoch.",

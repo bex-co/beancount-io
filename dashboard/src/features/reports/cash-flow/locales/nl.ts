@@ -88,6 +88,17 @@ const nlCashFlow: Record<string, TranslationEntry> = {
       "Kasmiddelen en equivalenten aan het begin en einde van de periode voor {ledgerName} met de netto verandering over de periode",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "Geen rekening onder {assets} heeft een naam als {names}, en geen enkele vermeldt {role} in haar openingsdirectief. Voeg {role} toe onder het openingsdirectief van elke bank- of walletrekening.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "Geen rekening telt als kasmiddelen",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "Geen kasstroomgegevens gevonden voor dit grootboek.",
     description: "Empty state message for cash flow statement",

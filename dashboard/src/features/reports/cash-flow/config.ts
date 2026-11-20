@@ -39,6 +39,17 @@ export const CASH_EQUIVALENT_PATTERNS: readonly RegExp[] = [
 ];
 
 /**
+ * The names those patterns look for, as the page cites them when no account
+ * matches (w1/321). Keep the two lists in step.
+ */
+export const CASH_ACCOUNT_NAMES: readonly string[] = [
+  "Cash",
+  "Checking",
+  "Savings",
+  "Bank",
+];
+
+/**
  * Cash-flow activity per Beancount root account. Roots not listed here are
  * excluded from the statement. Known judgment calls:
  *

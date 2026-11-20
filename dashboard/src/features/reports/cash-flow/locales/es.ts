@@ -88,6 +88,17 @@ const esCashFlow: Record<string, TranslationEntry> = {
       "Efectivo y equivalentes al inicio y al final del período de {ledgerName} con el cambio neto del período",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "Ninguna cuenta de {assets} tiene un nombre como {names}, y ninguna declara {role} en su directiva de apertura. Añade {role} bajo la directiva de apertura de cada cuenta bancaria o monedero.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "Ninguna cuenta se considera efectivo",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message:
       "No se encontraron datos de flujo de efectivo para este libro mayor.",

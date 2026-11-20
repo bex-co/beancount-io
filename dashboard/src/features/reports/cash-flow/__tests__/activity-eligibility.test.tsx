@@ -169,5 +169,11 @@ describe("Cash Flow activity eligibility", () => {
     render(<LedgerCashFlowPage />);
 
     expect(reportCall().variables.activityFilter).toBe('any(account:"^$")');
+    // Money may have moved, so the page says no account counts as cash
+    // rather than that there is no data (w1/321).
+    expect(
+      screen.getByText("page.cashFlow.noCashAccountsTitle"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("page.cashFlow.noData")).not.toBeInTheDocument();
   });
 });

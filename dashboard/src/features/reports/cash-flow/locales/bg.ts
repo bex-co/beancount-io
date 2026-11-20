@@ -88,6 +88,17 @@ const bgCashFlow: Record<string, TranslationEntry> = {
       "Парични средства и еквиваленти в началото и края на периода за {ledgerName} с нетната промяна за периода",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "Нито една сметка в {assets} няма име като {names} и нито една не декларира {role} в директивата си за откриване. Добавете {role} под директивата за откриване на всяка банкова сметка или портфейл.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "Нито една сметка не се отчита като парични средства",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "Няма намерени данни за паричен поток за тази книга.",
     description: "Empty state message for cash flow statement",

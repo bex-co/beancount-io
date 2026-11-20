@@ -88,6 +88,17 @@ const ukCashFlow: Record<string, TranslationEntry> = {
       "Грошові кошти та їх еквіваленти на початок і на кінець періоду для {ledgerName} з чистою зміною за період",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "Жоден рахунок у {assets} не має назви на кшталт {names}, і жоден не оголошує {role} у своїй директиві відкриття. Додайте {role} під директиву відкриття кожного банківського рахунку чи гаманця.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "Жоден рахунок не вважається грошовими коштами",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "Для цієї книги не знайдено даних про рух грошових коштів.",
     description: "Empty state message for cash flow statement",

@@ -87,6 +87,17 @@ const ptCashFlow: Record<string, TranslationEntry> = {
       "Caixa e equivalentes no início e no fim do período de {ledgerName} com a variação líquida do período",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "Nenhuma conta de {assets} tem um nome como {names}, e nenhuma declara {role} em sua diretiva de abertura. Adicione {role} sob a diretiva de abertura de cada conta bancária ou carteira.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "Nenhuma conta é considerada caixa",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "Nenhum dado de fluxo de caixa encontrado para este livro-razão.",
     description: "Empty state message for cash flow statement",

@@ -83,6 +83,17 @@ const zhCashFlow: Record<string, TranslationEntry> = {
     message: "{ledgerName}的期初和期末现金及现金等价物，以及本期净变动额",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "{assets} 下没有名称类似 {names} 的账户，也没有账户在开户指令中声明 {role}。请在每个银行或钱包账户的开户指令下添加 {role}。",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "没有账户被视为现金",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "未找到此账本的现金流量数据。",
     description: "Empty state message for cash flow statement",

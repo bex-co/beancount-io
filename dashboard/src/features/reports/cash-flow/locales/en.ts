@@ -86,6 +86,17 @@ const enCashFlow: Record<string, TranslationEntry> = {
       "Opening and closing cash and equivalents for {ledgerName} with the net change over the period",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "No {assets} account is named like {names}, and none declares {role} on its open directive. Add {role} under the open directive of each bank or wallet account.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "No account counts as cash",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "No cash flow data found for this ledger.",
     description: "Empty state message for cash flow statement",

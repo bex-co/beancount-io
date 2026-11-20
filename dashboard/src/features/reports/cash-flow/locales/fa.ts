@@ -87,6 +87,17 @@ const faCashFlow: Record<string, TranslationEntry> = {
       "وجه نقد و معادل‌های آن در ابتدا و پایان دوره برای {ledgerName} به همراه تغییر خالص طی دوره",
     description: "Description for the net change in cash summary card",
   },
+  "page.cashFlow.noCashAccounts": {
+    message:
+      "هیچ حسابی زیر {assets} نامی مانند {names} ندارد و هیچ‌کدام {role} را در دستور افتتاح خود اعلام نکرده است. {role} را زیر دستور افتتاح هر حساب بانکی یا کیف پول اضافه کنید.",
+    description:
+      'Cash flow empty state when the ledger has accounts but none counts as cash; {assets} is the ledger\'s own assets root name, {names} the account names the cash rule looks for (kept as written), and {role} the literal cash-flow-role: "cash" metadata line',
+  },
+  "page.cashFlow.noCashAccountsTitle": {
+    message: "هیچ حسابی وجه نقد به شمار نمی‌آید",
+    description:
+      "Cash flow empty state title when no account in the ledger counts as cash",
+  },
   "page.cashFlow.noData": {
     message: "هیچ داده جریان نقدینگی برای این دفتر یافت نشد.",
     description: "Empty state message for cash flow statement",

@@ -40,7 +40,12 @@ import { PageHeader } from "@/common/components/page-header";
 import { ConversionSelect } from "@/common/components/conversion-select";
 import { IntervalSelect } from "@/common/components/interval-select";
 import { cashFlowRootVariables, ledgerAccountRoots } from "./lib/account-roots";
+import { CASH_FLOW_ROLE_META_KEY } from "./lib/role-resolver";
+import { CASH_ACCOUNT_NAMES } from "./config";
+import { CASH_FLOW_ROLES_DOC_PATH } from "./constants";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
+import { DocLink } from "@/common/components/doc-link";
+import { docsUrl } from "@/common/lib/docs-url";
 import type { LegendSelection } from "../lib/legend-selection";
 
 /**
@@ -102,14 +107,15 @@ export default function LedgerCashFlowPage() {
     () => toAccountMetaMap(directives ?? []),
     [directives],
   );
+  const cashAccounts = useMemo(
+    () => cashAccountMembership(accountMeta, roots),
+    [accountMeta, roots],
+  );
   const activityFilter = useMemo(
     () =>
       directives &&
-      cashActivityFilter(
-        ledgerFilters.searchParams.filter,
-        cashAccountMembership(accountMeta, roots),
-      ),
-    [directives, accountMeta, roots, ledgerFilters.searchParams.filter],
+      cashActivityFilter(ledgerFilters.searchParams.filter, cashAccounts),
+    [directives, cashAccounts, ledgerFilters.searchParams.filter],
   );
   const membershipPending = activityFilter === undefined;
 
@@ -246,6 +252,15 @@ export default function LedgerCashFlowPage() {
     !statement ||
     (statement.rows.length === 0 && Object.keys(statement.closing).length === 0)
   ) {
+    // Accounts but no cash among them: no transaction is cash activity, so
+    // the statement is empty though money moved. Say why, not "no data".
+    if (directives?.length && cashAccounts.length === 0) {
+      return (
+        <NoCashAccountsState
+          assetsRoot={cashFlowRootVariables(ledgerData.options).assetsRoot}
+        />
+      );
+    }
     return (
       <ReportEmptyState
         Icon={ArrowLeftRight}
@@ -286,5 +301,33 @@ export default function LedgerCashFlowPage() {
       collapsePatterns={getCollapsePatterns(ledgerData)}
       exportReady
     />
+  );
+}
+
+/**
+ * The empty state for a ledger none of whose accounts counts as cash: it
+ * names the rule and the declaration that fixes it (w1/321), as
+ * `bea report cash-flow` does (w1/319).
+ */
+function NoCashAccountsState({ assetsRoot }: { assetsRoot: string }) {
+  const { t, i18n } = useTranslations();
+  const names = new Intl.ListFormat(i18n.language, {
+    type: "disjunction",
+  }).format(CASH_ACCOUNT_NAMES);
+  const role = `${CASH_FLOW_ROLE_META_KEY}: "cash"`;
+  return (
+    <ReportEmptyState
+      Icon={ArrowLeftRight}
+      title={t("page.cashFlow.noCashAccountsTitle")}
+      message={t("page.cashFlow.noCashAccounts", {
+        assets: assetsRoot,
+        names,
+        role,
+      })}
+    >
+      <DocLink href={docsUrl(i18n.language, CASH_FLOW_ROLES_DOC_PATH)}>
+        {t("page.cashFlow.classificationDocLink")}
+      </DocLink>
+    </ReportEmptyState>
   );
 }
