@@ -66,11 +66,6 @@ describe("Sidebar", () => {
   });
 
   describe("useSidebar hook", () => {
-    it("should export useSidebar hook", () => {
-      expect(useSidebar).toBeDefined();
-      expect(typeof useSidebar).toBe("function");
-    });
-
     it("should provide sidebar context values", () => {
       render(
         <SidebarProvider>
