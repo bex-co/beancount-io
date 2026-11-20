@@ -1987,10 +1987,15 @@ whole number, so a whole-yen ledger still prints whole yen. Its precision is bou
 from a total price such as `3 HOOL @@ 1000 JPY` does not add decimal places.
 A currency no posting names — usually a `--conversion` target — has no
 precision to infer and renders with two decimals; `--json` keeps the exact
-value either way. The one per-unit figure, `report holdings`' AVG COST, also
-keeps the digits its lots were costed in, so a `{0.0042 USD}` lot shows
-`0.0042 USD` rather than `0.00 USD`; an average that does not divide evenly
-still rounds to that finer precision.
+value either way. The per-unit figures, `report holdings`' AVG COST and
+`report register`'s COST column, also keep the digits their lots were costed in,
+so a `{0.0042 USD}` lot shows `0.0042 USD` rather than `0.00 USD`, and a
+`{0.30 USD}` lot in a whole-dollar ledger shows `0.30 USD`. A per-unit cost
+Beancount divided out of a total `{{100 USD}}`, a compound `{100.00 # 9.95 USD}`
+or an interpolated `{USD}` cost that does not divide evenly adds no digits: over
+3 units those show at the display precision (`33.33 USD`, `103.32 USD`), not the
+28 digits of the quotient. An average that does not divide evenly still rounds
+to that finer precision.
 
 Report interval breakdowns cover the complete requested period, including more
 than 100 daily or monthly intervals. The interval selects the aggregation

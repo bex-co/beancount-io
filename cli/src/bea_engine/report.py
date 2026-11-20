@@ -15,7 +15,7 @@ import re
 import unicodedata
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from datetime import date, timedelta
-from decimal import Context, Decimal, localcontext
+from decimal import Context, Decimal, getcontext, localcontext
 from pathlib import Path
 from typing import Any
 
@@ -820,12 +820,12 @@ def _holdings(
             if found is None:
                 # The first lot as booked: `0 + x` rounded a 29-digit token
                 # quantity to 28 digits before any real sum (w5/1074).
-                lots[key] = [number, number * cost.number, {name}, True, _fraction_digits(cost.number)]
+                lots[key] = [number, number * cost.number, {name}, True, _cost_digits(cost.number)]
                 continue
             found[0] += number
             found[1] += number * cost.number
             found[2].add(name)
-            found[4] = max(found[4], _fraction_digits(cost.number))
+            found[4] = max(found[4], _cost_digits(cost.number))
     for prefix, (number, names) in uncosted.items():
         costed = [key for key in lots if key[:-1] == prefix]
         # Uncosted units join the one costed group of their commodity only
@@ -847,8 +847,8 @@ def _holdings(
     operating = list(prices.operating_currencies)
     # Valued groups by the row they show in, each with the fractional digits
     # the text table shows its average cost in: at least those of the finest
-    # lot cost (w1/267), since a per-unit figure rounded to the posting
-    # precision read a 0.0042 USD lot as 0.00 USD. Under a currency
+    # lot cost as written (w1/267, `_cost_digits`), since a per-unit figure
+    # rounded to the posting precision read a 0.0042 USD lot as 0.00 USD. Under a currency
     # conversion the row is the scope, the commodity, and the currencies its
     # market value and basis came out in, so lots costed in USD and in EUR
     # that both value into USD are one holding (w1/288); otherwise it is the
@@ -972,10 +972,20 @@ def _merged_holding(parts: list[dict[str, Any]], group_by: str) -> dict[str, Any
     return group
 
 
-def _fraction_digits(number: Decimal) -> int:
-    """The fractional digits `number` is written with: 2 for `0.30`, 0 for `5`."""
-    exponent = number.as_tuple().exponent
-    return max(0, -exponent) if isinstance(exponent, int) else 0
+def _cost_digits(number: Decimal) -> int:
+    """The fractional digits a text table shows a per-unit cost in, beyond the display precision.
+
+    The digits the cost is written with: 4 for `{0.0042 USD}`, 2 for `{0.30
+    USD}` (w1/267), 0 for `{5 USD}`. Booking divides a total `{{100 USD}}`, a
+    compound `{100.00 # 9.95 USD}` or an interpolated `{USD}` cost into a
+    per-unit one; a quotient that does not come out even runs to the decimal
+    context's full precision, and AVG COST printed `33.33333333333333333333333333
+    USD` (w1/324). Those digits are division noise and count for nothing.
+    """
+    _, digits, exponent = number.as_tuple()
+    if not isinstance(exponent, int) or len(digits) >= getcontext().prec:
+        return 0
+    return max(0, -exponent)
 
 
 def _money_currencies(ledger: Any) -> set[str]:
@@ -1290,6 +1300,10 @@ def _register(filtered: Any, conversion: str, allow_errors: bool, ledger_errors:
         | valuation
         | {
             "display_precision": _display_precision(filtered),
+            # Frontend-only, like `display_precision`: one entry per row, the
+            # digits its per-unit COST shows in beyond the posting precision,
+            # which read a `{0.0042 USD}` lot as 0.00 USD (w1/324).
+            "cost_precision": [_cost_digits(row["cost"]["number"]) if row["cost"] else 0 for row in rows],
             "account": root,
             "rows": rows,
         }

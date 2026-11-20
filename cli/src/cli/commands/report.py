@@ -429,7 +429,7 @@ def _emit_csv(kind: str, file: Any, data: dict[str, Any], target: CsvOutput) -> 
 
 
 # Rendering hints for the text tables; JSON and CSV carry exact numbers.
-_TEXT_ONLY_KEYS = frozenset({"display_precision", "average_cost_precision"})
+_TEXT_ONLY_KEYS = frozenset({"display_precision", "average_cost_precision", "cost_precision"})
 
 
 def _emit_json(file: Any, data: dict[str, Any]) -> None:
@@ -663,7 +663,7 @@ def holdings(
                 group["account"] if by_account else ", ".join(group["accounts"]),
                 group["commodity"],
                 _money(group["units"], conversion, precision),
-                _average_cost(group["average_cost"], conversion, precision, digits),
+                _per_unit_cost(group["average_cost"], conversion, precision, digits),
                 _money(group["cost_basis"], conversion, precision),
                 _valued(group["market_value"], group, conversion, precision),
             ]
@@ -681,13 +681,16 @@ def holdings(
     typer.echo(f"  {'Market value:':<16} {_amounts(totals['market_value'], conversion, precision)}")
 
 
-def _average_cost(amount: dict[str, Any] | None, conversion: str, precision: Mapping[str, int], digits: int) -> str:
-    """A per-unit cost, kept to the digits its lots were costed in (w1/267).
+def _per_unit_cost(amount: dict[str, Any] | None, conversion: str, precision: Mapping[str, int], digits: int) -> str:
+    """A per-unit cost (holdings' AVG COST, the register's COST), kept to the digits its lots were costed in.
 
     The posting precision is for amounts held; a per-unit figure rounded to
     it read a 0.0042 USD lot as 0.00 USD, and a 0.30 USD lot in a
-    whole-dollar ledger as 0 USD. A weighted average that does not divide
-    evenly still rounds, to the finer of the two precisions.
+    whole-dollar ledger as 0 USD (w1/267). `digits` is the engine's hint: the
+    digits the lot costs are written with, where a total, compound or
+    interpolated cost that does not divide evenly counts for nothing, so
+    `{{100 USD}}` over 3 shows 33.33 USD (w1/324). A weighted average that
+    does not divide evenly still rounds, to the finer of the two precisions.
     """
     if amount is None:
         return "—"
@@ -732,11 +735,16 @@ def register(
     headers = ["DATE", *(["ACCOUNT"] if show_account else []), "DESCRIPTION", "AMOUNT", "COST", "BALANCE"]
     output.table(
         headers,
-        [_row_cells(row, conversion, precision, show_account) for row in rows],
+        [
+            _row_cells(row, conversion, precision, show_account, digits)
+            for row, digits in zip(rows, data["cost_precision"], strict=True)
+        ],
     )
 
 
-def _row_cells(row: dict[str, Any], conversion: str, precision: Mapping[str, int], show_account: bool) -> list[str]:
+def _row_cells(
+    row: dict[str, Any], conversion: str, precision: Mapping[str, int], show_account: bool, cost_digits: int
+) -> list[str]:
     """One register row's cells; the account column appears when rows sit below the requested account."""
     if row["entry"] == "balance":
         # The assertion moves nothing, so its figure sits in the description
@@ -753,7 +761,7 @@ def _row_cells(row: dict[str, Any], conversion: str, precision: Mapping[str, int
     cost = row["cost"]
     cost_cell = ""
     if cost is not None:
-        cost_cell = _money(cost, conversion, precision)
+        cost_cell = _per_unit_cost(cost, conversion, precision, cost_digits)
         if cost["date"]:
             cost_cell += f" ({cost['date']})"
     cells = [str(row["date"])]

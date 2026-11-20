@@ -369,3 +369,136 @@ def test_holdings_repeating_average_still_rounds(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr
     cells = _holdings_row(proc.stdout, "VTI")
     assert [cell.strip() for cell in cells[3:5]] == ["107 USD", "1,600 USD"]
+
+
+# Per-unit costs Beancount divides out of what was written: a total, a total
+# written as `{0 # T}` (what `bea add` writes for `{{T}}`), a compound and an
+# interpolated cost, none of which divides evenly over 3 units (w1/324).
+DIVIDED_COSTS = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Equity:Opening USD
+2026-01-02 * "open"
+  Assets:Bank:Checking  10000.00 USD
+  Equity:Opening
+2026-01-03 * "Buy 3 VTI at 100 plus a 9.95 commission"
+  Assets:Broker  3 VTI {100.00 # 9.95 USD}
+  Assets:Bank:Checking  -309.95 USD
+2026-01-04 * "Buy 3 AAA, cost inferred"
+  Assets:Broker  3 AAA {USD}
+  Assets:Bank:Checking  -1000.00 USD
+2026-01-05 * "Buy 3 HOOL"
+  Assets:Broker  3 HOOL {0 # 100 USD}
+  Assets:Bank:Checking
+2026-01-06 * "Buy 3 BBB"
+  Assets:Broker  3 BBB {{1000.00 USD}}
+  Assets:Bank:Checking
+2026-01-10 price VTI 110.00 USD
+2026-01-10 price AAA 350.00 USD
+2026-01-10 price HOOL 40.00 USD
+2026-01-10 price BBB 350.00 USD
+"""
+
+WHOLE_YEN_TOTAL = """\
+option "operating_currency" "JPY"
+2026-01-01 open Assets:Bank JPY
+2026-01-01 open Assets:Broker
+2026-01-01 open Equity:Opening JPY
+2026-01-02 * "open"
+  Assets:Bank  100000 JPY
+  Equity:Opening
+2026-01-03 * "Buy 3 HOOL"
+  Assets:Broker  3 HOOL {{1000 JPY}}
+  Assets:Bank
+2026-01-10 price HOOL 400 JPY
+"""
+
+SUB_CENT_REGISTER = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Equity:Opening
+2026-01-01 * "open"
+  Assets:Bank:Checking 5000.00 USD
+  Equity:Opening
+2026-01-02 * "buy"
+  Assets:Broker 100000 SHIB {0.0042 USD}
+  Assets:Bank:Checking -420.00 USD
+2026-01-03 * "buy penny"
+  Assets:Broker 1000 PENNY {0.305 USD}
+  Assets:Bank:Checking -305.00 USD
+"""
+
+
+def _register_cost(stdout: str, day: str) -> str:
+    (row,) = [line for line in stdout.splitlines() if line.startswith(day)]
+    (cell,) = [cell.strip() for cell in row.split("  ") if cell.strip().endswith(f"({day})")]
+    return cell
+
+
+def test_holdings_average_cost_drops_division_noise(tmp_path: Path) -> None:
+    # The booked per-unit cost of these lots has 28 significant digits, and
+    # AVG COST printed every one: 33.33333333333333333333333333 USD (w1/324).
+    ledger = _write(tmp_path, DIVIDED_COSTS)
+    expected = {"VTI": "103.32 USD", "AAA": "333.33 USD", "HOOL": "33.33 USD", "BBB": "333.33 USD"}
+    for extra in ((), ("--group-by", "commodity"), ("-x", "at_cost")):
+        proc = _bea(tmp_path, "--file", str(ledger), "report", "holdings", *extra)
+        assert proc.returncode == 0, proc.stderr
+        assert {commodity: _holdings_row(proc.stdout, commodity)[3].strip() for commodity in expected} == expected
+        assert _holdings_row(proc.stdout, "HOOL")[4].strip() == "100.00 USD"
+    # JSON keeps the exact quotient.
+    proc = _bea(tmp_path, "--file", str(ledger), "--json", "report", "holdings")
+    assert proc.returncode == 0, proc.stderr
+    groups = {group["commodity"]: group for group in json.loads(proc.stdout)["data"]["groups"]}
+    assert groups["HOOL"]["average_cost"] == {"number": "33.33333333333333333333333333", "currency": "USD"}
+    assert groups["AAA"]["average_cost"] == {"number": "333.3333333333333333333333333", "currency": "USD"}
+
+
+def test_holdings_total_cost_in_a_whole_yen_ledger(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, WHOLE_YEN_TOTAL)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "holdings")
+    assert proc.returncode == 0, proc.stderr
+    cells = _holdings_row(proc.stdout, "HOOL")
+    assert [cell.strip() for cell in cells[3:6]] == ["333 JPY", "1,000 JPY", "1,200 JPY"]
+
+
+def test_register_cost_keeps_lot_digits(tmp_path: Path) -> None:
+    # The COST column rounded the per-unit cost to the posting precision: a
+    # 0.0042 USD lot read 0.00 USD, and 0.30 USD read 0 USD in a whole-dollar
+    # ledger (w1/324).
+    ledger = _write(tmp_path, SUB_CENT_REGISTER)
+    for extra in (("-x", "units"), ("--allow-errors",)):
+        proc = _bea(tmp_path, "--file", str(ledger), "report", "register", "Assets:Broker", *extra)
+        assert proc.returncode == 0, proc.stderr
+        assert _register_cost(proc.stdout, "2026-01-02") == "0.0042 USD (2026-01-02)"
+        assert _register_cost(proc.stdout, "2026-01-03") == "0.305 USD (2026-01-03)"
+        # The money columns keep the ledger's cents.
+        assert "1,000 PENNY  100,000 SHIB" in proc.stdout
+    proc = _bea(tmp_path, "--file", str(ledger), "--json", "report", "register", "Assets:Broker", "-x", "units")
+    assert proc.returncode == 0, proc.stderr
+    data = json.loads(proc.stdout)["data"]
+    assert "cost_precision" not in data
+    assert data["rows"][0]["cost"] == {"number": "0.0042", "currency": "USD", "date": "2026-01-02"}
+    csv_out = _bea(
+        tmp_path, "--file", str(ledger), "report", "register", "Assets:Broker", "-x", "units", "--format", "csv"
+    )
+    assert csv_out.returncode == 0, csv_out.stderr
+    assert ",0.0042," in csv_out.stdout
+    ledger = _write(tmp_path, WHOLE_DOLLARS)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "register", "Assets:Broker", "-x", "units")
+    assert proc.returncode == 0, proc.stderr
+    (penny,) = [line for line in proc.stdout.splitlines() if "penny stock" in line]
+    assert "0.30 USD (2026-01-02)" in penny
+    (euros,) = [line for line in proc.stdout.splitlines() if "euros" in line]
+    assert "1.10 USD (2026-01-02)" in euros
+
+
+def test_register_cost_drops_division_noise(tmp_path: Path) -> None:
+    ledger = _write(tmp_path, DIVIDED_COSTS)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "register", "Assets:Broker", "-x", "units")
+    assert proc.returncode == 0, proc.stderr
+    assert _register_cost(proc.stdout, "2026-01-03") == "103.32 USD (2026-01-03)"
+    assert _register_cost(proc.stdout, "2026-01-04") == "333.33 USD (2026-01-04)"
+    assert _register_cost(proc.stdout, "2026-01-05") == "33.33 USD (2026-01-05)"
+    assert _register_cost(proc.stdout, "2026-01-06") == "333.33 USD (2026-01-06)"
