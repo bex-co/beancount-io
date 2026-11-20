@@ -209,3 +209,113 @@ def test_the_shell_reads_the_precision_again_after_a_reload(tmp_path: Path, monk
     stream.truncate()
     shell.onecmd("SELECT sum(cost(position)) WHERE account = 'Assets:Broker'")
     assert "100.0000 USD" in stream.getvalue()
+
+
+def _cells(tmp_path: Path, text: str, *args: str) -> list[list[str]]:
+    """The text table's data rows, each split into its whitespace-separated words."""
+    ledger = write_ledger(tmp_path, text)
+    result = bea(["--file", str(ledger), "query", *args], tmp_path)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stderr == ""
+    lines = result.stdout.splitlines()
+    assert set(lines[1]) <= {"-", " "}, result.stdout
+    return [line.split() for line in lines[2:]]
+
+
+# The purchase's quotient weighs 99.99999999999999999999999999 USD; a coffee
+# the same day rides on the residue its cash leg leaves (w1/326).
+SAME_DAY = (
+    TOTAL_COST
+    + """\
+2026-01-05 * "Coffee"
+  Expenses:Food  4.50 USD
+  Assets:Bank:Checking
+"""
+)
+
+
+def test_a_sum_that_cancels_a_quotient_prints_zero(tmp_path: Path) -> None:
+    """`sum(weight)` over a `{{100 USD}}` purchase is -1E-26 USD: zero, unsigned, and no noise beside it (w1/326)."""
+    assert _cells(tmp_path, TOTAL_COST, "SELECT sum(weight)") == [["0.00", "USD"]]
+    assert _cells(tmp_path, TOTAL_COST, "SELECT sum(weight), sum(position)") == [
+        ["0.00", "USD", "3", "HOOL", "{", "33.33", "USD}", "-100.00", "USD"]
+    ]
+    by_date = _cells(tmp_path, TOTAL_COST, "SELECT date, sum(weight) GROUP BY date ORDER BY date")
+    assert by_date[-1] == ["2026-01-05", "0.00", "USD"]
+
+
+def test_a_residue_beside_a_real_amount_adds_no_decimals(tmp_path: Path) -> None:
+    rows = _cells(tmp_path, SAME_DAY, "SELECT date, sum(weight) WHERE account ~ '^Assets' GROUP BY date ORDER BY date")
+
+    assert rows == [
+        ["2026-01-02", "10000.00", "USD"],
+        ["2026-01-03", "-12.30", "USD"],
+        ["2026-01-05", "-4.50", "USD"],
+    ]
+
+
+def test_a_sums_real_digits_and_a_lone_sub_cent_price_keep_their_decimals(tmp_path: Path) -> None:
+    """Only a sum's residue is dropped: a satoshi's dollar value and sub-cent prices are real.
+
+    A price is a lone amount, never a sum, so even ten zeros after the point
+    leave its digits alone.
+    """
+    text = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank USD
+2026-01-01 open Assets:Penny
+2026-01-01 open Assets:Meme
+2026-01-01 open Assets:Crypto BTC
+2026-01-01 open Equity:Opening
+2026-01-02 * "open"
+  Assets:Bank  1000.00 USD
+  Equity:Opening
+2026-01-03 * "Pennies"
+  Assets:Penny  1000 PENNY @ 0.0042 USD
+  Assets:Bank  -4.20 USD
+2026-01-03 * "Meme coins"
+  Assets:Meme  1000 MEME @ 0.000000000012 USD
+  Assets:Bank
+2026-01-04 * "A satoshi"
+  Assets:Crypto  0.00000001 BTC
+  Equity:Opening
+2026-01-10 price BTC 61234.56789012 USD
+"""
+    converted = _cells(tmp_path, text, "SELECT convert(sum(position), 'USD') WHERE account ~ 'Crypto'")
+    prices = _cells(tmp_path, text, "SELECT account, price WHERE account ~ 'Penny|Meme' ORDER BY account")
+
+    assert converted == [["0.0006123456789012", "USD"]]
+    assert prices == [["Assets:Meme", "0.000000000012", "USD"], ["Assets:Penny", "0.004200000000", "USD"]]
+
+
+@pytest.mark.parametrize(
+    ("number", "digits"),
+    [
+        ("-0.00000000000000000000000001", 0),
+        ("-4.50000000000000000000000001", 1),
+        ("4.49999999999999999999999999", 1),
+        ("9.99999999999999999999999999", 0),
+        ("0.0006123456789012", 16),
+        ("30617.28394506", 8),
+        ("0.00000000012", 11),
+    ],
+)
+def test_digits_after_a_run_of_ten_zeros_or_nines_are_residue(number: str, digits: int) -> None:
+    from decimal import Decimal
+
+    from bea_engine.query import _before_residue
+
+    value = Decimal(number)
+    assert _before_residue(value, -int(value.as_tuple().exponent)) == digits
+
+
+def test_json_and_csv_keep_the_residue(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, TOTAL_COST)
+    shown = bea(["--json", "--file", str(ledger), "query", "SELECT sum(weight)"], tmp_path)
+    csv = bea(["--file", str(ledger), "query", "--format", "csv", "SELECT sum(weight)"], tmp_path)
+
+    assert shown.returncode == csv.returncode == 0, shown.stderr + csv.stderr
+    assert json.loads(shown.stdout)["data"]["rows"] == [
+        [[{"units": {"number": "-0.00000000000000000000000001", "currency": "USD"}, "cost": None}]]
+    ]
+    assert csv.stdout.splitlines() == ["sum(weight)", "-0.00000000000000000000000001 USD"]

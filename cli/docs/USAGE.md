@@ -1093,8 +1093,15 @@ price. Trailing zeros of a product add none: `12.50 EUR @ 1.10 USD` reads
 `-13.75 USD`. Neither does a quotient that runs to the decimal context's full
 28 digits, such as the per-unit cost Beancount books for `3 HOOL {{100 USD}}`
 or the price it derives from `3 EUR @@ 10.00 USD`: those read `33.33 USD` and
-`3.33 USD`, and the cost of the lot reads `100.00 USD`. `--json`, `--format
-csv`, and their `-m` columns keep every digit.
+`3.33 USD`, and the cost of the lot reads `100.00 USD`. Nor does what such a
+quotient leaves in a sum: the purchase weighs `99.99999999999999999999999999
+USD`, so `sum(weight)` over it and its `-100.00 USD` cash leg is
+`-0.00000000000000000000000001 USD`, and a `4.50 USD` coffee added on the same
+day makes it `-4.50000000000000000000000001 USD`. A summed amount's digits
+after a run of ten zeros or nines are that residue, so those read `0.00 USD`
+and `-4.50 USD`, and a zero prints without a sign. The rule applies only to
+sums: a `0.000000000012 USD` price keeps its twelve decimals. `--json`,
+`--format csv`, and their `-m` columns keep every digit.
 `tags` and `links` hold a whole set per entry, so BQL cannot compare them:
 `SELECT DISTINCT tags` and `GROUP BY tags` are refused (exit **2**) with the
 recipes that work — `SELECT DISTINCT joinstr(tags)` for distinct combinations,

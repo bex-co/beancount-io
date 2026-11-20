@@ -22,7 +22,10 @@ below need Beancount objects, which is why they live here and not in `bea`:
   precision the ledger writes it in and the meaningful digits of its values:
   trailing zeros, and the digits of a quotient that ran to the decimal
   context's full precision (a `{{100 USD}}` lot over 3 units, an `@@` total),
-  count for nothing (w1/325). `-m` cells in CSV and JSON stay lossless.
+  count for nothing (w1/325). Nor does the residue such a quotient leaves in
+  a sum that should cancel, past a run of ten zeros or nines: `sum(weight)`
+  over that lot and its cash leg reads `0.00 USD`, not `-1E-26 USD` (w1/326).
+  `-m` cells in CSV and JSON stay lossless.
 - **Directive exports.** The shared writer printer preserves negative custom
   values, small decimal metadata, string escapes and whole cost specifications
   so reloading an export does not silently change those values.
@@ -2155,18 +2158,25 @@ def _fixed_point_text() -> Iterator[None]:
     Upstream's `DecimalRenderer` pads with an f-string and `ObjectRenderer` is
     `str()`, so `0.00000001` printed as `1E-8` in a number column, a `-m`
     column and an `entry_meta()` cell, while the position beside it, the CSV
-    and the JSON all said `0.00000001` (w5/294). The swap lasts one render, so
-    native `--source` keeps upstream's table.
+    and the JSON all said `0.00000001` (w5/294). An amount that rounds to zero
+    prints without a sign (w1/326). Upstream's position, cost and inventory
+    renderers build their amount renderer by its module name, so that name is
+    swapped too. The swap lasts one render, so native `--source` keeps
+    upstream's table.
     """
+    from beancount.core.amount import Amount
     from beanquery import query_render
 
     swapped = _text_renderers()
     saved = {dtype: query_render.RENDERERS[dtype] for dtype in swapped}
+    amounts = query_render.AmountRenderer
     query_render.RENDERERS.update(swapped)
+    query_render.AmountRenderer = swapped[Amount]
     try:
         yield
     finally:
         query_render.RENDERERS.update(saved)
+        query_render.AmountRenderer = amounts
 
 
 def _renderer_for(datatype: Any, ctx: Any) -> Any:
@@ -2303,6 +2313,7 @@ def _whole(value: Decimal) -> Decimal:
 
 @cache
 def _text_renderers() -> dict[type, type]:
+    from beancount.core.amount import Amount
     from beanquery import query_render
 
     registered = dict(query_render.RENDERERS)
@@ -2349,11 +2360,25 @@ def _text_renderers() -> dict[type, type]:
             # out one line per table row.
             return text.split("\n") if "\n" in text else text
 
+    class UnsignedZeroAmountRenderer(query_render.AmountRenderer):  # type: ignore[misc]
+        """Upstream's amount column, with no sign on an amount that rounds to zero.
+
+        Zero has no sign as money. A sum that cancels a quotient but for its
+        rounding residue (w1/326) printed `-0.00 USD`, which reads as a loss
+        nobody had.
+        """
+
+        def format(self, value: Any) -> str:
+            number = value.number
+            if isinstance(number, Decimal) and number.is_signed() and not self.quantize(number, value.currency):
+                value = value._replace(number=number.copy_abs())
+            return str(super().format(value))
+
     # Subclassing registers each class in upstream's table for good; keep that
     # table as it was and swap these in only for one text render.
     query_render.RENDERERS.clear()
     query_render.RENDERERS.update(registered)
-    return {Decimal: FixedPointDecimalRenderer, object: PlainObjectRenderer}
+    return {Decimal: FixedPointDecimalRenderer, object: PlainObjectRenderer, Amount: UnsignedZeroAmountRenderer}
 
 
 def _public_value(value: Any) -> Any:
@@ -3691,6 +3716,28 @@ def _entry_summary(entry: Any) -> str:
     return words + legs
 
 
+#: A run this long of zeros or nines ends a sum's meaningful digits (w1/326).
+_RESIDUE_RUN = 10
+
+
+def _before_residue(number: Decimal, digits: int) -> int:
+    """The fractional digits of a sum before a quotient's rounding residue (w1/326).
+
+    `3 HOOL {{100 USD}}` weighs 99.99999999999999999999999999 USD, so the
+    sum that should cancel its `-100.00 USD` cash leg is
+    `-0.00000000000000000000000001` and a `-4.50` beside it reads
+    `-4.50000000000000000000000001`. A 28-digit quotient on any amount below
+    a trillion ends at least fourteen places past the cent, so ten zeros or
+    nines in a row mark where the meaningful digits end: 0 and 1 places for
+    those two. `digits` is the number's fractional digit count.
+    """
+    fraction = "".join(map(str, number.as_tuple().digits)).rjust(digits, "0")[-digits:]
+    for start in range(digits - _RESIDUE_RUN + 1):
+        if fraction[start : start + _RESIDUE_RUN] in ("0" * _RESIDUE_RUN, "9" * _RESIDUE_RUN):
+            return start
+    return digits
+
+
 def result_context(rows: Any, written: Mapping[str, int] | None = None) -> Any:
     """A display context sized to these results rather than to the ledger's inputs.
 
@@ -3709,6 +3756,16 @@ def result_context(rows: Any, written: Mapping[str, int] | None = None) -> Any:
     `3.333333333333333333333333333 USD` price, and either one in the rows gave
     every USD amount 26 or 27 decimals. A computed value's real digits still
     show: a `convert()` at an eight-decimal quote keeps all of them.
+
+    Nor does what such a quotient leaves in a sum (w1/326). `sum(weight)` over
+    a `{{100 USD}}` purchase and its `-100.00 USD` cash leg is
+    `-0.00000000000000000000000001 USD`, and with a `4.50 USD` coffee the same
+    day `-4.50000000000000000000000001 USD`: the residue sits past a run of
+    zeros (or nines) that written amounts and rates, and their products, do
+    not have (`_before_residue`). In a summed inventory those digits count
+    for nothing, so the first prints as zero at the ledger's precision, and
+    without a sign. A lone amount keeps them: it is a posting's own value or
+    a rate, which no sum has touched.
     """
     from beancount.core.amount import Amount
     from beancount.core.display_context import DisplayContext
@@ -3719,24 +3776,33 @@ def result_context(rows: Any, written: Mapping[str, int] | None = None) -> Any:
 
     digits_by_currency: dict[str, int] = dict(written or {})
 
-    def places(number: Decimal) -> int:
+    def learn(value: Amount | Cost, summed: bool = False) -> None:
+        number = value.number
+        if not isinstance(number, Decimal) or not number.is_finite():
+            return
         if written is None:
-            return -int(number.as_tuple().exponent)
-        return _cost_digits(_without_trailing_zeros(number))
+            digits = -int(number.as_tuple().exponent)
+        else:
+            number = _without_trailing_zeros(number)
+            digits = _cost_digits(number)
+            if summed and digits > digits_by_currency.get(value.currency, 0):
+                digits = _before_residue(number, digits)
+        digits_by_currency[value.currency] = max(digits_by_currency.get(value.currency, 0), digits)
 
     def visit(value: Any) -> None:
         if isinstance(value, Amount | Cost):
-            if isinstance(value.number, Decimal) and value.number.is_finite():
-                digits_by_currency[value.currency] = max(
-                    digits_by_currency.get(value.currency, 0), places(value.number)
-                )
+            learn(value)
         elif isinstance(value, Position):
             visit(value.units)
             visit(value.cost)
+        elif isinstance(value, Inventory):
+            for position in value:
+                learn(position.units, summed=True)
+                visit(position.cost)
         elif isinstance(value, Mapping):
             for item in value.values():
                 visit(item)
-        elif isinstance(value, Inventory | list | tuple | set | frozenset):
+        elif isinstance(value, list | tuple | set | frozenset):
             for item in value:
                 visit(item)
 
