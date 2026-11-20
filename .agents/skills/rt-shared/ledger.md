@@ -97,6 +97,7 @@ newest first.
 
 ### Skipped
 
+- 2026-11-20 dashboard Overview stepped month lost on Back/reload (w5/1148) — read the item and the `use-overview-month` state-vs-URL split; persisting the month in the URL is a navigation-design change on top of the w5/1147 link fix, out of this run's budget after three shipped findings; still open.
 - 2026-11-20 cli `bea_engine`/`cli` mirror pairs (`amounts` twin regexes `_ZERO_DIVISOR`/`_NOT_ARITHMETIC`/`_EXPONENT_TOKEN`/`_divides_by_zero`, `csv_mapper`/`include_glob`/`paths` splits) — twin points textually identical, remaining splits deliberate engine/frontend adaptations; examined, no drift since the 2026-11-18 sweep.
 - 2026-11-20 mobile `plural.ts` builtin-vs-`Intl` rules, `decimal-number.ts` vs dashboard twin, `number-locale`/`number-utils`/`currency-util` separator/position agreement — pinned by the 0–1000 agreement battery, the 138-case differential fuzz, and the w21/882 currencyAfter match; probed promotion/residue edges hold; examined, no divergence.
 - 2026-11-19 backend-cluster/ledger `discrepancyKey` spelling agreement (parsed balance `amount` vs engine `balances.amount` cell) — live-engine probes agree on every spelling (trailing/leading zeros, exponents, signs); both sides share one producer; examined, no divergence.
@@ -115,10 +116,6 @@ newest first.
 - 2026-11-18 `mobile/src/common/series-util.ts` carryBalanceToToday/latestBalance/baseline agreement — agree by construction (value remap, borrowed-point baseline); duplicate-date input unreachable via pointsToMonthlySeries; examined, no divergence.
 - 2026-11-18 `mobile/src/common/decimal-number.ts` vs `dashboard/src/common/lib/beancount/decimal-number.ts` — 138-case differential fuzz plus 60-input parser crash-fuzz agree with zero divergence; out-of-contract inputs (non-decimal strings, zero denominators, negative digits) throw identically on both sides and no caller passes them.
 - 2026-11-18 mobile vs dashboard budget twins (`daysInBudgetPeriod`, week-start, unknown-cadence default, newest-signed-entry direction) — both Monday-start weeks, monthly default, DST-safe day counts, zero-sign normalized away by `parseDecimal`; agree on every probed edge.
-- 2026-11-18 `mobile/src/common/entry-write.ts` nonce/fingerprint retry machine + `single-flight.ts` + `use-single-entry-write.ts` unification — retries rebuild identical variables so the requestId is stable, the nonce renews after every save, same-screen double taps collapse to one write; no divergence from the pre-unification hooks.
-- 2026-11-18 `mobile/.../select-account-journal.ts` paging (`mergeAccountJournalItems`, `hasMoreAccountJournal`) and dashboard `formatPercentageCell` number path — covered by existing tests; the query returns decimal strings so the number path is defensive-only.
-
-- 2026-11-18 mobile `detect-recurrence.ts` — 60k-case fuzz over cadences/jitter/refunds/zeros/pre-entered points plus 23 exact next-date oracles all hold; no divergence from documented intent found.
 
 ## rt-logic-simplifier
 
