@@ -6,6 +6,12 @@ shorthand. From then on every report printed USD to 26 decimals and the trial
 balance grew a rounding line. `add balance --amount '100/3 USD'` offered that
 28-digit figure as the fix. All three now refuse before writing and name an
 amount to write instead; exact arithmetic is still written evaluated.
+
+A cost or price did the same: `3 HOOL {100/3 USD}`, `@ 100/3 USD`, and a `@@`
+or `{{...}}` total typed as `100/3 USD` were written as 28 digits at exit 0
+(w1/317). They are refused too; a `@@` total is judged as typed, so an exact
+`@@ 100 USD` over 3 units, which the grammar divides into a repeating price,
+is still written.
 """
 
 from __future__ import annotations
@@ -19,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from bea_engine.amounts import Repeating, parse_exact
+from bea_engine.amounts import Repeating, parse_exact, split_total_price
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -131,11 +137,85 @@ def test_exact_arithmetic_is_still_written_evaluated(tmp_path: Path) -> None:
 
 
 def test_a_total_price_over_three_units_is_still_written(tmp_path: Path) -> None:
-    """The grammar divides a `@@` total into a repeating unit price; only the units are judged."""
+    """The grammar divides a `@@` total into a repeating unit price; the total is judged as typed."""
     result = _split(tmp_path, "Assets:Broker 3 HOOL @@ 100 USD")
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert "Assets:Broker 3 HOOL @@ 100 USD" in " ".join(_ledger(tmp_path).split())
+
+
+@pytest.mark.parametrize(
+    ("posting", "part"),
+    [
+        ("Assets:Broker 3 HOOL {100/3 USD}", "The cost"),
+        ("Assets:Broker 3 HOOL {100/3 # 5 USD}", "The cost"),
+        ("Assets:Broker 3 HOOL {{100/3 USD}}", "The total cost"),
+        ("Assets:Broker 3 EUR @ 100/3 USD", "The price"),
+        ("Assets:Broker 3 EUR @@ 100/3 USD", "The total price"),
+    ],
+)
+def test_a_cost_or_price_flag_that_does_not_divide_exactly_is_refused(tmp_path: Path, posting: str, part: str) -> None:
+    result = _bea(tmp_path, "transaction", "--date", "2026-01-10", "Buy", "-p", posting, "-p", "Assets:Checking")
+
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert _ledger(tmp_path) == LEDGER
+    message = " ".join(result.stderr.split())
+    assert f"{part} in --posting 1 {posting!r} does not divide exactly" in message
+    assert f"Beancount would store {READING}" in message
+    assert "such as 33.33 USD" in message
+    assert "Nothing was written." in message
+
+
+@pytest.mark.parametrize(
+    ("amount", "part"),
+    [
+        ("3 HOOL {100/3 USD}", "The cost"),
+        ("3 EUR @ 100/3 USD", "The price"),
+        ("3 EUR @@ 100/3 USD", "The total price"),
+    ],
+)
+def test_a_bulk_cost_or_price_that_does_not_divide_exactly_is_refused(tmp_path: Path, amount: str, part: str) -> None:
+    rows = [
+        {
+            "date": "2026-01-10",
+            "narration": "Buy",
+            "postings": [{"account": "Assets:Broker", "amount": amount}, {"account": "Assets:Checking"}],
+        }
+    ]
+    result = _bea(tmp_path, "transactions", "--from", "-", stdin=json.dumps(rows))
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert _ledger(tmp_path) == LEDGER
+    message = " ".join(result.stderr.split())
+    assert f"{part} in amount {amount!r} does not divide exactly" in message
+    assert "such as 33.33 USD" in message
+
+
+def test_exact_costs_and_prices_over_three_units_are_still_written(tmp_path: Path) -> None:
+    """An exact total over units it does not divide, and a terminating rate, are written."""
+    result = _bea(
+        tmp_path,
+        "transaction",
+        "--date",
+        "2026-01-10",
+        "Buy",
+        "-p",
+        "Assets:Broker 3 HOOL {{100 USD}}",
+        "-p",
+        "Assets:Broker 3 HOOL @@ 200/2 USD",
+        "-p",
+        "Assets:Broker 8 EUR @ 1/8 USD",
+        "-p",
+        "Assets:Checking",
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    written = [" ".join(line.split()) for line in _ledger(tmp_path).removeprefix(LEDGER).strip().splitlines()]
+    assert written[1:4] == [
+        "Assets:Broker 3 HOOL {0 # 100 USD}",
+        "Assets:Broker 3 HOOL @@ 100 USD",
+        "Assets:Broker 8 EUR @ 0.125 USD",
+    ]
 
 
 @pytest.mark.parametrize("units", ["1/3", "-100/3", "100/3*3", "2/7"])
@@ -162,3 +242,12 @@ def test_parse_exact_marks_a_divided_total_price_but_not_its_units() -> None:
     posting = entries[0].postings[0]
     assert type(posting.units.number) is Decimal
     assert isinstance(posting.price.number, Repeating)
+
+
+def test_a_total_price_is_marked_by_its_own_arithmetic() -> None:
+    """The typed `@@` total carries the mark, not the price the grammar divided from it."""
+    repeating = split_total_price("Assets:A 3 EUR @@ 100/3 USD")
+    exact = split_total_price("Assets:A 3 EUR @@ 200/2 USD")
+
+    assert repeating is not None and isinstance(repeating[0], Repeating)
+    assert exact == (Decimal(100), "USD") and type(exact[0]) is Decimal

@@ -21,7 +21,7 @@ from pydantic import (
 from bea_engine.amounts import (
     JsonFloat,
     parse_exact,
-    refuse_repeating,
+    refuse_repeating_posting,
     refuse_scientific_notation,
     refuse_zero_divisor,
     require_plain_decimal,
@@ -366,7 +366,7 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
         refuse("no amount found")
     if units.currency is MISSING:
         refuse("no currency found")
-    refuse_repeating(f"amount {amount!r}", units.number, units.currency)
+    refuse_repeating_posting(f"amount {amount!r}", posting, amount)
     fields: dict[str, Any] = {
         "units": {"number": format(units.number, "f"), "currency": units.currency},
     }
@@ -394,7 +394,7 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
         }
     total = split_total_price(amount)
     if total is not None:
-        fields["price_total"] = {"number": total[0], "currency": total[1]}
+        fields["price_total"] = {"number": format(total[0], "f"), "currency": total[1]}
     elif posting.price is not None:
         price = posting.price
         if price is MISSING or price.number is MISSING or price.currency is MISSING:

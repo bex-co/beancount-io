@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from bea_engine import protocol
-from bea_engine.amounts import JsonFloat, parse_decimal_number, parse_exact, refuse_repeating
+from bea_engine.amounts import JsonFloat, parse_decimal_number, parse_exact, refuse_repeating, refuse_repeating_posting
 from bea_engine.ledger import write, writer
 from bea_engine.ledger.text import (
     checked_operating_currencies,
@@ -1376,11 +1376,7 @@ def _transaction(
     for number, posting in enumerate(entry.postings, start=1):
         try:
             typed = postings[number - 1] if number <= len(postings) else posting.account
-            refuse_repeating(
-                f"--posting {number} {typed!r}",
-                getattr(posting.units, "number", None),
-                getattr(posting.units, "currency", None),
-            )
+            refuse_repeating_posting(f"--posting {number} {typed!r}", posting, typed)
         except ValueError as exc:
             raise protocol.UsageError(f"{exc} Nothing was written.") from None
         if managed_load.zero_units_at_total_cost(posting):
@@ -1619,7 +1615,7 @@ def _total_price(posting_text: str) -> Any | None:
     total = split_total_price(posting_text)
     if total is None:
         return None
-    return BcAmount(Decimal(total[0]), total[1])
+    return BcAmount(*total)
 
 
 def _refuse_missing_price(postings: list[str], number: int, posting: Any) -> None:

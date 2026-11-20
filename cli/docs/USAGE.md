@@ -1308,7 +1308,10 @@ quotient that does not terminate, such as `100/3 USD` in a `--posting`, a bulk
 `amount`, or `add balance --amount`, is refused and nothing is written:
 Beancount would store it rounded to 28 digits, and every report in that
 currency would print that many decimals. The refusal names an amount to write
-instead, such as `33.33 USD`. A zero divisor, literal (`100/0`,
+instead, such as `33.33 USD`. Costs and prices are judged the same way:
+`{100/3 USD}`, `{{100/3 USD}}`, `@ 100/3 USD` and `@@ 100/3 USD` are refused
+too. A `@@` total is judged as typed, so an exact total over units it does not
+divide (`3 HOOL @@ 100 USD`) is still written. A zero divisor, literal (`100/0`,
 `100/(0)`) or computed (`100/(2-2)`), is refused as a usage error before it
 reaches the engine, because Beancount evaluates amount arithmetic while
 parsing and a zero divisor crashes it.

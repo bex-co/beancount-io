@@ -236,7 +236,10 @@ def test_json_answer_total_price_round_trips_through_bulk(ledger: Path, posting:
     ],
 )
 def test_split_total_price_reads_plain_totals(text: str, total: tuple[str, str]) -> None:
-    assert split_total_price(text) == total
+    split = split_total_price(text)
+
+    assert split is not None
+    assert (format(split[0], "f"), split[1]) == total
 
 
 @pytest.mark.parametrize(

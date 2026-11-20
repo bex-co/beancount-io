@@ -223,16 +223,18 @@ class Repeating(Decimal):
     `parse_exact` marks each one, so a write can refuse it instead of storing
     `33.33333333333333333333333333 USD`: every report in that currency then
     printed 26 decimals, and the trial balance grew a rounding line (w1/313).
-    The grammar divides a `@@` total into a unit price, which is marked too;
-    only the amounts written as units or asserted balances are refused.
+    The grammar divides a `@@` total into a unit price, which is marked too
+    when the units do not divide it (`@@ 100 USD` over 3), so a total is
+    judged as typed, never by that divided price (w1/317).
     """
 
 
-def refuse_repeating(subject: str, number: Any, currency: Any) -> None:
+def refuse_repeating(subject: str, number: Any, currency: Any, instead: str = "") -> None:
     """Refuse an amount whose arithmetic does not terminate, naming what to write instead.
 
     `subject` names the input as the user typed it, such as `--amount '100/3
-    USD'`. Exact arithmetic (`84/2`, `10/4`) is not marked and passes.
+    USD'`; `instead` adds another way to write it. Exact arithmetic (`84/2`,
+    `10/4`) is not marked and passes.
     """
     if not isinstance(number, Repeating):
         return
@@ -242,7 +244,37 @@ def refuse_repeating(subject: str, number: Any, currency: Any) -> None:
     raise ValueError(
         f"{subject} does not divide exactly: Beancount would store {format(number, 'f')}{unit}, and every report "
         f"in its currency would then print that many decimal places. Write the amount to the precision you mean, "
-        f"such as {format(example, 'f')}{unit}."
+        f"such as {format(example, 'f')}{unit}{instead}."
+    )
+
+
+def refuse_repeating_posting(subject: str, posting: Any, text: str) -> None:
+    """`refuse_repeating` for a parsed posting's units, cost and price.
+
+    `text` is the posting as typed, `subject` how to name it. A per-unit cost
+    or `@` price that does not terminate (`{100/3 USD}`) wrote 28 digits just
+    as units did (w1/317). A `@@` total is judged as typed: the grammar
+    divides even an exact one (`@@ 100 USD` over 3) into a repeating price.
+    """
+    units = posting.units
+    refuse_repeating(subject, getattr(units, "number", None), getattr(units, "currency", None))
+    cost = posting.cost
+    if cost is not None:
+        currency = getattr(cost, "currency", None)
+        lot = ", or give the lot's total cost instead, which stays exact"
+        refuse_repeating(f"The cost in {subject}", getattr(cost, "number_per", None), currency, lot)
+        refuse_repeating(f"The total cost in {subject}", getattr(cost, "number_total", None), currency)
+    price = posting.price
+    if price is None:
+        return
+    if "@@" in _QUOTED_OR_COMMENT.sub("", text):
+        total = split_total_price(text)
+        if total is not None:
+            refuse_repeating(f"The total price in {subject}", *total)
+        return
+    total_instead = ", or give the total price with @@ instead, which stays exact"
+    refuse_repeating(
+        f"The price in {subject}", getattr(price, "number", None), getattr(price, "currency", None), total_instead
     )
 
 
@@ -291,8 +323,8 @@ def _typed_digits(rounded: Any, exact: Any, precision: int) -> Any:
     return rounded
 
 
-def split_total_price(text: str) -> tuple[str, str] | None:
-    """The `@@` total from a posting line as `(number, currency)` strings, or None.
+def split_total_price(text: str) -> tuple[Decimal, str] | None:
+    """The `@@` total from a posting line as `(number, currency)`, or None.
 
     The caller has already validated the line through Beancount's parser, so
     a total that cannot be read here means the split misread the text — never
@@ -302,19 +334,20 @@ def split_total_price(text: str) -> tuple[str, str] | None:
     (`@@ 100USD`), and a total written as native arithmetic
     (`@@ (40+60) USD`, `@@ 200/2 USD`) is evaluated by it too — the fallback
     would otherwise record either as a divided, repeating `@` price (w5/802).
+    A total whose own arithmetic does not terminate comes back `Repeating`.
     """
     unquoted = _QUOTED_OR_COMMENT.sub("", text)
     if "@@" not in unquoted:
         return None
     tail = unquoted.rsplit("@@", 1)[1].split()
     if len(tail) == 2 and _PLAIN_DECIMAL.fullmatch(tail[0]):
-        return tail[0], tail[1]
+        return Decimal(tail[0]), tail[1]
     if not tail:
         return None
     return _probed_amount(" ".join(tail))
 
 
-def _probed_amount(tail: str) -> tuple[str, str] | None:
+def _probed_amount(tail: str) -> tuple[Decimal, str] | None:
     """The tail after `@@` as `(number, currency)`, read by Beancount's own grammar, or None.
 
     The probe reports what the grammar makes of the exact tail text — a glued
@@ -337,7 +370,7 @@ def _probed_amount(tail: str) -> tuple[str, str] | None:
         return None
     if units.number is MISSING or not isinstance(units.currency, str):
         return None
-    return format(units.number, "f"), units.currency
+    return units.number, units.currency
 
 
 def refuse_zero_divisor(text: str) -> None:
