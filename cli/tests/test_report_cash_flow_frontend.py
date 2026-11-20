@@ -114,15 +114,121 @@ option "operating_currency" "USD"
 """
 
 
+NO_CASH_NOTE = (
+    "No account counts as cash: none is an Assets account named like Cash, Checking, Savings or Bank, "
+    'or one whose open declares cash-flow-role: "cash". Add cash-flow-role: "cash" under the open of each '
+    "bank or wallet account, then run the report again."
+)
+
+# The bank is named after the institution, so no name pattern makes it cash.
+REVOLUT = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Revolut USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Rent USD
+2026-01-15 * "Employer" "Pay"
+  Assets:Revolut  3000.00 USD
+  Income:Salary
+2026-01-20 * "Landlord" "Rent"
+  Expenses:Rent  1200.00 USD
+  Assets:Revolut
+"""
+
+RENAMED_ROOTS = """\
+option "operating_currency" "USD"
+option "name_assets" "Activos"
+option "name_liabilities" "Pasivos"
+option "name_equity" "Patrimonio"
+option "name_income" "Ingresos"
+option "name_expenses" "Gastos"
+2026-01-01 open Activos:Banco:Cuenta USD
+2026-01-01 open Ingresos:Salario USD
+2026-01-15 * "Empleador" "Pago"
+  Activos:Banco:Cuenta  3000.00 USD
+  Ingresos:Salario
+"""
+
+
+def _assert_no_cash_explained(proc: subprocess.CompletedProcess[str]) -> None:
+    """The empty cash set is explained on stderr, never read as a quiet period (w1/319)."""
+    assert proc.returncode == 0, proc.stderr
+    assert NO_CASH_NOTE in proc.stderr
+    assert "No account counts as cash" not in proc.stdout
+    assert "No cash flows in this period." not in proc.stdout + proc.stderr
+    assert "Cash accounts:" not in proc.stdout
+
+
 def test_cash_flow_without_cash_accounts(tmp_path: Path) -> None:
     ledger = write_ledger(tmp_path, NOCASH)
     proc = _bea(tmp_path, "--file", str(ledger), "report", "cash-flow")
-    assert proc.returncode == 0, proc.stderr
+    _assert_no_cash_explained(proc)
     # No transaction without a cash leg is cash activity (w1/268).
-    assert "No cash flows in this period." in proc.stdout
     assert "Operating" not in proc.stdout
     assert "Net change in cash:" in proc.stdout
-    assert "Cash accounts:" not in proc.stdout
+
+
+def test_cash_flow_bank_named_after_institution_is_explained(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, REVOLUT)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "cash-flow")
+    _assert_no_cash_explained(proc)
+    assert "Net change in cash:  —" in proc.stdout
+    assert "Closing cash:        —" in proc.stdout
+
+
+def test_cash_flow_renamed_roots_without_cash_is_explained(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, RENAMED_ROOTS)
+    _assert_no_cash_explained(_bea(tmp_path, "--file", str(ledger), "report", "cash-flow"))
+
+
+def test_cash_flow_csv_without_cash_accounts_notes_on_stderr(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, REVOLUT)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "cash-flow", "--format", "csv")
+    _assert_no_cash_explained(proc)
+    assert proc.stdout.splitlines()[0] == "section,item,date,currency,amount"
+    assert "net_change,net_change,,," in proc.stdout
+
+
+def test_cash_flow_json_without_cash_accounts_is_unchanged(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, REVOLUT)
+    proc = _bea(tmp_path, "--json", "--file", str(ledger), "report", "cash-flow")
+    assert proc.returncode == 0, proc.stderr
+    assert "No account counts as cash" not in proc.stdout + proc.stderr
+    data = json.loads(proc.stdout)["data"]
+    assert data["cash_accounts"] == []
+    assert data["net_change"] == {} and data["opening"] == {} and data["closing"] == {}
+
+
+def test_cash_flow_declared_role_makes_named_bank_cash(tmp_path: Path) -> None:
+    declared = REVOLUT.replace(
+        "2026-01-01 open Assets:Revolut USD\n", '2026-01-01 open Assets:Revolut USD\n  cash-flow-role: "cash"\n'
+    )
+    ledger = write_ledger(tmp_path, declared)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "cash-flow")
+    assert proc.returncode == 0, proc.stderr
+    assert "No account counts as cash" not in proc.stderr
+    assert "Income:Salary" in proc.stdout and "1,800.00 USD" in proc.stdout
+    assert "Cash accounts: Assets:Revolut" in proc.stdout
+
+
+def test_cash_flow_filter_without_cash_account_names_the_filter(tmp_path: Path) -> None:
+    # The ledger has a cash account; the filter leaves it out. The note must
+    # not claim the ledger has none.
+    ledger = write_ledger(tmp_path, LEDGER + NOCASH.removeprefix('option "operating_currency" "USD"\n'))
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "cash-flow", "--account", "Assets:Brokerage")
+    assert proc.returncode == 0, proc.stderr
+    assert "No cash account matches Assets:Brokerage: a cash account is an Assets account named like" in proc.stderr
+    assert "Widen --account to keep one" in proc.stderr
+    assert "No account counts as cash" not in proc.stderr
+    assert "No cash flows in this period." not in proc.stdout
+
+
+def test_cash_flow_filter_matching_nothing_keeps_its_own_note(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, LEDGER)
+    proc = _bea(tmp_path, "--file", str(ledger), "report", "cash-flow", "--account", "Liabilities")
+    assert proc.returncode == 0, proc.stderr
+    assert "No accounts match Liabilities." in proc.stderr
+    assert "No cash account" not in proc.stderr
+    assert "No account counts as cash" not in proc.stderr
 
 
 def test_cash_flow_invalid_role_is_noted(tmp_path: Path) -> None:

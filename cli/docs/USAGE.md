@@ -2135,6 +2135,14 @@ Cash accounts are the Assets accounts named like cash (`Cash`, `Checking`,
 `cash-flow-role: "cash"` — under any root, so an overdraft declared cash counts
 its negative balance in opening and closing cash. A declared operating,
 investing or financing role takes an account out of cash and into that section.
+A bank named after its institution (`Assets:Revolut`, `Assets:Wise`) is not
+cash until its `open` declares the role. When no account counts as cash, no
+transaction is cash activity: the text and CSV reports say so on stderr, with
+the rule and the fix (add `cash-flow-role: "cash"` under the account's `open`
+by hand; `bea add open` takes no metadata), instead of reporting a quiet
+period. Under `--account`, the note names the filter, because the ledger may
+still have cash accounts that the filter leaves out. JSON carries
+`cash_accounts: []`.
 
 ```bash
 bea report income-statement --time 2026 --interval quarterly

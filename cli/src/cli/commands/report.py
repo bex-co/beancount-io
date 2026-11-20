@@ -883,6 +883,11 @@ def cash_flow(
     if context.current().json_output:
         _emit_json(file, data)
         return
+    no_cash = not data["cash_accounts"]
+    if no_cash and not data.get("account_filter_empty"):
+        # With no cash account no transaction is cash activity, so the empty
+        # statement is not a quiet period: say why and how to fix it (w1/319).
+        output.note(_no_cash_accounts_note(data))
     if csv_target is not None:
         _emit_csv("cash-flow", file, data, csv_target)
         return
@@ -896,7 +901,7 @@ def cash_flow(
     precision = _precision(data)
     sections = data["sections"]
     activities = ("operating", "investing", "financing")
-    if not any(sections[activity] for activity in activities):
+    if not no_cash and not any(sections[activity] for activity in activities):
         typer.echo("No cash flows in this period.")
     for activity in activities:
         rows = sections[activity]
@@ -924,6 +929,29 @@ def cash_flow(
         typer.echo(f"\nCash accounts: {', '.join(cash_accounts)}")
     for invalid in data["invalid_role_values"]:
         output.note(f"{invalid['account']}: unknown cash-flow-role value {invalid['value']!r}; using the default.")
+
+
+_CASH_RULE = (
+    'an Assets account named like Cash, Checking, Savings or Bank, or one whose open declares cash-flow-role: "cash"'
+)
+
+
+def _no_cash_accounts_note(data: dict[str, Any]) -> str:
+    """Why an empty cash set leaves the statement empty, and the fix.
+
+    `--account` narrows the cash set too, so under a filter the ledger may
+    still have cash accounts: the note then names the filter, not the ledger.
+    No `bea` command adds metadata to an existing open, so the fix is an edit.
+    """
+    if data.get("account_filter"):
+        return (
+            f"No cash account matches {_filter_text(data)}: a cash account is {_CASH_RULE}. "
+            'Widen --account to keep one, or add cash-flow-role: "cash" under the open of each bank or wallet account.'
+        )
+    return (
+        f"No account counts as cash: none is {_CASH_RULE}. "
+        'Add cash-flow-role: "cash" under the open of each bank or wallet account, then run the report again.'
+    )
 
 
 @report_app.command("budget", cls=SingleValueCommand)
