@@ -149,3 +149,82 @@ def test_synthesized_entry_never_resolves() -> None:
     assert not errors
     with pytest.raises(protocol.UsageError, match="No transaction with import-id or ref 'ghost'"):
         updating.locate_transaction(list(entries), "ghost")
+
+
+NESTED_ROOT = """\
+option "operating_currency" "USD"
+include "2026/jan.bean"
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Expenses:Uncategorized USD
+"""
+NESTED_LEAF = """\
+2026-01-05 ! "Mystery"
+  import-id: "stmt:42"
+  Expenses:Uncategorized 5.00 USD
+  Assets:Checking
+"""
+
+
+@pytest.fixture
+def nested(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """`books/main.bean` including `2026/jan.bean`, run from the folder holding `books/` (w1/340)."""
+    root = tmp_path / "books" / "main.bean"
+    (root.parent / "2026").mkdir(parents=True)
+    root.write_text(NESTED_ROOT)
+    (root.parent / "2026" / "jan.bean").write_text(NESTED_LEAF)
+    monkeypatch.chdir(tmp_path)
+    return root
+
+
+def test_file_line_resolves_from_the_root_folder(nested: Path) -> None:
+    entry = updating.locate_transaction(_entries(nested), "2026/jan.bean:1", nested)
+    assert entry.narration == "Mystery"
+    assert Path(entry.meta["filename"]).samefile(nested.parent / "2026" / "jan.bean")
+
+
+def test_file_line_from_the_working_directory_still_resolves(nested: Path) -> None:
+    entry = updating.locate_transaction(_entries(nested), "books/2026/jan.bean:1", nested)
+    assert entry.narration == "Mystery"
+
+
+def test_a_ledger_file_wins_over_a_stray_working_directory_file(nested: Path) -> None:
+    (nested.parent.parent / "2026").mkdir()
+    (nested.parent.parent / "2026" / "jan.bean").write_text('2026-01-05 * "Not in this ledger"\n')
+    entry = updating.locate_transaction(_entries(nested), "2026/jan.bean:1", nested)
+    assert entry.narration == "Mystery"
+
+
+def test_the_working_directory_wins_when_both_files_are_in_the_ledger(nested: Path) -> None:
+    (nested.parent.parent / "2026").mkdir()
+    (nested.parent.parent / "2026" / "jan.bean").write_text(
+        '2026-01-06 * "Beside the books"\n  Expenses:Uncategorized 1.00 USD\n  Assets:Checking\n'
+    )
+    nested.write_text(NESTED_ROOT + 'include "../2026/jan.bean"\n')
+    entry = updating.locate_transaction(_entries(nested), "2026/jan.bean:1", nested)
+    assert entry.narration == "Beside the books"
+
+
+def test_a_location_naming_no_file_says_where_it_looked(nested: Path) -> None:
+    with pytest.raises(protocol.UsageError) as caught:
+        updating.locate_transaction(_entries(nested), "2026/feb.bean:1", nested)
+    message = str(caught.value)
+    assert "No transaction with import-id or ref '2026/feb.bean:1'" in message
+    assert f"'2026/feb.bean' is not a file under {Path.cwd()} or {nested.parent}." in message
+
+
+def test_an_absolute_location_naming_no_file_names_no_folder(nested: Path) -> None:
+    missing = nested.parent / "2026" / "feb.bean"
+    with pytest.raises(protocol.UsageError) as caught:
+        updating.locate_transaction(_entries(nested), f"{missing}:1", nested)
+    assert f"{str(missing)!r} is not a file. Nothing was written." in str(caught.value)
+
+
+def test_a_colon_import_id_still_resolves_as_metadata(nested: Path) -> None:
+    entry = updating.locate_transaction(_entries(nested), "stmt:42", nested)
+    assert entry.narration == "Mystery"
+
+
+def test_a_plain_id_names_no_file(nested: Path) -> None:
+    with pytest.raises(protocol.UsageError) as caught:
+        updating.locate_transaction(_entries(nested), "nope", nested)
+    assert str(caught.value) == "No transaction with import-id or ref 'nope' in this ledger. Nothing was written."

@@ -1981,6 +1981,14 @@ validates the edit as the apply does: one the ledger would refuse (an unknown
 account, say) prints its diff and the ledger error and exits **1**, and
 `--json` keeps the diff in `error.result`.
 
+A relative path in `file:line` is read from the working directory first and
+then from the root ledger's folder, the base `--into`, `include` lines and
+the `WRITTEN IN` listings use: run from the folder holding `books/`,
+`bea --file books/main.bean update transaction --id 2026/jan.bean:5` finds
+`books/2026/jan.bean`. When both places hold such a file, the one the ledger
+loads wins. An id shaped `file:line` that names a file in neither place is
+looked up as an import-id or `ref`, and its refusal names where it looked.
+
 Both update commands accept `--into FILE` to explicitly select the existing
 file the entries must belong to. Keep `--file` on the governing root;
 `--into` resolves relative to that root's directory and skips automatic root

@@ -158,7 +158,9 @@ The request names its entry with `id`, in one of three forms:
 
 - an `import-id` metadata value, which every bea import stamps;
 - a `ref` metadata value, which bank importers use;
-- `file:line`, the entry's header line, which names the entry outright.
+- `file:line`, the entry's header line, which names the entry outright. A
+  relative `file` is read from the working directory and then from the
+  root's folder; when both name a file, the one the ledger loads wins.
 
 An `import-id` always wins when a `ref` elsewhere spells the same value. A
 value shared by two entries is refused as ambiguous (naming each `file:line`

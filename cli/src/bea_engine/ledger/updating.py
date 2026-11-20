@@ -22,7 +22,7 @@ import codecs
 import os
 import re
 import unicodedata
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from contextlib import ExitStack
 from dataclasses import dataclass
 from decimal import Decimal
@@ -46,12 +46,10 @@ from bea_engine.query import format_error, same_file
 TYPES = ("transaction", "transactions")
 
 
-def parse_location(id_text: str) -> tuple[Path, int] | None:
-    """A `file:line` reference, or None when the text is not one.
+def _location_shape(id_text: str) -> tuple[str, int] | None:
+    """The `(file, line)` an id is shaped as, or None when it names no line.
 
-    The split is on the last colon, so a Windows drive letter survives it, and
-    the path must name an existing file: an import-id such as `stmt:42` is
-    metadata, not a location.
+    The split is on the last colon, so a Windows drive letter survives it.
     """
     path_text, separator, line_text = id_text.rpartition(":")
     # `isdecimal`, not `isdigit`: a superscript `²` or circled `②` is a digit
@@ -62,31 +60,92 @@ def parse_location(id_text: str) -> tuple[Path, int] | None:
     lineno = int(line_text)
     if lineno < 1:
         return None
-    path = Path(path_text)
-    if not path.is_file():
-        return None
-    return path, lineno
+    return path_text, lineno
 
 
-def _same_location(entry: Any, path: Path, lineno: int) -> bool:
-    """Whether the entry is written at `path:lineno`.
+def _location_bases(root: Path | None) -> list[str]:
+    """The folders a relative `file:line` path is looked for in, as a refusal names them."""
+    bases: list[str] = []
+    try:
+        bases.append(os.getcwd())
+    except OSError:
+        pass
+    if root is not None:
+        folder = os.path.dirname(os.path.abspath(root))
+        if folder not in bases:
+            bases.append(folder)
+    return bases
+
+
+def _same_path(path: Path, filename: str) -> bool:
+    """Whether `path` names the file an entry records as its `filename`.
 
     Compared by identity where the filesystem allows it, so a symlinked or
     case-variant spelling of the ledger still resolves; otherwise by
     normalized absolute path.
     """
-    meta = entry.meta or {}
-    if meta.get("lineno") != lineno:
-        return False
-    filename = meta.get("filename")
-    if not isinstance(filename, str) or not filename:
-        return False
     try:
         if os.path.samefile(path, filename):
             return True
     except OSError:
         pass
     return os.path.normcase(os.path.abspath(str(path))) == os.path.normcase(os.path.abspath(filename))
+
+
+def parse_location(id_text: str, root: Path | None = None, entries: Sequence[Any] = ()) -> tuple[Path, int] | None:
+    """A `file:line` reference, or None when the text is not one.
+
+    The path must name an existing file, so an import-id such as `stmt:42` is
+    metadata, not a location. A relative path is read from the working
+    directory and then from the root ledger's folder: `--into`, `include`
+    lines and the `WRITTEN IN` listings spell a ledger's files from there, and
+    a location written the same way named no file from the parent folder, so
+    it fell through to the import-id lookup (w1/340). When both name a file,
+    the first one holding `entries` wins, the working directory's on a tie.
+    """
+    shape = _location_shape(id_text)
+    if shape is None:
+        return None
+    path_text, lineno = shape
+    path = Path(path_text)
+    candidates = [path]
+    if not path.is_absolute() and root is not None:
+        # Kept as typed from the working directory, so a refusal names it so.
+        candidates.append(Path(os.path.dirname(os.path.abspath(root))) / path)
+    existing = [candidate for candidate in candidates if candidate.is_file()]
+    if not existing:
+        return None
+    if len(existing) > 1:
+        files = {(entry.meta or {}).get("filename") for entry in entries}
+        named = [name for name in files if isinstance(name, str) and name]
+        existing.sort(key=lambda candidate: not any(_same_path(candidate, name) for name in named))
+    return existing[0], lineno
+
+
+def _no_file_named(id_text: str, root: Path | None) -> str:
+    """`, and FILE is not a file under ...` for an id shaped `file:line`, or nothing.
+
+    The import-id refusal alone never said the id was tried as a location,
+    nor where its file was looked for (w1/340).
+    """
+    shape = _location_shape(id_text)
+    if shape is None:
+        return ""
+    path_text = shape[0]
+    bases = [] if Path(path_text).is_absolute() else _location_bases(root)
+    where = f" under {' or '.join(bases)}" if bases else ""
+    return f", and {path_text!r} is not a file{where}"
+
+
+def _same_location(entry: Any, path: Path, lineno: int) -> bool:
+    """Whether the entry is written at `path:lineno`."""
+    meta = entry.meta or {}
+    if meta.get("lineno") != lineno:
+        return False
+    filename = meta.get("filename")
+    if not isinstance(filename, str) or not filename:
+        return False
+    return _same_path(path, filename)
 
 
 def _metadata_values(entry: Any, key: str) -> list[str]:
@@ -127,14 +186,16 @@ def _ambiguous(id_text: str, key: str, matches: list[Any]) -> protocol.UsageErro
     )
 
 
-def locate_transaction(entries: list[Any], id_text: str) -> Any:
+def locate_transaction(entries: list[Any], id_text: str, root: Path | None = None) -> Any:
     """The one on-disk transaction `id_text` names.
 
-    `file:line` resolves by location; anything else resolves by `import-id`
-    first and `ref` second, so an import-id always wins when a `ref` elsewhere
-    spells the same value. A repeated value is ambiguous and an absent one is
-    not found; both are usage errors, because the caller named the wrong entry
-    rather than the ledger failing to load.
+    `file:line` resolves by location, its path read from the working
+    directory and then from the folder of `root`, the root ledger; anything
+    else resolves by `import-id` first and `ref` second, so an import-id
+    always wins when a `ref` elsewhere spells the same value. A repeated value
+    is ambiguous and an absent one is not found; both are usage errors,
+    because the caller named the wrong entry rather than the ledger failing
+    to load.
     """
     from beancount.core.data import Transaction
 
@@ -144,7 +205,7 @@ def locate_transaction(entries: list[Any], id_text: str) -> Any:
         for entry in entries
         if isinstance(entry, Transaction) and not reader.entry_generated(entry, "transaction", shared)
     ]
-    location = parse_location(id_text)
+    location = parse_location(id_text, root, entries)
     if location is not None:
         path, lineno = location
         matches = [entry for entry in on_disk if _same_location(entry, path, lineno)]
@@ -164,7 +225,10 @@ def locate_transaction(entries: list[Any], id_text: str) -> Any:
             raise _ambiguous(id_text, key, matches)
         if matches:
             return matches[0]
-    raise protocol.UsageError(f"No transaction with import-id or ref {id_text!r} in this ledger. Nothing was written.")
+    raise protocol.UsageError(
+        f"No transaction with import-id or ref {id_text!r} in this ledger{_no_file_named(id_text, root)}. "
+        "Nothing was written."
+    )
 
 
 @dataclass
@@ -673,6 +737,7 @@ def _plan_rows(
     rows: list[Any],
     file_lines: dict[Path, list[str]],
     *,
+    root: Path,
     into: Path | None = None,
 ) -> tuple[list[_RowPlan], list[str], list[int], dict[int, _Rejection], bool]:
     """Resolve and plan every row.
@@ -706,7 +771,7 @@ def _plan_rows(
             refuse(index, _row_reason(index, exc), schema=True)
             continue
         try:
-            entry = locate_transaction(entries, changes.id)
+            entry = locate_transaction(entries, changes.id, root)
         except protocol.UsageError as exc:
             refuse(index, _row_reason(index, exc))
             continue
@@ -1028,7 +1093,7 @@ def _transactions(
         snapshot = ledger_write.LedgerSnapshot.capture(file)
         file_texts, file_lines, marks = files(snapshot)
         plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(
-            entries, options, rows, file_lines, into=into
+            entries, options, rows, file_lines, root=file, into=into
         )
         valid = _validate_plans(
             plans, file_lines, snapshot, rejected, rejected_rows, reasons, allow_errors=allow_errors
@@ -1061,7 +1126,7 @@ def _transactions(
         entries, options = load(snapshot)
         file_texts, file_lines, marks = files(snapshot)
         plans, rejected, rejected_rows, reasons, schema_rejects = _plan_rows(
-            entries, options, rows, file_lines, into=into
+            entries, options, rows, file_lines, root=file, into=into
         )
         # Every file validates before any file writes, so a validation failure
         # never leaves half the batch behind.
@@ -1203,7 +1268,7 @@ def answer(
     if not apply:
         entries, errors, options = managed_load.load_file(file)
         _gate_load_errors(errors, file, allow_errors=allow_errors)
-        entry = locate_transaction(list(entries), changes.id)
+        entry = locate_transaction(list(entries), changes.id, file)
         target = Path((entry.meta or {})["filename"])
         _require_into(target, selected)
         snapshot = ledger_write.LedgerSnapshot.capture(file)
@@ -1234,7 +1299,7 @@ def answer(
         # file is in the graph the load read, so it is locked too.
         entries, errors, options = managed_load.load_file(file, snapshot=snapshot)
         _gate_load_errors(errors, file, allow_errors=allow_errors)
-        entry = locate_transaction(list(entries), changes.id)
+        entry = locate_transaction(list(entries), changes.id, file)
         target = Path((entry.meta or {})["filename"])
         _require_into(target, selected)
         original = snapshot.require_target(target)
