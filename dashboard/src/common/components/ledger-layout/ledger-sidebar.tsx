@@ -392,6 +392,7 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
           currentPath={currentPath}
           isActive={hasActiveItem}
           onNavigate={handleNavigate}
+          landingPath={group.landingPath}
         />
       );
     }

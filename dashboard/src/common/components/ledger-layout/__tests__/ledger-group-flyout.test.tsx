@@ -13,12 +13,14 @@ vi.mock("@tanstack/react-router", () => ({
     to,
     children,
     onClick,
+    ...rest
   }: {
     to: string;
     children: React.ReactNode;
     onClick?: () => void;
-  }) => (
+  } & React.ComponentProps<"a">) => (
     <a
+      {...rest}
       href={to}
       onClick={(event) => {
         event.preventDefault();
@@ -218,5 +220,34 @@ describe("LedgerGroupFlyout", () => {
       await new Promise((resolve) => setTimeout(resolve, 300));
     });
     expect(screen.getByText("Income statement")).toBeInTheDocument();
+  });
+
+  describe("with a landing page", () => {
+    it("goes to the group's first page when the icon is clicked", () => {
+      const onNavigate = vi.fn();
+      renderFlyout({ landingPath: "/x/income", onNavigate });
+      const icon = screen.getByRole("link", { name: "Reports" });
+      expect(icon).toHaveAttribute("href", "/x/income");
+      fireEvent.click(icon);
+      expect(onNavigate).toHaveBeenCalledTimes(1);
+      expect(screen.queryByText("Balance sheet")).not.toBeInTheDocument();
+    });
+
+    it("still lists the destinations on mouse hover", async () => {
+      const { container } = renderFlyout({ landingPath: "/x/income" });
+      const item = container.querySelector(
+        '[data-slot="sidebar-menu-item"]',
+      ) as HTMLElement;
+      fireEvent.pointerEnter(item, { pointerType: "mouse" });
+      expect(await screen.findByText("Balance sheet")).toBeInTheDocument();
+    });
+
+    it("opens the destinations from the keyboard with an arrow", async () => {
+      renderFlyout({ landingPath: "/x/income" });
+      const icon = screen.getByRole("link", { name: "Reports" });
+      fireEvent.keyDown(icon, { key: "ArrowRight" });
+      expect(await screen.findByText("Balance sheet")).toBeInTheDocument();
+      expect(icon).toHaveAttribute("aria-expanded", "true");
+    });
   });
 });

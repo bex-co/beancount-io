@@ -15,6 +15,7 @@ import {
 } from "@/common/components/ui/sidebar.tsx";
 import {
   Popover,
+  PopoverAnchor,
   PopoverContent,
   PopoverTrigger,
 } from "@/common/components/ui/popover.tsx";
@@ -32,6 +33,13 @@ interface LedgerGroupFlyoutProps {
   currentPath: string;
   isActive: boolean;
   onNavigate: () => void;
+  /**
+   * The group's own first page (Reports → Income Statement). With one, the
+   * icon goes there, as the group's label does in the full sidebar; the
+   * destinations still open beside it on hover, or from the keyboard with
+   * the right or down arrow.
+   */
+  landingPath?: string;
 }
 
 /** Delay before closing on pointer-leave, so moving across the gap between the
@@ -43,7 +51,9 @@ const CLOSE_DELAY_MS = 120;
  * submenu is hidden, so the group icon would otherwise be a dead click. Here it
  * opens a flyout — on hover, click, or keyboard — that lists the group's
  * destinations beside the rail, keeping every icon actionable and every section
- * reachable while collapsed.
+ * reachable while collapsed. A group with a landing page (Reports) goes there
+ * on click instead, as its label does in the full sidebar, and keeps the
+ * flyout for hover and the arrow keys.
  */
 export function LedgerGroupFlyout({
   label,
@@ -52,6 +62,7 @@ export function LedgerGroupFlyout({
   currentPath,
   isActive,
   onNavigate,
+  landingPath,
 }: LedgerGroupFlyoutProps) {
   const [open, setOpen] = useState(false);
   const titleId = useId();
@@ -96,6 +107,81 @@ export function LedgerGroupFlyout({
     [],
   );
 
+  // The flyout is a dialog; its visible group title names it, as the group
+  // label names the rail icon (w4/1012).
+  const content = (
+    <PopoverContent
+      aria-labelledby={titleId}
+      side="right"
+      align="start"
+      sideOffset={8}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      className="w-56 p-1"
+    >
+      <div
+        id={titleId}
+        className="px-2 py-1.5 text-xs font-medium text-sidebar-foreground/70"
+      >
+        {label}
+      </div>
+      <ul className="flex flex-col gap-0.5">
+        {items.map((item) => (
+          <SidebarMenuSubItem key={item.id}>
+            <SidebarMenuSubButton asChild isActive={currentPath === item.path}>
+              <Link
+                to={item.path}
+                onClick={() => {
+                  onNavigate();
+                  setOpen(false);
+                }}
+              >
+                <span>{item.label}</span>
+              </Link>
+            </SidebarMenuSubButton>
+          </SidebarMenuSubItem>
+        ))}
+      </ul>
+    </PopoverContent>
+  );
+
+  if (landingPath) {
+    return (
+      <SidebarMenuItem
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+      >
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverAnchor asChild>
+            <SidebarMenuButton asChild isActive={isActive}>
+              <Link
+                to={landingPath}
+                aria-label={label}
+                aria-haspopup="dialog"
+                aria-expanded={open}
+                onClick={() => {
+                  onNavigate();
+                  setOpen(false);
+                }}
+                onKeyDown={(event) => {
+                  // Enter follows the link; an arrow opens the rest.
+                  if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+                    event.preventDefault();
+                    openNow();
+                  }
+                }}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{label}</span>
+              </Link>
+            </SidebarMenuButton>
+          </PopoverAnchor>
+          {content}
+        </Popover>
+      </SidebarMenuItem>
+    );
+  }
+
   return (
     <SidebarMenuItem
       onPointerEnter={handlePointerEnter}
@@ -108,44 +194,7 @@ export function LedgerGroupFlyout({
             <span>{label}</span>
           </SidebarMenuButton>
         </PopoverTrigger>
-        {/* The flyout is a dialog; its visible group title names it, as the
-            group label names the rail icon (w4/1012). */}
-        <PopoverContent
-          aria-labelledby={titleId}
-          side="right"
-          align="start"
-          sideOffset={8}
-          onPointerEnter={handlePointerEnter}
-          onPointerLeave={handlePointerLeave}
-          className="w-56 p-1"
-        >
-          <div
-            id={titleId}
-            className="px-2 py-1.5 text-xs font-medium text-sidebar-foreground/70"
-          >
-            {label}
-          </div>
-          <ul className="flex flex-col gap-0.5">
-            {items.map((item) => (
-              <SidebarMenuSubItem key={item.id}>
-                <SidebarMenuSubButton
-                  asChild
-                  isActive={currentPath === item.path}
-                >
-                  <Link
-                    to={item.path}
-                    onClick={() => {
-                      onNavigate();
-                      setOpen(false);
-                    }}
-                  >
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ))}
-          </ul>
-        </PopoverContent>
+        {content}
       </Popover>
     </SidebarMenuItem>
   );
