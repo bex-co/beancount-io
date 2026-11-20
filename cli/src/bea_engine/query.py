@@ -38,8 +38,10 @@ from __future__ import annotations
 
 import ast
 import difflib
+import itertools
 import json
 import numbers
+import operator
 import os
 import re
 import shlex
@@ -274,6 +276,99 @@ def _null_aware(value: Any) -> Any:
     return value
 
 
+def _column_key() -> Callable[[Any], tuple[bool, Any]]:
+    """ORDER BY's key for one column's values: NULL first, then the column's own rule.
+
+    It owns one `_Column`, so build one per column and per sort.
+    """
+    column = _Column()
+
+    def present(value: Any) -> tuple[bool, Any]:
+        if value is None:
+            return (False, 0)
+        column.add(value)
+        return (True, _Orderable(value, column))
+
+    return present
+
+
+def _pivot(self: Any) -> tuple[tuple[Any, ...], list[tuple[Any, ...]]]:
+    """Upstream `EvalPivot.__call__`, with both of its sorts on ORDER BY's key (w1/333).
+
+    Upstream sorted the pivot keys and the rows natively, so a transaction
+    without a payee (`PIVOT BY month, payee`) or metadata mixing `ref: "A-12"`
+    with `ref: 5` raised a bare TypeError. A NULL key's column is headed
+    `NULL`, as the hosted engine heads it.
+    """
+    from beanquery import cursor
+
+    columns, rows = self.query()
+    col1, col2 = self.pivots
+    othercols = [i for i in range(len(columns)) if i not in self.pivots]
+    nother = len(othercols)
+    keys = sorted({row[col2] for row in rows}, key=_column_key())
+    labels = ["NULL" if key is None else f"{key}" for key in keys]
+
+    head = cursor.Column(f"{columns[col1].name}/{columns[col2].name}", columns[col1].datatype)
+    cells = itertools.product(labels, (columns[i] for i in othercols))
+    columns = (
+        head,
+        *(cursor.Column(f"{label}/{col.name}" if nother > 1 else label, col.datatype) for label, col in cells),
+    )
+
+    pivoted = []
+    first = _column_key()
+    # The type breaks a tie between `5` and `"5"` in a mixed column, so each
+    # value's rows stay together for groupby.
+    rows.sort(key=lambda row: (first(row[col1]), type(row[col1]).__name__))
+    for field1, group in itertools.groupby(rows, key=operator.itemgetter(col1)):
+        outrow = [field1] + [None] * (len(columns) - 1)
+        for row in group:
+            index = keys.index(row[col2]) * nother + 1
+            outrow[index : index + nother] = [row[i] for i in othercols]
+        pivoted.append(tuple(outrow))
+    return columns, pivoted
+
+
+def _extreme(pick: Callable[..., Any], values: list[Any]) -> Any:
+    """`min()` or `max()` of one group's values, by ORDER BY's rule (w1/333).
+
+    Upstream compared each value with the best so far, so metadata mixing
+    `ref: "A-12"` with `ref: 5` raised a bare TypeError. Whether a group mixes
+    kinds is known only once it is whole, so the aggregate keeps its values
+    until then: a mixed group picks by text, a uniform one natively, as
+    `_Orderable` sorts them.
+    """
+    if not values:
+        return None
+    column = _Column()
+    for value in {type(value): value for value in values}.values():
+        column.add(value)
+    if column.mixed:
+        return pick(values, key=str)
+    try:
+        return pick(values)
+    except TypeError:
+        return pick(values, key=lambda value: _Orderable(value, column))
+
+
+def _keep_values(self: Any, store: Any) -> None:
+    store[self.handle] = []
+
+
+def _keep_value(self: Any, store: Any, context: Any) -> None:
+    value = self.operands[0](context)
+    if value is not None:
+        store[self.handle].append(value)
+
+
+def _pick_extreme(pick: Callable[..., Any]) -> Callable[[Any, Any], None]:
+    def finalize(self: Any, store: Any) -> None:
+        self.value = _extreme(pick, store[self.handle])
+
+    return finalize
+
+
 def _null_safe_ordering() -> None:
     """Sort a NULL first without comparing it to a value (w5/562).
 
@@ -283,27 +378,27 @@ def _null_safe_ordering() -> None:
     AttributeError whenever an unpriced posting sorted against a priced one,
     and posting order decided whether it did. Each key is a (present, value)
     pair instead, so a NULL is only ever compared with another NULL.
+
+    PIVOT BY and `min()`/`max()` compare values too, and follow the same rule
+    (w1/333).
     """
-    from beanquery import query_execute
+    from beanquery import query_compile, query_env, query_execute
 
     if getattr(query_execute.nullitemgetter, "_bea_null_safe", False):
         return
 
-    def present(value: Any, column: _Column) -> tuple[bool, Any]:
-        if value is None:
-            return (False, 0)
-        column.add(value)
-        return (True, _Orderable(value, column))
-
     def nullitemgetter(item: int, *items: int) -> Callable[[Any], Any]:
-        # One `_Column` per sorted column and per sort, shared by its keys.
         if items:
-            indexes = (item, *items)
-            columns = {index: _Column() for index in indexes}
-            return lambda row: tuple(present(row[index], columns[index]) for index in indexes)
-        column = _Column()
-        return lambda row: present(row[item], column)
+            keys = [(index, _column_key()) for index in (item, *items)]
+            return lambda row: tuple(key(row[index]) for index, key in keys)
+        key = _column_key()
+        return lambda row: key(row[item])
 
+    query_compile.EvalPivot.__call__ = _pivot
+    for aggregate, pick in ((query_env.Min, min), (query_env.Max, max)):
+        aggregate.initialize = _keep_values
+        aggregate.update = _keep_value
+        aggregate.finalize = _pick_extreme(pick)
     nullitemgetter._bea_null_safe = True  # type: ignore[attr-defined]
     query_execute.nullitemgetter = nullitemgetter
 
