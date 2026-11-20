@@ -405,3 +405,229 @@ def test_json_keeps_the_lots_cost_and_the_rate_exact(tmp_path: Path) -> None:
     }
     assert rows[1][1]["units"] == {"number": "-1915.60", "currency": "USD"}
     assert rows[2][2] == {"number": "1.083721", "currency": "USD"}
+
+
+# A `{{100.00 USD}}` lot of 3, whose cash leg Beancount interpolates from the
+# 33.33333333333333333333333333 USD unit cost, then a lot at its own cost
+# (w1/334). Bare-number columns printed every digit of that quotient.
+BARE = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Equity:Opening USD
+2026-01-01 * "Start"
+  Assets:Cash  1000.00 USD
+  Equity:Opening
+2026-01-02 * "Buy"
+  Assets:Broker  3 HOOL {{100.00 USD}}
+  Assets:Cash
+2026-01-03 * "Buy2"
+  Assets:Broker  2 HOOL {40.00 USD}
+  Assets:Cash
+2026-01-04 price HOOL 41.00 USD
+"""
+
+# The purchase spends all of the cash, but for the quotient's residue.
+EMPTIED = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Equity:Opening USD
+2026-01-01 * "Start"
+  Assets:Cash  100.00 USD
+  Equity:Opening
+2026-01-02 * "Buy"
+  Assets:Broker  3 HOOL {{100.00 USD}}
+  Assets:Cash
+"""
+
+BARE_JOURNAL = "SELECT date, account, number, cost_number, position"
+
+# The BQL cookbook's "Open lots at own cost" and "Per-lot market value"
+# recipes (docs/skills/bql-cookbook.md), verbatim.
+OPEN_LOTS = (
+    "SELECT account, currency AS commodity, cost_number, cost_date, sum(number) AS units, "
+    "sum(number * cost_number) AS cost, cost_currency WHERE cost_number IS NOT NULL "
+    "GROUP BY account, commodity, cost_number, cost_date, cost_currency HAVING sum(number) != 0 "
+    "ORDER BY account, commodity, cost_date"
+)
+LOT_MARKET = (
+    "SELECT account, currency AS commodity, cost_date, cost_currency, sum(number) AS units, "
+    "sum(number * cost_number) AS cost, sum(number(value(position))) AS market, "
+    "sum(number(value(position))) - sum(number * cost_number) AS unrealized "
+    "WHERE cost_number IS NOT NULL AND currency(value(position)) = cost_currency "
+    "GROUP BY account, commodity, cost_date, cost_currency HAVING sum(number) != 0 "
+    "ORDER BY account, commodity, cost_date"
+)
+
+
+def test_a_number_column_reads_a_quotient_at_its_other_values_digits(tmp_path: Path) -> None:
+    """The cash leg and the unit cost read as their position cells do; `3` and `1000.00` keep their own digits."""
+    ledger = write_ledger(tmp_path, BARE)
+    result = bea(["--file", str(ledger), "query", BARE_JOURNAL], tmp_path)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    lines = result.stdout.splitlines()
+    assert [line.split() for line in lines[2:]] == [
+        ["2026-01-01", "Assets:Cash", "1000.00", "1000.00", "USD"],
+        ["2026-01-01", "Equity:Opening", "-1000.00", "-1000.00", "USD"],
+        ["2026-01-02", "Assets:Broker", "3", "33.33", "3", "HOOL", "{", "33.33", "USD}"],
+        ["2026-01-02", "Assets:Cash", "-100.00", "-100.00", "USD"],
+        ["2026-01-03", "Assets:Broker", "2", "40.00", "2", "HOOL", "{", "40.00", "USD}"],
+        ["2026-01-03", "Assets:Cash", "-80.00", "-80.00", "USD"],
+    ]
+    # Nor does the quotient's width set the column's: `-1000.00` does.
+    assert [len(rule) for rule in lines[1].split()][2:4] == [len("-1000.00"), len("cost_number")]
+
+
+@pytest.mark.parametrize("numberify", [False, True], ids=["amounts", "numberified"])
+def test_a_summed_number_reads_at_cents_beside_its_position(tmp_path: Path, numberify: bool) -> None:
+    flags = ["-m"] if numberify else []
+    query = "SELECT account, sum(position) AS p, sum(number) AS n GROUP BY account ORDER BY account"
+    rows = _rows(tmp_path, BARE, *flags, query)
+
+    if numberify:
+        assert rows == {
+            "Assets:Broker": ["5", "5"],
+            "Assets:Cash": ["820.00", "820.00"],
+            "Equity:Opening": ["-1000.00", "-1000.00"],
+        }
+    else:
+        assert rows == {
+            "Assets:Broker": ["3", "HOOL", "{", "33.33", "USD}", "2", "HOOL", "{", "40.00", "USD}", "5"],
+            "Assets:Cash": ["820.00", "USD", "820.00"],
+            "Equity:Opening": ["-1000.00", "USD", "-1000.00"],
+        }
+
+
+def test_the_cookbooks_lot_recipes_read_a_100_usd_lot_as_100_usd(tmp_path: Path) -> None:
+    assert _cells(tmp_path, BARE, OPEN_LOTS) == [
+        ["Assets:Broker", "HOOL", "33.33", "2026-01-02", "3", "100.00", "USD"],
+        ["Assets:Broker", "HOOL", "40.00", "2026-01-03", "2", "80.00", "USD"],
+    ]
+    assert _cells(tmp_path, BARE, LOT_MARKET) == [
+        ["Assets:Broker", "HOOL", "2026-01-02", "USD", "3", "100.00", "123.00", "23.00"],
+        ["Assets:Broker", "HOOL", "2026-01-03", "USD", "2", "80.00", "82.00", "2.00"],
+    ]
+
+
+def test_a_pivoted_sum_reads_at_cents(tmp_path: Path) -> None:
+    query = (
+        "SELECT year, account, sum(number) AS n GROUP BY year, account ORDER BY year, account PIVOT BY account, year"
+    )
+
+    assert _rows(tmp_path, BARE, query) == {
+        "Assets:Broker": ["5"],
+        "Assets:Cash": ["820.00"],
+        "Equity:Opening": ["-1000.00"],
+    }
+
+
+def test_an_emptied_account_holds_zero_at_the_ledgers_precision(tmp_path: Path) -> None:
+    """A sum that is all residue has no other digits to read at, so it takes the ledger's, without a sign."""
+    cash = "SELECT sum(number) AS cash, sum(position) AS p WHERE account = 'Assets:Cash'"
+
+    assert _cells(tmp_path, EMPTIED, cash) == [["0.00", "0.00", "USD"]]
+    assert _cells(tmp_path, EMPTIED, "SELECT sum(number) WHERE account = 'Assets:Cash'") == [["0.00"]]
+    # An exact zero carrying the quotient's 26 places.
+    assert _cells(tmp_path, BARE, "SELECT sum(number(weight)) WHERE narration = 'Buy'") == [["0.00"]]
+
+
+def test_clean_numbers_keep_their_own_digits(tmp_path: Path) -> None:
+    """Counts, units and a lone sub-cent rate are not noise; a summed `convert()` keeps its eight decimals."""
+    text = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank USD
+2026-01-01 open Assets:Meme
+2026-01-01 open Assets:Crypto BTC
+2026-01-01 open Equity:Opening
+2026-01-02 * "open"
+  Assets:Bank  1000.00 USD
+  Equity:Opening
+2026-01-03 * "Meme coins"
+  Assets:Meme  1000 MEME @ 0.000000000012 USD
+  Assets:Bank
+2026-01-04 * "A coin"
+  Assets:Crypto  1 BTC
+  Equity:Opening
+2026-01-10 price BTC 61234.56789012 USD
+"""
+    assert _cells(tmp_path, BARE, "SELECT count(*) AS c, sum(number) AS n WHERE account = 'Assets:Broker'") == [
+        ["2", "5"]
+    ]
+    assert _cells(tmp_path, text, "SELECT number(price) AS rate WHERE account = 'Assets:Meme'") == [["0.000000000012"]]
+    converted = "SELECT sum(number(convert(position, 'USD'))) AS v WHERE account = 'Assets:Crypto'"
+    assert _cells(tmp_path, text, converted) == [["61234.56789012"]]
+
+
+def test_stdin_and_an_output_file_read_the_same_digits(tmp_path: Path) -> None:
+    import subprocess
+    import sys
+
+    from tests.report_helpers import run_env
+
+    ledger = write_ledger(tmp_path, BARE)
+    query = "SELECT account, sum(number) AS n GROUP BY account ORDER BY account"
+    piped = subprocess.run(
+        [sys.executable, "-m", "cli.main", "--file", str(ledger), "query"],
+        env=run_env(tmp_path),
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=300,
+        input=query + "\n",
+        check=False,
+    )
+    written = bea(["--file", str(ledger), "query", "-o", "out.txt", query], tmp_path)
+
+    assert piped.returncode == written.returncode == 0, piped.stderr + written.stderr
+    for table in (piped.stdout, (tmp_path / "out.txt").read_text()):
+        assert [line.split() for line in table.splitlines()[2:]] == [
+            ["Assets:Broker", "5"],
+            ["Assets:Cash", "820.00"],
+            ["Equity:Opening", "-1000.00"],
+        ]
+
+
+def test_json_and_csv_keep_a_numbers_every_digit(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, BARE)
+    query = "SELECT number WHERE narration = 'Buy' AND account = 'Assets:Cash'"
+    shown = bea(["--json", "--file", str(ledger), "query", query], tmp_path)
+    csv = bea(["--file", str(ledger), "query", "--format", "csv", query], tmp_path)
+
+    assert shown.returncode == csv.returncode == 0, shown.stderr + csv.stderr
+    assert json.loads(shown.stdout)["data"]["rows"] == [["-99.99999999999999999999999999"]]
+    assert csv.stdout.splitlines() == ["number", "-99.99999999999999999999999999"]
+
+
+def test_the_shell_reads_a_summed_number_at_cents(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("beanquery.shell.readline", None)
+    monkeypatch.setattr("beanquery.shell.INIT_FILENAME", str(tmp_path / "no-init"))
+    stream = io.StringIO()
+    shell = build_shell(write_ledger(tmp_path, EMPTIED), stream)
+
+    shell.onecmd("SELECT sum(number) AS cash WHERE account = 'Assets:Cash'")
+    assert stream.getvalue().split()[-1] == "0.00"
+
+
+@pytest.mark.parametrize(
+    ("number", "summed", "digits"),
+    [
+        ("-99.99999999999999999999999999", False, 0),
+        ("33.33333333333333333333333333", True, 0),
+        ("820.0000000000000000000000000", True, 0),
+        ("23.00000000000000000000000001", True, 0),
+        ("-4.50000000000000000000000001", True, 1),
+        ("1000.00", False, 2),
+        ("1000.00", True, 2),
+        ("3", True, 0),
+        ("0.000000000012", False, 12),
+        ("0.000000000012", True, 0),
+    ],
+)
+def test_a_numbers_meaningful_digits(number: str, summed: bool, digits: int) -> None:
+    from decimal import Decimal
+
+    from bea_engine.query import _meaningful_digits
+
+    assert _meaningful_digits(Decimal(number), summed) == digits

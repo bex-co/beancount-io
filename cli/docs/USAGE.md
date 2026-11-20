@@ -1106,7 +1106,15 @@ cost in a position or an inventory, and a rate in a `price` column, keep
 their digits without setting how the amounts print. One `{191.559998 USD}`
 lot reads `10 AAPL {191.559998 USD}` beside a `7963.73 USD` balance, and a
 `1.083721 USD` price beside `-108.37 USD` postings; `-m` columns follow the
-same rule. `--json`, `--format csv`, and their `-m` columns keep every digit.
+same rule. A bare-number column, such as `number`, `cost_number`,
+`sum(number)`, `number * cost_number` or `number()` of an amount, has no
+currency to take a precision from, so each value keeps the digits it is
+written with: `1000.00` shows two and `3` none. A value whose digits are such
+a quotient, or the residue in a `sum()`, prints at the most digits the
+column's other values have, or at the ledger's finest written precision when
+they have none, and a zero prints without a sign: the cash leg of `3 HOOL
+{{100.00 USD}}` reads `-100.00`, its unit cost `33.33`, and the account it
+empties `0.00`. `--json`, `--format csv`, and their `-m` columns keep every digit.
 `tags` and `links` hold a whole set per entry, so BQL cannot compare them:
 `SELECT DISTINCT tags` and `GROUP BY tags` are refused (exit **2**) with the
 recipes that work — `SELECT DISTINCT joinstr(tags)` for distinct combinations,

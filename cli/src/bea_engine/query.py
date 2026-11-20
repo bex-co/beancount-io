@@ -27,8 +27,13 @@ below need Beancount objects, which is why they live here and not in `bea`:
   nines: `sum(weight)` over that lot and its cash leg reads `0.00 USD`, not
   `-1E-26 USD` (w1/326). A per-unit cost and a `price` column's rate keep
   their own digits without setting the amounts': one `{191.559998 USD}` lot
-  printed every USD amount in the table with six decimals (w1/330). `-m`
-  cells in CSV and JSON stay lossless.
+  printed every USD amount in the table with six decimals (w1/330). A bare
+  number column (`number`, `cost_number`, `sum(number)`) holds no currency,
+  so each value keeps its digits as written, `3` beside `1000.00`; one whose
+  digits are such a quotient, or a `sum()`'s residue, prints at the digits
+  of the column's other values, or at the ledger's finest written precision
+  when they have none: `-100.00`, not `-99.99999999999999999999999999`
+  (w1/334). `-m` cells in CSV and JSON stay lossless.
 - **Directive exports.** The shared writer printer preserves negative custom
   values, small decimal metadata, string escapes and whole cost specifications
   so reloading an export does not silently change those values.
@@ -1749,8 +1754,10 @@ def build_shell(
             return self._written[1]
 
         def on_Select(self, statement: Any) -> Any:  # noqa: N802 - beanquery dispatch name
-            cursor = self.context.execute(statement)
-            description, rows = cursor.description, cursor.fetchall()
+            # Compiled here rather than through a cursor, which keeps only the
+            # rows: a text table reads which columns sum off the targets.
+            query = self.context.compile(statement)
+            description, rows = query()
             # A `PRINT` returns entries by construction. With no rows its lone
             # column is typed `object`, which the guard below read as a column
             # `SELECT`: an empty year was refused, with the advice to "use
@@ -1764,6 +1771,7 @@ def build_shell(
             # lossless, as JSON's do.
             if self.settings.format == "text":
                 written = self._written_precision()
+                description = _marked_sums(query, description)
                 if self.settings.numberify:
                     description, rows = _numberified_text(description, rows, written)
                 dcontext = _text_context(written)
@@ -2265,21 +2273,24 @@ def _fixed_point_text() -> Iterator[None]:
     column and an `entry_meta()` cell, while the position beside it, the CSV
     and the JSON all said `0.00000001` (w5/294). An amount that rounds to zero
     prints without a sign (w1/326), and each amount renderer sizes its own
-    values (w1/330). Upstream's position and cost renderers build their
-    amount renderer by its module name, so that name is swapped too. The swap
-    lasts one render, so native `--source` keeps upstream's table.
+    values (w1/330), as each number renderer does (w1/334). Upstream's
+    position and cost renderers build their amount renderer by its module
+    name, so that name is swapped too. The swap lasts one render, so native
+    `--source` keeps upstream's table.
     """
     from beancount.core.amount import Amount
     from beanquery import query_render
 
     swapped = _text_renderers()
-    saved = {dtype: query_render.RENDERERS[dtype] for dtype in swapped}
+    # Whole, since `_SummedNumber` has no upstream renderer to put back.
+    saved = dict(query_render.RENDERERS)
     amounts = query_render.AmountRenderer
     query_render.RENDERERS.update(swapped)
     query_render.AmountRenderer = swapped[Amount]
     try:
         yield
     finally:
+        query_render.RENDERERS.clear()
         query_render.RENDERERS.update(saved)
         query_render.AmountRenderer = amounts
 
@@ -2406,6 +2417,40 @@ def _render_text_display_width(
     file.write(bottom)
 
 
+class _SummedNumber(Decimal):
+    """The type a text table gives a number column holding a `sum()` (w1/334).
+
+    Only for the renderer lookup: such a column's digits after a quotient's
+    residue are noise, as a summed inventory's are (w1/326). No value is ever
+    one.
+    """
+
+
+def _marked_sums(query: Any, description: Sequence[Any]) -> list[Any]:
+    """A text table's columns, each number column holding a `sum()` typed `_SummedNumber` (w1/334).
+
+    The compiled targets tell: `sum(number)`, a difference of two sums,
+    `number()` of an amount taken from a summed inventory. A pivoted table
+    repeats the targets other than its two keys once per value of the second.
+    """
+    from beanquery import query_compile, query_env
+    from beanquery.compiler import get_columns_and_aggregates
+    from beanquery.cursor import Column
+
+    sums = (query_env.SumDecimal, query_env.SumAmount, query_env.SumPosition, query_env.SumInventory)
+    pivots = query.pivots if isinstance(query, query_compile.EvalPivot) else None
+    targets = getattr(query.query if pivots else query, "columns", ())
+    flags = [any(isinstance(node, sums) for node in get_columns_and_aggregates(target.c_expr)[1]) for target in targets]
+    if pivots and flags:
+        others = [flag for index, flag in enumerate(flags) if index not in pivots]
+        flags = [flags[pivots[0]], *itertools.islice(itertools.cycle(others), len(description) - 1)]
+    summed = {index for index, flag in enumerate(flags) if flag}
+    return [
+        Column(column.name, _SummedNumber) if index in summed and column.datatype is Decimal else column
+        for index, column in enumerate(description)
+    ]
+
+
 def _whole(value: Decimal) -> Decimal:
     """A positive-exponent decimal as the same number with its zeros written out.
 
@@ -2427,32 +2472,80 @@ def _text_renderers() -> dict[type, type]:
     registered = dict(query_render.RENDERERS)
 
     class FixedPointDecimalRenderer(query_render.DecimalRenderer):  # type: ignore[misc]
-        """Upstream's decimal-point alignment, never in scientific notation.
+        """Upstream's decimal-point alignment, never in scientific notation, without division noise.
 
         Upstream measures and prints a positive exponent (`round(x, -2)`) as
         `1.5E+3`, and compares a NaN's or an infinity's exponent, a letter,
         with `>`, a TypeError that ended the query (w5/471). Such a value is
         measured and printed as its fixed-point digits, and a non-finite one
         as its name, as CSV and JSON print them.
+
+        Upstream also prints every digit, so the cash leg of a `3 HOOL
+        {{100.00 USD}}` purchase read `-99.99999999999999999999999999` beside
+        the `-100.00 USD` its position cell showed (w1/334). A value keeps its
+        digits as written, `1000.00` two and `3` none, unless they are noise
+        (`_meaningful_digits`). A noisy value prints at the most digits the
+        column's other values have, or the ledger's finest written precision
+        when they have none, and a zero without a sign.
         """
 
         nintegral: int
+        summed = False
+
+        def __init__(self, ctx: Any) -> None:
+            super().__init__(ctx)
+            self.places = max((ctx.dcontext.column().written or {}).values(), default=0)
+            self.values: list[Decimal] = []
 
         def update(self, value: Decimal) -> None:
+            # Upstream sizes each value as it arrives; the digits a noisy
+            # value prints at are known only once the column's last is in.
+            self.values.append(value)
+
+        def prepare(self) -> int:
+            clean = kept = 0
+            for value in self.values:
+                if value.is_finite():
+                    value = _whole(value)
+                    digits = -int(value.as_tuple().exponent)
+                    meaningful = _meaningful_digits(value, self.summed)
+                    if meaningful < digits:
+                        kept = max(kept, meaningful)
+                    else:
+                        clean = max(clean, digits)
+            self.places = max(clean or self.places, kept)
+            for value in self.values:
+                shown = self._shown(value)
+                if shown.is_finite():
+                    super().update(shown)
+                else:
+                    self.nintegral = max(self.nintegral, len(str(shown)))
+            self.values.clear()
+            return int(super().prepare())
+
+        def _shown(self, value: Decimal) -> Decimal:
             if not value.is_finite():
-                self.nintegral = max(self.nintegral, len(str(value)))
-                return
-            super().update(_whole(value))
+                return value
+            value = _whole(value)
+            if _meaningful_digits(value, self.summed) < -int(value.as_tuple().exponent):
+                value = _quantized(value, self.places)
+            return value if value else value.copy_abs()
 
         def format(self, value: Decimal) -> str:
+            value = self._shown(value)
             if not value.is_finite():
                 return str(value).rjust(self.nintegral).ljust(self.maxwidth)
-            value = _whole(value)
             # Upstream's padding with a fixed-point spelling: the widths it
             # measured from `as_tuple()` already count the zeros.
             n = value.as_tuple()
             left = self.nintegral - (max(1, len(n.digits) + n.exponent) + n.sign)  # type: ignore[operator]
             return f"{'':>{left}}{value:<{self.maxwidth - left}f}"
+
+    class SummedNumberRenderer(FixedPointDecimalRenderer):
+        """A number column holding a `sum()`, whose quotient residue is noise too (w1/334)."""
+
+        dtype = _SummedNumber
+        summed = True
 
     class PlainObjectRenderer(query_render.ObjectRenderer):  # type: ignore[misc]
         def update(self, value: Any) -> None:
@@ -2534,6 +2627,7 @@ def _text_renderers() -> dict[type, type]:
     query_render.RENDERERS.update(registered)
     return {
         Decimal: FixedPointDecimalRenderer,
+        _SummedNumber: SummedNumberRenderer,
         object: PlainObjectRenderer,
         Amount: ColumnAmountRenderer,
         Inventory: SummedInventoryRenderer,
@@ -3897,6 +3991,41 @@ def _before_residue(number: Decimal, digits: int) -> int:
     return digits
 
 
+def _meaningful_digits(number: Decimal, summed: bool) -> int:
+    """The fractional digits of a bare number a text table shows before any division noise (w1/334).
+
+    Its digits as written, trailing zeros included, since no currency says
+    what precision it has. None of a quotient's that ran to the decimal
+    context's full precision (`report._cost_digits`): a `{{100.00 USD}}` lot
+    of 3 costs `33.33333333333333333333333333` a unit, and its cash leg reads
+    `-99.99999999999999999999999999`. In a sum, only those before a
+    quotient's residue (`_before_residue`): the account that leg emptied
+    holds `0.00000000000000000000000001`. A number with fewer meaningful
+    digits than it has is noisy.
+    """
+    from bea_engine.report import _cost_digits
+
+    digits = -int(number.as_tuple().exponent)
+    if summed:
+        before = _before_residue(number, digits)
+        if before < digits:
+            return before
+    return _cost_digits(number)
+
+
+def _quantized(number: Decimal, places: int) -> Decimal:
+    """The number at `places` fractional digits, past the decimal context's precision if it must be.
+
+    `Decimal.quantize` raises when the result needs more digits than the
+    context holds, and DisplayContext.quantize caps the integer portion at
+    twelve; a large balance and fractional units both keep every digit.
+    """
+    exponent = int(number.as_tuple().exponent)
+    with localcontext() as arithmetic:
+        arithmetic.prec = max(arithmetic.prec, len(number.as_tuple().digits) + max(0, exponent + places))
+        return number.quantize(Decimal(1).scaleb(-places))
+
+
 class _Digits:
     """Fractional digits per currency, sized to the values learned so far.
 
@@ -3972,13 +4101,7 @@ class _Digits:
 
     def quantize(self, number: Decimal, currency: str) -> Decimal:
         """The number at its currency's digits, which upstream's `DisplayFormatter.quantize` also takes."""
-        # DisplayContext.quantize caps the integer portion at twelve
-        # digits. Preserve large balances as well as fractional units.
-        digits = -self.by_currency.get(currency, 0)
-        exponent = int(number.as_tuple().exponent)
-        with localcontext() as arithmetic:
-            arithmetic.prec = max(arithmetic.prec, len(number.as_tuple().digits) + max(0, exponent - digits))
-            return number.quantize(Decimal(1).scaleb(digits))
+        return _quantized(number, self.by_currency.get(currency, 0))
 
     def context(self) -> Any:
         """A display context quantizing by these digits, whose `column()` sizes one text column afresh."""
