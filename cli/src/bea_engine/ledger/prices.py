@@ -50,25 +50,32 @@ def quote_refusal(currency: str, number: Decimal | None, quote_currency: str) ->
 def reciprocal_agrees(typed: Decimal | None, other: Decimal | None) -> bool:
     """Whether a new quote agrees with a same-day reciprocal, at the typed precision.
 
-    Two quotes name the same rate when the inverse of one rounds to the
-    other at the other's typed precision: `0.3333` agrees with `3`, as
+    Two quotes name the same rate when each one's inverse rounds to the
+    other at that other's typed precision: `0.3333` agrees with `3`, as
     `0.9211` agrees with `1.0857`, though neither product is exactly 1
-    (w5/741). Shared by `add price` and import, which must refuse the same
-    pairs.
+    (w5/741). It must hold both ways: checked one way, a coarse quote agreed
+    with a wide band (`1` with anything from 0.67 to 2), so `1` beside
+    `1.90` was written and won the day while `1.0` was refused, and the
+    verdict turned on which quote came first (w1/335). Shared by `add
+    price` and import, which must refuse the same pairs.
     """
+    return _inverse_rounds_to(other, typed) and _inverse_rounds_to(typed, other)
+
+
+def _inverse_rounds_to(number: Decimal | None, target: Decimal | None) -> bool:
+    """Whether `1 / number`, rounded at `target`'s typed precision, is `target`."""
     from decimal import InvalidOperation, localcontext
 
-    if not typed or not other:
+    if not number or not target:
         return False
-    digits = typed.as_tuple().digits
-    exponent = typed.as_tuple().exponent
+    exponent = target.as_tuple().exponent
     if not isinstance(exponent, int):
         return False
     quantum = Decimal((0, (1,), exponent))
     with localcontext() as context:
-        context.prec = max(28, len(digits) + len(other.as_tuple().digits) + 12)
+        context.prec = max(28, len(target.as_tuple().digits) + len(number.as_tuple().digits) + 12)
         try:
-            return (ONE / other).quantize(quantum) == typed
+            return (ONE / number).quantize(quantum) == target
         except InvalidOperation:
             return False
 

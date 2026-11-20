@@ -218,3 +218,70 @@ def test_agreement_is_judged_at_the_typed_precision(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
+
+
+def test_a_coarse_reciprocal_must_round_trip_both_ways(tmp_path: Path) -> None:
+    # `1 EUR` passed beside `EUR 1.90 USD` because 1/1.90 rounds to 1 at one
+    # digit, and then won the day and revalued the holding by 47 %, while
+    # the same rate typed `1.0 EUR` was refused (w1/335).
+    ledger = HEADER + "".join(f"2026-01-0{day} price EUR 1.90 USD\n" for day in (3, 4, 5))
+    for typed in ("1 EUR", "1.0 EUR"):
+        result, path = _add(tmp_path, ledger, "--date", "2026-01-05", "-c", "USD", "--amount", typed)
+
+        assert result.exit_code == 4, (typed, result.output)
+        assert f"{typed} disagrees with it" in result.output, result.output
+        assert path.read_text() == ledger
+
+
+def test_a_coarse_reciprocal_is_refused_whichever_quote_came_first(tmp_path: Path) -> None:
+    ledger = HEADER + "2026-01-05 price USD 1 EUR\n"
+    result, path = _add(tmp_path, ledger, "--date", "2026-01-05", "-c", "EUR", "--amount", "1.90 USD")
+
+    assert result.exit_code == 4, result.output
+    assert "1.90 USD disagrees with it" in result.output, result.output
+    assert path.read_text() == ledger
+
+
+def test_a_rounded_reciprocal_still_agrees_both_ways(tmp_path: Path) -> None:
+    for recorded, currency, typed in (
+        ("EUR 1.12 USD", "USD", "0.89 EUR"),
+        ("EUR 1.12 USD", "USD", "0.8929 EUR"),
+        ("USD 3 EUR", "EUR", "0.3333 USD"),
+    ):
+        ledger = HEADER + f"2026-01-05 price {recorded}\n"
+        result, path = _add(tmp_path, ledger, "--date", "2026-01-05", "-c", currency, "--amount", typed)
+
+        assert result.exit_code == 0, (recorded, typed, result.output)
+        number, quote = typed.split()
+        assert any(line.split()[2:] == [currency, number, quote] for line in path.read_text().splitlines()), (
+            path.read_text()
+        )
+
+
+def test_import_refuses_a_coarse_reciprocal_of_a_recorded_quote(tmp_path: Path) -> None:
+    path = tmp_path / "main.bean"
+    ledger = HEADER + "2026-01-05 price EUR 1.90 USD\n"
+    path.write_text(ledger)
+    (tmp_path / "imp.py").write_text(IMPORTER)
+    (tmp_path / "quotes.txt").write_text("2026-01-05=USD=1=EUR")
+
+    result = runner.invoke(
+        app,
+        [
+            "--json",
+            "--no-input",
+            "--file",
+            str(path),
+            "import",
+            str(tmp_path / "quotes.txt"),
+            "--config",
+            str(tmp_path / "imp.py"),
+            "--apply",
+        ],
+    )
+
+    assert result.exit_code == 4, result.output
+    (detail,) = json.loads(result.output)["error"]["details"]
+    assert "EUR already has a 2026-01-05 price of 1.90 USD" in detail, detail
+    assert "the other direction of this pair; refusing 1 EUR" in detail, detail
+    assert path.read_text() == ledger
