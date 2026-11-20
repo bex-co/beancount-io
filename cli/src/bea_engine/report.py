@@ -222,13 +222,7 @@ def _balances(
     # holding must not make a USD checking balance fail.
     previous = _summary_pair(filtered.ledger)
     balances = [balance for tree in pruned.values() if tree is not None for balance in _tree_balances(tree, previous)]
-    flows = ("income", "expenses")
-    dated = [
-        (filtered.end_date, balance)
-        for name, tree in pruned.items()
-        if tree is not None and name not in flows
-        for balance in _tree_balances(tree, previous)
-    ] + _flow_dates(filtered, resolved_conversion, _tree_accounts(pruned[name] for name in flows))
+    dated = _dated_balances(filtered, resolved_conversion, pruned, previous)
     metadata = (
         _metadata(filtered, resolved_conversion, ledger_errors)
         # `_metadata` judges emptiness by a report `--account`, which balance
@@ -278,16 +272,10 @@ def _overview(
     )
     trees = tuple(sections[name] for name in ("assets", "liabilities", "income", "expenses"))
     previous = _summary_pair(filtered.ledger)
-    balances = [
-        (filtered.end_date, balance)
-        for tree in trees[:2]
-        if tree is not None
-        for balance in _tree_balances(tree, previous)
-    ]
+    # Income and expenses, in the trees and the series alike, are valued day by day.
+    balances = _dated_balances(filtered, conversion, sections, previous)
     for series in (data.assets_data, data.liabilities_data):
         balances.extend((point.date, point.balance) for point in series)
-    # Income and expenses, in the trees and the series alike, are valued day by day.
-    balances.extend(_flow_dates(filtered, conversion))
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger, ledger_errors, _tree_accounts(trees))
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
     empty = type(data.assets_hierarchy.balance_children)()
@@ -331,7 +319,7 @@ def _income_statement(
     )
     trees = (sections["income"], sections["expenses"])
     # The trees and the rows are the same postings, each valued on its own day.
-    balances = _flow_dates(filtered, conversion)
+    balances = _dated_balances(filtered, conversion, sections, ())
     valuation = _valuation(conversion, balances, allow_errors, filtered.ledger, ledger_errors, _tree_accounts(trees))
     metadata = _metadata(filtered, conversion, ledger_errors, interval) | valuation
     empty = type(data.income_hierarchy.balance_children)()
@@ -637,12 +625,7 @@ def _trial_balance(filtered: Any, conversion: str, allow_errors: bool, ledger_er
     sections = _prune_sections(sections, filtered.account, filtered.ledger.root_accounts)
     previous = _summary_pair(filtered.ledger)
     balances = [balance for tree in sections.values() if tree is not None for balance in _tree_balances(tree, previous)]
-    dated = [
-        (filtered.end_date, balance)
-        for name, tree in sections.items()
-        if tree is not None and name not in ("income", "expenses")
-        for balance in _tree_balances(tree, previous)
-    ] + _flow_dates(filtered, conversion)
+    dated = _dated_balances(filtered, conversion, sections, previous)
     metadata = _metadata(filtered, conversion, ledger_errors) | _valuation(
         conversion,
         dated,
@@ -2510,6 +2493,10 @@ def _valuation(
     }
 
 
+#: The report sections that hold flows, valued on each posting's own date (w1/m49).
+_FLOW_SECTIONS = ("income", "expenses")
+
+
 def _flow_dates(
     filtered: Any, conversion: str, accounts: Collection[str] | None = None
 ) -> list[tuple[date | None, Mapping[str, Decimal]]]:
@@ -2526,6 +2513,20 @@ def _flow_dates(
     from fava.modules.chart import ChartModule
 
     return [(point.date, point.balance) for point in ChartModule().flow_days(filtered, conversion, accounts)]
+
+
+def _dated_balances(
+    filtered: Any, conversion: str, sections: Mapping[str, Any], previous: Collection[str]
+) -> list[tuple[date | None, Mapping[str, Decimal]]]:
+    """A report's tree balances as `_valuation` dates them: balances at the as-of date, flows on their own days."""
+    dated: list[tuple[date | None, Mapping[str, Decimal]]] = [
+        (filtered.end_date, balance)
+        for name, tree in sections.items()
+        if tree is not None and name not in _FLOW_SECTIONS
+        for balance in _tree_balances(tree, previous)
+    ]
+    flows = [sections[name] for name in _FLOW_SECTIONS if name in sections]
+    return dated + _flow_dates(filtered, conversion, _tree_accounts(flows))
 
 
 def _balance_map(balance: Mapping[str, Decimal]) -> dict[str, Decimal]:

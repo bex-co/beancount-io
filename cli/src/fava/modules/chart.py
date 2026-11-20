@@ -49,17 +49,38 @@ def _under_roots(account: str, roots: str | tuple[str, ...]) -> bool:
     return account.partition(":")[0] in ((roots,) if isinstance(roots, str) else roots)
 
 
-def _account_days(
+def _flow_roots(filtered: FilteredLedger) -> tuple[str, str]:
+    """The ledger's income and expenses roots: the accounts whose postings are flows."""
+    options = filtered.ledger.options
+    return options["name_income"], options["name_expenses"]
+
+
+def _in_scope_flows(filtered: FilteredLedger) -> Callable[[str], bool]:
+    """Whether an account is one of the statement's income or expenses accounts in scope."""
+    flows = _flow_roots(filtered)
+    in_scope = account_predicate(filtered.account, filtered.ledger.root_accounts)
+    return lambda account: _under_roots(account, flows) and in_scope(account)
+
+
+def _reads_prices(conversion: str | Conversion) -> bool:
+    """Whether `conversion` reads prices, so a flow's value depends on its day."""
+    return conversion not in ("units", "at_cost", UNITS, AT_COST)
+
+
+def _valued_days(
     entries: Iterable[Directive],
     include: Callable[[str], bool],
-) -> dict[tuple[str, date], CounterInventory]:
-    """The included accounts' postings in `entries`, netted per account and day."""
+    conversion: str | Conversion,
+    prices: FavaPriceMap,
+) -> Iterable[tuple[str, date, SimpleCounterInventory]]:
+    """The included accounts' postings, netted per account and day, each day valued at its own price."""
     days: dict[tuple[str, date], CounterInventory] = defaultdict(CounterInventory)
     for entry in entries:
         for posting in getattr(entry, "postings", []):
             if include(posting.account):
                 days[posting.account, entry.date].add_position(posting)
-    return days
+    for (account, day), inventory in days.items():
+        yield account, day, cost_or_value(inventory, conversion, prices, day)
 
 
 def _flow_inventories(
@@ -82,15 +103,15 @@ def _flow_inventories(
     `at_cost` read no price, so they keep the positions and the conversion.
     """
     inventories: dict[str, CounterInventory] = defaultdict(CounterInventory)
-    if conversion in ("units", "at_cost", UNITS, AT_COST):
+    if not _reads_prices(conversion):
         for entry in entries:
             for posting in getattr(entry, "postings", []):
                 if include(posting.account):
                     inventories[posting.account].add_position(posting)
         return inventories, conversion
-    for (account, day), inventory in _account_days(entries, include).items():
+    for account, _, value in _valued_days(entries, include, conversion, prices):
         valued = inventories[account]
-        for currency, number in cost_or_value(inventory, conversion, prices, day).items():
+        for currency, number in value.items():
             valued.add((currency, None), number)
     return inventories, UNITS
 
@@ -128,15 +149,13 @@ def _flow_ranges(
     # assertion kept an empty one-day row (w5/617). The flow roots are the
     # statement's, not one series', so the income, expense and net-profit
     # series keep the same rows.
-    options = filtered.ledger.options
-    flows = (options["name_income"], options["name_expenses"])
-    in_scope = account_predicate(filtered.account, filtered.ledger.root_accounts)
+    flow = _in_scope_flows(filtered)
 
     def busy(entry: Directive) -> bool:
         return (
             isinstance(entry, Transaction)
             and entry.meta.get("filename") not in _CLAMP_SOURCES
-            and any(_under_roots(posting.account, flows) and in_scope(posting.account) for posting in entry.postings)
+            and any(flow(posting.account) for posting in entry.postings)
         )
 
     def quiet_fragment(period: DateRange) -> bool:
@@ -223,8 +242,8 @@ class ChartModule:
     ) -> SerialisedTreeNode:
         """Render an account tree.
 
-        Beancount.io change: the income and expenses roots value each posting
-        on its own date (:func:`_flow_inventories`), as their interval rows do.
+        Beancount.io change: an income or expenses tree values each posting
+        on its own date (:func:`_flow_inventories`), as its interval rows do.
         """
         entries = (
             slice_entry_dates(filtered.entries, begin, end)
@@ -232,11 +251,9 @@ class ChartModule:
             else filtered.entries
         )
         prices = filtered.ledger.prices
-        options = filtered.ledger.options
-        if account_name in (options["name_income"], options["name_expenses"]):
-            flows, conversion = _flow_inventories(
-                entries, lambda account: _under_roots(account, account_name), conversion, prices
-            )
+        if account_name and _under_roots(account_name, _flow_roots(filtered)):
+            subtree = account_tester(account_name, with_children=True)
+            flows, conversion = _flow_inventories(entries, subtree, conversion, prices)
             tree = Tree([entry for entry in entries if isinstance(entry, Open)])
             for account, balance in sorted(flows.items()):
                 tree.insert(account, balance)
@@ -331,20 +348,9 @@ class ChartModule:
         need a price (w1/m49). `accounts` limits the days to the accounts a
         report shows; by default they are the in-scope income and expenses.
         """
-        if accounts is None:
-            options = filtered.ledger.options
-            flows = (options["name_income"], options["name_expenses"])
-            in_scope = account_predicate(filtered.account, filtered.ledger.root_accounts)
-
-            def include(account: str) -> bool:
-                return _under_roots(account, flows) and in_scope(account)
-
-        else:
-            include = accounts.__contains__
-        prices = filtered.ledger.prices
-        days = _account_days(filtered.entries, include)
-        for (_, day), inventory in sorted(days.items(), key=lambda item: item[0][1]):
-            yield DateAndBalance(day, cost_or_value(inventory, conversion, prices, day))
+        include = _in_scope_flows(filtered) if accounts is None else accounts.__contains__
+        for _, day, value in _valued_days(filtered.entries, include, conversion, filtered.ledger.prices):
+            yield DateAndBalance(day, value)
 
     @listify
     def account_balance(
