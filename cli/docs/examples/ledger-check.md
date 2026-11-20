@@ -5,7 +5,7 @@ Copy [ledger-check.yml](ledger-check.yml) into
 workflow checks out the repo and calls the shared action in one line:
 
 ```yaml
-- uses: bex-co/beancount-io/cli/action@3dbc8d734300384373039e3f01bb98eba6d3c431 # cli-v0.4.1
+- uses: bex-co/beancount-io/cli/action@cb395229b667df30c6859693eb7af2877e1d70f8 # cli-v0.5.0
   with:
     version: "0.5.0"
     file: main.bean
@@ -37,7 +37,7 @@ repository's `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/bex-co/beancount-io
-    rev: 3dbc8d734300384373039e3f01bb98eba6d3c431 # cli-v0.4.1
+    rev: cb395229b667df30c6859693eb7af2877e1d70f8 # cli-v0.5.0
     hooks:
       - id: bea-check
       - id: bea-format

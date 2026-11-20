@@ -474,7 +474,7 @@ bex serves Git over HTTPS only: it has no TCP routing (nor does Render, whose pu
 
 #### Cloning a ledger
 
-With `bea` (the release after 0.4.1), sign Git in once per machine and then use plain `git`, with no prompt and no token to copy:
+With `bea` 0.5.0 or later, sign Git in once per machine and then use plain `git`, with no prompt and no token to copy:
 
 ```zsh
 export BEA_API_URL=https://<your dashboard address>
