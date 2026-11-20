@@ -195,13 +195,21 @@ def _simple(directive_type: str, request: dict[str, Any], roots: tuple[str, ...]
                 f"--currency value {blank} of {len(raw_currencies)} is blank after trimming; supply a currency "
                 "symbol or drop that -c. Nothing was written."
             )
+        meta = _parse_metadata([str(item) for item in request.get("meta") or []])
+        # The one key bea itself reads off an open: a role the cash-flow
+        # report ignores was written with exit 0 and surfaced only as a note
+        # on a later report (w1/329).
+        from bea_engine.report import _CASH_FLOW_ROLE_KEY, cash_flow_role_refusal
+
+        if _CASH_FLOW_ROLE_KEY in meta and (refusal := cash_flow_role_refusal(meta[_CASH_FLOW_ROLE_KEY])):
+            raise protocol.UsageError(f"Invalid --meta: {refusal} Nothing was written.")
         return OpenDirective.model_validate(
             {
                 "date": date,
                 "account": parse_account(_text(request, "account"), roots, creating=True),
                 "currencies": currencies,
                 "booking": booking,
-                "meta": _parse_metadata([str(item) for item in request.get("meta") or []]),
+                "meta": meta,
             },
             context=WRITE_INPUT,
         )

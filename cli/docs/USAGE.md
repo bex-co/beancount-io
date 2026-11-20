@@ -1700,10 +1700,16 @@ refused with exit **1**, nothing written: the error names that declaration's
 `--meta 'cash-flow-role:cash'`, which makes a bank named after its institution
 (`Assets:Revolut`) count as cash in `report cash-flow`. The keys are written
 indented under the `open` and come back in the add envelope in the same tagged
-form. An account opens once, so `--meta` for an account that is already open
+form. `cash-flow-role` must be one of the four values the report reads, `cash`,
+`operating`, `investing` or `financing`, in lowercase. Any other value (`Cash`,
+`bank`, `""`, `TRUE`, `1`) is refused with exit **2**, nothing written, and
+the error names the four. A value that differs only in case or surrounding
+spaces names the one it meant, such as `cash` for `Cash`. Other keys take any
+value. An account opens once, so `--meta` for an account that is already open
 is refused with exit **1**, nothing written. The error names that `open`'s
 `file:line` and the metadata lines to add under it, since `add open` cannot
-change an existing `open`.
+change an existing `open`. A `cash-flow-role` the report would ignore is never
+offered as a line to add; the error says it is not a role the report reads.
 
 `add price` refuses a negative quote (`--amount '-250 USD'`) and a commodity
 quoted in itself (`-c USD --amount '1 USD'`) with exit **2**, nothing written;

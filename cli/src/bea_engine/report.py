@@ -1592,6 +1592,28 @@ _CASH_FLOW_ROLE_KEY = "cash-flow-role"
 _CASH_FLOW_ACTIVITIES = ("operating", "investing", "financing")
 
 
+def cash_flow_role_refusal(value: Any) -> str | None:
+    """Why a declared `cash-flow-role` value is one this report ignores; None when it reads it.
+
+    `_resolve_cash_flow_role` takes only the four exact strings and sends
+    anything else to the name heuristics, so a write refuses such a value
+    instead of storing one the report flags long afterwards (w1/329). A
+    spelling that differs only in case or surrounding spaces names the role.
+    """
+    if isinstance(value, str) and value in _CASH_FLOW_ROLES:
+        return None
+    if isinstance(value, bool):
+        shown = "TRUE" if value else "FALSE"
+    else:
+        shown = f'"{value}"' if isinstance(value, str) else str(value)
+    meant = value.strip().lower() if isinstance(value, str) else ""
+    suggestion = f' Did you mean "{meant}"?' if meant in _CASH_FLOW_ROLES else ""
+    return (
+        f"{_CASH_FLOW_ROLE_KEY} {shown} is not a role the cash-flow report reads, so it would classify the "
+        f"account by its name; use one of: {', '.join(_CASH_FLOW_ROLES)}.{suggestion}"
+    )
+
+
 def _root_type_map(options: Any) -> dict[str, str]:
     """Ledger root names read as their Beancount type (w4/1022 on the dashboard)."""
     names = (

@@ -3827,21 +3827,35 @@ def _duplicate_open_hint(existing: Any, duplicate: Any, filenames: dict[Path, Pa
         else ""
     )
     # Declaring a key such as `cash-flow-role` is the usual reason to open an
-    # account again (w1/320); it belongs under the existing open.
+    # account again (w1/320); it belongs under the existing open. A role the
+    # cash-flow report ignores is named as such, never offered as the edit
+    # (w1/329).
+    from bea_engine.report import _CASH_FLOW_ROLE_KEY, cash_flow_role_refusal
+
+    proposed_meta = duplicate.meta or {}
+    unread = ""
+    if _CASH_FLOW_ROLE_KEY in proposed_meta and (refusal := cash_flow_role_refusal(proposed_meta[_CASH_FLOW_ROLE_KEY])):
+        unread = f" {refusal}"
+        duplicate = duplicate._replace(
+            meta={key: value for key, value in proposed_meta.items() if key != _CASH_FLOW_ROLE_KEY}
+        )
     meta = _metadata_edit(existing, duplicate)
     remedy = f" To {meta}, edit that open's metadata (bea add open cannot change an existing open)." if meta else ""
     if not existing.currencies:
-        return f"{existing.account} is already opened at {where} for any currency; an account opens once.{remedy}{shut}"
+        return (
+            f"{existing.account} is already opened at {where} for any currency; an account opens once."
+            f"{remedy}{unread}{shut}"
+        )
     added = [currency for currency in duplicate.currencies or [] if currency not in existing.currencies]
     if not added:
-        return f"{existing.account} is already opened at {where}; an account opens once.{remedy}{shut}"
+        return f"{existing.account} is already opened at {where}; an account opens once.{remedy}{unread}{shut}"
     widened = _open_line(existing, [*existing.currencies, *added])
     widen = f"To allow {', '.join(added)} too, edit that open to '{widened}'"
     if meta:
         widen += f" and {meta} under it"
     return (
         f"{existing.account} is already opened at {where} for {', '.join(existing.currencies)}; an account opens "
-        f"once. {widen} (bea add open cannot change an existing open).{shut}"
+        f"once. {widen} (bea add open cannot change an existing open).{unread}{shut}"
     )
 
 
