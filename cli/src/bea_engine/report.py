@@ -2616,13 +2616,19 @@ def _headline(balance: Mapping[str, Decimal], conversion: str) -> dict[str, Deci
 
 
 def _display_precision(filtered: Any) -> dict[str, int]:
-    """Fractional digits per currency, for the frontend's human amount rounding.
+    """Fractional digits per currency, for the frontend's human amount rounding (`written_precision`)."""
+    return written_precision(filtered.ledger.all_entries, filtered.ledger.options)
 
-    The finest precision the ledger's own money is written in: posting units
-    and balance assertions. Beancount's display context (MAXIMUM) also learns
-    from price directives and `@`/`{}` numbers, so one long quote such as
-    `price AAPL 191.559998 USD` made every USD total in a cents ledger print
-    six decimals. A quote is a rate, not an amount anyone holds.
+
+def written_precision(entries: Sequence[Any], options: Mapping[str, Any]) -> dict[str, int]:
+    """Fractional digits per currency that the ledger's own money is written in.
+
+    The finest precision of posting units and balance assertions. Beancount's
+    display context (MAXIMUM) also learns from price directives and `@`/`{}`
+    numbers, so one long quote such as `price AAPL 191.559998 USD` made every
+    USD total in a cents ledger print six decimals. A quote is a rate, not an
+    amount anyone holds. The report tables and `bea query`'s text table
+    (w1/325) both size a currency from this.
 
     `option "display_precision"` still wins for the currencies it names.
     """
@@ -2653,7 +2659,7 @@ def _display_precision(filtered: Any) -> dict[str, int]:
         into[currency] = max(digits, into.get(currency, 0))
 
     typed: dict[tuple[str, int], dict[str, int]] = {}
-    for entry in filtered.ledger.all_entries:
+    for entry in entries:
         if isinstance(entry, Transaction):
             for posting in entry.postings:
                 if posting.units is not None:
@@ -2703,7 +2709,7 @@ def _display_precision(filtered: Any) -> dict[str, int]:
     for currency, digits in inferred.items():
         if not precision.get(currency):
             precision[currency] = digits
-    for currency, example in (filtered.ledger.options.get("display_precision") or {}).items():
+    for currency, example in (options.get("display_precision") or {}).items():
         exponent = example.as_tuple().exponent
         precision[str(currency)] = max(0, -exponent) if isinstance(exponent, int) else 0
     return precision

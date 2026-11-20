@@ -18,7 +18,11 @@ below need Beancount objects, which is why they live here and not in `bea`:
   (`convert()` of eight decimal places came back with five) and raises
   `decimal.InvalidOperation` outright on a balance wider than twelve integer
   digits. `result_context` derives the precision from the values being
-  rendered instead.
+  rendered instead. A text table shows each currency at the finer of the
+  precision the ledger writes it in and the meaningful digits of its values:
+  trailing zeros, and the digits of a quotient that ran to the decimal
+  context's full precision (a `{{100 USD}}` lot over 3 units, an `@@` total),
+  count for nothing (w1/325). `-m` cells in CSV and JSON stay lossless.
 - **Directive exports.** The shared writer printer preserves negative custom
   values, small decimal metadata, string escapes and whole cost specifications
   so reloading an export does not silently change those values.
@@ -1631,6 +1635,17 @@ def build_shell(
             return super().onecmd(line)
 
         _printing = False
+        # The entries the precision below was read from, and that precision.
+        _written: tuple[Any, dict[str, int]] | None = None
+
+        def _written_precision(self) -> dict[str, int]:
+            """The ledger's written precision per currency, read once per load: it parses the source again."""
+            from bea_engine.report import written_precision
+
+            table = self.context.tables["entries"]
+            if self._written is None or self._written[0] is not table.entries:
+                self._written = (table.entries, written_precision(table.entries, table.options))
+            return self._written[1]
 
         def on_Select(self, statement: Any) -> Any:  # noqa: N802 - beanquery dispatch name
             cursor = self.context.execute(statement)
@@ -1643,7 +1658,9 @@ def build_shell(
                 _require_entries(description, rows)
             if not rows:
                 protocol.note("(no rows)")
-            dcontext = result_context(rows)
+            # A text table is read, so it shows the ledger's own precision; `-m`
+            # CSV cells stay lossless, as JSON's do.
+            dcontext = result_context(rows, self._written_precision() if self.settings.format == "text" else None)
             if self.settings.numberify:
                 description, rows = numberify_results(description, rows, dcontext.build())
             with self.output as out:
@@ -3674,20 +3691,44 @@ def _entry_summary(entry: Any) -> str:
     return words + legs
 
 
-def result_context(rows: Any) -> Any:
-    """A display context sized to these results rather than to the ledger's inputs."""
+def result_context(rows: Any, written: Mapping[str, int] | None = None) -> Any:
+    """A display context sized to these results rather than to the ledger's inputs.
+
+    Without `written` it is lossless, for the `-m` cells of CSV and JSON: a
+    currency gets the most fractional digits any of its values has, so
+    quantizing to it never rounds.
+
+    With `written`, the digits per currency the ledger's money is written in
+    (`report.written_precision`, as the report tables use it), it sizes a text
+    table people read. A currency shows the finer of that and the meaningful
+    digits of its values (w1/325). A trailing zero means nothing: `12.50 EUR @
+    1.10 USD` infers a `-13.7500 USD` leg, which made every USD amount print
+    four decimals. Nor does a quotient that ran to the decimal context's full
+    precision (`report._cost_digits`): `3 HOOL {{100 USD}}` books a
+    `33.33333333333333333333333333 USD` unit cost and `3 EUR @@ 10.00 USD` a
+    `3.333333333333333333333333333 USD` price, and either one in the rows gave
+    every USD amount 26 or 27 decimals. A computed value's real digits still
+    show: a `convert()` at an eight-decimal quote keeps all of them.
+    """
     from beancount.core.amount import Amount
     from beancount.core.display_context import DisplayContext
     from beancount.core.inventory import Inventory
     from beancount.core.position import Cost, Position
 
-    digits_by_currency: dict[str, int] = {}
+    from bea_engine.report import _cost_digits, _without_trailing_zeros
+
+    digits_by_currency: dict[str, int] = dict(written or {})
+
+    def places(number: Decimal) -> int:
+        if written is None:
+            return -int(number.as_tuple().exponent)
+        return _cost_digits(_without_trailing_zeros(number))
 
     def visit(value: Any) -> None:
         if isinstance(value, Amount | Cost):
             if isinstance(value.number, Decimal) and value.number.is_finite():
                 digits_by_currency[value.currency] = max(
-                    digits_by_currency.get(value.currency, 0), -int(value.number.as_tuple().exponent)
+                    digits_by_currency.get(value.currency, 0), places(value.number)
                 )
         elif isinstance(value, Position):
             visit(value.units)

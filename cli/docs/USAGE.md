@@ -1085,7 +1085,16 @@ shell exits 130 without opening, and a `.reload` returns to the prompt.
 Query tables preserve the precision of result values, including calculated
 amounts and commodity quantities. Interactive queries and the `ask` BQL tool
 use the same precision policy; cents are never discarded because most entries
-in the ledger happen to use whole amounts.
+in the ledger happen to use whole amounts. A text table shows each currency
+with at least the decimals the ledger writes it in (posting amounts, balance
+assertions, or `option "display_precision"`, as the reports do), plus any
+further digits a result really has, such as a `convert()` at an eight-decimal
+price. Trailing zeros of a product add none: `12.50 EUR @ 1.10 USD` reads
+`-13.75 USD`. Neither does a quotient that runs to the decimal context's full
+28 digits, such as the per-unit cost Beancount books for `3 HOOL {{100 USD}}`
+or the price it derives from `3 EUR @@ 10.00 USD`: those read `33.33 USD` and
+`3.33 USD`, and the cost of the lot reads `100.00 USD`. `--json`, `--format
+csv`, and their `-m` columns keep every digit.
 `tags` and `links` hold a whole set per entry, so BQL cannot compare them:
 `SELECT DISTINCT tags` and `GROUP BY tags` are refused (exit **2**) with the
 recipes that work — `SELECT DISTINCT joinstr(tags)` for distinct combinations,
