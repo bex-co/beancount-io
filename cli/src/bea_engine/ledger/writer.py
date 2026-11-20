@@ -639,7 +639,7 @@ def write_open(
                 f"Unknown booking method {directive.booking!r}. Choose one of: {choices}."
             ) from exc
     entry = Open(
-        meta={},
+        meta=ledger_write.metadata_for_write(directive.meta),
         date=directive.date,
         account=directive.account,
         currencies=directive.currencies if directive.currencies else [],

@@ -201,6 +201,7 @@ def _simple(directive_type: str, request: dict[str, Any], roots: tuple[str, ...]
                 "account": parse_account(_text(request, "account"), roots, creating=True),
                 "currencies": currencies,
                 "booking": booking,
+                "meta": _parse_metadata([str(item) for item in request.get("meta") or []]),
             },
             context=WRITE_INPUT,
         )

@@ -408,6 +408,11 @@ suite's minimum version no longer needs it.
   listed under `unpriced_reductions` and named after the text totals. 0.4.1
   and earlier leave it out without notice; only the booked-gains tie-out
   shows the gap.
+- **`add open --meta` (after 0.4.1).** `bea add open --meta 'key:value'`
+  writes metadata such as `cash-flow-role: "cash"` under the new `open`.
+  0.4.1 and earlier refuse `--meta` as an unknown option (exit 2, nothing
+  written): open the account without it and have the user add the line
+  under that `open`.
 - **Covered rows in `report budget` (after 0.4.1).** An account whose
   budget sits on an ancestor the `--account` filter leaves out is listed
   with status `covered` and that ancestor in `covered_by`. 0.4.1 and earlier

@@ -3826,16 +3826,22 @@ def _duplicate_open_hint(existing: Any, duplicate: Any, filenames: dict[Path, Pa
         if closed is not None
         else ""
     )
+    # Declaring a key such as `cash-flow-role` is the usual reason to open an
+    # account again (w1/320); it belongs under the existing open.
+    meta = _metadata_edit(existing, duplicate)
+    remedy = f" To {meta}, edit that open's metadata (bea add open cannot change an existing open)." if meta else ""
     if not existing.currencies:
-        return f"{existing.account} is already opened at {where} for any currency; an account opens once.{shut}"
+        return f"{existing.account} is already opened at {where} for any currency; an account opens once.{remedy}{shut}"
     added = [currency for currency in duplicate.currencies or [] if currency not in existing.currencies]
     if not added:
-        return f"{existing.account} is already opened at {where}; an account opens once.{shut}"
+        return f"{existing.account} is already opened at {where}; an account opens once.{remedy}{shut}"
+    widened = _open_line(existing, [*existing.currencies, *added])
+    widen = f"To allow {', '.join(added)} too, edit that open to '{widened}'"
+    if meta:
+        widen += f" and {meta} under it"
     return (
         f"{existing.account} is already opened at {where} for {', '.join(existing.currencies)}; an account opens "
-        f"once. To allow {', '.join(added)} too, edit that open to "
-        f"'{_open_line(existing, [*existing.currencies, *added])}' (bea add open cannot change an existing open)."
-        f"{shut}"
+        f"once. {widen} (bea add open cannot change an existing open).{shut}"
     )
 
 
@@ -3854,9 +3860,21 @@ def _duplicate_commodity_hint(existing: Any, proposed: Any, filenames: dict[Path
     The usual reason to declare a symbol again is to give it metadata, which
     belongs under the existing declaration.
     """
+    hint = f"{existing.currency} is already declared at {_location(existing, filenames)}; a commodity is declared once."
+    meta = _metadata_edit(existing, proposed)
+    if not meta:
+        return hint
+    return f"{hint} To {meta}, edit that directive's metadata (bea add commodity cannot change an existing commodity)."
+
+
+def _metadata_edit(existing: Any, proposed: Any) -> str:
+    """The metadata lines a refused second declaration carries that the first lacks, as `add k: v`.
+
+    Empty when the proposal adds nothing; `set` when it changes a key the
+    existing directive already has.
+    """
     from bea_engine.ledger.writer import format_entry
 
-    hint = f"{existing.currency} is already declared at {_location(existing, filenames)}; a commodity is declared once."
     changed = {
         key: value
         for key, value in proposed.meta.items()
@@ -3865,14 +3883,11 @@ def _duplicate_commodity_hint(existing: Any, proposed: Any, filenames: dict[Path
         and (key not in existing.meta or existing.meta[key] != value)
     }
     if not changed:
-        return hint
+        return ""
     rendered = format_entry(proposed._replace(meta={"filename": "", "lineno": 0, **changed}))
     lines = [line.strip() for line in rendered.splitlines()[1:] if line.strip()]
     verb = "set" if any(key in existing.meta for key in changed) else "add"
-    return (
-        f"{hint} To {verb} {', '.join(lines)}, edit that directive's metadata "
-        "(bea add commodity cannot change an existing commodity)."
-    )
+    return f"{verb} {', '.join(lines)}"
 
 
 def _operating_default_balance_hint(

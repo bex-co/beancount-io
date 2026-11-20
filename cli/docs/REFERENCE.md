@@ -492,6 +492,7 @@ Usage: bea add open [OPTIONS]
 | `--account, -a` | str | required | Account name |
 | `--currency, -c` | str (repeatable) |  | Allowed currency (repeat) |
 | `--booking` | str |  | Lot booking method: STRICT, STRICT_WITH_SIZE, NONE, FIFO, LIFO, HIFO |
+| `--meta` | str (repeatable) |  | 'key:value' metadata; bare text or native typed values (repeat) |
 | `--allow-errors` | flag |  | Allow semantic ledger errors; syntax and pad account references must be valid |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
 

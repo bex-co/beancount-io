@@ -1559,6 +1559,7 @@ bea add transaction \
 
 ```bash
 bea add open --date 2026-01-01 --account Assets:Reserve --currency USD
+bea add open --date 2026-01-01 --account Assets:Revolut --currency USD --meta 'cash-flow-role:cash'
 bea add close --date 2026-12-31 --account Assets:OldAccount   # refused while it still holds a balance; --force closes anyway
 bea add balance --date 2026-04-30 --account Assets:Cash --amount "1000 USD"
 # Advanced two-step pad: complete the pair before adding anything else
@@ -1670,6 +1671,15 @@ response can be sent again unchanged. A symbol the ledger already declares is
 refused with exit **1**, nothing written: the error names that declaration's
 `file:line` and, with `--meta`, the keys to write under it, since
 `add commodity` cannot change an existing declaration.
+
+`add open` takes the same `--meta` for what an account is. The common one is
+`--meta 'cash-flow-role:cash'`, which makes a bank named after its institution
+(`Assets:Revolut`) count as cash in `report cash-flow`. The keys are written
+indented under the `open` and come back in the add envelope in the same tagged
+form. An account opens once, so `--meta` for an account that is already open
+is refused with exit **1**, nothing written. The error names that `open`'s
+`file:line` and the metadata lines to add under it, since `add open` cannot
+change an existing `open`.
 
 `add price` refuses a negative quote (`--amount '-250 USD'`) and a commodity
 quoted in itself (`-c USD --amount '1 USD'`) with exit **2**, nothing written;
@@ -2139,7 +2149,8 @@ A bank named after its institution (`Assets:Revolut`, `Assets:Wise`) is not
 cash until its `open` declares the role. When no account counts as cash, no
 transaction is cash activity: the text and CSV reports say so on stderr, with
 the rule and the fix (add `cash-flow-role: "cash"` under the account's `open`
-by hand; `bea add open` takes no metadata), instead of reporting a quiet
+by hand; `bea add open --meta 'cash-flow-role:cash'` declares it only for an
+account not yet open), instead of reporting a quiet
 period. Under `--account`, the note names the filter, because the ledger may
 still have cash accounts that the filter leaves out. JSON carries
 `cash_accounts: []`.

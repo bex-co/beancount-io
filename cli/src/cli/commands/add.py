@@ -48,6 +48,9 @@ IntoOpt = Annotated[
 DateOpt = Annotated[str, typer.Option("--date", help="Date in YYYY-MM-DD format")]
 TagOpt = Annotated[list[str] | None, typer.Option("--tag", help="Tag (repeat for multiple)")]
 LinkOpt = Annotated[list[str] | None, typer.Option("--link", help="Link (repeat for multiple)")]
+MetaOpt = Annotated[
+    list[str] | None, typer.Option("--meta", help="'key:value' metadata; bare text or native typed values (repeat)")
+]
 AllowErrorsOpt = Annotated[
     bool,
     typer.Option(
@@ -181,9 +184,7 @@ def add_transaction(
     ] = None,
     tag: TagOpt = None,
     link: LinkOpt = None,
-    meta: Annotated[
-        list[str] | None, typer.Option("--meta", help="'key:value' metadata; bare text or native typed values (repeat)")
-    ] = None,
+    meta: MetaOpt = None,
     allow_errors: AllowErrorsOpt = False,
     into: IntoOpt = None,
 ) -> None:
@@ -239,14 +240,20 @@ def add_open(
             autocompletion=fixed_values(_BOOKING_METHODS),
         ),
     ] = None,
+    meta: MetaOpt = None,
     allow_errors: AllowErrorsOpt = False,
     into: IntoOpt = None,
 ) -> None:
-    """Append an open directive."""
+    """Append an open directive.
+
+    `--meta` declares what the account is, such as 'cash-flow-role:cash' for a
+    bank the cash-flow report would not recognize by name.
+    """
     request: dict[str, Any] = {
         "date": parse_date(date).isoformat(),
         "account": account,
         "currencies": list(currency) if currency else [],
+        "meta": list(meta or []),
     }
     if booking is not None:
         request["booking"] = booking
@@ -473,9 +480,7 @@ def add_price(
 def add_commodity(
     date: DateOpt,
     currency: Annotated[str, typer.Option("--currency", "--commodity", "-c", help="Commodity symbol")],
-    meta: Annotated[
-        list[str] | None, typer.Option("--meta", help="'key:value' metadata; bare text or native typed values (repeat)")
-    ] = None,
+    meta: MetaOpt = None,
     allow_errors: AllowErrorsOpt = False,
     into: IntoOpt = None,
 ) -> None:
