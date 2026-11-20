@@ -1227,6 +1227,9 @@ never format or commit them automatically.
 A `document` row's `filename` is relative to the file that wrote the directive
 (the form `add document --into` takes back), so each row also names that file:
 `source` (`filename`, `lineno`) in JSON and a `WRITTEN IN` column in the table.
+A statement Beancount found in the `option "documents"` folder was written by
+no directive: its `source` is `null`, its `WRITTEN IN` cell is empty, it is
+marked `generated`, and its `filename` is relative to the root ledger's folder.
 
 ```bash
 bea list transaction

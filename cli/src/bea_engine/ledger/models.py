@@ -531,7 +531,9 @@ class DocumentDirective(BaseModel):
     model_config = ConfigDict(extra="forbid")
     date: LedgerDate
     account: str
-    #: Relative to the file that wrote the directive, which `source` names (w5/833).
+    #: Relative to the file that wrote the directive, which `source` names (w5/833);
+    #: a statement found in the documents folder has no `source` and is
+    #: relative to the root ledger's folder (w1/341).
     filename: str
     tags: list[Tag] = Field(default_factory=list)
     links: list[Link] = Field(default_factory=list)

@@ -1003,9 +1003,15 @@ def list_documents(
 
 
 def _source_of(entry: Any) -> SourceLocation | None:
+    """Where the directive is written, or `None` when it is written nowhere.
+
+    Beancount stamps a statement it found in the `option "documents"` folder
+    with the root file at line 0, a line no file has (w1/341): `entry_generated`
+    already reads below line 1 as no location.
+    """
     meta = entry.meta or {}
     filename, lineno = meta.get("filename"), meta.get("lineno")
-    if isinstance(filename, str) and isinstance(lineno, int) and not isinstance(lineno, bool):
+    if isinstance(filename, str) and isinstance(lineno, int) and not isinstance(lineno, bool) and lineno >= 1:
         return SourceLocation(filename=filename, lineno=lineno)
     return None
 
