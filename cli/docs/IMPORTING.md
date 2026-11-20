@@ -326,7 +326,10 @@ bea --file books/main.bean list transaction --flag '!'
 
 For a longer queue, `bea update transactions --from queue.csv` applies a whole
 `id,account,flag` mapping in one previewed write per file; see [Updating
-directives](USAGE.md#updating-directives).
+directives](USAGE.md#updating-directives). As with `bea import`'s
+`--default-account` guard, a retarget that would leave every posting of the
+entry on the bank's own account is refused: the entry would cancel out, so
+name the account its money goes to or comes from.
 
 ```bash
 cat > category.csv <<'EOF'

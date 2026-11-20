@@ -442,25 +442,38 @@ def _retarget_accounts(entry: Any, options: dict[str, Any], changes: _Changes) -
                 f"No posting to {old} in the entry at {_where(entry)}; it posts to {', '.join(held)}. "
                 "Nothing was written."
             )
-        return old, new
-    new = parse_account(changes.account)
-    candidates = [account for account in held if account == holding_account(options)]
-    if len(candidates) == 1:
-        return candidates[0], new
-    if not candidates and len(held) == 1:
-        return held[0], new
-    if not candidates and new in held:
-        return new, new
-    listing = ", ".join(held)
-    if len(candidates) > 1:
+    else:
+        new = parse_account(changes.account)
+        candidates = [account for account in held if account == holding_account(options)]
+        if len(candidates) == 1:
+            old = candidates[0]
+        elif not candidates and len(held) == 1:
+            old = held[0]
+        elif not candidates and new in held:
+            return new, new
+        else:
+            listing = ", ".join(held)
+            if len(candidates) > 1:
+                raise protocol.UsageError(
+                    f"The entry at {_where(entry)} posts to the holding account twice ({listing}); "
+                    f"name the leg to retarget as OLD=NEW. Nothing was written."
+                )
+            raise protocol.UsageError(
+                f"The entry at {_where(entry)} posts to {listing}, so {new} alone does not say which leg to "
+                "retarget; name it as OLD=NEW. Nothing was written."
+            )
+    # A counter posting to the entry's own source cancels the movement:
+    # `-5 USD` and `+5 USD` on one account, written with exit 0 and gone
+    # from its balance (w1/328). Merging a leg into another account the
+    # entry already posts to stays allowed; only a retarget that leaves
+    # every posting on one account is refused (w5/468).
+    if old != new and all(account == old or account == new for account in held):
         raise protocol.UsageError(
-            f"The entry at {_where(entry)} posts to the holding account twice ({listing}); "
-            f"name the leg to retarget as OLD=NEW. Nothing was written."
+            f"Retargeting {old} to {new} in the entry at {_where(entry)} would post every leg to {new}, "
+            "against its own source, and cancel out. Name the account its money goes to or comes from. "
+            "Nothing was written."
         )
-    raise protocol.UsageError(
-        f"The entry at {_where(entry)} posts to {listing}, so {new} alone does not say which leg to retarget; "
-        "name it as OLD=NEW. Nothing was written."
-    )
+    return old, new
 
 
 def _summarize(entry: Any, options: dict[str, Any], changes: _Changes) -> list[str]:
