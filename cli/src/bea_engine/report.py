@@ -2630,7 +2630,10 @@ def _display_precision(filtered: Any) -> dict[str, int]:
     for entry, posting in pending:
         if precision.get(posting.units.currency):
             continue
-        number = posting.units.number
+        # The product keeps the units' decimal places even when its value is
+        # whole: 2.5 × 10000 is -25000.0, which has no subunits to show and
+        # made a whole-yen ledger print every JPY figure as `.0` (w1/322).
+        number = _without_trailing_zeros(posting.units.number)
         limit = None
         exponent = number.as_tuple().exponent if isinstance(number, Decimal) else 0
         meta = entry.meta or {}
@@ -2657,6 +2660,27 @@ def _display_precision(filtered: Any) -> dict[str, int]:
         exponent = example.as_tuple().exponent
         precision[str(currency)] = max(0, -exponent) if isinstance(exponent, int) else 0
     return precision
+
+
+def _without_trailing_zeros(number: Any) -> Any:
+    """The same value with no zero fractional digits: `-25000.0` → `-25000`, `68.50` → `68.5`.
+
+    Not `Decimal.normalize`, which rounds to the context's precision and
+    writes `-25000` as `-2.5E+4`. Anything but a finite Decimal is returned
+    unchanged.
+    """
+    if not isinstance(number, Decimal) or not number.is_finite():
+        return number
+    if not number:
+        return Decimal(0)
+    sign, digits, exponent = number.as_tuple()
+    if not isinstance(exponent, int):
+        return number
+    kept = list(digits)
+    while exponent < 0 and kept[-1] == 0:
+        kept.pop()
+        exponent += 1
+    return Decimal((sign, kept, exponent))
 
 
 def _typed_precision(entry: Any, cache: dict[tuple[str, int], dict[str, int]]) -> dict[str, int]:

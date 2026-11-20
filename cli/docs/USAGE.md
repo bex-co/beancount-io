@@ -1982,7 +1982,8 @@ An amount Beancount inferred for an omitted leg — units times a cost or a pric
 — counts only for a currency the ledger never writes with decimals itself, so
 an omitted cash leg on a `{191.559998 USD}` purchase leaves a cents ledger in
 cents, while an inferred `31.5 USD` in a whole-dollar ledger is not rounded away.
-Its precision is bounded by the transaction's written numbers: division noise
+Only its value's digits count: `2.5 FUND {10000 JPY}` infers `-25000.0 JPY`, a
+whole number, so a whole-yen ledger still prints whole yen. Its precision is bounded by the transaction's written numbers: division noise
 from a total price such as `3 HOOL @@ 1000 JPY` does not add decimal places.
 A currency no posting names — usually a `--conversion` target — has no
 precision to infer and renders with two decimals; `--json` keeps the exact
