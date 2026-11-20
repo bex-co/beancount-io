@@ -28,6 +28,7 @@ export function MonthSummary({
   selectedDate,
   onSelectDate,
   dataThrough,
+  ledgerDataThrough,
   income,
   expenses,
   netWorth,
@@ -39,6 +40,13 @@ export function MonthSummary({
   onSelectDate: (date: string) => void;
   /** The ledger's last day with data; a month past it is incomplete. */
   dataThrough: string;
+  /**
+   * The ledger's newest transaction with no account, filter or time: only
+   * the dormancy line reads it. A past Time filter always ends long ago,
+   * so reading dormancy off the filtered date calls every filtered view
+   * of an active ledger dormant (w5/1149).
+   */
+  ledgerDataThrough: string;
   income: IntervalDataSeries;
   expenses: IntervalDataSeries;
   /** Net worth at market value, one point per month. */
@@ -53,7 +61,7 @@ export function MonthSummary({
   // wholly after the data simply has nothing in it.
   const incomplete =
     isPeriodIncomplete(selectedDate, dataThrough) && dataThrough >= monthStart;
-  const dormant = isLedgerDormant(dataThrough, today);
+  const dormant = isLedgerDormant(ledgerDataThrough, today);
   const throughLabel = incomplete
     ? t("page.overview.dataThrough", {
         // A ledger date, written as the ledger writes it, as every list
@@ -61,11 +69,11 @@ export function MonthSummary({
         date: dataThrough,
       })
     : null;
-  const lastEntryDate = dataThrough;
+  const lastEntryDate = ledgerDataThrough;
   const lastEntry = dormant
     ? t("page.overview.lastEntry", {
         date: lastEntryDate,
-        ago: formatTimeAgo(dataThrough, today, language),
+        ago: formatTimeAgo(ledgerDataThrough, today, language),
       })
     : null;
 

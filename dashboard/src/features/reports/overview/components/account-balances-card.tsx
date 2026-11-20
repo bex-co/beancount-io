@@ -25,6 +25,7 @@ import {
   type FiscalYearEnd,
 } from "../../export/reporting-period";
 import { formatStatementDate } from "../../export/date";
+import { toLedgerFilterSearchParam } from "@/common/lib/ledger-search-params";
 import { AccountName } from "@/common/components/account-name";
 import { FormattedAmounts } from "./formatted-amounts";
 
@@ -371,8 +372,20 @@ export function AccountBalancesCard({
 
       <div className="flex justify-end border-t px-3 py-2">
         <Button variant="ghost" size="sm" asChild>
-          {/* The card's one way on, saying where it goes. */}
-          <Link to={accountsLink} params={{ ledgerOwner, ledgerName }}>
+          {/* The card's one way on, saying where it goes. The stepped month
+          lives in component state, not in the URL, so the link carries the
+          same `time` the card names — otherwise the Balance Sheet opens on
+          today's balances instead of the period's (w5/1147). */}
+          <Link
+            to={accountsLink}
+            params={{ ledgerOwner, ledgerName }}
+            search={(prev) => ({
+              ...prev,
+              ...(filtered
+                ? { time: toLedgerFilterSearchParam(time ?? "") }
+                : {}),
+            })}
+          >
             {filtered
               ? t("page.overview.viewPeriodBalanceSheet")
               : t("page.overview.viewAllAccounts")}

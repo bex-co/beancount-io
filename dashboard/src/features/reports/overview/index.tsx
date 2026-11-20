@@ -225,6 +225,17 @@ export default function LedgerOverviewPage() {
     time: ledgerFilters.searchParams.time,
     today,
   });
+  // Dormancy is a fact about the ledger, not the view: a past Time filter
+  // always ends long ago, so the "Last entry" line reads the newest
+  // transaction with no filter (w5/1149). Everything else keeps the
+  // filtered date above.
+  const ledgerDataThrough = useDataThrough({
+    ledgerId,
+    account: "",
+    filter: "",
+    time: "",
+    today,
+  });
   // One month for the whole page: the summary, the money cards, their
   // history and the cash-flow diagram all answer for it.
   const month = useOverviewMonth({
@@ -664,6 +675,7 @@ export default function LedgerOverviewPage() {
                 selectedDate={month.selectedDate}
                 onSelectDate={month.setSelectedDate}
                 dataThrough={dataThrough}
+                ledgerDataThrough={ledgerDataThrough}
                 income={overview?.incomeIntervalData ?? []}
                 expenses={overview?.expensesIntervalData ?? []}
                 netWorth={market?.netWorthData ?? []}

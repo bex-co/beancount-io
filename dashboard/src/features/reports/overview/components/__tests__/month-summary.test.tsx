@@ -28,12 +28,15 @@ function Summary({
   income,
   expenses,
   dataThrough,
+  ledgerDataThrough = dataThrough,
   today,
   netWorth = [],
 }: {
   income: IntervalDataSeries;
   expenses: IntervalDataSeries;
   dataThrough: string;
+  /** The ledger's newest transaction with no filter; only dormancy reads it. */
+  ledgerDataThrough?: string;
   today: string;
   netWorth?: DataSeries;
 }) {
@@ -51,6 +54,7 @@ function Summary({
       selectedDate={month.selectedDate}
       onSelectDate={month.setSelectedDate}
       dataThrough={dataThrough}
+      ledgerDataThrough={ledgerDataThrough}
       income={income}
       expenses={expenses}
       netWorth={netWorth}
@@ -139,6 +143,54 @@ describe("the month summary", () => {
       />,
     );
     expect(summary()).toBe("August 2026Last entry 2026-09-08 (9 years ago)");
+  });
+
+  it("does not call a filtered view of an active ledger dormant (w5/1149)", async () => {
+    // A past Time filter ends long ago, but the ledger is still writing:
+    // its intervals narrow to the filter, as the page's own read does.
+    const spring = months("2026-01", "2026-05");
+    const springFlow = (amounts: Record<string, number>) =>
+      spring.map((date) => ({
+        date,
+        balance: { USD: amounts[date.slice(0, 7)] ?? 0 },
+        accountBalances: {},
+      }));
+    await renderSummary(
+      <Summary
+        income={springFlow(
+          Object.fromEntries(spring.map((date) => [date.slice(0, 7), -1000])),
+        )}
+        expenses={springFlow({ "2026-05": 1200 })}
+        dataThrough="2026-05-31"
+        ledgerDataThrough="2026-09-30"
+        today="2026-10-02"
+      />,
+    );
+    expect(summary()).toBe("May 2026");
+    expect(document.body.textContent).not.toMatch(/Last entry/);
+  });
+
+  it("names the ledger's real last entry on a filtered dormant ledger (w5/1149)", async () => {
+    const spring = months("2026-01", "2026-05");
+    const springFlow = (amounts: Record<string, number>) =>
+      spring.map((date) => ({
+        date,
+        balance: { USD: amounts[date.slice(0, 7)] ?? 0 },
+        accountBalances: {},
+      }));
+    await renderSummary(
+      <Summary
+        income={springFlow(
+          Object.fromEntries(spring.map((date) => [date.slice(0, 7), -1000])),
+        )}
+        expenses={springFlow({ "2026-05": 1200 })}
+        dataThrough="2026-05-31"
+        ledgerDataThrough="2026-06-15"
+        today="2027-01-01"
+      />,
+    );
+    expect(document.body.textContent).toMatch(/Last entry 2026-06-15/);
+    expect(document.body.textContent).not.toMatch(/Last entry 2026-05-31/);
   });
 
   it("steps the month from the dateline", async () => {

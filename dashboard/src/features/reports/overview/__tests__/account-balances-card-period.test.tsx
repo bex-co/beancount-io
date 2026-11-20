@@ -33,7 +33,10 @@ const assets = {
 };
 
 /** The card inside a ledger route that keeps filters, as the app's does. */
-async function renderCard(time?: string) {
+async function renderCard(
+  time?: string,
+  urlTime: string | null = time ?? null,
+) {
   const root = createRootRoute({ component: () => <Outlet /> });
   const ledger = createRoute({
     getParentRoute: () => root,
@@ -64,7 +67,9 @@ async function renderCard(time?: string) {
   const router = createRouter({
     routeTree: root.addChildren([ledger.addChildren([overview, ...leaves])]),
     history: createMemoryHistory({
-      initialEntries: [`/ledger/alice/books/${time ? `?time=${time}` : ""}`],
+      initialEntries: [
+        `/ledger/alice/books/${urlTime ? `?time=${urlTime}` : ""}`,
+      ],
     }),
   });
   await act(async () => {
@@ -96,6 +101,18 @@ describe("Overview Accounts card under a Time filter (w3/568)", () => {
         "Asset and liability balances at the end of the selected period",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("carries the stepped month the card names, with no URL filter (w5/1147)", async () => {
+    // The stepper keeps the month in component state, not in the URL, so
+    // the card's own `time` is the only thing that can carry it onward.
+    await renderCard("2026-05", null);
+
+    expect(
+      screen.getByRole("link", {
+        name: "Open the balance sheet for this period",
+      }),
+    ).toHaveAttribute("href", "/ledger/alice/books/balance-sheet?time=2026-05");
   });
 
   it("keeps current balances and the Accounts link without a filter", async () => {
