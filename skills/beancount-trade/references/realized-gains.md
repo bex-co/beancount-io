@@ -29,7 +29,17 @@ so it is never a row: splits and own-account transfers (the same transaction
 takes the commodity back in) stay out silently, and any other one is listed
 under `unpriced_reductions` with its `file` and `line`. `bea` 0.4.1 and
 earlier lack that field and drop such a sale without notice, so there the
-tie-out below is the only sign of one. Amounts are in each row's cost
+tie-out below is the only sign of one. An account booked `"NONE"` matches
+no lot, so a sale written with the lot's cost but not its date
+(`-5 ABC {100 USD} @ 200 USD`) is dated its own day and holds no lot's key.
+The command reads it as reducing the account's net holding at the posting's
+own cost and price, the gain the transaction booked. Its acquired date is
+that of the one held lot at that cost number (and label, when named); when
+no lot or several match, as for an average cost such as `{125 USD}`,
+`acquired` is empty and the gain totals under holding unknown. `bea` 0.4.1
+and earlier report such a sale as no sale at all, which only the tie-out
+shows. Writing the lot's date (`{100 USD, 2025-01-10}`) keeps the
+acquisition date everywhere. Amounts are in each row's cost
 currency — never sum across currencies.
 
 **Tie-out.** The per-lot gains must equal what was actually booked to the
@@ -50,7 +60,9 @@ adding the sale price (`@ PRICE`) to that posting reports it. Never adjust a
 row or a total to force the tie.
 
 The queries behind the command, for windows it does not carve (a custom
-predicate, a per-lot filter the flags cannot express) — the per-lot rows:
+predicate, a per-lot filter the flags cannot express) — the per-lot rows (on
+an undated `"NONE"` sale they show the sale's own day as `acquired` and
+0 held days; the command's row is the one to quote):
 
 <!-- recipe: realized-gains -->
 ```sh

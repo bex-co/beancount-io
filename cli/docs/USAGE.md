@@ -2109,8 +2109,17 @@ stays short even across a leap day, and `held_days` stays the plain count.
 A closed lot is whatever a priced posting actually reduced, long or short:
 covering a short (or settling a costed foreign-currency payable) reports the
 opening cost as proceeds and the cover price as basis, and opening a short
-realizes nothing. A reduction without a price states no proceeds, so it is
-never a row. Splits and own-account transfers are such reductions, and the
+realizes nothing. An account booked `"NONE"` matches no lot, so a sale that
+names a lot's cost but not its date (`-5 ABC {100 USD} @ 200 USD`) is dated
+its own day and closes no held lot by key; it is read as reducing the
+account's net holding of that commodity in that cost currency, up to that
+holding (any excess still opens a short), at the posting's own cost and
+price, the gain the transaction booked. Its acquired date is that of the one
+held lot at the same cost number (and label, when named); with none, as for
+an average cost such as `{125 USD}`, or several, it is empty and the gain
+totals under holding unknown. Name the lot's date (`{100 USD, 2025-01-10}`)
+to keep the acquisition date. A reduction without a price states no
+proceeds, so it is never a row. Splits and own-account transfers are such reductions, and the
 same transaction takes the commodity back in, so they stay out. Any other
 one, such as a sale to cash written without `@ PRICE`, still booked its gain,
 so the report names it instead of totalling short: text ends with

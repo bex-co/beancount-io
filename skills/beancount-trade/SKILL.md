@@ -140,7 +140,7 @@ Which lot an unnamed reduction (`{}`) takes is the account's booking method, dec
 - **STRICT** — `{}` matches only when exactly one lot can mean it; with two candidate lots the write is refused as ambiguous. Name the lot by cost and date, or ask (the sell procedure above).
 - **STRICT_WITH_SIZE** — like STRICT, except a reduction whose size equals exactly one lot's size matches that lot.
 - **FIFO / LIFO / HIFO** — the engine selects the oldest / newest / highest-cost lot. The proposal still names the lot the method will take (read it off the `lots-held` order) so the user confirms the real outcome, not just the method's name.
-- **NONE** — no booking: reductions carry no cost and the engine computes no gain, so every leg needs an explicit amount. Show proceeds and the named lot's cost and let the user confirm the gain figure in the proposal; never fill it in silently.
+- **NONE** — no booking: reductions carry no cost and the engine computes no gain, so every leg needs an explicit amount. Show proceeds and the named lot's cost and let the user confirm the gain figure in the proposal; never fill it in silently. Write the lot's cost **and date** (`{100 USD, 2025-01-10}`): without the date the engine dates the sale's lot on its own day, so `report capital-gains` can only give it the acquisition date of the one held lot at that cost; with none (an average cost such as `{125 USD}`) or several, it reports the gain with the holding unknown (`references/realized-gains.md`).
 
 Choose the method when the account is opened (`bea add open --booking FIFO` writes it into the `open` line, on request — this skill does not edit existing `open` directives, so changing a method later is the user's own edit with gain-history consequences to say out loud).
 

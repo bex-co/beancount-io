@@ -2,7 +2,9 @@
 
 Only negative postings counted as sales: a short cover (or a payment settling
 a costed EUR payable) was never reported, and the negative posting that opened
-the short was reported as a two-unit sale at zero gain.
+the short was reported as a two-unit sale at zero gain. A `"NONE"`-booked sale
+that names a lot's cost but not its date closes the account's net holding,
+though no held lot has its exact key (w1/323).
 """
 
 from __future__ import annotations
@@ -116,3 +118,141 @@ def test_clip_keeps_exact_native_magnitudes(tmp_path: Path, opening: str, closin
     data = _gains(tmp_path, WIDE_SHORT.format(opening=opening, closing=closing))
     (row,) = data["rows"]  # type: ignore[index]
     assert Decimal(row["quantity"]["number"]) == Decimal(expected)
+
+
+# w1/323. `"NONE"` booking matches no lot: a sale naming the lot's cost but
+# not its date is dated its own day, so its exact key held nothing and the
+# report read the 500 USD it booked as a short opening — `No sales.`.
+NONE_SALE = """option "operating_currency" "USD"
+2025-01-01 open Assets:Cash USD
+2025-01-01 open Assets:Broker "{booking}"
+2025-01-01 open Income:Gains USD
+2025-01-01 open Equity:Opening USD
+2025-01-01 * "Fund"
+  Assets:Cash 10000 USD
+  Equity:Opening
+2025-01-10 * "Buy"
+  Assets:Broker 10 ABC {{100 USD}}
+  Assets:Cash -1000 USD
+2025-03-10 * "Buy"
+  Assets:Broker 10 ABC {{150 USD}}
+  Assets:Cash -1500 USD
+{sales}"""
+SALE = """{date} * "Sell"
+  Assets:Broker -{quantity} ABC {{{cost}}} {price}
+  Assets:Cash {cash} USD
+  Income:Gains
+"""
+
+
+def _sale(cost: str, quantity: int = 5, date: str = "2026-02-01", price: str = "@ 200 USD") -> str:
+    return SALE.format(date=date, quantity=quantity, cost=cost, price=price, cash=quantity * 200)
+
+
+def _booked(tmp_path: Path) -> str:
+    """What the ledger booked to `Income:Gains`, negated: the tie-out the rows must meet."""
+    proc = bea(
+        [
+            "--file",
+            str(tmp_path / "main.beancount"),
+            "--json",
+            "query",
+            "SELECT -sum(number) AS gain WHERE account = 'Income:Gains'",
+        ],
+        tmp_path,
+    )
+    assert proc.returncode == 0, proc.stderr
+    ((gain,),) = json.loads(proc.stdout)["data"]["rows"]
+    return str(gain)
+
+
+@pytest.mark.parametrize(
+    ("booking", "cost"),
+    [("NONE", "100 USD"), ("NONE", "100 USD, 2025-01-10"), ("FIFO", "100 USD")],
+    ids=["none-undated", "none-dated", "fifo"],
+)
+def test_a_none_sale_naming_the_cost_reports_the_lot_it_named(tmp_path: Path, booking: str, cost: str) -> None:
+    data = _gains(tmp_path, NONE_SALE.format(booking=booking, sales=_sale(cost)))
+
+    (row,) = data["rows"]  # type: ignore[misc]
+    assert row["acquired"] == "2025-01-10" and row["sold"] == "2026-02-01" and row["long_held"] is True
+    assert row["quantity"] == {"number": "5", "currency": "ABC"}
+    assert row["proceeds"] == {"number": "1000", "currency": "USD"}
+    assert row["basis"] == {"number": "500", "currency": "USD"}
+    assert row["gain"] == {"number": "500", "currency": "USD"}
+    assert data["totals"] == {"one_year_or_less": {}, "more_than_one_year": {"USD": "500"}, "holding_unknown": {}}
+    assert _booked(tmp_path) == "500"
+
+
+def test_a_none_sale_at_an_average_cost_has_an_unknown_holding(tmp_path: Path) -> None:
+    data = _gains(tmp_path, NONE_SALE.format(booking="NONE", sales=_sale("125 USD")))
+
+    (row,) = data["rows"]  # type: ignore[misc]
+    assert row["acquired"] is None and row["held_days"] is None and row["long_held"] is None
+    assert row["quantity"] == {"number": "5", "currency": "ABC"}
+    assert row["basis"] == {"number": "625", "currency": "USD"}
+    assert row["gain"] == {"number": "375", "currency": "USD"}
+    assert data["totals"] == {"one_year_or_less": {}, "more_than_one_year": {}, "holding_unknown": {"USD": "375"}}
+    assert _booked(tmp_path) == "375"
+
+
+def test_none_sales_reduce_the_net_holding_and_its_excess_opens_a_short(tmp_path: Path) -> None:
+    # The second same-day sale shares the first's key, a lot on its own side;
+    # the third outruns the 10 ABC left, and only those close; the fourth
+    # finds the account already short, so it closes nothing.
+    sales = (
+        _sale("100 USD") * 2 + _sale("150 USD", quantity=15, date="2026-03-01") + _sale("100 USD", date="2026-03-02")
+    )
+    data = _gains(tmp_path, NONE_SALE.format(booking="NONE", sales=sales))
+
+    rows = [(row["acquired"], row["sold"], row["quantity"]["number"], row["gain"]["number"]) for row in data["rows"]]  # type: ignore[attr-defined]
+    assert rows == [
+        ("2025-01-10", "2026-02-01", "5", "500"),
+        ("2025-01-10", "2026-02-01", "5", "500"),
+        ("2025-03-10", "2026-03-01", "10", "500"),
+    ]
+
+
+def test_an_undated_none_cover_closes_the_short_it_names(tmp_path: Path) -> None:
+    cover = COVER.replace("{{100 USD, 2026-01-02}}", "{{100 USD}}").format(price="80", booked="-20")
+    data = _gains(tmp_path, SHORT.format(cover=cover))
+
+    (row,) = data["rows"]  # type: ignore[misc]
+    assert row["acquired"] == "2026-01-02" and row["sold"] == "2026-01-20"
+    assert row["proceeds"] == {"number": "100", "currency": "USD"}
+    assert row["basis"] == {"number": "80", "currency": "USD"}
+    assert row["gain"] == {"number": "20", "currency": "USD"}
+
+
+def test_an_unpriced_undated_none_sale_is_named_not_dropped(tmp_path: Path) -> None:
+    data = _gains(tmp_path, NONE_SALE.format(booking="NONE", sales=_sale("100 USD", price="")))
+
+    assert data["rows"] == []
+    (item,) = data["unpriced_reductions"]  # type: ignore[misc]
+    assert item["acquired"] == "2025-01-10" and item["quantity"] == {"number": "5", "currency": "ABC"}
+    assert item["cost"] == {"number": "100", "currency": "USD"}
+
+
+LABELLED = """option "operating_currency" "USD"
+2025-01-01 open Assets:Broker "NONE"
+2025-01-01 open Assets:Cash USD
+2025-01-01 open Income:Gains USD
+2025-01-10 * "Buy"
+  Assets:Broker 10 ABC {{100 USD, "a"}}
+  Assets:Cash -1000 USD
+2025-06-10 * "Buy"
+  Assets:Broker 10 ABC {{100 USD, "b"}}
+  Assets:Cash -1000 USD
+2026-01-05 * "Sell"
+  Assets:Broker -5 ABC {{100 USD{label}}} @ 200 USD
+  Assets:Cash 1000 USD
+  Income:Gains
+"""
+
+
+@pytest.mark.parametrize(("label", "acquired"), [(', "b"', "2025-06-10"), ("", None)], ids=["named", "ambiguous"])
+def test_a_none_sale_takes_the_one_lot_its_cost_and_label_name(
+    tmp_path: Path, label: str, acquired: str | None
+) -> None:
+    (row,) = _gains(tmp_path, LABELLED.format(label=label))["rows"]  # type: ignore[misc]
+    assert row["acquired"] == acquired and row["gain"] == {"number": "500", "currency": "USD"}

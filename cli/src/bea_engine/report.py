@@ -1396,6 +1396,11 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
     # (w5/1035), so the lots are tracked from the first entry, whatever the
     # date bounds, and only what a posting actually closed is reported.
     held_lots: dict[str, Any] = {}
+    # Each account's net units of a commodity per cost currency. `"NONE"`
+    # booking matches no lot: a sale written `{100 USD}` is dated its own
+    # day, so it runs against no held lot of its own key, only against this
+    # net, at the cost Beancount balanced it and booked its gain at (w1/323).
+    held_nets: dict[tuple[str, str, str], Decimal] = {}
     for entry in filtered.entries:
         if not isinstance(entry, Transaction):
             continue
@@ -1412,8 +1417,14 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
             lots = held_lots.setdefault(posting.account, Inventory())
             existing = lots.get((units.currency, cost))
             before = existing.units.number if existing is not None else Decimal(0)
+            acquired: date | None = cost.date
+            net_key = (posting.account, units.currency, cost.currency)
+            net = held_nets.get(net_key, Decimal(0))
+            held_nets[net_key] = net + units.number
+            if not _runs_against(before, units.number) and _runs_against(net, units.number):
+                before, acquired = net, _named_lot_date(lots, units, cost)
             lots.add_position(posting)
-            if before == 0 or (before > 0) == (units.number > 0):
+            if not _runs_against(before, units.number):
                 continue
             if (start is not None and entry.date < start) or (end is not None and entry.date > end):
                 continue
@@ -1432,7 +1443,7 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
                             "line": entry.meta.get("lineno"),
                             "account": posting.account,
                             "commodity": units.currency,
-                            "acquired": cost.date,
+                            "acquired": acquired,
                             "quantity": {"number": quantity, "currency": units.currency},
                             "cost": {"number": cost.number, "currency": cost.currency},
                         }
@@ -1455,7 +1466,6 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
             else:
                 proceeds = {"number": quantity * cost.number, "currency": cost.currency}
                 basis = {"number": quantity * price.number, "currency": price.currency}
-            acquired = cost.date
             held = (entry.date - acquired).days if acquired is not None else None
             # "More than one year" is by calendar date, not `held > 365`: a
             # year spanning 29 February has 366 days, so a lot held exactly
@@ -1505,6 +1515,29 @@ def _capital_gains(filtered: Any, bounds: tuple[date | None, date | None], ledge
         "totals": totals,
         "unpriced_reductions": unpriced,
     }
+
+
+def _runs_against(held: Decimal, units: Decimal) -> bool:
+    """Whether a posting of `units` shrinks a holding of `held`: a sale from a long one, a cover into a short one."""
+    return held != 0 and (held > 0) != (units > 0)
+
+
+def _named_lot_date(lots: Any, units: Any, cost: Any) -> date | None:
+    """The acquisition date of the one held lot a reduction by cost alone names, or None with none or several.
+
+    That lot is on the other side of the posting, at its cost number and
+    currency, and has its label when the posting names one (w1/323).
+    """
+    dates = [
+        position.cost.date
+        for position in lots
+        if position.units.currency == units.currency
+        and _runs_against(position.units.number, units.number)
+        and position.cost.number == cost.number
+        and position.cost.currency == cost.currency
+        and (cost.label is None or position.cost.label == cost.label)
+    ]
+    return dates[0] if len(dates) == 1 else None
 
 
 def _offset_in_entry(postings: Any, units: Any) -> bool:

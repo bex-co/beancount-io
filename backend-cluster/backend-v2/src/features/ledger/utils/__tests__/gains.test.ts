@@ -11,7 +11,12 @@ const txn = (
     account: string;
     number: string;
     currency?: string;
-    cost?: { number: string; currency: string; date: string } | null;
+    cost?: {
+      number: string;
+      currency: string;
+      date: string;
+      label?: string | null;
+    } | null;
     price?: { number: string; currency: string } | null;
   }[],
   extra: Partial<JournalTransactionPublic> = {},
@@ -602,6 +607,202 @@ describe("composeGains", () => {
         transactions: repro,
       });
       expect(result.unpriced_reductions).toEqual([]);
+    });
+  });
+
+  describe("a NONE sale that names a cost but no lot date (w1/323)", () => {
+    // The note's repro as the ledger's journal answers it: two lots bought
+    // into a NONE-booked account, then `-5 ABC {100 USD} @ 200 USD`, whose
+    // cost names no lot date (`""`; Beancount's own loader dates it on the
+    // sale's day). Neither shape is a held lot's key.
+    const lot = (number: string, date: string, label?: string) => ({
+      number,
+      currency: "USD",
+      date,
+      ...(label === undefined ? {} : { label }),
+    });
+    const bought = (number: string, date: string, label?: string) =>
+      txn(date, [
+        {
+          account: "Assets:Broker",
+          number: "10",
+          currency: "ABC",
+          cost: lot(number, date, label),
+        },
+        { account: "Assets:Cash", number: `-${Number(number) * 10}` },
+      ]);
+    const sell = (
+      date: string,
+      quantity: string,
+      cost: { number: string; currency: string; date: string },
+      price: string | null = "200",
+    ) =>
+      txn(date, [
+        {
+          account: "Assets:Broker",
+          number: `-${quantity}`,
+          currency: "ABC",
+          cost,
+          price: price === null ? null : { number: price, currency: "USD" },
+        },
+        { account: "Assets:Cash", number: `${Number(quantity) * 200}` },
+        { account: "Income:Gains", number: "0" },
+      ]);
+    const lots = [bought("150", "2025-03-10"), bought("100", "2025-01-10")];
+    const row = (fields: Record<string, unknown>) => ({
+      account: "Assets:Broker",
+      commodity: "ABC",
+      sold: "2026-02-01",
+      quantity: { number: "5", currency: "ABC" },
+      proceeds: { number: "1000", currency: "USD" },
+      ...fields,
+    });
+
+    it.each([
+      ["no lot date, as the hosted engine answers it", ""],
+      ["the sale's own date, as Beancount's loader books it", "2026-02-01"],
+      ["the lot's date, the dated control", "2025-01-10"],
+    ])("reports the named lot for a cost dated with %s", (_, date) => {
+      const result = composeGains({
+        ...base,
+        transactions: [sell("2026-02-01", "5", lot("100", date)), ...lots],
+      });
+      expect(result.rows).toEqual([
+        row({
+          acquired: "2025-01-10",
+          held_days: 387,
+          long_held: true,
+          basis: { number: "500", currency: "USD" },
+          gain: { number: "500", currency: "USD" },
+        }),
+      ]);
+      expect(result.totals).toEqual({
+        one_year_or_less: {},
+        more_than_one_year: { USD: "500" },
+        holding_unknown: {},
+      });
+    });
+
+    it("leaves the holding unknown for a sale at an average cost", () => {
+      const result = composeGains({
+        ...base,
+        transactions: [sell("2026-02-01", "5", lot("125", "")), ...lots],
+      });
+      expect(result.rows).toEqual([
+        row({
+          acquired: null,
+          held_days: null,
+          long_held: null,
+          basis: { number: "625", currency: "USD" },
+          gain: { number: "375", currency: "USD" },
+        }),
+      ]);
+      expect(result.totals.holding_unknown).toEqual({ USD: "375" });
+    });
+
+    it("closes the net holding, and no more, sale by sale", () => {
+      // The second same-day sale shares the first's key, a lot on its own
+      // side; the third outruns the 10 ABC left; the fourth finds the
+      // account already short.
+      const result = composeGains({
+        ...base,
+        transactions: [
+          sell("2026-03-02", "5", lot("100", "")),
+          sell("2026-03-01", "15", lot("150", "")),
+          sell("2026-02-01", "5", lot("100", "")),
+          sell("2026-02-01", "5", lot("100", "")),
+          ...lots,
+        ],
+      });
+      expect(
+        result.rows.map((r) => [
+          r.acquired,
+          r.sold,
+          r.quantity.number,
+          r.gain.number,
+        ]),
+      ).toEqual([
+        ["2025-01-10", "2026-02-01", "5", "500"],
+        ["2025-01-10", "2026-02-01", "5", "500"],
+        ["2025-03-10", "2026-03-01", "10", "500"],
+      ]);
+    });
+
+    it("covers a short the cover names by cost alone", () => {
+      const result = composeGains({
+        ...base,
+        transactions: [
+          txn("2026-01-20", [
+            {
+              account: "Assets:Broker",
+              number: "1",
+              cost: lot("100", ""),
+              price: { number: "80", currency: "USD" },
+            },
+          ]),
+          txn("2026-01-02", [
+            {
+              account: "Assets:Broker",
+              number: "-2",
+              cost: lot("100", "2026-01-02"),
+              price: { number: "100", currency: "USD" },
+            },
+          ]),
+        ],
+      });
+      expect(result.rows).toEqual([
+        {
+          account: "Assets:Broker",
+          commodity: "HOOL",
+          acquired: "2026-01-02",
+          sold: "2026-01-20",
+          held_days: 18,
+          long_held: false,
+          quantity: { number: "1", currency: "HOOL" },
+          proceeds: { number: "100", currency: "USD" },
+          basis: { number: "80", currency: "USD" },
+          gain: { number: "20", currency: "USD" },
+        },
+      ]);
+    });
+
+    it("names an unpriced sale instead of dropping it", () => {
+      const result = composeGains({
+        ...base,
+        transactions: [sell("2026-02-01", "5", lot("100", ""), null), ...lots],
+      });
+      expect(result.rows).toEqual([]);
+      expect(result.unpriced_reductions).toEqual([
+        {
+          date: "2026-02-01",
+          entry_hash: "h-2026-02-01",
+          account: "Assets:Broker",
+          commodity: "ABC",
+          acquired: "2025-01-10",
+          quantity: { number: "5", currency: "ABC" },
+          cost: { number: "100", currency: "USD" },
+        },
+      ]);
+    });
+
+    it.each([
+      ["names a lot's label", "b", "2025-06-10"],
+      ["matches two lots", undefined, null],
+    ])("dates a sale whose cost %s", (_, label, acquired) => {
+      const labelled = [
+        bought("100", "2025-06-10", "b"),
+        bought("100", "2025-01-10", "a"),
+      ];
+      const result = composeGains({
+        ...base,
+        transactions: [
+          sell("2026-01-05", "5", lot("100", "", label)),
+          ...labelled,
+        ],
+      });
+      expect(result.rows.map((r) => [r.acquired, r.gain.number])).toEqual([
+        [acquired, "500"],
+      ]);
     });
   });
 });

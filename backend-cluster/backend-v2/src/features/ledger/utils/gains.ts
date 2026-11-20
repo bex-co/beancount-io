@@ -24,11 +24,13 @@ import type {
  * written without `@` — still booked its gain, so it is listed in
  * `unpriced_reductions` by its entry hash rather than dropped (w1/308).
  * FIFO vs specific-lot is the ledger's own booking, already resolved in
- * the posting's cost. Proceeds and basis stay in their own currencies,
- * and totals never sum across currencies. The one-year boundary is the
- * acquisition date's anniversary, with no tax logic. No quotes are read,
- * so every figure is exact booked arithmetic; number strings are
- * normalized rather than scale-preserved, as in holdings.
+ * the posting's cost — except under `"NONE"`, which resolves nothing, so a
+ * posting that runs against no lot of its own key reduces the account's
+ * net holding at its own cost (w1/323). Proceeds and basis stay in their
+ * own currencies, and totals never sum across currencies. The one-year
+ * boundary is the acquisition date's anniversary, with no tax logic. No
+ * quotes are read, so every figure is exact booked arithmetic; number
+ * strings are normalized rather than scale-preserved, as in holdings.
  */
 
 type GainsRow = {
@@ -154,6 +156,47 @@ function lotKey(currency: string, cost: JournalCostPublic, number: BigNumber) {
   ]);
 }
 
+/** One lot an account holds: its key's parts and its units. */
+type HeldLot = {
+  currency: string;
+  cost: JournalCostPublic;
+  number: BigNumber;
+  units: BigNumber;
+};
+
+/** Whether a posting of `units` shrinks a holding of `held`: a sale from a long one, a cover into a short one. */
+function runsAgainst(held: BigNumber, units: BigNumber): boolean {
+  return !held.isZero() && held.gt(0) !== units.gt(0);
+}
+
+/**
+ * The acquisition date of the one held lot a reduction by cost alone
+ * names, or null with none or several — `_named_lot_date` for the CLI.
+ * That lot is on the other side of the posting, at its cost number and
+ * currency, and has its label when the posting names one (w1/323).
+ */
+function namedLotDate(
+  lots: Iterable<HeldLot>,
+  currency: string,
+  cost: JournalCostPublic,
+  number: BigNumber,
+  units: BigNumber,
+): string | null {
+  const dates: string[] = [];
+  for (const lot of lots) {
+    if (
+      lot.currency === currency &&
+      runsAgainst(lot.units, units) &&
+      lot.number.eq(number) &&
+      lot.cost.currency === cost.currency &&
+      (cost.label == null || lot.cost.label === cost.label)
+    ) {
+      dates.push(lot.cost.date);
+    }
+  }
+  return dates.length === 1 && dates[0] !== "" ? dates[0]! : null;
+}
+
 /**
  * Closed lots, oldest sale first. `transactions` is the whole journal,
  * newest-first, and is read back to front so every lot is known before
@@ -172,7 +215,13 @@ export function composeGains(params: {
   const { transactions, window, account, roots, start, end } = params;
   const rows: GainsRow[] = [];
   const unpriced: UnpricedReduction[] = [];
-  const held = new Map<string, Map<string, BigNumber>>();
+  const held = new Map<string, Map<string, HeldLot>>();
+  // Each account's net units of a commodity per cost currency. `"NONE"`
+  // booking matches no lot: a sale written `{100 USD}` names no lot date
+  // (the journal answers `""`), so it runs against no held lot of its own
+  // key, only against this net, at the cost the engine balanced it and
+  // booked its gain at (w1/323).
+  const nets = new Map<string, BigNumber>();
   for (const entry of [...transactions].reverse()) {
     // The engine could not book it, so no lot moved (the journal lists it
     // only so it can be fixed).
@@ -191,15 +240,29 @@ export function composeGains(params: {
         lots = new Map();
         held.set(posting.account, lots);
       }
-      const key = lotKey(posting.units.currency, cost, costNumber);
-      const before = lots.get(key) ?? new BigNumber(0);
+      const currency = posting.units.currency;
+      const key = lotKey(currency, cost, costNumber);
+      let before = lots.get(key)?.units ?? new BigNumber(0);
+      // A dateless cost serializes as `""`; the CLI reads it as no date.
+      let acquired: string | null = cost.date === "" ? null : cost.date;
+      const netKey = JSON.stringify([posting.account, currency, cost.currency]);
+      const net = nets.get(netKey) ?? new BigNumber(0);
+      nets.set(netKey, net.plus(units));
       const after = before.plus(units);
-      if (after.isZero()) lots.delete(key);
-      else lots.set(key, after);
-      // An augmentation: opening or adding to a lot, long or short.
-      if (before.isZero() || before.gt(0) === units.gt(0)) {
-        continue;
+      if (!runsAgainst(before, units) && runsAgainst(net, units)) {
+        acquired = namedLotDate(
+          lots.values(),
+          currency,
+          cost,
+          costNumber,
+          units,
+        );
+        before = net;
       }
+      if (after.isZero()) lots.delete(key);
+      else lots.set(key, { currency, cost, number: costNumber, units: after });
+      // An augmentation: opening or adding to a lot, long or short.
+      if (!runsAgainst(before, units)) continue;
       if (!reported) continue;
       if (
         account !== undefined &&
@@ -214,7 +277,7 @@ export function composeGains(params: {
             entry_hash: entry.entry_hash,
             account: posting.account,
             commodity: posting.units.currency,
-            acquired: cost.date === "" ? null : cost.date,
+            acquired,
             quantity: {
               number: plain(BigNumber.min(before.abs(), units.abs())),
               currency: posting.units.currency,
@@ -224,7 +287,7 @@ export function composeGains(params: {
         }
         continue;
       }
-      const row = closedLot(posting, cost, entry.date, before, units);
+      const row = closedLot(posting, cost, acquired, entry.date, before, units);
       if (row !== null) rows.push(row);
     }
   }
@@ -300,6 +363,7 @@ function bucketTotals(rows: readonly GainsRow[]): GainsResult["totals"] {
 function closedLot(
   posting: JournalPostingPublic,
   cost: JournalCostPublic,
+  acquired: string | null,
   sold: string,
   before: BigNumber,
   units: BigNumber,
@@ -314,8 +378,6 @@ function closedLot(
   const [proceeds, basis] = before.gt(0)
     ? [atPrice, atCost]
     : [atCost, atPrice];
-  // A dateless cost serializes as `""`; the CLI reads it as no date.
-  const acquired: string | null = cost.date === "" ? null : cost.date;
   return {
     account: posting.account,
     commodity: posting.units.currency,
