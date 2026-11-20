@@ -201,7 +201,11 @@ function valueLot(
       // get_market_value: price(units→cost.ccy) × units, else the COST value —
       // in the cost currency; a cost-less lot stays in its units currency.
       if (lot.costNumber && lot.costCurrency) {
-        const rate = priceMap.getScaledRate(lot.currency, lot.costCurrency, date);
+        const rate = priceMap.getScaledRate(
+          lot.currency,
+          lot.costCurrency,
+          date,
+        );
         if (rate) {
           return [
             lot.costCurrency,
@@ -389,4 +393,67 @@ function addScaledInto(
   );
 }
 
+/** Whether `conversion` reads prices, so a flow's value depends on its day. */
+function readsPrices(conversion: Conversion): boolean {
+  return conversion.kind === "currency" || conversion.kind === "at_value";
+}
 
+/**
+ * The target that reads {@link FlowLots.settle}'s inventory: `units` where
+ * settling valued it, the report's own target where it kept the lots.
+ */
+export function settledTarget(target: string): string {
+  return readsPrices(parseConversion(target)) ? "units" : target;
+}
+
+/**
+ * Income and expenses postings, kept one inventory per day until they are
+ * read, so each can be valued at the price on the day it happened (w1/m49).
+ *
+ * A flow is worth what it was when it happened: a trip paid in EUR in January
+ * cost what EUR was worth in January. Valued as one inventory at the report's
+ * date, a later quote revalued it, so an income statement's trees no longer
+ * matched the interval rows beneath them, and the same days totalled
+ * differently by month and by year. `bea` applies the same rule.
+ */
+export class FlowLots {
+  private readonly days = new Map<string, LotInventory>();
+
+  /** Net a posting booked on `date` into that day's inventory. */
+  addPosting(date: string, posting: PostingJson): void {
+    let day = this.days.get(date);
+    if (!day) {
+      day = new LotInventory();
+      this.days.set(date, day);
+    }
+    day.addPosting(posting);
+  }
+
+  /**
+   * The days netted into one inventory, for {@link settledTarget} to read.
+   * Under a target that reads prices (a currency, `at_value`) each day is
+   * valued at its own price, as `convert(position, 'USD', date)` does, and
+   * the inventory holds what the conversion returned. What a day cannot be
+   * valued in stays in its own commodity: no later quote revalues it.
+   * `units`, `units_by_cost` and `at_cost` read no price, so the lots stay.
+   */
+  settle(target: string, priceMap: PriceMap): LotInventory {
+    const conversion = parseConversion(target);
+    const inventory = new LotInventory();
+    this.days.forEach((day, date) => {
+      if (!readsPrices(conversion)) {
+        inventory.merge(day);
+        return;
+      }
+      day
+        .reduceScaled(conversion, priceMap, date)
+        .forEach(({ value, scale }, currency) =>
+          inventory.addPosting({
+            account: "",
+            units: { number: value.toFixed(scale), currency },
+          }),
+        );
+    });
+    return inventory;
+  }
+}

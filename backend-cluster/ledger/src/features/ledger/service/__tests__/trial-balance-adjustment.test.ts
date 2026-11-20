@@ -446,7 +446,9 @@ describe("the rounding the ledger's tolerance accepted (w1/305)", () => {
   );
 
   it("values foreign rounding at the as-of price, as the roots are", async () => {
-    configure([...HOLDINGS, SPLIT("2024-01-25", "EUR", "Assets:Euro")]);
+    // Split on the day EUR is quoted, so its expenses, valued on their own
+    // date (w1/m49), read the as-of price too.
+    configure([...HOLDINGS, SPLIT("2024-01-31", "EUR", "Assets:Euro")]);
 
     const market = await finance().getTrialBalance(params);
     const cost = await finance().getTrialBalance({

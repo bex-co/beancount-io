@@ -100,8 +100,16 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     const key = (interval ?? "month") as IntervalKey;
     const cumulative = (prefixes: string[]) =>
       accountBalanceSeries(directives, key, prefixes, target, priceMap, window);
+    // Income and expenses are flows, each posting valued on its own date in
+    // the trees and the interval totals alike (w1/m49).
     const periodic = (prefixes: string[]) =>
-      intervalTotals(directives, key, prefixes, target, priceMap, window);
+      intervalTotals(directives, key, prefixes, target, priceMap, window, {
+        flows: true,
+      });
+    const flowTree = (root: string) =>
+      accountHierarchy(directives, root, target, priceMap, valuationDate, {
+        flows: true,
+      });
     return {
       net_worth_data: cumulative([roots.assets, roots.liabilities]),
       assets_data: cumulative([roots.assets]),
@@ -121,22 +129,10 @@ export class LedgerFinanceService implements ILedgerFinanceService {
         valuationDate,
       ),
       expenses_interval_data: periodic([roots.expenses]),
-      expenses_hierarchy_data: accountHierarchy(
-        directives,
-        roots.expenses,
-        target,
-        priceMap,
-        valuationDate,
-      ),
+      expenses_hierarchy_data: flowTree(roots.expenses),
       expenses_data: cumulative([roots.expenses]),
       income_interval_data: periodic([roots.income]),
-      income_hierarchy_data: accountHierarchy(
-        directives,
-        roots.income,
-        target,
-        priceMap,
-        valuationDate,
-      ),
+      income_hierarchy_data: flowTree(roots.income),
       income_data: cumulative([roots.income]),
     };
   }
@@ -167,46 +163,26 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       allCommodities,
     );
     const key = (interval ?? "month") as IntervalKey;
-    const netProfit = intervalTotals(
-      directives,
-      key,
-      [roots.income, roots.expenses],
-      target,
-      priceMap,
-      window,
-    ).map((row) => ({ date: row.date, balance: row.balance }));
+    // Each income and expenses posting is valued on its own date, in the trees
+    // and the rows alike, so the rows add up to the trees at every interval
+    // (w1/m49).
+    const periodic = (prefixes: string[]) =>
+      intervalTotals(directives, key, prefixes, target, priceMap, window, {
+        flows: true,
+      });
+    const flowTree = (root: string) =>
+      accountHierarchy(directives, root, target, priceMap, valuationDate, {
+        flows: true,
+      });
     return {
-      net_profit_data: netProfit,
-      income_data: intervalTotals(
-        directives,
-        key,
-        [roots.income],
-        target,
-        priceMap,
-        window,
-      ),
-      expenses_data: intervalTotals(
-        directives,
-        key,
-        [roots.expenses],
-        target,
-        priceMap,
-        window,
-      ),
-      income_hierarchy_data: accountHierarchy(
-        directives,
-        roots.income,
-        target,
-        priceMap,
-        valuationDate,
-      ),
-      expenses_hierarchy_data: accountHierarchy(
-        directives,
-        roots.expenses,
-        target,
-        priceMap,
-        valuationDate,
-      ),
+      net_profit_data: periodic([roots.income, roots.expenses]).map((row) => ({
+        date: row.date,
+        balance: row.balance,
+      })),
+      income_data: periodic([roots.income]),
+      expenses_data: periodic([roots.expenses]),
+      income_hierarchy_data: flowTree(roots.income),
+      expenses_hierarchy_data: flowTree(roots.expenses),
     };
   }
 
@@ -317,8 +293,12 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       operatingCurrency,
       allCommodities,
     );
+    // Income and expenses value each posting on its own date, as the income
+    // statement does; the valuation line takes the translation (w1/m49).
     const tree = (root: string, stream = directives) =>
-      accountHierarchy(stream, root, target, priceMap, valuationDate);
+      accountHierarchy(stream, root, target, priceMap, valuationDate, {
+        flows: root === roots.income || root === roots.expenses,
+      });
     // Valued, the five trees net only through two lines, valuation and the
     // rounding the ledger's tolerance accepted (w1/305), and the clamp's
     // conversion booking folds into the first, as `bea` does: with and

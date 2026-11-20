@@ -1,7 +1,12 @@
 import BigNumber from "bignumber.js";
 import type { DirectiveJson, PostingJson } from "@rustledger/wasm";
 import type { PriceMap } from "./price-map";
-import { LotInventory, parseConversion } from "./lot-inventory";
+import {
+  FlowLots,
+  LotInventory,
+  parseConversion,
+  settledTarget,
+} from "./lot-inventory";
 
 const Amount = BigNumber.clone({
   DECIMAL_PLACES: 28,
@@ -64,9 +69,16 @@ interface MutableNode {
  * LOTS per account and rolling them up to ancestors. `Open` directives seed
  * empty accounts (`has_txns=false`). Cost lots are preserved so the tree can be
  * valued `at_cost` / `at_value` / in a currency (see {@link accountHierarchy}).
+ * With `flows`, the accounts it selects net {@link FlowLots} instead, settled
+ * under its target: each posting valued on its own date.
  */
 function buildAccountTree(
   directives: DirectiveJson[],
+  flows?: {
+    includes: (account: string) => boolean;
+    target: string;
+    priceMap: PriceMap;
+  },
 ): Map<string, MutableNode> {
   const nodes = new Map<string, MutableNode>();
 
@@ -93,6 +105,7 @@ function buildAccountTree(
 
   // Seed opened accounts, then accumulate posting lots per account.
   const accountLots = new Map<string, LotInventory>();
+  const accountFlows = new Map<string, FlowLots>();
   directives.forEach((directive) => {
     if (directive.type === "open") {
       ensure(directive.account);
@@ -100,6 +113,15 @@ function buildAccountTree(
     if (directive.type !== "transaction") return;
     directive.postings.forEach((posting) => {
       if (!posting.units) return;
+      if (flows?.includes(posting.account)) {
+        let days = accountFlows.get(posting.account);
+        if (!days) {
+          days = new FlowLots();
+          accountFlows.set(posting.account, days);
+        }
+        days.addPosting(directive.date, posting);
+        return;
+      }
       let lots = accountLots.get(posting.account);
       if (!lots) {
         lots = new LotInventory();
@@ -108,6 +130,11 @@ function buildAccountTree(
       lots.addPosting(posting);
     });
   });
+  if (flows) {
+    accountFlows.forEach((days, account) =>
+      accountLots.set(account, days.settle(flows.target, flows.priceMap)),
+    );
+  }
 
   // Insert each account's balance and roll up to ancestors.
   [...accountLots.entries()]
@@ -187,6 +214,10 @@ function serialiseSubtree(
  * `at_cost` / `at_value`) against `priceMap`. Prices are those on or before
  * `date`, the time filter's last day (fava's `serialise_with_context` passes
  * `g.filtered.end_date`), and the latest ones when there is no time filter.
+ *
+ * `flows` marks an income or expenses root: its postings are valued on their
+ * own dates instead, as the interval totals beside it are (w1/m49), so a
+ * later quote does not revalue an earlier month's spending.
  */
 export function accountHierarchy(
   directives: DirectiveJson[],
@@ -194,11 +225,23 @@ export function accountHierarchy(
   target: string,
   priceMap: PriceMap,
   date?: string,
+  { flows = false }: { flows?: boolean } = {},
 ): AccountTreeNode {
+  const nodes = buildAccountTree(
+    directives,
+    flows
+      ? {
+          includes: (account) =>
+            account === rootAccount || account.startsWith(`${rootAccount}:`),
+          target,
+          priceMap,
+        }
+      : undefined,
+  );
   return serialiseSubtree(
-    buildAccountTree(directives),
+    nodes,
     rootAccount,
-    target,
+    flows ? settledTarget(target) : target,
     priceMap,
     date,
   );

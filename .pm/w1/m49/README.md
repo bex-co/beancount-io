@@ -1,6 +1,6 @@
 # w1 · m49 — A period's income and expenses have one value, whatever the interval
 
-**Worker:** worker1 **Goal:** under a currency conversion or `at_value`, every Income and Expenses posting is valued at the price on its own date, so an income statement's account trees, `Net Profit` and interval rows agree at every interval, in `bea` and in the hosted ledger service **Status:** in progress (t001, t002 done)
+**Worker:** worker1 **Goal:** under a currency conversion or `at_value`, every Income and Expenses posting is valued at the price on its own date, so an income statement's account trees, `Net Profit` and interval rows agree at every interval, in `bea` and in the hosted ledger service **Status:** in progress (t001, t002, t003 done)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | ---- | ----- | --- | ---------- |
 | t001 | `bea`: value Income and Expenses postings at their own date in the income statement, overview, balance sheet earnings and trial balance — **DONE** | 60m | — |
 | t002 | `bea`: `USAGE.md` states the flow valuation rule and where the translation goes — **DONE** | 20m | t001 |
-| t003 | Hosted ledger service: the income statement, overview and trial balance value flows at their own date | 60m | — |
+| t003 | Hosted ledger service: the income statement, overview and trial balance value flows at their own date — **DONE** | 60m | — |
 | t004 | Adoption surface | 20m | t002, t003 |
 | t005 | Simplify | 20m | t004 |
 | t006 | Test coverage | 30m | t004 |

@@ -1,7 +1,12 @@
 import type { DirectiveJson } from "@rustledger/wasm";
 import { BadUserInputError } from "@/shared/errors";
 import type { PriceMap } from "./price-map";
-import { LotInventory, parseConversion } from "./lot-inventory";
+import {
+  FlowLots,
+  LotInventory,
+  parseConversion,
+  settledTarget,
+} from "./lot-inventory";
 import { utcDate } from "./utc-date";
 import { localTodayStr } from "./plugins";
 
@@ -295,6 +300,10 @@ export function windowEndInclusive(window: IntervalWindow): string {
  * `window` selects the interval boundaries: absent ⇒ the transaction span with
  * complete (rounded-out) intervals; present ⇒ exactly `[begin, end)` with
  * `complete=false` intervals (the `time`-filtered case).
+ *
+ * `flows` marks the statements' income and expenses totals: each posting is
+ * valued on its own date instead of the interval end, as their account trees
+ * are (w1/m49), so the rows add up to the trees at every interval.
  */
 export function intervalTotals(
   directives: DirectiveJson[],
@@ -303,14 +312,15 @@ export function intervalTotals(
   target: string,
   priceMap: PriceMap,
   window?: IntervalWindow,
+  { flows = false }: { flows?: boolean } = {},
 ): DateBalanceWithAccounts[] {
   // A flow total ends at the last transaction: a price dated after it adds an
   // empty month, which moved Reports' anchor onto it (w21/889). Balance series
   // keep running to the last price, which values them.
   const ranges = seriesRanges(directives, key, window, false);
   const accumulators = ranges.map(() => {
-    const total = new LotInventory();
-    const perAccount = new Map<string, LotInventory>();
+    const total = new FlowLots();
+    const perAccount = new Map<string, FlowLots>();
     return { total, perAccount };
   });
 
@@ -332,30 +342,38 @@ export function intervalTotals(
     directive.postings.forEach((posting) => {
       if (!posting.units || !matchesAccountOrChild(posting.account, prefixes))
         return;
-      total.addPosting(posting);
+      total.addPosting(directive.date, posting);
       let acct = perAccount.get(posting.account);
       if (!acct) {
-        acct = new LotInventory();
+        acct = new FlowLots();
         perAccount.set(posting.account, acct);
       }
-      acct.addPosting(posting);
+      acct.addPosting(directive.date, posting);
     });
   }
 
+  // Without `flows` the days settle as they are and value at the interval end.
+  const settleAs = flows ? target : "units";
+  const readAs = flows ? settledTarget(target) : target;
   return ranges.map((range, index) => {
     const { total, perAccount } = accumulators[index];
     const account_balances: Record<string, Record<string, string>> = {};
-    perAccount.forEach((inventory, account) => {
+    perAccount.forEach((days, account) => {
       account_balances[account] = valueRecord(
-        inventory,
-        target,
+        days.settle(settleAs, priceMap),
+        readAs,
         priceMap,
         range.endInclusive,
       );
     });
     return {
       date: range.endInclusive,
-      balance: valueRecord(total, target, priceMap, range.endInclusive),
+      balance: valueRecord(
+        total.settle(settleAs, priceMap),
+        readAs,
+        priceMap,
+        range.endInclusive,
+      ),
       account_balances,
     };
   });

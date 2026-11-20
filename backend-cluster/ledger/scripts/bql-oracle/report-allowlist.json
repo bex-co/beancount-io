@@ -18,5 +18,25 @@
       "backend-cluster/ledger/src/foundation/rustledger/cost-valuation.ts"
     ],
     "note": "The reports' at_value is Fava's get_market_value: a lot with no price directive is valued at cost (74.04 USD for 6 QAX). Stock BQL value() leaves the units. Documented in cost-valuation.ts."
+  },
+  {
+    "id": "report-priced-trial-balance-usd",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      "backend-cluster/ledger/src/foundation/rustledger/lot-inventory.ts"
+    ],
+    "note": "The reports value income and expenses at each posting's own date (w1/m49): the 80.00 EUR hotel of 2026-08-10 is 88.00 USD at that day's 1.10, where stock convert(sum(position), 'USD') values the sum at the latest 1.12 (89.6 USD). Documented on FlowLots in lot-inventory.ts."
+  },
+  {
+    "id": "report-priced-income-statement-usd",
+    "differences": [
+      "cells"
+    ],
+    "references": [
+      "backend-cluster/ledger/src/foundation/rustledger/lot-inventory.ts"
+    ],
+    "note": "The reports value income and expenses at each posting's own date (w1/m49): the 80.00 EUR hotel of 2026-08-10 is 88.00 USD at that day's 1.10, where stock convert(sum(position), 'USD') values the sum at the latest 1.12 (89.6 USD). Documented on FlowLots in lot-inventory.ts."
   }
 ]

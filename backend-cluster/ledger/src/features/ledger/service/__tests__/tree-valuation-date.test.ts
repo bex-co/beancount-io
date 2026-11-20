@@ -75,6 +75,7 @@ const DIRECTIVES: DirectiveJson[] = [
       cost: { number: { kind: "per_unit", value: "10" }, currency: "USD" },
     },
   ]),
+  price("2016-08-31", "11"),
   price("2016-12-31", "12"),
   price("2017-06-30", "20"),
 ];
@@ -143,7 +144,7 @@ describe("tree balances at market value use the period's prices (w3/500)", () =>
     expect(usd(report.assets_hierarchy_data, "Assets:Brokerage")).toBe("180");
   });
 
-  it("values every trial-balance tree at the period end", async () => {
+  it("values the trial balance's holdings at the period end, its expenses on their own date", async () => {
     const report = await finance().getTrialBalance({
       ...params,
       time: "2016",
@@ -151,25 +152,35 @@ describe("tree balances at market value use the period's prices (w3/500)", () =>
     });
 
     expect(usd(report.assets_hierarchy_data, "Assets:Brokerage")).toBe("108");
-    expect(usd(report.expenses_hierarchy_data, "Expenses:Gifts")).toBe("12");
+    // The gift of 2016-09-01 is worth the 2016-08-31 price (w1/m49).
+    expect(usd(report.expenses_hierarchy_data, "Expenses:Gifts")).toBe("11");
   });
 
-  it("values income-statement and overview trees at the period end", async () => {
-    const statement = await finance().getIncomeStatement({
-      ...params,
-      time: "2016",
-      conversion: "at_value",
-    });
-    const overview = await finance().getOverview({
-      ...params,
-      time: "2016",
-      conversion: "at_value",
-    });
+  it.each([{ time: "2016" }, { time: undefined }])(
+    "values income-statement and overview flows on their own date, time $time",
+    async ({ time }) => {
+      const statement = await finance().getIncomeStatement({
+        ...params,
+        time,
+        conversion: "at_value",
+      });
+      const overview = await finance().getOverview({
+        ...params,
+        time,
+        conversion: "at_value",
+      });
 
-    expect(usd(statement.expenses_hierarchy_data, "Expenses:Gifts")).toBe("12");
-    expect(usd(overview.assets_hierarchy_data, "Assets:Brokerage")).toBe("108");
-    expect(usd(overview.expenses_hierarchy_data, "Expenses:Gifts")).toBe("12");
-  });
+      expect(usd(statement.expenses_hierarchy_data, "Expenses:Gifts")).toBe(
+        "11",
+      );
+      expect(usd(overview.assets_hierarchy_data, "Assets:Brokerage")).toBe(
+        time ? "108" : "180",
+      );
+      expect(usd(overview.expenses_hierarchy_data, "Expenses:Gifts")).toBe(
+        "11",
+      );
+    },
+  );
 
   it("leaves at-cost trees independent of the period's prices", async () => {
     const report = await finance().getBalanceSheet({
