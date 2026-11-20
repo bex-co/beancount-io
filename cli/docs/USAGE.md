@@ -1100,8 +1100,13 @@ USD`, so `sum(weight)` over it and its `-100.00 USD` cash leg is
 day makes it `-4.50000000000000000000000001 USD`. A summed amount's digits
 after a run of ten zeros or nines are that residue, so those read `0.00 USD`
 and `-4.50 USD`, and a zero prints without a sign. The rule applies only to
-sums: a `0.000000000012 USD` price keeps its twelve decimals. `--json`,
-`--format csv`, and their `-m` columns keep every digit.
+sums: a `0.000000000012 USD` price keeps its twelve decimals. Each column is
+sized by its own values, and a per-unit figure by its own digits: a lot's
+cost in a position or an inventory, and a rate in a `price` column, keep
+their digits without setting how the amounts print. One `{191.559998 USD}`
+lot reads `10 AAPL {191.559998 USD}` beside a `7963.73 USD` balance, and a
+`1.083721 USD` price beside `-108.37 USD` postings; `-m` columns follow the
+same rule. `--json`, `--format csv`, and their `-m` columns keep every digit.
 `tags` and `links` hold a whole set per entry, so BQL cannot compare them:
 `SELECT DISTINCT tags` and `GROUP BY tags` are refused (exit **2**) with the
 recipes that work — `SELECT DISTINCT joinstr(tags)` for distinct combinations,

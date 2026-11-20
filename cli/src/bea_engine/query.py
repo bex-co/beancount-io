@@ -17,15 +17,18 @@ below need Beancount objects, which is why they live here and not in `bea`:
   context, which rounds a computed value to the precision of the inputs
   (`convert()` of eight decimal places came back with five) and raises
   `decimal.InvalidOperation` outright on a balance wider than twelve integer
-  digits. `result_context` derives the precision from the values being
-  rendered instead. A text table shows each currency at the finer of the
-  precision the ledger writes it in and the meaningful digits of its values:
-  trailing zeros, and the digits of a quotient that ran to the decimal
-  context's full precision (a `{{100 USD}}` lot over 3 units, an `@@` total),
-  count for nothing (w1/325). Nor does the residue such a quotient leaves in
-  a sum that should cancel, past a run of ten zeros or nines: `sum(weight)`
-  over that lot and its cash leg reads `0.00 USD`, not `-1E-26 USD` (w1/326).
-  `-m` cells in CSV and JSON stay lossless.
+  digits. `_Digits` derives the precision from the values being rendered
+  instead. A text table shows each currency in a column at the finer of the
+  precision the ledger writes it in and the meaningful digits of that
+  column's values: trailing zeros, and the digits of a quotient that ran to
+  the decimal context's full precision (a `{{100 USD}}` lot over 3 units, an
+  `@@` total), count for nothing (w1/325). Nor does the residue such a
+  quotient leaves in a sum that should cancel, past a run of ten zeros or
+  nines: `sum(weight)` over that lot and its cash leg reads `0.00 USD`, not
+  `-1E-26 USD` (w1/326). A per-unit cost and a `price` column's rate keep
+  their own digits without setting the amounts': one `{191.559998 USD}` lot
+  printed every USD amount in the table with six decimals (w1/330). `-m`
+  cells in CSV and JSON stay lossless.
 - **Directive exports.** The shared writer printer preserves negative custom
   values, small decimal metadata, string escapes and whole cost specifications
   so reloading an export does not silently change those values.
@@ -1661,11 +1664,18 @@ def build_shell(
                 _require_entries(description, rows)
             if not rows:
                 protocol.note("(no rows)")
-            # A text table is read, so it shows the ledger's own precision; `-m`
-            # CSV cells stay lossless, as JSON's do.
-            dcontext = result_context(rows, self._written_precision() if self.settings.format == "text" else None)
-            if self.settings.numberify:
-                description, rows = numberify_results(description, rows, dcontext.build())
+            # A text table is read, so each of its columns shows the ledger's
+            # own precision and its own values' digits; `-m` CSV cells stay
+            # lossless, as JSON's do.
+            if self.settings.format == "text":
+                written = self._written_precision()
+                if self.settings.numberify:
+                    description, rows = _numberified_text(description, rows, written)
+                dcontext = _text_context(written)
+            else:
+                dcontext = result_context(rows)
+                if self.settings.numberify:
+                    description, rows = numberify_results(description, rows, dcontext.build())
             with self.output as out:
                 if self.settings.format == "csv":
                     # Upstream CSV reuses text DecimalRenderer padding. Emit
@@ -2159,10 +2169,10 @@ def _fixed_point_text() -> Iterator[None]:
     `str()`, so `0.00000001` printed as `1E-8` in a number column, a `-m`
     column and an `entry_meta()` cell, while the position beside it, the CSV
     and the JSON all said `0.00000001` (w5/294). An amount that rounds to zero
-    prints without a sign (w1/326). Upstream's position, cost and inventory
-    renderers build their amount renderer by its module name, so that name is
-    swapped too. The swap lasts one render, so native `--source` keeps
-    upstream's table.
+    prints without a sign (w1/326), and each amount renderer sizes its own
+    values (w1/330). Upstream's position and cost renderers build their
+    amount renderer by its module name, so that name is swapped too. The swap
+    lasts one render, so native `--source` keeps upstream's table.
     """
     from beancount.core.amount import Amount
     from beanquery import query_render
@@ -2313,7 +2323,10 @@ def _whole(value: Decimal) -> Decimal:
 
 @cache
 def _text_renderers() -> dict[type, type]:
+    from collections import defaultdict
+
     from beancount.core.amount import Amount
+    from beancount.core.inventory import Inventory
     from beanquery import query_render
 
     registered = dict(query_render.RENDERERS)
@@ -2360,13 +2373,46 @@ def _text_renderers() -> dict[type, type]:
             # out one line per table row.
             return text.split("\n") if "\n" in text else text
 
-    class UnsignedZeroAmountRenderer(query_render.AmountRenderer):  # type: ignore[misc]
-        """Upstream's amount column, with no sign on an amount that rounds to zero.
+    class ColumnAmountRenderer(query_render.AmountRenderer):  # type: ignore[misc]
+        """Upstream's amount column, sized by its own values, with no sign on an amount that rounds to zero.
+
+        Upstream quantizes every amount through the result's one display
+        context, so the finest number anywhere in the rows set a currency's
+        decimals everywhere: one `{191.559998 USD}` lot, or the `1.083721 USD`
+        rate in a `price` column, printed every USD amount in the table with
+        six (w1/330). Each instance sizes what it renders by those values
+        alone, at least the ledger's written precision. Upstream builds one
+        for every column, and a position's units and its per-unit cost get one
+        each, so a cost keeps its digits without lending them to the units.
+        `summed` marks an inventory's units, whose quotient residue counts for
+        nothing (w1/326).
 
         Zero has no sign as money. A sum that cancels a quotient but for its
-        rounding residue (w1/326) printed `-0.00 USD`, which reads as a loss
-        nobody had.
+        rounding residue printed `-0.00 USD`, which reads as a loss nobody had.
         """
+
+        summed = False
+        curwidth: int
+
+        def __init__(self, ctx: Any) -> None:
+            super().__init__(ctx)
+            self.digits = ctx.dcontext.column()
+            self.quantize = self.digits.quantize
+            self.values: list[Any] = []
+
+        def update(self, value: Any) -> None:
+            # Upstream sizes each value as it arrives; the digits to quantize
+            # to are known only once the column's last value is in.
+            if value is not None:
+                self.digits.learn(value, self.summed)
+                self.values.append(value)
+                self.curwidth = max(self.curwidth, len(value.currency))
+
+        def prepare(self) -> int:
+            for value in self.values:
+                self.dcontext.update(self.quantize(value.number, value.currency), value.currency)
+            self.values.clear()
+            return int(super().prepare())
 
         def format(self, value: Any) -> str:
             number = value.number
@@ -2374,11 +2420,29 @@ def _text_renderers() -> dict[type, type]:
                 value = value._replace(number=number.copy_abs())
             return str(super().format(value))
 
+    class SummedInventoryRenderer(query_render.InventoryRenderer):  # type: ignore[misc]
+        """Upstream's inventory column, whose units are sums (w1/326)."""
+
+        def __init__(self, ctx: Any) -> None:
+            super().__init__(ctx)
+
+            def summed() -> Any:
+                renderer = query_render.PositionRenderer(ctx)
+                renderer.units_renderer.summed = True
+                return renderer
+
+            self.renderers: defaultdict[Any, Any] = defaultdict(summed)
+
     # Subclassing registers each class in upstream's table for good; keep that
     # table as it was and swap these in only for one text render.
     query_render.RENDERERS.clear()
     query_render.RENDERERS.update(registered)
-    return {Decimal: FixedPointDecimalRenderer, object: PlainObjectRenderer, Amount: UnsignedZeroAmountRenderer}
+    return {
+        Decimal: FixedPointDecimalRenderer,
+        object: PlainObjectRenderer,
+        Amount: ColumnAmountRenderer,
+        Inventory: SummedInventoryRenderer,
+    }
 
 
 def _public_value(value: Any) -> Any:
@@ -3738,20 +3802,21 @@ def _before_residue(number: Decimal, digits: int) -> int:
     return digits
 
 
-def result_context(rows: Any, written: Mapping[str, int] | None = None) -> Any:
-    """A display context sized to these results rather than to the ledger's inputs.
+class _Digits:
+    """Fractional digits per currency, sized to the values learned so far.
 
     Without `written` it is lossless, for the `-m` cells of CSV and JSON: a
     currency gets the most fractional digits any of its values has, so
     quantizing to it never rounds.
 
     With `written`, the digits per currency the ledger's money is written in
-    (`report.written_precision`, as the report tables use it), it sizes a text
-    table people read. A currency shows the finer of that and the meaningful
-    digits of its values (w1/325). A trailing zero means nothing: `12.50 EUR @
-    1.10 USD` infers a `-13.7500 USD` leg, which made every USD amount print
-    four decimals. Nor does a quotient that ran to the decimal context's full
-    precision (`report._cost_digits`): `3 HOOL {{100 USD}}` books a
+    (`report.written_precision`, as the report tables use it), it sizes one
+    column of a text table people read (w1/330). A currency shows the finer
+    of that and the meaningful digits of the column's values (w1/325). A
+    trailing zero means nothing: `12.50 EUR @ 1.10 USD` infers a `-13.7500
+    USD` leg, which made every USD amount print four decimals. Nor does a
+    quotient that ran to the decimal context's full precision
+    (`report._cost_digits`): `3 HOOL {{100 USD}}` books a
     `33.33333333333333333333333333 USD` unit cost and `3 EUR @@ 10.00 USD` a
     `3.333333333333333333333333333 USD` price, and either one in the rows gave
     every USD amount 26 or 27 decimals. A computed value's real digits still
@@ -3767,62 +3832,123 @@ def result_context(rows: Any, written: Mapping[str, int] | None = None) -> Any:
     without a sign. A lone amount keeps them: it is a posting's own value or
     a rate, which no sum has touched.
     """
-    from beancount.core.amount import Amount
-    from beancount.core.display_context import DisplayContext
-    from beancount.core.inventory import Inventory
-    from beancount.core.position import Cost, Position
 
-    from bea_engine.report import _cost_digits, _without_trailing_zeros
+    def __init__(self, written: Mapping[str, int] | None = None) -> None:
+        self.written = written
+        self.by_currency: dict[str, int] = dict(written or {})
 
-    digits_by_currency: dict[str, int] = dict(written or {})
+    def learn(self, value: Any, summed: bool = False) -> None:
+        """Widen the value's currency to its digits: an `Amount`'s, or a `Cost`'s per-unit number's."""
+        from bea_engine.report import _cost_digits, _without_trailing_zeros
 
-    def learn(value: Amount | Cost, summed: bool = False) -> None:
         number = value.number
         if not isinstance(number, Decimal) or not number.is_finite():
             return
-        if written is None:
+        if self.written is None:
             digits = -int(number.as_tuple().exponent)
         else:
             number = _without_trailing_zeros(number)
             digits = _cost_digits(number)
-            if summed and digits > digits_by_currency.get(value.currency, 0):
+            if summed and digits > self.by_currency.get(value.currency, 0):
                 digits = _before_residue(number, digits)
-        digits_by_currency[value.currency] = max(digits_by_currency.get(value.currency, 0), digits)
+        self.by_currency[value.currency] = max(self.by_currency.get(value.currency, 0), digits)
 
-    def visit(value: Any) -> None:
-        if isinstance(value, Amount | Cost):
-            learn(value)
+    def visit(self, value: Any, *, costs: bool) -> None:
+        """Learn every amount in a cell, a row or a result; and every per-unit cost, with `costs`."""
+        from beancount.core.amount import Amount
+        from beancount.core.inventory import Inventory
+        from beancount.core.position import Cost, Position
+
+        if isinstance(value, Amount) or (costs and isinstance(value, Cost)):
+            self.learn(value)
         elif isinstance(value, Position):
-            visit(value.units)
-            visit(value.cost)
+            self.visit(value.units, costs=costs)
+            self.visit(value.cost, costs=costs)
         elif isinstance(value, Inventory):
             for position in value:
-                learn(position.units, summed=True)
-                visit(position.cost)
+                self.learn(position.units, summed=True)
+                self.visit(position.cost, costs=costs)
         elif isinstance(value, Mapping):
             for item in value.values():
-                visit(item)
+                self.visit(item, costs=costs)
         elif isinstance(value, list | tuple | set | frozenset):
             for item in value:
-                visit(item)
+                self.visit(item, costs=costs)
 
-    visit(rows)
+    def quantize(self, number: Decimal, currency: str) -> Decimal:
+        """The number at its currency's digits, which upstream's `DisplayFormatter.quantize` also takes."""
+        # DisplayContext.quantize caps the integer portion at twelve
+        # digits. Preserve large balances as well as fractional units.
+        digits = -self.by_currency.get(currency, 0)
+        exponent = int(number.as_tuple().exponent)
+        with localcontext() as arithmetic:
+            arithmetic.prec = max(arithmetic.prec, len(number.as_tuple().digits) + max(0, exponent - digits))
+            return number.quantize(Decimal(1).scaleb(digits))
 
-    class ResultContext(DisplayContext):
-        def quantize(self, number: Decimal, currency: str, precision: Any = None) -> Decimal:
-            del precision  # Retain the upstream signature; result values determine display precision.
-            # DisplayContext.quantize caps the integer portion at twelve
-            # digits. Preserve large balances as well as fractional units.
-            digits = -digits_by_currency.get(currency, 0)
-            exponent = int(number.as_tuple().exponent)
-            with localcontext() as arithmetic:
-                arithmetic.prec = max(arithmetic.prec, len(number.as_tuple().digits) + max(0, exponent - digits))
-                return number.quantize(Decimal(1).scaleb(digits))
+    def context(self) -> Any:
+        """A display context quantizing by these digits, whose `column()` sizes one text column afresh."""
+        from beancount.core.display_context import DisplayContext
 
-    context = ResultContext()
-    for currency, digits in digits_by_currency.items():
-        # Every value in a currency receives the maximum precision present in
-        # these results. Beanquery's per-column formatter can then neither
-        # infer whole units from a majority nor discard calculated fractions.
-        context.update(Decimal(1).scaleb(-digits), currency)
-    return context
+        digits = self
+
+        class ResultContext(DisplayContext):
+            def quantize(self, number: Decimal, currency: str, precision: Any = None) -> Decimal:
+                del precision  # Retain the upstream signature; result values determine display precision.
+                return digits.quantize(number, currency)
+
+            def column(self) -> _Digits:
+                return _Digits(digits.written)
+
+        context = ResultContext()
+        for currency, places in self.by_currency.items():
+            # Every value in a currency receives the most digits learned.
+            # Beanquery's per-column formatter can then neither infer whole
+            # units from a majority nor discard calculated fractions.
+            context.update(Decimal(1).scaleb(-places), currency)
+        return context
+
+
+def result_context(rows: Any) -> Any:
+    """A lossless display context sized to these results, for the `-m` cells of CSV and JSON.
+
+    Each currency gets the most fractional digits any value in the rows has,
+    a per-unit cost's included, so quantizing to it never rounds.
+    """
+    digits = _Digits()
+    digits.visit(rows, costs=True)
+    return digits.context()
+
+
+def _text_context(written: Mapping[str, int]) -> Any:
+    """The display context of a text table: each amount renderer sizes its own values (w1/330).
+
+    One context for the whole result set a currency's decimals everywhere by
+    the finest number in the rows, so one `{191.559998 USD}` lot or a `price`
+    column's `1.083721 USD` rate printed every USD amount with six. The text
+    renderers (`_text_renderers`) ask it for a fresh `column()` each, at the
+    ledger's written precision, so a column's amounts, and a position's units
+    and its per-unit cost, are each sized by their own digits.
+    """
+    return _Digits(written).context()
+
+
+def _numberified_text(description: Any, rows: Any, written: Mapping[str, int]) -> tuple[Any, list[list[Any]]]:
+    """Upstream's `-m` split for a text table, each column quantized to its own amounts (w1/330).
+
+    Numberify drops a position's cost, yet one context for the whole result
+    still printed a USD column with the six decimals of a `{191.559998 USD}`
+    lot, or of the `1.083721 USD` rate in a `price` column beside it.
+    """
+    from beanquery.numberify import numberify_results
+
+    columns: list[Any] = []
+    cells: list[list[Any]] = [[] for _ in rows]
+    for index, column in enumerate(description):
+        values = [(row[index],) for row in rows]
+        digits = _Digits(written)
+        digits.visit(values, costs=False)
+        named, numbered = numberify_results([column], values, digits)
+        columns.extend(named)
+        for row, split in zip(cells, numbered, strict=True):
+            row.extend(split)
+    return columns, cells

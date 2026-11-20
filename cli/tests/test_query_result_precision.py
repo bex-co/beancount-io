@@ -8,6 +8,11 @@ decimals. A product's trailing zeros counted too: `12.50 EUR @ 1.10 USD`
 infers `-13.7500 USD`, and every USD amount printed four. A currency now shows
 the finer of the precision the ledger writes it in and the meaningful digits
 of its values. JSON and CSV keep every digit.
+
+Each column, and within a position its units and its per-unit cost apart, is
+sized by its own values (w1/330): one `{191.559998 USD}` lot or a `price`
+column's `1.083721 USD` rate printed every USD amount in the table with six
+decimals.
 """
 
 from __future__ import annotations
@@ -319,3 +324,84 @@ def test_json_and_csv_keep_the_residue(tmp_path: Path) -> None:
         [[{"units": {"number": "-0.00000000000000000000000001", "currency": "USD"}, "cost": None}]]
     ]
     assert csv.stdout.splitlines() == ["sum(weight)", "-0.00000000000000000000000001 USD"]
+
+
+# One lot's per-unit cost and one posting's rate carry six decimals; every
+# amount the ledger writes has two (w1/330).
+PER_UNIT = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Assets:Euro EUR
+2026-01-01 open Expenses:Food USD
+2026-01-01 open Equity:Opening USD
+2026-01-02 * "open"
+  Assets:Bank:Checking  10000.00 USD
+  Equity:Opening
+2026-01-03 * "Lunch"
+  Expenses:Food  12.30 USD
+  Assets:Bank:Checking
+2026-01-05 * "Buy AAPL"
+  Assets:Broker  10 AAPL {191.559998 USD}
+  Assets:Bank:Checking  -1915.60 USD
+2026-01-06 * "Buy EUR"
+  Assets:Euro  100.00 EUR @ 1.083721 USD
+  Assets:Bank:Checking  -108.37 USD
+"""
+
+JOURNAL = "SELECT date, account, position, price WHERE account ~ 'Checking|Euro|Food'"
+
+
+def test_a_lots_per_unit_cost_keeps_its_digits_without_lending_them_to_amounts(tmp_path: Path) -> None:
+    rows = _rows(tmp_path, PER_UNIT, "SELECT account, sum(position) GROUP BY account ORDER BY account")
+
+    assert rows == {
+        "Assets:Bank:Checking": ["7963.73", "USD"],
+        "Assets:Broker": ["10", "AAPL", "{", "191.559998", "USD}"],
+        "Assets:Euro": ["100.00", "EUR"],
+        "Equity:Opening": ["-10000.00", "USD"],
+        "Expenses:Food": ["12.30", "USD"],
+    }
+
+
+def test_a_numberified_column_ignores_the_cost_numberify_drops(tmp_path: Path) -> None:
+    rows = _rows(tmp_path, PER_UNIT, "-m", "SELECT account, sum(position) GROUP BY account ORDER BY account")
+
+    assert rows == {
+        "Assets:Bank:Checking": ["7963.73"],
+        "Assets:Broker": ["10"],
+        "Assets:Euro": ["100.00"],
+        "Equity:Opening": ["-10000.00"],
+        "Expenses:Food": ["12.30"],
+    }
+
+
+@pytest.mark.parametrize("numberify", [False, True], ids=["amounts", "numberified"])
+def test_a_price_columns_rate_keeps_its_digits_without_lending_them_to_amounts(tmp_path: Path, numberify: bool) -> None:
+    rows = _cells(tmp_path, PER_UNIT, *(["-m"] if numberify else []), JOURNAL)
+
+    usd = [] if numberify else ["USD"]
+    eur = [] if numberify else ["EUR"]
+    assert rows == [
+        ["2026-01-02", "Assets:Bank:Checking", "10000.00", *usd],
+        ["2026-01-03", "Expenses:Food", "12.30", *usd],
+        ["2026-01-03", "Assets:Bank:Checking", "-12.30", *usd],
+        ["2026-01-05", "Assets:Bank:Checking", "-1915.60", *usd],
+        ["2026-01-06", "Assets:Euro", "100.00", *eur, "1.083721", *usd],
+        ["2026-01-06", "Assets:Bank:Checking", "-108.37", *usd],
+    ]
+
+
+def test_json_keeps_the_lots_cost_and_the_rate_exact(tmp_path: Path) -> None:
+    ledger = write_ledger(tmp_path, PER_UNIT)
+    query = "SELECT account, position, price WHERE date >= 2026-01-05"
+    shown = bea(["--json", "--file", str(ledger), "query", query], tmp_path)
+
+    assert shown.returncode == 0, shown.stderr
+    rows = json.loads(shown.stdout)["data"]["rows"]
+    assert rows[0][1] == {
+        "units": {"number": "10", "currency": "AAPL"},
+        "cost": {"number": "191.559998", "currency": "USD", "date": "2026-01-05", "label": None},
+    }
+    assert rows[1][1]["units"] == {"number": "-1915.60", "currency": "USD"}
+    assert rows[2][2] == {"number": "1.083721", "currency": "USD"}
