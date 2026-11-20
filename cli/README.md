@@ -152,7 +152,7 @@ Every flag, default, and help string is listed in the generated
 ### Git on a self-hosted server
 
 On a self-hosted Beancount.io server, `bea cloud git setup` (after
-`bea cloud login`, in the release after 0.4.1) makes plain `git clone`,
+`bea cloud login`, from 0.5.0) makes plain `git clone`,
 `git pull` and `git push` over HTTPS sign in through `bea`: no prompt and no
 token to paste. See the
 [usage guide](https://github.com/bex-co/beancount-io/blob/main/cli/docs/USAGE.md#cloud-git-sign-in-on-a-self-hosted-server).

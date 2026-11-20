@@ -109,27 +109,69 @@ Only a successful full journey updates `tests/managed_prices_live_status.json`.
 This is an explicit network gate, separate from the deterministic unit suite.
 `BEA_LIVE_PRICE_TESTS=1` additionally opts into the anonymous login-boundary test.
 
-## 0.4.1 release notes
+## 0.5.0 release notes
 
-This section is the GitHub Release body for `cli-v0.4.1`; apply it with
-`gh release edit cli-v0.4.1 --notes-file <this section>` after the workflow
-creates the release. The 0.4.0 notes are on the `cli-v0.4.0` release.
+This section is the GitHub Release body for `cli-v0.5.0`; apply it with
+`gh release edit cli-v0.5.0 --notes-file <this section>` after the workflow
+creates the release. The 0.4.1 notes are on the `cli-v0.4.1` release.
 
-`bea` 0.4.1 changes one message. It needs no ledger changes.
+`bea` 0.5.0 adds Git sign-in for self-hosted servers and one option, and fixes
+reports, queries and write refusals. It needs no ledger changes.
 
-- **Cloning from a self-hosted server with no Git over SSH.** `bea cloud ledger
-  clone` (and `create --clone`) still clones over SSH only, so on such a server
-  (a bex deployment, for one) it still stops. It now says how to get the ledger
-  anyway: the `git clone` command for its HTTPS address, a personal access
-  token from the dashboard (Settings → API keys) as the password, and that the
-  operator can turn on Git over SSH except on bex, which routes no SSH. Under
-  `--json` these lines are in `error.details`. 0.4.0 told you only to ask the
-  operator to enable SSH.
+New:
 
-The first `bea` command after a uv or pip upgrade provisions the 0.4.1 engine
+- **`bea cloud git setup` (self-hosted servers).** After `bea cloud login`,
+  run it once per machine and plain `git clone`, `git pull` and `git push`
+  over HTTPS sign in through `bea`: no prompt and no token to paste. Git's
+  password is a personal access token `bea` mints for itself (`ledger.read`
+  and `ledger.write`, 90 days, listed under Settings → Personal access
+  tokens). `bea cloud git setup --undo` removes it, and `bea cloud logout`
+  revokes it. The managed service is refused: there Git uses an SSH key and
+  `bea cloud ledger clone`, as before.
+- **`bea add open --meta 'key:value'`** writes metadata on the `open`
+  directive, so a cash-flow role is declared through `bea`. A role the
+  cash-flow report would ignore is refused.
+
+Reports:
+
+- **Trial balance and balance sheet.** A valued (`-t`) trial balance nets
+  through a valuation adjustment line, accepted rounding is its own line, and
+  a period opens at the ledger's own equity.
+- **Capital gains.** A sale written without a price, or one that names a cost
+  but no lot date, is listed under `unpriced_reductions` instead of dropped.
+- **Holdings.** A commodity whose lots were costed in two currencies is listed
+  once, and unquoted lot-less shares keep their own row.
+- **Budget.** An account covered by an ancestor's budget stays in the report
+  (`covered`, with `covered_by`); a budget line `bea` ignores is named with
+  its file, line, account and value instead of stopping the report.
+- **Cash flow** explains an empty cash set instead of reporting a quiet
+  period. A managed price feed no longer starts the report period.
+- **Register.** A balance assertion moves nothing, and a period register lists
+  only the summarized account's own legs.
+
+Queries:
+
+- Text tables show the ledger's precision instead of division noise, keep
+  sub-cent lot digits in per-unit cost columns, and size each column by its
+  own amounts. The shell's `.output` reads `-`, quotes and `~` as `-o` does.
+
+Writes and imports:
+
+- `bea add` refuses an amount, cost or price whose arithmetic does not
+  terminate, a posting costed or priced in its own commodity, and a negative
+  or self-quoting price; `add close` names every funded account it would
+  close; `add commodity` names the existing declaration on a repeat.
+- Write refusals blame the ledger, not the write, for a problem the ledger
+  already had, and fold errors only when they share a remedy.
+- A whole-yen ledger stays in whole yen, a same-day sale follows the transfer
+  that supplies it in bulk add, and a multiline payee or narration keeps its
+  spaces in exports.
+- `bea init --existing` locates a broken include at its include line.
+
+The first `bea` command after a uv or pip upgrade provisions the 0.5.0 engine
 once; Homebrew installs it with the formula. Upgrade with
 `brew upgrade bex-co/tap/bea` or `uv tool upgrade beancount-io`, or install with
-`uv tool install beancount-io==0.4.1`.
+`uv tool install beancount-io==0.5.0`.
 
 ## 0.2.0 migration
 

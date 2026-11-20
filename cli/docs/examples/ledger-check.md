@@ -7,7 +7,7 @@ workflow checks out the repo and calls the shared action in one line:
 ```yaml
 - uses: bex-co/beancount-io/cli/action@3dbc8d734300384373039e3f01bb98eba6d3c431 # cli-v0.4.1
   with:
-    version: "0.4.1"
+    version: "0.5.0"
     file: main.bean
 ```
 
@@ -31,7 +31,7 @@ checks.
 ## Pre-commit hooks
 
 The same checks run before each commit. Install `bea` once
-(`uv tool install 'beancount-io==0.4.1'`), then add to the ledger
+(`uv tool install 'beancount-io==0.5.0'`), then add to the ledger
 repository's `.pre-commit-config.yaml`:
 
 ```yaml
@@ -62,7 +62,7 @@ managed engine. The setup and three cases took 27.36 seconds on that
 machine. On 2026-09-28 the same three cases were repeated with published
 bea 0.3.1 in a fresh tool directory and engine, and on 2026-11-17 with
 published bea 0.4.0 (uv 0.13.4); the results below were unchanged both
-times. The current pin, 0.4.1, changes only `bea cloud ledger clone`.
+times. The current pin, 0.5.0, has not been rehearsed this way.
 
 | Synthetic input | `bea check` exit | `bea format --check` exit | Files unchanged |
 | --- | --- | --- | --- |

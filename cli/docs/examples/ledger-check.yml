@@ -18,5 +18,5 @@ jobs:
           persist-credentials: false
       - uses: bex-co/beancount-io/cli/action@3dbc8d734300384373039e3f01bb98eba6d3c431 # cli-v0.4.1
         with:
-          version: "0.4.1"
+          version: "0.5.0"
           file: main.bean
