@@ -1143,10 +1143,12 @@ export class LedgerJournalService implements ILedgerJournalService {
     // Serialize and apply display selectors before total/offset/limit so paging
     // and counts match the selected rows while change/balance retain the
     // unfiltered running-balance values for each kept row.
+    const { income, expenses } = snapshot.reportAccounts.roots;
     const items = accountJournalItems(filtered, query.account, {
       withChildren,
       conversion,
       prices,
+      flowRoots: [income, expenses],
     })
       .reverse()
       .map((row) => ({

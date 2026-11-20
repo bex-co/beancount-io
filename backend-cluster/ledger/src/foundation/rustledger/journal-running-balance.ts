@@ -3,6 +3,7 @@ import type { DirectiveJson, PostingJson } from "@rustledger/wasm";
 import { perUnitFromTotalCost } from "./total-cost";
 import { divideWithPythonDecimalContext } from "./decimal-context";
 import { isUnbookedDirective } from "./plugins/provenance";
+import { isFlowAccount } from "./lot-inventory";
 
 /**
  * Account journal with per-entry change and running balance — a faithful port
@@ -454,6 +455,29 @@ function nonPostingAccounts(directive: DirectiveJson): string[] {
   }
 }
 
+/**
+ * Net already valued amounts into `totals` (a flow's running balance) and
+ * return the result, dropping a currency that nets to zero as `reduce` does.
+ */
+function addValues(
+  totals: Map<string, ScaledDecimal>,
+  values: Record<string, string>,
+): Record<string, string> {
+  Object.entries(values).forEach(([currency, amount]) => {
+    const prev = totals.get(currency);
+    const next = prev
+      ? addScaled(prev, fromSource(amount))
+      : fromSource(amount);
+    if (next.value.isZero()) totals.delete(currency);
+    else totals.set(currency, next);
+  });
+  const out: Record<string, string> = {};
+  totals.forEach((amount, currency) => {
+    out[currency] = formatScaled(amount);
+  });
+  return out;
+}
+
 /** One row of the account journal: the entry plus its change and balance. */
 export interface AccountJournalItem {
   entry: DirectiveJson;
@@ -474,6 +498,12 @@ export interface AccountJournalOptions {
    * date (fava passes `entry.date` to `cost_or_value`).
    */
   prices?: ScaledPriceMap;
+  /**
+   * The ledger's income and expenses roots. An account under one is a flow
+   * (w1/m49): under a conversion that reads prices, its running `balance` is
+   * the sum of each entry's `change`, valued on that entry's date.
+   */
+  flowRoots?: readonly string[];
 }
 
 /**
@@ -498,7 +528,23 @@ export function accountJournalItems(
   const conversion = opts.conversion ?? "at_cost";
   const isRelevant = makeAccountTester(account, withChildren);
 
+  // `at_value` and currency targets value each row as-of the entry's own date
+  // (fava passes `entry.date` to `cost_or_value`); `units` and `at_cost` read
+  // no price.
+  const prices =
+    conversion !== "units" && conversion !== "at_cost"
+      ? opts.prices
+      : undefined;
   const balance = new LotInventory();
+  // An income or expenses account is a flow, as on the statements (w1/m49):
+  // each entry is worth what it was on its own date, and no later quote
+  // revalues it. Valuing the whole running inventory at each entry's date ran
+  // January's euros at February's rate, past the trial-balance total
+  // (w1/337).
+  const flowBalance =
+    prices && isFlowAccount(account, opts.flowRoots ?? [])
+      ? new Map<string, ScaledDecimal>()
+      : null;
   const items: AccountJournalItem[] = [];
 
   directives.forEach((directive) => {
@@ -523,16 +569,14 @@ export function accountJournalItems(
     }
 
     if (entryIsRelevant) {
-      // `at_value` values each row as-of the entry's own date (fava passes
-      // `entry.date` to `cost_or_value`); other modes ignore `valuation`.
-      const valuation =
-        conversion !== "units" && conversion !== "at_cost" && opts.prices
-          ? { prices: opts.prices, date: directive.date }
-          : undefined;
+      const valuation = prices ? { prices, date: directive.date } : undefined;
+      const changed = change.reduce(conversion, valuation);
       items.push({
         entry: directive,
-        change: change.reduce(conversion, valuation),
-        balance: balance.reduce(conversion, valuation),
+        change: changed,
+        balance: flowBalance
+          ? addValues(flowBalance, changed)
+          : balance.reduce(conversion, valuation),
       });
     }
   });
