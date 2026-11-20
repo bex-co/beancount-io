@@ -1612,7 +1612,10 @@ bea add document --date 2026-04-30 --account Assets:Cash --filename "receipts/ap
 `add close` judges every account the write closes. Under the `close_tree`
 plugin that includes the open descendants it closes with the account, and the
 refusal names each funded one with what it still holds, so a single attempt
-shows every balance to move and everything `--force` would close.
+shows every balance to move and everything `--force` would close. A close
+dated before a later transaction or pad on any of those accounts is refused
+for its date instead: the refusal names that posting and the date to close on
+or after, without a balance, a move-out, or `--force`.
 
 `add transaction` defaults to today's date. Its positional argument is the
 narration, so without `--date` a narration that is a date (`2026-01-05`,

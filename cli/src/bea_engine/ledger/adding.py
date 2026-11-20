@@ -471,6 +471,28 @@ def _moved_closes(before: list[Any], after: list[Any]) -> list[Any]:
     ]
 
 
+def _referenced_after_close(entries: list[Any], closes: dict[str, datetime.date]) -> bool:
+    """Whether a directive dated after an account's close in `closes` names that account where validation refuses it.
+
+    A note, document or balance may follow a close (upstream's
+    ALLOW_AFTER_CLOSE); a transaction or pad may not, and an entry on the close
+    date itself sorts before the close.
+    """
+    from beancount.core import getters
+    from beancount.core.data import Close, Open
+    from beancount.ops.validation import ALLOW_AFTER_CLOSE
+
+    allowed = (Open, Close, *ALLOW_AFTER_CLOSE)
+    for entry in entries:
+        if isinstance(entry, allowed):
+            continue
+        for account in getters.get_entry_accounts(entry):
+            closed = closes.get(account)
+            if closed is not None and entry.date > closed:
+                return True
+    return False
+
+
 _FUNDED = tuple[str, datetime.date, dict[str, Decimal], list[str]]
 
 
@@ -550,15 +572,22 @@ def _close(
     # it would stand closes it: a descendant whose generated close this write
     # moves earlier is closed by it too (w5/1062). One refusal names every
     # funded account the write closes, so one attempt shows all the money to
-    # move and what --force would close with it (w1/312).
+    # move and what --force would close with it (w1/312). A posting after the
+    # close date is the date's fault, not the balance's: a move-out dated on
+    # or before the close would book the transfer twice, and --force reaches
+    # the posting, so validation refuses it with the date the close needs
+    # (w5/772, w1/338).
     def judge(candidate: list[Any], _staged: dict[Path, Path]) -> None:
         moved = sorted(
             (close.account, close.date)
             for close in _moved_closes(entries, candidate)
             if close.account != directive.account
         )
+        closing = [(directive.account, directive.date), *moved]
+        if _referenced_after_close(candidate, dict(closing)):
+            return
         funded: list[_FUNDED] = []
-        for account, date in [(directive.account, directive.date), *moved]:
+        for account, date in closing:
             held, stranded = _remaining_balance(candidate, account, date)
             if held or stranded:
                 funded.append((account, date, held, stranded))

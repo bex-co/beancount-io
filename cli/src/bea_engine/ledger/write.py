@@ -2873,6 +2873,20 @@ def validate_candidate(
                     remedy = "correct the proposed close date"
                     continue
                 if isinstance(entry, Close) and (
+                    with_ancestor := _proposed_ancestor_close(entry, lifecycles, filenames, original_lines)
+                ):
+                    # close_tree closes a descendant with the proposed close of
+                    # its ancestor, so that close's date is the one to move (w1/338).
+                    if last_inactive_dates is None:
+                        first_inactive_dates, last_inactive_dates = _inactive_bounds(errors)
+                    ancestor, closer = with_ancestor
+                    message += (
+                        f" The proposed close would close {ancestor.account} on {entry.date}, and {closer} "
+                        f"closes {account} with it; date that close on or after {last_inactive_dates[account]}."
+                    )
+                    remedy = "correct the proposed close date"
+                    continue
+                if isinstance(entry, Close) and (
                     closing_hint := _plugin_close_hint(entry, lifecycles, filenames, original_lines)
                 ):
                     description, remedy = closing_hint
@@ -3595,6 +3609,31 @@ def _proposed_entry(entry: Any, filenames: dict[Path, Path], original_lines: dic
     original = filenames.get(path, path).resolve()
     line = entry.meta.get("lineno")
     return original in original_lines and isinstance(line, int) and line > len(original_lines[original])
+
+
+def _proposed_ancestor_close(
+    closed: Any,
+    lifecycles: dict[str, list[Any]],
+    filenames: dict[Path, Path],
+    original_lines: dict[Path, list[bytes]],
+) -> tuple[Any, str] | None:
+    """The proposed ancestor close a plugin's same-day close of `closed.account` follows, and that plugin."""
+    from beancount.core.data import Close
+
+    origin = _plugin_origin(closed, "close", filenames, original_lines)
+    if origin is None:
+        return None
+    ancestor = closed.account
+    while ":" in ancestor:
+        ancestor = ancestor.rsplit(":", 1)[0]
+        for entry in lifecycles.get(ancestor, []):
+            if (
+                isinstance(entry, Close)
+                and entry.date == closed.date
+                and _proposed_entry(entry, filenames, original_lines)
+            ):
+                return entry, origin
+    return None
 
 
 def _plugin_close_hint(
