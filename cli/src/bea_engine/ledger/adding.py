@@ -152,6 +152,26 @@ def _validation_details(exc: Any) -> list[str]:
 # --------------------------------------------------------------------------- #
 
 
+def _refuse_invalid_cash_flow_role(meta: dict[str, Any]) -> None:
+    """An open's `cash-flow-role` the cash-flow report would ignore is refused at the write (w1/329).
+
+    ADR003 defines four case-sensitive values; the report falls back to the
+    name heuristic for anything else and only flags it. Writing such a value
+    with exit 0 declares cash the report never counts, so the write fails
+    instead and names the four.
+    """
+    from bea_engine.report import _CASH_FLOW_ROLE_KEY, _CASH_FLOW_ROLES
+
+    if _CASH_FLOW_ROLE_KEY not in meta:
+        return
+    value = meta[_CASH_FLOW_ROLE_KEY]
+    if value in _CASH_FLOW_ROLES:
+        return
+    choices = ", ".join(_CASH_FLOW_ROLES)
+    hint = f" Did you mean {value.lower()!r}?" if isinstance(value, str) and value.lower() in _CASH_FLOW_ROLES else ""
+    raise protocol.UsageError(f"Invalid cash-flow-role {value!r}; choose one of: {choices}.{hint} Nothing was written.")
+
+
 def _simple(directive_type: str, request: dict[str, Any], roots: tuple[str, ...] | None) -> Any:
     from bea_engine.ledger.models import (
         WRITE_INPUT,
@@ -195,13 +215,15 @@ def _simple(directive_type: str, request: dict[str, Any], roots: tuple[str, ...]
                 f"--currency value {blank} of {len(raw_currencies)} is blank after trimming; supply a currency "
                 "symbol or drop that -c. Nothing was written."
             )
+        meta = _parse_metadata([str(item) for item in request.get("meta") or []])
+        _refuse_invalid_cash_flow_role(meta)
         return OpenDirective.model_validate(
             {
                 "date": date,
                 "account": parse_account(_text(request, "account"), roots, creating=True),
                 "currencies": currencies,
                 "booking": booking,
-                "meta": _parse_metadata([str(item) for item in request.get("meta") or []]),
+                "meta": meta,
             },
             context=WRITE_INPUT,
         )

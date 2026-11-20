@@ -3874,6 +3874,7 @@ def _metadata_edit(existing: Any, proposed: Any) -> str:
     existing directive already has.
     """
     from bea_engine.ledger.writer import format_entry
+    from bea_engine.report import _CASH_FLOW_ROLE_KEY, _CASH_FLOW_ROLES
 
     changed = {
         key: value
@@ -3881,6 +3882,10 @@ def _metadata_edit(existing: Any, proposed: Any) -> str:
         if key not in ("filename", "lineno")
         and not key.startswith("__")
         and (key not in existing.meta or existing.meta[key] != value)
+        # An invalid cash-flow-role is refused at the write (w1/329); the
+        # hint must never tell the user to hand-write a value the report
+        # ignores.
+        and not (key == _CASH_FLOW_ROLE_KEY and value not in _CASH_FLOW_ROLES)
     }
     if not changed:
         return ""

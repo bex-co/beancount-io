@@ -1601,6 +1601,11 @@ plugin that includes the open descendants it closes with the account, and the
 refusal names each funded one with what it still holds, so a single attempt
 shows every balance to move and everything `--force` would close.
 
+`add open --meta 'cash-flow-role:cash'` declares the account's cash-flow
+role, and the role is checked at the write: anything but `cash`,
+`operating`, `investing` or `financing` is refused (exit 2, nothing written),
+since the cash-flow report would ignore it and classify by name instead.
+
 `add transaction` defaults to today's date. Its positional argument is the
 narration, so without `--date` a narration that is a date (`2026-01-05`,
 `01/05/2026`) is refused (exit 2) rather than written today, and one that is
