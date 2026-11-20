@@ -36,7 +36,8 @@ function escapeRegExp(value: string): string {
  *
  * The search box accepts anything, and the ledger's own filter
  * (`foundation/rustledger/directive-filter.ts`) matches an account by a whole
- * component **or** a case-insensitive unanchored regex, falling back to literal
+ * run of components, case-insensitively — or, for a value written as a
+ * pattern, by a case-insensitive unanchored regex, falling back to literal
  * equality when the pattern will not compile. Summarising with a plain
  * exact-or-subtree test disagreed with that: typing `Checking` returned the
  * right transactions but matched none of their postings, so every row lost its
@@ -45,17 +46,28 @@ function escapeRegExp(value: string): string {
  * This is a deliberately small local copy of those two rules. Importing the
  * ledger package into the browser bundle would cost far more than it saves.
  */
+/** Characters that make a filter value a pattern rather than an account name. */
+const REGEX_SYNTAX = /[.*+?^${}()|[\]\\]/;
+
 function makeAccountMatcher(filter: string): (account: string) => boolean {
-  const component = new RegExp(`(^|:)${escapeRegExp(filter)}(:|$)`);
-  let pattern: RegExp | null = null;
-  try {
-    pattern = new RegExp(filter, "i");
-  } catch {
-    pattern = null;
+  // A value written as a pattern keeps Fava's unanchored search; a plain
+  // account name matches that account, its children, or a whole run of
+  // components, case-insensitively — never a longer sibling (`Cash` must not
+  // select `CashApp`) or a partial name. The same rule lives in the ledger's
+  // `directive-filter.ts` (anchored for plain names in w21/113); the two
+  // copies cannot import each other, so keep the alternatives in step.
+  if (REGEX_SYNTAX.test(filter)) {
+    let pattern: RegExp | null = null;
+    try {
+      pattern = new RegExp(filter, "i");
+    } catch {
+      pattern = null;
+    }
+    return (account: string): boolean =>
+      pattern ? pattern.test(account) : account === filter;
   }
-  return (account: string): boolean =>
-    component.test(account) ||
-    (pattern ? pattern.test(account) : account === filter);
+  const component = new RegExp(`(^|:)${escapeRegExp(filter)}(:|$)`, "i");
+  return (account: string): boolean => component.test(account);
 }
 
 /** A posting's units as the ledger's decimal, or null when it is not one. */

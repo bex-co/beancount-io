@@ -91,6 +91,8 @@ newest first.
 
 ### Skipped
 
+- 2026-11-20 cli `bea_engine`/`cli` mirror pairs (`amounts` twin regexes `_ZERO_DIVISOR`/`_NOT_ARITHMETIC`/`_EXPONENT_TOKEN`/`_divides_by_zero`, `csv_mapper`/`include_glob`/`paths` splits) — twin points textually identical, remaining splits deliberate engine/frontend adaptations; examined, no drift since the 2026-11-18 sweep.
+- 2026-11-20 mobile `plural.ts` builtin-vs-`Intl` rules, `decimal-number.ts` vs dashboard twin, `number-locale`/`number-utils`/`currency-util` separator/position agreement — pinned by the 0–1000 agreement battery, the 138-case differential fuzz, and the w21/882 currencyAfter match; probed promotion/residue edges hold; examined, no divergence.
 - 2026-11-19 backend-cluster/ledger `discrepancyKey` spelling agreement (parsed balance `amount` vs engine `balances.amount` cell) — live-engine probes agree on every spelling (trailing/leading zeros, exponents, signs); both sides share one producer; examined, no divergence.
 - 2026-11-19 backend-cluster/ledger balances subquery/CTE/UNION/quoted-alias/OVER-window shapes — the engine refuses each with its own error, never a silent NULL; examined, no divergence.
 - 2026-11-19 dashboard importer duplicate/amount agreement (`import-duplicates.ts` decimalKey vs `csv-validator.ts` exactDecimalValueKey vs journal postings) — both sides normalize to exact decimal value, one-for-one consumption pinned by tests; examined, no divergence.

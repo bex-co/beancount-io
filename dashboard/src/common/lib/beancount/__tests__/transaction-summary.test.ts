@@ -458,6 +458,57 @@ describe("summarizeTransaction", () => {
       expect(summary.amounts).not.toEqual([{ currency: "USD", value: 0 }]);
       expect(summary.accounts).toContain("Expenses:Financial:Fees");
     });
+
+    // The summary's matcher is a deliberately small copy of the ledger's
+    // account rule (`backend-cluster/ledger/.../directive-filter.ts`,
+    // anchored for plain names in w21/113): a plain name matches its account,
+    // its children, or a whole run of components, case-insensitively, and a
+    // value written as a pattern keeps Fava's unanchored search. The journal
+    // filters through the ledger, so the summary must select the same
+    // postings or its amount disagrees with the rows above it.
+    it("does not select a longer sibling, as the anchored ledger filter does", () => {
+      const move = transaction([
+        posting("Assets:Cash", "-100"),
+        posting("Assets:CashApp", "60"),
+        posting("Expenses:Food", "40"),
+      ]);
+      const summary = summarizeTransaction({
+        ...base,
+        accountFilter: "Cash",
+        transaction: move,
+      });
+      expect(summary.amounts).toMatchObject([{ currency: "USD", value: -100 }]);
+      expect(summary.accounts).toContain("Assets:CashApp");
+    });
+
+    it("matches no partial name, as the anchored ledger filter does", () => {
+      const move = transaction([
+        posting("Assets:Cash", "-100"),
+        posting("Assets:CashApp", "60"),
+        posting("Expenses:Food", "40"),
+      ]);
+      expect(
+        summarizeTransaction({
+          ...base,
+          accountFilter: "Cas",
+          transaction: move,
+        }).amounts,
+      ).toEqual([]);
+    });
+
+    it("keeps Fava's search for a value written as a pattern", () => {
+      const move = transaction([
+        posting("Assets:Cash", "-100"),
+        posting("Assets:CashApp", "60"),
+        posting("Expenses:Food", "40"),
+      ]);
+      const summary = summarizeTransaction({
+        ...base,
+        accountFilter: "^Assets:Cash",
+        transaction: move,
+      });
+      expect(summary.amounts).toMatchObject([{ currency: "USD", value: -40 }]);
+    });
   });
 });
 
