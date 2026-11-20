@@ -1,6 +1,6 @@
 # w22 · m12 — `bea` signs Git in on a self-hosted stack: nothing to paste
 
-**Worker:** worker1 **Goal:** on a self-hosted deployment, a person who has run `bea cloud login` runs `bea cloud git setup` once, and from then on plain `git clone`, `git pull` and `git push` over HTTPS sign in with no prompt and no token to copy, the way `gh auth setup-git` works for GitHub **Status:** blocked (t001–t005, t009, t010, t012 done; t006, t007, t008, t011 blocked)
+**Worker:** worker1 **Goal:** on a self-hosted deployment, a person who has run `bea cloud login` runs `bea cloud git setup` once, and from then on plain `git clone`, `git pull` and `git push` over HTTPS sign in with no prompt and no token to copy, the way `gh auth setup-git` works for GitHub **Status:** blocked (t001–t005, t007, t009, t010, t012 done; t006, t008, t011 blocked)
 
 ## Tasks (in order)
 
@@ -13,7 +13,7 @@
 | t004 | `bea cloud logout` signs Git out too — **DONE** | 45m | t002, t003 |
 | t005 | Point `bea cloud ledger clone`'s no-SSH advice at the helper — **DONE** | 30m | t002 |
 | t006 | Live check on a temporary bex stack — **blocked** | 1h | t004, t005 |
-| t007 | Release `bea` with the helper — **blocked** | 45m | t006 |
+| t007 | Release `bea` with the helper — **DONE** | 45m | t006 |
 | t008 | Adoption surface — **blocked** | 45m | t007, t012 |
 | t009 | Simplify — **DONE** | 30m | t008 |
 | t010 | Test coverage — **DONE** | 1h | t008 |
@@ -24,10 +24,10 @@
 **Blocked 2026-11-18.** The code, tests, documents and dashboard hint are shipped (`e295b5f5e` and `5c9a3da1d`, which completes it): `bea cloud git setup`, `bea cloud git credential`, logout revoking the Git token, the clone advice, and `selfHost` on REST, GraphQL and MCP. What is left cannot be done from a worker's seat:
 
 - **t006, the live check on a temporary bex stack.** Creating the stack needs a bex API token (`BEX_ACCESS_TOKEN`), which the worker did not have. Nothing in this milestone has been run against a real server yet: the tests use real `git` and a stubbed API.
-- **t007, the release.** It follows t006 and needs the owner's approval of the tag.
-- **t008 and t011** finish after those: the documents get the version number and the date of the live run, then Closeout.
+- **t007, the release, is done (2026-11-20):** `bea` 0.5.0 (`cli-v0.5.0`, commit `cb395229b`) is on PyPI and the Homebrew tap, released at the owner's instruction before the live check.
+- **t008 and t011** finish after t006: the documents get the date of the live run, then Closeout.
 
-**Unblock:** the owner runs t006's steps against a temporary bex stack (or supplies `BEX_ACCESS_TOKEN` and a workspace so the next `/loopx w22` run can), then approves the `cli-v<version>` tag. Baseline for the next worker: `main` at `5c9a3da1d`; `cli/pyproject.toml` is still 0.4.1.
+**Unblock:** the owner runs t006's steps against a temporary bex stack with `bea` 0.5.0 (or supplies `BEX_ACCESS_TOKEN` and a workspace so the next `/loopx w22` run can). Baseline for the next worker: `main` at `cb395229b`; `bea` 0.5.0 is released.
 
 ## Definition of done
 
