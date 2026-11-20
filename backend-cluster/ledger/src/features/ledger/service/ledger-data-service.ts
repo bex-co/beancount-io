@@ -891,6 +891,8 @@ export class LedgerDataService implements ILedgerDataService {
         target,
         priceMap,
       ),
+      // An income or expenses account's totals value each posting on its
+      // own date, as the income statement's rows do (w1/m49).
       interval_totals_data: strip(
         intervalTotals(
           directives,
@@ -899,6 +901,12 @@ export class LedgerDataService implements ILedgerDataService {
           target,
           priceMap,
           window,
+          {
+            flowRoots: [
+              reportAccounts.roots.income,
+              reportAccounts.roots.expenses,
+            ],
+          },
         ),
       ),
       account_balance_data: accountBalanceSeries(
@@ -951,6 +959,7 @@ export class LedgerDataService implements ILedgerDataService {
       collectLedgerCommodities(fullDirectives),
     );
     const key = (interval ?? "month") as IntervalKey;
+    // Income and expenses value each posting on its own date (w1/m49).
     return intervalTotals(
       directives,
       key,
@@ -958,6 +967,9 @@ export class LedgerDataService implements ILedgerDataService {
       target,
       priceMap,
       window,
+      {
+        flowRoots: [reportAccounts.roots.income, reportAccounts.roots.expenses],
+      },
     );
   }
 }

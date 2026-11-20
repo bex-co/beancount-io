@@ -66,6 +66,33 @@ interface ILedgerFinanceService {
   ): Promise<TrialBalanceDataPublic>;
 }
 
+/**
+ * A statement's interval totals and account trees. Income and expenses are
+ * flows: each posting is valued on its own date, in the trees and the rows
+ * alike, so the rows add up to the trees at every interval (w1/m49).
+ */
+function statementBuilders(
+  directives: DirectiveJson[],
+  key: IntervalKey,
+  target: string,
+  priceMap: PriceMap,
+  roots: ReportAccounts["roots"],
+  window: IntervalWindow | undefined,
+  valuationDate: string | undefined,
+) {
+  const flowRoots = [roots.income, roots.expenses];
+  return {
+    periodic: (prefixes: string[]) =>
+      intervalTotals(directives, key, prefixes, target, priceMap, window, {
+        flowRoots,
+      }),
+    tree: (root: string) =>
+      accountHierarchy(directives, root, target, priceMap, valuationDate, {
+        flowRoots,
+      }),
+  };
+}
+
 export class LedgerFinanceService implements ILedgerFinanceService {
   constructor(
     private readonly giteaClientFactory: IGiteaClientFactory,
@@ -100,39 +127,26 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     const key = (interval ?? "month") as IntervalKey;
     const cumulative = (prefixes: string[]) =>
       accountBalanceSeries(directives, key, prefixes, target, priceMap, window);
-    // Income and expenses are flows, each posting valued on its own date in
-    // the trees and the interval totals alike (w1/m49).
-    const periodic = (prefixes: string[]) =>
-      intervalTotals(directives, key, prefixes, target, priceMap, window, {
-        flows: true,
-      });
-    const flowTree = (root: string) =>
-      accountHierarchy(directives, root, target, priceMap, valuationDate, {
-        flows: true,
-      });
+    const { periodic, tree } = statementBuilders(
+      directives,
+      key,
+      target,
+      priceMap,
+      roots,
+      window,
+      valuationDate,
+    );
     return {
       net_worth_data: cumulative([roots.assets, roots.liabilities]),
       assets_data: cumulative([roots.assets]),
-      assets_hierarchy_data: accountHierarchy(
-        directives,
-        roots.assets,
-        target,
-        priceMap,
-        valuationDate,
-      ),
+      assets_hierarchy_data: tree(roots.assets),
       liabilities_data: cumulative([roots.liabilities]),
-      liabilities_hierarchy_data: accountHierarchy(
-        directives,
-        roots.liabilities,
-        target,
-        priceMap,
-        valuationDate,
-      ),
+      liabilities_hierarchy_data: tree(roots.liabilities),
       expenses_interval_data: periodic([roots.expenses]),
-      expenses_hierarchy_data: flowTree(roots.expenses),
+      expenses_hierarchy_data: tree(roots.expenses),
       expenses_data: cumulative([roots.expenses]),
       income_interval_data: periodic([roots.income]),
-      income_hierarchy_data: flowTree(roots.income),
+      income_hierarchy_data: tree(roots.income),
       income_data: cumulative([roots.income]),
     };
   }
@@ -163,17 +177,15 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       allCommodities,
     );
     const key = (interval ?? "month") as IntervalKey;
-    // Each income and expenses posting is valued on its own date, in the trees
-    // and the rows alike, so the rows add up to the trees at every interval
-    // (w1/m49).
-    const periodic = (prefixes: string[]) =>
-      intervalTotals(directives, key, prefixes, target, priceMap, window, {
-        flows: true,
-      });
-    const flowTree = (root: string) =>
-      accountHierarchy(directives, root, target, priceMap, valuationDate, {
-        flows: true,
-      });
+    const { periodic, tree } = statementBuilders(
+      directives,
+      key,
+      target,
+      priceMap,
+      roots,
+      window,
+      valuationDate,
+    );
     return {
       net_profit_data: periodic([roots.income, roots.expenses]).map((row) => ({
         date: row.date,
@@ -181,8 +193,8 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       })),
       income_data: periodic([roots.income]),
       expenses_data: periodic([roots.expenses]),
-      income_hierarchy_data: flowTree(roots.income),
-      expenses_hierarchy_data: flowTree(roots.expenses),
+      income_hierarchy_data: tree(roots.income),
+      expenses_hierarchy_data: tree(roots.expenses),
     };
   }
 
@@ -297,7 +309,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     // statement does; the valuation line takes the translation (w1/m49).
     const tree = (root: string, stream = directives) =>
       accountHierarchy(stream, root, target, priceMap, valuationDate, {
-        flows: root === roots.income || root === roots.expenses,
+        flowRoots: [roots.income, roots.expenses],
       });
     // Valued, the five trees net only through two lines, valuation and the
     // rounding the ledger's tolerance accepted (w1/305), and the clamp's

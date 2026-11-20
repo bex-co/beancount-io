@@ -3,9 +3,9 @@ import { BadUserInputError } from "@/shared/errors";
 import type { PriceMap } from "./price-map";
 import {
   FlowLots,
+  isFlowAccount,
   LotInventory,
   parseConversion,
-  settledTarget,
 } from "./lot-inventory";
 import { utcDate } from "./utc-date";
 import { localTodayStr } from "./plugins";
@@ -301,9 +301,10 @@ export function windowEndInclusive(window: IntervalWindow): string {
  * complete (rounded-out) intervals; present ⇒ exactly `[begin, end)` with
  * `complete=false` intervals (the `time`-filtered case).
  *
- * `flows` marks the statements' income and expenses totals: each posting is
- * valued on its own date instead of the interval end, as their account trees
- * are (w1/m49), so the rows add up to the trees at every interval.
+ * `flowRoots` names the ledger's income and expenses roots. Totals of
+ * accounts under them value each posting on its own date instead of the
+ * interval end, as their account trees do (w1/m49), so the rows add up to
+ * the trees at every interval.
  */
 export function intervalTotals(
   directives: DirectiveJson[],
@@ -312,17 +313,16 @@ export function intervalTotals(
   target: string,
   priceMap: PriceMap,
   window?: IntervalWindow,
-  { flows = false }: { flows?: boolean } = {},
+  { flowRoots = [] }: { flowRoots?: readonly string[] } = {},
 ): DateBalanceWithAccounts[] {
   // A flow total ends at the last transaction: a price dated after it adds an
   // empty month, which moved Reports' anchor onto it (w21/889). Balance series
   // keep running to the last price, which values them.
   const ranges = seriesRanges(directives, key, window, false);
-  const accumulators = ranges.map(() => {
-    const total = new FlowLots();
-    const perAccount = new Map<string, FlowLots>();
-    return { total, perAccount };
-  });
+  const flows =
+    prefixes.length > 0 &&
+    prefixes.every((prefix) => isFlowAccount(prefix, flowRoots));
+  const accumulators = ranges.map(() => new Map<string, FlowLots>());
 
   // Directives and ranges are chronological. Advance through both once instead
   // of rescanning the entire ledger for each report interval.
@@ -338,29 +338,29 @@ export function intervalTotals(
     if (rangeIndex >= ranges.length) break;
     if (directive.date < ranges[rangeIndex].begin) continue;
 
-    const { total, perAccount } = accumulators[rangeIndex];
+    const perAccount = accumulators[rangeIndex];
     directive.postings.forEach((posting) => {
       if (!posting.units || !matchesAccountOrChild(posting.account, prefixes))
         return;
-      total.addPosting(directive.date, posting);
       let acct = perAccount.get(posting.account);
       if (!acct) {
-        acct = new FlowLots();
+        acct = new FlowLots(target, priceMap, flows);
         perAccount.set(posting.account, acct);
       }
       acct.addPosting(directive.date, posting);
     });
   }
 
-  // Without `flows` the days settle as they are and value at the interval end.
-  const settleAs = flows ? target : "units";
-  const readAs = flows ? settledTarget(target) : target;
   return ranges.map((range, index) => {
-    const { total, perAccount } = accumulators[index];
+    const total = new LotInventory();
+    let readAs = target;
     const account_balances: Record<string, Record<string, string>> = {};
-    perAccount.forEach((days, account) => {
+    accumulators[index].forEach((lots, account) => {
+      const settled = lots.settle();
+      readAs = settled.readAs;
+      total.merge(settled.inventory);
       account_balances[account] = valueRecord(
-        days.settle(settleAs, priceMap),
+        settled.inventory,
         readAs,
         priceMap,
         range.endInclusive,
@@ -368,12 +368,7 @@ export function intervalTotals(
     });
     return {
       date: range.endInclusive,
-      balance: valueRecord(
-        total.settle(settleAs, priceMap),
-        readAs,
-        priceMap,
-        range.endInclusive,
-      ),
+      balance: valueRecord(total, readAs, priceMap, range.endInclusive),
       account_balances,
     };
   });

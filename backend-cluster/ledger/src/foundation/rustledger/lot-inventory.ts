@@ -286,6 +286,25 @@ export class LotInventory {
     });
   }
 
+  /** Net a cost-less amount already parsed, at its scale, into its lot. */
+  addAmount(currency: string, value: BigNumber, scale: number): void {
+    const key = lotKey(currency, null, null);
+    const existing = this.lots.get(key);
+    if (existing) {
+      existing.number = existing.number.plus(value);
+      existing.scale = Math.max(existing.scale, scale);
+      return;
+    }
+    this.lots.set(key, {
+      number: value,
+      scale,
+      currency,
+      costNumber: null,
+      costScale: 0,
+      costCurrency: null,
+    });
+  }
+
   /** A deep copy (for the running-inventory snapshots the line charts take). */
   clone(): LotInventory {
     const copy = new LotInventory();
@@ -393,22 +412,21 @@ function addScaledInto(
   );
 }
 
-/** Whether `conversion` reads prices, so a flow's value depends on its day. */
-function readsPrices(conversion: Conversion): boolean {
-  return conversion.kind === "currency" || conversion.kind === "at_value";
-}
-
 /**
- * The target that reads {@link FlowLots.settle}'s inventory: `units` where
- * settling valued it, the report's own target where it kept the lots.
+ * Whether `account` is a flow: an income or expenses account, by its root
+ * component, whose postings are valued on the day they happened.
  */
-export function settledTarget(target: string): string {
-  return readsPrices(parseConversion(target)) ? "units" : target;
+export function isFlowAccount(
+  account: string,
+  flowRoots: readonly string[],
+): boolean {
+  return account !== "" && flowRoots.includes(account.split(":", 1)[0]);
 }
 
 /**
- * Income and expenses postings, kept one inventory per day until they are
- * read, so each can be valued at the price on the day it happened (w1/m49).
+ * Postings kept for one read under `target`. For income and expenses
+ * (`byDay`), one inventory per day, so each is valued at the price on the day
+ * it happened (w1/m49).
  *
  * A flow is worth what it was when it happened: a trip paid in EUR in January
  * cost what EUR was worth in January. Valued as one inventory at the report's
@@ -418,42 +436,52 @@ export function settledTarget(target: string): string {
  */
 export class FlowLots {
   private readonly days = new Map<string, LotInventory>();
+  private readonly byDay: boolean;
+
+  constructor(
+    private readonly target: string,
+    private readonly priceMap: PriceMap,
+    flows: boolean,
+  ) {
+    const { kind } = parseConversion(target);
+    // `units`, `units_by_cost` and `at_cost` read no price: any day reads alike.
+    this.byDay = flows && (kind === "currency" || kind === "at_value");
+  }
 
   /** Net a posting booked on `date` into that day's inventory. */
   addPosting(date: string, posting: PostingJson): void {
-    let day = this.days.get(date);
+    const key = this.byDay ? date : "";
+    let day = this.days.get(key);
     if (!day) {
       day = new LotInventory();
-      this.days.set(date, day);
+      this.days.set(key, day);
     }
     day.addPosting(posting);
   }
 
   /**
-   * The days netted into one inventory, for {@link settledTarget} to read.
-   * Under a target that reads prices (a currency, `at_value`) each day is
-   * valued at its own price, as `convert(position, 'USD', date)` does, and
-   * the inventory holds what the conversion returned. What a day cannot be
-   * valued in stays in its own commodity: no later quote revalues it.
-   * `units`, `units_by_cost` and `at_cost` read no price, so the lots stay.
+   * The postings as one inventory, and the target that reads it. By day, each
+   * day is valued at its own price, as `convert(position, 'USD', date)` does,
+   * and the inventory holds what the conversion returned, read as `units`;
+   * what a day cannot be valued in stays in its own commodity, so no later
+   * quote revalues it. Otherwise the lots are kept for `target` itself.
    */
-  settle(target: string, priceMap: PriceMap): LotInventory {
-    const conversion = parseConversion(target);
+  settle(): { inventory: LotInventory; readAs: string } {
+    if (!this.byDay) {
+      return {
+        inventory: this.days.get("") ?? new LotInventory(),
+        readAs: this.target,
+      };
+    }
+    const conversion = parseConversion(this.target);
     const inventory = new LotInventory();
-    this.days.forEach((day, date) => {
-      if (!readsPrices(conversion)) {
-        inventory.merge(day);
-        return;
-      }
+    this.days.forEach((day, date) =>
       day
-        .reduceScaled(conversion, priceMap, date)
+        .reduceScaled(conversion, this.priceMap, date)
         .forEach(({ value, scale }, currency) =>
-          inventory.addPosting({
-            account: "",
-            units: { number: value.toFixed(scale), currency },
-          }),
-        );
-    });
-    return inventory;
+          inventory.addAmount(currency, value, scale),
+        ),
+    );
+    return { inventory, readAs: "units" };
   }
 }

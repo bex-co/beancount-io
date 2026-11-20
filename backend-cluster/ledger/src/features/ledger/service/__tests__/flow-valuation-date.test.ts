@@ -3,6 +3,7 @@ import type { DirectiveJson } from "@rustledger/wasm";
 import type { SerializableTreeNodePublic } from "@/foundation/ledger-api-types";
 import { loadCachedFileMapForRepo } from "@/foundation/clients/load-cached-ledger-file-map";
 import { parseLedgerFiles } from "@/foundation/rustledger";
+import { LedgerDataService } from "../ledger-data-service";
 import { LedgerFinanceService } from "../ledger-finance-service";
 
 /**
@@ -129,6 +130,7 @@ function configure(directives: DirectiveJson[]) {
 }
 
 const finance = () => new LedgerFinanceService(factory as never, {} as never);
+const data = () => new LedgerDataService(factory as never, {} as never);
 
 function balanceOf(node: Tree, account: string): Record<string, string> {
   if (node.account === account) return node.balance_children;
@@ -240,6 +242,43 @@ describe("income and expenses are valued on their own date (w1/m49)", () => {
       balanceOf(report.equity_hierarchy_data, "Equity:Earnings:Previous"),
     ).toEqual({ USD: "200.0000" });
     expect(report.valuation_adjustment).toEqual({});
+  });
+
+  it("values the flows an account filter keeps the same way", async () => {
+    configure(TRAVEL);
+    const statement = await finance().getIncomeStatement({
+      ...params,
+      account: "Expenses:Travel",
+    });
+
+    expect(
+      balanceOf(statement.expenses_hierarchy_data, "Expenses:Travel"),
+    ).toEqual({ USD: "300.0000" });
+    expect(amounts(statement.expenses_data, "USD")).toEqual([100, 200]);
+  });
+
+  it("gives an expenses account's report and interval totals the statement's rows", async () => {
+    configure(TRAVEL);
+    const account = await data().getAccountReport({
+      ...params,
+      accountName: "Expenses:Travel",
+      interval: "year",
+    });
+    const totals = await data().getIntervalTotals({
+      ...params,
+      accountName: "Expenses",
+      interval: "year",
+    });
+    // Balances keep the interval end: the account's cash at 2.00 USD.
+    const cash = await data().getIntervalTotals({
+      ...params,
+      accountName: "Assets:Euro",
+      interval: "year",
+    });
+
+    expect(amounts(account.interval_totals_data, "USD")).toEqual([300]);
+    expect(amounts(totals, "USD")).toEqual([300]);
+    expect(amounts(cash, "USD")).toEqual([1600]);
   });
 
   it("reads as before when the rate never moves", async () => {

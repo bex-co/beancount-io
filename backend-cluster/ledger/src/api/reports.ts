@@ -9,6 +9,7 @@ import {
 } from "./service-context";
 import {
   accountHierarchy,
+  deriveReportAccounts,
   buildPriceMap,
   collectLedgerCommodities,
   deriveBeancountOptions,
@@ -358,7 +359,10 @@ export function setReportsHandler(router: Router): void {
 
   // ---- hierarchy (engine-direct; Python ChartModule.hierarchy) ------------
   router.get(`${base}/hierarchy`, authMiddleware, async (ctx) => {
-    const { snapshot } = await loadSnapshotForRequest(ctx, ledgerIdOf(ctx));
+    const { files, entryPoint, snapshot } = await loadSnapshotForRequest(
+      ctx,
+      ledgerIdOf(ctx),
+    );
     const accountName = strQuery(ctx.query.account_name) ?? "";
     const conversion = strQuery(ctx.query.conversion) ?? "USD";
     const priceMap = buildPriceMap(snapshot.directives);
@@ -368,11 +372,19 @@ export function setReportsHandler(router: Router): void {
       snapshot.options.operating_currencies?.[0] ?? "USD",
       collectLedgerCommodities(snapshot.directives),
     );
+    // An income or expenses tree values each posting on its own date, as the
+    // statements do (w1/m49).
+    const { roots } = deriveReportAccounts({
+      source: files[entryPoint],
+      operatingCurrencies: snapshot.options.operating_currencies ?? [],
+    });
     const tree = accountHierarchy(
       snapshot.directives,
       accountName,
       typeof target === "string" ? target : conversion,
       priceMap,
+      undefined,
+      { flowRoots: [roots.income, roots.expenses] },
     );
     ctx.body = successResponse(tree);
   });
