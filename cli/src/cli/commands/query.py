@@ -344,6 +344,10 @@ def query(
         # The engine's stdout is the envelope pipe, not the caller's, so a
         # device path for stdout means what `-` means: print the result here.
         output_file = None
+    if output_file is not None:
+        # No format bea writes is a workbook, so this holds under `--format`
+        # and `--json` too; `--spreadsheet-safe` needs a local `--file`.
+        output.refuse_workbook_destination(output_file, spreadsheet_safe=source is None)
     explicit_format = output_format
     # Under `--json` the destination receives the JSON envelope whatever its
     # suffix, so a `.csv`/`.tsv` name says nothing about the format.

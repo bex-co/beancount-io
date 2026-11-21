@@ -1043,6 +1043,33 @@ def guard_output_destination(
         )
 
 
+#: Spreadsheet workbook suffixes. bea writes none of these formats (w1/351).
+WORKBOOK_SUFFIXES = frozenset({".xlsx", ".xlsm", ".xls", ".ods", ".numbers"})
+
+
+def refuse_workbook_destination(output_file: str, *, spreadsheet_safe: bool = True) -> None:
+    """Refuse an `--output` named for a spreadsheet workbook, whatever the format.
+
+    Text, CSV and JSON alike would land under a name a spreadsheet app opens
+    as a workbook and then rejects. The hint names the CSV file to write
+    instead, with `--spreadsheet-safe` when the caller can pass it.
+    """
+    suffix = Path(output_file).suffix
+    if suffix.casefold() not in WORKBOOK_SUFFIXES:
+        return
+    remedy = f"-o {output_file[: -len(suffix)]}.csv"
+    if spreadsheet_safe:
+        remedy += " --spreadsheet-safe"
+    if _json_mode():
+        remedy = f"drop --json and use {remedy}"
+    else:
+        remedy = f"use {remedy}"
+    raise UsageError(
+        f"--output {output_file} names a spreadsheet workbook, which bea does not write; "
+        f"{remedy} (spreadsheets open CSV)."
+    )
+
+
 def check_output_destination(destination: Path, flag: str = "--output") -> None:
     """Refuse an output destination that cannot become a fresh file.
 

@@ -390,6 +390,8 @@ def _csv_output(fmt: ReportFormat | None, output_file: str | None, spreadsheet_s
     ctx = context.current()
     if output_file in output.STDOUT_PATHS:
         output_file = None
+    if output_file is not None:
+        output.refuse_workbook_destination(output_file)
     implied_csv = output_file is not None and Path(output_file).suffix.casefold() == ".csv"
     if fmt is None and implied_csv and not ctx.json_output:
         fmt = ReportFormat.csv

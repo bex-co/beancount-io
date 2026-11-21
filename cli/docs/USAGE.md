@@ -951,6 +951,14 @@ envelope names `{"stdin": "-"}` as its target.
 
 `bea --json query "SELECT account, sum(position) GROUP BY account" -o result.json`
 writes the standard JSON envelope to the file with no duplicate stdout output.
+Without `--format` or `--json`, the `-o` name decides the format: `.csv`
+writes CSV, `.bean` and `.beancount` write directives, and `.tsv` and `.json`
+are refused with exit 2 (pass `--format csv`, or put `--json` before the
+command). A spreadsheet workbook name — `.xlsx`, `.xlsm`, `.xls`, `.ods` or
+`.numbers`, in any letter case — is refused with exit 2 under every format,
+`--json` included, before the query runs and with an existing file there left
+untouched: bea writes no workbook format, and a spreadsheet opens
+`-o spend.csv --spreadsheet-safe` instead.
 `-o -` keeps stdout; `--numberify` splits inventories into decimal currency columns
 in JSON as well as text. One-shot query exports replace the destination only after a successful
 query; a failed query or write preserves an existing export. Text, CSV, and JSON
@@ -2333,8 +2341,9 @@ too:
 ### Reports as CSV
 
 Every `bea report` command takes `--format csv` for a spreadsheet, a script, or
-`-o FILE` (a `.csv` name implies the format; `--spreadsheet-safe` prefixes text
-cells that start with `=`, `+`, `-`, `@`, tab or CR with `'`, as for `bea query`).
+`-o FILE` (a `.csv` name implies the format, and a workbook name such as
+`.xlsx` or `.ods` is refused with exit 2; `--spreadsheet-safe` prefixes text
+cells that start with `=`, `+`, `-`, `@`, tab or CR with `'`; both as for `bea query`).
 The table holds the figures `--json` carries, with these rules:
 
 - Amounts are exact decimal strings: no rounding, thousands separators or
