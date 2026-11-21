@@ -36,6 +36,10 @@ export function findLikelyDuplicates(
 ): Set<string> {
   const booked = new Map<string, number>();
   for (const transaction of existing) {
+    // A transaction the engine could not book stays listed in the journal but
+    // is in no balance (w21/678): it booked nothing, so it must not withhold
+    // a row as already booked.
+    if (transaction.not_booked === true) continue;
     for (const posting of transaction.postings ?? []) {
       if (posting.account !== sourceAccount) continue;
       if (posting.units?.currency !== currency) continue;

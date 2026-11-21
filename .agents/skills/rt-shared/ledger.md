@@ -27,6 +27,7 @@ newest first.
 
 ### Deferred
 
+- 2026-11-21 cli engine `infer_date_format` (`src/bea_engine/csv_mapper.py:1362`) — zero callers repo-wide (grep over `src tests docs action`); live inference is the frontend twin (`src/cli/csv_mapper.py:881` + `inspect_date_column`, called from `import_.py:1699`) and the engine path always receives an explicit `--date-format` (`importing.py:284` defaults to `%Y-%m-%d`); `_strptime`/`_has_year_directive`/`_locale_shorthand` beside it are still used (lines 1401/1568-1569), so only `infer_date_format` is dead — verify no dynamic/`getattr` use, then delete.
 - 2026-11-19 backend-v2 expired TEMPORARY `__Host-authSess` retirement shim (`src/server/middleware/orphaned-host-cookie-middleware.ts`, mounted in `src/server/start-server.ts:114-127`, test in `src/server/middleware/__tests__/orphaned-host-cookie-middleware.test.ts`) — marked safe-to-delete after 2026-10-21; confirm no stranded-window tokens remain, then delete shim + mount + test. 2026-11-20 re-check: still mounted and reachable on every production request (not dead code); default JWT lifetime is 365 days (`config.ts:527`), so stranded tokens may still be valid — the repo alone cannot prove the window is empty.
 - 2026-11-19 ledger `getUserApiClient` on `IGiteaClientFactory`/`RequestScopedGiteaClientFactory` (`backend-cluster/ledger/src/foundation/clients/gitea-client-factory.ts`) — zero callers in ledger (every service uses `getPublicApiClient`), but the method is live in the backend-v2 donor (`ledger-workflow.ts` ×4, `commits-service.ts` ×2 per 2026-11-20 re-check); decide transplant fidelity vs removal.
 
@@ -98,6 +99,9 @@ newest first.
 
 ### Skipped
 
+- 2026-11-21 dashboard `decode-csv-bytes.ts` + `use-csv-parser.ts` empty path — empty/whitespace-only bytes throw `CsvEmptyError` at the caller, BOM-only UTF-16 decodes to empty and throws the same way; no-BOM UTF-16 is out of the documented scope (same choice as `FileReader.readAsText`); examined, no divergence.
+- 2026-11-21 cli engine/frontend date-inference split (`bea_engine/csv_mapper.py` vs `cli/csv_mapper.py`) — the pair agrees on all 12 built-in formats; the engine's extra `%j`/`%U`/`%W` rollover refusal (w5/986, w5/1022) only fires on custom `--date-format`s where the frontend already forwarded the recalled format, so the strict side refuses loudly instead of diverging silently; the engine's own `infer_date_format` is dead code, handed to `rt-dead-code-removal` as Deferred.
+- 2026-11-21 cli OFX vs frontend `_source_accounts`/`_ofx_identities` twin scans — textually identical modulo bytes/str decode (non-ASCII ids only); the w5/1069 recipient and w5/1031 same-number-different-bank cases agree; examined, no drift.
 - 2026-11-21 dashboard `series-util`/`calendar-date` month windows + carry/forward-fill + export/model exact-decimal core — read against tests and docblocks; no divergence.
 - 2026-11-21 dashboard cash-flow `statement-tree`/`merge-intervals`/`role-resolver`/`account-roots` + overview categorizer — read; agree with the engine post-fix, no separate divergence.
 - 2026-11-21 dashboard Smart Import currency-symbol table (`csv-validator.ts` `SYMBOL_CURRENCIES`) — FIXED: added ֏/؋/₵ (w5/924) and fullwidth ￡/￦ (w5/1064) so those rows conflict under the wrong currency like `bea import --csv`, instead of silently posting as dollars.
