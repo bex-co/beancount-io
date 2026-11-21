@@ -146,6 +146,9 @@ const DOT_GROUPING_TWO = /^[1-9]\d{0,2}(?:\.\d{3}){2,}$/;
 const SYMBOL_CURRENCIES: Record<string, readonly string[]> = {
   "€": ["EUR"],
   "£": ["GBP", "GIP", "FKP", "SHP", "EGP"],
+  // The fullwidth forms name the same currencies (the CLI's w5/1064).
+  "￡": ["GBP", "GIP", "FKP", "SHP", "EGP"],
+  "￦": ["KRW", "KPW"],
   "₹": ["INR"],
   "₽": ["RUB"],
   "₩": ["KRW", "KPW"],
@@ -167,6 +170,11 @@ const SYMBOL_CURRENCIES: Record<string, readonly string[]> = {
   "₿": ["BTC"],
   "₭": ["LAK"],
   "៛": ["KHR"],
+  // ֏ (AMD), ؋ (AFN) and ₵ (GHS/GHC) joined the CLI table in w5/924; same
+  // hazard, same fix.
+  "֏": ["AMD"],
+  "؋": ["AFN"],
+  "₵": ["GHS", "GHC"],
 };
 
 type AmountCurrencySymbol = {
