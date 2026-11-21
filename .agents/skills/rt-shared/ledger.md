@@ -45,10 +45,11 @@ newest first.
 
 ### Deferred
 
-- 2026-11-21 unguarded engine/frontend twin pattern (`same_file`/`not_a_load_cache`) — `regex_reads_otherwise` and `_DESCRIPTOR` guarded this run (`cli/tests/test_twin_regex_reads_otherwise.py`, `cli/tests/test_twin_descriptor_paths.py`); `include_glob` + `expand_path` already guarded (see Skipped); guard the remaining pair next.
+- 2026-11-21 `JSON_FLOAT_MARKER` transport marker (`cli/amounts.py:36` "must match `bea_engine.amounts`" vs `bea_engine/amounts.py:197`) — string literal both sides must share, no test pins it; add a drift guard next run.
 
 ### Skipped
 
+- 2026-11-21 twin pairs already guarded, verified this run: `include_glob` (`test_include_glob_preflight.py` runs both `check_glob` copies over the same inputs), `expand_path` (`test_unresolved_home_paths.py` params both modules with identical messages), `fold_account` (`test_turkish_case_fold.py` imports both), `single_line` (`test_bidi_controls_are_escaped.py` compares both), `decode_error_message` (`test_bom_ledger.py` compares both) — agree today, nothing to add.
 - 2026-11-20 `cli/src/bea_engine/*` vs `cli/src/cli/*` twin re-compare — every pair agrees or is deliberately adapted, no non-deliberate drift: `amounts` shared patterns identical (`_ZERO_DIVISOR`, `_NOT_ARITHMETIC`, `JSON_FLOAT_MARKER`); `display_width`/`pad` identical; `include_glob` identical; `csv_mapper` deliberately split (engine extraction vs frontend inference); `paths` `_DESCRIPTOR` identical, `expand_path` identical, `descriptor_number`/`held_descriptor`/`refuse_too_long_name` frontend-only by design; `ledger/text` `fold_account`/`regex_reads_otherwise` logic identical, `single_line` identical modulo the frontend's shared `_escape_controls` alias, `decode_error_message` identical modulo the `UTF8_BOM` import source; `write`/`query` vs `output` `CACHE_ENV`/`not_a_load_cache`/`same_file` identical, `refuse_cache_over_ledger` deliberately adapted to each side's members source. Closes the 2026-11-17 Deferred comparison.
 - 2026-11-19 mobile `filterLedgers` (`components/ledger-drawer/drawer-ledgers.ts` generic vs `screens/ledger-selection/discovery-store.ts`) — identical 3-line wrappers over the shared `ledgerMatchesQuery`; unifying saves nothing and would drag drawer imports into the discovery screen; below the value bar.
 - 2026-11-19 dashboard `toIntervalEnum` (`features/ledger-data/budget/budget-chart-card.tsx` vs `budget-history-table.tsx`) — 4 identical lines, `Object.values`-driven so no missed-edit hazard; below the value bar.
