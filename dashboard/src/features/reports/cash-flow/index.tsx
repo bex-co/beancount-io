@@ -152,11 +152,23 @@ export default function LedgerCashFlowPage() {
   const closingCashAccounts = useMemo(
     () =>
       cashFlowData
-        ? collectCashAccounts(
-            cashFlowData.getLedgerBalanceSheet
-              .assetsHierarchyData as SerializableTreeNode,
-            accountMeta,
-            roots,
+        ? [
+            cashFlowData.getLedgerBalanceSheet.assetsHierarchyData,
+            // Declared cash counts under any of the five roots (w5/1057):
+            // the balance sheet serves the three stock-root hierarchies, so
+            // the closing cash set reads all three. Membership never crosses
+            // roots (depths resolve within one account path), so one
+            // collection per hierarchy concatenates cleanly.
+            cashFlowData.getLedgerBalanceSheet.liabilitiesHierarchyData,
+            cashFlowData.getLedgerBalanceSheet.equityHierarchyData,
+          ].flatMap((hierarchy) =>
+            hierarchy
+              ? collectCashAccounts(
+                  hierarchy as SerializableTreeNode,
+                  accountMeta,
+                  roots,
+                )
+              : [],
           )
         : [],
     [cashFlowData, accountMeta, roots],

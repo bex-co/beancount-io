@@ -111,6 +111,10 @@ beforeEach(() => {
                     balanceChildren: {},
                     children: [],
                   },
+                  liabilitiesHierarchyData:
+                    payload.getLedgerBalanceSheet.liabilitiesHierarchyData,
+                  equityHierarchyData:
+                    payload.getLedgerBalanceSheet.equityHierarchyData,
                 },
               }
             : payload,

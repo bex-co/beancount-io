@@ -116,6 +116,33 @@ describe("collectCashAccounts", () => {
     ]);
   });
 
+  it("snapshots a declared-cash account from a non-Assets hierarchy", () => {
+    // collectCashAccounts is hierarchy-agnostic: the page concatenates the
+    // assets, liabilities and equity hierarchies, so a declared-cash
+    // overdraft closes with the cash set (w5/1057).
+    const liabilities = treeNode("Liabilities", { USD: "-250.00" }, [
+      treeNode("Liabilities:Overdraft", { USD: "-250.00" }),
+    ]);
+    const accountMeta = new Map([
+      ["Liabilities:Overdraft", { "cash-flow-role": "cash" }],
+    ]);
+
+    expect(collectCashAccounts(liabilities, accountMeta)).toEqual([
+      {
+        account: "Liabilities:Overdraft",
+        balance: { USD: "-250.00" },
+        roleSource: "declared",
+      },
+    ]);
+  });
+
+  it("treats a missing hierarchy as no closing cash accounts", () => {
+    // Regression: the page concatenates three nullable hierarchies, and a
+    // payload without one (older mocks, partial data) crashed the read.
+    expect(collectCashAccounts(undefined)).toEqual([]);
+    expect(collectCashAccounts(null)).toEqual([]);
+  });
+
   it("pulls a declared non-cash account out of a heuristic-cash subtree", () => {
     const assets = treeNode("Assets", { USD: "11000" }, [
       treeNode("Assets:Bank", { USD: "11000" }, [
