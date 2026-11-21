@@ -100,7 +100,6 @@
 
 ## Inbox
 
-- [655](./655.md) — Recheck the open w5 dashboard notes not yet verified on `main-CIyNN76T.js` ← routine dashboard-qa follow-up 2026-11-20
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 
