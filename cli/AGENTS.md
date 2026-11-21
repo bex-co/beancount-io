@@ -83,6 +83,8 @@ tests the exact sdist through `scripts/test-homebrew.sh` in a clean macOS job.
 `scripts/render-formula.sh` installs the hash-pinned wheels and runs
 `scripts/smoke-installed.py` against the installed executable. Both channels
 publish only after that passes; a tag release requires the tap credential.
+`scripts/render-release-notes.sh` writes the GitHub Release body from the
+user-facing CLI commits the previous `cli-v*` tag has not shipped yet.
 `tests/test_release.py` puts the shell suite inside `make check-all`. Never
 hand-edit `requirements.lock` — it is generated per release and gitignored.
 `cli/docs/RELEASING.md` holds the tagging procedure and one-time credentials setup.

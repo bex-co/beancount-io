@@ -49,6 +49,17 @@ def test_the_release_script_suite_passes() -> None:
     assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
 
 
+def test_the_release_notes_suite_passes() -> None:
+    result = subprocess.run(
+        ["bash", str(CLI_ROOT / "scripts" / "render-release-notes.test.sh")],
+        capture_output=True,
+        text=True,
+        cwd=CLI_ROOT,
+    )
+
+    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"
+
+
 def test_the_sdist_carries_the_hashed_lock() -> None:
     """The Homebrew formula installs from `requirements.lock` inside the sdist.
 
