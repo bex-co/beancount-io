@@ -83,7 +83,10 @@ def test_treeify_stdout_device_matches_dash_under_a_file_redirect(tmp_path: Path
 
 
 def test_example_stdout_device_writes_through_a_file_redirect(tmp_path: Path) -> None:
-    result = _bea_to_file(tmp_path, tmp_path / "out.bean", "example", "-o", "/dev/stdout")
+    # Seeded and bounded: an unseeded bean-example history sometimes trips its
+    # own "Cash balance is negative" check, which is not what this pins.
+    seeded = ("--seed", "1", "--date-begin", "2026-01-01", "--date-end", "2026-04-01")
+    result = _bea_to_file(tmp_path, tmp_path / "out.bean", "example", *seeded, "-o", "/dev/stdout")
 
     assert result.returncode == 0, result.stderr
     text = (tmp_path / "out.bean").read_text()
