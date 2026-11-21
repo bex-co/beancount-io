@@ -315,8 +315,10 @@ def answer_preset(
             lines.append("")
         for account in sorted(balances):
             lines.append(f"{day} balance {account}  {balances[account]:f} {currency}")
-        lines.append("")
 
+    # One newline after the last directive: a trailing "" here wrote a blank
+    # line at end of file, which `git diff --check` refused and the first
+    # `bea add` doubled (w1/349).
     _write_new_ledger(file, "\n".join(lines) + "\n")
     return {
         "created": str(file),

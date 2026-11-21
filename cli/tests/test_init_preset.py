@@ -137,3 +137,52 @@ def test_preset_ledger_refuses_a_misspelt_account(tmp_path: Path) -> None:
     assert typo.returncode == 1, typo.stdout + typo.stderr
     assert "Assets:Csah" in typo.stdout + typo.stderr
     assert main.read_bytes() == before
+
+
+def test_preset_ledger_with_opening_balances_ends_in_one_newline(tmp_path: Path) -> None:
+    """A preset ledger with opening balances ends with one newline, not a blank line (w1/349).
+
+    It ended in `USD\\n\\n`: `git diff --check` reported a new blank line at
+    EOF on the first commit, and the first `bea add` left two blank lines
+    before its entry. A nonzero opening posts a transaction before its
+    assertion; a zero one asserts alone.
+    """
+    for preset, opening in (("personal@1", "Assets:Bank 100"), ("business@1", "Assets:Bank 0")):
+        books = tmp_path / preset
+        made = _bea(
+            tmp_path,
+            "--no-input",
+            "init",
+            str(books),
+            "--preset",
+            preset,
+            "--currency",
+            "USD",
+            "--date",
+            "2026-01-01",
+            "--opening-balance",
+            opening,
+        )
+        assert made.returncode == 0, made.stderr or made.stdout
+        main = books / "main.bean"
+        created = main.read_text(encoding="utf-8")
+        assert created.endswith(" USD\n") and not created.endswith("\n\n"), repr(created[-60:])
+        assert created.splitlines()[-1].split() == ["2026-01-01", "balance", *opening.split(), "USD"]
+
+        added = _bea(
+            tmp_path,
+            "--no-input",
+            "--file",
+            str(main),
+            "add",
+            "note",
+            "--date",
+            "2026-01-02",
+            "-a",
+            "Assets:Bank",
+            "-m",
+            "hi",
+        )
+        assert added.returncode == 0, added.stderr or added.stdout
+        appended = main.read_text(encoding="utf-8")
+        assert appended == created + '\n2026-01-02 note Assets:Bank "hi"\n', repr(appended[-80:])
