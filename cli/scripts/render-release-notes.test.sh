@@ -103,6 +103,21 @@ fi
 expect_contains "the bound still excludes older history with the tag present" "$notes" 'cli-v0\.4\.1\.\.\.cli-v0\.5\.1'
 expect_missing "the previous release stays shipped with the tag present" "$notes" 'already shipped'
 
+# A re-run of an older release, after a newer tag exists, is bounded by its
+# own predecessor: the newer tag is not a previous release of this one.
+git -C "$fixture" commit -q --allow-empty -m "fix(cli): a fix only the next release ships"
+git -C "$fixture" tag cli-v0.5.2
+git -C "$fixture" checkout -q cli-v0.5.1
+if bash "$render" 0.5.1 "$fixture" >"$notes" 2>"$work/err"; then
+  pass "renders notes for an older release after a newer tag"
+else
+  fail "renders notes for an older release after a newer tag: $(cat "$work/err")"
+fi
+expect_contains "an older release is bounded by its own predecessor" "$notes" 'cli-v0\.4\.1\.\.\.cli-v0\.5\.1'
+expect_contains "an older release still lists its own changes" "$notes" 'Accept --meta on add open'
+expect_missing "an older release does not claim to be empty" "$notes" 'no user-facing changes'
+git -C "$fixture" checkout -q main
+
 # --- singular counts stay grammatical ------------------------------------------
 
 single="$work/single"

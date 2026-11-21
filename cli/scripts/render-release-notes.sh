@@ -33,13 +33,14 @@ fi
 
 tag="cli-v$version"
 
-# The newest earlier cli-v tag bounds the release. The release tag itself
-# already exists when the workflow runs on a tag push, so it is excluded;
-# without any earlier tag this is a first release over the whole history.
-prev=""
-while IFS= read -r candidate; do
-  [[ "$candidate" != "$tag" ]] && prev="$candidate"
-done < <(git -C "$repo" tag --list 'cli-v*' | sort -V)
+# The highest cli-v tag below this version bounds the release. The release
+# tag itself already exists when the workflow runs on a tag push, and a re-run
+# of an older release can find newer tags, so neither is a bound; without any
+# earlier tag this is a first release over the whole history.
+prev="$(git -C "$repo" tag --list 'cli-v*' | sed 's/^cli-v//' |
+  { printf '%s\n' "$version"; cat; } | sort -V -u |
+  awk -v version="$version" '$0 == version { print previous; exit } { previous = $0 }')"
+[[ -z "$prev" ]] || prev="cli-v$prev"
 
 if [[ -n "$prev" ]]; then
   range="$prev..HEAD"
@@ -62,8 +63,9 @@ while IFS= read -r subject; do
       # Strip one trailing board ref: internal tracker jargon, meaningless
       # to users. Public PR refs stay.
       sentence="$(printf '%s' "$sentence" | sed -E 's/ \([a-z][0-9]*\/[a-z0-9\/_-]+\)$//')"
-      # A polished sentence starts with a capital.
-      sentence="$(printf '%s' "$sentence" | sed -E 's/^[a-z]/\U&/')"
+      # A polished sentence starts with a capital. (BSD sed has no \U, and
+      # macOS's bash 3.2 has no ${var^}.)
+      sentence="$(printf '%s' "${sentence:0:1}" | tr '[:lower:]' '[:upper:]')${sentence:1}"
       if [[ "$kind" == "feat" ]]; then
         new_entries+=("$sentence")
       else
