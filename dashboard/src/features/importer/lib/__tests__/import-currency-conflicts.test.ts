@@ -27,6 +27,13 @@ describe("amountCurrencySymbols", () => {
     ["-₿4.50", "₿", ["BTC"]],
     ["-₭1250.00", "₭", ["LAK"]],
     ["-៛2500.00", "៛", ["KHR"]],
+    // The CLI's table has these too (w5/924): dram, afghani and cedi.
+    ["-֏4.50", "֏", ["AMD"]],
+    ["-؋1250.00", "؋", ["AFN"]],
+    ["-₵4.50", "₵", ["GHS", "GHC"]],
+    // Fullwidth pound and won name the same currencies (w5/1064).
+    ["-￡4.50", "￡", POUND],
+    ["-￦1000", "￦", ["KRW", "KPW"]],
   ])("reads %s as %s", (cell, symbol, currencies) => {
     expect(amountCurrencySymbols(cell)).toEqual([{ symbol, currencies }]);
   });
@@ -122,6 +129,31 @@ describe("findImportCurrencyConflicts", () => {
     expect(
       findImportCurrencyConflicts([row(0, "-₭1250.00", false)], "USD"),
     ).toEqual([]);
+  });
+
+  it("refuses ֏/؋/₵/￡/￦ rows under USD and clears them under their own currency (w5/924, w5/1064)", () => {
+    const rows = [
+      row(0, "-֏4.50"),
+      row(1, "-؋1250.00"),
+      row(2, "-₵4.50"),
+      row(3, "-￡4.50"),
+      row(4, "-￦1000"),
+    ];
+    expect(findImportCurrencyConflicts(rows, "USD")).toEqual([
+      { symbol: "֏", currencies: ["AMD"], rows: [1] },
+      { symbol: "؋", currencies: ["AFN"], rows: [2] },
+      { symbol: "₵", currencies: ["GHS", "GHC"], rows: [3] },
+      { symbol: "￡", currencies: POUND, rows: [4] },
+      { symbol: "￦", currencies: ["KRW", "KPW"], rows: [5] },
+    ]);
+    expect(findImportCurrencyConflicts([row(0, "-֏4.50")], "AMD")).toEqual([]);
+    expect(findImportCurrencyConflicts([row(0, "-؋1250.00")], "AFN")).toEqual(
+      [],
+    );
+    expect(findImportCurrencyConflicts([row(0, "-₵4.50")], "GHC")).toEqual([]);
+    // The fullwidth pound names every pound, like `£` under EGP.
+    expect(findImportCurrencyConflicts([row(0, "-￡4.50")], "EGP")).toEqual([]);
+    expect(findImportCurrencyConflicts([row(0, "-￦1000")], "KRW")).toEqual([]);
   });
 
   it("ignores deselected rows", () => {
