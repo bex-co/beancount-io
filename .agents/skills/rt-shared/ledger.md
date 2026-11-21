@@ -147,11 +147,10 @@ newest first.
 
 ### Deferred
 
-- 2026-11-20 ledger `src/shared/lock/lock.test.ts` "should be defined" + "should have acquire method" — mirror the pruned backend-v2 lock two; proof recipe: stub `acquire` to return a wrong answer (observed 2026-11-20: 5 behavior tests red, both green); deferred for single-package scope, take next run.
-
 ### Skipped
 
 - 2026-11-21 ledger `src/shared/logger/index.test.ts` remaining 23 tests — doesn't-throw/level/child-behavior/async-context/allowlist pins all hold behavior (re-proved 2026-11-21: emptied `LOGGABLE_CONTEXT_KEYS` reds the same 4 allowlist tests); kept per the proof rule.
+- 2026-11-21 ledger `src/shared/lock/lock.test.ts` remaining 5 behavior tests — re-proved 2026-11-21: `acquire` stubbed to return without running the callback reds all 5, both existence tests stay green; kept per the proof rule.
 - 2026-11-20 cli 13 new test files (`test_update_self_cancel`, `test_balance_pad_omit_messages`, `test_into_unincluded_missing_directory`, +10) — AST sweep: every test function carries real asserts; subprocess-based suite, no mock/tautology shapes.
 - 2026-11-20 backend-v2 capital-gains parity ×3 + ledger `flow-valuation-date.test.ts`/`account-journal-flow.test.ts` — exact `toEqual` pins on every surface/rate; reviewed, all real.
 - 2026-11-20 dashboard `sankey-colors` scheme-mapping tests + `cash-account-status.test.ts` — mapping/toEqual pins; swapping a mapping reds its own test, so the proof rule keeps them.
@@ -170,4 +169,3 @@ newest first.
 - 2026-11-18 cli/tests assertion-less-per-function sweep (~40 hits) — every hit asserts via local `_assert_*`/`_refuse_*`/`run_doc`/`_applies`/`_replays` helpers or raising validators; sampled 8 files, all real.
 - 2026-11-18 `expect(vi.mocked(...))` with-args call assertions (reconciliation-page, write-outcome, create-file-pending) — real wiring pins, not the bare-`vi.mocked` shape; left in place.
 - 2026-11-18 mobile `toast-provider/__tests__/index.test.ts` — a prior run already pruned its tautologies; remaining asserts pin `toast-queue` behavior.
-- 2026-11-18 static sweeps with zero hits repo-wide (mobile/dashboard/ledger/cli): assertion-free `it` bodies, weak-matcher-only files, literal tautologies, empty bodies, tests mocking their own unit.
