@@ -5,6 +5,8 @@ the hint reported Python's shortest repr: `1.10` was told `'1.1'` — and
 following that wrote a transaction 3 cents out of balance at exit 0 —
 long decimals lost digits, and `1E400` was called `inf`. Floats now
 cross into the engine with their source text, and the hint quotes it.
+An exponent literal is written out instead, since its spelling is refused
+too (w1/346, `test_bulk_float_hint.py`).
 """
 
 from __future__ import annotations
@@ -76,11 +78,6 @@ def _units(number: str) -> str:
             "12345678901234567890.123456789",
         ),
         (
-            _row(_units("1E400")),
-            "Row 1, postings.0.units.number",
-            "1E400",
-        ),
-        (
             _row(
                 '{"account":"Expenses:Food","amount":"5 USD"},{"account":"Assets:Checking"}',
                 '"rate":{"kind":"number","value":1.10}',
@@ -89,7 +86,7 @@ def _units(number: str) -> str:
             "1.10",
         ),
     ],
-    ids=["trailing-zero", "long-decimal", "big-decimal", "exponent", "meta-number"],
+    ids=["trailing-zero", "long-decimal", "big-decimal", "meta-number"],
 )
 def test_the_hint_quotes_the_literal_as_typed(tmp_path: Path, rows: str, location: str, literal: str) -> None:
     result = _add(tmp_path, rows)

@@ -69,7 +69,7 @@ def _row(meta: str, posting_meta: str = "") -> str:
         (
             _row('"nn":5', '"pp":1e2'),
             "Row 1, postings.0.meta.pp: JSON float 1e2 cannot represent a decimal exactly. "
-            'Send a tagged number instead, such as {"kind":"number","value":"1e2"}.',
+            'Send a tagged number instead, such as {"kind":"number","value":"100"}.',
         ),
         (_row('"xx":NaN'), "Row 1, meta.xx: nan is not a finite number, so it has no decimal form"),
     ],

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 import re
-from decimal import Decimal, Inexact, Rounded, localcontext
+from decimal import Decimal, Inexact, InvalidOperation, Rounded, localcontext
 from typing import Any
 
 _PLAIN_DECIMAL = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)")
@@ -407,20 +407,67 @@ def refuse_scientific_notation(text: str) -> None:
         require_decimal_notation(match[0])
 
 
+#: The longest number Beancount's lexer reads. It copies the token (the sign
+#: is a token of its own) into a 256-byte buffer and refuses a longer one as
+#: `Invalid number format`, so a hint naming a longer string is refused too.
+NUMBER_TOKEN_LIMIT = 255
+
+#: Why a finite float has no string to send in its place: `1E400` written out.
+TOO_LONG_FOR_BEANCOUNT = (
+    f"Written out in decimal, it has more than the {NUMBER_TOKEN_LIMIT} characters a Beancount number can hold"
+)
+
+
+def _written_out(text: str) -> str | None:
+    """`text`'s exact decimal spelling, keeping every digit: `1.250e1` is `12.50`."""
+    try:
+        number = Decimal(text)
+    except InvalidOperation:
+        return None  # A transport marker can carry any string.
+    exponent = number.as_tuple().exponent
+    # Bounded before formatting, which would spell all of `1e999999999`.
+    if not isinstance(exponent, int) or exponent < -NUMBER_TOKEN_LIMIT:
+        return None
+    if exponent > NUMBER_TOKEN_LIMIT and not number.is_zero():
+        return None
+    return format(number, "f")
+
+
+def exact_decimal_form(value: float | JsonFloat) -> str | None:
+    """The decimal string to send instead of a refused float, or None when there is none.
+
+    A literal without an exponent is quoted as typed, so `1.10` is not told
+    `'1.1'` (w5/735). An exponent literal is written out exactly (`1.25e1` as
+    `12.5`), since the exponent spelling is itself refused on the next run
+    (w1/346). A non-finite value has no decimal form, and one longer than a
+    Beancount number can hold (`1E400`) has none that can be recorded.
+    """
+    if isinstance(value, JsonFloat):
+        text = value.literal if _PLAIN_DECIMAL.fullmatch(value.literal) else _written_out(value.literal)
+    elif math.isfinite(value):
+        text = _written_out(repr(value))
+    else:
+        return None
+    if text is None or len(text.lstrip("+-")) > NUMBER_TOKEN_LIMIT:
+        return None
+    return text
+
+
 def decimal_string_hint(value: float | JsonFloat, noun: str) -> str:
     """What to send instead of a JSON float: a string this same input accepts.
 
     `str()` of a float is scientific for large or tiny values (`1e+20`,
     `1e-08`) and `nan`/`inf` for the rest, each refused on the next run; an
-    agent following the hint looped between two errors (w5/335). A marked
-    float quotes its literal instead, so following it never changes the
-    amount, its precision or the tolerance (w5/735).
+    agent following the hint looped between two errors (w5/335). The hint
+    names `exact_decimal_form`, so following it never changes the amount,
+    its precision or the tolerance, and is never refused for its spelling.
     """
-    if isinstance(value, JsonFloat):
-        return f"Send the {noun} as a decimal string, such as '{value.literal}'."
-    if not math.isfinite(value):
+    form = exact_decimal_form(value)
+    if form is not None:
+        return f"Send the {noun} as a decimal string, such as '{form}'."
+    if isinstance(value, float) and not math.isfinite(value):
         return f"{value!r} is not a finite number, so it has no decimal form."
-    return f"Send the {noun} as a decimal string, such as '{format(Decimal(repr(value)), 'f')}'."
+    return f"{TOO_LONG_FOR_BEANCOUNT}, so no decimal string can stand in for it."
 
 
 def require_decimal_notation(value: Any) -> Any:
