@@ -162,11 +162,13 @@ export default function LedgerCashFlowPage() {
             cashFlowData.getLedgerBalanceSheet.liabilitiesHierarchyData,
             cashFlowData.getLedgerBalanceSheet.equityHierarchyData,
           ].flatMap((hierarchy) =>
-            collectCashAccounts(
-              hierarchy as SerializableTreeNode,
-              accountMeta,
-              roots,
-            ),
+            hierarchy
+              ? collectCashAccounts(
+                  hierarchy as SerializableTreeNode,
+                  accountMeta,
+                  roots,
+                )
+              : [],
           )
         : [],
     [cashFlowData, accountMeta, roots],

@@ -136,6 +136,13 @@ describe("collectCashAccounts", () => {
     ]);
   });
 
+  it("treats a missing hierarchy as no closing cash accounts", () => {
+    // Regression: the page concatenates three nullable hierarchies, and a
+    // payload without one (older mocks, partial data) crashed the read.
+    expect(collectCashAccounts(undefined)).toEqual([]);
+    expect(collectCashAccounts(null)).toEqual([]);
+  });
+
   it("pulls a declared non-cash account out of a heuristic-cash subtree", () => {
     const assets = treeNode("Assets", { USD: "11000" }, [
       treeNode("Assets:Bank", { USD: "11000" }, [
