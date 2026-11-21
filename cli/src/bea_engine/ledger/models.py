@@ -26,6 +26,7 @@ from bea_engine.amounts import (
     refuse_zero_divisor,
     require_plain_decimal,
     split_total_price,
+    with_leading_zeros,
 )
 from bea_engine.ledger.text import parse_iso_date, require_commodity, require_flag, require_link, require_tag
 
@@ -359,7 +360,9 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
         raise ValueError(f"amount {amount!r} contains a ';'. {COMMENT_HELP}")
     refuse_zero_divisor(amount)
     refuse_scientific_notation(amount)
-    entries, errors, _ = parse_exact(f'2026-01-02 * "probe"\n  Assets:Probe {amount}\n  Equity:Probe\n')
+    # `.5 HOOL {.5 USD} @ .5 USD` reads as 0.5, as a plain `.5 USD` does (w1/347).
+    line = with_leading_zeros(amount)
+    entries, errors, _ = parse_exact(f'2026-01-02 * "probe"\n  Assets:Probe {line}\n  Equity:Probe\n')
     entry: Any = entries[0] if len(entries) == 1 and not errors else None
     posting: Any = entry.postings[0] if entry is not None else None
     if posting is None:
@@ -369,7 +372,7 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
         refuse("no amount found")
     if units.currency is MISSING:
         refuse("no currency found")
-    refuse_repeating_posting(f"amount {amount!r}", posting, amount)
+    refuse_repeating_posting(f"amount {amount!r}", posting, line)
     fields: dict[str, Any] = {
         "units": {"number": format(units.number, "f"), "currency": units.currency},
     }
@@ -395,7 +398,7 @@ def _posting_fragment(amount: str) -> dict[str, Any]:
             "date": cost.date,
             "label": cost.label,
         }
-    total = split_total_price(amount)
+    total = split_total_price(line)
     if total is not None:
         fields["price_total"] = {"number": format(total[0], "f"), "currency": total[1]}
     elif posting.price is not None:

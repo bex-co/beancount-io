@@ -33,6 +33,7 @@ from bea_engine.amounts import (
     parse_exact,
     refuse_repeating,
     refuse_repeating_posting,
+    with_leading_zeros,
 )
 from bea_engine.ledger import write, writer
 from bea_engine.ledger.text import (
@@ -1202,7 +1203,8 @@ def _parse_balance_amount(text: str) -> tuple[Decimal, str, Decimal | None]:
     # Amount fields have no account or quoted label to confuse with a
     # separator. Accept pasted Unicode spaces as price/bulk amounts do.
     text = "".join(" " if unicodedata.category(character) == "Zs" else character for character in text)
-    entries, errors, _ = parse_exact(f"2000-01-01 balance Assets:Balance {text}\n")
+    # `.5 USD` and `~ .5` read as 0.5, as `add price --amount` does (w1/347).
+    entries, errors, _ = parse_exact(f"2000-01-01 balance Assets:Balance {with_leading_zeros(text)}\n")
     if errors or len(entries) != 1 or not isinstance(entries[0], Balance):
         raise protocol.UsageError(
             "Balance amount must be 'NUMBER [~ TOLERANCE] CURRENCY', for example '1538 ~ 1 EUR'.",
@@ -1447,7 +1449,11 @@ def _transaction(
         context=WRITE_INPUT,
     )
     header_text = writer.format_transaction(header)
-    text = header_text + "".join(f"  {item.strip()}\n" for item in postings)
+    # The lines the grammar reads: `.5 USD`, `{.5 USD}` and `@ .5 USD` read as
+    # 0.5, as every other `bea add` amount does (w1/347). Messages quote what
+    # was typed.
+    lines = [with_leading_zeros(posting) for posting in postings]
+    text = header_text + "".join(f"  {item.strip()}\n" for item in lines)
     entries, errors, _ = parse_exact(text)
     # Root names are ledger options. The full candidate validation below
     # checks them in that context; this standalone parse only checks syntax.
@@ -1480,7 +1486,8 @@ def _transaction(
     for number, posting in enumerate(entry.postings, start=1):
         try:
             typed = postings[number - 1] if number <= len(postings) else posting.account
-            refuse_repeating_posting(f"--posting {number} {typed!r}", posting, typed)
+            line = lines[number - 1] if number <= len(postings) else typed
+            refuse_repeating_posting(f"--posting {number} {typed!r}", posting, line)
         except ValueError as exc:
             raise protocol.UsageError(f"{exc} Nothing was written.") from None
         if managed_load.zero_units_at_total_cost(posting):
@@ -1513,7 +1520,7 @@ def _transaction(
     # A forced single-currency default is not a guess and stays out.
     operating_defaults: dict[int, list[str] | None] = {}
     for number, posting in enumerate(entry.postings, start=1):
-        _refuse_missing_price(postings, number, posting)
+        _refuse_missing_price(lines, number, posting)
         # Beancount annotates booked postings; the parser also returns MISSING.
         units: Any = posting.units
         if units is MISSING or units.number is MISSING:
@@ -1571,7 +1578,7 @@ def _transaction(
         # spelling sits at the same index; incomplete prices raised above.
         meta: dict[str, Any] = {}
         if number <= len(postings):
-            total = _total_price(postings[number - 1])
+            total = _total_price(lines[number - 1])
             if total is not None:
                 meta[writer.TOTAL_PRICE_META] = total
         normalized.append(posting._replace(units=units, meta=meta))

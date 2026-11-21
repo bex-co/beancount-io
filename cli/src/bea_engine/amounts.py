@@ -13,6 +13,9 @@ _PLAIN_DECIMAL = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)")
 _QUOTED_OR_COMMENT = re.compile(r'"(?:[^"\\]|\\.)*"|;[^\r\n]*')
 """Quoted strings and comments, inside which an `@@` is text, not a price."""
 
+_LEADING_DOT_OR_TEXT = re.compile(r'"(?:[^"\\]|\\.)*"|;[^\r\n]*|(?<![\w.:#^\'])\.(?=\d)')
+"""Quoted strings, comments, and the dot that starts a number written without its zero."""
+
 _ZERO_DIVISOR = re.compile(r"/\s*[-+]?(?:0+(?:\.0*)?|\.0+)(?![\d.]|[A-Z0-9'._-]*[A-Z])")
 #: Ledger text no amount arithmetic is in: strings, `;` comments, `#tag`
 #: and `^link` tokens (a hierarchical `#proj/0` holds a `/0` that is not a
@@ -276,6 +279,19 @@ def refuse_repeating_posting(subject: str, posting: Any, text: str) -> None:
     refuse_repeating(
         f"The price in {subject}", getattr(price, "number", None), getattr(price, "currency", None), total_instead
     )
+
+
+def with_leading_zeros(text: str) -> str:
+    """`text` with a number written without its leading zero (`.5`, `-.5`, `+.25`) given one.
+
+    Beancount's grammar has no such number, so `add transaction --posting` and
+    `add balance --amount` refused `.5 USD` with a bare `Invalid token: '.5'`
+    while `add price`, bulk rows, `add custom` and `init --opening-balance`
+    wrote it as 0.5 (w1/347), as the hosted ledger reads it (w21/969). Quoted
+    strings and `;` comments stay as typed, and a dot after a letter, digit,
+    `.`, `:`, `#`, `^` or `'` belongs to a name, tag, link or number.
+    """
+    return _LEADING_DOT_OR_TEXT.sub(lambda found: "0." if found[0] == "." else found[0], text)
 
 
 def parse_exact(text: str) -> tuple[list[Any], list[Any], dict[str, Any]]:
