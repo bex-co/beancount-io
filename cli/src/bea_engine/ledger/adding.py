@@ -38,6 +38,7 @@ from bea_engine.amounts import (
 from bea_engine.ledger import write, writer
 from bea_engine.ledger.text import (
     checked_operating_currencies,
+    folder_document_refusal,
     is_commodity,
     outside_ledger_tree,
     parse_account,
@@ -126,7 +127,8 @@ def _require_document_in_tree(file: Path, into: Path | None, filename: str) -> N
     Beancount resolves a document path against the directory of the file that
     holds it, and `check` refuses one that lands outside the root ledger's
     directory; checking only for an absolute path let `../elsewhere.pdf` write
-    a ledger the very next `check` failed.
+    a ledger the very next `check` failed. A path that names a folder is
+    refused too, since `check` accepts it but no viewer can open it (w1/350).
     """
     root = Path(os.path.abspath(file)).parent
     # Beancount resolves paths beside the include as named, even when the
@@ -138,6 +140,8 @@ def _require_document_in_tree(file: Path, into: Path | None, filename: str) -> N
             "`bea check` refuses because copies of the ledger would lose it. Move the file under the "
             "ledger directory and pass a relative --path."
         )
+    if folder := folder_document_refusal(holder, filename):
+        raise protocol.UsageError(f"{folder} Nothing was written.")
 
 
 _HEADER_ERROR = (

@@ -120,6 +120,26 @@ def outside_ledger_tree(path: Path, root: Path) -> bool:
     return False
 
 
+def folder_document_refusal(holder: Path, filename: str) -> str | None:
+    """Why a document path that names a folder cannot be written, or None for anything else.
+
+    Beancount's own check is `os.path.exists`, so `receipts/`, or `.` for the
+    ledger's own folder, loaded clean and listed like an attachment no viewer
+    can open, while a missing file was refused (w1/350). `holder` is the folder
+    of the file the directive lands in, which a relative path resolves against.
+    """
+    import os
+
+    folder = os.path.abspath(os.path.join(holder, filename))
+    if not os.path.isdir(folder):
+        return None
+    stem = filename.rstrip("/\\")
+    example = "<name>.pdf" if stem in ("", ".") else f"{stem}/<name>.pdf"
+    return (
+        f"Document path {filename!r} names the folder {folder}, not a file; pass the file to attach, such as {example}."
+    )
+
+
 def refuse_control_characters(text: str, *, what: str) -> None:
     """Refuse raw directive text that carries a control character.
 

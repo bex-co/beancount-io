@@ -20,7 +20,12 @@ from typing import Any
 
 from bea_engine import protocol
 from bea_engine.ledger import write as ledger_write
-from bea_engine.ledger.text import new_account_format_problem, refuse_control_characters, without_root_name_errors
+from bea_engine.ledger.text import (
+    folder_document_refusal,
+    new_account_format_problem,
+    refuse_control_characters,
+    without_root_name_errors,
+)
 from bea_engine.query import format_error
 
 
@@ -36,7 +41,7 @@ def answer(
     """Validate (and optionally append) raw directive text against a ledger."""
     entries = _parse_directives(text)
     _refuse_self_rates(entries)
-    _refuse_documents_outside(text, entries, file, into)
+    _refuse_unattachable_documents(text, entries, file, into)
     snapshot = _snapshot_for(file, token)
     _refuse_invisible_new_accounts(entries, file, snapshot)
     target = ledger_write.destination(file, into)
@@ -63,13 +68,15 @@ def answer(
     return {"written": len(entries), "target": str(target), "warnings": warnings}
 
 
-def _refuse_documents_outside(text: str, entries: list[Any], file: Path, into: Path | None) -> None:
+def _refuse_unattachable_documents(text: str, entries: list[Any], file: Path, into: Path | None) -> None:
     """Refuse a `document` naming a file outside the ledger's folder, before anything looks for it.
 
     Validation reports a missing document file, so the answer told the model
     whether any path on the machine exists — one bit per call, with nothing
     shown to the user (w5/848). Outside the folder is refused the same way
-    whether or not the file is there.
+    whether or not the file is there. Inside it, a path naming a folder is
+    refused as `add document` refuses it (w1/350): a missing file there is
+    already reported, so the refusal tells the model nothing new.
     """
     from beancount.core.data import Document
     from beancount.parser import parser
@@ -77,9 +84,11 @@ def _refuse_documents_outside(text: str, entries: list[Any], file: Path, into: P
     if not any(isinstance(entry, Document) for entry in entries):
         return
     folder = Path(file).resolve().parent
+    destination = ledger_write.destination(file, into)
+    holder = destination.parent
     # Parsed as the file it lands in, so a relative path resolves beside it
     # as the loader will resolve it, not against this process's directory.
-    located, _, _ = parser.parse_string(text, report_filename=str(ledger_write.destination(file, into)))
+    located, _, _ = parser.parse_string(text, report_filename=str(destination))
     for entry in located:
         if not isinstance(entry, Document):
             continue
@@ -89,6 +98,8 @@ def _refuse_documents_outside(text: str, entries: list[Any], file: Path, into: P
                 "Write rejected: an AI-proposed document must name a file inside the ledger's folder; "
                 "this one is outside it. Move the file into the ledger's folder first."
             )
+        if refusal := folder_document_refusal(holder, os.path.relpath(entry.filename, holder)):
+            raise protocol.UsageError(f"Write rejected: {refusal}")
 
 
 def _refuse_self_rates(entries: list[Any]) -> None:

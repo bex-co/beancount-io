@@ -32,6 +32,7 @@ from bea_engine.ledger.text import (
     OPENED_ACCOUNTS,
     bea_command,
     checked_operating_currencies,
+    folder_document_refusal,
     ledger_roots,
     new_account_format_problem,
     reports_unused_accounts,
@@ -211,7 +212,7 @@ def answer(
     always skipped. Nothing is written unless `--apply` is set and the preview
     is free of conflicts / unresolved possible duplicates / validation errors.
     """
-    from beancount.core.data import Balance, Close, Open, Price, Transaction
+    from beancount.core.data import Balance, Close, Document, Open, Price, Transaction
 
     from bea_engine import managed_load
     from bea_engine.csv_mapper import (
@@ -788,6 +789,10 @@ def answer(
             directive_key = _directive_key(entry, target.parent)
             if directive_key in other_entries:
                 status, reason = "duplicate", "Identical directive already exists."
+            elif isinstance(entry, Document) and (folder := folder_document_refusal(target.parent, entry.filename)):
+                # The attachment `add document` refuses: Beancount loads a
+                # folder as a document, and the ledger lists it (w1/350).
+                status, reason, match = "invalid", folder, None
             elif isinstance(entry, Balance):
                 # A different assertion for the same day, account and currency is
                 # the conflict `add balance` refuses, judged against what the
