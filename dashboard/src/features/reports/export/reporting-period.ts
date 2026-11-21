@@ -78,7 +78,10 @@ function fiscalPeriod(
   fiscalYearEnd: FiscalYearEnd,
   quarter?: number,
 ): DateRange | null {
-  const monthOfYear = ((fiscalYearEnd.month - 1) % 12) + 1;
+  // Fava's floor-modulo (`(month - 1) % 12 + 1` in Python): `00-31` is a
+  // valid year end meaning December, so month 0 must wrap to 12, which JS's
+  // truncating `%` does not do on its own.
+  const monthOfYear = ((((fiscalYearEnd.month - 1) % 12) + 12) % 12) + 1;
   const yearOffset = Math.floor((fiscalYearEnd.month - 1) / 12);
   const fiscalEnd = utcDate(
     year - 1 + yearOffset,

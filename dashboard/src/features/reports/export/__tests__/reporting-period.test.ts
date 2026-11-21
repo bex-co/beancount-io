@@ -28,6 +28,23 @@ describe("statement reporting period", () => {
     });
   });
 
+  it("resolves a fiscal year against a modulo-wrapped year end", () => {
+    // Fava's `parse_fye_string` accepts `00-31` and reads month 0 as December
+    // of the previous year, so FY2026 is calendar 2025; the backend serves
+    // that `{ month: 0, day: 31 }` straight through. Python's `%` floors, so
+    // the port must floor explicitly for months below 1.
+    expect(parseConcreteTimeFilter("FY2026", { month: 0, day: 31 })).toEqual({
+      startDate: "2025-01-01",
+      endDate: "2025-12-31",
+    });
+    expect(parseConcreteTimeFilter("FY2026-Q1", { month: 0, day: 31 })).toEqual(
+      {
+        startDate: "2025-01-01",
+        endDate: "2025-03-31",
+      },
+    );
+  });
+
   it("runs an unfiltered period statement through its generation day", () => {
     expect(
       resolveReportingPeriod({
