@@ -92,9 +92,11 @@ Compose `/ship` for this one unification. Loop within budget.
   or read both copies (the engine/cli twins from `cli/tests`, for example),
   add a drift guard: a test that fails when the two disagree, by comparing
   the shared constants, patterns or tables directly or by running both over
-  the same inputs. A fix for a drifted twin ships with its guard in the same
-  commit; without one the fix is incomplete. When no test can see both sides,
-  say so in the pair's ledger entry.
+  the same inputs. This holds for twins that agree today too: an unguarded
+  twin is a finding on its own, and its guard ships as a test-only commit
+  even when nothing has drifted. A fix for a drifted twin ships with its guard
+  in the same commit; without one the fix is incomplete. When no test can see
+  both sides, say so in the pair's ledger entry.
 - If unification requires an abstraction more complex than either original
   (config objects, strategy callbacks, mode flags), skip the finding — a
   slightly duplicated simple thing beats a unified complicated one.
