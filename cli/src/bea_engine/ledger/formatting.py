@@ -182,12 +182,16 @@ def render_file(file: Path, widths: tuple[int | None, int | None, int | None]) -
     """The same formatted text for stdout/output as for an in-place rewrite."""
     from beancount.parser import parser
 
-    from bea_engine.amounts import zero_divisor_line
+    from bea_engine.amounts import evaluated_zero_divisor_line, zero_divisor_line
     from bea_engine.query import format_error
 
     text = _universal(sys.stdin.read()) if str(file) == "-" else _read(file)[1]
     name = "stdin" if str(file) == "-" else str(file)
     line = zero_divisor_line(text)
+    if line is None:
+        # A divisor the grammar evaluates, like `100/(2-2)`, crashes the
+        # parser the literal scan cannot see, so refuse it the same way.
+        line = evaluated_zero_divisor_line(text)
     if line is not None:
         errors = [
             f"{name}:{line}: Division by zero in an amount expression; Beancount's parser crashes on a "
