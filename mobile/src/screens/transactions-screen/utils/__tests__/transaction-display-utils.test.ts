@@ -926,6 +926,30 @@ describe("groupToSections", () => {
     expect(sections[0].data[0]).toBe(tx);
   });
 
+  it("finds an Arabic-script payee by its Persian spelling, like every other search", () => {
+    const tx = makeTransaction({ payee: "كافي شاپ" });
+    const other = makeTransaction({ payee: "Stripe" });
+    const sections = groupToSections([tx, other], "کافی");
+    expect(sections.length).toBe(1);
+    expect(sections[0].data[0]).toBe(tx);
+  });
+
+  it("finds full-width text by its ordinary spelling", () => {
+    const tx = makeTransaction({ payee: "ＡＭＡＺＯＮ" });
+    const other = makeTransaction({ payee: "Stripe" });
+    const sections = groupToSections([tx, other], "amazon");
+    expect(sections.length).toBe(1);
+    expect(sections[0].data[0]).toBe(tx);
+  });
+
+  it("matches a Turkish capital İ by its lower-case spelling", () => {
+    const tx = makeTransaction({ payee: "İşBank ATM" });
+    const other = makeTransaction({ payee: "Stripe" });
+    const sections = groupToSections([tx, other], "iş");
+    expect(sections.length).toBe(1);
+    expect(sections[0].data[0]).toBe(tx);
+  });
+
   it("returns all entries when searchQuery is empty", () => {
     const entries = [
       makeTransaction({ date: "2026-07-01" }),
