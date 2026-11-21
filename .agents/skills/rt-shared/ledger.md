@@ -123,6 +123,10 @@ newest first.
 
 ### Skipped
 
+- 2026-11-21 cli `bea_engine/importing.py:answer` row-classification chain — ~300-line duplicate/twin/counterpart dispatch interleaved with price/balance/directive handling and preview assembly; every branch pins a past w5/xxx fix and shares mutable loop state (`identities`, `dated`, `batch_rows`, `texts`/`included`); splitting it is single-use helpers plus re-threaded state, below the value bar.
+- 2026-11-21 cli `report.py:_register` (194 lines, w1/337 flow branch) and `_cash_flow` re-check (w1/m49 refactor, w5/1057 fix landed since the 2026-11-19 skip) — still sequential stages with early exits, every branch pins a past fix; extracting further is single-use helpers, below the value bar.
+- 2026-11-21 mobile `budget-screen/selectors/budget-selectors.ts` (`budgetForIntervalExact` fast-path + day walk) — backfill/governing/effective-from branches each pin a past w21/xxx verdict fix (301/622/762); factored small helpers already, no interleaving to split.
+
 - 2026-11-19 cli `report.py` `_cash_flow` — 241 lines but every branch pins a past w5/10xx/11xx cash-flow fix; extracting it further is single-use helpers, below the value bar.
 - 2026-11-19 cli `ledger/adding.py` `_transaction` — 200 lines of sequential validation gates with early refusals, no interleaved concerns to split.
 - 2026-11-19 cli `ledger/updating.py` `_transactions` preview/apply branches — shared steps already live in `_plan_rows`/`_validate_plans`/`_row_payload` helpers; the two-phase shape is deliberate, not drift.

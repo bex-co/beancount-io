@@ -2675,6 +2675,19 @@ def validate_candidate(
             ]
         return on_disk_accounts
 
+    def _before_errors() -> list[Any]:
+        # The ledger as it stands, loaded once for every new-vs-pre-existing
+        # judgment below. Each judgment used to load it with its own copy of
+        # this block; loads that disagree misclassify an error either way, so
+        # there is one baseline, read here.
+        nonlocal before_errors
+        if before_errors is None:
+            root = snapshot.root if snapshot else file
+            before_errors = (
+                managed_load.load_file(root, snapshot=snapshot, check_types=True)[1] if root.exists() else []
+            )
+        return before_errors
+
     # What the per-error hints below look up, each built on first use and then
     # shared (w5/124). One mis-dated `open` makes thousands of errors, and a
     # pass over the whole ledger for each took a refusal from seconds to
@@ -2759,13 +2772,8 @@ def validate_candidate(
             # Keep that real location, but identify this write as the trigger
             # only when the error was absent before it (w5/666).
             if existing_plugin_errors is None:
-                if before_errors is None:
-                    root = snapshot.root if snapshot else file
-                    before_errors = (
-                        managed_load.load_file(root, snapshot=snapshot, check_types=True)[1] if root.exists() else []
-                    )
                 existing_plugin_errors = _preexisting_errors(
-                    errors, before_errors, filenames, original_lines, _own_lifecycle_accounts
+                    errors, _before_errors(), filenames, original_lines, _own_lifecycle_accounts
                 )
             if index not in existing_plugin_errors:
                 hints.append(f"The proposed append (not written) triggers this error from plugin {plugin}.")
@@ -2775,14 +2783,9 @@ def validate_candidate(
             # already lacked; the ledger before the write can (w5/398).
             message = message.removeprefix(f"{metadata.get('filename')}:{lineno}: ")
             if missing_before is None:
-                if before_errors is None:
-                    root = snapshot.root if snapshot else file
-                    before_errors = (
-                        managed_load.load_file(root, snapshot=snapshot, check_types=True)[1] if root.exists() else []
-                    )
                 missing_before = {
                     found.group(1)
-                    for before in before_errors
+                    for before in _before_errors()
                     if _unanchored(before) and (found := _MISSING_COMMODITY.search(getattr(before, "message", "")))
                 }
             if missing.group(1) not in missing_before:
@@ -3213,14 +3216,9 @@ def validate_candidate(
     new_records = [record for record, is_new in zip(records, introduced, strict=True) if is_new]
     if errors and (not allow_errors or syntax_errors or invalid_pad_accounts or new_records):
         if not allow_errors and type_errors and not (syntax_errors or invalid_pad_accounts):
-            if before_errors is None:
-                root = snapshot.root if snapshot else file
-                before_errors = (
-                    managed_load.load_file(root, snapshot=snapshot, check_types=True)[1] if root.exists() else []
-                )
-            if _preexisting_errors(type_errors, before_errors, filenames, original_lines, _own_lifecycle_accounts):
+            if _preexisting_errors(type_errors, _before_errors(), filenames, original_lines, _own_lifecycle_accounts):
                 raise CandidateRejected(
-                    f"The ledger already has {len(before_errors)} error(s); nothing was written. "
+                    f"The ledger already has {len(_before_errors())} error(s); nothing was written. "
                     "Pass --allow-errors to tolerate existing errors; new errors are still refused.",
                     details=messages,
                     locations=locations,
@@ -3230,13 +3228,8 @@ def validate_candidate(
         # An error on an appended line is the write's own; only books whose
         # every error sits elsewhere are worth a load of the version before.
         if not allow_errors and not any_appended:
-            if before_errors is None:
-                root = snapshot.root if snapshot else file
-                before_errors = (
-                    managed_load.load_file(root, snapshot=snapshot, check_types=True)[1] if root.exists() else []
-                )
             if len(
-                _preexisting_errors(errors, before_errors, filenames, original_lines, _own_lifecycle_accounts)
+                _preexisting_errors(errors, _before_errors(), filenames, original_lines, _own_lifecycle_accounts)
             ) == len(errors):
                 # The write adds nothing wrong; the books were already broken,
                 # which is the case --allow-errors exists for, unless a syntax
