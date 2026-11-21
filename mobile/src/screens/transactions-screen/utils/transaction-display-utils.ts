@@ -1,4 +1,5 @@
 import { formatLedgerDate } from "../../../common/date-format";
+import { foldForSearch } from "../../../common/search-fold";
 import { getAccountRoot, type RootNames } from "../../../common/account-root";
 import {
   currencyMinorUnits,
@@ -544,17 +545,20 @@ export const groupToSections = (
   searchQuery = "",
   locale = "en",
 ): JournalSection[] => {
-  const q = searchQuery.toLowerCase().trim();
+  // Folded on both sides, as every other free-text search in the app is: a
+  // payee typed with an Arabic ي, a full-width Ａ or a Turkish İ is found by
+  // the ordinary spelling, and the other way round.
+  const q = foldForSearch(searchQuery).trim();
   const filtered = q
     ? entries.filter((entry) => {
         if (isJournalTransaction(entry)) {
           return (
-            entry.payee?.toLowerCase().includes(q) ||
-            entry.narration?.toLowerCase().includes(q) ||
-            entry.postings.some((p) => p.account.toLowerCase().includes(q))
+            foldForSearch(entry.payee ?? "").includes(q) ||
+            foldForSearch(entry.narration ?? "").includes(q) ||
+            entry.postings.some((p) => foldForSearch(p.account).includes(q))
           );
         }
-        return entry.directive_type.toLowerCase().includes(q);
+        return foldForSearch(entry.directive_type).includes(q);
       })
     : entries;
 
