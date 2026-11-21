@@ -45,7 +45,7 @@ newest first.
 
 ### Deferred
 
-- 2026-11-21 unguarded engine/frontend twin patterns (`_DESCRIPTOR`, `same_file`/`not_a_load_cache`) — `regex_reads_otherwise` guarded this run (`cli/tests/test_twin_regex_reads_otherwise.py`); `include_glob` + `expand_path` already guarded (see Skipped); guard the remaining pairs next.
+- 2026-11-21 unguarded engine/frontend twin pattern (`same_file`/`not_a_load_cache`) — `regex_reads_otherwise` and `_DESCRIPTOR` guarded this run (`cli/tests/test_twin_regex_reads_otherwise.py`, `cli/tests/test_twin_descriptor_paths.py`); `include_glob` + `expand_path` already guarded (see Skipped); guard the remaining pair next.
 
 ### Skipped
 
