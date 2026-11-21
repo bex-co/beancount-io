@@ -59,6 +59,8 @@ export function convertedSalePayload(conversion: ConversionOption) {
         cashLeaf("Assets:Brokerage:Cash", { USD: "18295.35" }),
         cashLeaf("Assets:Bank:Checking", { USD: "10000" }),
       ]),
+      liabilitiesHierarchyData: hierarchyNode("Liabilities", {}),
+      equityHierarchyData: hierarchyNode("Equity", {}),
     },
     getLedgerAccountDirectives: [],
   };
@@ -86,6 +88,8 @@ export function cashTransferPayload() {
         cashLeaf("Assets:Bank:Checking", { USD: "10000" }),
         cashLeaf("Assets:Brokerage:Cash", { USD: "50000" }),
       ]),
+      liabilitiesHierarchyData: hierarchyNode("Liabilities", {}),
+      equityHierarchyData: hierarchyNode("Equity", {}),
     },
     getLedgerAccountDirectives: [],
   };

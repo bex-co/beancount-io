@@ -82,6 +82,18 @@ const noActivity = {
       balanceChildren: {},
       children: [],
     },
+    liabilitiesHierarchyData: {
+      account: "Liabilities",
+      balance: {},
+      balanceChildren: {},
+      children: [],
+    },
+    equityHierarchyData: {
+      account: "Equity",
+      balance: {},
+      balanceChildren: {},
+      children: [],
+    },
   },
 };
 

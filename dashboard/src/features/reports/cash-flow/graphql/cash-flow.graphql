@@ -115,5 +115,26 @@ query GetLedgerCashFlow(
       cost
       costChildren
     }
+    # Declared cash is honored under any of the five roots (w5/1057), so the
+    # closing cash set also reads the other stock-root hierarchies the
+    # balance sheet serves. Income/Expenses have no hierarchy on this field.
+    liabilitiesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    equityHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
   }
 }

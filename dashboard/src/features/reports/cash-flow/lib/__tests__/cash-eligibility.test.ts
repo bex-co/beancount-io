@@ -73,6 +73,34 @@ describe("cashAccountMembership", () => {
       cashAccountMembership(meta(["Assets:House", "Equity:Opening"])),
     ).toEqual([]);
   });
+
+  it("honors a declared cash role outside the Assets root (w5/1057)", () => {
+    // ADR024: a valid `cash-flow-role: "cash"` makes an account under any of
+    // the five roots a CCE member. The engine follows it since d3c2c51dc; the
+    // activity filter reads this membership, so an excluded overdraft drops
+    // its transactions' other legs from the activity reads too.
+    const accounts = meta(
+      ["Assets:Cash", "Liabilities:Overdraft", "Expenses:Food"],
+      { "Liabilities:Overdraft": { "cash-flow-role": "cash" } },
+    );
+    expect(cashAccountMembership(accounts)).toEqual([
+      "Assets:Cash",
+      "Liabilities:Overdraft",
+    ]);
+  });
+
+  it("keeps declared-cash inheritance inside one non-Assets subtree", () => {
+    // A declared-cash ancestor carries down, exactly as under Assets: the
+    // leaf is cash without its own declaration.
+    const accounts = meta(
+      ["Liabilities:Overdraft", "Liabilities:Overdraft:Fees"],
+      { "Liabilities:Overdraft": { "cash-flow-role": "cash" } },
+    );
+    expect(cashAccountMembership(accounts)).toEqual([
+      "Liabilities:Overdraft",
+      "Liabilities:Overdraft:Fees",
+    ]);
+  });
 });
 
 describe("cashActivityFilter", () => {

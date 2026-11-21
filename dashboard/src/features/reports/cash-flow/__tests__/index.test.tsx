@@ -116,6 +116,8 @@ const emptyPayload = {
   equityIntervals: [],
   getLedgerBalanceSheet: {
     assetsHierarchyData: hierarchyNode("Assets", {}),
+    liabilitiesHierarchyData: hierarchyNode("Liabilities", {}),
+    equityHierarchyData: hierarchyNode("Equity", {}),
   },
   getLedgerAccountDirectives: [],
 };
@@ -148,6 +150,8 @@ const populatedPayload = {
     assetsHierarchyData: hierarchyNode("Assets", { USD: "3500.00" }, [
       hierarchyNode("Assets:Bank:Checking", { USD: "3500.00" }),
     ]),
+    liabilitiesHierarchyData: hierarchyNode("Liabilities", {}),
+    equityHierarchyData: hierarchyNode("Equity", {}),
   },
   getLedgerAccountDirectives: [
     {
@@ -261,6 +265,8 @@ describe("LedgerCashFlowPage", () => {
           hierarchyNode("Assets:Bank:Checking", { USD: "3500.00" }),
           hierarchyNode("Assets:Bank:CD", { USD: "1500.00" }),
         ]),
+        liabilitiesHierarchyData: hierarchyNode("Liabilities", {}),
+        equityHierarchyData: hierarchyNode("Equity", {}),
       },
     };
     // The declaration rides on the directives the page already fetches.
@@ -314,6 +320,117 @@ describe("LedgerCashFlowPage", () => {
     expect(
       props.cashAccountRows.map((row: { account: string }) => row.account),
     ).toEqual(["Assets:Bank:Checking"]);
+  });
+
+  it("counts a declared-cash overdraft in closing cash, not in opening (w5/1057)", () => {
+    // The engine honors a declared `cash-flow-role: "cash"` under any of the
+    // five roots (d3c2c51dc); ADR024 names this page as still differing. The
+    // overdraft's -250 must sit in closing, leaving opening at zero — never
+    // as an invented +250 opening — and the overdraft itself is never a row.
+    const payload = {
+      incomeIntervals: [
+        {
+          date: "2024-01-31",
+          balance: { USD: "-100.00" },
+          accountBalances: { "Income:Salary": { USD: "-100.00" } },
+        },
+      ],
+      expenseIntervals: [
+        {
+          date: "2024-01-31",
+          balance: { USD: "50.00" },
+          accountBalances: { "Expenses:Food": { USD: "50.00" } },
+        },
+      ],
+      assetIntervals: [
+        {
+          date: "2024-01-31",
+          balance: { USD: "1100.00" },
+          accountBalances: { "Assets:Cash": { USD: "1100.00" } },
+        },
+      ],
+      liabilityIntervals: [
+        {
+          date: "2024-01-31",
+          balance: { USD: "-250.00" },
+          accountBalances: { "Liabilities:Overdraft": { USD: "-250.00" } },
+        },
+      ],
+      equityIntervals: [
+        {
+          date: "2024-01-31",
+          balance: { USD: "-800.00" },
+          accountBalances: { "Equity:Opening": { USD: "-800.00" } },
+        },
+      ],
+      getLedgerBalanceSheet: {
+        assetsHierarchyData: hierarchyNode("Assets", { USD: "1100.00" }, [
+          hierarchyNode("Assets:Cash", { USD: "1100.00" }),
+        ]),
+        liabilitiesHierarchyData: hierarchyNode(
+          "Liabilities",
+          { USD: "-250.00" },
+          [hierarchyNode("Liabilities:Overdraft", { USD: "-250.00" })],
+        ),
+        equityHierarchyData: hierarchyNode("Equity", { USD: "-800.00" }, [
+          hierarchyNode("Equity:Opening", { USD: "-800.00" }),
+        ]),
+      },
+      getLedgerAccountDirectives: [
+        "Assets:Cash",
+        "Liabilities:Overdraft",
+        "Income:Salary",
+        "Expenses:Food",
+        "Equity:Opening",
+      ].map((account) => ({
+        account,
+        openedAt: "2024-01-01",
+        closedAt: null,
+        balance: {},
+        entryCount: 1,
+        entryHash: "abc",
+        closeEntryHash: null,
+        ...(account === "Liabilities:Overdraft"
+          ? { meta: { "cash-flow-role": "cash" } }
+          : {}),
+      })),
+    };
+    mockQuery(payload);
+
+    render(<LedgerCashFlowPage />);
+
+    expect(screen.getByText("cash-flow-content")).toBeInTheDocument();
+    const props = captureProps.mock.calls.at(-1)[0];
+
+    // Salary inflow +100, food outflow -50 → operating +50; the opening
+    // balance transfer reads as a +800 financing inflow.
+    expect(
+      props.statement.rows.map(
+        (row: { accountPath: string; activity: string; amounts: unknown }) => [
+          row.accountPath,
+          row.activity,
+          row.amounts,
+        ],
+      ),
+    ).toEqual([
+      ["Income:Salary", "operating", { USD: "100.00" }],
+      ["Expenses:Food", "operating", { USD: "-50.00" }],
+      ["Equity:Opening", "financing", { USD: "800.00" }],
+    ]);
+    expect(props.statement.totals.operating).toEqual({ USD: "50.00" });
+    expect(props.statement.netChange).toEqual({ USD: "850.00" });
+    // 1100 cash - 250 overdraft closes at 850 with nothing before it.
+    expect(props.statement.closing).toEqual({ USD: "850.00" });
+    expect(props.statement.opening).toEqual({ USD: "0.00" });
+
+    expect(
+      props.closingCashAccounts.map(
+        (snapshot: { account: string }) => snapshot.account,
+      ),
+    ).toEqual(["Assets:Cash", "Liabilities:Overdraft"]);
+    expect(
+      props.cashAccountRows.map((row: { account: string }) => row.account),
+    ).toEqual(["Assets:Cash", "Liabilities:Overdraft"]);
   });
 });
 

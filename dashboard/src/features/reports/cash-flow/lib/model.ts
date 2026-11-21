@@ -244,6 +244,10 @@ export function cashAccountMembership(
  * keeps it in the closing balance. A leaf that explicitly declares a
  * non-cash role resolves non-cash here too, so the declaration still pulls
  * it out of the subtree and into its activity.
+ *
+ * A declared `cash-flow-role: "cash"` counts under any of the five roots
+ * (w5/1057) — an overdraft declared cash is cash — while the name patterns
+ * only ever match Assets. Accounts outside the five roots stay out.
  */
 export function isCashAccountByMembership(
   account: string,
@@ -251,7 +255,8 @@ export function isCashAccountByMembership(
   roots?: AccountRoots,
 ): boolean {
   const parts = account.split(":");
-  if (accountAsRootType(parts[0]!, roots) !== "Assets") return false;
+  const root = accountAsRootType(parts[0]!, roots) as CashFlowRoot;
+  if ((CASH_FLOW_ACTIVITY_BY_ROOT[root] ?? null) === null) return false;
   let source: CashSource = null;
   for (let depth = 2; depth <= parts.length; depth += 1) {
     const name = parts.slice(0, depth).join(":");

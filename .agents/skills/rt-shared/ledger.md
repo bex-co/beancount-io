@@ -93,10 +93,13 @@ newest first.
 
 ### Deferred
 
+- 2026-11-21 dashboard declared `cash-flow-role: "cash"` under Income/Expenses roots — `isCashAccountByMembership`/rows follow the five-root gate, but `BalanceSheetData` serves no income/expense hierarchy so there is no closing snapshot (liabilities/equity added this run); engine accumulates them. Needs a server field or a scope call; still open.
 - 2026-11-20 cli `test_interrupt_contract.py` (3 tests) + `test_native_interrupt_is_silent.py::test_ctrl_c_during_a_forwarded_program_exits_130_silently` (2 params) — deterministic 10/10 FAIL in this sandbox, green in CI: sandbox python is libedit-readline, so ETX during `input()` raises KeyboardInterrupt in-process with no line-discipline `^C` echo (probe: exit by SIGINT, no `^C` on screen) while `_noise()` pins the echo; the exit-130 half of the USAGE.md carve-out holds — needs an intent call on whether the echo pin is backend-specific over-pinning (w3/388, w5/273).
 
 ### Skipped
 
+- 2026-11-21 dashboard `series-util`/`calendar-date` month windows + carry/forward-fill + export/model exact-decimal core — read against tests and docblocks; no divergence.
+- 2026-11-21 dashboard cash-flow `statement-tree`/`merge-intervals`/`role-resolver`/`account-roots` + overview categorizer — read; agree with the engine post-fix, no separate divergence.
 - 2026-11-21 cli zero-divisor twin agreement (`bea_engine/amounts` vs `cli/amounts` `_Expression`/`_divides_by_zero`/`_ZERO_DIVISOR`/`_NOT_ARITHMETIC`) — bodies identical; 33-spelling fuzz vs beancount 3.2.3 oracle: no missed crash; the 4 evaluator-refuses divergences (`.0`, `0_0`, `//0`) are all inputs beancount rejects or SystemErrors on, and the literal scan already refuses them — message-only, nothing valid diverges.
 - 2026-11-21 mobile recurrence trio (`detect-recurrence`/`payee-series`/`resolve-recurring` + `use-payee-recurrence` wiring) — 61-probe battery (leap clamping, lapse cap, grace/lapse edges, quarter-end anchor, four-weekly guard, biweekly-with-15, semimonthly skip, refund tie, currency switch, weekend shift, resolver truth table) all agree with documented intent; no divergence.
 - 2026-11-21 mobile valuation basis pair (`valueBasisOf` operating-currency read vs `selectValuation` cost-currency pricing) — agree on all reachable inputs; w21/124 + w21/426 tests pin the foreign-cost-lot behavior; module-doc intro line is loose wording, not a behavior bug.
@@ -115,7 +118,6 @@ newest first.
 - 2026-11-18 w5/1130 BQL `use-query-history.ts` — FIXED: history keyed per signed-in user id (`beancount-query-history.<id>`), signed-out visitors get `beancount-query-history:signed-out`, the unscoped legacy bucket is dropped on mount, and logout removes every stored history; BQL page passes `userProfile?.id`.
 - 2026-11-18 `mobile/src/common/map-in-batches.ts` `size <= 0` infinite loop — sole caller passes a positive `BUDGET_PANEL_BATCH`; unreachable, defensive-only, below the bar.
 - 2026-11-18 `mobile/src/common/{account-frecency,balance-display,balance-util,ledger-conflict,ledger-owner-rename}.ts` — bucket boundaries, units/money selection, `resolveCurrencyBalance` EUR-ledger pin (w21/058), conflict whole-word match (w21/387), owner-prefix rewrite all match their documented intent; examined, no divergence.
-- 2026-11-18 `mobile/src/common/suggestion-utils.ts` deriveTwoPostingSuggestions oldest-direction tie-break — journal is newest-first (ledger-journal-service), so w21/833's purchase-wins-tie holds; examined, no divergence.
 
 ## rt-logic-simplifier
 

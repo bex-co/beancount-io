@@ -80,6 +80,8 @@ function noActivity(root: string) {
           node(account, balance),
         ),
       },
+      liabilitiesHierarchyData: node("Liabilities", {}),
+      equityHierarchyData: node("Equity", {}),
     },
   };
 }
