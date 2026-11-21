@@ -97,6 +97,9 @@ newest first.
 
 ### Skipped
 
+- 2026-11-20 dashboard `reporting-period.ts` vs vendored `fava/util/date.py` — parsed every concrete form, range splits, week-53 guard, Feb-28 leap rule, fiscal quarter gates on both sides; twins agree, dashboard returns null where Fava raises (invalid dates) by deliberate robustness; examined, no divergence.
+- 2026-11-20 mobile account-journal paging (`mergeAccountJournalItems`/`hasMoreAccountJournal`/`accountJournalPageOverlapped` + screen refetch interplay) — modeled blind-append, dedup, overlap-refetch and stop-paging transitions; every branch pinned by suites, refetch terminates; examined, no divergence.
+- 2026-11-20 dashboard CSV exporters (statement `statementToCSV`, BQL `tableToCSV`, holdings) — all route through the shared `rowsToCSV`/`escapeCSVField` formula neutralization; agree; examined, no divergence.
 - 2026-11-20 dashboard Overview stepped month lost on Back/reload (w5/1148) — read the item and the `use-overview-month` state-vs-URL split; persisting the month in the URL is a navigation-design change on top of the w5/1147 link fix, out of this run's budget after three shipped findings; still open.
 - 2026-11-20 cli `bea_engine`/`cli` mirror pairs (`amounts` twin regexes `_ZERO_DIVISOR`/`_NOT_ARITHMETIC`/`_EXPONENT_TOKEN`/`_divides_by_zero`, `csv_mapper`/`include_glob`/`paths` splits) — twin points textually identical, remaining splits deliberate engine/frontend adaptations; examined, no drift since the 2026-11-18 sweep.
 - 2026-11-20 mobile `plural.ts` builtin-vs-`Intl` rules, `decimal-number.ts` vs dashboard twin, `number-locale`/`number-utils`/`currency-util` separator/position agreement — pinned by the 0–1000 agreement battery, the 138-case differential fuzz, and the w21/882 currencyAfter match; probed promotion/residue edges hold; examined, no divergence.

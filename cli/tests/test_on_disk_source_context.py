@@ -89,6 +89,8 @@ def _run(
     on_disk: bool = False,
     json_output: bool = True,
     limit: int | None = None,
+    details: bool = False,
+    plugin: str = "source_mirror",
 ) -> subprocess.CompletedProcess[str]:
     env = {
         key: value
@@ -105,7 +107,7 @@ def _run(
         TERM="dumb",
         NO_COLOR="1",
     )
-    marker = tmp_path / "plugins" / "source_mirror.runs"
+    marker = tmp_path / "plugins" / f"{plugin}.runs"
     runs = marker.read_text().splitlines() if marker.exists() else []
     result = subprocess.run(
         [
@@ -120,6 +122,7 @@ def _run(
             *(["--allow-errors"] if kind == "pad" else []),
             *(["--on-disk"] if on_disk else []),
             *(["--limit", str(limit)] if limit is not None else []),
+            *(["--details"] if details else []),
         ],
         env=env,
         cwd=cwd,
@@ -135,9 +138,16 @@ def _run(
 
 
 def _rows(
-    tmp_path: Path, cwd: Path, root: Path, kind: str, *, on_disk: bool = False, limit: int | None = None
+    tmp_path: Path,
+    cwd: Path,
+    root: Path,
+    kind: str,
+    *,
+    on_disk: bool = False,
+    limit: int | None = None,
+    plugin: str = "source_mirror",
 ) -> list[dict[str, Any]]:
-    result = _run(tmp_path, cwd, root, kind, on_disk=on_disk, limit=limit)
+    result = _run(tmp_path, cwd, root, kind, on_disk=on_disk, limit=limit, plugin=plugin)
     return list(json.loads(result.stdout)["data"])
 
 
@@ -231,6 +241,86 @@ def test_note_tags_metadata_and_unicode_context_survive_the_provenance_parse(
     assert transaction["meta"]["source"] == "travel", transaction
     assert all("generated" not in row for row in on_disk)
     assert _snapshot(root) == before
+
+
+ZERO_LINE_PLUGIN = """\
+from pathlib import Path
+
+from beancount.core import data
+
+__plugins__ = ["zero_line"]
+
+
+def zero_line(entries, options_map):
+    with Path(__file__).with_suffix(".runs").open("a") as marker:
+        marker.write("run\\n")
+    out = list(entries)
+    for entry in entries:
+        if isinstance(entry, data.Transaction):
+            meta = dict(entry.meta)
+            # A synthesized entry points at no line, as Beancount's own loader
+            # stamps synthesized entries with line 0.
+            meta["lineno"] = 0
+            out.append(
+                data.Transaction(
+                    meta,
+                    entry.date,
+                    entry.flag,
+                    entry.payee,
+                    (entry.narration or "") + " (synth)",
+                    entry.tags,
+                    entry.links,
+                    entry.postings,
+                )
+            )
+            break
+    return out, []
+"""
+
+
+def _zero_line_books(tmp_path: Path) -> Path:
+    plugins = tmp_path / "plugins"
+    plugins.mkdir()
+    (plugins / "zero_line.py").write_text(ZERO_LINE_PLUGIN, encoding="utf-8")
+    root = tmp_path / "main.bean"
+    root.write_text(
+        'plugin "zero_line"\n'
+        "2026-01-01 open Assets:Cash USD\n"
+        "2026-01-01 open Expenses:Food USD\n"
+        '2026-01-05 * "lunch"\n'
+        "  Expenses:Food  5.00 USD\n"
+        "  Assets:Cash  -5.00 USD\n",
+        encoding="utf-8",
+    )
+    return root
+
+
+def test_a_plugin_made_transaction_names_no_written_location(tmp_path: Path) -> None:
+    """`list transaction` gives a line-0 transaction no source, like `list document` (w1/342).
+
+    The header read its meta line directly while `entry_generated` already
+    treated below line 1 as no location, so JSON carried
+    `"source": {"lineno": 0}` and `--details` printed a `main.bean:0` comment.
+    The row now carries `source: null` with the `generated` marker, and the
+    written transaction keeps its `file:line`.
+    """
+    root = _zero_line_books(tmp_path)
+
+    rows = _rows(tmp_path, tmp_path, root, "transaction", plugin="zero_line")
+
+    assert [(row["narration"], row["source"]) for row in rows] == [
+        ("lunch", {"filename": str(root), "lineno": 4}),
+        ("lunch (synth)", None),
+    ]
+    assert [bool(row.get("generated")) for row in rows] == [False, True]
+
+    table = _run(tmp_path, tmp_path, root, "transaction", json_output=False, plugin="zero_line")
+    assert ":0" not in table.stdout
+    assert table.stdout.count("generated") == 1, table.stdout
+
+    details = _run(tmp_path, tmp_path, root, "transaction", json_output=False, details=True, plugin="zero_line")
+    assert ":0" not in details.stdout, details.stdout
+    assert f"; {root}:4\n" in details.stdout, details.stdout
 
 
 def test_human_listing_marks_the_copy_and_on_disk_omits_the_source_column(tmp_path: Path) -> None:

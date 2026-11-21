@@ -676,7 +676,10 @@ def _to_transaction(entry: Any, shared: frozenset[tuple[str, int]] = frozenset()
         tags=sorted(entry.tags),
         links=sorted(entry.links),
         meta=metadata_to_json(entry.meta),
-        source=SourceLocation(filename=entry.meta["filename"], lineno=entry.meta["lineno"]),
+        # A plugin-made transaction carries line 0, which is no line (w1/342):
+        # read the location the same way the document listing does, so `source`
+        # is null and the generated marker carries the provenance instead.
+        source=_source_of(entry),
         generated=entry_generated(entry, "transaction", shared),
     )
 
