@@ -100,7 +100,6 @@
 
 ## Inbox
 
-- [653](./blocked/653.md) — Production dashboard has not been redeployed since before w2/134 (≤1h) ← follow-up from routine dashboard-qa, 2026-11-17 — **blocked:** owner deploys the dashboard at or after `c97ffa8af`
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 
