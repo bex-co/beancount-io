@@ -121,10 +121,12 @@ def _relative(path: Path, folder: Path) -> str:
 def _plugin(
     name: str, location: tuple[str, int] | None, failure: tuple[bool, str] | None, folder: Path
 ) -> dict[str, Any]:
+    from bea_engine.query import module_beside
+
     top = name.split(".", 1)[0]
     if top == "beancount":
         source = "beancount"
-    elif _beside_ledger(top, folder) or _loaded_from(top, folder):
+    elif module_beside(top, folder) or _loaded_from(top, folder):
         source = "beside-ledger"
     else:
         source = "package"
@@ -137,11 +139,6 @@ def _plugin(
         "error": failure[1] if failure is not None else None,
         "failed_while_running": failure is not None and failure[0],
     }
-
-
-def _beside_ledger(top: str, folder: Path) -> bool:
-    """Whether `folder` holds a module or package named `top`."""
-    return (folder / f"{top}.py").is_file() or (folder / top / "__init__.py").is_file()
 
 
 def _loaded_from(top: str, folder: Path) -> bool:

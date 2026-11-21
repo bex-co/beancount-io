@@ -629,7 +629,9 @@ item at its `file:line` with one next step:
 
 - a plugin under `beancount.` that this Beancount does not ship (Beancount 2
   plugins Beancount 3 dropped): remove or replace the line;
-- a plugin module in the ledger's folder: run bea there with `PYTHONPATH=.`;
+- a plugin module in the ledger's folder: run bea there with `PYTHONPATH=.`
+  (`bea check` and every other read name the same module, and the
+  `option "insert_pythonpath" "TRUE"` alternative, on the plugin's line);
 - a plugin from a package the managed engine does not include: no `bea`
   command installs third-party packages, so the plugin does not run under
   bea while the rest of the ledger loads;
@@ -681,7 +683,12 @@ bea query                  # needs a terminal; exits 2 without one
 ```
 
 `bea check` reports a `plugin` line that cannot be imported as `FILE:LINE:
-Cannot import plugin "NAME": CAUSE`, and one whose plugin raises while running
+Cannot import plugin "NAME": CAUSE` followed by the next step. That step is
+to check the spelling and the installation, unless the missing module is a
+`NAME.py` or `NAME/__init__.py` in the ledger's folder: bea does not import
+from there, so the line says so and names both fixes, adding
+`option "insert_pythonpath" "TRUE"` to that file or running bea with
+`PYTHONPATH` set to the folder. It reports a plugin that raises while running
 as `FILE:LINE: Plugin "NAME" failed while running: CAUSE` (with the
 `plugin "NAME" "CONFIG"` form named when the plugin needs a configuration
 string) — the lines `--json check` and every other read give — instead of

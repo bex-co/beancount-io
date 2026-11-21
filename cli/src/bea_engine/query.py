@@ -3708,18 +3708,45 @@ def _plugin_message(message: str, ledger_file: Path | str | None, source: Any) -
         return None
     kind, name, traceback_text = match.groups()
     cause = _exception_summary(traceback_text)
+    location = plugin_directive(ledger_file, name, config)
     if kind == "importing":
-        text = f'Cannot import plugin "{name}": {cause}. Check the name is spelled right and the plugin is installed.'
+        text = f'Cannot import plugin "{name}": {cause}. {_import_hint(name, cause, location, ledger_file)}'
     else:
         text = f'Plugin "{name}" failed while running: {cause}.'
         if "required positional argument: 'config'" in cause:
             # Bundled plugins such as currency_accounts take a configuration
             # string, and the raw TypeError never said so (w5/400).
             text += f' This plugin needs a configuration string: plugin "{name}" "CONFIG".'
-    location = plugin_directive(ledger_file, name, config)
     if location is None:
         return f"<ledger>:0: {text}"
     return f"{location[0]}:{location[1]}: {text}"
+
+
+def _import_hint(name: str, cause: str, location: tuple[str, int] | None, ledger_file: Path | str | None) -> str:
+    """The next step for a plugin that would not import.
+
+    A module kept beside the ledger is spelled right and present, yet the
+    engine never imports from the ledger's folder (w1/098), so checking the
+    spelling and the installation leads nowhere (w1/344). It loads once that
+    folder is on the module path, through the option or the environment.
+    """
+    declared = location[0] if location is not None else ledger_file
+    top = name.split(".", 1)[0]
+    if declared is None or f"No module named '{top}'" not in cause:
+        return "Check the name is spelled right and the plugin is installed."
+    folder = Path(os.path.abspath(declared)).parent
+    if not module_beside(top, folder):
+        return "Check the name is spelled right and the plugin is installed."
+    return (
+        f"The module {top} is in the ledger's folder, and bea does not import from there: "
+        f'add option "insert_pythonpath" "TRUE" to {Path(declared).name}, '
+        f"or run bea with PYTHONPATH={shlex.quote(str(folder))}."
+    )
+
+
+def module_beside(top: str, folder: Path) -> bool:
+    """Whether `folder` holds a module or package named `top`."""
+    return (folder / f"{top}.py").is_file() or (folder / top / "__init__.py").is_file()
 
 
 _MISSING_INCLUDE = re.compile(r'File glob "(?P<pattern>.*)" does not match any files\Z', re.DOTALL)
