@@ -191,10 +191,6 @@ def _prepare_new_file(file: Path) -> Path:
     return file
 
 
-#: Preset accounts opened for any commodity, because they hold instrument units.
-_INSTRUMENT_ACCOUNTS = frozenset({"Assets:Holdings"})
-
-
 def module_accounts(
     catalog: dict[str, Any], preset: str, modules: list[str], property_name: str | None
 ) -> dict[str, dict[str, Any]]:
@@ -245,10 +241,11 @@ def answer_preset(
 ) -> dict[str, Any]:
     """Write a new ledger from a setup-catalog preset (ADR026).
 
-    Mirrors the hosted builder: preset accounts open with no balance claim,
-    an explicit opening balance posts the day before the history boundary
-    against Equity:OpeningBalances and asserts on the boundary, and the
-    accounts open the day before the boundary when such a posting exists.
+    Mirrors the hosted builder: preset accounts open with no balance claim
+    and no currency constraint, an explicit opening balance posts the day
+    before the history boundary against Equity:OpeningBalances and asserts on
+    the boundary, and the accounts open the day before the boundary when such
+    a posting exists.
     """
     file = _prepare_new_file(file)
 
@@ -300,16 +297,13 @@ def answer_preset(
         opened.append("Equity:OpeningBalances")
         opened.sort()
     for account in opened:
-        # The portfolio preset's holdings hold instruments (HOOL, BTC), not
-        # only cash: restricted to the operating currency, its first share
-        # purchase was refused (w5/957).
-        # A holdings account (the investments module's brokerage) takes any
-        # commodity too; a catalog booking method follows the currencies.
-        catalog_account = catalog_accounts.get(account, {})
-        method = catalog_account.get("booking")
-        holds_instruments = account in _INSTRUMENT_ACCOUNTS or catalog_account.get("kind") == "holdings"
-        restriction = "" if holds_instruments else f" {currency}"
-        lines.append(f"{open_day} open {account}{restriction}" + (f' "{method}"' if method else ""))
+        # No account takes a constraint from the operating currency, which
+        # "neither converts amounts nor prohibits other currencies" (ADR026),
+        # as in the hosted builder: restricted to it, Portfolio's holdings
+        # refused their first share purchase (w5/957) and a euro lunch in a
+        # dollar ledger was refused (w1/343). A catalog booking method ends the line.
+        method = catalog_accounts.get(account, {}).get("booking")
+        lines.append(f"{open_day} open {account}" + (f' "{method}"' if method else ""))
     if balances:
         lines.append("")
         for account in funded:

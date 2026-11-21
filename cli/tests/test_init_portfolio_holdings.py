@@ -1,4 +1,4 @@
-"""The portfolio preset's holdings account accepts instrument units (w5/957).
+"""The portfolio preset's accounts accept instrument units and other currencies (w5/957, w1/343).
 
 `init --preset portfolio@1` opened `Assets:Holdings` for the operating currency
 alone, so the preset's own first purchase (`10 HOOL {20 USD}` plus a fee) was
@@ -60,11 +60,14 @@ def test_the_first_purchase_is_accepted(tmp_path: Path, currency: str, funded: b
     assert json.loads(held.stdout)["data"]["rows"] == [["10"]]
 
 
-def test_cash_and_fee_accounts_stay_restricted_to_the_operating_currency(tmp_path: Path) -> None:
+def test_a_share_priced_in_another_currency_is_accepted(tmp_path: Path) -> None:
+    """Cash and fee accounts open with no currency either (w1/343): a euro-listed share books in a dollar ledger."""
     ledger = _init(tmp_path, "USD", "Assets:BrokerCash 1000")
     text = ledger.read_text()
+    assert "open Assets:BrokerCash\n" in text
+    assert "open Expenses:Fees\n" in text
 
-    assert "open Assets:BrokerCash USD" in text
-    assert "open Expenses:Fees USD" in text
-    assert "open Assets:Holdings\n" in text
-    assert "open Assets:Holdings USD" not in text
+    bought = _buy(tmp_path, ledger, "EUR")
+
+    assert bought.returncode == 0, bought.stderr  # type: ignore[attr-defined]
+    assert _bea(tmp_path, "--json", "-f", str(ledger), "check").returncode == 0

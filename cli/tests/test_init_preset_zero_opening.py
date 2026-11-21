@@ -35,7 +35,7 @@ def test_a_confirmed_zero_differs_from_omission_and_is_queryable(tmp_path: Path)
     assert "balance" not in unknown
     # Nothing is posted: no opening transaction and no day shift.
     assert "Opening balance" not in zero
-    assert "2024-02-01 open Assets:Cash USD" in zero
+    assert "2024-02-01 open Assets:Cash\n" in zero
 
     checked = _bea(tmp_path, "--file", str(tmp_path / "zero" / "main.bean"), "check")
     assert checked.returncode == 0, checked.stderr or checked.stdout
@@ -50,6 +50,6 @@ def test_a_zero_beside_a_known_amount_posts_only_the_known_one(tmp_path: Path) -
     assert mixed.count("Opening balance") == 1
     assert re.search(r"2024-02-01 balance Assets:Cash +100 USD", mixed)
     assert re.search(r"2024-02-01 balance Assets:Bank +0 USD", mixed)
-    assert "2024-01-31 open Equity:OpeningBalances USD" in mixed
+    assert "2024-01-31 open Equity:OpeningBalances\n" in mixed
     checked = _bea(tmp_path, "--file", str(tmp_path / "mixed" / "main.bean"), "check")
     assert checked.returncode == 0, checked.stderr or checked.stdout

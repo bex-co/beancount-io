@@ -506,10 +506,14 @@ bea --no-input init books --preset personal@1 --currency USD --date 2026-01-01 \
   --module side-business@1
 ```
 
-`investments@1` opens `Assets:Brokerage` (booked FIFO, open for any
-commodity), `Income:Dividends`, `Income:Interest`, `Income:CapitalGains`, and
-`Expenses:Brokerage:Fees`. `rental-property@1` opens `Income:Rent:<Name>`,
-`Liabilities:Deposits:<Name>`, and `Expenses:Rental:<Name>:` `Repairs`,
+Every preset and module account opens with no currency constraint, as
+hosted Create Ledger opens it: the operating currency neither converts amounts
+nor refuses others, so a `12.00 EUR @ 1.10 USD` lunch or euro cash books in a
+dollar `personal@1` ledger without editing an open.
+
+`investments@1` opens `Assets:Brokerage` (booked FIFO), `Income:Dividends`,
+`Income:Interest`, `Income:CapitalGains`, and `Expenses:Brokerage:Fees`.
+`rental-property@1` opens `Income:Rent:<Name>`, `Liabilities:Deposits:<Name>`, and `Expenses:Rental:<Name>:` `Repairs`,
 `Insurance`, `Management`, and `Other`. `side-business@1` opens
 `Assets:Business:Bank`, `Income:Business:Services`, and `Expenses:Business:`
 `Software`, `Supplies`, `Travel`, and `Fees`. The order of `--module` flags
@@ -529,7 +533,7 @@ either that argument or `--file`, not both. To backfill before the chosen date, 
 relevant account opens and ensure the opening balances still describe that
 history. `--file` must name a ledger file: an existing directory exits **2**
 with suggestions to pass it to `bea init DIR` or use `--file DIR/main.bean`.
-The asset and liability accounts are opened for the chosen currency
+Without `--preset`, the asset and liability accounts are opened for the chosen currency
 only; the income, expense and equity categories take any currency, so a
 foreign charge such as `Expenses:Dining 45 USD @ 0.90 EUR` books in the EUR
 ledger above without editing an open. To hold another currency in an account,
