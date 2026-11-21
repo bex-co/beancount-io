@@ -39,6 +39,25 @@ describe("buildLedgerFiles (w3/m53/t002)", () => {
     expect(main).toContain("2026-02-01 balance Assets:Cash 100 EUR");
   });
 
+  // w1/349: the assertions were followed by "", so the committed file ended
+  // in a blank line that `git diff --check` refused, unlike `bea init`'s.
+  it("ends a ledger with opening balances in one newline", () => {
+    const main = buildLedgerFiles(
+      {
+        preset: "personal@1",
+        operatingCurrency: "USD",
+        historyStart: "2026-01-01",
+        accounts: [
+          { name: "Assets:Bank", openingState: "known", amount: "100" },
+          { name: "Assets:Cash", openingState: "known", amount: "0" },
+        ],
+      },
+      "2026-01-01",
+    )["main.bean"];
+    expect(main.endsWith("2026-01-01 balance Assets:Cash 0 USD\n")).toBe(true);
+    expect(main.endsWith("\n\n")).toBe(false);
+  });
+
   it("does not switch on auto_accounts, so a misspelt account is refused (w23/059)", () => {
     const main = buildLedgerFiles(
       { preset: "personal@1", historyStart: "2026-02-01" },

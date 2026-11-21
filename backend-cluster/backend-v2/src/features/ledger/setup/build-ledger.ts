@@ -399,9 +399,9 @@ export function previewLedgerSetup(
   if (openings.length > 0) {
     lines.push("", ...openings);
   }
-  if (assertions.length > 0) {
-    lines.push(...assertions, "");
-  }
+  // One newline after the last directive, as `bea init --preset` writes: a
+  // trailing "" here committed a blank line at end of file (w1/349).
+  lines.push(...assertions);
 
   const openedAccounts = [...opened].sort();
   return {
