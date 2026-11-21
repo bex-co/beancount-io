@@ -58,6 +58,29 @@ describe("findLikelyDuplicates", () => {
     }
   });
 
+  it("ignores transactions the ledger could not book", () => {
+    // A failed booking stays in the journal stream (w21/678) but is in no
+    // balance; it must not withhold a row as already booked.
+    const unbooked = { ...booked("2026-09-02", "-3.25"), not_booked: true };
+    expect(
+      findLikelyDuplicates(ROWS, [unbooked], "Assets:Cash", "USD"),
+    ).toEqual(new Set());
+  });
+
+  it("counts only booked transactions one for one", () => {
+    const rows = [
+      { id: "first", date: "2026-09-02", amountDecimal: "-3.25" },
+      { id: "second", date: "2026-09-02", amountDecimal: "-3.25" },
+    ];
+    const existing = [
+      booked("2026-09-02", "-3.25"),
+      { ...booked("2026-09-02", "-3.25"), not_booked: true },
+    ];
+    expect(findLikelyDuplicates(rows, existing, "Assets:Cash", "USD")).toEqual(
+      new Set(["first"]),
+    );
+  });
+
   it("matches one for one, so a second identical row stays new", () => {
     const rows = [
       { id: "first", date: "2026-09-02", amountDecimal: "-3.25" },
