@@ -173,7 +173,10 @@ def check(ctx: typer.Context) -> None:
             # (w1/273): bean-check names no include line. With bean-check's own
             # options, its output stays native, as USAGE documents.
             includes = [] if args else [str(line) for line in loaded.get("include_errors") or []]
-            if failed or unbookable or customs or reserved or includes:
+            # A `pushtag` or `pushmeta` never closed: bean-check reports it at
+            # line 0 of its file (w1/345). Native options keep its words, too.
+            pushes = [] if args else [str(line) for line in loaded.get("unclosed_pushes") or []]
+            if failed or unbookable or customs or reserved or includes or pushes:
                 # bean-check reports a plugin that cannot load as a traceback at
                 # `<load>:0`, and a transaction booking cannot do the arithmetic
                 # for as an uncaught `DivisionByZero` or `InvalidOperation` (w5/538);

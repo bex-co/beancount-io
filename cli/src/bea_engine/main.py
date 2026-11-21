@@ -1076,7 +1076,7 @@ def _validate(file: Path, *, documents_only: bool = False) -> dict[str, Any]:
 
     from bea_engine.compat import is_reserved_location
     from bea_engine.managed_load import data_type_errors, is_booking_failure, is_valueless_custom
-    from bea_engine.query import format_error, is_plugin_failure, is_unlocated_include
+    from bea_engine.query import format_error, is_plugin_failure, is_unlocated_include, unclosed_push
     from fava.core.loader import load_file
 
     entries, errors, options = load_file(str(file))
@@ -1108,7 +1108,10 @@ def _validate(file: Path, *, documents_only: bool = False) -> dict[str, Any]:
     # A `custom` with no values fails bean-check's pad plugin at `<load>:0`,
     # and every balance a pad covers with it (w1/299).
     customs = [format_error(error, ledger_file=file) for error in errors if is_valueless_custom(error)]
-    if failed or unbookable or reserved or includes or customs:
+    # A `pushtag` or `pushmeta` never closed: bean-check reports it at line 0
+    # of its file (w1/345).
+    pushes = [f"{path}:{line}: {text}" for path, line, text in filter(None, map(unclosed_push, errors))]
+    if failed or unbookable or reserved or includes or customs or pushes:
         # bean-check prints these as a traceback at `<load>:0`, raises on the
         # transaction booking cannot do the arithmetic for (w5/538), or accepts
         # metadata that overwrites an entry's location (w5/630); the caller,
@@ -1121,6 +1124,7 @@ def _validate(file: Path, *, documents_only: bool = False) -> dict[str, Any]:
             "valueless_customs": customs,
             "reserved_keys": reserved,
             "include_errors": includes,
+            "unclosed_pushes": pushes,
             "root_hint": hint,
             "clean": False,
         }

@@ -3514,11 +3514,12 @@ def is_plugin_failure(error: Any) -> bool:
 def format_error(error: Any, ledger_file: Path | str | None = None) -> str:
     """One loader error as `file:line: message` — the frontend's detail line.
 
-    Three loader messages arrive as internal Python artifacts and are rewritten
+    Four loader messages arrive as internal Python artifacts and are rewritten
     here, the one boundary where error objects become display strings: plugin
     failures embed a full traceback with a `<load>:0` location, an include
     that matches nothing (w1/269) or loads a file twice (w1/273) is reported
-    at `<load>:0` too, and duplicate
+    at `<load>:0` too, a `pushtag` or `pushmeta` never closed at line 0 of
+    its file (w1/345), and duplicate
     reports embed two whole `Transaction(...)` reprs. Anything unrecognized
     keeps its legacy rendering rather than losing information.
     """
@@ -3531,9 +3532,9 @@ def format_error(error: Any, ledger_file: Path | str | None = None) -> str:
         duplicate = _duplicate_message(error, message)
         if duplicate is not None:
             return duplicate
-        include = include_error(error, ledger_file)
-        if include is not None:
-            return f"{include[0]}:{include[1]}: {include[2]}"
+        located = include_error(error, ledger_file) or unclosed_push(error)
+        if located is not None:
+            return f"{located[0]}:{located[1]}: {located[2]}"
         message = _booking_message(error, message)
     return f"{source.get('filename', '<ledger>')}:{source.get('lineno', 0)}: {message}"
 
@@ -3812,6 +3813,46 @@ def include_error(
     for other, other_line, _, other_why in others:
         text += f"; also {show(other)}:{other_line} {other_why}"
     return path, line, text
+
+
+_UNCLOSED_TAG = re.compile(r"Unbalanced pushed tag: '(?P<name>.*)'\Z", re.DOTALL)
+_UNCLOSED_META = re.compile(r"Unbalanced metadata key '(?P<name>.*?)'; leftover metadata '.*'\Z", re.DOTALL)
+
+
+def unclosed_push(error: Any) -> tuple[str, int, str] | None:
+    """A `pushtag` or `pushmeta` its file never closes, as `(file, line, message)` at the push (w1/345).
+
+    Beancount reports both at line 0 of the file (`grammar.finalize`), a line
+    that does not exist. The file is lexed again, as the append refusal reads
+    it, and the push still open for that name is named, with the directive
+    that closes it. A file that cannot be read again keeps line 0.
+    """
+    message = getattr(error, "message", error)
+    source = getattr(error, "source", None)
+    if not isinstance(message, str) or not isinstance(source, dict) or source.get("lineno") != 0:
+        return None
+    if (match := _UNCLOSED_TAG.match(message)) is not None:
+        pushed, close = f"pushtag #{match['name']}", f"poptag #{match['name']}"
+    elif (match := _UNCLOSED_META.match(message)) is not None:
+        pushed, close = f"pushmeta {match['name']}:", f"popmeta {match['name']}:"
+    else:
+        return None
+    filename = str(source.get("filename"))
+    try:
+        text = Path(filename).read_bytes().decode("utf-8")
+    except (OSError, UnicodeDecodeError, ValueError):
+        return None
+    from bea_engine.ledger.write import open_pushes
+
+    # `open_pushes` lexes NFC text, so compare names the same way.
+    wanted = unicodedata.normalize("NFC", pushed)
+    lines = [line for line, directive in open_pushes(text) if directive == wanted]
+    if not lines:
+        return None
+    first, *others = lines
+    also = "".join(f"; also left open at line {line}" for line in others)
+    each = "each" if others else "it"
+    return filename, first, f"{message}{also}. Close {each} with `{close}` after the last entry it should cover."
 
 
 class _IncludeWalk(NamedTuple):

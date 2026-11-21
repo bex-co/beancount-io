@@ -741,6 +741,15 @@ included it) is an include cycle: `FILE:LINE: include "PATTERN" leads back to
 PATH, which includes this file (an include cycle)`. Remove that include line.
 With bean-check's own options, the output stays `<load>:0: Duplicate filename
 parsed: "PATH"`.
+A `pushtag` or `pushmeta` its file never closes is reported at that push, with
+the directive that closes it: `FILE:LINE: Unbalanced metadata key 'trip';
+leftover metadata 'Berlin'. Close it with `popmeta trip:` after the last entry
+it should cover.` An unclosed tag names `poptag #TAG` the same way. A pop
+closes the latest push of its name, so a name pushed more often than popped is
+reported at the earliest push left open, and any other push of it still open
+is named after it. Every read, `--json check`, `bea init --existing` and plain
+`bea check` report it this way. With bean-check's own options, the output stays
+bean-check's, at line 0 of the file.
 
 `bea check` loads the ledger once in its helper, which applies bean-check's own
 validations. With no bean-check options, a ledger that passes is answered from

@@ -80,12 +80,13 @@ def _error(error: Any, root: Path) -> dict[str, Any]:
     Beancount 2 option removed in Beancount 3 reads. An include the loader
     reports at `<load>:0` is located at the include that wrote it, and the
     paths its message names read as "Needs attention" names locations (w1/284).
+    A `pushtag` or `pushmeta` never closed is located at the push (w1/345).
     """
-    from bea_engine.query import format_error, include_error
+    from bea_engine.query import format_error, include_error, unclosed_push
 
-    include = include_error(error, root, show=lambda path: _shown(path, root.parent))
-    if include is not None:
-        filename, line, message = include
+    located = include_error(error, root, show=lambda path: _shown(path, root.parent)) or unclosed_push(error)
+    if located is not None:
+        filename, line, message = located
     else:
         source = getattr(error, "source", None) or {}
         filename, line = str(source.get("filename") or root), int(source.get("lineno") or 0)
