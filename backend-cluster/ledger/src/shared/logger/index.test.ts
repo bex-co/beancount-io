@@ -2,30 +2,6 @@ import { logger } from ".";
 import { asyncContext } from "@/shared/async-context";
 
 describe("logger", () => {
-  it("should be defined", () => {
-    expect(logger).toBeDefined();
-  });
-
-  it("should have info method", () => {
-    expect(logger.info).toBeDefined();
-    expect(typeof logger.info).toBe("function");
-  });
-
-  it("should have error method", () => {
-    expect(logger.error).toBeDefined();
-    expect(typeof logger.error).toBe("function");
-  });
-
-  it("should have debug method", () => {
-    expect(logger.debug).toBeDefined();
-    expect(typeof logger.debug).toBe("function");
-  });
-
-  it("should have warn method", () => {
-    expect(logger.warn).toBeDefined();
-    expect(typeof logger.warn).toBe("function");
-  });
-
   it("should be able to log messages without throwing", () => {
     expect(() => {
       logger.info("Test info message");
@@ -68,20 +44,6 @@ describe("logger", () => {
   });
 
   describe("child logger", () => {
-    it("should have child method", () => {
-      expect(logger.child).toBeDefined();
-      expect(typeof logger.child).toBe("function");
-    });
-
-    it("should create a child logger", () => {
-      const childLogger = logger.child({ module: "test-module" });
-      expect(childLogger).toBeDefined();
-      expect(childLogger.info).toBeDefined();
-      expect(childLogger.error).toBeDefined();
-      expect(childLogger.debug).toBeDefined();
-      expect(childLogger.warn).toBeDefined();
-    });
-
     it("should allow child logger to log messages without throwing", () => {
       const childLogger = logger.child({ module: "test-module" });
       expect(() => {
