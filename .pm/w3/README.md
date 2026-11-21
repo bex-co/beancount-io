@@ -100,6 +100,7 @@
 
 ## Inbox
 
+- [656](./656.md) — Six legacy dashboard alias paths 404 on the website instead of redirecting (≤1h) ← routine dashboard-qa follow-up 2026-11-21
 - [650](./done/650.md) — Saving a file shows "Out of date — click to refresh" for the user's own write (≤1h) ← user report 2026-11-01 — **done** 2026-11-01 (`2ef426039`)
 - [648](./done/648.md) — Fix the web Starter copy promising an example transaction and rename the create button from Save (≤1h) ← `/pm-brainstorm w3` 2026-10-20 candidate 7, from ADR021 — **done** 2026-10-20 (`2f11faa72`)
 
