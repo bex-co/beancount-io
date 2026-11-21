@@ -4,7 +4,8 @@ import { compile } from "tailwindcss";
 import { beforeAll, describe, expect, it } from "vitest";
 
 /**
- * Custom row actions (Journal/Account dates, Overview rows, Files rows) take
+ * Custom row actions (the entries of every journal list — the Journal, an
+ * account's journal and the Overview's recent activity — and Files rows) take
  * the shared Button's forced-colors focus outline; their shadow rings and
  * background tints vanish under forced colors (w4/262). This checks that the
  * exact utilities they now carry emit real forced-colors outline rules,
@@ -12,10 +13,10 @@ import { beforeAll, describe, expect, it } from "vitest";
  * forced-colors rendering were not measured in this environment.
  */
 const SOURCES = [
-  "src/features/journal/components/journal-table.tsx",
+  "src/features/journal/components/journal-lines.tsx",
+  "src/features/journal/components/journal-days.tsx",
   "src/features/reports/overview/components/account-balances-card.tsx",
   "src/features/reports/overview/components/money-movement-section.tsx",
-  "src/features/reports/overview/components/recent-activity-card.tsx",
   "src/features/ledger-editor/directory-browse/components/ledger-directory-view.tsx",
 ];
 const CLASSES = [

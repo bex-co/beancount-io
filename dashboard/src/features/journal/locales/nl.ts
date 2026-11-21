@@ -187,10 +187,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Budgetposten",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "Wijziging",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -331,10 +327,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Vlag",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "Niet geboekt, telt niet mee",
     description:
@@ -423,10 +415,6 @@ const nlJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "Pad",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "Begunstigde/Omschrijving",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "Begunstigde",

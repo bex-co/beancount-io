@@ -44,11 +44,12 @@ import {
 import type { JournalDirectiveType } from "@/common/types/journal";
 import { JournalFilters } from "@/features/journal/components/journal-filters";
 import { useJournalFilterState } from "@/features/journal/hooks/use-journal-filter-state";
+import { useJournalMoney } from "@/features/journal/hooks/use-journal-money";
 import { JournalPagination } from "@/features/journal/components/journal-pagination";
 import {
   PageLoadingState,
   PageErrorState,
-  LoadingSpinner,
+  JournalLoadingState,
 } from "@/features/journal/components/journal-states";
 import {
   ReportEmptyState,
@@ -104,7 +105,15 @@ export function AccountJournalTable({
     setShowMetadata,
     showPostings,
     setShowPostings,
+    density,
+    setDensity,
   } = useJournalFilterState(`accountJournal.${ledgerId}.${accountName}`);
+  // The Journal's own rows, each reporting this account's share.
+  const money = useJournalMoney(accountName);
+  const register = useMemo(
+    () => ({ account: accountName, withChildren }),
+    [accountName, withChildren],
+  );
 
   // Pagination lives in the route's validated search params so opening a
   // transaction's source — which unmounts this table — plus browser Back
@@ -286,9 +295,14 @@ export function AccountJournalTable({
     };
   });
 
+  const empty =
+    !journalFailure && !journalLoading && journalTableData.length === 0;
+
   return (
     <>
-      <CardContent className="pb-3">
+      {/* The Journal's own frame: its filters above, the list flush to the
+          card's edges, and the pages below. */}
+      <div className="border-y bg-muted/20 px-2 py-2 sm:px-3">
         <JournalFilters
           selectedDirectiveTypes={selectedDirectiveTypes}
           onDirectiveTypesChange={setSelectedDirectiveTypes}
@@ -302,61 +316,70 @@ export function AccountJournalTable({
           onShowMetadataChange={setShowMetadata}
           showPostings={showPostings}
           onShowPostingsChange={setShowPostings}
+          density={density}
+          onDensityChange={setDensity}
         />
-      </CardContent>
-      <CardContent>
-        <div ref={entryFallbackRef} tabIndex={-1} className="outline-none">
-          {journalFailure ? (
+      </div>
+      <div ref={entryFallbackRef} tabIndex={-1} className="outline-none">
+        {journalFailure ? (
+          <div className="p-4">
             <ReportErrorState
               message={t("page.accountReport.errorLoadingJournal")}
               onRetry={retryJournal}
               retrying={retryingJournal}
             />
-          ) : journalLoading ? (
-            <LoadingSpinner />
-          ) : journalTableData.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  {t("page.accountReport.noJournalEntries")}
-                </h3>
-                <p className="text-muted-foreground">
-                  {t("page.accountReport.noJournalEntriesForAccount")}
-                </p>
-              </div>
+          </div>
+        ) : journalLoading ? (
+          <JournalLoadingState density={density} />
+        ) : empty ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                {t("page.accountReport.noJournalEntries")}
+              </h3>
+              <p className="text-muted-foreground">
+                {t("page.accountReport.noJournalEntriesForAccount")}
+              </p>
             </div>
-          ) : (
-            <JournalTable
-              data={journalTableData}
-              showMetadata={showMetadata}
-              showPostings={showPostings}
-              isAccountJournal
-              accountName={accountName}
-              withChildren={withChildren}
-              ledgerOwner={ledgerOwner}
-              ledgerName={ledgerName}
-              onEntryClick={(entry, opener) => {
-                entryOpenerRef.current = opener;
-                setSelectedEntry(entry);
-                setIsEntryContextDialogOpen(true);
-              }}
-            />
-          )}
-        </div>
-        <div className="relative flex justify-end">
-          <JournalPagination
-            total={paginationTotal}
-            limit={limit}
-            offset={offset}
-            setOffset={setOffset}
-            loading={journalLoading}
-            resultCount={journalError ? 0 : journalTableData.length}
-            scopeKey={paginationScope}
-            fallbackFocusRef={entryFallbackRef}
+          </div>
+        ) : (
+          <JournalTable
+            layout={density === "compact" ? "lines" : "days"}
+            money={money}
+            register={register}
+            data={journalTableData}
+            showMetadata={showMetadata}
+            showPostings={showPostings}
+            ledgerOwner={ledgerOwner}
+            ledgerName={ledgerName}
+            onEntryClick={(entry, opener) => {
+              entryOpenerRef.current = opener;
+              setSelectedEntry(entry);
+              setIsEntryContextDialogOpen(true);
+            }}
           />
-        </div>
-      </CardContent>
+        )}
+      </div>
+      <div
+        className={
+          // Nothing to page through: no strip left under the message.
+          empty
+            ? "relative flex justify-end [&>div]:mt-0"
+            : "relative flex justify-end border-t bg-muted/10 px-3 py-2 [&>div]:mt-0"
+        }
+      >
+        <JournalPagination
+          total={paginationTotal}
+          limit={limit}
+          offset={offset}
+          setOffset={setOffset}
+          loading={journalLoading}
+          resultCount={journalError ? 0 : journalTableData.length}
+          scopeKey={paginationScope}
+          fallbackFocusRef={entryFallbackRef}
+        />
+      </div>
 
       <EntryContextDialog
         open={isEntryContextDialogOpen}
@@ -626,9 +649,11 @@ export default function AccountPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Account Journal */}
-      <Card>
-        <CardHeader className="pb-3">
+      {/* Account Journal: clipped to its corners without becoming a
+          scroller, so the list's column and day headings stay pinned as the
+          page scrolls. */}
+      <Card className="gap-0 overflow-clip py-0">
+        <CardHeader className="py-5">
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
             {t("page.accountReport.accountJournal")}

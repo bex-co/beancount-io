@@ -7,27 +7,44 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { JournalTable } from "@/features/journal/components/journal-table";
+import { JournalTable as RealJournalTable } from "@/features/journal/components/journal-table";
 import type { JournalTableItem } from "@/features/journal/components/journal-table";
 import type { JournalTransaction } from "@/common/types/journal";
 
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
+import {
+  LedgerProviderContext,
+  type LedgerProviderContextType,
+} from "@/common/providers/ledger-provider/context";
 
 vi.unmock("react-i18next");
 vi.unmock("@/common/hooks/use-translations");
 vi.unmock("@/i18n");
+
+const ledger = {
+  ledgerData: { options: { renderCommas: true } },
+} as unknown as LedgerProviderContextType;
 
 function render(ui: React.ReactElement) {
   const localization = createLocalization();
   return renderUI(ui, {
     wrapper: ({ children }) => (
       <LocalizationProvider localization={localization}>
-        {children}
+        <LedgerProviderContext.Provider value={ledger}>
+          {children}
+        </LedgerProviderContext.Provider>
       </LocalizationProvider>
     ),
   });
 }
+
+const money = {
+  primaryCurrency: "USD",
+  incomeRoot: "Income",
+  expensesRoot: "Expenses",
+  accountFilter: "",
+};
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
@@ -52,7 +69,15 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
-describe("JournalTable", () => {
+/**
+ * Both of the Journal's layouts — the compact lines and the days — behave the
+ * same wherever a list of entries appears: the Journal, an account's journal
+ * and the Overview's recent activity.
+ */
+describe.each(["lines", "days"] as const)("JournalTable (%s)", (layout) => {
+  const JournalTable = (
+    props: Omit<Parameters<typeof RealJournalTable>[0], "layout" | "money">,
+  ) => <RealJournalTable layout={layout} money={money} {...props} />;
   const mockOnEntryClick = vi.fn();
   let transactionSequence = 0;
 
@@ -91,52 +116,7 @@ describe("JournalTable", () => {
   });
 
   const getPostingToggles = () =>
-    screen
-      .getAllByRole("button", { name: /^(Show|Hide) \d+ postings? for / })
-      .filter((_, index) => index % 2 === 0);
-
-  describe("narrow layout", () => {
-    // jsdom has no table layout, so this pins the contract that keeps a phone
-    // row from clipping the posting count (verified in a browser at 390px):
-    // the description column must not contribute its untruncated, `nowrap`
-    // payee width to the table's minimum, or the table outgrows its scroll
-    // container and the rightmost column — the count — is cut off.
-    it("lets the description column shrink so a two-digit count stays whole", () => {
-      const transaction = {
-        ...createMockTransaction(16),
-        payee: "Metro Transport Authority of the Greater Region",
-      };
-      render(
-        <JournalTable
-          data={createTableData([transaction])}
-          showMetadata={false}
-          showPostings={false}
-          onEntryClick={mockOnEntryClick}
-        />,
-      );
-
-      const descriptionHeader = screen.getByRole("columnheader", {
-        name: "Payee/Narration",
-      });
-      const descriptionCell = screen
-        .getByText("Metro Transport Authority of the Greater Region")
-        .closest("td");
-      for (const el of [descriptionHeader, descriptionCell]) {
-        // Phone-only: from `sm:` up the original auto sizing is restored.
-        expect(el).toHaveClass(
-          "w-full",
-          "max-w-0",
-          "sm:w-auto",
-          "sm:max-w-none",
-        );
-      }
-      for (const toggle of screen.getAllByRole("button", {
-        name: /^(Show|Hide) \d+ postings? for /,
-      })) {
-        expect(toggle).toHaveTextContent("16");
-      }
-    });
-  });
+    screen.getAllByRole("button", { name: /^(Show|Hide) \d+ postings? for / });
 
   describe("PostingIndicators", () => {
     it("should render the posting count for a transaction", () => {
@@ -464,7 +444,7 @@ describe("JournalTable", () => {
   });
 
   describe("Integration with table rendering", () => {
-    it("should activate an entry via row click and a keyboard-focusable date control", async () => {
+    it("should activate an entry via row click and its keyboard-focusable name", async () => {
       const user = userEvent.setup();
       const transaction = createMockTransaction(2);
       const data = createTableData([transaction]);
@@ -482,11 +462,11 @@ describe("JournalTable", () => {
       expect(entryRow).toBeTruthy();
       await user.click(entryRow as HTMLElement);
 
-      const dateControl = screen.getByRole("button", {
+      const openControl = screen.getByRole("button", {
         name: "Open entry 2024-01-01 Test Payee Test transaction (row 1)",
       });
-      dateControl.focus();
-      expect(dateControl).toHaveFocus();
+      openControl.focus();
+      expect(openControl).toHaveFocus();
       await user.keyboard("{Enter}");
       await user.keyboard(" ");
 
@@ -545,20 +525,15 @@ describe("JournalTable", () => {
         screen.getByRole("table", { name: "Journal" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("columnheader", { name: "Date" }),
+        screen.getByRole("columnheader", { name: "Entry" }),
       ).toBeInTheDocument();
-      expect(
-        screen.getByRole("columnheader", { name: "Flag" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("columnheader", { name: "Payee/Narration" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getAllByRole("columnheader", { name: "Postings" }),
-      ).toHaveLength(2);
+      // One disclosure, wherever the width puts it.
+      expect(getPostingToggles()).toHaveLength(1);
 
       expect(screen.getByText("Test Payee")).toBeInTheDocument();
-      expect(screen.getByText("Test transaction")).toBeInTheDocument();
+      // Narrow, the narration shares a line with the accounts; wide, it has
+      // its own place. CSS shows one; both are this entry's.
+      expect(screen.getAllByText(/Test transaction/).length).toBeGreaterThan(0);
     });
 
     it("should handle multiple transactions with different posting counts", () => {
@@ -676,232 +651,31 @@ describe("JournalTable", () => {
     });
   });
 
-  describe("column-to-header alignment", () => {
-    function cellForHeader(row: HTMLElement, headerName: string): HTMLElement {
+  describe("columns", () => {
+    it("gives every entry row one cell per column heading", () => {
+      const transactions = [createMockTransaction(4), createMockTransaction(1)];
+      render(
+        <JournalTable
+          data={createTableData(transactions)}
+          showMetadata={false}
+          showPostings={false}
+          onEntryClick={mockOnEntryClick}
+        />,
+      );
+
       const headers = screen.getAllByRole("columnheader");
-      const headerIndex = headers.findIndex(
-        (header) =>
-          header.textContent?.replace(/\s+/g, " ").trim() === headerName ||
-          header.getAttribute("aria-label") === headerName,
-      );
-      expect(headerIndex).toBeGreaterThanOrEqual(0);
-      const cells = within(row).getAllByRole("cell");
-      // Detail rows are separate; the primary data row has one cell per header.
-      expect(cells.length).toBeGreaterThan(headerIndex);
-      return cells[headerIndex] as HTMLElement;
-    }
-
-    it("binds each account-journal value to its column header", () => {
-      const transaction: JournalTransaction = {
-        entry_hash: "gld-buy",
-        directive_type: "Transaction",
-        date: "2017-08-27",
-        flag: "*",
-        payee: null,
-        narration: "Buy shares of GLD",
-        postings: [
-          {
-            account: "Assets:US:ETrade:GLD",
-            units: { number: "10", currency: "GLD" },
-            cost: null,
-            price: null,
-            flag: null,
-            meta: {},
-          },
-          {
-            account: "Assets:US:ETrade:Cash",
-            units: { number: "-2433.36", currency: "USD" },
-            cost: null,
-            price: null,
-            flag: null,
-            meta: {},
-          },
-          {
-            account: "Income:US:ETrade:PnL",
-            units: { number: "0", currency: "USD" },
-            cost: null,
-            price: null,
-            flag: null,
-            meta: {},
-          },
-        ],
-        tags: [],
-        links: [],
-        meta: {},
-      };
-
-      render(
-        <JournalTable
-          data={[
-            {
-              directive: transaction,
-              change: { USD: "2433.36" },
-              balance: { USD: "4559.80" },
-            },
-          ]}
-          showMetadata={false}
-          showPostings={false}
-          isAccountJournal
-          accountName="Assets:US:ETrade:GLD"
-          onEntryClick={mockOnEntryClick}
-        />,
-      );
-
-      const table = screen.getByRole("table", { name: "Account journal" });
+      const rows = screen
+        .getAllByRole("button", { name: /^Open entry / })
+        .map((control) => control.closest("tr")!);
+      expect(rows).toHaveLength(2);
+      // A hidden cell would give up its column and slide the ones after it
+      // under the wrong heading; every cell stays, empty where it has
+      // nothing to say at a width.
+      for (const row of rows)
+        expect(within(row).getAllByRole("cell")).toHaveLength(headers.length);
       expect(
-        within(table).getByRole("columnheader", { name: "Units" }),
-      ).toBeInTheDocument();
-      expect(
-        within(table).getByRole("columnheader", { name: "Change" }),
-      ).toBeInTheDocument();
-      expect(
-        within(table).getByRole("columnheader", { name: "Balance" }),
-      ).toBeInTheDocument();
-      expect(
-        within(table).getByRole("columnheader", { name: "Flag" }),
-      ).toBeInTheDocument();
-
-      const row = screen.getByText("Buy shares of GLD").closest("tr");
-      expect(row).toBeTruthy();
-
-      expect(cellForHeader(row as HTMLElement, "Date")).toHaveTextContent(
-        "2017-08-27",
-      );
-      expect(cellForHeader(row as HTMLElement, "Flag")).toHaveTextContent("*");
-      expect(
-        cellForHeader(row as HTMLElement, "Payee/Narration"),
-      ).toHaveTextContent("Buy shares of GLD");
-      // Units must be the GLD quantity, not the posting-count toggle (3).
-      expect(cellForHeader(row as HTMLElement, "Units")).toHaveTextContent(
-        "10 GLD",
-      );
-      expect(
-        within(cellForHeader(row as HTMLElement, "Units")).queryByRole(
-          "button",
-          { name: /^(Show|Hide) \d+ postings? for / },
-        ),
+        screen.queryByRole("columnheader", { name: "Balance" }),
       ).not.toBeInTheDocument();
-      expect(cellForHeader(row as HTMLElement, "Change")).toHaveTextContent(
-        "2,433.36 USD",
-      );
-      expect(cellForHeader(row as HTMLElement, "Balance")).toHaveTextContent(
-        "4,559.80 USD",
-      );
-
-      const postingsHeaders = within(table).getAllByRole("columnheader", {
-        name: "Postings",
-      });
-      expect(postingsHeaders).toHaveLength(2);
-      const desktopPostingsCell = cellForHeader(row as HTMLElement, "Postings");
-      expect(
-        within(desktopPostingsCell).getAllByRole("button", {
-          name: /^(Show|Hide) \d+ postings? for /,
-        }).length,
-      ).toBeGreaterThan(0);
-    });
-
-    it("leaves account-journal value columns empty for non-transaction rows", () => {
-      render(
-        <JournalTable
-          data={[
-            {
-              directive: {
-                directive_type: "Balance",
-                date: "2017-01-01",
-                account: "Assets:US:ETrade:GLD",
-                amount: { number: "10", currency: "GLD" },
-                diff_amount: null,
-                meta: {},
-              },
-              change: {},
-              balance: { GLD: "10" },
-            },
-          ]}
-          showMetadata={false}
-          showPostings={false}
-          isAccountJournal
-          accountName="Assets:US:ETrade:GLD"
-          onEntryClick={mockOnEntryClick}
-        />,
-      );
-
-      const row = within(screen.getByRole("table", { name: "Account journal" }))
-        .getAllByRole("row")
-        .find((candidate) => candidate.textContent?.includes("2017-01-01"));
-      expect(row).toBeTruthy();
-      expect(cellForHeader(row as HTMLElement, "Units")).toHaveTextContent("");
-      expect(cellForHeader(row as HTMLElement, "Change")).toHaveTextContent("");
-      expect(cellForHeader(row as HTMLElement, "Balance")).toHaveTextContent(
-        "",
-      );
-      expect(
-        screen.queryByRole("button", {
-          name: /^(Show|Hide) \d+ postings? for /,
-        }),
-      ).not.toBeInTheDocument();
-    });
-
-    it("binds each plain-journal value to its four column headers", () => {
-      const transaction = createMockTransaction(4);
-      transaction.narration = "Plain journal row";
-
-      render(
-        <JournalTable
-          data={[{ directive: transaction }]}
-          showMetadata={false}
-          showPostings={false}
-          onEntryClick={mockOnEntryClick}
-        />,
-      );
-
-      const table = screen.getByRole("table", { name: "Journal" });
-      expect(
-        within(table).queryByRole("columnheader", { name: "Units" }),
-      ).not.toBeInTheDocument();
-      expect(
-        within(table).getAllByRole("columnheader", { name: "Postings" }),
-      ).toHaveLength(2);
-
-      const row = screen.getByText("Plain journal row").closest("tr");
-      expect(row).toBeTruthy();
-      expect(cellForHeader(row as HTMLElement, "Date")).toHaveTextContent(
-        "2024-01-01",
-      );
-      expect(cellForHeader(row as HTMLElement, "Flag")).toHaveTextContent("*");
-      expect(
-        cellForHeader(row as HTMLElement, "Payee/Narration"),
-      ).toHaveTextContent("Test Payee");
-      expect(
-        within(cellForHeader(row as HTMLElement, "Postings")).getAllByRole(
-          "button",
-          { name: /^(Show|Hide) \d+ postings? for / },
-        )[0],
-      ).toHaveTextContent("4");
-    });
-
-    it("exposes desktop and mobile postings columns with matching cells", () => {
-      const transaction = createMockTransaction(2);
-
-      render(
-        <JournalTable
-          data={[{ directive: transaction }]}
-          showMetadata={false}
-          showPostings={false}
-          onEntryClick={mockOnEntryClick}
-        />,
-      );
-
-      const headers = screen.getAllByRole("columnheader", { name: "Postings" });
-      expect(headers[0]?.className).toMatch(/hidden/);
-      expect(headers[0]?.className).toMatch(/sm:table-cell/);
-      expect(headers[1]?.className).toMatch(/sm:hidden/);
-
-      const row = screen.getByText("Test Payee").closest("tr");
-      const cells = within(row as HTMLElement).getAllByRole("cell");
-      // Date, Flag, Description, desktop Postings, mobile Postings
-      expect(cells).toHaveLength(5);
-      expect(cells[3]?.className).toMatch(/sm:table-cell/);
-      expect(cells[4]?.className).toMatch(/sm:hidden/);
     });
   });
 });

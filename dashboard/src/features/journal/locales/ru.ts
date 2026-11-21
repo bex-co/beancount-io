@@ -226,10 +226,6 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Записи бюджета",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "Изменение",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -370,10 +366,6 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Флаг",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "Не проведена, не учитывается",
     description:
@@ -462,10 +454,6 @@ const ruJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "Заполнение",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "Получатель/Описание",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "Получатель",

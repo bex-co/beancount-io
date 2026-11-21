@@ -45,7 +45,6 @@ export const FLAG_KEYS = [
   "journal.linked",
   "journal.budget",
   "journal.discovered",
-  "journal.flagAbbrev",
 ] as const;
 
 /**

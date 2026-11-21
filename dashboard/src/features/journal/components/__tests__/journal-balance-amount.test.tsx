@@ -9,7 +9,17 @@ import {
 } from "@tanstack/react-router";
 import { afterEach, describe, expect, it } from "vitest";
 import { DirectiveType, type JournalBalance } from "@/common/types/journal";
+import {
+  LedgerProviderContext,
+  type LedgerProviderContextType,
+} from "@/common/providers/ledger-provider/context";
 import { JournalTable } from "../journal-table";
+
+const ledger = {
+  ledgerData: { options: { renderCommas: true } },
+} as unknown as LedgerProviderContextType;
+
+type Layout = "lines" | "days";
 
 afterEach(cleanup);
 
@@ -23,22 +33,38 @@ const assertion: JournalBalance = {
   diff_amount: null,
 };
 
-async function renderRow(directive: JournalBalance, isAccountJournal: boolean) {
+async function renderRow(
+  layout: Layout,
+  directive: JournalBalance,
+  isAccountJournal: boolean,
+) {
   const root = createRootRoute({ component: () => <Outlet /> });
   const journal = createRoute({
     getParentRoute: () => root,
     path: "/",
     component: () => (
-      <JournalTable
-        data={[{ directive, change: {}, balance: {} }]}
-        isAccountJournal={isAccountJournal}
-        accountName="Assets:Cash"
-        showMetadata={false}
-        showPostings={false}
-        ledgerOwner="owner"
-        ledgerName="ledger"
-        onEntryClick={() => {}}
-      />
+      <LedgerProviderContext.Provider value={ledger}>
+        <JournalTable
+          layout={layout}
+          money={{
+            primaryCurrency: "USD",
+            incomeRoot: "Income",
+            expensesRoot: "Expenses",
+            accountFilter: isAccountJournal ? "Assets:Cash" : "",
+          }}
+          register={
+            isAccountJournal
+              ? { account: "Assets:Cash", withChildren: true }
+              : undefined
+          }
+          data={[{ directive, change: {}, balance: {} }]}
+          showMetadata={false}
+          showPostings={false}
+          ledgerOwner="owner"
+          ledgerName="ledger"
+          onEntryClick={() => {}}
+        />
+      </LedgerProviderContext.Provider>
     ),
   });
   const router = createRouter({
@@ -48,45 +74,66 @@ async function renderRow(directive: JournalBalance, isAccountJournal: boolean) {
   });
   await router.load();
   render(<RouterProvider router={router} />);
-  const table = await screen.findByRole("table");
-  return within(table).getAllByRole("row")[1];
+  await screen.findByRole("table");
+  return screen
+    .getByRole("button", { name: /^Open entry 2026-08-29 Balance/ })
+    .closest("tr")!;
 }
 
-describe("Balance rows show the asserted amount (w3/556)", () => {
-  it.each([
-    ["the journal", false],
-    ["the account journal", true],
-  ])("reads Assets:Cash … 49.75 USD in %s", async (_name, isAccountJournal) => {
-    const row = await renderRow(assertion, isAccountJournal);
+/** The isolated run of sign, figure and unit that reads `text` whole. */
+function amount(row: HTMLElement, text: string) {
+  const runs = within(row).getAllByText(
+    (_, element) => element?.tagName === "BDI" && element.textContent === text,
+  );
+  for (const run of runs) expect(run).toHaveAttribute("dir", "ltr");
+  return runs;
+}
 
-    expect(within(row).getByText("Assets:Cash")).toBeInTheDocument();
-    const amount = within(row).getByText("49.75 USD");
-    // Isolated so RTL layouts keep the number and currency in order.
-    expect(amount.tagName).toBe("BDI");
-    expect(amount).toHaveAttribute("dir", "ltr");
-  });
+describe.each(["lines", "days"] as const)(
+  "Balance rows show the asserted amount (w3/556) (%s)",
+  (layout) => {
+    it.each([
+      ["the journal", false],
+      ["the account journal", true],
+    ])(
+      "reads Assets:Cash … 49.75 USD in %s",
+      async (_name, isAccountJournal) => {
+        const row = await renderRow(layout, assertion, isAccountJournal);
 
-  it("names the entry by its account and amount, not as a price", async () => {
-    const row = await renderRow(assertion, false);
+        expect(within(row).getAllByText("Assets:Cash").length).toBeGreaterThan(
+          0,
+        );
+        // Isolated so RTL layouts keep the number and currency in order.
+        expect(amount(row, "49.75 USD").length).toBeGreaterThan(0);
+      },
+    );
 
-    expect(
-      within(row).getByRole("button", {
-        name: "Open entry 2026-08-29 Balance Assets:Cash 49.75 USD (row 1)",
-      }),
-    ).toBeInTheDocument();
-  });
+    it("names the entry by its account and amount, not as a price", async () => {
+      const row = await renderRow(layout, assertion, false);
 
-  it("shows an explicit tolerance with the amount", async () => {
-    const row = await renderRow({ ...assertion, tolerance: "0.01" }, false);
+      expect(
+        within(row).getByRole("button", {
+          name: "Open entry 2026-08-29 Balance Assets:Cash 49.75 USD (row 1)",
+        }),
+      ).toBeInTheDocument();
+    });
 
-    expect(within(row).getByText("49.75 ~ 0.01 USD")).toBeInTheDocument();
-  });
+    it("shows an explicit tolerance with the amount", async () => {
+      const row = await renderRow(
+        layout,
+        { ...assertion, tolerance: "0.01" },
+        false,
+      );
 
-  it("still renders the account when an older service omits the amount", async () => {
-    const { amount: _omitted, ...legacy } = assertion;
-    const row = await renderRow(legacy, false);
+      expect(amount(row, "49.75 ~ 0.01 USD").length).toBeGreaterThan(0);
+    });
 
-    expect(within(row).getByText("Assets:Cash")).toBeInTheDocument();
-    expect(within(row).queryByText(/USD/)).not.toBeInTheDocument();
-  });
-});
+    it("still renders the account when an older service omits the amount", async () => {
+      const { amount: _omitted, ...legacy } = assertion;
+      const row = await renderRow(layout, legacy, false);
+
+      expect(within(row).getAllByText("Assets:Cash").length).toBeGreaterThan(0);
+      expect(within(row).queryByText(/USD/)).not.toBeInTheDocument();
+    });
+  },
+);

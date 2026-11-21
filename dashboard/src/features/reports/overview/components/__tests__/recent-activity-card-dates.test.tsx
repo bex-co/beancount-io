@@ -75,26 +75,28 @@ describe("RecentActivityCard dates", () => {
     vi.useRealTimers();
   });
 
-  it("formats same-year transaction dates compactly in the active language", () => {
+  // The Journal's own day headings, so a day reads here as it does there.
+  it("names each day once, as the Journal does, in the active language", () => {
     language = "en";
     const { unmount } = render(<RecentActivityCard {...props} />);
-    // Once, as the heading of the day's rows, at every width.
-    expect(screen.getByRole("heading", { name: "Feb 3" })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("rowheader").map((day) => day.textContent),
+    ).toEqual(["Tue, Feb 3, 2026"]);
     unmount();
 
     language = "fr";
     render(<RecentActivityCard {...props} />);
     expect(
-      screen.getByRole("heading", { name: "3 févr." }),
-    ).toBeInTheDocument();
+      screen.getAllByRole("rowheader").map((day) => day.textContent),
+    ).toEqual(["mar. 3 févr. 2026"]);
   });
 
-  it("includes the year when the activity is not in the current calendar year", () => {
+  it("keeps the year on a day from another year", () => {
     language = "en";
     transaction.date = "2017-09-08";
     render(<RecentActivityCard {...props} />);
     expect(
-      screen.getByRole("heading", { name: "Sep 8, 2017" }),
+      screen.getByRole("rowheader", { name: "Fri, Sep 8, 2017" }),
     ).toBeInTheDocument();
   });
 });

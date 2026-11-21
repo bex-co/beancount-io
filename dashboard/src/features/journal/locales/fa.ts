@@ -189,10 +189,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "ثبت‌های بودجه",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "تغییر",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -333,10 +329,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "پرچم",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "ثبت نشده، محاسبه نمی‌شود",
     description:
@@ -425,10 +417,6 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "تراز",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "دریافت‌کننده/شرح",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "دریافت‌کننده",

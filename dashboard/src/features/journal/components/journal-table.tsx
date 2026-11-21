@@ -1,590 +1,73 @@
-import { useId, useState, type ReactNode } from "react";
-import {
-  type JournalDirectiveType,
-  isJournalTransaction,
-  isJournalDocument,
-  isJournalCustom,
-} from "@/common/types/journal";
-import { formatDateISO } from "@/common/lib/format/format-date-iso";
+import type { JournalDirectiveType } from "@/common/types/journal";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { JournalDescription } from "./journal-description";
-import { JournalMetadata } from "./journal-metadata";
-import { displayableMetadataEntries } from "./journal-metadata-entries";
-import { JournalPostings } from "./journal-postings";
-import { journalEntryLabel } from "./journal-entry-label";
-import { JournalPostingToggle } from "./journal-posting-toggle";
 import { JournalDays, type JournalMoney } from "./journal-days";
 import { JournalLines } from "./journal-lines";
-import { cn } from "@/common/lib/utils/utils";
-import { getClickableRowProps } from "@/common/components/clickable-row";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/common/components/ui/table";
-import { deriveAccountUnits } from "@/features/journal/lib/derive-account-units";
-import { LedgerAmount } from "@/common/components/ledger-amount";
+import type { JournalRegister, JournalTableItem } from "./journal-register";
 
-export type JournalTableItem = {
-  directive: JournalDirectiveType;
-  change?: Record<string, string>;
-  balance?: Record<string, string>;
-};
+export type { JournalTableItem } from "./journal-register";
 
 interface JournalTableProps {
   data: JournalTableItem[];
-  showMetadata?: boolean;
-  showPostings?: boolean;
-  onEntryClick?: (
-    entry: JournalDirectiveType,
-    opener: HTMLElement | null,
-  ) => void;
-  isAccountJournal?: boolean;
-  /** Required when `isAccountJournal` to derive the Units column from postings. */
-  accountName?: string;
-  /** Match child accounts when deriving units; mirrors the journal query flag. */
-  withChildren?: boolean;
-  ledgerOwner?: string;
-  ledgerName?: string;
   /**
-   * `days` reads as a ledger: entries under day headings, each with its
-   * amount. The Journal page uses it; an account's journal keeps its
-   * Change and Balance columns.
+   * `lines` is one line per entry with its date and status in columns of
+   * their own, for reconciling; `days` reads as a ledger, entries under day
+   * headings. The reader picks one with the Journal's layout choice.
    */
-  layout?: "columns" | "days" | "lines";
-  /** The ledger's names the `days` layout needs to sum an entry. */
-  money?: JournalMoney;
-}
-
-interface JournalAmountsProps {
-  balance?: Record<string, string>;
-}
-
-function JournalAmounts({ balance }: JournalAmountsProps) {
-  if (!balance || Object.keys(balance).length === 0) {
-    return null;
-  }
-
-  return (
-    <>
-      {Object.entries(balance).map(([currency, amount]) => (
-        <span key={currency} className="block">
-          <LedgerAmount number={amount} currency={currency} />
-        </span>
-      ))}
-    </>
-  );
-}
-
-const getDirectiveTypeClass = (directive: JournalDirectiveType): string => {
-  const baseType = directive.directive_type.toLowerCase();
-
-  if (isJournalTransaction(directive)) {
-    const flag = directive.flag;
-    if (flag === "*") return "transaction cleared";
-    if (flag === "!") return "transaction pending";
-    return "transaction other";
-  }
-
-  if (isJournalDocument(directive)) {
-    if (directive.tags.includes("discovered")) return "document discovered";
-    if (directive.tags.includes("linked")) return "document linked";
-    return "document";
-  }
-
-  if (isJournalCustom(directive)) {
-    if (directive.type === "budget") return "custom budget";
-    return "custom";
-  }
-
-  return baseType;
-};
-
-type ColumnVisibility = "always" | "desktop" | "mobile";
-
-type JournalColumnId =
-  | "date"
-  | "flag"
-  | "description"
-  | "units"
-  | "change"
-  | "balance"
-  | "postings";
-
-type JournalColumnDef = {
-  id: JournalColumnId;
-  visibility: ColumnVisibility;
-  headerClassName: string;
-  cellClassName: string;
-};
-
-const DATE_COL: JournalColumnDef = {
-  id: "date",
-  visibility: "always",
-  // An ISO date is one token. The document sets `overflow-wrap: anywhere` so
-  // long narrations can wrap, and under `table-layout: auto` that let the
-  // browser break `2017-09-08` down to a single glyph per line — a 9px column
-  // ten lines tall. `w-*` is not a minimum for a real table cell, so the date
-  // says outright that it does not break; the shared Table already owns a
-  // horizontal scroller for whatever that costs the other columns.
-  headerClassName:
-    "w-20 shrink-0 text-center text-xs font-medium whitespace-nowrap [overflow-wrap:normal] text-muted-foreground sm:w-24 sm:text-sm",
-  cellClassName:
-    "w-20 shrink-0 text-center font-mono text-xs tabular-nums whitespace-nowrap [overflow-wrap:normal] sm:w-24 sm:text-sm",
-};
-
-const FLAG_COL: JournalColumnDef = {
-  id: "flag",
-  visibility: "always",
-  headerClassName:
-    "flag w-12 shrink-0 text-center text-xs font-medium text-muted-foreground sm:w-24 sm:text-sm",
-  cellClassName:
-    "flag w-12 shrink-0 text-center font-mono text-xs sm:w-24 sm:text-sm",
-};
-
-// On phones, `w-full max-w-0` keeps this column from contributing its content
-// width to the table's minimum: a truncated payee is `nowrap`, so a long one
-// widened the table past its scroll container and clipped the rightmost
-// column — the posting count. The column takes the remaining width instead and
-// its text truncates as intended. From `sm:` up the original auto sizing stays,
-// so desktop column widths are unchanged.
-const DESCRIPTION_COL: JournalColumnDef = {
-  id: "description",
-  visibility: "always",
-  headerClassName:
-    "description w-full max-w-0 text-xs font-medium text-muted-foreground sm:w-auto sm:max-w-none sm:text-sm",
-  cellClassName: "description w-full max-w-0 sm:w-auto sm:max-w-none",
-};
-
-const UNITS_COL: JournalColumnDef = {
-  id: "units",
-  visibility: "desktop",
-  headerClassName:
-    "num hidden w-20 text-end text-xs font-medium text-muted-foreground sm:table-cell sm:w-32 sm:text-sm",
-  cellClassName:
-    "num hidden w-20 text-end font-mono text-xs sm:table-cell sm:w-32 sm:text-sm",
-};
-
-const CHANGE_COL: JournalColumnDef = {
-  id: "change",
-  visibility: "desktop",
-  headerClassName:
-    "num hidden w-20 text-end text-xs font-medium text-muted-foreground sm:table-cell sm:w-32 sm:text-sm",
-  cellClassName:
-    "num hidden w-20 text-end font-mono text-xs sm:table-cell sm:w-32 sm:text-sm",
-};
-
-const BALANCE_COL: JournalColumnDef = {
-  id: "balance",
-  visibility: "desktop",
-  headerClassName:
-    "num hidden w-20 text-end text-xs font-medium text-muted-foreground sm:table-cell sm:w-32 sm:text-sm",
-  cellClassName:
-    "num hidden w-20 text-end font-mono text-xs sm:table-cell sm:w-32 sm:text-sm",
-};
-
-const POSTINGS_DESKTOP_COL: JournalColumnDef = {
-  id: "postings",
-  visibility: "desktop",
-  headerClassName:
-    "hidden w-24 shrink-0 text-end text-xs font-medium text-muted-foreground sm:table-cell sm:text-sm",
-  cellClassName: "hidden w-24 shrink-0 sm:table-cell",
-};
-
-const POSTINGS_MOBILE_COL: JournalColumnDef = {
-  id: "postings",
-  visibility: "mobile",
-  headerClassName: "w-10 shrink-0 sm:hidden",
-  cellClassName: "w-10 shrink-0 pr-1 sm:hidden",
-};
-
-function journalColumns(isAccountJournal: boolean): JournalColumnDef[] {
-  if (isAccountJournal) {
-    return [
-      DATE_COL,
-      FLAG_COL,
-      DESCRIPTION_COL,
-      UNITS_COL,
-      CHANGE_COL,
-      BALANCE_COL,
-      POSTINGS_DESKTOP_COL,
-      POSTINGS_MOBILE_COL,
-    ];
-  }
-  return [
-    DATE_COL,
-    FLAG_COL,
-    DESCRIPTION_COL,
-    POSTINGS_DESKTOP_COL,
-    POSTINGS_MOBILE_COL,
-  ];
-}
-
-interface JournalTableHeaderProps {
-  columns: JournalColumnDef[];
-}
-
-function JournalTableHeaderRow({ columns }: JournalTableHeaderProps) {
-  const { t } = useTranslations();
-
-  const headerLabel = (id: JournalColumnId): ReactNode => {
-    switch (id) {
-      case "date":
-        return t("journal.date");
-      case "flag":
-        return (
-          <abbr title={t("journal.flag")} className="no-underline">
-            {t("journal.flagAbbrev")}
-          </abbr>
-        );
-      case "description":
-        return t("journal.payeeNarration");
-      case "units":
-        return t("journal.unitsHeader");
-      case "change":
-        return t("journal.change");
-      case "balance":
-        return t("journal.balanceHeader");
-      case "postings":
-        return t("journal.postings");
-    }
-  };
-
-  return (
-    <TableHeader className="head border-b border-border bg-muted/40">
-      <TableRow className="hover:bg-transparent">
-        {columns.map((column, index) => {
-          const isPostingsMobile =
-            column.id === "postings" && column.visibility === "mobile";
-          return (
-            <TableHead
-              key={`${column.id}-${column.visibility}-${index}`}
-              scope="col"
-              className={cn("h-auto py-2.5", column.headerClassName)}
-              aria-label={column.id === "flag" ? t("journal.flag") : undefined}
-            >
-              {isPostingsMobile ? (
-                <span className="sr-only">{headerLabel(column.id)}</span>
-              ) : (
-                headerLabel(column.id)
-              )}
-            </TableHead>
-          );
-        })}
-      </TableRow>
-    </TableHeader>
-  );
-}
-
-interface JournalTableRowProps {
-  item: JournalTableItem;
-  position: number;
-  columns: JournalColumnDef[];
+  layout: "lines" | "days";
+  /** The ledger's names the rows need to say how much moved. */
+  money: JournalMoney;
+  /**
+   * An account's journal: each row also says what the entry did to that
+   * account and where the account then stood, from `change` and `balance`.
+   */
+  register?: JournalRegister;
   showMetadata?: boolean;
   showPostings?: boolean;
   onEntryClick?: (
     entry: JournalDirectiveType,
     opener: HTMLElement | null,
   ) => void;
-  isAccountJournal?: boolean;
-  accountName?: string;
-  withChildren?: boolean;
   ledgerOwner?: string;
   ledgerName?: string;
-  colSpan: number;
+  /** The table's accessible name, where the page names the list itself. */
+  label?: string;
 }
 
-function JournalTableEntryRows({
-  item,
-  position,
-  columns,
-  showMetadata = true,
-  showPostings = true,
-  onEntryClick,
-  isAccountJournal = false,
-  accountName = "",
-  withChildren = true,
-  ledgerOwner,
-  ledgerName,
-  colSpan,
-}: JournalTableRowProps) {
-  const { t } = useTranslations();
-  const directive = item.directive;
-  const entryLabel = journalEntryLabel(directive);
-  const postingsRegionId = useId();
-  const typeClass = getDirectiveTypeClass(directive);
-  const isTransaction = isJournalTransaction(directive);
-  const [isPostingsExpanded, setIsPostingsExpanded] = useState(false);
-  const postingsVisible = showPostings || isPostingsExpanded;
-  const hasVisiblePostings =
-    isTransaction && postingsVisible && (directive.postings?.length ?? 0) > 0;
-  const units = isAccountJournal
-    ? deriveAccountUnits(directive, accountName, withChildren)
-    : undefined;
-  const hasCompactChange =
-    isAccountJournal && Object.keys(item.change ?? {}).length > 0;
-  const hasCompactBalance =
-    isAccountJournal &&
-    isTransaction &&
-    Object.keys(item.balance ?? {}).length > 0;
-
-  const rowProps = onEntryClick
-    ? getClickableRowProps<HTMLTableRowElement>(
-        (event) => onEntryClick(directive, event.currentTarget),
-        {
-          className:
-            "group transition-colors hover:bg-muted/25 data-[state=selected]:bg-muted/25",
-          preserveTableSemantics: true,
-        },
-      )
-    : {
-        className:
-          "group transition-colors hover:bg-muted/25 data-[state=selected]:bg-muted/25",
-      };
-
-  const togglePostings = () => {
-    if (!showPostings) {
-      setIsPostingsExpanded((prev) => !prev);
-    }
-  };
-
-  const flagTone = isTransaction
-    ? directive.flag === "*"
-      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-      : directive.flag === "!"
-        ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
-        : "bg-muted text-muted-foreground"
-    : "bg-muted text-muted-foreground";
-
-  const renderPostingToggle = () =>
-    isTransaction ? (
-      <div className="flex justify-end">
-        <JournalPostingToggle
-          directive={directive}
-          entry={entryLabel}
-          position={position}
-          controls={hasVisiblePostings ? postingsRegionId : undefined}
-          onClick={togglePostings}
-          expanded={postingsVisible}
-          forcedOpen={showPostings}
-        />
-      </div>
-    ) : null;
-
-  const renderCell = (column: JournalColumnDef) => {
-    switch (column.id) {
-      case "date":
-        return onEntryClick ? (
-          <button
-            type="button"
-            aria-label={t("journal.openEntryWithContext", {
-              entry: entryLabel,
-              position,
-            })}
-            className={cn(
-              "rounded-sm text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]",
-            )}
-            onClick={(event) => {
-              event.stopPropagation();
-              onEntryClick(directive, event.currentTarget);
-            }}
-          >
-            {formatDateISO(directive.date)}
-          </button>
-        ) : (
-          formatDateISO(directive.date)
-        );
-      case "flag":
-        return (
-          <span
-            className={cn(
-              "inline-block max-w-full truncate rounded-md px-1.5 py-0.5",
-              flagTone,
-            )}
-            title={directive.directive_type}
-          >
-            {isTransaction ? directive.flag : directive.directive_type}
-          </span>
-        );
-      case "description":
-        return (
-          <>
-            <JournalDescription directive={directive} />
-            {isTransaction && directive.not_booked === true ? (
-              <span className="mt-1 inline-block rounded-md bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                {t("journal.notBooked")}
-              </span>
-            ) : null}
-            {(hasCompactChange || hasCompactBalance) && (
-              <dl className="mt-1 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 px-1 text-xs sm:hidden">
-                {hasCompactChange && (
-                  <>
-                    <dt className="text-muted-foreground">
-                      {t("journal.change")}
-                    </dt>
-                    <dd className="min-w-0 break-all text-end font-mono tabular-nums">
-                      <JournalAmounts balance={item.change} />
-                    </dd>
-                  </>
-                )}
-                {hasCompactBalance && (
-                  <>
-                    <dt className="text-muted-foreground">
-                      {t("journal.balanceHeader")}
-                    </dt>
-                    <dd className="min-w-0 break-all text-end font-mono tabular-nums">
-                      <JournalAmounts balance={item.balance} />
-                    </dd>
-                  </>
-                )}
-              </dl>
-            )}
-          </>
-        );
-      case "units":
-        return <JournalAmounts balance={units} />;
-      case "change":
-        return <JournalAmounts balance={item.change} />;
-      case "balance":
-        return isTransaction ? <JournalAmounts balance={item.balance} /> : null;
-      case "postings":
-        return renderPostingToggle();
-    }
-  };
-
-  // A detail row exists only if something would render inside it. The global
-  // Metadata preference used to create one for every transaction, so a page of
-  // entries without metadata exposed an empty row after each one.
-  const hasVisibleMetadata =
-    showMetadata && displayableMetadataEntries(directive).length > 0;
-  const detailVisible = hasVisiblePostings || hasVisibleMetadata;
-
-  return (
-    <>
-      <TableRow
-        {...rowProps}
-        className={cn(
-          typeClass,
-          "border-b border-border/50",
-          rowProps.className,
-        )}
-      >
-        {columns.map((column, index) => (
-          <TableCell
-            key={`${column.id}-${column.visibility}-${index}`}
-            className={cn("align-top py-2.5", column.cellClassName)}
-          >
-            {renderCell(column)}
-          </TableCell>
-        ))}
-      </TableRow>
-      {detailVisible && (
-        <TableRow
-          className={cn(
-            typeClass,
-            "border-b border-border/50 hover:bg-transparent",
-          )}
-        >
-          <TableCell colSpan={colSpan} className="p-0">
-            {isTransaction && hasVisiblePostings && (
-              <div id={postingsRegionId}>
-                <JournalPostings
-                  directive={directive}
-                  showPostings={postingsVisible}
-                  ledgerOwner={ledgerOwner}
-                  ledgerName={ledgerName}
-                />
-              </div>
-            )}
-            <JournalMetadata
-              directive={directive}
-              showMetadata={showMetadata}
-            />
-          </TableCell>
-        </TableRow>
-      )}
-    </>
-  );
-}
-
+/**
+ * The one list of ledger entries: the Journal, an account's journal and the
+ * Overview's recent activity all draw their entries here, so an entry reads
+ * the same wherever it appears.
+ */
 export function JournalTable({
   data,
+  layout,
+  money,
+  register,
   showMetadata = true,
   showPostings = true,
   onEntryClick,
-  isAccountJournal = false,
-  accountName = "",
-  withChildren = true,
   ledgerOwner,
   ledgerName,
-  layout = "columns",
-  money,
+  label,
 }: JournalTableProps) {
   const { t } = useTranslations();
-  const columns = journalColumns(isAccountJournal);
-  const label = isAccountJournal
-    ? t("journal.accountJournalTable")
-    : t("journal.journalTable");
-
-  if (layout === "lines" && money && !isAccountJournal) {
-    return (
-      <JournalLines
-        data={data}
-        money={money}
-        showMetadata={showMetadata}
-        showPostings={showPostings}
-        onEntryClick={onEntryClick}
-        ledgerOwner={ledgerOwner}
-        ledgerName={ledgerName}
-        label={label}
-      />
-    );
-  }
-  if (layout === "days" && money && !isAccountJournal) {
-    return (
-      <JournalDays
-        data={data}
-        money={money}
-        showMetadata={showMetadata}
-        showPostings={showPostings}
-        onEntryClick={onEntryClick}
-        ledgerOwner={ledgerOwner}
-        ledgerName={ledgerName}
-        label={label}
-      />
-    );
-  }
-
+  const Layout = layout === "lines" ? JournalLines : JournalDays;
   return (
-    <div className="journal">
-      <Table aria-label={label} className="w-full">
-        <JournalTableHeaderRow columns={columns} />
-        <TableBody>
-          {data.map((item, index) => (
-            <JournalTableEntryRows
-              key={
-                item.directive.entry_hash ||
-                `${item.directive.directive_type}-${item.directive.date}-${index}`
-              }
-              item={item}
-              position={index + 1}
-              columns={columns}
-              showMetadata={showMetadata}
-              showPostings={showPostings}
-              onEntryClick={onEntryClick}
-              isAccountJournal={isAccountJournal}
-              accountName={accountName}
-              withChildren={withChildren}
-              ledgerOwner={ledgerOwner}
-              ledgerName={ledgerName}
-              colSpan={columns.length}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <Layout
+      data={data}
+      money={money}
+      register={register}
+      showMetadata={showMetadata}
+      showPostings={showPostings}
+      onEntryClick={onEntryClick}
+      ledgerOwner={ledgerOwner}
+      ledgerName={ledgerName}
+      label={
+        label ??
+        (register
+          ? t("journal.accountJournalTable")
+          : t("journal.journalTable"))
+      }
+    />
   );
 }

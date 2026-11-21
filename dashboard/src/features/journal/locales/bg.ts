@@ -186,10 +186,6 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Бюджетни записи",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "Промяна",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -330,10 +326,6 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Флаг",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "Ф",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "Не е осчетоводена, не се брои",
     description:
@@ -422,10 +414,6 @@ const bgJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "Попълване",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "Получател/Описание",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "Получател",

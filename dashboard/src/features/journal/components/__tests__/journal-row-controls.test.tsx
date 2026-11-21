@@ -4,6 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import { DirectiveType, type JournalTransaction } from "@/common/types/journal";
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
+import {
+  LedgerProviderContext,
+  type LedgerProviderContextType,
+} from "@/common/providers/ledger-provider/context";
 import { JournalTable } from "../journal-table";
 
 vi.unmock("react-i18next");
@@ -37,6 +41,35 @@ function transaction(
   };
 }
 
+const ledger = {
+  ledgerData: { options: { renderCommas: true } },
+} as unknown as LedgerProviderContextType;
+
+const money = {
+  primaryCurrency: "USD",
+  incomeRoot: "Income",
+  expensesRoot: "Expenses",
+  accountFilter: "",
+};
+
+const LAYOUTS = ["lines", "days"] as const;
+type Layout = (typeof LAYOUTS)[number];
+
+/** Every list the Journal draws, in the reader's language. */
+function renderJournal(
+  localization: ReturnType<typeof createLocalization>,
+  layout: Layout,
+  props: Omit<Parameters<typeof JournalTable>[0], "layout" | "money">,
+) {
+  return render(
+    <LocalizationProvider localization={localization}>
+      <LedgerProviderContext.Provider value={ledger}>
+        <JournalTable layout={layout} money={money} {...props} />
+      </LedgerProviderContext.Provider>
+    </LocalizationProvider>,
+  );
+}
+
 const entries = [
   transaction("fees", "BANK FEES", "Monthly fee", 1),
   transaction("dinner", "Uncle Boons", "Dinner", 2),
@@ -56,23 +89,19 @@ const entries = [
   ),
 ];
 
-describe("Journal entry control names", () => {
+describe.each(LAYOUTS)("Journal entry control names (%s)", (layout) => {
   it.each(["en", "de"] as const)(
-    "%s identifies same-day, identical and truncated entries and keeps the responsive disclosure copies synchronized",
+    "%s identifies same-day, identical and truncated entries and names each disclosure by its row",
     async (language) => {
       const localization = createLocalization();
       await localization.changeLanguage(language);
       const onEntryClick = vi.fn();
-      render(
-        <LocalizationProvider localization={localization}>
-          <JournalTable
-            data={entries.map((directive) => ({ directive }))}
-            showMetadata={false}
-            showPostings={false}
-            onEntryClick={onEntryClick}
-          />
-        </LocalizationProvider>,
-      );
+      renderJournal(localization, layout, {
+        data: entries.map((directive) => ({ directive })),
+        showMetadata: false,
+        showPostings: false,
+        onEntryClick,
+      });
       const openControls = screen.getAllByRole("button", {
         name: language === "en" ? /^Open entry / : /^Eintrag /,
       });
@@ -98,13 +127,14 @@ describe("Journal entry control names", () => {
       expect(Array.from(names[4] ?? "").length).toBeLessThan(220);
       expect(Array.from(names[5] ?? "").length).toBeLessThan(220);
       const disclosureNames = openControls.map((openControl, index) => {
-        const copies = within(openControl.closest("tr")!).getAllByRole(
+        // One disclosure per entry, in every width: the layout moves it
+        // rather than drawing a second copy for a phone.
+        const toggles = within(openControl.closest("tr")!).getAllByRole(
           "button",
           { expanded: false },
         );
-        expect(copies).toHaveLength(2);
-        const name = copies[0].getAttribute("aria-label");
-        expect(copies[1]).toHaveAccessibleName(name!);
+        expect(toggles).toHaveLength(1);
+        const name = toggles[0].getAttribute("aria-label");
         expect(name).toContain(
           language === "en" ? `(row ${index + 1})` : `(Zeile ${index + 1})`,
         );
@@ -115,18 +145,14 @@ describe("Journal entry control names", () => {
       const row = openControls[0].closest("tr")!;
       expect(row).toHaveRole("row");
       expect(row).not.toHaveAttribute("tabindex");
-      // CSS chooses one of these cells in the browser; jsdom exposes both.
-      const toggles = within(row).getAllByRole("button", { expanded: false });
-      expect(toggles).toHaveLength(2);
-      for (const toggle of toggles) {
-        expect(toggle).toHaveAccessibleName(
-          language === "en"
-            ? "Show 1 posting for 2017-09-04 BANK FEES Monthly fee (row 1)"
-            : "1 Buchung für 2017-09-04 BANK FEES Monthly fee anzeigen (Zeile 1)",
-        );
-        expect(toggle).toHaveTextContent("1");
-        expect(toggle).not.toHaveAttribute("aria-controls");
-      }
+      const [toggle] = within(row).getAllByRole("button", { expanded: false });
+      expect(toggle).toHaveAccessibleName(
+        language === "en"
+          ? "Show 1 posting for 2017-09-04 BANK FEES Monthly fee (row 1)"
+          : "1 Buchung für 2017-09-04 BANK FEES Monthly fee anzeigen (Zeile 1)",
+      );
+      expect(toggle).toHaveTextContent("1");
+      expect(toggle).not.toHaveAttribute("aria-controls");
       const secondRow = openControls[1].closest("tr")!;
       expect(
         within(secondRow).getAllByRole("button", { expanded: false })[0],
@@ -144,42 +170,37 @@ describe("Journal entry control names", () => {
         openControls[0],
       );
       expect(onEntryClick).toHaveBeenCalledTimes(1);
-      toggles[0].focus();
+      toggle.focus();
       await user.keyboard("{Enter}");
-      const targetId = toggles[0].getAttribute("aria-controls");
+      const targetId = toggle.getAttribute("aria-controls");
       expect(targetId).toBeTruthy();
       const target = document.getElementById(targetId!);
       expect(target).not.toBeNull();
       expect(within(target!).getAllByRole("listitem")).toHaveLength(1);
-      for (const toggle of toggles) {
-        expect(toggle).toHaveAttribute("aria-expanded", "true");
-        expect(toggle).toHaveAttribute("aria-controls", targetId);
-        expect(toggle).toHaveAccessibleName(
-          language === "en"
-            ? "Hide 1 posting for 2017-09-04 BANK FEES Monthly fee (row 1)"
-            : "1 Buchung für 2017-09-04 BANK FEES Monthly fee ausblenden (Zeile 1)",
-        );
-      }
-      toggles[1].focus();
+      expect(toggle).toHaveAttribute("aria-expanded", "true");
+      expect(toggle).toHaveAccessibleName(
+        language === "en"
+          ? "Hide 1 posting for 2017-09-04 BANK FEES Monthly fee (row 1)"
+          : "1 Buchung für 2017-09-04 BANK FEES Monthly fee ausblenden (Zeile 1)",
+      );
       await user.keyboard(" ");
       expect(document.getElementById(targetId!)).toBeNull();
-      for (const toggle of toggles) {
-        expect(toggle).toHaveAttribute("aria-expanded", "false");
-        expect(toggle).not.toHaveAttribute("aria-controls");
-      }
-      await user.click(toggles[1]);
-      expect(toggles[0]).toHaveAttribute("aria-expanded", "true");
+      expect(toggle).toHaveAttribute("aria-expanded", "false");
+      expect(toggle).not.toHaveAttribute("aria-controls");
+      await user.click(toggle);
+      expect(toggle).toHaveAttribute("aria-expanded", "true");
+      // Opening postings never opens the entry.
       expect(onEntryClick).toHaveBeenCalledTimes(1);
 
       await act(async () =>
         localization.changeLanguage(language === "en" ? "de" : "en"),
       );
-      expect(toggles[0]).toHaveAccessibleName(
+      expect(toggle).toHaveAccessibleName(
         language === "en"
           ? "1 Buchung für 2017-09-04 BANK FEES Monthly fee ausblenden (Zeile 1)"
           : "Hide 1 posting for 2017-09-04 BANK FEES Monthly fee (row 1)",
       );
-      expect(toggles[0]).toHaveAttribute("aria-controls", targetId);
+      expect(toggle).toHaveAttribute("aria-controls", targetId);
     },
   );
 
@@ -196,16 +217,12 @@ describe("Journal entry control names", () => {
       meta: { receipt: "fee.pdf" },
     };
     const onEntryClick = vi.fn();
-    render(
-      <LocalizationProvider localization={localization}>
-        <JournalTable
-          data={[{ directive: withMetadata }, { directive: withoutPostings }]}
-          showMetadata
-          showPostings={false}
-          onEntryClick={onEntryClick}
-        />
-      </LocalizationProvider>,
-    );
+    renderJournal(localization, layout, {
+      data: [{ directive: withMetadata }, { directive: withoutPostings }],
+      showMetadata: true,
+      showPostings: false,
+      onEntryClick,
+    });
     expect(screen.getByText("dinner.pdf")).toBeInTheDocument();
     expect(screen.getByText("fee.pdf")).toBeInTheDocument();
     const toggles = screen.getAllByRole("button", { expanded: false });
@@ -219,16 +236,15 @@ describe("Journal entry control names", () => {
     const target = document.getElementById(targetId!);
     expect(within(target!).getAllByRole("listitem")).toHaveLength(2);
     expect(target).not.toHaveTextContent("dinner.pdf");
-    expect(toggles[1]).toHaveAttribute("aria-controls", targetId);
 
-    const emptyToggles = screen.getAllByRole("button", {
+    const emptyToggle = screen.getByRole("button", {
       name: "Show 0 postings for 2017-09-04 BANK FEES Monthly fee (row 2)",
       exact: true,
     });
-    await user.click(emptyToggles[0]);
-    for (const toggle of emptyToggles)
-      expect(toggle).not.toHaveAttribute("aria-controls");
-    await user.click(toggles[1]);
+    await user.click(emptyToggle);
+    // Nothing mounted to point at.
+    expect(emptyToggle).not.toHaveAttribute("aria-controls");
+    await user.click(toggles[0]);
     expect(document.getElementById(targetId!)).toBeNull();
     expect(screen.getByText("dinner.pdf")).toBeInTheDocument();
     expect(screen.getByText("fee.pdf")).toBeInTheDocument();
@@ -241,16 +257,12 @@ describe("Journal entry control names", () => {
       const localization = createLocalization();
       await localization.changeLanguage(language);
       const onEntryClick = vi.fn();
-      const { container } = render(
-        <LocalizationProvider localization={localization}>
-          <JournalTable
-            data={entries.slice(0, 2).map((directive) => ({ directive }))}
-            showMetadata={false}
-            showPostings
-            onEntryClick={onEntryClick}
-          />
-        </LocalizationProvider>,
-      );
+      const { container } = renderJournal(localization, layout, {
+        data: entries.slice(0, 2).map((directive) => ({ directive })),
+        showMetadata: false,
+        showPostings: true,
+        onEntryClick,
+      });
       expect(
         screen.queryByRole("button", { expanded: true }),
       ).not.toBeInTheDocument();
@@ -260,7 +272,7 @@ describe("Journal entry control names", () => {
           : "1 Buchung für 2017-09-04 BANK FEES Monthly fee sichtbar (Zeile 1)",
         { exact: true },
       );
-      expect(first).toHaveLength(2);
+      expect(first).toHaveLength(1);
       expect(
         screen.getAllByText(
           language === "en"
@@ -268,7 +280,7 @@ describe("Journal entry control names", () => {
             : "2 Buchungen für 2017-09-04 Uncle Boons Dinner sichtbar (Zeile 2)",
           { exact: true },
         ),
-      ).toHaveLength(2);
+      ).toHaveLength(1);
       expect(container.querySelectorAll(".postings")).toHaveLength(2);
       expect(onEntryClick).not.toHaveBeenCalled();
     },
@@ -277,7 +289,7 @@ describe("Journal entry control names", () => {
 
 // w21/678: a transaction the ledger could not book is listed, marked, and says
 // it is not counted in balances.
-describe("Journal entry that failed booking", () => {
+describe.each(LAYOUTS)("Journal entry that failed booking (%s)", (layout) => {
   it.each([
     ["en", "Not booked, not counted"],
     ["de", "Nicht gebucht, nicht gezählt"],
@@ -290,20 +302,19 @@ describe("Journal entry that failed booking", () => {
         ...transaction("sell", "Broker", "QA Sell", 2),
         not_booked: true,
       };
-      render(
-        <LocalizationProvider localization={localization}>
-          <JournalTable
-            data={[broken, transaction("buy", "Broker", "QA Buy", 2)].map(
-              (directive) => ({ directive }),
-            )}
-            showMetadata={false}
-            showPostings={false}
-          />
-        </LocalizationProvider>,
-      );
+      renderJournal(localization, layout, {
+        data: [broken, transaction("buy", "Broker", "QA Buy", 2)].map(
+          (directive) => ({ directive }),
+        ),
+        showMetadata: false,
+        showPostings: false,
+      });
       expect(screen.getAllByText(text)).toHaveLength(1);
       const row = screen.getByText(text).closest("tr")!;
-      expect(within(row).getByText(/QA Sell/)).toBeTruthy();
+      // The lines layout writes the narration inline where it is wide and on
+      // a second line where it is not; either way it is this row's.
+      expect(within(row).getAllByText(/QA Sell/).length).toBeGreaterThan(0);
+      expect(within(row).queryByText(/QA Buy/)).toBeNull();
     },
   );
 });

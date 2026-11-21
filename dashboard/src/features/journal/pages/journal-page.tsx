@@ -35,6 +35,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useJournalFilterState } from "@/features/journal/hooks/use-journal-filter-state";
+import { useJournalMoney } from "@/features/journal/hooks/use-journal-money";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { NewDirectiveDialog } from "@/features/journal/components/new-directive-dialog";
 import { EntryContextDialog } from "@/features/journal/components/entry-context-dialog";
@@ -78,16 +79,7 @@ const JournalContent = () => {
     from: "/ledger/$ledgerOwner/$ledgerName/journal",
   });
   const { canWrite } = useLedgerPermission();
-  const { primaryCurrency, ledgerData } = useLedger();
-  const accountFilter = ledgerSearchParams.searchParams.account;
-  // What each row needs to say how much moved, in the ledger's own names.
-  // Beancount's own root names where the ledger has not renamed them.
-  const incomeRoot = ledgerData?.options?.nameIncome || "Income";
-  const expensesRoot = ledgerData?.options?.nameExpenses || "Expenses";
-  const money = useMemo(
-    () => ({ primaryCurrency, incomeRoot, expensesRoot, accountFilter }),
-    [accountFilter, expensesRoot, incomeRoot, primaryCurrency],
-  );
+  const money = useJournalMoney(ledgerSearchParams.searchParams.account);
 
   // Filter state — persisted per ledger in localStorage. The keys carry the
   // ledger id so one ledger's selections never hide another's entries; the

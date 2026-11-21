@@ -206,10 +206,6 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Lançamentos de orçamento",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "Mudança",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -350,10 +346,6 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Indicador",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "Não lançada, não conta",
     description:
@@ -442,10 +434,6 @@ const ptJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "Ajuste",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "Beneficiário/Descrição",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "Beneficiário",

@@ -165,10 +165,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "预算条目",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "变更",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -308,10 +304,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "标记",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "未入账，不计入余额",
     description:
@@ -400,10 +392,6 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "补平",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "收款人/备注",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "收款人",

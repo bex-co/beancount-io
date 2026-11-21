@@ -142,9 +142,9 @@ describe("Overview in Pacific/Apia, which skipped 2011-12-30", () => {
   );
 
   it.each([
-    ["2011-12-29", "Dec 29, 2011"],
-    ["2011-12-30", "Dec 30, 2011"],
-    ["2011-12-31", "Dec 31, 2011"],
+    ["2011-12-29", "Thu, Dec 29, 2011"],
+    ["2011-12-30", "Fri, Dec 30, 2011"],
+    ["2011-12-31", "Sat, Dec 31, 2011"],
   ])("labels a %s Recent activity entry %s", async (day, label) => {
     journal.date = day;
     render(

@@ -142,7 +142,7 @@ describe("Persian ledger dates stay Gregorian (w3/632)", () => {
     expect(option.yAxis.axisLabel.formatter(18000)).not.toMatch(/\d/);
   });
 
-  it("gives Recent activity the Gregorian day, with the year when it differs", async () => {
+  it("gives Recent activity the Gregorian day, as the Journal names it", async () => {
     await mount(
       <RecentActivityCard
         ledgerId="alice/books"
@@ -157,11 +157,14 @@ describe("Persian ledger dates stay Gregorian (w3/632)", () => {
         canWrite={false}
       />,
     );
+    // The Journal's day heading: weekday, day, month and year.
     const expected = ledgerDateFormat("fa", {
+      weekday: "short",
+      year: "numeric",
       month: "short",
       day: "numeric",
-      ...(new Date().getFullYear() !== 2026 ? { year: "numeric" } : {}),
-    }).format(new Date(2026, 1, 10));
+      timeZone: "UTC",
+    }).format(new Date(Date.UTC(2026, 1, 10)));
 
     expect(screen.getAllByText(expected).length).toBeGreaterThan(0);
     expect(expected).not.toContain("بهمن");

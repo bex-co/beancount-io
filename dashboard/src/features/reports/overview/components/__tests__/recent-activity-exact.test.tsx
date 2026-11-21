@@ -73,8 +73,15 @@ function card(account = "") {
   );
 }
 
+// An amount is one isolated run — sign, figure and unit — so a
+// right-to-left page keeps their order; read it whole.
 const shows = (amount: RegExp) =>
-  expect(screen.getAllByText(amount).length).toBeGreaterThan(0);
+  expect(
+    screen.getAllByText(
+      (_, element) =>
+        element?.tagName === "BDI" && amount.test(element.textContent ?? ""),
+    ).length,
+  ).toBeGreaterThan(0);
 
 describe("Recent activity exact amounts", () => {
   it("shows a large income with every digit", () => {
@@ -84,7 +91,7 @@ describe("Recent activity exact amounts", () => {
     ];
     card();
     shows(/9,007,199,254,740,993\.00 USD/);
-    expect(screen.queryByText(/9,007,199,254,740,992/)).toBeNull();
+    expect(document.body).not.toHaveTextContent(/9,007,199,254,740,992/);
   });
 
   it("shows a filtered one-dollar net instead of multiple postings", () => {

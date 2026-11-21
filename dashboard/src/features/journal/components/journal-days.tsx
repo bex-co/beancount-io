@@ -43,6 +43,12 @@ import { journalEntryLabel } from "./journal-entry-label";
 import { BalanceCheck } from "./journal-balance-check";
 import { balanceRowTone } from "./journal-balance-tone";
 import { moneyFlow } from "./journal-money-flow";
+import {
+  type JournalRegister,
+  type JournalTableItem,
+  RegisterBalance,
+  RegisterChange,
+} from "./journal-register";
 
 /** What the rows need to say how much moved: the ledger's own names. */
 export type JournalMoney = {
@@ -53,7 +59,7 @@ export type JournalMoney = {
   accountFilter: string;
 };
 
-type Item = { directive: JournalDirectiveType };
+type Item = JournalTableItem;
 
 /** A day as a heading: "Fri, Sep 8, 2017" in the reader's language. */
 function formatDay(date: string, language: string): string {
@@ -244,6 +250,7 @@ function DayEntryRows({
   onEntryClick,
   ledgerOwner,
   ledgerName,
+  register,
 }: {
   item: Item;
   position: number;
@@ -256,6 +263,7 @@ function DayEntryRows({
   ) => void;
   ledgerOwner?: string;
   ledgerName?: string;
+  register?: JournalRegister;
 }) {
   const { t } = useTranslations();
   const formatNumber = useFormatNumber();
@@ -372,13 +380,31 @@ function DayEntryRows({
                     </Badge>
                   )}
                 </div>
-                {summary && transaction && (
-                  <TransactionAmount
-                    summary={summary}
-                    transaction={transaction}
-                    money={money}
-                    className="shrink-0 text-end text-base leading-6 sm:hidden"
-                  />
+                {register && !balance ? (
+                  // On an account's journal: what the entry did there, and
+                  // under it where the account then stood, named.
+                  <div className="shrink-0 space-y-0.5 text-end sm:hidden">
+                    <RegisterChange
+                      item={item}
+                      register={register}
+                      className="text-base leading-6"
+                    />
+                    <RegisterBalance
+                      item={item}
+                      labelClassName=""
+                      className="text-xs text-muted-foreground"
+                    />
+                  </div>
+                ) : (
+                  summary &&
+                  transaction && (
+                    <TransactionAmount
+                      summary={summary}
+                      transaction={transaction}
+                      money={money}
+                      className="shrink-0 text-end text-base leading-6 sm:hidden"
+                    />
+                  )
                 )}
               </div>
               {transaction ? (
@@ -430,13 +456,28 @@ function DayEntryRows({
           )}
         </TableCell>
         <TableCell className="p-0 text-end align-top text-[15px] leading-5 sm:py-3 sm:pe-2 sm:ps-2 sm:pointer-coarse:text-base sm:pointer-coarse:leading-6">
-          {summary && transaction && (
-            <TransactionAmount
-              summary={summary}
-              transaction={transaction}
-              money={money}
-              className="hidden sm:block"
-            />
+          {register && !balance ? (
+            // On an account's journal: what the entry did there, and under
+            // it where the account then stood, named, as a bank's app sets
+            // a running balance.
+            <div className="hidden space-y-0.5 sm:block">
+              <RegisterChange item={item} register={register} />
+              <RegisterBalance
+                item={item}
+                labelClassName=""
+                className="text-[13px] text-muted-foreground"
+              />
+            </div>
+          ) : (
+            summary &&
+            transaction && (
+              <TransactionAmount
+                summary={summary}
+                transaction={transaction}
+                money={money}
+                className="hidden sm:block"
+              />
+            )
           )}
           {balance?.amount && (
             // The balance the statement gave, as asserted.
@@ -445,7 +486,14 @@ function DayEntryRows({
                 balance.amount.number,
                 balance.amount.currency,
                 fractionDigitsOf(balance.amount.number),
-              )}{" "}
+              )}
+              {/* An explicit `~` tolerance, as the ledger wrote it. */}
+              {balance.tolerance &&
+                ` ~ ${formatNumber(
+                  balance.tolerance,
+                  balance.amount.currency,
+                  fractionDigitsOf(balance.tolerance),
+                )}`}{" "}
               {balance.amount.currency}
             </Amount>
           )}
@@ -562,6 +610,7 @@ export function JournalDays({
   ledgerOwner,
   ledgerName,
   label,
+  register,
 }: {
   data: Item[];
   money: JournalMoney;
@@ -574,6 +623,8 @@ export function JournalDays({
   ledgerOwner?: string;
   ledgerName?: string;
   label: string;
+  /** An account's journal: each entry also carries its change and balance. */
+  register?: JournalRegister;
 }) {
   const { t, i18n } = useTranslations();
   const days = useMemo(() => {
@@ -640,6 +691,7 @@ export function JournalDays({
                 onEntryClick={onEntryClick}
                 ledgerOwner={ledgerOwner}
                 ledgerName={ledgerName}
+                register={register}
               />
             ))}
           </TableBody>

@@ -29,7 +29,6 @@ const REPAIRED = [
   ["journal.note", "Nota"],
   ["journal.metadata", "Metadades"],
   ["journal.postings", "Apunts"],
-  ["journal.payeeNarration", "Beneficiari/Descripció"],
   ["journal.pendingTransactions", "Transaccions pendents"],
   ["journal.otherTransactions", "Altres transaccions"],
   ["journal.linkedDocuments", "Documents vinculats"],
@@ -52,7 +51,6 @@ const MISASSIGNED = [
   ["journal.note", "No s'han trobat beneficiaris"],
   ["journal.metadata", "Carregant el context de l'entrada..."],
   ["journal.pending", "El beneficiari és obligatori"],
-  ["journal.payeeNarration", "Emplenar"],
   [
     "component.searchControls.clearAll",
     "Veure els canvis del compte al llarg del temps",

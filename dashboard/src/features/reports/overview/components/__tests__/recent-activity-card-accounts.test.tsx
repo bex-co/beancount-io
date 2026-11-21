@@ -56,49 +56,62 @@ const props = {
   canWrite: true,
 };
 
+/** The Journal row Recent activity draws for the entry named `name`. */
+function rowOf(name: string | RegExp) {
+  return screen
+    .getByRole("button", {
+      name: (label) =>
+        label.startsWith("Open entry ") &&
+        (typeof name === "string" ? label.includes(name) : name.test(label)),
+    })
+    .closest("tr")!;
+}
+
 /**
- * Text a row shows at a breakpoint, resolving Tailwind's responsive display
- * classes the way the browser would (jsdom applies no CSS).
+ * Recent activity draws the Journal's own rows (the day layout), so an entry
+ * reads the same on the Overview as in the Journal: where the money moved,
+ * and one amount by the Journal's rule.
  */
-function visibleText(row: HTMLElement, viewport: "narrow" | "desktop") {
-  const clone = row.cloneNode(true) as HTMLElement;
-  for (const el of Array.from(clone.querySelectorAll<HTMLElement>("*"))) {
-    const classes = el.className.toString().split(/\s+/);
-    const hidden =
-      viewport === "narrow"
-        ? classes.includes("hidden")
-        : classes.includes("sm:hidden") ||
-          (classes.includes("hidden") &&
-            !classes.some((c) => /^sm:(block|flex|inline-flex)$/.test(c)));
-    if (hidden) el.remove();
-  }
-  return clone.textContent ?? "";
-}
-
-function occurrences(text: string, needle: string) {
-  return text.split(needle).length - 1;
-}
-
-describe("RecentActivityCard account summary", () => {
+describe("RecentActivityCard rows", () => {
   beforeEach(() => {
     postings = [];
     narration = "Coffee";
     payee = "Cafe";
   });
 
-  it("names a row's accounts once at desktop width and keeps them on narrow rows", () => {
+  it("draws the Journal's list under the section's own name", () => {
     postings = [
       { account: "Expenses:Food", units: { number: "4.50", currency: "USD" } },
       { account: "Assets:Cash", units: { number: "-4.50", currency: "USD" } },
     ];
     render(<RecentActivityCard {...props} />);
-    const row = screen.getByRole("button", { name: /Cafe/ });
 
-    expect(occurrences(visibleText(row, "desktop"), "Food · Cash")).toBe(1);
-    expect(occurrences(visibleText(row, "narrow"), "Food · Cash")).toBe(1);
+    expect(
+      screen.getByRole("table", { name: "Recent activity" }),
+    ).toBeInTheDocument();
+    // One disclosure for the entry's postings, as the Journal offers.
+    const toggle = within(rowOf("Cafe")).getByRole("button", {
+      expanded: false,
+    });
+    expect(toggle).toHaveTextContent("2");
   });
 
-  it("keeps a transfer's accounts in the subtitle beside its Transfer label", () => {
+  it("says where the money moved, from the account it left to the one it reached", () => {
+    postings = [
+      { account: "Expenses:Food", units: { number: "4.50", currency: "USD" } },
+      { account: "Assets:Cash", units: { number: "-4.50", currency: "USD" } },
+    ];
+    render(<RecentActivityCard {...props} />);
+    const row = rowOf("Cafe");
+
+    // Wide, by the accounts' full names; narrow, by their last names.
+    expect(row).toHaveTextContent("Assets:Cash");
+    expect(row).toHaveTextContent("Expenses:Food");
+    expect(row).toHaveTextContent("Cash → Food");
+    expect(row).toHaveTextContent("-4.50 USD");
+  });
+
+  it("shows a transfer between the reader's own accounts by its size", () => {
     postings = [
       {
         account: "Assets:Savings",
@@ -110,14 +123,13 @@ describe("RecentActivityCard account summary", () => {
       },
     ];
     render(<RecentActivityCard {...props} />);
-    const row = screen.getByRole("button", { name: /Cafe/ });
-    const desktop = visibleText(row, "desktop");
+    const row = rowOf("Cafe");
 
-    expect(occurrences(desktop, "Savings · Checking")).toBe(1);
-    expect(desktop).toContain("Transfer");
-    expect(occurrences(visibleText(row, "narrow"), "Savings · Checking")).toBe(
-      1,
-    );
+    expect(row).toHaveTextContent("Assets:Checking");
+    expect(row).toHaveTextContent("Assets:Savings");
+    expect(row).toHaveTextContent("100.00 USD");
+    expect(row).not.toHaveTextContent("-100.00 USD");
+    expect(row).not.toHaveTextContent("+100.00 USD");
   });
 
   describe("costed investment activity amounts", () => {
@@ -177,42 +189,32 @@ describe("RecentActivityCard account summary", () => {
         narration: "Buy 100 ACME @ $84.60",
         postings: purchase,
         expenseAmount: "-4.95 USD",
-        cashAmount: "-8,464.95 USD",
+        cashChange: "-8,464.95 USD",
       },
       {
         narration: "Sell 100 NWRB post-split shares — long-term loss",
         postings: lossSale,
         expenseAmount: "-139.95 USD",
-        cashAmount: "905.05 USD",
+        cashChange: "+905.05 USD",
       },
     ];
 
     it.each(trades)(
-      "shows Multiple postings instead of an expense subtotal for $narration at both widths",
+      "never passes an expense subtotal off as $narration",
       (trade) => {
         postings = trade.postings;
         narration = trade.narration;
         payee = "";
         render(<RecentActivityCard {...props} canWrite={false} />);
-        const activity = screen.getByRole("region", {
-          name: /Recent activity/i,
-        });
-        const row = within(activity).getByRole("button", {
-          name: (name) => name.includes(trade.narration),
-        });
 
-        expect(within(row).getByText("Multiple postings")).toBeInTheDocument();
-        for (const viewport of ["narrow", "desktop"] as const) {
-          const text = visibleText(row, viewport);
-          expect(text).toContain("Multiple postings");
-          expect(text).not.toContain(trade.expenseAmount);
-          expect(text).not.toContain(trade.cashAmount);
-        }
+        expect(rowOf(trade.narration)).not.toHaveTextContent(
+          trade.expenseAmount,
+        );
       },
     );
 
     it.each(trades)(
-      "shows the explicit cash-account movement for $narration",
+      "shows the filtered cash account's own change for $narration",
       (trade) => {
         postings = trade.postings;
         narration = trade.narration;
@@ -224,15 +226,8 @@ describe("RecentActivityCard account summary", () => {
             canWrite={false}
           />,
         );
-        const row = screen.getByRole("button", {
-          name: (name) => name.includes(trade.narration),
-        });
 
-        expect(within(row).getByText(trade.cashAmount)).toBeInTheDocument();
-        expect(
-          within(row).queryByText("Multiple postings"),
-        ).not.toBeInTheDocument();
-        expect(visibleText(row, "narrow")).toContain(trade.cashAmount);
+        expect(rowOf(trade.narration)).toHaveTextContent(trade.cashChange);
       },
     );
 
@@ -248,70 +243,30 @@ describe("RecentActivityCard account summary", () => {
         },
       ];
       render(<RecentActivityCard {...props} />);
-      const row = screen.getByRole("button", { name: /Cafe/ });
 
-      expect(within(row).getByText("-4.95 USD")).toBeInTheDocument();
-      expect(
-        within(row).queryByText("Multiple postings"),
-      ).not.toBeInTheDocument();
+      expect(rowOf("Cafe")).toHaveTextContent("-4.95 USD");
     });
 
-    it.each([
-      [
-        "payroll",
-        [
-          {
-            account: "Assets:Checking",
-            units: { number: "2550.60", currency: "USD" },
-          },
-          {
-            account: "Income:Salary",
-            units: { number: "-4639.70", currency: "USD" },
-          },
-          {
-            account: "Expenses:Taxes",
-            units: { number: "2089.10", currency: "USD" },
-          },
-        ],
-      ],
-      [
-        "gain sale",
-        [
-          {
-            account: "Assets:Brokerage:ACME",
-            units: { number: "-40", currency: "ACME" },
-            cost: {
-              number: "84.60",
-              currency: "USD",
-              date: "2025-09-08",
-              label: null,
-            },
-          },
-          {
-            account: "Assets:Brokerage:Cash",
-            units: { number: "3665.05", currency: "USD" },
-          },
-          {
-            account: "Expenses:Brokerage:Commissions",
-            units: { number: "4.95", currency: "USD" },
-          },
-          {
-            account: "Income:Investment:CapitalGains",
-            units: { number: "-286.00", currency: "USD" },
-          },
-        ],
-      ],
-    ] as const)(
-      "preserves the Multiple postings fallback for %s",
-      (_, controlPostings) => {
-        postings = [...controlPostings];
-        render(<RecentActivityCard {...props} />);
-        expect(
-          within(screen.getByRole("button", { name: /Cafe/ })).getByText(
-            "Multiple postings",
-          ),
-        ).toBeInTheDocument();
-      },
-    );
+    it("shows what a payroll earned, as the Journal does", () => {
+      postings = [
+        {
+          account: "Assets:Checking",
+          units: { number: "2550.60", currency: "USD" },
+        },
+        {
+          account: "Income:Salary",
+          units: { number: "-4639.70", currency: "USD" },
+        },
+        {
+          account: "Expenses:Taxes",
+          units: { number: "2089.10", currency: "USD" },
+        },
+      ];
+      render(<RecentActivityCard {...props} />);
+
+      // The Overview used to say "Multiple postings" here while the Journal
+      // showed the earnings.
+      expect(rowOf("Cafe")).toHaveTextContent("+4,639.70 USD");
+    });
   });
 });

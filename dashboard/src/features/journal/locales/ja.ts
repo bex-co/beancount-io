@@ -163,10 +163,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "予算エントリ",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "変更",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -307,10 +303,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "フラグ",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "未記帳・残高に含まれません",
     description:
@@ -399,10 +391,6 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "パッド",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "支払先/説明",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "支払先",

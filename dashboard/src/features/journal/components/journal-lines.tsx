@@ -24,8 +24,14 @@ import { type JournalMoney, TransactionAmount } from "./journal-days";
 import { moneyFlow, shortAccountPair } from "./journal-money-flow";
 import { BalanceCheck } from "./journal-balance-check";
 import { balanceIsOff, balanceRowTone } from "./journal-balance-tone";
+import {
+  type JournalRegister,
+  type JournalTableItem,
+  RegisterBalance,
+  RegisterChange,
+} from "./journal-register";
 
-type Item = { directive: JournalDirectiveType };
+type Item = JournalTableItem;
 type OpenEntry = (
   entry: JournalDirectiveType,
   opener: HTMLElement | null,
@@ -50,6 +56,7 @@ function LineRows({
   onEntryClick,
   ledgerOwner,
   ledgerName,
+  register,
 }: {
   item: Item;
   position: number;
@@ -59,6 +66,7 @@ function LineRows({
   onEntryClick?: OpenEntry;
   ledgerOwner?: string;
   ledgerName?: string;
+  register?: JournalRegister;
 }) {
   const { t } = useTranslations();
   // Grouped as the transactions' amounts are (2,962.67, not 2962.67).
@@ -218,6 +226,13 @@ function LineRows({
                 className="min-w-0 truncate font-medium"
               >
                 {title}
+              </span>
+            )}
+            {transaction?.not_booked === true && (
+              // The ledger could not book it: listed, but not in any
+              // balance (w21/678), as the day layout marks it.
+              <span className="shrink-0 rounded-md bg-amber-500/10 px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-amber-700 dark:text-amber-400">
+                {t("journal.notBooked")}
               </span>
             )}
             {narration && (
@@ -420,7 +435,14 @@ function LineRows({
               phone, so the entry's own words get the width. */}
           <div className="flex flex-col items-end gap-0.5 sm:flex-row sm:items-start sm:justify-end sm:gap-2">
             <div className="text-end sm:whitespace-nowrap">
-              {summary && transaction ? (
+              {register && !balance ? (
+                // On an account's journal: what the entry did there.
+                <RegisterChange
+                  item={item}
+                  register={register}
+                  quietCurrencyOnPhone={money.primaryCurrency}
+                />
+              ) : summary && transaction ? (
                 <TransactionAmount
                   summary={summary}
                   transaction={transaction}
@@ -435,6 +457,13 @@ function LineRows({
                     balance.amount.currency,
                     fractionDigitsOf(balance.amount.number),
                   )}
+                  {/* An explicit `~` tolerance, as the ledger wrote it. */}
+                  {balance.tolerance &&
+                    ` ~ ${formatNumber(
+                      balance.tolerance,
+                      balance.amount.currency,
+                      fractionDigitsOf(balance.tolerance),
+                    )}`}
                   <span
                     className={
                       balance.amount.currency === money.primaryCurrency
@@ -448,6 +477,17 @@ function LineRows({
                 </Amount>
               ) : null}
             </div>
+            {register && (
+              // Where the account then stood: its own place beside the
+              // amount, and under it on a phone, named there.
+              <div className="text-end max-sm:text-xs max-sm:text-muted-foreground max-sm:empty:hidden sm:w-36 sm:whitespace-nowrap">
+                <RegisterBalance
+                  item={item}
+                  labelClassName="sm:sr-only"
+                  quietCurrencyOnPhone={money.primaryCurrency}
+                />
+              </div>
+            )}
             {transaction ? (
               <div className="flex justify-end sm:w-14">
                 <JournalPostingToggle
@@ -511,6 +551,7 @@ export function JournalLines({
   ledgerOwner,
   ledgerName,
   label,
+  register,
 }: {
   data: Item[];
   money: JournalMoney;
@@ -520,6 +561,8 @@ export function JournalLines({
   ledgerOwner?: string;
   ledgerName?: string;
   label: string;
+  /** An account's journal: each line also carries its change and balance. */
+  register?: JournalRegister;
 }) {
   const { t } = useTranslations();
   return (
@@ -533,7 +576,9 @@ export function JournalLines({
           <col />
           {/* From and to, where there is room for full account names. */}
           <col className="w-0 @4xl/journal:w-[30%] @5xl/journal:w-[34%]" />
-          <col className="w-24 sm:w-52" />
+          {/* Amount and postings, and on an account's journal the balance
+              between them. */}
+          <col className={register ? "w-28 sm:w-[21rem]" : "w-24 sm:w-52"} />
         </colgroup>
         {/* Named columns, pinned while the reader scrolls a long page. */}
         {/* Flush with the top of the scrolling page, past its padding, so
@@ -571,6 +616,11 @@ export function JournalLines({
                       figure; the heading says which it is. */}
                   <span className="sm:hidden"> · {money.primaryCurrency}</span>
                 </span>
+                {register && (
+                  <span className="max-sm:sr-only sm:w-36 sm:text-end">
+                    {t("journal.balanceHeader")}
+                  </span>
+                )}
                 {/* Named where it has its own place beside the amount; the
                     count is the entry's postings, opened in place. */}
                 <span
@@ -617,6 +667,7 @@ export function JournalLines({
                   onEntryClick={onEntryClick}
                   ledgerOwner={ledgerOwner}
                   ledgerName={ledgerName}
+                  register={register}
                 />
               </Fragment>
             );

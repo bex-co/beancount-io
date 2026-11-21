@@ -226,10 +226,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Rozpočtové záznamy",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "Zmena",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -370,10 +366,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Príznak",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "Nezaúčtovaná, nezapočítava sa",
     description:
@@ -462,10 +454,6 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "Vyrovnanie",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "Príjemca/Popis",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "Príjemca",

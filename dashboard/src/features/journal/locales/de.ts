@@ -187,10 +187,6 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "Budgeteinträge",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "Änderung",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -331,10 +327,6 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "Kennzeichen",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "Nicht gebucht, nicht gezählt",
     description:
@@ -423,10 +415,6 @@ const deJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "Ausgleich",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "Zahlungsempfänger/Beschreibung",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "Zahlungsempfänger",

@@ -163,10 +163,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "예산 항목",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "변경",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -306,10 +302,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "플래그",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "미기장, 잔액에 포함되지 않음",
     description:
@@ -398,10 +390,6 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "패드",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "수취인/서술",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "수취인",

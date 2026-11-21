@@ -206,10 +206,6 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Entrades de pressupost",
     description: "Filter tooltip for budget entries",
   },
-  "journal.change": {
-    message: "Canvi",
-    description: "Table header for change column in account journal",
-  },
   "journal.cleared": {
     message: "*",
     description: "Label for cleared transaction subtype filter",
@@ -350,10 +346,6 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Indicador",
     description: "Accessible name for the journal flag column",
   },
-  "journal.flagAbbrev": {
-    message: "F",
-    description: "Short label shown in the journal flag column header",
-  },
   "journal.notBooked": {
     message: "No comptabilitzada, no es compta",
     description:
@@ -442,10 +434,6 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.pad": {
     message: "Emplenar",
     description: "Pad entry type filter",
-  },
-  "journal.payeeNarration": {
-    message: "Beneficiari/Descripció",
-    description: "Table header for payee and narration column",
   },
   "journal.payeePlaceholder": {
     message: "Beneficiari",
