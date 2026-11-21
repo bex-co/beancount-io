@@ -135,6 +135,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0 # tag history bounds the generated release notes
           persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
@@ -170,13 +171,17 @@ jobs:
           TAG: ${{ needs.build.outputs.tag }}
           VERSION: ${{ needs.build.outputs.version }}
         # Idempotent, so a failure in the tap step below is fixed by re-running
-        # the job instead of leaving the release half-published.
+        # the job instead of leaving the release half-published. A re-run also
+        # refreshes the notes, so the body always matches the range the tag
+        # actually shipped.
         run: |
+          bash scripts/render-release-notes.sh "$VERSION" > "$RUNNER_TEMP/notes.md"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --title "bea $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
           else
             gh release create "$TAG" dist/* \
-              --title "bea $VERSION" --generate-notes
+              --title "bea $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
           fi
 
       - name: Publish the Homebrew formula
