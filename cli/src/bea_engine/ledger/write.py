@@ -2676,10 +2676,9 @@ def validate_candidate(
         return on_disk_accounts
 
     def _before_errors() -> list[Any]:
-        # The ledger as it stands, loaded once for every new-vs-pre-existing
-        # judgment below. Each judgment used to load it with its own copy of
-        # this block; loads that disagree misclassify an error either way, so
-        # there is one baseline, read here.
+        # The ledger as it stands, loaded once and shared by every
+        # new-vs-pre-existing judgment below: two baselines that disagreed
+        # would misclassify an error either way.
         nonlocal before_errors
         if before_errors is None:
             root = snapshot.root if snapshot else file
