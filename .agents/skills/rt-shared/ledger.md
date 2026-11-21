@@ -96,6 +96,9 @@ newest first.
 
 ### Skipped
 
+- 2026-11-21 cli zero-divisor twin agreement (`bea_engine/amounts` vs `cli/amounts` `_Expression`/`_divides_by_zero`/`_ZERO_DIVISOR`/`_NOT_ARITHMETIC`) — bodies identical; 33-spelling fuzz vs beancount 3.2.3 oracle: no missed crash; the 4 evaluator-refuses divergences (`.0`, `0_0`, `//0`) are all inputs beancount rejects or SystemErrors on, and the literal scan already refuses them — message-only, nothing valid diverges.
+- 2026-11-21 mobile recurrence trio (`detect-recurrence`/`payee-series`/`resolve-recurring` + `use-payee-recurrence` wiring) — 61-probe battery (leap clamping, lapse cap, grace/lapse edges, quarter-end anchor, four-weekly guard, biweekly-with-15, semimonthly skip, refund tie, currency switch, weekend shift, resolver truth table) all agree with documented intent; no divergence.
+- 2026-11-21 mobile valuation basis pair (`valueBasisOf` operating-currency read vs `selectValuation` cost-currency pricing) — agree on all reachable inputs; w21/124 + w21/426 tests pin the foreign-cost-lot behavior; module-doc intro line is loose wording, not a behavior bug.
 - 2026-11-20 dashboard Overview stepped month lost on Back/reload (w5/1148) — read the item and the `use-overview-month` state-vs-URL split; persisting the month in the URL is a navigation-design change on top of the w5/1147 link fix, out of this run's budget after three shipped findings; still open.
 - 2026-11-20 cli `bea_engine`/`cli` mirror pairs (`amounts` twin regexes `_ZERO_DIVISOR`/`_NOT_ARITHMETIC`/`_EXPONENT_TOKEN`/`_divides_by_zero`, `csv_mapper`/`include_glob`/`paths` splits) — twin points textually identical, remaining splits deliberate engine/frontend adaptations; examined, no drift since the 2026-11-18 sweep.
 - 2026-11-20 mobile `plural.ts` builtin-vs-`Intl` rules, `decimal-number.ts` vs dashboard twin, `number-locale`/`number-utils`/`currency-util` separator/position agreement — pinned by the 0–1000 agreement battery, the 138-case differential fuzz, and the w21/882 currencyAfter match; probed promotion/residue edges hold; examined, no divergence.
@@ -112,9 +115,6 @@ newest first.
 - 2026-11-18 `mobile/src/common/merchant-key.ts` — mobile-only, no dashboard twin; fold/trim/NFC/quote/whitespace/lowercase order sound; examined, no divergence.
 - 2026-11-18 `dashboard/.../holdings/utils.ts` roundDecimalString + `export/model.ts` invertDecimal/sumBalanceRecords — zero paths, half-up rounding and exact-decimal sums agree; examined, no divergence.
 - 2026-11-18 `dashboard/.../cash-flow/lib/model.ts` weight/inference keying + withinBalancingTolerance — matches beancount 3.2.3 `infer_tolerances`/`is_small` semantics; examined, no divergence.
-- 2026-11-18 `mobile/src/common/series-util.ts` carryBalanceToToday/latestBalance/baseline agreement — agree by construction (value remap, borrowed-point baseline); duplicate-date input unreachable via pointsToMonthlySeries; examined, no divergence.
-- 2026-11-18 `mobile/src/common/decimal-number.ts` vs `dashboard/src/common/lib/beancount/decimal-number.ts` — 138-case differential fuzz plus 60-input parser crash-fuzz agree with zero divergence; out-of-contract inputs (non-decimal strings, zero denominators, negative digits) throw identically on both sides and no caller passes them.
-- 2026-11-18 mobile vs dashboard budget twins (`daysInBudgetPeriod`, week-start, unknown-cadence default, newest-signed-entry direction) — both Monday-start weeks, monthly default, DST-safe day counts, zero-sign normalized away by `parseDecimal`; agree on every probed edge.
 
 ## rt-logic-simplifier
 

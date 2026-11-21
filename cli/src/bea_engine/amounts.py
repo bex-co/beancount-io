@@ -142,6 +142,23 @@ def zero_divisor_line(text: str) -> int | None:
     return None
 
 
+def evaluated_zero_divisor_line(text: str) -> int | None:
+    """The first line whose amount arithmetic divides by zero, computed or literal.
+
+    The literal scan above cannot see a divisor the grammar evaluates, like
+    `100/(2-2)`: Beancount's parser crashes on it outright, so a path that
+    parses text it has read (such as the formatter's render of a file or
+    piped input) must refuse it before parsing, naming the line the same way.
+    Tags, links, strings, comments and skipped lines hold no arithmetic and
+    are stripped first, exactly as the literal scan strips them.
+    """
+    code = _NOT_ARITHMETIC.sub(lambda found: re.sub(r"[^\n]", " ", found.group()), text)
+    for number, line in enumerate(code.split("\n"), start=1):
+        if _divides_by_zero(line):
+            return number
+    return None
+
+
 DECIMAL_COMMA_HELP = (
     "A comma is read only as a thousands separator between groups of three digits, such as '1,538.25'; "
     "write the fraction after a decimal point, or remove the separators."
