@@ -96,8 +96,8 @@ def ledger_create(
     import httpx
 
     from cli.api.client import authenticated_client
-    from cli.commands.init import module_accounts
-    from cli.utils import ledger_name
+    from cli.commands.init import module_accounts, preset_currency
+    from cli.utils import ledger_name, parse_date
 
     from . import manager
 
@@ -107,6 +107,29 @@ def ledger_create(
     if directory is not None and not clone:
         # It was read only `if clone:`, so the ledger was created and nothing cloned, unsaid (w5/623).
         raise UsageError("--dir is where --clone puts the new ledger; add --clone, or drop --dir. Nothing was created.")
+    # The setup options are judged here too, signed in or out (w1/352).
+    if preset is None and (title is not None or currency is not None or date is not None):
+        raise UsageError("--title, --currency, and --date are only meaningful with --preset. Nothing was created.")
+    if preset is not None:
+        from cli.api.rest_client.models.create_ledger_body_setup_type_0_preset import (
+            CreateLedgerBodySetupType0Preset,
+        )
+
+        members = {str(member) for member in CreateLedgerBodySetupType0Preset}
+        if preset not in members:
+            known = ", ".join(sorted(members))
+            raise UsageError(f"--preset {preset!r}: Unknown preset. Choose one of: {known}. Nothing was created.")
+    # As `bea init --preset` reads them: `eur` is sent as `EUR`, and a currency
+    # outside the catalog or a day that does not exist never reaches the server.
+    try:
+        currency = None if currency is None else preset_currency(currency)
+    except typer.BadParameter as exc:
+        raise UsageError(f"--currency {currency!r}: {exc.message}") from None
+    try:
+        date = None if date is None else parse_date(date).isoformat()
+    except typer.BadParameter as exc:
+        raise UsageError(f"--date {date!r}: {exc.message}") from None
+    selection = module_accounts(preset, module, property_name)
     if clone:
         manager.ensure_git_available()
         # A target git is certain to refuse is refused here, before the ledger
@@ -115,18 +138,6 @@ def ledger_create(
 
     client = authenticated_client()
     try:
-        if preset is None and (title is not None or currency is not None or date is not None):
-            raise UsageError("--title, --currency, and --date are only meaningful with --preset. Nothing was created.")
-        if preset is not None:
-            from cli.api.rest_client.models.create_ledger_body_setup_type_0_preset import (
-                CreateLedgerBodySetupType0Preset,
-            )
-
-            members = {str(member) for member in CreateLedgerBodySetupType0Preset}
-            if preset not in members:
-                known = ", ".join(sorted(members))
-                raise UsageError(f"--preset {preset!r}: Unknown preset. Choose one of: {known}. Nothing was created.")
-        selection = module_accounts(preset, module, property_name)
         ledger = manager.create_ledger(
             client,
             name,

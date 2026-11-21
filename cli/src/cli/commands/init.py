@@ -204,11 +204,12 @@ def module_accounts(preset: str | None, modules: list[str] | None, property_name
     return ModuleSelection(tuple(names), property_module)
 
 
-def _preset_currency(value: str) -> str:
+def preset_currency(value: str) -> str:
     """A currency the setup catalog supports, from the engine's copy of its list (w5/878).
 
     A preset ledger takes only catalog currencies; checking just the symbol
     grammar let `BTC` through to a refusal after every question was answered.
+    Shared by `bea init` and `bea cloud ledger create`.
     """
     import json
 
@@ -565,7 +566,7 @@ def init(
     # Every option is checked before the first question, naming itself: a bad
     # `--date` or `--opening-balance` was refused only after the prompts were
     # answered, as `Invalid value: …` with no option named (w5/588).
-    check_currency = _currency if preset is None else _preset_currency
+    check_currency = _currency if preset is None else preset_currency
     if currency is not None:
         try:
             currency = check_currency(currency)
