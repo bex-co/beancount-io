@@ -783,8 +783,20 @@ class TestNativeMisuse:
 
     def test_example_valid_range_still_works(self, tmp_path: Path) -> None:
         target = tmp_path / "ex.bean"
+        # Seeded: an unseeded bean-example history sometimes trips its own
+        # "Cash balance is negative" check (CI run 44928948112), which is not
+        # what this pins.
         result = _bea_native(
-            tmp_path, "example", "--date-begin", "2020-01-01", "--date-end", "2020-02-01", "-o", str(target)
+            tmp_path,
+            "example",
+            "--seed",
+            "1",
+            "--date-begin",
+            "2020-01-01",
+            "--date-end",
+            "2020-02-01",
+            "-o",
+            str(target),
         )
         assert result.returncode == 0, result.stderr
         assert target.exists()

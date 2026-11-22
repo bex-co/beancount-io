@@ -78,7 +78,17 @@ def _piped_to_closed_reader(tmp_path: Path, *args: str) -> tuple[int, str]:
     [
         pytest.param(("--file", "books.bean", "list", "transaction", "--limit", "5000"), id="list"),
         pytest.param(("--file", "books.bean", "query", "PRINT"), id="query"),
-        pytest.param(("example",), id="example"),
+        # Seeded and bounded: an unseeded bean-example history sometimes trips
+        # its own "Cash balance is negative" check and exits 1 instead of
+        # hitting the closed reader (CI run 44928948112). Twenty past years
+        # keep the output (~2.2 MB) past any plausible pipe buffer without
+        # depending on today's date: a single year (~121 KiB) proved too
+        # close to the buffer and once exited 0 instead of 141 (CI run
+        # 44973319827).
+        pytest.param(
+            ("example", "--seed", "1", "--date-begin", "2005-01-01", "--date-end", "2024-12-31"),
+            id="example",
+        ),
         # Delegated to a child on inherited streams: upstream is Python too, so
         # it reports its own broken stdout as a plain exit 1 and the frontend
         # has to recognize the closed pipe behind it.

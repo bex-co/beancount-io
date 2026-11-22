@@ -74,7 +74,11 @@ def test_example_with_an_unset_variable_writes_literally(tmp_path: Path) -> None
     work = tmp_path / "work"
     work.mkdir()
 
-    result = _bea(work, "example", "-o", "demo$X.bean", X=None)
+    # Seeded and bounded: an unseeded bean-example history sometimes trips its
+    # own "Cash balance is negative" check (CI run 44928948112), which is not
+    # what this pins.
+    seeded = ("--seed", "1", "--date-begin", "2026-01-01", "--date-end", "2026-04-01")
+    result = _bea(work, "example", *seeded, "-o", "demo$X.bean", X=None)
 
     assert result.returncode == 0, result.stderr
     assert (work / "demo$X.bean").is_file()
