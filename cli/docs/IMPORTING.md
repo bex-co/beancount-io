@@ -429,8 +429,8 @@ nothing remembered, and bea falls back to reading that header directly.
 
 Remembered settings live in `importers/` under the config directory. When
 that directory cannot be read (wrong modes after a restore, or left
-root-owned by a privileged run), the import still runs — on the options you
-typed, an `importers.py` beside the root ledger, or the header row — with a
+root-owned by a privileged run), the import still runs on the options you
+typed or falls back to built-in CSV or OFX handling, with a
 stderr note (`Cannot read remembered import settings in <directory>`) that is
 also in the JSON `notes`, and that run is not remembered. When it cannot be
 written (a read-only config directory in a container or sandbox), the import
@@ -438,10 +438,10 @@ still succeeds and says what to pass next time — `Could not remember the
 column mapping: <reason>. Pass --csv on the next import.`, or `Could not
 remember the importer path: <reason>. Pass --config on the next import.` — on
 stderr and in the JSON `notes` alike.
-A remembered importer record that is not valid JSON, or not of the form
-`{"config": "<path>"}`, selects nothing, just like an importer that was moved
+A remembered importer record with invalid JSON or a missing or invalid
+`config` path selects nothing, just like an importer that was moved
 away. The note (`The remembered importer record <file> is not valid; ignoring
-it.`) names the file, and the `importers.py` and header-row fallbacks apply.
+it.`) names the file, and the built-in CSV or OFX handling applies.
 A record bea cannot read (wrong mode) still stops a flag-free import, since it
 may name the importer the ledger relies on. The refusal names the file. Make
 it readable or delete it, or choose for that run with `--config FILE` or
@@ -519,24 +519,23 @@ bea --file books/main.bean import statement.csv --apply
 ```
 
 The Python configuration must export `CONFIG = [importer, ...]`. An import
-executes this Python file, so use your own local configuration. The selected
-path is remembered per root ledger. Both this path and a `--csv` mapping
+executes this Python file, so select a trusted configuration with `--config`.
+After a successful run, bea remembers that selection per root ledger. Both this path and a `--csv` mapping
 belong to the ledger file, not to the spelling typed for it: on a
 case-insensitive volume `Books/main.bean` and `books/main.bean` share one
-memory. An explicit `--config` overrides it;
-without a saved path, the CLI uses `importers.py` beside the root ledger.
+memory. An explicit `--config` overrides it. Older saved paths need one
+successful run with `--config` to record your selection. Without an explicit
+or previously confirmed selection, bea uses its built-in OFX or CSV handling.
 A saved path whose file has since been moved or deleted is ignored with a
 stderr note (`The remembered importer <path> is missing; ignoring it.`), and the
-run continues as if nothing were saved: `importers.py` beside the root ledger,
-then the header row.
-It does not search the working directory or parent directories for Python files.
+run falls back to built-in handling.
 Human output reports `Using importers from <path> (<source>)` on stderr. The
-source is `--config`, `remembered`, or `default beside root ledger`. JSON
+source is `--config` or `remembered`. JSON
 includes the path in `config` and its source in `config_source`.
 The importer chooses the account and categories itself, so `--account`,
 `--rules`, `--default-account`, `--date-format` and `--delimiter` are refused
-(exit 2) on a run that resolves to a Python importer, including the remembered
-and default ones; pass `--csv auto` with them to read the file by its header
+(exit 2) on a run that resolves to a Python importer, including a remembered
+one. Pass `--csv auto` with them to read the file by its header
 row instead.
 If multiple importers recognize the export, select one with `--importer NAME`.
 Importers that share a name, such as two instances of one class configured for

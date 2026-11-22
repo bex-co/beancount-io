@@ -190,8 +190,12 @@ def test_config_with_no_code_options_on_ofx_names_ofx(books: Path) -> None:
     assert "replace --config with --ofx to import it without an importer" in message
 
 
-def test_configured_ledger_keeps_its_python_importers_for_ofx(books: Path, tmp_path: Path) -> None:
+def test_configured_ledger_keeps_its_python_importers_for_ofx(
+    books: Path, beangulp_engine: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Auto-dispatch never hijacks a ledger that configured Python importers."""
+    monkeypatch.setenv("BEA_ENGINE_PYTHON", beangulp_engine)
+    monkeypatch.delenv("BEA_ENGINE_DIR", raising=False)
     (books.parent / "importers.py").write_text(
         "from beancount.core.amount import Amount\n"
         "from beancount.core.data import Posting, Transaction, new_metadata\n"
@@ -211,7 +215,14 @@ def test_configured_ledger_keeps_its_python_importers_for_ofx(books: Path, tmp_p
         "\n"
         "CONFIG = [OfxBank()]\n"
     )
-    result = _import(books, str(books.parent / "checking.ofx"))
+    source = str(books.parent / "checking.ofx")
+    detected = _import(books, source, "--account", "Assets:Checking")
+    assert detected.exit_code == 0, detected.output
+    assert "OfxImporter → Assets:Checking" in detected.stdout
+
+    approved = _import(books, source, "--config", str(books.parent / "importers.py"))
+    assert approved.exit_code == 0, approved.output
+    result = _import(books, source)
     assert result.exit_code == 0, result.output
     assert "Using importers from" in result.stderr and "importers.py" in result.stderr
     assert "OfxImporter" not in result.stdout

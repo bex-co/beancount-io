@@ -212,7 +212,7 @@ def test_import_into_an_included_file_validates_and_deduplicates_against_root(bo
     assert not loader.load_file(book)[1]
 
 
-def test_config_is_remembered_per_root_and_conventional_file_is_ledger_relative(
+def test_config_is_remembered_per_root_and_adjacent_importer_requires_selection(
     book: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     source = book.parent / "bank.csv"
@@ -234,10 +234,15 @@ def test_config_is_remembered_per_root_and_conventional_file_is_ledger_relative(
     assert result.exit_code == 2 and "--config" in result.stderr and "--account" in result.stderr
     conventional = second.parent / "importers.py"
     conventional.write_bytes(CONFIG.read_bytes())
-    result = runner.invoke(app, ["--json", "-f", str(second), "import", str(source)])
+    args = ["--json", "-f", str(second), "import", str(source)]
+    inferred = runner.invoke(app, [*args, "--account", "Assets:Checking"])
+    assert inferred.exit_code == 0, inferred.output
+    assert json.loads(inferred.stdout)["data"]["config_source"] == "inferred --csv"
+
+    result = runner.invoke(app, [*args, "--config", str(conventional)])
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout)["data"]["config"] == str(conventional)
-    assert json.loads(result.stdout)["data"]["config_source"] == "default beside root ledger"
+    assert json.loads(result.stdout)["data"]["config_source"] == "--config"
 
 
 def test_uncategorized_or_unbalanced_import_never_changes_the_ledger(book: Path) -> None:

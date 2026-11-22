@@ -97,8 +97,8 @@ def _config_record(file: Path, *, reading: bool = False) -> Path:
 def _memory_unreadable(file: Path) -> str | None:
     """The note for an import-memory directory this user cannot search (w5/215).
 
-    Memory is a convenience: an import that cannot read it runs on its flags,
-    the `importers.py` beside the ledger, or the header row, and remembers
+    Memory is a convenience: an import that cannot read it runs on its flags
+    or the header row, and remembers
     nothing, instead of stopping on the directory's permissions.
     """
     record = _csv_record(file)
@@ -118,8 +118,7 @@ def _config_available(file: Path, notes: list[str]) -> tuple[Path, str] | None:
     """The Python importer this ledger already selects, if it selects one.
 
     A remembered path whose file was moved or deleted selects nothing: it is
-    named in `notes` and the `importers.py` and header-row fallbacks apply, as
-    they do for a ledger with no saved path (w5/141).
+    named in `notes` and the data-only fallbacks apply (w5/141).
     """
     record = _config_record(file, reading=True)
     if _is_record(record):
@@ -136,8 +135,11 @@ def _config_available(file: Path, notes: list[str]) -> tuple[Path, str] | None:
                 "Make it readable, or delete it to forget the importer; or choose for this run with "
                 "--config FILE (a Python importer) or --csv auto (the header row)."
             ) from exc
+        explicitly_selected = False
         try:
-            remembered: Path | None = Path(json.loads(text.decode("utf-8"))["config"])
+            settings = json.loads(text.decode("utf-8"))
+            remembered: Path | None = Path(settings["config"])
+            explicitly_selected = settings.get("explicitly_selected") is True
         except (ValueError, KeyError, TypeError, RecursionError):
             # Corrupt memory selects nothing, as a moved importer does: stale
             # local state must not block an import (w1/105, w5/592).
@@ -157,18 +159,16 @@ def _config_available(file: Path, notes: list[str]) -> tuple[Path, str] | None:
             )
             if stale not in notes:
                 notes.append(stale)
-        elif remembered is not None and remembered.is_file():
-            return remembered, "remembered"
         elif remembered is not None:
-            missing = (
-                f"The remembered importer {remembered} is missing; ignoring it. "
-                "Pass --config FILE to select a Python importer again."
-            )
-            if missing not in notes:
-                notes.append(missing)
-    conventional = file.parent / "importers.py"
-    if conventional.is_file():
-        return conventional, "default beside root ledger"
+            if not remembered.is_file():
+                reason = "is missing"
+            elif not explicitly_selected:
+                reason = "was saved without a record of explicit selection"
+            else:
+                return remembered, "remembered"
+            note = f"The remembered importer {remembered} {reason}; ignoring it. Pass --config FILE to select it again."
+            if note not in notes:
+                notes.append(note)
     return None
 
 
@@ -189,8 +189,8 @@ def _config_path(
     if available is not None:
         return available
     raise UsageError(
-        "Choose a Python importer with --config FILE, or place importers.py beside the root ledger. "
-        "The selected path is remembered for this ledger. "
+        "Choose a Python importer with --config FILE. "
+        "Use a trusted file; the selected path is remembered for this ledger. "
         + _unread_header_hint(source, account, delimiter=delimiter, encoding=encoding, skip=skip),
         details=notes,
     )
@@ -517,7 +517,7 @@ def _remember_config(file: Path, config: Path, notes: list[str]) -> None:
     record = _config_record(file)
     try:
         record.parent.mkdir(parents=True, exist_ok=True)
-        atomic_write(record, json.dumps({"config": str(config)}))
+        atomic_write(record, json.dumps({"config": str(config), "explicitly_selected": True}))
     except OSError as exc:
         notes.append(f"Could not remember the importer path: {exc}. Pass --config on the next import.")
         output.note(notes[-1])
@@ -1035,7 +1035,7 @@ def import_entries(
     ] = None,
     config: Annotated[
         Path | None,
-        typer.Option("--config", help="Python CONFIG file; defaults to the saved path or root-ledger/importers.py"),
+        typer.Option("--config", help="Trusted Python CONFIG file; reuses a previously selected path for this ledger"),
     ] = None,
     importer_name: Annotated[str | None, typer.Option("--importer", help="Importer name when multiple match")] = None,
     apply: Annotated[bool, typer.Option("--apply", help="Validate and write the previewed entries")] = False,

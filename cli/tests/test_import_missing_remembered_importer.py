@@ -2,8 +2,7 @@
 
 After one `--config` run, moving or deleting that importer made every flag-free
 `bea import` on the ledger exit 2 with "Importer configuration not found" —
-even with a valid `importers.py` beside the ledger, and even for a plain CSV
-whose header row needs no importer at all.
+even for a plain CSV whose header row needs no importer at all.
 """
 
 from __future__ import annotations
@@ -56,16 +55,14 @@ def _missing_note(book: Path) -> str:
     return f"The remembered importer {book.parent / 'old' / 'imp.py'} is missing; ignoring it."
 
 
-def test_importers_beside_the_ledger_take_over_and_become_the_saved_path(book: Path) -> None:
+def test_selecting_a_replacement_importer_updates_the_saved_path(book: Path) -> None:
     conventional = book.parent / "importers.py"
     shutil.copy(CONFIG, conventional)
 
-    result = _import(book, "bank.csv")
+    result = _import(book, "bank.csv", "--config", str(conventional))
 
     assert result.exit_code == 0, result.output
-    assert _missing_note(book) in result.stderr
-    assert f"Using importers from {conventional} (default beside root ledger)" in result.stderr
-    assert "Importer configuration not found" not in result.stderr
+    assert f"Using importers from {conventional} (--config)" in result.stderr
     assert "1 ready" in result.stdout
 
     again = _import(book, "bank.csv")
@@ -75,12 +72,28 @@ def test_importers_beside_the_ledger_take_over_and_become_the_saved_path(book: P
 
 
 def test_a_plain_csv_falls_back_to_its_header_row(book: Path) -> None:
+    shutil.copy(CONFIG, book.parent / "importers.py")
     result = _import(book, "s.csv", "--account", "Assets:Checking")
 
     assert result.exit_code == 0, result.output
     assert _missing_note(book) in result.stderr
     assert "Read the column mapping from the header row" in result.stderr
     assert "csv → Assets:Checking: 1 ready" in result.stdout
+
+
+def test_legacy_importer_memory_requires_explicit_selection(book: Path, bea_config_dir: Path) -> None:
+    config = book.parent / "importers.py"
+    shutil.copy(CONFIG, config)
+    (record,) = (bea_config_dir / "importers").glob("*.json")
+    legacy = json.dumps({"config": str(config)})
+    record.write_text(legacy)
+
+    result = _import(book, "s.csv", "--account", "Assets:Checking")
+
+    assert result.exit_code == 0, result.output
+    assert "was saved without a record of explicit selection" in result.stderr
+    assert "csv → Assets:Checking: 1 ready" in result.stdout
+    assert record.read_text() == legacy
 
 
 def test_json_carries_the_note_and_the_fallback_source(book: Path) -> None:

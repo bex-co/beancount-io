@@ -114,7 +114,7 @@ Usage: bea import [OPTIONS] {source}
 | `--delimiter` | str |  | CSV field delimiter for --csv: ',', ';', '\|', or 'tab' (detected from the header when omitted) |
 | `--rules` | path |  | TOML categorization rules for --csv or --ofx rows |
 | `--default-account` | str |  | Counter account for --csv or --ofx rows no rule matches [default: Expenses:Uncategorized, under the ledger's own expenses root] |
-| `--config` | path |  | Python CONFIG file; defaults to the saved path or root-ledger/importers.py |
+| `--config` | path |  | Trusted Python CONFIG file; reuses a previously selected path for this ledger |
 | `--importer` | str |  | Importer name when multiple match |
 | `--apply` | flag |  | Validate and write the previewed entries |
 | `--duplicates` | choice: review \| skip \| include | review | Decision for possible duplicates; exact IDs are always skipped |

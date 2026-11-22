@@ -42,8 +42,8 @@ ingest_app = typer.Typer(
 def _ingest_script(supplied: Path | None) -> Path:
     """Locate the user's ingest script: --config, else ingest.py beside the root ledger.
 
-    Like `bea import` with `importers.py`, the default is the script that
-    belongs to the ledger; the working directory is not searched. A ledger
+    The default is the script that belongs to the ledger; the working
+    directory is not searched. A ledger
     found in the working directory makes its folder that place anyway.
 
     Made absolute without following links: Beangulp files `archive` documents
