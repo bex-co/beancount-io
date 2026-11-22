@@ -8,7 +8,7 @@
 
 ## Context
 
-Before this decision the mobile app had **no AI chat surface**: its screens were ledger CRUD, reports, and capture flows, while agent mode had become the platform's **primary** chat mode. The dashboard's `/agent` page is the mature reference client; the old `/api-gateway/chat` route is gone, and the dashboard's `/ask` path now redirects to `/agent` unless it carries `?mode=sandbox|agent`, which selects the separate sandbox surface (`/api-gateway/sandbox-agent`) that this record does not cover.
+Before this decision the mobile app had **no AI chat surface**: its screens were ledger CRUD, reports, and capture flows, while agent mode had become the platform's **primary** chat mode. The dashboard's `/agent` page is the mature reference client; the old `/api-gateway/chat` route is gone, and the dashboard's `/ask` path redirects to `/agent`.
 
 What already exists, on each side of the wire:
 

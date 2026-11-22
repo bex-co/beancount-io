@@ -167,40 +167,13 @@
                   "status",
                   "latency_ms"
                 ]
-              },
-              "aiFeature": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "healthy",
-                      "unhealthy",
-                      "unchecked"
-                    ]
-                  },
-                  "latency_ms": {
-                    "type": "number"
-                  },
-                  "lastChecked": {
-                    "type": "string"
-                  },
-                  "error": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "status",
-                  "latency_ms"
-                ]
               }
             },
             "required": [
               "postgres",
               "redis",
               "ledger",
-              "gitea",
-              "aiFeature"
+              "gitea"
             ]
           }
         },
@@ -1141,7 +1114,7 @@
     "/healthz": {
       "get": {
         "summary": "Health check endpoint",
-        "description": "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea) and reads cached AI feature health. Returns 200 when infrastructure services are healthy, 500 when any is unhealthy. Use ?strict=true to also fail on unhealthy AI feature.",
+        "description": "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea). Returns 200 when every service is healthy, 500 when any is unhealthy.",
         "tags": [
           "Health"
         ],
@@ -1172,7 +1145,7 @@
     "/api-gateway/healthz": {
       "get": {
         "summary": "Health check endpoint",
-        "description": "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea) and reads cached AI feature health. Returns 200 when infrastructure services are healthy, 500 when any is unhealthy. Use ?strict=true to also fail on unhealthy AI feature.",
+        "description": "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea). Returns 200 when every service is healthy, 500 when any is unhealthy.",
         "tags": [
           "Health"
         ],

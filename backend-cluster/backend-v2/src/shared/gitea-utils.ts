@@ -12,7 +12,7 @@ interface GiteaCloneUrls {
  * reported when it was learned, otherwise the configured host and port (https
  * for a domain, http for localhost or an IP address).
  */
-export function externalGiteaBase(config: GiteaConfig): string {
+function externalGiteaBase(config: GiteaConfig): string {
   if (config.externalBaseUrl) {
     return config.externalBaseUrl;
   }

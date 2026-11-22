@@ -1,6 +1,4 @@
 import "reflect-metadata";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";

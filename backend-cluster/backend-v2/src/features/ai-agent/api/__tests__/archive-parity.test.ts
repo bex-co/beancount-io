@@ -1,6 +1,4 @@
 import "reflect-metadata";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import http from "node:http";
 import { gzipSync, gunzipSync } from "node:zlib";
 import Koa from "koa";

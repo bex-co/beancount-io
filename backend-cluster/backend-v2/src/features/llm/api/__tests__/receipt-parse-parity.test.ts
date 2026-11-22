@@ -1,7 +1,5 @@
 import { requestPlatform } from "@/server/api/request-platform";
 import "reflect-metadata";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 jest.mock("../../utils/extract-receipt-from-file", () => ({
   extractReceiptFromFile: jest.fn(),
 }));

@@ -1773,17 +1773,6 @@
       }
     },
     {
-      "verb": "ai.sandboxAgent",
-      "eligible": [
-        "rest"
-      ],
-      "class": "write",
-      "authorizationAction": "ai.ledger.ask",
-      "bindings": {
-        "rest": "POST /api-gateway/sandbox-agent"
-      }
-    },
-    {
       "verb": "ai.openaiChatCompletions",
       "eligible": [
         "rest"

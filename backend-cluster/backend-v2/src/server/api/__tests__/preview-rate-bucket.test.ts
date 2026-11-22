@@ -8,8 +8,6 @@ jest.mock("@/foundation/redis/redis-counter", () => ({
     return { count, resetInMs: 60_000 };
   },
 }));
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 
 import type { RouterContext } from "@koa/router";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";

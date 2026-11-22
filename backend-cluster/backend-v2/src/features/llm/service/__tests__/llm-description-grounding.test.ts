@@ -1,5 +1,3 @@
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 jest.mock("../../utils/call-llm", () => ({ callLLM: jest.fn() }));
 jest.mock("@/shared/logger", () => {
   const logger = {

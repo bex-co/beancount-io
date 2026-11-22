@@ -1,6 +1,4 @@
 import "reflect-metadata";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 jest.mock("@/server/api/identity", () => ({
   ...jest.requireActual("@/server/api/identity"),
   resolveIdentity: jest.fn(),

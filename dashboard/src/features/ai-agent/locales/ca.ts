@@ -174,14 +174,6 @@ const caAiAgent: Record<string, TranslationEntry> = {
     message: "fitxer adjunt",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "Preparant...",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} ha fallat",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "Llista",
     description: "Label for the list-files AI tool",

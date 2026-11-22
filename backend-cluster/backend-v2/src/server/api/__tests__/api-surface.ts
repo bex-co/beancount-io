@@ -16,11 +16,6 @@ import { assembleApi, type ApiManifest } from "../composition-root";
  * keeps the guards to a second and no containers. The `http.Server` is likewise
  * never listened on; Apollo only wants something to register its drain hook
  * against.
- *
- * Files importing this must first `jest.mock` the two harness ESM packages
- * (`@ai-sdk/harness/agent`, `@ai-sdk/harness-acp`); their
- * `import.meta.url` cannot be evaluated under Jest's CommonJS transform, and
- * the ai-agent fragment pulls them in transitively.
  */
 
 /** Answers any property access, call, or construction with itself. */

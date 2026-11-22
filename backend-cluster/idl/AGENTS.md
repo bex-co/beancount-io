@@ -9,7 +9,6 @@ idl/
 ├── beancount-ledger.openapi.json   # Ledger service (exported from the retired Python service; served today by beancount-ledger-v2)
 ├── backend-v2.openapi.json         # Backend-v2 REST admin API (Node.js)
 ├── gitea.swagger.v1.json           # Gitea git service (upstream Swagger)
-├── claude-code-sandbox.openapi.json # External sandbox contract (spec only)
 ├── beancount-ledger-cli/           # CLI for ledger service
 ├── backend-v2-admin-cli/           # CLI for backend-v2 admin endpoints
 └── gitea-cli/                      # CLI for Gitea admin API

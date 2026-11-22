@@ -8,7 +8,7 @@
 
 ## Context
 
-The repository ships five ways to run the stack, and nothing records what a self-hoster is promised.
+The repository ships four ways to run the stack, and nothing records what a self-hoster is promised. (A fifth, a development target for the sandbox Ask-AI surface, was removed on 2026-11-21 with that surface.)
 
 | Target | Intended for | Inputs the operator supplies | Notes |
 | --- | --- | --- | --- |
@@ -16,7 +16,6 @@ The repository ships five ways to run the stack, and nothing records what a self
 | [`deploy/docker/`](../../deploy/docker/README.md) | One persistent server | ~15 secrets, three DNS names | Caddy TLS, optional SSH overlay. |
 | [`deploy/docker-single-psql/`](../../deploy/docker-single-psql/README.md) | Same, one Postgres | as above | Variant of `docker/`. |
 | [`deploy/docker-mac/`](../../deploy/docker-mac/README.md) | Local development | a few | Not a production target. |
-| [`deploy/dev-sandbox/`](../../deploy/dev-sandbox/) | Development with the Ask-AI sandbox | generated | Not a production target. |
 
 The decisions that exist are scattered: the design reasoning for bex lives in `deploy/bex/README.md` (including rejected options), the target list in [`deploy/AGENTS.md`](../../deploy/AGENTS.md), and one product rule in [`.pm/DO_NOT_DO.md`](../../.pm/DO_NOT_DO.md): *no half-self-hosted deployments* — a deployment is fully self-hosted or fully managed, and configuration whose only purpose is to make two halves agree is out. Other ADRs mention self-hosting in passing (for example [ADR 013](./ADR013-mobile-verified-https-oauth-redirect.md) on redirect URIs). No ADR owns it.
 

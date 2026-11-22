@@ -1,7 +1,5 @@
 import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
 import "reflect-metadata";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { McpError } from "@modelcontextprotocol/sdk/types.js";

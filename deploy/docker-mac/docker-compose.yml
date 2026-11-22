@@ -132,9 +132,6 @@ services:
       # LLM access (ADR 0011). Every LLM var is optional: the server boots with
       # none set. The `bea ask` model proxy uses OPENAI_API_KEY (and
       # OPENAI_BASE_URL); left empty, it fails clearly with "not configured".
-      # No default on purpose: point this at your own Claude Code sandbox
-      # deployment if you use the sandboxed ask-agent mode.
-      CLAUDE_CODE_SANDBOX_URL: ${CLAUDE_CODE_SANDBOX_URL:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       # Null mapping on purpose: pass through only when set in .env. An EMPTY
       # string is fatal — @ai-sdk/anthropic validates baseURL at import time

@@ -26,7 +26,6 @@ body:
       options:
         - deploy/docker-mac (Docker Compose, local)
         - deploy/docker (single host)
-        - deploy/dev-sandbox
         - deploy/bex
         - other
     validations:

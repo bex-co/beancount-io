@@ -303,7 +303,7 @@ const SCREEN_PROJECTION_VERBS: ReadonlySet<string> = new Set([
  *
  * Distinct from the scope lists above, and the distinction matters: those say
  * "not a parity target"; this says "a target, and this surface physically
- * cannot". Ten verbs, all of them a transport limit rather than a judgement —
+ * cannot". Seven entries, all of them a transport limit rather than a judgement —
  * which is why they are listed rather than argued for per row.
  */
 const SURFACE_IMPOSSIBLE: Record<
@@ -317,7 +317,6 @@ const SURFACE_IMPOSSIBLE: Record<
     "ledger.downloadArchive.legacy",
     "ledger.downloadArchive.mcp",
     "ai.agent",
-    "ai.sandboxAgent",
     "ai.openaiChatCompletions",
   ]),
   // REST can carry anything in scope; the set is empty rather than absent so
@@ -325,7 +324,7 @@ const SURFACE_IMPOSSIBLE: Record<
   rest: new Set<string>(),
   // These *are* the agent transports. A tool for reaching one from inside a
   // tool call is circular.
-  mcp: new Set(["ai.agent", "ai.sandboxAgent", "ai.openaiChatCompletions"]),
+  mcp: new Set(["ai.agent", "ai.openaiChatCompletions"]),
 };
 
 /**
@@ -1954,14 +1953,6 @@ const AI_ROUTE_VERBS: readonly VerbEntry[] = [
     class: "write",
     authorizationAction: AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
     rest: "POST /api-gateway/agent",
-    gqlExempt: G.streamingOnly,
-    mcpExempt: M.transportOnly,
-  },
-  {
-    verb: "ai.sandboxAgent",
-    class: "write",
-    authorizationAction: AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
-    rest: "POST /api-gateway/sandbox-agent",
     gqlExempt: G.streamingOnly,
     mcpExempt: M.transportOnly,
   },

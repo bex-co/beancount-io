@@ -1,6 +1,4 @@
 import "reflect-metadata";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import { graphql } from "graphql";
 import { buildSchema, registerEnumType } from "type-graphql";
 import { AccountResolver } from "../account-resolver";

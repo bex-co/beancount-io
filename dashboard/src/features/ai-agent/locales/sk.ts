@@ -174,14 +174,6 @@ const skAiAgent: Record<string, TranslationEntry> = {
     message: "príloha",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "Pripravuje sa…",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} zlyhalo",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "Zoznam",
     description: "Label for the list-files AI tool",

@@ -248,11 +248,6 @@ describe("classifyOp", () => {
       "write",
     ],
     [
-      "REST POST /api-gateway/sandbox-agent",
-      AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
-      "write",
-    ],
-    [
       "REST POST /api-gateway/ai/openai/chat/completions",
       AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
       "write",

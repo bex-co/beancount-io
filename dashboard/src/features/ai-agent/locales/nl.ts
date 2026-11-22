@@ -174,14 +174,6 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     message: "bijlage",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "Voorbereiden…",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} mislukt",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "Lijst",
     description: "Label for the list-files AI tool",

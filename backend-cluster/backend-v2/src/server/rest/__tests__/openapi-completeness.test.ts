@@ -1,8 +1,3 @@
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({
-  createACP: () => ({}),
-}));
-
 import fs from "node:fs";
 import path from "node:path";
 

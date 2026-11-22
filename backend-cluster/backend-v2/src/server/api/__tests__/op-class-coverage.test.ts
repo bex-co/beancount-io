@@ -1,8 +1,3 @@
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({
-  createACP: () => ({}),
-}));
-
 import { getMetadataStorage } from "type-graphql";
 import { DIRECT_ONLY_ACTIONS, VERB_TABLE, classifiedOpIds } from "../op-class";
 import { ALWAYS_PUBLIC_OP_IDS } from "../always-public";

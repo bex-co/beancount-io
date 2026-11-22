@@ -6,8 +6,6 @@ import {
 } from "@/foundation/redis/__tests__/fake-redis-counter";
 import { request } from "node:http";
 jest.mock("@/foundation/redis/redis-counter", () => mockFakeRedisCounter);
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 jest.mock("@/features/plaid/utils/encryption", () => ({
   decryptToken: () => "fixture-bank-token",
 }));

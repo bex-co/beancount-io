@@ -174,14 +174,6 @@ const ukAiAgent: Record<string, TranslationEntry> = {
     message: "вкладення",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "Готується…",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} не вдалося",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "Список",
     description: "Label for the list-files AI tool",

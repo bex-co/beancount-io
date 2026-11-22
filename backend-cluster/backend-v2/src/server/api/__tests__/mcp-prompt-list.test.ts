@@ -2,11 +2,6 @@ import "reflect-metadata";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({
-  createACP: () => ({}),
-}));
-
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type { McpError } from "@modelcontextprotocol/sdk/types.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";

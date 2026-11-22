@@ -174,14 +174,6 @@ const ruAiAgent: Record<string, TranslationEntry> = {
     message: "вложение",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "Подготовка…",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} не удалось",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "Список",
     description: "Label for the list-files AI tool",

@@ -13,7 +13,7 @@ describe("the agent chat request body", () => {
   it("carries the browser's time zone, read for each request", () => {
     expect(
       source.includes(
-        "body:()=>({ledgerId:`${ledgerOwner}/${ledgerName}`,sessionId,timeZone:browserTimeZone(),...bodyExtra,}),",
+        "body:()=>({ledgerId:`${ledgerOwner}/${ledgerName}`,sessionId,timeZone:browserTimeZone(),}),",
       ),
     ).toBe(true);
   });

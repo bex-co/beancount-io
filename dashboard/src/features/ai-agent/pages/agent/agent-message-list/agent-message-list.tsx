@@ -14,7 +14,6 @@ import type { AgentUITools } from "../../../types/agent-tool-types";
 import { Bot, Timer } from "lucide-react";
 import { ToolActivityGroup } from "./tool-activity-group";
 import { DynamicToolActivityGroup } from "./dynamic-tool-activity-group";
-import { DynamicToolApproval } from "./dynamic-tool-approval";
 import { SentFileParts } from "./sent-file-parts";
 import { UnknownBlock } from "./unknown-block";
 
@@ -29,8 +28,7 @@ type MessageDisplayBlock =
   | { type: "activity"; key: string; parts: AgentToolPart[] }
   | { type: "edit"; key: string; part: AgentToolPart }
   | { type: "receipt-insert"; key: string; part: AgentToolPart }
-  | { type: "dynamic-activity"; key: string; parts: DynamicToolUIPart[] }
-  | { type: "dynamic-edit"; key: string; part: DynamicToolUIPart };
+  | { type: "dynamic-activity"; key: string; parts: DynamicToolUIPart[] };
 
 function buildMessageDisplayBlocks(
   parts: AgentUIMessage["parts"],
@@ -48,29 +46,15 @@ function buildMessageDisplayBlocks(
     }
 
     if (part.type === "dynamic-tool") {
-      const isApprovalRelated =
-        part.state === "approval-requested" ||
-        part.state === "approval-responded" ||
-        part.state === "output-denied" ||
-        ((part.state === "output-available" || part.state === "output-error") &&
-          part.approval != null);
-      if (isApprovalRelated) {
-        blocks.push({
-          type: "dynamic-edit",
-          key: `dynamic-edit-${partIndex}`,
-          part,
-        });
+      const previousBlock = blocks[blocks.length - 1];
+      if (previousBlock?.type === "dynamic-activity") {
+        previousBlock.parts.push(part);
       } else {
-        const previousBlock = blocks[blocks.length - 1];
-        if (previousBlock?.type === "dynamic-activity") {
-          previousBlock.parts.push(part);
-        } else {
-          blocks.push({
-            type: "dynamic-activity",
-            key: `dynamic-activity-${partIndex}`,
-            parts: [part],
-          });
-        }
+        blocks.push({
+          type: "dynamic-activity",
+          key: `dynamic-activity-${partIndex}`,
+          parts: [part],
+        });
       }
       return;
     }
@@ -199,21 +183,6 @@ export function AgentMessageList({
                     <DynamicToolActivityGroup
                       key={block.key}
                       parts={block.parts}
-                    />
-                  );
-                }
-
-                if (block.type === "dynamic-edit") {
-                  return (
-                    <DynamicToolApproval
-                      key={block.key}
-                      part={block.part}
-                      onApprove={(id) =>
-                        void addToolApprovalResponse({ id, approved: true })
-                      }
-                      onDeny={(id) =>
-                        void addToolApprovalResponse({ id, approved: false })
-                      }
                     />
                   );
                 }

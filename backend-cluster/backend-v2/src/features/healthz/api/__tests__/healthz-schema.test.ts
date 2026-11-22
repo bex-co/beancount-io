@@ -7,11 +7,6 @@ const validResponse = {
     redis: { status: "healthy", latency_ms: 1 },
     ledger: { status: "healthy", latency_ms: 15 },
     gitea: { status: "healthy", latency_ms: 10 },
-    aiFeature: {
-      status: "healthy",
-      latency_ms: 3200,
-      lastChecked: "2025-01-01T00:00:00.000Z",
-    },
   },
 };
 
@@ -30,44 +25,6 @@ describe("Health Schema", () => {
           redis: { status: "unhealthy", latency_ms: 5000, error: "timeout" },
           ledger: { status: "healthy", latency_ms: 15 },
           gitea: { status: "healthy", latency_ms: 10 },
-          aiFeature: {
-            status: "healthy",
-            latency_ms: 3200,
-            lastChecked: "2025-01-01T00:00:00.000Z",
-          },
-        },
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("should accept aiFeature with unchecked status", () => {
-      const result = healthCheckResponseSchema.safeParse({
-        status: "healthy",
-        services: {
-          postgres: { status: "healthy", latency_ms: 2 },
-          redis: { status: "healthy", latency_ms: 1 },
-          ledger: { status: "healthy", latency_ms: 15 },
-          gitea: { status: "healthy", latency_ms: 10 },
-          aiFeature: { status: "unchecked", latency_ms: 0 },
-        },
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("should accept aiFeature with unhealthy status and error", () => {
-      const result = healthCheckResponseSchema.safeParse({
-        status: "unhealthy",
-        services: {
-          postgres: { status: "healthy", latency_ms: 2 },
-          redis: { status: "healthy", latency_ms: 1 },
-          ledger: { status: "healthy", latency_ms: 15 },
-          gitea: { status: "healthy", latency_ms: 10 },
-          aiFeature: {
-            status: "unhealthy",
-            latency_ms: 150000,
-            lastChecked: "2025-01-01T00:00:00.000Z",
-            error: "timeout",
-          },
         },
       });
       expect(result.success).toBe(true);
@@ -98,11 +55,11 @@ describe("Health Schema", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should reject missing aiFeature", () => {
-      const { aiFeature: _, ...servicesWithoutAi } = validResponse.services;
+    it("should reject a missing service", () => {
+      const { gitea: _, ...servicesWithoutGitea } = validResponse.services;
       const result = healthCheckResponseSchema.safeParse({
         status: "healthy",
-        services: servicesWithoutAi,
+        services: servicesWithoutGitea,
       });
       expect(result.success).toBe(false);
     });

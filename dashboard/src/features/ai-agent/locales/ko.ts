@@ -171,14 +171,6 @@ const koAiAgent: Record<string, TranslationEntry> = {
     message: "첨부 파일",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "준비 중…",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} 실패",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "목록",
     description: "Label for the list-files AI tool",

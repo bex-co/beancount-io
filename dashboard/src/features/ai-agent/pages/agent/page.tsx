@@ -47,25 +47,7 @@ function browserTimeZone(): string | undefined {
   }
 }
 
-export interface AgentPageImplProps {
-  /**
-   * Backend endpoint suffix appended to config.apiUrl. Defaults to "agent"
-   * (the in-process ToolLoopAgent). The sandbox surface passes "sandbox-agent" to
-   * hit the harness-backed Cloudflare-sandbox route (ADR 0005 / m17).
-   */
-  chatApi?: string;
-  /**
-   * Extra fields merged into the request body — e.g. { conversationId, mode }
-   * for the sandbox-agent route.
-   */
-  bodyExtra?: Record<string, unknown>;
-}
-
-export function AgentPageImpl({
-  chatApi = "agent",
-  bodyExtra,
-}: AgentPageImplProps = {}) {
-  // strict:false so this component works under both the /agent and /ask routes.
+export function AgentPageImpl() {
   const { ledgerOwner, ledgerName } = useParams({ strict: false }) as {
     ledgerOwner: string;
     ledgerName: string;
@@ -95,7 +77,7 @@ export function AgentPageImpl({
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: `${config.apiUrl}${chatApi}`,
+        api: `${config.apiUrl}agent`,
         credentials: "include",
         headers: () => ({ "Accept-Language": i18nRef.current.language }),
         // The browser's zone, read per request, so the agent knows today's date
@@ -104,12 +86,11 @@ export function AgentPageImpl({
           ledgerId: `${ledgerOwner}/${ledgerName}`,
           sessionId,
           timeZone: browserTimeZone(),
-          ...bodyExtra,
         }),
         fetch: async (url, options) => {
           const response = await fetch(url as string, options as RequestInit);
           if (response.status === 401) {
-            // Keep mode/lang for the return URL, but drop q so login does not
+            // Keep lang for the return URL, but drop q so login does not
             // auto-send the deep-linked question.
             const next = buildAgentLoginNextUrl(
               window.location.pathname,
@@ -120,7 +101,7 @@ export function AgentPageImpl({
           return response;
         },
       }),
-    [ledgerOwner, ledgerName, sessionId, chatApi, bodyExtra],
+    [ledgerOwner, ledgerName, sessionId],
   );
 
   const initialMessages = useMemo<AgentUIMessage[]>(

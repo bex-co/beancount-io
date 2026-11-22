@@ -1,7 +1,5 @@
 import "reflect-metadata";
 import { MAX_BQL_QUERY_BYTES } from "@/features/ledger/utils/bql-query-size-limit";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";

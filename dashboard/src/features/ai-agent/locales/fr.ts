@@ -174,14 +174,6 @@ const frAiAgent: Record<string, TranslationEntry> = {
     message: "pièce jointe",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "Préparation…",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} a échoué",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "Liste",
     description: "Label for the list-files AI tool",

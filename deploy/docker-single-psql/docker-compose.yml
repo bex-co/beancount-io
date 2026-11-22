@@ -162,10 +162,6 @@ services:
       SSH_PROXY_HOST_KEY: ${SSH_PROXY_HOST_KEY:-}
       # Every LLM var is optional (ADR 0011). With no OPENAI_API_KEY the
       # `bea ask` model proxy fails clearly with "not configured".
-      CLAUDE_CODE_SANDBOX_URL: ${CLAUDE_CODE_SANDBOX_URL:-}
-      CLAUDE_CODE_AGENT_URL: ${CLAUDE_CODE_AGENT_URL:-}
-      ASK_AI_MODE: ${ASK_AI_MODE:-bql}
-      AGENT_MODE: ${AGENT_MODE:-self-hosted}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       # Null is intentional: an empty ANTHROPIC_BASE_URL crashes the process.
       # To use a custom endpoint, export a non-empty value before Compose runs.

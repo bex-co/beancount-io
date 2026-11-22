@@ -8,13 +8,6 @@ const serviceHealthSchema = z.object({
   error: z.string().optional(),
 });
 
-const aiFeatureHealthSchema = z.object({
-  status: z.enum(["healthy", "unhealthy", "unchecked"]),
-  latency_ms: z.number(),
-  lastChecked: z.string().optional(),
-  error: z.string().optional(),
-});
-
 export const healthCheckResponseSchema = z
   .object({
     status: z.enum(["healthy", "unhealthy"]),
@@ -23,7 +16,6 @@ export const healthCheckResponseSchema = z
       redis: serviceHealthSchema,
       ledger: serviceHealthSchema,
       gitea: serviceHealthSchema,
-      aiFeature: aiFeatureHealthSchema,
     }),
   })
   .openapi("HealthCheckResponse", {

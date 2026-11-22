@@ -1,6 +1,3 @@
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
-
 import "reflect-metadata";
 import {
   chmodSync,

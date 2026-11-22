@@ -1,13 +1,5 @@
 import "reflect-metadata";
 
-// The ai-agent fragment transitively loads the harness ESM packages, whose
-// `import.meta.url` Jest's CommonJS transform cannot evaluate. Nothing here
-// calls them.
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({
-  createACP: () => ({}),
-}));
-
 import Router, { type RouterContext } from "@koa/router";
 import { config as realConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";

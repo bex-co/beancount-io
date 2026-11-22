@@ -1,33 +1,23 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
-import { searchEnum, searchString } from "@/common/lib/search-params/tolerant";
-import SandboxAgentPage from "@/features/ai-agent/pages/sandbox-agent";
-import { createLedgerHead } from "@/common/lib/seo/ledger-head";
+import { searchString } from "@/common/lib/search-params/tolerant";
 
 const searchSchema = z.object({
   q: searchString(),
-  mode: searchEnum(["sandbox", "agent"]),
 });
 
+/**
+ * `/ask` is an old address for Ask AI, still used by the quick-ask box and
+ * by `?q=` deep links. It always lands on `/agent`, keeping the question.
+ */
 export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/ask")({
-  // Sandbox Ask-AI (ADR 0005 / m17): ?mode=sandbox|agent renders the harness
-  // chat surface, which streams UIMessage from /api-gateway/sandbox-agent →
-  // HarnessAgent → Claude Code in a Cloudflare Sandbox. Mode-less ?q= deep-links
-  // still belong to the in-process agent surface.
   beforeLoad: ({ params, search }) => {
-    if (!search.mode) {
-      throw redirect({
-        to: "/ledger/$ledgerOwner/$ledgerName/agent",
-        params,
-        search: search.q ? { q: search.q } : {},
-        replace: true,
-      });
-    }
+    throw redirect({
+      to: "/ledger/$ledgerOwner/$ledgerName/agent",
+      params,
+      search: search.q ? { q: search.q } : {},
+      replace: true,
+    });
   },
-  component: SandboxAgentPage,
   validateSearch: searchSchema,
-  head: (args) =>
-    createLedgerHead(args, "ledgerAsk", {
-      noIndex: Boolean(args.match.search.q),
-    }),
 });

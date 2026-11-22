@@ -301,7 +301,7 @@ Every active package has path-filtered CI, and a repository-wide secret scan gat
 | [`mobile/`](./mobile) | Active iOS & Android client (Expo + React Native + Apollo) |
 | [`cli/`](./cli) | Active `bea` CLI and Python tooling ([releases](https://github.com/bex-co/beancount-io/releases?q=bea)) |
 | [`skills/`](./skills) | One Beancount.io ledger suite with sixteen `beancount-*` workflows; install the versioned `beancount-io` plugin or the complete source collection. |
-| [`backend-cluster/`](./backend-cluster) | Active backend: GraphQL/REST gateway, ledger service, IDL, and agent sandbox |
+| [`backend-cluster/`](./backend-cluster) | Active backend: GraphQL/REST gateway, ledger service, and IDL |
 
 The dashboard and mobile app are clients for the Beancount.io API served by `backend-cluster/` — hosted, or self-run. Skills have two audiences: Beancount users get [`skills/`](./skills/README.md); repository contributors get [`.agents/skills/`](./.agents/skills) (see [`.agents/AGENTS.md`](./.agents/AGENTS.md)). The root `.claude/skills` links to `.agents/skills` so Claude Code and Codex share the internal workflows.
 

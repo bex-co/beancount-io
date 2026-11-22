@@ -171,14 +171,6 @@ const jaAiAgent: Record<string, TranslationEntry> = {
     message: "添付ファイル",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "準備中…",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} が失敗しました",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "リスト",
     description: "Label for the list-files AI tool",

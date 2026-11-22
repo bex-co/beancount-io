@@ -173,14 +173,6 @@ const zhAiAgent: Record<string, TranslationEntry> = {
     message: "附件",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "准备...",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} 失败",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "列表",
     description: "Label for the list-files AI tool",

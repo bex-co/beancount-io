@@ -94,14 +94,6 @@ export const CACHE_KEYS = {
   },
 
   /**
-   * AI subsystem caches.
-   */
-  ai: {
-    /** Result of the periodic AI health check (written by the scheduler job). */
-    healthStatus: () => "ai:health:status",
-  },
-
-  /**
    * Activity / blog feed caches (Gitea feature).
    */
   feed: {

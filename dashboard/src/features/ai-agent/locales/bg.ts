@@ -174,14 +174,6 @@ const bgAiAgent: Record<string, TranslationEntry> = {
     message: "прикачен файл",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "Подготвя се...",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} неуспешно",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "Списък",
     description: "Label for the list-files AI tool",

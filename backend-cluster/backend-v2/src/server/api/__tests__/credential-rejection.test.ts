@@ -15,14 +15,6 @@
  */
 import "reflect-metadata";
 
-// The ai-agent routes transitively load the harness ESM packages, whose
-// `import.meta.url` Jest's CommonJS transform cannot evaluate. No request here
-// reaches them.
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({
-  createACP: () => ({}),
-}));
-
 import http from "node:http";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
@@ -405,11 +397,9 @@ describe("routes that authenticate through resolveAuthUser (w31/026)", () => {
   const body = {
     messages: [{ role: "user", content: "What did I spend on rent?" }],
     ledgerId: "alice/main",
-    conversationId: "conversation-1",
   };
   const routes = [
     "/api-gateway/agent",
-    "/api-gateway/sandbox-agent",
     "/api-gateway/ai/openai/chat/completions",
   ];
   let server: http.Server;

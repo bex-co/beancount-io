@@ -18,7 +18,7 @@ defect class.
 ## Scope resolution
 
 `$ARGUMENTS` may name a package (`mobile`, `dashboard`, `cli`, `skills`,
-`backend-v2`, `agent-box`, `ledger`, `idl`, `deploy`) or a path — scope the run
+`backend-v2`, `ledger`, `idl`, `deploy`) or a path — scope the run
 to it. When empty, survey in the default order `mobile → dashboard → cli →
 backend-v2 → ledger → skills`, pick the single highest-value target, and
 announce the pick with a one-line plan before doing work. Every finding stays
@@ -112,8 +112,8 @@ quick, otherwise carry on and name it in the summary (root `AGENTS.md`,
 - any `AGENTS.md` or skill change → `python3 scripts/check-agent-guidance.py` (from the repo root)
 - before every ship → `python3 scripts/scan-secrets.py` (from the repo root)
 
-**If no automated check covers the changed behavior** (backend-v2, agent-box,
-and deploy have no package-wide CI workflow), STOP and report the finding
+**If no automated check covers the changed behavior** (backend-v2 and deploy
+have no package-wide CI workflow), STOP and report the finding
 instead of shipping it.
 
 ## Ship protocol

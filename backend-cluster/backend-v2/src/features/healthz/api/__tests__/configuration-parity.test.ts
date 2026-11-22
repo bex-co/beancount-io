@@ -1,8 +1,6 @@
 import "reflect-metadata";
 import { SubscriptionService } from "@/features/stripe/service/subscription-service";
 import { SubscriptionResolver } from "@/features/stripe/api/subscription-resolver";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { graphql } from "graphql";

@@ -8,10 +8,6 @@ import {
 import { registerRoute } from "@/server/rest/openapi-registry";
 import { healthCheckResponseSchema } from "./healthz-schema";
 import { logger } from "@/shared/logger";
-import {
-  AI_HEALTH_CHECK_CACHE_KEY,
-  type AiHealthCheckResult,
-} from "@/scheduler/jobs/ai-health-check-job";
 
 const healthLogger = logger.child({ module: "healthz" });
 
@@ -23,13 +19,6 @@ interface ServiceHealth {
   error?: string;
 }
 
-interface AiFeatureHealth {
-  status: "healthy" | "unhealthy" | "unchecked";
-  latency_ms: number;
-  lastChecked?: string;
-  error?: string;
-}
-
 interface HealthResponse {
   status: ServiceStatus;
   services: {
@@ -37,7 +26,6 @@ interface HealthResponse {
     redis: ServiceHealth;
     ledger: ServiceHealth;
     gitea: ServiceHealth;
-    aiFeature: AiFeatureHealth;
   };
 }
 
@@ -144,11 +132,8 @@ const HEALTHZ_PATHS = ["/healthz", "/api-gateway/healthz"] as const;
  * Set up health check endpoint
  *
  * Deep health check that verifies connectivity to all backend dependencies
- * (PostgreSQL, Redis, Ledger, Gitea) and reads cached AI feature health.
- * Returns JSON with per-service status.
- * Returns 200 when all infrastructure services are healthy, 500 when any is unhealthy.
- * With ?strict=true, AI feature health also affects the HTTP status (soft dependency).
- * AI feature "unchecked" status (cron hasn't run yet) is always treated as OK.
+ * (PostgreSQL, Redis, Ledger, Gitea). Returns JSON with per-service status:
+ * 200 when every service is healthy, 500 when any is unhealthy.
  */
 export function setHealthzHandler(
   router: Router,
@@ -178,44 +163,13 @@ export function setHealthzHandler(
       }),
     ]);
 
-    // Read cached AI feature health check result (set by cron job, not blocking)
-    let aiFeature: AiFeatureHealth;
-    try {
-      const cached = await layers.clients.cacheHelper.get<AiHealthCheckResult>(
-        AI_HEALTH_CHECK_CACHE_KEY,
-      );
-      if (cached) {
-        // The cached error is free text from the sandbox; the status says enough.
-        aiFeature = {
-          status: cached.status,
-          latency_ms: cached.latency_ms,
-          lastChecked: cached.lastChecked,
-        };
-      } else {
-        aiFeature = { status: "unchecked", latency_ms: 0 };
-      }
-    } catch (error) {
-      healthLogger.warn(
-        "Failed to read AI health check cache",
-        describeHealthFailure(error),
-      );
-      aiFeature = {
-        status: "unchecked",
-        latency_ms: 0,
-        error: publicFailure(error),
-      };
-    }
-
-    const strict = ctx.query.strict === "true";
-    const infraHealthy = [postgres, redis, ledger, gitea].every(
+    const allHealthy = [postgres, redis, ledger, gitea].every(
       (s) => s.status === "healthy",
     );
-    const allHealthy =
-      infraHealthy && (!strict || aiFeature.status !== "unhealthy");
 
     const response: HealthResponse = {
       status: allHealthy ? "healthy" : "unhealthy",
-      services: { postgres, redis, ledger, gitea, aiFeature },
+      services: { postgres, redis, ledger, gitea },
     };
 
     ctx.status = allHealthy ? 200 : 500;
@@ -229,7 +183,7 @@ export function setHealthzHandler(
       path,
       summary: "Health check endpoint",
       description:
-        "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea) and reads cached AI feature health. Returns 200 when infrastructure services are healthy, 500 when any is unhealthy. Use ?strict=true to also fail on unhealthy AI feature.",
+        "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea). Returns 200 when every service is healthy, 500 when any is unhealthy.",
       tags: ["Health"],
       responses: {
         200: {

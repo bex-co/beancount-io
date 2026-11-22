@@ -1,6 +1,4 @@
 import "reflect-metadata";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import { ApolloServer } from "@apollo/server";
 import { buildSchema } from "type-graphql";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";

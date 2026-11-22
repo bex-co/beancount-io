@@ -61,7 +61,6 @@ describe("Healthz Handler", () => {
     let fetchMock: jest.Mock;
     let dbExecute: jest.Mock;
     let getStrict: jest.Mock;
-    let cacheGet: jest.Mock;
     const originalFetch = global.fetch;
 
     async function runHealthz(
@@ -81,11 +80,10 @@ describe("Healthz Handler", () => {
       mockWarn.mockReset();
       dbExecute = jest.fn().mockResolvedValue(undefined);
       getStrict = jest.fn().mockResolvedValue(null);
-      cacheGet = jest.fn().mockResolvedValue(null);
       fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200 });
       global.fetch = fetchMock as any;
       mockLayers.database.db = { execute: dbExecute } as any;
-      mockLayers.clients.cacheHelper = { getStrict, get: cacheGet } as any;
+      mockLayers.clients.cacheHelper = { getStrict } as any;
       mockConfig = {
         favaApi: { baseUrl: "http://ledger:8000" },
         gitea: { internalBaseUrl: "http://gitea:3000" },
@@ -120,10 +118,12 @@ describe("Healthz Handler", () => {
 
       expect(ctx.status).toBe(200);
       expect(ctx.body.status).toBe("healthy");
-      expect(ctx.body.services.aiFeature).toEqual({
-        status: "unchecked",
-        latency_ms: 0,
-      });
+      expect(Object.keys(ctx.body.services).sort()).toEqual([
+        "gitea",
+        "ledger",
+        "postgres",
+        "redis",
+      ]);
       expect(mockWarn).not.toHaveBeenCalled();
     });
 
@@ -209,49 +209,6 @@ describe("Healthz Handler", () => {
       expect(meta.reason.length).toBeLessThanOrEqual(201);
       expect(meta.reason.endsWith("…")).toBe(true);
       expect(Object.keys(meta).sort()).toEqual(["reason", "service"]);
-    });
-
-    it("logs a compact cache-read failure and keeps AI health unchecked", async () => {
-      cacheGet.mockRejectedValue(
-        Object.assign(new Error("Connection is closed.\nretrying"), {
-          code: "ECONNRESET",
-        }),
-      );
-
-      const ctx = await runHealthz({ strict: "true" });
-
-      expect(ctx.status).toBe(200);
-      expect(ctx.body.services.aiFeature).toEqual({
-        status: "unchecked",
-        latency_ms: 0,
-        error: "ECONNRESET",
-      });
-      expect(mockWarn).toHaveBeenCalledTimes(1);
-      expect(mockWarn).toHaveBeenCalledWith(
-        "Failed to read AI health check cache",
-        { reason: "Connection is closed. retrying", code: "ECONNRESET" },
-      );
-    });
-
-    it("keeps strict mode failing on cached unhealthy AI without a warning", async () => {
-      cacheGet.mockResolvedValue({
-        status: "unhealthy",
-        latency_ms: 12,
-        lastChecked: "2026-09-27T00:00:00.000Z",
-        error: "model unavailable",
-      });
-
-      expect((await runHealthz()).status).toBe(200);
-      router = new Router();
-      const strict = await runHealthz({ strict: "true" });
-
-      expect(strict.status).toBe(500);
-      expect(strict.body.services.aiFeature).toEqual({
-        status: "unhealthy",
-        latency_ms: 12,
-        lastChecked: "2026-09-27T00:00:00.000Z",
-      });
-      expect(mockWarn).not.toHaveBeenCalled();
     });
   });
 });

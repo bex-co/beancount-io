@@ -286,22 +286,22 @@ inventories in both directions.
 
 Additional composite assisted-ingestion and AI actions:
 
-| Canonical action              | Transport aliases                                | Preserved credential ceiling                          | Relationship requirement                  |
-| ----------------------------- | ------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------- |
-| `assisted.file.parse`         | `GQL Mutation.parseFile`                         | session, or OAuth/API key with `ledger.read`          | exact-self + temporary-asset owner        |
-| `assisted.receipt.parse`      | GraphQL and agent receipt parser                 | session, or OAuth/API key with `ledger.read`          | temp owner + ledger contents/assets read  |
-| `assisted.categories.suggest` | `GQL Query.suggestTransactionCategories`         | session, or OAuth/API key with `ledger.read`          | ledger contents read + AI write           |
-| `assisted.receipt.insert`     | GraphQL and agent receipt insertion              | session, or OAuth/API key with `ledger.write`         | temp owner + ledger contents/assets write |
-| `temp_asset.upload.create`    | `GQL Mutation.generateTempAssetUploadUrl`        | session, or OAuth/API key with `ledger.read`          | exact-self uploader                       |
-| `temp_asset.download.read`    | `GQL Query.generateTempAssetDownloadUrl`         | session, or OAuth/API key with `ledger.read`          | temporary-asset owner                     |
-| `ai.model.invoke`             | OpenAI- and Anthropic-compatible REST routes     | session, or OAuth/API key with `ledger.write`         | exact-self AI caller                      |
-| `ai.ledger.ask`               | all agent routes and effective read-only mode    | session, or OAuth/API key with `ledger.read`          | ledger contents read                      |
-| `ai.ledger.agent`             | write upgrade for self-hosted and sandbox agents | session, OAuth/API key with `ledger.write`, or system | ledger contents write + AI write          |
+| Canonical action              | Transport aliases                             | Preserved credential ceiling                          | Relationship requirement                  |
+| ----------------------------- | --------------------------------------------- | ----------------------------------------------------- | ----------------------------------------- |
+| `assisted.file.parse`         | `GQL Mutation.parseFile`                      | session, or OAuth/API key with `ledger.read`          | exact-self + temporary-asset owner        |
+| `assisted.receipt.parse`      | GraphQL and agent receipt parser              | session, or OAuth/API key with `ledger.read`          | temp owner + ledger contents/assets read  |
+| `assisted.categories.suggest` | `GQL Query.suggestTransactionCategories`      | session, or OAuth/API key with `ledger.read`          | ledger contents read + AI write           |
+| `assisted.receipt.insert`     | GraphQL and agent receipt insertion           | session, or OAuth/API key with `ledger.write`         | temp owner + ledger contents/assets write |
+| `temp_asset.upload.create`    | `GQL Mutation.generateTempAssetUploadUrl`     | session, or OAuth/API key with `ledger.read`          | exact-self uploader                       |
+| `temp_asset.download.read`    | `GQL Query.generateTempAssetDownloadUrl`      | session, or OAuth/API key with `ledger.read`          | temporary-asset owner                     |
+| `ai.model.invoke`             | OpenAI- and Anthropic-compatible REST routes  | session, or OAuth/API key with `ledger.write`         | exact-self AI caller                      |
+| `ai.ledger.ask`               | all agent routes and effective read-only mode | session, or OAuth/API key with `ledger.read`          | ledger contents read                      |
+| `ai.ledger.agent`             | write upgrade for the in-process agent        | session, OAuth/API key with `ledger.write`, or system | ledger contents write + AI write          |
 
 Agent mode always authorizes `ai.ledger.ask` first. If the caller can read a
 public or shared ledger but the independent `ai.ledger.agent` write upgrade is
-denied, the turn continues in read-only mode: edit tools are absent, the sandbox
-remote is removed, and read-only instructions prohibit mutation. A relationship
+denied, the turn continues in read-only mode: edit tools are absent and
+read-only instructions prohibit mutation. A relationship
 source error still fails closed instead of being mistaken for an ordinary
 read-only downgrade.
 

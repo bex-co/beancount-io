@@ -174,14 +174,6 @@ const ptAiAgent: Record<string, TranslationEntry> = {
     message: "anexo",
     description: "Fallback filename for an attachment",
   },
-  "aiAgent.preparing": {
-    message: "Preparando…",
-    description: "Status while an AI tool is preparing",
-  },
-  "aiAgent.toolFailed": {
-    message: "{tool} falhou",
-    description: "Fallback error when an AI tool fails",
-  },
   "aiAgent.toolList": {
     message: "Lista",
     description: "Label for the list-files AI tool",

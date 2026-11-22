@@ -146,15 +146,6 @@ interface OpenAIConfig {
   baseUrl: string;
 }
 
-interface ClaudeCodeSandboxConfig {
-  apiUrl: string;
-}
-
-interface AgentConfig {
-  mode: "self-hosted" | "sandbox";
-  sandboxApiUrl: string;
-}
-
 interface StripeConfig {
   webhookSecret: string;
   publicKey: string;
@@ -286,10 +277,6 @@ export interface AppConfig {
   mcpRegistry: McpRegistryConfig;
   gitea: GiteaConfig;
   openai: OpenAIConfig;
-  claudeCodeSandbox: ClaudeCodeSandboxConfig;
-  /** Controls which Ask AI backend to use: "bql" (local LLM+BQL) or "sandbox" (Cloudflare sandbox proxy) */
-  askAiMode: "bql" | "sandbox";
-  agent: AgentConfig;
   stripe: StripeConfig;
   tempAssetS3: AssetS3Config;
   loki: LokiConfig;
@@ -578,14 +565,6 @@ export const config: AppConfig = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY || "",
     baseUrl: parseOpenAIBaseUrl(process.env.OPENAI_BASE_URL),
-  },
-  claudeCodeSandbox: {
-    apiUrl: process.env.CLAUDE_CODE_SANDBOX_URL || "",
-  },
-  askAiMode: process.env.ASK_AI_MODE === "sandbox" ? "sandbox" : "bql",
-  agent: {
-    mode: process.env.AGENT_MODE === "sandbox" ? "sandbox" : "self-hosted",
-    sandboxApiUrl: process.env.CLAUDE_CODE_AGENT_URL || "",
   },
   server: {
     trustedProxyHops: parseTrustedProxyHops(process.env.TRUSTED_PROXY_HOPS),

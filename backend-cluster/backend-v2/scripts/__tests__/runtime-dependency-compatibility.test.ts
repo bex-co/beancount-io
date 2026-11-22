@@ -1,13 +1,8 @@
 import { spawnSync } from "node:child_process";
 
 describe("runtime dependency compatibility", () => {
-  it("loads the AI providers and harnesses in an untransformed Node process", () => {
-    const imports = [
-      "@ai-sdk/anthropic",
-      "@ai-sdk/harness/agent",
-      "@ai-sdk/harness-acp",
-      "@ai-sdk/openai",
-    ];
+  it("loads the AI providers in an untransformed Node process", () => {
+    const imports = ["@ai-sdk/anthropic", "@ai-sdk/openai"];
     const child = spawnSync(
       process.execPath,
       [

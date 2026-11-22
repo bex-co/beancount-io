@@ -1,6 +1,4 @@
 import "reflect-metadata";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
 import type { ZodType } from "zod";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";

@@ -43,7 +43,7 @@ one package with the most promising hits.
 `cd` into the package, then run its detector:
 
 - JS/TS packages (`mobile`, `dashboard`, `backend-cluster/backend-v2`,
-  `backend-cluster/ledger`, `backend-cluster/agent-box`) → `yarn lint:deadcode`
+  `backend-cluster/ledger`) → `yarn lint:deadcode`
   (Knip; config in the package's `knip.jsonc`)
 - `cli/` → `make deadcode` (Vulture; high-confidence only)
 

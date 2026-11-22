@@ -1,8 +1,5 @@
 import "reflect-metadata";
 
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
-
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { AppLayers } from "@/foundation/composition";
 import { UriTemplate } from "@modelcontextprotocol/sdk/shared/uriTemplate.js";

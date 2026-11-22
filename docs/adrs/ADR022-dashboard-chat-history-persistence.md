@@ -1,34 +1,33 @@
 # ADR022: Ask AI Chat History Persistence
 
 - Status: Draft
-- Status notes: Draft since 2026-11-14 (was Proposed): the [requirements to settle before implementation](#requirements-to-settle-before-implementation) are open, and nothing is scheduled from this record.
+- Status notes: Draft since 2026-11-14 (was Proposed): the [requirements to settle before implementation](#requirements-to-settle-before-implementation) are open, and nothing is scheduled from this record. On 2026-11-21 the dashboard's second, sandbox-backed chat surface was removed (`/ask` now always redirects to `/agent`), so this record covers the one remaining surface.
 - Date: 2026-08-17
 - Decision owners: Backend (persistence + endpoint), Dashboard (client)
-- Scope: Persisting the Ask AI conversations of the dashboard's two chat surfaces in `dashboard/src/features/ai-agent/pages/` (`agent/` and `sandbox-agent/`) — what survives reload/navigation, **which service owns the store**, and which mechanism to reuse.
+- Scope: Persisting the Ask AI conversations of the dashboard's chat surface in `dashboard/src/features/ai-agent/pages/agent/` — what survives reload/navigation, **which service owns the store**, and which mechanism to reuse.
 
 ## Context
 
-The dashboard has two Ask AI surfaces. Both render the same component, `AgentPageImpl` in `dashboard/src/features/ai-agent/pages/agent/page.tsx`, which already uses the Vercel AI SDK: **`useChat` + `DefaultChatTransport`** from `@ai-sdk/react` / `ai`, cookie auth (`credentials: "include"`), calling the backend directly at `${config.apiUrl}<route>`. Both backend routes already answer with the AI SDK **`UIMessage` stream**. The protocol half of a history mechanism is therefore in place; the storage half is not.
+The dashboard has one Ask AI surface, `AgentPageImpl` in `dashboard/src/features/ai-agent/pages/agent/page.tsx`, which already uses the Vercel AI SDK: **`useChat` + `DefaultChatTransport`** from `@ai-sdk/react` / `ai`, cookie auth (`credentials: "include"`), calling the backend directly at `${config.apiUrl}agent`. The backend route already answers with the AI SDK **`UIMessage` stream**. The protocol half of a history mechanism is therefore in place; the storage half is not.
 
-| | Agent | Sandbox agent |
-| --- | --- | --- |
-| Dashboard route | `/ledger/:owner/:name/agent` | `/ledger/:owner/:name/ask?mode=sandbox\|agent` (a mode-less `/ask` redirects to `/agent`) |
-| Page | `dashboard/src/features/ai-agent/pages/agent/` | `dashboard/src/features/ai-agent/pages/sandbox-agent/` |
-| Backend route | `POST /api-gateway/agent` (`backend-cluster/backend-v2/src/features/ai-agent/api/agent-route.ts`) | `POST /api-gateway/sandbox-agent` (`backend-cluster/backend-v2/src/features/ai-agent/api/sandbox-agent-route.ts`) |
-| Brain | In-process tool-loop agent (BQL, list/read/edit ledger files, receipt parse + insert), capped at ten steps | Claude Code in a Cloudflare Sandbox, reached through the `backend-cluster/agent-box` control plane |
-| What the client sends each turn | The **full `UIMessage[]`** plus `ledgerId` and `sessionId` | The full `UIMessage[]` plus `ledgerId`, `conversationId`, and `mode` |
-| What the server uses | The full client-supplied history, converted to model messages; `sessionId` is only logged | **Only the text of the last message**; earlier turns come from the sandbox container |
-| Conversation memory | None on the server — the client is the memory | The sandbox container, keyed on `conversationId` (it is also the harness session id) |
-| Client identifier | `sessionId` (`aisess_…`), kept in `sessionStorage` under `ai-agent-session` by `dashboard/src/features/ai-agent/hooks/use-agent-session.ts`; survives a reload in the same tab | `conversationId` (`conv_…`), minted in component state on every mount |
+| | Agent |
+| --- | --- |
+| Dashboard route | `/ledger/:owner/:name/agent` (the older `/ask` path redirects here, keeping `?q=`) |
+| Page | `dashboard/src/features/ai-agent/pages/agent/` |
+| Backend route | `POST /api-gateway/agent` (`backend-cluster/backend-v2/src/features/ai-agent/api/agent-route.ts`) |
+| Brain | In-process tool-loop agent (BQL, list/read/edit ledger files, receipt parse + insert), capped at ten steps |
+| What the client sends each turn | The **full `UIMessage[]`** plus `ledgerId` and `sessionId` |
+| What the server uses | The full client-supplied history, converted to model messages; `sessionId` is only logged |
+| Conversation memory | None on the server — the client is the memory |
+| Client identifier | `sessionId` (`aisess_…`), kept in `sessionStorage` under `ai-agent-session` by `dashboard/src/features/ai-agent/hooks/use-agent-session.ts`; survives a reload in the same tab |
 
-Conversation state is **ephemeral** on both:
+Conversation state is **ephemeral**:
 
-- `useChat` is seeded with a single welcome bubble on every mount. A reload or navigation wipes the visible history. On the agent surface the `sessionId` survives the reload, but nothing is keyed on it, so it restores nothing.
-- On the sandbox surface a reload mints a new `conversationId`, which abandons the container that held the conversation.
+- `useChat` is seeded with a single welcome bubble on every mount. A reload or navigation wipes the visible history. The `sessionId` survives the reload, but nothing is keyed on it, so it restores nothing.
 - **No durable history exists anywhere.** There are no chat or message tables in backend-v2, no history read, and no history list. The dashboard has no "New chat" action either; `useAgentSession` exposes `startNewSession`, but nothing calls it.
-- Both routes **already own the trust boundary**: `resolveAuthUser` (`backend-cluster/backend-v2/src/features/ai-agent/utils/route-guards.ts`) resolves the caller, `resolveAgentAccessMode` (`backend-cluster/backend-v2/src/features/ai-agent/agent-access.ts`) authorizes the ledger and decides read vs. write tools, and the AI-CFO quota is checked before the turn and debited after it. They run on the service that owns the product **Postgres/Drizzle database** and user identity.
+- The route **already owns the trust boundary**: `resolveAuthUser` (`backend-cluster/backend-v2/src/features/ai-agent/utils/route-guards.ts`) resolves the caller, `resolveAgentAccessMode` (`backend-cluster/backend-v2/src/features/ai-agent/agent-access.ts`) authorizes the ledger and decides read vs. write tools, and the AI-CFO quota is checked before the turn and debited after it. They run on the service that owns the product **Postgres/Drizzle database** and user identity.
 - The dashboard's own **Nitro server is not in the chat data path** (it serves only SSR HTML/assets).
-- Two things on the agent surface shape what "a stored message" means. Ledger edits and receipt inserts are `needsApproval` tools: the stream ends with a tool part in `approval-requested` state, and the client re-sends the conversation with an approval response (`sendAutomaticallyWhen`), so **an existing assistant message changes after it was first produced**. Attachments travel as `file` parts plus `data-file-upload` parts carrying a temp-asset `objectKey`.
+- Two things shape what "a stored message" means. Ledger edits and receipt inserts are `needsApproval` tools: the stream ends with a tool part in `approval-requested` state, and the client re-sends the conversation with an approval response (`sendAutomaticallyWhen`), so **an existing assistant message changes after it was first produced**. Attachments travel as `file` parts plus `data-file-upload` parts carrying a temp-asset `objectKey`.
 
 `backend-v2` lives in this monorepo (`backend-cluster/backend-v2`), so the backend and dashboard halves of this work land in one repository and can be tracked on one board. A third client exists: the mobile app's gated-off agent screen speaks the same `/api-gateway/agent` route (`docs/adrs/ADR002-mobile-ai-assistant.md`) and would hydrate from the same history endpoints.
 
@@ -37,20 +36,20 @@ Conversation state is **ephemeral** on both:
 - Restore the conversation across reload/navigation, and enable **durable, cross-device** history — not device-local scratch state.
 - **Persistence must live with the service that already owns identity, auth, and the database.** Durable user records do not belong in the presentation/SSR layer.
 - Reuse a **standard, maintained history mechanism** instead of a bespoke store.
-- Keep the two brains **unchanged**.
+- Keep the agent **unchanged**.
 - Control **data custody** for financial chat text (prefer our own database over a third party).
 - Honor the repository's **REST / GraphQL / MCP parity** rule for the new history capability.
 - Enable **resumable streaming** as a natural next step.
 
 ## Decision
 
-Persist chat history in **backend-v2 — the service that already owns the database, user identity, auth, quota, and both chat routes** — using the **Vercel AI SDK ecosystem's history mechanism** (server-side `loadChat`/`saveChat`, the `UIMessage` "parts" shape, stable server IDs, optional resumable streams). The **dashboard stays a pure client**: it already runs `useChat` against the backend, so its remaining work is to hydrate from a backend history read and to add a history list.
+Persist chat history in **backend-v2 — the service that already owns the database, user identity, auth, quota, and the chat route** — using the **Vercel AI SDK ecosystem's history mechanism** (server-side `loadChat`/`saveChat`, the `UIMessage` "parts" shape, stable server IDs, optional resumable streams). The **dashboard stays a pure client**: it already runs `useChat` against the backend, so its remaining work is to hydrate from a backend history read and to add a history list.
 
 Explicitly **rejected**: the dashboard's Nitro server owning a datastore (it would duplicate the backend's identity/auth/schema/ops and split user data across two stores — a presentation layer should not own durable records), and client-only `localStorage` (device-local, non-authoritative, bespoke).
 
 Reusable ecosystem components (implemented **in the backend**, consumed by the dashboard client):
 
-- **Backend**: the AI SDK message-persistence pattern — `loadChat(chatId)`, `saveChat(chatId, messages)` on the stream's **`onFinish`**, the **`UIMessage`** shape as the stored source of truth, and `createIdGenerator()` for stable IDs. The store is the **backend's existing Postgres/Drizzle**, using the Chat SDK schema shape (`chats`, `messages` with `parts`). Persistence reuses the routes' existing `resolveAuthUser` + `resolveAgentAccessMode`, so reads and writes are authorized by the same checks as a turn.
+- **Backend**: the AI SDK message-persistence pattern — `loadChat(chatId)`, `saveChat(chatId, messages)` on the stream's **`onFinish`**, the **`UIMessage`** shape as the stored source of truth, and `createIdGenerator()` for stable IDs. The store is the **backend's existing Postgres/Drizzle**, using the Chat SDK schema shape (`chats`, `messages` with `parts`). Persistence reuses the route's existing `resolveAuthUser` + `resolveAgentAccessMode`, so reads and writes are authorized by the same checks as a turn.
 - **Dashboard (client only)**: keep `useChat` + `DefaultChatTransport`; send a `chatId` with each turn; hydrate initial messages from a backend history read; add a per-ledger **history list** and a **New chat** action, reusing the Chat SDK history-list pattern.
 - **Later**: `vercel/resumable-stream` + `useChat({ resume: true })` to rejoin an in-progress generation after reload. backend-v2 already connects to Redis, so this needs no new datastore.
 
@@ -70,20 +69,15 @@ flowchart TB
   dash["Dashboard Nitro server<br/>(SSR / assets only — NOT in chat path)"]
   subgraph be["backend-v2 (owns auth + DB)"]
     agentRoute["POST /api-gateway/agent<br/>auth · ledger access · quota"]
-    sbxRoute["POST /api-gateway/sandbox-agent<br/>auth · ledger access · quota"]
     loop["in-process tool-loop agent<br/>stateless — full history from the client"]
-    wf["sandbox agent workflow<br/>forwards the last message only"]
   end
-  box["agent-box control plane + Cloudflare Sandbox<br/>container = memory, keyed by conversationId"]
 
   dash -. "serves the page only" .-> browser
   browser -- "UIMessage[] + sessionId · cookie" --> agentRoute --> loop
-  browser -- "UIMessage[] + conversationId + mode · cookie" --> sbxRoute --> wf --> box
   agentRoute -- "UIMessage stream" --> browser
-  sbxRoute -- "UIMessage stream" --> browser
 ```
 
-Reload / navigation wipes the React state. The sandbox surface also regenerates `conversationId`, so its container is abandoned. **No store anywhere.**
+Reload / navigation wipes the React state. **No store anywhere.**
 
 ### Proposed architecture (backend owns history)
 
@@ -94,24 +88,21 @@ flowchart TB
   browser["Browser — AgentPageImpl<br/>useChat (AI SDK)"]
   dash["Dashboard Nitro server<br/>(SSR / assets only — still NOT in chat path)"]
   subgraph be["backend-v2 — owns identity · auth · DB · chat + history"]
-    routes["POST /api-gateway/agent · /api-gateway/sandbox-agent<br/>+ history list / read / delete"]
+    routes["POST /api-gateway/agent<br/>+ history list / read / delete"]
     persist["loadChat / saveChat (onFinish)<br/>authorized like a turn"]
     store[("Backend Postgres<br/>chats + messages(parts)")]
     loop["in-process tool-loop agent (unchanged)"]
-    wf["sandbox agent workflow (unchanged)"]
   end
-  box["agent-box + Cloudflare Sandbox (unchanged)<br/>container by conversationId"]
 
   dash -. "serves the page only" .-> browser
   browser -- "useChat: messages + chatId · cookie" --> routes
   routes --> loop
-  routes --> wf --> box
   routes --> persist --> store
   routes -- "UIMessage stream (live)" --> browser
   persist -. "hydrate on mount (history read)" .-> browser
 ```
 
-History is durable and cross-device; the store lives in the backend's own Postgres (no new data owner, no third-party). The two brains and the trust boundary stay exactly where they are.
+History is durable and cross-device; the store lives in the backend's own Postgres (no new data owner, no third-party). The agent and the trust boundary stay exactly where they are.
 
 ### Proposed turn sequence
 
@@ -130,7 +121,7 @@ sequenceDiagram
   Note over U,S: New turn
   U->>B: POST { chatId, message(s) }
   Note over B: resolveAuthUser · ledger access · quota (existing)
-  B->>B: run the agent or the sandbox workflow (unchanged)
+  B->>B: run the agent (unchanged)
   B-->>U: UIMessage stream (live render)
   B->>S: saveChat(chatId, UIMessage[]) — onFinish
 
@@ -156,8 +147,6 @@ erDiagram
     text id PK "chat_<base58>"
     text user_id FK "users.id (owner)"
     text ledger_id "owner/name"
-    text surface "agent | sandbox"
-    text sandbox_conversation_id "nullable; sandbox container key"
     text title "nullable; from first user message"
     text visibility "private; wider values pending an open requirement"
     timestamp created_at
@@ -205,9 +194,6 @@ export const askAiChats = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     ledgerId: text("ledger_id").notNull(), // "owner/name"
-    surface: text("surface").notNull(), // "agent" | "sandbox"
-    // Sandbox surface only: the container key sent as `conversationId`.
-    sandboxConversationId: text("sandbox_conversation_id"),
     title: text("title"), // derived from first user message
     visibility: text("visibility").notNull().default("private"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -260,9 +246,8 @@ export const askAiStreams = pgTable(
 ### Design notes
 
 - **`parts` is the source of truth.** Store the AI SDK **`UIMessage.parts`** (not the provider `ModelMessage` shape) as `jsonb`. `loadChat(chatId)` selects rows ordered by `(chat_id, seq)` and rebuilds `UIMessage[]`; validate with `validateUIMessages` on load. File parts and `data-file-upload` parts are ordinary parts, so there is no separate attachments column.
-- **Messages are upserted, not appended.** On the agent surface an assistant message is not final when first streamed: a tool part moves from `approval-requested` to its result after the user answers, in a later request. `saveChat` therefore upserts by message `id` and bumps `updated_at`; an insert-only log would store the pending state forever. `seq` gives a stable order that does not depend on timestamps.
-- **`surface` replaces the old "mode".** A chat belongs to one of the two surfaces for its whole life, because they keep memory differently. On the **agent** surface the stored `UIMessage[]` is the complete conversation and can drive the next turn. On the **sandbox** surface the stored messages are a **display copy**: the container is the working memory, the backend forwards only the latest message text, and a restored chat whose container has gone resumes without the agent's earlier context unless a replay is designed. The sandbox `ask`/`agent` access mode stays a per-request input and is not stored on the chat.
-- **`sandbox_conversation_id` vs `id`.** `chats.id` is the durable **history** handle. On the sandbox surface the container key is kept separately so a container can expire or be recycled without losing chat identity or history. On the agent surface the column is null.
+- **Messages are upserted, not appended.** An assistant message is not final when first streamed: a tool part moves from `approval-requested` to its result after the user answers, in a later request. `saveChat` therefore upserts by message `id` and bumps `updated_at`; an insert-only log would store the pending state forever. `seq` gives a stable order that does not depend on timestamps.
+- **The stored conversation is complete.** The stored `UIMessage[]` is the whole conversation and can drive the next turn. The `ask`/`agent` access mode stays a per-request decision and is not stored on the chat.
 - **Scoping & auth.** Every query filters by the caller's `user_id` (from `resolveAuthUser`) and passes the same ledger authorization as a turn (`resolveAgentAccessMode`). As drawn, chats are private to their owner within a ledger; `visibility` is reserved, and whether anything wider is ever allowed is an open requirement below.
 - **Deletion.** `ON DELETE CASCADE` from `ask_ai_chats` → messages/streams, and from `users` → chats, so deleting a chat or a user removes the rows. Retention policy and what deletion must reach beyond these tables are open requirements below.
 - **At rest.** Rows live in the backend's own Postgres (encryption at rest per infra). For stronger guarantees on financial text, `pgcrypto` column encryption of `parts`/`metadata` is an option (trade-off: defeats server-side search/analytics).
@@ -273,21 +258,21 @@ Nothing in this plan is started, and it is not scheduled on the `.pm` board. It 
 
 ### Already in place
 
-- Both surfaces use `useChat` + `DefaultChatTransport` against the backend, and both routes emit the `UIMessage` stream. The transport migration this record originally planned is done; no response-shape change or client cutover remains.
+- The surface uses `useChat` + `DefaultChatTransport` against the backend, and the route emits the `UIMessage` stream. The transport migration this record originally planned is done; no response-shape change or client cutover remains.
 - Stop, retry, tool activity, approval cards, attachments, and the quota upgrade panel are already expressed as `UIMessage` parts and `useChat` state.
 
 ### Backend-v2 (`backend-cluster/backend-v2`)
 
 - Add the `ask_ai_chats` / `ask_ai_messages` tables (Drizzle — see [Database Schema](#database-schema-backend-v2-postgres--drizzle)) with a migration under `backend-cluster/backend-v2/src/drizzle/migrations`.
-- Accept a `chatId` on both routes and persist the turn: on the agent route in the handler that pipes the stream (`backend-cluster/backend-v2/src/features/ai-agent/service/agent-handler/self-hosted-agent-handler.ts`), on the sandbox route around the workflow's response stream (`backend-cluster/backend-v2/src/features/ai-agent/workflow/sandbox-agent-workflow.ts`). Assign stable server message IDs.
+- Accept a `chatId` on the agent route and persist the turn in the handler that pipes the stream (`backend-cluster/backend-v2/src/features/ai-agent/service/agent-handler/self-hosted-agent-handler.ts`). Assign stable server message IDs.
 - Add history **list**, **read**, and **delete** as service operations exposed on REST, GraphQL, and MCP, following `backend-cluster/backend-v2/docs/api-parity.md`.
-- Leave the two brains and the Cloudflare container behavior unchanged.
+- Leave the agent unchanged.
 - Later: resumable streams on the backend's existing Redis + the `ask_ai_streams` table.
 
 ### Dashboard (`dashboard/`) — client only, behind a flag
 
 - Send `chatId` with each turn and hydrate `useChat`'s initial messages from the history read instead of the welcome bubble alone.
-- Decide what the existing `sessionId` and per-mount `conversationId` become once a `chatId` exists, and stop minting a new sandbox `conversationId` on every mount.
+- Decide what the existing `sessionId` becomes once a `chatId` exists.
 - Add the per-ledger **history list** and a **New chat** action.
 
 ### Mobile (`mobile/`)
@@ -300,7 +285,7 @@ Nothing in this plan is started, and it is not scheduled on the `.pm` board. It 
 The presentation/SSR layer would become a stateful data-owning service — duplicating identity resolution, auth, schema, migrations, backups, and retention that `backend-v2` already provides, and splitting the same user's data (and two auth checks) across two stores. A frontend/BFF should not own durable user records. This is the design this ADR explicitly moves **away** from.
 
 ### Dashboard as a thin proxy, backend owns the store (rejected)
-The dashboard Nitro route could wrap the backend stream and call backend history endpoints — keeping the store in the backend but adding a hop and a second service in the path. It was only ever justified if the backend could not emit the `UIMessage` protocol directly. Both routes now do, so the client talks to the backend.
+The dashboard Nitro route could wrap the backend stream and call backend history endpoints — keeping the store in the backend but adding a hop and a second service in the path. It was only ever justified if the backend could not emit the `UIMessage` protocol directly. The route now does, so the client talks to the backend.
 
 ### Client-only `localStorage` (rejected)
 Device-local, non-authoritative display-only continuity, storage-limited, and a bespoke format we carry forever. Rejected for a durable, server-owned mechanism.
@@ -320,14 +305,14 @@ Object storage (no querying/TTL) and read-optimized config (slow global writes) 
 - **Correct ownership**: history lives with the service that already owns identity, auth, quota, ledger access, and the database — no split-brain, no second data tier.
 - **Durable and cross-device**; a real system of record.
 - Financial chat text stays in **our own Postgres** — no third-party custody/DPA surface.
-- The dashboard stays a **pure client**; the two brains are untouched.
+- The dashboard stays a **pure client**; the agent is untouched.
 - Reuses a standard ecosystem mechanism the client already runs (`useChat`, `UIMessage`), adding only `loadChat`/`saveChat` and, later, resumable streams; `UIMessage` is a portable schema.
 - Backend and dashboard changes land in one repository.
 
 ### Negative
 - A new class of stored personal financial data: chat text, tool inputs and outputs, and attachment references, with the retention, deletion, and access obligations that brings.
 - Three API surfaces to build and keep in parity for list/read/delete, not one history GET.
-- The two surfaces persist differently (authoritative history vs. display copy), and the approval round-trip forces upsert semantics — more moving parts than an append-only log.
+- The approval round-trip forces upsert semantics — more moving parts than an append-only log.
 - The agent route's contract changes if the server stops accepting client-supplied history, which also affects the mobile client.
 
 ## Requirements to settle before implementation
@@ -341,13 +326,12 @@ These are open. This record does not decide them; implementation does not start 
 - **Persisted tool outputs.** Tool parts carry query results and file contents. Decide which parts are stored in full, which are truncated or dropped, and whether a restored chat may show data that has since changed or been removed from the ledger.
 - **Attachment keys.** `data-file-upload` parts reference temp-asset object keys. Decide whether history stores those keys, what a restored chat shows once the object is gone, and whether attachments need durable storage of their own.
 - **Account deletion and export.** How chat history is covered by account deletion and by any data-export obligation.
-- **Not trusting client-supplied history.** The agent route takes the full `UIMessage[]` from the client and the sandbox route takes the last message from it. Once the server holds the record, decide whether the server loads history itself and accepts only the new message (and the approval response), and how a client-sent message that contradicts the stored one is handled. Persisting whatever the client sends would let a client rewrite its own history, including tool results.
+- **Not trusting client-supplied history.** The agent route takes the full `UIMessage[]` from the client. Once the server holds the record, decide whether the server loads history itself and accepts only the new message (and the approval response), and how a client-sent message that contradicts the stored one is handled. Persisting whatever the client sends would let a client rewrite its own history, including tool results.
 
 ## Open Questions
 
-- Endpoint shape: where `chatId` travels on the two existing routes, and the names of the history operations on each surface.
-- `chatId` scheme and its relationship to today's `sessionId` (agent) and `conversationId` (sandbox), including sandbox container lifetime and expiry.
-- Whether a restored sandbox chat should replay stored history into a fresh container or resume without it.
+- Endpoint shape: where `chatId` travels on the existing route, and the names of the history operations on each surface.
+- `chatId` scheme and its relationship to today's `sessionId`.
 - Whether resumable streams are worth building for this surface.
 - Sequencing and feature-flagging of the backend and dashboard changes.
 
@@ -355,11 +339,9 @@ These are open. This record does not decide them; implementation does not start 
 
 Internal:
 - `dashboard/src/features/ai-agent/pages/agent/page.tsx` — `AgentPageImpl`: `useChat`, `DefaultChatTransport`, approvals, attachments
-- `dashboard/src/features/ai-agent/pages/sandbox-agent/index.tsx` — the sandbox surface and its per-mount `conversationId`
 - `dashboard/src/features/ai-agent/hooks/use-agent-session.ts` — the `sessionStorage`-backed `sessionId`
-- `backend-cluster/backend-v2/src/features/ai-agent/api/agent-route.ts` and `sandbox-agent-route.ts` — the two authenticated chat routes
+- `backend-cluster/backend-v2/src/features/ai-agent/api/agent-route.ts` — the authenticated chat route
 - `backend-cluster/backend-v2/src/features/ai-agent/service/agent-handler/self-hosted-agent-handler.ts` — ledger authorization, quota, and the piped `UIMessage` stream
-- `backend-cluster/agent-box/AGENTS.md` — the Cloudflare Worker control plane for the sandbox
 - `backend-cluster/backend-v2/docs/api-parity.md` and `docs/adrs/ADR008-backend-v2-surface-parity.md` — the parity rule the history operations must meet
 - `docs/adrs/ADR002-mobile-ai-assistant.md` — the mobile client of the agent route
 

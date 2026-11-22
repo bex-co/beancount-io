@@ -35,12 +35,11 @@ newest first.
 
 - 2026-11-20 cli vulture min-confidence-100 on Python 3.12.16 — clean over `src/cli`, `src/bea_engine`, `src/fava` (parses the three PEP-695 files vulture skipped on 3.11); ruff F401/F841 clean tree-wide; closes the 2026-11-18 Deferred vulture entry.
 - 2026-11-20 vulture min-confidence-100 over `skills/` and the root support scripts (`check-agent-guidance`, `ci-check`, `check-bex-blueprint`, `scan-secrets`) — clean; single-file scan of `scripts/skills/test_beancount_skills.py` flags the `pattern` arg of the `load_tests` protocol hook, but the whole-dir scan is clean and unittest requires the 3-arg signature; false positive.
-- 2026-11-20 marker sweeps with zero hits — `if False`/`while False` (`cli/src`), `if (false)` (`dashboard`/`mobile`/`backend-v2`/`ledger`/`agent-box` src), commented-out `def`/`class`/`import`/`export`, "no longer used/dead code" markers.
+- 2026-11-20 marker sweeps with zero hits — `if False`/`while False` (`cli/src`), `if (false)` (`dashboard`/`mobile`/`backend-v2`/`ledger` src), commented-out `def`/`class`/`import`/`export`, "no longer used/dead code" markers.
 - 2026-11-19 knip-clean with installed deps (mobile incl. production knip + graphql-operations-check, dashboard, ledger, backend-v2) — zero hits; cli ruff F401/F841 clean tree-wide and vulture min-confidence-100 clean on every file it can parse.
 - 2026-11-19 cli `ask/agent.py`, `api/client.py`, `bea_engine/importing.py` (vulture-unparseable on 3.11, PEP 695 syntax) — manual occurrence sweep: every top-level symbol has exactly one use; nothing dead.
 - 2026-11-19 `scripts/skills/test_beancount_skills.py` (vulture-unparseable f-string) — single-occurrence names are all `Test*` classes found by unittest discovery plus the `load_tests` protocol hook; nothing dead.
 - 2026-11-19 vulture `setUpClass(cls)` unused-variable hits (8× in `scripts/skills/test_verify_*.py`) — `cls` is signature-required for the unittest classmethod override; false positives, left in place.
-- 2026-11-19 agent-box `vitest.setup.ts` knip hit with no node_modules — referenced by `vitest.config.ts` `setupFiles`; detector-environment artifact, no ignore added.
 
 ## rt-dup-unifier
 
@@ -149,7 +148,7 @@ newest first.
 - 2026-11-19 backend-v2 `plaid-sync` scheduler `enabled: false` (`src/scheduler/job-scheduler.ts:105-109`) — deliberate fallback documented in ADR028 (gap G7 "the fallback sync is off", decision D3 to enable it is pending); scheduler test pins "plaid-sync always disabled"; pending decision, not a finding.
 - 2026-11-19 mobile `config.features.agentChat: false` — owner-gated off, permanently out of scope per this routine's skill and `mobile/.pm/DO_NOT_DO.md`; the route guard and home card stay.
 - 2026-11-19 backend `featureFlags` GraphQL field + REST `/api-gateway/v1/feature-flags` + MCP resource — cross-package contract consumed by mobile/CLI; removal is a universal STOP, reported not fixed.
-- 2026-11-19 deployment-fact switches (`SELF_HOST`, `ASK_AI_MODE`/`AGENT_MODE`, `SSH_PROXY_ENABLED`, `OIDC_*`, `OAUTH_JWKS_FROM_AUTH_SECRET`, dashboard `emailDelivery`/`selfHost`/`spendingReportSubscription`, `analyticsEnabled`) — vary by environment (self-host vs managed, sandbox vs bql) by design; deliberate, not single-value.
+- 2026-11-19 deployment-fact switches (`SELF_HOST`, `SSH_PROXY_ENABLED`, `OIDC_*`, `OAUTH_JWKS_FROM_AUTH_SECRET`, dashboard `emailDelivery`/`selfHost`/`spendingReportSubscription`, `analyticsEnabled`) — vary by environment (self-host vs managed) by design; deliberate, not single-value.
 - 2026-11-19 CLI user-managed switches (engine `beangulp`/`beanprice` enablement, `BEA_NO_*`, `BEANCOUNT_DISABLE_LOAD_CACHE`, `CI`, `BEA_TOKEN`) — vary per user invocation; deliberate opt-outs, not shipped-feature gates.
 
 ## rt-useless-test-pruner

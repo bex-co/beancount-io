@@ -34,7 +34,7 @@ const routes = {
   ],
   "files/upload": [LegacyUploadRoute.options.validateSearch, ["dirPath"]],
   "files/create": [LegacyCreateRoute.options.validateSearch, ["dirPath"]],
-  ask: [AskRoute.options.validateSearch, ["q", "mode"]],
+  ask: [AskRoute.options.validateSearch, ["q"]],
   query: [QueryRoute.options.validateSearch, ["query"]],
   profile: [userProfileSearchSchema, ["tab"]],
 } as const;
@@ -85,9 +85,6 @@ describe("typed spellings read as meant, unusable ones as the default", () => {
     expect(userProfileSearchSchema.parse({ tab: "follower" }).tab).toBe(
       undefined,
     );
-    expect(
-      validate(AskRoute.options.validateSearch, { mode: "Agent" }),
-    ).toEqual({ mode: "agent" });
     expect(
       validate(LoginRoute.options.validateSearch, { reason: "foo" }).reason,
     ).toBe(undefined);

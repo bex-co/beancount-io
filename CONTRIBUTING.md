@@ -15,7 +15,7 @@ complaints use the separate contact in the code of conduct.
 | [`dashboard/`](./dashboard/) | Web client: ledgers, reports, imports, and collaboration | [Development guide](./dashboard/README.md) · [package rules](./dashboard/AGENTS.md) |
 | [`mobile/`](./mobile/) | React Native iOS and Android app | [Development guide](./mobile/README.md) · [package rules](./mobile/AGENTS.md) |
 | [`cli/`](./cli/) | Python `bea` CLI and its bundled reporting resources | [Development guide](./cli/README.md) · [package rules](./cli/AGENTS.md) |
-| [`backend-cluster/`](./backend-cluster/) | API gateway, ledger service, contracts, and Ask-AI sandbox control plane | [API gateway](./backend-cluster/backend-v2/README.md) · [ledger](./backend-cluster/ledger/README.md) · [IDL rules](./backend-cluster/idl/AGENTS.md) · [agent-box](./backend-cluster/agent-box/README.md) |
+| [`backend-cluster/`](./backend-cluster/) | API gateway, ledger service, and contracts | [API gateway](./backend-cluster/backend-v2/README.md) · [ledger](./backend-cluster/ledger/README.md) · [IDL rules](./backend-cluster/idl/AGENTS.md) |
 | [`skills/`](./skills/) | Customer-facing `beancount-*` ledger skills; guides in `docs/skills/`, tooling in `scripts/skills/` | [Suite guide](./skills/README.md) · [package rules](./skills/AGENTS.md) |
 | [`.agents/skills/`](./.agents/skills/) | Internal development workflows: PM, release, QA, maintenance, and diagrams | [Development skill catalog and rules](./.agents/AGENTS.md) |
 | [`deploy/`](./deploy/) | Full-stack local, self-hosted, and managed deployment targets | [Target guide](./deploy/AGENTS.md) · [local stack](./deploy/docker-mac/README.md) · [single-server deployment](./deploy/docker/README.md) |
