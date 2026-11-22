@@ -45,6 +45,7 @@ newest first.
 
 ### Deferred
 
+- 2026-11-21 `FORMULA_TRIGGERS` (`cli/report_csv.py:34` vs `bea_engine/query.py:2194`) — the comment says the tuples must agree, the sets agree today, but no drift guard pins them (unlike the #248/#249 pairs); add one next run.
 - 2026-11-21 `JSON_FLOAT_MARKER` transport marker (`cli/amounts.py:36` "must match `bea_engine.amounts`" vs `bea_engine/amounts.py:197`) — string literal both sides must share, no test pins it; add a drift guard next run.
 
 ### Skipped
@@ -93,7 +94,7 @@ newest first.
 
 ### Deferred
 
-- 2026-11-21 dashboard declared `cash-flow-role: "cash"` under Income/Expenses roots — `isCashAccountByMembership`/rows follow the five-root gate, but `BalanceSheetData` serves no income/expense hierarchy so there is no closing snapshot (liabilities/equity added this run); engine accumulates them. Needs a server field or a scope call; still open.
+- 2026-11-21 dashboard declared `cash-flow-role: "cash"` under Income/Expenses roots — `isCashAccountByMembership`/rows follow the five-root gate, but `BalanceSheetData` serves no income/expense hierarchy so there is no closing snapshot (liabilities/equity added this run); engine accumulates them. Needs a server field or a scope call; still open. 2026-11-21 re-check: still blocked — the dashboard server is only a proxy and the closings need a backend API field (cross-package STOP).
 - 2026-11-20 cli `test_interrupt_contract.py` (3 tests) + `test_native_interrupt_is_silent.py::test_ctrl_c_during_a_forwarded_program_exits_130_silently` (2 params) — deterministic 10/10 FAIL in this sandbox, green in CI: sandbox python is libedit-readline, so ETX during `input()` raises KeyboardInterrupt in-process with no line-discipline `^C` echo (probe: exit by SIGINT, no `^C` on screen) while `_noise()` pins the echo; the exit-130 half of the USAGE.md carve-out holds — needs an intent call on whether the echo pin is backend-specific over-pinning (w3/388, w5/273).
 
 ### Skipped
@@ -101,6 +102,10 @@ newest first.
 - 2026-11-21 dashboard `decode-csv-bytes.ts` + `use-csv-parser.ts` empty path — empty/whitespace-only bytes throw `CsvEmptyError` at the caller, BOM-only UTF-16 decodes to empty and throws the same way; no-BOM UTF-16 is out of the documented scope (same choice as `FileReader.readAsText`); examined, no divergence.
 - 2026-11-21 cli engine/frontend date-inference split (`bea_engine/csv_mapper.py` vs `cli/csv_mapper.py`) — the pair agrees on all 12 built-in formats; the engine's extra `%j`/`%U`/`%W` rollover refusal (w5/986, w5/1022) only fires on custom `--date-format`s where the frontend already forwarded the recalled format, so the strict side refuses loudly instead of diverging silently; the engine's own `infer_date_format` is dead code, handed to `rt-dead-code-removal` as Deferred.
 - 2026-11-21 cli OFX vs frontend `_source_accounts`/`_ofx_identities` twin scans — textually identical modulo bytes/str decode (non-ASCII ids only); the w5/1069 recipient and w5/1031 same-number-different-bank cases agree; examined, no drift.
+- 2026-11-21 backend-cluster/ledger `directive-filter` `monthOfYear` truncated-`%` — same shape as the dashboard floor-mod bug fixed this run, but its `parseFyeString` rejects month < 1 so the path is unreachable; examined, no change.
+- 2026-11-21 cli `report_csv.py` vs `bea_engine/query.py` CSV-injection handling — trigger sets agree; every report user-text cell is in `_TEXT_COLUMNS`, numbers exempt by column; examined, no divergence.
+- 2026-11-21 cli `rows._alternating_nuls` vs `csv_mapper._refuse_utf16` parity half — deliberate documented floor (w5/738); examined, no divergence.
+- 2026-11-21 cli `bea_engine/importing.py` duplicate pool vs dashboard unbooked-dup fix — probed live: exact-ID rows matching an unbalanced ledger txn stay `duplicate` per the documented always-skip rule, failing ledgers refuse without `--allow-errors`; no intent pins error entries out; ambiguous, no fix.
 - 2026-11-21 dashboard `series-util`/`calendar-date` month windows + carry/forward-fill + export/model exact-decimal core — read against tests and docblocks; no divergence.
 - 2026-11-21 dashboard cash-flow `statement-tree`/`merge-intervals`/`role-resolver`/`account-roots` + overview categorizer — read; agree with the engine post-fix, no separate divergence.
 - 2026-11-21 dashboard Smart Import currency-symbol table (`csv-validator.ts` `SYMBOL_CURRENCIES`) — FIXED: added ֏/؋/₵ (w5/924) and fullwidth ￡/￦ (w5/1064) so those rows conflict under the wrong currency like `bea import --csv`, instead of silently posting as dollars.
