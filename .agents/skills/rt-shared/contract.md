@@ -38,11 +38,12 @@ commit, whichever routine finds it; see "Guard every twin" in
 
 ## Value bar (the tidy routines)
 
-`rt-dup-unifier`, `rt-logic-simplifier`, `rt-abstraction-improver` and
-`rt-abstraction-police` exist to find the bugs that drifted copies, hidden
-state and crossed boundaries cause, and to remove the hazards that cause them.
-Tidier code is a by-product, not a finding. On top of the proof standard, a
-finding counts only when it:
+`rt-dup-unifier`, `rt-logic-simplifier`, `rt-abstraction-improver`,
+`rt-abstraction-police`, `rt-useless-test-pruner`, `rt-dead-code-removal`,
+and `rt-shipped-feature-inliner` exist to find the bugs that drifted copies,
+hidden state, dead code, hollow tests, and crossed boundaries cause, and to
+remove the hazards that cause them. Tidier code is a by-product, not a
+finding. On top of the proof standard, a finding counts only when it:
 
 - fixes or prevents a concrete bug, or
 - removes a real hazard: copies that must change together and can drift
@@ -57,6 +58,17 @@ safe, not what makes it worth shipping. Spend the run searching for a finding
 that clears this bar instead of shipping the first provable one. Zero findings
 beats a cosmetic one.
 
+- **Batch cleanup & minimum threshold:** for pure cleanup/refactor runs (no
+  user-visible bug fix), sweep the target package completely and deliver all
+  confirmed items in **one batched PR** (rather than opening separate tiny PRs
+  per file). If the entire sweep yields only a single isolated non-bug cleanup
+  of `<=15` changed lines, skip it and ship nothing.
+- **Whole-invariant & no-bug threshold (`rt-logic-bugfixer`):** when fixing an
+  invariant, check every sibling projection or engine/frontend twin of the
+  same contract in the same run so one invariant is not split across follow-up
+  PRs. If an audit finds no real behavioral bug, do **not** ship a PR for a
+  single small test (`<30` lines), a comment-only edit, or a ledger update.
+
 ## Ledger
 
 `.agents/skills/rt-shared/ledger.md` carries findings from one run to the
@@ -64,16 +76,15 @@ next, one section per routine. Read your routine's section before
 discovering: finish an open **Deferred** entry before hunting new ones, and
 do not re-examine a **Skipped** entry unless the code it cites has changed.
 
-Update it in the same commit as the finding it belongs to: remove the entries
-this run fixed, add what it deferred, and add what it examined and skipped
-when another run would otherwise repeat the work. One line each,
+Update it **only alongside a real code or qualifying test change**: remove the
+entries this run fixed, add what it deferred, and add what it examined and
+skipped when another run would otherwise repeat the work. One line each,
 `- YYYY-MM-DD <path or symbol> — <finding>; <why deferred or skipped>`, newest
-first, at most 20 entries per routine (drop the oldest Skipped first). A run
-that ships no code but has Deferred entries to record, its own or another
-routine's, commits the ledger alone (`chore(skills): record rt findings`). Skipped
-entries alone do not: they ride along with the run's code or Deferred change,
-and a run that has only Skipped entries lists them in its summary and ships
-nothing.
+first, at most 20 entries per routine (drop the oldest Skipped first).
+**Never commit or open a PR that only touches `ledger.md` — even for Deferred
+entries.** A run with no code or qualifying test changes leaves the working
+tree clean, makes no commit, opens no PR, and lists any Deferred/Skipped notes
+in its summary only.
 
 ## Board items are not routine work
 
@@ -122,8 +133,11 @@ Each proven, verified finding ships by composing `/ship`
 (`.agents/skills/ship/SKILL.md`). You made the changes this session, so
 `/ship` runs session-aware: stage exactly the files you touched, message from
 session knowledge. `/ship` has no test gate of its own — the gates above are the
-only gate. **One finding per ship, never batched.** Do not start the next
-finding until `/ship` reports the shipped HEAD SHA.
+only gate. **One finding per ship for bug fixes**; for pure cleanup/refactor
+runs (useless-test pruning, dead-code removal, duplication/abstraction
+cleanups), batch the target package's confirmed items into a single PR/ship
+instead of opening separate tiny PRs per file. Do not start the next finding
+until `/ship` reports the shipped HEAD SHA.
 
 ## Budget
 
