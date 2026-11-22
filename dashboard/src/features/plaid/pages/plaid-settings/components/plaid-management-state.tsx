@@ -71,7 +71,7 @@ export function PlaidManagementState({
   };
 
   return (
-    <div className="container mx-auto space-y-4 pb-4">
+    <div className="space-y-4">
       <div className="flex justify-end gap-2">
         <Button
           variant="outline"

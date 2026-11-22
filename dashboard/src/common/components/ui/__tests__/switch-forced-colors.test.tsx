@@ -82,7 +82,7 @@ describe("Switch under forced colors", () => {
   });
 
   it("still moves the thumb between states", () => {
-    expect(classesOf(true)).toContain("data-[state=checked]:translate-x-4");
+    expect(classesOf(true)).toContain("data-[state=checked]:translate-x-5");
     expect(classesOf(false)).toContain("data-[state=unchecked]:translate-x-0");
   });
 });

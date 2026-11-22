@@ -1,4 +1,4 @@
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
@@ -511,8 +511,8 @@ export default function AccountPage() {
 
   if (!accountReportData) {
     return (
-      <div className="space-y-4">
-        <PageHeader
+      <LedgerPage className="space-y-5 sm:space-y-6">
+        <LedgerPageHeading
           title={accountName}
           description={t("common.pageDescription.account", {
             ledgerName: ledgerDisplayName ?? ledgerName,
@@ -523,7 +523,7 @@ export default function AccountPage() {
           title={t("component.emptyState.title")}
           message={t("page.accountReport.noData")}
         />
-      </div>
+      </LedgerPage>
     );
   }
 
@@ -532,8 +532,8 @@ export default function AccountPage() {
     : false;
 
   return (
-    <div className="space-y-4">
-      <PageHeader
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={accountName}
         description={t("common.pageDescription.account", {
           ledgerName: ledgerDisplayName ?? ledgerName,
@@ -690,6 +690,6 @@ export default function AccountPage() {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }

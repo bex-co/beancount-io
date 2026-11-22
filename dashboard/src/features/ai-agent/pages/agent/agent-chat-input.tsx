@@ -247,7 +247,7 @@ export function AgentChatInput({
           size="icon-sm"
           variant="ghost"
           disabled={disabled}
-          className="rounded-lg text-muted-foreground hover:text-foreground"
+          className="rounded-lg text-muted-foreground hover:text-foreground pointer-coarse:size-11"
           onClick={() => fileInputRef.current?.click()}
           aria-label={t("aiAgent.attachFile")}
         >
@@ -258,7 +258,7 @@ export function AgentChatInput({
           <Button
             type="button"
             size="icon-sm"
-            className="shrink-0 rounded-full"
+            className="shrink-0 rounded-full pointer-coarse:size-11"
             aria-label={t("aiAgent.stop")}
             onClick={() => {
               onStop();
@@ -274,7 +274,7 @@ export function AgentChatInput({
             type="submit"
             size="icon-sm"
             disabled={!canSend}
-            className="shrink-0 rounded-full"
+            className="shrink-0 rounded-full disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 pointer-coarse:size-11"
             aria-label={t("aiAgent.ask")}
             onClick={(e) => {
               e.preventDefault();

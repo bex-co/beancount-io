@@ -6,7 +6,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/common/components/ui/alert";
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { LedgerWriteAccessNotice } from "@/common/components/ledger-write-access-notice";
 import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
@@ -24,14 +24,13 @@ export default function ReceiptPage() {
   const { canWrite } = useLedgerPermission();
 
   return (
-    <div className="space-y-6 pb-6">
-      <PageHeader
-        className="space-y-1"
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={t("receipt.page.title")}
         description={t("receipt.page.description")}
       />
       {canWrite ? <ReceiptWorkflow /> : <ReadOnlyReceiptPage />}
-    </div>
+    </LedgerPage>
   );
 }
 

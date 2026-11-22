@@ -1,4 +1,4 @@
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { useParams } from "@tanstack/react-router";
 import { PostingsPerAccount } from "./postings-per-account";
@@ -21,8 +21,8 @@ export default function LedgerStatisticsPage() {
   const { ledgerName: ledgerDisplayName } = useLedger();
 
   return (
-    <div className="space-y-4">
-      <PageHeader
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={t("page.statistics.statistics")}
         description={t("common.pageDescription.statistics", {
           ledgerName: ledgerDisplayName ?? ledgerName,
@@ -55,6 +55,6 @@ export default function LedgerStatisticsPage() {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }

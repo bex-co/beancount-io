@@ -208,7 +208,11 @@ export default function LedgerCloneUrlMenu({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="default" size="sm">
+        <Button
+          variant="outline"
+          size="sm"
+          className="pointer-coarse:min-h-11 pointer-coarse:px-4"
+        >
           <GitBranch className="mr-1 h-4 w-4" />
           {t("ledgerEditor.gitClone")}
         </Button>

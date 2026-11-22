@@ -36,11 +36,11 @@ export function HierarchyVisualizationCard({
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <PieChart className="h-5 w-5" />
+        <h2 className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
+          <PieChart className="h-4 w-4 text-muted-foreground" />
           {title}
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1">{description}</p>
+        </h2>
+        <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
       </div>
       <div className={className}>
         <HierarchyTreeMap

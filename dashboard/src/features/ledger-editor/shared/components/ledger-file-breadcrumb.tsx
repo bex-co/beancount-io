@@ -1,4 +1,4 @@
-import { ChevronRight, Home } from "lucide-react";
+import { ChevronRight, FolderOpen } from "lucide-react";
 import { cn } from "@/common/lib/utils/utils";
 import { useParams } from "@tanstack/react-router";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
@@ -38,12 +38,15 @@ export default function LedgerFileBreadcrumb({
   // Directory breadcrumb: File / seg1 / seg2 ...
   if (type === "dir") {
     return (
-      <div className={cn("flex items-center gap-2", className)}>
-        <Home className="h-5 w-5" />
-        <div className="flex items-center gap-1 text-sm sm:text-base">
+      <div className={cn("flex items-center gap-2 min-w-0", className)}>
+        <FolderOpen
+          className="h-5 w-5 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <div className="flex flex-wrap items-center gap-1">
           <button
             type="button"
-            className="text-foreground hover:underline cursor-pointer"
+            className="inline-flex min-h-6 min-w-6 items-center text-foreground hover:underline underline-offset-4 cursor-pointer"
             onClick={() => handleNavigateDir("")}
           >
             {t("ledgerEditor.files")}
@@ -55,7 +58,7 @@ export default function LedgerFileBreadcrumb({
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 <button
                   type="button"
-                  className="text-foreground hover:underline cursor-pointer"
+                  className="inline-flex min-h-6 min-w-6 items-center text-foreground hover:underline underline-offset-4 cursor-pointer"
                   onClick={() => handleNavigateDir(dirPath)}
                 >
                   {seg}
@@ -71,12 +74,15 @@ export default function LedgerFileBreadcrumb({
   // File breadcrumb: File / ... / parentDir / filename
   const parentSegments = segments.slice(0, -1);
   return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <Home className="h-5 w-5" />
+    <div className={cn("flex items-center gap-2 min-w-0", className)}>
+      <FolderOpen
+        className="h-5 w-5 shrink-0 text-muted-foreground"
+        aria-hidden="true"
+      />
       <div className="flex items-center gap-1 text-sm sm:text-base min-w-0">
         <button
           type="button"
-          className="text-foreground hover:underline cursor-pointer"
+          className="inline-flex min-h-6 min-w-6 items-center text-foreground hover:underline underline-offset-4 cursor-pointer"
           onClick={() => handleNavigateDir("")}
         >
           {t("ledgerEditor.files")}
@@ -88,7 +94,7 @@ export default function LedgerFileBreadcrumb({
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
               <button
                 type="button"
-                className="text-foreground hover:underline cursor-pointer"
+                className="inline-flex min-h-6 min-w-6 items-center text-foreground hover:underline underline-offset-4 cursor-pointer"
                 onClick={() => handleNavigateDir(dirPath)}
               >
                 {seg}

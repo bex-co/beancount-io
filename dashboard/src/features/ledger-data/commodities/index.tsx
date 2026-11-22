@@ -1,4 +1,4 @@
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import {
   Card,
@@ -194,8 +194,8 @@ export default function LedgerCommoditiesPage() {
     });
 
   return (
-    <div className="space-y-4">
-      <PageHeader
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={t("page.commodities.commodities")}
         description={t("common.pageDescription.commodities", {
           ledgerName: ledgerDisplayName ?? ledgerName,
@@ -282,6 +282,6 @@ export default function LedgerCommoditiesPage() {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }

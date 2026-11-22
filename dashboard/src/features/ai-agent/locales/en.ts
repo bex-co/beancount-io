@@ -257,6 +257,23 @@ const enAiAgent: Record<string, TranslationEntry> = {
     message: "Edit failed",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "What were my top expenses last month?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Summarize my net worth trend",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Show my current asset allocation",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Check for uncategorized or unusual entries",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default enAiAgent;

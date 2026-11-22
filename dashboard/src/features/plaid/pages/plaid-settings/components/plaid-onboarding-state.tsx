@@ -81,7 +81,7 @@ export function PlaidOnboardingState({ ledgerId }: { ledgerId: string }) {
     <div className="space-y-8">
       {/* Header Section */}
       <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">
+        <h2 className="text-xl font-semibold tracking-tight">
           {t("plaid.onboarding.title")}
         </h2>
         <p className="text-lg text-muted-foreground">

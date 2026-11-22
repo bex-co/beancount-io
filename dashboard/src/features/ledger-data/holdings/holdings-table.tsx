@@ -10,7 +10,7 @@ import {
 } from "@/common/components/ui/table";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { Button } from "@/common/components/ui/button";
-import { Download } from "lucide-react";
+import { ChevronRight, Download } from "lucide-react";
 import { downloadCSV } from "@/common/lib/utils/csv-export";
 import React from "react";
 import { tableToCSV, formatNumber } from "./utils";
@@ -51,6 +51,87 @@ function isNumericCell(value: unknown): boolean {
     typeof value === "number" ||
     (typeof value === "string" &&
       /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim()))
+  );
+}
+
+function isPercentColumn(headerName?: string): boolean {
+  return Boolean(headerName && /pct|percent/i.test(headerName));
+}
+
+function formatColumnHeader(header: string): string {
+  return header.replace(/_pct$/i, " (%)").replaceAll("_", " ");
+}
+
+function ScrollableTableFrame({
+  scrollNextLabel,
+  children,
+}: {
+  scrollNextLabel: string;
+  children: React.ReactNode;
+}) {
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+  const [canScrollRight, setCanScrollRight] = React.useState(false);
+
+  const getScroller = React.useCallback((): HTMLElement | null => {
+    const root = wrapperRef.current;
+    if (!root) return null;
+    return (
+      root.querySelector<HTMLElement>('[data-slot="table-container"]') ?? root
+    );
+  }, []);
+
+  const updateScrollCue = React.useCallback(() => {
+    const scroller = getScroller();
+    if (!scroller) return;
+    setCanScrollRight(
+      scroller.scrollWidth - scroller.clientWidth - scroller.scrollLeft > 2,
+    );
+  }, [getScroller]);
+
+  React.useEffect(() => {
+    const scroller = getScroller();
+    if (!scroller) return;
+    updateScrollCue();
+    scroller.addEventListener("scroll", updateScrollCue, { passive: true });
+    const table = scroller.querySelector("table");
+    let ro: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(updateScrollCue);
+      ro.observe(scroller);
+      if (table) ro.observe(table);
+    }
+    return () => {
+      scroller.removeEventListener("scroll", updateScrollCue);
+      ro?.disconnect();
+    };
+  }, [getScroller, updateScrollCue, children]);
+
+  const handleScrollRight = () => {
+    const scroller = getScroller();
+    if (!scroller) return;
+    scroller.scrollBy({ left: 260, behavior: "smooth" });
+  };
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      {children}
+      {canScrollRight && (
+        <>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 end-0 w-14 bg-gradient-to-l from-card via-card/85 to-transparent"
+          />
+          <button
+            type="button"
+            onClick={handleScrollRight}
+            aria-label={scrollNextLabel}
+            className="absolute end-1.5 top-1.5 z-10 inline-flex size-7 cursor-pointer items-center justify-center rounded-full border border-border bg-card/95 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -129,13 +210,13 @@ export const DatasetTable = React.memo(
       }
 
       return (
-        <div className="space-y-3 sm:space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-            <div className="flex items-center gap-3">
+        <div className="overflow-clip rounded-xl border bg-card shadow-sm">
+          <div className="flex flex-col gap-3 border-b bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2.5">
               <div className="text-sm font-medium text-foreground">
                 {t("common.results")}
               </div>
-              <div className="px-2 py-1 bg-muted rounded-md text-xs font-semibold text-muted-foreground">
+              <div className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
                 {formatCount(rows.length)}{" "}
                 {rows.length === 1 ? t("page.holdings.row") : t("common.rows")}
               </div>
@@ -144,119 +225,119 @@ export const DatasetTable = React.memo(
               onClick={handleExportCSV}
               size="sm"
               variant="outline"
-              className="flex items-center gap-2 w-full sm:w-fit"
+              className="flex items-center gap-2 w-full sm:w-fit pointer-coarse:min-h-11"
             >
               <Download className="h-4 w-4" />
               <span>{t("page.holdings.exportCsv")}</span>
             </Button>
           </div>
-          <div className="overflow-hidden w-full">
-            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
-              <Table aria-label={ariaLabel}>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    {headers.map((header, index) => (
-                      <TableHead
-                        key={header}
-                        className={cn(
-                          "text-xs sm:text-sm text-foreground whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2",
-                          numericColumns[index] && "text-end",
-                        )}
-                      >
-                        {header}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map((row, rowIndex) => {
-                    const accountCell = row[accountColumnIndex];
-                    const accountName =
-                      accountColumnIndex >= 0
-                        ? typeof accountCell === "string"
-                          ? accountCell
-                          : String(accountCell)
-                        : null;
-                    const rowProps = accountName
-                      ? getClickableRowProps<HTMLTableRowElement>(
-                          () => {
-                            const { ledgerOwner, ledgerName } =
-                              decodeLedgerId(ledgerId);
-                            void navigate({
-                              to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
-                              params: {
-                                ledgerOwner,
-                                ledgerName,
-                                accountName,
-                              },
-                            });
-                          },
-                          {
-                            className: "hover:bg-muted/30 transition-colors",
-                            preserveTableSemantics: true,
-                          },
-                        )
-                      : { className: "hover:bg-muted/30 transition-colors" };
+          <ScrollableTableFrame scrollNextLabel={t("common.next")}>
+            <Table aria-label={ariaLabel}>
+              <TableHeader>
+                <TableRow className="bg-muted/40">
+                  {headers.map((header, index) => (
+                    <TableHead
+                      key={header}
+                      className={cn(
+                        "text-xs font-medium capitalize text-muted-foreground whitespace-nowrap px-2.5 lg:px-3 py-2.5",
+                        numericColumns[index] && "text-end",
+                      )}
+                    >
+                      {formatColumnHeader(header)}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row, rowIndex) => {
+                  const accountCell = row[accountColumnIndex];
+                  const accountName =
+                    accountColumnIndex >= 0
+                      ? typeof accountCell === "string"
+                        ? accountCell
+                        : String(accountCell)
+                      : null;
+                  const rowProps = accountName
+                    ? getClickableRowProps<HTMLTableRowElement>(
+                        () => {
+                          const { ledgerOwner, ledgerName } =
+                            decodeLedgerId(ledgerId);
+                          void navigate({
+                            to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+                            params: {
+                              ledgerOwner,
+                              ledgerName,
+                              accountName,
+                            },
+                          });
+                        },
+                        {
+                          className: "hover:bg-muted/30 transition-colors",
+                          preserveTableSemantics: true,
+                        },
+                      )
+                    : { className: "hover:bg-muted/30 transition-colors" };
 
-                    return (
-                      <TableRow key={rowIndex} {...rowProps}>
-                        {row.map((cell, cellIndex) => {
-                          const headerName = headers[cellIndex];
-                          const isAccountColumn =
-                            headerName?.toLowerCase() === "account";
-                          const cellValue =
-                            typeof cell === "object" && cell !== null ? (
-                              renderObject(cell)
-                            ) : !isAccountColumn && isNumericCell(cell) ? (
-                              <Amount>{formatNumber(cell, headerName)}</Amount>
-                            ) : (
-                              formatNumber(cell ?? "", headerName)
-                            );
-
-                          return (
-                            <TableCell
-                              key={cellIndex}
-                              className={cn(
-                                "text-xs sm:text-sm font-mono whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2",
-                                isAccountColumn
-                                  ? "font-medium text-primary"
-                                  : "",
-                                numericColumns[cellIndex] && "text-end",
-                              )}
-                            >
-                              {isAccountColumn && accountName ? (
-                                <button
-                                  type="button"
-                                  className="text-start font-medium text-primary hover:text-primary/80 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    const { ledgerOwner, ledgerName } =
-                                      decodeLedgerId(ledgerId);
-                                    void navigate({
-                                      to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
-                                      params: {
-                                        ledgerOwner,
-                                        ledgerName,
-                                        accountName,
-                                      },
-                                    });
-                                  }}
-                                >
-                                  {cellValue}
-                                </button>
-                              ) : (
-                                cellValue
-                              )}
-                            </TableCell>
+                  return (
+                    <TableRow key={rowIndex} {...rowProps}>
+                      {row.map((cell, cellIndex) => {
+                        const headerName = headers[cellIndex];
+                        const isAccountColumn =
+                          headerName?.toLowerCase() === "account";
+                        const pct = isPercentColumn(headerName);
+                        const num = isNumericCell(cell) ? Number(cell) : null;
+                        const cellValue =
+                          typeof cell === "object" && cell !== null ? (
+                            renderObject(cell)
+                          ) : !isAccountColumn && isNumericCell(cell) ? (
+                            <Amount>{formatNumber(cell, headerName)}</Amount>
+                          ) : (
+                            formatNumber(cell ?? "", headerName)
                           );
-                        })}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+
+                        return (
+                          <TableCell
+                            key={cellIndex}
+                            className={cn(
+                              "text-xs sm:text-sm font-mono whitespace-nowrap px-2.5 lg:px-3 py-2 tabular-nums",
+                              isAccountColumn ? "font-medium text-primary" : "",
+                              numericColumns[cellIndex] && "text-end",
+                              pct && num !== null && num > 0 && "text-gain",
+                              pct && num !== null && num < 0 && "text-loss",
+                            )}
+                          >
+                            {isAccountColumn && accountName ? (
+                              <button
+                                type="button"
+                                className="inline-flex min-h-6 items-center text-start font-medium text-primary hover:text-primary/80 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  const { ledgerOwner, ledgerName } =
+                                    decodeLedgerId(ledgerId);
+                                  void navigate({
+                                    to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+                                    params: {
+                                      ledgerOwner,
+                                      ledgerName,
+                                      accountName,
+                                    },
+                                  });
+                                }}
+                              >
+                                {cellValue}
+                              </button>
+                            ) : (
+                              cellValue
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </ScrollableTableFrame>
         </div>
       );
     }, [
@@ -297,19 +378,21 @@ export const DatasetTable = React.memo(
 
     if (loading) {
       return (
-        <div>
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <Skeleton className="h-6 w-24" />
-              <Skeleton className="h-8 w-full sm:w-32" />
-            </div>
-            <div className="space-y-3">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+        <div className="min-h-[75vh] overflow-clip rounded-xl border bg-card shadow-sm">
+          <div className="flex flex-col gap-3 border-b bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <Skeleton className="h-5 w-28" />
+            <Skeleton className="h-8 w-full sm:w-32" />
+          </div>
+          <div className="divide-y divide-border">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between px-4 py-3"
+              >
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
           </div>
         </div>
       );

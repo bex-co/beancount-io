@@ -261,9 +261,9 @@ export function VisibilitySection({
         {!isPrivate && (
           <div className="border-t pt-6 space-y-6">
             <div>
-              <h3 className="text-sm font-semibold mb-1">
+              <h2 className="text-sm font-semibold mb-1">
                 {t("page.settings.sharing")}
-              </h3>
+              </h2>
               <p className="text-sm text-muted-foreground">
                 {t("page.settings.sharingDescription")}
               </p>

@@ -29,10 +29,21 @@ interface LedgerDirectoryViewProps {
   currentPath: string;
 }
 
-const DirectoryHeading = ({ currentPath }: { currentPath?: string }) => (
-  <h1 className="text-lg sm:text-xl font-semibold">
-    <LedgerFileBreadcrumb type="dir" path={currentPath} />
-  </h1>
+const DirectoryHeading = ({
+  currentPath,
+  subtitle,
+}: {
+  currentPath?: string;
+  subtitle?: string;
+}) => (
+  <div className="min-w-0">
+    <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+      <LedgerFileBreadcrumb type="dir" path={currentPath} />
+    </h1>
+    {subtitle && (
+      <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
+    )}
+  </div>
 );
 
 /**
@@ -40,8 +51,8 @@ const DirectoryHeading = ({ currentPath }: { currentPath?: string }) => (
  */
 const DirectoryLoading = ({ currentPath }: { currentPath: string }) => {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2 md:mb-4">
+    <div className="space-y-4 sm:space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <DirectoryHeading currentPath={currentPath} />
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-8 sm:w-24" />
@@ -49,7 +60,7 @@ const DirectoryLoading = ({ currentPath }: { currentPath: string }) => {
           <Skeleton className="h-8 w-8 sm:w-24" />
         </div>
       </div>
-      <div className="border rounded-sm overflow-hidden">
+      <div className="overflow-clip rounded-xl border bg-card shadow-sm">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
@@ -174,38 +185,20 @@ export default function LedgerDirectoryView({
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2 md:mb-4">
-        <DirectoryHeading currentPath={currentPath} />
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:flex">
-            <LedgerCloneUrlMenu ledgerId={ledgerId} />
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleVersionHistory}
-            className="flex items-center gap-2"
-            aria-label={t("commits.versionHistory")}
-          >
-            <GitBranch className="h-4 w-4" />
-            <span className="hidden md:inline" aria-hidden="true">
-              {t("commits.versionHistory")}
-            </span>
-          </Button>
-
+    <div className="space-y-4 sm:space-y-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <DirectoryHeading currentPath={currentPath} subtitle={ledgerName} />
+        <div className="flex flex-wrap items-center gap-2">
           <LedgerWritePermission>
             <Button
-              variant="outline"
+              variant="default"
               size="sm"
               onClick={handleCreateFile}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 pointer-coarse:min-h-11 pointer-coarse:px-4"
               aria-label={t("ledgerEditor.createFile")}
             >
-              <Plus className="h-4 w-4" />
-              <span className="hidden md:inline" aria-hidden="true">
-                {t("ledgerEditor.createFile")}
-              </span>
+              <Plus className="h-4 w-4 shrink-0" />
+              <span>{t("ledgerEditor.createFile")}</span>
             </Button>
           </LedgerWritePermission>
 
@@ -214,34 +207,43 @@ export default function LedgerDirectoryView({
               variant="outline"
               size="sm"
               onClick={handleUpdateFiles}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 pointer-coarse:min-h-11 pointer-coarse:px-4"
               aria-label={t("ledgerEditor.uploadFiles")}
             >
-              <Upload className="h-4 w-4" />
-              <span className="hidden md:inline" aria-hidden="true">
-                {t("ledgerEditor.uploadFiles")}
-              </span>
+              <Upload className="h-4 w-4 shrink-0" />
+              <span>{t("ledgerEditor.uploadFiles")}</span>
             </Button>
           </LedgerWritePermission>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleVersionHistory}
+            className="flex items-center gap-1.5 pointer-coarse:min-h-11 pointer-coarse:px-4"
+            aria-label={t("commits.versionHistory")}
+          >
+            <GitBranch className="h-4 w-4 shrink-0" />
+            <span>{t("commits.versionHistory")}</span>
+          </Button>
+
+          <LedgerCloneUrlMenu ledgerId={ledgerId} />
 
           {currentPath && (
             <Button
               variant="outline"
               size="sm"
               onClick={handleBackClick}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 pointer-coarse:min-h-11 pointer-coarse:px-4"
               aria-label={t("common.back")}
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden md:inline" aria-hidden="true">
-                {t("common.back")}
-              </span>
+              <ArrowLeft className="h-4 w-4 shrink-0" />
+              <span>{t("common.back")}</span>
             </Button>
           )}
         </div>
       </div>
       {!dirContent || dirContent.length === 0 ? (
-        <div className="flex items-center justify-center py-8">
+        <div className="flex items-center justify-center rounded-xl border bg-card py-12 shadow-sm">
           <div className="text-center">
             <Folder className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
@@ -250,7 +252,7 @@ export default function LedgerDirectoryView({
           </div>
         </div>
       ) : (
-        <div className="border rounded-sm overflow-hidden">
+        <div className="overflow-clip rounded-xl border bg-card shadow-sm">
           {[...dirContent]
             .sort((a, b) => {
               // First sort by type: directories first, then files
@@ -263,7 +265,7 @@ export default function LedgerDirectoryView({
                 numeric: true,
               });
             })
-            .map((item, index) => (
+            .map((item) => (
               <Link
                 key={item.path}
                 to={
@@ -280,8 +282,6 @@ export default function LedgerDirectoryView({
                 className={cn(
                   "flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0",
                   "hover:bg-accent cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:-outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]",
-                  index === 0 && "rounded-t-sm",
-                  index === dirContent.length - 1 && "rounded-b-sm",
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -299,10 +299,10 @@ export default function LedgerDirectoryView({
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground ml-2">
+                <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground ml-2 tabular-nums">
                   {item.type === "file" && (
-                    <div className="hidden sm:flex items-center gap-1">
-                      <HardDrive className="h-4 w-4" />
+                    <div className="flex items-center gap-1">
+                      <HardDrive className="hidden sm:block h-4 w-4" />
                       <span className="whitespace-nowrap">
                         {formatFileSize(item.size)}
                       </span>

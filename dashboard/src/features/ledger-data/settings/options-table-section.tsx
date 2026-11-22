@@ -69,32 +69,43 @@ export function OptionsTableSection({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
-          <Table aria-labelledby={titleId}>
-            <TableHeader>
-              <TableRow>
-                {/* A fixed 300px name column left a narrow screen's values
-                    about 9px, one character per line (w4/1051). Below sm
-                    the two share the width. */}
-                <TableHead className="w-2/5 sm:w-75">
-                  {t("common.option")}
-                </TableHead>
-                <TableHead>{t("common.value")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.map((entry) => (
-                <TableRow key={entry.name}>
-                  <TableCell className="font-mono text-sm">
-                    {entry.name}
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {formatValue(entry.value)}
-                  </TableCell>
+        <div className="relative">
+          <div className="overflow-x-auto rounded-md border">
+            <Table
+              aria-labelledby={titleId}
+              className="min-w-[28rem] sm:min-w-full"
+            >
+              <TableHeader>
+                <TableRow>
+                  {/* A fixed 300px name column left a narrow screen's values
+                      about 9px, one character per line (w4/1051). Below sm
+                      the two share the width. */}
+                  <TableHead className="w-2/5 sm:w-75 whitespace-nowrap">
+                    {t("common.option")}
+                  </TableHead>
+                  <TableHead className="min-w-[13rem] whitespace-nowrap">
+                    {t("common.value")}
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {entries.map((entry) => (
+                  <TableRow key={entry.name}>
+                    <TableCell className="font-mono text-sm whitespace-nowrap">
+                      {entry.name}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm break-words">
+                      {formatValue(entry.value)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-px end-px w-6 rounded-e-md bg-gradient-to-l from-card to-transparent sm:hidden"
+          />
         </div>
       </CardContent>
     </Card>

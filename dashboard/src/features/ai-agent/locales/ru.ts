@@ -298,6 +298,23 @@ const ruAiAgent: Record<string, TranslationEntry> = {
     message: "Не удалось изменить",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "Какими были мои главные расходы в прошлом месяце?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Подведи итог динамики моего чистого капитала",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Покажи текущее распределение моих активов",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Проверь некатегоризированные или необычные записи",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default ruAiAgent;

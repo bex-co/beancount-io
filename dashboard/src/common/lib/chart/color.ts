@@ -280,11 +280,13 @@ export function hclColorRange(
 
 /**
  * Get 15 HCL colors for treemap visualizations
- * Follows Fava's generation strategy, rotated to start at the brand hue
+ * Follows Fava's generation strategy, rotated to start at the brand hue.
+ * Adapts luminance for dark mode so tiles harmonize with dark surfaces while
+ * maintaining strong contrast with light foreground labels.
  * @returns Array of 15 hex color strings
  */
-export const getTreeMapColors = (): string[] => {
-  return hclColorRange(15, 30, 80);
+export const getTreeMapColors = (isDark = false): string[] => {
+  return isDark ? hclColorRange(15, 34, 34) : hclColorRange(15, 30, 80);
 };
 
 /**

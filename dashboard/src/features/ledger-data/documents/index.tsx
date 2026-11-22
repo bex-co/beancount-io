@@ -1,4 +1,4 @@
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useQuery } from "@apollo/client/react";
@@ -127,8 +127,8 @@ export default function LedgerDocumentsPage() {
   const documents = data?.getLedgerDocuments || [];
 
   return (
-    <div className="space-y-4">
-      <PageHeader
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={t("page.documents.documents")}
         description={t("common.pageDescription.documents", {
           ledgerName: ledgerDisplayName ?? ledgerName,
@@ -270,6 +270,6 @@ export default function LedgerDocumentsPage() {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }

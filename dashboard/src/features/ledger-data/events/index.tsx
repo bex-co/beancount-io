@@ -1,4 +1,4 @@
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useParams } from "@tanstack/react-router";
@@ -131,8 +131,8 @@ export default function LedgerEventsPage() {
   );
 
   return (
-    <div className="space-y-4">
-      <PageHeader
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={t("page.events.events")}
         description={t("common.pageDescription.events", {
           ledgerName: ledgerDisplayName ?? ledgerName,
@@ -297,6 +297,6 @@ export default function LedgerEventsPage() {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }

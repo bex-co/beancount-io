@@ -298,6 +298,23 @@ const skAiAgent: Record<string, TranslationEntry> = {
     message: "Úprava zlyhala",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "Aké boli moje najväčšie výdavky minulý mesiac?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Zhrň vývoj môjho čistého imania",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Zobraz moje aktuálne rozloženie aktív",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Skontroluj nekategorizované alebo nezvyčajné položky",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default skAiAgent;

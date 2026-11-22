@@ -1,4 +1,4 @@
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
 import { useParams, ClientOnly } from "@tanstack/react-router";
@@ -21,9 +21,9 @@ export default function ImportPage() {
   const { canWrite } = useLedgerPermission();
 
   return (
-    <div className="space-y-6">
+    <LedgerPage className="space-y-5 sm:space-y-6">
       {/* Header */}
-      <PageHeader
+      <LedgerPageHeading
         title={t("page.importer.title")}
         description={t("common.pageDescription.import", {
           ledgerName: ledgerDisplayName ?? ledgerName,
@@ -70,6 +70,6 @@ export default function ImportPage() {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }

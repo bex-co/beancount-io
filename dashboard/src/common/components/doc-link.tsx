@@ -20,7 +20,7 @@ export function DocLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="underline underline-offset-2 inline-flex items-center gap-1 hover:text-foreground"
+      className="underline underline-offset-2 inline-flex min-h-6 items-center gap-1 hover:text-foreground"
     >
       {children}
       <ExternalLink className="h-3 w-3" aria-hidden="true" />

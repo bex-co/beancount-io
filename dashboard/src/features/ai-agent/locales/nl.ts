@@ -258,6 +258,23 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     message: "Bewerken mislukt",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "Wat waren mijn grootste uitgaven vorige maand?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Vat de trend van mijn nettovermogen samen",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Toon mijn huidige activaverdeling",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Controleer op niet-gecategoriseerde of ongebruikelijke boekingen",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default nlAiAgent;

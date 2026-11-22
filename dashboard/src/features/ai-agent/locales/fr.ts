@@ -278,6 +278,23 @@ const frAiAgent: Record<string, TranslationEntry> = {
     message: "Échec de la modification",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "Quelles ont été mes principales dépenses le mois dernier ?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Résume l'évolution de mon patrimoine net",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Affiche ma répartition actuelle d'actifs",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Vérifie les écritures non catégorisées ou inhabituelles",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default frAiAgent;

@@ -2,7 +2,7 @@ import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import type { ReactNode } from "react";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -19,14 +19,13 @@ export function PlaidPage({
   const { isAdmin } = useLedgerPermission();
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        showOnMobile
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={t("plaid.pageTitle")}
         description={t("plaid.management.connectionsSubtitle")}
       />
       {isAdmin ? children : <PlaidAccessNotice ledgerId={ledgerId} />}
-    </div>
+    </LedgerPage>
   );
 }
 

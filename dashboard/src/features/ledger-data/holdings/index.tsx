@@ -1,4 +1,4 @@
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
 
@@ -107,8 +107,8 @@ const LedgerHoldingsPage = () => {
   const { ledgerName: ledgerDisplayName } = useLedger();
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-full">
-      <PageHeader
+    <LedgerPage className="@container space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={t("page.holdings.holdings")}
         description={t("common.pageDescription.holdings", {
           ledgerName: ledgerDisplayName ?? ledgerName,
@@ -132,7 +132,7 @@ const LedgerHoldingsPage = () => {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 };
 

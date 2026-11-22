@@ -235,6 +235,23 @@ const koAiAgent: Record<string, TranslationEntry> = {
     message: "편집 실패",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "지난달 가장 큰 지출은 무엇이었나요?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "순자산 추이를 요약해 주세요",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "현재 자산 배분 현황을 보여 주세요",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "미분류되거나 특이한 거래 내역을 확인해 주세요",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default koAiAgent;

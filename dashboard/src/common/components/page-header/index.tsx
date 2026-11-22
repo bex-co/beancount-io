@@ -10,34 +10,17 @@ interface PageHeaderProps {
 }
 
 /**
- * Below `md` the header is hidden by design (w4/228), but only visually: its
- * h1 stays in the accessibility tree, where screen-reader users navigate a
- * page by heading (w2/115). The visually hidden wrapper is out of flow, so
- * it adds no gap to the layout around it.
+ * Standard page header matching `LedgerPageHeading`'s typographic hierarchy:
+ * always visible across phone, tablet, and desktop so every destination
+ * establishes clear orientation and a single authoritative `<h1>`.
  */
-export function PageHeader({
-  title,
-  description,
-  className,
-  showOnMobile = false,
-}: PageHeaderProps) {
+export function PageHeader({ title, description, className }: PageHeaderProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col space-y-1",
-        !showOnMobile && "max-md:sr-only",
-        className,
-      )}
-    >
-      <h1 className="text-lg sm:text-xl font-normal text-muted-foreground">
+    <div className={cn("flex min-w-0 flex-col gap-1", className)}>
+      <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
         {title}
       </h1>
-      <p
-        className={cn(
-          "text-sm text-muted-foreground leading-relaxed",
-          !showOnMobile && "max-md:hidden",
-        )}
-      >
+      <p className="text-sm leading-relaxed text-muted-foreground">
         {description}
       </p>
     </div>

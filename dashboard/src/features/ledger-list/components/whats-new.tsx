@@ -61,10 +61,18 @@ export function WhatsNew() {
       <div
         aria-busy="true"
         data-testid="whats-new-loading"
-        className="space-y-2 py-1"
+        className="space-y-3"
       >
-        <Skeleton className="h-5 w-28" />
-        <Skeleton className="h-4 w-64" />
+        <div className="space-y-1.5">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
       </div>
     );
   }
@@ -160,7 +168,7 @@ export function WhatsNew() {
               : t("common.whatsNewUpToDate")}
           </p>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="-ms-2.5 flex items-center gap-1">
           {unreadCount > 0 && (
             <Button
               variant="ghost"

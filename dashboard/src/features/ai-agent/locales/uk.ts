@@ -298,6 +298,23 @@ const ukAiAgent: Record<string, TranslationEntry> = {
     message: "Помилка редагування",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "Якими були мої найбільші витрати минулого місяця?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Підсумуй динаміку мого чистого капіталу",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Покажи поточний розподіл моїх активів",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Перевір некатегоризовані або незвичні записи",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default ukAiAgent;

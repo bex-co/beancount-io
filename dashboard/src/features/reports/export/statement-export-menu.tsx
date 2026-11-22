@@ -176,6 +176,7 @@ export function StatementExportMenu({
             size="sm"
             disabled={isBusy || !canExport}
             aria-label={t("reports.export.action")}
+            className="pointer-coarse:min-h-11"
           >
             <FileOutput />
             <span>{t("reports.export.action")}</span>

@@ -40,8 +40,9 @@ interface TreeNodeProps {
 /** Stable empty forest so a null/undefined `data` doesn't churn effect deps. */
 const NO_NODES: HierarchyListNode[] = [];
 
-const ROW_CLASS = "border-b border-border hover:bg-muted/50";
-const CELL_PAD = "py-2 px-3 align-middle";
+const ROW_CLASS =
+  "border-b border-border last:border-b-0 hover:bg-muted/40 transition-colors";
+const CELL_PAD = "py-2 px-2.5 sm:px-3 align-middle";
 /**
  * Depth indents from the leading edge: `paddingLeft` indented nothing in RTL
  * (Persian), where it padded the trailing side and every depth ended flush.
@@ -178,14 +179,14 @@ function AmountCells({
 }): ReactNode {
   return (
     <>
-      <td className={cn(CELL_PAD, "w-[25%] text-end")}>
+      <td className={cn(CELL_PAD, "w-px text-end whitespace-nowrap")}>
         <PrimaryCurrencyColumn
           balanceData={balanceData}
           primaryCurrency={primaryCurrency}
           inverted={inverted}
         />
       </td>
-      <td className={cn(CELL_PAD, "w-[25%] text-end")}>
+      <td className={cn(CELL_PAD, "w-px text-end whitespace-nowrap")}>
         <OtherBalancesColumn
           label={label}
           balanceData={balanceData}
@@ -231,14 +232,14 @@ function TreeNode({
       >
         <th
           scope="row"
-          className={cn(CELL_PAD, "w-1/2 font-normal text-start")}
+          className={cn(CELL_PAD, "min-w-0 font-normal text-start")}
           style={indentStyle(level)}
         >
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
             {hasChildren ? (
               <button
                 type="button"
-                className="shrink-0 p-1 hover:bg-muted rounded"
+                className="inline-flex size-6 shrink-0 items-center justify-center rounded hover:bg-muted"
                 aria-expanded={isExpanded}
                 aria-label={t("common.toggleAccountChildren", {
                   account: node.account,
@@ -266,10 +267,10 @@ function TreeNode({
                   ledgerName,
                   accountName: node.account,
                 }}
-                className="font-mono font-medium text-sm text-primary truncate inline-block hover:text-primary/80"
+                className="inline-flex min-h-6 min-w-6 max-w-full items-center font-mono font-medium text-sm text-primary hover:text-primary/80 hover:underline underline-offset-4"
                 onClick={(e) => e.stopPropagation()}
               >
-                {label}
+                <span className="truncate">{label}</span>
               </Link>
               {node.roleSource === "declared" ? (
                 <span
@@ -323,10 +324,10 @@ function SummaryRow({
   primaryCurrency?: string;
 }) {
   return (
-    <tr className={cn(ROW_CLASS, row.bold && "font-semibold")}>
+    <tr className={cn(ROW_CLASS, row.bold && "font-semibold bg-muted/20")}>
       <th
         scope="row"
-        className={cn(CELL_PAD, "w-1/2 font-inherit text-start")}
+        className={cn(CELL_PAD, "min-w-0 font-inherit text-start")}
         style={indentStyle(0)}
       >
         <div className="flex items-center gap-2 min-w-0">
@@ -475,65 +476,73 @@ export function HierarchyList({
           column often sits past the edge. A named, focusable region lets
           keyboard users scroll to it even when the table has no links, as
           in summary-only cards (w0/014). */}
-      <div
-        role="region"
-        tabIndex={0}
-        aria-label={tableLabel}
-        aria-labelledby={ariaLabelledBy}
-        className={`hierarchy-scroll overflow-x-auto rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className || ""}`}
-        style={{
-          scrollbarWidth: "thin",
-          scrollbarColor:
-            "hsl(var(--muted-foreground) / 0.3) hsl(var(--muted))",
-        }}
-      >
-        {/*
-          Keep amount columns wide enough that signed decimals stay one line;
-          narrow viewports scroll horizontally instead of wrapping digits.
-        */}
-        <table
-          className="w-full min-w-[40rem] border-collapse"
+      <div className="relative">
+        <div
+          role="region"
+          tabIndex={0}
           aria-label={tableLabel}
           aria-labelledby={ariaLabelledBy}
+          className={`@container hierarchy-scroll overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className || ""}`}
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor:
+              "hsl(var(--muted-foreground) / 0.3) hsl(var(--muted))",
+          }}
         >
-          <thead>
-            <tr
-              className={cn(
-                "border-b border-border bg-muted font-semibold text-sm text-muted-foreground",
-              )}
-            >
-              <th scope="col" className={cn(CELL_PAD, "w-1/2 text-start")}>
-                {t("common.accountColumn")}
-              </th>
-              <th scope="col" className={cn(CELL_PAD, "w-[25%] text-end")}>
-                {primaryCurrency}
-              </th>
-              <th scope="col" className={cn(CELL_PAD, "w-[25%] text-end")}>
-                {t("common.otherColumn")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((node) => (
-              <TreeNode
-                key={node.account}
-                node={node}
-                level={0}
-                expandedNodes={expandedNodes}
-                onToggle={handleToggle}
-                primaryCurrency={primaryCurrency}
-              />
-            ))}
+          <table
+            className="w-full table-auto border-collapse"
+            aria-label={tableLabel}
+            aria-labelledby={ariaLabelledBy}
+          >
+            <thead>
+              <tr
+                className={cn(
+                  "border-b border-border bg-muted/40 font-medium text-xs text-muted-foreground",
+                )}
+              >
+                <th scope="col" className={cn(CELL_PAD, "text-start")}>
+                  {t("common.accountColumn")}
+                </th>
+                <th
+                  scope="col"
+                  className={cn(CELL_PAD, "w-px text-end whitespace-nowrap")}
+                >
+                  {primaryCurrency}
+                </th>
+                <th
+                  scope="col"
+                  className={cn(CELL_PAD, "w-px text-end whitespace-nowrap")}
+                >
+                  {t("common.otherColumn")}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((node) => (
+                <TreeNode
+                  key={node.account}
+                  node={node}
+                  level={0}
+                  expandedNodes={expandedNodes}
+                  onToggle={handleToggle}
+                  primaryCurrency={primaryCurrency}
+                />
+              ))}
 
-            {summaryRows.map((row, index) => (
-              <SummaryRow
-                key={index}
-                row={row}
-                primaryCurrency={primaryCurrency}
-              />
-            ))}
-          </tbody>
-        </table>
+              {summaryRows.map((row, index) => (
+                <SummaryRow
+                  key={index}
+                  row={row}
+                  primaryCurrency={primaryCurrency}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 end-0 w-6 bg-gradient-to-l from-card to-transparent sm:hidden"
+        />
       </div>
     </>
   );

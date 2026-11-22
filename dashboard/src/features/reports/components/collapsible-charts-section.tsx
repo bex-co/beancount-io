@@ -18,18 +18,22 @@ export function ChartsToggleButton({
   chartsSectionId: string;
 }) {
   const { t } = useTranslations();
+  const label = chartsVisible ? t("common.hideCharts") : t("common.showCharts");
   return (
     <Button
       variant="outline"
-      size="icon-sm"
+      size="sm"
       onClick={onToggle}
       aria-expanded={chartsVisible}
       aria-controls={chartsSectionId}
-      aria-label={
-        chartsVisible ? t("common.hideCharts") : t("common.showCharts")
-      }
+      className="gap-1.5 pointer-coarse:min-h-11"
     >
-      {chartsVisible ? <ChevronUp /> : <ChevronDown />}
+      {chartsVisible ? (
+        <ChevronUp className="h-4 w-4" aria-hidden="true" />
+      ) : (
+        <ChevronDown className="h-4 w-4" aria-hidden="true" />
+      )}
+      <span>{label}</span>
     </Button>
   );
 }

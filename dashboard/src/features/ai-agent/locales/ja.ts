@@ -235,6 +235,23 @@ const jaAiAgent: Record<string, TranslationEntry> = {
     message: "編集に失敗しました",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "先月の主な支出は何でしたか？",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "純資産の推移をまとめてください",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "現在の資産配分を表示してください",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "未分類や不自然な仕訳がないか確認してください",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default jaAiAgent;

@@ -88,7 +88,10 @@ function BudgetEmptyState({ onAdd }: { onAdd: (opener: HTMLElement) => void }) {
           {t("page.budget.budgetNoBudgetsFoundDescription")}
         </p>
         <LedgerWritePermission>
-          <Button onClick={(event) => onAdd(event.currentTarget)}>
+          <Button
+            onClick={(event) => onAdd(event.currentTarget)}
+            className="pointer-coarse:min-h-11 pointer-coarse:px-5"
+          >
             <Plus className="h-4 w-4" />
             {t("page.budget.budgetEmptyStateCta")}
           </Button>
@@ -369,19 +372,21 @@ export default function LedgerBudgetPage() {
             : undefined
         }
         actions={
-          <LedgerWritePermission>
-            {/* Server-rendered before its click handler exists: a click then
-                opened nothing, so it waits for hydration (w4/962). */}
-            <Button
-              ref={headerAddRef}
-              disabled={!hydrated}
-              onClick={(event) => openAddBudget(event.currentTarget)}
-              className="shrink-0 self-start sm:self-auto pointer-coarse:h-11"
-            >
-              <Plus className="h-4 w-4" />
-              {t("page.budget.budgetAddBudget")}
-            </Button>
-          </LedgerWritePermission>
+          budgetGroups && budgetGroups.length > 0 ? (
+            <LedgerWritePermission>
+              {/* Server-rendered before its click handler exists: a click then
+                  opened nothing, so it waits for hydration (w4/962). */}
+              <Button
+                ref={headerAddRef}
+                disabled={!hydrated}
+                onClick={(event) => openAddBudget(event.currentTarget)}
+                className="shrink-0 self-start sm:self-auto pointer-coarse:h-11"
+              >
+                <Plus className="h-4 w-4" />
+                {t("page.budget.budgetAddBudget")}
+              </Button>
+            </LedgerWritePermission>
+          ) : undefined
         }
       />
 

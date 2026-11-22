@@ -147,8 +147,14 @@ export function SingleDateBalanceChart({
           type: "scroll",
           pageButtonItemGap: 5,
         },
-        grid: createCommonGridConfig(),
-        xAxis,
+        grid: { ...createCommonGridConfig(), right: "24px" },
+        xAxis: {
+          ...(xAxis as object),
+          axisLabel: {
+            ...((xAxis as { axisLabel?: object }).axisLabel ?? {}),
+            hideOverlap: true,
+          },
+        },
         yAxis,
         series: seriesData,
         color: getChartColors(),

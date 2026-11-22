@@ -1,4 +1,5 @@
 import { useParams } from "@tanstack/react-router";
+import { LedgerPage } from "@/common/components/ledger-page";
 import LedgerDirectoryView from "./components/ledger-directory-view";
 import { createLedgerId } from "@/common/lib/utils/encode";
 
@@ -12,10 +13,8 @@ export default function LedgerDirectoryPage() {
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
 
   return (
-    <div className="flex flex-col h-full space-y-4">
-      <div className="flex-1">
-        <LedgerDirectoryView ledgerId={ledgerId} currentPath={dirPath} />
-      </div>
-    </div>
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerDirectoryView ledgerId={ledgerId} currentPath={dirPath} />
+    </LedgerPage>
   );
 }

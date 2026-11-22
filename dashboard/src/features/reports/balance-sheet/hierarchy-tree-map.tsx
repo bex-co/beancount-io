@@ -7,6 +7,7 @@ import type {
 } from "echarts";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 import { getTreeMapColors } from "@/common/lib/chart/color";
+import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { useFormatPercent } from "@/common/hooks/use-format-percent";
 
@@ -63,6 +64,7 @@ export function HierarchyTreeMap({
   inverse,
   currency = "USD",
 }: HierarchyTreeMapProps) {
+  const isDarkTheme = useIsDarkTheme();
   const formatNum = useFormatNumber();
   const formatPercent = useFormatPercent();
   const chartOption = useMemo((): EChartsOption => {
@@ -74,8 +76,10 @@ export function HierarchyTreeMap({
 
     const data = slimSerializableTreeNode(initialData, currency);
 
-    // Get color palette (HCL colors for perceptual uniformity)
-    const treeMapColors = getTreeMapColors();
+    // Get color palette (HCL colors for perceptual uniformity, theme-aware)
+    const treeMapColors = getTreeMapColors(isDarkTheme);
+    const gapColor = isDarkTheme ? "#18181b" : "#ffffff";
+    const labelColor = isDarkTheme ? "#f4f4f5" : "#18181b";
 
     // Track account-to-color assignments (like D3's scaleOrdinal)
     const accountColorMap = new Map<string, string>();
@@ -224,15 +228,22 @@ export function HierarchyTreeMap({
             },
             fontSize: 12,
             fontWeight: "normal",
-            color: "#000", // Dark text for better contrast on HCL colors
+            color: labelColor,
             overflow: "truncate",
-            ellipsis: "...",
+            ellipsis: "…",
+          },
+          labelLayout: (params) => {
+            if (params.rect.width < 46 || params.rect.height < 18) {
+              return { fontSize: 0, opacity: 0 };
+            }
+            return { hideOverlap: true };
           },
           upperLabel: {
             show: false, // Fava doesn't show upper labels
           },
           itemStyle: {
-            borderWidth: 0,
+            borderColor: gapColor,
+            borderWidth: 1,
             gapWidth: 2, // Fava uses paddingInner(2)
           },
           emphasis: {
@@ -248,13 +259,15 @@ export function HierarchyTreeMap({
           levels: [
             {
               itemStyle: {
-                borderWidth: 0,
+                borderColor: gapColor,
+                borderWidth: 1,
                 gapWidth: 2,
               },
             },
             {
               itemStyle: {
-                borderWidth: 0,
+                borderColor: gapColor,
+                borderWidth: 1,
                 gapWidth: 2,
               },
             },
@@ -265,7 +278,15 @@ export function HierarchyTreeMap({
       animationDuration: 1000,
       animationEasing: "cubicOut",
     };
-  }, [initialData, title, inverse, currency, formatNum, formatPercent]);
+  }, [
+    initialData,
+    title,
+    inverse,
+    currency,
+    formatNum,
+    formatPercent,
+    isDarkTheme,
+  ]);
   return (
     <div className={className}>
       <ReactECharts option={chartOption} style={styles} />

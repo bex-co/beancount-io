@@ -158,15 +158,19 @@ function LedgerItem({
     <SidebarMenuItem data-testid="ledger-item">
       <SidebarMenuButton
         onClick={() => onView(ledger.id)}
-        className="flex flex-col items-start h-auto py-2 pr-8"
+        className="flex flex-col items-start h-auto py-2 pr-9"
       >
-        <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex w-full items-center gap-1.5 min-w-0">
           <LedgerVisibilityIcon isPrivate={ledger.private} />
-          <TruncatedText dir="auto" text={displayName} className="text-sm" />
+          <TruncatedText
+            dir="auto"
+            text={displayName}
+            className="block min-w-0 flex-1 text-sm"
+          />
         </div>
         <TruncatedText
           text={metaLine}
-          className="text-xs text-muted-foreground"
+          className="block w-full text-xs text-muted-foreground"
         />
       </SidebarMenuButton>
       {ledger.permissions?.admin && (
@@ -319,9 +323,20 @@ export function DashboardSidebar() {
   );
   const deleteReturnFocusRef = useRef<HTMLElement | null>(null);
   const editReturnFocusRef = useRef<HTMLElement | null>(null);
+  const createReturnFocusRef = useRef<HTMLElement | null>(null);
   const skipEditFocusRestoreRef = useRef(false);
+  const skipCreateFocusRestoreRef = useRef(false);
   const createDialog = useLedgerFormDialog(() => setIsCreateDialogOpen(false));
   const editDialog = useLedgerFormDialog(() => setEditingLedger(null));
+
+  const openCreateDialog = (opener?: HTMLElement | null) => {
+    createReturnFocusRef.current =
+      opener ??
+      (document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null);
+    setIsCreateDialogOpen(true);
+  };
 
   const {
     data,
@@ -372,6 +387,7 @@ export function DashboardSidebar() {
         const { ledgerOwner, ledgerName } = decodeLedgerId(
           result.data.createLedger.id,
         );
+        skipCreateFocusRestoreRef.current = true;
         void navigate({ to: `/ledger/${ledgerOwner}/${ledgerName}` });
       }
       return true;
@@ -427,7 +443,7 @@ export function DashboardSidebar() {
     <>
       <Sidebar>
         <SidebarNavigation label={t("common.dashboardNavigation")}>
-          <SidebarHeader className="h-16 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
+          <SidebarHeader className="h-12 md:h-14 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
             {/* Logo + "Dashboard" text (clickable) */}
             <button
               onClick={() => navigate({ to: "/ledger" })}
@@ -453,7 +469,7 @@ export function DashboardSidebar() {
               <SidebarGroupContent>
                 <div className="px-2">
                   <Button
-                    onClick={() => setIsCreateDialogOpen(true)}
+                    onClick={(event) => openCreateDialog(event.currentTarget)}
                     variant="outline"
                     size="sm"
                     className="w-full justify-start"
@@ -480,7 +496,7 @@ export function DashboardSidebar() {
                     onView={handleViewLedger}
                     onEdit={handleEditLedger}
                     onDelete={handleSetDeletingLedger}
-                    onCreateLedger={() => setIsCreateDialogOpen(true)}
+                    onCreateLedger={() => openCreateDialog()}
                   />
                 )}
               </SidebarGroupContent>
@@ -498,6 +514,15 @@ export function DashboardSidebar() {
         <DialogContent
           data-testid="create-ledger-dialog"
           busy={createDialog.busy}
+          onCloseAutoFocus={(event) => {
+            if (skipCreateFocusRestoreRef.current) {
+              skipCreateFocusRestoreRef.current = false;
+              event.preventDefault();
+            } else {
+              restoreFocusOnDialogClose(event, createReturnFocusRef.current);
+            }
+            createReturnFocusRef.current = null;
+          }}
         >
           <DialogHeader>
             <DialogTitle>{t("page.dashboard.createNewLedger")}</DialogTitle>

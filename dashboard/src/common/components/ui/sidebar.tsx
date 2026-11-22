@@ -403,13 +403,14 @@ function Sidebar({
           "group-data-[dragging=true]/sidebar-wrapper:transition-none",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
-          variant === "floating" || variant === "inset"
-            ? "rail:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-            : "rail:w-(--sidebar-width-icon)",
+          collapsible === "icon" &&
+            (variant === "floating" || variant === "inset"
+              ? "rail:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+              : "rail:w-(--sidebar-width-icon)"),
           // Opened over the page on a tablet, it leaves the page its width:
           // the rail's, or none for a sidebar that slides away.
           collapsible === "icon" && "max-xl:w-(--sidebar-width-icon)",
-          collapsible === "offcanvas" && "max-xl:w-0",
+          collapsible === "offcanvas" && "rail:w-0 max-xl:w-0",
         )}
       />
       <div

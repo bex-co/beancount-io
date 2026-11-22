@@ -108,9 +108,9 @@ export function ReportLoadingState({
   className,
 }: ReportLoadingStateProps = {}) {
   return (
-    <div className={cn("space-y-4", className)}>
-      <Card className="overflow-hidden">
-        <CardContent>
+    <div className={cn("mx-auto w-full max-w-[85rem] space-y-4", className)}>
+      <Card className="min-h-[65vh] overflow-hidden">
+        <CardContent className="flex min-h-[65vh] items-center justify-center">
           <ReportLoadingIndicator message={message} />
         </CardContent>
       </Card>

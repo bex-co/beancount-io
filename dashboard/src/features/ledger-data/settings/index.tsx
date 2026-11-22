@@ -7,7 +7,7 @@ import {
 } from "@/graphql/definitions";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { createLedgerId } from "@/common/lib/utils/encode";
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { Authenticated } from "@/common/components/authenticated";
 import { QueryView } from "@/common/components/query-view";
@@ -20,6 +20,12 @@ import { DangerZoneSection } from "./danger-zone-section";
 import { LedgerAdminPermission } from "@/common/components/ledger-permission/admin";
 import { Card, CardContent, CardHeader } from "@/common/components/ui/card";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/common/components/ui/tabs";
+import {
   Alert,
   AlertDescription,
   AlertTitle,
@@ -28,21 +34,35 @@ import { AlertTriangle } from "lucide-react";
 
 function SettingsSkeleton() {
   return (
-    <div className="space-y-6">
+    <LedgerPage className="space-y-5 sm:space-y-6">
       <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-      <Card>
-        <CardHeader>
-          <div className="h-6 w-32 bg-muted animate-pulse rounded" />
-          <div className="h-4 w-64 bg-muted animate-pulse rounded" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="h-10 w-full bg-muted animate-pulse rounded" />
-            <div className="h-10 w-24 bg-muted animate-pulse rounded" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="h-10 w-full bg-muted animate-pulse rounded" />
+              <div className="h-10 w-24 bg-muted animate-pulse rounded" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <div className="h-6 w-36 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-56 bg-muted animate-pulse rounded" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="h-10 w-full bg-muted animate-pulse rounded" />
+              <div className="h-10 w-full bg-muted animate-pulse rounded" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </LedgerPage>
   );
 }
 
@@ -59,27 +79,47 @@ export function LedgerSettingsContent({
   });
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <PageHeader
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={t("common.ledgerSettings")}
         description={t("common.pageDescription.settings", {
           ledgerName: ledger.name,
         })}
       />
-      <Authenticated>
-        <GeneralSettingsSection ledger={ledger} ledgerId={ledgerId} />
-      </Authenticated>
-      <Authenticated>
-        <VisibilitySection ledger={ledger} ledgerId={ledgerId} />
-      </Authenticated>
-      <LedgerAdminPermission>
-        <CollaboratorsSection ledgerId={ledgerId} />
-      </LedgerAdminPermission>
-      <BeancountOptionsSection ledger={ledger} />
-      <FavaOptionsSection ledger={ledger} />
-      <LedgerAdminPermission>
-        <DangerZoneSection ledger={ledger} ledgerId={ledgerId} />
-      </LedgerAdminPermission>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:items-start">
+        <div className="space-y-6">
+          <Authenticated>
+            <GeneralSettingsSection ledger={ledger} ledgerId={ledgerId} />
+          </Authenticated>
+          <Authenticated>
+            <VisibilitySection ledger={ledger} ledgerId={ledgerId} />
+          </Authenticated>
+          <LedgerAdminPermission>
+            <CollaboratorsSection ledgerId={ledgerId} />
+          </LedgerAdminPermission>
+          <LedgerAdminPermission>
+            <DangerZoneSection ledger={ledger} ledgerId={ledgerId} />
+          </LedgerAdminPermission>
+        </div>
+        <div className="space-y-4">
+          <Tabs defaultValue="beancount" className="w-full space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="beancount">
+                {t("page.settings.beancountOptions")}
+              </TabsTrigger>
+              <TabsTrigger value="fava">
+                {t("page.settings.favaOptions")}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="beancount" className="mt-0">
+              <BeancountOptionsSection ledger={ledger} />
+            </TabsContent>
+            <TabsContent value="fava" className="mt-0">
+              <FavaOptionsSection ledger={ledger} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
       <RelatedLinks
         links={[
           {
@@ -92,7 +132,7 @@ export function LedgerSettingsContent({
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }
 

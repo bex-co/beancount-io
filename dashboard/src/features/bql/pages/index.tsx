@@ -1,4 +1,4 @@
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import {
   useState,
@@ -280,134 +280,138 @@ export default function LedgerQueryPage() {
   };
 
   return (
-    <div className="container mx-auto space-y-6">
-      <PageHeader
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
         title={t("page.bql.query")}
         description={t("common.pageDescription.query", {
           ledgerName: ledgerDisplayName ?? ledgerName,
         })}
       />
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <div className="border border-input rounded-md overflow-hidden">
-            <Editor
-              height="200px"
-              defaultLanguage={BQL_LANGUAGE_ID}
-              value={queryText}
-              onChange={(value) => setQueryText(value || "")}
-              onMount={(editor, monaco: typeof monacoType) => {
-                editorRef.current = editor;
-                // Add keyboard shortcut for executing query
-                editor.addCommand(
-                  monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
-                  () => {
-                    const text = editor.getValue();
-                    setQueryText(text);
-                    submitQueryRef.current(text);
+      <div className="overflow-clip rounded-xl border bg-card shadow-sm">
+        <div className="overflow-hidden">
+          <Editor
+            height="200px"
+            defaultLanguage={BQL_LANGUAGE_ID}
+            value={queryText}
+            onChange={(value) => setQueryText(value || "")}
+            onMount={(editor, monaco: typeof monacoType) => {
+              editorRef.current = editor;
+              // Add keyboard shortcut for executing query
+              editor.addCommand(
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+                () => {
+                  const text = editor.getValue();
+                  setQueryText(text);
+                  submitQueryRef.current(text);
+                },
+              );
+
+              // BQL's own language: block comments only, so the comment
+              // shortcut never emits the `--` the engine rejects.
+              const languageDisposables = registerBqlLanguage(monaco);
+
+              // Add Beancount-specific keywords
+              const completionProvider =
+                monaco.languages.registerCompletionItemProvider(
+                  BQL_LANGUAGE_ID,
+                  {
+                    provideCompletionItems: (model, position) => {
+                      const word = model.getWordUntilPosition(position);
+                      const lineContent = model.getLineContent(
+                        position.lineNumber,
+                      );
+                      if (!shouldOfferBqlQuerySnippets(lineContent, word)) {
+                        return { suggestions: [] };
+                      }
+                      const range = bqlQuerySnippetRange(
+                        position.lineNumber,
+                        word,
+                      );
+                      const suggestions = BQL_QUERY_SNIPPETS.map((snippet) => ({
+                        label: snippet.label,
+                        kind: monaco.languages.CompletionItemKind.Snippet,
+                        insertText: snippet.insertText,
+                        documentation: snippet.documentation,
+                        range,
+                      }));
+                      return { suggestions };
+                    },
                   },
                 );
 
-                // BQL's own language: block comments only, so the comment
-                // shortcut never emits the `--` the engine rejects.
-                const languageDisposables = registerBqlLanguage(monaco);
+              for (const disposable of monacoDisposablesRef.current) {
+                disposable.dispose();
+              }
+              monacoDisposablesRef.current = [
+                ...languageDisposables,
+                completionProvider,
+              ].filter(Boolean) as monacoType.IDisposable[];
 
-                // Add Beancount-specific keywords
-                const completionProvider =
-                  monaco.languages.registerCompletionItemProvider(
-                    BQL_LANGUAGE_ID,
-                    {
-                      provideCompletionItems: (model, position) => {
-                        const word = model.getWordUntilPosition(position);
-                        const lineContent = model.getLineContent(
-                          position.lineNumber,
-                        );
-                        if (!shouldOfferBqlQuerySnippets(lineContent, word)) {
-                          return { suggestions: [] };
-                        }
-                        const range = bqlQuerySnippetRange(
-                          position.lineNumber,
-                          word,
-                        );
-                        const suggestions = BQL_QUERY_SNIPPETS.map(
-                          (snippet) => ({
-                            label: snippet.label,
-                            kind: monaco.languages.CompletionItemKind.Snippet,
-                            insertText: snippet.insertText,
-                            documentation: snippet.documentation,
-                            range,
-                          }),
-                        );
-                        return { suggestions };
-                      },
-                    },
-                  );
-
+              editor.onDidDispose(() => {
+                if (editorRef.current === editor) editorRef.current = null;
                 for (const disposable of monacoDisposablesRef.current) {
                   disposable.dispose();
                 }
-                monacoDisposablesRef.current = [
-                  ...languageDisposables,
-                  completionProvider,
-                ].filter(Boolean) as monacoType.IDisposable[];
+                monacoDisposablesRef.current = [];
+              });
 
-                editor.onDidDispose(() => {
-                  if (editorRef.current === editor) editorRef.current = null;
-                  for (const disposable of monacoDisposablesRef.current) {
-                    disposable.dispose();
-                  }
-                  monacoDisposablesRef.current = [];
-                });
-
-                // Monaco can finish loading after the reader has moved on, to
-                // a bookmarked query's result, say; taking focus then sent
-                // their next key to the editor (w4/974). Focus it only while
-                // nothing else has focus.
-                const active = document.activeElement;
-                if (!active || active === document.body) editor.focus();
-              }}
-              options={{
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                wordWrap: "on",
-                lineNumbers: "on",
-                folding: false,
-                // lineDecorationsWidth: 0,
-                // lineNumbersMinChars: 0,
-                fontSize: 14,
-                fontFamily:
-                  "Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace",
-                padding: { top: 16, bottom: 16 },
-                suggest: {
-                  showKeywords: true,
-                  showSnippets: true,
-                },
-                quickSuggestions: {
-                  other: true,
-                  comments: false,
-                  strings: false,
-                },
-              }}
-              theme={isDarkTheme ? "vs-dark" : "light"}
-            />
-          </div>
-          <p className="text-sm text-muted-foreground">
+              // Monaco can finish loading after the reader has moved on, to
+              // a bookmarked query's result, say; taking focus then sent
+              // their next key to the editor (w4/974). Focus it only while
+              // nothing else has focus.
+              const active = document.activeElement;
+              if (!active || active === document.body) editor.focus();
+            }}
+            options={{
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              wordWrap: "on",
+              lineNumbers: "on",
+              folding: false,
+              glyphMargin: false,
+              lineDecorationsWidth: 10,
+              lineNumbersMinChars: 3,
+              overviewRulerLanes: 0,
+              renderLineHighlight: "none",
+              occurrencesHighlight: "off",
+              selectionHighlight: false,
+              fontSize: 14,
+              fontFamily:
+                "var(--font-mono), Monaco, 'Cascadia Code', Consolas, monospace",
+              padding: { top: 16, bottom: 16 },
+              suggest: {
+                showKeywords: true,
+                showSnippets: true,
+              },
+              quickSuggestions: {
+                other: true,
+                comments: false,
+                strings: false,
+              },
+            }}
+            theme={isDarkTheme ? "vs-dark" : "light"}
+          />
+        </div>
+        <div className="flex flex-col gap-3 border-t bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="hidden text-xs text-muted-foreground pointer-fine:block">
             {t("bql.queryShortcutHint")}
           </p>
+          <Button
+            onClick={handleSubmit}
+            loading={executingQueries.size > 0}
+            disabled={!queryText.trim()}
+            className="w-full sm:ms-auto sm:w-auto sm:min-w-36 pointer-coarse:min-h-11"
+          >
+            {t("bql.executeQuery")}
+          </Button>
         </div>
-
-        <Button
-          onClick={handleSubmit}
-          loading={executingQueries.size > 0}
-          disabled={!queryText.trim()}
-          className="w-full"
-        >
-          {t("bql.executeQuery")}
-        </Button>
       </div>
 
       {history.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">{t("bql.queryHistory")}</h3>
+          <h2 className="text-base font-semibold tracking-tight">
+            {t("bql.queryHistory")}
+          </h2>
           <div ref={historyListRef} className="space-y-3">
             {history.map((query, index) => {
               const cached = resultsCache[query];
@@ -436,8 +440,36 @@ export default function LedgerQueryPage() {
       )}
 
       {history.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          {t("bql.noQueryHistory")}
+        <div className="rounded-xl border border-dashed bg-muted/10 px-6 py-10 text-center space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {t("bql.noQueryHistory")}
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {BQL_QUERY_SNIPPETS.filter(
+              (snippet) =>
+                snippet.label.toLowerCase() !== queryText.trim().toLowerCase(),
+            )
+              .slice(0, 3)
+              .map((snippet) => (
+                <Button
+                  key={snippet.label}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="font-mono text-xs"
+                  onClick={() => {
+                    const clean = snippet.insertText.replace(
+                      /\$\{\d+:?([^}]*)\}/g,
+                      "$1",
+                    );
+                    setQueryText(clean);
+                    editorRef.current?.focus();
+                  }}
+                >
+                  {snippet.label}
+                </Button>
+              ))}
+          </div>
         </div>
       )}
 
@@ -457,6 +489,6 @@ export default function LedgerQueryPage() {
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }

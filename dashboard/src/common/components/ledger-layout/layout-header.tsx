@@ -92,18 +92,16 @@ export function LayoutHeader({ ledgerId }: { ledgerId: string }) {
         "@container/ledger-header shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60",
         // By the viewport, not a hook: a hook's answer arrives after the
         // first paint, and the whole page jumped 16px when it did.
-        "h-12 md:h-16",
+        "h-12 md:h-14",
       )}
     >
-      <div className="flex h-full items-center justify-between px-4">
-        <div className="flex items-center gap-3">
+      <div className="flex h-full items-center justify-between gap-3 px-4 md:px-6">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           {showTrigger && (
             <SidebarTrigger className="-ml-1 pointer-coarse:size-11" />
           )}
-        </div>
-        <div className="flex items-center gap-2">
           {shouldShowFilters && (
-            <>
+            <div className="flex items-center gap-2">
               <div
                 ref={inlineFiltersRef}
                 className="hidden @min-[52rem]/ledger-header:block"
@@ -168,8 +166,10 @@ export function LayoutHeader({ ledgerId }: { ledgerId: string }) {
                   </SheetFooter>
                 </SheetContent>
               </Sheet>
-            </>
+            </div>
           )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           <Authenticated
             fallback={
               <Button variant="outline" size="sm" asChild>

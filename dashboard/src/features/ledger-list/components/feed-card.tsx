@@ -64,10 +64,15 @@ function LedgerActivityCard({ item }: { item: FeedItem }) {
                 · {item.author}
               </span>
             )}
-            <span aria-hidden="true" className="text-muted-foreground/60">
-              ·
+            <span className="inline-flex items-center gap-1.5">
+              <span
+                aria-hidden="true"
+                className="hidden text-muted-foreground/60 sm:inline"
+              >
+                ·
+              </span>
+              <FeedTimestamp publishedAt={item.publishedAt} />
             </span>
-            <FeedTimestamp publishedAt={item.publishedAt} />
           </div>
           {destination && (
             <p className="mt-1 text-sm text-muted-foreground">{item.title}</p>

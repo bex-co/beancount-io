@@ -161,7 +161,7 @@ export function LineChart({
         },
         grid: {
           left: "0%",
-          right: "0",
+          right: "24px",
           bottom: "25",
           top: "3%",
           containLabel: true,
@@ -171,6 +171,7 @@ export function LineChart({
           type: "category",
           data: dates,
           axisLabel: {
+            hideOverlap: true,
             formatter: (value: string) => {
               return formatDateAxis(value, interval ?? "monthly");
             },

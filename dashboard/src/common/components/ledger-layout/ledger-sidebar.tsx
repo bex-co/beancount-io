@@ -491,7 +491,7 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarNavigation label={t("common.ledgerNavigation")}>
-        <SidebarHeader className="h-16 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
+        <SidebarHeader className="h-12 md:h-14 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
           <LedgerSwitcher
             currentLedgerId={ledgerId}
             currentLedgerName={ledgerName}

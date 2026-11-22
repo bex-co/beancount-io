@@ -258,6 +258,23 @@ const faAiAgent: Record<string, TranslationEntry> = {
     message: "ویرایش انجام نشد",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "بیشترین هزینه‌های من در ماه گذشته چه بود؟",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "روند دارایی خالص من را خلاصه کن",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "تخصیص فعلی دارایی‌های من را نشان بده",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "تراکنش‌های دسته‌بندی‌نشده یا غیرعادی را بررسی کن",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default faAiAgent;

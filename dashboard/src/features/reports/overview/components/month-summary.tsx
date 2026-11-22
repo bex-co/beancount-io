@@ -110,7 +110,7 @@ export function MonthSummary({
               type="button"
               variant="outline"
               size="icon"
-              className="size-10 rounded-full text-muted-foreground sm:size-8"
+              className="size-10 rounded-full text-muted-foreground sm:size-8 pointer-coarse:size-11"
               disabled={index <= 0}
               onClick={() => onSelectDate(dates[index - 1])}
               aria-label={t("common.previous")}
@@ -127,7 +127,7 @@ export function MonthSummary({
               type="button"
               variant="outline"
               size="icon"
-              className="size-10 rounded-full text-muted-foreground sm:size-8"
+              className="size-10 rounded-full text-muted-foreground sm:size-8 pointer-coarse:size-11"
               disabled={index < 0 || index >= dates.length - 1}
               onClick={() => onSelectDate(dates[index + 1])}
               aria-label={t("common.next")}

@@ -6,7 +6,7 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { Button } from "@/common/components/ui/button";
 import {
   Dialog,
@@ -63,21 +63,26 @@ export default function EntryPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader
-          title={t("journal.entryPageTitle")}
-          description={t("journal.entryPageDescription", {
-            ledgerName: ledgerDisplayName ?? ledgerName,
-          })}
-        />
-        <Button variant="outline" size="sm" className="self-start" asChild>
-          <Link {...journalHref}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t("journal.backToJournal")}
-          </Link>
-        </Button>
-      </div>
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
+        title={t("journal.entryPageTitle")}
+        description={t("journal.entryPageDescription", {
+          ledgerName: ledgerDisplayName ?? ledgerName,
+        })}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            className="self-start sm:self-end"
+            asChild
+          >
+            <Link {...journalHref}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t("journal.backToJournal")}
+            </Link>
+          </Button>
+        }
+      />
 
       <div
         ref={editorRegionRef}
@@ -157,6 +162,6 @@ export default function EntryPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </LedgerPage>
   );
 }

@@ -278,6 +278,23 @@ const caAiAgent: Record<string, TranslationEntry> = {
     message: "L'edició ha fallat",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "Quines van ser les meves principals despeses el mes passat?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Resumeix la tendència del meu patrimoni net",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Mostra la meva distribució actual d'actius",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Revisa si hi ha assentaments sense categoria o inusuals",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default caAiAgent;

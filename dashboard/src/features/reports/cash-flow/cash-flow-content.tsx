@@ -2,7 +2,7 @@ import { useId, useMemo } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { DollarSign, Layers } from "lucide-react";
 import { DocLink } from "@/common/components/doc-link";
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
 import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-trigger-list";
@@ -217,114 +217,129 @@ export function CashFlowContent({
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader
-          className="min-w-0"
-          title={t("common.cashFlow")}
-          description={
-            <>
-              {t("common.pageDescription.cashFlow", {
-                ledgerName: ledgerDisplayName,
-              })}{" "}
-              <DocLink href={docsUrl(i18n.language, CASH_FLOW_ROLES_DOC_PATH)}>
-                {t("page.cashFlow.classificationDocLink")}
-              </DocLink>
-            </>
-          }
-        />
-        <ClientOnly>
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            <StatementExportMenu
-              document={exportDocument}
-              ready={exportReady}
-            />
-            <ChartsToggleButton
-              chartsVisible={chartsVisible}
-              onToggle={toggleChartsVisible}
-              chartsSectionId={chartsSectionId}
-            />
-          </div>
-        </ClientOnly>
-      </div>
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
+        title={t("common.cashFlow")}
+        description={
+          <>
+            {t("common.pageDescription.cashFlow", {
+              ledgerName: ledgerDisplayName,
+            })}{" "}
+            <DocLink href={docsUrl(i18n.language, CASH_FLOW_ROLES_DOC_PATH)}>
+              {t("page.cashFlow.classificationDocLink")}
+            </DocLink>
+          </>
+        }
+        actions={
+          <ClientOnly
+            fallback={
+              <div
+                className="flex h-8 w-60 shrink-0 items-center gap-2"
+                aria-hidden="true"
+              />
+            }
+          >
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+              <StatementExportMenu
+                document={exportDocument}
+                ready={exportReady}
+              />
+              <ChartsToggleButton
+                chartsVisible={chartsVisible}
+                onToggle={toggleChartsVisible}
+                chartsSectionId={chartsSectionId}
+              />
+            </div>
+          </ClientOnly>
+        }
+      />
 
       {/* Collapsible Chart Section */}
       <CollapsibleChartsSection
         id={chartsSectionId}
         chartsVisible={chartsVisible}
       >
-        <Tabs
-          value={selectedTab}
-          onValueChange={onSelectedTabChange}
-          className="w-full flex-col justify-start gap-6"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <ResponsiveTabTriggerList
-              selectedTab={selectedTab}
-              setSelectedTab={onSelectedTabChange}
-              tabOptions={tabOptions}
-            />
-            <ClientOnly>
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                <IntervalSelect
-                  value={timeInterval}
-                  onValueChange={onTimeIntervalChange}
-                />
-                <ConversionSelect
-                  value={conversion}
-                  onValueChange={onConversionChange}
-                  currencies={operatingCurrencies}
-                />
+        <div className="min-h-[380px] overflow-clip rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+          <Tabs
+            value={selectedTab}
+            onValueChange={onSelectedTabChange}
+            className="w-full flex-col justify-start gap-5"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <ResponsiveTabTriggerList
+                selectedTab={selectedTab}
+                setSelectedTab={onSelectedTabChange}
+                tabOptions={tabOptions}
+              />
+              <ClientOnly
+                fallback={
+                  <div
+                    className="flex h-8 w-64 shrink-0 items-center gap-2"
+                    aria-hidden="true"
+                  />
+                }
+              >
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  <IntervalSelect
+                    value={timeInterval}
+                    onValueChange={onTimeIntervalChange}
+                  />
+                  <ConversionSelect
+                    value={conversion}
+                    onValueChange={onConversionChange}
+                    currencies={operatingCurrencies}
+                  />
+                </div>
+              </ClientOnly>
+            </div>
+            <TabsContent value="netCashFlow" className="mt-0 space-y-3">
+              <div>
+                <h2
+                  id={`${chartTitleId}-netCashFlow`}
+                  className="text-base font-semibold tracking-tight flex items-center gap-2"
+                >
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  {t("page.cashFlow.netCashFlow")}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {t("page.cashFlow.netCashFlowDescription", {
+                    ledgerName: ledgerDisplayName,
+                  })}
+                </p>
               </div>
-            </ClientOnly>
-          </div>
-          <TabsContent value="netCashFlow" className="mt-0 space-y-3">
-            <div>
-              <h2
-                id={`${chartTitleId}-netCashFlow`}
-                className="text-xl font-semibold flex items-center gap-2"
-              >
-                <DollarSign className="h-5 w-5" />
-                {t("page.cashFlow.netCashFlow")}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t("page.cashFlow.netCashFlowDescription", {
-                  ledgerName: ledgerDisplayName,
-                })}
-              </p>
-            </div>
-            <NetCashFlowChart
-              labelledBy={`${chartTitleId}-netCashFlow`}
-              data={statement.intervals}
-              interval={timeInterval}
-              primarySeries={primaryCurrency}
-              {...unitsOf("netCashFlow")}
-            />
-          </TabsContent>
-          <TabsContent value="byActivity" className="mt-0 space-y-3">
-            <div>
-              <h2
-                id={`${chartTitleId}-byActivity`}
-                className="text-xl font-semibold flex items-center gap-2"
-              >
-                <Layers className="h-5 w-5" />
-                {t("page.cashFlow.byActivity")}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t("page.cashFlow.byActivityDescription", {
-                  ledgerName: ledgerDisplayName,
-                })}
-              </p>
-            </div>
-            <ActivityBreakdownChart
-              labelledBy={`${chartTitleId}-byActivity`}
-              data={statement.intervals}
-              interval={timeInterval}
-              primarySeries={primaryCurrency}
-              {...unitsOf("byActivity")}
-            />
-          </TabsContent>
-        </Tabs>
+              <NetCashFlowChart
+                labelledBy={`${chartTitleId}-netCashFlow`}
+                data={statement.intervals}
+                interval={timeInterval}
+                primarySeries={primaryCurrency}
+                {...unitsOf("netCashFlow")}
+              />
+            </TabsContent>
+            <TabsContent value="byActivity" className="mt-0 space-y-3">
+              <div>
+                <h2
+                  id={`${chartTitleId}-byActivity`}
+                  className="text-base font-semibold tracking-tight flex items-center gap-2"
+                >
+                  <Layers className="h-4 w-4 text-muted-foreground" />
+                  {t("page.cashFlow.byActivity")}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {t("page.cashFlow.byActivityDescription", {
+                    ledgerName: ledgerDisplayName,
+                  })}
+                </p>
+              </div>
+              <ActivityBreakdownChart
+                labelledBy={`${chartTitleId}-byActivity`}
+                data={statement.intervals}
+                interval={timeInterval}
+                primarySeries={primaryCurrency}
+                {...unitsOf("byActivity")}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </CollapsibleChartsSection>
 
       {/* 2 Column Grid: Operating + bottom line (left) | Investing + Financing (right) */}
@@ -390,6 +405,6 @@ export function CashFlowContent({
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }

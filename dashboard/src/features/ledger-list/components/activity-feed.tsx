@@ -145,14 +145,13 @@ function ActivityFeedWorkspace() {
               className="rounded-xl border bg-card p-4 shadow-sm sm:p-5"
               aria-hidden="true"
             >
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-2">
                 <Skeleton className="size-9 shrink-0 rounded-md" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-16" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-36" />
                 </div>
               </div>
-              <Skeleton className="h-5 w-3/4 mb-2" />
               <Skeleton className="h-4 w-full" />
             </div>
           ))}

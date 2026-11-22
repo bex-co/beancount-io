@@ -276,6 +276,7 @@ export function GeneralSettingsSection({
           <div className="flex justify-end">
             <Button
               onClick={handleUpdateGeneral}
+              className="pointer-coarse:min-h-11 pointer-coarse:px-5"
               disabled={
                 !hasChanges ||
                 updatingLedger ||

@@ -618,7 +618,7 @@ export default function LedgerOverviewPage() {
               // public reader arrives without context: the title leads.
               // The ledger pages' title size; on its home page the
               // ledger's own name is the title.
-              className={`text-2xl font-semibold tracking-tight outline-none ${publicReader ? "" : "truncate"}`}
+              className={`text-xl sm:text-2xl font-semibold tracking-tight outline-none ${publicReader ? "" : "truncate"}`}
             >
               {displayName}
             </h1>

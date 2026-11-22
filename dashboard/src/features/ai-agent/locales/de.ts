@@ -258,6 +258,23 @@ const deAiAgent: Record<string, TranslationEntry> = {
     message: "Bearbeiten fehlgeschlagen",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "Was waren meine größten Ausgaben im letzten Monat?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Fasse den Verlauf meines Nettovermögens zusammen",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Zeige meine aktuelle Vermögensaufteilung",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Prüfe auf unkategorisierte oder ungewöhnliche Buchungen",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default deAiAgent;

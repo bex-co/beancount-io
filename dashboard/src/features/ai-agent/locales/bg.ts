@@ -258,6 +258,23 @@ const bgAiAgent: Record<string, TranslationEntry> = {
     message: "Неуспешна редакция",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "Кои бяха най-големите ми разходи миналия месец?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Обобщи тенденцията на нетната ми стойност",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Покажи текущото разпределение на активите ми",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Провери за некатегоризирани или необичайни записи",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default bgAiAgent;

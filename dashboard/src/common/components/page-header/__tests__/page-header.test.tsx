@@ -16,31 +16,21 @@ async function cssOf(element: Element): Promise<string> {
   return classes.map((name) => rules.get(name) ?? "").join("\n");
 }
 
-const NARROW = "@media (width < 48rem)";
-
 describe("PageHeader", () => {
-  it("keeps its h1 for assistive technology while hiding it below md", async () => {
+  it("keeps its h1 and description visible at every viewport width", async () => {
     render(<PageHeader title="Journal" description="Every entry" />);
     const heading = screen.getByRole("heading", { level: 1, name: "Journal" });
+    const description = screen.getByText("Every entry");
     const wrapper = heading.parentElement!;
 
-    // Nothing on the path to the h1 is display: none, at any width.
-    for (const element of [wrapper, heading]) {
-      expect(await cssOf(element)).not.toMatch(/display:\s*none/);
+    for (const element of [wrapper, heading, description]) {
+      const css = await cssOf(element);
+      expect(css).not.toMatch(/display:\s*none/);
+      expect(css).not.toMatch(/clip-path/);
     }
-    // Visually hidden and out of flow below md, so it adds no gap.
-    const wrapperCss = await cssOf(wrapper);
-    expect(wrapperCss).toContain(NARROW);
-    expect(wrapperCss).toMatch(/position:\s*absolute/);
-    expect(wrapperCss).toMatch(/clip-path:\s*inset\(50%\)/);
-    // The description stays hidden below md, as w4/228 designed.
-    const description = screen.getByText("Every entry");
-    expect(await cssOf(description)).toMatch(
-      /@media \(width < 48rem\) \{\s*display:\s*none/,
-    );
   });
 
-  it("shows title and description on every width when asked", async () => {
+  it("remains visible when showOnMobile is passed", async () => {
     render(
       <PageHeader showOnMobile title="Budget" description="Spending caps" />,
     );

@@ -28,22 +28,14 @@ function PlaidSettingsContent({ ledgerId }: { ledgerId: string }) {
   const { items, loading, error, refetch } = usePlaidItems(ledgerId);
 
   if (loading) {
-    return (
-      <div className="container mx-auto py-8">
-        <PlaidLoadingState />
-      </div>
-    );
+    return <PlaidLoadingState />;
   }
 
   if (error) {
     if (isPlaidAccessError(error)) {
       return <PlaidAccessNotice ledgerId={ledgerId} />;
     }
-    return (
-      <div className="container mx-auto py-8">
-        <PlaidErrorState onRetry={() => refetch()} />
-      </div>
-    );
+    return <PlaidErrorState onRetry={() => refetch()} />;
   }
 
   if (items.length === 0) {

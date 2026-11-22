@@ -1,5 +1,5 @@
 import { useId, useMemo } from "react";
-import { PageHeader } from "@/common/components/page-header";
+import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
 import { ClientOnly } from "@tanstack/react-router";
 import { Tabs, TabsContent } from "@/common/components/ui/tabs";
@@ -211,168 +211,189 @@ export function IncomeStatementContent({
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader
-          className="min-w-0"
-          title={t("common.incomeStatement")}
-          description={t("common.pageDescription.incomeStatement", {
-            ledgerName: ledgerDisplayName,
-          })}
-        />
-        <ClientOnly>
-          <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            <StatementExportMenu
-              document={exportDocument}
-              ready={exportReady}
-            />
-            <ChartsToggleButton
-              chartsVisible={chartsVisible}
-              onToggle={toggleChartsVisible}
-              chartsSectionId={chartsSectionId}
-            />
-          </div>
-        </ClientOnly>
-      </div>
+    <LedgerPage className="space-y-5 sm:space-y-6">
+      <LedgerPageHeading
+        title={t("common.incomeStatement")}
+        description={t("common.pageDescription.incomeStatement", {
+          ledgerName: ledgerDisplayName,
+        })}
+        actions={
+          <ClientOnly
+            fallback={
+              <div
+                className="flex h-8 w-60 shrink-0 items-center gap-2"
+                aria-hidden="true"
+              />
+            }
+          >
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+              <StatementExportMenu
+                document={exportDocument}
+                ready={exportReady}
+              />
+              <ChartsToggleButton
+                chartsVisible={chartsVisible}
+                onToggle={toggleChartsVisible}
+                chartsSectionId={chartsSectionId}
+              />
+            </div>
+          </ClientOnly>
+        }
+      />
       {/* Collapsible Chart Section */}
       <CollapsibleChartsSection
         id={chartsSectionId}
         chartsVisible={chartsVisible}
       >
-        <Tabs
-          value={selectedTab}
-          onValueChange={onSelectedTabChange}
-          className="w-full flex-col justify-start gap-6"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <ResponsiveTabTriggerList
-              selectedTab={selectedTab}
-              setSelectedTab={onSelectedTabChange}
-              tabOptions={tabOptions}
-            />
-            <ClientOnly>
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                {(selectedTab === "income" || selectedTab === "expenses") && (
-                  <ChartModeSelect
-                    value={chartMode}
-                    onValueChange={onChartModeChange}
+        <div className="min-h-[380px] overflow-clip rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+          <Tabs
+            value={selectedTab}
+            onValueChange={onSelectedTabChange}
+            className="w-full flex-col justify-start gap-5"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <ResponsiveTabTriggerList
+                selectedTab={selectedTab}
+                setSelectedTab={onSelectedTabChange}
+                tabOptions={tabOptions}
+              />
+              <ClientOnly
+                fallback={
+                  <div
+                    className="flex h-8 w-64 shrink-0 items-center gap-2"
+                    aria-hidden="true"
                   />
-                )}
-                <IntervalSelect
-                  value={timeInterval}
-                  onValueChange={onTimeIntervalChange}
-                />
-                <ConversionSelect
-                  value={conversion}
-                  onValueChange={onConversionChange}
-                  currencies={operatingCurrencies}
-                />
+                }
+              >
+                <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                  {(selectedTab === "income" || selectedTab === "expenses") && (
+                    <ChartModeSelect
+                      value={chartMode}
+                      onValueChange={onChartModeChange}
+                    />
+                  )}
+                  <IntervalSelect
+                    value={timeInterval}
+                    onValueChange={onTimeIntervalChange}
+                  />
+                  <ConversionSelect
+                    value={conversion}
+                    onValueChange={onConversionChange}
+                    currencies={operatingCurrencies}
+                  />
+                </div>
+              </ClientOnly>
+            </div>
+            <TabsContent value="netProfit" className="mt-0 space-y-3">
+              <div>
+                <h2
+                  id={`${chartTitleId}-netProfit`}
+                  className="text-base font-semibold tracking-tight flex items-center gap-2"
+                >
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  {t("common.netProfit")}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {t("page.incomeStatement.netProfitDescription", {
+                    ledgerName: ledgerDisplayName,
+                  })}
+                </p>
               </div>
-            </ClientOnly>
-          </div>
-          <TabsContent value="netProfit" className="mt-0 space-y-3">
-            <div>
-              <h2
-                id={`${chartTitleId}-netProfit`}
-                className="text-xl font-semibold flex items-center gap-2"
-              >
-                <DollarSign className="h-5 w-5" />
-                {t("common.netProfit")}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t("page.incomeStatement.netProfitDescription", {
-                  ledgerName: ledgerDisplayName,
+              <DateBalanceChart
+                labelledBy={`${chartTitleId}-netProfit`}
+                data={incomeStatementData.netProfitData}
+                interval={timeInterval}
+                primarySeries={primaryCurrency}
+                inverted={invertIncomeLiabilitiesEquity}
+                {...unitsOf("netProfit")}
+              />
+            </TabsContent>
+            <TabsContent value="income" className="mt-0 space-y-3">
+              <div>
+                <h2
+                  id={`${chartTitleId}-income`}
+                  className="text-base font-semibold tracking-tight flex items-center gap-2"
+                >
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  {t("common.income")}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {t("page.incomeStatement.incomeDescription", {
+                    ledgerName: ledgerDisplayName,
+                  })}
+                </p>
+              </div>
+              <DateBalanceChart
+                labelledBy={`${chartTitleId}-income`}
+                data={incomeStatementData.incomeData}
+                interval={timeInterval}
+                primarySeries={primaryCurrency}
+                chartMode={chartMode}
+                inverted={invertIncomeLiabilitiesEquity}
+                {...unitsOf("income")}
+              />
+            </TabsContent>
+            <TabsContent value="expenses" className="mt-0 space-y-3">
+              <div>
+                <h2
+                  id={`${chartTitleId}-expenses`}
+                  className="text-base font-semibold tracking-tight flex items-center gap-2"
+                >
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                  {t("common.expenses")}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {t("page.incomeStatement.expensesDescription", {
+                    ledgerName: ledgerDisplayName,
+                  })}
+                </p>
+              </div>
+              <DateBalanceChart
+                labelledBy={`${chartTitleId}-expenses`}
+                data={incomeStatementData.expensesData}
+                interval={timeInterval}
+                primarySeries={primaryCurrency}
+                chartMode={chartMode}
+                {...unitsOf("expenses")}
+              />
+            </TabsContent>
+            <TabsContent value="incomeBreakdown" className="mt-0">
+              <HierarchyVisualizationCard
+                data={incomeHierarchy}
+                title={t("page.reports.hierarchyTitle", {
+                  sectionName: t("common.income"),
                 })}
-              </p>
-            </div>
-            <DateBalanceChart
-              labelledBy={`${chartTitleId}-netProfit`}
-              data={incomeStatementData.netProfitData}
-              interval={timeInterval}
-              primarySeries={primaryCurrency}
-              inverted={invertIncomeLiabilitiesEquity}
-              {...unitsOf("netProfit")}
-            />
-          </TabsContent>
-          <TabsContent value="income" className="mt-0 space-y-3">
-            <div>
-              <h2
-                id={`${chartTitleId}-income`}
-                className="text-xl font-semibold flex items-center gap-2"
-              >
-                <TrendingUp className="h-5 w-5" />
-                {t("common.income")}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t("page.incomeStatement.incomeDescription", {
-                  ledgerName: ledgerDisplayName,
+                description={t(
+                  "page.reports.hierarchyVisualizationDescription",
+                  {
+                    ledgerName: ledgerDisplayName,
+                    sectionName: t("common.income"),
+                  },
+                )}
+                hierarchyTitle={t("common.income")}
+                inverse
+                currency={primaryCurrency}
+              />
+            </TabsContent>
+            <TabsContent value="expensesBreakdown" className="mt-0">
+              <HierarchyVisualizationCard
+                data={expensesHierarchy}
+                title={t("page.reports.hierarchyTitle", {
+                  sectionName: t("common.expenses"),
                 })}
-              </p>
-            </div>
-            <DateBalanceChart
-              labelledBy={`${chartTitleId}-income`}
-              data={incomeStatementData.incomeData}
-              interval={timeInterval}
-              primarySeries={primaryCurrency}
-              chartMode={chartMode}
-              inverted={invertIncomeLiabilitiesEquity}
-              {...unitsOf("income")}
-            />
-          </TabsContent>
-          <TabsContent value="expenses" className="mt-0 space-y-3">
-            <div>
-              <h2
-                id={`${chartTitleId}-expenses`}
-                className="text-xl font-semibold flex items-center gap-2"
-              >
-                <TrendingDown className="h-5 w-5" />
-                {t("common.expenses")}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t("page.incomeStatement.expensesDescription", {
-                  ledgerName: ledgerDisplayName,
-                })}
-              </p>
-            </div>
-            <DateBalanceChart
-              labelledBy={`${chartTitleId}-expenses`}
-              data={incomeStatementData.expensesData}
-              interval={timeInterval}
-              primarySeries={primaryCurrency}
-              chartMode={chartMode}
-              {...unitsOf("expenses")}
-            />
-          </TabsContent>
-          <TabsContent value="incomeBreakdown" className="mt-0">
-            <HierarchyVisualizationCard
-              data={incomeHierarchy}
-              title={t("page.reports.hierarchyTitle", {
-                sectionName: t("common.income"),
-              })}
-              description={t("page.reports.hierarchyVisualizationDescription", {
-                ledgerName: ledgerDisplayName,
-                sectionName: t("common.income"),
-              })}
-              hierarchyTitle={t("common.income")}
-              inverse
-              currency={primaryCurrency}
-            />
-          </TabsContent>
-          <TabsContent value="expensesBreakdown" className="mt-0">
-            <HierarchyVisualizationCard
-              data={expensesHierarchy}
-              title={t("page.reports.hierarchyTitle", {
-                sectionName: t("common.expenses"),
-              })}
-              description={t("page.reports.hierarchyVisualizationDescription", {
-                ledgerName: ledgerDisplayName,
-                sectionName: t("common.expenses"),
-              })}
-              hierarchyTitle={t("common.expenses")}
-              currency={primaryCurrency}
-            />
-          </TabsContent>
-        </Tabs>
+                description={t(
+                  "page.reports.hierarchyVisualizationDescription",
+                  {
+                    ledgerName: ledgerDisplayName,
+                    sectionName: t("common.expenses"),
+                  },
+                )}
+                hierarchyTitle={t("common.expenses")}
+                currency={primaryCurrency}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </CollapsibleChartsSection>
 
       {/* 2 Column Grid: Summary + Income List (left) | Expenses List (right) */}
@@ -442,6 +463,6 @@ export function IncomeStatementContent({
           },
         ]}
       />
-    </div>
+    </LedgerPage>
   );
 }

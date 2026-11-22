@@ -267,6 +267,11 @@
   display: none !important;
 }
 
+/* Hide Monaco's raw floating touch-keyboard overlay on narrow viewports */
+.monaco-editor .iPadShowKeyboard {
+  display: none !important;
+}
+
 /* Highlighted line in Monaco Editor */
 .highlighted-line {
   background: rgba(255, 235, 59, 0.15) !important;

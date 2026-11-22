@@ -205,6 +205,9 @@ export function Combobox({
       } else {
         setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : 0));
       }
+    } else if (e.key === "Tab" && open) {
+      setOpen(false);
+      setHighlightedIndex(-1);
     }
   };
 

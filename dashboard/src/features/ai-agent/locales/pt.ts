@@ -278,6 +278,23 @@ const ptAiAgent: Record<string, TranslationEntry> = {
     message: "Falha na edição",
     description: "Fallback error for a failed AI file edit",
   },
+  "aiAgent.starterPromptExpenses": {
+    message: "Quais foram minhas maiores despesas no mês passado?",
+    description: "Starter prompt chip asking about top recent expenses",
+  },
+  "aiAgent.starterPromptNetWorth": {
+    message: "Resuma a tendência do meu patrimônio líquido",
+    description: "Starter prompt chip asking for a net worth summary",
+  },
+  "aiAgent.starterPromptAssets": {
+    message: "Mostre minha alocação atual de ativos",
+    description: "Starter prompt chip asking for current asset allocation",
+  },
+  "aiAgent.starterPromptReview": {
+    message: "Verifique lançamentos sem categoria ou incomuns",
+    description:
+      "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
 };
 
 export default ptAiAgent;
