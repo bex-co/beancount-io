@@ -323,11 +323,16 @@ def update_transactions(
 ) -> None:
     """Recategorize a batch of transactions from a JSON or CSV mapping.
 
-    Every valid row writes; a rejected row never aborts the valid ones, but
-    the exit status is still 1 whenever any row was rejected, with
-    `written_rows` and `rejected_rows` in the JSON result, as `bea add
-    transactions --partial` reports. Each file's rows land in one atomic
-    write. Previews by default and writes only with --apply.
+    Previews by default and writes only with --apply. With --apply, every
+    valid row writes and a rejected row never aborts the valid ones, but the
+    exit status is still 1 whenever any row was rejected, with `written_rows`
+    and `rejected_rows` in the JSON result, as `bea add transactions
+    --partial` reports. Each file's rows land in one atomic write.
+
+    A preview writes nothing and exits 0 even when it rejects rows: each
+    rejection shows in its row status and in the `rejected` count
+    (`data.rejected` under --json). To gate an apply on the preview, check
+    that count, not the exit status.
 
     JSON rows use the single-row fields:
 

@@ -1005,10 +1005,13 @@ def _transactions(
 ) -> dict[str, Any]:
     """Preview or apply a batch of rows, writing every valid row.
 
-    Unlike `add transactions`, there is no `--partial`: valid rows always
-    write and rejected rows never abort them. The exit status is still nonzero
-    whenever any row was rejected — the documented partial-failure code, 1 —
-    with `written_rows` and `rejected_rows` in the result, as `add` reports.
+    Unlike `add transactions`, there is no `--partial`: on apply, valid rows
+    always write and rejected rows never abort them. The apply's exit status is
+    still nonzero whenever any row was rejected — the documented
+    partial-failure code, 1 — with `written_rows` and `rejected_rows` in the
+    result, as `add` reports. A preview writes nothing and answers every row's
+    status with exit 0 even when some are rejected; its `rejected` count is
+    what tells the caller to fix the mapping before applying.
     """
     from bea_engine import managed_load
 

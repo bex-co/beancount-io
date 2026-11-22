@@ -2066,12 +2066,15 @@ bea list transaction --flag '!'
 ```
 
 JSON rows use the single-row fields; pass `--from -` to read either form from
-stdin. Any rejection exits **1** with per-row results, as `bea add
-transactions --partial` reports. A rejected row's `reason` says what failed
-and its `details` list the located ledger errors behind it, which the text
-preview prints beneath the row. Fix the rejected rows and run the same
-mapping again: a row it already applied reports `unchanged`, so the rerun
-exits 0 once every row is valid.
+stdin. With `--apply`, any rejection exits **1** with per-row results, as `bea
+add transactions --partial` reports. A preview writes nothing and exits 0 even
+when it rejects rows: each rejection shows in its row status and in the
+`rejected` count (`data.rejected` under `--json`), so a script that previews
+before applying checks that count, not the exit status. A rejected row's
+`reason` says what failed and its `details` list the located ledger errors
+behind it, which the text preview prints beneath the row. Fix the rejected
+rows and run the same mapping again: a row it already applied reports
+`unchanged`, so the rerun exits 0 once every row is valid.
 
 ## Reports
 
