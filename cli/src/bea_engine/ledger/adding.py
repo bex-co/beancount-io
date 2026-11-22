@@ -1613,9 +1613,20 @@ def _transaction(
         posting["price_total"] = None if total is None else protocol.jsonable(total)
         if total is not None:
             posting["price"] = None
-    warnings = write.append(
-        file, [rendered], allow_errors=allow_errors, into=into, snapshot=snapshot, operating_defaults=operating_defaults
-    )
+    try:
+        warnings = write.append(
+            file,
+            [rendered],
+            allow_errors=allow_errors,
+            into=into,
+            snapshot=snapshot,
+            operating_defaults=operating_defaults,
+        )
+    except write.SelfCostRejected as refused:
+        # `{}` on a deposit books as a lot costed in the units' own commodity,
+        # the posting the typed `{USD}` above is refused for (w1/355).
+        first = refused.refused[0]
+        raise protocol.UsageError(f"--posting {first.number} {first.tail} Nothing was written.") from None
     return {
         "written": 1,
         "directive": directive,
@@ -2175,12 +2186,12 @@ def _transactions(
         else:
             kept.append((index, directive))
     valid = kept
-    misstated = _misstated_inferences(file, valid, allow_errors=allow_errors, into=into)
-    if misstated:
-        for index in misstated:
-            rejected.extend(misstated[index])
+    misbooked = _misbooked_rows(file, valid, allow_errors=allow_errors, into=into)
+    if misbooked:
+        for index in misbooked:
+            rejected.extend(misbooked[index])
             rejected_rows.append(index)
-        valid = [(index, directive) for index, directive in valid if index not in misstated]
+        valid = [(index, directive) for index, directive in valid if index not in misbooked]
 
     if rejected and not partial:
         # `--partial` only helps when some row passed; with none, the advice
@@ -2735,16 +2746,21 @@ def _appended_spans(content: str, texts: list[str]) -> list[tuple[int, int]]:
     return spans
 
 
-def _misstated_inferences(
+def _misbooked_rows(
     file: Path, rows: list[tuple[int, Any]], *, allow_errors: bool, into: Path | None
 ) -> dict[int, list[str]]:
-    """Rows whose `inferred` units state a number booking does not interpolate, with their details (w5/1018).
+    """Rows that book other than they read, with their details.
 
-    Such a posting is written number-less, so the number it states would be
-    silently dropped: an edited listing must not book something else. The
-    batch is loaded once, as it would stand, and each marked posting is read
-    back from its own line. One that does not book (the batch is refused for
-    that) stands aside; ledger validation reports it.
+    `inferred` units whose stated number booking does not interpolate are
+    written number-less, so the number would be silently dropped: an edited
+    listing must not book something else (w5/1018). A cost that names no
+    currency (`{}`) beside another leg in the units' own commodity books as a
+    lot costed in itself, the posting a typed `{USD}` is refused for (w1/355).
+    The batch is loaded once, as it would stand, and only when a row has
+    either shape; each marked posting is read back from its own line. One
+    that does not book (the batch is refused for that) stands aside; ledger
+    validation reports it. Judged before the booking order is searched, which
+    a refused row would send through every order it tries.
     """
     from beancount.core.data import Transaction
     from beancount.parser import parser
@@ -2766,7 +2782,7 @@ def _misstated_inferences(
         lines = [int((posting.meta or {}).get("lineno") or 0) for posting in parsed[0].postings]
         if len(lines) == len(directive.postings):
             marked.extend((position, n, lines[n]) for n in stated)
-    if not marked:
+    if not marked and not any(_may_cost_in_itself(directive) for _, directive in rows):
         return {}
     target = write.destination(file, into)
     try:
@@ -2788,11 +2804,21 @@ def _misstated_inferences(
                 if isinstance(line, int) and posting.units is not None:
                     booked[line] = posting.units
 
+    self_costs: list[write.SelfCost] = []
     try:
         write.validate_append(file, texts, allow_errors=allow_errors, into=into, inspect=collect)
+    except write.SelfCostRejected as refused:
+        self_costs = refused.refused
     except protocol.LedgerError:
         pass  # Judged again, and reported, by the batch validation.
     problems: dict[int, list[str]] = {}
+    for item in self_costs:
+        placed = next((p for p, (first, last) in enumerate(spans) if first <= item.lineno <= last), None)
+        if placed is not None:
+            index = rows[placed][0]
+            problems.setdefault(index, []).append(
+                f"Row {index + 1}, postings.{item.number - 1}: the posting {item.tail}"
+            )
     for position, n, line in marked:
         index, directive = rows[position]
         units = booked.get(spans[position][0] + line - 1)
@@ -2805,6 +2831,27 @@ def _misstated_inferences(
             'Give the inferred number, or drop "inferred" to write the stated one.'
         )
     return problems
+
+
+def _may_cost_in_itself(directive: Any) -> bool:
+    """Whether booking could cost a posting in its own commodity: a currency-less cost beside that commodity.
+
+    Booking gives a cost with no currency the one currency the other legs
+    weigh in, so only a row where another leg names the units' commodity can
+    book it in itself; a sale `-5 AAPL {}` beside dollars cannot (w1/355).
+    """
+    for posting in directive.postings:
+        if posting.cost is None or posting.cost.currency is not None or posting.units is None:
+            continue
+        named = {
+            getattr(part, "currency", None)
+            for other in directive.postings
+            if other is not posting
+            for part in (other.units, other.cost, other.price, other.price_total)
+        }
+        if posting.units.currency in named:
+            return True
+    return False
 
 
 def _refused_with_placed(

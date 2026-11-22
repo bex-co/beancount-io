@@ -1679,7 +1679,12 @@ refused the same way (exit 2, naming the posting, nothing written):
 `10 USD @ 2 USD`, `10 USD @@ 20 USD`, `10 USD {2 USD}` and even `10 USD @ 1 USD`.
 Beancount balances such a posting by the rate's weight, not its units, so the
 books stop summing to zero. Drop the price or cost, or name the commodity
-really bought (`10 EUR @ 2 USD`). `add transactions` refuses such a row,
+really bought (`10 EUR @ 2 USD`). A cost that names no currency (`{}`,
+`{2026-01-10}`, `{"label"}`) is judged by what it books: on a deposit or a card
+charge, booking fills it in as the units' own currency, so
+`Liabilities:Card -8.00 USD {}` is refused the same way rather than written as
+a dollar lot that `report holdings` would list. A sale that names its lot
+(`Assets:Broker -5 AAPL {}`) still writes. `add transactions` refuses such a row,
 `bea ask` refuses such a proposal, and `bea import` marks such an importer row
 `invalid`. Other directive types keep their explicit dates. Only `add transaction`
 defaults the date to today; the other types require it. The transaction flag

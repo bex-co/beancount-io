@@ -1926,6 +1926,72 @@ class _ErrorRecord:
     source: Path
 
 
+@dataclass(frozen=True)
+class SelfCost:
+    """A new posting booked at a cost in its own commodity: `self_rate_tail`'s words for it, and where it is."""
+
+    account: str
+    tail: str
+    number: int  # 1-based, in the transaction's posting order
+    source: Path
+    lineno: int
+
+
+class SelfCostRejected(CandidateRejected):
+    """New postings that booked at a cost in their own commodity, which a write refuses (w1/355).
+
+    `self_rate_tail` judges a parsed posting, where `{}`, `{2026-01-10}` and
+    `{"lbl"}` name no currency yet. Booking then takes it from the other legs,
+    and on a deposit or a card charge that is the units' own: the account
+    held a USD lot at 1 USD beside its cash, which `report holdings` listed as
+    an investment and no later plain posting reduced. The locations place each
+    posting for a batch writer; `refused` lets a single write word it as it
+    words the typed `{USD}`.
+    """
+
+    def __init__(self, refused: list[SelfCost]) -> None:
+        records = [
+            _ErrorRecord(
+                item.tail, f"Proposed append (not written): {item.account} {item.tail}", item.lineno, [], item.source
+            )
+            for item in refused
+        ]
+        super().__init__(
+            "A new posting would be held at a cost in its own commodity; nothing was written.",
+            details=_collapse_repeats(records),
+            locations=[(item.source, item.lineno) for item in refused],
+            records=records,
+        )
+        self.refused = refused
+
+
+def _booked_self_costs(entries: list[Any], filenames: dict[Path, Path], target: Path, lines: int) -> list[SelfCost]:
+    """The postings appended past `target`'s first `lines` lines that booked at a cost in their own commodity."""
+    from beancount.core.data import Transaction
+    from beancount.core.position import Cost
+
+    from bea_engine import managed_load
+
+    refused: list[SelfCost] = []
+    for entry in entries:
+        path = Path(entry.meta.get("filename", ""))
+        source = filenames.get(path, path)
+        line = entry.meta.get("lineno")
+        if not isinstance(entry, Transaction) or not isinstance(line, int) or line <= lines:
+            continue
+        if source.resolve() != target:
+            continue
+        # Booking may regroup the postings by currency; their lines keep the order they were written in.
+        order = sorted({at for posting in entry.postings if isinstance(at := (posting.meta or {}).get("lineno"), int)})
+        for posting in entry.postings:
+            at = (posting.meta or {}).get("lineno")
+            if isinstance(posting.cost, Cost) and isinstance(at, int):
+                tail = managed_load.self_rate_tail(posting)
+                if tail is not None:
+                    refused.append(SelfCost(posting.account, tail, order.index(at) + 1, source, at))
+    return refused
+
+
 def _collapse_repeats(records: list[_ErrorRecord]) -> list[str]:
     """One line per distinct problem, naming the other lines it occurs on.
 
@@ -2553,10 +2619,18 @@ def validate_candidate(
     operating_defaults: dict[int, list[str] | None] | None = None,
     inspect: Callable[[list[Any], dict[Path, Path]], None] | None = None,
     also: Mapping[Path, Path] | None = None,
+    appended_costs: bool = False,
 ) -> list[str]:
     """Refuse a candidate that fails validation, naming what it would break.
 
     `also` stages other files' candidates beside this one (see `staged`).
+
+    `appended_costs` says the candidate is `file` with text added at its end
+    that holds a cost, so every transaction past its original lines is the
+    write's own, and one of those whose posting booked at a cost in its own
+    commodity is refused (`SelfCostRejected`, w1/355). A rewrite moves
+    existing entries past those lines and keeps it off; an append with no
+    `{` cannot book a cost and pays for no walk of the entries.
 
     `inspect` is handed the candidate's loaded entries, in the order every
     read sees them, so a caller can judge the write against the ledger as it
@@ -2632,6 +2706,10 @@ def validate_candidate(
         ) from exc
     if inspect is not None:
         inspect(entries, filenames)
+    if appended_costs:
+        target = file.resolve()
+        if refused := _booked_self_costs(entries, filenames, target, len(original_lines.get(target, []))):
+            raise SelfCostRejected(refused)
     type_errors = managed_load.data_type_errors(entries, options)
     errors = _in_line_order([*errors, *type_errors])
     original_line_counts = {path: len(lines) for path, lines in original_lines.items()}
@@ -4607,12 +4685,18 @@ def validate_append(
             stages_pad=stages_pad,
             stages_open=_only_opens(texts),
             inspect=inspect,
+            appended_costs=_holds_cost(texts),
         )
     snapshot.verify()
     return warnings + respelled_account_notes(texts, snapshot)
 
 
 _OPEN_TEXT = re.compile(r"\s*\d{4}[-/]\d+[-/]\d+\s*open\b")
+
+
+def _holds_cost(texts: list[str]) -> bool:
+    """Whether appended text may book a cost: only a `{` opens one."""
+    return any("{" in text for text in texts)
 
 
 def _only_opens(texts: list[str]) -> bool:
@@ -4849,6 +4933,7 @@ def append(
                     pad_from=pad_from,
                     pad_date_explicit=pad_date_explicit,
                     operating_defaults=operating_defaults,
+                    appended_costs=_holds_cost(texts),
                 )
             snapshot.verify()
             if original_stat is None:

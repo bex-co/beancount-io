@@ -45,9 +45,14 @@ def answer(
     snapshot = _snapshot_for(file, token)
     _refuse_invisible_new_accounts(entries, file, snapshot)
     target = ledger_write.destination(file, into)
-    warnings = ledger_write.validate_append(
-        file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot, one_entry_each=False
-    )
+    try:
+        warnings = ledger_write.validate_append(
+            file, [text], allow_errors=allow_errors, into=into, snapshot=snapshot, one_entry_each=False
+        )
+    except ledger_write.SelfCostRejected as refused:
+        # `{}` that booking costs in the units' own commodity, refused as a typed `{USD}` is above (w1/355).
+        first = refused.refused[0]
+        raise protocol.UsageError(f"Write rejected: {first.account} {first.tail}") from None
     if dry_run:
         seed = ledger_write.new_include_seed(snapshot, target)
         seeded = seed + snapshot.require_target(target, into=into)
