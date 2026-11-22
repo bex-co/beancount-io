@@ -1107,6 +1107,16 @@ function ymd(year: number, month: number, day: number): string {
   return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}`;
 }
 
+/**
+ * A substituted year with Fava's `:04` digits (`util/date.py`, w5/936):
+ * `parse_date` requires four digits, so a replacement before year 1000 is
+ * rejected as unparseable without the padding. Pads the magnitude to four
+ * digits and keeps the sign (`-5` → `"-0005"`, never `"00-5"`).
+ */
+function padYear(year: number): string {
+  return `${year < 0 ? "-" : ""}${String(Math.abs(year)).padStart(4, "0")}`;
+}
+
 function isLeapYear(year: number): boolean {
   return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 }
@@ -1268,12 +1278,19 @@ function substitute(input: string, fye: FiscalYearEnd, today: string): string {
     const offset = sign === "+" ? mod : -mod;
 
     if (interval === "fiscal_year") {
+      // `02-28` is February's last day (`getFiscalPeriod` starts the next
+      // year on March 1 in leap years too), so leap day is still in the
+      // year that ends on it (w5/966).
+      const endDay =
+        monthOfYear(fye) === 2 && fye.day === 28
+          ? daysInMonth(ty, 2)
+          : fye.day;
       const afterFye =
-        tm > monthOfYear(fye) || (tm === monthOfYear(fye) && td > fye.day);
+        tm > monthOfYear(fye) || (tm === monthOfYear(fye) && td > endDay);
       const year = ty + (afterFye ? 1 : 0) - yearOffset(fye);
-      result = result.replace(complete, `FY${year + offset}`);
+      result = result.replace(complete, `FY${padYear(year + offset)}`);
     } else if (interval === "year") {
-      result = result.replace(complete, String(ty + offset));
+      result = result.replace(complete, padYear(ty + offset));
     } else if (interval === "fiscal_quarter") {
       if (!hasQuarters(fye)) {
         throw new TimeFilterParseError(input);
@@ -1290,18 +1307,18 @@ function substitute(input: string, fye: FiscalYearEnd, today: string): string {
       // negative operands that arise when tgm precedes the FY start month.
       const quarter =
         (((Math.floor((tgm - monthOfYear(fye) - 1) / 3) % 4) + 4) % 4) + 1;
-      result = result.replace(complete, `FY${year}-Q${quarter}`);
+      result = result.replace(complete, `FY${padYear(year)}-Q${quarter}`);
     } else if (interval === "quarter") {
       const quarterToday = Math.floor((tm - 1) / 3) + 1;
       const year = ty + Math.floor((quarterToday + offset - 1) / 4);
       const quarter = ((((quarterToday + offset - 1) % 4) + 4) % 4) + 1;
-      result = result.replace(complete, `${year}-Q${quarter}`);
+      result = result.replace(complete, `${padYear(year)}-Q${quarter}`);
     } else if (interval === "month") {
       const year = ty + Math.floor((tm + offset - 1) / 12);
       const month = ((((tm + offset - 1) % 12) + 12) % 12) + 1;
       result = result.replace(
         complete,
-        `${year}-${String(month).padStart(2, "0")}`,
+        `${padYear(year)}-${String(month).padStart(2, "0")}`,
       );
     } else if (interval === "week") {
       const base = utcDate(ty, tm - 1, td + offset * 7);
@@ -1329,7 +1346,7 @@ function isoFormatWeek(date: Date): string {
   const week =
     1 +
     Math.round((target.getTime() - firstThursday.getTime()) / (7 * 86_400_000));
-  return `${isoYear}-W${String(week).padStart(2, "0")}`;
+  return `${padYear(isoYear)}-W${String(week).padStart(2, "0")}`;
 }
 
 /**
