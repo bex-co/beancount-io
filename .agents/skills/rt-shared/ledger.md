@@ -104,6 +104,7 @@ newest first.
 
 ### Skipped
 
+- 2026-11-22 mobile `account-close-dates.ts` remaining helpers (`isOpenOn` close-day inclusivity, `listedAccountsAsOf` close-day hiding, `budgetEndsOn` split-parent rule, `firstOpeningAfter`, `closedBeforeDate` trim, `isDeclared` empty-read claim) — boundaries match their docblocks and pins; the one divergence found (`closedAccountNamed` shadowing `notYetOpenAccountNamed`) shipped as its own fix.
 - 2026-11-22 dashboard `use-import-duplicates` journal window vs server `parseDateRange` — the client sends the file's first/last day (or one day) as `time`; the server resolves both endpoints inclusively (`[begin, end)`), so the booked pool covers the file's days; examined, no divergence.
 - 2026-11-22 backend-cluster/ledger `directive-filter` TS-NONE-vs-donor-crash pairs — where the donor raises (year ≤ 0 constructions, underflows below year 1), the TS port returns undefined (400), consistent with the existing impossible-date 400 pins; examined, no change.
 - 2026-11-22 backend-cluster/ledger `directive-filter` `monthOffset` clamp-vs-raise — `monthOffset` clamps the day while Python `month_offset` raises, but every call site (`getFiscalPeriod` quarter starts, `substitute` day-1 inputs) provably carries day 1; examined, no divergence.
