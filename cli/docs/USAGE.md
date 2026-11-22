@@ -344,7 +344,11 @@ cannot establish which writes finished. `--debug` includes any upstream tracebac
 These five codes are the whole table. If the engine process dies on a signal —
 an upstream crash, an out-of-memory kill — `bea` reports it as exit 1 with a
 message naming the signal, rather than passing the shell's `128+N` convention
-through as an undocumented status. The exceptions are the two signals that mean
+through as an undocumented status. Beancount's parser crashes this way on a
+zero divisor in an amount expression, literal (`100/0`, `100 / 0`) or computed
+(`120/(3-3)`), so when a load crashes, `bea check` and every read scan the
+ledger's include closure and name that amount's `FILE:LINE` first in the
+details; a write still exits 4. The exceptions are the two signals that mean
 the run was ended on purpose: `Ctrl-C` still exits 130 and a write to a closed
 downstream pipe exits 141, both without a message. This includes deferred
 warnings and update notices. A native command that fails without writing to
@@ -1201,7 +1205,9 @@ scanned files are formatted.
 a named file stands for its whole include closure — every file an `include`
 reaches, whatever its suffix (`entries.inc` too) — a file the parser rejects
 fails instead of reading as "already formatted", and an include that matches
-nothing fails naming the directive. A relative include resolves beside the file
+nothing fails naming the directive. A zero divisor, literal or computed
+(`100/(2-2)`), is named at its file and line in every mode, and that file is
+never handed to the parser it would crash. A relative include resolves beside the file
 that names it, never against the working directory. A managed price include (an `http(s)://`
 URL) is not a file: it is neither formatted nor reported missing, and the gate
 needs no network or login for it. Encrypted includes (`.gpg`, or armored PGP

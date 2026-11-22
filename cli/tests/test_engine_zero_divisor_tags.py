@@ -46,3 +46,19 @@ def test_the_twins_blank_the_same_text() -> None:
     assert engine_amounts._NOT_ARITHMETIC.pattern == frontend_amounts._NOT_ARITHMETIC.pattern
     assert engine_amounts._NOT_ARITHMETIC.flags == frontend_amounts._NOT_ARITHMETIC.flags
     assert engine_amounts._ZERO_DIVISOR.pattern == frontend_amounts._ZERO_DIVISOR.pattern
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        '2020-01-05 * "a"\n  Assets:Cash  100/(2-2) USD\n',
+        '2020-01-05 * "a"\n  Assets:Cash  100 / 0 USD\n',
+        '2020-01-05 * "a"\n  Assets:Cash  100/(1*0) USD\n',
+        '2020-01-05 * "a" #proj/0 ^inv/0 ; 1/(0)\n  Assets:Cash  100/0.5 USD\n',
+        '2020-01-05 * "100/(0)"\n  Assets:Cash  1 /0J {100/(2) USD}\n',
+    ],
+)
+def test_the_twins_evaluate_the_same_lines(text: str) -> None:
+    # The frontend twin names a crashed load's line and the format walking
+    # modes' line; the engine twin names the render's. They must agree (w1/354).
+    assert frontend_amounts.evaluated_zero_divisor_line(text) == engine_amounts.evaluated_zero_divisor_line(text)

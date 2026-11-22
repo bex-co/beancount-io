@@ -246,7 +246,7 @@ def _merge_json_errors(file: Path, completed: subprocess.CompletedProcess[str], 
     """bean-check's JSON answer with bea's own findings added to its list: reserved keys, portable documents."""
     stdout = completed.stdout or ""
     sys.stderr.write(completed.stderr or "")
-    code = launch.captured_status(completed)
+    code = launch.captured_status(completed, ledger=file)
     try:
         answer = json.loads(stdout)
         errors = list(answer["errors"])

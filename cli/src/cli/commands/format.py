@@ -30,7 +30,7 @@ from typing import Annotated
 import typer
 
 from cli import context, output
-from cli.amounts import zero_divisor_line
+from cli.amounts import crashing_divisor_line
 from cli.engine import launch
 from cli.errors import BeaError, LedgerError, SignalError, UsageError
 from cli.paths import expand_path, is_descriptor_path
@@ -536,12 +536,13 @@ def _syntax_failures(files: list[Path]) -> dict[str, list[str]]:
     are read as UTF-8 first, so an undecodable path raises the same error it
     always has instead of arriving as a parse failure.
     """
-    # A literal zero divisor segfaults upstream's parser, which took the whole
-    # batch down unnamed and formatted nothing (w5/565): that file is reported
-    # here and the rest go to the engine.
+    # A zero divisor segfaults upstream's parser, which took the whole batch
+    # down unnamed and formatted nothing (w5/565): that file is reported here,
+    # at its line, and the rest go to the engine. A computed divisor like
+    # `100/(2-2)` is found by evaluating the line, as the render does (w1/354).
     divided: dict[str, list[str]] = {}
     for file in files:
-        line = zero_divisor_line(_text(file))
+        line = crashing_divisor_line(_text(file))
         if line is not None:
             divided[str(file)] = [
                 f"{file}:{line}: Division by zero in an amount expression; Beancount's parser crashes on a "
@@ -552,10 +553,10 @@ def _syntax_failures(files: list[Path]) -> dict[str, list[str]]:
     try:
         reported = launch.helper_json(["syntax", *parsed]).get("files", {}) if parsed else {}
     except SignalError:
-        # The batch died on a signal — a zero divisor the literal scan
-        # cannot see, like `100/(0)` — so isolate it per file: the one that
-        # kills the engine is named, and the rest still format (w5/759). One
-        # call per file only on this path; the batch stays a single call.
+        # The batch died on a signal the scan above cannot explain, so
+        # isolate it per file: the one that kills the engine is named, and
+        # the rest still format (w5/759). One call per file only on this
+        # path; the batch stays a single call.
         reported = {}
         for single in parsed:
             try:

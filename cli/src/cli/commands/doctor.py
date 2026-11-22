@@ -413,7 +413,7 @@ def _needs_compat(op: str, args: list[str]) -> bool:
 def _run(op: str, args: list[str]) -> int:
     """Run one operation with the streams inherited, where it reads the ledger right."""
     if _needs_compat(op, args):
-        return launch.run_engine_argv(["scoped", op, *args])
+        return launch.run_engine_argv(["scoped", op, *args], ledger=_ledger_operand(args))
     return launch.run_native("bean-doctor", [op, *args], ledger=_ledger_operand(args))
 
 
@@ -438,14 +438,15 @@ def _refuse_json() -> None:
     )
 
 
-def _replayed(completed: subprocess.CompletedProcess[str]) -> subprocess.CompletedProcess[str]:
+def _replayed(completed: subprocess.CompletedProcess[str], args: list[str]) -> subprocess.CompletedProcess[str]:
     """Replay captured upstream output, passing a nonzero status straight through.
 
     Except a death on a signal, which is reported as the streamed operations
-    report one rather than leaving the shell an undocumented status.
+    report one rather than leaving the shell an undocumented status, naming
+    the zero divisor in the ledger of `args` that a crash died on.
     """
     _replay(completed)
-    code = launch.captured_status(completed)
+    code = launch.captured_status(completed, ledger=_ledger_operand(args))
     if code != 0:
         raise typer.Exit(code)
     return completed
@@ -651,7 +652,7 @@ def _forward_roundtrip(ctx: typer.Context) -> None:
     # Captured rather than streamed so the verdict can be read: upstream logs
     # `Entries differ!` and returns 0 regardless, so a real failed comparison
     # exited 0 and nothing automated could tell it from a clean one.
-    _replayed(completed)
+    _replayed(completed, args)
     if _entries_differ(completed.stderr):
         raise LedgerError(
             f"doctor roundtrip found that {positionals[0]} does not survive a print/parse cycle (see above).",
@@ -727,7 +728,7 @@ def _forward_directories(ctx: typer.Context) -> None:
     """Map upstream's ERROR lines to the exit status gates need."""
     _refuse_json()
     args = list(ctx.args)
-    completed = _replayed(_capture("directories", args))
+    completed = _replayed(_capture("directories", args), args)
     problems = [
         line
         for stream in (completed.stdout, completed.stderr)
@@ -778,7 +779,7 @@ def _forward_scoped(op: str, ctx: typer.Context) -> None:
     # Through the helper rather than the `bean-doctor` script: same upstream
     # command, run where bea can number its balance tree from the entries in
     # scope instead of from the whole ledger's display context (w3/352).
-    completed = _replayed(launch.capture_engine(["scoped", op, *args]))
+    completed = _replayed(launch.capture_engine(["scoped", op, *args]), args)
     rest = [
         line
         for stream in (completed.stdout, completed.stderr)
@@ -800,7 +801,7 @@ def _forward_missing_open(ctx: typer.Context) -> None:
     positionals = _positionals(args)
     if positionals:
         _refuse_partial_load("missing-open", positionals[0])
-    _replayed(_capture("missing-open", args))
+    _replayed(_capture("missing-open", args), args)
     if not positionals:
         raise typer.Exit(0)
     try:

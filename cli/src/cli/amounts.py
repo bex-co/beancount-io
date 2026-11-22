@@ -198,6 +198,31 @@ def zero_divisor_line(text: str) -> int | None:
     return None
 
 
+def evaluated_zero_divisor_line(text: str) -> int | None:
+    """The first line whose amount arithmetic divides by zero, computed or literal.
+
+    The literal scan above cannot see a divisor the grammar evaluates, such
+    as `100/(2-2)`, and Beancount's parser crashes on it all the same. The
+    engine twin guards the formatter's render with this scan; here it guards
+    the batch syntax scan and names the line of a ledger whose load crashed.
+    """
+    code = _NOT_ARITHMETIC.sub(lambda found: re.sub(r"[^\n]", " ", found.group()), text)
+    for number, line in enumerate(code.split("\n"), start=1):
+        if _divides_by_zero(line):
+            return number
+    return None
+
+
+def crashing_divisor_line(text: str) -> int | None:
+    """The line the engine's render refuses for a zero divisor: a literal one first, then a computed one.
+
+    In that order, so every mode of `bea format` and a crashed load name
+    the same line of a file.
+    """
+    line = zero_divisor_line(text)
+    return line if line is not None else evaluated_zero_divisor_line(text)
+
+
 def check_decimal_notation(text: str) -> None:
     """Reject the amount spellings that never reach a useful engine answer.
 

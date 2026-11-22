@@ -66,26 +66,29 @@ from pathlib import Path
 from typing import Any, Literal, TextIO
 
 from cli import config, context, output
+from cli.amounts import crashing_divisor_line
 from cli.auth.credentials import load_credentials
 from cli.engine import paths, provision
 from cli.errors import BY_CATEGORY, BeaError, ConflictError, EngineError, SignalError, UsageError
 
 
-def run_engine_argv(argv: Sequence[str], *, interactive: bool = False) -> int:
+def run_engine_argv(argv: Sequence[str], *, interactive: bool = False, ledger: Path | str | None = None) -> int:
     """Run the engine helper with `argv`, streams inherited. Returns its exit code.
 
     `interactive` marks a child that owns the terminal for a whole session,
     such as the query shell: Ctrl-C there belongs to the child, which cancels
     the line and keeps going, so this process must not die of it too.
+    `ledger` is the one the child reads, when `argv` names it other than by `--file`.
     """
     # Streamed commands have no answer envelope to prove that the program
     # served. A non-Python override can otherwise silently exit successfully.
     refuse_unusable_engine()
     command, env = helper_command()
+    ledger = ledger or _ledger_argument(argv)
     if not interactive:
-        return _spawn([*command, *argv], env)
+        return _spawn([*command, *argv], env, ledger=ledger)
     with _terminal_child_owns_interrupts():
-        return _spawn([*command, *argv], env)
+        return _spawn([*command, *argv], env, ledger=ledger)
 
 
 @contextmanager
@@ -135,7 +138,11 @@ def run_native(
     """
     command = [str(native_command(name)), *args]
     code = _spawn(
-        command, env if env is not None else _native_env(ledger), deaf_to_interrupt=True, renamed=_BEA_NAMES.get(name)
+        command,
+        env if env is not None else _native_env(ledger),
+        deaf_to_interrupt=True,
+        renamed=_BEA_NAMES.get(name),
+        ledger=ledger,
     )
     if code != 0 and code <= 128:
         # The streams are already upstream's; a damaged engine still gets its
@@ -461,15 +468,15 @@ def capture_engine(argv: Sequence[str]) -> subprocess.CompletedProcess[str]:
     return _run_helper([*command, *argv], env, None)
 
 
-def captured_status(completed: subprocess.CompletedProcess[str]) -> int:
+def captured_status(completed: subprocess.CompletedProcess[str], *, ledger: Path | str | None = None) -> int:
     """The exit status of a captured child, with a signal death reported as `_spawn` reports one.
 
     `subprocess` hands back a signal death as a negative return code. Passed to
     the shell as it stands, -11 comes out as exit 245 with nothing on either
-    stream (w5/251).
+    stream (w5/251). `ledger` is the one the child read, as for `_spawn`.
     """
     if completed.returncode < 0:
-        return _died_on_signal(-completed.returncode, [str(part) for part in completed.args])
+        return _died_on_signal(-completed.returncode, [str(part) for part in completed.args], ledger)
     return completed.returncode
 
 
@@ -941,6 +948,8 @@ def _parse(completed: subprocess.CompletedProcess[str], args: Sequence[str], *, 
                 name = f"signal {number}"
         else:
             refuse_unusable_engine(completed)
+        # A crash names the zero divisor that caused it, when the ledger holds one.
+        located = _crash_location(number, _ledger_argument(args)) if number > 0 else None
         if writes:
             # A writer that produced no envelope may or may not have written.
             # Exit 4 says exactly that, and stops a caller from retrying a
@@ -949,7 +958,7 @@ def _parse(completed: subprocess.CompletedProcess[str], args: Sequence[str], *, 
                 raise ConflictError(
                     f"The Beancount engine was killed by {name} answering 'bea-engine {' '.join(args)}'; "
                     "the outcome is unknown. Inspect the file before retrying.",
-                    details=[*printed, _signal_hint(number)],
+                    details=[located, *printed] if located else [*printed, _signal_hint(number)],
                 ) from None
             raise ConflictError(
                 f"The Beancount engine did not answer 'bea-engine {' '.join(args)}' "
@@ -957,13 +966,13 @@ def _parse(completed: subprocess.CompletedProcess[str], args: Sequence[str], *, 
                 details=printed,
             ) from None
         if number > 0:
-            hint = _signal_hint(number)
+            hint = located or _signal_hint(number)
             raise SignalError(
                 f"The Beancount engine was killed by {name} answering "
                 f"'bea-engine {' '.join(args)}' and produced no result.",
                 signal_name=name,
                 hint=hint,
-                details=[*printed, hint],
+                details=[located, *printed] if located else [*printed, hint],
             ) from None
         raise BeaError(
             f"The Beancount engine did not answer 'bea-engine {' '.join(args)}' (exit {completed.returncode}).",
@@ -1123,6 +1132,7 @@ def _spawn(
     *,
     deaf_to_interrupt: bool = False,
     renamed: str | None = None,
+    ledger: Path | str | None = None,
 ) -> int:
     """Run a child with the caller's streams and working directory, and report its status.
 
@@ -1137,7 +1147,8 @@ def _spawn(
     also be relayed to drop CPython's failed-flush epilogue.
 
     `renamed` is the `bea` command an upstream program answers for: its stderr
-    is then relayed with the program's name replaced in usage lines.
+    is then relayed with the program's name replaced in usage lines. `ledger`
+    is the one the child reads, so a crash can name the amount that caused it.
     """
     rename = (Path(command[0]).name, renamed) if renamed else None
     if _stream_is_captured(sys.stdout) or _stream_is_captured(sys.stderr):
@@ -1170,7 +1181,7 @@ def _spawn(
                 return 128 + signal.SIGPIPE
             raise failures[0]
     if returncode < 0:
-        return _died_on_signal(-returncode, command)
+        return _died_on_signal(-returncode, command, ledger)
     if returncode == _FLUSH_FAILED:
         # CPython's own status when the last flush of stdout failed on the way
         # out (a full disk, a size limit): undocumented, so the run says what
@@ -1550,7 +1561,7 @@ _FORWARDED_SIGNALS = _signals("SIGINT", "SIGTERM", "SIGHUP")
 _STOP_SIGNALS = _signals("SIGTERM", "SIGHUP")
 
 
-def _died_on_signal(number: int, command: list[str]) -> int:
+def _died_on_signal(number: int, command: list[str], ledger: Path | str | None = None) -> int:
     """Report a child killed by a signal as something the exit table documents.
 
     A child that dies on a signal usually writes nothing first, so passing the
@@ -1558,7 +1569,7 @@ def _died_on_signal(number: int, command: list[str]) -> int:
     the documented 0-4 table, and with nothing on either stream to say why.
     `bea check` on a ledger whose amount arithmetic divides by zero exited 139
     in complete silence, which is the one command whose whole job is to report
-    what is wrong with a ledger.
+    what is wrong with a ledger. `ledger` is the one the child read, if any.
     """
     if number in _QUIET_SIGNALS:
         return 128 + number
@@ -1569,8 +1580,51 @@ def _died_on_signal(number: int, command: list[str]) -> int:
     program = Path(command[0]).name
     raise BeaError(
         f"The Beancount engine ({program}) was killed by {name} and produced no result.",
-        details=[_signal_hint(number), f"Command: {' '.join(command)}"],
+        details=[_crash_location(number, ledger) or _signal_hint(number), f"Command: {' '.join(command)}"],
     )
+
+
+def _ledger_argument(args: Sequence[str]) -> str | None:
+    """The ledger a helper command reads: its `--file` value, ahead of any `--`."""
+    for flag, value in zip(args, args[1:], strict=False):
+        if flag == "--":
+            return None
+        if flag == "--file":
+            return value
+    return None
+
+
+def _crash_location(number: int, ledger: Path | str | None) -> str | None:
+    """`FILE:LINE` of the zero divisor a crashed load died on, when the ledger's files hold one.
+
+    Upstream's parser segfaults on a zero divisor in an amount expression,
+    so the child says nothing about where; the hint to search for `/0`
+    found nothing for `120/(3-3)` or `100 / 0` (w1/354). Read only on this
+    failure path, so a healthy load pays nothing. Every reachable plaintext
+    file is scanned in include order with the scan `bea format` uses;
+    encrypted members are skipped, as format skips them, and nothing found
+    leaves the generic hint in place.
+    """
+    if number not in _CRASH_SIGNALS or not ledger:
+        return None
+    try:
+        members, _ = output.walk_closure(Path(ledger))
+    except (OSError, ValueError, BeaError):
+        return None
+    for member in members:
+        if output.is_encrypted(member):
+            continue
+        try:
+            text = member.read_text(encoding="utf-8", errors="replace").removeprefix("\ufeff")
+        except OSError:
+            continue
+        line = crashing_divisor_line(text)
+        if line is not None:
+            return (
+                f"{member}:{line}: Division by zero in an amount expression; Beancount's parser crashes on "
+                "a zero divisor, so fix that amount and re-run."
+            )
+    return None
 
 
 def _signal_hint(number: int) -> str:

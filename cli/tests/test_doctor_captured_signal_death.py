@@ -99,7 +99,8 @@ def test_a_captured_operation_reports_the_crash(tmp_path: Path, op: str, operand
     assert result.returncode == 1, f"exit {result.returncode}"
     assert result.stdout == ""
     assert "was killed by SIGSEGV and produced no result" in result.stderr
-    assert "/0" in result.stderr
+    # The crash names the amount it died on, not only what to search for (w1/354).
+    assert "dz.bean:6: Division by zero in an amount expression" in result.stderr
 
 
 def test_the_streamed_operation_reports_it_the_same_way(tmp_path: Path) -> None:

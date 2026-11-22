@@ -4,7 +4,9 @@
 `/0` inside them and refused the file. And a zero divisor the literal scan
 cannot see (`100/(0)`) still killed the whole batched syntax run unnamed.
 Tags and links are now blanked from the scan, and a batch that dies on a
-signal is re-run per file so the crashing one is named.
+signal is re-run per file so the crashing one is named. Since w1/354 the scan
+evaluates `100/(0)` and names its line; the per-file rerun stays for a crash
+no scan can see, stubbed here.
 """
 
 from __future__ import annotations
@@ -12,11 +14,17 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
+from typer.testing import CliRunner
 
 from cli.amounts import zero_divisor_line
+from cli.engine import launch
+from cli.errors import SignalError
+from cli.main import app
 
 ROOT = Path(__file__).resolve().parents[1]
 MAIN = (
@@ -87,26 +95,55 @@ def test_tagged_file_renders_to_stdout(tmp_path: Path) -> None:
     assert "#proj/0 ^inv/0" in proc.stdout
 
 
-def test_parenthesised_zero_names_the_crashing_file(tmp_path: Path) -> None:
+def _books(tmp_path: Path) -> Path:
     books = tmp_path / "books"
     books.mkdir()
     for name, text in (("main.bean", MAIN), ("jan.bean", JAN), ("feb.bean", FEB)):
         (books / name).write_text(text)
+    return books
+
+
+def test_parenthesised_zero_names_the_crashing_line(tmp_path: Path) -> None:
+    books = _books(tmp_path)
     proc = _bea(tmp_path, "format", "-i", str(books))
     assert proc.returncode == 1, proc.stdout
     out = proc.stdout + proc.stderr
     assert f"formatted: {books / 'jan.bean'}" in out, out
-    assert f"cannot parse: {books / 'feb.bean'}: Beancount's parser crashed reading this file" in out, out
-    assert "SIGSEGV" in out
+    assert f"cannot parse: {books / 'feb.bean'}:2: Division by zero in an amount expression" in out, out
+    assert "SIGSEGV" not in out
     assert "jan.bean:" not in out
 
 
-def test_check_names_the_crashing_file(tmp_path: Path) -> None:
-    books = tmp_path / "books"
-    books.mkdir()
-    for name, text in (("main.bean", MAIN), ("jan.bean", JAN), ("feb.bean", FEB)):
-        (books / name).write_text(text)
+def test_check_names_the_crashing_line(tmp_path: Path) -> None:
+    books = _books(tmp_path)
     proc = _bea(tmp_path, "format", "--check", str(books))
     assert proc.returncode == 1, proc.stdout
     out = proc.stdout + proc.stderr
-    assert f"cannot parse: {books / 'feb.bean'}: Beancount's parser crashed reading this file" in out, out
+    assert f"cannot parse: {books / 'feb.bean'}:2: Division by zero in an amount expression" in out, out
+
+
+def test_a_crash_no_scan_sees_is_still_isolated_to_its_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # A signal death with no zero divisor behind it: the batch dies, and the
+    # per-file rerun names the one file that kills the engine (w5/759).
+    books = tmp_path / "books"
+    books.mkdir()
+    for name, text in (("main.bean", MAIN), ("jan.bean", JAN), ("feb.bean", FEB.replace("100/(0)", "100"))):
+        (books / name).write_text(text)
+    crashing = str(books / "feb.bean")
+    real = launch.helper_json
+
+    def crash_on_feb(args: Sequence[str], **kwargs: Any) -> dict[str, Any]:
+        if args[0] == "syntax" and crashing in args:
+            raise SignalError("killed", signal_name="SIGSEGV", hint="Stub crash hint.")
+        return real(args, **kwargs)
+
+    monkeypatch.setattr(launch, "helper_json", crash_on_feb)
+    result = CliRunner().invoke(app, ["format", "-i", str(books)])
+
+    assert result.exit_code == 1, result.output
+    assert f"formatted: {books / 'jan.bean'}" in result.stderr, result.stderr
+    assert (
+        f"cannot parse: {crashing}: Beancount's parser crashed reading this file "
+        "(the engine was killed by SIGSEGV), so it was not parsed. Stub crash hint." in result.stderr
+    ), result.stderr
+    assert "jan.bean:" not in result.stderr

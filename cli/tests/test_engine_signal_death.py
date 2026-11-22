@@ -155,7 +155,8 @@ def test_check_reports_the_crash_instead_of_exiting_139_in_silence(tmp_path: Pat
     assert result.returncode == 1, f"exit {result.returncode}"
     assert result.stdout == ""
     assert "SIGSEGV" in result.stderr
-    assert "/0" in result.stderr
+    # The crash names the amount it died on, not only what to search for (w1/354).
+    assert f"{ledger}:6: Division by zero in an amount expression" in result.stderr
 
 
 def test_json_check_names_the_signal_rather_than_a_raw_negative_exit(tmp_path: Path) -> None:
@@ -171,7 +172,7 @@ def test_json_check_names_the_signal_rather_than_a_raw_negative_exit(tmp_path: P
     assert error["exit_code"] == 1
     assert "SIGSEGV" in error["message"]
     assert "exit -11" not in error["message"]
-    assert any("/0" in detail for detail in error["details"])
+    assert error["details"][0].startswith(f"{ledger}:6: Division by zero in an amount expression")
 
 
 @pytest.mark.parametrize("command", [("list", "transaction"), ("balance",), ("report", "trial-balance")])
