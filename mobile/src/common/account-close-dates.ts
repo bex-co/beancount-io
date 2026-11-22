@@ -195,7 +195,13 @@ export function closedAccountNamed(
   const wanted = nameKey(query.trim());
   if (!wanted) return null;
   for (const [account, closedAt] of closeDates) {
-    if (nameKey(account) === wanted && !isOpenOn(account, onDate, closeDates)) {
+    if (nameKey(account) !== wanted) continue;
+    // An account the ledger opens after onDate is not "closed by" it — it
+    // does not exist yet. `notYetOpenAccountNamed` owns that case (w21/374),
+    // and the picker consults it when this yields.
+    const openedAt = closeDates.openedOn?.get(account);
+    if (openedAt !== undefined && onDate < openedAt) continue;
+    if (!isOpenOn(account, onDate, closeDates)) {
       return { account, closedAt };
     }
   }

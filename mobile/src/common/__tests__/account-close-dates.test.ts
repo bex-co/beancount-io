@@ -137,6 +137,34 @@ describe("closedAccountNamed", () => {
   });
 });
 
+// w21/122 + w21/374: an account the ledger opens after the entry's date is
+// not "closed by" it, even when it also carries a close date — the picker
+// must report when it opens, not when it closes.
+describe("closedAccountNamed for an account that opens later", () => {
+  const dates = closeDatesOf([
+    {
+      account: "Assets:QaFutureCard",
+      openedAt: "2026-06-01",
+      closedAt: "2026-09-01",
+    },
+  ]);
+
+  it("yields to the opens-on message before the account opens", () => {
+    expect(closedAccountNamed("Assets:QaFutureCard", "2026-01-01", dates)).toBe(
+      null,
+    );
+    expect(
+      notYetOpenAccountNamed("Assets:QaFutureCard", "2026-01-01", dates),
+    ).toEqual({ account: "Assets:QaFutureCard", openedAt: "2026-06-01" });
+  });
+
+  it("still reports the close once the account has closed", () => {
+    expect(
+      closedAccountNamed("Assets:QaFutureCard", "2026-10-01", dates),
+    ).toEqual({ account: "Assets:QaFutureCard", closedAt: "2026-09-01" });
+  });
+});
+
 // w21/229: the other half of w21/045. An account opened after a back-dated
 // entry was offered, filled in by the payee seed, and refused at Done with
 // "not opened until".
