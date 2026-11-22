@@ -232,7 +232,7 @@ export class AuthResolver {
     if (ctx.token) {
       await this.authService.logout(ctx.token);
     }
-    clearAuthCookie(ctx.koaCtx as any);
+    clearAuthCookie(ctx.koaCtx as any, ctx.config.env === "production");
     return { success: true };
   }
 

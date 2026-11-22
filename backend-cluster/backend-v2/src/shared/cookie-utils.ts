@@ -40,15 +40,39 @@ function getCookieOptions(
   };
 }
 
-// Duck-typed on the one call made: Koa and @koa/router contexts carry
-// structurally identical cookie jars whose fluent `set` return type (`this`)
-// defeats nominal assignability between the two type graphs.
-export function clearAuthCookie(ctx: {
-  cookies: {
-    set(name: string, value: string, opts: { maxAge: number }): unknown;
-  };
-}): void {
-  ctx.cookies.set(COOKIE_NAME, "", { maxAge: 0 });
+/**
+ * Expire the auth cookie in the browser.
+ *
+ * A browser keys a cookie by name, domain and path, so the expiry must carry
+ * the same domain and path `setAuthCookie` used or the browser keeps the
+ * original. The host-only expiry also removes a copy set without a domain
+ * (every non-production cookie, and any older host-only one). Koa keeps both
+ * `Set-Cookie` headers because `overwrite` defaults to false.
+ *
+ * Duck-typed on the jar's `set`, the only method used: Koa and @koa/router
+ * contexts carry structurally identical cookie jars whose fluent `set` return
+ * type (`this`) defeats nominal assignability between the two type graphs.
+ */
+export function clearAuthCookie(
+  ctx: {
+    cookies: {
+      set(
+        name: string,
+        value: string,
+        opts: { maxAge: number; path: string; domain?: string },
+      ): unknown;
+    };
+  },
+  isProduction: boolean,
+): void {
+  ctx.cookies.set(COOKIE_NAME, "", { maxAge: 0, path: "/" });
+  if (isProduction) {
+    ctx.cookies.set(COOKIE_NAME, "", {
+      maxAge: 0,
+      path: "/",
+      domain: authCookieDomain(),
+    });
+  }
 }
 
 /**

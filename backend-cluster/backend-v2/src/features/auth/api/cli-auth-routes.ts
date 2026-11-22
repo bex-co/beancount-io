@@ -139,10 +139,10 @@ export const CLI_AUTH_V1_ROUTES = [
     responses: {
       200: json("Logout confirmation", z.object({ success: z.boolean() })),
     },
-    handler: async ({ layers }, { ctx }) => {
+    handler: async ({ layers, config }, { ctx }) => {
       const token = getTokenFromCtx(ctx);
       if (token) await layers.services.auth.logout(token);
-      clearAuthCookie(ctx);
+      clearAuthCookie(ctx, config.env === "production");
       return { success: true };
     },
   }),

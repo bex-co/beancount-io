@@ -79,7 +79,7 @@ describe("AuthResolver", () => {
       expect((mockContext.koaCtx as any).cookies.set).toHaveBeenCalledWith(
         "authSess:beancount.io",
         "",
-        { maxAge: 0 },
+        { maxAge: 0, path: "/" },
       );
     });
 
@@ -93,8 +93,33 @@ describe("AuthResolver", () => {
       expect((mockContext.koaCtx as any).cookies.set).toHaveBeenCalledWith(
         "authSess:beancount.io",
         "",
-        { maxAge: 0 },
+        { maxAge: 0, path: "/" },
       );
+    });
+
+    it("expires the cookie on the shared parent domain in production", async () => {
+      const original = process.env.AUTH_COOKIE_DOMAIN;
+      delete process.env.AUTH_COOKIE_DOMAIN;
+      (mockContext as { config: { env: string } }).config = {
+        env: "production",
+      };
+
+      try {
+        await resolver.logout(mockContext);
+      } finally {
+        if (original !== undefined) process.env.AUTH_COOKIE_DOMAIN = original;
+      }
+
+      const set = (mockContext.koaCtx as any).cookies.set;
+      expect(set).toHaveBeenCalledWith("authSess:beancount.io", "", {
+        maxAge: 0,
+        path: "/",
+        domain: ".beancount.io",
+      });
+      expect(set).toHaveBeenCalledWith("authSess:beancount.io", "", {
+        maxAge: 0,
+        path: "/",
+      });
     });
 
     it("should propagate error if token revocation fails", async () => {
