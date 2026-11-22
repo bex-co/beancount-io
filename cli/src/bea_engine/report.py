@@ -1713,7 +1713,8 @@ def _cash_flow(
     Flows and closing accumulate posting inventories over their windows and
     convert at cost — the conversion the dashboard statement reconciles
     under (`at_cost` reads booked costs only, so lots collapse to the cash
-    they moved and cost-less cash stays in its own units). Flows cover
+    they moved and cost-less cash stays in its own units). A non-cash leg
+    a price weighs is read at that weight, the cash it moved. Flows cover
     `--time` intersected with the inclusive `--from-date`/`--to-date`
     bounds; cash boundaries independently accumulate postings before the
     window's start and exclusive end, using native inventory arithmetic.
@@ -1727,11 +1728,12 @@ def _cash_flow(
     Membership — not the direct role — gates rows, so an inherited-cash
     leaf is never double-counted.
     """
+    from beancount.core.convert import get_weight
     from beancount.core.data import Open, Transaction
 
     from fava.core.conversion import cost_or_value
     from fava.core.inventory import CounterInventory
-    from fava.modules.financial_statements import priced_exchange
+    from fava.modules.financial_statements import price_weighted
 
     matches = _report_filter_match(filtered.account, filtered.ledger.root_accounts) if filtered.account else None
     root_types = _root_type_map(filtered.ledger.options)
@@ -1799,8 +1801,11 @@ def _cash_flow(
             dropped = sorted({account for account in legs if not matches(account)})
             if kept and dropped:
                 split.append((entry, kept, dropped))
-        is_priced = priced_exchange(entry)
-        if is_priced:
+        # A price on a cash leg is an exchange of cash: the account changes in
+        # units no weight states (w5/1068). A price on any other leg only
+        # weighs it, and that weight is the cash the leg moved (w1/357).
+        exchanged = any(posting.account in members and price_weighted(posting) for posting in entry.postings)
+        if exchanged:
             priced.append(entry)
         own = CounterInventory()
         for posting in entry.postings:
@@ -1808,15 +1813,22 @@ def _cash_flow(
                 continue
             if matches is not None and not matches(posting.account):
                 continue
-            if not is_priced:
-                own.add_position(posting)  # type: ignore[arg-type]
+            book = flow_books.setdefault(posting.account, CounterInventory())
+            if posting.account not in members and price_weighted(posting):
+                # `Expenses:Travel 20 EUR @ 1.10 USD` paid from checking
+                # spent 22 USD; read in its units it was a -20 EUR row.
+                weight = get_weight(posting)  # type: ignore[no-untyped-call]
+                book.add_amount(weight)
+                own.add_amount(weight)
+                continue
             # Fava's inventory reads units/cost duck-typed; beancount postings
             # flow through the same call in interval_totals at runtime.
-            flow_books.setdefault(posting.account, CounterInventory()).add_position(posting)  # type: ignore[arg-type]
-        # What a price-free transaction leaves at cost is the rounding its
-        # own tolerance accepted (a {{1000.00 USD}} lot over three shares
-        # weighs 999.99…), not a basis mismatch (w5/1071).
-        if not is_priced:
+            book.add_position(posting)  # type: ignore[arg-type]
+            own.add_position(posting)  # type: ignore[arg-type]
+        # What a transaction leaves at cost is the rounding its own tolerance
+        # accepted (a {{1000.00 USD}} lot over three shares weighs 999.99…),
+        # not a basis mismatch (w5/1071).
+        if not exchanged:
             residuals.append(_balance_map(cost_or_value(own, "at_cost", prices)))
     if split:
         _refuse_split_cash_flow(filtered.account, split, ledger_errors)
@@ -1868,10 +1880,11 @@ def _cash_flow(
     totals = {activity: _sum_amounts(row["amounts"] for row in rows) for activity, rows in sections.items()}
     net_change = _sum_amounts(totals.values())
     # The rows explain the cash only when every transaction conserves each
-    # currency at cost. A priced exchange (`100 EUR @ 1.10 USD`) balances by
-    # its price weight instead, so its legs vanished from the rows or became
-    # an invented foreign opening balance (w5/1068): checked against the cash
-    # accounts' own movement, and refused rather than published.
+    # currency as read. A price on a cash leg (`Assets:Bank:Euro 100 EUR @
+    # 1.10 USD`) balances by a weight the cash account does not move in, so
+    # its legs vanished from the rows or became an invented foreign opening
+    # balance (w5/1068): checked against the cash accounts' own movement, and
+    # refused rather than published.
     moved = _sum_amounts(flows[account] for account in flows if account in members)
     rounding = {currency: total for currency, total in _sum_amounts(residuals).items() if total}
     unexplained = sorted(

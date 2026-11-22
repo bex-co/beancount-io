@@ -8,7 +8,6 @@ they moved; each currency reconciles on its own.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
@@ -126,13 +125,19 @@ def test_transfers_between_cash_accounts_never_appear(tmp_path: Path) -> None:
     assert "Expenses:Food" not in rows
 
 
-def test_a_priced_exchange_is_refused_rather_than_misreconciled(tmp_path: Path) -> None:
-    # Cash really opens at zero and closes at 2670 USD; reading the 300 EUR
-    # hotel at cost left -330 USD +300 EUR as an invented opening (w5/1068).
-    proc = engine(["report", "--file", str(write_ledger(tmp_path, FX)), "--kind", "cash-flow"], tmp_path)
-    assert proc.returncode == 2, proc.stdout
-    message = json.loads(proc.stdout)["error"]["message"]
-    assert "cannot reconcile" in message and "Paris hotel" in message
+def test_a_priced_expense_paid_from_cash_reports_at_its_weight(tmp_path: Path) -> None:
+    # Cash really opens at zero and closes at 2670 USD. Reading the 300 EUR
+    # hotel in its units left -330 USD +300 EUR as an invented opening
+    # (w5/1068), and then refused the period (w1/357); its weight is the cash.
+    data = _cash_flow(write_ledger(tmp_path, FX))
+    assert data["sections"]["operating"] == [
+        {"account": "Expenses:Food", "amounts": {"USD": "-330.00"}, "role_source": "heuristic"},
+        {"account": "Income:Salary", "amounts": {"USD": "3000.00"}, "role_source": "heuristic"},
+    ]
+    assert data["net_change"] == {"USD": "2670.00"}
+    assert data["opening"] == {"USD": "0.00"}
+    assert data["closing"] == {"USD": "2670.00"}
+    assert data["rounding_residual"] == {}
 
 
 def test_a_window_without_the_exchange_still_reports(tmp_path: Path) -> None:

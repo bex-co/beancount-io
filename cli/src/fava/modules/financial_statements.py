@@ -9,7 +9,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, TypeGuard
 
 from beancount.core import flags
-from beancount.core.data import Directive, Transaction
+from beancount.core.data import Directive, Posting, Transaction
 from beancount.parser.options import get_previous_accounts
 
 from .chart import ChartModule, DateAndBalance, DateAndBalanceWithAccountBalance
@@ -97,19 +97,23 @@ def _period_equity_view(filtered: FilteredLedger, conversion: str | Conversion) 
     return view, keep_plugs
 
 
-def priced_exchange(entry: Transaction) -> bool:
-    """Whether a price, not a booked cost, weighs one of a transaction's legs: a currency exchange.
+def price_weighted(posting: Posting) -> bool:
+    """Whether a price, not a booked cost, weighs this posting.
 
     A price on a costed posting does not set its weight (the booked cost
     does), so only a price-weighted leg counts (w5/1078).
     """
-    return any(
+    return (
         posting.price is not None
         and posting.cost is None
         and posting.units is not None
         and posting.price.currency != posting.units.currency
-        for posting in entry.postings
     )
+
+
+def priced_exchange(entry: Transaction) -> bool:
+    """Whether a price, not a booked cost, weighs one of a transaction's legs: a currency exchange."""
+    return any(price_weighted(posting) for posting in entry.postings)
 
 
 def _residual(balances: Iterable[SimpleCounterInventory]) -> SimpleCounterInventory:

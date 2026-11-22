@@ -2275,13 +2275,18 @@ with `--allow-errors`) naming the transactions and the accounts the filter
 would also need. Drop `--account`, or widen it to a balanced filter.
 Opening, closing and per-account cash balances use native Beancount arithmetic,
 including when a payment amount was inferred. Activity rows are reconciled at
-higher precision; `rounding_residual` discloses accepted cost rounding and any
-difference from native cash accumulation, so the rows explain the actual cash
-movement. JSON preserves these decimal amounts exactly.
-A priced currency exchange in the window (`100 EUR @ 1.10 USD`) balances by
-its price, not by cost, so the rows cannot explain the cash it moves: such a
-period is refused the same way, naming the transactions; choose a window
-without them or read the balance sheet.
+higher precision; `rounding_residual` discloses the rounding each
+transaction's tolerance accepted and any difference from native cash
+accumulation, so the rows explain the actual cash movement. JSON preserves these decimal amounts exactly.
+A price on a leg that is not cash weighs that leg, and the report reads it at
+that weight, the cash it moved: a hotel bill stated as
+`Expenses:Travel 20.00 EUR @ 1.10 USD` and paid from checking is an
+operating outflow of 22.00 USD, and a EUR invoice paid into a USD account is
+an inflow of the dollars received. A price on a cash leg is a currency
+exchange of cash (`Assets:Bank:Euro 100 EUR @ 1.10 USD` against checking):
+the cash account changes in units no weight states, so the rows cannot
+explain it, and such a period is refused the same way, naming the
+transactions; choose a window without them or read the balance sheet.
 Cash accounts are the Assets accounts named like cash (`Cash`, `Checking`,
 `Savings`, `Bank`) and their children, plus any account whose `open` declares
 `cash-flow-role: "cash"` — under any root, so an overdraft declared cash counts
