@@ -361,7 +361,7 @@ Usage: bea ingest identify [OPTIONS]
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger or cwd) |
+| `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger) |
 
 ```text
 Native interface (arguments/options are forwarded by bea):
@@ -390,7 +390,7 @@ Usage: bea ingest extract [OPTIONS]
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger or cwd) |
+| `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger) |
 
 ```text
 Native interface (arguments/options are forwarded by bea):
@@ -423,7 +423,7 @@ Usage: bea ingest archive [OPTIONS]
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
-| `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger or cwd) |
+| `--config` | path |  | Ingest script (defaults to ingest.py beside the ledger) |
 
 ```text
 Native interface (arguments/options are forwarded by bea):

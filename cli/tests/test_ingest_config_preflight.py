@@ -65,6 +65,8 @@ OPERATIONS = ["identify", "extract", "archive"]
 def _project(tmp_path: Path) -> Path:
     project = tmp_path / "project"
     (project / "dl").mkdir(parents=True)
+    # The root ledger a default `ingest.py` is found beside.
+    (project / "main.bean").write_text('option "operating_currency" "USD"\n')
     (project / "dl" / "a.csv").write_text("Date,Payee,Narration,Amount\n2026-08-02,Cafe,Coffee,-5.25\n")
     (project / "bank.py").write_text(BANK)
     (project / "runner.py").write_text(RUNNER)

@@ -801,6 +801,9 @@ under read is refused, an existing `.bean`/`.beancount` file needs
 `--force`, and a destination that is the input file is refused. The
 destination is written only after the tree renders, so a failed run leaves it
 untouched. `bea ingest`
+runs `--config FILE`, or without it the `ingest.py` beside the root ledger;
+like `bea import`, it does not search the working directory, so a script kept
+anywhere else is named with `--config` (exit **2** otherwise, nothing run). It
 needs a script that calls `beangulp.Ingest(...)()`; a `CONFIG = [...]`
 import module is refused with exit 2 and pointed at `bea import --config`,
 which is the command that shape belongs to. An annotated

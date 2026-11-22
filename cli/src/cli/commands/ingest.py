@@ -29,7 +29,7 @@ from cli.paths import expand_path
 _EXTRA = {"allow_extra_args": True, "ignore_unknown_options": True}
 _CONFIG = Annotated[
     Path | None,
-    typer.Option("--config", help="Ingest script (defaults to ingest.py beside the ledger or cwd)"),
+    typer.Option("--config", help="Ingest script (defaults to ingest.py beside the ledger)"),
 ]
 
 ingest_app = typer.Typer(
@@ -40,7 +40,11 @@ ingest_app = typer.Typer(
 
 
 def _ingest_script(supplied: Path | None) -> Path:
-    """Locate the user's ingest script: --config, else ingest.py beside the ledger or cwd.
+    """Locate the user's ingest script: --config, else ingest.py beside the root ledger.
+
+    Like `bea import` with `importers.py`, the default is the script that
+    belongs to the ledger; the working directory is not searched. A ledger
+    found in the working directory makes its folder that place anyway.
 
     Made absolute without following links: Beangulp files `archive` documents
     beside the script path it was started with, so a symlinked `ingest.py`
@@ -56,16 +60,14 @@ def _ingest_script(supplied: Path | None) -> Path:
         ledger = context.current().entry_file()
     except UsageError:
         ledger = None
-    candidates: list[Path] = []
-    if ledger is not None:
-        candidates.append(ledger.parent / "ingest.py")
-    candidates.append(Path.cwd() / "ingest.py")
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate.absolute()
+    if ledger is not None and (ledger.parent / "ingest.py").is_file():
+        return (ledger.parent / "ingest.py").absolute()
+    where = f" ({ledger.parent.absolute()})" if ledger is not None else ""
+    # Only a stat: the working-directory script is named, never run.
+    local = " To use ./ingest.py, pass --config ingest.py." if (Path.cwd() / "ingest.py").is_file() else ""
     raise UsageError(
-        "Choose an ingest script with --config FILE, or place ingest.py beside the root ledger "
-        "(or in the current directory). The script should call beangulp.Ingest(...)()."
+        f"Choose an ingest script with --config FILE, or place ingest.py beside the root ledger{where}. "
+        f"The script should call beangulp.Ingest(...)().{local}"
     )
 
 

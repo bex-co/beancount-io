@@ -8,10 +8,12 @@ import subprocess
 import sys
 import textwrap
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from typer.testing import CliRunner
 
+from cli.engine import launch
 from cli.main import app
 
 runner = CliRunner()
@@ -375,6 +377,75 @@ def test_config_module_refused_before_silent_noop(tmp_path: Path) -> None:
     assert result.exit_code == 2, result.output
     assert "bea import --config" in result.output
     assert "beangulp.Ingest" in result.output
+
+
+_MINIMAL_INGEST = "from beangulp import Ingest\nIngest([])()\n"
+
+
+@pytest.fixture
+def recorded_script(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    call = Mock(return_value=0)
+    monkeypatch.setattr(launch, "run_optional_script", call)
+    return call
+
+
+@pytest.mark.parametrize("ledger_from", ["--file", "$BEA_FILE"])
+def test_ingest_py_in_the_working_directory_is_not_a_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, recorded_script: Mock, ledger_from: str
+) -> None:
+    """Without --config, only ingest.py beside the root ledger is used."""
+    books = tmp_path / "books"
+    books.mkdir()
+    ledger = books / "main.bean"
+    ledger.write_text('option "operating_currency" "USD"\n')
+    work = tmp_path / "work"
+    work.mkdir()
+    (work / "ingest.py").write_text(_MINIMAL_INGEST)
+    monkeypatch.chdir(work)
+    if ledger_from == "$BEA_FILE":
+        monkeypatch.setenv("BEA_FILE", str(ledger))
+        args = ["ingest", "identify", "."]
+    else:
+        args = ["--file", str(ledger), "ingest", "identify", "."]
+
+    result = runner.invoke(app, args)
+
+    assert result.exit_code == 2, result.output
+    assert "Choose an ingest script with --config FILE" in result.output
+    assert str(books) in result.output
+    assert "pass --config ingest.py" in result.output
+    recorded_script.assert_not_called()
+
+
+def test_ledger_in_the_working_directory_uses_the_ingest_py_beside_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, recorded_script: Mock
+) -> None:
+    (tmp_path / "main.bean").write_text('option "operating_currency" "USD"\n')
+    (tmp_path / "ingest.py").write_text(_MINIMAL_INGEST)
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["ingest", "identify", "."])
+
+    assert result.exit_code == 0, result.output
+    recorded_script.assert_called_once()
+    _feature, script, forwarded = recorded_script.call_args.args
+    assert script.resolve() == (tmp_path / "ingest.py").resolve()
+    assert forwarded == ["identify", "."]
+
+
+def test_missing_ingest_script_names_only_the_ledger_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, recorded_script: Mock
+) -> None:
+    ledger = tmp_path / "main.bean"
+    ledger.write_text('option "operating_currency" "USD"\n')
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["ingest", "identify", "."])
+
+    assert result.exit_code == 2, result.output
+    assert "Choose an ingest script with --config FILE" in result.output
+    assert "./ingest.py" not in result.output
+    recorded_script.assert_not_called()
 
 
 @pytest.mark.usefixtures("use_optional_engine")
