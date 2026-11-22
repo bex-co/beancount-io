@@ -9,6 +9,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { TransactionConfigForm } from "../transaction-config-form";
 import type { ParsedRow } from "../../../../types";
+import {
+  AICategorizationIncompleteError,
+  type AISuggestion,
+} from "../../../../utils/categorize-in-batches";
 
 // The duplicate check reads the ledger; these rows are new (w2/122).
 vi.mock("../../../../hooks/use-import-duplicates", () => ({
@@ -232,6 +236,32 @@ describe("AI Fill with a pending request", () => {
     pending[1].resolve(new Map([food(0), food(1)] as [number, unknown][]));
     await waitFor(() => expect(targets()[0]).toHaveValue("Expenses:Food"));
     expect(targets()[1]).toHaveValue("Expenses:Food");
+  });
+});
+
+/** A large import is suggested in batches; a later batch can fail alone. */
+describe("AI Fill when a later batch fails", () => {
+  it("fills the rows earlier batches answered and reports the failure", async () => {
+    vi.mocked(toast.error).mockClear();
+    renderForm();
+    fireEvent.click(aiFill());
+    await waitFor(() => expect(pending).toHaveLength(1));
+    pending[0].reject(
+      new AICategorizationIncompleteError(
+        new Map([food(0)] as [number, AISuggestion][]),
+        new Error("AI quota used up"),
+      ),
+    );
+
+    await waitFor(() => expect(targets()[0]).toHaveValue("Expenses:Food"));
+    expect(targets()[1]).toHaveValue("");
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "importer.accountMapping.aiFailed",
+        expect.anything(),
+      ),
+    );
+    expect(toast.success).not.toHaveBeenCalled();
   });
 });
 

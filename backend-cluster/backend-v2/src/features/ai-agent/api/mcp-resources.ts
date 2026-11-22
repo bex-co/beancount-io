@@ -1,6 +1,7 @@
 import { pagedResourceContent } from "@/server/api/page-signals";
 import { feedQuery } from "@/features/gitea/feed/api/feed-route";
 import { suggestCategoriesQuery } from "@/features/llm/api/suggest-categories-route";
+import { MAX_SUGGEST_TRANSACTIONS } from "@/features/llm/utils/suggest-categories-cap";
 import { tempAssetDownloadQuery } from "@/features/s3/api/temp-asset-routes";
 import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
 import {
@@ -427,8 +428,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
   {
     name: "transactionCategorySuggestions",
     title: "Transaction Category Suggestions",
-    description:
-      "Suggest a target account for each supplied transaction using the ledger's open accounts and recent history. transactions is a JSON-encoded array of {rowIndex, date, payee, description, amount}. Requires assisted-categorization authority and consumes AI quota.",
+    description: `Suggest a target account for each supplied transaction using the ledger's open accounts and recent history. transactions is a JSON-encoded array of {rowIndex, date, payee, description, amount}, at most ${MAX_SUGGEST_TRANSACTIONS} per read; split a larger import into several reads. Requires assisted-categorization authority and consumes AI quota.`,
     uriTemplate: "beancount://{owner}/{name}/import/suggest-categories",
     queryNames: Object.keys(suggestCategoriesQuery.shape),
     mimeType: "application/json",

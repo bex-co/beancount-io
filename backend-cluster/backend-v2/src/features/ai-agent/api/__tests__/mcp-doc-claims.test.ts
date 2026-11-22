@@ -13,6 +13,7 @@ import {
 import { ENTRY_WRITE_ATTEMPTS } from "@/features/ledger/utils/entry-write-race";
 import { MAX_BQL_QUERY_BYTES } from "@/features/ledger/utils/bql-query-size-limit";
 import { HOST_DEFAULT_LIMIT } from "@/shared/host-page";
+import { MAX_SUGGEST_TRANSACTIONS } from "@/features/llm/utils/suggest-categories-cap";
 import type { AppConfig } from "@/config/config";
 import type { McpRequestContext } from "../mcp-context";
 
@@ -150,6 +151,12 @@ const CLAIMS: Claim[] = [
     id: "ledger search without a limit reads pages of 30",
     doc: "without a `limit` it reads pages of 30",
     violations: () => (HOST_DEFAULT_LIMIT === 30 ? [] : ["HOST_DEFAULT_LIMIT"]),
+  },
+  {
+    id: "category suggestions take at most 500 transactions per read",
+    doc: "at most 500 transactions per read",
+    violations: () =>
+      MAX_SUGGEST_TRANSACTIONS === 500 ? [] : ["MAX_SUGGEST_TRANSACTIONS"],
   },
   {
     id: "an entry write retries a lost race up to 3 attempts",

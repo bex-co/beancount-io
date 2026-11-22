@@ -268,7 +268,7 @@ type Query {
   getCommitDetails(sha: String!, ledgerId: String!): CommitDetails!
 
   """
-  Suggest transaction categories based on payee, description, and transaction history
+  Suggest transaction categories based on payee, description, and transaction history. At most 500 transactions per call; split a larger import into several calls.
   """
   suggestTransactionCategories(transactions: [TransactionToCategorizeInput!]!, ledgerId: String!): [CategorySuggestion!]!
 

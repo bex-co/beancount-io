@@ -53,6 +53,10 @@ Preview. It clears on a new upload or reset/finish — never via localStorage.
 - **`row-edit-schema.ts`** — Zod validation for editable rows, built per row
   from its amount column's convention
 - **`is-premium-required.ts`** — Tier gating for import limits
+- **`categorize-in-batches.ts`** — AI Fill sends at most 500 rows per
+  `suggestTransactionCategories` call (the server's cap), one batch at a time;
+  when a later batch fails, the rows earlier batches answered are still filled
+  and the failure is reported
 
 - Dates stay the canonical `YYYY-MM-DD` string from upload through preview,
   configure, and submit. `parseDate` validates Gregorian arithmetic instead of

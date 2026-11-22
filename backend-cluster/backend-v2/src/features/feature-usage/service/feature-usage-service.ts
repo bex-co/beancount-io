@@ -10,6 +10,13 @@ export type UsageCheckResult = {
 };
 
 /**
+ * A reservation taken before metered work. `reservedTokens` is what the
+ * counter already holds on the caller's behalf, in `billingMonth`; settle it
+ * against the same month once the real usage is known.
+ */
+export type UsageReservation = UsageCheckResult & { reservedTokens: number };
+
+/**
  * Generic service for tracking and enforcing feature usage limits.
  * Any metered feature can use this service with a unique featureKey.
  */
@@ -25,6 +32,18 @@ export interface IFeatureUsageService {
     featureKey: string,
     tokensToAdd: number,
   ): Promise<number>;
+  reserveUsage(
+    userId: string,
+    featureKey: string,
+    maxAllowed: number,
+    tokens: number,
+  ): Promise<UsageReservation>;
+  settleUsage(
+    userId: string,
+    featureKey: string,
+    reservation: Pick<UsageReservation, "billingMonth" | "reservedTokens">,
+    actualTokens: number,
+  ): Promise<void>;
   getUsage(
     userId: string,
     featureKey: string,
@@ -106,6 +125,101 @@ export class FeatureUsageService implements IFeatureUsageService {
       billingMonth,
       tokensToAdd,
     );
+  }
+
+  /**
+   * Admits metered work and holds `tokens` for it in one atomic step. The
+   * work is admitted while the counter, other reservations included, is
+   * below `maxAllowed`, so concurrent callers together pass the limit by at
+   * most one reservation. Unlimited plans are admitted without a hold.
+   */
+  async reserveUsage(
+    userId: string,
+    featureKey: string,
+    maxAllowed: number,
+    tokens: number,
+  ): Promise<UsageReservation> {
+    const billingMonth = this.getCurrentBillingMonth();
+
+    if (config.env === "development" || maxAllowed === -1) {
+      return {
+        allowed: true,
+        currentCount: 0,
+        maxAllowed: -1,
+        billingMonth,
+        reservedTokens: 0,
+      };
+    }
+
+    const reservedTokens = Math.max(0, Math.ceil(tokens));
+    const newCount =
+      maxAllowed > 0
+        ? await this.models.featureUsage.reserveAndGetCount(
+            this.postgresDb,
+            userId,
+            featureKey,
+            billingMonth,
+            reservedTokens,
+            maxAllowed,
+          )
+        : null;
+
+    if (newCount === null) {
+      const currentCount = await this.models.featureUsage.getCount(
+        this.postgresDb,
+        userId,
+        featureKey,
+        billingMonth,
+      );
+      return {
+        allowed: false,
+        currentCount,
+        maxAllowed,
+        billingMonth,
+        reservedTokens: 0,
+      };
+    }
+
+    return {
+      allowed: true,
+      currentCount: newCount,
+      maxAllowed,
+      billingMonth,
+      reservedTokens,
+    };
+  }
+
+  /**
+   * Replaces a reservation with the work's real usage, in the month the
+   * reservation was taken: the difference is added or released. Pass 0
+   * when the work failed, which releases the whole reservation.
+   */
+  async settleUsage(
+    userId: string,
+    featureKey: string,
+    reservation: Pick<UsageReservation, "billingMonth" | "reservedTokens">,
+    actualTokens: number,
+  ): Promise<void> {
+    if (config.env === "development") return;
+
+    const delta = Math.max(0, actualTokens) - reservation.reservedTokens;
+    if (delta > 0) {
+      await this.models.featureUsage.addAndGetCount(
+        this.postgresDb,
+        userId,
+        featureKey,
+        reservation.billingMonth,
+        delta,
+      );
+    } else if (delta < 0) {
+      await this.models.featureUsage.releaseCount(
+        this.postgresDb,
+        userId,
+        featureKey,
+        reservation.billingMonth,
+        -delta,
+      );
+    }
   }
 
   /**

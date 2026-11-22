@@ -44,10 +44,19 @@ async function fixture(caller = identity) {
       counts.get(`${userId}/${key}/${billingMonth}`) ?? 0,
   );
   const addAndGetCount = jest.fn();
+  const reserveAndGetCount = jest.fn();
+  const releaseCount = jest.fn();
   const subscriptions = jest.fn(async () => []);
   const usage = new AiCfoUsageService(
     new FeatureUsageService(
-      { featureUsage: { getCount, addAndGetCount } },
+      {
+        featureUsage: {
+          getCount,
+          addAndGetCount,
+          reserveAndGetCount,
+          releaseCount,
+        },
+      },
       {} as never,
     ),
     { listSubscriptions: subscriptions } as never,

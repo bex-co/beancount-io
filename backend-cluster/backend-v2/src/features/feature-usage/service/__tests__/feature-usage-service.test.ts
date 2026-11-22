@@ -11,6 +11,8 @@ describe("FeatureUsageService", () => {
     mockModels = {
       featureUsage: {
         addAndGetCount: jest.fn(),
+        reserveAndGetCount: jest.fn(),
+        releaseCount: jest.fn(),
         getCount: jest.fn(),
       },
     } as unknown as jest.Mocked<Pick<IModels, "featureUsage">>;
@@ -119,6 +121,135 @@ describe("FeatureUsageService", () => {
       await service.addTokenUsage("user1", "ai_cfo", 0);
 
       expect(mockModels.featureUsage.addAndGetCount).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("reserveUsage", () => {
+    it("holds the rounded-up tokens through the conditional add", async () => {
+      (
+        mockModels.featureUsage.reserveAndGetCount as jest.Mock
+      ).mockResolvedValue(4_001);
+
+      const result = await service.reserveUsage(
+        "user1",
+        "ai_cfo",
+        20_000,
+        4_000.2,
+      );
+
+      expect(mockModels.featureUsage.reserveAndGetCount).toHaveBeenCalledWith(
+        mockPostgresDb,
+        "user1",
+        "ai_cfo",
+        service.getCurrentBillingMonth(),
+        4_001,
+        20_000,
+      );
+      expect(result).toEqual({
+        allowed: true,
+        currentCount: 4_001,
+        maxAllowed: 20_000,
+        billingMonth: service.getCurrentBillingMonth(),
+        reservedTokens: 4_001,
+      });
+    });
+
+    it("refuses with the current count and holds nothing once the limit is reached", async () => {
+      (
+        mockModels.featureUsage.reserveAndGetCount as jest.Mock
+      ).mockResolvedValue(null);
+      (mockModels.featureUsage.getCount as jest.Mock).mockResolvedValue(21_500);
+
+      const result = await service.reserveUsage("user1", "ai_cfo", 20_000, 500);
+
+      expect(result).toMatchObject({
+        allowed: false,
+        currentCount: 21_500,
+        maxAllowed: 20_000,
+        reservedTokens: 0,
+      });
+    });
+
+    it("admits an unlimited plan without holding or writing anything", async () => {
+      const result = await service.reserveUsage("user1", "ai_cfo", -1, 500);
+
+      expect(result).toMatchObject({ allowed: true, reservedTokens: 0 });
+      expect(mockModels.featureUsage.reserveAndGetCount).not.toHaveBeenCalled();
+    });
+
+    it("refuses a zero limit without writing a row", async () => {
+      (mockModels.featureUsage.getCount as jest.Mock).mockResolvedValue(0);
+
+      const result = await service.reserveUsage("user1", "ai_cfo", 0, 500);
+
+      expect(result.allowed).toBe(false);
+      expect(mockModels.featureUsage.reserveAndGetCount).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("settleUsage", () => {
+    const reservation = { billingMonth: "2026-10", reservedTokens: 1_000 };
+
+    it("adds what the work used beyond its reservation, in the reservation's month", async () => {
+      await service.settleUsage("user1", "ai_cfo", reservation, 1_250);
+
+      expect(mockModels.featureUsage.addAndGetCount).toHaveBeenCalledWith(
+        mockPostgresDb,
+        "user1",
+        "ai_cfo",
+        "2026-10",
+        250,
+      );
+      expect(mockModels.featureUsage.releaseCount).not.toHaveBeenCalled();
+    });
+
+    it("releases the part of the reservation the work did not use", async () => {
+      await service.settleUsage("user1", "ai_cfo", reservation, 400);
+
+      expect(mockModels.featureUsage.releaseCount).toHaveBeenCalledWith(
+        mockPostgresDb,
+        "user1",
+        "ai_cfo",
+        "2026-10",
+        600,
+      );
+      expect(mockModels.featureUsage.addAndGetCount).not.toHaveBeenCalled();
+    });
+
+    it("releases the whole reservation when the work failed", async () => {
+      await service.settleUsage("user1", "ai_cfo", reservation, 0);
+
+      expect(mockModels.featureUsage.releaseCount).toHaveBeenCalledWith(
+        mockPostgresDb,
+        "user1",
+        "ai_cfo",
+        "2026-10",
+        1_000,
+      );
+    });
+
+    it("writes nothing when the work used exactly its reservation", async () => {
+      await service.settleUsage("user1", "ai_cfo", reservation, 1_000);
+
+      expect(mockModels.featureUsage.addAndGetCount).not.toHaveBeenCalled();
+      expect(mockModels.featureUsage.releaseCount).not.toHaveBeenCalled();
+    });
+
+    it("records the full usage of an unlimited plan, which held nothing", async () => {
+      await service.settleUsage(
+        "user1",
+        "ai_cfo",
+        { billingMonth: "2026-10", reservedTokens: 0 },
+        900,
+      );
+
+      expect(mockModels.featureUsage.addAndGetCount).toHaveBeenCalledWith(
+        mockPostgresDb,
+        "user1",
+        "ai_cfo",
+        "2026-10",
+        900,
+      );
     });
   });
 

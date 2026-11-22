@@ -36,6 +36,8 @@ describe("AiCfoUsageService", () => {
     mockFeatureUsageService = {
       checkUsage: jest.fn(),
       addTokenUsage: jest.fn(),
+      reserveUsage: jest.fn(),
+      settleUsage: jest.fn(),
       getUsage: jest.fn(),
       getCurrentBillingMonth: jest.fn(),
     };
@@ -177,6 +179,51 @@ describe("AiCfoUsageService", () => {
         "user1",
         FEATURE_KEY_AI_CFO,
         2500,
+      );
+    });
+  });
+
+  describe("reserve", () => {
+    it.each([
+      [SubscriptionTier.FREE, FREE_TOKENS],
+      [SubscriptionTier.PREMIUM, PREMIUM_TOKENS],
+    ])(
+      "holds the estimate against the %s tier's token limit",
+      async (tier, limit) => {
+        mockGetUserTier.mockResolvedValue(tier);
+        const reservation = {
+          allowed: true,
+          currentCount: 700,
+          maxAllowed: limit,
+          billingMonth: "2026-11",
+          reservedTokens: 700,
+        };
+        mockFeatureUsageService.reserveUsage.mockResolvedValue(reservation);
+
+        await expect(service.reserve("user1", 700)).resolves.toEqual(
+          reservation,
+        );
+        expect(mockFeatureUsageService.reserveUsage).toHaveBeenCalledWith(
+          "user1",
+          FEATURE_KEY_AI_CFO,
+          limit,
+          700,
+        );
+      },
+    );
+  });
+
+  describe("settle", () => {
+    it("settles the reservation under the AI CFO key", async () => {
+      const reservation = { billingMonth: "2026-11", reservedTokens: 700 };
+
+      await service.settle("user1", reservation, 640);
+
+      expect(mockFeatureUsageService.settleUsage).toHaveBeenCalledWith(
+        "user1",
+        FEATURE_KEY_AI_CFO,
+        reservation,
+        640,
       );
     });
   });

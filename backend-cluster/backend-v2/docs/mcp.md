@@ -2188,7 +2188,9 @@ it does not insert ledger entries and has no preview mode.
 Read `beancount://{owner}/{name}/import/suggest-categories` with a
 `transactions` query parameter carrying a JSON-encoded array of
 `{rowIndex, date, payee, description, amount}` objects — the same shape GraphQL
-`suggestTransactionCategories` accepts, with no batch minimum. The result is an
+`suggestTransactionCategories` accepts, with no batch minimum and at most 500
+transactions per read; split a larger import into several reads. A longer list
+is refused with `BAD_USER_INPUT` before any ledger or model work. The result is an
 array of `{rowIndex, targetAccount, confidence, source, reasoning?}`
 suggestions drawn from the ledger's open accounts and recent transaction
 history; ledgers using an auto-accounts plugin may receive accounts outside the

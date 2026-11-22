@@ -6,6 +6,7 @@ import {
   TransactionToCategorizeInput,
   CategorySuggestion,
 } from "./ai-categorization-resolver.types";
+import { MAX_SUGGEST_TRANSACTIONS } from "../utils/suggest-categories-cap";
 
 @Resolver()
 export class LLMCategorizationQueryResolver {
@@ -13,8 +14,7 @@ export class LLMCategorizationQueryResolver {
 
   @Authenticated()
   @Query(() => [CategorySuggestion], {
-    description:
-      "Suggest transaction categories based on payee, description, and transaction history",
+    description: `Suggest transaction categories based on payee, description, and transaction history. At most ${MAX_SUGGEST_TRANSACTIONS} transactions per call; split a larger import into several calls.`,
   })
   async suggestTransactionCategories(
     @Arg("ledgerId", () => String) ledgerId: string,

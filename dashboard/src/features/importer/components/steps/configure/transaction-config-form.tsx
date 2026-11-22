@@ -28,6 +28,10 @@ import {
 } from "@/common/components/ledger-comboboxes";
 import { AccountMappingTable } from "./account-mapping-table";
 import { useAICategorization } from "../../../hooks/use-ai-categorization";
+import {
+  AICategorizationIncompleteError,
+  type AISuggestion,
+} from "../../../utils/categorize-in-batches";
 import type { ParsedRow, ImportTransaction } from "../../../types";
 import {
   buildImportConfigFormValues,
@@ -208,7 +212,17 @@ export function TransactionConfigForm({
         .getValues("transactions")
         .map((txn) => [txn.id, txn.targetAccount] as const),
     );
-    const suggestions = await categorizeTransactions(validRows);
+    // A batch that fails after earlier ones still fills what those earlier
+    // batches suggested, then reports the failure.
+    let suggestions: Map<number, AISuggestion>;
+    let failure: { cause: unknown } | undefined;
+    try {
+      suggestions = await categorizeTransactions(validRows);
+    } catch (err) {
+      if (!(err instanceof AICategorizationIncompleteError)) throw err;
+      suggestions = err.suggestions;
+      failure = { cause: err.cause };
+    }
     const currentTransactions = form.getValues("transactions");
     // The rows a suggestion actually filled, which is what the completion
     // message reports (w4/324).
@@ -237,6 +251,7 @@ export function TransactionConfigForm({
         shouldDirty: true,
       });
     });
+    if (failure) throw failure.cause;
     return applied;
   };
 

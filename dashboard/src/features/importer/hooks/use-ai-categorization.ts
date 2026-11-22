@@ -1,22 +1,21 @@
 import { useLazyQuery } from "@apollo/client/react";
 import { SuggestTransactionCategoriesDocument } from "@/graphql/definitions";
 import type { ParsedRow } from "../types";
-
-export interface AISuggestion {
-  rowIndex: number;
-  targetAccount: string;
-  confidence: number;
-  reasoning: string;
-}
+import {
+  categorizeInBatches,
+  type AISuggestion,
+} from "../utils/categorize-in-batches";
 
 export function useAICategorization(ledgerId: string) {
   const [executeQuery, { loading, error }] = useLazyQuery(
     SuggestTransactionCategoriesDocument,
   );
 
-  const categorizeTransactions = async (
+  const categorizeTransactions = (
     rows: ParsedRow[],
   ): Promise<Map<number, AISuggestion>> => {
+    // rowIndex is the row's position in the whole import, so suggestions
+    // from every batch land on the right row.
     const input = rows.map((row, index) => ({
       rowIndex: index,
       date: row.date,
@@ -25,27 +24,23 @@ export function useAICategorization(ledgerId: string) {
       amount: row.amount,
     }));
 
-    const result = await executeQuery({
-      variables: {
-        ledgerId,
-        transactions: input,
-      },
+    return categorizeInBatches(input, async (transactions) => {
+      const result = await executeQuery({
+        variables: { ledgerId, transactions },
+      });
+      return (result.data?.suggestTransactionCategories ?? []).flatMap((s) =>
+        s
+          ? [
+              {
+                rowIndex: s.rowIndex,
+                targetAccount: s.targetAccount,
+                confidence: s.confidence,
+                reasoning: s.reasoning || "",
+              },
+            ]
+          : [],
+      );
     });
-
-    // Map results by rowIndex for easy lookup
-    const suggestionMap = new Map<number, AISuggestion>();
-    result.data?.suggestTransactionCategories?.forEach((s) => {
-      if (s) {
-        suggestionMap.set(s.rowIndex, {
-          rowIndex: s.rowIndex,
-          targetAccount: s.targetAccount,
-          confidence: s.confidence,
-          reasoning: s.reasoning || "",
-        });
-      }
-    });
-
-    return suggestionMap;
   };
 
   return {

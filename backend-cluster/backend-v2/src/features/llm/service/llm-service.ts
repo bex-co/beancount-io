@@ -2,6 +2,7 @@ import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
+import type { UsageReservation } from "@/features/feature-usage/service/feature-usage-service";
 import type { AppConfig } from "@/config/config";
 import { LedgerAccountService } from "@/features/ledger/service/ledger-account-service";
 import type { Identity } from "@/server/api/identity";
@@ -22,6 +23,8 @@ import { extractReceiptFromFile } from "../utils/extract-receipt-from-file";
 import { recommendAccounts } from "../utils/recommend-accounts";
 import { normalizeReceiptDate } from "../utils/normalize-receipt-date";
 import { categorizeTransactions } from "../utils/categorize-transactions";
+import { estimateCategorizationTokens } from "../utils/categorize-transactions/estimate-tokens";
+import { assertSuggestBatchSize } from "../utils/suggest-categories-cap";
 import { modelProxyError } from "../utils/model-proxy-error";
 import { uploadedMediaType } from "../utils/media-type-utils";
 import { parseLedgerId } from "@/shared/str";
@@ -121,6 +124,23 @@ export interface ILLMService {
   ): Promise<unknown>;
 }
 
+/** The refusal for a spent assisted-AI quota, whether checked or reserved. */
+function assistedQuotaReached({
+  maxAllowed,
+  currentCount,
+}: {
+  maxAllowed: number;
+  currentCount: number;
+}): ResourceLimitReachedError {
+  return new ResourceLimitReachedError(
+    "AI CFO Token",
+    maxAllowed,
+    currentCount,
+    undefined,
+    { limitOwner: "REQUESTER" },
+  );
+}
+
 function getFormatFromContentType(contentType: string): string {
   if (contentType === "application/pdf") return "pdf";
   if (contentType.startsWith("image/")) {
@@ -164,14 +184,39 @@ export class LLMService implements ILLMService {
     if (platform === "mobile") return;
 
     const usageCheck = await this.aiCfoUsageService.check(userId);
-    if (!usageCheck.allowed) {
-      throw new ResourceLimitReachedError(
-        "AI CFO Token",
-        usageCheck.maxAllowed,
-        usageCheck.currentCount,
-        undefined,
-        { limitOwner: "REQUESTER" },
-      );
+    if (!usageCheck.allowed) throw assistedQuotaReached(usageCheck);
+  }
+
+  /**
+   * Hold a model call's estimated tokens against the quota, or refuse when
+   * the quota is spent. The hold is atomic, so calls in flight together pass
+   * the quota by at most one reservation. Mobile is not gated (null).
+   */
+  private async reserveAssistedTokens(
+    userId: string,
+    platform: "web" | "mobile",
+    estimatedTokens: number,
+  ): Promise<UsageReservation | null> {
+    if (platform === "mobile") return null;
+
+    const reservation = await this.aiCfoUsageService.reserve(
+      userId,
+      estimatedTokens,
+    );
+    if (!reservation.allowed) throw assistedQuotaReached(reservation);
+    return reservation;
+  }
+
+  /** Record what the call really used, settling its reservation if it had one. */
+  private async settleAssistedTokens(
+    userId: string,
+    reservation: UsageReservation | null,
+    usedTokens: number,
+  ): Promise<void> {
+    if (reservation) {
+      await this.aiCfoUsageService.settle(userId, reservation, usedTokens);
+    } else if (usedTokens > 0) {
+      await this.aiCfoUsageService.addTokenUsage(userId, usedTokens);
     }
   }
 
@@ -323,6 +368,7 @@ export class LLMService implements ILLMService {
     platform: "web" | "mobile" = "web",
   ): Promise<CategorySuggestionResult[]> {
     const { userId } = identity;
+    assertSuggestBatchSize(transactions);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.ASSISTED_CATEGORIES_SUGGEST,
@@ -384,28 +430,37 @@ export class LLMService implements ILLMService {
       ledgerPlugins.includes(plugin),
     );
 
-    const { suggestions, tokenUsage } = await categorizeTransactions(
-      this.llmClient,
-      {
-        transactions,
-        existingAccounts,
-        recentExamples: recentExamples.slice(0, 30),
-        autoAccounts,
-      },
-    );
-
-    await this.aiCfoUsageService.addTokenUsage(
+    const request = {
+      transactions,
+      existingAccounts,
+      recentExamples: recentExamples.slice(0, 30),
+      autoAccounts,
+    };
+    const reservation = await this.reserveAssistedTokens(
       userId,
-      tokenUsage.inputTokens + tokenUsage.outputTokens,
+      platform,
+      estimateCategorizationTokens(request),
     );
 
-    return suggestions.map((s) => ({
-      rowIndex: s.rowIndex,
-      targetAccount: s.targetAccount,
-      confidence: s.confidence,
-      source: "llm" as const,
-      reasoning: s.reasoning,
-    }));
+    // A failed call settles to 0, releasing its reservation.
+    let usedTokens = 0;
+    try {
+      const { suggestions, tokenUsage } = await categorizeTransactions(
+        this.llmClient,
+        request,
+      );
+      usedTokens = tokenUsage.inputTokens + tokenUsage.outputTokens;
+
+      return suggestions.map((s) => ({
+        rowIndex: s.rowIndex,
+        targetAccount: s.targetAccount,
+        confidence: s.confidence,
+        source: "llm" as const,
+        reasoning: s.reasoning,
+      }));
+    } finally {
+      await this.settleAssistedTokens(userId, reservation, usedTokens);
+    }
   }
 
   async invokeOpenAI(

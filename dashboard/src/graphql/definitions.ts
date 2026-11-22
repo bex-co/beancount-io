@@ -2659,7 +2659,7 @@ export type Query = {
   suggestPlaidAccountMapping: Array<PlaidAccountMappingSuggestion>;
   /** Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted. Requires ledger-content read, bank-connection read, and AI-use authority. */
   suggestPlaidTransactionCategories: Array<CategorySuggestion>;
-  /** Suggest transaction categories based on payee, description, and transaction history */
+  /** Suggest transaction categories based on payee, description, and transaction history. At most 500 transactions per call; split a larger import into several calls. */
   suggestTransactionCategories: Array<CategorySuggestion>;
   /** get the user */
   userProfile: Maybe<UserProfileResponse>;

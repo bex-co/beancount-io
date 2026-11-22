@@ -5,6 +5,7 @@ import {
   billingMonthReset,
   type IFeatureUsageService,
   type UsageCheckResult,
+  type UsageReservation,
 } from "./feature-usage-service";
 import {
   type LimitOwner,
@@ -39,6 +40,12 @@ export interface IAiCfoUsageService {
   check(userId: string): Promise<UsageCheckResult>;
   assertQuotaAvailable(userId: string): Promise<void>;
   addTokenUsage(userId: string, totalTokens: number): Promise<void>;
+  reserve(userId: string, estimatedTokens: number): Promise<UsageReservation>;
+  settle(
+    userId: string,
+    reservation: Pick<UsageReservation, "billingMonth" | "reservedTokens">,
+    actualTokens: number,
+  ): Promise<void>;
   getUsage(identity: Identity): Promise<AiCfoUsageInfo>;
 }
 
@@ -110,6 +117,44 @@ export class AiCfoUsageService implements IAiCfoUsageService {
       userId,
       FEATURE_KEY_AI_CFO,
       totalTokens,
+    );
+  }
+
+  /**
+   * Admits an LLM request against the user's tier quota and holds its
+   * estimated tokens until `settle`. Call it right before the model call;
+   * `allowed: false` means the quota is spent.
+   */
+  async reserve(
+    userId: string,
+    estimatedTokens: number,
+  ): Promise<UsageReservation> {
+    const tier = await getUserTier({
+      stripe: this.stripe,
+      userId,
+    });
+    return this.featureUsageService.reserveUsage(
+      userId,
+      FEATURE_KEY_AI_CFO,
+      getTierLimits(tier).aiCfoTokensMax,
+      estimatedTokens,
+    );
+  }
+
+  /**
+   * Settles a reservation to the tokens the request actually used (0 when
+   * it failed).
+   */
+  async settle(
+    userId: string,
+    reservation: Pick<UsageReservation, "billingMonth" | "reservedTokens">,
+    actualTokens: number,
+  ): Promise<void> {
+    await this.featureUsageService.settleUsage(
+      userId,
+      FEATURE_KEY_AI_CFO,
+      reservation,
+      actualTokens,
     );
   }
 

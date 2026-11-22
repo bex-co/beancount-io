@@ -128,8 +128,9 @@ def sync_detailed(
     """Suggest transaction categories from the ledger
 
      Suggest a target account for each supplied transaction using the ledger's open accounts and recent
-    transaction history. Requires assisted-categorization authority on the ledger and consumes AI quota.
-    Returns suggestions without writing entries.
+    transaction history. At most 500 transactions per call; split a larger import into several calls.
+    Requires assisted-categorization authority on the ledger and consumes AI quota. Returns suggestions
+    without writing entries.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -167,8 +168,9 @@ def sync(
     """Suggest transaction categories from the ledger
 
      Suggest a target account for each supplied transaction using the ledger's open accounts and recent
-    transaction history. Requires assisted-categorization authority on the ledger and consumes AI quota.
-    Returns suggestions without writing entries.
+    transaction history. At most 500 transactions per call; split a larger import into several calls.
+    Requires assisted-categorization authority on the ledger and consumes AI quota. Returns suggestions
+    without writing entries.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -201,8 +203,9 @@ async def asyncio_detailed(
     """Suggest transaction categories from the ledger
 
      Suggest a target account for each supplied transaction using the ledger's open accounts and recent
-    transaction history. Requires assisted-categorization authority on the ledger and consumes AI quota.
-    Returns suggestions without writing entries.
+    transaction history. At most 500 transactions per call; split a larger import into several calls.
+    Requires assisted-categorization authority on the ledger and consumes AI quota. Returns suggestions
+    without writing entries.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -238,8 +241,9 @@ async def asyncio(
     """Suggest transaction categories from the ledger
 
      Suggest a target account for each supplied transaction using the ledger's open accounts and recent
-    transaction history. Requires assisted-categorization authority on the ledger and consumes AI quota.
-    Returns suggestions without writing entries.
+    transaction history. At most 500 transactions per call; split a larger import into several calls.
+    Requires assisted-categorization authority on the ledger and consumes AI quota. Returns suggestions
+    without writing entries.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

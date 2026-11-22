@@ -11,6 +11,8 @@ import { graphql } from "graphql";
 import { DirectiveType } from "@/foundation/fava";
 import { LLMCategorizationQueryResolver } from "../ai-categorization-resolver";
 import { LLMService } from "../../service/llm-service";
+import { estimateCategorizationTokens } from "../../utils/categorize-transactions/estimate-tokens";
+import { MAX_SUGGEST_TRANSACTIONS } from "../../utils/suggest-categories-cap";
 import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
@@ -93,6 +95,14 @@ async function fixture(
     maxAllowed: 1000,
   }));
   const charge = jest.fn(async () => undefined);
+  const reserve = jest.fn(async (_userId: string, tokens: number) => ({
+    allowed: true,
+    currentCount: 10 + tokens,
+    maxAllowed: 1000,
+    billingMonth: "2026-11",
+    reservedTokens: tokens,
+  }));
+  const settle = jest.fn(async () => undefined);
   const state = { permission: "write", plugins: [] as string[] };
   const models = {
     user: {
@@ -159,7 +169,7 @@ async function fixture(
   const service = new LLMService(
     fava as never,
     {} as never,
-    { check, addTokenUsage: charge } as never,
+    { check, addTokenUsage: charge, reserve, settle } as never,
     {
       openai: { apiKey: accessKey, baseUrl: "https://api.openai.com/v1" },
     } as never,
@@ -197,6 +207,8 @@ async function fixture(
     state,
     check,
     charge,
+    reserve,
+    settle,
     getJournal,
     rest: (body: unknown = { transactions }) =>
       fetch(
@@ -268,8 +280,32 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
         limit: 50,
         directive_types: [DirectiveType.Transaction],
       });
-      expect(f.charge).toHaveBeenCalledTimes(3);
-      expect(f.charge).toHaveBeenCalledWith("usr_alice", 140);
+      // Each call holds its estimate before the model runs and settles to
+      // the 140 tokens it really used.
+      const estimate = estimateCategorizationTokens({
+        transactions,
+        existingAccounts: ["Assets:Cash", "Expenses:Coffee"],
+        recentExamples: [
+          {
+            payee: "Blue Bottle",
+            narration: "Morning latte",
+            account: "Expenses:Coffee",
+          },
+        ],
+        autoAccounts: false,
+      });
+      expect(f.reserve).toHaveBeenCalledTimes(3);
+      expect(f.reserve).toHaveBeenCalledWith("usr_alice", estimate);
+      expect(f.reserve.mock.invocationCallOrder[0]).toBeLessThan(
+        jest.mocked(categorizeTransactions).mock.invocationCallOrder[0],
+      );
+      expect(f.settle).toHaveBeenCalledTimes(3);
+      expect(f.settle).toHaveBeenCalledWith(
+        "usr_alice",
+        expect.objectContaining({ reservedTokens: estimate }),
+        140,
+      );
+      expect(f.charge).not.toHaveBeenCalled();
     } finally {
       await f.close();
     }
@@ -308,7 +344,7 @@ it("passes an empty batch through without inventing a minimum", async () => {
       m,
     ])
       expect(result).toEqual([]);
-    expect(f.charge).toHaveBeenCalledWith("usr_alice", 6);
+    expect(f.settle).toHaveBeenCalledWith("usr_alice", expect.anything(), 6);
   } finally {
     await f.close();
   }
@@ -327,6 +363,7 @@ it.each([undefined, "beancount-mobile"])(
       expect((await f.gql()).errors).toHaveLength(1);
       await expect(f.read()).rejects.toThrow();
       expect(f.check).not.toHaveBeenCalled();
+      expect(f.reserve).not.toHaveBeenCalled();
       expect(categorizeTransactions).not.toHaveBeenCalled();
     } finally {
       await f.close();
@@ -382,6 +419,41 @@ it("refuses exhausted quota before provider work or charging", async () => {
     expect((await f.gql()).errors).toHaveLength(1);
     await expect(f.read()).rejects.toThrow();
     expect(categorizeTransactions).not.toHaveBeenCalled();
+    expect(f.reserve).not.toHaveBeenCalled();
+    expect(f.charge).not.toHaveBeenCalled();
+    expect(f.settle).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+it("refuses with the same quota error when the reservation finds the quota spent", async () => {
+  const f = await fixture();
+  f.reserve.mockResolvedValue({
+    allowed: false,
+    currentCount: 1000,
+    maxAllowed: 1000,
+    billingMonth: "2026-11",
+    reservedTokens: 0,
+  });
+  try {
+    const r = await f.rest();
+    expect(r.status).toBe(403);
+    expect(await r.json()).toMatchObject({
+      ok: false,
+      error: { code: "RESOURCE_LIMIT_REACHED" },
+    });
+    const g = await f.gql();
+    expect(g.errors).toHaveLength(1);
+    expect(g.errors![0].originalError).toMatchObject({
+      category: "RESOURCE_LIMIT_REACHED",
+    });
+    await expect(f.read()).rejects.toMatchObject({
+      data: { code: "RESOURCE_LIMIT_REACHED" },
+    });
+    expect(f.reserve).toHaveBeenCalledTimes(3);
+    expect(categorizeTransactions).not.toHaveBeenCalled();
+    expect(f.settle).not.toHaveBeenCalled();
     expect(f.charge).not.toHaveBeenCalled();
   } finally {
     await f.close();
@@ -417,6 +489,7 @@ it.each([undefined, "beancount-mobile"])(
         data: { code: "CONFIGURATION_ERROR", hint },
       });
       expect(categorizeTransactions).not.toHaveBeenCalled();
+      expect(f.reserve).not.toHaveBeenCalled();
       expect(f.charge).not.toHaveBeenCalled();
     } finally {
       if (priorAnthropic === undefined) delete process.env.ANTHROPIC_API_KEY;
@@ -429,7 +502,7 @@ it.each([undefined, "beancount-mobile"])(
 );
 
 it.each([undefined, "beancount-mobile"])(
-  "propagates provider failure without charging (%s)",
+  "propagates provider failure without charging, releasing any reservation (%s)",
   async (appId) => {
     const f = await fixture(identity, "fixture", appId);
     jest
@@ -453,6 +526,18 @@ it.each([undefined, "beancount-mobile"])(
         data: { code: "INTERNAL_SERVER_ERROR" },
       });
       expect(f.charge).not.toHaveBeenCalled();
+      if (appId) {
+        // Mobile is not gated, so it holds nothing to release.
+        expect(f.reserve).not.toHaveBeenCalled();
+        expect(f.settle).not.toHaveBeenCalled();
+      } else {
+        expect(f.settle).toHaveBeenCalledTimes(3);
+        expect(f.settle).toHaveBeenCalledWith(
+          "usr_alice",
+          expect.objectContaining({ reservedTokens: expect.any(Number) }),
+          0,
+        );
+      }
     } finally {
       await f.close();
     }
@@ -509,6 +594,7 @@ it.each(["beancount-mobile", "mobile-beancount"])(
         expect(result).toEqual(expected);
       }
       expect(f.check).not.toHaveBeenCalled();
+      expect(f.reserve).not.toHaveBeenCalled();
       expect(f.charge).toHaveBeenCalledTimes(3);
       expect(f.charge).toHaveBeenCalledWith("usr_alice", 140);
     } finally {
@@ -516,3 +602,67 @@ it.each(["beancount-mobile", "mobile-beancount"])(
     }
   },
 );
+
+const batchOf = (length: number) =>
+  Array.from({ length }, (_, rowIndex) => ({
+    rowIndex,
+    date: "2026-08-01",
+    payee: `Payee ${rowIndex}`,
+    description: "Card purchase",
+    amount: -1,
+  }));
+
+it.each([undefined, "beancount-mobile"])(
+  "refuses one transaction over the cap identically on every surface before any work (%s)",
+  async (appId) => {
+    const f = await fixture(identity, "fixture", appId);
+    const overCap = batchOf(MAX_SUGGEST_TRANSACTIONS + 1);
+    const message = `transactions holds ${MAX_SUGGEST_TRANSACTIONS + 1} transactions; at most ${MAX_SUGGEST_TRANSACTIONS} may be categorized per call. Split them into several calls.`;
+    try {
+      const r = await f.rest({ transactions: overCap });
+      expect(r.status).toBe(400);
+      expect(await r.json()).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message,
+          metadata: { field: "transactions" },
+        },
+      });
+      const g = await f.gql({ transactions: overCap });
+      expect(g.errors).toHaveLength(1);
+      expect(g.errors![0].message).toBe(message);
+      expect(g.errors![0].originalError).toMatchObject({
+        category: "BAD_USER_INPUT",
+        metadata: { field: "transactions" },
+      });
+      await expect(f.read(overCap)).rejects.toMatchObject({
+        message: expect.stringContaining(message),
+        data: { code: "BAD_USER_INPUT" },
+      });
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.reserve).not.toHaveBeenCalled();
+      expect(f.getJournal).not.toHaveBeenCalled();
+      expect(categorizeTransactions).not.toHaveBeenCalled();
+      expect(f.charge).not.toHaveBeenCalled();
+      expect(f.settle).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it("accepts exactly the cap on every surface", async () => {
+  const f = await fixture();
+  const atCap = batchOf(MAX_SUGGEST_TRANSACTIONS);
+  try {
+    expect((await f.rest({ transactions: atCap })).status).toBe(200);
+    expect((await f.gql({ transactions: atCap })).errors).toBeUndefined();
+    expect(await f.read(atCap)).toEqual(expected);
+    expect(categorizeTransactions).toHaveBeenCalledTimes(3);
+    for (const [, request] of jest.mocked(categorizeTransactions).mock.calls)
+      expect(request.transactions).toHaveLength(MAX_SUGGEST_TRANSACTIONS);
+  } finally {
+    await f.close();
+  }
+});
