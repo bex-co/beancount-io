@@ -1092,7 +1092,11 @@ interface FiscalYearEnd {
 const END_OF_YEAR: FiscalYearEnd = { month: 12, day: 31 };
 
 function monthOfYear(fye: FiscalYearEnd): number {
-  return ((fye.month - 1) % 12) + 1;
+  // Python floor-mod (`(month - 1) % 12 + 1`): month 0 is December of the
+  // previous year, months above 12 a fiscal-year offset. JavaScript `%`
+  // truncates toward zero, so adjust — same shape as `parseFiscalYearEnd`
+  // in `fava-options.ts`, which mirrors the donor's validation formula.
+  return ((((fye.month - 1) % 12) + 12) % 12) + 1;
 }
 
 function yearOffset(fye: FiscalYearEnd): number {
@@ -1101,20 +1105,24 @@ function yearOffset(fye: FiscalYearEnd): number {
 
 // ── minimal UTC date arithmetic (avoids TZ drift; matches datetime.date) ──────
 
-function ymd(year: number, month: number, day: number): string {
-  const pad = (n: number, width: number): string =>
-    String(n).padStart(width, "0");
-  return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}`;
-}
-
 /**
- * A substituted year with Fava's `:04` digits (`util/date.py`, w5/936):
- * `parse_date` requires four digits, so a replacement before year 1000 is
- * rejected as unparseable without the padding. Pads the magnitude to four
- * digits and keeps the sign (`-5` → `"-0005"`, never `"00-5"`).
+ * A year with Fava's `:04` digits (`util/date.py`, w5/936): `parse_date`
+ * requires four digits, so a replacement before year 1000 is rejected as
+ * unparseable without the padding. Pads the magnitude to four digits and
+ * keeps the sign (`-5` → `"-0005"`, never `"00-5"`).
  */
 function padYear(year: number): string {
   return `${year < 0 ? "-" : ""}${String(Math.abs(year)).padStart(4, "0")}`;
+}
+
+function ymd(year: number, month: number, day: number): string {
+  const pad = (n: number, width: number): string =>
+    String(n).padStart(width, "0");
+  // The year keeps its sign (`padYear`): several helpers re-split the
+  // emitted string on `-`, and a zero-padded negative (`"00-5"`) would
+  // mis-split into a wrong-but-valid year 0/month 5 instead of failing
+  // the four-digit checks like every other sub-year-1 intermediate.
+  return `${padYear(year)}-${pad(month, 2)}-${pad(day, 2)}`;
 }
 
 function isLeapYear(year: number): boolean {
@@ -1193,11 +1201,14 @@ function parseFyeString(fye: string): FiscalYearEnd | undefined {
   if (!match) return undefined;
   const month = Number.parseInt(match[1], 10);
   const day = Number.parseInt(match[2], 10);
-  if (month < 1) return undefined;
-  // Fava deliberately preserves months above 12 as a fiscal-year offset:
-  // `15-31` means March 31 in the following year. Validate the calendar day
-  // against the normalized month while returning the original offset month.
-  const normalizedMonth = ((month - 1) % 12) + 1;
+  // Fava validates the day against the normalized month-of-year
+  // (`datetime.date(2001, (month - 1) % 12 + 1, day)`): month 0 is December
+  // of the previous year and months above 12 are a fiscal-year offset
+  // (`15-31` means March 31 in the following year). Validate the calendar
+  // day against the normalized month while returning the original offset
+  // month — mirroring `parseFiscalYearEnd` in `fava-options.ts`, which
+  // already accepts `00-31` from the same ledger option.
+  const normalizedMonth = ((((month - 1) % 12) + 12) % 12) + 1;
   if (day < 1 || day > daysInMonth(2001, normalizedMonth)) return undefined;
   return { month, day };
 }
@@ -1282,9 +1293,7 @@ function substitute(input: string, fye: FiscalYearEnd, today: string): string {
       // year on March 1 in leap years too), so leap day is still in the
       // year that ends on it (w5/966).
       const endDay =
-        monthOfYear(fye) === 2 && fye.day === 28
-          ? daysInMonth(ty, 2)
-          : fye.day;
+        monthOfYear(fye) === 2 && fye.day === 28 ? daysInMonth(ty, 2) : fye.day;
       const afterFye =
         tm > monthOfYear(fye) || (tm === monthOfYear(fye) && td > endDay);
       const year = ty + (afterFye ? 1 : 0) - yearOffset(fye);
