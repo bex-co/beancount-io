@@ -1105,20 +1105,24 @@ function yearOffset(fye: FiscalYearEnd): number {
 
 // ── minimal UTC date arithmetic (avoids TZ drift; matches datetime.date) ──────
 
-function ymd(year: number, month: number, day: number): string {
-  const pad = (n: number, width: number): string =>
-    String(n).padStart(width, "0");
-  return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}`;
-}
-
 /**
- * A substituted year with Fava's `:04` digits (`util/date.py`, w5/936):
- * `parse_date` requires four digits, so a replacement before year 1000 is
- * rejected as unparseable without the padding. Pads the magnitude to four
- * digits and keeps the sign (`-5` → `"-0005"`, never `"00-5"`).
+ * A year with Fava's `:04` digits (`util/date.py`, w5/936): `parse_date`
+ * requires four digits, so a replacement before year 1000 is rejected as
+ * unparseable without the padding. Pads the magnitude to four digits and
+ * keeps the sign (`-5` → `"-0005"`, never `"00-5"`).
  */
 function padYear(year: number): string {
   return `${year < 0 ? "-" : ""}${String(Math.abs(year)).padStart(4, "0")}`;
+}
+
+function ymd(year: number, month: number, day: number): string {
+  const pad = (n: number, width: number): string =>
+    String(n).padStart(width, "0");
+  // The year keeps its sign (`padYear`): several helpers re-split the
+  // emitted string on `-`, and a zero-padded negative (`"00-5"`) would
+  // mis-split into a wrong-but-valid year 0/month 5 instead of failing
+  // the four-digit checks like every other sub-year-1 intermediate.
+  return `${padYear(year)}-${pad(month, 2)}-${pad(day, 2)}`;
 }
 
 function isLeapYear(year: number): boolean {

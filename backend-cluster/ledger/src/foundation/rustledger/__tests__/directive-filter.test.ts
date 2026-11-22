@@ -997,6 +997,21 @@ describe("parseDateRange — early-year parity with fava/util/date (w5/936)", ()
     expect(result?.begin.startsWith("0999-")).toBe(true);
   });
 
+  it("leaves a fiscal quarter computed past year 1 unparseable", () => {
+    // The donor's `month_offset` raises `ValueError` for a target before
+    // year 1; every sibling branch (`year`, `quarter`, `month`, `week`,
+    // `day`, `fiscal_year`) already 400s through its four-digit check, and
+    // the request path surfaces this `undefined` as `TimeFilterParseError`.
+    // Offset -8162 lands the intermediate in year -15 (which a zero-padded
+    // `ymd` mis-split into the valid-looking FY0001-Q1) and -8102 in year 0
+    // (whose fiscal-year start underflows to year -1 the same way).
+    expect(
+      parseDateRange("fiscal_quarter-8102", undefined, TODAY),
+    ).toBeUndefined();
+    expect(
+      parseDateRange("fiscal_quarter-8162", undefined, TODAY),
+    ).toBeUndefined();
+  });
 });
 
 describe("parseDateRange — leap-day parity with fava/util/date (w5/966)", () => {

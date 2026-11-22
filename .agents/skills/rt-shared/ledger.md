@@ -97,7 +97,6 @@ newest first.
 
 ### Deferred
 
-- 2026-11-22 backend-cluster/ledger `directive-filter` `substitute` negative-year intermediates — `fiscal_quarter` offsets past year 1 (the `fiscal_quarter-10000` class) mis-split `ymd`'s zero-padded negative year through the string round-trip and return a wrong-but-valid range (e.g. `FY0001-Q2`) where the donor raises; the year/quarter/month/week/day branches already 400 via their four-digit regexes; needs an intent call on 400-vs-range for computed intermediates.
 - 2026-11-21 dashboard declared `cash-flow-role: "cash"` under Income/Expenses roots — `isCashAccountByMembership`/rows follow the five-root gate, but `BalanceSheetData` serves no income/expense hierarchy so there is no closing snapshot (liabilities/equity added this run); engine accumulates them. Needs a server field or a scope call; still open. 2026-11-21 re-check: still blocked — the dashboard server is only a proxy and the closings need a backend API field (cross-package STOP).
 - 2026-11-20 cli `test_interrupt_contract.py` (3 tests) + `test_native_interrupt_is_silent.py::test_ctrl_c_during_a_forwarded_program_exits_130_silently` (2 params) — deterministic 10/10 FAIL in this sandbox, green in CI: sandbox python is libedit-readline, so ETX during `input()` raises KeyboardInterrupt in-process with no line-discipline `^C` echo (probe: exit by SIGINT, no `^C` on screen) while `_noise()` pins the echo; the exit-130 half of the USAGE.md carve-out holds — needs an intent call on whether the echo pin is backend-specific over-pinning (w3/388, w5/273).
 
