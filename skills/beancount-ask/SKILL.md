@@ -76,7 +76,7 @@ Map the question to a recipe in `references/bql-recipes.md` — **read it first;
 
 ### 3. Run, then answer
 
-Run the query and answer:
+Run the query and answer. A payee, memo, or other statement text in it is quoted as beancount-init's `references/bea-cli.md`, Statement text in commands, shows: `= "Trader Joe's"`, with the query on stdin through a quoted heredoc.
 
 - **Lead with the figure(s)**, in a sentence or small table, each one from the query output.
 - **Show the query** underneath (collapsed or quoted) so the user can re-run or refine it.

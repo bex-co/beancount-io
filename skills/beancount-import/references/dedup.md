@@ -43,7 +43,7 @@ Take the SHA-256 hex digest, keep the **first 16 hex chars** (64 bits — collis
 
 Example: `2026-05-07|-54.2 USD|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking` → `import-id: "csv:sha256:<first-16-of-sha256>"`. With a payee column reading `Store`: `2026-05-07|-54.2 USD|STORE|TRADER JOES #123 SEATTLE WA|Assets:Bank:Checking`. With a lot (an importer's `BUY AAPL` row posting `10 AAPL {100 USD}` to its source account): `2026-05-07|10 AAPL {100 USD}|BUY AAPL|Assets:Broker:AAPL` → `import-id: "csv:sha256:d11701f46efbd599"`. With a compound lot (`5 AAPL {100 # 5 USD}`): `2026-05-07|5 AAPL {101 USD}|BUY AAPL|Assets:Broker:AAPL` → `import-id: "csv:sha256:a5b6e00ea85caa3d"`. With two legs listed `10 AAPL {120 USD}` then `2 AAPL {100 USD}`: `2026-05-07|2 AAPL {100 USD}+10 AAPL {120 USD}|BUY AAPL|Assets:Broker:AAPL` → `import-id: "csv:sha256:6648ad67a6d94d97"`.
 
-Compute it honestly (e.g. `printf '%s' '<input>' | shasum -a 256 | cut -c1-16`) — never fabricate a plausible-looking hash.
+Compute it honestly (e.g. `printf '%s' '<input>' | shasum -a 256 | cut -c1-16`, each `'` in the input written as `'\''`; beancount-init's `references/bea-cli.md`, Statement text in commands) — never fabricate a plausible-looking hash.
 
 **Ledgers written before exact amounts or before NFC normalization.** Ids stored by an earlier `bea` were hashed from the un-normalized description, or from the two-decimal amount without its commodity, or both. (Earlier exact-amount ids also rounded amounts past 28 significant digits; `bea import` matches those lookup-only too.) There are therefore two independent axes a ledger may predate, and `bea import` offers every older combination as a **lookup-only** key: it matches them, writes only the canonical one, and needs no re-hash pass.
 

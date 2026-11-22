@@ -68,7 +68,7 @@ Reduce the request to directives. Pasted receipt or statement text comes from a 
 - **Date:** the date the user gives; "today", "Friday", or "last Tuesday" resolve against today's date, and the resolved date is stated in the proposal.
 - **Amounts and signs:** ledger signs, not statement signs. Money leaving an asset is negative on that asset; a card purchase is negative on the card's `Liabilities:` account; income is negative on its `Income:` account; an expense is positive. A refund reverses the purchase's signs. Use the operating currency only when the user gives none, and say so.
 - **Accounts:** map the user's words to accounts from the open-accounts read ("the Amex" → `Liabilities:CreditCard:Amex`). Ambiguous → ask. The category leg comes from the payee's history in this ledger; with no confident prior, use `Expenses:Uncategorized` (propose its `open` if missing) and flag it. Propose a new account only when the user asks for one, with its `open` in the same proposal.
-- **Client and project:** when the request names one or the payee's earlier entries carry these keys, read `dimension-prior` below and follow beancount-init's `references/business-books.md` (`../beancount-init/references/business-books.md`, or `references/business-books.md` in a standalone install), Client and project. Show the evidence and proposed attribution with the entry.
+- **Client and project:** when the request names one or the payee's earlier entries carry these keys, read `dimension-prior` below (bind `payee` as beancount-init's `references/bea-cli.md`, Statement text in commands, shows) and follow beancount-init's `references/business-books.md` (`../beancount-init/references/business-books.md`, or `references/business-books.md` in a standalone install), Client and project. Show the evidence and proposed attribution with the entry.
 - **Splits and receipts:** one transaction, one posting per category; the parts must sum to the amount paid, or ask about the difference (tax, tip, a discount).
 - **Transfers between the user's own accounts:** two postings, no expense or income leg.
 
@@ -76,7 +76,7 @@ Ask for anything missing. Never guess an amount, an account, or the date of a pa
 
 <!-- recipe: dimension-prior -->
 ```sh
-bea --file "$ledger" --json --no-input query "SELECT any_meta('client') AS client, any_meta('project') AS project, count(id) AS postings WHERE coalesce(payee, narration) = '$payee' AND account ~ '^(Income|Expenses):' GROUP BY client, project ORDER BY postings DESC"
+bea --file "$ledger" --json --no-input query "SELECT any_meta('client') AS client, any_meta('project') AS project, count(id) AS postings WHERE coalesce(payee, narration) = \"$payee\" AND account ~ '^(Income|Expenses):' GROUP BY client, project ORDER BY postings DESC"
 ```
 
 **A request to change an existing entry is not part of this workflow, even in the same message.** This skill only adds entries, and every write waits for the confirmation in step 4. When a request also asks to edit, move, or delete an entry already in the ledger (a payee rename, a wrong amount, a duplicate), do not make that change before the yes, after it, or as part of the proposal. Find the entry, show its file and line, say that this workflow leaves existing entries to the user, and propose only the new entries.

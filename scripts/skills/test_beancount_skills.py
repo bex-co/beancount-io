@@ -1435,6 +1435,11 @@ class TestDedupConvention(unittest.TestCase):
 RECIPE_MARK = re.compile(r"<!-- recipe: ([a-z0-9-]+) -->")
 
 
+def single_quoted(text: str) -> str:
+    """A POSIX single-quoted shell word, each `'` written as `'\\''` (bea-cli.md)."""
+    return "'" + text.replace("'", "'\\''") + "'"
+
+
 class TestBeaRecipes(unittest.TestCase):
     """Execute the shipped Markdown recipes against isolated synthetic books."""
 
@@ -1521,6 +1526,27 @@ class TestBeaRecipes(unittest.TestCase):
             return answer if envelope else answer["data"]
         self.assertNotEqual(result.returncode, 0, result.stdout)
         return result
+
+    def shell_recipe(self, name: str, *, extra: tuple[str, ...] = (), **values: str):
+        """Run a shipped recipe through `sh` the way an agent does: each value bound
+        with the single-quoted assignment bea-cli.md's Statement text in commands
+        describes, then the recipe exactly as written."""
+        self.values.update(values)
+        recipe = self.block(name)
+        if extra:
+            self.assertNotIn("\n", recipe, "extra arguments go on a one-line recipe")
+            recipe = " ".join([recipe, *map(single_quoted, extra)])
+        script = "\n".join([
+            "bea() { " + " ".join(map(single_quoted, self.bea)) + ' "$@"; }',
+            *(f"{key}={single_quoted(value)}" for key, value in self.values.items()),
+            recipe,
+        ])
+        result = subprocess.run(
+            ["sh", "-c", script], cwd=self.root, env=self.env, capture_output=True, text=True, timeout=90,
+        )
+        self.assertEqual(self.decoy.read_bytes(), self.decoy_before)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)["data"]
 
     def query_recipe(self, name: str, **placeholders: str):
         """Run a shipped BQL recipe, filling its `<placeholder>` slots."""
@@ -1700,6 +1726,37 @@ class TestBeaRecipes(unittest.TestCase):
         with self.target.open("a", encoding="utf-8") as books:
             books.write('2026-05-09 * "Bakery" "Bread"\n  Expenses:Dining 3.00 USD\n  Assets:Checking\n')
         self.assertEqual(self.recipe("dimension-prior", payee="Bakery")["rows"], [[None, None, 1]])
+
+    def test_statement_text_with_quotes_and_shell_metacharacters_round_trips(self):
+        # Payees and notes copied from a statement, bound as bea-cli.md's
+        # Statement text in commands shows and run through a real shell.
+        reference = (SUITE / "beancount-init" / "references" / "bea-cli.md").read_text(encoding="utf-8")
+        self.assertIn("payee=" + single_quoted("Trader Joe's"), reference)
+        payees = ["Trader Joe's", "'Ohana Poke", "Venmo $(touch substituted)", "Zelle `touch substituted`",
+                  'The "Best" Cafe', "Trader Joe"]
+        for day, payee in enumerate(payees, 1):
+            self.shell_recipe(
+                "transaction", extra=("--meta", "client:acme") if payee == "Trader Joe's" else (),
+                entry_date=f"2026-05-0{day}", payee=payee, narration=f"{payee} purchase",
+                posting_1=f"Expenses:Dining {day}.00 USD", posting_2="Assets:Checking",
+            )
+        note = "Card renamed 'Joint' at $5/mo; see `statement`"
+        self.shell_recipe("note", note_date="2026-05-08", note=note)
+        self.recipe("check")
+        self.assertFalse((self.root / "substituted").exists())
+        for day, payee in enumerate(payees, 1):
+            with self.subTest(payee=payee):
+                rows = self.recipe("already-recorded", number=f"-{day}.00", currency="USD",
+                                   window_start=f"2026-05-0{day}", window_end=f"2026-05-0{day}")["rows"]
+                self.assertEqual([(r[1], r[2]) for r in rows], [(payee, f"{payee} purchase")])
+                if '"' not in payee:
+                    # Each read finds only that payee's own entry.
+                    expected = [["acme", None, 1]] if payee == "Trader Joe's" else [[None, None, 1]]
+                    self.assertEqual(self.shell_recipe("dimension-prior", payee=payee)["rows"], expected)
+        self.assertIn(f'2026-05-08 note Assets:Checking "{note}"', self.target.read_text())
+        # A query written by hand goes on stdin through a quoted heredoc.
+        rows = self.shell_recipe("query-on-stdin")["rows"]
+        self.assertEqual([r[0] for r in rows], ["2026-05-01"])
 
     def test_one_off_write_outside_the_included_files_is_refused_and_creates_nothing(self):
         orphan = self.books / "transactions" / "orphan.bean"
@@ -2517,6 +2574,22 @@ class TestBeaRecipes(unittest.TestCase):
         # Nothing open, and the account itself agrees.
         balances = {row[0]: row[1] for row in self.query_recipe("account-balances")}
         self.assertEqual(balances["Assets:AccountsReceivable"], [])
+
+    def test_invoice_number_with_a_quote_reads_only_its_own_postings(self):
+        self.open_ledger("Assets:AccountsReceivable", "Income:Services")
+        self.values["receivable"] = "Assets:AccountsReceivable"
+        # Numbers as printed on the documents, issued through the shell like any one-off.
+        for day, invoice in enumerate(["INV-031", "O'NEIL-7", "O'NEIL-70"], 1):
+            self.shell_recipe(
+                "transaction", extra=("--meta", f"invoice:{invoice}"),
+                entry_date=f"2026-10-0{day}", payee="Client", narration=f"Invoice {invoice}",
+                posting_1=f"Assets:AccountsReceivable {day}00.00 USD", posting_2="Income:Services",
+            )
+        self.recipe("check")
+        for day, invoice in enumerate(["INV-031", "O'NEIL-7", "O'NEIL-70"], 1):
+            with self.subTest(invoice=invoice):
+                rows = self.shell_recipe("invoice-postings", invoice=invoice)["rows"]
+                self.assertEqual([(r[2], r[3]) for r in rows], [(f"Invoice {invoice}", f"{day}00.00")])
 
     def test_bill_open_balances_follow_partial_payments(self):
         self.open_ledger("Assets:Checking", "Liabilities:AccountsPayable", "Expenses:Printing")
