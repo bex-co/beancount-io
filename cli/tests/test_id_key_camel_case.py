@@ -80,7 +80,19 @@ def _import(books: Path, amount: str, *args: str) -> subprocess.CompletedProcess
         NO_COLOR="1",
     )
     return subprocess.run(
-        [sys.executable, "-m", "cli.main", "-f", str(books / "main.bean"), "import", "s.csv", "--apply", *args],
+        [
+            sys.executable,
+            "-m",
+            "cli.main",
+            "-f",
+            str(books / "main.bean"),
+            "import",
+            "s.csv",
+            "--config",
+            "importers.py",
+            "--apply",
+            *args,
+        ],
         cwd=books,
         env=env,
         stdin=subprocess.DEVNULL,

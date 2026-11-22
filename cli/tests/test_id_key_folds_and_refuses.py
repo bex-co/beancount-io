@@ -88,6 +88,8 @@ def _import(books: Path, *args: str, as_json: bool = False) -> subprocess.Comple
             str(books / "main.bean"),
             "import",
             "s.csv",
+            "--config",
+            "importers.py",
             "--apply",
             *args,
         ],
