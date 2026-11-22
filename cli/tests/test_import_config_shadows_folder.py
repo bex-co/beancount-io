@@ -29,7 +29,15 @@ def _books(tmp_path: Path) -> list[str]:
     )
     (tmp_path / "importers.py").write_text("from importers import chase\n\nCONFIG = [chase.Chase()]\n")
     (tmp_path / "stmt.csv").write_text("Date,Description,Amount\n05/05/2026,TRADER JOES,33.20\n")
-    return ["--no-input", "--file", str(tmp_path / "main.bean"), "import", str(tmp_path / "stmt.csv")]
+    return [
+        "--no-input",
+        "--file",
+        str(tmp_path / "main.bean"),
+        "import",
+        str(tmp_path / "stmt.csv"),
+        "--config",
+        str(tmp_path / "importers.py"),
+    ]
 
 
 def test_a_shadowed_folder_names_the_rename_or_init_fix(tmp_path: Path, bea_config_dir: Path) -> None:
