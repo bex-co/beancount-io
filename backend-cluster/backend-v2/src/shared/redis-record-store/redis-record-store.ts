@@ -32,6 +32,8 @@ export interface RedisRecordStore {
   putRecord<T>(key: string, value: T, ttlMs: number): Promise<void>;
   /** Read and parse a JSON record, or `null` on miss. */
   getRecord<T>(key: string): Promise<T | null>;
+  /** Return a write-once record only to the caller that deletes its key. */
+  takeRecord<T>(key: string): Promise<T | null>;
   /** Delete a single record. */
   deleteRecord(key: string): Promise<void>;
   /** Store a raw string pointer (e.g. a secondary index value) verbatim. */
@@ -58,6 +60,21 @@ export function createRedisRecordStore(cache: Cache): RedisRecordStore {
       const raw = await helper.getStrict<string>(key);
       if (!raw) return null;
       return JSON.parse(raw) as T;
+    },
+
+    async takeRecord<T>(key: string): Promise<T | null> {
+      const [store] = cache.stores;
+      if (!store || cache.stores.length !== 1) {
+        throw new Error(
+          "Taking a record requires a single authoritative store",
+        );
+      }
+      const raw = await store.get<string>(key);
+      if (!raw) return null;
+      const record = JSON.parse(raw) as T;
+      // Keyv returns the Redis deletion result. cache-manager's del reports
+      // success even when the key was already gone.
+      return (await store.delete(key)) === true ? record : null;
     },
 
     async deleteRecord(key: string): Promise<void> {

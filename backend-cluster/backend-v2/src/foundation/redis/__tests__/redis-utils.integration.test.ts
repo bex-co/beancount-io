@@ -13,6 +13,7 @@ import { incrementInWindow } from "../redis-counter";
 import { redisIdempotencyStore } from "../redis-idempotency";
 import { consumeSlidingWindows } from "../redis-admission";
 import { issueSignInRecoveryProof } from "@/features/auth/operations/sign-in-recovery-proof";
+import { MagicLinkTokenRedisModel } from "@/features/auth/data/magic-link-token-model/redis-impl";
 import { ServiceUnavailableError } from "@/shared/errors";
 import type { Cache } from "cache-manager";
 import { createCacheHelper } from "@/shared/cache";
@@ -134,6 +135,21 @@ afterAll(async () => {
   }
   jest.restoreAllMocks();
   if (scratch) await rm(scratch, { recursive: true, force: true });
+});
+
+it("returns a magic link to exactly one redeemer and preserves replacement invalidation", async () => {
+  const model = new MagicLinkTokenRedisModel({ cache });
+  const token = await model.regenerateToken("user_test");
+  const results = await Promise.all(
+    Array.from({ length: 25 }, () => model.findOneAndDelete(token.id)),
+  );
+  expect(results.filter((result) => result !== null)).toEqual([token]);
+  await expect(model.findOne(token.id)).resolves.toBeNull();
+
+  const next = await model.regenerateToken(token.userId);
+  const latest = await model.regenerateToken(token.userId);
+  await expect(model.findOneAndDelete(next.id)).resolves.toBeNull();
+  await expect(model.findOneAndDelete(latest.id)).resolves.toEqual(latest);
 });
 
 it("increments atomically under concurrency, preserves an existing expiry, and repairs immortal counters", async () => {

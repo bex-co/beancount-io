@@ -2,6 +2,7 @@ import type { Cache } from "cache-manager";
 import { nanoid } from "nanoid";
 import { getExpireEpochMins } from "@/shared/expire-epoch";
 import { CACHE_KEYS } from "@/shared/cache";
+import { ServiceUnavailableError } from "@/shared/errors";
 import {
   createRedisRecordStore,
   type RedisRecordStore,
@@ -75,34 +76,15 @@ export class MagicLinkTokenRedisModel implements IMagicLinkTokenModel {
    * Returns the token data if found, null otherwise.
    */
   public async findOneAndDelete(id: string): Promise<MagicLinkToken | null> {
-    const tokenData = await this.store.getRecord<MagicLinkToken>(
-      CACHE_KEYS.auth.magicLinkTokenById(id),
-    );
-
-    if (!tokenData) return null;
-
-    // Delete token
-    await this.store.deleteRecord(CACHE_KEYS.auth.magicLinkTokenById(id));
-
-    // Remove from user->tokens mapping
-    const userKey = CACHE_KEYS.auth.magicLinkTokensByUser(tokenData.userId);
-    const existingTokens = await this.store.getRecord<string[]>(userKey);
-    if (existingTokens) {
-      const filtered = existingTokens.filter((tokenId) => tokenId !== id);
-      if (filtered.length > 0) {
-        const remainingTtlMs =
-          new Date(tokenData.expireAt).getTime() - Date.now();
-        if (remainingTtlMs > 0) {
-          await this.store.putRecord(userKey, filtered, remainingTtlMs);
-        } else {
-          await this.store.deleteRecord(userKey);
-        }
-      } else {
-        await this.store.deleteRecord(userKey);
-      }
+    try {
+      // Let the index expire or be replaced by regeneration. Updating it here
+      // could remove a freshly issued token's index.
+      return await this.store.takeRecord<MagicLinkToken>(
+        CACHE_KEYS.auth.magicLinkTokenById(id),
+      );
+    } catch {
+      throw new ServiceUnavailableError("Magic link token storage", 5);
     }
-
-    return tokenData;
   }
 
   /**

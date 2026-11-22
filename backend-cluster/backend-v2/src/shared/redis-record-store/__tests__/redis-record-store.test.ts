@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { createCache } from "cache-manager";
 import { createRedisRecordStore } from "../redis-record-store";
 
 function fakeCache() {
@@ -44,6 +45,20 @@ describe("createRedisRecordStore", () => {
     await store.deleteRecord("k:1");
 
     expect(cache.del).toHaveBeenCalledWith("k:1");
+  });
+
+  it("returns a write-once record only to the caller that deletes the key", async () => {
+    const store = createRedisRecordStore(createCache());
+    const record = { id: "one-use" };
+    await store.putRecord("k:1", record, 30_000);
+
+    const results = await Promise.all([
+      store.takeRecord("k:1"),
+      store.takeRecord("k:1"),
+    ]);
+
+    expect(results).toContainEqual(record);
+    expect(results).toContain(null);
   });
 
   it("appends to a one-to-many index without duplicating ids", async () => {
