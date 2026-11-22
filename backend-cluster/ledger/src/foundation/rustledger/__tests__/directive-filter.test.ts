@@ -921,3 +921,78 @@ describe("parseDateRange — fiscal_quarter substitution (util/date parity)", ()
     ).toThrow(TimeFilterParseError);
   });
 });
+
+describe("parseDateRange — early-year parity with fava/util/date (w5/936)", () => {
+  // The donor zero-pads every substituted year to four digits (`:04`), so a
+  // relative term before year 1000 parses exactly like its absolute
+  // spelling. Mirror of `cli/tests/test_report_early_year_periods.py`, with
+  // today fixed to the same 2026-06-15.
+  const TODAY = "2026-06-15";
+  const PAIRS: Array<[relative: string, absolute: string]> = [
+    ["year-1027", "0999"],
+    ["year-2025", "0001"],
+    ["year-1026", "1000"],
+    ["fiscal_year-1027", "FY0999"],
+    ["quarter-4108", "0999-Q2"],
+    ["month-12324", "0999-06"],
+    ["fiscal_quarter-4108", "FY0999-Q2"],
+  ];
+
+  for (const [relative, absolute] of PAIRS) {
+    it(`'${relative}' parses as its absolute spelling '${absolute}'`, () => {
+      const expected = parseDateRange(absolute, undefined, TODAY);
+      expect(expected).toBeDefined();
+      expect(parseDateRange(relative, undefined, TODAY)).toEqual(expected);
+    });
+  }
+
+  it("resolves a relative ISO week before year 1000 with a padded year", () => {
+    // Same date arithmetic as the donor test: back to mid-June 0999.
+    const weeksBack = Math.floor(
+      (Date.UTC(2026, 5, 15) - Date.UTC(999, 5, 15)) / 86400000 / 7,
+    );
+    const result = parseDateRange(`week-${weeksBack}`, undefined, TODAY);
+    expect(result).toBeDefined();
+    expect(result?.begin.startsWith("0999-")).toBe(true);
+  });
+});
+
+describe("parseDateRange — leap-day parity with fava/util/date (w5/966)", () => {
+  // `02-28` is February's last day, so leap day is still in the fiscal year
+  // that ends on it. Mirror of `cli/tests/test_fiscal_year_leap_day.py`.
+  it("keeps leap day in the February fiscal year that ends on it", () => {
+    expect(parseDateRange("fiscal_year", "02-28", "2024-02-29")).toEqual({
+      begin: "2023-03-01",
+      end: "2024-03-01",
+    });
+  });
+
+  it("advances to the next fiscal year on March 1", () => {
+    expect(parseDateRange("fiscal_year", "02-28", "2024-03-01")).toEqual({
+      begin: "2024-03-01",
+      end: "2025-03-01",
+    });
+  });
+
+  it("applies offsets to the corrected leap-day base", () => {
+    expect(parseDateRange("fiscal_year-1", "02-28", "2024-02-29")).toEqual({
+      begin: "2022-03-01",
+      end: "2023-03-01",
+    });
+    expect(parseDateRange("fiscal_year+1", "02-28", "2024-02-29")).toEqual({
+      begin: "2024-03-01",
+      end: "2025-03-01",
+    });
+  });
+
+  it("keeps leap day for a cross-year fiscal month offset too", () => {
+    // Fava accepts month 14 as February of the following year.
+    expect(parseDateRange("fiscal_year", "14-28", "2024-02-29")).toEqual(
+      parseDateRange("FY2023", "14-28"),
+    );
+    expect(parseDateRange("FY2023", "14-28")).toEqual({
+      begin: "2023-03-01",
+      end: "2024-03-01",
+    });
+  });
+});
