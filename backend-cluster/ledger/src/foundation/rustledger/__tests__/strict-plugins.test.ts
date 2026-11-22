@@ -174,6 +174,17 @@ describe("reconcileCheckCommodityErrors", () => {
     ]);
   });
 
+  it("refuses an ignore pattern too complex to run, and checks without it", () => {
+    expect(check(`${declared} "{'Assets:(A+)+B': 'USD'}"`)).toEqual([
+      [
+        "error",
+        null,
+        "Invalid regexp: 'Assets:(A+)+B' for check_commodity: pattern is too complex: a repeated part can match the same text in more than one way, as in (a+)+ or (a|a)*",
+      ],
+      ["error", null, "Missing Commodity directive for 'USD' in 'Assets:Cash'"],
+    ]);
+  });
+
   it("runs under pedantic, and not without either", () => {
     expect(check('plugin "beancount.plugins.pedantic"')).toEqual([
       ["error", null, "Missing Commodity directive for 'USD' in 'Assets:Cash'"],

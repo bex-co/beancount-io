@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import type { DirectiveJson, PostingJson } from "@rustledger/wasm";
+import { MAX_PATTERN_LENGTH, patternRefusal } from "./pattern-complexity";
 import { getRustledgerWorkerPool } from "./rustledger-worker-pool";
 import type { SourceSyntax } from "./source-slice";
 import { utcDate } from "./utc-date";
@@ -65,9 +66,6 @@ export interface FilterOptions {
    */
   today?: string;
 }
-
-/** Keep user-authored regex programs small before they enter a worker. */
-const MAX_FILTER_PATTERN_LENGTH = 256;
 
 /**
  * Thrown when `time` cannot be parsed to a range — mirrors Fava's
@@ -179,9 +177,13 @@ function escapeRegExp(value: string): string {
  */
 type FilterValueMatcher = (value: unknown) => boolean;
 
-function compileMatcherRegex(search: string): RegExp {
+/** The compiled search, with the pattern text it was compiled from. */
+function compileMatcherRegex(search: string): {
+  regex: RegExp;
+  source: string;
+} {
   try {
-    return new RegExp(search, "i");
+    return { regex: new RegExp(search, "i"), source: search };
   } catch (originalError) {
     // Translate the common Python-only constructs accepted by Fava's `re` so
     // they do not silently degrade to literal equality under JavaScript.
@@ -196,7 +198,7 @@ function compileMatcherRegex(search: string): RegExp {
       .replace(/\(\?P<([A-Za-z_][A-Za-z0-9_]*)>/gu, "(?<$1>")
       .replace(/\(\?P=([A-Za-z_][A-Za-z0-9_]*)\)/gu, "\\k<$1>");
     if (source === search) throw originalError;
-    return new RegExp(source, [...flags].join(""));
+    return { regex: new RegExp(source, [...flags].join("")), source };
   }
 }
 
@@ -274,16 +276,15 @@ function foldForSearch(text: string): string {
 }
 
 function makeMatcher(rawSearch: string): FilterValueMatcher {
-  if (rawSearch.length > MAX_FILTER_PATTERN_LENGTH) {
+  if (rawSearch.length > MAX_PATTERN_LENGTH) {
     throw new AdvancedFilterParseError(
-      `Filter pattern exceeds ${MAX_FILTER_PATTERN_LENGTH} characters`,
+      `Filter pattern exceeds ${MAX_PATTERN_LENGTH} characters`,
     );
   }
   const search = foldForSearch(rawSearch);
+  let compiled: ReturnType<typeof compileMatcherRegex>;
   try {
-    const regex = compileMatcherRegex(search);
-    return (value): boolean =>
-      regex.test(foldForSearch(stringifyFilterValue(value)));
+    compiled = compileMatcherRegex(search);
   } catch {
     // Fava deliberately treats a regex that Python cannot compile as a literal
     // exact match. Keep that behavior after attempting the compatibility
@@ -291,6 +292,15 @@ function makeMatcher(rawSearch: string): FilterValueMatcher {
     return (value): boolean =>
       foldForSearch(stringifyFilterValue(value)) === search;
   }
+  // Refused before any text is searched, on the API thread's validation pass
+  // and again in the worker (see `pattern-complexity.ts`).
+  const { regex, source } = compiled;
+  const refusal = patternRefusal(source, regex.flags);
+  if (refusal !== undefined) {
+    throw new AdvancedFilterParseError(`Filter pattern is ${refusal}`);
+  }
+  return (value): boolean =>
+    regex.test(foldForSearch(stringifyFilterValue(value)));
 }
 
 /** Characters that make a filter value a pattern rather than an account name. */
@@ -333,9 +343,9 @@ export function makeAccountNameMatcher(
 
 /** A whole run of `:`-delimited components, case-insensitively. */
 function makeComponentRunMatcher(run: string): FilterValueMatcher {
-  if (run.length > MAX_FILTER_PATTERN_LENGTH) {
+  if (run.length > MAX_PATTERN_LENGTH) {
     throw new AdvancedFilterParseError(
-      `Filter pattern exceeds ${MAX_FILTER_PATTERN_LENGTH} characters`,
+      `Filter pattern exceeds ${MAX_PATTERN_LENGTH} characters`,
     );
   }
   const regex = new RegExp(`(^|:)${escapeRegExp(run)}(:|$)`, "i");

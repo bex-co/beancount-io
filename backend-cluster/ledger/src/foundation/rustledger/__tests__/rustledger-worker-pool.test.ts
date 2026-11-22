@@ -32,6 +32,7 @@ function makePool(
     workerCount?: number;
     maxQueueDepth?: number;
     taskTimeoutMs?: number;
+    filterTimeoutMs?: number;
   } = {},
 ) {
   const workers: FakeWorker[] = [];
@@ -39,6 +40,7 @@ function makePool(
     workerCount: options.workerCount ?? 1,
     maxQueueDepth: options.maxQueueDepth ?? 1,
     taskTimeoutMs: options.taskTimeoutMs ?? 1000,
+    filterTimeoutMs: options.filterTimeoutMs,
     workerFactory: () => {
       const worker = new FakeWorker();
       workers.push(worker);
@@ -286,6 +288,51 @@ describe("RustledgerWorkerPool", () => {
 
     await expect(query).rejects.toBeInstanceOf(ServiceUnavailableError);
     expect(workers[0].terminate).toHaveBeenCalledTimes(1);
+    await pool.close();
+    jest.useRealTimers();
+  });
+
+  it("bounds a filter task well inside the parse budget, by default", async () => {
+    jest.useFakeTimers();
+    const { pool, workers } = makePool({
+      workerCount: 2,
+      taskTimeoutMs: 120_000,
+    });
+    const parse = pool.parse({ "main.bean": "" }, "main.bean");
+    const filter = pool.filter([], { account: "Assets" });
+
+    jest.advanceTimersByTime(10_000);
+
+    await expect(filter).rejects.toBeInstanceOf(ServiceUnavailableError);
+    expect(workers[1].terminate).toHaveBeenCalledTimes(1);
+    // The parse keeps its own budget and its worker.
+    expect(workers[0].terminate).not.toHaveBeenCalled();
+    workers[0].respond({
+      id: workers[0].posted[0].id,
+      ok: true,
+      value: {
+        valid: true,
+        errors: [],
+        options: {} as never,
+        directives: [],
+        directiveCount: 0,
+      },
+    });
+    await expect(parse).resolves.toEqual(
+      expect.objectContaining({ valid: true }),
+    );
+    await pool.close();
+    jest.useRealTimers();
+  });
+
+  it("takes a filter bound of its own", async () => {
+    jest.useFakeTimers();
+    const { pool } = makePool({ taskTimeoutMs: 1000, filterTimeoutMs: 5 });
+    const filter = pool.filter([], { account: "Assets" });
+
+    jest.advanceTimersByTime(5);
+
+    await expect(filter).rejects.toBeInstanceOf(ServiceUnavailableError);
     await pool.close();
     jest.useRealTimers();
   });

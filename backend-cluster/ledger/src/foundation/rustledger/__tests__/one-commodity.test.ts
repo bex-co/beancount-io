@@ -140,6 +140,21 @@ describe("reconcileOneCommodityErrors", () => {
     ).toEqual([]);
   });
 
+  it("reports a pattern too complex to run, and keeps the engine's check", () => {
+    const entries = [open("Expenses:Travel"), open("Equity:Opening"), ...trips];
+    expect(
+      check(entries, [`${PLUGIN} "Expenses:(A+)+B"`, ...travel].join("\n"), [
+        rustledgerError("Expenses:Travel"),
+      ]),
+    ).toEqual([
+      [null, "Account 'Expenses:Travel' uses multiple currencies: USD and EUR"],
+      [
+        null,
+        "Invalid regexp: 'Expenses:(A+)+B' for onecommodity: pattern is too complex: a repeated part can match the same text in more than one way, as in (a+)+ or (a|a)*",
+      ],
+    ]);
+  });
+
   it("checks cost currencies, and places balances before the day's entries", () => {
     const source = [
       PLUGIN,

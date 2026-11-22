@@ -1,4 +1,5 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
+import { patternRefusal } from "./pattern-complexity";
 import { beancountPluginRuns } from "./plugins/collect-plugins";
 
 /** rustledger's own finding, a warning, which the server does not show. */
@@ -56,11 +57,23 @@ function checkCommodities(
     for (const [key, value] of Object.entries(patterns)) {
       const compiled: RegExp[] = [];
       for (const pattern of [key, String(value)]) {
+        let regex: RegExp;
         try {
           // Sticky, so it matches from the start, as `re.match`.
-          compiled.push(new RegExp(pattern, "y"));
+          regex = new RegExp(pattern, "y");
         } catch {
           errors.push(unlocated(`Invalid regexp: '${value}' for ${key}`));
+          continue;
+        }
+        const refusal = patternRefusal(pattern, regex.flags);
+        if (refusal === undefined) {
+          compiled.push(regex);
+        } else {
+          errors.push(
+            unlocated(
+              `Invalid regexp: '${pattern}' for check_commodity: pattern is ${refusal}`,
+            ),
+          );
         }
       }
       if (compiled.length === 2) ignore.push([compiled[0]!, compiled[1]!]);

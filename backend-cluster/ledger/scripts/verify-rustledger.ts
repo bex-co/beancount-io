@@ -65,6 +65,7 @@ import { LedgerDataService } from "@/features/ledger/service/ledger-data-service
 import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 import { verifyBatchDeleteScale } from "./batch-delete-scale";
+import { verifyPatternLimits } from "./pattern-limits";
 import {
   verifyEntryMove,
   verifyOwnKeyUnderPushmeta,
@@ -1080,6 +1081,7 @@ async function main(): Promise<void> {
   );
 
   await verifyPoisonedWorkerRecovery();
+  await verifyPatternLimits();
   await verifyTransactionLookups();
   await verifyBalanceSheetCurrentEarnings();
   await verifyTrialBalanceAdjustment();

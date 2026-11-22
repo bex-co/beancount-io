@@ -12,11 +12,13 @@
 import type { DirectiveJson } from "@rustledger/wasm";
 import type { JournalAmountPublic } from "@/foundation/ledger-api-types";
 import {
+  AdvancedFilterParseError,
   costNumberToPerUnit,
   getDirectiveSourceId,
   makeAccountNameMatcher,
   type EntrySourceLocation,
 } from "@/foundation/rustledger";
+import { BadUserInputError } from "@/shared/errors";
 import { documentFilePath } from "@/foundation/rustledger/document-validation";
 import type { PostingJson } from "@rustledger/wasm";
 
@@ -211,6 +213,18 @@ function directivePayee(directive: DirectiveJson): string {
   return directive.type === "transaction" ? (directive.payee ?? "") : "";
 }
 
+/** The account filter's matcher; a filter it refuses is the caller's 400. */
+function legacyAccountMatcher(value: string): (accountName: string) => boolean {
+  try {
+    return makeAccountNameMatcher(value);
+  } catch (error) {
+    if (error instanceof AdvancedFilterParseError) {
+      throw new BadUserInputError(error.message);
+    }
+    throw error;
+  }
+}
+
 /**
  * The V1 `get_legacy_journal` algorithm over the rustledger directive stream
  * (date-sorted ascending, equivalent to fava's `ledger.all_entries`).
@@ -263,7 +277,7 @@ export function runLegacyJournal(
   const searchLower = searchQuery ? searchQuery.toLowerCase() : "";
   // Compiled once for the whole list, not per entry.
   const accountMatcher = accountFilter
-    ? makeAccountNameMatcher(accountFilter)
+    ? legacyAccountMatcher(accountFilter)
     : null;
   if (
     searchQuery ||

@@ -1,5 +1,6 @@
 import type { BeancountError, DirectiveJson, FileMap } from "@rustledger/wasm";
 import { indexBlocks } from "./block-index";
+import { patternRefusal } from "./pattern-complexity";
 import { beancountPluginRuns } from "./plugins/collect-plugins";
 import { includeTraversalOrder } from "./source-slice";
 
@@ -170,6 +171,28 @@ export function reconcileOneCommodityErrors(
   } catch {
     return [...errors];
   }
+  // A pattern too complex to run is reported, and the engine's own check
+  // stands, as it does for a pattern that does not compile.
+  const refused = configs.flatMap((config) => {
+    const refusal = config ? patternRefusal(config, "y") : undefined;
+    return refusal === undefined
+      ? []
+      : [
+          {
+            message: `Invalid regexp: '${config}' for onecommodity: pattern is ${refusal}`,
+            code: "PLUGIN",
+            phase: "plugin",
+            hint: null,
+            file: null,
+            line: null,
+            column: null,
+            end_line: null,
+            end_column: null,
+            severity: "error",
+          } satisfies BeancountError,
+        ];
+  });
+  if (refused.length > 0) return [...errors, ...refused];
   const reconciled = errors.filter((error) => !RUSTLEDGER.test(error.message));
   for (const pattern of patterns) {
     const mixed = mixedAccounts(entries, pattern);

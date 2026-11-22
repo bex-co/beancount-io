@@ -43,7 +43,9 @@ decommissioned. The OpenAPI contract is `../idl/beancount-ledger.openapi.json`.
 - `yarn test` — unit tests (WASM-free; live engine path via `yarn verify:rustledger`)
 - `yarn verify:rustledger` — live `@rustledger/wasm` checks through the real
   runtime loader. Includes the poisoned-worker regression: an engine
-  instance that traps is retired, not reused for every later request.
+  instance that traps is retired, not reused for every later request. Also
+  the pattern limits (`pattern-complexity.ts`): a plugin or filter pattern
+  too complex to run is refused before it takes up a worker.
 - `yarn lint && yarn typecheck && yarn build` — ESLint, Knip dead-code detection, types, and compile check
 - `yarn lint:deadcode:fix` — remove unused files, exports, and exported types; review the resulting diff
 - Parity harness: retired (the Python oracle it compared against is gone —

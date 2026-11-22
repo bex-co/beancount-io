@@ -34,6 +34,10 @@ const DEFAULT_MAX_QUEUE_DEPTH = 32;
 // every coalesced request re-times-out at this bound, 503s all callers, and
 // kills the in-flight worker in a respawn loop.
 const DEFAULT_TASK_TIMEOUT_MS = 120_000;
+// A filter task walks an already-parsed stream: about a second for a stream
+// the size of the largest ledger the loader admits, with no WASM pass. Its own
+// bound frees the worker long before the parse budget would.
+const DEFAULT_FILTER_TIMEOUT_MS = 10_000;
 
 export interface WorkerLike {
   on(event: "message", listener: (value: unknown) => void): this;
@@ -63,6 +67,8 @@ export interface RustledgerWorkerPoolOptions {
   workerCount?: number;
   maxQueueDepth?: number;
   taskTimeoutMs?: number;
+  /** The bound for `filter` tasks; every other kind gets `taskTimeoutMs`. */
+  filterTimeoutMs?: number;
   workerFactory?: WorkerFactory;
 }
 
@@ -98,6 +104,7 @@ export class RustledgerWorkerPool {
   public readonly workerCount: number;
   private readonly maxQueueDepth: number;
   private readonly taskTimeoutMs: number;
+  private readonly filterTimeoutMs: number;
   private readonly workerFactory: WorkerFactory;
   private readonly workers: WorkerSlot[] = [];
   private readonly queue: Array<PendingTask<RustledgerWorkerValue>> = [];
@@ -113,6 +120,11 @@ export class RustledgerWorkerPool {
     this.taskTimeoutMs = Math.max(
       1,
       options.taskTimeoutMs ?? DEFAULT_TASK_TIMEOUT_MS,
+    );
+    this.filterTimeoutMs = Math.max(
+      1,
+      options.filterTimeoutMs ??
+        Math.min(DEFAULT_FILTER_TIMEOUT_MS, this.taskTimeoutMs),
     );
     this.workerFactory = options.workerFactory ?? createNodeWorker;
   }
@@ -248,13 +260,17 @@ export class RustledgerWorkerPool {
       const pending = this.queue.shift();
       if (!pending) return;
       slot.current = pending;
+      const timeoutMs =
+        pending.task.kind === "filter"
+          ? this.filterTimeoutMs
+          : this.taskTimeoutMs;
       pending.timeout = setTimeout(() => {
         this.failSlot(
           slot as WorkerSlot,
           new ServiceUnavailableError("RustLedger worker", 1),
           true,
         );
-      }, this.taskTimeoutMs);
+      }, timeoutMs);
       slot.worker.postMessage(pending.task);
     }
   }

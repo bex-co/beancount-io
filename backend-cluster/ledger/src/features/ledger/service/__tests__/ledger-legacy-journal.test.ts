@@ -3,6 +3,7 @@ import {
   runLegacyJournal,
   serialiseV1Directive,
 } from "@/features/ledger/service/ledger-legacy-journal";
+import { BadUserInputError } from "@/shared/errors";
 
 const tx = (
   date: string,
@@ -197,6 +198,14 @@ describe("runLegacyJournal", () => {
 
     it("matches no partial component", () => {
       expect(narrationsFor("Assets:Cas")).toEqual([]);
+    });
+
+    it("answers a pattern too complex to run as the caller's bad input", () => {
+      expect(() => narrationsFor("(.|.)*Z")).toThrow(BadUserInputError);
+      expect(() => narrationsFor("(.|.)*Z")).toThrow(
+        /^Filter pattern is too complex: /,
+      );
+      expect(narrationsFor("^Assets:Cash(App)?$")).toEqual(["cash", "cashapp"]);
     });
 
     it("matches a run of components anywhere, case-insensitively", () => {
