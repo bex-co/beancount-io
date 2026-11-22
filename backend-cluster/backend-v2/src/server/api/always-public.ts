@@ -139,7 +139,6 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
   { opId: "REST GET /api-admin-docs/swagger.json", reason: DEV_ONLY_DOCS },
 
   // --- Admin API ---------------------------------------------------------
-  { opId: "REST POST /api/admin/login-as", reason: ADMIN_TOKEN },
   { opId: "REST POST /api/admin/password-reset-link", reason: ADMIN_TOKEN },
   { opId: "REST POST /api/admin/unblock-user", reason: ADMIN_TOKEN },
   { opId: "REST POST /api/admin/run-migrations", reason: ADMIN_TOKEN },

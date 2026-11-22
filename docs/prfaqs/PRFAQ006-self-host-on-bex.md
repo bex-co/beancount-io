@@ -145,7 +145,7 @@ Your own ledger is a text file you can read and diff.
 
 ### 13. Someone signed up before me. What now?
 
-Delete their account, then sign up yourself. With the `ADMIN_TOKEN` (question 8), `GET /api/admin/recent-users` on the API's address shows the account's email, and `POST /api/admin/login-as` with that email returns a one-time link, good for five minutes, that signs you in as that account. There, Settings → Danger Zone → **Delete Account** removes it, and sign-up opens again. Run on bex on 2026-11-18.
+Delete their account, then sign up yourself. With the `ADMIN_TOKEN` (question 8), `GET /api/admin/recent-users` on the API's address shows the account's email. `POST /api/admin/password-reset-link` with that email returns a one-time reset link, good for an hour (question 7). Open it, set a password, and sign in to that account with the email and the new password. There, Settings → Danger Zone → **Delete Account** removes it, and sign-up opens again. These steps were written on 2026-11-21 and have not yet been run in this order on bex; each has run there on its own, the reset link on 2026-11-16 and Delete Account on 2026-11-18.
 
 ![Settings → Danger Zone → Delete Account, confirmed by typing the account's username](../images/PRFAQ006-delete-account.webp)
 
@@ -255,7 +255,7 @@ On 2026-11-18 a new stack was created from the Blueprint (`main` at `0a90302df`)
 
 | Check | Result |
 | --- | --- |
-| Someone signs up first (question 13) | A stranger's sign-up closed sign-up. `GET /api/admin/recent-users` showed the address, `POST /api/admin/login-as` signed the operator in as that account, Settings → Danger Zone → Delete Account removed it, and sign-up opened again for the owner. |
+| Someone signs up first (question 13) | A stranger's sign-up closed sign-up. `GET /api/admin/recent-users` showed the address, the operator got into that account through an admin call that has since been removed, Settings → Danger Zone → Delete Account removed it, and sign-up opened again for the owner. Question 13 now goes through a password reset link instead, which this run did not cover. |
 | `bea cloud login` | With `bea` 0.4.1 from PyPI, the device page showed the client, device and address; after **Authorize**, `bea cloud status` (`ENTERPRISE`) and `bea cloud ledger list` worked. |
 | Clone | `bea cloud ledger clone` printed the HTTPS command and the token advice; `git clone` with a personal access token worked. |
 | Bringing books in (question 15) | A 6,600-line ledger with its own history was merged into a new ledger and pushed, and a forced push was refused. With `main.bean` including it, `checkLedger` over MCP reported no errors and 1,051 transactions. |

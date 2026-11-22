@@ -46,9 +46,6 @@ describe("AdminService", () => {
   let mockSignupOtpSessionModel: jest.Mocked<
     Pick<IModels["signupOtpSession"], "getSessionByEmail">
   >;
-  let mockMagicLinkTokenModel: jest.Mocked<
-    Pick<IModels["magicLinkToken"], "regenerateToken">
-  >;
   let mockEmailTokenModel: jest.Mocked<
     Pick<IModels["emailToken"], "issueToken">
   >;
@@ -87,10 +84,6 @@ describe("AdminService", () => {
       getSessionByEmail: jest.fn(),
     };
 
-    mockMagicLinkTokenModel = {
-      regenerateToken: jest.fn(),
-    };
-
     mockEmailTokenModel = {
       issueToken: jest.fn(),
     };
@@ -123,8 +116,6 @@ describe("AdminService", () => {
         user: mockUserModel as unknown as IModels["user"],
         signupOtpSession:
           mockSignupOtpSessionModel as unknown as IModels["signupOtpSession"],
-        magicLinkToken:
-          mockMagicLinkTokenModel as unknown as IModels["magicLinkToken"],
         paidCustomer:
           mockPaidCustomerModel as unknown as IModels["paidCustomer"],
         emailToken: mockEmailTokenModel as unknown as IModels["emailToken"],
@@ -256,48 +247,6 @@ describe("AdminService", () => {
         },
       ]);
       expect(result.pagination).toEqual({ limit: 10, offset: 0, total: 1 });
-    });
-  });
-
-  describe("loginAs", () => {
-    it("should throw NotFoundError when user does not exist", async () => {
-      mockUserModel.getByMail.mockResolvedValue(null);
-
-      await expect(service.loginAs("notfound@example.com")).rejects.toThrow(
-        NotFoundError,
-      );
-    });
-
-    it("should throw OperationNotAllowedError when user is blocked", async () => {
-      mockUserModel.getByMail.mockResolvedValue({
-        id: "u1",
-        email: "blocked@example.com",
-        isBlocked: true,
-      } as any);
-
-      await expect(service.loginAs("blocked@example.com")).rejects.toThrow(
-        OperationNotAllowedError,
-      );
-    });
-
-    it("should return redirectUrl with one-time token", async () => {
-      mockUserModel.getByMail.mockResolvedValue({
-        id: "u1",
-        email: "valid@example.com",
-        isBlocked: false,
-      } as any);
-      mockMagicLinkTokenModel.regenerateToken.mockResolvedValue({
-        id: "tok123",
-      } as any);
-
-      const result = await service.loginAs("valid@example.com");
-
-      expect(mockMagicLinkTokenModel.regenerateToken).toHaveBeenCalledWith(
-        "u1",
-      );
-      expect(result.redirectUrl).toBe(
-        "https://dashboard.example.com/auth/callback?oneTimeToken=tok123",
-      );
     });
   });
 

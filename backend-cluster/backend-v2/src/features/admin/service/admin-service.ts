@@ -119,7 +119,6 @@ export interface IAdminService {
     pagination: { limit: number; offset: number; total: number };
   }>;
   getStats(): Promise<{ totalUsers: number; activePaidUsers: number }>;
-  loginAs(email: string): Promise<{ redirectUrl: string }>;
   issuePasswordResetLink(
     email: string,
   ): Promise<{ resetUrl: string; expireAt: string }>;
@@ -140,11 +139,7 @@ export class AdminService implements IAdminService {
   constructor(
     private readonly models: Pick<
       IModels,
-      | "user"
-      | "signupOtpSession"
-      | "magicLinkToken"
-      | "paidCustomer"
-      | "emailToken"
+      "user" | "signupOtpSession" | "paidCustomer" | "emailToken"
     >,
     private readonly db: DbExecutor,
     private readonly config: Pick<AppConfig, "dashboard">,
@@ -230,25 +225,6 @@ export class AdminService implements IAdminService {
       this.models.paidCustomer.countWithActivePeriod(this.db),
     ]);
     return { totalUsers, activePaidUsers };
-  }
-
-  async loginAs(email: string): Promise<{ redirectUrl: string }> {
-    const user = await this.models.user.getByMail(this.db, email);
-    if (!user) {
-      throw new NotFoundError("User", email);
-    }
-    if (user.isBlocked) {
-      throw new OperationNotAllowedError(
-        "login-as",
-        `User ${email} is blocked`,
-      );
-    }
-    const oneTimeToken = await this.models.magicLinkToken.regenerateToken(
-      user.id,
-    );
-    return {
-      redirectUrl: `${this.config.dashboard.url}/auth/callback?oneTimeToken=${oneTimeToken.id}`,
-    };
   }
 
   /**

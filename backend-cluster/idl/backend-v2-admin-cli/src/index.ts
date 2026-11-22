@@ -51,35 +51,11 @@ program
   });
 
 program
-  .command("prune-inactive-users")
-  .description("block inactive users (no activation, short ledger, >3 months old)")
-  .action(async () => {
-    const client = getClient(program.opts());
-    out(await client.post("/api/admin/prune-inactive-users"));
-  });
-
-program
-  .command("login-as <email>")
-  .description("generate JWT auth token for a user by email (admin impersonation)")
-  .action(async (email: string) => {
-    const client = getClient(program.opts());
-    out(await client.post("/api/admin/login-as", { email }));
-  });
-
-program
   .command("unblock-user <email>")
   .description("unblock a user by email")
   .action(async (email: string) => {
     const client = getClient(program.opts());
     out(await client.post("/api/admin/unblock-user", { email }));
-  });
-
-program
-  .command("delete-user <email>")
-  .description("permanently delete a user and all associated data by email (GDPR / irreversible)")
-  .action(async (email: string) => {
-    const client = getClient(program.opts());
-    out(await client.post("/api/admin/delete-user", { email }));
   });
 
 program.parseAsync().catch((err: unknown) => {

@@ -2,7 +2,6 @@ import Router from "@koa/router";
 import type { AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
 import { AdminService } from "../service/admin-service";
-import { registerLoginAsRoute } from "./login-as-handler";
 import { registerPasswordResetLinkRoute } from "./password-reset-link-handler";
 import { registerUnblockUserRoute } from "./unblock-user-handler";
 import { registerRunMigrationsRoute } from "./run-migrations-handler";
@@ -24,7 +23,6 @@ export function setAdminApiRoute(
     {
       user: layers.database.models.user,
       signupOtpSession: layers.database.models.signupOtpSession,
-      magicLinkToken: layers.database.models.magicLinkToken,
       paidCustomer: layers.database.models.paidCustomer,
       emailToken: layers.database.models.emailToken,
     },
@@ -36,7 +34,6 @@ export function setAdminApiRoute(
     layers.clients.cacheHelper,
   );
 
-  registerLoginAsRoute(server, adminService);
   registerPasswordResetLinkRoute(server, adminService);
   registerUnblockUserRoute(server, adminService);
   registerRunMigrationsRoute(server, adminService);

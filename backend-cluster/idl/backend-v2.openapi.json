@@ -210,7 +210,7 @@
         ],
         "description": "Health check response with per-service dependency status and latency"
       },
-      "LoginAsResponse": {
+      "PasswordResetLinkResponse": {
         "type": "object",
         "properties": {
           "ok": {
@@ -220,18 +220,24 @@
             ],
             "description": "Indicates request succeeded"
           },
-          "redirectUrl": {
+          "resetUrl": {
             "type": "string",
             "format": "uri",
-            "description": "Dashboard URL with one-time token for auto login via /auth/callback",
-            "example": "https://beancount.io/auth/callback?oneTimeToken=abc123"
+            "description": "Dashboard reset-password URL carrying a one-time token. Give it to the user; it sets a new password once.",
+            "example": "https://beancount.example.com/auth/reset-password/?token=abc123"
+          },
+          "expireAt": {
+            "type": "string",
+            "description": "When the link stops working (ISO 8601)",
+            "example": "2026-11-14T12:00:00.000Z"
           }
         },
         "required": [
           "ok",
-          "redirectUrl"
+          "resetUrl",
+          "expireAt"
         ],
-        "description": "Response containing a one-time redirect URL to auto-login to the dashboard"
+        "description": "A one-time password-reset link for the user"
       },
       "ErrorResponse": {
         "type": "object",
@@ -267,50 +273,6 @@
           "ok",
           "error"
         ]
-      },
-      "LoginAsRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "description": "Email of the user to login as",
-            "example": "user@example.com"
-          }
-        },
-        "required": [
-          "email"
-        ],
-        "description": "Request body for logging in as a specific user"
-      },
-      "PasswordResetLinkResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "enum": [
-              true
-            ],
-            "description": "Indicates request succeeded"
-          },
-          "resetUrl": {
-            "type": "string",
-            "format": "uri",
-            "description": "Dashboard reset-password URL carrying a one-time token. Give it to the user; it sets a new password once.",
-            "example": "https://beancount.example.com/auth/reset-password/?token=abc123"
-          },
-          "expireAt": {
-            "type": "string",
-            "description": "When the link stops working (ISO 8601)",
-            "example": "2026-11-14T12:00:00.000Z"
-          }
-        },
-        "required": [
-          "ok",
-          "resetUrl",
-          "expireAt"
-        ],
-        "description": "A one-time password-reset link for the user"
       },
       "PasswordResetLinkRequest": {
         "type": "object",
@@ -1231,71 +1193,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HealthCheckResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/login-as": {
-      "post": {
-        "summary": "Generate a one-time login URL for a user by email",
-        "description": "Allows administrators to generate a one-time redirect URL that auto-logs into the dashboard as the specified user.\n\nThe returned URL points to /auth/callback?oneTimeToken=... and expires in 5 minutes.\n\nThe endpoint will return an error if:\n- The user with the provided email does not exist (404)\n- The user is blocked (400)",
-        "tags": [
-          "Admin API"
-        ],
-        "security": [
-          {
-            "adminToken": []
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginAsRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "One-time login URL generated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginAsResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request - user is blocked or invalid input",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing admin token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
