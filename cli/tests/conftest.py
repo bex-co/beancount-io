@@ -112,7 +112,7 @@ def event_loop() -> Iterator[None]:
 
 @pytest.fixture(autouse=True)
 def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """Give every test its own `~/.config/bea` and a clean `BEA_*` environment.
+    """Give every test its own `HOME`, `~/.config/bea`, and a clean `BEA_*` environment.
 
     Autouse, because a test that read the developer's real credentials or wrote
     to their config directory would be both flaky and rude.
@@ -126,6 +126,10 @@ def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[
     # nothing installed there, `cli.engine.launch` falls through to running the
     # helper out of this checkout instead of provisioning one.
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdg-data"))
+    # Beanquery ignores XDG: it saves its shell history to, and replays its init
+    # file from, `~/.config/beanquery`. A child that inherits the developer's
+    # `HOME` appends their history and runs their `.format` or `.output` lines.
+    monkeypatch.setenv("HOME", str(tmp_path / "home-dir"))
     # uv looks for its standalone CPythons under `XDG_DATA_HOME` too. Keep it on
     # the real ones: with `python-preference = "only-managed"` (pyproject.toml), a
     # nested `uv run --project` would otherwise see the checkout's venv as foreign
