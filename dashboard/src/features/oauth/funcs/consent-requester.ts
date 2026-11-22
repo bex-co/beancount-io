@@ -1,6 +1,7 @@
 import {
   getBackendBase,
   interactionForwardHeaders,
+  isOauthInteractionUid,
 } from "@/common/lib/oauth/forward-to-backend";
 
 /**
@@ -62,10 +63,11 @@ export async function handleConsentRequesterGet({
   request: Request;
 }): Promise<Response> {
   const uid = new URL(request.url).searchParams.get("uid") ?? "";
-  const upstream = await fetch(
-    `${getBackendBase()}/api-gateway/oauth/interaction/${encodeURIComponent(uid)}`,
-    { headers: interactionForwardHeaders(request) },
-  ).catch(() => null);
+  const upstream = isOauthInteractionUid(uid)
+    ? await fetch(`${getBackendBase()}/api-gateway/oauth/interaction/${uid}`, {
+        headers: interactionForwardHeaders(request),
+      }).catch(() => null)
+    : null;
   // A 200 with a non-JSON body (a proxy's error page) is as unidentified as a
   // failed request — it must not become a 500.
   const details =

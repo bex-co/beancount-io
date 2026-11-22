@@ -67,10 +67,13 @@ describe("handleConsentRequesterGet", () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  const request = () =>
-    new Request("https://beancount.io/oauth/consent/requester?uid=a/b", {
-      headers: { cookie: "_interaction=xyz" },
-    });
+  const request = (uid = "abc_DEF-123") =>
+    new Request(
+      `https://beancount.io/oauth/consent/requester?uid=${encodeURIComponent(uid)}`,
+      {
+        headers: { cookie: "_interaction=xyz" },
+      },
+    );
 
   it("reads the interaction with the browser's cookie and maps it", async () => {
     fetchMock.mockResolvedValue(
@@ -89,7 +92,7 @@ describe("handleConsentRequesterGet", () => {
       clientName: "ChatGPT",
     });
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toMatch(/\/api-gateway\/oauth\/interaction\/a%2Fb$/);
+    expect(url).toMatch(/\/api-gateway\/oauth\/interaction\/abc_DEF-123$/);
     // The backend resolves the interaction only with the browser's cookie, and
     // pins the issuer from the public host and scheme.
     expect(init.headers).toEqual({
@@ -97,6 +100,12 @@ describe("handleConsentRequesterGet", () => {
       "x-forwarded-host": "beancount.io",
       "x-forwarded-proto": "https",
     });
+  });
+
+  it("rejects a malformed uid without requesting interaction details", async () => {
+    const res = await handleConsentRequesterGet({ request: request("a/b") });
+    expect(res.status).toBe(404);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("answers 404 when the backend does not know the interaction", async () => {

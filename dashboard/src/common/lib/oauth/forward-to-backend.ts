@@ -84,16 +84,21 @@ async function readBodyWithinLimit(
   return new TextDecoder().decode(merged);
 }
 
-/**
- * Proxies an OIDC interaction "login" POST (cookies, body, and any Set-Cookie
- * response headers preserved) to one of the backend's oidc-provider instances —
- * shared by both the MCP consent page and the identity-login consent page,
- * which differ only in which interaction endpoint they target.
- */
+export function isOauthInteractionUid(uid: string): boolean {
+  return uid.length > 0 && uid.length <= 128 && !/[^A-Za-z0-9_-]/.test(uid);
+}
+
+/** Proxies the OIDC login POST, preserving cookies, the form, and Set-Cookie headers. */
 export async function proxyOauthInteractionLogin(
   request: Request,
-  interactionLoginPath: string,
 ): Promise<Response> {
+  const uid = new URL(request.url).searchParams.get("uid") ?? "";
+  if (!isOauthInteractionUid(uid)) {
+    return new Response(null, {
+      status: 400,
+      headers: { "cache-control": "no-store" },
+    });
+  }
   const backendBase = getBackendBase();
 
   const body = await readBodyWithinLimit(request, MAX_CONSENT_BODY_BYTES);
@@ -101,20 +106,23 @@ export async function proxyOauthInteractionLogin(
     return new Response(null, { status: 413 });
   }
 
-  const upstream = await fetch(`${backendBase}${interactionLoginPath}`, {
-    method: "POST",
-    headers: {
-      "content-type":
-        request.headers.get("content-type") ??
-        "application/x-www-form-urlencoded",
-      ...interactionForwardHeaders(request),
-      ...(request.headers.get("authorization")
-        ? { authorization: request.headers.get("authorization")! }
-        : {}),
+  const upstream = await fetch(
+    `${backendBase}/api-gateway/oauth/interaction/${uid}/login`,
+    {
+      method: "POST",
+      headers: {
+        "content-type":
+          request.headers.get("content-type") ??
+          "application/x-www-form-urlencoded",
+        ...interactionForwardHeaders(request),
+        ...(request.headers.get("authorization")
+          ? { authorization: request.headers.get("authorization")! }
+          : {}),
+      },
+      body,
+      redirect: "manual",
     },
-    body,
-    redirect: "manual",
-  });
+  );
 
   const responseHeaders = new Headers();
   const location = upstream.headers.get("location");

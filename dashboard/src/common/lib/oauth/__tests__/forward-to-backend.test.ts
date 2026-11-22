@@ -35,7 +35,6 @@ describe("OAuth backend forwarding", () => {
         method: "POST",
         body: "decision=approve",
       }),
-      "/api-gateway/oauth/interaction/abc/login",
     );
 
     const [url] = fetchMock.mock.calls[0] as [string];

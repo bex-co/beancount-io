@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { handleConsentPost } from "../handle-consent-post";
-import { handleMobileConsentPost } from "../handle-mobile-consent-post";
 import { backendBaseFromApiUrl } from "@/common/lib/oauth/forward-to-backend";
 
 const CONSENT_URL = "https://beancount.io/oauth/consent?uid=abc";
@@ -57,7 +56,7 @@ describe("handleConsentPost", () => {
       }),
     );
 
-    const response = await handleMobileConsentPost({
+    const response = await handleConsentPost({
       request: new Request(
         "https://beancount.io/oauth/mobile-consent?uid=mobile-1",
         { method: "POST", body: "decision=cancel" },
@@ -69,6 +68,19 @@ describe("handleConsentPost", () => {
     expect(init.body).toBe("decision=cancel");
     expect(response.headers.get("location")).toContain("access_denied");
   });
+
+  it.each(["", "a/b", "a?b", "a#b", "..", "abc\n"])(
+    "rejects malformed interaction uid %j without forwarding",
+    async (uid) => {
+      const url = new URL(CONSENT_URL);
+      url.searchParams.set("uid", uid);
+      const response = await handleConsentPost({
+        request: new Request(url, { method: "POST", body: "consent=accept" }),
+      });
+      expect(response.status).toBe(400);
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("rejects an oversized declared Content-Length before reading the body", async () => {
     // The Request constructor strips forbidden headers like Content-Length,

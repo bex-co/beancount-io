@@ -2,7 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { InvalidAuthorizationLinkPage } from "@/common/root-route/not-found-page";
 import { z } from "zod";
 import IdentityOAuthConsentPage from "@/features/oauth/pages/identity-consent";
-import { handleIdentityConsentPost } from "@/features/oauth/funcs/handle-identity-consent-post";
+import { handleConsentPost } from "@/features/oauth/funcs/handle-consent-post";
 import { identityOauthConsentLoader } from "@/features/oauth/funcs/identity-loader";
 import { createNoIndexHead } from "@/common/lib/seo/seo-helpers";
 
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/oauth/identity-consent")({
   head: createNoIndexHead,
   server: {
     handlers: {
-      POST: handleIdentityConsentPost,
+      POST: handleConsentPost,
     },
   },
 });

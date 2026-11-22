@@ -5,9 +5,5 @@ export async function handleConsentPost({
 }: {
   request: Request;
 }): Promise<Response> {
-  const uid = new URL(request.url).searchParams.get("uid") ?? "";
-  return proxyOauthInteractionLogin(
-    request,
-    `/api-gateway/oauth/interaction/${uid}/login`,
-  );
+  return proxyOauthInteractionLogin(request);
 }

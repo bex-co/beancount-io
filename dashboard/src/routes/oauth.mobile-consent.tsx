@@ -2,7 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import type { z } from "zod";
 import { InvalidAuthorizationLinkPage } from "@/common/root-route/not-found-page";
 import MobileOAuthConsentPage from "@/features/oauth/pages/mobile-consent";
-import { handleMobileConsentPost } from "@/features/oauth/funcs/handle-mobile-consent-post";
+import { handleConsentPost } from "@/features/oauth/funcs/handle-consent-post";
 import { mobileOauthConsentLoader } from "@/features/oauth/funcs/mobile-loader";
 import { mobileConsentSearchSchema } from "@/features/oauth/funcs/mobile-consent-search";
 import { createNoIndexHead } from "@/common/lib/seo/seo-helpers";
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/oauth/mobile-consent")({
   head: createNoIndexHead,
   server: {
     handlers: {
-      POST: handleMobileConsentPost,
+      POST: handleConsentPost,
     },
   },
 });
