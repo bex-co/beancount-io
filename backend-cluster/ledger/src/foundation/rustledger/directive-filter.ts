@@ -1092,7 +1092,11 @@ interface FiscalYearEnd {
 const END_OF_YEAR: FiscalYearEnd = { month: 12, day: 31 };
 
 function monthOfYear(fye: FiscalYearEnd): number {
-  return ((fye.month - 1) % 12) + 1;
+  // Python floor-mod (`(month - 1) % 12 + 1`): month 0 is December of the
+  // previous year, months above 12 a fiscal-year offset. JavaScript `%`
+  // truncates toward zero, so adjust — same shape as `parseFiscalYearEnd`
+  // in `fava-options.ts`, which mirrors the donor's validation formula.
+  return ((((fye.month - 1) % 12) + 12) % 12) + 1;
 }
 
 function yearOffset(fye: FiscalYearEnd): number {
@@ -1193,11 +1197,14 @@ function parseFyeString(fye: string): FiscalYearEnd | undefined {
   if (!match) return undefined;
   const month = Number.parseInt(match[1], 10);
   const day = Number.parseInt(match[2], 10);
-  if (month < 1) return undefined;
-  // Fava deliberately preserves months above 12 as a fiscal-year offset:
-  // `15-31` means March 31 in the following year. Validate the calendar day
-  // against the normalized month while returning the original offset month.
-  const normalizedMonth = ((month - 1) % 12) + 1;
+  // Fava validates the day against the normalized month-of-year
+  // (`datetime.date(2001, (month - 1) % 12 + 1, day)`): month 0 is December
+  // of the previous year and months above 12 are a fiscal-year offset
+  // (`15-31` means March 31 in the following year). Validate the calendar
+  // day against the normalized month while returning the original offset
+  // month — mirroring `parseFiscalYearEnd` in `fava-options.ts`, which
+  // already accepts `00-31` from the same ledger option.
+  const normalizedMonth = ((((month - 1) % 12) + 12) % 12) + 1;
   if (day < 1 || day > daysInMonth(2001, normalizedMonth)) return undefined;
   return { month, day };
 }
@@ -1282,9 +1289,7 @@ function substitute(input: string, fye: FiscalYearEnd, today: string): string {
       // year on March 1 in leap years too), so leap day is still in the
       // year that ends on it (w5/966).
       const endDay =
-        monthOfYear(fye) === 2 && fye.day === 28
-          ? daysInMonth(ty, 2)
-          : fye.day;
+        monthOfYear(fye) === 2 && fye.day === 28 ? daysInMonth(ty, 2) : fye.day;
       const afterFye =
         tm > monthOfYear(fye) || (tm === monthOfYear(fye) && td > endDay);
       const year = ty + (afterFye ? 1 : 0) - yearOffset(fye);

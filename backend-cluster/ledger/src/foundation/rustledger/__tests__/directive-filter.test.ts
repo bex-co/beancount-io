@@ -806,6 +806,47 @@ describe("parseDateRange — relative variables + fiscal year end", () => {
       end: "2025-04-01",
     });
   });
+
+  it("honors Fava's month-0 fiscal year end (December of the previous year)", () => {
+    // The donor's `parse_fye_string` accepts `00-31` (`month_of_year` 12,
+    // `year_offset` -1), so FY2024 is the calendar year 2023 — a full year
+    // off the calendar-year fallback. The ledger's `fava-option`
+    // `fiscal-year-end "00-31"` already parses and re-renders as `00-31`.
+    expect(parseDateRange("FY2024", "00-31")).toEqual({
+      begin: "2023-01-01",
+      end: "2024-01-01",
+    });
+    expect(parseDateRange("FY2024-Q2", "00-31")).toEqual({
+      begin: "2023-04-01",
+      end: "2023-07-01",
+    });
+  });
+
+  it("numbers relative fiscal terms under a month-0 fiscal year end", () => {
+    // `fiscal_year` is FY(today.year + 1) and `fiscal_quarter` FY2025-Q2 for
+    // a June 2024 today — oracle values from `fava.util.date.substitute`.
+    expect(parseDateRange("fiscal_year", "00-31", "2024-06-15")).toEqual({
+      begin: "2024-01-01",
+      end: "2025-01-01",
+    });
+    expect(parseDateRange("fiscal_quarter", "00-31", "2024-06-15")).toEqual({
+      begin: "2024-04-01",
+      end: "2024-07-01",
+    });
+  });
+
+  it("rejects impossible days under a month-0 fiscal year end", () => {
+    // `00-00` and `00-32` fail the donor's `datetime.date(2001, 12, day)`
+    // check, so they fall back to the calendar year like any invalid FYE.
+    expect(parseDateRange("FY2024", "00-00")).toEqual({
+      begin: "2024-01-01",
+      end: "2025-01-01",
+    });
+    expect(parseDateRange("FY2024", "00-32")).toEqual({
+      begin: "2024-01-01",
+      end: "2025-01-01",
+    });
+  });
 });
 
 describe("parseDateRange — fiscal_quarter substitution (util/date parity)", () => {
@@ -955,6 +996,7 @@ describe("parseDateRange — early-year parity with fava/util/date (w5/936)", ()
     expect(result).toBeDefined();
     expect(result?.begin.startsWith("0999-")).toBe(true);
   });
+
 });
 
 describe("parseDateRange — leap-day parity with fava/util/date (w5/966)", () => {

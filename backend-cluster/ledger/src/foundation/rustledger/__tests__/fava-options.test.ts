@@ -201,6 +201,17 @@ describe("parseFavaOptions", () => {
     expect(parseFavaOptions(directives)).toEqual(golden.fye_feb28);
   });
 
+  it("accepts 00-31 as a fiscal year end (December of the previous year)", () => {
+    // The donor's `parse_fye_string` accepts month 0; the time filter must
+    // honor the same string this option re-renders as.
+    const directives: DirectiveJson[] = [
+      customStrings("fava-option", "2016-01-01", "fiscal-year-end", "00-31"),
+    ];
+    const parsed = parseFavaOptions(directives).fiscal_year_end;
+    expect(parsed).toEqual({ month: 0, day: 31 });
+    expect(formatFiscalYearEnd(parsed)).toBe("00-31");
+  });
+
   it("parses a single conversion currency into a one-element list", () => {
     const directives: DirectiveJson[] = [
       customStrings(
