@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { GraphQLError } from "graphql";
+import { GraphQLError, Kind, parse, OperationDefinitionNode } from "graphql";
 import { apolloMetricsPlugin } from "../apollo-plugin";
 import {
   graphqlQueryDuration,
@@ -22,6 +22,15 @@ jest.mock("../metrics-definitions", () => ({
   },
 }));
 
+/** The single operation a GraphQL document defines. */
+function operationOf(source: string): OperationDefinitionNode {
+  const definition = parse(source).definitions[0];
+  if (definition?.kind !== Kind.OPERATION_DEFINITION) {
+    throw new Error("expected an operation");
+  }
+  return definition;
+}
+
 describe("apolloMetricsPlugin", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -43,7 +52,7 @@ describe("apolloMetricsPlugin", () => {
       const handlers = await apolloMetricsPlugin.requestDidStart!({} as never);
       const mockContext = {};
       const requestContext = {
-        request: { operationName: "GetUser" },
+        request: { operationName: "ListLedgers" },
         operation: { operation: "query" },
         contextValue: mockContext,
       };
@@ -53,7 +62,7 @@ describe("apolloMetricsPlugin", () => {
       expect(graphqlQueryInProgress.inc).toHaveBeenCalled();
       expect(
         (mockContext as Record<string, string | number>)._metricsOperationName,
-      ).toBe("GetUser");
+      ).toBe("ListLedgers");
       expect(
         (mockContext as Record<string, string | number>)._metricsOperationType,
       ).toBe("query");
@@ -76,6 +85,50 @@ describe("apolloMetricsPlugin", () => {
       expect(
         (mockContext as Record<string, string | number>)._metricsOperationName,
       ).toBe("Anonymous");
+    });
+
+    it.each([
+      ["a name no first-party client defines", "MyScript"],
+      ["a generic name", "Query"],
+      ["no name", undefined],
+    ])(
+      "labels an operation with %s by its first root field",
+      async (_case, operationName) => {
+        const handlers = await apolloMetricsPlugin.requestDidStart!(
+          {} as never,
+        );
+        const mockContext = {};
+        const requestContext = {
+          request: { operationName },
+          operation: operationOf(
+            `query ${operationName ?? ""} { ledgers { id } }`,
+          ),
+          contextValue: mockContext,
+        };
+
+        await handlers?.didResolveOperation!(requestContext as never);
+
+        expect(
+          (mockContext as Record<string, string | number>)
+            ._metricsOperationName,
+        ).toBe("ledgers");
+      },
+    );
+
+    it("labels a named operation with no root field as Other", async () => {
+      const handlers = await apolloMetricsPlugin.requestDidStart!({} as never);
+      const mockContext = {};
+      const requestContext = {
+        request: { operationName: "MyScript" },
+        operation: { operation: "query" },
+        contextValue: mockContext,
+      };
+
+      await handlers?.didResolveOperation!(requestContext as never);
+
+      expect(
+        (mockContext as Record<string, string | number>)._metricsOperationName,
+      ).toBe("Other");
     });
 
     it("should use unknown for missing operation type", async () => {

@@ -5,6 +5,7 @@
  * 1. Normalizing routes to templates
  * 2. Grouping status codes into classes
  * 3. Validating label values
+ * 4. Capping the distinct values of request-derived labels
  */
 
 import { logger } from "@/shared/logger";
@@ -60,39 +61,33 @@ export function getStatusCodeClass(statusCode: number): string {
   return `${statusClass}xx`;
 }
 
+/** The value a capped label records once it holds its maximum. */
+export const OVERFLOW_LABEL = "Other";
+
 /**
- * Validate and sanitize operation name
+ * Cap the distinct values one label may take.
  *
- * Ensures GraphQL operation names don't cause cardinality explosion.
+ * prom-client keeps every label set it has seen for the life of the process,
+ * so a label whose value depends on the request needs a ceiling. The returned
+ * function passes a value through while fewer than `maxValues` distinct values
+ * have been admitted, keeps passing through values already admitted, and
+ * returns `Other` for any new value after that.
  *
- * @param operationName - GraphQL operation name
- * @param maxLength - Maximum allowed length (default: 100)
- * @returns Sanitized operation name or "Anonymous"
+ * @param maxValues - Distinct values to admit before new ones become `Other`
+ * @returns The label value to record for a candidate value
  */
-export function sanitizeOperationName(
-  operationName: string | null | undefined,
-  maxLength: number = 100,
-): string {
-  if (!operationName || operationName.length === 0) {
-    return "Anonymous";
-  }
-
-  // Truncate if too long
-  const truncated = operationName.slice(0, maxLength);
-
-  // Remove special characters that might indicate dynamic content
-  const cleaned = truncated.replace(/[^a-zA-Z0-9_]/g, "_");
-
-  // If it looks like a UUID or hash (hex string, 16+ chars), return generic name
-  // But exclude patterns like "AAAA" which are just repeated chars
-  const isHexLike = /^[a-f0-9]{16,}$/i.test(cleaned);
-  const hasRepeatedChars = /^(.)\1+$/.test(cleaned);
-
-  if (isHexLike && !hasRepeatedChars) {
-    return "DynamicOperation";
-  }
-
-  return cleaned;
+export function boundedLabel(maxValues: number): (value: string) => string {
+  const admitted = new Set<string>();
+  return (value) => {
+    if (admitted.has(value)) {
+      return value;
+    }
+    if (admitted.size >= maxValues) {
+      return OVERFLOW_LABEL;
+    }
+    admitted.add(value);
+    return value;
+  };
 }
 
 /**
@@ -135,7 +130,7 @@ export interface CardinalityConfig {
   normalizeRoutes: boolean;
 
   /**
-   * Maximum unique routes to track before using "OTHER"
+   * Distinct route labels to record; later routes are recorded as `Other`
    * Default: 1000
    */
   maxUniqueRoutes: number;

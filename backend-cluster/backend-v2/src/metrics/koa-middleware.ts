@@ -5,6 +5,7 @@ import {
   httpRequestInProgress,
 } from "./metrics-definitions";
 import {
+  boundedLabel,
   normalizeRoutePath,
   getStatusCodeClass,
   validateHttpMethod,
@@ -22,15 +23,16 @@ const cardinalityConfig: CardinalityConfig = defaultCardinalityConfig;
  * Record HTTP request metrics with cardinality control
  */
 function recordRequestMetrics(
+  routeLabel: (route: string) => string,
   method: string,
   route: string,
   statusCode: number,
   duration: number,
 ): void {
   // Apply cardinality controls
-  const normalizedRoute = cardinalityConfig.normalizeRoutes
-    ? normalizeRoutePath(route)
-    : route;
+  const normalizedRoute = routeLabel(
+    cardinalityConfig.normalizeRoutes ? normalizeRoutePath(route) : route,
+  );
 
   const validatedMethod = validateHttpMethod(method);
 
@@ -57,6 +59,8 @@ function recordRequestMetrics(
 
 // REST API metrics middleware
 export function restMetricsMiddleware() {
+  const routeLabel = boundedLabel(cardinalityConfig.maxUniqueRoutes);
+
   return async (ctx: Context, next: Next) => {
     // Skip metrics collection for configured paths
     if (ignorePrefixes.some((prefix) => ctx.path.startsWith(prefix))) {
@@ -83,7 +87,7 @@ export function restMetricsMiddleware() {
       const duration = (Date.now() - start) / 1000;
       const statusCode = ctx.status || 500;
 
-      recordRequestMetrics(method, route, statusCode, duration);
+      recordRequestMetrics(routeLabel, method, route, statusCode, duration);
 
       // Decrement in-progress requests
       httpRequestInProgress.dec();

@@ -7,6 +7,9 @@ on:
       - "backend-cluster/backend-v2/**"
       # The BQL claims the served text makes are pinned here (served-bql-claims.test.ts).
       - "backend-cluster/ledger/scripts/served-bql/**"
+      # Client operations must be first-party metric labels (first-party-operations.test.ts).
+      - "dashboard/src/**/*.graphql"
+      - "mobile/src/common/graphql/**"
       - ".github/workflows/ci-backend-parity.yml"
   pull_request:
     branches: [main]
@@ -14,6 +17,9 @@ on:
       - "backend-cluster/backend-v2/**"
       # The BQL claims the served text makes are pinned here (served-bql-claims.test.ts).
       - "backend-cluster/ledger/scripts/served-bql/**"
+      # Client operations must be first-party metric labels (first-party-operations.test.ts).
+      - "dashboard/src/**/*.graphql"
+      - "mobile/src/common/graphql/**"
       - ".github/workflows/ci-backend-parity.yml"
 
 concurrency:

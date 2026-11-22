@@ -5,7 +5,8 @@ import {
   graphqlQueryTotal,
   graphqlQueryInProgress,
 } from "./metrics-definitions";
-import { sanitizeOperationName } from "./cardinality-control";
+import { boundedLabel, OVERFLOW_LABEL } from "./cardinality-control";
+import { FIRST_PARTY_OPERATION_NAMES } from "./first-party-operations";
 import { DomainError } from "@/shared/errors";
 
 // Extend the context type to include metrics properties
@@ -16,8 +17,36 @@ interface MetricsContext {
 }
 
 /**
+ * Distinct `operation_name` values recorded besides the first-party names.
+ * Root fields are what fills it, and the schema has about 160 today.
+ */
+const MAX_OTHER_OPERATION_LABELS = 500;
+const otherOperationLabel = boundedLabel(MAX_OTHER_OPERATION_LABELS);
+
+/**
+ * The `operation_name` label for a resolved operation.
+ *
+ * A name a first-party client defines is recorded as is. Any other operation is
+ * labelled by its first root field, which validation has already checked
+ * against the schema. An operation with neither is `Anonymous` when it sent no
+ * name and `Other` when it did. Values beyond the first-party names are capped.
+ */
+function operationNameLabel(
+  operationName: string | null | undefined,
+  operation: OperationDefinitionNode | undefined,
+): string {
+  if (operationName && FIRST_PARTY_OPERATION_NAMES.has(operationName)) {
+    return operationName;
+  }
+  const fieldName = extractFirstFieldName(operation);
+  return otherOperationLabel(
+    fieldName ?? (operationName ? OVERFLOW_LABEL : "Anonymous"),
+  );
+}
+
+/**
  * Extract the first field name from a GraphQL operation
- * Used when operation name is generic (like "Query") or missing
+ * Used to label operations that are not first-party
  */
 function extractFirstFieldName(
   operation: OperationDefinitionNode | undefined,
@@ -67,25 +96,11 @@ export const apolloMetricsPlugin: ApolloServerPlugin = {
   async requestDidStart() {
     return {
       async didResolveOperation(requestContext) {
-        const rawOperationName = requestContext.request.operationName;
         const operationType = requestContext.operation?.operation || "unknown";
-
-        // If operation name is generic (Query, Mutation, Subscription) or missing,
-        // extract the first field name from the operation
-        let operationName: string;
-        if (
-          !rawOperationName ||
-          rawOperationName === "Query" ||
-          rawOperationName === "Mutation" ||
-          rawOperationName === "Subscription"
-        ) {
-          const fieldName = extractFirstFieldName(requestContext.operation);
-          operationName = fieldName
-            ? sanitizeOperationName(fieldName)
-            : sanitizeOperationName(rawOperationName);
-        } else {
-          operationName = sanitizeOperationName(rawOperationName);
-        }
+        const operationName = operationNameLabel(
+          requestContext.request.operationName,
+          requestContext.operation,
+        );
 
         // Increment in-progress queries
         graphqlQueryInProgress.inc();
@@ -100,9 +115,7 @@ export const apolloMetricsPlugin: ApolloServerPlugin = {
       async willSendResponse(requestContext) {
         const context = requestContext.contextValue as MetricsContext;
         const startTime = context._metricsStartTime;
-        const operationName =
-          context._metricsOperationName ||
-          sanitizeOperationName(requestContext.request?.operationName);
+        const operationName = context._metricsOperationName ?? "Anonymous";
 
         if (startTime) {
           const duration = (Date.now() - startTime) / 1000;

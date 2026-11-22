@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { Context, Next } from "koa";
 import { restMetricsMiddleware } from "../koa-middleware";
+import { defaultCardinalityConfig } from "../cardinality-control";
 import {
   httpRequestDuration,
   httpRequestTotal,
@@ -242,5 +243,27 @@ describe("restMetricsMiddleware", () => {
       route: "/api/users",
       method: "GET",
     });
+  });
+
+  it("records routes past the distinct-route cap as Other", async () => {
+    const cap = defaultCardinalityConfig.maxUniqueRoutes;
+    const request = (path: string) =>
+      middleware(
+        { method: "GET", path, status: 404 } as Context,
+        mockNext as Next,
+      );
+    const lastRoute = () =>
+      (httpRequestTotal.inc as jest.Mock).mock.lastCall[0].route;
+
+    for (let i = 0; i < cap; i++) {
+      await request(`/page-${i}`);
+    }
+    expect(lastRoute()).toBe(`/page-${cap - 1}`);
+
+    await request("/page-new");
+    expect(lastRoute()).toBe("Other");
+
+    await request("/page-0");
+    expect(lastRoute()).toBe("/page-0");
   });
 });

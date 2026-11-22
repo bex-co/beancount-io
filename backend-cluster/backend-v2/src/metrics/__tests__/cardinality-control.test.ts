@@ -1,7 +1,8 @@
 import {
   normalizeRoutePath,
   getStatusCodeClass,
-  sanitizeOperationName,
+  boundedLabel,
+  OVERFLOW_LABEL,
   validateHttpMethod,
   shouldSampleRequest,
   cardinalityTracker,
@@ -95,44 +96,39 @@ describe("getStatusCodeClass", () => {
   });
 });
 
-describe("sanitizeOperationName", () => {
-  it("should return Anonymous for null or undefined", () => {
-    expect(sanitizeOperationName(null)).toBe("Anonymous");
-    expect(sanitizeOperationName(undefined)).toBe("Anonymous");
-    expect(sanitizeOperationName("")).toBe("Anonymous");
+describe("boundedLabel", () => {
+  it("passes values through until the cap is reached", () => {
+    const label = boundedLabel(2);
+    expect(label("a")).toBe("a");
+    expect(label("b")).toBe("b");
+    expect(label("c")).toBe(OVERFLOW_LABEL);
   });
 
-  it("should preserve valid operation names", () => {
-    expect(sanitizeOperationName("GetUser")).toBe("GetUser");
-    expect(sanitizeOperationName("CreateLedger")).toBe("CreateLedger");
-    expect(sanitizeOperationName("UpdateUser_Profile")).toBe(
-      "UpdateUser_Profile",
-    );
+  it("keeps recording admitted values after the cap is reached", () => {
+    const label = boundedLabel(2);
+    label("a");
+    label("b");
+    label("c");
+    expect(label("a")).toBe("a");
+    expect(label("b")).toBe("b");
   });
 
-  it("should replace special characters with underscores", () => {
-    expect(sanitizeOperationName("Get-User")).toBe("Get_User");
-    expect(sanitizeOperationName("Create.Ledger")).toBe("Create_Ledger");
-    expect(sanitizeOperationName("Update User!")).toBe("Update_User_");
+  it("records at most the cap plus Other across many distinct values", () => {
+    const label = boundedLabel(50);
+    const recorded = new Set<string>();
+    for (let i = 0; i < 5000; i++) {
+      recorded.add(label(`value${i}`));
+    }
+    expect(recorded.size).toBe(51);
+    expect(recorded.has(OVERFLOW_LABEL)).toBe(true);
   });
 
-  it("should truncate long operation names", () => {
-    const longName = "A".repeat(150);
-    const result = sanitizeOperationName(longName);
-    expect(result.length).toBe(100);
-  });
-
-  it("should handle custom max length", () => {
-    const longName = "A".repeat(100);
-    const result = sanitizeOperationName(longName, 50);
-    expect(result.length).toBe(50);
-  });
-
-  it("should detect and replace UUID-like names", () => {
-    expect(sanitizeOperationName("550e8400e29b41d4a716446655440000")).toBe(
-      "DynamicOperation",
-    );
-    expect(sanitizeOperationName("abcdef1234567890")).toBe("DynamicOperation");
+  it("keeps each cap separate", () => {
+    const first = boundedLabel(1);
+    const second = boundedLabel(1);
+    first("a");
+    expect(first("b")).toBe(OVERFLOW_LABEL);
+    expect(second("b")).toBe("b");
   });
 });
 
