@@ -17,8 +17,8 @@ import { JournalFilters } from "../journal-filters";
 
 /**
  * The Journal for reconciling: one line per entry with its date and status,
- * and balance assertions in the flow as checkpoints. Real table, formatter
- * and English.
+ * and balance assertions in the flow as checkpoints. Uses the real table,
+ * formatter and translations.
  */
 vi.unmock("react-i18next");
 vi.unmock("@/common/hooks/use-translations");
@@ -73,9 +73,10 @@ const balance = (
 async function renderLines(
   entries: JournalDirectiveType[],
   accountFilter = "",
+  language = "en",
 ) {
   const localization = createLocalization();
-  await localization.changeLanguage("en");
+  await localization.changeLanguage(language);
   render(
     <LocalizationProvider localization={localization}>
       <LedgerProviderContext.Provider value={ledger}>
@@ -137,6 +138,19 @@ describe("the Journal's compact lines", () => {
     expect(matching).toHaveTextContent("Matches");
     expect(matching).toHaveTextContent("2,962.67 USD");
     expect(off).toHaveTextContent("Off by 12.00 USD");
+  });
+
+  it("localizes the balance label and the cleared transaction tooltip in Persian", async () => {
+    await renderLines(
+      [balance("ok", null), { ...dinner, flag: "*" }],
+      "",
+      "fa",
+    );
+
+    expect(
+      screen.getByText("مانده", { selector: "button" }),
+    ).toBeInTheDocument();
+    expect(screen.getByTitle("پاک شد")).toHaveTextContent(/^\*/);
   });
 });
 
