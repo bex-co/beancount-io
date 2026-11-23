@@ -6,6 +6,7 @@ import {
 } from "@/foundation/rustledger/source-slice-worker";
 import { indexDatedBlocks, sliceSha256 } from "@/foundation/rustledger";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
+import { BadUserInputError } from "@/shared/errors";
 
 /**
  * w1/237. A 1,000-entry `deleteEntrySources` batch took 90 s, overran the
@@ -164,3 +165,28 @@ it("still refuses the whole batch when one entry is unknown", async () => {
   ).rejects.toMatchObject({ category: "NOT_FOUND" });
   expect(commitMock).not.toHaveBeenCalled();
 });
+
+// w31/042: an empty batch must be refused before loading the ledger or running
+// rustledger, matching moveSourceSlices.
+it.each([false, true])(
+  "refuses empty entries with BadUserInputError without loading the ledger (dryRun %p)",
+  async (dryRun) => {
+    const failure = await service()
+      .deleteMultiSourceSlices({
+        ledgerId: "alice/main",
+        userId: "user-1",
+        entries: [],
+        dryRun,
+      })
+      .catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(BadUserInputError);
+    expect(failure).toMatchObject({
+      category: "BAD_USER_INPUT",
+      message: "entries must name at least one entry",
+      metadata: { field: "entries" },
+    });
+    expect(loadMock).not.toHaveBeenCalled();
+    expect(findMock).not.toHaveBeenCalled();
+    expect(commitMock).not.toHaveBeenCalled();
+  },
+);

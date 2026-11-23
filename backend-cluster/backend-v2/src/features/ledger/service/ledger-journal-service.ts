@@ -527,6 +527,12 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
 
+    if (entries.length === 0) {
+      throw new BadUserInputError(
+        "entries must name at least one entry",
+        "entries",
+      );
+    }
     // GraphQL's entries argument arrives unchecked, so the schema maxItems
     // alone would leave that surface uncapped (w23/103).
     assertBulkEntriesSize(entries, "deleted");

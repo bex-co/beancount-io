@@ -1294,3 +1294,60 @@ describe.each(["rest", "gql", "mcp"])(
     });
   },
 );
+
+describe.each(["rest", "gql", "mcp"])(
+  "empty batch deletes via %s",
+  (surface) => {
+    // w31/042: an empty batch must be refused with BAD_USER_INPUT before
+    // calling the ledger service, on both preview and commit paths.
+    it.each([false, true])(
+      "refuses empty entries with BAD_USER_INPUT and calls nothing (dryRun: %s)",
+      async (dryRun) => {
+        const f = await fixture();
+        const before = [...f.slices];
+        try {
+          const result = await f.call(surface, "delete_many", {
+            entries: [],
+            [surface === "mcp" ? "dry_run" : "dryRun"]: dryRun,
+          });
+          expect(result.success).toBe(false);
+          expect(f.journal.deleteMultiSourceSlices).not.toHaveBeenCalled();
+          expect([...f.slices]).toEqual(before);
+          if (surface === "rest") {
+            expect(result.result).toMatchObject({
+              ok: false,
+              error: {
+                code: "BAD_USER_INPUT",
+                message: "entries must name at least one entry",
+                metadata: { field: "entries" },
+              },
+            });
+          } else if (surface === "gql") {
+            const refusal = result.errors?.[0]?.originalError as
+              | {
+                  category?: string;
+                  message?: string;
+                  metadata?: Record<string, unknown>;
+                }
+              | undefined;
+            expect(refusal).toMatchObject({
+              category: "BAD_USER_INPUT",
+              message: "entries must name at least one entry",
+              metadata: { field: "entries" },
+            });
+          } else {
+            expect(result.full).toMatchObject({
+              ok: false,
+              error: {
+                code: "BAD_USER_INPUT",
+                message: "entries must name at least one entry",
+              },
+            });
+          }
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  },
+);

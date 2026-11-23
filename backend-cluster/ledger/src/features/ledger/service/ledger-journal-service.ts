@@ -1255,6 +1255,12 @@ export class LedgerJournalService implements ILedgerJournalService {
     dryRun?: boolean;
   }): Promise<DeleteMultiSlicesResult> {
     const { ledgerId, userId, entries, allowInvalid, dryRun } = params;
+    if (entries.length === 0) {
+      throw new BadUserInputError(
+        "entries must name at least one entry",
+        "entries",
+      );
+    }
     const loaded = await this.loadFileMap(ledgerId, userId);
     const { removed, transforms } = await this.planSliceRemoval(
       loaded,

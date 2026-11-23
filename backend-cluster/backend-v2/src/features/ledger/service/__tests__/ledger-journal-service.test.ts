@@ -524,10 +524,32 @@ describe("LedgerJournalService", () => {
         service.deleteMultiSourceSlices({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entries: [],
+          entries: [{ entryHash: "h1", sha256sum: "s1" }],
         }),
       ).rejects.toThrow(InternalServerError);
     });
+
+    it.each([false, true])(
+      "refuses empty entries with BadUserInputError without calling the ledger (dryRun: %s)",
+      async (dryRun) => {
+        const failure = await service
+          .deleteMultiSourceSlices({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entries: [],
+            dryRun,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          message: "entries must name at least one entry",
+          metadata: { field: "entries" },
+        });
+        expect(mockDeleteMultiSourceSlices).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe("updateSourceSlice", () => {
