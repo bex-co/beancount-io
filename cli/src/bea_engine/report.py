@@ -517,8 +517,8 @@ def _as_written(value: Any) -> str:
     return str(value.value)
 
 
-def _scoped_earnings(filtered: Any, conversion: str, unfiltered: Any) -> Any:
-    """Current earnings over the accounts `--account` actually selected.
+def _scoped_earnings(filtered: Any, conversion: str, data: Any) -> tuple[Any, list[Any]]:
+    """Current earnings over the accounts `--account` actually selected, and the roots they sum.
 
     `balance_sheet` sums the income and expenses hierarchies before this module
     prunes anything, so a filtered balance sheet reported the whole period's
@@ -527,10 +527,12 @@ def _scoped_earnings(filtered: Any, conversion: str, unfiltered: Any) -> Any:
     trees so the two reports answer alike.
 
     Returned untouched when no filter is set, so an unfiltered balance sheet is
-    byte-identical to before.
+    byte-identical to before. The parts are the income and expenses roots the
+    income statement prints, for the text earnings line (w1/358).
     """
+    unfiltered = data.current_earnings
     if not filtered.account:
-        return unfiltered
+        return unfiltered, list(data.earnings_parts)
     from fava.modules.chart import ChartModule
 
     chart = ChartModule()
@@ -541,12 +543,11 @@ def _scoped_earnings(filtered: Any, conversion: str, unfiltered: Any) -> Any:
         filtered.ledger.root_accounts,
     )
     earnings = type(unfiltered)()
-    for tree in trees.values():
-        if tree is None:
-            continue
-        for currency, amount in tree.balance_children.items():
+    parts = [tree.balance_children for tree in trees.values() if tree is not None]
+    for part in parts:
+        for currency, amount in part.items():
             earnings.add(currency, amount)
-    return earnings
+    return earnings, parts
 
 
 def _balance_sheet(
@@ -555,7 +556,7 @@ def _balance_sheet(
     from fava.modules.financial_statements import FinancialStatementsModule
 
     data = FinancialStatementsModule().balance_sheet(filtered, _interval(interval), conversion)
-    earnings = _scoped_earnings(filtered, conversion, data.current_earnings)
+    earnings, earnings_parts = _scoped_earnings(filtered, conversion, data)
     sections = _prune_sections(
         {
             "assets": data.assets_hierarchy,
@@ -602,6 +603,9 @@ def _balance_sheet(
         # The income statement's `net_profit` rule, so both reports agree.
         "current_earnings": _headline(earnings, conversion),
         "current_earnings_signs": "negative_for_gain",
+        # Text only: the income and expenses roots, so the earnings line foots
+        # with the figures the income statement prints for them (w1/358).
+        "earnings_parts": [_balance_map(part) for part in earnings_parts],
         "net_profit": _headline(-earnings, conversion),
         # Named in the conversion currency, as the headlines are: an empty
         # inventory printed "—" beside `Net Worth: 0.00 USD` (w5/506).

@@ -216,6 +216,10 @@ class BalanceSheetData:
     liabilities_hierarchy: SerialisedTreeNode
     equity_hierarchy: SerialisedTreeNode
     current_earnings: SimpleCounterInventory
+    #: Beancount.io change: the income and expenses roots `current_earnings`
+    #: sums, so a text report can print it from the figures the income
+    #: statement prints for them (w1/358).
+    earnings_parts: tuple[SimpleCounterInventory, ...]
     valuation_adjustment: SimpleCounterInventory
     rounding_residual: SimpleCounterInventory
     equity_total: SimpleCounterInventory
@@ -363,6 +367,7 @@ class FinancialStatementsModule:
             liabilities_hierarchy=liabilities,
             equity_hierarchy=equity,
             current_earnings=earnings,
+            earnings_parts=tuple(tree.balance_children for tree in valued[3:]),
             valuation_adjustment=adjustment,
             rounding_residual=rounding,
             equity_total=equity_total,

@@ -2593,6 +2593,22 @@ an amount that rounds to zero prints unsigned (`-0.40 USD` at whole-dollar
 precision reads `0 USD`). JSON keeps the full-precision decimal string
 (`"4.9050"`, `"-0.40"`).
 
+Text totals are footed from the printed figures, per currency, so a statement
+adds up digit for digit even where rounding each figure on its own would miss
+by a cent. `Net Profit` is `-(income + expenses)` as printed, in the headline
+and every interval row; `Net Worth` is assets plus liabilities as printed; the
+`Valuation/translation adjustment` is what nets the printed lines of the trial
+balance (and `bea balance`) and of the balance sheet, beside any `Rounding
+residual`; `Total equity` is the sum of the printed equity lines; and the
+balance sheet's earnings line is income plus expenses as the income statement
+prints them. Cash flow's section totals sum their rows, `Net change in cash`
+sums the section totals, and its `Rounding residual` is what takes the printed
+opening cash and net change to the printed closing cash. Account rows keep
+their own rounding. With `price VTI 95.45 USD` on 2.5 shares, the trial balance
+prints assets `9,988.63 USD`, equity `-10,000.00 USD` and an adjustment of
+`11.37 USD`, while `--json` keeps `"9988.625"` and `"11.375"`. JSON and CSV
+carry the exact figures, which foot on their own.
+
 ## Managed price includes
 
 One line values a holding at market in every command — no quote provider to

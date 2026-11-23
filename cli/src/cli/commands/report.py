@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import shlex
 import sys
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from enum import StrEnum
@@ -167,6 +167,58 @@ def _amounts(
     return "  ".join(render(currency, number) for currency, number in sorted(balance.items())) or "—"
 
 
+def _figure(number: Any, currency: str, precision: Mapping[str, int]) -> Decimal | None:
+    """One amount as text prints it; None where it reads Unavailable or is not a number."""
+    value = _as_decimal(number)
+    if value is None or not value.is_finite():
+        return None
+    return _quantize(value, currency, precision)
+
+
+def _negated(balance: Mapping[str, Any]) -> dict[str, Decimal | None]:
+    """A balance with every sign flipped; rounding half up is symmetric, so it prints flipped too."""
+    signed = {currency: _as_decimal(number) for currency, number in balance.items()}
+    return {currency: None if value is None else -value for currency, value in signed.items()}
+
+
+def _footed(
+    total: Mapping[str, Any] | None, parts: Iterable[Mapping[str, Any] | None], precision: Mapping[str, int]
+) -> dict[str, Any]:
+    """A line defined as the sum of others, as the sum of what those others print (w1/358).
+
+    Each text figure rounds on its own, half up, so a total rounded from its
+    exact value could miss the lines it sums by a cent: `10.005` and
+    `-20.00` print `10.01` and `-20.00`, while their `-9.995` printed
+    `-10.00`. Summing the printed parts, per currency, makes the statement
+    foot; a part the line subtracts goes in `_negated`. A line reading
+    Unavailable stays as it is, and so does a currency where a part reads
+    Unavailable or no part names it. A currency only the parts name joins
+    when what they print does not net to zero. JSON and CSV keep the exact
+    figures.
+    """
+    total = total or {}
+    if any(_figure(number, currency, precision) is None for currency, number in total.items()):
+        return dict(total)
+    named = [part for part in parts if part]
+    footed: dict[str, Any] = {}
+    for currency in set(total).union(*named):
+        figures = [_figure(part[currency], currency, precision) for part in named if currency in part]
+        known = [figure for figure in figures if figure is not None]
+        if not known or len(known) < len(figures):
+            if currency in total:
+                footed[currency] = total[currency]
+            continue
+        value = sum(known, Decimal(0))
+        if currency in total or value:
+            footed[currency] = value
+    return footed
+
+
+def _same(left: Mapping[str, Any], right: Mapping[str, Any]) -> bool:
+    """Whether two balances hold the same figures, however each spells them."""
+    return left.keys() == right.keys() and all(_as_decimal(left[key]) == _as_decimal(right[key]) for key in left)
+
+
 def _money(
     amount: dict[str, Any] | None, conversion: str | None = None, precision: Mapping[str, int] | None = None
 ) -> str:
@@ -218,15 +270,26 @@ def _print_trial_balance(data: dict[str, Any]) -> None:
     Each line shows only when it holds something: a ledger with no holdings or
     priced exchanges nets without the first, one whose transactions balance
     exactly without the second (w1/304), and JSON and CSV still carry the zero.
+    The adjustment printed is what nets the printed lines, so a text trial
+    balance foots to zero digit for digit (w1/358).
     """
     conversion = str(data["conversion"])
     _heading("Trial Balance", data)
     precision = _precision(data)
-    lines = {
-        "Valuation/translation adjustment:": data.get("valuation_adjustment") or {},
-        "Rounding residual:": data.get("rounding_residual") or {},
-    }
-    for name in ("assets", "liabilities", "equity", "income", "expenses"):
+    names = ("assets", "liabilities", "equity", "income", "expenses")
+    adjustment = data.get("valuation_adjustment")
+    rounding = data.get("rounding_residual") or {}
+    plug: dict[str, Any] = {}
+    if adjustment is not None:
+        # Withheld (None), the adjustment nets nothing, so nothing is plugged.
+        roots = [_negated(data[name]["balance_children"]) for name in names if data[name] is not None]
+        plug = _footed(adjustment, [*roots, _negated(rounding)], precision)
+    lines = [
+        # A plug that is not zero shows even where the exact figure is zero.
+        ("Valuation/translation adjustment:", plug, _nonzero(adjustment or {}) or _nonzero(plug)),
+        ("Rounding residual:", rounding, _nonzero(rounding)),
+    ]
+    for name in names:
         tree = data[name]
         if tree is None:
             continue
@@ -234,8 +297,8 @@ def _print_trial_balance(data: dict[str, Any]) -> None:
         _print_tree(tree, conversion=conversion, precision=precision)
         if name != "equity":
             continue
-        for label, balance in lines.items():
-            if _nonzero(balance):
+        for label, balance, shown in lines:
+            if shown:
                 typer.echo(f"  {label:<46}  {_amounts(balance, conversion, precision)}")
 
 
@@ -432,7 +495,7 @@ def _emit_csv(kind: str, file: Any, data: dict[str, Any], target: CsvOutput) -> 
 
 
 # Rendering hints for the text tables; JSON and CSV carry exact numbers.
-_TEXT_ONLY_KEYS = frozenset({"display_precision", "average_cost_precision", "cost_precision"})
+_TEXT_ONLY_KEYS = frozenset({"display_precision", "average_cost_precision", "cost_precision", "earnings_parts"})
 
 
 def _emit_json(file: Any, data: dict[str, Any]) -> None:
@@ -465,7 +528,9 @@ def overview(
     conversion = str(data["conversion"])
     _heading("Financial Overview", data)
     precision = _precision(data)
-    for title, balance in data["totals"].items():
+    totals = dict(data["totals"])
+    totals["net_worth"] = _footed(totals["net_worth"], [totals["assets"], totals["liabilities"]], precision)
+    for title, balance in totals.items():
         typer.echo(f"  {title.replace('_', ' ').title() + ':':<16} {_amounts(balance, conversion, precision)}")
     typer.echo(f"\n{data['interval'].title()} breakdown")
     # Join flow and balance series by their valuation date. The balance series
@@ -519,12 +584,16 @@ def income_statement(
     conversion = str(data["conversion"])
     _heading("Income Statement", data, profit_line=True)
     precision = _precision(data)
-    for tree in (data["income"], data["expenses"]):
-        if tree is None:
-            continue
+    trees = [tree for tree in (data["income"], data["expenses"]) if tree is not None]
+    for tree in trees:
         typer.echo("")
         _print_tree(tree, conversion=conversion, precision=precision)
-    typer.echo(f"\nNet Profit: {_amounts(data['net_profit'], conversion, precision)}")
+
+    def profit(total: Mapping[str, Any], *parts: Mapping[str, Any]) -> str:
+        # Net profit is -(income + expenses) as printed beside it (w1/358).
+        return _amounts(_footed(total, map(_negated, parts), precision), conversion, precision)
+
+    typer.echo(f"\nNet Profit: {profit(data['net_profit'], *(tree['balance_children'] for tree in trees))}")
     typer.echo(f"\n{data['interval'].title()} breakdown")
     output.table(
         ["PERIOD END", "INCOME", "EXPENSES", "NET PROFIT"],
@@ -533,7 +602,7 @@ def income_statement(
                 str(period["date"]),
                 _amounts(period["income"], conversion, precision),
                 _amounts(period["expenses"], conversion, precision),
-                _amounts(period["net_profit"], conversion, precision),
+                profit(period["net_profit"], period["income"], period["expenses"]),
             ]
             for period in data["periods"]
         ],
@@ -573,31 +642,43 @@ def balance_sheet(
     conversion = str(data["conversion"])
     _heading("Balance Sheet", data)
     precision = _precision(data)
-    for tree in (data["assets"], data["liabilities"], data["equity"]):
-        if tree is None:
-            continue
+    sections = {name: data[name]["balance_children"] for name in ("assets", "liabilities", "equity") if data[name]}
+    for name in sections:
         typer.echo("")
-        _print_tree(tree, conversion=conversion, precision=precision)
-    earnings = _amounts(data["current_earnings"], conversion, precision)
-    typer.echo(f"  {'Current-period earnings (credit):':<46}  {earnings}")
+        _print_tree(data[name], conversion=conversion, precision=precision)
+    # Each derived line is footed from the lines printed for it (w1/358):
+    # earnings from the income and expenses the income statement prints.
+    earnings = _footed(data["current_earnings"], data.get("earnings_parts") or [], precision)
+    typer.echo(f"  {'Current-period earnings (credit):':<46}  {_amounts(earnings, conversion, precision)}")
     if data.get("equity_reconciled"):
-        adjustment = _amounts(data["valuation_adjustment"] or {}, conversion, precision)
-        typer.echo(f"  {'Valuation/translation adjustment (credit):':<46}  {adjustment}")
+        rounding = data["rounding_residual"] or {}
+        # The adjustment is what nets the printed lines; total equity sums them.
+        others = map(_negated, [*sections.values(), earnings, rounding])
+        adjustment = _footed(data["valuation_adjustment"], others, precision)
+        label = "Valuation/translation adjustment (credit):"
+        typer.echo(f"  {label:<46}  {_amounts(adjustment, conversion, precision)}")
         # What the ledger's tolerance accepted, shown when there was some (w1/304).
-        rounding = data["rounding_residual"]
         if _nonzero(rounding):
             typer.echo(f"  {'Rounding residual (credit):':<46}  {_amounts(rounding, conversion, precision)}")
-        equity_total = _amounts(data["equity_total"] or {}, conversion, precision)
-        typer.echo(f"  {'Total equity (credit):':<46}  {equity_total}")
+        equity_parts = [sections.get("equity"), earnings, adjustment, rounding]
+        equity_total = _footed(data["equity_total"], equity_parts, precision)
+        typer.echo(f"  {'Total equity (credit):':<46}  {_amounts(equity_total, conversion, precision)}")
     # The credit lines above carry the opposite sign to the income statement's
     # Net Profit, which is the same quantity. Say so, and say what it equals.
-    profit = _amounts(data["net_profit"], conversion, precision)
+    profit = _amounts(_footed(data["net_profit"], [_negated(earnings)], precision), conversion, precision)
     typer.echo(f"\nCredit lines above are negative for a gain; the same period's Net Profit is {profit}.")
-    typer.echo(f"Net Worth: {_amounts(data['net_worth'], conversion, precision)}")
+    worth = _footed(data["net_worth"], [sections.get("assets"), sections.get("liabilities")], precision)
+    typer.echo(f"Net Worth: {_amounts(worth, conversion, precision)}")
     typer.echo(f"\n{str(data['interval']).title()} net worth")
+
+    def series_cell(point: Mapping[str, Any]) -> str:
+        # The as-of row is the headline's figure, and prints as the headline does.
+        same = str(point["date"]) == str(data["as_of"]) and _same(point["balance"], data["net_worth"])
+        return _amounts(worth if same else point["balance"], conversion, precision)
+
     output.table(
         ["DATE", "NET WORTH"],
-        [[str(point["date"]), _amounts(point["balance"], conversion, precision)] for point in data["net_worth_series"]],
+        [[str(point["date"]), series_cell(point)] for point in data["net_worth_series"]],
     )
 
 
@@ -926,15 +1007,23 @@ def cash_flow(
             ["ACCOUNT", "AMOUNT"],
             [[row["account"], _amounts(row["amounts"], conversion, precision)] for row in rows],
         )
-    totals = data["totals"]
+    # Each total sums the printed lines above it, and the rounding line is what
+    # takes the printed opening and net change to the printed closing (w1/358).
+    totals = {
+        activity: _footed(data["totals"][activity], [row["amounts"] for row in sections[activity]], precision)
+        for activity in activities
+    }
+    net_change = _footed(data["net_change"], totals.values(), precision)
+    residual = data.get("rounding_residual") or {}
+    rounding = _footed(residual, [data["closing"], _negated(data["opening"]), _negated(net_change)], precision)
     typer.echo("")
     for activity in activities:
         if sections[activity]:
             typer.echo(f"  {f'Total {activity}:':<20} {_amounts(totals[activity], conversion, precision)}")
-    typer.echo(f"  {'Net change in cash:':<20} {_amounts(data['net_change'], conversion, precision)}")
-    if data.get("rounding_residual"):
+    typer.echo(f"  {'Net change in cash:':<20} {_amounts(net_change, conversion, precision)}")
+    if residual or _nonzero(rounding):
         # Cost rounding the ledger's own tolerances accepted (w5/1071).
-        typer.echo(f"  {'Rounding residual:':<20} {_amounts(data['rounding_residual'], conversion, precision)}")
+        typer.echo(f"  {'Rounding residual:':<20} {_amounts(rounding, conversion, precision)}")
     typer.echo(f"  {'Opening cash:':<20} {_amounts(data['opening'], conversion, precision)}")
     typer.echo(f"  {'Closing cash:':<20} {_amounts(data['closing'], conversion, precision)}")
     cash_accounts = [entry["account"] for entry in data["cash_accounts"]]
