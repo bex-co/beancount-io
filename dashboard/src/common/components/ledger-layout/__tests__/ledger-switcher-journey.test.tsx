@@ -93,8 +93,12 @@ async function setup(language: "en" | "de", fullName?: string) {
             name: operation.operationName,
             variables: operation.variables,
           });
-          expect(operation.operationName).toBe("ListLedgers");
-          observer.next({ data: ledgers });
+          if (operation.operationName === "ListLedgers") {
+            observer.next({ data: ledgers });
+          } else {
+            expect(operation.operationName).toBe("GetCurrentUser");
+            observer.next({ data: { userProfile: null } });
+          }
           observer.complete();
         }),
     ),
@@ -255,6 +259,60 @@ describe("ledger switcher names and real navigation", () => {
       await user.keyboard("{Enter}");
       await screen.findByRole("heading", { name: "Profile destination" });
       expect(router.state.location.pathname).toBe("/ledger/alice");
+    },
+  );
+
+  it.each([
+    {
+      action: "Create Ledger",
+      tabs: 1,
+      selectedLedger: false,
+      role: "dialog",
+      destination: "Create New Ledger",
+      url: undefined,
+    },
+    {
+      action: "Manage your Beancount ledgers",
+      tabs: 2,
+      selectedLedger: true,
+      role: "heading",
+      destination: "Dashboard destination",
+      url: "/ledger",
+    },
+  ] as const)(
+    "Enter activates $action while a picker option is highlighted",
+    async ({ action, tabs, selectedLedger, role, destination, url }) => {
+      const { router } = await setup("en");
+      const originalUrl = router.state.location.href;
+      const user = userEvent.setup();
+      screen.getByRole("combobox", { name: "books — switch ledger" }).focus();
+      await user.keyboard("{Enter}");
+
+      const picker = within(
+        await screen.findByRole("dialog", { name: "Select a ledger" }),
+      );
+      expect(picker.getByRole("combobox")).toHaveFocus();
+      const owner = await picker.findByRole("option", {
+        name: messages.en.owner,
+      });
+      await waitFor(() =>
+        expect(owner).toHaveAttribute("aria-selected", "true"),
+      );
+      if (selectedLedger) {
+        await user.keyboard("{ArrowDown}{ArrowDown}");
+        expect(
+          picker.getByRole("option", { name: /^business/ }),
+        ).toHaveAttribute("aria-selected", "true");
+      }
+
+      for (let tab = 0; tab < tabs; tab++) await user.tab();
+      expect(picker.getByRole("button", { name: action })).toHaveFocus();
+      await user.keyboard("{Enter}");
+
+      expect(
+        await screen.findByRole(role, { name: destination }),
+      ).toBeVisible();
+      expect(router.state.location.href).toBe(url ?? originalUrl);
     },
   );
 

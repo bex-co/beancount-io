@@ -372,7 +372,13 @@ function LedgerAuthenticatedSwitcher({
                 </CommandList>
 
                 {/* Keep global actions outside cmdk's scrollable list sizer. */}
-                <div className="shrink-0 border-t bg-popover p-1">
+                <div
+                  className="shrink-0 border-t bg-popover p-1"
+                  onKeyDown={(event) => {
+                    // Let the focused button activate before cmdk handles Enter.
+                    if (event.key === "Enter") event.stopPropagation();
+                  }}
+                >
                   <Button
                     type="button"
                     variant="ghost"
