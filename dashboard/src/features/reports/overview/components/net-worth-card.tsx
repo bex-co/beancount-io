@@ -413,6 +413,8 @@ export function NetWorthCard({
     latestComparable && previousComparable
       ? amountDifference(latestComparable, previousComparable)
       : null;
+  // The exact subtraction normalizes signed zero.
+  const rising = change !== null && isPositiveDecimalNumber(change);
   const falling = change?.startsWith("-") ?? false;
   // The change as a share of last month, when last month held something to
   // be a share of. A ratio, so the doubles are fine here.
@@ -548,17 +550,14 @@ export function NetWorthCard({
       <span
         className={cn(
           "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium whitespace-nowrap tabular-nums",
-          falling
-            ? "bg-rose-500/10 text-rose-700 dark:text-rose-400"
-            : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+          rising && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+          falling && "bg-rose-500/10 text-rose-700 dark:text-rose-400",
+          !rising && !falling && "bg-muted text-muted-foreground",
         )}
       >
-        {falling ? (
-          <TrendingDown aria-hidden="true" className="size-3.5" />
-        ) : (
-          <TrendingUp aria-hidden="true" className="size-3.5" />
-        )}
-        {isPositiveDecimalNumber(change) ? "+" : ""}
+        {falling && <TrendingDown aria-hidden="true" className="size-3.5" />}
+        {rising && <TrendingUp aria-hidden="true" className="size-3.5" />}
+        {rising ? "+" : ""}
         {formatNumber(
           change,
           latestComparable.currency,

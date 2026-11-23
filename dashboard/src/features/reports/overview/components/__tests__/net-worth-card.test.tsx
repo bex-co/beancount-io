@@ -706,6 +706,45 @@ describe("NetWorthCard monthly change", () => {
       ?.textContent ?? null;
 
   it.each([
+    {
+      balance: "10000.00",
+      text: "0.00 USD · 0%",
+      share: "· 0%",
+      color: "text-muted-foreground",
+      icon: null,
+    },
+    {
+      balance: "12013.11",
+      text: "+2013.11 USD · +20.1%",
+      share: "· +20.1%",
+      color: "text-emerald-700",
+      icon: ".lucide-trending-up",
+    },
+    {
+      balance: "9988.00",
+      text: "-12.00 USD · -0.1%",
+      share: "· -0.1%",
+      color: "text-rose-700",
+      icon: ".lucide-trending-down",
+    },
+  ])(
+    "uses the exact change to style $text",
+    ({ balance, text, share, color, icon }) => {
+      renderCard([
+        { date: "2016-01-31", balance: { USD: "10000.00" } },
+        { date: "2016-02-29", balance: { USD: balance } },
+      ]);
+
+      const badge = screen.getByText(share).parentElement!;
+      expect(badge).toHaveTextContent(text);
+      expect(badge).toHaveClass(color);
+      if (icon) expect(badge.querySelector(icon)).toBeInTheDocument();
+      else expect(badge.querySelector("svg")).toBeNull();
+    },
+  );
+
+  it.each([
+    { balance: "1000", shareText: "· 0%" },
     { balance: "1200", shareText: "· +20%" },
     { balance: "800", shareText: "· -20%" },
   ])(
