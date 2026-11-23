@@ -35,10 +35,12 @@ interface DocumentRowProps {
 }
 
 export function DocumentRow({ document, onActivate }: DocumentRowProps) {
+  const metadata = Object.entries(document.meta ?? {});
+
   return (
     <TableRow
       {...getClickableRowProps<HTMLTableRowElement>(onActivate, {
-        className: "hover:bg-muted/30",
+        className: "hover:bg-muted/30 [&>td]:align-top",
         preserveTableSemantics: true,
       })}
     >
@@ -90,10 +92,20 @@ export function DocumentRow({ document, onActivate }: DocumentRowProps) {
         </div>
       </TableCell>
       <TableCell className="w-40 px-2 sm:px-3 py-1.5 sm:py-2">
-        {document.meta && Object.keys(document.meta).length > 0 ? (
-          <div className="truncate text-sm text-muted-foreground">
-            {JSON.stringify(document.meta)}
-          </div>
+        {metadata.length > 0 ? (
+          <ul
+            role="list"
+            className="max-w-56 space-y-0.5 [overflow-wrap:anywhere] text-sm text-muted-foreground"
+          >
+            {metadata.map(([key, value]) => (
+              <li key={key} dir="auto">
+                <span className="font-medium text-foreground">{key}:</span>{" "}
+                <bdi>
+                  {typeof value === "string" ? value : JSON.stringify(value)}
+                </bdi>
+              </li>
+            ))}
+          </ul>
         ) : (
           <span className="text-muted-foreground text-sm">-</span>
         )}
