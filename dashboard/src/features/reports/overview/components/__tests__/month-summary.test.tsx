@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { createLocalization } from "@/i18n/init";
@@ -204,10 +204,43 @@ describe("the month summary", () => {
       />,
     );
     expect(screen.getByRole("group", { name: "Month shown" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
 
     await user.click(screen.getByRole("button", { name: "Previous" }));
     await user.click(screen.getByRole("button", { name: "Previous" }));
     expect(summary()).toBe("July 2026");
+  });
+
+  it("keeps keyboard focus on either arrow after reaching its limit", async () => {
+    const user = userEvent.setup();
+    await renderSummary(
+      <Summary
+        income={income.slice(-2)}
+        expenses={expenses.slice(-2)}
+        dataThrough="2026-09-30"
+        today="2026-10-02"
+      />,
+    );
+    const stepper = within(screen.getByRole("group", { name: "Month shown" }));
+    const previous = stepper.getByRole("button", { name: "Previous" });
+    const next = stepper.getByRole("button", { name: "Next" });
+
+    previous.focus();
+    await user.keyboard("{Enter}");
+    expect(previous).toHaveFocus();
+    expect(previous).toHaveAttribute("aria-disabled", "true");
+    await user.keyboard("{Enter}");
+    expect(summary()).toBe("August 2026");
+
+    await user.tab();
+    expect(next).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(next).toHaveFocus();
+    expect(next).toHaveAttribute("aria-disabled", "true");
+    await user.keyboard("{Enter}");
+    expect(summary()).toBe("September 2026");
   });
 });

@@ -156,6 +156,45 @@ describe("Overview customization from the all-hidden prompt", () => {
     access.canWrite = true;
   });
 
+  it("keeps keyboard tab order after moving a module to either end", async () => {
+    const user = userEvent.setup();
+    render(<LedgerOverviewPage />);
+    const prompt = screen.getByText(/All dashboard modules are hidden/);
+    await user.click(
+      within(prompt.parentElement!).getByRole("button", { name: "Customize" }),
+    );
+    const panel = within(await screen.findByRole("dialog"));
+    const down = panel.getByRole("button", {
+      name: "Move down: Financial position",
+    });
+    const up = panel.getByRole("button", {
+      name: "Move up: Financial position",
+    });
+    const financialPosition = panel.getByRole("switch", {
+      name: "Show module: Financial position",
+    });
+
+    down.focus();
+    await user.keyboard("{Enter}{Enter}{Enter}");
+    expect(panel.getAllByRole("switch").at(-1)).toBe(financialPosition);
+    expect(down).toHaveFocus();
+    expect(down).toHaveAttribute("aria-disabled", "true");
+    await user.keyboard("{Enter}");
+    expect(panel.getAllByRole("switch").at(-1)).toBe(financialPosition);
+    await user.tab();
+    expect(panel.getByRole("button", { name: "Reset layout" })).toHaveFocus();
+
+    up.focus();
+    await user.keyboard("{Enter}{Enter}{Enter}");
+    expect(panel.getAllByRole("switch")[0]).toBe(financialPosition);
+    expect(up).toHaveFocus();
+    expect(up).toHaveAttribute("aria-disabled", "true");
+    await user.keyboard("{Enter}");
+    expect(panel.getAllByRole("switch")[0]).toBe(financialPosition);
+    await user.tab();
+    expect(down).toHaveFocus();
+  });
+
   it("stays open while modules are restored, then returns focus to a visible trigger", async () => {
     const user = userEvent.setup();
     render(<LedgerOverviewPage />);

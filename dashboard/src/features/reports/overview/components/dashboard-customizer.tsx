@@ -130,6 +130,8 @@ export function DashboardCustomizer({
         <div className="flex-1 space-y-2 overflow-y-auto px-4">
           {layout.order.map((id, index) => {
             const visible = !layout.hidden.includes(id);
+            const canMoveUp = index > 0;
+            const canMoveDown = index < layout.order.length - 1;
             return (
               <div
                 key={id}
@@ -152,9 +154,11 @@ export function DashboardCustomizer({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-8"
-                    disabled={index === 0}
-                    onClick={() => move(id, -1)}
+                    className="size-8 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                    aria-disabled={!canMoveUp || undefined}
+                    onClick={() => {
+                      if (canMoveUp) move(id, -1);
+                    }}
                     aria-label={`${t("page.overview.moveUp")}: ${labels[id]}`}
                   >
                     <ArrowUp className="size-4" />
@@ -163,9 +167,11 @@ export function DashboardCustomizer({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-8"
-                    disabled={index === layout.order.length - 1}
-                    onClick={() => move(id, 1)}
+                    className="size-8 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                    aria-disabled={!canMoveDown || undefined}
+                    onClick={() => {
+                      if (canMoveDown) move(id, 1);
+                    }}
                     aria-label={`${t("page.overview.moveDown")}: ${labels[id]}`}
                   >
                     <ArrowDown className="size-4" />

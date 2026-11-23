@@ -93,6 +93,8 @@ export function MonthSummary({
     unitOf(income, true) ?? unitOf(expenses, false) ?? primaryCurrency;
 
   const index = dates.indexOf(selectedDate);
+  const canGoPrevious = index > 0;
+  const canGoNext = index >= 0 && index < dates.length - 1;
 
   return (
     <div className="grid gap-y-6">
@@ -110,9 +112,11 @@ export function MonthSummary({
               type="button"
               variant="outline"
               size="icon"
-              className="size-10 rounded-full text-muted-foreground sm:size-8 pointer-coarse:size-11"
-              disabled={index <= 0}
-              onClick={() => onSelectDate(dates[index - 1])}
+              className="size-10 rounded-full text-muted-foreground aria-disabled:pointer-events-none aria-disabled:opacity-50 sm:size-8 pointer-coarse:size-11"
+              aria-disabled={!canGoPrevious || undefined}
+              onClick={() => {
+                if (canGoPrevious) onSelectDate(dates[index - 1]);
+              }}
               aria-label={t("common.previous")}
             >
               <ChevronLeft className="size-4" />
@@ -127,9 +131,11 @@ export function MonthSummary({
               type="button"
               variant="outline"
               size="icon"
-              className="size-10 rounded-full text-muted-foreground sm:size-8 pointer-coarse:size-11"
-              disabled={index < 0 || index >= dates.length - 1}
-              onClick={() => onSelectDate(dates[index + 1])}
+              className="size-10 rounded-full text-muted-foreground aria-disabled:pointer-events-none aria-disabled:opacity-50 sm:size-8 pointer-coarse:size-11"
+              aria-disabled={!canGoNext || undefined}
+              onClick={() => {
+                if (canGoNext) onSelectDate(dates[index + 1]);
+              }}
               aria-label={t("common.next")}
             >
               <ChevronRight className="size-4" />
