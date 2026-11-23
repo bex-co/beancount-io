@@ -931,9 +931,13 @@ export async function listLedgerResources(
         .getSourceFiles({ ledgerId, identity: context.identity })
         .catch((): string[] => []);
       for (const path of files.slice(0, MAX_LISTED_SOURCE_FILES)) {
+        // Percent-encode each segment so filenames with `#`, `?`, `%`, spaces,
+        // or non-ASCII round-trip through `QueryResourceTemplate.match` while
+        // preserving `/` directory separators (w31/069).
+        const encodedPath = path.split("/").map(encodeURIComponent).join("/");
         listed.push({
           template: fileTemplate.name,
-          uri: `${RESOURCE_SCHEME}://${ledgerId}/files/${path}`,
+          uri: `${RESOURCE_SCHEME}://${ledgerId}/files/${encodedPath}`,
           title: fileTemplate.title,
           mimeType: fileTemplate.mimeType,
         });

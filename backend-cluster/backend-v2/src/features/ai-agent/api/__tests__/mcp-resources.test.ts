@@ -315,6 +315,83 @@ describe("resource path encoding", () => {
       await close();
     }
   });
+
+  // w31/069: resources/list must percent-encode each segment of files/{+path}
+  // so every listed URI round-trips directly into resources/read.
+  it("lists segment-encoded file URIs that round-trip through resources/read", async () => {
+    const cases: ReadonlyArray<
+      readonly [path: string, expectedEncoded: string]
+    > = [
+      ["main.bean", "main.bean"],
+      ["2026/expenses.bean", "2026/expenses.bean"],
+      ["qa-20261123-a#1.bean", "qa-20261123-a%231.bean"],
+      ["2026/acct#1.bean", "2026/acct%231.bean"],
+      ["q?v=1&b=2.bean", "q%3Fv%3D1%26b%3D2.bean"],
+      ["tax 100%.bean", "tax%20100%25.bean"],
+      ["literal%25.bean", "literal%2525.bean"],
+      [
+        "receipts/café 100%25 #1?a.bean",
+        "receipts/caf%C3%A9%20100%2525%20%231%3Fa.bean",
+      ],
+    ];
+    const contentsByPath = new Map(
+      cases.map(([path]) => [path, `content:${path}`]),
+    );
+    const getFilesContent = jest.fn(async ({ paths }: { paths: string[] }) =>
+      paths
+        .filter((p) => contentsByPath.has(p))
+        .map((p) => ({
+          path: p,
+          content: contentsByPath.get(p)!,
+          sha: "abc",
+        })),
+    );
+    const base = ctx(getFilesContent);
+    const context: McpRequestContext = {
+      ...base,
+      services: {
+        ...base.services,
+        ledgerData: {
+          getSourceFiles: jest
+            .fn()
+            .mockResolvedValue(cases.map(([path]) => path)),
+        },
+      } as unknown as McpRequestContext["services"],
+    };
+    const { client, close } = await connect(context);
+    try {
+      const { resources } = await client.listResources();
+      const fileUris = resources
+        .map((resource) => resource.uri)
+        .filter((uri) =>
+          uri.startsWith(`${RESOURCE_SCHEME}://${LEDGER}/files/`),
+        );
+
+      expect(fileUris).toEqual(
+        cases.map(
+          ([, encoded]) => `${RESOURCE_SCHEME}://${LEDGER}/files/${encoded}`,
+        ),
+      );
+
+      for (let i = 0; i < cases.length; i += 1) {
+        const [originalPath] = cases[i];
+        const uri = fileUris[i];
+        const result = await client.readResource({ uri });
+        expect(result.contents[0]).toMatchObject({
+          uri,
+          text: `content:${originalPath}`,
+        });
+        expect(getFilesContent).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            ledgerId: LEDGER,
+            paths: [originalPath],
+          }),
+        );
+      }
+    } finally {
+      await close();
+    }
+  });
 });
 
 /**
