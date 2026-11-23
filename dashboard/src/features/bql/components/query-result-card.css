@@ -1,0 +1,26 @@
+/* Keep the native disclosure. The action buttons size the second header
+   column, and the expandable result uses both columns. */
+@supports (grid-template-columns: subgrid) and
+  selector(details::details-content) {
+  .query-result-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .query-result-card > details {
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .query-result-card > details::details-content {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-inline-size: 0;
+  }
+
+  .query-result-card > .query-result-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}

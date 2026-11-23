@@ -348,23 +348,28 @@ export function QueryResultCard({
     // disclosure is named by the query alone and holds nothing interactive.
     <div
       className={cn(
-        "relative border rounded-lg overflow-hidden",
+        "query-result-card grid min-w-0 overflow-hidden rounded-lg border",
         error && "border-destructive",
       )}
     >
-      <details ref={detailsRef} onToggle={handleToggle} className="group">
-        <summary className="flex items-start gap-2 p-3 pr-28 hover:bg-muted/50 transition-colors cursor-pointer list-none">
+      <details
+        ref={detailsRef}
+        onToggle={handleToggle}
+        className="group min-w-0"
+      >
+        <summary className="flex min-w-0 cursor-pointer list-none items-start gap-2 p-3 transition-colors hover:bg-muted/50">
           <ChevronRight
-            className={cn(
-              "h-5 w-5 shrink-0 transition-transform mt-0.5",
-              "group-open:rotate-90",
-            )}
+            aria-hidden="true"
+            className="mt-0.5 size-5 shrink-0 transition-transform group-open:rotate-90 rtl:rotate-180 rtl:group-open:rotate-90"
           />
           {/* `min-w-0` lets this flex item shrink below the SQL's intrinsic
             width, so a long account name wraps instead of running under the
             actions beside it. */}
-          <div className="min-w-0 flex-1 text-left">
-            <pre className="text-sm font-mono whitespace-pre-wrap break-words">
+          <div className="min-w-0 flex-1">
+            <pre
+              dir="ltr"
+              className="font-mono text-sm whitespace-pre-wrap break-words"
+            >
               {query}
             </pre>
           </div>
@@ -422,7 +427,7 @@ export function QueryResultCard({
           )}
         </div>
       </details>
-      <div className="absolute right-3 top-2 flex items-center gap-1">
+      <div className="query-result-actions flex items-center gap-1 self-start justify-self-end py-2 pe-3">
         {/* Same gate as the result body: while this query runs again its
             previous table is hidden, so it must not download unlabelled as
             the current result (w4/297). */}

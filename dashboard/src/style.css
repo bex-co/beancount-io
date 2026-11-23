@@ -6,6 +6,7 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 @import "./features/ai-agent/styles/chat-markdown.css";
+@import "./features/bql/components/query-result-card.css";
 @import "./common/components/diff-viewer/diff-viewer.css";
 @import "./common/components/ledger-layout/ledger-print.css";
 @import "./features/reports/export/statement-print.css";
