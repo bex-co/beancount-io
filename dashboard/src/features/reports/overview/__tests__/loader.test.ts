@@ -12,7 +12,10 @@ import { overviewLoader } from "../loader";
 
 type QueryOptions = { query: unknown; variables?: Record<string, unknown> };
 
-function loaderInput(query: (options: QueryOptions) => Promise<unknown>) {
+function loaderInput(
+  query: (options: QueryOptions) => Promise<unknown>,
+  month?: string,
+) {
   return {
     params: { ledgerOwner: "open_ledger", ledgerName: "example" },
     context: { client: { query } } as unknown as RouterContext,
@@ -20,6 +23,7 @@ function loaderInput(query: (options: QueryOptions) => Promise<unknown>) {
       account: "Assets:Checking",
       filter: "",
       time: "2025",
+      month,
     },
     abortController: new AbortController(),
     preload: false,
@@ -192,7 +196,12 @@ describe("overviewLoader", () => {
     vi.stubEnv("SSR", false);
     const query = vi.fn(() => Promise.resolve({ data: {} }));
     const input = loaderInput(query);
-    input.deps = { account: "", filter: "payee:Rent", time: "2025-10" };
+    input.deps = {
+      account: "",
+      filter: "payee:Rent",
+      time: "2025-10",
+      month: undefined,
+    };
 
     await overviewLoader(input);
 
@@ -271,9 +280,12 @@ describe("overviewLoader, the opening month's balances", () => {
     });
   }
 
-  function unfiltered(query: (options: QueryOptions) => Promise<unknown>) {
-    const input = loaderInput(query);
-    input.deps = { account: "", filter: "", time: "" };
+  function unfiltered(
+    query: (options: QueryOptions) => Promise<unknown>,
+    month?: string,
+  ) {
+    const input = loaderInput(query, month);
+    input.deps = { account: "", filter: "", time: "", month };
     return input;
   }
 
@@ -296,6 +308,30 @@ describe("overviewLoader, the opening month's balances", () => {
       monthRead,
     );
   });
+
+  it.each([
+    ["2025-08", "2025-08"],
+    ["2024-01", "2025-09"],
+  ])(
+    "prefetches the selected balances for month=%s on the server",
+    async (month, expected) => {
+      vi.stubEnv("SSR", true);
+      vi.useFakeTimers({ now: new Date(2026, 10, 16, 12), toFake: ["Date"] });
+      const query = serve(() => Promise.resolve({ data: {} }));
+
+      await overviewLoader(unfiltered(query, month));
+
+      const valuations = query.mock.calls
+        .map(([options]) => options)
+        .filter(
+          (options) => options.query === GetLedgerOverviewValuationDocument,
+        );
+      expect(valuations.map((options) => options.variables?.time)).toEqual([
+        "",
+        expected,
+      ]);
+    },
+  );
 
   it("waits for that read, so the rows never render as placeholders", async () => {
     vi.stubEnv("SSR", false);

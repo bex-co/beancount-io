@@ -233,6 +233,7 @@ function MovementCard({
               params={{ ledgerOwner, ledgerName }}
               search={(prev) => ({
                 ...prev,
+                month: undefined,
                 time: toLedgerFilterSearchParam(timeFilter),
               })}
             >

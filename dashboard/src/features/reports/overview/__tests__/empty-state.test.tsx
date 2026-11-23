@@ -36,6 +36,8 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
       {children}
     </a>
   ),
+  useSearch: () => ({}),
+  useNavigate: () => vi.fn(),
   useParams: () => ({ ledgerOwner: "demo", ledgerName: "empty" }),
   useLoaderData: () => ({}),
 }));

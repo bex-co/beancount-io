@@ -1,13 +1,18 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { GetLedgerJournalDocument } from "@/graphql/definitions";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
+import { useUrlView } from "@/common/hooks/use-url-view";
 import {
   type IntervalDataSeries,
   getIntervalDates,
   resolveMovementTimeFilter,
 } from "../lib/overview-utils";
-import { dataThroughOf, openingMonth } from "../lib/overview-month";
+import {
+  dataThroughOf,
+  dateForOverviewMonth,
+  openingMonth,
+} from "../lib/overview-month";
 import { recentTransactionsVariables } from "../lib/recent-transactions";
 
 /**
@@ -62,7 +67,7 @@ export function useOverviewMonth({
     () => getIntervalDates(income, expenses),
     [expenses, income],
   );
-  const [requestedDate, setRequestedDate] = useState("");
+  const months = useMemo(() => dates.map((date) => date.slice(0, 7)), [dates]);
   const hasFilters = Boolean(
     searchParams.account || searchParams.filter || searchParams.time,
   );
@@ -88,9 +93,15 @@ export function useOverviewMonth({
       today,
     ],
   );
-  const selectedDate = dates.includes(requestedDate)
-    ? requestedDate
-    : defaultDate;
+  const [selectedMonth, selectMonth] = useUrlView(
+    "/ledger/$ledgerOwner/$ledgerName/",
+    months,
+    defaultDate.slice(0, 7),
+    "month",
+    { writeFallback: true },
+  );
+  const selectedDate =
+    dateForOverviewMonth(dates, selectedMonth) ?? defaultDate;
   // The month as a time filter, narrowed to the dashboard's own Time filter.
   const timeFilter = selectedDate
     ? resolveMovementTimeFilter(selectedDate, searchParams.time || undefined)
@@ -99,7 +110,7 @@ export function useOverviewMonth({
   return {
     dates,
     selectedDate,
-    setSelectedDate: setRequestedDate,
+    setSelectedDate: (date: string) => selectMonth(date.slice(0, 7)),
     timeFilter,
   };
 }

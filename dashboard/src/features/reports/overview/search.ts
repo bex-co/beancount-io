@@ -30,20 +30,28 @@ export type MoneyMovementView = (typeof MONEY_MOVEMENT_VIEWS)[number];
 export const DEFAULT_MONEY_MOVEMENT_VIEW: MoneyMovementView = "flow";
 
 /**
- * `?view=` is the Net Worth card's and `?movement=` the Money movement
- * module's, for the same reason: a shared scope edit unmounts the page. An
- * unknown value of either falls back to the default.
+ * Each Overview view has its own search parameter. The stepped month is
+ * independent of the ledger's shared `time` filter.
  */
 export const overviewSearchSchema = z
-  .object({ movement: z.unknown().optional() })
+  .object({
+    movement: z.unknown().optional(),
+    month: z
+      .string()
+      .regex(/^\d{4}-(?:0[1-9]|1[0-2])$/)
+      .optional()
+      .catch(undefined),
+  })
   .passthrough()
   .transform(
     (
       search,
     ): z.output<typeof netWorthSearchSchema> & {
       movement?: MoneyMovementView;
+      month?: string;
     } => ({
       ...netWorthSearchSchema.parse(search),
+      month: search.month,
       movement: isOneOfViews(MONEY_MOVEMENT_VIEWS, search.movement)
         ? search.movement
         : undefined,

@@ -11,6 +11,15 @@ import type { DataSeries, IntervalDataSeries } from "../../lib/overview-utils";
 // Real English, plurals included: the summary's sentences are the subject.
 vi.unmock("react-i18next");
 vi.unmock("@/common/hooks/use-translations");
+vi.mock("@/common/hooks/use-url-view", async () => {
+  const { useState } = await import("react");
+  return {
+    useUrlView: (_from: string, views: string[], fallback: string) => {
+      const [choice, setChoice] = useState("");
+      return [views.includes(choice) ? choice : fallback, setChoice];
+    },
+  };
+});
 vi.mock("@/common/components/react-echarts", () => ({
   ReactECharts: () => <div data-testid="echarts-mock" />,
 }));

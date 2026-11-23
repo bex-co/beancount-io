@@ -8,7 +8,10 @@ import { overviewSearchSchema } from "@/features/reports/overview/search";
 export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/")({
   component: LedgerOverviewPage,
   validateSearch: (search) => overviewSearchSchema.parse(search),
-  loaderDeps: ({ search }) => ledgerFilterLoaderDeps(search),
+  loaderDeps: ({ search }) => ({
+    ...ledgerFilterLoaderDeps(search),
+    month: search.month,
+  }),
   loader: overviewLoader,
   head: (args) => createLedgerHead(args, "ledgerOverview"),
 });

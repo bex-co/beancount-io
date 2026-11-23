@@ -20,13 +20,15 @@ vi.mock("@/common/hooks/use-ledger", () => ({
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }));
-// The chart view lives in the page URL; these cases only read the months.
-vi.mock("@/common/hooks/use-url-view", () => ({
-  useUrlView: (_from: string, _views: unknown, fallback: string) => [
-    fallback,
-    vi.fn(),
-  ],
-}));
+vi.mock("@/common/hooks/use-url-view", async () => {
+  const { useState } = await import("react");
+  return {
+    useUrlView: (_from: string, views: string[], fallback: string) => {
+      const [choice, setChoice] = useState("");
+      return [views.includes(choice) ? choice : fallback, setChoice];
+    },
+  };
+});
 
 /**
  * The page's wiring in miniature: the month hook chooses the month, the

@@ -23,6 +23,8 @@ const state = vi.hoisted(() => ({
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+  useSearch: () => ({}),
+  useNavigate: () => vi.fn(),
   useParams: () => ({
     ledgerOwner: "open_ledger",
     ledgerName: "stock-example",

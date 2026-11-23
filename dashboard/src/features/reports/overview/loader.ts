@@ -22,10 +22,10 @@ import type { InitialLedgerReadme } from "@/common/lib/ledger-readme";
 export const overviewLoader: RouteLoader<
   "/ledger/$ledgerOwner/$ledgerName/",
   { readme?: InitialLedgerReadme },
-  LedgerSearchParams
+  LedgerSearchParams & { month?: string }
 > = async ({ params, context, deps, abortController }) => {
   const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;
-  const { account, filter, time } = deps;
+  const { account, filter, time, month: requestedMonth } = deps;
 
   // Client navigation keeps optional panels nonblocking. Initial public SSR
   // additionally settles README within a deadline so its authored explanation
@@ -118,6 +118,7 @@ export const overviewLoader: RouteLoader<
         hasFilters: Boolean(account || filter || time),
         dataThrough,
         today,
+        month: requestedMonth,
       });
       if (!isPastMonth(month, dataThrough)) return;
       const monthTime = resolveMovementTimeFilter(month, time || undefined);

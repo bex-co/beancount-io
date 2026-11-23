@@ -26,6 +26,13 @@ export function dataThroughOf(entries: unknown, today: string): string {
   return resolveDataThrough(newest || null, today);
 }
 
+export function dateForOverviewMonth(
+  dates: string[],
+  month: string | undefined,
+) {
+  return dates.find((date) => date.slice(0, 7) === month);
+}
+
 /**
  * The month the Overview opens on: the latest one (under a filter, the latest
  * the filter reaches; for a public reader, the latest with activity), except
@@ -40,6 +47,7 @@ export function openingMonth({
   dataThrough,
   today,
   dates = getIntervalDates(income, expenses),
+  month,
 }: {
   income: IntervalDataSeries;
   expenses: IntervalDataSeries;
@@ -49,7 +57,11 @@ export function openingMonth({
   today: string;
   /** The months of `income` and `expenses`, when already at hand. */
   dates?: string[];
+  month?: string;
 }): string {
+  const requestedDate = dateForOverviewMonth(dates, month);
+  if (requestedDate) return requestedDate;
+
   const latest = hasFilters
     ? (getFilteredDefaultIntervalDate(income, expenses) ?? "")
     : ((preferActiveMonth
