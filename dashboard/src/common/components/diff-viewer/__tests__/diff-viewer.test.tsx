@@ -884,11 +884,15 @@ describe("DiffViewer renamed and line-free files", () => {
       }),
     );
     const list = screen.getByTestId("virtualized-diff");
-    const header = await within(list).findByText(heading, { exact: true });
-    expect(header).toHaveAttribute("id", getDiffFileId("qa-20261110/r.bean"));
-    expect(header.nextElementSibling).toHaveTextContent(
-      "File renamed without changes",
-    );
+    // Updating the visible file can remount its virtual rows. Check the
+    // current header and its neighboring note in the same render.
+    await waitFor(() => {
+      const header = within(list).getByText(heading, { exact: true });
+      expect(header).toHaveAttribute("id", getDiffFileId("qa-20261110/r.bean"));
+      expect(header.nextElementSibling).toHaveTextContent(
+        "File renamed without changes",
+      );
+    });
     // The persistent current-file bar names the rename too.
     await waitFor(() =>
       expect(screen.getAllByText(heading, { exact: true })).toHaveLength(2),
