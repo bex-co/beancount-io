@@ -3,11 +3,19 @@ import { Button } from "@/common/components/ui/button.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/common/components/ui/dropdown-menu.tsx";
 import { useTheme } from "@/common/hooks/use-theme";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
+import type { Theme } from "@/common/providers/theme-provider/type";
+
+const options = {
+  light: { label: "userSettings.light", icon: Sun },
+  dark: { label: "userSettings.dark", icon: Moon },
+  system: { label: "userSettings.system", icon: Monitor },
+} as const;
 
 /**
  * Theme switch component using shadcn dropdown menu
@@ -16,63 +24,34 @@ import { useTranslations } from "@/common/hooks/use-translations.ts";
 export function ThemeSwitch() {
   const { theme, setTheme } = useTheme();
   const { t } = useTranslations();
-
-  const getThemeIcon = () => {
-    switch (theme) {
-      case "light":
-        return <Sun className="h-4 w-4" />;
-      case "dark":
-        return <Moon className="h-4 w-4" />;
-      case "system":
-        return <Monitor className="h-4 w-4" />;
-      default:
-        return <Monitor className="h-4 w-4" />;
-    }
-  };
-
-  const getThemeLabel = () => {
-    switch (theme) {
-      case "light":
-        return t("userSettings.light");
-      case "dark":
-        return t("userSettings.dark");
-      case "system":
-        return t("userSettings.system");
-      default:
-        return t("userSettings.system");
-    }
-  };
+  const { label, icon: ThemeIcon } = options[theme];
+  const currentLabel = t(label);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          {getThemeIcon()}
-          {getThemeLabel()}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          aria-label={`${t("userSettings.theme")} ${currentLabel}`}
+        >
+          <ThemeIcon className="h-4 w-4" aria-hidden />
+          {currentLabel}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem
-          onClick={() => setTheme("light")}
-          className="flex items-center gap-2 cursor-pointer"
+        <DropdownMenuRadioGroup
+          value={theme}
+          onValueChange={(value) => setTheme(value as Theme)}
         >
-          <Sun className="h-4 w-4" />
-          <span>{t("userSettings.light")}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme("dark")}
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <Moon className="h-4 w-4" />
-          <span>{t("userSettings.dark")}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme("system")}
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <Monitor className="h-4 w-4" />
-          <span>{t("userSettings.system")}</span>
-        </DropdownMenuItem>
+          {Object.entries(options).map(([value, { label, icon: Icon }]) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <Icon className="h-4 w-4" aria-hidden />
+              <span>{t(label)}</span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -16,6 +16,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuSub,
@@ -26,6 +28,7 @@ import {
 import { useQuery } from "@apollo/client/react";
 import { GetCurrentUserDocument } from "@/graphql/definitions.ts";
 import { useTheme } from "@/common/hooks/use-theme";
+import type { Theme } from "@/common/providers/theme-provider/type";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 import { useIsMobile } from "@/common/hooks/use-mobile";
 import { Button } from "@/common/components/ui/button.tsx";
@@ -117,20 +120,10 @@ export function UserNav() {
     }
   };
 
-  const getCurrentLanguage = (): SupportedLanguage => {
-    const currentLang = i18n.language?.split("-")[0] || "en";
-    return SUPPORTED_LANGUAGES.includes(currentLang as SupportedLanguage)
-      ? (currentLang as SupportedLanguage)
-      : "en";
-  };
-
-  const getLanguageLabel = () => {
-    return LANGUAGE_NAMES[getCurrentLanguage()];
-  };
-
-  const handleLanguageChange = (lang: SupportedLanguage) => {
-    void changeLanguage(lang);
-  };
+  const language = (i18n.language?.split("-")[0] ?? "en") as SupportedLanguage;
+  const currentLanguage = SUPPORTED_LANGUAGES.includes(language)
+    ? language
+    : "en";
 
   if (isLoading) {
     return <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />;
@@ -190,27 +183,23 @@ export function UserNav() {
             </div>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            <DropdownMenuItem
-              onClick={() => setTheme("light")}
-              className={theme === "light" ? "bg-accent" : ""}
+            <DropdownMenuRadioGroup
+              value={theme}
+              onValueChange={(value) => setTheme(value as Theme)}
             >
-              <Sun className="mr-2 h-4 w-4" />
-              <span>{t("userSettings.themeLight")}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setTheme("dark")}
-              className={theme === "dark" ? "bg-accent" : ""}
-            >
-              <Moon className="mr-2 h-4 w-4" />
-              <span>{t("userSettings.themeDark")}</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setTheme("system")}
-              className={theme === "system" ? "bg-accent" : ""}
-            >
-              <Monitor className="mr-2 h-4 w-4" />
-              <span>{t("userSettings.themeSystem")}</span>
-            </DropdownMenuItem>
+              <DropdownMenuRadioItem value="light">
+                <Sun className="h-4 w-4" aria-hidden />
+                <span>{t("userSettings.themeLight")}</span>
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="dark">
+                <Moon className="h-4 w-4" aria-hidden />
+                <span>{t("userSettings.themeDark")}</span>
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="system">
+                <Monitor className="h-4 w-4" aria-hidden />
+                <span>{t("userSettings.themeSystem")}</span>
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSub>
@@ -218,24 +207,30 @@ export function UserNav() {
             <Globe className="mr-2 h-4 w-4" />
             <div className="flex flex-col">
               <span>{t("userSettings.currentLanguage")}</span>
-              <span className="text-xs text-muted-foreground">
-                {getLanguageLabel()}
+              <span
+                className="text-xs text-muted-foreground"
+                lang={currentLanguage}
+                dir={i18n.dir(currentLanguage)}
+              >
+                {LANGUAGE_NAMES[currentLanguage]}
               </span>
             </div>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            {SUPPORTED_LANGUAGES.map((lang) => {
-              const isCurrent = getCurrentLanguage() === lang;
-              return (
-                <DropdownMenuItem
-                  key={lang}
-                  onClick={() => handleLanguageChange(lang)}
-                  className={isCurrent ? "bg-accent" : ""}
-                >
-                  <span>{LANGUAGE_NAMES[lang]}</span>
-                </DropdownMenuItem>
-              );
-            })}
+            <DropdownMenuRadioGroup
+              value={currentLanguage}
+              onValueChange={(value) =>
+                void changeLanguage(value as SupportedLanguage)
+              }
+            >
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <DropdownMenuRadioItem key={lang} value={lang}>
+                  <span lang={lang} dir={i18n.dir(lang)}>
+                    {LANGUAGE_NAMES[lang]}
+                  </span>
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSeparator />

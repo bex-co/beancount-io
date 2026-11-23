@@ -39,6 +39,7 @@ vi.mock("@/common/hooks/use-theme", () => ({
 
 vi.unmock("@/common/hooks/use-translations");
 vi.unmock("react-i18next");
+vi.unmock("@/i18n");
 
 const originalWidth = window.innerWidth;
 const viewportListeners = new Set<() => void>();
@@ -328,6 +329,46 @@ describe("UserNav", () => {
     await user.keyboard("{Enter}");
 
     expect(mockNavigate).toHaveBeenCalledExactlyOnceWith({ to: "/settings" });
+  });
+
+  it("marks the preferred theme independently of keyboard focus", async () => {
+    const user = userEvent.setup();
+    render(<UserNav />);
+    screen.getByRole("button", { name: "User menu" }).focus();
+    await user.keyboard("{Enter}");
+    screen.getByRole("menuitem", { name: /^Theme/ }).focus();
+    await user.keyboard("{ArrowRight}");
+    const light = await screen.findByRole("menuitemradio", { name: "Light" });
+    const system = screen.getByRole("menuitemradio", { name: "System" });
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(3);
+    expect(screen.getAllByRole("menuitemradio", { checked: true })).toEqual([
+      system,
+    ]);
+    expect(system.querySelector("svg.lucide-check")).toBeInTheDocument();
+    expect(light.querySelector("svg.lucide-check")).toBeNull();
+    light.focus();
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(mockSetTheme).toHaveBeenCalledExactlyOnceWith("dark");
+  });
+
+  it("marks the current language and gives each language name its own pronunciation", async () => {
+    const user = userEvent.setup();
+    render(<UserNav />);
+    screen.getByRole("button", { name: "User menu" }).focus();
+    await user.keyboard("{Enter}");
+    screen.getByRole("menuitem", { name: /^Language/ }).focus();
+    await user.keyboard("{ArrowRight}");
+    const english = await screen.findByRole("menuitemradio", {
+      name: "English",
+    });
+    expect(screen.getAllByRole("menuitemradio", { checked: true })).toEqual([
+      english,
+    ]);
+    expect(english.querySelector("svg.lucide-check")).toBeInTheDocument();
+    expect(screen.getAllByRole("menuitemradio")).toHaveLength(15);
+    expect(screen.getByText("日本語")).toHaveAttribute("lang", "ja");
+    expect(screen.getByText("فارسی")).toHaveAttribute("lang", "fa");
+    expect(screen.getByText("فارسی")).toHaveAttribute("dir", "rtl");
   });
 
   it("updates the localized action during live viewport and language changes", async () => {

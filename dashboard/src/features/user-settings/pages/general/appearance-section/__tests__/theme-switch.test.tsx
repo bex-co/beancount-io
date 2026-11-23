@@ -1,7 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import {
+  render as renderComponent,
+  screen,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createLocalization } from "@/i18n/init";
+import { LocalizationProvider } from "@/i18n/provider";
+import { SUPPORTED_LANGUAGES } from "@/i18n/config";
+import * as catalogs from "@/i18n/locales";
 import { ThemeSwitch } from "../theme-switch";
+
+vi.unmock("@/common/hooks/use-translations");
+vi.unmock("react-i18next");
 
 // Mock useTheme hook
 const mockSetTheme = vi.fn();
@@ -14,6 +25,16 @@ vi.mock("@/common/hooks/use-theme", () => ({
   }),
 }));
 
+function renderTheme(localization = createLocalization()) {
+  return renderComponent(<ThemeSwitch />, {
+    wrapper: ({ children }) => (
+      <LocalizationProvider localization={localization}>
+        {children}
+      </LocalizationProvider>
+    ),
+  });
+}
+
 describe("ThemeSwitch", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -23,34 +44,62 @@ describe("ThemeSwitch", () => {
   describe("trigger button label", () => {
     it("should display 'System' label when theme is 'system'", () => {
       mockTheme = "system";
-      render(<ThemeSwitch />);
-      expect(screen.getByRole("button")).toHaveTextContent("System");
+      renderTheme();
+      expect(
+        screen.getByRole("button", { name: "Theme System" }),
+      ).toHaveTextContent("System");
     });
 
     it("should display 'Light' label when theme is 'light'", () => {
       mockTheme = "light";
-      render(<ThemeSwitch />);
-      expect(screen.getByRole("button")).toHaveTextContent("Light");
+      renderTheme();
+      expect(
+        screen.getByRole("button", { name: "Theme Light" }),
+      ).toHaveTextContent("Light");
     });
 
     it("should display 'Dark' label when theme is 'dark'", () => {
       mockTheme = "dark";
-      render(<ThemeSwitch />);
-      expect(screen.getByRole("button")).toHaveTextContent("Dark");
+      renderTheme();
+      expect(
+        screen.getByRole("button", { name: "Theme Dark" }),
+      ).toHaveTextContent("Dark");
     });
+
+    it.each(SUPPORTED_LANGUAGES)(
+      "includes the localized Theme and choice in %s",
+      async (language) => {
+        const localization = createLocalization();
+        await localization.changeLanguage(language);
+        renderTheme(localization);
+        const catalog = catalogs[language];
+        expect(
+          screen.getByRole("button", {
+            name: `${catalog["userSettings.theme"]} ${catalog["userSettings.system"]}`,
+          }),
+        ).toBeVisible();
+      },
+    );
   });
 
   describe("dropdown menu items", () => {
-    it("should open the dropdown when trigger is clicked", async () => {
-      render(<ThemeSwitch />);
+    it("exposes three radio items with only System checked", async () => {
+      renderTheme();
       await userEvent.click(screen.getByRole("button"));
-      expect(screen.getAllByText("Light").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("Dark").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("System").length).toBeGreaterThan(0);
+      const menu = within(await screen.findByRole("menu"));
+      expect(menu.getAllByRole("menuitemradio")).toHaveLength(3);
+      expect(menu.getAllByRole("menuitemradio", { checked: true })).toEqual([
+        menu.getByRole("menuitemradio", { name: "System" }),
+      ]);
+      expect(
+        menu
+          .getByRole("menuitemradio", { name: "System" })
+          .querySelector("svg.lucide-check"),
+      ).toBeInTheDocument();
     });
 
     it("should call setTheme('light') when Light option is clicked", async () => {
-      render(<ThemeSwitch />);
+      renderTheme();
       await userEvent.click(screen.getByRole("button"));
       const lightItems = screen.getAllByText("Light");
       await userEvent.click(lightItems[lightItems.length - 1]);
@@ -58,7 +107,7 @@ describe("ThemeSwitch", () => {
     });
 
     it("should call setTheme('dark') when Dark option is clicked", async () => {
-      render(<ThemeSwitch />);
+      renderTheme();
       await userEvent.click(screen.getByRole("button"));
       const darkItems = screen.getAllByText("Dark");
       await userEvent.click(darkItems[darkItems.length - 1]);
@@ -67,7 +116,7 @@ describe("ThemeSwitch", () => {
 
     it("should call setTheme('system') when System option is clicked", async () => {
       mockTheme = "light";
-      render(<ThemeSwitch />);
+      renderTheme();
       await userEvent.click(screen.getByRole("button"));
       const systemItems = screen.getAllByText("System");
       await userEvent.click(systemItems[systemItems.length - 1]);
@@ -78,7 +127,7 @@ describe("ThemeSwitch", () => {
   describe("icons", () => {
     it("should render an SVG icon in the trigger button", () => {
       mockTheme = "system";
-      const { container } = render(<ThemeSwitch />);
+      const { container } = renderTheme();
       const svgs = container.querySelectorAll("svg");
       expect(svgs.length).toBeGreaterThan(0);
     });
