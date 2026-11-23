@@ -30,7 +30,10 @@ const baseInput = {
   date: "2026-06-18",
   payee: "Cafe",
   description: "Coffee",
-  postings: [],
+  postings: [
+    { account: "Expenses:Food", amountNumber: "5.00", amountCurrency: "USD" },
+    { account: "Assets:Cash", amountNumber: "-5.00", amountCurrency: "USD" },
+  ],
   documentAccount: "Assets:Receipts",
 };
 

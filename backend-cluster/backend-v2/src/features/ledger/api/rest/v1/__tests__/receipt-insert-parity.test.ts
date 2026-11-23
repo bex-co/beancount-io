@@ -97,6 +97,10 @@ async function fixture(
   }));
   const createFile = jest.fn(async () => envelope({ sha: "sha-receipt" }));
   const deleteFile = jest.fn(async () => envelope({}));
+  const getBcioOptions = jest.fn(async () =>
+    envelope({ default_file: "main.bean", ...state.bcio }),
+  );
+  const getErrors = jest.fn(async () => []);
   const fava = {
     getAdminClient: () => ({
       ledgers: { getLedger: async () => envelope({ id: 42, private: true }) },
@@ -112,8 +116,7 @@ async function fixture(
     getPublicApiClient: async () => ({
       // The ledger always answers a default_file (main.bean unless set).
       reports: {
-        getLedgerBcioOptions: async () =>
-          envelope({ default_file: "main.bean", ...state.bcio }),
+        getLedgerBcioOptions: getBcioOptions,
       },
       ledgers: { createLedgerFile: createFile, deleteLedgerFile: deleteFile },
     }),
@@ -152,6 +155,7 @@ async function fixture(
     {
       identity: caller,
       ledgerReceiptWorkflow: workflow,
+      services: { ledgerData: { getErrors } },
     } as unknown as McpRequestContext,
     config,
   );
@@ -163,9 +167,12 @@ async function fixture(
     state,
     write,
     copy,
+    download,
     deleteTemp,
     createFile,
     deleteFile,
+    getBcioOptions,
+    getErrors,
     rest: (body: unknown = { receiptObjectKey, input }) =>
       fetch(
         `${rest.url}/api-gateway/v1/ledgers/alice/main/import/insert-receipt`,
@@ -996,4 +1003,220 @@ it("refuses an unbalanced receipt without offering allowInvalid on every surface
   } finally {
     await f.close();
   }
+});
+
+/**
+ * w31/053. Blank or malformed documentAccount and empty postings: [] used to
+ * pass validation across MCP, REST, and GraphQL, reaching ledger options reads,
+ * S3 promotion, or Git receipt commits before failing or silently succeeding.
+ */
+describe("upfront documentAccount and postings validation (w31/053)", () => {
+  beforeEach(() => fakeRedisIdempotencyState.reset());
+
+  it.each([
+    "",
+    "   ",
+    "not-an-account",
+    "expenses:food",
+    "Expenses:Food:Bad Account",
+    "Expenses:Food\n",
+  ])(
+    "refuses invalid documentAccount %j as BAD_USER_INPUT on REST, GraphQL, and MCP before any effect",
+    async (documentAccount) => {
+      const f = await fixture();
+      f.state.bcio = { receipt_storage: "git" };
+      const badInput = { ...input, documentAccount };
+      const payload = {
+        receiptObjectKey,
+        input: badInput,
+        requestId: "rcpt-invalid-doc-account",
+      };
+      try {
+        const r = await f.rest(payload);
+        expect(r.status).toBe(400);
+        expect(await r.json()).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("documentAccount"),
+            metadata: {
+              field: "documentAccount",
+              hint: expect.any(String),
+            },
+          },
+        });
+
+        const g = await f.gql(
+          payload,
+          "success",
+          "receiptObjectKey:$receiptObjectKey,requestId:$requestId",
+          "$receiptObjectKey:String!,$requestId:String",
+        );
+        expect(g.errors).toHaveLength(1);
+        const gqlError = formatError(g.errors![0].toJSON(), g.errors![0]);
+        expect(gqlError).toMatchObject({
+          message: expect.stringContaining("documentAccount"),
+          extensions: {
+            code: "BAD_USER_INPUT",
+            field: "documentAccount",
+            hint: expect.any(String),
+          },
+        });
+
+        const m = await f.mcp(payload);
+        expect(m.isError).toBe(true);
+        expect(m.structuredContent).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("documentAccount"),
+            hint: expect.any(String),
+          },
+        });
+
+        expect(f.getBcioOptions).not.toHaveBeenCalled();
+        expect(f.getErrors).not.toHaveBeenCalled();
+        expect(f.write).not.toHaveBeenCalled();
+        expect(f.copy).not.toHaveBeenCalled();
+        expect(f.download).not.toHaveBeenCalled();
+        expect(f.deleteTemp).not.toHaveBeenCalled();
+        expect(f.createFile).not.toHaveBeenCalled();
+        expect(f.deleteFile).not.toHaveBeenCalled();
+        expect(fakeRedisIdempotencyState.records.size).toBe(0);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("refuses empty postings: [] as BAD_USER_INPUT on REST, GraphQL, and MCP before any effect", async () => {
+    const f = await fixture();
+    const emptyPostingsInput = { ...input, postings: [] };
+    const payload = {
+      receiptObjectKey,
+      input: emptyPostingsInput,
+      requestId: "rcpt-empty-postings",
+    };
+    try {
+      const r = await f.rest(payload);
+      expect(r.status).toBe(400);
+      expect(await r.json()).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message: expect.stringContaining("postings"),
+          metadata: {
+            field: "postings",
+            hint: expect.any(String),
+          },
+        },
+      });
+
+      const g = await f.gql(
+        payload,
+        "success",
+        "receiptObjectKey:$receiptObjectKey,requestId:$requestId",
+        "$receiptObjectKey:String!,$requestId:String",
+      );
+      expect(g.errors).toHaveLength(1);
+      const gqlError = formatError(g.errors![0].toJSON(), g.errors![0]);
+      expect(gqlError).toMatchObject({
+        message: expect.stringContaining("postings"),
+        extensions: {
+          code: "BAD_USER_INPUT",
+          field: "postings",
+          hint: expect.any(String),
+        },
+      });
+
+      const m = await f.mcp(payload);
+      expect(m.isError).toBe(true);
+      expect(m.structuredContent).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message: expect.stringContaining("postings"),
+          hint: expect.any(String),
+        },
+      });
+
+      expect(f.getBcioOptions).not.toHaveBeenCalled();
+      expect(f.getErrors).not.toHaveBeenCalled();
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.copy).not.toHaveBeenCalled();
+      expect(f.download).not.toHaveBeenCalled();
+      expect(f.deleteTemp).not.toHaveBeenCalled();
+      expect(f.createFile).not.toHaveBeenCalled();
+      expect(f.deleteFile).not.toHaveBeenCalled();
+      expect(fakeRedisIdempotencyState.records.size).toBe(0);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it.each(["s3", "git"] as const)(
+    "accepts a valid non-Latin documentAccount on REST, GraphQL, and MCP under %s storage",
+    async (storage) => {
+      const f = await fixture();
+      f.state.bcio = { receipt_storage: storage };
+      const nonLatinInput = { ...input, documentAccount: "Expenses:日本" };
+      const payload = { receiptObjectKey, input: nonLatinInput };
+      try {
+        const r = await f.rest(payload);
+        expect(r.status).toBe(200);
+        const g = await f.gql(payload);
+        expect(g.errors).toBeUndefined();
+        expect(g.data!.insertReceiptTransaction).toEqual({ success: true });
+        const m = await f.mcp(payload);
+        expect(m.isError).not.toBe(true);
+
+        if (storage === "git") {
+          const writes = f.write.mock.calls.filter(
+            (call) => (call as unknown[])[6] !== true,
+          );
+          expect(writes).toHaveLength(3);
+          for (const call of writes) {
+            const [document] = (call as unknown[])[3] as {
+              type: string;
+              entry: { account: string };
+            }[];
+            expect(document.type).toBe("document");
+            expect(document.entry.account).toBe("Expenses:日本");
+          }
+        } else {
+          expect(f.copy).toHaveBeenCalledTimes(3);
+        }
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("still refuses a read-only token with FORBIDDEN for valid inputs on all surfaces", async () => {
+    const f = await fixture({ ...identity, scopes: new Set(["ledger.read"]) });
+    try {
+      const r = await f.rest();
+      expect(r.status).toBe(403);
+      expect(await r.json()).toMatchObject({ error: { code: "FORBIDDEN" } });
+
+      const g = await f.gql();
+      expect(g.errors).toHaveLength(1);
+      expect(
+        formatError(g.errors![0].toJSON(), g.errors![0]).extensions,
+      ).toMatchObject({ code: "FORBIDDEN" });
+
+      const m = await f.mcp();
+      expect(m.isError).toBe(true);
+      expect(m.structuredContent).toMatchObject({
+        ok: false,
+        error: { code: "FORBIDDEN" },
+      });
+
+      expect(f.getBcioOptions).not.toHaveBeenCalled();
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.copy).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
 });

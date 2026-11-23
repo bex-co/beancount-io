@@ -2,6 +2,7 @@ import { posix } from "node:path";
 import { runIdempotentEntryWrite } from "@/features/ledger/utils/entry-write-idempotency";
 import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
 import { parseDirectiveDate } from "@/features/ledger/utils/directive-date";
+import { assertValidReceiptInsertInput } from "@/features/ledger/utils/receipt-insert-validation";
 import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
 import { parseLedgerId } from "@/shared/str";
 import { nanoidBase58 } from "@/shared/nanoid-base58";
@@ -164,6 +165,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     // commit, and ledger mutation. LedgerEntry's later authorization is
     // intentional defense in depth at the final write boundary.
     assertTempAssetKey(receiptObjectKey, "receiptObjectKey");
+    assertValidReceiptInsertInput(input);
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,

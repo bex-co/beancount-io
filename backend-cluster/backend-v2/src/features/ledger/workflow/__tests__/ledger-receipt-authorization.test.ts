@@ -21,7 +21,14 @@ const params = {
     date: "2026-01-01",
     payee: "Shop",
     description: "Receipt",
-    postings: [],
+    postings: [
+      {
+        account: "Expenses:Food",
+        amountNumber: "10.00",
+        amountCurrency: "USD",
+      },
+      { account: "Assets:Cash", amountNumber: "-10.00", amountCurrency: "USD" },
+    ],
     documentAccount: "Assets:Receipts",
   },
 };

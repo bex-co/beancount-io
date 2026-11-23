@@ -8,6 +8,8 @@ import {
   writeFlagsInput,
 } from "@/features/ledger/utils/flag-alias";
 import { resolveObjectKey } from "@/features/ledger/utils/object-key-alias";
+import { assertValidReceiptInsertInput } from "@/features/ledger/utils/receipt-insert-validation";
+import { assertTempAssetKey } from "@/features/s3/temp-asset-key";
 import { BQL_SIZE_DESCRIPTION } from "@/features/ledger/utils/bql-size-description";
 import {
   SOURCE_SLICE_OPERATION_OUTPUTS,
@@ -587,6 +589,9 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     execute: async (context, input) => {
       const { ledger, ...args } = insertReceiptTransactionInput.parse(input);
       const ledgerId = resolveMcpLedger(context, ledger);
+      const receiptObjectKey = resolveObjectKey(args);
+      assertTempAssetKey(receiptObjectKey, "receiptObjectKey");
+      assertValidReceiptInsertInput(args.input);
       const { written, validation } = await withPostWriteValidation(
         context.services,
         context.identity,
@@ -595,7 +600,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
           context.ledgerReceiptWorkflow.insertReceiptTransaction({
             identity: context.identity,
             ledgerId,
-            receiptObjectKey: resolveObjectKey(args),
+            receiptObjectKey,
             input: args.input,
             requestId: args.requestId,
           }),
