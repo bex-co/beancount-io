@@ -14,6 +14,7 @@ export const PLURAL_BASE_KEYS = [
   "aiAgent.ranQueries",
   "aiAgent.usedTools",
   "bql.errors.argumentCount",
+  "collaboration.collaboratorAddedSuccess",
   "commits.loadedOlder",
   "common.moreItemsLoaded",
   "common.whatsNewUnread",

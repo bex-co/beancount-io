@@ -20,9 +20,13 @@ const bgCollaboration: Record<string, TranslationEntry> = {
     message: "Запис",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "Сътрудникът е добавен успешно",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_one": {
+    message: "Добавен е {count} сътрудник",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "Добавени са {count} сътрудници",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "Сътрудникът е премахнат успешно",
@@ -103,6 +107,11 @@ const bgCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "Няма намерени потребители",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "Премахване на {username}",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "Премахване на сътрудник",

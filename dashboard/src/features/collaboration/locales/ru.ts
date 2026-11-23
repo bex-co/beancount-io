@@ -20,9 +20,21 @@ const ruCollaboration: Record<string, TranslationEntry> = {
     message: "Запись",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "Соавтор успешно добавлен",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_one": {
+    message: "Добавлен {count} участник",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_few": {
+    message: "Добавлено {count} участника",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_many": {
+    message: "Добавлено {count} участников",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "Добавлено {count} участника",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "Соавтор успешно удален",
@@ -103,6 +115,11 @@ const ruCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "Пользователи не найдены",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "Убрать {username}",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "Удалить соавтора",

@@ -17,9 +17,9 @@ const koCollaboration: Record<string, TranslationEntry> = {
     message: "쓰기",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "협력자가 성공적으로 추가되었습니다",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "협력자 {count}명을 추가했습니다",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "협력자가 성공적으로 삭제되었습니다",
@@ -99,6 +99,11 @@ const koCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "사용자를 찾을 수 없습니다",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "{username} 삭제",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "협력자 삭제",

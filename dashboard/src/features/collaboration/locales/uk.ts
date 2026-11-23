@@ -20,9 +20,21 @@ const ukCollaboration: Record<string, TranslationEntry> = {
     message: "Запис",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "Співробітника успішно додано",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_one": {
+    message: "Додано {count} учасника",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_few": {
+    message: "Додано {count} учасники",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_many": {
+    message: "Додано {count} учасників",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "Додано {count} учасника",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "Співробітника успішно видалено",
@@ -103,6 +115,11 @@ const ukCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "Користувачів не знайдено",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "Вилучити {username}",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "Видалити співробітника",

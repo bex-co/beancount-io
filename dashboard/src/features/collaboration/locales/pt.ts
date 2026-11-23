@@ -20,9 +20,17 @@ const ptCollaboration: Record<string, TranslationEntry> = {
     message: "Escrita",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "Colaborador adicionado com sucesso",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_one": {
+    message: "Foi adicionado {count} colaborador",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_many": {
+    message: "Foram adicionados {count} colaboradores",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "Foram adicionados {count} colaboradores",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "Colaborador removido com sucesso",
@@ -103,6 +111,11 @@ const ptCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "Nenhum usuário encontrado",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "Remover {username}",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "Remover Colaborador",

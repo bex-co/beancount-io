@@ -44,10 +44,13 @@ import { LedgerAdminPermission } from "@/common/components/ledger-permission/adm
 import { LimitIndicator } from "@/common/components/limit-indicator";
 import { CollaboratorRow } from "@/features/collaboration/components/collaborator-row";
 import { InviteCollaboratorsDialog } from "@/features/collaboration/components/invite-collaborators-dialog";
-import type { CollaboratorPermissionType } from "@/features/collaboration/components/types";
+import type {
+  CollaboratorPermissionType,
+  InviteFailure,
+} from "@/features/collaboration/components/types";
 
 export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
   const formatError = useErrorMessage();
   const navigate = useNavigate();
   const { limits, tier } = useUserLimits();
@@ -86,26 +89,50 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
     users: SearchUser[],
     permission: CollaboratorPermissionType,
   ) => {
-    try {
-      await addLedgerCollaborator({
-        variables: { ledgerId, collaborator: users[0].username, permission },
-        refetchQueries: [
-          { query: ListLedgerCollaboratorsDocument, variables: { ledgerId } },
-        ],
-        awaitRefetchQueries: true,
-      });
-      toast.success(t("collaboration.collaboratorAddedSuccess"));
-    } catch (error) {
-      // The owner's plan sets the limit: telling anyone else to upgrade
-      // would not help (w1/181).
-      let description = formatError(error);
-      if (isOwnerLimitError(error)) {
-        description = isOwner
-          ? t("common.errors.resourceLimitReached")
-          : t("collaboration.ownerPlanLimitReached");
+    const failed: InviteFailure[] = [];
+    const added: string[] = [];
+    // Each add checks the ledger owner's collaborator limit. Finish one
+    // before starting the next so each request sees the previous result.
+    for (const { username } of users) {
+      try {
+        const { data } = await addLedgerCollaborator({
+          variables: { ledgerId, collaborator: username, permission },
+        });
+        const result = data?.addOrUpdateLedgerCollaborator;
+        if (result?.success) {
+          added.push(username);
+        } else {
+          failed.push({
+            username,
+            reason:
+              result?.message || t("collaboration.failedToAddCollaborator"),
+          });
+        }
+      } catch (error) {
+        // The owner's plan sets the limit (w1/181).
+        const reason = isOwnerLimitError(error)
+          ? isOwner
+            ? t("common.errors.resourceLimitReached")
+            : t("collaboration.ownerPlanLimitReached")
+          : formatError(error);
+        failed.push({ username, reason });
       }
-      toast.error(t("collaboration.failedToAddCollaborator"), { description });
     }
+    // Refresh once. A failed list read has its own Try Again in this card.
+    await refetchCollaborators().catch(() => undefined);
+    if (added.length) {
+      const message = t("collaboration.collaboratorAddedSuccess", {
+        count: added.length,
+      });
+      if (failed.length) {
+        toast.success(message, {
+          description: new Intl.ListFormat(i18n.language).format(added),
+        });
+      } else {
+        toast.success(message);
+      }
+    }
+    return failed;
   };
 
   const handleRemove = async (collaborator: string) => {
@@ -144,6 +171,7 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
   };
 
   const collaborators = collaboratorsData?.listLedgerCollaborators || [];
+  const showInvite = !collaboratorsLoading && !collaboratorsFailure;
   // Both the loading and the member tables carry the card's own title.
   const titleId = useId();
 
@@ -231,29 +259,38 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
         {!collaboratorsLoading &&
           !collaboratorsFailure &&
           collaborators.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="flex flex-col items-center justify-center pt-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
                 {t("collaboration.noCollaborators")}
               </h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground">
                 {t("collaboration.noCollaboratorsDescription")}
               </p>
-              <LedgerAdminPermission>
-                <InviteCollaboratorsDialog onInvite={handleInvite} />
-              </LedgerAdminPermission>
             </div>
           )}
+
+        {/* Keep the dialog mounted when a refresh moves this card from empty
+            to populated or a read fails while there are failed invites. */}
+        <LedgerAdminPermission>
+          <div
+            hidden={!showInvite}
+            className={
+              showInvite
+                ? collaborators.length
+                  ? "flex justify-end"
+                  : "flex justify-center pb-8"
+                : undefined
+            }
+          >
+            <InviteCollaboratorsDialog key={ledgerId} onInvite={handleInvite} />
+          </div>
+        </LedgerAdminPermission>
 
         {!collaboratorsLoading &&
           !collaboratorsFailure &&
           collaborators.length > 0 && (
             <div className="space-y-4">
-              <LedgerAdminPermission>
-                <div className="flex items-center justify-end">
-                  <InviteCollaboratorsDialog onInvite={handleInvite} />
-                </div>
-              </LedgerAdminPermission>
               <div className="rounded-md border">
                 <Table aria-labelledby={titleId}>
                   <TableHeader>

@@ -6,9 +6,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GetCurrentUserDocument } from "@/graphql/definitions";
 import { CollaboratorsSection } from "../collaborators-section";
 
-const { mockAdd, mockToast, viewer } = vi.hoisted(() => ({
+const { mockAdd, mockOutcome, viewer } = vi.hoisted(() => ({
   mockAdd: vi.fn(),
-  mockToast: { success: vi.fn(), error: vi.fn() },
+  mockOutcome: vi.fn(),
   viewer: { username: "alice" },
 }));
 
@@ -17,10 +17,13 @@ vi.mock("@apollo/client/react", () => ({
   useQuery: (document: unknown) =>
     document === GetCurrentUserDocument
       ? { data: { userProfile: { username: viewer.username } } }
-      : { data: { listLedgerCollaborators: [] }, loading: false },
+      : {
+          data: { listLedgerCollaborators: [] },
+          loading: false,
+          refetch: async () => ({}),
+        },
   useMutation: () => [mockAdd, { loading: false }],
 }));
-vi.mock("sonner", () => ({ toast: mockToast }));
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({ t: (key: string) => key }),
 }));
@@ -41,9 +44,16 @@ vi.mock(
     InviteCollaboratorsDialog: ({
       onInvite,
     }: {
-      onInvite: (users: { username: string }[], permission: string) => void;
+      onInvite: (
+        users: { username: string }[],
+        permission: string,
+      ) => Promise<unknown>;
     }) => (
-      <button onClick={() => onInvite([{ username: "newcomer" }], "write")}>
+      <button
+        onClick={() =>
+          void onInvite([{ username: "newcomer" }], "write").then(mockOutcome)
+        }
+      >
         invite
       </button>
     ),
@@ -75,10 +85,9 @@ describe("adding a collaborator past a plan limit (w1/181)", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "invite" }));
 
-    expect(mockToast.error).toHaveBeenCalledWith(
-      "collaboration.failedToAddCollaborator",
-      { description: "collaboration.ownerPlanLimitReached" },
-    );
+    expect(mockOutcome).toHaveBeenCalledWith([
+      { username: "newcomer", reason: "collaboration.ownerPlanLimitReached" },
+    ]);
   });
 
   it("tells the owner their own plan's limit, as any other limit reads", async () => {
@@ -88,9 +97,8 @@ describe("adding a collaborator past a plan limit (w1/181)", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "invite" }));
 
-    expect(mockToast.error).toHaveBeenCalledWith(
-      "collaboration.failedToAddCollaborator",
-      { description: "common.errors.resourceLimitReached" },
-    );
+    expect(mockOutcome).toHaveBeenCalledWith([
+      { username: "newcomer", reason: "common.errors.resourceLimitReached" },
+    ]);
   });
 });

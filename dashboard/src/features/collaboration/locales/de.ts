@@ -20,9 +20,13 @@ const deCollaboration: Record<string, TranslationEntry> = {
     message: "Schreiben",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "Mitarbeiter erfolgreich hinzugefügt",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_one": {
+    message: "{count} Mitwirkender hinzugefügt",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "{count} Mitwirkende hinzugefügt",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "Mitarbeiter erfolgreich entfernt",
@@ -103,6 +107,11 @@ const deCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "Keine Benutzer gefunden",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "{username} entfernen",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "Mitarbeiter entfernen",

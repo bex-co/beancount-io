@@ -20,9 +20,13 @@ const faCollaboration: Record<string, TranslationEntry> = {
     message: "نوشتن",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "همکار با موفقیت اضافه شد",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_one": {
+    message: "{count} همکار اضافه شد",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "{count} همکار اضافه شدند",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "همکار با موفقیت حذف شد",
@@ -103,6 +107,11 @@ const faCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "کاربری یافت نشد",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "حذف {username}",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "حذف همکار",

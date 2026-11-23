@@ -20,9 +20,13 @@ const nlCollaboration: Record<string, TranslationEntry> = {
     message: "Schrijven",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "Medewerker succesvol toegevoegd",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_one": {
+    message: "{count} medewerker toegevoegd",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "{count} medewerkers toegevoegd",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "Medewerker succesvol verwijderd",
@@ -103,6 +107,11 @@ const nlCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "Geen gebruikers gevonden",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "{username} verwijderen",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "Medewerker verwijderen",

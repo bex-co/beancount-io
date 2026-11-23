@@ -19,15 +19,18 @@ import { useTranslations } from "@/common/hooks/use-translations";
 export function MultiUserSearch({
   selectedUsers,
   onUsersChange,
+  addedUsernames,
 }: {
   selectedUsers: SearchUser[];
   onUsersChange: (users: SearchUser[]) => void;
+  addedUsernames?: readonly string[];
 }) {
   const { t } = useTranslations();
   const [inputValue, setInputValue] = useState("");
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debounce the search keyword to avoid hitting rate limits
@@ -71,14 +74,15 @@ export function MultiUserSearch({
   const availableUsers = useMemo(() => {
     if (!searchData?.getUserByExactMatch) return [];
 
-    // Filter out already selected users
-    const selectedUsernames = selectedUsers.map((user) => user.username);
+    const excluded = new Set(addedUsernames);
+    selectedUsers.forEach(({ username }) => excluded.add(username));
     return searchData.getUserByExactMatch.filter(
-      (user) => !selectedUsernames.includes(user.username),
+      (user) => !excluded.has(user.username),
     );
-  }, [searchData, selectedUsers]);
+  }, [searchData, selectedUsers, addedUsernames]);
 
   const handleUserSelect = (user: SearchUser) => {
+    inputRef.current?.focus();
     onUsersChange([...selectedUsers, user]);
     setInputValue("");
     setDebouncedKeyword("");
@@ -154,6 +158,7 @@ export function MultiUserSearch({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="user-search"
+            ref={inputRef}
             placeholder={t("collaboration.typeToSearchUsers")}
             value={inputValue}
             onChange={handleInputChange}
@@ -232,10 +237,13 @@ export function MultiUserSearch({
                 <Button
                   variant="ghost"
                   size="sm"
+                  aria-label={t("collaboration.removeSelectedUser", {
+                    username: user.username,
+                  })}
                   onClick={() => handleUserRemove(user.username)}
                   className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             ))}

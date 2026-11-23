@@ -20,9 +20,9 @@ const zhCollaboration: Record<string, TranslationEntry> = {
     message: "写入",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "协作者添加成功",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "已添加 {count} 位协作者",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "协作者移除成功",
@@ -102,6 +102,11 @@ const zhCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "未找到用户",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "移除 {username}",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "移除协作者",

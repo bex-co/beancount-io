@@ -17,9 +17,9 @@ const jaCollaboration: Record<string, TranslationEntry> = {
     message: "書き込み",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "コラボレーターが正常に追加されました",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "共同編集者を {count} 人追加しました",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "コラボレーターが正常に削除されました",
@@ -100,6 +100,11 @@ const jaCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "ユーザーが見つかりません",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "{username} を削除",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "コラボレーターを削除",

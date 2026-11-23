@@ -43,7 +43,7 @@ describe("InviteCollaboratorsDialog", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockOnInvite.mockResolvedValue(undefined);
+    mockOnInvite.mockResolvedValue([]);
     mockSelectedUsers = [];
   });
 
@@ -333,6 +333,9 @@ describe("InviteCollaboratorsDialog", () => {
 
       // Cancel
       await user.click(screen.getByRole("button", { name: "Cancel" }));
+      await user.click(
+        await screen.findByRole("button", { name: "Discard", exact: true }),
+      );
 
       // Reopen dialog
       await user.click(screen.getByText("Invite Collaborator"));
@@ -349,8 +352,8 @@ describe("InviteCollaboratorsDialog", () => {
       const user = userEvent.setup();
       // Create a promise we can control to test loading state
       let resolveInvite: () => void;
-      const pendingInvite = new Promise<void>((resolve) => {
-        resolveInvite = resolve;
+      const pendingInvite = new Promise<[]>((resolve) => {
+        resolveInvite = () => resolve([]);
       });
       mockOnInvite.mockReturnValue(pendingInvite);
 

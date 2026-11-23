@@ -20,9 +20,21 @@ const skCollaboration: Record<string, TranslationEntry> = {
     message: "Zápis",
     description: "Write permission level",
   },
-  "collaboration.collaboratorAddedSuccess": {
-    message: "Spolupracovník bol úspešne pridaný",
-    description: "Success message when collaborator is added",
+  "collaboration.collaboratorAddedSuccess_one": {
+    message: "Pridaný {count} spolupracovník",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_few": {
+    message: "Pridaní {count} spolupracovníci",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_many": {
+    message: "Pridaných {count} spolupracovníka",
+    description: "Number of collaborators successfully added",
+  },
+  "collaboration.collaboratorAddedSuccess_other": {
+    message: "Pridaných {count} spolupracovníkov",
+    description: "Number of collaborators successfully added",
   },
   "collaboration.collaboratorRemovedSuccess": {
     message: "Spolupracovník bol úspešne odstránený",
@@ -103,6 +115,11 @@ const skCollaboration: Record<string, TranslationEntry> = {
   "collaboration.noUsersFound": {
     message: "Nenašli sa žiadni používatelia",
     description: "Message when search returns no results",
+  },
+  "collaboration.removeSelectedUser": {
+    message: "Odstrániť používateľa {username}",
+    description:
+      "Accessible name for removing a user from the invite selection",
   },
   "collaboration.removeCollaborator": {
     message: "Odstrániť spolupracovníka",
