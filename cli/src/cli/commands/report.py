@@ -219,6 +219,30 @@ def _balance_of(amount: Mapping[str, Any] | None) -> dict[str, Any] | None:
     return None if amount is None else {str(amount["currency"]): amount["number"]}
 
 
+def _register_balance(
+    row: Mapping[str, Any], previous: Mapping[str, Any], precision: Mapping[str, int]
+) -> dict[str, Any]:
+    """One register row's running balance as the printed amounts above it sum to.
+
+    Each text figure rounds on its own, half up, so two half-cent legs print
+    `-15.02` twice under an exact `-30.03` balance: the column would not add
+    up. Like every other derived text line, a running balance in the amounts'
+    currency is the sum of the printed figures it is defined from, chained
+    down the column. A row whose amount names a currency the balance does not
+    carry (units under a market conversion, a costed lot's units) cannot join
+    it and keeps its exact figure, as does the closing row: its revalued total
+    is the point, not the amounts above it. JSON and CSV keep the exact
+    figures.
+    """
+    exact = row["balance"] or {}
+    if row["entry"] == "closing":
+        return dict(exact)
+    amount = _balance_of(row.get("amount"))
+    if amount is not None and not set(amount) <= set(exact) | set(previous):
+        return dict(exact)
+    return _footed(exact, [previous, amount] if amount else [previous], precision)
+
+
 def _same(left: Mapping[str, Any], right: Mapping[str, Any]) -> bool:
     """Whether two balances hold the same figures, however each spells them."""
     return left.keys() == right.keys() and all(_as_decimal(left[key]) == _as_decimal(right[key]) for key in left)
@@ -826,17 +850,24 @@ def register(
     requested = str(data["account"]).casefold()
     show_account = any(row["account"].casefold() != requested for row in rows if row["entry"] != "closing")
     headers = ["DATE", *(["ACCOUNT"] if show_account else []), "DESCRIPTION", "AMOUNT", "COST", "BALANCE"]
-    output.table(
-        headers,
-        [
-            _row_cells(row, conversion, precision, show_account, digits)
-            for row, digits in zip(rows, data["cost_precision"], strict=True)
-        ],
-    )
+    cells = []
+    previous: dict[str, Any] = {}
+    for row, digits in zip(rows, data["cost_precision"], strict=True):
+        # Each running balance sums the printed amounts above it; the chain
+        # carries the footed figures down the column.
+        balance = _register_balance(row, previous, precision)
+        previous = balance
+        cells.append(_row_cells(row, conversion, precision, show_account, digits, balance))
+    output.table(headers, cells)
 
 
 def _row_cells(
-    row: dict[str, Any], conversion: str, precision: Mapping[str, int], show_account: bool, cost_digits: int
+    row: dict[str, Any],
+    conversion: str,
+    precision: Mapping[str, int],
+    show_account: bool,
+    cost_digits: int,
+    balance: Mapping[str, Any],
 ) -> list[str]:
     """One register row's cells; the account column appears when rows sit below the requested account."""
     if row["entry"] == "balance":
@@ -864,7 +895,7 @@ def _row_cells(
         description,
         _money(row["amount"], conversion, precision) if row["amount"] is not None else "",
         cost_cell,
-        _amounts(row["balance"], conversion, precision),
+        _amounts(balance, conversion, precision),
     ]
     return cells
 

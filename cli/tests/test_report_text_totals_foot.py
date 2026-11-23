@@ -7,7 +7,8 @@ its parts rounded in opposite directions: the trial balance netted to 0.01,
 -10.00 under `-10.01` and `20.00`. Every derived text line is now the sum of
 the printed lines it is defined from; `--json` and CSV keep the exact figures.
 Holdings' column totals and capital gains' holding-period totals sum their
-printed rows the same way (w1/360).
+printed rows the same way (w1/360). A register's running balances sum the
+printed amounts above them the same way.
 """
 
 from __future__ import annotations
@@ -119,6 +120,24 @@ option "operating_currency" "USD"
   Income:Gains
 """
 AMOUNT = r"(-?[\d,]+\.\d+) USD"
+# Two interpolated cash legs at a half cent each: 1.5 shares at a 10.01 USD
+# cost book -15.015 USD against checking, so the printed amounts foot a cent
+# below the printed running balance.
+REGISTER = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Equity:Opening USD
+2026-01-02 * "Opening"
+  Assets:Cash 100.00 USD
+  Equity:Opening
+2026-01-03 * "First"
+  Assets:Broker 1.5 AAA {10.01 USD}
+  Assets:Cash
+2026-01-04 * "Second"
+  Assets:Broker 1.5 BBB {10.01 USD}
+  Assets:Cash
+"""
 
 
 def _run(tmp_path: Path, ledger: str, *args: str) -> str:
@@ -211,6 +230,24 @@ def test_capital_gains_totals_sum_the_printed_gains_of_their_rows(tmp_path: Path
     assert gains == [("long", "0.01"), ("short", "0.01"), ("long", "0.01"), ("short", "0.01")], out
     assert _line(out, "One year or less:") == Decimal("0.02")
     assert _line(out, "More than one year:") == Decimal("0.02")
+
+
+def test_register_running_balances_sum_their_printed_amounts(tmp_path: Path) -> None:
+    out = _run(tmp_path, REGISTER, "report", "register", "Assets:Cash")
+    rows = []
+    for line in out.splitlines():
+        if re.match(r"^2026-", line):
+            words = line.split()
+            rows.append(((words[-4], words[-3]), (words[-2], words[-1])))
+    assert rows == [
+        (("100.00", "USD"), ("100.00", "USD")),
+        (("-15.02", "USD"), ("84.98", "USD")),
+        (("-15.02", "USD"), ("69.96", "USD")),
+    ]
+    amounts = sum((Decimal(amount) for (amount, _), _ in rows), Decimal(0))
+    assert amounts == Decimal(rows[-1][1][0])
+    data = _json(tmp_path, REGISTER, "report", "register", "Assets:Cash")
+    assert [row["balance"] for row in data["rows"]] == [{"USD": "100.00"}, {"USD": "84.985"}, {"USD": "69.970"}]
 
 
 def test_json_keeps_the_exact_figures(tmp_path: Path) -> None:
