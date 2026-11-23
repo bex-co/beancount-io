@@ -61,7 +61,10 @@ export class QueryResourceTemplate extends UriTemplate {
         "Percent-encode each path segment as UTF-8 (`encodeURIComponent`) and read it again.",
       );
     }
-    if (url.hash)
+    // WHATWG `new URL(uri).hash` is `""` for a bare trailing `#`, so check the
+    // raw URI too; per RFC 3986 a literal `#` only begins a fragment (encoded
+    // `%23` stays valid in paths and query values) (w31/063).
+    if (url.hash || uri.includes("#"))
       refuseUri(
         "Resource fragments are not supported",
         "Drop the `#` fragment; a resource URI takes a path and an optional query only.",

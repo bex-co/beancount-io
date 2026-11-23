@@ -339,6 +339,18 @@ describe("a malformed resource URI", () => {
       `${RESOURCE_SCHEME}://alice/main/errors#qa`,
       "Resource fragments are not supported",
     ],
+    // w31/063: WHATWG `new URL(...).hash` is `""` for a bare trailing `#`, so
+    // an empty fragment bypassed `if (url.hash)` on every resource shape.
+    [
+      `${RESOURCE_SCHEME}://alice/main/errors#`,
+      "Resource fragments are not supported",
+    ],
+    [`${TRIAL}?time=2026#`, "Resource fragments are not supported"],
+    [`${FILE_URI}#`, "Resource fragments are not supported"],
+    [
+      `${RESOURCE_SCHEME}://configuration/health#`,
+      "Resource fragments are not supported",
+    ],
     [
       `${RESOURCE_SCHEME}://alice/main/files/%E0%A4`,
       "Invalid URI encoding in resource path",
@@ -423,6 +435,45 @@ describe("a malformed resource URI", () => {
         .then(() => undefined)
         .catch((caught: unknown) => caught as McpError);
       expect((error?.data as { hint: string }).hint).toContain("`time`");
+    } finally {
+      await close();
+    }
+  });
+
+  it("allows percent-encoded %23 in resource paths and query parameters", async () => {
+    const getFilesContent = contentOf("notes#1.beancount", "hash path ok");
+    const getAssetDownloadUrl = jest
+      .fn()
+      .mockResolvedValue("https://cdn.example/receipt.pdf");
+    const context: McpRequestContext = {
+      ...ctx(getFilesContent),
+      ledgerAssetService: {
+        getAssetDownloadUrl,
+      } as unknown as McpRequestContext["ledgerAssetService"],
+    };
+    const { client, close } = await connect(context);
+    try {
+      const file = await client.readResource({
+        uri: `${RESOURCE_SCHEME}://alice/main/files/notes%231.beancount`,
+      });
+      expect(file.contents[0]).toMatchObject({ text: "hash path ok" });
+      expect(getFilesContent).toHaveBeenCalledWith(
+        expect.objectContaining({ paths: ["notes#1.beancount"] }),
+      );
+
+      const asset = await client.readResource({
+        uri: `${RESOURCE_SCHEME}://assets/download-url?ledgerRepoId=42&filename=receipt%231.pdf`,
+      });
+      expect(asset.contents[0]).toMatchObject({
+        text: JSON.stringify({
+          downloadUrl: "https://cdn.example/receipt.pdf",
+        }),
+      });
+      expect(getAssetDownloadUrl).toHaveBeenCalledWith(
+        42,
+        "receipt#1.pdf",
+        context.identity,
+      );
     } finally {
       await close();
     }
