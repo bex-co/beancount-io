@@ -1,6 +1,5 @@
 import { INCLUDE_SOURCE_DESCRIPTION } from "@/features/ledger/utils/include-source-description";
 import { z } from "zod";
-import { unsyncedTransactionsQuery } from "@/features/ledger/api/rest/v1/banks-handler";
 import { JOURNAL_FILTER_DESCRIPTION } from "@/features/ledger/utils/journal-filter-description";
 import { JOURNAL_KINDS } from "@/features/ledger/utils/journal-kinds";
 import { logger } from "@/shared/logger";
@@ -57,10 +56,35 @@ export async function executeListBankConnections(
 // --- listStagedBankTransactions ---------------------------------------------
 
 export const listStagedBankTransactionsDescription =
-  "List bank transactions staged for import, newest first. Each row's `transactionId` — not its `id` — is what importStagedBankTransactions and discardStagedBankTransactions take; optional accountId filter, an account's `id` (pacc_…) from listBankConnections. Pass `limit` (at most 100) to read a large staging area in pages; `page.hasMore` says whether more remain. Imported and discarded rows leave the list, so after acting on a page read page 1 again rather than the next page. Omit `limit` for every staged row.";
+  "List bank transactions staged for import, newest first. Each row's `transactionId` — not its `id` — is what importStagedBankTransactions and discardStagedBankTransactions take. Pass `limit` to read a large staging area in pages (`page.hasMore` says whether more remain; omit `limit` for every staged row). Imported and discarded rows leave the list, so after acting on a page read page 1 again rather than the next page.";
 
-// Strict at the base (w23/112), with the shared page and limit.
-export const listStagedBankTransactionsInput = unsyncedTransactionsQuery;
+// Strict JSON input (w23/112, w31/070): unlike REST's `unsyncedTransactionsQuery`
+// (which uses `z.coerce.number()` for URL query strings and `.openapi()` for
+// OpenAPI descriptions), MCP arguments arrive as JSON and publish `.describe()`
+// in `tools/list`.
+export const listStagedBankTransactionsInput = z
+  .object({
+    accountId: z
+      .string()
+      .optional()
+      .describe(
+        "Restrict to one bank account, by its `id` (pacc_…) from listBankConnections, not its Plaid `accountId`.",
+      ),
+    page: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe("1-based page number, defaults to 1."),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(100)
+      .optional()
+      .describe("Page size, at most 100."),
+  })
+  .strict();
 
 export const listStagedBankTransactionsOutput = toolOutputSchema(
   z.array(z.unknown()),

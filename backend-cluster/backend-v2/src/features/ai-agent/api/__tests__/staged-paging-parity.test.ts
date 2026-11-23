@@ -208,6 +208,7 @@ async function fixture() {
 
   return {
     read,
+    client,
     close: async () => {
       await client.close();
       await server.close();
@@ -301,4 +302,41 @@ describe("staged bank transactions are paged the same way on every surface", () 
       await f.close();
     }
   });
+
+  // w31/070: listStagedBankTransactions takes JSON, not a URL query string, so
+  // non-numeric JSON types must be refused as BAD_USER_INPUT naming the wrong
+  // type rather than coerced via z.coerce.number().
+  it.each([
+    ["boolean page", { page: true }, "boolean"],
+    ["false page", { page: false }, "boolean"],
+    ["boolean limit", { limit: true }, "boolean"],
+    ["string page", { page: "1" }, "string"],
+    ["empty-string page", { page: "" }, "string"],
+    ["string limit", { limit: "5" }, "string"],
+    ["null page", { page: null }, "null"],
+    ["null limit", { limit: null }, "null"],
+  ])(
+    "refuses %s on listStagedBankTransactions with a type error",
+    async (_name, args, received) => {
+      const f = await fixture();
+      try {
+        const res = await f.client.callTool({
+          name: "listStagedBankTransactions",
+          arguments: { ledger: LEDGER, ...args },
+        });
+        expect(res.isError).toBe(true);
+        const structured = res.structuredContent as {
+          ok: boolean;
+          error?: { code: string; message: string };
+        };
+        expect(structured.ok).toBe(false);
+        expect(structured.error?.code).toBe("BAD_USER_INPUT");
+        expect(structured.error?.message).toContain(
+          `expected number, received ${received}`,
+        );
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });

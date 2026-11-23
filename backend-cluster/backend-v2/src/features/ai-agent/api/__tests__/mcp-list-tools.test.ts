@@ -151,6 +151,22 @@ describe("listStagedBankTransactions", () => {
     expect(result.isError).toBe(true);
     await close();
   });
+
+  it("publishes parameter descriptions for accountId, page, and limit in tools/list", async () => {
+    const { client, close } = await connect(fakeServices());
+    try {
+      const { tools } = await client.listTools();
+      const tool = tools.find((t) => t.name === "listStagedBankTransactions");
+      const props = tool?.inputSchema.properties as
+        | Record<string, { description?: string }>
+        | undefined;
+      expect(props?.accountId?.description).toContain("listBankConnections");
+      expect(props?.page?.description).toBeTruthy();
+      expect(props?.limit?.description).toBeTruthy();
+    } finally {
+      await close();
+    }
+  });
 });
 
 /**
