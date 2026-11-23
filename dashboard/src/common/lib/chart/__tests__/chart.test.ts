@@ -26,7 +26,46 @@ describe("Chart Utils", () => {
 
     it("should format small numbers without suffix", () => {
       expect(formatYAxisNumber(100)).toBe("100.0");
-      expect(formatYAxisNumber(999)).toBe("1.0k");
+      expect(formatYAxisNumber(999)).toBe("999.0");
+    });
+
+    it("keeps spending ticks below a thousand in single units", () => {
+      expect([0, 200, 400, 600, 800, 1000].map(formatYAxisNumber)).toEqual([
+        "0.0",
+        "200.0",
+        "400.0",
+        "600.0",
+        "800.0",
+        "1.0k",
+      ]);
+    });
+
+    it("keeps net worth ticks below a million in thousands", () => {
+      expect(
+        [200_000, 400_000, 600_000, 800_000, 1_000_000].map(formatYAxisNumber),
+      ).toEqual(["200.0k", "400.0k", "600.0k", "800.0k", "1.0m"]);
+    });
+
+    it("keeps account chart ticks in their magnitude's unit", () => {
+      expect(
+        [0, -300, -600, -900, -1200, -1500, -1800, -2100].map(
+          formatYAxisNumber,
+        ),
+      ).toEqual([
+        "0.0",
+        "-300.0",
+        "-600.0",
+        "-900.0",
+        "-1.2k",
+        "-1.5k",
+        "-1.8k",
+        "-2.1k",
+      ]);
+    });
+
+    it("keeps hundreds of billions in billions", () => {
+      expect(formatYAxisNumber(-600e9)).toBe("-600.0b");
+      expect(formatYAxisNumber(-1.2e12)).toBe("-1.2t");
     });
 
     it("should handle negative numbers", () => {
@@ -81,14 +120,12 @@ describe("Chart Utils", () => {
       expect(formatYAxisNumber(-0.00001)).toBe("-1.0e-5");
     });
 
-    it("leaves the abbreviation boundaries alone", () => {
-      // Everything from one upward keeps the behaviour it had.
+    it("uses the next suffix at full unit thresholds", () => {
       expect(formatYAxisNumber(1)).toBe("1.0");
-      expect(formatYAxisNumber(999)).toBe("1.0k");
       expect(formatYAxisNumber(1000)).toBe("1.0k");
-      expect(formatYAxisNumber(999999)).toBe("1.0m");
+      expect(formatYAxisNumber(999900)).toBe("999.9k");
+      expect(formatYAxisNumber(1000000)).toBe("1.0m");
       expect(formatYAxisNumber(1000000000)).toBe("1.0b");
-      expect(formatYAxisNumber(0)).toBe("0.0");
     });
 
     it("should handle string numbers", () => {
@@ -98,7 +135,7 @@ describe("Chart Utils", () => {
 
     it("should handle decimal numbers", () => {
       expect(formatYAxisNumber(1234.56)).toBe("1.2k");
-      expect(formatYAxisNumber(999.9)).toBe("1.0k");
+      expect(formatYAxisNumber(999.9)).toBe("999.9");
     });
   });
 

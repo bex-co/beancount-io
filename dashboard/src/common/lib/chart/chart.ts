@@ -10,11 +10,9 @@ const EXPONENTIAL_BELOW = 1e-4;
  * Format a number for Y-axis display in charts
  * Converts numbers to abbreviated format (e.g., 1000 => "1.0k")
  *
- * The abbreviated `0.0a` pattern keeps a single mantissa digit, which renders
- * every fractional tick as "0.0" — a 0.04 BTC axis read as six identical
- * zeros. Ticks below one therefore keep two significant digits instead, which
- * is enough to tell 0.003 from 0.006 and 0.019 from 0.020; an actual zero
- * still reads "0.0", and everything from one upward is unchanged.
+ * Abbreviate at full unit thresholds and show one decimal place. Fractional
+ * ticks keep two significant digits so nearby values such as 0.003 and 0.006
+ * remain distinct. Zero reads "0.0".
  *
  * @param numberString - The number to format (as string or number)
  * @returns Formatted number with abbreviation
@@ -36,7 +34,11 @@ export const formatYAxisNumber = (numberString: string | number): string => {
     return String(Number(value.toPrecision(FRACTIONAL_SIGNIFICANT_DIGITS)));
   }
 
-  return numbro(numberString).format("0.0a");
+  return numbro(numberString).format({
+    average: true,
+    mantissa: 1,
+    lowPrecision: false,
+  });
 };
 
 import {
