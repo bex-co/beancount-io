@@ -226,7 +226,7 @@ export function FileUpload({ onParsed, onFileSelected }: FileUploadProps) {
         <p className="text-xs text-muted-foreground mb-2">
           {t("importer.upload.csvFormatHint")}
         </p>
-        <pre className="text-xs bg-background p-2 rounded border">
+        <pre className="max-w-full overflow-x-auto rounded border bg-background p-2 text-xs">
           {CSV_FORMAT_EXAMPLE}
         </pre>
         <p className="text-xs text-muted-foreground mt-2">

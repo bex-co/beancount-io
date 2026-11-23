@@ -531,8 +531,8 @@ export function TransactionReviewTable({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
             <CardTitle>
               <h2>{t("plaid.transactionReview.title")}</h2>
             </CardTitle>
@@ -542,10 +542,10 @@ export function TransactionReviewTable({
               })}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto">
             {/* The placeholder carries the field's purpose — it doubles as the
                 accessible name, since Combobox takes no aria-label. */}
-            <div className="w-70">
+            <div className="w-full min-w-0 sm:w-70">
               <SourceFileCombobox
                 ledgerId={ledgerId}
                 value={targetFile}

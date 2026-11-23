@@ -98,14 +98,14 @@ describe("AccountPage narrow report selectors", () => {
     });
   });
 
-  it("keeps interval and conversion selectors in the toolbar layout", () => {
-    const { container } = render(<AccountPage />);
+  it("lets the interval and conversion controls wrap under the view picker", () => {
+    render(<AccountPage />);
 
-    expect(screen.getByTestId("interval-select")).toBeInTheDocument();
-    expect(screen.getByTestId("conversion-select")).toBeInTheDocument();
-
-    const hiddenDesktopOnly = container.querySelector(".hidden.sm\\:flex");
-    expect(hiddenDesktopOnly).toBeNull();
-    expect(container.querySelector(".flex-wrap")).not.toBeNull();
+    const toolbar = screen.getByTestId("view-select").parentElement;
+    const selectors = screen.getByTestId("interval-select").parentElement;
+    expect(toolbar).toHaveClass("flex-wrap");
+    expect(toolbar).toContainElement(selectors);
+    expect(selectors).toHaveClass("max-w-full", "flex-wrap");
+    expect(selectors).toContainElement(screen.getByTestId("conversion-select"));
   });
 });

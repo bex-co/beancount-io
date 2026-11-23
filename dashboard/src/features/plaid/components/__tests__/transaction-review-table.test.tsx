@@ -125,6 +125,25 @@ describe("TransactionReviewTable target file", () => {
     fireEvent.change(targetAccount, { target: { value: "Expenses:Food" } });
   };
 
+  it("lets the title and actions wrap, with the file picker full-width on phones", () => {
+    render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
+
+    const header = screen
+      .getByRole("heading", { name: "Bank Transactions" })
+      .closest('[data-slot="card-header"]');
+    const filePicker = screen.getByTestId("source-file-combobox").parentElement;
+    const actions = filePicker?.parentElement;
+    expect(header?.firstElementChild).toHaveClass("flex-wrap");
+    expect(actions).toHaveClass("w-full", "flex-wrap", "sm:w-auto");
+    expect(filePicker).toHaveClass("w-full", "sm:w-70");
+    expect(actions).toContainElement(
+      screen.getByRole("button", { name: /submit/i }),
+    );
+    expect(actions).toContainElement(
+      screen.getByRole("button", { name: /delete/i }),
+    );
+  });
+
   it("sends the chosen file as the submission's filename", async () => {
     render(<TransactionReviewTable ledgerId={LEDGER_ID} />);
 
