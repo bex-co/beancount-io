@@ -1162,14 +1162,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Grafieken weergeven",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "Omleiden...",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Uw grootboek laden",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: 'Druk op Enter om "{value}" te gebruiken',
     description: "Hint for accepting a custom combobox value",

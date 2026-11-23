@@ -1163,14 +1163,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Mostrar gráficos",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "Redirecionando…",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Carregando seu livro-razão",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: 'Pressione Enter para usar "{value}"',
     description: "Hint for accepting a custom combobox value",

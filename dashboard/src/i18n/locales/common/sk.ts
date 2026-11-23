@@ -1166,14 +1166,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Zobraziť grafy",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "Presmerovanie...",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Načítava sa vaša účtovná kniha",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: "Stlačením klávesu Enter použijete „{value}“",
     description: "Hint for accepting a custom combobox value",

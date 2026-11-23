@@ -1160,14 +1160,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Показване на диаграми",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "Пренасочване...",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Зареждане на вашата книга",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: "Натиснете Enter, за да използвате „{value}“",
     description: "Hint for accepting a custom combobox value",

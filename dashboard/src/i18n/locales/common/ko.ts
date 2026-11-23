@@ -1150,14 +1150,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "차트 표시",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "리디렉션 중…",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "원장 로드",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: '"{value}"을(를) 사용하려면 Enter 키를 누르세요.',
     description: "Hint for accepting a custom combobox value",

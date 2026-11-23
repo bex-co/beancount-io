@@ -1127,14 +1127,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "显示图表",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "重定向...",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "加载你的账本",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: "按 Enter 键以使用“{value}”",
     description: "Hint for accepting a custom combobox value",

@@ -1165,14 +1165,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Show charts",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "Redirecting…",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Loading your ledger",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: 'Press Enter to use "{value}"',
     description: "Hint for accepting a custom combobox value",

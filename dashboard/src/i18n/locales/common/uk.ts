@@ -1165,14 +1165,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Показати діаграми",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "Переспрямування…",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Завантаження вашої книги",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: 'Натисніть Enter, щоб використовувати "{value}"',
     description: "Hint for accepting a custom combobox value",

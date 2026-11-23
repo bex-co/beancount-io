@@ -1156,14 +1156,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "チャートを表示する",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "リダイレクト中…",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "元帳をロードしています",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: "Enter キーを押して「{value}」を使用します",
     description: "Hint for accepting a custom combobox value",

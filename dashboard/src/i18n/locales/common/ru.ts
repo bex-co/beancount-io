@@ -1168,14 +1168,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Показать графики",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "Перенаправление…",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Загрузка бухгалтерской книги",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: "Нажмите Enter, чтобы использовать «{value}»",
     description: "Hint for accepting a custom combobox value",

@@ -1168,14 +1168,6 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Mostra els gràfics",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "S'està redirigint...",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Carregant el vostre llibre major",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: 'Premeu Intro per utilitzar "{value}"',
     description: "Hint for accepting a custom combobox value",

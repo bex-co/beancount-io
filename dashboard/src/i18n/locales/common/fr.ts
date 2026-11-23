@@ -1172,14 +1172,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Afficher les graphiques",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "Redirection…",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Chargement de votre grand livre",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: 'Appuyez sur Entrée pour utiliser "{value}"',
     description: "Hint for accepting a custom combobox value",

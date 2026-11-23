@@ -1169,14 +1169,6 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Diagramme anzeigen",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "Weiterleitung…",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "Laden Sie Ihr Hauptbuch",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: "Drücken Sie die Eingabetaste, um „{value}“ zu verwenden.",
     description: "Hint for accepting a custom combobox value",

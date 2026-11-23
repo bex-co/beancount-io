@@ -1158,14 +1158,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "نمایش نمودارها",
     description: "Accessible label for showing report charts",
   },
-  "common.redirecting": {
-    message: "در حال تغییر مسیر…",
-    description: "Status while redirecting to another page",
-  },
-  "common.loadingLedger": {
-    message: "در حال بارگیری دفتر کل شما",
-    description: "Status while loading a ledger",
-  },
   "component.combobox.useCustomValue": {
     message: 'برای استفاده از "{value}" Enter را فشار دهید',
     description: "Hint for accepting a custom combobox value",
