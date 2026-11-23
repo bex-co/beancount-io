@@ -1,7 +1,10 @@
 import BigNumber from "bignumber.js";
 import type { DirectiveJson, PostingJson } from "@rustledger/wasm";
 import { perUnitFromTotalCost } from "./total-cost";
-import { divideWithPythonDecimalContext } from "./decimal-context";
+import {
+  divideWithPythonDecimalContext,
+  roundWithPythonDecimalContext,
+} from "./decimal-context";
 import { isUnbookedDirective } from "./plugins/provenance";
 import { isFlowAccount } from "./lot-inventory";
 
@@ -65,14 +68,62 @@ function fromSource(source: string): ScaledDecimal {
   return { value: new Coefficient(source), scale: scaleOf(source) };
 }
 
-/** Python `Decimal.__add__`: value sum, scale = max(operand scales). */
+/**
+ * The engine derives `per_unit` from a total with its own division precision
+ * (29 digits for a repeating quotient); beancount's
+ * `booking_full.compute_cost_number` divides under its 28-digit Decimal
+ * context, so restore that booking here. Values that already fit pass through
+ * untouched — and a user-typed `per_unit` (no division involved, kept exact by
+ * beancount) is never normalized, which is why this applies only to the
+ * engine-derived kind. The scale follows the rounded value so the postings
+ * below spell the booking the way beancount does (mirrors `time-clamp.ts`).
+ */
+function normalizeEnginePerUnit(source: string): ScaledDecimal {
+  const parsed = fromSource(source);
+  const rounded = roundWithPythonDecimalContext(parsed.value);
+  if (rounded.eq(parsed.value)) return parsed;
+  return { value: rounded, scale: rounded.decimalPlaces() ?? 0 };
+}
+
+/**
+ * Digits Python's `Decimal` drops when rounding an exact result to its
+ * 28-digit context. The exact coefficient is an integer at exponent `-scale`,
+ * so its digit count is `scale + exponent + 1`, trailing zeros included —
+ * the count `Decimal` rounds down to 28. Zero carries no digits and keeps its
+ * scale (`Decimal("1.00") + Decimal("-1.00")` is `Decimal("0.00")`).
+ */
+function droppedDigits(exact: BigNumber, scale: number): number {
+  if (exact.isZero()) return 0;
+  return Math.max(scale + (exact.e ?? 0) + 1 - 28, 0);
+}
+
+/**
+ * An exact sum/product under beancount's 28-digit `Decimal` context: the
+ * value rounded to 28 significant digits half-even, the scale dropped a place
+ * per digit rounding removes (matching `Decimal`'s exponent, so `str` keeps
+ * no phantom trailing zero). A value that already fits passes through
+ * untouched — this is an identity everywhere except past beancount's
+ * precision, exactly where exact arithmetic would otherwise erase the dust
+ * beancount's intermediate rounding leaves behind (mirrors `time-clamp.ts`).
+ */
+function withDecimalContext(exact: BigNumber, scale: number): ScaledDecimal {
+  const dropped = droppedDigits(exact, scale);
+  if (dropped === 0) return { value: exact, scale };
+  const value = roundWithPythonDecimalContext(exact);
+  // Rounding up across a power of ten (999.99… → 1000.0…) gains a digit the
+  // count above cannot see; `Decimal`'s exponent shifts one more place.
+  const overflow = (value.e ?? 0) > (exact.e ?? 0) ? 1 : 0;
+  return { value, scale: Math.max(scale - dropped - overflow, 0) };
+}
+
+/** Python `Decimal.__add__`: value sum, scale = max of operand scales. */
 function addScaled(a: ScaledDecimal, b: ScaledDecimal): ScaledDecimal {
-  return { value: a.value.plus(b.value), scale: Math.max(a.scale, b.scale) };
+  return withDecimalContext(a.value.plus(b.value), Math.max(a.scale, b.scale));
 }
 
 /** Python `Decimal.__mul__`: value product, scale = sum of operand scales. */
 function mulScaled(a: ScaledDecimal, b: ScaledDecimal): ScaledDecimal {
-  return { value: a.value.times(b.value), scale: a.scale + b.scale };
+  return withDecimalContext(a.value.times(b.value), a.scale + b.scale);
 }
 
 /** Format like `str(Decimal)` — preserve scale as trailing zeros. */
@@ -246,7 +297,7 @@ function costPerUnitOf(posting: PostingJson): ScaledDecimal | null {
       };
     }
     case "per_unit_from_total":
-      return fromSource(number.per_unit);
+      return normalizeEnginePerUnit(number.per_unit);
     case "compound":
       return null;
     default:
