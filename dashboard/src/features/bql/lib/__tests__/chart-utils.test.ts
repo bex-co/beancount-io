@@ -205,7 +205,11 @@ describe("chart-utils", () => {
       expect(chartConfig?.type).toBe("line");
       expect(chartConfig?.option.series?.[0]).toMatchObject({
         type: "line",
-        data: [4841.12, -4, -2400],
+        data: [
+          [Date.UTC(2015, 0, 1), 4841.12],
+          [Date.UTC(2015, 0, 4), -4],
+          [Date.UTC(2015, 0, 6), -2400],
+        ],
       });
     });
 
@@ -227,7 +231,12 @@ describe("chart-utils", () => {
 
       expect(chartConfig?.option.series?.[0]).toMatchObject({
         name: "UNIV2ETHUSDC",
-        data: [7, 0.15, 0.12, -7.27],
+        data: [
+          [Date.UTC(2024, 2, 15), 7],
+          [Date.UTC(2024, 5, 30), 0.15],
+          [Date.UTC(2024, 8, 30), 0.12],
+          [Date.UTC(2024, 9, 15), -7.27],
+        ],
       });
       expect(chartConfig?.option.yAxis).toMatchObject({
         name: "UNIV2ETHUSDC",
@@ -248,7 +257,11 @@ describe("chart-utils", () => {
       } as any;
 
       expect(parseQueryChart(result)?.option.series?.[0]).toMatchObject({
-        data: [2, 1, 1],
+        data: [
+          [Date.UTC(2015, 0, 1), 2],
+          [Date.UTC(2015, 0, 4), 1],
+          [Date.UTC(2015, 0, 6), 1],
+        ],
       });
     });
 
@@ -265,7 +278,10 @@ describe("chart-utils", () => {
       } as any;
 
       expect(parseQueryChart(result)?.option.series?.[0]).toMatchObject({
-        data: [0, 0],
+        data: [
+          [Date.UTC(2024, 0, 1), 0],
+          [Date.UTC(2024, 0, 2), 0],
+        ],
       });
     });
 
@@ -313,16 +329,70 @@ describe("chart-utils", () => {
 
       expect(chartConfig).not.toBeNull();
       expect(chartConfig?.type).toBe("line");
+      expect(chartConfig?.option.useUTC).toBe(true);
       expect(chartConfig?.option.xAxis).toMatchObject({
-        type: "category",
-        data: ["2024-01-01", "2024-01-02", "2024-01-03"],
-        boundaryGap: false,
+        type: "time",
       });
       expect(chartConfig?.option.series).toHaveLength(1);
       expect(chartConfig?.option.series?.[0]).toMatchObject({
         type: "line",
-        data: [100, 200, 150],
+        step: "end",
+        data: [
+          [Date.UTC(2024, 0, 1), 100],
+          [Date.UTC(2024, 0, 2), 200],
+          [Date.UTC(2024, 0, 3), 150],
+        ],
       });
+    });
+
+    it("plots dates chronologically with proportional gaps regardless of result order", () => {
+      const result = {
+        types: [
+          { name: "date", dtype: "date" },
+          { name: "balance", dtype: "Inventory" },
+        ],
+        rows: [
+          ["2015-11-13", { GLD: "15" }],
+          ["2015-11-18", { GLD: "10" }],
+          ["2016-05-05", { GLD: "12" }],
+        ],
+      } as QueryResultTable;
+      const reverse = { ...result, rows: [...result.rows].reverse() };
+      const start = (
+        parseQueryChart(result)!.option.series as Array<{ data: number[][] }>
+      )[0].data;
+      const end = (
+        parseQueryChart(reverse)!.option.series as Array<{ data: number[][] }>
+      )[0].data;
+      const day = 24 * 60 * 60 * 1000;
+      expect(end).toEqual(start);
+      expect(start[1][0] - start[0][0]).toBe(5 * day);
+      expect(start[2][0] - start[1][0]).toBe(169 * day);
+    });
+
+    it("preserves same-day amounts and exact text by row after chronological sorting", () => {
+      const result = {
+        types: [
+          { name: "date", dtype: "date" },
+          { name: "balance", dtype: "Inventory" },
+        ],
+        rows: [
+          ["2016-02-25", { USD: "108.00" }],
+          ["2016-01-08", { USD: "-2469.00" }],
+          ["2016-01-08", { USD: "-3164.0300" }],
+        ],
+      } as QueryResultTable;
+      const option = parseQueryChart(result)!.option;
+      const points = (option.series as Array<{ data: number[][] }>)[0].data;
+      expect(points.slice(0, 2)).toEqual([
+        [Date.UTC(2016, 0, 8), -2469],
+        [Date.UTC(2016, 0, 8), -3164.03],
+      ]);
+      const { valueFormatter } = option.tooltip as {
+        valueFormatter: (value: number, index: number) => string;
+      };
+      expect(valueFormatter(points[0][1], 0)).toBe("-2469.00 USD");
+      expect(valueFormatter(points[1][1], 1)).toBe("-3164.0300 USD");
     });
 
     it("should generate bar chart config for string-based data", () => {
@@ -384,7 +454,10 @@ describe("chart-utils", () => {
       expect(chartConfig?.option.series?.[0]).toMatchObject({
         type: "line",
         name: "USD",
-        data: [100, 200],
+        data: [
+          [Date.UTC(2024, 0, 1), 100],
+          [Date.UTC(2024, 0, 2), 200],
+        ],
       });
     });
 

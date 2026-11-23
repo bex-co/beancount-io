@@ -40,7 +40,12 @@ function draw(result: QueryResultTable) {
   });
   charts.push(chart);
   chart.setOption(config.option);
-  const series = (config.option.series as { data: number[] }[])[0];
+  const series = (
+    config.option.series as { data: (number | [number, number])[] }[]
+  )[0];
+  const points = series.data.map((value, index) =>
+    Array.isArray(value) ? value : [index, value],
+  );
   const axis = (
     chart.getModel() as unknown as {
       getComponent: (
@@ -52,7 +57,12 @@ function draw(result: QueryResultTable) {
     }
   ).getComponent("yAxis", 0).axis;
   const y = (index: number, value: number) =>
-    (chart.convertToPixel({ seriesIndex: 0 }, [index, value]) as number[])[1];
+    (
+      chart.convertToPixel({ seriesIndex: 0 }, [
+        points[index][0],
+        value,
+      ]) as number[]
+    )[1];
   const tooltip = (
     config.option.tooltip as {
       valueFormatter: (value: number, index: number) => string;
@@ -60,7 +70,7 @@ function draw(result: QueryResultTable) {
   ).valueFormatter;
   return {
     option: config.option as EChartsOption,
-    plotted: series.data,
+    plotted: points.map((point) => point[1]),
     extent: axis.scale.getExtent(),
     y,
     tooltip,

@@ -1,6 +1,7 @@
 import type { EChartsOption } from "echarts";
 import type { QueryResultTable } from "@/graphql/definitions";
 import { CONFINED_TOOLTIP } from "@/common/lib/chart/tooltip";
+import { formatDateISO } from "@/common/lib/format/format-date-iso";
 
 export interface ChartConfig {
   type: "line" | "bar";
@@ -112,6 +113,7 @@ export function decodeQueryChartValue(
  * here keep their plain axis.
  */
 const SMALLEST_UNSCALED = 1e-15;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * The power of ten a series is plotted in, or 0 to plot it as is. ECharts
@@ -148,11 +150,7 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
   const isDateBased = firstType.dtype === "date";
   const chartType = isDateBased ? "line" : "bar";
 
-  const categories: string[] = [];
-  const values: number[] = [];
-  // Each point's source decimal, by index, so a repeated category label
-  // never borrows another row's text.
-  const texts: string[] = [];
+  const points: { x: string | number; amount: number; text: string }[] = [];
   let seriesUnit: string | undefined;
 
   for (const row of rows) {
@@ -174,22 +172,31 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
       }
     }
 
-    categories.push(String(category ?? ""));
-    values.push(decoded.amount);
-    texts.push(decoded.text);
+    let x: string | number = String(category ?? "");
+    if (isDateBased) {
+      const date = formatDateISO(x);
+      if (date === null) return null;
+      x = Date.parse(`${date}T00:00:00.000Z`);
+    }
+    points.push({ x, amount: decoded.amount, text: decoded.text });
   }
 
-  if (categories.length === 0) {
+  if (points.length === 0) {
     return null;
   }
+  // Keep the query's order for ties and sort the exact text with its point.
+  if (isDateBased)
+    points.sort((left, right) => Number(left.x) - Number(right.x));
 
   // A tiny series is drawn in a power of ten its ticks name ("2e-24"); the
   // tooltip still says each row's exact decimal.
+  const values = points.map((point) => point.amount);
   const exponent = displayExponent(values);
   const plotted =
     exponent === 0 ? values : values.map((value) => value * 10 ** -exponent);
 
   const option: EChartsOption = {
+    ...(isDateBased ? { useUTC: true } : {}),
     tooltip: {
       ...CONFINED_TOOLTIP,
       trigger: "axis",
@@ -198,7 +205,7 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
       },
       // Say the source value; the plotted float may have dropped digits.
       valueFormatter: (value, dataIndex) => {
-        const text = texts[dataIndex] ?? String(value);
+        const text = points[dataIndex]?.text ?? String(value);
         return seriesUnit ? `${text} ${seriesUnit}` : text;
       },
     },
@@ -208,11 +215,24 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
       bottom: "3%",
       containLabel: true,
     },
-    xAxis: {
-      type: "category",
-      data: categories,
-      boundaryGap: chartType === "bar",
-    },
+    xAxis: isDateBased
+      ? {
+          type: "time",
+          minInterval: DAY_MS,
+          axisPointer: {
+            label: {
+              formatter: ({ value }) =>
+                typeof value === "number" && Number.isFinite(value)
+                  ? new Date(value).toISOString().slice(0, 10)
+                  : String(value),
+            },
+          },
+        }
+      : {
+          type: "category",
+          data: points.map((point) => String(point.x)),
+          boundaryGap: true,
+        },
     yAxis: {
       type: "value",
       name: seriesUnit,
@@ -228,13 +248,19 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
           }),
     },
     series: [
-      {
-        name: seriesUnit,
-        type: chartType,
-        data: plotted,
-        smooth: chartType === "line",
-        areaStyle: chartType === "line" ? {} : undefined,
-      },
+      isDateBased
+        ? {
+            name: seriesUnit,
+            type: "line",
+            data: points.map((point, index) => [
+              Number(point.x),
+              plotted[index],
+            ]),
+            encode: { x: 0, y: 1, tooltip: [1] },
+            step: "end",
+            areaStyle: {},
+          }
+        : { name: seriesUnit, type: "bar", data: plotted },
     ],
   };
 

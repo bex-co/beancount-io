@@ -94,6 +94,7 @@ function appChartTheme(palette: readonly string[], chrome: ChartChrome) {
       extraCssText: TOOLTIP_SURFACE_CSS,
     },
     categoryAxis: axis,
+    timeAxis: axis,
     valueAxis: { ...axis, axisLine: { show: false } },
     bar: { itemStyle: { borderRadius: [3, 3, 0, 0] } },
   };
