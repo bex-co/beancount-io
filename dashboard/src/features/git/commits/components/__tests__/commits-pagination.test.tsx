@@ -179,6 +179,63 @@ function historyShas() {
     .map((link) => link.getAttribute("href")!.split("/").at(-1));
 }
 
+describe("responsive Version History sheet focus (w5/1160)", () => {
+  it.each([
+    { selected: 27, firstFocus: 27 },
+    { selected: 66, firstFocus: 0 },
+  ])(
+    "focuses commit $firstFocus with commit $selected selected",
+    async ({ selected, firstFocus }) => {
+      const { requests, router, user } = await mountHistory({
+        selected: sha(selected),
+      });
+      await resolve(requests[0], page(0, 30));
+      const trigger = screen.getByRole("button", {
+        name: en["commits.versionHistory"],
+      });
+      trigger.focus();
+      await user.keyboard("{Enter}");
+      const sheet = await screen.findByRole("dialog", {
+        name: en["commits.versionHistory"],
+      });
+      expect(
+        within(sheet).getByRole("button", { name: en["commits.loadOlder"] }),
+      ).toBeInTheDocument();
+      const link = within(sheet).getByRole("link", {
+        name: new RegExp(`Synthetic a change ${firstFocus} `),
+      });
+      await waitFor(() => expect(link).toHaveFocus());
+
+      await user.keyboard("{Enter}");
+      await waitFor(() => expect(sheet).not.toBeInTheDocument());
+      expect(router.state.location.pathname).toBe(
+        `/ledger/alice/books/commit/${sha(firstFocus)}`,
+      );
+      expect(requests).toHaveLength(1);
+      await waitFor(() => expect(trigger).toHaveFocus());
+    },
+  );
+
+  it("opens an empty history on the Close button", async () => {
+    const { requests, user } = await mountHistory();
+    await resolve(requests[0], page(0, 0));
+    const trigger = screen.getByRole("button", {
+      name: en["commits.versionHistory"],
+    });
+    trigger.focus();
+    await user.keyboard("{Enter}");
+    const sheet = await screen.findByRole("dialog", {
+      name: en["commits.versionHistory"],
+    });
+    const close = within(sheet).getByRole("button", {
+      name: en["common.closeDialog"],
+    });
+    await waitFor(() => expect(close).toHaveFocus());
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+});
+
 describe("commit history pagination through Apollo", () => {
   it("appends 30/30/7 commits, resolves the deep-link warning, and retains keyboard focus", async () => {
     const selected = sha(66);

@@ -265,6 +265,21 @@ function CommitsWorkspace({
                 <SheetContent
                   side="left"
                   className="w-[min(90vw,320px)] gap-0 p-0 sm:max-w-[320px]"
+                  onOpenAutoFocus={(event) => {
+                    const sheet = event.currentTarget;
+                    if (!(sheet instanceof HTMLElement)) return;
+                    const link =
+                      sheet.querySelector<HTMLAnchorElement>(
+                        'nav a[aria-current="page"]',
+                      ) ?? sheet.querySelector<HTMLAnchorElement>("nav a");
+                    if (!link) return;
+                    event.preventDefault();
+                    link.focus({ preventScroll: true });
+                    link.scrollIntoView({
+                      block: "nearest",
+                      inline: "nearest",
+                    });
+                  }}
                 >
                   <SheetHeader className="sr-only">
                     <SheetTitle>{t("commits.versionHistory")}</SheetTitle>
