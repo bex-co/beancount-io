@@ -57,19 +57,24 @@ export default function TrialBalancePage() {
     DEFAULT_VIEW,
   );
 
+  const scope = {
+    ledgerId,
+    account: ledgerFilters.searchParams.account,
+    filter: ledgerFilters.searchParams.filter,
+    time: ledgerFilters.searchParams.time,
+  };
   const {
     data,
     loading: isLoading,
     error,
     refetch,
   } = useQuery(GetLedgerTrialBalanceDocument, {
-    variables: {
-      ledgerId: ledgerId,
-      conversion: conversion,
-      account: ledgerFilters.searchParams.account,
-      filter: ledgerFilters.searchParams.filter,
-      time: ledgerFilters.searchParams.time,
-    },
+    variables: { ...scope, conversion },
+    fetchPolicy: "cache-first",
+  });
+  const atCostQuery = useQuery(GetLedgerTrialBalanceDocument, {
+    variables: { ...scope, conversion: "at_cost" },
+    skip: conversion === "at_cost",
     fetchPolicy: "cache-first",
   });
   const { failure, retrying, retry } = useQueryRetry(error, refetch);
@@ -108,6 +113,11 @@ export default function TrialBalancePage() {
   return (
     <TrialBalanceContent
       trialBalanceData={trialBalanceData}
+      atCostData={
+        atCostQuery.loading || atCostQuery.error
+          ? undefined
+          : atCostQuery.data?.getLedgerTrialBalance
+      }
       primaryCurrency={primaryCurrency}
       operatingCurrencies={operatingCurrencies}
       ledgerDisplayName={ledgerDisplayName ?? ledgerName}

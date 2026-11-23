@@ -61,6 +61,11 @@ const zhTrialBalance: Record<string, TranslationEntry> = {
     description:
       "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
   },
+  "page.trialBalance.reconciliationAtCost": {
+    message: "勾稽差额（按成本）",
+    description:
+      "Trial Balance reconciliation row when the report displays another valuation basis",
+  },
   "page.trialBalance.roundingResidual": {
     message: "舍入差额",
     description:

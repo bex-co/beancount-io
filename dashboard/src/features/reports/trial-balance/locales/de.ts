@@ -63,6 +63,11 @@ const deTrialBalance: Record<string, TranslationEntry> = {
     description:
       "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
   },
+  "page.trialBalance.reconciliationAtCost": {
+    message: "Abstimmungsdifferenz (zu Anschaffungskosten)",
+    description:
+      "Trial Balance reconciliation row when the report displays another valuation basis",
+  },
   "page.trialBalance.roundingResidual": {
     message: "Rundungsdifferenz",
     description:

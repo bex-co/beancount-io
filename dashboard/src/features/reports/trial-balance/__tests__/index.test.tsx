@@ -1,12 +1,18 @@
 import { act, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useQuery } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { GetLedgerTrialBalanceDocument } from "@/graphql/definitions";
 import TrialBalancePage from "../index";
 
 const { captureProps } = vi.hoisted(() => ({ captureProps: vi.fn() }));
+let storedConversion: string | undefined;
 
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
+vi.mock("@/common/hooks/use-cookie-storage-state/cookie", () => ({
+  getCookie: () => storedConversion,
+  setCookie: vi.fn(),
+}));
 
 const routerSearch = vi.hoisted(() => ({
   current: {} as Record<string, unknown>,
@@ -42,13 +48,18 @@ vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({
     ledgerName: "Demo Books",
     primaryCurrency: "USD",
+    operatingCurrencies: ["USD"],
     ledgerData: { options: { title: "" }, favaOptions: {} },
   }),
 }));
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({
   useLedgerSearchParams: () => ({
-    searchParams: { account: "", filter: "", time: "" },
+    searchParams: {
+      account: "Assets",
+      filter: "currency:USD",
+      time: "2017-09",
+    },
   }),
 }));
 
@@ -76,6 +87,8 @@ function graphQLError(code: string) {
 }
 
 beforeEach(() => {
+  storedConversion = undefined;
+  vi.mocked(useQuery).mockClear();
   routerSearch.current = {};
   routerSearch.listeners.clear();
 });
@@ -128,6 +141,44 @@ describe("TrialBalancePage", () => {
 
     expect(screen.getByText("trial-balance-content")).toBeInTheDocument();
   });
+
+  it.each(["loading", "error", "ready"])(
+    "requests cost for the exact displayed scope and keeps showing the report when cost is %s",
+    (state) => {
+      storedConversion = "USD";
+      const displayed = { assetsHierarchyData: { balance: { USD: "1109" } } };
+      const atCost = { assetsHierarchyData: { balance: { USD: "1000" } } };
+      vi.mocked(useQuery).mockImplementation((_query, options) => {
+        const { variables } = options as { variables: { conversion: string } };
+        const isCostRead = variables.conversion === "at_cost";
+        return {
+          data: { getLedgerTrialBalance: isCostRead ? atCost : displayed },
+          loading: isCostRead && state === "loading",
+          error:
+            isCostRead && state === "error" ? new Error("offline") : undefined,
+        } as never;
+      });
+
+      render(<TrialBalancePage />);
+
+      expect(useQuery).toHaveBeenCalledWith(GetLedgerTrialBalanceDocument, {
+        fetchPolicy: "cache-first",
+        skip: false,
+        variables: {
+          ledgerId: "demo/books",
+          account: "Assets",
+          filter: "currency:USD",
+          time: "2017-09",
+          conversion: "at_cost",
+        },
+      });
+      expect(screen.getByText("trial-balance-content")).toBeInTheDocument();
+      expect(captureProps.mock.calls.at(-1)?.[0]).toMatchObject({
+        trialBalanceData: displayed,
+        atCostData: state === "ready" ? atCost : undefined,
+      });
+    },
+  );
 });
 
 describe("TrialBalancePage chart selection lifetime", () => {

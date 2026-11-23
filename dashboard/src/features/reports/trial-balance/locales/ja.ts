@@ -61,6 +61,11 @@ const jaTrialBalance: Record<string, TranslationEntry> = {
     description:
       "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
   },
+  "page.trialBalance.reconciliationAtCost": {
+    message: "照合差額（コストで評価）",
+    description:
+      "Trial Balance reconciliation row when the report displays another valuation basis",
+  },
   "page.trialBalance.roundingResidual": {
     message: "端数差額",
     description:

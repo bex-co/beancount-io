@@ -62,6 +62,11 @@ const enTrialBalance: Record<string, TranslationEntry> = {
     description:
       "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
   },
+  "page.trialBalance.reconciliationAtCost": {
+    message: "Reconciliation Difference (at cost)",
+    description:
+      "Trial Balance reconciliation row when the report displays another valuation basis",
+  },
   "page.trialBalance.roundingResidual": {
     message: "Rounding residual",
     description:

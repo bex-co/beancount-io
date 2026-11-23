@@ -9,16 +9,21 @@ export const trialBalanceLoader: RouteLoader<
   LedgerSearchParams
 > = async ({ params, context, deps }) => {
   const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;
-  await Promise.allSettled([
-    context.client.query({
-      query: GetLedgerTrialBalanceDocument,
-      variables: {
-        ledgerId,
-        account: deps.account,
-        filter: deps.filter,
-        time: deps.time,
-        conversion: storedReportConversion(ledgerId),
-      },
-    }),
-  ]);
+  const conversion = storedReportConversion(ledgerId);
+  const conversions =
+    conversion === "at_cost" ? [conversion] : [conversion, "at_cost"];
+  await Promise.allSettled(
+    conversions.map((conversion) =>
+      context.client.query({
+        query: GetLedgerTrialBalanceDocument,
+        variables: {
+          ledgerId,
+          account: deps.account,
+          filter: deps.filter,
+          time: deps.time,
+          conversion,
+        },
+      }),
+    ),
+  );
 };

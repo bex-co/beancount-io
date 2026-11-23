@@ -2,6 +2,7 @@ import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import type { ConversionOption } from "@/common/types/chart";
 import { TrialBalanceContent } from "../trial-balance-content";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -106,11 +107,15 @@ type TrialBalanceData = React.ComponentProps<
 function Harness({
   onConversionChange,
   data = trialBalanceData as unknown as TrialBalanceData,
+  atCostData,
+  conversion = "at_cost",
   invert = false,
 }: {
-  onConversionChange: (value: "at_cost" | "units" | "at_value") => void;
+  onConversionChange: (value: ConversionOption) => void;
   /** Override the fixture for a case that needs its own hierarchy. */
   data?: TrialBalanceData;
+  atCostData?: TrialBalanceData;
+  conversion?: ConversionOption;
   invert?: boolean;
 }) {
   const [selectedTab, setSelectedTab] = useState("assets");
@@ -119,11 +124,12 @@ function Harness({
       selectedTab={selectedTab}
       onSelectedTabChange={setSelectedTab}
       trialBalanceData={data}
+      atCostData={atCostData}
       primaryCurrency="USD"
       ledgerDisplayName="Demo Books"
       ledgerOwner="demo"
       ledgerNameParam="books"
-      conversion="at_cost"
+      conversion={conversion}
       onConversionChange={onConversionChange}
       invertIncomeLiabilitiesEquity={invert}
       showZeroBalance
@@ -296,6 +302,104 @@ describe("TrialBalanceContent", () => {
       ]);
     },
   );
+
+  const costBasis = {
+    assetsHierarchyData: hierarchyNode("Assets", { USD: "1000.00" }),
+    liabilitiesHierarchyData: hierarchyNode("Liabilities", {}),
+    incomeHierarchyData: hierarchyNode("Income", {}),
+    expensesHierarchyData: hierarchyNode("Expenses", {}),
+    equityHierarchyData: hierarchyNode("Equity", { USD: "-1000.00" }),
+  } as unknown as TrialBalanceData;
+
+  it.each([
+    { conversion: "at_value", displayedAssets: { USD: "1109.00" } },
+    { conversion: "USD", displayedAssets: { USD: "1109.00" } },
+    { conversion: "units", displayedAssets: { GLD: "17" } },
+  ])(
+    "checks at cost while displaying $conversion",
+    ({ conversion, displayedAssets }) => {
+      render(
+        <Harness
+          conversion={conversion}
+          onConversionChange={vi.fn()}
+          atCostData={costBasis}
+          data={
+            {
+              ...costBasis,
+              assetsHierarchyData: hierarchyNode("Assets", displayedAssets),
+            } as TrialBalanceData
+          }
+        />,
+      );
+
+      expect(hierarchyListMock.mock.calls.at(-1)?.[0]).toMatchObject({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            account: "Assets",
+            balance: displayedAssets,
+          }),
+        ]),
+        summaryRows: [
+          {
+            label: "Reconciliation Difference (at cost)",
+            balance: { USD: "0.00" },
+            bold: true,
+          },
+        ],
+      });
+    },
+  );
+
+  it("preserves an actual at-cost difference under a converted view", () => {
+    const atCostData = {
+      ...costBasis,
+      assetsHierarchyData: hierarchyNode("Assets", { USD: "1000.01" }),
+    } as TrialBalanceData;
+    render(
+      <Harness
+        conversion="USD"
+        onConversionChange={vi.fn()}
+        data={costBasis}
+        atCostData={atCostData}
+      />,
+    );
+
+    expect(hierarchyListMock.mock.calls.at(-1)?.[0]).toMatchObject({
+      summaryRows: [
+        {
+          label: "Reconciliation Difference (at cost)",
+          balance: { USD: "0.01" },
+          bold: true,
+        },
+      ],
+    });
+  });
+
+  it("keeps the valuation line while the at-cost read is unavailable", () => {
+    render(
+      <Harness
+        conversion="at_value"
+        onConversionChange={vi.fn()}
+        data={
+          {
+            ...costBasis,
+            assetsHierarchyData: hierarchyNode("Assets", { USD: "1109.00" }),
+            valuationAdjustment: { USD: "-109.00" },
+          } as TrialBalanceData
+        }
+      />,
+    );
+
+    expect(hierarchyListMock.mock.calls.at(-1)?.[0]).toMatchObject({
+      summaryRows: [
+        {
+          label: "Valuation/translation adjustment",
+          balance: { USD: "-109.00" },
+          inverted: false,
+        },
+      ],
+    });
+  });
 
   it("shows the assets chart by default", () => {
     renderContent();

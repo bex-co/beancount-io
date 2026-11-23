@@ -61,6 +61,11 @@ const koTrialBalance: Record<string, TranslationEntry> = {
     description:
       "Trial balance summary row: what valuing holdings and currencies leaves unbalanced, so the roots net to zero",
   },
+  "page.trialBalance.reconciliationAtCost": {
+    message: "조정 차이(원가 기준)",
+    description:
+      "Trial Balance reconciliation row when the report displays another valuation basis",
+  },
   "page.trialBalance.roundingResidual": {
     message: "반올림 차액",
     description:

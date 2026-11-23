@@ -28,6 +28,7 @@ import {
 
 interface TrialBalanceContentProps {
   trialBalanceData: GetLedgerTrialBalanceQuery["getLedgerTrialBalance"];
+  atCostData?: GetLedgerTrialBalanceQuery["getLedgerTrialBalance"];
   primaryCurrency: string;
   /**
    * Every currency the conversion selector offers, in ledger order. Defaults
@@ -56,6 +57,7 @@ interface TrialBalanceContentProps {
 
 export function TrialBalanceContent({
   trialBalanceData,
+  atCostData,
   primaryCurrency,
   operatingCurrencies = [primaryCurrency],
   ledgerDisplayName,
@@ -173,28 +175,47 @@ export function TrialBalanceContent({
         balance: line(trialBalanceData.roundingResidual),
       },
     ];
-    const reconciliationDifference = computeTrialBalanceReconciliation(
-      hierarchyData,
-      ...lines.map(({ balance }) => balance),
+    // Equity lines use the credit roots' display sign and conversion.
+    const rows = lines.flatMap(({ label, balance }) =>
+      balance && hasTrialBalanceReconciliationDifference(balance)
+        ? [{ label, balance, inverted: invertIncomeLiabilitiesEquity }]
+        : [],
     );
-    if (Object.keys(reconciliationDifference).length === 0) {
-      return [];
-    }
+
+    const atCost = conversion === "at_cost";
+    const basis = atCost ? trialBalanceData : atCostData;
+    if (!basis) return rows;
+
+    const difference = computeTrialBalanceReconciliation(
+      [
+        basis.equityHierarchyData,
+        basis.liabilitiesHierarchyData,
+        basis.incomeHierarchyData,
+        basis.assetsHierarchyData,
+        basis.expensesHierarchyData,
+      ] as SerializableTreeNode[],
+      line(basis.valuationAdjustment),
+      line(basis.roundingResidual),
+    );
+    if (Object.keys(difference).length === 0) return rows;
 
     return [
-      // Equity lines, so they are displayed with the credit roots' sign.
-      ...lines.flatMap(({ label, balance }) =>
-        balance && hasTrialBalanceReconciliationDifference(balance)
-          ? [{ label, balance, inverted: invertIncomeLiabilitiesEquity }]
-          : [],
-      ),
+      ...rows,
       {
-        label: t("reports.export.reconciliationDifference"),
-        balance: reconciliationDifference,
+        label: atCost
+          ? t("reports.export.reconciliationDifference")
+          : t("page.trialBalance.reconciliationAtCost"),
+        balance: difference,
         bold: true,
       },
     ];
-  }, [hierarchyData, trialBalanceData, invertIncomeLiabilitiesEquity, t]);
+  }, [
+    atCostData,
+    conversion,
+    trialBalanceData,
+    invertIncomeLiabilitiesEquity,
+    t,
+  ]);
 
   return (
     <LedgerPage className="space-y-5 sm:space-y-6">

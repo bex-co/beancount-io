@@ -135,7 +135,11 @@ async function serverConversion(
   return container.querySelector("output")?.textContent;
 }
 
-async function prefetchReports(header: string, ledgerId = LEDGER) {
+async function prefetchReports(
+  header: string,
+  ledgerId = LEDGER,
+  expectCostReference = false,
+) {
   const query = vi.fn(
     async (options: { query: unknown; variables?: Record<string, unknown> }) =>
       options.query === GetLedgerCashFlowAccountsDocument
@@ -181,6 +185,7 @@ async function prefetchReports(header: string, ledgerId = LEDGER) {
     GetLedgerIncomeStatementDocument,
     GetLedgerCashFlowDocument,
     GetLedgerTrialBalanceDocument,
+    ...(expectCostReference ? [GetLedgerTrialBalanceDocument] : []),
   ]);
   const variables = reports.map(([options]) => options.variables);
   variables.forEach((variables) =>
@@ -223,11 +228,12 @@ describe("report conversion across the browser/server cookie boundary", () => {
     expect(await onServer(header, () => storedReportConversion(LEDGER))).toBe(
       "units",
     );
-    expect(await prefetchReports(header)).toEqual([
+    expect(await prefetchReports(header, LEDGER, true)).toEqual([
       "units",
       "units",
       "units",
       "units",
+      "at_cost",
     ]);
     const markup = await onServer(header, () => renderToString(probe()));
     const container = document.createElement("div");
@@ -269,11 +275,12 @@ describe("report conversion across the browser/server cookie boundary", () => {
     expect(serverOutput).toHaveTextContent("at_value");
     expect(Cookies.get(key)).toBe("at_value");
     expect(await serverConversion(document.cookie)).toBe("at_value");
-    expect(await prefetchReports(document.cookie)).toEqual([
+    expect(await prefetchReports(document.cookie, LEDGER, true)).toEqual([
       "at_value",
       "at_value",
       "at_value",
       "at_value",
+      "at_cost",
     ]);
   });
 
@@ -309,11 +316,12 @@ describe("report conversion across the browser/server cookie boundary", () => {
     expect(await serverConversion(header, LEDGER)).toBe("units");
     expect(await serverConversion(header, OTHER_LEDGER)).toBe("at_value");
     expect(await serverConversion(header, "alice/example")).toBe("at_cost");
-    expect(await prefetchReports(header, OTHER_LEDGER)).toEqual([
+    expect(await prefetchReports(header, OTHER_LEDGER, true)).toEqual([
       "at_value",
       "at_value",
       "at_value",
       "at_value",
+      "at_cost",
     ]);
   });
 
@@ -348,11 +356,12 @@ describe("report conversion across the browser/server cookie boundary", () => {
     );
     // Loaders do not know the primary currency yet; safe currency names pass
     // through for prefetch, and the mounted page validates the offered choice.
-    expect(await prefetchReports(document.cookie)).toEqual([
+    expect(await prefetchReports(document.cookie, LEDGER, true)).toEqual([
       "EUR",
       "EUR",
       "EUR",
       "EUR",
+      "at_cost",
     ]);
   });
 
