@@ -24,6 +24,11 @@ const ptDirectoryBrowse: Record<
     message: "Gerenciar Chaves SSH",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "Pasta não encontrada: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "Este diretório está vazio",
     description: "Message shown when directory has no contents",

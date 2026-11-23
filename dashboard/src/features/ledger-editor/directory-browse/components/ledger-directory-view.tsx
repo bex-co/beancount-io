@@ -23,10 +23,14 @@ import LedgerCloneUrlMenu from "./ledger-clone-url-menu";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { ReadmeCard } from "@/common/components/readme-card";
 import { Skeleton } from "@/common/components/ui/skeleton";
+import { useQueryRetry } from "@/common/hooks/use-query-retry";
+import { isMissingDirectory } from "../../shared/lib/surviving-directory";
+import { DirectoryNotFoundView } from "../not-found";
 
 interface LedgerDirectoryViewProps {
   ledgerId: string;
   currentPath: string;
+  initialReadFailed?: boolean;
 }
 
 const DirectoryHeading = ({
@@ -84,7 +88,15 @@ const DirectoryLoading = ({ currentPath }: { currentPath: string }) => {
 /**
  * Error component for directory view
  */
-const DirectoryError = ({ currentPath }: { currentPath?: string }) => {
+const DirectoryError = ({
+  currentPath,
+  retry,
+  retrying,
+}: {
+  currentPath: string;
+  retry: () => void;
+  retrying: boolean;
+}) => {
   const { t } = useTranslations();
   return (
     <div>
@@ -93,10 +105,10 @@ const DirectoryError = ({ currentPath }: { currentPath?: string }) => {
       </div>
       <div className="flex items-center justify-center py-8">
         <div className="text-center">
-          <p className="text-destructive mb-4">
+          <p role="alert" className="text-destructive mb-4">
             {t("ledgerEditor.failedToLoadDirectory")}
           </p>
-          <Button onClick={() => window.location.reload()}>
+          <Button type="button" onClick={retry} loading={retrying}>
             {t("common.tryAgain")}
           </Button>
         </div>
@@ -111,11 +123,13 @@ const DirectoryError = ({ currentPath }: { currentPath?: string }) => {
 export default function LedgerDirectoryView({
   ledgerId,
   currentPath,
+  initialReadFailed = false,
 }: LedgerDirectoryViewProps) {
   const {
     data,
     loading: isLoading,
     error,
+    refetch,
   } = useQuery(GetLedgerDirContentDocument, {
     variables: {
       ledgerId: ledgerId,
@@ -123,6 +137,11 @@ export default function LedgerDirectoryView({
     },
     skip: !ledgerId,
   });
+  const { failure, retry, retrying } = useQueryRetry(
+    error ?? (initialReadFailed && !data ? true : undefined),
+    refetch,
+    `${ledgerId}/${currentPath}`,
+  );
 
   const dirContent = data?.getLedgerDirContent;
   const navigate = useNavigate();
@@ -176,12 +195,26 @@ export default function LedgerDirectoryView({
     (item) => item.type === "file" && item.name.toLowerCase() === "readme.md",
   );
 
+  if (isMissingDirectory(error)) {
+    return (
+      <DirectoryNotFoundView
+        ledgerOwner={ledgerOwner}
+        ledgerName={ledgerName}
+        dirPath={currentPath}
+      />
+    );
+  }
+  if (failure) {
+    return (
+      <DirectoryError
+        currentPath={currentPath}
+        retry={retry}
+        retrying={retrying}
+      />
+    );
+  }
   if (isLoading) {
     return <DirectoryLoading currentPath={currentPath} />;
-  }
-
-  if (error) {
-    return <DirectoryError currentPath={currentPath} />;
   }
 
   return (

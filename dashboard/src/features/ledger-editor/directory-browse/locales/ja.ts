@@ -24,6 +24,11 @@ const jaDirectoryBrowse: Record<
     message: "SSHキーを管理",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "フォルダーが見つかりません: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "このディレクトリは空です",
     description: "Message shown when directory has no contents",

@@ -24,6 +24,11 @@ const bgDirectoryBrowse: Record<
     message: "Управление на SSH ключове",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "Папката не е намерена: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "Тази директория е празна",
     description: "Message shown when directory has no contents",

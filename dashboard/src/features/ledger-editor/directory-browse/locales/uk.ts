@@ -24,6 +24,11 @@ const ukDirectoryBrowse: Record<
     message: "Керування SSH ключами",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "Папку не знайдено: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "Ця директорія порожня",
     description: "Message shown when directory has no contents",

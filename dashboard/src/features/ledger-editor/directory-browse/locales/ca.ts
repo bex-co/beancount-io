@@ -24,6 +24,11 @@ const caDirectoryBrowse: Record<
     message: "Gestionar claus SSH",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "No s’ha trobat la carpeta: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "Aquest directori està buit",
     description: "Message shown when directory has no contents",

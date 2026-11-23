@@ -25,6 +25,11 @@ const deDirectoryBrowse: Record<
     message: "SSH-Schlüssel verwalten",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "Ordner nicht gefunden: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "Dieses Verzeichnis ist leer",
     description: "Message shown when directory has no contents",

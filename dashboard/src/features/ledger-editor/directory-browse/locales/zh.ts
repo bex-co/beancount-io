@@ -23,6 +23,11 @@ const zhDirectoryBrowse: Record<
     message: "管理 SSH 密钥",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "找不到文件夹：{path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "此目录为空",
     description: "Message shown when directory has no contents",

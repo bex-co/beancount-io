@@ -24,6 +24,11 @@ const nlDirectoryBrowse: Record<
     message: "SSH-sleutels beheren",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "Map niet gevonden: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "Deze map is leeg",
     description: "Message shown when directory has no contents",

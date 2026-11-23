@@ -24,6 +24,11 @@ const esDirectoryBrowse: Record<
     message: "Administrar Claves SSH",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "No se encontró la carpeta: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "Este directorio está vacío",
     description: "Message shown when directory has no contents",

@@ -81,7 +81,8 @@ afterEach(() => {
 async function setup({
   path = "",
   language = "en" as "en" | "de",
-  state = "ready" as "ready" | "loading" | "empty" | "error",
+  state = "ready" as "ready" | "loading" | "empty" | "error" | "missing",
+  recoverOnRetry = false,
 } = {}) {
   const requests: Array<{ name: string; variables: Record<string, unknown> }> =
     [];
@@ -96,7 +97,24 @@ async function setup({
           });
           if (operation.operationName === "GetLedgerDirContent") {
             if (state === "loading") return;
-            if (state === "error") {
+            if (state === "missing") {
+              observer.next({
+                errors: [
+                  {
+                    message: "Synthetic missing directory",
+                    extensions: { code: "NOT_FOUND" },
+                  },
+                ],
+              });
+              observer.complete();
+              return;
+            }
+            if (
+              state === "error" &&
+              (!recoverOnRetry ||
+                requests.filter(({ name }) => name === "GetLedgerDirContent")
+                  .length === 1)
+            ) {
               observer.error(new Error("Synthetic directory failure"));
               return;
             }
@@ -208,6 +226,56 @@ function pageHeading(name: string) {
 }
 
 describe("directory page heading and real embedded README", () => {
+  it("retries only the directory read and renders the result in place", async () => {
+    const { router, requests, localization } = await setup({
+      path: "FY2024",
+      state: "error",
+      recoverOnRetry: true,
+    });
+    const user = userEvent.setup();
+    const originalUrl = router.state.location.href;
+    await user.click(
+      screen.getByRole("button", {
+        name: localization.i18n.t("common.tryAgain"),
+      }),
+    );
+    expect(
+      await screen.findByRole("link", { name: /^FY2024\.bean/ }),
+    ).toBeVisible();
+    expect(router.state.location.href).toBe(originalUrl);
+    expect(requests).toEqual([
+      {
+        name: "GetLedgerDirContent",
+        variables: { ledgerId: "alice/books", dirPath: "FY2024" },
+      },
+      {
+        name: "GetLedgerDirContent",
+        variables: { ledgerId: "alice/books", dirPath: "FY2024" },
+      },
+    ]);
+  });
+
+  it("offers the parent when a mounted directory read reports a missing folder", async () => {
+    const { localization } = await setup({
+      path: "FY2024/missing",
+      state: "missing",
+    });
+    expect(
+      await screen.findByRole("heading", {
+        name: "Folder not found: FY2024/missing",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", {
+        name: localization.i18n.t("ledgerEditor.browseParentDirectory"),
+      }),
+    ).toHaveAttribute("href", "/ledger/alice/books/files/tree/main/FY2024");
+    expect(
+      screen.queryByRole("button", {
+        name: localization.i18n.t("common.tryAgain"),
+      }),
+    ).toBeNull();
+  });
   it.each(["en", "de"] as const)(
     "names the %s root Files page and nests Markdown and raw HTML README headings below it",
     async (language) => {

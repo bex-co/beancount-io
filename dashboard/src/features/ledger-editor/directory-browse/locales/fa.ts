@@ -24,6 +24,11 @@ const faDirectoryBrowse: Record<
     message: "مدیریت کلیدهای SSH",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "پوشه پیدا نشد: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "این پوشه خالی است",
     description: "Message shown when directory has no contents",

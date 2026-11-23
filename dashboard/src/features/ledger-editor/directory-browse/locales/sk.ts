@@ -24,6 +24,11 @@ const skDirectoryBrowse: Record<
     message: "Spravovať SSH kľúče",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "Priečinok sa nenašiel: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "Tento priečinok je prázdny",
     description: "Message shown when directory has no contents",

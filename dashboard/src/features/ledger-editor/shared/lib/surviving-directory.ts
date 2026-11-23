@@ -3,7 +3,7 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { GetLedgerDirContentDocument } from "@/graphql/definitions";
 import { getParentPath } from "./utils";
 
-function isMissingDirectory(error: unknown): boolean {
+export function isMissingDirectory(error: unknown): boolean {
   return (
     CombinedGraphQLErrors.is(error) &&
     error.errors.some((item) => item.extensions?.code === "NOT_FOUND")

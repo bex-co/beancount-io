@@ -23,6 +23,11 @@ const koDirectoryBrowse: Record<
     message: "SSH 키 관리",
     description: "Menu item for SSH key management",
   },
+  "ledgerEditor.folderNotFound": {
+    message: "폴더를 찾을 수 없음: {path}",
+    description:
+      "Shown when a ledger folder path does not exist (contains {path})",
+  },
   "ledgerEditor.thisDirectoryIsEmpty": {
     message: "이 디렉터리는 비어 있습니다",
     description: "Message shown when directory has no contents",

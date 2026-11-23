@@ -31,6 +31,7 @@ import { Route as CommitRoute } from "@/routes/ledger.$ledgerOwner.$ledgerName.c
 import { Route as PullRoute } from "@/routes/ledger.$ledgerOwner.$ledgerName.pull.$prNumber";
 import { Route as ProfileRoute } from "@/routes/ledger.$username";
 import { Route as FileRoute } from "@/routes/ledger.$ledgerOwner.$ledgerName.files.blob.$branch.$";
+import { Route as DirectoryRoute } from "@/routes/ledger.$ledgerOwner.$ledgerName.files.tree.$branch.$";
 
 vi.unmock("@/common/hooks/use-translations");
 vi.unmock("react-i18next");
@@ -66,6 +67,9 @@ vi.mock("@/features/git/pull-requests/pages/pr-review-page", () => ({
 }));
 vi.mock("@/features/ledger-editor/file-editor", () => ({
   default: () => <p>Existing file body</p>,
+}));
+vi.mock("@/features/ledger-editor/directory-browse", () => ({
+  default: () => <p>Existing directory body</p>,
 }));
 vi.mock(
   "@/features/user-profile/pages/user-profile-page",
@@ -165,6 +169,8 @@ function responseData(operation: string, missing: boolean) {
               diff: "",
             },
       };
+    case "GetLedgerDirContent":
+      return { getLedgerDirContent: [] };
     case "GetLedgerFile":
       return {
         getLedgerFile: missing
@@ -211,7 +217,12 @@ function responseData(operation: string, missing: boolean) {
 
 async function serve(
   path: string,
-  options: { missing?: boolean; code?: string; networkError?: boolean } = {},
+  options: {
+    missing?: boolean;
+    code?: string;
+    codeOperation?: string;
+    networkError?: boolean;
+  } = {},
 ) {
   const requests: Array<{ name: string; variables: Record<string, unknown> }> =
     [];
@@ -227,7 +238,11 @@ async function serve(
           });
           if (options.networkError)
             observer.error(new Error("Synthetic network failure"));
-          else if (options.code) {
+          else if (
+            options.code &&
+            (!options.codeOperation ||
+              operation.operationName === options.codeOperation)
+          ) {
             observer.next({
               errors: [
                 {
@@ -282,6 +297,7 @@ async function serve(
     clone(CommitRoute, ledgerRoute, "commit/$commitSha"),
     clone(PullRoute, ledgerRoute, "pull/$prNumber"),
     clone(FileRoute, ledgerRoute, "files/blob/$branch/$"),
+    clone(DirectoryRoute, ledgerRoute, "files/tree/$branch/$"),
   ]);
   const router = createRouter({
     routeTree: root.addChildren([
@@ -319,6 +335,81 @@ function expectNotFound(result: Awaited<ReturnType<typeof serve>>) {
   expect(result.html).not.toMatch(/rel="canonical"/);
   expect(result.html).not.toContain("Existing account body");
 }
+
+describe("directory routes through the actual SSR boundary", () => {
+  const treePath = `${ledger}/files/tree/main`;
+
+  it("answers the repository root with 200, including an empty root", async () => {
+    const result = await serve(treePath);
+    expect(result.response.status).toBe(200);
+    expect(result.html).toContain("Existing directory body");
+    expect(result.requests).toEqual([
+      {
+        name: "GetLedgerDirContent",
+        variables: { ledgerId: "alice/books", dirPath: null },
+      },
+    ]);
+  });
+
+  it("answers a missing folder with 404, noindex and a parent link", async () => {
+    const result = await serve(`${treePath}/imports/missing`, {
+      code: "NOT_FOUND",
+    });
+    expectNotFound(result);
+    expect(result.html).toContain("Folder not found: imports/missing");
+    expect(result.html).toContain("Browse parent directory");
+    expect(result.html).toContain(`href="${treePath}/imports"`);
+    expect(result.html).not.toContain("Existing directory body");
+    expect(result.html).not.toContain("Try Again");
+  });
+
+  it("redirects a file path to the blob route", async () => {
+    const result = await serve(`${treePath}/README.md`, {
+      code: "NOT_FOUND",
+      codeOperation: "GetLedgerDirContent",
+    });
+    expect(result.response.status).toBe(307);
+    const location = new URL(result.response.headers.get("Location")!, origin);
+    expect(location.pathname).toBe(`${ledger}/files/blob/main/README.md`);
+    expect(result.requests).toEqual([
+      {
+        name: "GetLedgerDirContent",
+        variables: { ledgerId: "alice/books", dirPath: "README.md" },
+      },
+      {
+        name: "GetLedgerFile",
+        variables: { ledgerId: "alice/books", path: "README.md" },
+      },
+    ]);
+  });
+
+  it("leaves an unsupported branch at 404 without looking up files", async () => {
+    const result = await serve(`${ledger}/files/tree/old/imports`);
+    expectNotFound(result);
+    expect(result.html).toContain("Browse files on main");
+    expect(result.requests).toEqual([]);
+  });
+
+  it("only probes for a file after a missing directory result", async () => {
+    const result = await serve(`${treePath}/imports`, { code: "FORBIDDEN" });
+    expectNotFound(result);
+    expect(result.requests.map((request) => request.name)).toEqual([
+      "GetLedgerDirContent",
+    ]);
+  });
+
+  it("hands an inconclusive read to the directory retry view", async () => {
+    const result = await serve(`${treePath}/imports`, { networkError: true });
+    expect(result.response.status).toBe(200);
+    const directory = result.router.state.matches.find((match) =>
+      match.routeId.includes("/files/tree/"),
+    );
+    expect(directory?.loaderData).toEqual({ readFailed: true });
+    expect(result.requests.map((request) => request.name)).toEqual([
+      "GetLedgerDirContent",
+    ]);
+  });
+});
 
 describe("matched entity routes through the actual SSR boundary", () => {
   it.each(entities)(
