@@ -169,6 +169,7 @@ function expectIsolatedAmount(container: HTMLElement, text: string) {
   expect(run).toBeDefined();
   expect(run).toHaveAttribute("dir", "ltr");
   expect(run?.textContent).toBe(text);
+  return run!;
 }
 
 const cash = "Assets:Brokerage:Cash";
@@ -244,6 +245,54 @@ describe.each(["lines", "days"] as const)(
       expectIsolatedAmount(row(gainSale.narration!), "+3,665.05 USD");
     });
 
+    it.each([
+      ["Return to card", "Liabilities:CreditCard:Visa", "12.00", "+12.00 USD"],
+      ["Return to bank", cash, "7.00", "+7.00 USD"],
+    ])(
+      "shows a refund as money in for %s",
+      async (name, account, amount, shown) => {
+        const refund = transaction(name, [
+          posting(account, amount),
+          posting("Expenses:Groceries", `-${amount}`),
+        ]);
+        await renderTable(layout, [{ directive: refund }], "en");
+        expect(
+          expectIsolatedAmount(row(name), shown).closest(".text-chart-2"),
+        ).not.toBeNull();
+      },
+    );
+
+    it("shows an income reversal as money out", async () => {
+      const reversal = transaction("Return overpaid salary", [
+        posting(cash, "-50.00"),
+        posting("Income:Salary", "50.00"),
+      ]);
+      await renderTable(layout, [{ directive: reversal }], "en");
+      expect(
+        expectIsolatedAmount(
+          row("Return overpaid salary"),
+          "-50.00 USD",
+        ).closest(".text-chart-2"),
+      ).toBeNull();
+    });
+
+    it("colours each currency by its own direction", async () => {
+      const mixed = transaction("Salary adjustment", [
+        posting(cash, "25.00"),
+        posting("Income:Salary", "-25.00"),
+        posting(cash, "-5.00", "EUR"),
+        posting("Income:Salary", "5.00", "EUR"),
+      ]);
+      await renderTable(layout, [{ directive: mixed }], "en");
+      const adjustment = row("Salary adjustment");
+      expect(
+        expectIsolatedAmount(adjustment, "+25.00 USD").closest(".text-chart-2"),
+      ).not.toBeNull();
+      expect(
+        expectIsolatedAmount(adjustment, "-5.00 EUR").closest(".text-chart-2"),
+      ).toBeNull();
+    });
+
     it("shows payroll earnings and unsigned purchases and transfers", async () => {
       const directives = [
         transaction("Payroll", [
@@ -266,9 +315,17 @@ describe.each(["lines", "days"] as const)(
         directives.map((directive) => ({ directive })),
         "en",
       );
-      expectIsolatedAmount(row("Payroll"), "+4,000.00 USD");
+      expect(
+        expectIsolatedAmount(row("Payroll"), "+4,000.00 USD").closest(
+          ".text-chart-2",
+        ),
+      ).not.toBeNull();
       expectIsolatedAmount(row("Buy ACME"), "8,464.95 USD");
-      expectIsolatedAmount(row("Transfer to savings"), "300.00 USD");
+      expect(
+        expectIsolatedAmount(row("Transfer to savings"), "300.00 USD").closest(
+          ".text-chart-2",
+        ),
+      ).toBeNull();
     });
   },
 );

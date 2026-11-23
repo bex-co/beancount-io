@@ -164,29 +164,22 @@ export function TransactionAmount({
         parseDecimalNumber(String(posting.units?.number))?.startsWith("-"),
     );
   let amounts = reducesCostedPosition ? [] : summary.amounts;
-  // Filtered to an account, each row is that account's change, signed as a
-  // statement prints it: money in with "+" and in green, money out with "−".
-  let tone: "in" | "out" | "moved" | "change" =
-    money.accountFilter && amounts.length > 0
-      ? "change"
-      : summary.kind === "income"
-        ? "in"
-        : summary.kind === "expense"
-          ? "out"
-          : "moved";
+  // For income, expenses and account changes, the sign of each currency is
+  // its direction. Transfers and gross amounts show only the size moved.
+  let signed =
+    Boolean(money.accountFilter) ||
+    summary.kind === "income" ||
+    summary.kind === "expense";
   if (!reducesCostedPosition && amounts.length === 0) {
     const earned = incomeAmounts(
       transaction,
       money.incomeRoot,
       money.primaryCurrency,
     );
-    if (earned.length) {
-      amounts = earned;
-      tone = "in";
-    } else {
-      amounts = grossAmounts(transaction, money.primaryCurrency);
-      tone = "moved";
-    }
+    signed = earned.length > 0;
+    amounts = signed
+      ? earned
+      : grossAmounts(transaction, money.primaryCurrency);
   }
   if (amounts.length === 0) {
     return (
@@ -199,16 +192,12 @@ export function TransactionAmount({
   }
   return (
     <span
-      className={cn(
-        "block space-y-0.5 font-medium tabular-nums",
-        tone === "in" && "text-chart-2",
-        className,
-      )}
+      className={cn("block space-y-0.5 font-medium tabular-nums", className)}
     >
       {amounts.map((amount) => {
         const value = amount.exact ?? String(amount.value);
-        const shown =
-          tone === "moved" && value.startsWith("-") ? value.slice(1) : value;
+        const shown = !signed && value.startsWith("-") ? value.slice(1) : value;
+        const incoming = signed && amount.value > 0;
         return (
           <span
             key={amount.currency}
@@ -216,13 +205,11 @@ export function TransactionAmount({
               // On a phone a long commodity code may take a line of its own
               // rather than run into the postings toggle.
               "block sm:whitespace-nowrap",
-              tone === "change" && amount.value > 0 && "text-chart-2",
+              incoming && "text-chart-2",
             )}
           >
             <Amount>
-              {(tone === "in" || tone === "change") && amount.value > 0
-                ? "+"
-                : ""}
+              {incoming ? "+" : ""}
               {/* The currency's own minor units (4,500.00 USD), as the
                   Overview writes amounts. */}
               {formatNumber(shown, amount.currency, fractionDigitsOf(shown))}
