@@ -1933,8 +1933,15 @@ error, so nothing is written. A result with a key its schema forbids fails the
 check. A refused call carries no structured result to compare and is reported as
 not compared, not as a pass.
 
+With `--token`, check 19 previews `revertCommit` with `sha: "main"` and
+`dry_run: true`, so it undoes nothing. It passes when the preview names the
+files the newest commit touched. A refusal that answers the request (a
+credential without `ledger.write`, a merge or root commit at `main`, no `main`
+branch, a rate limit) is a skip. Any other error fails the check, because it
+means no commit can be undone on that deployment (w23/242).
+
 A credential that is not pinned to one ledger needs `--ledger owner/name` so the
-read, preview and refusal checks (5, 10 and 17) can name the ledger they use.
+read, preview and refusal checks (5, 10, 17 and 19) can name the ledger they use.
 Without it they skip.
 
 An optional `--read-only-token` checks refusal of a file write. Supply only a

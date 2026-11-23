@@ -17,6 +17,7 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
 import { corsMiddleware } from "@/server/middleware/cors-middleware";
+import { BadUserInputError } from "@/shared/errors";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -41,6 +42,7 @@ const [
   checkCimd,
   checkOutputSchemaConformance,
   checkBrowserDiscovery,
+  checkRevertPreview,
 ] = CHECKS;
 
 const ledgerScoped: Identity = {
@@ -55,6 +57,9 @@ const readOnly: Identity = { ...ledgerScoped, scopes: new Set(["ledger.read"]) }
 
 /** What the stubbed ledger-entry service answers an append preview with. */
 let appendPreviewErrors: Record<string, unknown>[] = [];
+
+/** What the stubbed ledger workflow does when asked to undo a commit. */
+let revertLedgerCommit: jest.Mock;
 
 let server: http.Server;
 let baseUrl: string;
@@ -110,7 +115,12 @@ beforeAll(async () => {
       apiKey: {},
       llm: {},
     },
-    workflows: { ledgerReceipt: {} },
+    workflows: {
+      ledgerReceipt: {},
+      ledger: {
+        revertLedgerCommit: (...args: unknown[]) => revertLedgerCommit(...args),
+      },
+    },
   } as unknown as AppLayers;
 
   const app = new Koa();
@@ -134,6 +144,14 @@ afterAll(async () => {
 
 beforeEach(() => {
   appendPreviewErrors = [];
+  revertLedgerCommit = jest.fn(async ({ input }: { input: { dryRun?: boolean } }) => ({
+    sha: "a1b2c3d4e5f6a7b8c9d0a1b2c3d4e5f6a7b8c9d0",
+    subject: "Add groceries",
+    message: 'Revert "Add groceries"',
+    files: [{ path: "main.bean", change: "updated" }],
+    dryRun: input.dryRun === true,
+    validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [], valid: true },
+  }));
   resolveIdentityMock.mockReset();
   // Default: anonymous. Checks that need a credential opt in below.
   resolveIdentityMock.mockResolvedValue(undefined);
@@ -330,6 +348,75 @@ describe("MCP conformance checks", () => {
   it("check 17 skips rather than fails without a credential", async () => {
     const result = await checkOutputSchemaConformance({ baseUrl });
     expect(result.outcome).toBe("skip");
+  });
+
+  it("check 19 passes when previewing the undo of main names the files it touched", async () => {
+    acceptTokens({ good: ledgerScoped });
+    const result = await checkRevertPreview({ baseUrl, token: "good" });
+    expect(result.outcome).toBe("pass");
+    expect(result.detail).toBe("undoing a1b2c3d4e5f6 previews updated main.bean");
+    // A preview of the newest commit, so the check never writes.
+    expect(revertLedgerCommit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ledgerId: "alice/main",
+        input: expect.objectContaining({ sha: "main", dryRun: true }),
+      }),
+    );
+  });
+
+  it("check 19 fails when the undo of an existing commit ends in INTERNAL_SERVER_ERROR", async () => {
+    acceptTokens({ good: ledgerScoped });
+    // w23/242: the Gitea content read came back without a body, and the undo
+    // threw on it, so every existing commit answered INTERNAL_SERVER_ERROR.
+    revertLedgerCommit.mockRejectedValue(
+      new TypeError("Cannot destructure property 'sha' of 'found.data' as it is null."),
+    );
+    const result = await checkRevertPreview({ baseUrl, token: "good" });
+    expect(result.outcome).toBe("fail");
+    expect(result.detail).toContain("INTERNAL_SERVER_ERROR");
+  });
+
+  it("check 19 fails when a dry_run reports a commit", async () => {
+    acceptTokens({ good: ledgerScoped });
+    revertLedgerCommit.mockImplementation(async () => ({
+      sha: "a1b2c3d4e5f6a7b8c9d0a1b2c3d4e5f6a7b8c9d0",
+      subject: "Add groceries",
+      message: 'Revert "Add groceries"',
+      files: [{ path: "main.bean", change: "updated" }],
+      dryRun: false,
+      commit: "f00dfeedf00dfeedf00dfeedf00dfeedf00dfeed",
+      validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [], valid: true },
+    }));
+    const result = await checkRevertPreview({ baseUrl, token: "good" });
+    expect(result.outcome).toBe("fail");
+    expect(result.detail).toContain("A preview must write nothing");
+  });
+
+  it("check 19 skips when the newest commit is one the undo refuses", async () => {
+    acceptTokens({ good: ledgerScoped });
+    revertLedgerCommit.mockRejectedValue(
+      new BadUserInputError(
+        "a1b2c3d4e5f6 is a merge commit, which cannot be reverted",
+        "sha",
+      ),
+    );
+    const result = await checkRevertPreview({ baseUrl, token: "good" });
+    expect(result.outcome).toBe("skip");
+    expect(result.detail).toContain("merge commit");
+  });
+
+  it("check 19 skips, naming --ledger, when an unpinned credential names no ledger", async () => {
+    acceptTokens({ unpinned: { ...ledgerScoped, ledgerScope: undefined } });
+    const result = await checkRevertPreview({ baseUrl, token: "unpinned" });
+    expect(result.outcome).toBe("skip");
+    expect(result.detail).toContain("--ledger owner/name");
+    expect(revertLedgerCommit).not.toHaveBeenCalled();
+  });
+
+  it("check 19 skips rather than fails without a write credential", async () => {
+    const result = await checkRevertPreview({ baseUrl, readOnlyToken: "ro" });
+    expect(result.outcome).toBe("skip");
+    expect(result.detail).toContain("ledger.write");
   });
 
   it("check 10 skips rather than fails without a credential", async () => {

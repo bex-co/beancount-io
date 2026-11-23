@@ -906,35 +906,13 @@ async function checkOutputSchemaConformance(o: Options): Promise<CheckResult> {
   const checked: string[] = [];
   const notCompared: string[] = [];
   for (const call of calls) {
-    const client = new Client({ name: "mcp-conformance", version: "1.0.0" });
-    const transport = new StreamableHTTPClientTransport(
-      new URL(`${o.baseUrl}${MCP_PATH}`),
-      { requestInit: { headers: { Authorization: `Bearer ${call.token}` } } },
-    );
-    try {
-      await client.connect(transport);
-      // Listing is what makes the client compile the output validators.
-      await client.listTools();
-      const result = await client.callTool(
-        { name: call.name, arguments: call.arguments },
-        undefined,
-        { timeout: TIMEOUT_MS },
-      );
-      if (result.isError || result.structuredContent === undefined) {
-        notCompared.push(`${call.name} was refused or returned no structuredContent`);
-      } else {
-        checked.push(call.name);
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (/output schema/i.test(message)) {
-        return v.fail(
-          `${call.name}'s result does not match its published outputSchema (${message}). A schema-validating client rejects it`,
-        );
-      }
-      return v.fail(`${call.name} could not be called: ${message}`);
-    } finally {
-      await client.close().catch(() => undefined);
+    const outcome = await callAsSdkClient(o, call.token, call.name, call.arguments);
+    if ("failure" in outcome) return v.fail(outcome.failure);
+    const { result } = outcome;
+    if (result.isError || result.structuredContent === undefined) {
+      notCompared.push(`${call.name} was refused or returned no structuredContent`);
+    } else {
+      checked.push(call.name);
     }
   }
   if (checked.length === 0) {
@@ -942,6 +920,129 @@ async function checkOutputSchemaConformance(o: Options): Promise<CheckResult> {
   }
   return v.pass(
     `${checked.join(", ")} validate${notCompared.length ? `; not compared: ${notCompared.join("; ")}` : ""}`,
+  );
+}
+
+/**
+ * One tool call through the MCP TypeScript SDK's own client, which compiles
+ * each tool's `outputSchema` when it lists tools and validates every
+ * successful result against it, as a schema-validating host does. A call the
+ * client rejects, or that cannot be made at all, comes back as the failure
+ * text a check reports.
+ */
+async function callAsSdkClient(
+  o: Options,
+  token: string,
+  name: string,
+  args: Record<string, unknown>,
+): Promise<
+  | { result: Awaited<ReturnType<Client["callTool"]>> }
+  | { failure: string }
+> {
+  const client = new Client({ name: "mcp-conformance", version: "1.0.0" });
+  const transport = new StreamableHTTPClientTransport(
+    new URL(`${o.baseUrl}${MCP_PATH}`),
+    { requestInit: { headers: { Authorization: `Bearer ${token}` } } },
+  );
+  try {
+    await client.connect(transport);
+    // Listing is what makes the client compile the output validators.
+    await client.listTools();
+    return {
+      result: await client.callTool({ name, arguments: args }, undefined, {
+        timeout: TIMEOUT_MS,
+      }),
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      failure: /output schema/i.test(message)
+        ? `${name}'s result does not match its published outputSchema (${message}). A schema-validating client rejects it`
+        : `${name} could not be called: ${message}`,
+    };
+  } finally {
+    await client.close().catch(() => undefined);
+  }
+}
+
+/**
+ * The refusals that answer the request rather than report a broken
+ * deployment: the credential cannot write (`FORBIDDEN`), no ledger was named or
+ * the newest commit is a merge or root commit (`BAD_USER_INPUT`), the ledger
+ * has no `main` (`NOT_FOUND`), or the run was throttled (`RATE_LIMITED`).
+ */
+const REVERT_REFUSALS = new Set([
+  "FORBIDDEN",
+  "BAD_USER_INPUT",
+  "NOT_FOUND",
+  "RATE_LIMITED",
+]);
+
+/**
+ * 19 — undo previews the newest commit (w23/242).
+ *
+ * A deployment answered every other check while `revertCommit` failed with
+ * `INTERNAL_SERVER_ERROR` for every commit that existed: the undo is the only
+ * operation that reads each touched file at a commit and at its parent, and
+ * no other check reaches those reads. So this previews undoing `main`, the
+ * newest commit, which no later commit can conflict with, and expects the
+ * files that commit touched. `dry_run` writes nothing. A refusal that answers
+ * the request (see `REVERT_REFUSALS`) means the preview did not run; any other
+ * error is a deployment on which no commit can be undone.
+ */
+async function checkRevertPreview(o: Options): Promise<CheckResult> {
+  const v = verdict("19 revert-preview", "Undo previews the newest commit's files");
+  if (!o.token) {
+    return v.skip(
+      `needs ${TOKEN_SOURCE}: revertCommit requires ledger.write, even to preview`,
+    );
+  }
+  const outcome = await callAsSdkClient(
+    o,
+    o.token,
+    "revertCommit",
+    withLedger(o, { sha: "main", dry_run: true }),
+  );
+  if ("failure" in outcome) return v.fail(outcome.failure);
+  const structured = outcome.result.structuredContent as
+    | {
+        error?: { code?: string; message?: string };
+        result?: {
+          sha?: string;
+          dry_run?: boolean;
+          commit?: string;
+          files?: { path: string; change: string }[];
+        };
+      }
+    | undefined;
+  if (outcome.result.isError) {
+    const error = structured?.error;
+    if (!error?.code || !REVERT_REFUSALS.has(error.code)) {
+      return v.fail(
+        `previewing the undo of main answered ${error?.code ?? "an error with no code"}${error?.message ? ` (${error.message})` : ""}: no commit can be undone on this deployment. The server's log for this request names the step that failed`,
+      );
+    }
+    const why = `${error.code}${error.message ? ` (${error.message})` : ""}`;
+    return v.skip(
+      !o.ledger && /select a ledger/i.test(error.message ?? "")
+        ? `the credential is not pinned to one ledger and the preview named none (${why}). Pass --ledger owner/name`
+        : `the preview was refused with ${why}, so the undo could not be observed`,
+    );
+  }
+  const preview = structured?.result;
+  if (preview?.dry_run !== true || preview.commit !== undefined) {
+    return v.fail(
+      `a dry_run answered dry_run: ${String(preview?.dry_run)}${preview?.commit ? ` and commit ${preview.commit}` : ""}. A preview must write nothing`,
+    );
+  }
+  const files = preview.files ?? [];
+  if (files.length === 0) {
+    return v.fail(
+      "the preview named no files, so an agent cannot see what the undo would change",
+    );
+  }
+  return v.pass(
+    `undoing ${(preview.sha ?? "main").slice(0, 12)} previews ${files.map(({ change, path }) => `${change} ${path}`).join(", ")}`,
   );
 }
 
@@ -1099,6 +1200,7 @@ export const CHECKS = [
   checkCimd,
   checkOutputSchemaConformance,
   checkBrowserDiscovery,
+  checkRevertPreview,
 ] as const;
 
 export type { CheckResult, Options, Outcome };
