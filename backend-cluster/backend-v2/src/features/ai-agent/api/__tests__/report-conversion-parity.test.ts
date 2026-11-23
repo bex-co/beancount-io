@@ -92,7 +92,11 @@ async function fixture() {
         name_income: "Income",
         name_expenses: "Expenses",
       }),
-    getLedgerPostingsPerAccount: async () => envelope([{ account: ACCOUNT }]),
+    getLedgerPostingsPerAccount: async (
+      _o: string,
+      _n: string,
+      query?: { time?: string },
+    ) => envelope(query?.time === "1999" ? [] : [{ account: ACCOUNT }]),
     getLedgerCurrencies: async () => envelope(["ITOT", "USD"]),
     getLedgerCommodities: async () =>
       envelope([{ base: "ITOT", quote: "USD", prices: [] }]),
@@ -135,39 +139,64 @@ async function fixture() {
   const [a, b] = InMemoryTransport.createLinkedPair();
   await Promise.all([client.connect(a), server.connect(b)]);
 
-  /** Each surface's final register balance, or its refusal code. */
-  const register = async (conversion: string) => {
-    const query = new URLSearchParams({ account: ACCOUNT, conversion });
+  /** Each surface's final register balance (or empty result), or its refusal code. */
+  const register = async (
+    conversion: string,
+    opts?: { account?: string; time?: string },
+  ) => {
+    const account = opts?.account ?? ACCOUNT;
+    const params: Record<string, string> = { account, conversion };
+    if (opts?.time) params.time = opts.time;
+    const query = new URLSearchParams(params);
     const response = await fetch(
       `${rest.url}/api-gateway/v1/ledgers/alice/main/register?${query}`,
     );
     const restBody = await response.json();
     const restOut =
       response.status === 200
-        ? restBody.rows.at(-1).balance
+        ? restBody.account === null
+          ? { account: null, rows: restBody.rows }
+          : restBody.rows.at(-1).balance
         : restBody.error.code;
+    const mcpQuery = new URLSearchParams({
+      conversion,
+      ...(opts?.time ? { time: opts.time } : {}),
+    });
     const mcpOut = await client
       .readResource({
-        uri: `beancount://alice/main/register/${ACCOUNT}?conversion=${conversion}`,
+        uri: `beancount://alice/main/register/${account}?${mcpQuery}`,
       })
       .then((result) => {
         const content = result.contents[0];
         if (!("text" in content)) throw new Error("Expected JSON");
-        return JSON.parse(content.text).rows.at(-1).balance;
+        const parsed = JSON.parse(content.text);
+        return parsed.account === null
+          ? { account: null, rows: parsed.rows }
+          : parsed.rows.at(-1).balance;
       })
       .catch((error: { data?: { code: string } }) => error.data?.code);
     const gql = await graphql({
       schema,
-      source: `query($c: String) { getLedgerRegister(ledgerId: "alice/main", account: "${ACCOUNT}", conversion: $c) { rows { balance } } }`,
-      variableValues: { c: conversion },
+      source: `query($a: String!, $c: String, $t: String) { getLedgerRegister(ledgerId: "alice/main", account: $a, conversion: $c, time: $t) { account rows { balance } } }`,
+      variableValues: { a: account, c: conversion, t: opts?.time },
       contextValue: { identity: pinnedReadToken },
     });
     const gqlError = gql.errors?.[0];
     const gqlOut = gqlError
       ? formatError(gqlError.toJSON(), gqlError).extensions?.code
-      : (
-          gql.data as { getLedgerRegister: { rows: { balance: unknown }[] } }
-        ).getLedgerRegister.rows.at(-1)?.balance;
+      : (() => {
+          const reg = (
+            gql.data as {
+              getLedgerRegister: {
+                account: string | null;
+                rows: { balance: unknown }[];
+              };
+            }
+          ).getLedgerRegister;
+          return reg.account === null
+            ? { account: null, rows: reg.rows }
+            : reg.rows.at(-1)?.balance;
+        })();
     return { rest: restOut, mcp: mcpOut, gql: gqlOut };
   };
 
@@ -245,6 +274,52 @@ describe("the register's conversion on a cost-basis account", () => {
           mcp: "BAD_USER_INPUT",
           gql: "BAD_USER_INPUT",
         });
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  // w31/039: empty account match or empty time window still validates conversion.
+  it.each([
+    ["BOGUS", { account: "Assets:NoSuchAcct" }],
+    ["USD,EUR", { account: "Assets:NoSuchAcct" }],
+    ["BOGUS", { time: "1999" }],
+    ["USD,EUR", { time: "1999" }],
+  ] as const)(
+    "refuses %p on every surface even when root is empty (%o)",
+    async (c, opts) => {
+      const f = await fixture();
+      try {
+        expect(await f.register(c, opts)).toEqual({
+          rest: "BAD_USER_INPUT",
+          mcp: "BAD_USER_INPUT",
+          gql: "BAD_USER_INPUT",
+        });
+        expect(f.getAccountJournal).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["units", "at_cost", "at_value", "units_by_cost", "USD"])(
+    "still returns empty on every surface for valid %p when root is empty",
+    async (c) => {
+      const f = await fixture();
+      try {
+        const empty = { account: null, rows: [] };
+        expect(await f.register(c, { account: "Assets:NoSuchAcct" })).toEqual({
+          rest: empty,
+          mcp: empty,
+          gql: empty,
+        });
+        expect(await f.register(c, { time: "1999" })).toEqual({
+          rest: empty,
+          mcp: empty,
+          gql: empty,
+        });
+        expect(f.getAccountJournal).not.toHaveBeenCalled();
       } finally {
         await f.close();
       }

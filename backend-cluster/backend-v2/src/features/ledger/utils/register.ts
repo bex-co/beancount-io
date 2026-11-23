@@ -56,6 +56,13 @@ export type RegisterResult = {
   rows: RegisterRow[];
 };
 
+/** Fava conversion modes the register's account-journal endpoint accepts. */
+export const REGISTER_CONVERSION_MODES = [
+  "at_cost",
+  "at_value",
+  "units_by_cost",
+] as const;
+
 /**
  * Resolve the conversion target: an explicit currency or Fava mode,
  * `units` for none, or the ledger's single operating currency when
@@ -68,13 +75,14 @@ export function resolveRegisterConversion(
 ): string | null {
   if (conversion !== undefined && conversion.includes(",")) {
     throw new BadUserInputError(
-      `Unsupported conversion "${conversion}": pass one currency code, "units", at_cost, or at_value.`,
+      `Unsupported conversion "${conversion}": pass one currency code, "units", at_cost, at_value, or units_by_cost.`,
     );
   }
-  return resolveConversionTarget(conversion, operatingCurrencies, [
-    "at_cost",
-    "at_value",
-  ]);
+  return resolveConversionTarget(
+    conversion,
+    operatingCurrencies,
+    REGISTER_CONVERSION_MODES,
+  );
 }
 
 /**

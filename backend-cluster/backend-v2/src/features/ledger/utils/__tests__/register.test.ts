@@ -78,6 +78,12 @@ describe("resolveRegisterConversion", () => {
     expect(resolveRegisterConversion("units", ["USD"])).toBeNull();
     expect(resolveRegisterConversion("at_cost", ["USD"])).toBe("at_cost");
     expect(resolveRegisterConversion("AT_VALUE", ["USD"])).toBe("at_value");
+    expect(resolveRegisterConversion("units_by_cost", ["USD"])).toBe(
+      "units_by_cost",
+    );
+    expect(resolveRegisterConversion("UNITS_BY_COST", ["USD"])).toBe(
+      "units_by_cost",
+    );
   });
 
   it("defaults to one operating currency, else held currencies", () => {

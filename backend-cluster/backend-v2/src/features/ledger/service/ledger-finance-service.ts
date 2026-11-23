@@ -22,6 +22,7 @@ import type {
 } from "@/features/ledger/utils/holdings";
 import {
   mapRegisterRows,
+  REGISTER_CONVERSION_MODES,
   resolveRegisterConversion,
   selectRegisterRoot,
 } from "@/features/ledger/utils/register";
@@ -294,12 +295,13 @@ export class LedgerFinanceService
   }
 
   /**
-   * Refuse a holdings conversion to a currency the ledger never names (w1/204).
+   * Refuse a conversion to a currency the ledger never names (w1/204, w31/039).
    * Interpolated into the BQL price lookup, a typo or a lowercase `usd` found
-   * no price and answered `valuation: "partial"` as if it were a real target.
-   * The statements refuse the same values in the ledger service (w23/156);
-   * holdings is composed here, so the set is read here: posting and cost
-   * currencies, both sides of every price pair, and the operating currencies.
+   * no price and answered `valuation: "partial"` as if it were a real target;
+   * on an empty register root, the early return skipped the ledger service's
+   * check altogether. The statements refuse the same values in the ledger
+   * service (w23/156), so the set is read here: posting and cost currencies,
+   * both sides of every price pair, and the operating currencies.
    */
   private async assertLedgerNamesCurrency(
     favaApiClient: Pick<FavaApiClient, "reports">,
@@ -307,6 +309,7 @@ export class LedgerFinanceService
     ledgerName: string,
     target: string,
     operating: readonly string[],
+    allowedModes: readonly string[] = [],
   ): Promise<void> {
     if (operating.includes(target)) return;
     const [currencies, pairs] = await Promise.all([
@@ -326,8 +329,13 @@ export class LedgerFinanceService
     ]);
     if (known.has(target)) return;
     const shown = [...known].sort();
+    const quotedModes = ['"units"', ...allowedModes.map((mode) => `"${mode}"`)];
+    const choices =
+      quotedModes.length === 1
+        ? `${quotedModes[0]} or a currency in this ledger`
+        : `${quotedModes.join(", ")}, or a currency in this ledger`;
     throw new BadUserInputError(
-      `Unsupported conversion "${target}": pass "units" or a currency in this ledger${
+      `Unsupported conversion "${target}": pass ${choices}${
         shown.length === 0
           ? ""
           : ` (${shown.slice(0, 10).join(", ")}${shown.length > 10 ? ", …" : ""})`
@@ -369,6 +377,7 @@ export class LedgerFinanceService
       ),
       this.balanceAccounts(favaApiClient, ledgerOwner, ledgerName, time),
     ]);
+    const operating = options?.operating_currency ?? [];
     const roots = this.rootsOf(options);
     const root = selectRegisterRoot(
       account,
@@ -376,11 +385,24 @@ export class LedgerFinanceService
       balances,
       roots,
     );
-    if (root === null) return { account: null, rows: [] };
-    const target = resolveRegisterConversion(
-      conversion,
-      options?.operating_currency ?? [],
-    );
+    const target = resolveRegisterConversion(conversion, operating);
+    if (root === null) {
+      if (
+        conversion !== undefined &&
+        target !== null &&
+        !(REGISTER_CONVERSION_MODES as readonly string[]).includes(target)
+      ) {
+        await this.assertLedgerNamesCurrency(
+          favaApiClient,
+          ledgerOwner,
+          ledgerName,
+          target,
+          operating,
+          REGISTER_CONVERSION_MODES,
+        );
+      }
+      return { account: null, rows: [] };
+    }
     const items = await this.registerItems(
       favaApiClient,
       ledgerOwner,

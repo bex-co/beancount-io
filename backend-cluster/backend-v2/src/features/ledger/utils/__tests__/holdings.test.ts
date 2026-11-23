@@ -231,6 +231,9 @@ describe("resolveHoldingsConversion", () => {
     expect(() => resolveHoldingsConversion("at_cost", ["USD"])).toThrow(
       BadUserInputError,
     );
+    expect(() => resolveHoldingsConversion("units_by_cost", ["USD"])).toThrow(
+      BadUserInputError,
+    );
   });
 });
 

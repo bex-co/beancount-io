@@ -758,6 +758,69 @@ describe("LedgerFinanceService.getRegister", () => {
       );
     }
   });
+
+  // w31/039: an early return when no account matches or the time window is
+  // empty must still reject invalid conversions instead of returning empty.
+  it.each(["BOGUS", "usd", "EUR"])(
+    "refuses unknown conversion %p even when no account matches",
+    async (conversion) => {
+      mockReports.getLedgerCurrencies.mockResolvedValue(ok(["USD"]));
+      mockReports.getLedgerCommodities.mockResolvedValue(ok([]));
+
+      const refusal = await service
+        .getRegister({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          account: "Assets:NoSuchAcct",
+          conversion,
+        })
+        .catch((error: unknown) => error);
+
+      expect(refusal).toBeInstanceOf(BadUserInputError);
+      expect((refusal as Error).message).toBe(
+        `Unsupported conversion "${conversion}": pass "units", "at_cost", "at_value", "units_by_cost", or a currency in this ledger (USD).`,
+      );
+      expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["BOGUS", "USD,EUR"])(
+    "refuses invalid conversion %p on an existing account with an empty time window",
+    async (conversion) => {
+      mockReports.getLedgerPostingsPerAccount.mockResolvedValue(ok([]));
+      mockReports.getLedgerCurrencies.mockResolvedValue(ok(["USD"]));
+      mockReports.getLedgerCommodities.mockResolvedValue(ok([]));
+
+      await expect(
+        service.getRegister({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          account: "Assets:Checking",
+          time: "1999",
+          conversion,
+        }),
+      ).rejects.toBeInstanceOf(BadUserInputError);
+      expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["units", "at_cost", "at_value", "units_by_cost", "USD", "CAD"])(
+    "still answers null with no rows for valid conversion %p when nothing matches",
+    async (conversion) => {
+      mockReports.getLedgerCurrencies.mockResolvedValue(ok(["USD", "CAD"]));
+      mockReports.getLedgerCommodities.mockResolvedValue(ok([]));
+
+      const result = await service.getRegister({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        account: "Assets:NoSuchAcct",
+        conversion,
+      });
+
+      expect(result).toEqual({ account: null, rows: [] });
+      expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("LedgerFinanceService.getCapitalGains", () => {
