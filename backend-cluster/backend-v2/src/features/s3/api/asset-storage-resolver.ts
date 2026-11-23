@@ -24,8 +24,8 @@ export class AssetStorageResolver {
     // The uploader is bound into the object key; the session supplies it, so a
     // key can never be minted under another user's scope.
     return this.assetStorage.generateUploadUrl(ctx.getCurrentIdentity(), {
-      filename,
-      mimeType,
+      filename: filename ?? undefined,
+      mimeType: mimeType ?? undefined,
     });
   }
 

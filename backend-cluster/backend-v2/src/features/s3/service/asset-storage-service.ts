@@ -55,6 +55,66 @@ export const S3_PREFIX_ASSETS = "assets";
 // admitting separators that would break out of the segment.
 const OWNER_ID_RE = /^[A-Za-z0-9_-]+$/;
 
+// RFC 6838 §4.2 restricted-name (1..127 chars, starting with alnum).
+const MEDIA_TYPE_NAME = "[A-Za-z0-9][A-Za-z0-9!#$&^_.+-]{0,126}";
+// RFC 9110 §5.6.2 token (no whitespace or control characters).
+const HTTP_TOKEN = "[A-Za-z0-9!#$%&'*+.^_`|~-]+";
+// RFC 9110 §5.6.4 quoted-string restricted to printable ASCII and plain space.
+const QUOTED_STRING =
+  '"(?:[ \\x21\\x23-\\x5b\\x5d-\\x7e]|\\\\[ \\x21-\\x7e])*"';
+const MIME_TYPE_RE = new RegExp(
+  `^${MEDIA_TYPE_NAME}/${MEDIA_TYPE_NAME}(?: *; *${HTTP_TOKEN}=(?:${HTTP_TOKEN}|${QUOTED_STRING}))*$`,
+);
+const MAX_MIME_TYPE_LENGTH = 255;
+
+// Safe object-key extension appended to tmp/{ownerId}/{date}-{id}{ext}, keeping
+// keys URL/S3-safe and well under S3's 1,024-byte ceiling (w31/043).
+const SAFE_EXTENSION_RE = /^\.[A-Za-z0-9]{1,16}$/;
+
+function hasControlChars(value: string): boolean {
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i);
+    if (code <= 0x1f || (code >= 0x7f && code <= 0x9f)) return true;
+  }
+  return false;
+}
+
+function validateMimeType(mimeType: string | undefined): string | undefined {
+  if (mimeType === undefined || mimeType === "") return undefined;
+  if (
+    hasControlChars(mimeType) ||
+    mimeType.length > MAX_MIME_TYPE_LENGTH ||
+    !MIME_TYPE_RE.test(mimeType)
+  ) {
+    throw new BadUserInputError(
+      "mimeType must be a valid media type (type/subtype) without control characters",
+      "mimeType",
+      "Pass an RFC 6838 media type such as `application/pdf`, `image/jpeg`, or `text/csv`, or omit `mimeType`.",
+    );
+  }
+  return mimeType;
+}
+
+function extractSafeExtension(filename: string | undefined): string {
+  if (filename === undefined || filename === "") return "";
+  if (hasControlChars(filename)) {
+    throw new BadUserInputError(
+      "filename must not contain control characters",
+      "filename",
+      "Pass a plain filename such as `receipt.pdf` without control characters, or omit `filename`.",
+    );
+  }
+  const ext = extname(filename);
+  if (ext !== "" && !SAFE_EXTENSION_RE.test(ext)) {
+    throw new BadUserInputError(
+      "filename extension must be 1 to 16 ASCII letters or digits",
+      "filename",
+      "Use a simple file extension such as `.pdf`, `.jpg`, or `.csv`, or omit `filename`.",
+    );
+  }
+  return ext;
+}
+
 /** Build the S3 object key for a ledger repo asset: assets/repo_{repoId}/{filename} */
 export function buildLedgerRepoAssetKey(
   repoId: number,
@@ -198,7 +258,8 @@ export class AssetStorageService implements IAssetStorageService {
       throw new BadUserInputError("ownerId must be a single path segment");
     }
 
-    const ext = extname(params.filename ?? "");
+    const ext = extractSafeExtension(params.filename);
+    const contentType = validateMimeType(params.mimeType);
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -208,7 +269,7 @@ export class AssetStorageService implements IAssetStorageService {
     const command = new PutObjectCommand({
       Bucket: this.config.bucket,
       Key: objectKey,
-      ContentType: params.mimeType,
+      ContentType: contentType,
     });
 
     // A declared type is signed, so the PUT must send it: unsigned, a client
@@ -216,15 +277,15 @@ export class AssetStorageService implements IAssetStorageService {
     // file, and one that sent another type stored that one (w1/231).
     const uploadUrl = await getSignedUrl(this.s3Client, command, {
       expiresIn: this.config.uploadUrlExpiration,
-      ...(params.mimeType && { signableHeaders: new Set(["content-type"]) }),
+      ...(contentType && { signableHeaders: new Set(["content-type"]) }),
     });
 
     return {
       uploadUrl,
       objectKey,
       expiresIn: this.config.uploadUrlExpiration,
-      ...(params.mimeType && {
-        uploadHeaders: { "Content-Type": params.mimeType },
+      ...(contentType && {
+        uploadHeaders: { "Content-Type": contentType },
       }),
     };
   }

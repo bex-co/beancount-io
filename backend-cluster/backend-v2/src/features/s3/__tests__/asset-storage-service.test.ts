@@ -115,6 +115,121 @@ describe("AssetStorageService", () => {
         s3Service.generateUploadUrl(identity("../escape"), {}),
       ).rejects.toThrow(BadUserInputError);
     });
+
+    it.each([
+      "application/pdf",
+      "image/jpeg",
+      "image/svg+xml",
+      "text/csv; charset=utf-8",
+      'text/plain; charset="utf-8"',
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ])("should accept valid mimeType %j", async (mimeType) => {
+      const result = await s3Service.generateUploadUrl(identity(), {
+        filename: "receipt.pdf",
+        mimeType,
+      });
+
+      expect(result.uploadHeaders).toEqual({ "Content-Type": mimeType });
+    });
+
+    it("should treat empty mimeType as omitted", async () => {
+      const result = await s3Service.generateUploadUrl(identity(), {
+        filename: "receipt.pdf",
+        mimeType: "",
+      });
+
+      expect(result.uploadHeaders).toBeUndefined();
+      expect(S3Presigner.getSignedUrl).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        { expiresIn: 300 },
+      );
+    });
+
+    it.each([
+      ["CRLF header injection", "application/pdf\r\nX-Bad: 1"],
+      ["trailing LF", "application/pdf\n"],
+      ["NUL byte", "image/jpeg\x00"],
+      ["tab control character", "text/csv\t"],
+      ["whitespace-only", "   "],
+      ["leading space", " application/pdf"],
+      ["trailing space", "application/pdf "],
+      ["non-MIME text", "not-a-mime"],
+      ["missing subtype", "application/"],
+      ["missing type", "/pdf"],
+      ["wildcard subtype", "image/*"],
+      ["dangling parameter separator", "text/csv; "],
+      ["malformed parameter", "text/csv; badparam"],
+      ["overlong media type", `text/plain; ${"a=b; ".repeat(60)}c=d`],
+    ])(
+      "should reject invalid mimeType (%s) before signing",
+      async (_label, mimeType) => {
+        const presign = jest.spyOn(S3Presigner, "getSignedUrl");
+        const error = await s3Service
+          .generateUploadUrl(identity(), { filename: "receipt.pdf", mimeType })
+          .catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(BadUserInputError);
+        expect(error).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "mimeType" },
+        });
+        expect(presign).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([
+      ["My Receipt 2026.pdf", ".pdf"],
+      ["发票.JPEG", ".JPEG"],
+      ["statement.xlsx", ".xlsx"],
+      ["archive.tar.gz", ".gz"],
+      ["receipt", ""],
+      ["../../etc/passwd", ""],
+      [".env", ""],
+      ["", ""],
+    ])(
+      "should accept valid filename %j with derived extension %j",
+      async (filename, expectedExt) => {
+        const result = await s3Service.generateUploadUrl(identity(), {
+          filename,
+        });
+
+        expect(result.objectKey).toMatch(
+          new RegExp(
+            `^tmp/user123/\\d{4}-\\d{2}-\\d{2}-testnanoi${expectedExt.replace(".", "\\.")}$`,
+          ),
+        );
+      },
+    );
+
+    it.each([
+      ["newline in extension", "receipt.pdf\nX-Inject: 1"],
+      ["CR in basename", "receipt\r.pdf"],
+      ["NUL in basename", "receipt\x00.pdf"],
+      ["LF without extension", "no-ext\n"],
+      ["trailing space in extension", "receipt.pdf "],
+      ["fragment in extension", "receipt.pdf#frag"],
+      ["query in extension", "receipt.pdf?a=1"],
+      ["percent in extension", "receipt.pdf%20"],
+      ["trailing dot", "receipt."],
+      ["17-char extension", `a.${"x".repeat(17)}`],
+      ["overlong >1024-byte extension", `a.${"x".repeat(1200)}`],
+    ])(
+      "should reject invalid filename (%s) before signing",
+      async (_label, filename) => {
+        const presign = jest.spyOn(S3Presigner, "getSignedUrl");
+        const error = await s3Service
+          .generateUploadUrl(identity(), { filename })
+          .catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(BadUserInputError);
+        expect(error).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "filename" },
+        });
+        expect(presign).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe("copyTempToPermanent", () => {

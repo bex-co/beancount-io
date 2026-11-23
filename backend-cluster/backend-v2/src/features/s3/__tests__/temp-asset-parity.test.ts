@@ -13,6 +13,7 @@ import {
   SourceBackedRelationshipEvaluator,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { clearRateLimitShadows } from "@/server/api/rate-limit";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
@@ -56,6 +57,7 @@ beforeAll(async () => {
   });
 });
 beforeEach(() => {
+  clearRateLimitShadows();
   jest.mocked(getSignedUrl).mockReset();
   jest
     .mocked(getSignedUrl)
@@ -397,6 +399,153 @@ it("refuses upload on unconfigured storage as CONFIGURATION_ERROR on every surfa
       error: { code: "CONFIGURATION_ERROR", hint },
     });
     expect(getSignedUrl).not.toHaveBeenCalled();
+  } finally {
+    await f.close();
+  }
+});
+
+// w31/043: CRLF/blank/malformed mimeType and unsafe/overlong filename
+// extensions are refused before presigning on every surface.
+it.each([
+  ["CRLF injection", "application/pdf\r\nX-Bad: 1"],
+  ["whitespace-only", "   "],
+  ["non-MIME text", "not-a-mime"],
+])(
+  "refuses invalid mimeType (%s) as BAD_USER_INPUT on every surface without signing",
+  async (_label, mimeType) => {
+    const f = await fixture();
+    try {
+      const body = { filename: "receipt.pdf", mimeType };
+      const r = await f.rest("upload-url", body);
+      expect(r.status).toBe(400);
+      expect(await r.json()).toMatchObject({
+        ok: false,
+        error: { code: "BAD_USER_INPUT", metadata: { field: "mimeType" } },
+      });
+      const g = await f.gql(
+        "mutation($filename:String,$mimeType:String) { generateTempAssetUploadUrl(filename:$filename,mimeType:$mimeType) { objectKey } }",
+        body,
+      );
+      expect(g.errors?.[0].originalError).toMatchObject({
+        category: "BAD_USER_INPUT",
+        metadata: { field: "mimeType" },
+      });
+      const m = await f.client.callTool({
+        name: "generateTempAssetUploadUrl",
+        arguments: body,
+      });
+      expect(m.isError).toBe(true);
+      expect(m.structuredContent).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message: expect.stringContaining("mimeType"),
+        },
+      });
+      expect(getSignedUrl).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it.each([
+  ["newline injection", "receipt.pdf\nX-Inject: 1"],
+  ["trailing space", "receipt.pdf "],
+  ["fragment", "receipt.pdf#frag"],
+  ["query", "receipt.pdf?a=1"],
+  ["overlong >1024-byte extension", `a.${"x".repeat(1200)}`],
+])(
+  "refuses invalid filename (%s) as BAD_USER_INPUT on every surface without signing",
+  async (_label, filename) => {
+    const f = await fixture();
+    try {
+      const body = { filename };
+      const r = await f.rest("upload-url", body);
+      expect(r.status).toBe(400);
+      expect(await r.json()).toMatchObject({
+        ok: false,
+        error: { code: "BAD_USER_INPUT", metadata: { field: "filename" } },
+      });
+      const g = await f.gql(
+        "mutation($filename:String) { generateTempAssetUploadUrl(filename:$filename) { objectKey } }",
+        body,
+      );
+      expect(g.errors?.[0].originalError).toMatchObject({
+        category: "BAD_USER_INPUT",
+        metadata: { field: "filename" },
+      });
+      const m = await f.client.callTool({
+        name: "generateTempAssetUploadUrl",
+        arguments: body,
+      });
+      expect(m.isError).toBe(true);
+      expect(m.structuredContent).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message: expect.stringContaining("filename"),
+        },
+      });
+      expect(getSignedUrl).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
+
+it("accepts parameterized mimeType and null inputs consistently across all adapters", async () => {
+  const f = await fixture();
+  try {
+    const body = {
+      filename: "export.csv",
+      mimeType: "text/csv; charset=utf-8",
+    };
+    const r = await f.rest("upload-url", body);
+    expect(r.status).toBe(200);
+    const g = await f.gql(
+      "mutation($filename:String,$mimeType:String) { generateTempAssetUploadUrl(filename:$filename,mimeType:$mimeType) { uploadUrl objectKey expiresIn uploadHeaders } }",
+      body,
+    );
+    expect(g.errors).toBeUndefined();
+    const m = await f.client.callTool({
+      name: "generateTempAssetUploadUrl",
+      arguments: body,
+    });
+    expect(m.isError).not.toBe(true);
+    for (const upload of [
+      await r.json(),
+      g.data!.generateTempAssetUploadUrl,
+      (m.structuredContent as { result: unknown }).result,
+    ]) {
+      expect(upload).toMatchObject({
+        objectKey: expect.stringMatching(/^tmp\/usr_alice\/.+\.csv$/),
+        uploadHeaders: { "Content-Type": "text/csv; charset=utf-8" },
+      });
+    }
+
+    const rNull = await f.rest("upload-url", {
+      filename: null,
+      mimeType: null,
+    });
+    expect(rNull.status).toBe(200);
+    const gNull = await f.gql(
+      "mutation { generateTempAssetUploadUrl(filename:null,mimeType:null) { objectKey uploadHeaders } }",
+    );
+    expect(gNull.errors).toBeUndefined();
+    const mNull = await f.client.callTool({
+      name: "generateTempAssetUploadUrl",
+      arguments: { filename: null, mimeType: null },
+    });
+    expect(mNull.isError).not.toBe(true);
+    expect(await rNull.json()).not.toHaveProperty("uploadHeaders");
+    expect(
+      (gNull.data!.generateTempAssetUploadUrl as { uploadHeaders?: unknown })
+        .uploadHeaders,
+    ).toBeNull();
+    expect(
+      (mNull.structuredContent as { result: Record<string, unknown> }).result,
+    ).not.toHaveProperty("uploadHeaders");
   } finally {
     await f.close();
   }
