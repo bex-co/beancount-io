@@ -5,7 +5,13 @@ import {
   Observable,
 } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -144,6 +150,16 @@ describe("Statistics section read failure", () => {
       await waitFor(() => expect(screen.getAllByRole("table")).toHaveLength(3));
       expect(screen.queryByText(description)).toBeNull();
       expect(screen.queryByRole("button", { name: "Try Again" })).toBeNull();
+      // The postings table mounts before its account-report lookup settles.
+      const postings = screen.getByRole("table", {
+        name: /Postings per Account/i,
+      });
+      expect(
+        await within(postings).findByRole("link", {
+          name: "Assets:Cash",
+          exact: true,
+        }),
+      ).toBeInTheDocument();
 
       // Three attempts of the failed section's read, all for the current
       // scope; each sibling was read once and never again.
