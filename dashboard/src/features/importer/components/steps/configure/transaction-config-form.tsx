@@ -343,7 +343,9 @@ export function TransactionConfigForm({
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>{t("importer.configure.title")}</CardTitle>
+            <CardTitle>
+              <h2 tabIndex={-1}>{t("importer.configure.title")}</h2>
+            </CardTitle>
             <CardDescription>
               {t("importer.configure.description")}
             </CardDescription>

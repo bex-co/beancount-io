@@ -17,9 +17,9 @@ export function ImportingStep() {
           <div className="w-3 h-3 rounded-full bg-primary animate-bounce" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-xl font-semibold">
+          <h2 tabIndex={-1} className="text-xl font-semibold">
             {t("importer.importing.title")}
-          </h3>
+          </h2>
           <p className="text-sm text-muted-foreground">
             {t("importer.importing.description")}
           </p>

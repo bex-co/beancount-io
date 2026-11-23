@@ -219,6 +219,72 @@ describe("Smart Import ledger access", () => {
   });
   afterEach(cleanup);
 
+  it("focuses and describes the new step after choosing a file, Continue, Back and Upload Different File", async () => {
+    setAccess({ ...ledger.permissions, push: true });
+    const { container } = render(<LedgerLayout />);
+    const user = userEvent.setup();
+    const findStep = async (name: string) => {
+      const title = await screen.findByText(name, { exact: true });
+      expect(title).toHaveFocus();
+      expect(screen.getByRole("heading", { level: 2, name })).toBe(title);
+      return title;
+    };
+    expect(screen.getByText("Drop your file here")).not.toHaveFocus();
+    const browse = screen.getByRole("button", { name: "Browse files" });
+    browse.focus();
+    await user.upload(
+      container.querySelector<HTMLInputElement>('input[type="file"]')!,
+      new File(
+        [
+          "Date,Payee,Description,Amount\n" +
+            "2026-10-08,First,Valid,-1.00\n" +
+            "2026-10-09,Second,Valid,-2.00\n" +
+            "2026-10-10,Third,Valid,-3.00\n" +
+            "invalid-date,Fourth,Invalid date,-4.00\n" +
+            "2026-10-11,Fifth,Invalid amount,invalid-amount\n",
+        ],
+        "mixed.csv",
+        { type: "text/csv" },
+      ),
+    );
+    const preview = await findStep("Preview Imported Data");
+    expect(preview).toHaveAccessibleDescription("3 Valid 2 Errors");
+    expect(
+      screen.getByRole("table", { name: "Preview Imported Data" }),
+    ).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("heading")
+        .map((heading) => [heading.tagName, heading.textContent]),
+    ).toEqual([
+      ["H1", "Smart Import"],
+      ["H2", "Preview Imported Data"],
+      ["H2", "Related Pages"],
+    ]);
+
+    screen.getByRole("button", { name: "Continue to Configure" }).focus();
+    await user.keyboard("{Enter}");
+    await findStep("Configure Import Settings");
+    expect(
+      screen
+        .getAllByRole("heading")
+        .map((heading) => [heading.tagName, heading.textContent]),
+    ).toEqual([
+      ["H1", "Smart Import"],
+      ["H2", "Configure Import Settings"],
+      ["H3", "Assign Target Accounts"],
+      ["H2", "Related Pages"],
+    ]);
+
+    screen.getByRole("button", { name: "Back" }).focus();
+    await user.keyboard("{Enter}");
+    await findStep("Preview Imported Data");
+    screen.getByRole("button", { name: "Upload Different File" }).focus();
+    await user.keyboard("{Enter}");
+    await findStep("Drop your file here");
+    expect(mocks.mutate).not.toHaveBeenCalled();
+  });
+
   it("offers an in-place retry when the owner's sign-in probe fails", async () => {
     mocks.authUnavailable = true;
     mocks.authenticated = false;
@@ -378,13 +444,13 @@ describe("Smart Import ledger access", () => {
         ],
       },
     });
-    expect(
-      await screen.findByRole(
-        "heading",
-        { name: "Import Successful!" },
-        { timeout: 5000 },
-      ),
-    ).toBeInTheDocument();
+    const finish = await screen.findByRole(
+      "heading",
+      { name: "Import Successful!" },
+      { timeout: 5000 },
+    );
+    expect(finish).toHaveFocus();
+    expect(finish.tagName).toBe("H2");
   });
 
   it("removes configuration and AI controls immediately when write permission is lost", async () => {

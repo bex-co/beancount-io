@@ -63,6 +63,9 @@ describe("Import Preview row-count badges (w4/1071)", () => {
   it("shows no error badge at zero errors", async () => {
     await renderPreview("en", csvWithErrors(0));
     expect(screen.getByText("1 Valid")).toBeInTheDocument();
-    expect(screen.queryByText(/Error/)).not.toBeInTheDocument();
+    expect(screen.getByText("0 Errors")).not.toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Preview Imported Data" }),
+    ).toHaveAccessibleDescription("1 Valid 0 Errors");
   });
 });

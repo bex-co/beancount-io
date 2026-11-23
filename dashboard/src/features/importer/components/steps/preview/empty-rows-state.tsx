@@ -20,9 +20,9 @@ export function EmptyRowsState({ onRetry }: EmptyRowsStateProps) {
           <div className="rounded-full bg-muted p-6 mb-4">
             <FileX className="w-12 h-12 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold mb-2">
+          <h2 tabIndex={-1} className="text-lg font-semibold mb-2">
             {t("importer.preview.emptyFileTitle")}
-          </h3>
+          </h2>
           <p className="text-sm text-muted-foreground max-w-md mb-6">
             {t("importer.preview.emptyFileDescription")}
           </p>

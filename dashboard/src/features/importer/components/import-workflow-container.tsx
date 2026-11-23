@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   UploadStep,
@@ -27,10 +28,21 @@ export function ImportWorkflowContainer({
 }: ImportWorkflowContainerProps) {
   const navigate = useNavigate();
 
-  // Hooks
   const workflow = useImportWorkflow();
   const { submitImport, importResult, isSubmitting } =
     useImportSubmit(ledgerId);
+  const { currentStep } = workflow;
+  const stepContainer = useRef<HTMLDivElement>(null);
+  const previousStep = useRef(currentStep);
+
+  // The previous step's controls unmount, so place focus at the new title.
+  useLayoutEffect(() => {
+    if (previousStep.current === currentStep) return;
+    previousStep.current = currentStep;
+    stepContainer.current
+      ?.querySelector<HTMLElement>('h2[tabindex="-1"]')
+      ?.focus();
+  }, [currentStep]);
 
   // Handlers
   const handleSubmit = async (transactions: ImportTransaction[]) => {
@@ -42,18 +54,11 @@ export function ImportWorkflowContainer({
     void navigate({ to: `/ledger/${ledgerOwner}/${ledgerName}/journal` });
   };
 
-  const handleResetToUpload = () => {
-    workflow.resetToUpload();
-  };
-
-  // Upload Step (includes parsing progress and error states)
-  if (workflow.currentStep === "upload") {
-    return <UploadStep onParseComplete={workflow.handleFileParsed} />;
-  }
-
-  // Preview Step
-  if (workflow.currentStep === "preview" && workflow.parseResult) {
-    return (
+  let step: ReactNode = null;
+  if (currentStep === "upload") {
+    step = <UploadStep onParseComplete={workflow.handleFileParsed} />;
+  } else if (currentStep === "preview" && workflow.parseResult) {
+    step = (
       <PreviewStep
         parseResult={workflow.parseResult}
         onContinue={workflow.handleContinueToConfig}
@@ -61,11 +66,8 @@ export function ImportWorkflowContainer({
         onResultChange={workflow.handleResultChange}
       />
     );
-  }
-
-  // Configure Step
-  if (workflow.currentStep === "configure" && workflow.parseResult) {
-    return (
+  } else if (currentStep === "configure" && workflow.parseResult) {
+    step = (
       <ConfigureStep
         parseResult={workflow.parseResult}
         ledgerId={ledgerId}
@@ -76,24 +78,21 @@ export function ImportWorkflowContainer({
         isSubmitting={isSubmitting}
       />
     );
-  }
-
-  // Importing Step
-  if (workflow.currentStep === "importing") {
-    return <ImportingStep />;
-  }
-
-  // Finish Step
-  if (workflow.currentStep === "finish" && importResult) {
-    return (
+  } else if (currentStep === "importing") {
+    step = <ImportingStep />;
+  } else if (currentStep === "finish" && importResult) {
+    step = (
       <FinishStep
         importResult={importResult}
         onFinish={handleFinish}
-        onImportMore={handleResetToUpload}
+        onImportMore={workflow.resetToUpload}
       />
     );
   }
 
-  // Fallback (should not reach here)
-  return null;
+  return (
+    <div ref={stepContainer} className="space-y-6">
+      {step}
+    </div>
+  );
 }

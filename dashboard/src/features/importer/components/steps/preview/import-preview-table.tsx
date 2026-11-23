@@ -38,6 +38,8 @@ export function ImportPreviewTable({
 }: ImportPreviewTableProps) {
   const { t } = useTranslations();
   const titleId = useId();
+  const validCountId = useId();
+  const errorCountId = useId();
   const [editableRows, setEditableRows] = useState<ParsedRow[]>(() =>
     withStableRowIds(result.rows),
   );
@@ -107,21 +109,41 @@ export function ImportPreviewTable({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle id={titleId}>{t("importer.preview.title")}</CardTitle>
+            <CardTitle>
+              <h2
+                id={titleId}
+                tabIndex={-1}
+                aria-describedby={`${validCountId} ${errorCountId}`}
+              >
+                {t("importer.preview.title")}
+              </h2>
+            </CardTitle>
             <CardDescription>
               {t("importer.preview.description")}
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Badge variant="outline" className="flex items-center gap-1">
+            <Badge
+              id={validCountId}
+              variant="outline"
+              className="flex items-center gap-1"
+            >
               <CheckCircle className="w-3 h-3 text-primary" />
               {t("importer.preview.validCount", { count: validCount })}
             </Badge>
-            {errorCount > 0 && (
-              <Badge variant="destructive" className="flex items-center gap-1">
+            {hasErrors ? (
+              <Badge
+                id={errorCountId}
+                variant="destructive"
+                className="flex items-center gap-1"
+              >
                 <AlertCircle className="w-3 h-3" />
                 {t("importer.preview.errorsCount", { count: errorCount })}
               </Badge>
+            ) : (
+              <span id={errorCountId} hidden>
+                {t("importer.preview.errorsCount", { count: 0 })}
+              </span>
             )}
           </div>
         </div>

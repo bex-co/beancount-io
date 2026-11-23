@@ -180,9 +180,9 @@ export function FileUpload({ onParsed, onFileSelected }: FileUploadProps) {
             <div className="space-y-4">
               <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">
+                <h2 tabIndex={-1} className="text-sm font-medium">
                   {t("importer.upload.dragAndDrop")}
-                </p>
+                </h2>
                 <p className="text-xs text-muted-foreground mt-1">
                   {t("importer.upload.supportedFormats")}
                 </p>

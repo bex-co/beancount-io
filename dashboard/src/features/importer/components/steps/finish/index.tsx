@@ -32,9 +32,12 @@ export function FinishStep({
 
           {/* Success message */}
           <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <h2
+              tabIndex={-1}
+              className="text-2xl font-bold text-green-600 dark:text-green-400"
+            >
               {t("importer.finish.successTitle")}
-            </h3>
+            </h2>
             <p className="text-base text-muted-foreground">
               {t("importer.finish.successMessage", {
                 count: importResult.successCount,
@@ -108,9 +111,9 @@ export function FinishStep({
 
         {/* Error message */}
         <div className="space-y-2">
-          <h3 className="text-2xl font-bold text-destructive">
+          <h2 tabIndex={-1} className="text-2xl font-bold text-destructive">
             {t("importer.finish.failedTitle")}
-          </h3>
+          </h2>
           <p className="text-base text-muted-foreground">
             {importResult.message || t("importer.finish.failedMessage")}
           </p>
