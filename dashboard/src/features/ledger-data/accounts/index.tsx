@@ -257,6 +257,8 @@ function BalanceCell({
 
 interface AccountRowProps {
   account: AccountDirective;
+  ledgerOwner: string;
+  ledgerName: string;
   /** What the account's sub-accounts hold, for a parent holding none itself. */
   subtotal?: Record<string, string>;
   onAccountClick: (accountName: string) => void;
@@ -379,6 +381,8 @@ function AccountActions({
 
 export function AccountRow({
   account,
+  ledgerOwner,
+  ledgerName,
   subtotal,
   onAccountClick,
   onDelete,
@@ -412,7 +416,8 @@ export function AccountRow({
             <AccountPrefixNavigation
               accountName={account.account}
               isClosed={isClosed}
-              onAccountClick={onAccountClick}
+              ledgerOwner={ledgerOwner}
+              ledgerName={ledgerName}
             />
           </div>
           {account.balance != null && (
@@ -1054,6 +1059,8 @@ export default function LedgerAccountsPage() {
                       <AccountRow
                         key={account.account}
                         account={account}
+                        ledgerOwner={ledgerOwner}
+                        ledgerName={ledgerName}
                         subtotal={subtotals.get(account.account)}
                         onAccountClick={handleAccountClick}
                         onDelete={openDeleteDialog}

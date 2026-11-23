@@ -191,7 +191,7 @@ describe("Accounts table identity", () => {
           labels["page.accounts.balanceNotComputed"].message,
         ),
       ).toHaveLength(1);
-      const account = within(table).getByRole("button", {
+      const account = within(table).getByRole("link", {
         name: "Assets:Bank:Checking",
       });
       act(() => account.focus());

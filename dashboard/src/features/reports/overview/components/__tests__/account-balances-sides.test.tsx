@@ -12,10 +12,15 @@ vi.unmock("@/common/hooks/use-translations");
 vi.unmock("react-i18next");
 vi.mock("@/common/hooks/use-ledger", async (original) => ({
   ...(await original<typeof import("@/common/hooks/use-ledger")>()),
-  useLedgerNavigateToAccount: () => vi.fn(),
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+  Link: ({
+    children,
+    title,
+  }: {
+    children: React.ReactNode;
+    title?: string;
+  }) => <a title={title}>{children}</a>,
 }));
 afterEach(cleanup);
 

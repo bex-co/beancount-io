@@ -170,7 +170,7 @@ async function setup(language: "en" | "fa") {
   const table = await screen.findByRole("table", {
     name: language === "fa" ? "حساب‌ها" : "Accounts",
   });
-  const account = within(table).getByRole("button", { name: accountName });
+  const account = within(table).getByRole("link", { name: accountName });
   const row = account.closest("tr")!;
   return { ...view, router, table, account, row, requests };
 }
@@ -222,7 +222,7 @@ describe("account balance reading direction", () => {
         amountsIn(language).join(""),
       );
       const emptyRow = within(table)
-        .getByRole("button", { name: "Assets:Empty" })
+        .getByRole("link", { name: "Assets:Empty" })
         .closest("tr")!;
       expect(within(emptyRow).getAllByRole("cell")[3].textContent).toBe("0");
       expect(
@@ -283,7 +283,7 @@ describe("Accounts balances at every width", () => {
         ["Income:Salary", language === "fa" ? "محاسبه نشده" : "Not computed"],
       ]) {
         const stateRow = within(table)
-          .getByRole("button", { name })
+          .getByRole("link", { name })
           .closest("tr")!;
         expect(within(stateRow).getAllByRole("cell")[3].textContent).toBe(text);
       }
@@ -295,7 +295,7 @@ describe("Accounts balances at every width", () => {
     async (language) => {
       const { router, table, row, requests } = await setup(language);
       const emptyRow = within(table)
-        .getByRole("button", { name: "Assets:Empty" })
+        .getByRole("link", { name: "Assets:Empty" })
         .closest("tr")!;
       const trigger = within(emptyRow).getByRole("button", {
         name:
@@ -312,7 +312,7 @@ describe("Accounts balances at every width", () => {
       await waitFor(() => expect(openRegister).toHaveFocus());
       await user.keyboard("{Escape}");
       await waitFor(() => expect(trigger).toHaveFocus());
-      const prefix = within(row).getByRole("button", { name: "Assets:بانک" });
+      const prefix = within(row).getByRole("link", { name: "Assets:بانک" });
       act(() => prefix.focus());
       await user.keyboard("{Enter}");
       await screen.findByRole("heading", { name: "Account detail" });

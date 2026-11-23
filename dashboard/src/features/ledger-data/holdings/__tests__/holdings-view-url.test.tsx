@@ -1,6 +1,7 @@
 import {
   act,
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -306,10 +307,16 @@ describe("holdings grouping in the URL", () => {
     expect(within(rows[1]).getAllByRole("cell")).toHaveLength(3);
     expect(within(table).getByText("0.004")).toBeInTheDocument();
     expect(within(table).getByText("123.4500")).toBeInTheDocument();
-    const accountButton = within(table).getByRole("button", {
+    const accountLink = within(table).getByRole("link", {
       name: "Assets:Brokerage",
     });
-    accountButton.focus();
+    expect(accountLink).toHaveAttribute(
+      "href",
+      "/ledger/alice/books/account/Assets%3ABrokerage",
+    );
+    fireEvent.click(rows[1], { metaKey: true });
+    expect(router.state.location.pathname).toBe("/ledger/alice/books/holdings");
+    accountLink.focus();
     await user.keyboard("{Enter}");
 
     await waitFor(() =>

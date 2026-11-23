@@ -55,7 +55,15 @@ export function getClickableRowProps<T extends HTMLElement>(
   "className" | "onClick" | "onKeyDown" | "role" | "tabIndex"
 > {
   const onClick: HTMLAttributes<T>["onClick"] = (event) => {
-    if (!isFromInteractiveChild(event)) {
+    if (
+      event.button === 0 &&
+      !event.altKey &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.shiftKey &&
+      !event.defaultPrevented &&
+      !isFromInteractiveChild(event)
+    ) {
       onActivate(event);
     }
   };

@@ -23,11 +23,12 @@ vi.mock("@/common/components/react-echarts", () => ({
 }));
 vi.mock("@/common/hooks/use-ledger", async (original) => ({
   ...(await original<typeof import("@/common/hooks/use-ledger")>()),
-  useLedgerNavigateToAccount: () => vi.fn(),
 }));
 vi.mock("@tanstack/react-router", async (original) => ({
   ...(await original<typeof import("@tanstack/react-router")>()),
-  Link: ({ children }: { children: ReactNode }) => <a>{children}</a>,
+  Link: ({ children, title }: { children: ReactNode; title?: string }) => (
+    <a title={title}>{children}</a>
+  ),
 }));
 afterEach(() => {
   cleanup();

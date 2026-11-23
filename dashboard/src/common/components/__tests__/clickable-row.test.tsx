@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { getClickableRowProps } from "../clickable-row";
@@ -71,6 +71,16 @@ describe("getClickableRowProps", () => {
     const row = screen.getByRole("button", { name: "Account" }).closest("tr");
     expect(row).not.toHaveAttribute("role");
     expect(row).not.toHaveAttribute("tabindex");
+    for (const gesture of [
+      { metaKey: true },
+      { ctrlKey: true },
+      { shiftKey: true },
+      { altKey: true },
+      { button: 1 },
+    ]) {
+      fireEvent.click(row!, gesture);
+    }
+    expect(onActivate).not.toHaveBeenCalled();
     await user.click(row as HTMLElement);
     expect(onActivate).toHaveBeenCalledTimes(1);
   });

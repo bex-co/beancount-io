@@ -1,6 +1,9 @@
 import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
 import { RelatedLinks } from "@/common/components/related-links";
-import { getLedgerFilesRootPath } from "@/common/hooks/use-file-navigate";
+import {
+  getLedgerFilesRootPath,
+  useFileNavigate,
+} from "@/common/hooks/use-file-navigate";
 import { useQuery } from "@apollo/client/react";
 import { Calendar } from "lucide-react";
 import { EmptyState } from "@/common/components/empty-state";
@@ -9,7 +12,7 @@ import {
   GetLedgerDocumentsDocument,
   type GetLedgerDocumentsQuery,
 } from "@/graphql/definitions";
-import { useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import {
   Table,
   TableBody,
@@ -21,7 +24,6 @@ import {
 import { Badge } from "@/common/components/ui/badge";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { formatDateISO } from "@/common/lib/format/format-date-iso";
-import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedger } from "@/common/hooks/use-ledger";
@@ -31,10 +33,17 @@ type LedgerDocument = GetLedgerDocumentsQuery["getLedgerDocuments"][number];
 
 interface DocumentRowProps {
   document: LedgerDocument;
+  ledgerOwner: string;
+  ledgerName: string;
   onActivate: () => void;
 }
 
-export function DocumentRow({ document, onActivate }: DocumentRowProps) {
+export function DocumentRow({
+  document,
+  ledgerOwner,
+  ledgerName,
+  onActivate,
+}: DocumentRowProps) {
   const metadata = Object.entries(document.meta ?? {});
 
   return (
@@ -45,16 +54,19 @@ export function DocumentRow({ document, onActivate }: DocumentRowProps) {
       })}
     >
       <TableCell className="w-64 font-medium px-2 sm:px-3 py-1.5 sm:py-2">
-        <button
-          type="button"
-          className="text-start font-medium text-primary hover:text-primary/80 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]"
-          onClick={(event) => {
-            event.stopPropagation();
-            onActivate();
+        <Link
+          to="/ledger/$ledgerOwner/$ledgerName/files/blob/$branch/$"
+          params={{
+            ledgerOwner,
+            ledgerName,
+            branch: "main",
+            _splat: document.filename,
           }}
+          className="text-start font-medium text-primary hover:text-primary/80 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]"
+          onClick={(event) => event.stopPropagation()}
         >
           {document.filename}
-        </button>
+        </Link>
       </TableCell>
       <TableCell className="w-40 px-2 sm:px-3 py-1.5 sm:py-2">
         {document.account}
@@ -255,6 +267,8 @@ export default function LedgerDocumentsPage() {
                   <DocumentRow
                     key={`${document.filename}-${index}`}
                     document={document}
+                    ledgerOwner={ledgerOwner}
+                    ledgerName={ledgerName}
                     onActivate={() =>
                       fileNavigate(ledgerId, "file", document.filename)
                     }

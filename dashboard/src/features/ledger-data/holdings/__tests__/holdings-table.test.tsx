@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DatasetTable } from "../holdings-table";
 import { unitsFirstRowsFilter } from "../utils";
@@ -15,6 +15,14 @@ vi.mock("@apollo/client/react", () => ({
 const mockNavigate = vi.fn();
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
+  Link: ({
+    children,
+    onClick,
+  }: Pick<React.ComponentProps<"a">, "children" | "onClick">) => (
+    <a href="#account" onClick={onClick}>
+      {children}
+    </a>
+  ),
 }));
 
 // Mock csv-export (the module the table actually imports)
@@ -475,7 +483,7 @@ describe("DatasetTable", () => {
   });
 
   describe("account row activation", () => {
-    it("should navigate with click, Enter, and Space from a focusable row", async () => {
+    it("preserves native row semantics and activates on a plain row click", async () => {
       const user = userEvent.setup();
       vi.mocked(useQuery).mockReturnValue({
         data: {
@@ -500,20 +508,19 @@ describe("DatasetTable", () => {
         />,
       );
 
-      const accountButton = screen.getByRole("button", {
+      const accountLink = screen.getByRole("link", {
         name: "Assets:Bank:Checking",
       });
-      const accountRow = accountButton.closest("tr");
+      const accountRow = accountLink.closest("tr");
       expect(accountRow).not.toHaveAttribute("role");
       expect(accountRow).not.toHaveAttribute("tabindex");
       expect(accountRow?.querySelectorAll("td")).toHaveLength(2);
 
+      fireEvent.click(screen.getByText("1000.00"), { ctrlKey: true });
+      fireEvent.click(accountLink, { metaKey: true });
+      expect(mockNavigate).not.toHaveBeenCalled();
       await user.click(screen.getByText("1000.00"));
-      await user.click(accountButton);
-      accountButton.focus();
-      await user.keyboard("{Enter}");
-
-      expect(mockNavigate).toHaveBeenCalledTimes(3);
+      expect(mockNavigate).toHaveBeenCalledTimes(1);
       expect(mockNavigate).toHaveBeenLastCalledWith({
         to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
         params: expect.objectContaining({

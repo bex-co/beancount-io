@@ -1,14 +1,17 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { renderLedgerNavigation } from "@/test/render-ledger-navigation";
 import { DocumentRow } from "../index";
 
 describe("DocumentRow", () => {
-  it("shows each metadata key and its full value on a separate line", () => {
-    render(
+  it("shows each metadata key and its full value on a separate line", async () => {
+    await renderLedgerNavigation(
       <table>
         <tbody>
           <DocumentRow
+            ledgerOwner="alice"
+            ledgerName="books"
             document={{
               __typename: "Document",
               filename: "receipts/coffee.pdf",
@@ -48,10 +51,12 @@ describe("DocumentRow", () => {
     const user = userEvent.setup();
     const onActivate = vi.fn();
 
-    render(
+    const { router } = await renderLedgerNavigation(
       <table>
         <tbody>
           <DocumentRow
+            ledgerOwner="alice"
+            ledgerName="books"
             document={{
               __typename: "Document",
               filename: "receipts/coffee.pdf",
@@ -65,9 +70,11 @@ describe("DocumentRow", () => {
           />
         </tbody>
       </table>,
+      "documents",
+      "?time=2026",
     );
 
-    const filename = screen.getByRole("button", {
+    const filename = screen.getByRole("link", {
       name: /receipts\/coffee\.pdf/,
     });
     const documentRow = filename.closest("tr");
@@ -75,12 +82,26 @@ describe("DocumentRow", () => {
     expect(documentRow).not.toHaveAttribute("tabindex");
     expect(documentRow?.querySelectorAll("td").length).toBeGreaterThan(0);
 
+    expect(filename).toHaveAttribute(
+      "href",
+      "/ledger/alice/books/files/blob/main/receipts/coffee.pdf?time=2026",
+    );
+    fireEvent.click(documentRow!, { ctrlKey: true });
+    fireEvent.click(filename, { metaKey: true });
+    expect(onActivate).not.toHaveBeenCalled();
+    expect(router.state.location.pathname).toBe(
+      "/ledger/alice/books/documents",
+    );
+    await user.click(documentRow!);
+
     await user.tab();
     expect(filename).toHaveFocus();
     await user.keyboard("{Enter}");
-    await user.click(filename);
-    await user.click(documentRow as HTMLElement);
-
-    expect(onActivate).toHaveBeenCalledTimes(3);
+    await waitFor(() =>
+      expect(router.state.location.href).toBe(
+        "/ledger/alice/books/files/blob/main/receipts/coffee.pdf?time=2026",
+      ),
+    );
+    expect(onActivate).toHaveBeenCalledTimes(1);
   });
 });

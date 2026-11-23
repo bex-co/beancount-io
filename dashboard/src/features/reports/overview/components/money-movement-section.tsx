@@ -3,7 +3,6 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/common/components/ui/button";
 import { Card, CardContent } from "@/common/components/ui/card";
-import { useLedgerNavigateToAccount } from "@/common/hooks/use-ledger";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { toLedgerFilterSearchParam } from "@/common/lib/ledger-search-params";
 import type {
@@ -116,7 +115,6 @@ function MovementCard({
   primaryCurrency: string;
 }) {
   const { t } = useTranslations();
-  const navigateToAccount = useLedgerNavigateToAccount();
   const isIncome = kind === "in";
   const topLabel = isIncome
     ? t("page.overview.topSources")
@@ -175,15 +173,21 @@ function MovementCard({
                   ? Math.min(category.sortValue / monthTotal, 1)
                   : 0;
               return (
-                <button
-                  type="button"
+                <Link
                   key={category.account}
+                  to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                  params={{
+                    ledgerOwner,
+                    ledgerName,
+                    accountName: category.account,
+                  }}
+                  search={(prev) => ({
+                    ...prev,
+                    time: toLedgerFilterSearchParam(timeFilter),
+                  })}
                   // The whole name, where a narrow row cuts it short.
                   title={category.account}
                   className="flex w-full cursor-pointer items-start gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:-outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]"
-                  onClick={() =>
-                    navigateToAccount(category.account, { time: timeFilter })
-                  }
                 >
                   {/* As in Accounts: Expenses:Taxes:…:Federal says what
                       Federal is, on the amount's own line. */}
@@ -208,7 +212,7 @@ function MovementCard({
                         />
                       )}
                   </span>
-                </button>
+                </Link>
               );
             })
           )}

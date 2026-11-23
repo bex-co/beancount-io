@@ -1,6 +1,7 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { renderLedgerNavigation } from "@/test/render-ledger-navigation";
 import { AccountRow } from "../index";
 import type { AccountDirective } from "../types";
 
@@ -8,11 +9,13 @@ vi.mock("@/common/hooks/use-ledger-permission", () => ({
   useLedgerPermission: () => ({ canWrite: true }),
 }));
 
-function renderRow(overrides: Partial<AccountDirective>) {
-  render(
+async function renderRow(overrides: Partial<AccountDirective>) {
+  await renderLedgerNavigation(
     <table>
       <tbody>
         <AccountRow
+          ledgerOwner="alice"
+          ledgerName="books"
           account={{
             account: "Income:US:Hoogle:Salary",
             openedAt: "2015-01-01",
@@ -40,10 +43,12 @@ describe("AccountRow", () => {
     const user = userEvent.setup();
     const onAccountClick = vi.fn();
 
-    render(
+    const { router } = await renderLedgerNavigation(
       <table>
         <tbody>
           <AccountRow
+            ledgerOwner="alice"
+            ledgerName="books"
             account={{
               account: "Assets:Bank:Checking",
               openedAt: "2024-01-01",
@@ -63,25 +68,31 @@ describe("AccountRow", () => {
     );
 
     const accountRow = screen
-      .getByRole("button", { name: "Assets:Bank:Checking" })
+      .getByRole("link", { name: "Assets:Bank:Checking" })
       .closest("tr");
     expect(accountRow).not.toHaveAttribute("role");
     expect(accountRow).not.toHaveAttribute("tabindex");
     expect(accountRow?.querySelectorAll("td").length).toBeGreaterThan(0);
 
-    await user.click(accountRow as HTMLElement);
+    fireEvent.click(accountRow!, { metaKey: true });
+    expect(onAccountClick).not.toHaveBeenCalled();
+    await user.click(accountRow!);
     expect(onAccountClick).toHaveBeenCalledTimes(1);
     expect(onAccountClick).toHaveBeenLastCalledWith("Assets:Bank:Checking");
 
-    await user.click(screen.getByRole("button", { name: "Assets" }));
-    expect(onAccountClick).toHaveBeenCalledTimes(2);
-    expect(onAccountClick).toHaveBeenLastCalledWith("Assets");
+    await user.click(screen.getByRole("link", { name: "Assets" }));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(
+        "/ledger/alice/books/account/Assets",
+      ),
+    );
+    expect(onAccountClick).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("AccountRow balance states", () => {
-  it("labels a balance the server did not compute instead of showing a zero", () => {
-    const { balanceCell } = renderRow({ balance: null });
+  it("labels a balance the server did not compute instead of showing a zero", async () => {
+    const { balanceCell } = await renderRow({ balance: null });
 
     expect(balanceCell).toHaveTextContent("Not computed");
     expect(balanceCell).not.toHaveTextContent("0");
@@ -96,8 +107,8 @@ describe("AccountRow balance states", () => {
     { account: "Assets:Qa:Retired", balance: {}, shown: "0" },
   ])(
     "shows the computed balance for closed account $account",
-    ({ account, balance, shown }) => {
-      const { balanceCell } = renderRow({
+    async ({ account, balance, shown }) => {
+      const { balanceCell } = await renderRow({
         account,
         balance,
         closedAt: "2024-05-01",
@@ -121,7 +132,7 @@ describe("AccountRow balance states", () => {
   }
 
   it("does not treat an uncomputed balance as an emptied account", async () => {
-    renderRow({ balance: null });
+    await renderRow({ balance: null });
     const { close, remove } = await openMenu("Income:US:Hoogle:Salary");
     // Both stay in the menu, greyed, each with its reason.
     expect(close).toHaveAttribute("aria-disabled", "true");
@@ -135,14 +146,14 @@ describe("AccountRow balance states", () => {
   });
 
   it("offers Delete but not Close for an unused account whose balance was not computed", async () => {
-    renderRow({ balance: null, entryCount: 0, referenceCount: 0 });
+    await renderRow({ balance: null, entryCount: 0, referenceCount: 0 });
     const { close, remove } = await openMenu("Income:US:Hoogle:Salary");
     expect(remove).not.toHaveAttribute("aria-disabled");
     expect(close).toHaveAttribute("aria-disabled", "true");
   });
 
   it("shows a computed zero balance as 0 and offers Close", async () => {
-    const { balanceCell } = renderRow({
+    const { balanceCell } = await renderRow({
       account: "Liabilities:AccountsPayable",
       balance: {},
       entryCount: 6,
@@ -156,7 +167,7 @@ describe("AccountRow balance states", () => {
   });
 
   it("shows a computed nonzero balance and keeps Close blocked", async () => {
-    const { balanceCell } = renderRow({
+    const { balanceCell } = await renderRow({
       account: "Liabilities:US:Chase:Slate",
       balance: { USD: "-8123.35" },
       entryCount: 528,
@@ -170,11 +181,13 @@ describe("AccountRow balance states", () => {
 });
 
 describe("AccountRow for a parent account", () => {
-  it("shows what its sub-accounts hold when it holds nothing itself, and says so", () => {
-    render(
+  it("shows what its sub-accounts hold when it holds nothing itself, and says so", async () => {
+    await renderLedgerNavigation(
       <table>
         <tbody>
           <AccountRow
+            ledgerOwner="alice"
+            ledgerName="books"
             account={{
               account: "Assets:US:BofA",
               openedAt: "2023-01-01",

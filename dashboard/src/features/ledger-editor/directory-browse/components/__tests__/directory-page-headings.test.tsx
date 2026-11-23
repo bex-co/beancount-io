@@ -322,7 +322,7 @@ describe("directory page heading and real embedded README", () => {
         `${localization.i18n.t("ledgerEditor.files")} FY2024`,
       );
       expect(
-        within(heading).getByRole("button", { name: "FY2024" }),
+        within(heading).getByRole("link", { name: "FY2024" }),
       ).toBeInTheDocument();
       expect(
         screen.queryByRole("heading", { name: "Synthetic ledger" }),
@@ -350,7 +350,7 @@ describe("directory page heading and real embedded README", () => {
         `${localization.i18n.t("ledgerEditor.files")} FY2024`,
       );
       expect(
-        within(heading).getByRole("button", { name: "FY2024" }),
+        within(heading).getByRole("link", { name: "FY2024" }),
       ).toBeInTheDocument();
     },
   );
@@ -365,7 +365,12 @@ describe("directory page heading and real embedded README", () => {
       const folder = () => screen.getByRole("link", { name: /^FY2024$/ });
       expect(
         screen.getAllByRole("link").map((link) => link.textContent?.trim()),
-      ).toEqual(["FY2024", "main.bean42 B", "README.md42 B"]);
+      ).toEqual([
+        t("ledgerEditor.files"),
+        "FY2024",
+        "main.bean42 B",
+        "README.md42 B",
+      ]);
       expect(folder()).toHaveAttribute(
         "href",
         "/ledger/alice/books/files/tree/main/FY2024",
@@ -375,7 +380,7 @@ describe("directory page heading and real embedded README", () => {
       await screen.findByRole("link", { name: /^FY2024\.bean/ });
       const heading = pageHeading(`${t("ledgerEditor.files")} FY2024`);
       await user.click(
-        within(heading).getByRole("button", { name: t("ledgerEditor.files") }),
+        within(heading).getByRole("link", { name: t("ledgerEditor.files") }),
       );
       await screen.findByRole("heading", { name: "Synthetic ledger" });
       expect(router.state.matches.at(-1)?.params._splat || "").toBe("");

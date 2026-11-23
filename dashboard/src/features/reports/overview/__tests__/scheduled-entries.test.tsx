@@ -39,7 +39,6 @@ vi.mock("@/common/hooks/use-ledger", () => ({
       },
     },
   }),
-  useLedgerNavigateToAccount: () => vi.fn(),
 }));
 vi.mock("@/common/hooks/use-ledger-permission", () => ({
   useLedgerPermission: () => ({ isAdmin: true, canWrite: true }),

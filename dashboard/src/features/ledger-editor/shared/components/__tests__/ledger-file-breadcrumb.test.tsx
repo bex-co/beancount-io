@@ -1,241 +1,94 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it } from "vitest";
+import { renderLedgerNavigation } from "@/test/render-ledger-navigation";
 import LedgerFileBreadcrumb from "../ledger-file-breadcrumb";
 
-// Mock @tanstack/react-router
-const mockParams = {
-  ledgerOwner: "testOwner",
-  ledgerName: "testLedger",
-};
-
-vi.mock("@tanstack/react-router", () => ({
-  useParams: () => mockParams,
-}));
-
-// Mock use-file-navigate hook
-const mockFileNavigate = vi.fn();
-vi.mock("@/common/hooks/use-file-navigate", () => ({
-  useFileNavigate: () => mockFileNavigate,
-}));
-
-// Mock encode utility
-vi.mock("@/common/lib/utils/encode", () => ({
-  createLedgerId: (owner: string, name: string) => `${owner}/${name}`,
-}));
-
-vi.mock("@/common/hooks/use-translations", () => ({
-  useTranslations: () => ({ t: () => "File" }),
-}));
+const rootPath = "/ledger/alice/books/files/tree/main";
+const filters = "?account=Assets&filter=sample&time=2026";
 
 describe("LedgerFileBreadcrumb", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  it.each([undefined, ""])("links to Files for root path %s", async (path) => {
+    const { container } = await renderLedgerNavigation(
+      <LedgerFileBreadcrumb type="dir" path={path} className="breadcrumb" />,
+      "files",
+    );
+    expect(screen.getByRole("link", { name: "Files" })).toHaveAttribute(
+      "href",
+      rootPath,
+    );
+    expect(container.firstChild).toHaveClass("breadcrumb");
+    expect(container.querySelector(".lucide-folder-open")).toBeInTheDocument();
   });
 
-  describe("directory breadcrumb", () => {
-    it("should render root for empty path", () => {
-      render(<LedgerFileBreadcrumb type="dir" path="" />);
-
-      expect(screen.getByText("File")).toBeInTheDocument();
-    });
-
-    it("should render root and single segment for single-level path", () => {
-      render(<LedgerFileBreadcrumb type="dir" path="accounts" />);
-
-      expect(screen.getByText("File")).toBeInTheDocument();
-      expect(screen.getByText("accounts")).toBeInTheDocument();
-    });
-
-    it("should render all segments for multi-level path", () => {
-      render(<LedgerFileBreadcrumb type="dir" path="accounts/2024/january" />);
-
-      expect(screen.getByText("File")).toBeInTheDocument();
-      expect(screen.getByText("accounts")).toBeInTheDocument();
-      expect(screen.getByText("2024")).toBeInTheDocument();
-      expect(screen.getByText("january")).toBeInTheDocument();
-    });
-
-    it("should navigate to root when clicking File", () => {
-      render(<LedgerFileBreadcrumb type="dir" path="accounts" />);
-
-      const rootButton = screen.getByText("File");
-      fireEvent.click(rootButton);
-
-      // fileNavigate is called with: ledgerId, type, path
-      expect(mockFileNavigate).toHaveBeenCalledWith(
-        "testOwner/testLedger", // base64 encoded ledgerId
-        "dir",
-        "",
+  it.each(["accounts/2024/january", "/accounts/2024/january/"])(
+    "links to each cumulative folder in %s",
+    async (path) => {
+      const { container, router } = await renderLedgerNavigation(
+        <LedgerFileBreadcrumb type="dir" path={path} />,
+        "files",
+        filters,
       );
-    });
-
-    it("should navigate to correct path when clicking segment", () => {
-      render(<LedgerFileBreadcrumb type="dir" path="accounts/2024" />);
-
-      const accountsButton = screen.getByText("accounts");
-      fireEvent.click(accountsButton);
-
-      expect(mockFileNavigate).toHaveBeenCalledWith(
-        "testOwner/testLedger",
-        "dir",
-        "accounts",
+      const expected = [
+        ["Files", ""],
+        ["accounts", "/accounts"],
+        ["2024", "/accounts/2024"],
+        ["january", "/accounts/2024/january"],
+      ];
+      for (const [name, destination] of expected) {
+        expect(screen.getByRole("link", { name, exact: true })).toHaveAttribute(
+          "href",
+          rootPath + destination + filters,
+        );
+      }
+      expect(container.querySelectorAll(".lucide-chevron-right")).toHaveLength(
+        3,
       );
-    });
-
-    it("should navigate to cumulative path for nested segments", () => {
-      render(
-        <LedgerFileBreadcrumb type="dir" path="accounts/2024/january/data" />,
+      const user = userEvent.setup();
+      screen.getByRole("link", { name: "2024" }).focus();
+      await user.keyboard("{Enter}");
+      await waitFor(() =>
+        expect(router.state.location.href).toBe(
+          rootPath + "/accounts/2024" + filters,
+        ),
       );
+    },
+  );
 
-      const yearButton = screen.getByText("2024");
-      fireEvent.click(yearButton);
+  it("links to a file's parent folder and leaves the current filename as text", async () => {
+    const { router } = await renderLedgerNavigation(
+      <LedgerFileBreadcrumb
+        type="file"
+        path="FY 2024/receipt.pdf"
+        name="Receipt"
+      />,
+      "files",
+      filters,
+    );
+    const folder = screen.getByRole("link", { name: "FY 2024" });
+    expect(folder).toHaveAttribute("href", rootPath + "/FY%202024" + filters);
+    expect(
+      screen.queryByRole("link", { name: "Receipt" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Receipt")).toHaveClass("font-medium");
 
-      expect(mockFileNavigate).toHaveBeenCalledWith(
-        "testOwner/testLedger",
-        "dir",
-        "accounts/2024",
-      );
-    });
-
-    it("should apply custom className", () => {
-      const { container } = render(
-        <LedgerFileBreadcrumb
-          type="dir"
-          path="accounts"
-          className="custom-class"
-        />,
-      );
-
-      const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper).toHaveClass("custom-class");
-    });
+    await userEvent.click(folder);
+    await waitFor(() =>
+      expect(router.state.location.href).toBe(
+        rootPath + "/FY%202024" + filters,
+      ),
+    );
   });
 
-  describe("file breadcrumb", () => {
-    it("should render root and filename for file at root", () => {
-      render(<LedgerFileBreadcrumb type="file" path="main.beancount" />);
-
-      expect(screen.getByText("File")).toBeInTheDocument();
-      expect(screen.getByText("main.beancount")).toBeInTheDocument();
-    });
-
-    it("should render parent directories and filename for nested file", () => {
-      render(
-        <LedgerFileBreadcrumb
-          type="file"
-          path="accounts/2024/data.beancount"
-        />,
-      );
-
-      expect(screen.getByText("File")).toBeInTheDocument();
-      expect(screen.getByText("accounts")).toBeInTheDocument();
-      expect(screen.getByText("2024")).toBeInTheDocument();
-      expect(screen.getByText("data.beancount")).toBeInTheDocument();
-    });
-
-    it("should navigate to parent directory when clicking parent segment", () => {
-      render(
-        <LedgerFileBreadcrumb
-          type="file"
-          path="accounts/2024/data.beancount"
-        />,
-      );
-
-      const accountsButton = screen.getByText("accounts");
-      fireEvent.click(accountsButton);
-
-      expect(mockFileNavigate).toHaveBeenCalledWith(
-        "testOwner/testLedger",
-        "dir",
-        "accounts",
-      );
-    });
-
-    it("should not make filename clickable", () => {
-      render(<LedgerFileBreadcrumb type="file" path="main.beancount" />);
-
-      const filename = screen.getByText("main.beancount");
-      expect(filename.tagName).not.toBe("BUTTON");
-    });
-
-    it("should display filename with font-medium class", () => {
-      render(<LedgerFileBreadcrumb type="file" path="main.beancount" />);
-
-      const filename = screen.getByText("main.beancount");
-      expect(filename).toHaveClass("font-medium");
-    });
-  });
-
-  describe("name prop", () => {
-    it("should use name prop over derived name from path", () => {
-      render(
-        <LedgerFileBreadcrumb
-          type="file"
-          path="accounts/data.beancount"
-          name="Custom Name"
-        />,
-      );
-
-      expect(screen.getByText("Custom Name")).toBeInTheDocument();
-      expect(screen.queryByText("data.beancount")).not.toBeInTheDocument();
-    });
-
-    it("should derive name from path when name is not provided", () => {
-      render(
-        <LedgerFileBreadcrumb type="file" path="accounts/important.txt" />,
-      );
-
-      expect(screen.getByText("important.txt")).toBeInTheDocument();
-    });
-  });
-
-  describe("edge cases", () => {
-    it("should handle path with trailing slash", () => {
-      render(<LedgerFileBreadcrumb type="dir" path="accounts/" />);
-
-      expect(screen.getByText("File")).toBeInTheDocument();
-      expect(screen.getByText("accounts")).toBeInTheDocument();
-    });
-
-    it("should handle path with leading slash", () => {
-      render(<LedgerFileBreadcrumb type="dir" path="/accounts" />);
-
-      expect(screen.getByText("File")).toBeInTheDocument();
-      expect(screen.getByText("accounts")).toBeInTheDocument();
-    });
-
-    it("should handle undefined path", () => {
-      render(<LedgerFileBreadcrumb type="dir" />);
-
-      expect(screen.getByText("File")).toBeInTheDocument();
-    });
-
-    it("should handle file with no name and empty path", () => {
-      const { container } = render(<LedgerFileBreadcrumb type="file" />);
-
-      expect(screen.getByText("File")).toBeInTheDocument();
-      // Filename should be empty, but component should not crash
-      expect(container).toBeInTheDocument();
-    });
-  });
-
-  describe("icons", () => {
-    it("should render Home icon", () => {
-      const { container } = render(<LedgerFileBreadcrumb type="dir" path="" />);
-
-      // Home icon from lucide-react should be present
-      const homeIcon = container.querySelector("svg");
-      expect(homeIcon).toBeInTheDocument();
-    });
-
-    it("should render ChevronRight between segments", () => {
-      const { container } = render(
-        <LedgerFileBreadcrumb type="dir" path="accounts/2024" />,
-      );
-
-      // Should have ChevronRight icons (at least 2 for this path)
-      const svgs = container.querySelectorAll("svg");
-      expect(svgs.length).toBeGreaterThanOrEqual(3); // Home + 2 chevrons
-    });
+  it.each([
+    ["main.bean", "main.bean"],
+    ["", undefined],
+  ])("renders a root file breadcrumb for %s", async (path, filename) => {
+    await renderLedgerNavigation(
+      <LedgerFileBreadcrumb type="file" path={path} />,
+      "files",
+    );
+    expect(screen.getAllByRole("link")).toHaveLength(1);
+    if (filename) expect(screen.getByText(filename)).toBeVisible();
   });
 });

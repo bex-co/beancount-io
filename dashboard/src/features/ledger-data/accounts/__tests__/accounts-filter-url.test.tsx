@@ -212,8 +212,8 @@ function typeChip(name: string) {
 
 function accountNames() {
   return screen
-    .getAllByRole("button")
-    .map((button) => button.getAttribute("aria-label"))
+    .queryAllByRole("link")
+    .map((link) => link.getAttribute("aria-label"))
     .filter((label): label is string =>
       accounts.some((account) => account.account === label),
     );
@@ -326,7 +326,7 @@ describe("accounts list filters in the URL", () => {
       expect(accountNames()).toEqual([matchingAccount]);
       expect(router.history.length).toBe(historyLength);
 
-      await user.click(screen.getByRole("button", { name: matchingAccount }));
+      await user.click(screen.getByRole("link", { name: matchingAccount }));
       await screen.findByTestId("account-page");
       await act(async () => router.history.back());
       await waitFor(() => expect(searchBox()).toHaveValue(nextSearch));
@@ -455,7 +455,7 @@ describe("accounts list filters in the URL", () => {
     expect(typeChip("Assets")).toHaveAttribute("aria-pressed", "true");
     expect(accountNames()).toEqual(["Assets:Cash"]);
 
-    await user.click(screen.getByRole("button", { name: "Assets:Cash" }));
+    await user.click(screen.getByRole("link", { name: "Assets:Cash" }));
     await waitFor(() => {
       expect(screen.getByTestId("account-page")).toBeInTheDocument();
     });

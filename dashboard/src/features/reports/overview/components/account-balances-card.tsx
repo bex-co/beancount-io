@@ -10,7 +10,6 @@ import {
 import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useFormatPercent } from "@/common/hooks/use-format-percent";
-import { useLedgerNavigateToAccount } from "@/common/hooks/use-ledger";
 import { formatLedgerDate } from "@/common/lib/format/ledger-date";
 import { cn } from "@/common/lib/utils/utils";
 import {
@@ -77,6 +76,8 @@ function BalanceSide({
   shares,
   active,
   onActive,
+  ledgerOwner,
+  ledgerName,
   className,
 }: {
   kind: Side;
@@ -86,10 +87,11 @@ function BalanceSide({
   /** The account the reader is pointing at, lit in the bar and its row. */
   active: string | null;
   onActive: (account: string | null) => void;
+  ledgerOwner: string;
+  ledgerName: string;
   className?: string;
 }) {
   const { t } = useTranslations();
-  const navigateToAccount = useLedgerNavigateToAccount();
   const headingId = useId();
   const listed = rows.slice(0, ROWS[kind]);
   const unlisted = rows.length - listed.length;
@@ -183,8 +185,9 @@ function BalanceSide({
             };
             return (
               <li key={row.account}>
-                <button
-                  type="button"
+                <Link
+                  to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                  params={{ ledgerOwner, ledgerName, accountName: row.account }}
                   // The whole name, where a narrow row cuts it short.
                   title={row.account}
                   className={cn(
@@ -195,7 +198,7 @@ function BalanceSide({
                   onMouseLeave={() => onActive(null)}
                   onFocus={() => onActive(row.account)}
                   onBlur={() => onActive(null)}
-                  onClick={() => navigateToAccount(row.account)}
+                  search={(prev) => prev}
                 >
                   {charted && (
                     // The row's key to its part of the bar.
@@ -221,7 +224,7 @@ function BalanceSide({
                       {share === undefined ? "" : formatPercent(share, 1, 0)}
                     </span>
                   )}
-                </button>
+                </Link>
               </li>
             );
           })}
@@ -359,6 +362,8 @@ export function AccountBalancesCard({
               {...side}
               active={active}
               onActive={setActive}
+              ledgerOwner={ledgerOwner}
+              ledgerName={ledgerName}
               className={cn(
                 index > 0 && "mt-2 border-t",
                 index > 0 &&

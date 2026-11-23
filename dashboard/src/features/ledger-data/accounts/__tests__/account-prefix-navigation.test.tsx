@@ -1,92 +1,73 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { renderLedgerNavigation } from "@/test/render-ledger-navigation";
 import { AccountPrefixNavigation } from "../account-prefix-navigation";
 
+const account = "Expenses:Taxes:Y2017:US:Federal";
+const filters = "?account=Assets&filter=sample&time=2026";
+const href = (prefix: string) =>
+  `/ledger/alice/books/account/${encodeURIComponent(prefix)}${filters}`;
+
 describe("AccountPrefixNavigation", () => {
-  it("shows the whole name, breaking only after a colon, with every prefix in Tab order", async () => {
-    const user = userEvent.setup();
-    const onAccountClick = vi.fn();
+  it("shows the whole name and links every prefix with retained filters", async () => {
+    const accountName = `${account}:PreTax401k`;
     const onParentClick = vi.fn();
-    const accountName = "Expenses:Taxes:Y2017:US:Federal:PreTax401k";
-    render(
+    const { router } = await renderLedgerNavigation(
       <div onClick={onParentClick}>
         <AccountPrefixNavigation
           accountName={accountName}
           isClosed={false}
-          onAccountClick={onAccountClick}
+          ledgerOwner="alice"
+          ledgerName="books"
         />
       </div>,
+      "accounts",
+      filters,
     );
-    const leaf = screen.getByRole("button", { name: accountName });
+    const leaf = screen.getByRole("link", { name: accountName });
     const name = leaf.parentElement!;
-    // The last part tells two accounts apart, so it is never cut off; a
-    // narrow column wraps the name instead.
     expect(name).not.toHaveClass("truncate");
     expect(name.querySelectorAll("wbr")).toHaveLength(5);
     expect(name).toHaveTextContent(accountName);
     expect(leaf).toHaveClass("font-medium");
 
-    const buttons = within(name).getAllByRole("button");
-    for (const [index, button] of buttons.entries()) {
+    const user = userEvent.setup();
+    const links = within(name).getAllByRole("link");
+    const segments = accountName.split(":");
+    for (const [index, link] of links.entries()) {
+      expect(link).toHaveAttribute(
+        "href",
+        href(segments.slice(0, index + 1).join(":")),
+      );
       await user.tab();
-      expect(button).toHaveFocus();
-      if (index === 4) {
-        expect(button).toHaveClass("bg-muted");
-        await user.keyboard("{Enter}");
-        expect(onAccountClick).toHaveBeenCalledExactlyOnceWith(
-          "Expenses:Taxes:Y2017:US:Federal",
-        );
-        expect(onParentClick).not.toHaveBeenCalled();
-      }
+      expect(link).toHaveFocus();
     }
+    const parent = screen.getByRole("link", { name: account });
+    parent.focus();
+    await waitFor(() => expect(parent).toHaveClass("bg-muted"));
+    fireEvent.click(parent, { metaKey: true, button: 0 });
+    expect(router.state.location.pathname).toBe("/ledger/alice/books/accounts");
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(router.state.location.href).toBe(href(account)));
+    expect(onParentClick).not.toHaveBeenCalled();
   });
 
-  it("renders and navigates to every cumulative account prefix", async () => {
-    const user = userEvent.setup();
-    const onAccountClick = vi.fn();
-    const accountName = "Expenses:Taxes:Y2017:US:SocSec";
-    const prefixes = [
-      "Expenses",
-      "Expenses:Taxes",
-      "Expenses:Taxes:Y2017",
-      "Expenses:Taxes:Y2017:US",
-      "Expenses:Taxes:Y2017:US:SocSec",
-    ];
-
-    const { container } = render(
-      <AccountPrefixNavigation
-        accountName={accountName}
-        isClosed={false}
-        onAccountClick={onAccountClick}
-      />,
-    );
-
-    expect(container).toHaveTextContent(accountName);
-
-    for (const prefix of prefixes) {
-      await user.click(screen.getByRole("button", { name: prefix }));
-    }
-
-    expect(onAccountClick.mock.calls.map(([prefix]) => prefix)).toEqual(
-      prefixes,
-    );
-  });
-
-  it("isolates the root-first path and keeps each segment's direction in a Persian page", async () => {
-    const user = userEvent.setup();
-    const onAccountClick = vi.fn();
+  it("isolates the root-first path and preserves the segments on a Persian page", async () => {
     const accountName = "Expenses:خوراک:رستوران";
-    render(
+    const { router } = await renderLedgerNavigation(
       <div dir="rtl">
         <AccountPrefixNavigation
           accountName={accountName}
           isClosed={false}
-          onAccountClick={onAccountClick}
+          ledgerOwner="alice"
+          ledgerName="books"
         />
       </div>,
+      "accounts",
+      filters,
     );
-    const leaf = screen.getByRole("button", { name: accountName });
+    const leaf = screen.getByRole("link", { name: accountName });
     const path = leaf.parentElement!;
     expect(path).toHaveAttribute("dir", "ltr");
     expect(path).toHaveClass("[unicode-bidi:isolate]");
@@ -98,46 +79,30 @@ describe("AccountPrefixNavigation", () => {
         (segment) => segment.textContent,
       ),
     ).toEqual(accountName.split(":"));
-    await user.click(screen.getByRole("button", { name: "Expenses:خوراک" }));
-    expect(onAccountClick).toHaveBeenCalledExactlyOnceWith("Expenses:خوراک");
+    await userEvent.click(screen.getByRole("link", { name: "Expenses:خوراک" }));
+    await waitFor(() =>
+      expect(router.state.location.href).toBe(href("Expenses:خوراک")),
+    );
   });
 
-  it("highlights the entire active prefix and does not trigger its parent", async () => {
-    const user = userEvent.setup();
-    const onAccountClick = vi.fn();
-    const onParentClick = vi.fn();
-
-    render(
-      <div onClick={onParentClick}>
-        <AccountPrefixNavigation
-          accountName="Expenses:Taxes:Y2017:US:SocSec"
-          isClosed={false}
-          onAccountClick={onAccountClick}
-        />
-      </div>,
+  it("highlights the entire active prefix on hover", async () => {
+    await renderLedgerNavigation(
+      <AccountPrefixNavigation
+        accountName={account}
+        isClosed={false}
+        ledgerOwner="alice"
+        ledgerName="books"
+      />,
     );
-
-    const expenses = screen.getByRole("button", { name: "Expenses" });
-    const taxes = screen.getByRole("button", { name: "Expenses:Taxes" });
-    const year = screen.getByRole("button", {
-      name: "Expenses:Taxes:Y2017",
-    });
-    const us = screen.getByRole("button", {
-      name: "Expenses:Taxes:Y2017:US",
-    });
-
+    const expenses = screen.getByRole("link", { name: "Expenses" });
+    const taxes = screen.getByRole("link", { name: "Expenses:Taxes" });
+    const year = screen.getByRole("link", { name: "Expenses:Taxes:Y2017" });
+    const us = screen.getByRole("link", { name: "Expenses:Taxes:Y2017:US" });
     expect(expenses).toHaveClass("cursor-pointer");
-
     fireEvent.mouseEnter(year);
-
     expect(expenses).toHaveClass("bg-muted");
     expect(taxes).toHaveClass("bg-muted");
     expect(year).toHaveClass("bg-muted");
     expect(us).not.toHaveClass("bg-muted");
-
-    await user.click(taxes);
-
-    expect(onAccountClick).toHaveBeenCalledWith("Expenses:Taxes");
-    expect(onParentClick).not.toHaveBeenCalled();
   });
 });

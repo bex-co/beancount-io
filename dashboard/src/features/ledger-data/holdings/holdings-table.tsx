@@ -15,7 +15,7 @@ import { downloadCSV } from "@/common/lib/utils/csv-export";
 import React from "react";
 import { tableToCSV, formatNumber } from "./utils";
 import { formatInventoryEntries } from "@/common/lib/format/inventory-cell";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { cn } from "@/common/lib/utils/utils";
 import { decodeLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -178,6 +178,7 @@ export const DatasetTable = React.memo(
 
     const renderTableData = React.useMemo(() => {
       if (!data?.queryShell?.table) return null;
+      const { ledgerOwner, ledgerName } = decodeLedgerId(ledgerId);
 
       const { table } = data.queryShell;
       const headers = table.types?.map((type) => type.name) || [];
@@ -260,8 +261,6 @@ export const DatasetTable = React.memo(
                   const rowProps = accountName
                     ? getClickableRowProps<HTMLTableRowElement>(
                         () => {
-                          const { ledgerOwner, ledgerName } =
-                            decodeLedgerId(ledgerId);
                           void navigate({
                             to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
                             params: {
@@ -307,25 +306,18 @@ export const DatasetTable = React.memo(
                             )}
                           >
                             {isAccountColumn && accountName ? (
-                              <button
-                                type="button"
-                                className="inline-flex min-h-6 items-center text-start font-medium text-primary hover:text-primary/80 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  const { ledgerOwner, ledgerName } =
-                                    decodeLedgerId(ledgerId);
-                                  void navigate({
-                                    to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
-                                    params: {
-                                      ledgerOwner,
-                                      ledgerName,
-                                      accountName,
-                                    },
-                                  });
+                              <Link
+                                to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                                params={{
+                                  ledgerOwner,
+                                  ledgerName,
+                                  accountName,
                                 }}
+                                className="inline-flex min-h-6 items-center text-start font-medium text-primary hover:text-primary/80 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                onClick={(event) => event.stopPropagation()}
                               >
                                 {cellValue}
-                              </button>
+                              </Link>
                             ) : (
                               cellValue
                             )}

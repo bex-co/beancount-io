@@ -14,7 +14,6 @@ vi.mock("@/common/components/react-echarts", () => ({
   ReactECharts: () => <div data-testid="echarts-mock" />,
 }));
 vi.mock("@/common/hooks/use-ledger", () => ({
-  useLedgerNavigateToAccount: () => vi.fn(),
   useLedger: () => ({ ledgerData: { options: {} } }),
 }));
 vi.mock("@tanstack/react-router", () => ({

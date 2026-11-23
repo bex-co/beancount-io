@@ -1,17 +1,20 @@
 import { Fragment, useState } from "react";
 import { ChevronRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/common/lib/utils/utils";
 
 interface AccountPrefixNavigationProps {
   accountName: string;
   isClosed: boolean;
-  onAccountClick: (accountName: string) => void;
+  ledgerOwner: string;
+  ledgerName: string;
 }
 
 export function AccountPrefixNavigation({
   accountName,
   isClosed,
-  onAccountClick,
+  ledgerOwner,
+  ledgerName,
 }: AccountPrefixNavigationProps) {
   const segments = accountName.split(":");
   const [hoveredPrefixIndex, setHoveredPrefixIndex] = useState<number | null>(
@@ -46,10 +49,15 @@ export function AccountPrefixNavigation({
 
             return (
               <Fragment key={accountPrefix}>
-                <button
-                  type="button"
+                <Link
+                  to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                  params={{
+                    ledgerOwner,
+                    ledgerName,
+                    accountName: accountPrefix,
+                  }}
                   className={cn(
-                    "min-w-6 cursor-pointer py-0.5 outline-none sm:py-0 pointer-coarse:pointer-events-none transition-colors duration-150 motion-reduce:transition-none focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring/50",
+                    "min-w-6 cursor-pointer py-0.5 outline-none sm:py-0 transition-colors duration-150 motion-reduce:transition-none focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-ring/50",
                     index === 0 && isInActivePrefix && "rounded-s-sm",
                     index === activePrefixIndex && "rounded-e-sm",
                     isLeaf
@@ -68,16 +76,13 @@ export function AccountPrefixNavigation({
                   onMouseEnter={() => setHoveredPrefixIndex(index)}
                   onFocus={() => setFocusedPrefixIndex(index)}
                   onBlur={() => setFocusedPrefixIndex(null)}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onAccountClick(accountPrefix);
-                  }}
+                  onClick={(event) => event.stopPropagation()}
                 >
                   <span dir="auto" className="[unicode-bidi:isolate]">
                     {segment}
                   </span>
                   {!isLeaf && ":"}
-                </button>
+                </Link>
                 {/* A line may break after each colon, never inside a part. */}
                 {!isLeaf && <wbr />}
               </Fragment>

@@ -167,7 +167,7 @@ async function setup(language: "en" | "de" = "en", referenceCount = 0) {
   );
   await waitFor(() =>
     expect(
-      screen.getByRole("button", { name: "Assets:Savings" }),
+      screen.getByRole("link", { name: "Assets:Savings" }),
     ).toBeInTheDocument(),
   );
   return { ...view, operations, mutations, router };

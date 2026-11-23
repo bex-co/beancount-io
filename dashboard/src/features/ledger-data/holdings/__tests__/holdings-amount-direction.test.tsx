@@ -137,7 +137,7 @@ async function setup(language: "en" | "fa") {
   const table = await screen.findByRole("table", {
     name: language === "fa" ? "دارایی‌ها بر اساس حساب" : "Holdings by Account",
   });
-  const account = within(table).getByRole("button", { name: accountName });
+  const account = within(table).getByRole("link", { name: accountName });
   const row = account.closest("tr")!;
   return { router, table, row, account, requests };
 }
