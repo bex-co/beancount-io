@@ -492,7 +492,8 @@ bea --no-input init books --currency EUR --date 2026-08-01 \
 `--opening-balance` takes `ACCOUNT NUMBER` for an asset or liability account
 the new ledger opens (`Assets:Checking`, `Assets:Savings`, `Assets:Cash`, and
 `Liabilities:CreditCard` in the fixed chart). The amount is in the operating
-currency; `ACCOUNT NUMBER CUR` is accepted when `CUR` is that `--currency`.
+currency; `ACCOUNT NUMBER CUR` is accepted when `CUR` is that `--currency`,
+read the way `--currency` reads it (`eur` is `EUR`).
 Any other value exits **2** before anything is created, naming its problem;
 an unknown or non-asset/liability account lists the accounts it accepts.
 The number keeps Beancount's sign: a card that owes 50 opens at `-50`. An

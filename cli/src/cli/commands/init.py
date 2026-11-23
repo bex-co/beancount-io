@@ -11,6 +11,7 @@ import functools
 import os
 import re
 import shlex
+from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
 from typing import Annotated, Any, NamedTuple
@@ -230,6 +231,27 @@ def _opening_amount(value: str) -> Decimal:
         raise typer.BadParameter(str(exc)) from exc
 
 
+def _prompted_opening_amount(currency: str) -> Callable[[str], Decimal]:
+    """The checking-balance answer: a number, which may name the operating currency after it (w1/367).
+
+    Read as `--opening-balance` reads its amount. A word after the number was
+    refused as a bad thousands separator whenever the number had a comma.
+    """
+
+    def parse(value: str) -> Decimal:
+        parts = value.split()
+        if len(parts) == 2 and parts[1][0].isalpha():
+            if parts[1].upper() != currency:
+                raise typer.BadParameter(
+                    f"The opening balance is in the operating currency {currency}, not {parts[1].upper()}; "
+                    "type the number alone, such as 1000.50."
+                )
+            value = parts[0]
+        return _opening_amount(value)
+
+    return parse
+
+
 def _in_credit_warning(account: str, amount: Decimal, currency: str) -> str:
     """The note for a liability that an unsigned positive number opens in credit (w1/285).
 
@@ -246,7 +268,9 @@ def _in_credit_warning(account: str, amount: Decimal, currency: str) -> str:
     )
 
 
-def _opening_balance_parts(balance: str, currency: str | None, allowed: tuple[str, ...]) -> tuple[str, str]:
+def _opening_balance_parts(
+    balance: str, currency: str | None, allowed: tuple[str, ...], check_currency: Callable[[str], str]
+) -> tuple[str, str]:
     """Split one `--opening-balance` value into its account and number.
 
     Each way the value can be wrong gets its own message (w1/262): the shape,
@@ -258,15 +282,22 @@ def _opening_balance_parts(balance: str, currency: str | None, allowed: tuple[st
     if len(parts) == 3:
         # `ACCOUNT NUMBER CUR` is the natural amount form; the amount is
         # always in the operating currency, so only that currency is allowed.
+        # `CUR` is read as `--currency` is read, so `eur` is EUR, and one that
+        # `--currency` would refuse is refused here for the same reason: every
+        # `--currency` these messages suggest then works (w1/367).
+        try:
+            stated = check_currency(parts[2])
+        except typer.BadParameter as exc:
+            raise UsageError(f"{prefix} {exc.message}") from None
         if currency is None:
             raise UsageError(
                 f"{prefix} Give the amount without a currency ('ACCOUNT NUMBER'); it is in the operating "
-                f"currency. To write {parts[2]!r}, also pass --currency {parts[2]}."
+                f"currency. To write {stated!r}, also pass --currency {stated}."
             )
-        if parts[2] != currency:
+        if stated != currency:
             raise UsageError(
-                f"{prefix} Opening balances are in the operating currency {currency}, not {parts[2]}. "
-                f"Use --currency {parts[2]}, or give the amount in {currency}."
+                f"{prefix} Opening balances are in the operating currency {currency}, not {stated}. "
+                f"Use --currency {stated}, or give the amount in {currency}."
             )
         parts = parts[:2]
     if len(parts) != 2:
@@ -577,7 +608,7 @@ def init(
     # credit is gone once the number is parsed.
     in_credit: list[str] = []
     for balance in opening_balance or []:
-        account, number = _opening_balance_parts(balance, currency, allowed_opening)
+        account, number = _opening_balance_parts(balance, currency, allowed_opening, check_currency)
         if account in balances:
             raise UsageError(f"--opening-balance {balance!r}: Opening balance specified twice for {account}.")
         try:
@@ -614,7 +645,9 @@ def init(
         day = given_day or datetime.date.today()
     if ctx.can_prompt and opening_balance is None and preset is None:
         balances["Assets:Checking"] = ctx.prompt(
-            f"Checking opening balance on {day} (negative for an overdraft)", default="0", value_proc=_opening_amount
+            f"Checking opening balance on {day} (negative for an overdraft)",
+            default="0",
+            value_proc=_prompted_opening_amount(currency),
         )
 
     argv = ["init", "--file", str(file), "--currency", currency, "--date", day.isoformat()]
