@@ -288,8 +288,7 @@ export class CommitsService implements ICommitsService {
     assertHostPage(page, limit);
     assertCommitRef(branch, "branch");
     // Gitea treats an empty `sha` query parameter as the default branch rather
-    // than refusing it, and tab/newline-only strings bypass assertCommitRef
-    // (w31/047).
+    // than refusing it, and tab-only strings bypass assertCommitRef (w31/047).
     if (branch.trim() === "") {
       throw new BadUserInputError(
         "branch must not be empty",

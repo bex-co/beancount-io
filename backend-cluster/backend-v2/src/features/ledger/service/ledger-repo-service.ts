@@ -176,8 +176,7 @@ export class LedgerRepoService
     const { ledgerId, identity, branchName = "main" } = params;
     assertCommitRef(branchName, "branchName");
     // Gitea treats an empty `sha` query parameter as the default branch rather
-    // than refusing it, and tab/newline-only strings bypass assertCommitRef
-    // (w31/047).
+    // than refusing it, and tab-only strings bypass assertCommitRef (w31/047).
     if (branchName.trim() === "") {
       throw new BadUserInputError(
         "branchName must not be empty",

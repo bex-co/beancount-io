@@ -249,10 +249,10 @@ describe("LedgerRepoService", () => {
     });
 
     // w31/047: Gitea treats an empty sha query parameter as the default branch,
-    // and tab/newline-only branchName strings bypass assertCommitRef, so
-    // explicit empty or whitespace-only branchName values must be refused
-    // before any Gitea call.
-    it.each(["", "\t", "\n", "\r\n"])(
+    // and tab-only branchName strings bypass assertCommitRef, so explicit
+    // empty or whitespace-only branchName values must be refused before any
+    // Gitea call.
+    it.each(["", "\t"])(
       "refuses empty or whitespace-only branchName=%j as BadUserInputError before calling Gitea",
       async (blankBranchName) => {
         mockRepoGetAllCommits.mockResolvedValue({
@@ -275,6 +275,35 @@ describe("LedgerRepoService", () => {
             field: "branchName",
             hint: expect.stringContaining("main"),
           },
+        });
+        expect(mockRepoGetAllCommits).not.toHaveBeenCalled();
+      },
+    );
+
+    // w31/062: line-break branchName refs must be refused upfront before any
+    // Gitea call.
+    it.each(["\n", "\r\n", "main\nfoo", ":/restore\nfoo"])(
+      "refuses line-break branchName=%j as BadUserInputError before calling Gitea",
+      async (badBranchName) => {
+        mockRepoGetAllCommits.mockResolvedValue({
+          data: { success: true, data: [] },
+        });
+
+        const failure = await service
+          .getLatestCommit({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            branchName: badBranchName,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          message: expect.stringContaining(
+            "branchName must not contain a line break",
+          ),
+          metadata: { field: "branchName", hint: expect.any(String) },
         });
         expect(mockRepoGetAllCommits).not.toHaveBeenCalled();
       },

@@ -20,7 +20,6 @@ describe("assertCommitRef", () => {
     "-n",
     "日本",
     "tab\there",
-    "b6d69fd\n",
     "main ",
     // A space inside a `@{…}` / `^{…}` group or after a leading `:/` is git
     // commit-revision syntax (w31/024, w31/061).
@@ -30,6 +29,36 @@ describe("assertCommitRef", () => {
     ":/restore fixture",
   ])("leaves %p to the repository host", (ref) => {
     expect(() => assertCommitRef(ref, "sha")).not.toThrow();
+  });
+
+  // w31/062: Gitea's line-oriented git ref lookup splits on `\n`, silently
+  // discarding everything from the first newline onward and resolving the
+  // first line; refuse any line break anywhere in the ref.
+  it.each([
+    "b6d69fd\n",
+    "main\nfoo",
+    "main\r\nfoo",
+    "main\rfoo",
+    "main@{1\nfoo}",
+    "main^{/restore\nfixture}",
+    ":/restore\nfoo",
+    "\n",
+    "\r\n",
+  ])("refuses line-break ref %p before the host is asked", (ref) => {
+    let thrown: unknown;
+    try {
+      assertCommitRef(ref, "branchName");
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(BadUserInputError);
+    expect(thrown).toMatchObject({
+      category: ErrorCategory.BAD_USER_INPUT,
+      metadata: { field: "branchName", hint: expect.any(String) },
+    });
+    expect((thrown as Error).message).toMatch(
+      /^branchName must not contain a line break/,
+    );
   });
 
   it.each([

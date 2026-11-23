@@ -407,6 +407,70 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
       }
     },
   );
+  // w31/062: Gitea's line-oriented git ref lookup splits on `\n` and silently
+  // drops everything after the first newline, resolving the first line instead
+  // of refusing a malformed ref. Refuse any `\r` or `\n` upfront on every
+  // surface without calling Gitea.
+  const newlineRefs = [
+    "main\nfoo",
+    "b6d69fd\n",
+    "main\r\nfoo",
+    "main\rfoo",
+    "main@{1\nfoo}",
+    ":/restore\nfoo",
+    "\n",
+    "\r\n",
+  ];
+  it.each(
+    refReads.flatMap((read) =>
+      newlineRefs.map((ref) => ({
+        ...read,
+        ref,
+        label: JSON.stringify(ref),
+      })),
+    ),
+  )(
+    "refuses $field with line-break $param=$label as BAD_USER_INPUT naming $param across REST, GraphQL, and MCP",
+    async ({ path, param, field, ref }) => {
+      const f = await fixture();
+      const query = `${path}?${param}=${encodeURIComponent(ref)}`;
+      try {
+        const response = await f.rest(query);
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining(
+              `${param} must not contain a line break`,
+            ),
+            metadata: { field: param, hint: expect.any(String) },
+          },
+        });
+        await expect(f.mcp(query)).rejects.toMatchObject({
+          code: -32602,
+          message: expect.stringContaining(
+            `${param} must not contain a line break`,
+          ),
+          data: { code: "BAD_USER_INPUT" },
+        });
+        const result = await f.gql(
+          `${field}(ledgerId: "alice/main", ${param}: ${JSON.stringify(ref)}) { sha }`,
+        );
+        const [graphqlError] = result.errors ?? [];
+        expect(graphqlError).toBeDefined();
+        const formatted = formatError(graphqlError.toJSON(), graphqlError);
+        expect(formatted.extensions?.code).toBe("BAD_USER_INPUT");
+        expect(formatted.message).toContain(
+          `${param} must not contain a line break`,
+        );
+        expect(f.history).not.toHaveBeenCalled();
+        expect(f.latest).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it.each([
     ["main@{1 day ago}", "main@%7B1%20day%20ago%7D"],
     ["main^{/restore fixture}", "main%5E%7B%2Frestore%20fixture%7D"],
@@ -434,7 +498,7 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
   // w31/034: Gitea treats an empty sha query parameter as default-branch HEAD,
   // so commit-details with an empty or whitespace-only sha must fail with
   // BAD_USER_INPUT ("sha is required") on every surface without calling Gitea.
-  it.each(["", "\t", "\n"])(
+  it.each(["", "\t"])(
     "refuses commit-details with empty or whitespace-only sha=%j as BAD_USER_INPUT across REST, GraphQL, and MCP",
     async (sha) => {
       const f = await fixture();
@@ -478,9 +542,9 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
     },
   );
   // w31/047: Gitea treats an empty sha query parameter as the default branch,
-  // and tab/newline-only branch strings bypass assertCommitRef, so explicit
-  // empty or whitespace-only branch/branchName values must fail with
-  // BAD_USER_INPUT on every surface without calling Gitea.
+  // and tab-only branch strings bypass assertCommitRef, so explicit empty or
+  // whitespace-only branch/branchName values must fail with BAD_USER_INPUT on
+  // every surface without calling Gitea.
   const branchReads = [
     { path: "commits", param: "branch", field: "listCommits" },
     {
@@ -489,7 +553,7 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
       field: "getLatestLedgerCommit",
     },
   ];
-  const blankBranches = ["", "\t", "\n", "\r\n"];
+  const blankBranches = ["", "\t"];
   it.each(
     branchReads.flatMap((read) =>
       blankBranches.map((value) => ({

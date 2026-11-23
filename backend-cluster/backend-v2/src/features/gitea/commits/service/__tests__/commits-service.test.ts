@@ -119,7 +119,7 @@ describe("CommitsService.getCommitDetails missing revisions", () => {
 
   // w31/034: Gitea treats an empty sha query parameter as default-branch HEAD,
   // so an empty or whitespace-only sha must be refused before any Gitea call.
-  it.each(["", "\t", "\n", "\r\n"])(
+  it.each(["", "\t"])(
     "refuses empty or whitespace-only sha=%j as BadUserInputError before calling Gitea",
     async (blankSha) => {
       const history = jest.fn().mockResolvedValue({ data: [{ sha }] });
@@ -135,6 +135,25 @@ describe("CommitsService.getCommitDetails missing revisions", () => {
           field: "sha",
           hint: expect.stringContaining("commits"),
         },
+      });
+      expect(history).not.toHaveBeenCalled();
+    },
+  );
+
+  // w31/062: line-break refs must be refused upfront before any Gitea call.
+  it.each(["\n", "\r\n", "main\nfoo", ":/restore\nfoo"])(
+    "refuses line-break sha=%j as BadUserInputError before calling Gitea",
+    async (badSha) => {
+      const history = jest.fn().mockResolvedValue({ data: [{ sha }] });
+      const service = serviceWithHistory(history);
+      const failure = await service
+        .getCommitDetails({ identity, ledgerId: "alice/main", sha: badSha })
+        .catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(BadUserInputError);
+      expect(failure).toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: expect.stringContaining("sha must not contain a line break"),
+        metadata: { field: "sha", hint: expect.any(String) },
       });
       expect(history).not.toHaveBeenCalled();
     },
@@ -282,9 +301,9 @@ describe("CommitsService.listCommits unknown branches", () => {
   });
 
   // w31/047: Gitea treats an empty sha query parameter as the default branch,
-  // and tab/newline-only branch strings bypass assertCommitRef, so explicit
-  // empty or whitespace-only branches must be refused before any Gitea call.
-  it.each(["", "\t", "\n", "\r\n"])(
+  // and tab-only branch strings bypass assertCommitRef, so explicit empty or
+  // whitespace-only branches must be refused before any Gitea call.
+  it.each(["", "\t"])(
     "refuses empty or whitespace-only branch=%j as BadUserInputError before calling Gitea",
     async (blankBranch) => {
       const history = jest.fn().mockResolvedValue({ data: [] });
@@ -308,6 +327,35 @@ describe("CommitsService.listCommits unknown branches", () => {
           field: "branch",
           hint: expect.stringContaining("main"),
         },
+      });
+      expect(history).not.toHaveBeenCalled();
+    },
+  );
+
+  // w31/062: line-break branch refs must be refused upfront before calling Gitea.
+  it.each(["\n", "\r\n", "main\nfoo", ":/restore\nfoo"])(
+    "refuses line-break branch=%j as BadUserInputError before calling Gitea",
+    async (badBranch) => {
+      const history = jest.fn().mockResolvedValue({ data: [] });
+      const service = new CommitsService(
+        {
+          getUserApiClient: jest.fn().mockResolvedValue({
+            repos: { repoGetAllCommits: history },
+          }),
+          getAnonymousApiClient: jest.fn(),
+        } as never,
+        { authorizeOrThrow: jest.fn().mockResolvedValue(undefined) } as never,
+      );
+      const failure = await service
+        .listCommits({ identity, ledgerId: "alice/main", branch: badBranch })
+        .catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(BadUserInputError);
+      expect(failure).toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: expect.stringContaining(
+          "branch must not contain a line break",
+        ),
+        metadata: { field: "branch", hint: expect.any(String) },
       });
       expect(history).not.toHaveBeenCalled();
     },

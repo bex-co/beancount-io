@@ -367,7 +367,47 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
     },
   );
 
-  it.each(["", "\t", "\n"])(
+  // w31/062: Gitea's line-oriented git ref lookup splits on `\n` and resolves
+  // the first line (e.g. "main\nfoo" -> "main"). Refuse any line break upfront
+  // with BAD_USER_INPUT before acquiring a Gitea client.
+  it.each([
+    ["main\nfoo", true],
+    ["main\nfoo", false],
+    ["b6d69fd\n", true],
+    ["main\r\nfoo", true],
+    ["main\rfoo", true],
+    ["main@{1\nfoo}", true],
+    [":/restore\nfoo", true],
+    ["\n", true],
+    ["\r\n", true],
+  ])(
+    "refuses line-break sha=%j (dryRun=%s) as BAD_USER_INPUT without calling Gitea",
+    async (sha, dryRun) => {
+      const f = await fixture([FINE, BROKEN]);
+      try {
+        const answer = await f.call(surface, {
+          sha,
+          ...(dryRun && { dryRun: true }),
+        });
+        expect(answer.ok).toBe(false);
+        expect(answer.code).toBe("BAD_USER_INPUT");
+        expect(answer.message).toContain("sha must not contain a line break");
+        if (surface === "rest") {
+          expect(answer.status).toBe(400);
+          expect(answer.field).toBe("sha");
+        } else if (surface === "gql") {
+          expect(answer.field).toBe("sha");
+        }
+        expect(f.getUserApiClient).not.toHaveBeenCalled();
+        expect(f.snapshot()).toEqual(BROKEN);
+        expect(f.shas()).toEqual(["c0", "c1"]);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["", "\t"])(
     "refuses empty or blank sha=%j as BAD_USER_INPUT without calling Gitea",
     async (sha) => {
       const f = await fixture([FINE, BROKEN]);
