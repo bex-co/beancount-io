@@ -286,7 +286,15 @@ const frPlaid: Record<string, TranslationEntry> = {
     message: "Dernière synchronisation",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
+  "plaid.institutionDetail.transactionsCount_one": {
+    message: "{count} transaction",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_many": {
+    message: "{count} transactions",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_other": {
     message: "{count} transactions",
     description: "Transaction count display - interpolation: {count}",
   },
@@ -611,7 +619,17 @@ const frPlaid: Record<string, TranslationEntry> = {
     message: "Tous les comptes bancaires",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
+  "plaid.transactionReview.accountsSelected_one": {
+    message: "{count} compte sélectionné",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_many": {
+    message: "{count} comptes sélectionnés",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_other": {
     message: "{count} comptes sélectionnés",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
@@ -854,7 +872,17 @@ const frPlaid: Record<string, TranslationEntry> = {
     message: "Catégorisation Terminée",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
+  "plaid.transactionReview.toast.categorizationCompleteDescription_one": {
+    message: "L'IA a suggéré des comptes pour {count} transaction.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_many": {
+    message: "L'IA a suggéré des comptes pour {count} transactions.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
     message: "L'IA a suggéré des comptes pour {count} transactions.",
     description:
       "Toast description for categorization complete - interpolation: {count}",
@@ -906,7 +934,17 @@ const frPlaid: Record<string, TranslationEntry> = {
     message: "Transactions Soumises",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_one": {
+    message: "{count} transaction ajoutée à votre livre de comptes.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_many": {
+    message: "{count} transactions ajoutées à votre livre de comptes.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
     message: "{count} transactions ajoutées à votre livre de comptes.",
     description:
       "Toast description for submitted transactions - interpolation: {count}",

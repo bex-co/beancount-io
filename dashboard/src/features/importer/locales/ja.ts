@@ -591,7 +591,7 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "注",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_other": {
     message: "…さらに {count} 件のエラー",
     description: "Count of additional import errors",
   },

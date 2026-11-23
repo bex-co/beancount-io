@@ -637,8 +637,12 @@ const faImporter: Record<string, TranslationEntry> = {
     message: "توجه",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
-    message: "…و {count} خطاهای دیگر",
+  "importer.finish.andMoreErrors_one": {
+    message: "…و {count} خطای دیگر",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
+    message: "…و {count} خطای دیگر",
     description: "Count of additional import errors",
   },
   "importer.preview.editCellLabel": {

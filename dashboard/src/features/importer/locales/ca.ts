@@ -685,7 +685,15 @@ const caImporter: Record<string, TranslationEntry> = {
     message: "Nota",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_one": {
+    message: "…i {count} error més",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_many": {
+    message: "…i {count} més errors",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
     message: "…i {count} més errors",
     description: "Count of additional import errors",
   },

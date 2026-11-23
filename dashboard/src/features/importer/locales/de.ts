@@ -640,7 +640,11 @@ const deImporter: Record<string, TranslationEntry> = {
     message: "Hinweis",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_one": {
+    message: "…und {count} weiterer Fehler",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
     message: "…und {count} weitere Fehler",
     description: "Count of additional import errors",
   },

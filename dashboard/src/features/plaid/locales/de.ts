@@ -269,7 +269,11 @@ const dePlaid: Record<string, TranslationEntry> = {
     message: "Zuletzt synchronisiert",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
+  "plaid.institutionDetail.transactionsCount_one": {
+    message: "{count} Transaktion",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_other": {
     message: "{count} Transaktionen",
     description: "Transaction count display - interpolation: {count}",
   },
@@ -583,7 +587,12 @@ const dePlaid: Record<string, TranslationEntry> = {
     message: "Alle Bankkonten",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
+  "plaid.transactionReview.accountsSelected_one": {
+    message: "{count} Konto ausgewählt",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_other": {
     message: "{count} Konten ausgewählt",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
@@ -788,7 +797,12 @@ const dePlaid: Record<string, TranslationEntry> = {
     message: "Kategorisierung Abgeschlossen",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
+  "plaid.transactionReview.toast.categorizationCompleteDescription_one": {
+    message: "KI hat Konten für {count} Transaktion vorgeschlagen.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
     message: "KI hat Konten für {count} Transaktionen vorgeschlagen.",
     description:
       "Toast description for categorization complete - interpolation: {count}",
@@ -834,7 +848,12 @@ const dePlaid: Record<string, TranslationEntry> = {
     message: "Transaktionen Übermittelt",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_one": {
+    message: "{count} Transaktion zu Ihrem Hauptbuch hinzugefügt.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
     message: "{count} Transaktionen zu Ihrem Hauptbuch hinzugefügt.",
     description:
       "Toast description for submitted transactions - interpolation: {count}",

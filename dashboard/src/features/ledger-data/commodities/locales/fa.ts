@@ -23,7 +23,12 @@ const faCommodities: Record<string, TranslationEntry> = {
     description:
       "Empty state description when the ledger records no commodity prices",
   },
-  "page.commodities.priceHistoryDataPoints": {
+  "page.commodities.priceHistoryDataPoints_one": {
+    message: "تاریخچه قیمت با {count} نقطه داده",
+    description:
+      "Description showing number of price data points. {count} is replaced with the number of data points.",
+  },
+  "page.commodities.priceHistoryDataPoints_other": {
     message: "تاریخچه قیمت با {count} نقطه داده",
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",

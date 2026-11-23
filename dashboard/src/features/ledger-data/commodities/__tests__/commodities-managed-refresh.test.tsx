@@ -10,8 +10,13 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createLocalization } from "@/i18n/init";
+import { LocalizationProvider } from "@/i18n/provider";
 import CommoditiesPage from "../index";
 
+vi.unmock("react-i18next");
+vi.unmock("@/common/hooks/use-translations");
+vi.unmock("@/i18n");
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@tanstack/react-router", () => ({
   useParams: () => ({ ledgerOwner: "demo", ledgerName: "books" }),
@@ -49,13 +54,13 @@ function source(overrides: Record<string, unknown>) {
 
 // Each read of the charts returns one more dated price than the last, so a
 // landed read is visible in the card's data-point count.
-function commodities(read: number) {
+function commodities(pointCount: number) {
   return [
     {
       __typename: "CommodityPairWithPrices",
       base: "ETH",
       quote: "USD",
-      prices: Array.from({ length: read + 1 }, (_, day) => ({
+      prices: Array.from({ length: pointCount }, (_, day) => ({
         __typename: "PricePoint",
         date: `2026-10-${String(day + 10).padStart(2, "0")}`,
         value: String(2400 + day),
@@ -73,11 +78,13 @@ function renderPage({
   ack,
   reads,
   held,
+  initialPointCount = 2,
 }: {
   ack: boolean;
   reads: boolean[];
   /** When given, the refresh waits for `held.release()` to settle. */
   held?: { release?: () => void };
+  initialPointCount?: number;
 }) {
   const calls = { refreshes: 0, commodityReads: 0 };
   const client = new ApolloClient({
@@ -121,16 +128,20 @@ function renderPage({
             case "GetLedgerCommodities":
               if (reads[calls.commodityReads++] === false) return fail();
               return reply({
-                getLedgerCommodities: commodities(calls.commodityReads),
+                getLedgerCommodities: commodities(
+                  initialPointCount + calls.commodityReads - 1,
+                ),
               });
           }
         }),
     ),
   });
   render(
-    <ApolloProvider client={client}>
-      <CommoditiesPage />
-    </ApolloProvider>,
+    <LocalizationProvider localization={createLocalization()}>
+      <ApolloProvider client={client}>
+        <CommoditiesPage />
+      </ApolloProvider>
+    </LocalizationProvider>,
   );
   return calls;
 }
@@ -150,6 +161,18 @@ beforeEach(() => vi.clearAllMocks());
 
 /** Managed-price refresh acknowledgement vs. the chart read after it (w4/332). */
 describe("Commodities managed-price refresh", () => {
+  it("describes one data point in the singular and two in the plural", async () => {
+    renderPage({ ack: true, reads: [true, true], initialPointCount: 1 });
+    expect(
+      await screen.findByText("Price history with 1 data point"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Refresh prices" }),
+    );
+    expect(await screen.findByText(dataPoints(2))).toBeInTheDocument();
+  });
+
   it("keeps an acknowledged refresh and the shown charts when only the chart read fails", async () => {
     const calls = renderPage({ ack: true, reads: [true, false, false] });
     const refresh = await refreshWithKeyboard();

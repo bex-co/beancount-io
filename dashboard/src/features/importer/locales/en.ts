@@ -635,7 +635,11 @@ const enImporter: Record<string, TranslationEntry> = {
     message: "Note",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_one": {
+    message: "…and {count} more error",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
     message: "…and {count} more errors",
     description: "Count of additional import errors",
   },

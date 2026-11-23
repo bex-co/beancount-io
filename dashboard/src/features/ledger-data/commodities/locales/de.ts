@@ -23,7 +23,12 @@ const deCommodities: Record<string, TranslationEntry> = {
     description:
       "Empty state description when the ledger records no commodity prices",
   },
-  "page.commodities.priceHistoryDataPoints": {
+  "page.commodities.priceHistoryDataPoints_one": {
+    message: "Kursverlauf mit {count} Datenpunkt",
+    description:
+      "Description showing number of price data points. {count} is replaced with the number of data points.",
+  },
+  "page.commodities.priceHistoryDataPoints_other": {
     message: "Kursverlauf mit {count} Datenpunkten",
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",

@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-  render,
+  render as renderIntoDocument,
   screen,
   fireEvent,
   waitFor,
   within,
 } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { createLocalization } from "@/i18n/init";
+import { LocalizationProvider } from "@/i18n/provider";
 import { TransactionReviewTable } from "../transaction-review-table";
 import {
   useUnsyncedTransactions,
@@ -14,6 +17,21 @@ import {
   useSubmitPlaidTransactions,
   useDeletePlaidTransactions,
 } from "../../hooks/use-plaid-accounts";
+
+vi.unmock("react-i18next");
+vi.unmock("@/common/hooks/use-translations");
+vi.unmock("@/i18n");
+
+function render(component: ReactElement) {
+  const localization = createLocalization();
+  return renderIntoDocument(component, {
+    wrapper: ({ children }) => (
+      <LocalizationProvider localization={localization}>
+        {children}
+      </LocalizationProvider>
+    ),
+  });
+}
 
 vi.mock("../../hooks/use-plaid-accounts", () => ({
   useUnsyncedTransactions: vi.fn(),

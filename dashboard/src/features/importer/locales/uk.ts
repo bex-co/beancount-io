@@ -725,8 +725,20 @@ const ukImporter: Record<string, TranslationEntry> = {
     message: "Примітка",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_one": {
+    message: "…і ще {count} помилка",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_few": {
+    message: "…і ще {count} помилки",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_many": {
     message: "…і ще {count} помилок",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
+    message: "…і ще {count} помилки",
     description: "Count of additional import errors",
   },
   "importer.preview.editCellLabel": {

@@ -267,7 +267,11 @@ const bgPlaid: Record<string, TranslationEntry> = {
     message: "Последна синхронизация",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
+  "plaid.institutionDetail.transactionsCount_one": {
+    message: "{count} транзакция",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_other": {
     message: "{count} транзакции",
     description: "Transaction count display - interpolation: {count}",
   },
@@ -577,7 +581,12 @@ const bgPlaid: Record<string, TranslationEntry> = {
     message: "Всички банкови сметки",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
+  "plaid.transactionReview.accountsSelected_one": {
+    message: "Избрана е {count} сметка",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_other": {
     message: "Избрани са {count} сметки",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
@@ -781,7 +790,12 @@ const bgPlaid: Record<string, TranslationEntry> = {
     message: "Категоризацията завърши",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
+  "plaid.transactionReview.toast.categorizationCompleteDescription_one": {
+    message: "AI предложи сметки за {count} транзакция.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
     message: "AI предложи сметки за {count} транзакции.",
     description:
       "Toast description for categorization complete - interpolation: {count}",
@@ -825,7 +839,12 @@ const bgPlaid: Record<string, TranslationEntry> = {
     message: "Транзакциите са изпратени",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_one": {
+    message: "{count} транзакция е добавена към главната ви книга.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
     message: "{count} транзакции са добавени към главната ви книга.",
     description:
       "Toast description for submitted transactions - interpolation: {count}",

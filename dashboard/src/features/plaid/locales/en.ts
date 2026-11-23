@@ -265,7 +265,11 @@ const enPlaid: Record<string, TranslationEntry> = {
     message: "Last synced",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
+  "plaid.institutionDetail.transactionsCount_one": {
+    message: "{count} transaction",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_other": {
     message: "{count} transactions",
     description: "Transaction count display - interpolation: {count}",
   },
@@ -603,7 +607,12 @@ const enPlaid: Record<string, TranslationEntry> = {
     message: "All bank accounts",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
+  "plaid.transactionReview.accountsSelected_one": {
+    message: "{count} account selected",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_other": {
     message: "{count} accounts selected",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
@@ -806,7 +815,12 @@ const enPlaid: Record<string, TranslationEntry> = {
     message: "Categorization Complete",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
+  "plaid.transactionReview.toast.categorizationCompleteDescription_one": {
+    message: "AI suggested accounts for {count} transaction.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
     message: "AI suggested accounts for {count} transactions.",
     description:
       "Toast description for categorization complete - interpolation: {count}",
@@ -850,7 +864,12 @@ const enPlaid: Record<string, TranslationEntry> = {
     message: "Transactions Submitted",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_one": {
+    message: "{count} transaction added to your ledger.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
     message: "{count} transactions added to your ledger.",
     description:
       "Toast description for submitted transactions - interpolation: {count}",

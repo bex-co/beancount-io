@@ -682,8 +682,16 @@ const ptImporter: Record<string, TranslationEntry> = {
     message: "Nota",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
-    message: "…e {count} mais erros",
+  "importer.finish.andMoreErrors_one": {
+    message: "…e mais {count} erro",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_many": {
+    message: "…e mais {count} erros",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
+    message: "…e mais {count} erros",
     description: "Count of additional import errors",
   },
   "importer.preview.editCellLabel": {

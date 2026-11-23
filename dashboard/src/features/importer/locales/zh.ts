@@ -583,8 +583,8 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "注意",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
-    message: "…以及 {count} 更多错误",
+  "importer.finish.andMoreErrors_other": {
+    message: "…另有 {count} 个错误",
     description: "Count of additional import errors",
   },
   "importer.preview.editCellLabel": {

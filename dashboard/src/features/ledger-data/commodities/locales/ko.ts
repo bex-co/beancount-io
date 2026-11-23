@@ -22,7 +22,7 @@ const koCommodities: Record<string, TranslationEntry> = {
     description:
       "Empty state description when the ledger records no commodity prices",
   },
-  "page.commodities.priceHistoryDataPoints": {
+  "page.commodities.priceHistoryDataPoints_other": {
     message: "{count}개 데이터 포인트가 있는 가격 기록",
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",

@@ -686,7 +686,15 @@ const frImporter: Record<string, TranslationEntry> = {
     message: "Remarque",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_one": {
+    message: "… et {count} autre erreur",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_many": {
+    message: "… et {count} autres erreurs",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
     message: "… et {count} autres erreurs",
     description: "Count of additional import errors",
   },

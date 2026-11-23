@@ -640,7 +640,11 @@ const bgImporter: Record<string, TranslationEntry> = {
     message: "Забележка",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_one": {
+    message: "…и още {count} грешка",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
     message: "…и още {count} грешки",
     description: "Count of additional import errors",
   },

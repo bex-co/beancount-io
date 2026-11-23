@@ -723,7 +723,19 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Poznámka",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_one": {
+    message: "…a {count} ďalšia chyba",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_few": {
+    message: "…a {count} ďalšie chyby",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_many": {
+    message: "…a {count} ďalšej chyby",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
     message: "…a {count} ďalších chýb",
     description: "Count of additional import errors",
   },

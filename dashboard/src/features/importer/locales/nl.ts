@@ -639,8 +639,12 @@ const nlImporter: Record<string, TranslationEntry> = {
     message: "Opmerking",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
-    message: "…en {count} nog meer fouten",
+  "importer.finish.andMoreErrors_one": {
+    message: "…en nog {count} fout",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
+    message: "…en nog {count} fouten",
     description: "Count of additional import errors",
   },
   "importer.preview.editCellLabel": {

@@ -683,7 +683,15 @@ const esImporter: Record<string, TranslationEntry> = {
     message: "Nota",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_one": {
+    message: "…y {count} error más",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_many": {
+    message: "…y {count} más errores",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
     message: "…y {count} más errores",
     description: "Count of additional import errors",
   },

@@ -245,7 +245,7 @@ const koPlaid: Record<string, TranslationEntry> = {
     message: "마지막 동기화",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
+  "plaid.institutionDetail.transactionsCount_other": {
     message: "거래 {count}건",
     description: "Transaction count display - interpolation: {count}",
   },
@@ -545,7 +545,7 @@ const koPlaid: Record<string, TranslationEntry> = {
     message: "모든 은행 계좌",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
+  "plaid.transactionReview.accountsSelected_other": {
     message: "계좌 {count}개 선택됨",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
@@ -707,7 +707,7 @@ const koPlaid: Record<string, TranslationEntry> = {
     message: "분류 완료",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
     message: "AI가 {count}건의 거래에 계좌를 제안했습니다.",
     description:
       "Toast description for categorization complete - interpolation: {count}",
@@ -746,7 +746,7 @@ const koPlaid: Record<string, TranslationEntry> = {
     message: "거래가 제출되었습니다",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
     message: "{count}건의 거래가 원장에 추가되었습니다.",
     description:
       "Toast description for submitted transactions - interpolation: {count}",

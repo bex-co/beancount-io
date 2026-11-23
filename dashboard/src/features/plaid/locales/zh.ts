@@ -248,7 +248,7 @@ const zhPlaid: Record<string, TranslationEntry> = {
     message: "上次同步",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
+  "plaid.institutionDetail.transactionsCount_other": {
     message: "{count} 笔交易",
     description: "Transaction count display - interpolation: {count}",
   },
@@ -546,7 +546,7 @@ const zhPlaid: Record<string, TranslationEntry> = {
     message: "所有银行账户",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
+  "plaid.transactionReview.accountsSelected_other": {
     message: "已选择 {count} 个账户",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
@@ -706,7 +706,7 @@ const zhPlaid: Record<string, TranslationEntry> = {
     message: "分类完成",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
     message: "AI 为 {count} 笔交易建议了账户。",
     description:
       "Toast description for categorization complete - interpolation: {count}",
@@ -745,7 +745,7 @@ const zhPlaid: Record<string, TranslationEntry> = {
     message: "交易已提交",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
     message: "已将 {count} 笔交易添加到你的账本。",
     description:
       "Toast description for submitted transactions - interpolation: {count}",

@@ -297,8 +297,20 @@ const skPlaid: Record<string, TranslationEntry> = {
     message: "Posledná synchronizácia",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
-    message: "Transakcie: {count}",
+  "plaid.institutionDetail.transactionsCount_one": {
+    message: "{count} transakcia",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_few": {
+    message: "{count} transakcie",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_many": {
+    message: "{count} transakcie",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_other": {
+    message: "{count} transakcií",
     description: "Transaction count display - interpolation: {count}",
   },
   "plaid.institutionDetail.syncFailed": {
@@ -627,8 +639,23 @@ const skPlaid: Record<string, TranslationEntry> = {
     message: "Všetky bankové účty",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
-    message: "Vybraných účtov: {count}",
+  "plaid.transactionReview.accountsSelected_one": {
+    message: "Vybraný {count} účet",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_few": {
+    message: "Vybrané {count} účty",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_many": {
+    message: "Vybraných {count} účtu",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_other": {
+    message: "Vybraných {count} účtov",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
   },
@@ -906,8 +933,23 @@ const skPlaid: Record<string, TranslationEntry> = {
     message: "Kategorizácia dokončená",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
-    message: "AI navrhla účty pre transakcie: {count}.",
+  "plaid.transactionReview.toast.categorizationCompleteDescription_one": {
+    message: "AI navrhla účty pre {count} transakciu.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_few": {
+    message: "AI navrhla účty pre {count} transakcie.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_many": {
+    message: "AI navrhla účty pre {count} transakcie.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
+    message: "AI navrhla účty pre {count} transakcií.",
     description:
       "Toast description for categorization complete - interpolation: {count}",
   },
@@ -960,8 +1002,23 @@ const skPlaid: Record<string, TranslationEntry> = {
     message: "Transakcie odoslané",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
-    message: "Transakcie pridané do účtovnej knihy: {count}.",
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_one": {
+    message: "{count} transakcia bola pridaná do účtovnej knihy.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_few": {
+    message: "{count} transakcie boli pridané do účtovnej knihy.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_many": {
+    message: "Do účtovnej knihy pribudlo {count} transakcie.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
+    message: "{count} transakcií bolo pridaných do účtovnej knihy.",
     description:
       "Toast description for submitted transactions - interpolation: {count}",
   },

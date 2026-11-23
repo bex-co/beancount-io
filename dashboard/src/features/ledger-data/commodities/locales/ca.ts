@@ -23,7 +23,17 @@ const caCommodities: Record<string, TranslationEntry> = {
     description:
       "Empty state description when the ledger records no commodity prices",
   },
-  "page.commodities.priceHistoryDataPoints": {
+  "page.commodities.priceHistoryDataPoints_one": {
+    message: "Historial de preus amb {count} punt de dades",
+    description:
+      "Description showing number of price data points. {count} is replaced with the number of data points.",
+  },
+  "page.commodities.priceHistoryDataPoints_many": {
+    message: "Historial de preus amb {count} punts de dades",
+    description:
+      "Description showing number of price data points. {count} is replaced with the number of data points.",
+  },
+  "page.commodities.priceHistoryDataPoints_other": {
     message: "Historial de preus amb {count} punts de dades",
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",

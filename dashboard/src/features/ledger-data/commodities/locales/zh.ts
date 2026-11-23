@@ -22,7 +22,7 @@ const zhCommodities: Record<string, TranslationEntry> = {
     description:
       "Empty state description when the ledger records no commodity prices",
   },
-  "page.commodities.priceHistoryDataPoints": {
+  "page.commodities.priceHistoryDataPoints_other": {
     message: "价格历史记录，包含 {count} 个数据点",
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",

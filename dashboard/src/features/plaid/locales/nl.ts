@@ -266,7 +266,11 @@ const nlPlaid: Record<string, TranslationEntry> = {
     message: "Laatst gesynchroniseerd",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
+  "plaid.institutionDetail.transactionsCount_one": {
+    message: "{count} transactie",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_other": {
     message: "{count} transacties",
     description: "Transaction count display - interpolation: {count}",
   },
@@ -576,7 +580,12 @@ const nlPlaid: Record<string, TranslationEntry> = {
     message: "Alle bankrekeningen",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
+  "plaid.transactionReview.accountsSelected_one": {
+    message: "{count} rekening geselecteerd",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_other": {
     message: "{count} rekeningen geselecteerd",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
@@ -780,7 +789,12 @@ const nlPlaid: Record<string, TranslationEntry> = {
     message: "Categorisering voltooid",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
+  "plaid.transactionReview.toast.categorizationCompleteDescription_one": {
+    message: "AI heeft rekeningen voorgesteld voor {count} transactie.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
     message: "AI heeft rekeningen voorgesteld voor {count} transacties.",
     description:
       "Toast description for categorization complete - interpolation: {count}",
@@ -824,7 +838,12 @@ const nlPlaid: Record<string, TranslationEntry> = {
     message: "Transacties ingediend",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_one": {
+    message: "{count} transactie toegevoegd aan je grootboek.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
     message: "{count} transacties toegevoegd aan je grootboek.",
     description:
       "Toast description for submitted transactions - interpolation: {count}",

@@ -264,7 +264,11 @@ const faPlaid: Record<string, TranslationEntry> = {
     message: "آخرین همگام‌سازی",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
+  "plaid.institutionDetail.transactionsCount_one": {
+    message: "{count} تراکنش",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_other": {
     message: "{count} تراکنش",
     description: "Transaction count display - interpolation: {count}",
   },
@@ -574,7 +578,12 @@ const faPlaid: Record<string, TranslationEntry> = {
     message: "همه حساب‌های بانکی",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
+  "plaid.transactionReview.accountsSelected_one": {
+    message: "{count} حساب انتخاب شد",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_other": {
     message: "{count} حساب انتخاب شد",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
@@ -775,7 +784,12 @@ const faPlaid: Record<string, TranslationEntry> = {
     message: "دسته‌بندی کامل شد",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
+  "plaid.transactionReview.toast.categorizationCompleteDescription_one": {
+    message: "هوش مصنوعی برای {count} تراکنش حساب پیشنهاد داد.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
     message: "هوش مصنوعی برای {count} تراکنش حساب پیشنهاد داد.",
     description:
       "Toast description for categorization complete - interpolation: {count}",
@@ -819,7 +833,12 @@ const faPlaid: Record<string, TranslationEntry> = {
     message: "تراکنش‌ها ارسال شدند",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_one": {
+    message: "{count} تراکنش به دفتر کل شما اضافه شد.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
     message: "{count} تراکنش به دفتر کل شما اضافه شد.",
     description:
       "Toast description for submitted transactions - interpolation: {count}",

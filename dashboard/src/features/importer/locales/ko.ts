@@ -589,8 +589,8 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "참고",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
-    message: "…그리고 {count} 오류가 더 많습니다",
+  "importer.finish.andMoreErrors_other": {
+    message: "…그 외 오류 {count}건",
     description: "Count of additional import errors",
   },
   "importer.preview.editCellLabel": {

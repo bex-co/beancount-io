@@ -1,7 +1,23 @@
 import { describe, expect, it } from "vitest";
 import * as locales from "../locales";
-import { findFlatPluralIssues, pluralCategories } from "../plural";
+import {
+  findFlatPluralIssues,
+  pluralCategories,
+  pluralFamily,
+} from "../plural";
 import { PLURAL_BASE_KEYS } from "../plural-keys";
+
+const NON_PLURAL_COUNTS = new Set([
+  // Overflow label with no counted noun.
+  "common.moreCount",
+  // Subscription quota labels.
+  "aiAgent.tokensPerMonth",
+  "userSettings.aiTokensPerMonth",
+  "userSettings.includedDirectives",
+  // These only render at or above the 50-ledger preview cap.
+  "userProfile.noMatchesInPreview",
+  "userProfile.previewNotice",
+]);
 
 describe("pluralCategories", () => {
   it("follows Intl.PluralRules per language", () => {
@@ -59,5 +75,18 @@ describe("shipped locales", () => {
       .map((key) => key.slice(0, -"_other".length))
       .sort();
     expect(bases).toEqual([...PLURAL_BASE_KEYS].sort());
+  });
+
+  it("use plural families for English word phrases that follow a count", () => {
+    const offenders = Object.entries(locales.en)
+      .filter(
+        ([key, message]) =>
+          /\{count\}\s+[a-z]/i.test(message) &&
+          !NON_PLURAL_COUNTS.has(key) &&
+          !Object.hasOwn(locales.en, `${key}_other`) &&
+          !pluralFamily(key, (variant) => Object.hasOwn(locales.en, variant)),
+      )
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
   });
 });

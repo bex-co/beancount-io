@@ -726,8 +726,20 @@ const ruImporter: Record<string, TranslationEntry> = {
     message: "Примечание",
     description: "Label before a partial import note",
   },
-  "importer.finish.andMoreErrors": {
+  "importer.finish.andMoreErrors_one": {
+    message: "…и ещё {count} ошибка",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_few": {
+    message: "…и ещё {count} ошибки",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_many": {
     message: "…и ещё {count} ошибок",
+    description: "Count of additional import errors",
+  },
+  "importer.finish.andMoreErrors_other": {
+    message: "…и ещё {count} ошибки",
     description: "Count of additional import errors",
   },
   "importer.preview.editCellLabel": {

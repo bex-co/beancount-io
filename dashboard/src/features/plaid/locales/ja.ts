@@ -245,7 +245,7 @@ const jaPlaid: Record<string, TranslationEntry> = {
     message: "最終同期",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
+  "plaid.institutionDetail.transactionsCount_other": {
     message: "{count}件の取引",
     description: "Transaction count display - interpolation: {count}",
   },
@@ -544,7 +544,7 @@ const jaPlaid: Record<string, TranslationEntry> = {
     message: "すべての銀行口座",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
+  "plaid.transactionReview.accountsSelected_other": {
     message: "{count} 件の口座を選択中",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
@@ -708,7 +708,7 @@ const jaPlaid: Record<string, TranslationEntry> = {
     message: "分類完了",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
     message: "AIが{count}件の取引に口座を提案しました。",
     description:
       "Toast description for categorization complete - interpolation: {count}",
@@ -747,7 +747,7 @@ const jaPlaid: Record<string, TranslationEntry> = {
     message: "取引を送信しました",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
     message: "{count}件の取引を台帳に追加しました。",
     description:
       "Toast description for submitted transactions - interpolation: {count}",

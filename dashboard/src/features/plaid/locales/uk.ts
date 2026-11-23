@@ -296,8 +296,20 @@ const ukPlaid: Record<string, TranslationEntry> = {
     message: "Остання синхронізація",
     description: "Label for last sync timestamp",
   },
-  "plaid.institutionDetail.transactionsCount": {
-    message: "Транзакцій: {count}",
+  "plaid.institutionDetail.transactionsCount_one": {
+    message: "{count} транзакція",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_few": {
+    message: "{count} транзакції",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_many": {
+    message: "{count} транзакцій",
+    description: "Transaction count display - interpolation: {count}",
+  },
+  "plaid.institutionDetail.transactionsCount_other": {
+    message: "{count} транзакції",
     description: "Transaction count display - interpolation: {count}",
   },
   "plaid.institutionDetail.syncFailed": {
@@ -627,8 +639,23 @@ const ukPlaid: Record<string, TranslationEntry> = {
     message: "Усі банківські рахунки",
     description: "Bank account filter option that turns account filtering off",
   },
-  "plaid.transactionReview.accountsSelected": {
-    message: "Вибрано рахунків: {count}",
+  "plaid.transactionReview.accountsSelected_one": {
+    message: "Вибрано {count} рахунок",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_few": {
+    message: "Вибрано {count} рахунки",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_many": {
+    message: "Вибрано {count} рахунків",
+    description:
+      "Bank account filter trigger when several accounts are picked - interpolation: {count}",
+  },
+  "plaid.transactionReview.accountsSelected_other": {
+    message: "Вибрано {count} рахунку",
     description:
       "Bank account filter trigger when several accounts are picked - interpolation: {count}",
   },
@@ -907,8 +934,23 @@ const ukPlaid: Record<string, TranslationEntry> = {
     message: "Категоризацію завершено",
     description: "Toast title when AI categorization completes",
   },
-  "plaid.transactionReview.toast.categorizationCompleteDescription": {
-    message: "ШІ запропонував рахунки для транзакцій: {count}.",
+  "plaid.transactionReview.toast.categorizationCompleteDescription_one": {
+    message: "ШІ запропонував рахунки для {count} транзакції.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_few": {
+    message: "ШІ запропонував рахунки для {count} транзакцій.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_many": {
+    message: "ШІ запропонував рахунки для {count} транзакцій.",
+    description:
+      "Toast description for categorization complete - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.categorizationCompleteDescription_other": {
+    message: "ШІ запропонував рахунки для {count} транзакції.",
     description:
       "Toast description for categorization complete - interpolation: {count}",
   },
@@ -961,8 +1003,23 @@ const ukPlaid: Record<string, TranslationEntry> = {
     message: "Транзакції надіслано",
     description: "Toast title when transactions are submitted",
   },
-  "plaid.transactionReview.toast.transactionsSubmittedDescription": {
-    message: "Транзакцій додано до книги: {count}.",
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_one": {
+    message: "До книги додано {count} транзакцію.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_few": {
+    message: "До книги додано {count} транзакції.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_many": {
+    message: "До книги додано {count} транзакцій.",
+    description:
+      "Toast description for submitted transactions - interpolation: {count}",
+  },
+  "plaid.transactionReview.toast.transactionsSubmittedDescription_other": {
+    message: "До книги додано {count} транзакції.",
     description:
       "Toast description for submitted transactions - interpolation: {count}",
   },
