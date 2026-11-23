@@ -2109,6 +2109,8 @@ export interface ScopeDecision {
   readonly allowed: boolean;
   /** Human-readable refusal, present only when `allowed` is false. */
   readonly denyReason?: string;
+  /** Actionable remediation hint, present only when `allowed` is false. */
+  readonly hint?: string;
 }
 
 /**
@@ -2156,6 +2158,7 @@ export function evaluateScope(
       allowed: false,
       denyReason:
         "This operation is not part of the API scope vocabulary and is reachable only from a browser session",
+      hint: "This operation accepts a signed-in browser session.",
     };
   }
   if (opClass !== "read" && opClass !== "write" && opClass !== "admin") {
@@ -2170,6 +2173,7 @@ export function evaluateScope(
       ...base,
       allowed: false,
       denyReason: `This operation requires the "${requiredScope}" scope`,
+      hint: `Use a credential that holds the "${requiredScope}" scope.`,
     };
   }
   return { ...base, allowed: true };
@@ -2228,6 +2232,7 @@ export function requireScopeClass(
   throw new ForbiddenError(
     `${decision.denyReason} (${decision.opId})`,
     decision.opId,
+    decision.hint,
   );
 }
 

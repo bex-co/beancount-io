@@ -412,10 +412,18 @@ describe("evaluateScope", () => {
     expect(decision.allowed).toBe(false);
     expect(decision.requiredScope).toBe("ledger.write");
     expect(decision.denyReason).toContain("ledger.write");
+    expect(decision.hint).toBe(
+      'Use a credential that holds the "ledger.write" scope.',
+    );
   });
 
   it("refuses a write token on an admin op", () => {
-    expect(evaluateScope(token("ledger.write"), ADMIN_OP).allowed).toBe(false);
+    const decision = evaluateScope(token("ledger.write"), ADMIN_OP);
+    expect(decision.allowed).toBe(false);
+    expect(decision.requiredScope).toBe("ledger.admin");
+    expect(decision.hint).toBe(
+      'Use a credential that holds the "ledger.admin" scope.',
+    );
   });
 
   it("treats scopes as cumulative, not orthogonal", () => {
@@ -437,6 +445,9 @@ describe("evaluateScope", () => {
     expect(decision.allowed).toBe(false);
     expect(decision.requiredScope).toBeNull();
     expect(decision.denyReason).toContain("browser session");
+    expect(decision.hint).toBe(
+      "This operation accepts a signed-in browser session.",
+    );
   });
 
   it("defers centralized-authz operations without treating a ledger scope as authority", () => {
@@ -576,6 +587,34 @@ describe("requireScopeClass", () => {
     expect(() =>
       requireScopeClass(token("ledger.read"), WRITE_OP, "enforce"),
     ).toThrow(WRITE_OP);
+  });
+
+  it("carries the missing-scope hint on the thrown ForbiddenError", () => {
+    let caught: unknown;
+    try {
+      requireScopeClass(token("ledger.read"), ADMIN_OP, "enforce");
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(ForbiddenError);
+    expect((caught as ForbiddenError).metadata).toMatchObject({
+      resource: ADMIN_OP,
+      hint: 'Use a credential that holds the "ledger.admin" scope.',
+    });
+  });
+
+  it("carries the session-only hint on the thrown ForbiddenError", () => {
+    let caught: unknown;
+    try {
+      requireScopeClass(token("ledger.admin"), SESSION_ONLY_OP, "enforce");
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(ForbiddenError);
+    expect((caught as ForbiddenError).metadata).toMatchObject({
+      resource: SESSION_ONLY_OP,
+      hint: "This operation accepts a signed-in browser session.",
+    });
   });
 
   it("records but does not refuse in shadow mode", () => {

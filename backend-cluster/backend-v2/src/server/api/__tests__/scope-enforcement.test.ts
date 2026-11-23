@@ -9,12 +9,18 @@ import { ForbiddenError } from "@/shared/errors";
 import { asyncContext, getOperationId } from "@/shared/async-context";
 import type { IContext } from "@/server/graphql/context";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { formatError } from "@/server/graphql/format-error";
 import { buildGraphqlSchema } from "@/server/graphql/api-gateway";
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { restScopeMiddleware } from "@/server/rest/scope-middleware";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
+import { envelopeFromThrown } from "@/features/ai-agent/api/mcp-errors";
 import type { Identity } from "../identity";
-import { authorizationActionForOp, classifyOp } from "../op-class";
+import {
+  authorizationActionForOp,
+  classifyOp,
+  requireScopeClass,
+} from "../op-class";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import { assembleMcpRegistry, type ApiGate } from "../composition-root";
 import { assembleTestApi } from "./api-surface";
@@ -71,6 +77,7 @@ function buildRestRouter(identity: Identity | undefined, config: AppConfig) {
   const gates = new Map<string, ApiGate>([
     ["REST POST /api-gateway/agent", "scoped"],
     ["REST POST /api-gateway/v1/ledgers/{owner}/{name}/entries", "scoped"],
+    ["REST POST /api-gateway/v1/logout", "enforced"],
     ["REST GET /healthz", "outside"],
     ["REST ALL /git{/*path}", "outside"],
   ]);
@@ -94,6 +101,7 @@ function buildRestRouter(identity: Identity | undefined, config: AppConfig) {
     "/api-gateway/v1/ledgers/:owner/:name/entries",
     answer("entries"),
   );
+  router.post("/api-gateway/v1/logout", answer("logout"));
   router.get("/healthz", answer("healthz"));
   router.all("/git{/*path}", answer("git"));
   return { dispatch: router.routes(), reached, operationIds };
@@ -335,8 +343,35 @@ describe("scope enforcement across surfaces", () => {
       });
 
       expect(result.isError).toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        ok: false,
+        error: {
+          code: "FORBIDDEN",
+          hint: 'Use a credential that holds the "ledger.admin" scope.',
+        },
+      });
       expect(getItems).not.toHaveBeenCalled();
       expect(getAccountsForLedger).not.toHaveBeenCalled();
+    });
+
+    it("MCP: listBankConnections emits the ledger.admin scope hint for a read-only token instead of the metadata fallback", async () => {
+      const handlers = captureMcpHandlers(readOnlyToken, realConfig);
+      const result = await handlers.get("listBankConnections")!({
+        ledger: "alice/main",
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        ok: false,
+        error: {
+          code: "FORBIDDEN",
+          hint: 'Use a credential that holds the "ledger.admin" scope.',
+        },
+      });
+      expect(
+        (result.structuredContent as { error?: { hint?: string } })?.error
+          ?.hint,
+      ).not.toContain("metadata");
     });
 
     it("MCP: ledger.admin still reaches an admin operation", async () => {
@@ -407,6 +442,66 @@ describe("scope enforcement across surfaces", () => {
       const result = await handlers.get("setLedgerStar")!({});
       expect(result.isError).toBe(true);
       expect(JSON.stringify(result.content)).toContain("ledger.write");
+      expect(result.structuredContent).toMatchObject({
+        ok: false,
+        error: {
+          code: "FORBIDDEN",
+          hint: 'Use a credential that holds the "ledger.write" scope.',
+        },
+      });
+      expect(
+        (result.structuredContent as { error?: { hint?: string } })?.error
+          ?.hint,
+      ).not.toContain("metadata");
+    });
+
+    it("session-only scope-gate refusals carry the browser-session hint across REST, GraphQL, and MCP", async () => {
+      const expectedHint =
+        "This operation accepts a signed-in browser session.";
+
+      // REST
+      const { ctx, reached } = await driveRest(
+        adminToken,
+        enforcing,
+        "POST",
+        "/api-gateway/v1/logout",
+      );
+      expect(reached).toEqual([]);
+      expect(ctx.status).toBe(403);
+      expect(ctx.body).toMatchObject({
+        ok: false,
+        error: {
+          code: "FORBIDDEN",
+          metadata: { hint: expectedHint },
+        },
+      });
+
+      // GraphQL
+      const gql = await driveGraphql(
+        adminToken,
+        makeGraphqlInfo("Mutation", "signIn"),
+        enforcing,
+      );
+      expect(gql.reached).toBe(false);
+      expect(gql.error).toBeInstanceOf(ForbiddenError);
+      const formatted = formatError({ message: "error" }, gql.error);
+      expect(formatted.extensions).toMatchObject({
+        code: "FORBIDDEN",
+        hint: expectedHint,
+      });
+
+      // MCP envelope
+      let caught: unknown;
+      try {
+        requireScopeClass(adminToken, "GQL Mutation.signIn", "enforce");
+      } catch (error) {
+        caught = error;
+      }
+      const envelope = envelopeFromThrown(caught);
+      expect(envelope).toMatchObject({
+        code: "FORBIDDEN",
+        hint: expectedHint,
+      });
     });
 
     /**
