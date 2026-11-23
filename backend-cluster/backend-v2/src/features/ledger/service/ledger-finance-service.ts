@@ -355,12 +355,13 @@ export class LedgerFinanceService
 
   async getRegister(params: RegisterParams): Promise<RegisterResult> {
     const { ledgerId, identity, account, time, conversion } = params;
-    assertValidAccountPattern(account);
-    if (account === undefined || account === "") {
+    if (account === undefined || account.trim() === "") {
       throw new BadUserInputError(
         "Register needs an account. Name the account to list, such as Assets:Checking.",
+        "account",
       );
     }
+    assertValidAccountPattern(account);
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,

@@ -583,6 +583,32 @@ describe("LedgerFinanceService.getRegister", () => {
     expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
   });
 
+  // w31/041: whitespace-only account must be refused identically to "" without
+  // touching the ledger service.
+  it.each(["", "  ", "\t", "\n"])(
+    "refuses blank account %p with BAD_USER_INPUT before touching Fava",
+    async (account) => {
+      const refusal = await service
+        .getRegister({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          account,
+        })
+        .catch((error: unknown) => error);
+
+      expect(refusal).toBeInstanceOf(BadUserInputError);
+      expect((refusal as BadUserInputError).metadata).toEqual({
+        field: "account",
+      });
+      expect((refusal as Error).message).toContain("Register needs an account");
+      expect(authorizeLedger).not.toHaveBeenCalled();
+      expect(mockFavaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+      expect(mockReports.getLedgerOptions).not.toHaveBeenCalled();
+      expect(mockReports.getLedgerPostingsPerAccount).not.toHaveBeenCalled();
+      expect(mockJournal.getAccountJournal).not.toHaveBeenCalled();
+    },
+  );
+
   it("refuses an uncompilable account pattern before touching Fava", async () => {
     await expect(
       service.getRegister({

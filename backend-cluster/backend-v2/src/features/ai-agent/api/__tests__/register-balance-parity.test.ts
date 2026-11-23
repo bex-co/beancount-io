@@ -6,6 +6,7 @@ import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerFinanceQueryResolver } from "@/features/ledger/api/resolvers/ledger-finance-resolver.query";
 import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
+import { formatError } from "@/server/graphql/format-error";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import {
@@ -32,6 +33,9 @@ jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const ACCOUNT = "Assets:Checking";
 const envelope = (data: unknown) => ({ data: { success: true, data } });
+
+let resolver: LedgerFinanceQueryResolver;
+let schemaPromise: ReturnType<typeof buildSchema> | undefined;
 
 const check = (date: string, asserted: string, diff?: string) => ({
   entry: {
@@ -102,13 +106,14 @@ async function fixture() {
   const services = {
     ledgerFinance: new LedgerFinanceService(factory as never, {} as never),
   };
-  const resolver = new LedgerFinanceQueryResolver(services.ledgerFinance);
-  const schema = await buildSchema({
+  resolver = new LedgerFinanceQueryResolver(services.ledgerFinance);
+  schemaPromise ??= buildSchema({
     resolvers: [LedgerFinanceQueryResolver],
     container: { get: () => resolver },
     globalMiddlewares: [graphqlScopeMiddleware("enforce")],
     validate: true,
   });
+  const schema = await schemaPromise;
   const rest = await startV1TestServer(
     { services } as unknown as AppLayers,
     config,
@@ -163,8 +168,50 @@ async function fixture() {
     return { rest: restRows, mcp: mcpRows, gql: gqlRows };
   };
 
+  const registerRefusal = async (account: string) => {
+    const query = new URLSearchParams({ account });
+    const response = await fetch(
+      `${rest.url}/api-gateway/v1/ledgers/alice/main/register?${query}`,
+    );
+    const restBody = await response.json();
+    const restOut = {
+      status: response.status,
+      code: restBody.error?.code,
+      message: restBody.error?.message,
+    };
+
+    const mcpOut = await client
+      .readResource({
+        uri: `beancount://alice/main/register/${encodeURIComponent(account)}`,
+      })
+      .then(() => ({ ok: true as const, code: undefined, message: undefined }))
+      .catch((error: { message?: string; data?: { code?: string } }) => ({
+        ok: false as const,
+        code: error.data?.code,
+        message: error.message,
+      }));
+
+    const gql = await graphql({
+      schema,
+      source: `query($a: String!) { getLedgerRegister(ledgerId: "alice/main", account: $a) { account } }`,
+      variableValues: { a: account },
+      contextValue: { identity: pinnedReadToken },
+    });
+    const gqlError = gql.errors?.[0];
+    const formatted = gqlError
+      ? formatError(gqlError.toJSON(), gqlError)
+      : undefined;
+    const gqlOut = formatted
+      ? { code: formatted.extensions?.code, message: formatted.message }
+      : { code: "OK", message: undefined };
+
+    return { rest: restOut, mcp: mcpOut, gql: gqlOut };
+  };
+
   return {
     register,
+    registerRefusal,
+    getPublicApiClient: factory.getPublicApiClient,
     close: async () => {
       await client.close();
       await server.close();
@@ -205,4 +252,34 @@ describe("the register's balance assertions", () => {
       await f.close();
     }
   });
+
+  // w31/041: whitespace-only account must be refused identically across REST,
+  // MCP, and GraphQL without calling the ledger service.
+  it.each(["  ", "\t"])(
+    "refuses whitespace-only account %p with BAD_USER_INPUT on REST, MCP, and GraphQL",
+    async (account) => {
+      const f = await fixture();
+      try {
+        expect(await f.registerRefusal(account)).toEqual({
+          rest: {
+            status: 400,
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("Register needs an account"),
+          },
+          mcp: {
+            ok: false,
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("Register needs an account"),
+          },
+          gql: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("Register needs an account"),
+          },
+        });
+        expect(f.getPublicApiClient).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });
