@@ -639,14 +639,31 @@ def _refuse_self_pad(account: str, source: str) -> None:
 
 
 def _conflict_refusal(
-    conflict: Any, account: str, date: Any, number: Any, currency: str, tolerance: Any
-) -> protocol.ConflictError:
-    where = conflict.meta.get("filename"), conflict.meta.get("lineno")
+    conflict: Any, account: str, date: Any, number: Any, currency: str, tolerance: Any, *, force: bool
+) -> protocol.ConflictError | None:
+    """The refusal of a second, different assertion for the day, or None when `--force` can land it.
+
+    Beancount accepts the same number again at another precision or tolerance,
+    so `--force` records that. A different number fails its duplicate-balance
+    validation whatever the tolerance, so it is refused forced or not, pointing
+    at the line to correct (w1/366).
+    """
+    if conflict is None:
+        return None
+    same_number = conflict.amount.number == number
+    if force and same_number:
+        return None
+    where = f"{conflict.meta.get('filename')}:{conflict.meta.get('lineno')}"
+    remedy = (
+        "Pass --force to record another assertion."
+        if same_number
+        else "Beancount allows one balance per account, currency and day, so correct or delete the "
+        f"assertion at {where} instead."
+    )
     return protocol.ConflictError(
         f"{account} already has a {date.isoformat()} balance of "
         f"{_balance_amount(conflict.amount.number, currency, conflict.tolerance)} "
-        f"(at {where[0]}:{where[1]}); refusing {_balance_amount(number, currency, tolerance)}. "
-        "Pass --force to record another assertion."
+        f"(at {where}); refusing {_balance_amount(number, currency, tolerance)}. {remedy}"
     )
 
 
@@ -737,8 +754,9 @@ def _balance(
                 warnings.append(_recorded_warning(held, source))
         return _duplicate_answer(warnings, source)
     conflict = _balance_conflict(authored, date, account, number, currency, tolerance)
-    if conflict is not None and not request.get("force"):
-        raise _conflict_refusal(conflict, account, date, number, currency, tolerance)
+    refusal = _conflict_refusal(conflict, account, date, number, currency, tolerance, force=bool(request.get("force")))
+    if refusal is not None:
+        raise refusal
     if pad_from is None and not request.get("force"):
         _refuse_used_pad_fill(before, date, account, number, currency, tolerance, before_options)
     if pad_from is None:
@@ -788,8 +806,11 @@ def _balance(
         # date the pad after that very day and to rerun this command (w5/487).
         authored = authored_entries(snapshot, Balance)
         conflict = _balance_conflict(authored, date, account, number, currency, tolerance)
-        if conflict is not None and not request.get("force"):
-            raise _conflict_refusal(conflict, account, date, number, currency, tolerance) from None
+        refusal = _conflict_refusal(
+            conflict, account, date, number, currency, tolerance, force=bool(request.get("force"))
+        )
+        if refusal is not None:
+            raise refusal from None
         # The only failure worth a retry is a pad Beancount reports unused;
         # anything else stands. Why it went unused decides what happens next.
         # `--allow-errors` takes the same path: the flag tolerates errors

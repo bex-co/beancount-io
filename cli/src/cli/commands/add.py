@@ -289,8 +289,9 @@ def add_balance(
         bool,
         typer.Option(
             "--force",
-            help="Record another assertion when the date/account already has one, or pad to an amount whose "
-            "sign is refused or that the assertion day's own transactions reach",
+            help="Record the day's existing number again at another precision or tolerance (a different number "
+            "means correcting the existing assertion), or pad to an amount whose sign is refused or that the "
+            "assertion day's own transactions reach",
         ),
     ] = False,
     pad_from: Annotated[

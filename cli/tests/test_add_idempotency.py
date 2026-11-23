@@ -129,15 +129,18 @@ def test_conflicting_balance_names_both_values_and_the_flag(ledger: Path) -> Non
     assert result.returncode == 4, result.stderr
     assert "-10 USD" in result.stderr
     assert "-9 USD" in result.stderr
-    assert "--force" in result.stderr
+    # Beancount allows one balance number per day, so --force cannot help (w1/366).
+    assert "correct or delete the assertion" in result.stderr
+    assert "--force" not in result.stderr
     assert ledger.read_text().count("balance Assets:Checking") == 1
 
 
-def test_forced_conflicting_balance_still_fails_validation(ledger: Path) -> None:
+def test_forced_conflicting_balance_is_still_refused(ledger: Path) -> None:
     assert _bea(ledger.parent, *_balance(ledger, "-10 USD")).returncode == 0
     result = _bea(ledger.parent, *_balance(ledger, "-9 USD", "--force"))
 
-    assert result.returncode == 1, result.stderr
+    assert result.returncode == 4, result.stderr
+    assert "correct or delete the assertion" in result.stderr
     assert ledger.read_text().count("balance Assets:Checking") == 1
 
 

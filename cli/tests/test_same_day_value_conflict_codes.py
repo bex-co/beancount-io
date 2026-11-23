@@ -142,9 +142,14 @@ def test_add_and_import_apply_report_the_same_price_conflict(tmp_path: Path, jso
 
 @pytest.mark.parametrize("json_output", [False, True], ids=["text", "json"])
 @pytest.mark.parametrize("pad", [False, True], ids=["plain", "pad"])
-@pytest.mark.parametrize("amount", ["7 USD", "0.000 USD"], ids=["value", "precision"])
+@pytest.mark.parametrize(
+    ("amount", "remedy"),
+    # Only the same number at another precision can land with --force (w1/366).
+    [("7 USD", "so correct or delete the assertion at"), ("0.000 USD", "Pass --force to record another assertion")],
+    ids=["value", "precision"],
+)
 def test_balance_disagreement_is_a_conflict_before_any_pad_write(
-    tmp_path: Path, json_output: bool, pad: bool, amount: str
+    tmp_path: Path, json_output: bool, pad: bool, amount: str, remedy: str
 ) -> None:
     root = _books(tmp_path)
     before = _snapshot(root)
@@ -153,7 +158,7 @@ def test_balance_disagreement_is_a_conflict_before_any_pad_write(
     message = _error(_bea(root, json_output, *_balance(amount), *extra), json_output)
 
     assert "balance of 0.00 USD" in message and f"refusing {amount}" in message, message
-    assert "values.bean:2" in message and "Pass --force" in message, message
+    assert "values.bean:2" in message and remedy in message, message
     assert _snapshot(root) == before
 
 
@@ -210,9 +215,10 @@ def test_duplicates_force_and_malformed_input_keep_their_distinct_outcomes(tmp_p
         _error(_bea(root, json_output, *command), json_output, code=2)
         assert _snapshot(root) == before
 
-    invalid = _bea(root, json_output, *_balance("7 USD"), "--force")
-    assert invalid.returncode == 1, invalid.stdout + invalid.stderr
-    assert "Balance failed" in invalid.stderr, invalid.stderr
+    # Beancount allows one balance number per day, so --force cannot land a
+    # different one: it stays a conflict, not a failed write (w1/366).
+    forced_balance = _error(_bea(root, json_output, *_balance("7 USD"), "--force"), json_output)
+    assert "values.bean:2" in forced_balance and "--force" not in forced_balance, forced_balance
     assert _snapshot(root) == before
 
     forced = _bea(root, json_output, *_price("1.20 USD"), "--force")

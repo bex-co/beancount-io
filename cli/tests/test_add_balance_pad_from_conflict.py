@@ -2,7 +2,8 @@
 
 The pad path skipped the same-day conflict check, so the write failed
 validation with advice to date the pad after that very day, a command to
-rerun the same write, and Beancount's duplicate error last.
+rerun the same write, and Beancount's duplicate error last. A different
+number is refused under `--force` too, before staging (w1/366).
 """
 
 from __future__ import annotations
@@ -46,27 +47,19 @@ def _bea(tmp_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+@pytest.mark.parametrize("force", [(), ("--force",)], ids=["unforced", "forced"])
 @pytest.mark.parametrize("pad", [(), ("--pad-from", "Equity:Opening")], ids=["plain", "pad-from"])
-def test_the_same_refusal_with_or_without_a_pad(tmp_path: Path, pad: tuple[str, ...]) -> None:
+def test_the_same_refusal_with_or_without_a_pad(tmp_path: Path, pad: tuple[str, ...], force: tuple[str, ...]) -> None:
     (tmp_path / "main.bean").write_text(LEDGER)
 
-    result = _bea(tmp_path, *ADD, *pad)
+    result = _bea(tmp_path, *ADD, *pad, *force)
 
     assert result.returncode == 4, result.stdout + result.stderr
-    assert "Assets:Cash already has a 2026-01-25 balance of 0 USD" in result.stderr
-    assert "refusing 7 USD. Pass --force to record another assertion." in result.stderr
-    assert "Date the pad after" not in result.stderr
-    assert "Opening adjustment command" not in result.stderr
-    assert (tmp_path / "main.bean").read_text() == LEDGER
-
-
-def test_forced_the_pad_hint_gives_no_impossible_date(tmp_path: Path) -> None:
-    (tmp_path / "main.bean").write_text(LEDGER)
-
-    result = _bea(tmp_path, *ADD, "--pad-from", "Equity:Opening", "--force")
-
-    assert result.returncode == 1, result.stdout + result.stderr
     flat = " ".join(result.stderr.split())
-    assert "Date the pad after 2026-01-25" not in flat
-    assert "already asserts this account on that day" in flat
+    assert "Assets:Cash already has a 2026-01-25 balance of 0 USD" in flat
+    assert "refusing 7 USD. Beancount allows one balance per account, currency and day" in flat
+    assert f"correct or delete the assertion at {tmp_path / 'main.bean'}:5 instead." in flat
+    assert "--force" not in flat
+    assert "Date the pad after" not in flat
+    assert "Opening adjustment command" not in flat
     assert (tmp_path / "main.bean").read_text() == LEDGER

@@ -33,6 +33,8 @@ def _diagnostic(result: Result, json_output: bool) -> str:
 def test_a_forced_conflicting_balance_never_recommends_another_balance_with_a_pad(
     tmp_path: Path, pad: bool, json_output: bool
 ) -> None:
+    # Refused before staging since w1/366: Beancount allows one balance number
+    # per account, currency and day, so the remedy is the existing line.
     root = tmp_path / "main.bean"
     original = OPENS + "2026-01-25 balance Assets:Cash 0 USD\n"
     root.write_text(original)
@@ -47,10 +49,10 @@ def test_a_forced_conflicting_balance_never_recommends_another_balance_with_a_pa
         ],
     )  # fmt: skip
 
-    assert result.exit_code == 1, result.output
+    assert result.exit_code == 4, result.output
     text = _diagnostic(result, json_output)
-    assert "Duplicate balance assertion with different amounts" in text
-    assert "Remove or correct the conflicting assertion" in text
+    assert f"correct or delete the assertion at {root}:7 instead" in text
+    assert "--force" not in text
     assert "Opening adjustment command" not in text
     assert "--pad-from SOURCE_ACCOUNT" not in text
     assert root.read_text() == original

@@ -1809,11 +1809,14 @@ other direction (`EUR 1.20 USD` beside `USD 0.80 EUR`, which says 1.25); with
 both on record, every read settles each day from the quotes up to that day, as `bea query` does, whatever their line order: the pair is valued by the inverse of the direction quoted less often, and a tie is broken in favor of the quote from the alphabetically later currency. Two quotes agree when the inverse of each rounds to the other at the other's typed precision, both ways (`0.3333` beside `3`); `1` beside `1.90` does not, since the inverse of `1` is `1.00` at two places, not `1.90`. So `1` and `1.0` get the same answer, whichever quote was written first. A quote that loses its day to a price a plugin implied is still written, with a warning naming the implied price, since no read will use it. Only written price directives count: a price a plugin such as
 `implicit_prices` generates is neither a duplicate nor a conflict. `add balance` is idempotent the same way: re-running an
 identical assertion reports the existing location and writes nothing, including
-with `--pad-from` (no new pad is written). A different value for the same date,
-account, and currency is a conflict (exit **4**) and needs `--force`
-(ledger validation still applies, so a conflicting value cannot land). Without
-an explicit `~` tolerance the number's precision sets the tolerance, so
-`10.30 USD` is a different, stricter assertion than `10.3 USD`.
+with `--pad-from` (no new pad is written). Another assertion for the same date,
+account, and currency is a conflict (exit **4**) naming the existing line.
+Without an explicit `~` tolerance the number's precision sets the tolerance, so
+`10.30 USD` is a different, stricter assertion than `10.3 USD`; `--force`
+records the same number at another precision or tolerance. Beancount allows one
+balance number per account, currency, and day, so a different number is refused
+with or without `--force` (and `--pad-from`): correct or delete the existing
+assertion instead.
 Repeated `--amount` is refused on both commands — a price and an assertion
 each hold one amount.
 
