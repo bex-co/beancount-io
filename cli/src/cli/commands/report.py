@@ -214,6 +214,11 @@ def _footed(
     return footed
 
 
+def _balance_of(amount: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """One `{number, currency}` object as a one-currency balance, for `_footed`; None stays None."""
+    return None if amount is None else {str(amount["currency"]): amount["number"]}
+
+
 def _same(left: Mapping[str, Any], right: Mapping[str, Any]) -> bool:
     """Whether two balances hold the same figures, however each spells them."""
     return left.keys() == right.keys() and all(_as_decimal(left[key]) == _as_decimal(right[key]) for key in left)
@@ -754,7 +759,11 @@ def holdings(
             for group, digits in zip(groups, data["average_cost_precision"], strict=True)
         ],
     )
-    totals = data["totals"]
+    # Each total sums the figures printed in its column above (w1/360).
+    totals = {
+        column: _footed(data["totals"][column], [_balance_of(group[column]) for group in groups], precision)
+        for column in ("cost_basis", "market_value")
+    }
     typer.echo("")
     basis = _amounts(totals["cost_basis"], conversion, precision)
     if data.get("cost_basis_complete") is False:
@@ -918,11 +927,20 @@ def capital_gains(
             for row in rows
         ],
     )
-    totals = data["totals"]
+    # Each bucket sums the GAIN figures printed for its rows (w1/360).
+    buckets = {"one_year_or_less": False, "more_than_one_year": True, "holding_unknown": None}
+    totals = {
+        bucket: _footed(
+            data["totals"][bucket],
+            [_balance_of(row["gain"]) for row in rows if row["long_held"] is long_held],
+            precision,
+        )
+        for bucket, long_held in buckets.items()
+    }
     typer.echo("")
     typer.echo(f"  {'One year or less:':<20} {_amounts(totals['one_year_or_less'], conversion, precision)}")
     typer.echo(f"  {'More than one year:':<20} {_amounts(totals['more_than_one_year'], conversion, precision)}")
-    if totals["holding_unknown"]:
+    if data["totals"]["holding_unknown"]:
         typer.echo(f"  {'Holding unknown:':<20} {_amounts(totals['holding_unknown'], conversion, precision)}")
     _unpriced_note(unpriced)
 

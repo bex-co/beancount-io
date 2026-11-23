@@ -6,6 +6,8 @@ its parts rounded in opposite directions: the trial balance netted to 0.01,
 `Net Worth` read -10.00 under `10.01` and `-20.00`, and `Net Profit` read
 -10.00 under `-10.01` and `20.00`. Every derived text line is now the sum of
 the printed lines it is defined from; `--json` and CSV keep the exact figures.
+Holdings' column totals and capital gains' holding-period totals sum their
+printed rows the same way (w1/360).
 """
 
 from __future__ import annotations
@@ -64,6 +66,57 @@ option "operating_currency" "USD"
 2026-01-11 * "Buy"
   Assets:Other 0.5 VTI {10.01 USD}
   Assets:Cash -5.01 USD
+"""
+# Two holdings at a half cent each: 1.5 shares at 10.01 cost and 10.03 USD,
+# beside a position with no cost basis, which the basis total leaves out.
+HOLDINGS = """\
+option "operating_currency" "USD"
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Assets:Broker
+2026-01-01 open Assets:Other
+2026-01-01 open Equity:Opening USD
+2026-01-02 * "Opening"
+  Assets:Cash 100.00 USD
+  Equity:Opening
+2026-01-10 * "Buy"
+  Assets:Broker 1.5 AAA {10.01 USD}
+  Assets:Cash -15.02 USD
+2026-01-11 * "Buy"
+  Assets:Other 1.5 BBB {10.01 USD}
+  Assets:Cash -15.02 USD
+2026-01-12 * "Gift"
+  Assets:Other 1 CCC @ 5.00 USD
+  Assets:Cash -5.00 USD
+2026-01-31 price AAA 10.03 USD
+2026-01-31 price BBB 10.03 USD
+2026-01-31 price CCC 5.00 USD
+"""
+# Four sales of half a share at a cent's gain: 0.005 USD each, two held over a year.
+GAINS = """\
+option "operating_currency" "USD"
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Assets:Broker
+2024-01-01 open Equity:Opening USD
+2024-01-01 open Income:Gains USD
+2024-01-02 * "Opening"
+  Assets:Cash 100.00 USD
+  Equity:Opening
+2024-01-10 * "Buy"
+  Assets:Broker 1.5 OLD {10.00 USD}
+  Assets:Cash -15.00 USD
+2026-01-10 * "Buy"
+  Assets:Broker 1.5 NEW {10.00 USD}
+  Assets:Cash -15.00 USD
+2026-02-01 * "Sell"
+  Assets:Broker -0.5 OLD {10.00 USD} @ 10.01 USD
+  Assets:Broker -0.5 NEW {10.00 USD} @ 10.01 USD
+  Assets:Cash 10.01 USD
+  Income:Gains
+2026-02-02 * "Sell"
+  Assets:Broker -0.5 OLD {10.00 USD} @ 10.01 USD
+  Assets:Broker -0.5 NEW {10.00 USD} @ 10.01 USD
+  Assets:Cash 10.01 USD
+  Income:Gains
 """
 AMOUNT = r"(-?[\d,]+\.\d+) USD"
 
@@ -143,6 +196,23 @@ def test_cash_flow_totals_foot_and_reach_the_closing_cash(tmp_path: Path) -> Non
     assert _line(out, "Opening cash:") + net + _line(out, "Rounding residual:") == _line(out, "Closing cash:")
 
 
+def test_holdings_totals_sum_their_printed_columns(tmp_path: Path) -> None:
+    out = _run(tmp_path, HOLDINGS, "report", "holdings")
+    rows = re.findall(rf"^Assets:\S+\s+\S+\s+\S+ \S+\s+(\S+ USD|—)\s+(\S+ USD|—)\s+{AMOUNT}\s*$", out, re.MULTILINE)
+    assert [row[2] for row in rows] == ["15.05", "15.05", "5.00"], out
+    assert [row[1] for row in rows] == ["15.02 USD", "15.02 USD", "—"], out
+    assert "  Cost basis:      30.04 USD (excludes positions without a cost basis)\n" in out
+    assert _line(out, "Market value:") == Decimal("35.10")
+
+
+def test_capital_gains_totals_sum_the_printed_gains_of_their_rows(tmp_path: Path) -> None:
+    out = _run(tmp_path, GAINS, "report", "capital-gains")
+    gains = re.findall(rf"\((short|long)\)\s+.*\s{AMOUNT}\s*$", out, re.MULTILINE)
+    assert gains == [("long", "0.01"), ("short", "0.01"), ("long", "0.01"), ("short", "0.01")], out
+    assert _line(out, "One year or less:") == Decimal("0.02")
+    assert _line(out, "More than one year:") == Decimal("0.02")
+
+
 def test_json_keeps_the_exact_figures(tmp_path: Path) -> None:
     trial = _json(tmp_path, BOOKS, "report", "trial-balance")
     assert trial["assets"]["balance_children"] == {"USD": "9988.625"}
@@ -160,6 +230,10 @@ def test_json_keeps_the_exact_figures(tmp_path: Path) -> None:
     flows = _json(tmp_path, CASH, "report", "cash-flow")
     assert flows["totals"]["investing"] == {"USD": "-30.030"}
     assert flows["rounding_residual"] == {}
+    held = _json(tmp_path, HOLDINGS, "report", "holdings")
+    assert held["totals"] == {"cost_basis": {"USD": "30.030"}, "market_value": {"USD": "35.090"}}
+    gains = _json(tmp_path, GAINS, "report", "capital-gains")
+    assert gains["totals"]["one_year_or_less"] == gains["totals"]["more_than_one_year"] == {"USD": "0.010"}
 
 
 def test_csv_keeps_the_exact_figures(tmp_path: Path) -> None:

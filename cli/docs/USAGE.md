@@ -2603,8 +2603,11 @@ residual`; `Total equity` is the sum of the printed equity lines; and the
 balance sheet's earnings line is income plus expenses as the income statement
 prints them. Cash flow's section totals sum their rows, `Net change in cash`
 sums the section totals, and its `Rounding residual` is what takes the printed
-opening cash and net change to the printed closing cash. Account rows keep
-their own rounding. With `price VTI 95.45 USD` on 2.5 shares, the trial balance
+opening cash and net change to the printed closing cash. Holdings' `Cost
+basis` and `Market value` sum the printed figures in their columns, and
+capital gains' `One year or less`, `More than one year` and `Holding unknown`
+sum the printed GAIN of their rows. Account rows keep their own rounding, and
+so does each holdings and capital-gains row. With `price VTI 95.45 USD` on 2.5 shares, the trial balance
 prints assets `9,988.63 USD`, equity `-10,000.00 USD` and an adjustment of
 `11.37 USD`, while `--json` keeps `"9988.625"` and `"11.375"`. JSON and CSV
 carry the exact figures, which foot on their own.
