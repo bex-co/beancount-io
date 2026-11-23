@@ -33,6 +33,14 @@ def attention(description: dict[str, Any], check_command: str) -> list[dict[str,
                 f"Plugin `{name}` loaded but failed while running.",
                 "Fix the plugin's code or its configuration string; `bea check` shows its error.",
             )
+        elif plugin["source"] == "beancount" and plugin.get("replacement"):
+            # Removing the line, the generic step below, would book a forecast
+            # template as a real transaction without an error (w1/362).
+            kind, message, step = (
+                "plugin-not-in-beancount",
+                f"Plugin `{name}` was dropped in Beancount 3; bea bundles a drop-in replacement.",
+                f'Change the line to plugin "{plugin["replacement"]}".',
+            )
         elif plugin["source"] == "beancount":
             kind, message, step = (
                 "plugin-not-in-beancount",

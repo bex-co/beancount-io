@@ -11,7 +11,8 @@ from, because each has a different next step:
 
 - `beancount`: a module under `beancount.` that this Beancount does not ship,
   which is what a Beancount 2 plugin removed or renamed in Beancount 3 looks
-  like;
+  like. When bea bundles a drop-in replacement for it, `replacement` names it
+  (w1/362);
 - `beside-ledger`: a module in the ledger's own folder. The engine never
   imports from the working directory (w1/098), so it loads only through
   `PYTHONPATH`;
@@ -122,7 +123,7 @@ def _relative(path: Path, folder: Path) -> str:
 def _plugin(
     name: str, location: tuple[str, int] | None, failure: tuple[bool, str] | None, folder: Path
 ) -> dict[str, Any]:
-    from bea_engine.query import module_beside
+    from bea_engine.query import bundled_replacement, module_beside
 
     top = name.split(".", 1)[0]
     if top == "beancount":
@@ -139,6 +140,7 @@ def _plugin(
         "source": source,
         "error": failure[1] if failure is not None else None,
         "failed_while_running": failure is not None and failure[0],
+        "replacement": bundled_replacement(name, failure[1]) if failure is not None and not failure[0] else None,
     }
 
 

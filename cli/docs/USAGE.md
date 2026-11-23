@@ -640,7 +640,10 @@ It then lists what needs attention before an agent works on the ledger, each
 item at its `file:line` with one next step:
 
 - a plugin under `beancount.` that this Beancount does not ship (Beancount 2
-  plugins Beancount 3 dropped): remove or replace the line;
+  plugins Beancount 3 dropped): remove or replace the line. When bea bundles
+  a drop-in replacement, the step names it instead: `beancount.plugins.forecast`
+  becomes `plugin "fava.plugins.forecast"`, and `bea check` and every other
+  read name the same line;
 - a plugin module in the ledger's folder: run bea there with `PYTHONPATH=.`
   (`bea check` and every other read name the same module, and the
   `option "insert_pythonpath" "TRUE"` alternative, on the plugin's line);
@@ -657,8 +660,9 @@ Nothing else changes: no ledger file is written, an existing `AGENTS.md` or
 repository is created or staged. A ledger with errors still gets its files;
 the command says how many errors it loads with and exits **0**. In JSON mode
 `data` holds the root, `files`, `operating_currencies`, `open_accounts`,
-`plugins` (each with its `file` and `line`, `loaded`, and `source`:
-`beancount`, `beside-ledger` or `package`), `errors` (each with `file`,
+`plugins` (each with its `file` and `line`, `loaded`, `source`:
+`beancount`, `beside-ledger` or `package`, and `replacement`, the bundled
+plugin to use instead or `null`), `errors` (each with `file`,
 `line`, `message`, and `option` when it is an option Beancount does not
 know), `attention` (each item's `kind`, `location`, `subject`, `message` and
 `next`), and `agent_files`.

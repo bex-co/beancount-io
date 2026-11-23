@@ -3731,6 +3731,9 @@ def _import_hint(name: str, cause: str, location: tuple[str, int] | None, ledger
     spelling and the installation leads nowhere (w1/344). It loads once that
     folder is on the module path, through the option or the environment.
     """
+    replacement = bundled_replacement(name, cause)
+    if replacement is not None:
+        return f'Beancount 3 dropped this plugin; bea bundles a drop-in replacement: plugin "{replacement}".'
     declared = location[0] if location is not None else ledger_file
     top = name.split(".", 1)[0]
     if declared is None or f"No module named '{top}'" not in cause:
@@ -3743,6 +3746,18 @@ def _import_hint(name: str, cause: str, location: tuple[str, int] | None, ledger
         f'add option "insert_pythonpath" "TRUE" to {Path(declared).name}, '
         f"or run bea with PYTHONPATH={shlex.quote(str(folder))}."
     )
+
+
+#: Beancount 2 plugins that Beancount 3 no longer ships and that bea bundles a
+#: drop-in replacement for. Their name is spelled right and there is nothing to
+#: install, and removing the line changes balances without an error (w1/362).
+_BUNDLED_REPLACEMENTS = {"beancount.plugins.forecast": "fava.plugins.forecast"}
+
+
+def bundled_replacement(name: str, cause: str) -> str | None:
+    """The bundled plugin to use instead of `name`, when `name` failed to import because Beancount dropped it."""
+    replacement = _BUNDLED_REPLACEMENTS.get(name)
+    return replacement if replacement is not None and f"No module named '{name}'" in cause else None
 
 
 def module_beside(top: str, folder: Path) -> bool:

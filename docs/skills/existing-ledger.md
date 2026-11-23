@@ -64,7 +64,10 @@ so. The `AGENTS.md` it wrote tells agents to run every check as
 On your own books, the list may also name:
 
 - a plugin under `beancount.` that Beancount 3 no longer ships (Beancount 2
-  had several): remove or replace that `plugin` line;
+  had several): remove or replace that `plugin` line. For
+  `beancount.plugins.forecast`, `bea` bundles a drop-in replacement and the
+  list says to change the line to `plugin "fava.plugins.forecast"`; removing
+  it instead would book each forecast template as one real transaction;
 - a plugin from a Python package `bea`'s engine does not include: no `bea`
   command installs one, so the plugin does not run under `bea` while the rest
   of the ledger loads;
