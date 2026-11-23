@@ -489,6 +489,7 @@ export class LedgerJournalService
       identity,
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
+    assertEntryHashFormat(entryHash);
 
     const data = await unwrapFavaResponse(
       favaApiClient.journal.deleteSourceSlice(ledgerOwner, ledgerName, {
@@ -536,6 +537,9 @@ export class LedgerJournalService
     // GraphQL's entries argument arrives unchecked, so the schema maxItems
     // alone would leave that surface uncapped (w23/103).
     assertBulkEntriesSize(entries, "deleted");
+    for (const entry of entries) {
+      assertEntryHashFormat(entry.entryHash);
+    }
 
     const data = await unwrapFavaResponse(
       favaApiClient.journal.deleteMultiSourceSlices(ledgerOwner, ledgerName, {
@@ -586,6 +590,9 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
     );
     assertBulkEntriesSize(entries, "moved");
+    for (const entry of entries) {
+      assertEntryHashFormat(entry.entryHash);
+    }
 
     const data = await unwrapFavaResponse(
       favaApiClient.journal.moveSourceSlices(ledgerOwner, ledgerName, {
@@ -641,6 +648,7 @@ export class LedgerJournalService
       identity,
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
+    assertEntryHashFormat(entryHash);
     // An empty edit would replace the entry with a blank line: a delete that
     // skipped the delete confirmation and reported "saved" (w21/120). REST,
     // GraphQL and MCP all edit through here.

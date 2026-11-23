@@ -59,6 +59,12 @@ const CAKE = '2026-08-09 * "Cake"\n  Expenses:Food  4.00 USD\n  Assets:Cash';
 const BTC_PRICE = "2026-08-01 price BTC 60000 USD";
 const BALANCE_FAILED =
   "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD";
+const H_TEA = "aa".repeat(16);
+const H_CAKE = "bb".repeat(16);
+const H_BTC = "cc".repeat(16);
+const H_TEA_DUP = `${H_TEA}:1`;
+const ENTRY_HASH_FORMAT_ERROR =
+  "entryHash must be an entry_hash from list output: 32 lowercase hex digits, with a :<n> suffix on a repeated entry";
 
 type MoveBody = {
   entries: { entry_hash: string; sha256sum: string }[];
@@ -70,9 +76,10 @@ type MoveBody = {
 
 async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
   const slices = new Map([
-    ["tea", TEA],
-    ["cake", CAKE],
-    ["btc", BTC_PRICE],
+    [H_TEA, TEA],
+    [H_CAKE, CAKE],
+    [H_BTC, BTC_PRICE],
+    [H_TEA_DUP, TEA],
   ]);
   const loaded = ["main.bean", "2026.bean", "prices/btc.bean"];
   const commits: MoveBody[] = [];
@@ -87,7 +94,7 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
       }
       for (const ref of body.entries) {
         const text = slices.get(ref.entry_hash);
-        if (ref.entry_hash === "btc") {
+        if (ref.entry_hash === H_BTC) {
           const error =
             "Operation 'edit managed price source' not allowed: prices/btc.bean is a managed price feed resolved from a URL include and is read-only; declare a price directive in your own ledger file to override it";
           throw new FavaApiError(error, 403, { error });
@@ -282,9 +289,9 @@ async function fixture(options: { readOnly?: boolean; breaks?: boolean } = {}) {
 
 const SURFACES = ["rest", "gql", "mcp"] as const;
 const ENTRIES = [
-  { entryHash: "cake", sha256sum: hash(CAKE) },
+  { entryHash: H_CAKE, sha256sum: hash(CAKE) },
   // The list spelling, as listLedgerEntries returns it.
-  { entry_hash: "tea", sha256sum: hash(TEA) },
+  { entry_hash: H_TEA, sha256sum: hash(TEA) },
 ];
 const MOVE = {
   entries: ENTRIES,
@@ -307,8 +314,8 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
       expect(env.commits).toEqual([
         {
           entries: [
-            { entry_hash: "cake", sha256sum: hash(CAKE) },
-            { entry_hash: "tea", sha256sum: hash(TEA) },
+            { entry_hash: H_CAKE, sha256sum: hash(CAKE) },
+            { entry_hash: H_TEA, sha256sum: hash(TEA) },
           ],
           to_path: "2026/08.bean",
           include_from: "main.bean",
@@ -316,7 +323,7 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
       ]);
       expect(result).toMatchObject({
         message: "Moved 2 entries to 2026/08.bean",
-        movedHashes: ["cake", "tea"],
+        movedHashes: [H_CAKE, H_TEA],
         toPath: "2026/08.bean",
         includeAdded: true,
         commit: "c0ffee1",
@@ -334,7 +341,7 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
             { path: "2026/08.bean" },
             // main.bean gained the include; it is listed once.
           ],
-          entryHashes: ["cake", "tea"],
+          entryHashes: [H_CAKE, H_TEA],
         });
       } else {
         expect(result).toMatchObject({ dryRun: false });
@@ -411,7 +418,7 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
       await expect(
         env.call(surface, {
           ...MOVE,
-          entries: [{ entryHash: "tea", sha256sum: "0".repeat(64) }],
+          entries: [{ entryHash: H_TEA, sha256sum: "0".repeat(64) }],
         }),
       ).resolves.toMatchObject({ success: false, code: "CONFLICT" });
       expect(env.commits).toHaveLength(0);
@@ -433,7 +440,7 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
     ],
     [
       "an entry in a managed price include",
-      { ...MOVE, entries: [{ entryHash: "btc", sha256sum: hash(BTC_PRICE) }] },
+      { ...MOVE, entries: [{ entryHash: H_BTC, sha256sum: hash(BTC_PRICE) }] },
       "OPERATION_NOT_ALLOWED",
     ],
   ])(
@@ -490,6 +497,51 @@ describe.each(SURFACES)("moveEntrySources on %s (w1/m45)", (surface) => {
         code: "FORBIDDEN",
       });
       expect(env.moveSourceSlices).not.toHaveBeenCalled();
+    } finally {
+      await env.close();
+    }
+  });
+
+  // w31/046: malformed entry hashes are refused as BAD_USER_INPUT before
+  // reaching the ledger, while valid :<n> duplicate hashes continue to work.
+  it.each([
+    ["", "entryHash"],
+    ["   ", "entryHash"],
+    ["not-a-hash", "entryHash"],
+    ["not-a-hash", "entry_hash"],
+  ] as const)(
+    "refuses malformed entryHash %j (%s) as BAD_USER_INPUT before reaching the ledger",
+    async (badHash, key) => {
+      const env = await fixture();
+      try {
+        const refused = await env.call(surface, {
+          ...MOVE,
+          entries: [{ [key]: badHash, sha256sum: hash(TEA) }],
+          dryRun: true,
+        });
+        expect(refused).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+          message: ENTRY_HASH_FORMAT_ERROR,
+        });
+        expect(env.moveSourceSlices).not.toHaveBeenCalled();
+        expect(env.commits).toHaveLength(0);
+      } finally {
+        await env.close();
+      }
+    },
+  );
+
+  it("still accepts a valid :<n> duplicate entry hash", async () => {
+    const env = await fixture();
+    try {
+      const res = await env.call(surface, {
+        ...MOVE,
+        entries: [{ entryHash: H_TEA_DUP, sha256sum: hash(TEA) }],
+        dryRun: true,
+      });
+      expect(res.success).toBe(true);
+      expect(env.moveSourceSlices).toHaveBeenCalledTimes(1);
     } finally {
       await env.close();
     }

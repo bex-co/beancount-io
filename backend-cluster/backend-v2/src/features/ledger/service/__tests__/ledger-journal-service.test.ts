@@ -27,6 +27,7 @@ const mockPlaintextJournal = jest.fn();
 const mockGetAccountJournal = jest.fn();
 const mockDeleteSourceSlice = jest.fn();
 const mockDeleteMultiSourceSlices = jest.fn();
+const mockMoveSourceSlices = jest.fn();
 const mockUpdateSourceSlice = jest.fn();
 
 const mockFavaApiClient = {
@@ -37,6 +38,7 @@ const mockFavaApiClient = {
     getAccountJournal: mockGetAccountJournal,
     deleteSourceSlice: mockDeleteSourceSlice,
     deleteMultiSourceSlices: mockDeleteMultiSourceSlices,
+    moveSourceSlices: mockMoveSourceSlices,
     updateSourceSlice: mockUpdateSourceSlice,
   },
 };
@@ -446,29 +448,77 @@ describe("LedgerJournalService", () => {
   });
 
   describe("deleteSourceSlice", () => {
+    const HASH_ABC = "ab".repeat(16);
+    const HASH_DUP = `${"ab".repeat(16)}:2`;
+
     it("returns message and entryHash on success", async () => {
       mockDeleteSourceSlice.mockResolvedValue({
         data: {
           success: true,
-          data: { message: "Deleted", entry_hash: "hash-abc" },
+          data: { message: "Deleted", entry_hash: HASH_ABC },
         },
       });
 
       const result = await service.deleteSourceSlice({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        entryHash: "hash-abc",
+        entryHash: HASH_ABC,
         sha256sum: "sum-xyz",
       });
 
       expect(result.message).toBe("Deleted");
-      expect(result.entryHash).toBe("hash-abc");
+      expect(result.entryHash).toBe(HASH_ABC);
       expect(mockDeleteSourceSlice).toHaveBeenCalledWith(
         "testowner",
         "testledger",
-        { entry_hash: "hash-abc", sha256sum: "sum-xyz" },
+        { entry_hash: HASH_ABC, sha256sum: "sum-xyz" },
       );
     });
+
+    it("accepts a valid duplicate :<n> entryHash suffix", async () => {
+      mockDeleteSourceSlice.mockResolvedValue({
+        data: {
+          success: true,
+          data: { message: "Deleted", entry_hash: HASH_DUP },
+        },
+      });
+
+      const result = await service.deleteSourceSlice({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        entryHash: HASH_DUP,
+        sha256sum: "sum-xyz",
+      });
+
+      expect(result.entryHash).toBe(HASH_DUP);
+      expect(mockDeleteSourceSlice).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        { entry_hash: HASH_DUP, sha256sum: "sum-xyz" },
+      );
+    });
+
+    it.each(["", "   ", "not-a-hash", HASH_ABC.toUpperCase(), `${HASH_ABC}:0`])(
+      "refuses malformed entryHash=%j with BadUserInputError before calling the ledger",
+      async (badHash) => {
+        const failure = await service
+          .deleteSourceSlice({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entryHash: badHash,
+            sha256sum: "sum-xyz",
+            dryRun: true,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "entryHash" },
+        });
+        expect(mockDeleteSourceSlice).not.toHaveBeenCalled();
+      },
+    );
 
     it("throws InternalServerError on failure", async () => {
       mockDeleteSourceSlice.mockResolvedValue({ data: { success: false } });
@@ -477,7 +527,7 @@ describe("LedgerJournalService", () => {
         service.deleteSourceSlice({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entryHash: "h",
+          entryHash: HASH_ABC,
           sha256sum: "s",
         }),
       ).rejects.toThrow(InternalServerError);
@@ -485,11 +535,15 @@ describe("LedgerJournalService", () => {
   });
 
   describe("deleteMultiSourceSlices", () => {
+    const H1 = "1a".repeat(16);
+    const H2 = "2b".repeat(16);
+    const H2_DUP = `${H2}:1`;
+
     it("returns message and deletedHashes on success", async () => {
       mockDeleteMultiSourceSlices.mockResolvedValue({
         data: {
           success: true,
-          data: { message: "Deleted 2", deleted_hashes: ["h1", "h2"] },
+          data: { message: "Deleted 2", deleted_hashes: [H1, H2_DUP] },
         },
       });
 
@@ -497,8 +551,8 @@ describe("LedgerJournalService", () => {
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
         entries: [
-          { entryHash: "h1", sha256sum: "s1" },
-          { entryHash: "h2", sha256sum: "s2" },
+          { entryHash: H1, sha256sum: "s1" },
+          { entryHash: H2_DUP, sha256sum: "s2" },
         ],
       });
 
@@ -508,12 +562,36 @@ describe("LedgerJournalService", () => {
         "testledger",
         {
           entries: [
-            { entry_hash: "h1", sha256sum: "s1" },
-            { entry_hash: "h2", sha256sum: "s2" },
+            { entry_hash: H1, sha256sum: "s1" },
+            { entry_hash: H2_DUP, sha256sum: "s2" },
           ],
         },
       );
     });
+
+    it.each(["", "   ", "not-a-hash", H1.toUpperCase(), `${H1}:0`])(
+      "refuses malformed entryHash=%j in any entry with BadUserInputError before calling the ledger",
+      async (badHash) => {
+        const failure = await service
+          .deleteMultiSourceSlices({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entries: [
+              { entryHash: H1, sha256sum: "s1" },
+              { entryHash: badHash, sha256sum: "s2" },
+            ],
+            dryRun: true,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "entryHash" },
+        });
+        expect(mockDeleteMultiSourceSlices).not.toHaveBeenCalled();
+      },
+    );
 
     it("throws InternalServerError on failure", async () => {
       mockDeleteMultiSourceSlices.mockResolvedValue({
@@ -524,7 +602,7 @@ describe("LedgerJournalService", () => {
         service.deleteMultiSourceSlices({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entries: [{ entryHash: "h1", sha256sum: "s1" }],
+          entries: [{ entryHash: H1, sha256sum: "s1" }],
         }),
       ).rejects.toThrow(InternalServerError);
     });
@@ -552,16 +630,88 @@ describe("LedgerJournalService", () => {
     );
   });
 
+  describe("moveSourceSlices", () => {
+    const H1 = "3c".repeat(16);
+    const H2_DUP = `${"4d".repeat(16)}:1`;
+
+    it("forwards valid hashes including :<n> suffixes to the ledger", async () => {
+      mockMoveSourceSlices.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            message: "Moved 2 entries to 2026.bean",
+            moved_hashes: [H1, H2_DUP],
+            include_added: false,
+            files: ["main.bean", "2026.bean"],
+          },
+        },
+      });
+
+      const result = await service.moveSourceSlices({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        entries: [
+          { entryHash: H1, sha256sum: "s1" },
+          { entryHash: H2_DUP, sha256sum: "s2" },
+        ],
+        toPath: "2026.bean",
+      });
+
+      expect(result.movedHashes).toEqual([H1, H2_DUP]);
+      expect(mockMoveSourceSlices).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        {
+          entries: [
+            { entry_hash: H1, sha256sum: "s1" },
+            { entry_hash: H2_DUP, sha256sum: "s2" },
+          ],
+          to_path: "2026.bean",
+        },
+      );
+    });
+
+    it.each(["", "   ", "not-a-hash", H1.toUpperCase(), `${H1}:0`])(
+      "refuses malformed entryHash=%j in any entry with BadUserInputError before calling the ledger",
+      async (badHash) => {
+        const failure = await service
+          .moveSourceSlices({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entries: [
+              { entryHash: H1, sha256sum: "s1" },
+              { entryHash: badHash, sha256sum: "s2" },
+            ],
+            toPath: "2026.bean",
+            dryRun: true,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "entryHash" },
+        });
+        expect(mockMoveSourceSlices).not.toHaveBeenCalled();
+      },
+    );
+  });
+
   describe("updateSourceSlice", () => {
+    const HASH_OLD = "aa".repeat(16);
+    const HASH_NEW = "bb".repeat(16);
+    const HASH_STALE = "cc".repeat(16);
+    const HASH_DUP = `${HASH_OLD}:1`;
+
     it("returns mapped result on success", async () => {
       mockUpdateSourceSlice.mockResolvedValue({
         data: {
           success: true,
           data: {
             message: "Updated",
-            entry_hash: "hash-new",
+            entry_hash: HASH_NEW,
             new_sha256sum: "newsum",
-            new_entry_hash: "hash-new-after-edit",
+            new_entry_hash: HASH_NEW,
           },
         },
       });
@@ -569,25 +719,77 @@ describe("LedgerJournalService", () => {
       const result = await service.updateSourceSlice({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        entryHash: "hash-old",
+        entryHash: HASH_OLD,
         sha256sum: "oldsum",
         newContent: '2024-01-02 * "new"\n',
       });
 
       expect(result.newSha256sum).toBe("newsum");
-      expect(result.entryHash).toBe("hash-new");
-      expect(result.newEntryHash).toBe("hash-new-after-edit");
+      expect(result.entryHash).toBe(HASH_NEW);
+      expect(result.newEntryHash).toBe(HASH_NEW);
       expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
         "testowner",
         "testledger",
         {
-          entry_hash: "hash-old",
+          entry_hash: HASH_OLD,
           sha256sum: "oldsum",
           new_content: '2024-01-02 * "new"\n',
         },
         {},
       );
     });
+
+    it("accepts a valid duplicate :<n> entryHash suffix", async () => {
+      mockUpdateSourceSlice.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            message: "Updated",
+            entry_hash: HASH_NEW,
+            new_sha256sum: "newsum",
+            new_entry_hash: HASH_NEW,
+          },
+        },
+      });
+
+      await service.updateSourceSlice({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        entryHash: HASH_DUP,
+        sha256sum: "oldsum",
+        newContent: '2024-01-02 * "new"\n',
+      });
+
+      expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        expect.objectContaining({ entry_hash: HASH_DUP }),
+        {},
+      );
+    });
+
+    it.each(["", "   ", "not-a-hash", HASH_OLD.toUpperCase(), `${HASH_OLD}:0`])(
+      "refuses malformed entryHash=%j with BadUserInputError before calling the ledger",
+      async (badHash) => {
+        const failure = await service
+          .updateSourceSlice({
+            ledgerId: LEDGER_ID,
+            identity: IDENTITY,
+            entryHash: badHash,
+            sha256sum: "oldsum",
+            newContent: '2024-01-02 * "new"\n',
+            dryRun: true,
+          })
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: { field: "entryHash" },
+        });
+        expect(mockUpdateSourceSlice).not.toHaveBeenCalled();
+      },
+    );
 
     // w23/m43: the ledger service decides from the file bytes. A checksum that
     // equals the request's does not make an edit a no-op (a comment kept beside
@@ -608,9 +810,9 @@ describe("LedgerJournalService", () => {
           success: true,
           data: {
             message: "Updated",
-            entry_hash: "hash-new",
+            entry_hash: HASH_NEW,
             new_sha256sum: "oldsum",
-            new_entry_hash: "hash-new",
+            new_entry_hash: HASH_NEW,
             files: ["main.bean"],
             ...flag,
           },
@@ -620,7 +822,7 @@ describe("LedgerJournalService", () => {
       const result = await service.updateSourceSlice({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        entryHash: "hash-old",
+        entryHash: HASH_OLD,
         sha256sum: "oldsum",
         newContent: "x",
       });
@@ -638,9 +840,9 @@ describe("LedgerJournalService", () => {
           success: true,
           data: {
             message: "Updated",
-            entry_hash: "hash-new",
+            entry_hash: HASH_NEW,
             new_sha256sum: "newsum",
-            new_entry_hash: "hash-new",
+            new_entry_hash: HASH_NEW,
           },
         },
       });
@@ -648,7 +850,7 @@ describe("LedgerJournalService", () => {
       await service.updateSourceSlice({
         ledgerId: LEDGER_ID,
         identity: IDENTITY,
-        entryHash: "hash-old",
+        entryHash: HASH_OLD,
         sha256sum: "oldsum",
         newContent: "x",
         platform: "mobile",
@@ -670,7 +872,7 @@ describe("LedgerJournalService", () => {
           service.updateSourceSlice({
             ledgerId: LEDGER_ID,
             identity: IDENTITY,
-            entryHash: "h",
+            entryHash: HASH_OLD,
             sha256sum: "s",
             newContent,
           }),
@@ -693,7 +895,7 @@ describe("LedgerJournalService", () => {
         service.updateSourceSlice({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entryHash: "h",
+          entryHash: HASH_OLD,
           sha256sum: "s",
           newContent,
         }),
@@ -713,7 +915,7 @@ describe("LedgerJournalService", () => {
         service.updateSourceSlice({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entryHash: "h",
+          entryHash: HASH_OLD,
           sha256sum: "s",
           newContent: "x",
         }),
@@ -731,7 +933,7 @@ describe("LedgerJournalService", () => {
         service.updateSourceSlice({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entryHash: "stale",
+          entryHash: HASH_STALE,
           sha256sum: "s",
           newContent: "x",
         }),
@@ -749,7 +951,7 @@ describe("LedgerJournalService", () => {
         service.updateSourceSlice({
           ledgerId: LEDGER_ID,
           identity: IDENTITY,
-          entryHash: "h",
+          entryHash: HASH_OLD,
           sha256sum: "old",
           newContent: "x",
         }),

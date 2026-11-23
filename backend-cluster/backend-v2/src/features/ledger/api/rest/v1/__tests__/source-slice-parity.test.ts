@@ -49,6 +49,15 @@ const BALANCE_FAILED =
   "Balance failed for Assets:Cash: expected 49.75 USD, got 73.25 USD (main.bean:84)";
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
 const original = '2026-09-01 * "Café" "Breakfast"\n';
+// Entry hashes are 32 lowercase hex digits (plus optional `:<n>` on repeated
+// entries), as the ledger service issues them.
+const ENTRY1 = "11".repeat(16);
+const ENTRY2 = "22".repeat(16);
+const ENTRY1_UPDATED = "33".repeat(16);
+const ENTRY_OTHER = "44".repeat(16);
+const ENTRY1_DUP = `${ENTRY1}:1`;
+const ENTRY_HASH_FORMAT_ERROR =
+  "entryHash must be an entry_hash from list output: 32 lowercase hex digits, with a :<n> suffix on a repeated entry";
 const operations = {
   delete: {
     field: "deleteLedgerEntrySourceSlice",
@@ -75,8 +84,9 @@ const operations = {
 type Operation = keyof typeof operations;
 async function fixture(caller = identity) {
   const slices = new Map([
-    ["entry1", original],
-    ["entry2", "; second\n"],
+    [ENTRY1, original],
+    [ENTRY2, "; second\n"],
+    [ENTRY1_DUP, original],
   ]);
   const state = {
     writable: true,
@@ -206,10 +216,10 @@ async function fixture(caller = identity) {
       if (body.dryRun === true) {
         return envelope({
           message: `Would update entry ${body.entry_hash}`,
-          entry_hash: "entry1-updated",
+          entry_hash: ENTRY1_UPDATED,
           new_sha256sum: hash(body.new_content),
           unchanged,
-          new_entry_hash: "entry1-updated",
+          new_entry_hash: ENTRY1_UPDATED,
           files: ["2026/imports.bean"],
           preview: [{ path: "2026/imports.bean", text: body.new_content }],
           ...projected(body),
@@ -221,10 +231,10 @@ async function fixture(caller = identity) {
       // here hid a summary that printed the new hash as the old one (w23/007).
       return envelope({
         message: "Updated",
-        entry_hash: "entry1-updated",
+        entry_hash: ENTRY1_UPDATED,
         new_sha256sum: hash(body.new_content),
         unchanged,
-        new_entry_hash: "entry1-updated",
+        new_entry_hash: ENTRY1_UPDATED,
         files: ["2026/imports.bean"],
         ...(state.commit && { commit: state.commit }),
         ...projected(body),
@@ -362,15 +372,15 @@ const args = (operation: Operation, stale = false) =>
   operation === "delete_many"
     ? {
         entries: [
-          { entryHash: "entry1", sha256sum: hash(original) },
+          { entryHash: ENTRY1, sha256sum: hash(original) },
           {
-            entryHash: "entry2",
+            entryHash: ENTRY2,
             sha256sum: stale ? "stale" : hash("; second\n"),
           },
         ],
       }
     : {
-        entryHash: "entry1",
+        entryHash: ENTRY1,
         sha256sum: stale ? "stale" : hash(original),
         ...(operation === "update"
           ? { newContent: "; replacement café\n" }
@@ -398,7 +408,7 @@ describe.each(["rest", "gql", "mcp"])(
               : { ...args("update"), newContent: original },
           );
           expect(result.success).toBe(true);
-          expect(f.slices.get("entry1")).toBe(original);
+          expect(f.slices.get(ENTRY1)).toBe(original);
           expect(result.result).toMatchObject({
             unchanged: true,
             message: dry
@@ -409,7 +419,9 @@ describe.each(["rest", "gql", "mcp"])(
           if (surface === "mcp") {
             expect(result.result).toMatchObject({ wrote: [] });
             expect((result.result as { summary: string }).summary).toMatch(
-              /^(Would change nothing|No change): entry entry1 already holds this text/,
+              new RegExp(
+                `^(Would change nothing|No change): entry ${ENTRY1} already holds this text`,
+              ),
             );
           }
         } finally {
@@ -446,12 +458,12 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
             valid: true,
           };
           if (operation === "update") {
-            expect(f.slices.get("entry1")).toBe("; replacement café\n");
+            expect(f.slices.get(ENTRY1)).toBe("; replacement café\n");
             const updated = {
               message: "Updated",
-              entryHash: "entry1-updated",
+              entryHash: ENTRY1_UPDATED,
               newSha256sum: hash("; replacement café\n"),
-              newEntryHash: "entry1-updated",
+              newEntryHash: ENTRY1_UPDATED,
               unchanged: false,
             };
             // REST echoes dryRun with its preview; MCP spells the echo
@@ -462,11 +474,10 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                     ...updated,
                     dry_run: false,
                     preview: [],
-                    summary:
-                      "Updated entry entry1 (new hash entry1-updated). No new bean-check errors.",
+                    summary: `Updated entry ${ENTRY1} (new hash ${ENTRY1_UPDATED}). No new bean-check errors.`,
                     // w23/042: the file the ledger rewrote, not always [].
                     wrote: [{ path: "2026/imports.bean" }],
-                    entryHashes: ["entry1-updated"],
+                    entryHashes: [ENTRY1_UPDATED],
                     validation: emptyValidation,
                   }
                 : surface === "rest"
@@ -479,7 +490,7 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                   : updated,
             );
           } else if (operation === "delete_many") {
-            expect(f.slices.has("entry1")).toBe(false);
+            expect(f.slices.has(ENTRY1)).toBe(false);
             const deleted = { message: "Deleted", deletedCount: 2 };
             expect(result.result).toEqual(
               surface === "mcp"
@@ -492,7 +503,7 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                       { path: "main.bean" },
                       { path: "2026/imports.bean" },
                     ],
-                    entryHashes: ["entry1", "entry2"],
+                    entryHashes: [ENTRY1, ENTRY2],
                     validation: emptyValidation,
                   }
                 : surface === "rest"
@@ -505,17 +516,17 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                   : deleted,
             );
           } else {
-            expect(f.slices.has("entry1")).toBe(false);
-            const deleted = { message: "Deleted", entryHash: "entry1" };
+            expect(f.slices.has(ENTRY1)).toBe(false);
+            const deleted = { message: "Deleted", entryHash: ENTRY1 };
             expect(result.result).toEqual(
               surface === "mcp"
                 ? {
                     ...deleted,
                     dry_run: false,
                     preview: [],
-                    summary: "Deleted entry entry1. No new bean-check errors.",
+                    summary: `Deleted entry ${ENTRY1}. No new bean-check errors.`,
                     wrote: [{ path: "main.bean" }],
-                    entryHashes: ["entry1"],
+                    entryHashes: [ENTRY1],
                     validation: emptyValidation,
                   }
                 : surface === "rest"
@@ -528,7 +539,7 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
                   : deleted,
             );
           }
-          expect(f.slices.has("entry2")).toBe(operation !== "delete_many");
+          expect(f.slices.has(ENTRY2)).toBe(operation !== "delete_many");
         } finally {
           await f.close();
         }
@@ -662,10 +673,10 @@ describe.each(["rest", "gql", "mcp"])(
           };
           if (operation === "update") {
             const would = {
-              message: "Would update entry entry1",
-              entryHash: "entry1-updated",
+              message: `Would update entry ${ENTRY1}`,
+              entryHash: ENTRY1_UPDATED,
               newSha256sum: hash(replacement),
-              newEntryHash: "entry1-updated",
+              newEntryHash: ENTRY1_UPDATED,
               unchanged: false,
               ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
               preview: [{ path: "2026/imports.bean", text: replacement }],
@@ -674,17 +685,16 @@ describe.each(["rest", "gql", "mcp"])(
               surface === "mcp"
                 ? {
                     ...would,
-                    summary:
-                      "Would update entry entry1 (new hash entry1-updated). No new bean-check errors.",
+                    summary: `Would update entry ${ENTRY1} (new hash ${ENTRY1_UPDATED}). No new bean-check errors.`,
                     wrote: [],
-                    entryHashes: ["entry1-updated"],
+                    entryHashes: [ENTRY1_UPDATED],
                     validation: emptyValidation,
                   }
                 : { ...would, ...emptyValidation },
             );
           } else if (operation === "delete_many") {
             const would = {
-              message: "Would delete 2 entries: entry1, entry2",
+              message: `Would delete 2 entries: ${ENTRY1}, ${ENTRY2}`,
               deletedCount: 2,
               ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
               preview: [
@@ -699,15 +709,15 @@ describe.each(["rest", "gql", "mcp"])(
                     summary:
                       "Would delete 2 entries. No new bean-check errors.",
                     wrote: [],
-                    entryHashes: ["entry1", "entry2"],
+                    entryHashes: [ENTRY1, ENTRY2],
                     validation: emptyValidation,
                   }
                 : { ...would, ...emptyValidation },
             );
           } else {
             const would = {
-              message: "Would delete entry entry1",
-              entryHash: "entry1",
+              message: `Would delete entry ${ENTRY1}`,
+              entryHash: ENTRY1,
               ...(surface === "mcp" ? { dry_run: true } : { dryRun: true }),
               preview: [{ path: "main.bean", text: original }],
             };
@@ -715,10 +725,9 @@ describe.each(["rest", "gql", "mcp"])(
               surface === "mcp"
                 ? {
                     ...would,
-                    summary:
-                      "Would delete entry entry1. No new bean-check errors.",
+                    summary: `Would delete entry ${ENTRY1}. No new bean-check errors.`,
                     wrote: [],
-                    entryHashes: ["entry1"],
+                    entryHashes: [ENTRY1],
                     validation: emptyValidation,
                   }
                 : { ...would, ...emptyValidation },
@@ -883,7 +892,7 @@ describe.each(["rest", "gql", "mcp"])("entry_hash alias via %s", (surface) => {
     try {
       const conflict = {
         ...args("delete"),
-        entry_hash: "another-entry",
+        entry_hash: ENTRY_OTHER,
       };
       expect((await f.call(surface, "delete", conflict)).success).toBe(false);
       expect([...f.slices]).toEqual(before);
@@ -1175,9 +1184,9 @@ describe.each(["rest", "gql", "mcp"])(
           });
           expect(result.success).toBe(true);
           if (operation === "update") {
-            expect(f.slices.get("entry1")).toBe("; replacement café\n");
+            expect(f.slices.get(ENTRY1)).toBe("; replacement café\n");
           } else {
-            expect(f.slices.has("entry1")).toBe(false);
+            expect(f.slices.has(ENTRY1)).toBe(false);
           }
         } finally {
           await f.close();
@@ -1195,9 +1204,9 @@ describe.each(["rest", "gql", "mcp"])(
           });
           expect(result.success).toBe(true);
           if (operation === "update") {
-            expect(f.slices.get("entry1")).toBe("; replacement café\n");
+            expect(f.slices.get(ENTRY1)).toBe("; replacement café\n");
           } else {
-            expect(f.slices.has("entry1")).toBe(false);
+            expect(f.slices.has(ENTRY1)).toBe(false);
           }
         } finally {
           await f.close();
@@ -1233,9 +1242,9 @@ describe.each(["rest", "gql", "mcp"])(
           });
           expect(result.success).toBe(true);
           if (operation === "update") {
-            expect(f.slices.get("entry1")).toBe("; replacement café\n");
+            expect(f.slices.get(ENTRY1)).toBe("; replacement café\n");
           } else {
-            expect(f.slices.has("entry1")).toBe(false);
+            expect(f.slices.has(ENTRY1)).toBe(false);
           }
         } finally {
           await f.close();
@@ -1256,7 +1265,7 @@ describe.each(["rest", "gql", "mcp"])(
         const entries = Array.from(
           { length: MAX_BULK_ENTRIES + 1 },
           (_, i) => ({
-            entryHash: `entry${i}`,
+            entryHash: i.toString(16).padStart(32, "0"),
             sha256sum: hash(original),
           }),
         );
@@ -1349,5 +1358,108 @@ describe.each(["rest", "gql", "mcp"])(
         }
       },
     );
+  },
+);
+
+// w31/046: entry-source write operations must refuse empty, blank, and
+// malformed entry hashes with BAD_USER_INPUT before loading the ledger,
+// while continuing to accept valid 32-hex hashes with :<n> duplicate suffixes.
+describe.each(["rest", "gql", "mcp"])(
+  "entryHash format validation via %s (w31/046)",
+  (surface) => {
+    const withHash = (
+      operation: Operation,
+      entryHash: string,
+      key: "entryHash" | "entry_hash" = "entryHash",
+    ): Record<string, unknown> => {
+      const dryFlag = surface === "mcp" ? { dry_run: true } : { dryRun: true };
+      if (operation === "delete_many") {
+        return {
+          entries: [{ [key]: entryHash, sha256sum: hash(original) }],
+          ...dryFlag,
+        };
+      }
+      return {
+        [key]: entryHash,
+        sha256sum: hash(original),
+        ...(operation === "update"
+          ? { newContent: "; replacement café\n" }
+          : {}),
+        ...dryFlag,
+      };
+    };
+
+    describe.each(Object.keys(operations) as Operation[])("%s", (operation) => {
+      it.each([
+        ["", "entryHash"],
+        ["   ", "entryHash"],
+        ["not-a-hash", "entryHash"],
+        ["not-a-hash", "entry_hash"],
+      ] as const)(
+        "refuses %j (%s) as BAD_USER_INPUT without calling the ledger",
+        async (badHash, key) => {
+          const f = await fixture();
+          const before = [...f.slices];
+          try {
+            const result = await f.call(
+              surface,
+              operation,
+              withHash(operation, badHash, key),
+            );
+            expect(result.success).toBe(false);
+            expect([...f.slices]).toEqual(before);
+            for (const call of Object.values(f.journal))
+              expect(call).not.toHaveBeenCalled();
+            if (surface === "rest") {
+              expect(result.result).toMatchObject({
+                ok: false,
+                error: {
+                  code: "BAD_USER_INPUT",
+                  message: ENTRY_HASH_FORMAT_ERROR,
+                  metadata: { field: "entryHash" },
+                },
+              });
+            } else if (surface === "gql") {
+              const refusal = result.errors?.[0]?.originalError as
+                | {
+                    category?: string;
+                    message?: string;
+                    metadata?: Record<string, unknown>;
+                  }
+                | undefined;
+              expect(refusal).toMatchObject({
+                category: "BAD_USER_INPUT",
+                message: ENTRY_HASH_FORMAT_ERROR,
+                metadata: { field: "entryHash" },
+              });
+            } else {
+              expect(result.full).toMatchObject({
+                ok: false,
+                error: {
+                  code: "BAD_USER_INPUT",
+                  message: ENTRY_HASH_FORMAT_ERROR,
+                },
+              });
+            }
+          } finally {
+            await f.close();
+          }
+        },
+      );
+
+      it("still accepts a valid :<n> duplicate entry hash", async () => {
+        const f = await fixture();
+        try {
+          const result = await f.call(
+            surface,
+            operation,
+            withHash(operation, ENTRY1_DUP),
+          );
+          expect(result.success).toBe(true);
+        } finally {
+          await f.close();
+        }
+      });
+    });
   },
 );
