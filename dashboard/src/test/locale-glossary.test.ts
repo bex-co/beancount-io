@@ -50,6 +50,30 @@ it("uses Saldenbilanz across the German trial balance surfaces", () => {
   }
 });
 
+describe.each([
+  ["holdings", "ledgerHoldings"],
+  ["commodities", "ledgerCommodities"],
+] as const)("%s terminology", (page, metadata) => {
+  it.each(Object.entries(locales))(
+    "is consistent in %s",
+    (_language, labels) => {
+      const heading = labels[`page.${page}.${page}`];
+      expect(heading).toBeTruthy();
+      expect(labels[`common.relatedLinks.${page}`]).toBe(heading);
+      expect(labels[`seo.${metadata}.title`]).toContain(heading);
+    },
+  );
+});
+
+it.each(["bg", "ru"] as const)(
+  "distinguishes the Holdings page from the Assets root in %s",
+  (language) => {
+    expect(locales[language]["page.holdings.holdings"]).not.toBe(
+      locales[language]["common.assets"],
+    );
+  },
+);
+
 describe("Catalan ledger pages name their own content", () => {
   it.each([
     ["page.holdings.holdings", /^Participacions$/],

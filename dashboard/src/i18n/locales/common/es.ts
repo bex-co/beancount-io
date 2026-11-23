@@ -559,7 +559,7 @@ const esCommon: Record<string, TranslationEntry> = {
     description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
-    message: "Materias primas",
+    message: "Productos",
     description: "Link label for commodities page",
   },
   "common.relatedLinks.createFile": {
@@ -583,7 +583,7 @@ const esCommon: Record<string, TranslationEntry> = {
     description: "Link label for files page",
   },
   "common.relatedLinks.holdings": {
-    message: "Participaciones",
+    message: "Tenencias",
     description: "Link label for holdings page",
   },
   "common.relatedLinks.import": {

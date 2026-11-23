@@ -213,11 +213,11 @@ const skSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerHoldings.description": {
     message:
-      "Investičné držby a portfólio pre {ledgerName}. Zobrazujte aktuálne pozície a ocenenia.",
+      "Portfólio pre {ledgerName}. Zobrazte aktuálne držby a ich ocenenie.",
     description: "Holdings page meta description",
   },
   "seo.ledgerHoldings.title": {
-    message: "Držby - {ledgerName}",
+    message: "Portfólio - {ledgerName}",
     description: "Holdings page title with ledger name",
   },
   "seo.ledgerImport.description": {

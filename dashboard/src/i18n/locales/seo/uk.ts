@@ -213,11 +213,11 @@ const ukSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerHoldings.description": {
     message:
-      "Інвестиційні володіння та портфель для {ledgerName}. Переглядайте поточні позиції та оцінки.",
+      "Холдинги й інвестиційний портфель для {ledgerName}. Переглядайте поточні позиції та оцінки.",
     description: "Holdings page meta description",
   },
   "seo.ledgerHoldings.title": {
-    message: "Володіння - {ledgerName}",
+    message: "Холдинги - {ledgerName}",
     description: "Holdings page title with ledger name",
   },
   "seo.ledgerImport.description": {

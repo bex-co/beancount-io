@@ -560,7 +560,7 @@ const caCommon: Record<string, TranslationEntry> = {
     description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
-    message: "Mercaderies",
+    message: "Productes",
     description: "Link label for commodities page",
   },
   "common.relatedLinks.createFile": {

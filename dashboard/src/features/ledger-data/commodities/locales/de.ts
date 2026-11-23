@@ -5,7 +5,7 @@ export interface TranslationEntry {
 
 const deCommodities: Record<string, TranslationEntry> = {
   "page.commodities.commodities": {
-    message: "Währungen",
+    message: "Waren",
     description: "Commodities/currencies view in ledger",
   },
   "page.commodities.failedToLoadCommodities": {

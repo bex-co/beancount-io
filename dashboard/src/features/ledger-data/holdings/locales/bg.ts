@@ -9,7 +9,7 @@ const bgHoldings: Record<string, TranslationEntry> = {
     description: "Button text to export data as CSV",
   },
   "page.holdings.holdings": {
-    message: "Активи",
+    message: "Притежания",
     description: "Holdings/investments view in ledger",
   },
   "page.holdings.holdingsByAccount": {

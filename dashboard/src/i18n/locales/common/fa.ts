@@ -556,7 +556,7 @@ const faCommon: Record<string, TranslationEntry> = {
     description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
-    message: "کالاها",
+    message: "کالاها و ارزها",
     description: "Link label for commodities page",
   },
   "common.relatedLinks.createFile": {
@@ -580,7 +580,7 @@ const faCommon: Record<string, TranslationEntry> = {
     description: "Link label for files page",
   },
   "common.relatedLinks.holdings": {
-    message: "دارایی‌ها",
+    message: "دارایی‌های نگهداری شده",
     description: "Link label for holdings page",
   },
   "common.relatedLinks.import": {

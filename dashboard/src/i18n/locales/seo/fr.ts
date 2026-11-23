@@ -213,11 +213,11 @@ const frSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerHoldings.description": {
     message:
-      "Participations d'investissement et portefeuille pour {ledgerName}. Visualisez les positions actuelles et les valorisations.",
+      "Avoirs et portefeuille d’investissement pour {ledgerName}. Consultez les positions et leurs valorisations.",
     description: "Holdings page meta description",
   },
   "seo.ledgerHoldings.title": {
-    message: "Participations - {ledgerName}",
+    message: "Avoirs - {ledgerName}",
     description: "Holdings page title with ledger name",
   },
   "seo.ledgerImport.description": {

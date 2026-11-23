@@ -588,7 +588,7 @@ const ukCommon: Record<string, TranslationEntry> = {
     description: "Link label for files page",
   },
   "common.relatedLinks.holdings": {
-    message: "Володіння",
+    message: "Холдинги",
     description: "Link label for holdings page",
   },
   "common.relatedLinks.import": {

@@ -111,11 +111,11 @@ const faSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerCommodities.description": {
     message:
-      "فهرست کالاها و قیمت‌ها برای {ledgerName}. ارزها، سهام و دارایی‌های دیگر را پیگیری کنید.",
+      "کالاها و ارزها در {ledgerName}. قیمت ارزها، سهام و دیگر دارایی‌ها را دنبال کنید.",
     description: "Commodities page meta description",
   },
   "seo.ledgerCommodities.title": {
-    message: "کالاها - {ledgerName}",
+    message: "کالاها و ارزها - {ledgerName}",
     description: "Commodities page title with ledger name",
   },
   "seo.ledgerCommits.description": {
@@ -212,11 +212,11 @@ const faSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerHoldings.description": {
     message:
-      "دارایی‌های سرمایه‌گذاری و سبد سهام برای {ledgerName}. موقعیت‌ها و ارزیابی‌های فعلی را مشاهده کنید.",
+      "دارایی‌های نگهداری شده و سبد سرمایه‌گذاری {ledgerName}. موقعیت‌ها و ارزیابی‌های فعلی را مشاهده کنید.",
     description: "Holdings page meta description",
   },
   "seo.ledgerHoldings.title": {
-    message: "دارایی‌ها - {ledgerName}",
+    message: "دارایی‌های نگهداری شده - {ledgerName}",
     description: "Holdings page title with ledger name",
   },
   "seo.ledgerImport.description": {
