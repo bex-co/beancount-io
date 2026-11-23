@@ -1,5 +1,5 @@
 import { Fragment, useId, useMemo, useState } from "react";
-import { AccountName } from "@/common/components/account-name";
+import { AccountName, AccountPath } from "@/common/components/account-name";
 import { ArrowRight } from "lucide-react";
 import {
   type JournalDirectiveType,
@@ -378,13 +378,7 @@ function LineRows({
             // between its names; and what it is off by, if it is.
             <div className="mt-0.5 space-y-0.5 @4xl/journal:hidden">
               <p className="text-[13px] leading-5 text-muted-foreground">
-                {balance.account.split(":").map((part, index) => (
-                  <span key={index}>
-                    {index > 0 && ":"}
-                    {index > 0 && <wbr />}
-                    {part}
-                  </span>
-                ))}
+                <AccountPath account={balance.account} />
               </p>
               {balanceIsOff(balance) && (
                 <BalanceCheck directive={balance} className="text-sm" />

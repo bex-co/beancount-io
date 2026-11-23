@@ -57,6 +57,7 @@ import { Skeleton } from "@/common/components/ui/skeleton";
 import { LedgerWritePermission } from "@/common/components/ledger-permission/write";
 import { cn } from "@/common/lib/utils/utils";
 import { AccountPrefixNavigation } from "./account-prefix-navigation";
+import { AccountPath } from "@/common/components/account-name";
 import { getClickableRowProps } from "@/common/components/clickable-row";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import {
@@ -385,7 +386,10 @@ export function AccountRow({
 }: AccountRowProps) {
   const formatCount = useFormatCount();
   const isClosed = account.closedAt !== null;
-  const parentPath = account.account.split(":").slice(0, -1);
+  const parentPath = account.account.slice(
+    0,
+    Math.max(0, account.account.lastIndexOf(":")),
+  );
 
   return (
     <TableRow
@@ -416,7 +420,7 @@ export function AccountRow({
               <BalanceCell balance={account.balance} subtotal={subtotal} />
             </div>
           )}
-          {parentPath.length > 0 && (
+          {parentPath && (
             // The parent path takes the row's whole width and wraps only
             // after a colon; the name's last part already says it all to
             // assistive technology.
@@ -424,16 +428,7 @@ export function AccountRow({
               aria-hidden="true"
               className="col-span-2 text-sm leading-snug text-muted-foreground [overflow-wrap:break-word] @lg:hidden"
             >
-              {parentPath.map((part, index) => (
-                <Fragment key={index}>
-                  {index > 0 && (
-                    <>
-                      :<wbr />
-                    </>
-                  )}
-                  {part}
-                </Fragment>
-              ))}
+              <AccountPath account={parentPath} />
             </div>
           )}
           {account.closedAt && (

@@ -188,7 +188,9 @@ describe("the Journal's compact lines", () => {
     ]);
 
     const [matching, off] = screen
-      .getAllByText("Assets:US:BofA:Checking")
+      .getAllByRole("button", {
+        name: /^Open entry .* Balance .*Assets:US:BofA:Checking/,
+      })
       .map((element) => element.closest("tr")!);
     expect(matching).toHaveTextContent("Matches");
     expect(matching).toHaveTextContent("2,962.67 USD");

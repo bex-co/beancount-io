@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import {
   Card,
@@ -10,6 +10,7 @@ import {
 } from "@/common/components/ui/card";
 import { Badge } from "@/common/components/ui/badge";
 import { Button } from "@/common/components/ui/button";
+import { AccountPath } from "@/common/components/account-name";
 import { DocLink } from "@/common/components/doc-link";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { docsUrl } from "@/common/lib/docs-url";
@@ -19,31 +20,6 @@ import {
   filterCashAccountStatus,
   type CashAccountStatusRow,
 } from "./lib/cash-account-status";
-
-/**
- * An account name is a colon-separated path, and nothing in it is a word the
- * line breaker will split on its own: at 320px a name would otherwise wrap one
- * character at a time. Offer a break after each separator so the name wraps
- * into its own segments, and keep `break-words` on the parent as the fallback
- * for a single segment too long for the line.
- */
-function AccountName({ account }: { account: string }) {
-  const segments = account.split(":");
-  return (
-    <>
-      {segments.map((segment, index) => (
-        <Fragment key={`${segment}-${index}`}>
-          {segment}
-          {index < segments.length - 1 ? (
-            <>
-              :<wbr />
-            </>
-          ) : null}
-        </Fragment>
-      ))}
-    </>
-  );
-}
 
 interface CashAccountStatusPanelProps {
   /** Joined CCE rows — exactly the accounts the statement counted as cash. */
@@ -127,7 +103,7 @@ export function CashAccountStatusPanel({
               >
                 <div className="col-span-2 min-w-0 sm:col-span-1">
                   <span className="font-mono text-sm break-words">
-                    <AccountName account={row.account} />
+                    <AccountPath account={row.account} />
                   </span>
                   {row.invalidRoleValue !== undefined ? (
                     <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-500">

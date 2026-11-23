@@ -34,7 +34,8 @@ export function AccountPrefixNavigation({
     >
       <div className="flex items-baseline gap-1.5">
         <span
-          className="flex min-w-0 flex-wrap items-baseline text-base leading-snug [overflow-wrap:break-word] sm:text-sm sm:leading-6"
+          dir="ltr"
+          className="flex min-w-0 flex-wrap items-baseline text-base leading-snug [overflow-wrap:break-word] [unicode-bidi:isolate] sm:text-sm sm:leading-6"
           onMouseLeave={() => setHoveredPrefixIndex(null)}
         >
           {segments.map((segment, index) => {
@@ -52,7 +53,7 @@ export function AccountPrefixNavigation({
                     index === 0 && isInActivePrefix && "rounded-s-sm",
                     index === activePrefixIndex && "rounded-e-sm",
                     isLeaf
-                      ? "text-start font-medium @max-lg:basis-full @max-lg:text-base"
+                      ? "text-start font-medium @max-lg:basis-full @max-lg:text-base rtl:text-right"
                       : "text-center @max-lg:hidden",
                     // The part a click opens, highlighted in the neutral
                     // hover of every row: green marks choices and money.
@@ -72,7 +73,10 @@ export function AccountPrefixNavigation({
                     onAccountClick(accountPrefix);
                   }}
                 >
-                  {isLeaf ? segment : `${segment}:`}
+                  <span dir="auto" className="[unicode-bidi:isolate]">
+                    {segment}
+                  </span>
+                  {!isLeaf && ":"}
                 </button>
                 {/* A line may break after each colon, never inside a part. */}
                 {!isLeaf && <wbr />}

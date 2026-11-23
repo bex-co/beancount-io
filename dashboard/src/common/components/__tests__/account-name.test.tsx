@@ -30,4 +30,27 @@ describe("AccountName", () => {
       "Equity",
     );
   });
+
+  it.each(["rtl", "ltr"] as const)(
+    "keeps the path root first in %s with Persian segments",
+    (direction) => {
+      const account = "Expenses:Qa:خوراک:سفر:رستوران";
+      const { container } = render(
+        <div dir={direction}>
+          <AccountName account={account} />
+        </div>,
+      );
+      const visible = container.querySelector('[aria-hidden="true"]')!;
+      expect(visible).toHaveAttribute("dir", "ltr");
+      expect(visible).toHaveClass("[unicode-bidi:isolate]");
+      expect(visible.textContent).toBe(account);
+      expect(
+        Array.from(
+          visible.querySelectorAll('[dir="auto"]'),
+          (segment) => segment.textContent,
+        ),
+      ).toEqual(account.split(":"));
+      expect(screen.getByText(account)).toHaveClass("sr-only");
+    },
+  );
 });

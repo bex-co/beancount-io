@@ -1,6 +1,6 @@
-import { Fragment } from "react";
 import type { JournalCost, JournalTransaction } from "@/common/types/journal";
 import { Link } from "@tanstack/react-router";
+import { AccountPath } from "@/common/components/account-name";
 import { LedgerAmount } from "@/common/components/ledger-amount";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatLedgerDate } from "@/common/lib/format/ledger-date";
@@ -23,25 +23,6 @@ interface JournalPostingsProps {
    * compact lines, whose entry column starts after the date and status.
    */
   inset?: "days" | "lines";
-}
-
-/** An account name that wraps only between its segments, never mid-word. */
-function AccountName({ account }: { account: string }) {
-  const segments = account.split(":");
-  return (
-    <>
-      {segments.map((segment, index) => (
-        <Fragment key={index}>
-          {index > 0 && (
-            <>
-              :<wbr />
-            </>
-          )}
-          {segment}
-        </Fragment>
-      ))}
-    </>
-  );
 }
 
 function PostingCost({ cost }: { cost: JournalCost }) {
@@ -89,10 +70,10 @@ export function JournalPostings({
         // and shows it is a link on hover and focus.
         className="rounded-sm text-foreground outline-none hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <AccountName account={account} />
+        <AccountPath account={account} />
       </Link>
     ) : (
-      <AccountName account={account} />
+      <AccountPath account={account} />
     );
 
   if (compact) {

@@ -73,6 +73,35 @@ describe("AccountPrefixNavigation", () => {
     );
   });
 
+  it("isolates the root-first path and keeps each segment's direction in a Persian page", async () => {
+    const user = userEvent.setup();
+    const onAccountClick = vi.fn();
+    const accountName = "Expenses:خوراک:رستوران";
+    render(
+      <div dir="rtl">
+        <AccountPrefixNavigation
+          accountName={accountName}
+          isClosed={false}
+          onAccountClick={onAccountClick}
+        />
+      </div>,
+    );
+    const leaf = screen.getByRole("button", { name: accountName });
+    const path = leaf.parentElement!;
+    expect(path).toHaveAttribute("dir", "ltr");
+    expect(path).toHaveClass("[unicode-bidi:isolate]");
+    expect(path.textContent).toBe(accountName);
+    expect(path.querySelectorAll("wbr")).toHaveLength(2);
+    expect(
+      Array.from(
+        path.querySelectorAll('[dir="auto"]'),
+        (segment) => segment.textContent,
+      ),
+    ).toEqual(accountName.split(":"));
+    await user.click(screen.getByRole("button", { name: "Expenses:خوراک" }));
+    expect(onAccountClick).toHaveBeenCalledExactlyOnceWith("Expenses:خوراک");
+  });
+
   it("highlights the entire active prefix and does not trigger its parent", async () => {
     const user = userEvent.setup();
     const onAccountClick = vi.fn();

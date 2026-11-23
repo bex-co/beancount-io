@@ -176,7 +176,7 @@ async function setup(language: "en" | "fa") {
 
 describe("account balance reading direction", () => {
   it.each(["fa", "en"] as const)(
-    "isolates each complete %s signed balance without changing its digits or account direction",
+    "isolates each complete %s balance and keeps the account path root first",
     async (language) => {
       const { table, account, row } = await setup(language);
       const context = screen.getByTestId("reading-context");
@@ -196,8 +196,9 @@ describe("account balance reading direction", () => {
           expect(isolated).not.toContainElement(account);
         }
       }
-      // Neither a whole row nor its Persian account name is forced LTR.
-      expect(account.closest("[dir]")).toBe(context);
+      // The account path and the amounts keep their own direction.
+      expect(account.parentElement).toHaveAttribute("dir", "ltr");
+      expect(row.closest("[dir]")).toBe(context);
       expect(row).not.toHaveAttribute("dir");
       expect(table).not.toHaveAttribute("dir");
       // An open account goes unmarked; only a closed one says so.

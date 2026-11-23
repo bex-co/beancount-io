@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import { BudgetInterval } from "@/graphql/definitions";
 import { Badge } from "@/common/components/ui/badge";
 import { Skeleton } from "@/common/components/ui/skeleton";
-import { AccountName } from "@/common/components/account-name";
+import { AccountName, AccountPath } from "@/common/components/account-name";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { isPositiveDecimalNumber } from "@/common/lib/beancount/decimal-number";
 import { cn } from "@/common/lib/utils/utils";
@@ -334,7 +334,7 @@ function BudgetSummaryRow({
             aria-hidden="true"
             className="block text-xs leading-4 break-all text-muted-foreground @2xl:hidden"
           >
-            {path}
+            <AccountPath account={path} />
           </span>
         )}
         <span className="block min-h-4 text-xs leading-4 text-muted-foreground">

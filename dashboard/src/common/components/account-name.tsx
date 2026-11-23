@@ -1,4 +1,37 @@
+import { Fragment } from "react";
+import { hasRtlLetters } from "@/common/lib/bidi/rtl-source";
 import { cn } from "@/common/lib/utils/utils";
+
+/** A root-first account path whose segments each read in their own direction. */
+export function AccountPath({
+  account,
+  className,
+}: {
+  account: string;
+  className?: string;
+}) {
+  const isolateSegments = hasRtlLetters(account);
+  return (
+    <span dir="ltr" className={cn("[unicode-bidi:isolate]", className)}>
+      {account.split(":").map((segment, index) => (
+        <Fragment key={index}>
+          {index > 0 && (
+            <>
+              :<wbr />
+            </>
+          )}
+          {isolateSegments ? (
+            <span dir="auto" className="[unicode-bidi:isolate]">
+              {segment}
+            </span>
+          ) : (
+            segment
+          )}
+        </Fragment>
+      ))}
+    </span>
+  );
+}
 
 /**
  * An account on one line, as the ledger names it: the path muted, the last
@@ -23,16 +56,32 @@ export function AccountName({
   const path = cut > 0 ? account.slice(0, cut) : "";
   const leaf = account.slice(cut + 1);
   return (
-    <span title={title} className={cn("block min-w-0 text-sm", className)}>
+    <span
+      title={title}
+      className={cn("block min-w-0 text-start text-sm", className)}
+    >
       {/* Read as one name: the split is only typographic. */}
       <span className="sr-only">{account}</span>
-      <span aria-hidden="true" className="flex min-w-0">
+      {/* An inline box stays at the surrounding cell's reading edge. */}
+      <span
+        aria-hidden="true"
+        dir="ltr"
+        className="inline-flex max-w-full min-w-0 align-top [unicode-bidi:isolate]"
+      >
         {path && (
-          <span className="min-w-0 truncate text-muted-foreground">{path}</span>
+          <AccountPath
+            account={path}
+            className="min-w-0 truncate text-muted-foreground"
+          />
         )}
         <span className="max-w-full shrink-0 truncate">
           {path && <span className="text-muted-foreground">:</span>}
-          <span className="font-medium text-foreground">{leaf}</span>
+          <span
+            dir="auto"
+            className="font-medium text-foreground [unicode-bidi:isolate]"
+          >
+            {leaf}
+          </span>
         </span>
       </span>
     </span>
