@@ -287,6 +287,10 @@ const nlJournal: Record<string, TranslationEntry> = {
     description:
       "Getoond wanneer de entry-context geen navigeerbaar bestand/regel heeft",
   },
+  "journal.entrySource": {
+    message: "Brontekst van de boeking",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Bron openen op {location}",
     description: "Accessible name for the entry source location control",

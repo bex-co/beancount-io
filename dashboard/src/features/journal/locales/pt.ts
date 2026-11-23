@@ -306,6 +306,10 @@ const ptJournal: Record<string, TranslationEntry> = {
     description:
       "Mostrado quando o contexto da entrada não tem ficheiro/linha navegáveis",
   },
+  "journal.entrySource": {
+    message: "Texto-fonte do lançamento",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Abrir fonte em {location}",
     description: "Accessible name for the entry source location control",

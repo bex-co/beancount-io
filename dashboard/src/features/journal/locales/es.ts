@@ -306,6 +306,10 @@ const esJournal: Record<string, TranslationEntry> = {
     description:
       "Se muestra cuando el contexto de la entrada no tiene archivo/línea navegables",
   },
+  "journal.entrySource": {
+    message: "Texto fuente del asiento",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Abrir origen en {location}",
     description: "Accessible name for the entry source location control",

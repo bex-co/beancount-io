@@ -286,6 +286,10 @@ const bgJournal: Record<string, TranslationEntry> = {
     description:
       "Показано, когато контекстът на записа няма навигируем файл/ред",
   },
+  "journal.entrySource": {
+    message: "Изходен текст на записа",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Отвори източника на {location}",
     description: "Accessible name for the entry source location control",

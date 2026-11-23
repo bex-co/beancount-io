@@ -326,6 +326,10 @@ const skJournal: Record<string, TranslationEntry> = {
     description:
       "Zobrazí sa, keď kontext záznamu nemá navigovateľný súbor/riadok",
   },
+  "journal.entrySource": {
+    message: "Zdrojový text účtovného zápisu",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Otvoriť zdroj na {location}",
     description: "Accessible name for the entry source location control",

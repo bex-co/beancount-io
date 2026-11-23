@@ -262,6 +262,10 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "소스 위치를 사용할 수 없음",
     description: "항목 컨텍스트에 탐색 가능한 파일/행이 없을 때 표시",
   },
+  "journal.entrySource": {
+    message: "분개 소스",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "{location}에서 소스 열기",
     description: "Accessible name for the entry source location control",

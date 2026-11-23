@@ -497,6 +497,8 @@ function EntryContextMain({
                   registerBeancountLanguage(monaco);
                 }}
                 options={{
+                  ariaLabel: t("journal.entrySource"),
+                  tabFocusMode: true,
                   minimap: { enabled: false },
                   scrollBeyondLastLine: false,
                   wordWrap: "on",

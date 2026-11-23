@@ -306,6 +306,10 @@ const frJournal: Record<string, TranslationEntry> = {
     description:
       "Affiché lorsque le contexte de l'écriture n'a pas de fichier/ligne navigables",
   },
+  "journal.entrySource": {
+    message: "Texte source de l’écriture",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Ouvrir la source à {location}",
     description: "Accessible name for the entry source location control",

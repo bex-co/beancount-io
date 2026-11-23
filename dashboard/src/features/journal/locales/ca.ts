@@ -306,6 +306,10 @@ const caJournal: Record<string, TranslationEntry> = {
     description:
       "Es mostra quan el context de l'entrada no té fitxer/línia navegables",
   },
+  "journal.entrySource": {
+    message: "Text font de l’assentament",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Obre l'origen a {location}",
     description: "Accessible name for the entry source location control",

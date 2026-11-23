@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -100,11 +101,16 @@ vi.mock("@/common/components/monaco-editor", () => ({
     onChange,
   }: {
     value: string;
-    options?: { readOnly?: boolean };
+    options?: {
+      readOnly?: boolean;
+      tabFocusMode?: boolean;
+      ariaLabel?: string;
+    };
     onChange?: (value: string | undefined) => void;
   }) => (
     <textarea
-      aria-label="entry-source"
+      aria-label={options?.ariaLabel ?? "Editor content"}
+      data-tab-focus-mode={options?.tabFocusMode}
       value={value}
       readOnly={options?.readOnly}
       onChange={(event) => onChange?.(event.target.value)}
@@ -147,6 +153,62 @@ describe("EntryContextPanel", () => {
     };
   });
 
+  it("tabs out of source without editing and can save an indented change", async () => {
+    const user = userEvent.setup();
+    mocks.contextData = {
+      ...mocks.contextData,
+      balances_before: {},
+      balances_after: {},
+    };
+    render(
+      <EntryContextPanel entryHash="hash-1" ledgerId="open_ledger/example" />,
+    );
+    const context = screen.getByRole("button", {
+      name: "journal.entryContext",
+    });
+    const source = screen.getByRole<HTMLTextAreaElement>("textbox", {
+      name: "journal.entrySource",
+    });
+    const deleteButton = screen.getByRole("button", { name: "common.delete" });
+    const save = screen.getByRole("button", { name: "common.save" });
+    const original = source.value;
+    expect(source).toHaveAttribute("data-tab-focus-mode", "true");
+
+    context.focus();
+    await user.tab();
+    expect(source).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(context).toHaveFocus();
+    await user.tab();
+    await user.tab();
+    expect(deleteButton).toHaveFocus();
+    expect(source).toHaveValue(original);
+    expect(screen.queryByText("journal.sourceModified")).toBeNull();
+    expect(save).toBeDisabled();
+
+    const posting = "  Assets:Cash  1 USD";
+    await user.type(source, `${posting}{Enter}`, {
+      initialSelectionStart: original.length,
+      initialSelectionEnd: original.length,
+    });
+    await user.tab();
+    expect(deleteButton).toHaveFocus();
+    await user.tab();
+    expect(save).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(mocks.updateMutation).toHaveBeenCalledExactlyOnceWith({
+      variables: {
+        ledgerId: "open_ledger/example",
+        input: {
+          entryHash: "hash-1",
+          sha256sum: "abc123",
+          newContent: `${original}${posting}\n`,
+        },
+      },
+    });
+  });
+
   it("queries the exact ledgerId and entryHash", () => {
     render(
       <EntryContextPanel
@@ -161,7 +223,7 @@ describe("EntryContextPanel", () => {
     });
     expect(mocks.queryOptions[0]?.skip).toBe(false);
     expect(screen.getByText("transactions/sale.bean:49")).toBeInTheDocument();
-    expect(screen.getByLabelText("entry-source")).toHaveValue(
+    expect(screen.getByLabelText("journal.entrySource")).toHaveValue(
       '2025-11-15 * "Sale" "Dispose property — recognize gain"\n  Assets:Property  -1 HOUSE\n',
     );
   });
@@ -175,7 +237,9 @@ describe("EntryContextPanel", () => {
     );
 
     expect(screen.getByText("journal.loadingEntryContext")).toBeInTheDocument();
-    expect(screen.queryByLabelText("entry-source")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("journal.entrySource"),
+    ).not.toBeInTheDocument();
   });
 
   it("surfaces classified network and missing errors without write controls", () => {
@@ -211,7 +275,7 @@ describe("EntryContextPanel", () => {
       />,
     );
 
-    expect(screen.getByLabelText("entry-source")).toBeInTheDocument();
+    expect(screen.getByLabelText("journal.entrySource")).toBeInTheDocument();
 
     mocks.loading = true;
     mocks.contextData = null;
@@ -224,7 +288,9 @@ describe("EntryContextPanel", () => {
     );
 
     expect(screen.getByText("journal.loadingEntryContext")).toBeInTheDocument();
-    expect(screen.queryByLabelText("entry-source")).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("journal.entrySource"),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps readers read-only", () => {
@@ -234,7 +300,9 @@ describe("EntryContextPanel", () => {
       <EntryContextPanel entryHash="hash-1" ledgerId="open_ledger/example" />,
     );
 
-    expect(screen.getByLabelText("entry-source")).toHaveAttribute("readonly");
+    const source = screen.getByRole("textbox", { name: "journal.entrySource" });
+    expect(source).toHaveAttribute("readonly");
+    expect(source).toHaveAttribute("data-tab-focus-mode", "true");
     expect(screen.queryByText("common.delete")).not.toBeInTheDocument();
   });
 
@@ -273,7 +341,7 @@ describe("EntryContextPanel", () => {
 
   describe("saving a changed source (w4/251)", () => {
     const edit = () =>
-      fireEvent.change(screen.getByLabelText("entry-source"), {
+      fireEvent.change(screen.getByLabelText("journal.entrySource"), {
         target: {
           value: '2025-11-15 * "Sale" "edited"\n  Assets:Property  -1 HOUSE\n',
         },
@@ -349,7 +417,9 @@ describe("EntryContextPanel", () => {
         />,
       );
 
-      expect(screen.getByLabelText("entry-source")).toHaveAttribute("readonly");
+      expect(screen.getByLabelText("journal.entrySource")).toHaveAttribute(
+        "readonly",
+      );
       expect(screen.queryByText("common.delete")).not.toBeInTheDocument();
       expect(screen.queryByText("common.save")).not.toBeInTheDocument();
       expect(
@@ -396,7 +466,9 @@ describe("EntryContextPanel", () => {
         <EntryContextPanel entryHash="hash-1" ledgerId="open_ledger/example" />,
       );
 
-      expect(screen.getByLabelText("entry-source")).toHaveAttribute("readonly");
+      expect(screen.getByLabelText("journal.entrySource")).toHaveAttribute(
+        "readonly",
+      );
       expect(screen.queryByText("common.delete")).not.toBeInTheDocument();
       expect(screen.queryByText("common.save")).not.toBeInTheDocument();
       expect(
@@ -439,7 +511,7 @@ describe("EntryContextPanel", () => {
         <EntryContextPanel entryHash="hash-1" ledgerId="open_ledger/example" />,
       );
 
-      expect(screen.getByLabelText("entry-source")).not.toHaveAttribute(
+      expect(screen.getByLabelText("journal.entrySource")).not.toHaveAttribute(
         "readonly",
       );
       expect(screen.getByText("common.delete")).toBeInTheDocument();

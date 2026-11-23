@@ -326,6 +326,10 @@ const ukJournal: Record<string, TranslationEntry> = {
     description:
       "Показується, коли в контексті запису немає файлу/рядка для переходу",
   },
+  "journal.entrySource": {
+    message: "Вихідний текст запису",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Відкрити джерело в {location}",
     description: "Accessible name for the entry source location control",

@@ -285,6 +285,10 @@ const enJournal: Record<string, TranslationEntry> = {
     message: "Source location unavailable",
     description: "Shown when entry context has no navigable filename/line",
   },
+  "journal.entrySource": {
+    message: "Entry source",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Open source at {location}",
     description: "Accessible name for the entry source location control",

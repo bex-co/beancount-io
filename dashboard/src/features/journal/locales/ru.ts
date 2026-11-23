@@ -326,6 +326,10 @@ const ruJournal: Record<string, TranslationEntry> = {
     description:
       "Показывается, когда у контекста записи нет файла/строки для перехода",
   },
+  "journal.entrySource": {
+    message: "Исходный текст записи",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Открыть источник в {location}",
     description: "Accessible name for the entry source location control",

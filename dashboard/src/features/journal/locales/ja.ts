@@ -263,6 +263,10 @@ const jaJournal: Record<string, TranslationEntry> = {
     description:
       "エントリコンテキストに移動可能なファイル名/行がない場合に表示",
   },
+  "journal.entrySource": {
+    message: "仕訳のソース",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "{location} のソースを開く",
     description: "Accessible name for the entry source location control",

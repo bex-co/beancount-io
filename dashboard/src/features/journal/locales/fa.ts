@@ -289,6 +289,10 @@ const faJournal: Record<string, TranslationEntry> = {
     description:
       "وقتی زمینه ورودی فایل/خط قابل پیمایش ندارد نمایش داده می\\u200cشود",
   },
+  "journal.entrySource": {
+    message: "متن منبع ثبت",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "باز کردن منبع در {location}",
     description: "Accessible name for the entry source location control",

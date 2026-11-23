@@ -264,6 +264,10 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "无法定位源文件",
     description: "当分录上下文没有可导航的文件名/行号时显示",
   },
+  "journal.entrySource": {
+    message: "分录源文本",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "打开源文件 {location}",
     description: "Accessible name for the entry source location control",

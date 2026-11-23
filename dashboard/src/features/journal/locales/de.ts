@@ -287,6 +287,10 @@ const deJournal: Record<string, TranslationEntry> = {
     description:
       "Anzeige, wenn der Eintragskontext keinen navigierbaren Dateinamen/Zeile hat",
   },
+  "journal.entrySource": {
+    message: "Quelltext der Buchung",
+    description: "Accessible name of the journal entry's source editor",
+  },
   "journal.openEntrySource": {
     message: "Quelle unter {location} öffnen",
     description: "Accessible name for the entry source location control",
