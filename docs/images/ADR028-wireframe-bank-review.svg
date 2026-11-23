@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 918" width="1280" height="918" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR028 wireframe: bank transactions review</title>
+  <desc>Wireframe of the bank transactions page. A summary says what automatic import did. A first list holds rows that need a decision, each with its candidate entries and two choices: same purchase, or new entry. A second list holds rows to categorize, each showing the bank’s own text beside an editable payee, narration and category filled from history or AI, bulk targets, submit and discard. A third list shows entries AI booked that still need confirming. A fourth shows what was imported automatically, with an undo.</desc>
+  <rect width="1280" height="918" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" font-weight="600">ADR028 wireframe — Bank transactions</text>
+  <text x="30" y="58" fill="#57606a">Journeys J4, J5, J7 and J8. Grey is the page; green notes name what is new and its decision.</text>
+
+  <rect x="30" y="80" width="900" height="808" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="50" y="110" font-size="16" font-weight="600">Bank transactions</text>
+  <rect x="790" y="92" width="120" height="28" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="850" y="110" text-anchor="middle">Sync now</text>
+
+  <!-- Summary -->
+  <rect x="50" y="132" width="860" height="44" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="66" y="159">Since yesterday: <tspan font-weight="600">14 imported</tspan> automatically · <tspan font-weight="600">3 completed</tspan> an existing entry · <tspan font-weight="600">2 need a decision</tspan> · <tspan font-weight="600">2 booked by AI</tspan> · <tspan font-weight="600">5 to categorize</tspan></text>
+
+  <!-- Needs a decision -->
+  <text x="50" y="204" font-size="14" font-weight="600">Needs a decision (2)</text>
+  <rect x="50" y="214" width="860" height="118" rx="8" fill="#ffffff" stroke="#bf8700"/>
+  <text x="66" y="238" font-weight="600">Nov 5 · CORNER CAFE · −6.50 USD</text>
+  <text x="300" y="238" fill="#57606a">Rewards card ••7715</text>
+  <text x="66" y="258" fill="#9a6700">Two receipts could be this purchase.</text>
+  <rect x="66" y="268" width="330" height="24" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="78" y="284">○ Nov 5 · Corner Cafe · 6.50 · receipt ▸</text>
+  <rect x="406" y="268" width="330" height="24" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="418" y="284">○ Nov 5 · Corner Cafe · 6.50 · receipt ▸</text>
+  <rect x="66" y="300" width="130" height="22" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="131" y="315" text-anchor="middle" font-weight="600">Same purchase</text>
+  <rect x="206" y="300" width="100" height="22" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="256" y="315" text-anchor="middle">New entry</text>
+
+  <rect x="50" y="342" width="860" height="96" rx="8" fill="#ffffff" stroke="#bf8700"/>
+  <text x="66" y="366" font-weight="600">Nov 4 · ELECTRIC CO · −88.10 USD</text>
+  <text x="300" y="366" fill="#57606a">Checking ••4821</text>
+  <text x="66" y="386" fill="#9a6700">An entry you typed looks the same.</text>
+  <rect x="66" y="396" width="330" height="24" rx="6" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="78" y="412">● Nov 3 · Electric bill · 88.10 · no bank ID ▸</text>
+  <rect x="406" y="397" width="130" height="22" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="471" y="412" text-anchor="middle" font-weight="600">Same purchase</text>
+  <rect x="546" y="397" width="100" height="22" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="596" y="412" text-anchor="middle">New entry</text>
+
+  <!-- To categorize -->
+  <text x="50" y="466" font-size="14" font-weight="600">To categorize (5)</text>
+  <rect x="560" y="450" width="130" height="24" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="625" y="466" text-anchor="middle">Ask AI (12 left)</text>
+  <rect x="700" y="450" width="100" height="24" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="750" y="466" text-anchor="middle">Set for selected</text>
+  <rect x="810" y="450" width="100" height="24" rx="6" fill="#1f2328"/>
+  <text x="860" y="466" text-anchor="middle" fill="#ffffff" font-weight="600">Submit (3)</text>
+
+  <rect x="50" y="484" width="860" height="150" rx="8" fill="#ffffff" stroke="#8c959f"/>
+  <g fill="#57606a" font-size="11" font-weight="600">
+    <text x="92" y="506">DATE</text>
+    <text x="140" y="506">FROM THE BANK</text>
+    <text x="300" y="506">PAYEE</text>
+    <text x="420" y="506">NARRATION</text>
+    <text x="548" y="506">AMOUNT</text>
+    <text x="604" y="506">CATEGORY</text>
+    <text x="800" y="506">SOURCE</text>
+  </g>
+  <line x1="66" y1="514" x2="894" y2="514" stroke="#d0d7de"/>
+  <rect x="66" y="524" width="14" height="14" rx="3" fill="#1f2328"/>
+  <text x="92" y="536">Nov 5</text>
+  <text x="140" y="536" fill="#57606a" font-size="11">HARDWARE DEPOT 114 OAK</text>
+  <rect x="300" y="522" width="110" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="308" y="537" fill="#1f2328">Hardware Depot</text>
+  <rect x="420" y="522" width="118" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="428" y="537" fill="#1f2328">Supplies</text>
+  <text x="548" y="536">−42.18</text>
+  <rect x="604" y="522" width="186" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="612" y="537" fill="#1f2328">Expenses:Home:Maintenance</text>
+  <rect x="800" y="524" width="94" height="18" rx="9" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="847" y="537" text-anchor="middle" font-size="11" fill="#1f2328">history · 1 prior</text>
+  <line x1="66" y1="552" x2="894" y2="552" stroke="#d0d7de"/>
+  <rect x="66" y="562" width="14" height="14" rx="3" fill="#1f2328"/>
+  <text x="92" y="574">Nov 5</text>
+  <text x="140" y="574" fill="#57606a" font-size="11">TST* NEW BISTRO SF 0042</text>
+  <rect x="300" y="560" width="110" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="308" y="575" fill="#1f2328">New Bistro</text>
+  <rect x="420" y="560" width="118" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="428" y="575" fill="#1f2328">Dinner</text>
+  <text x="548" y="574">−61.00</text>
+  <rect x="604" y="560" width="186" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="612" y="575" fill="#1f2328">Expenses:Food:Restaurants</text>
+  <rect x="800" y="562" width="94" height="18" rx="9" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="847" y="575" text-anchor="middle" font-size="11" fill="#1f2328">AI</text>
+  <line x1="66" y1="590" x2="894" y2="590" stroke="#d0d7de"/>
+  <rect x="66" y="600" width="14" height="14" rx="3" fill="#ffffff" stroke="#8c959f"/>
+  <text x="92" y="612">Nov 6</text>
+  <text x="140" y="612" fill="#8c959f" font-size="11">PARKING METER (pending)</text>
+  <text x="300" y="612" fill="#8c959f">Waits for the posted transaction</text>
+
+  <!-- Booked by AI -->
+  <text x="50" y="662" font-size="14" font-weight="600">Booked by AI, to confirm (2)</text>
+  <rect x="770" y="646" width="140" height="24" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="840" y="662" text-anchor="middle">Confirm selected</text>
+  <rect x="50" y="680" width="860" height="78" rx="8" fill="#ffffff" stroke="#bf8700"/>
+  <rect x="66" y="692" width="14" height="14" rx="3" fill="#1f2328"/>
+  <text x="92" y="704">Nov 5</text>
+  <text x="140" y="704" fill="#57606a" font-size="11">CITY PARKING GAR 0031 SF</text>
+  <rect x="300" y="690" width="110" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="308" y="705" fill="#1f2328">City Parking</text>
+  <rect x="420" y="690" width="118" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="428" y="705" fill="#1f2328">Parking</text>
+  <text x="548" y="704">−18.00</text>
+  <rect x="604" y="690" width="186" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="612" y="705" fill="#1f2328">Expenses:Transport:Parking</text>
+  <rect x="800" y="692" width="94" height="18" rx="9" fill="#fff8e5" stroke="#bf8700"/>
+  <text x="847" y="705" text-anchor="middle" font-size="11" fill="#9a6700">AI · in ledger</text>
+  <line x1="66" y1="720" x2="894" y2="720" stroke="#d0d7de"/>
+  <rect x="66" y="730" width="14" height="14" rx="3" fill="#ffffff" stroke="#8c959f"/>
+  <text x="92" y="742">Nov 4</text>
+  <text x="140" y="742" fill="#57606a" font-size="11">STREAMBOX*ANNUAL 8842</text>
+  <rect x="300" y="728" width="110" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="308" y="743" fill="#1f2328">Streambox</text>
+  <rect x="420" y="728" width="118" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="428" y="743" fill="#1f2328">Annual plan</text>
+  <text x="548" y="742">−99.00</text>
+  <rect x="604" y="728" width="186" height="22" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="612" y="743" fill="#1f2328">Expenses:Subscriptions</text>
+  <rect x="800" y="730" width="94" height="18" rx="9" fill="#fff8e5" stroke="#bf8700"/>
+  <text x="847" y="743" text-anchor="middle" font-size="11" fill="#9a6700">AI · in ledger</text>
+
+  <rect x="950" y="646" width="300" height="116" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="966" y="668" font-weight="600">Booked by AI · D5, D9</text>
+  <text x="966" y="688">Only for accounts set to Import everything.</text>
+  <text x="966" y="708">Already in the ledger, flagged !. Confirming</text>
+  <text x="966" y="728">or correcting clears the flag, and the</text>
+  <text x="966" y="748">merchant then counts as booked before.</text>
+
+  <!-- Imported automatically -->
+  <text x="50" y="780" font-size="14" font-weight="600">Imported automatically (17)</text>
+  <rect x="50" y="790" width="860" height="86" rx="8" fill="#ffffff" stroke="#8c959f"/>
+  <text x="66" y="814">Nov 5 · CORNER GROCER · −35.20 → Expenses:Food:Groceries</text>
+  <rect x="600" y="801" width="160" height="18" rx="9" fill="#f6f8fa" stroke="#8c959f"/>
+  <text x="680" y="814" text-anchor="middle" font-size="11">history · 6 priors</text>
+  <text x="880" y="814" text-anchor="end" fill="#57606a">Undo</text>
+  <line x1="66" y1="824" x2="894" y2="824" stroke="#d0d7de"/>
+  <text x="66" y="842">Nov 5 · CORNER CAFE · −21.60 → completed the Nov 3 receipt (was 18.00)</text>
+  <rect x="600" y="829" width="160" height="18" rx="9" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="680" y="842" text-anchor="middle" font-size="11" fill="#2f8f4e">matched a receipt</text>
+  <text x="880" y="842" text-anchor="end" fill="#57606a">Undo</text>
+  <line x1="66" y1="852" x2="894" y2="852" stroke="#d0d7de"/>
+  <text x="66" y="868">Nov 4 · TRANSFER FROM CHECKING · +500.00 → completed the Nov 4 transfer</text>
+  <rect x="600" y="855" width="160" height="18" rx="9" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="680" y="868" text-anchor="middle" font-size="11" fill="#2f8f4e">other side of a transfer</text>
+  <text x="880" y="868" text-anchor="end" fill="#57606a">Undo</text>
+
+  <!-- Notes -->
+  <rect x="950" y="132" width="300" height="56" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="966" y="154" font-weight="600">Summary · J4</text>
+  <text x="966" y="174">What Import automatically did since last visit.</text>
+
+  <rect x="950" y="214" width="300" height="136" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="966" y="236" font-weight="600">Needs a decision · D10 · J5</text>
+  <text x="966" y="256">Rows the matcher could not decide: two</text>
+  <text x="966" y="276">or more candidates, or an entry typed</text>
+  <text x="966" y="296">by hand. Same purchase completes the</text>
+  <text x="966" y="316">chosen entry; New entry adds one.</text>
+  <text x="966" y="336">Never decided automatically.</text>
+
+  <rect x="950" y="450" width="300" height="136" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="966" y="472" font-weight="600">To categorize · D4, D9 · J5</text>
+  <text x="966" y="492">Payee, narration and category are filled</text>
+  <text x="966" y="512">from history first, then by Ask AI, and all</text>
+  <text x="966" y="532">three can be edited. The bank’s own text</text>
+  <text x="966" y="552">stays beside them and on the entry (D13).</text>
+  <text x="966" y="572">Pending rows wait (D5, D6 · J8).</text>
+
+  <rect x="950" y="780" width="300" height="108" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="966" y="802" font-weight="600">Imported automatically · D5, D10, D11</text>
+  <text x="966" y="822">Each line says why it was imported or</text>
+  <text x="966" y="842">which entry it completed (J6, J7). Undo</text>
+  <text x="966" y="862">reverts that one commit.</text>
+</svg>

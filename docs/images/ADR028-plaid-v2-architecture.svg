@@ -11,7 +11,7 @@
 
   <rect width="1280" height="960" fill="#ffffff"/>
   <text x="30" y="38" font-size="20" font-weight="600">ADR028 — Plaid bank connections v2</text>
-  <text x="30" y="58" fill="#57606a">Posted, history-matched transactions on opted-in accounts reach the ledger on their own; the rest wait for review. Tags name decisions D1–D9.</text>
+  <text x="30" y="58" fill="#57606a">Posted rows on opted-in accounts import on their own, completing a receipt or transfer entry if one exists; the rest wait for review. Tags: D1–D13.</text>
 
   <!-- Legend -->
   <rect x="860" y="26" width="14" height="14" rx="3" fill="#eef4ff" stroke="#3b6fd8"/>
@@ -53,8 +53,8 @@
   <text x="46" y="181">per bank login (D1)</text>
   <text x="46" y="201">Manage accounts · Reconnect</text>
   <text x="46" y="221">Confirm suggested mappings (D9)</text>
-  <text x="46" y="241">Auto-import per bank account:</text>
-  <text x="46" y="261">off | history (D5)</text>
+  <text x="46" y="241">One import choice per account:</text>
+  <text x="46" y="261">off · review · known · all (D5, D12)</text>
   <text x="46" y="281">Banner when a bank needs</text>
   <text x="46" y="301">attention (D8)</text>
   <text x="46" y="321">Review: history matches first</text>
@@ -68,7 +68,7 @@
   <!-- Left: API and MCP clients -->
   <rect x="30" y="745" width="230" height="125" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
   <text x="46" y="769" font-size="13" font-weight="600">API key · MCP clients</text>
-  <text x="46" y="791">setBankAccountAutoImport (new)</text>
+  <text x="46" y="791">Auto-import and sync settings (new)</text>
   <text x="46" y="811">Suggestions carry source</text>
   <text x="46" y="831">Banks carry needsAttention</text>
   <text x="46" y="855" fill="#57606a" font-style="italic">Still cannot link or reconnect</text>
@@ -129,15 +129,15 @@
   <!-- Middle: auto-import (new) -->
   <rect x="300" y="595" width="600" height="140" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
   <text x="316" y="619" font-size="13" font-weight="600">Auto-import · runs after every sync</text>
-  <text x="316" y="641">Only bank accounts with autoImport = history, a mapping and a currency</text>
-  <text x="316" y="661">Only posted rows; pending rows wait for the posted version</text>
-  <text x="316" y="681">History match, high tier: the payee matches at least two earlier</text>
-  <text x="316" y="701">entries on this account, all with the same counter-account; no AI call</text>
-  <text x="316" y="721">Submitted as plaid_webhook or plaid_scheduler; the rest stay staged</text>
+  <text x="316" y="641">Only accounts set to import automatically, with a mapping and a currency</text>
+  <text x="316" y="661">Posted rows only, matched first to a receipt or transfer entry</text>
+  <text x="316" y="681">Unmatched rows need a history match, high tier: the payee matches two</text>
+  <text x="316" y="701">or more earlier entries with the same counter-account; no AI call</text>
+  <text x="316" y="721">The rest stay staged, or under “all” AI books them flagged !, within quota</text>
   <rect x="850" y="629" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
   <text x="866" y="641" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D5</text>
   <rect x="850" y="649" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
-  <text x="866" y="661" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D6</text>
+  <text x="866" y="661" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D10</text>
   <rect x="850" y="669" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
   <text x="866" y="681" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D4</text>
   <rect x="850" y="709" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
@@ -148,8 +148,8 @@
   <text x="316" y="779" font-size="13" font-weight="600">Review and submit · dashboard, REST, GraphQL, MCP</text>
   <text x="316" y="801">Suggestions: history first at no AI cost; the LLM only on request</text>
   <text x="316" y="821">LLM suggestions are quota-gated and recorded like other AI calls</text>
-  <text x="316" y="841">Submit takes the item lock; the synced flag is a compare-and-set</text>
-  <text x="316" y="861">Each row stores its own entry hash</text>
+  <text x="316" y="841">Submit locks the item, and the ledger while it matches and writes</text>
+  <text x="316" y="861">The synced flag is a compare-and-set; each row keeps its entry hash</text>
   <rect x="850" y="789" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
   <text x="866" y="801" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D4</text>
   <rect x="850" y="809" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
@@ -196,8 +196,8 @@
   <!-- Right: consumers -->
   <rect x="940" y="845" width="310" height="80" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
   <text x="956" y="869" font-size="13" font-weight="600">Customer jobs</text>
-  <text x="956" y="891">For example a receipt matcher that</text>
-  <text x="956" y="911">attaches receipts by import-id</text>
+  <text x="956" y="891">For example an ERP sync that reads</text>
+  <text x="956" y="911">entries by import-id</text>
 
   <text x="30" y="948" font-size="11" fill="#57606a">Unchanged: first link and reconnect need the account holder in Plaid Link, so they stay manual; the per-item lock stays in-process while backend-v2 runs one instance.</text>
 </svg>

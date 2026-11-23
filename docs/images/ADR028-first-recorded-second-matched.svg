@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" width="1280" height="760" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR028: whichever arrives first is recorded, the other is matched to it</title>
+  <desc>A card purchase reaches the ledger from the bank and from a receipt, in either order. Bank first: auto-import adds the posted transaction, and the receipt write later finds it and adds the receipt to it. Receipt first: the receipt write finds no bank entry and adds one, and the bank transaction later merges into it. No client chooses: both writes look before they add. Cash receipts and bank rows without a receipt stay single entries. Uncertain matches are flagged and wait for review.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+
+  <rect width="1280" height="760" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" font-weight="600">ADR028 — Whichever arrives first is recorded, the other is matched to it</text>
+  <text x="30" y="58" fill="#57606a">One card purchase reaches the books from the bank and from a receipt, in either order. The ledger ends with one entry. Tags name decisions.</text>
+
+  <!-- Legend -->
+  <rect x="960" y="76" width="14" height="14" rx="3" fill="#eef4ff" stroke="#3b6fd8"/>
+  <text x="980" y="88" fill="#57606a">exists today</text>
+  <rect x="1065" y="76" width="14" height="14" rx="3" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="1085" y="88" fill="#57606a">new</text>
+  <rect x="1125" y="76" width="14" height="14" rx="3" fill="#fff8e5" stroke="#bf8700"/>
+  <text x="1145" y="88" fill="#57606a">needs a person</text>
+
+  <!-- Column headers -->
+  <text x="30" y="108" font-size="13" font-weight="600" fill="#57606a">ORDER</text>
+  <text x="220" y="108" font-size="13" font-weight="600" fill="#57606a">FIRST TO ARRIVE</text>
+  <text x="590" y="108" font-size="13" font-weight="600" fill="#57606a">SECOND TO ARRIVE</text>
+  <text x="960" y="108" font-size="13" font-weight="600" fill="#57606a">THE LEDGER ENDS WITH</text>
+
+  <!-- Connectors -->
+  <g fill="none" stroke="#57606a" stroke-width="1.5">
+    <path d="M550 185 H588" marker-end="url(#arrow)"/>
+    <path d="M920 185 H958" marker-end="url(#arrow)"/>
+    <path d="M550 335 H588" marker-end="url(#arrow)"/>
+    <path d="M920 335 H958" marker-end="url(#arrow)"/>
+    <path d="M920 470 H958" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- Lane A: bank first -->
+  <rect x="30" y="120" width="170" height="130" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="46" y="144" font-size="13" font-weight="600">Bank first</text>
+  <text x="46" y="166" fill="#57606a">The usual order for a</text>
+  <text x="46" y="186" fill="#57606a">card purchase</text>
+
+  <rect x="220" y="120" width="330" height="130" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="236" y="144" font-size="13" font-weight="600">Bank posts · auto-import</text>
+  <text x="236" y="166">Posted row on a mapped account</text>
+  <text x="236" y="186">No receipt entry to complete</text>
+  <text x="236" y="206">Added as * with its import-id</text>
+  <rect x="502" y="174" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="518" y="186" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D10</text>
+  <rect x="502" y="194" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="518" y="206" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D5</text>
+
+  <rect x="590" y="120" width="330" height="130" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="606" y="144" font-size="13" font-weight="600">Receipt arrives · attached</text>
+  <text x="606" y="166">Dropped on the receipt page, captured</text>
+  <text x="606" y="186">on mobile, or found in the inbox</text>
+  <text x="606" y="206">insertReceiptTransaction finds the bank</text>
+  <text x="606" y="226">entry and adds the receipt. No new entry.</text>
+  <rect x="872" y="174" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="888" y="186" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D10</text>
+
+  <rect x="960" y="120" width="290" height="130" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">
+    <text x="976" y="148">2026-11-05 * "Corner Cafe" "Lunch"</text>
+    <text x="976" y="166">&#160;&#160;import-id: "plaid:Kx3…"</text>
+    <text x="976" y="184">&#160;&#160;receipt: "…/corner-cafe.jpg"</text>
+    <text x="976" y="202">&#160;&#160;Liabilities:Card&#160;&#160;-21.60 USD</text>
+    <text x="976" y="220">&#160;&#160;Expenses:Food&#160;&#160;&#160;&#160;&#160;&#160;21.60 USD</text>
+  </g>
+
+  <!-- Lane B: receipt first -->
+  <rect x="30" y="270" width="170" height="130" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="46" y="294" font-size="13" font-weight="600">Receipt first</text>
+  <text x="46" y="316" fill="#57606a">Photo taken at the</text>
+  <text x="46" y="336" fill="#57606a">counter; the bank posts</text>
+  <text x="46" y="356" fill="#57606a">days later</text>
+
+  <rect x="220" y="270" width="330" height="130" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="236" y="294" font-size="13" font-weight="600">Receipt arrives · inserted</text>
+  <text x="236" y="316">insertReceiptTransaction finds no bank</text>
+  <text x="236" y="336">entry yet, so it adds a * entry with</text>
+  <text x="236" y="356">the receipt and no import-id</text>
+  <text x="236" y="380" fill="#57606a" font-style="italic">The receipt says 18.00, before the tip</text>
+  <rect x="502" y="304" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="518" y="316" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D10</text>
+
+  <rect x="590" y="270" width="330" height="130" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="606" y="294" font-size="13" font-weight="600">Bank posts · merged</text>
+  <text x="606" y="316">Auto-import finds the receipt entry:</text>
+  <text x="606" y="336">same account, 18.00 → 21.60 is within</text>
+  <text x="606" y="356">100–125%, two days apart</text>
+  <text x="606" y="376">Adds import-id, takes the bank's amount</text>
+  <rect x="872" y="304" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="888" y="316" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D10</text>
+
+  <rect x="960" y="270" width="290" height="130" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">
+    <text x="976" y="294">2026-11-03 * "Corner Cafe" "Lunch"</text>
+    <text x="976" y="311">&#160;&#160;receipt: "…/corner-cafe.jpg"</text>
+    <text x="976" y="328">&#160;&#160;import-id: "plaid:Kx3…"</text>
+    <text x="976" y="345">&#160;&#160;bank-date: 2026-11-05</text>
+    <text x="976" y="362">&#160;&#160;Liabilities:Card&#160;&#160;-21.60 USD</text>
+    <text x="976" y="379">&#160;&#160;Expenses:Food&#160;&#160;&#160;&#160;&#160;&#160;21.60 USD</text>
+  </g>
+
+  <!-- Lane C: one side only -->
+  <rect x="30" y="420" width="170" height="100" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <text x="46" y="444" font-size="13" font-weight="600">One side only</text>
+  <text x="46" y="466" fill="#57606a">Nothing will arrive</text>
+  <text x="46" y="486" fill="#57606a">second</text>
+
+  <rect x="220" y="420" width="330" height="100" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="236" y="444" font-size="13" font-weight="600">Cash receipt</text>
+  <text x="236" y="466">Inserted as *. Final: no bank row</text>
+  <text x="236" y="486">will ever arrive for it</text>
+
+  <rect x="590" y="420" width="330" height="100" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="606" y="444" font-size="13" font-weight="600">Bank row, no receipt</text>
+  <text x="606" y="466">Added as * by auto-import. Final:</text>
+  <text x="606" y="486">the common case; nobody is reminded</text>
+  <rect x="872" y="454" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="888" y="466" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D5</text>
+
+  <rect x="960" y="420" width="290" height="100" rx="8" fill="#eef4ff" stroke="#3b6fd8" stroke-width="1.5"/>
+  <text x="976" y="444" font-size="13" font-weight="600">One entry each</text>
+  <text x="976" y="466">Nothing waits for a match</text>
+
+  <!-- Matching rule -->
+  <rect x="30" y="540" width="600" height="190" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="46" y="564" font-size="13" font-weight="600">Matching · inside both writes, so no client chooses</text>
+  <text x="46" y="586">Bank row finds a receipt entry: same mapped account, bank amount 100–125% of</text>
+  <text x="46" y="606">the receipt's, receipt dated 5 days before to 1 day after the bank's posting</text>
+  <text x="46" y="626">date, no import-id yet, and a receipt (receipt metadata or a ^rcpt_ link)</text>
+  <text x="46" y="646">Receipt finds a bank entry: the same test, on entries with an import-id</text>
+  <text x="46" y="666">and no receipt</text>
+  <text x="46" y="686">Transfer's other side: the same amount on this account within 3 days</text>
+  <text x="46" y="706" font-weight="600">Exactly one candidate: merge or attach. Otherwise: review.</text>
+  <rect x="582" y="552" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="598" y="564" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D10</text>
+  <rect x="582" y="674" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="598" y="686" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D11</text>
+
+  <!-- Exceptions -->
+  <rect x="650" y="540" width="600" height="190" rx="8" fill="#fff8e5" stroke="#bf8700" stroke-width="1.5"/>
+  <text x="666" y="564" font-size="13" font-weight="600">Exceptions · flagged ! and listed for review</text>
+  <text x="666" y="586">Two or more candidates: a bank row stays staged; a receipt is added flagged</text>
+  <text x="666" y="606">A split entry whose amounts differ from the bank&#8217;s</text>
+  <text x="666" y="626">A hand-entered entry that looks the same: asked, never merged</text>
+  <text x="666" y="646">A receipt on a mapped account still unmatched after N days</text>
+  <text x="666" y="666">A merged bank row that Plaid later removes</text>
+  <text x="666" y="706" font-weight="600">Once the owner resolves it, the flag returns to *</text>
+  <rect x="1202" y="654" width="32" height="16" rx="8" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="1218" y="666" text-anchor="middle" font-size="10" font-weight="600" fill="#2f8f4e">D6</text>
+</svg>

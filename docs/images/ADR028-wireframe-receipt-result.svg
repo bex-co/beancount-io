@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 620" width="1280" height="620" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" fill="#1f2328">
+  <title>ADR028 wireframe: receipt upload results</title>
+  <desc>Wireframe of the receipt page after Record. The upload and review steps are unchanged. The result is one of three: the receipt was added to an existing bank entry, a new entry was recorded, or the receipt was recorded and flagged because several bank entries could be its purchase. Each result offers an undo, and the flagged one asks the owner to choose.</desc>
+  <rect width="1280" height="620" fill="#ffffff"/>
+  <text x="30" y="38" font-size="20" font-weight="600">ADR028 wireframe — Receipt upload, after Record</text>
+  <text x="30" y="58" fill="#57606a">Journey J6. Upload, parsing and the review form stay as they are; the page and the mobile screen make one call and show one of three results (D10).</text>
+
+  <!-- Steps strip -->
+  <rect x="30" y="80" width="1220" height="64" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <rect x="50" y="98" width="230" height="28" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="165" y="116" text-anchor="middle">1 · Drop or photograph the receipt</text>
+  <text x="296" y="116" fill="#57606a">→</text>
+  <rect x="320" y="98" width="230" height="28" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="435" y="116" text-anchor="middle">2 · Review date, payee, amount</text>
+  <text x="566" y="116" fill="#57606a">→</text>
+  <rect x="590" y="98" width="110" height="28" rx="6" fill="#1f2328"/>
+  <text x="645" y="116" text-anchor="middle" fill="#ffffff" font-weight="600">3 · Record</text>
+  <text x="716" y="116" fill="#57606a">→</text>
+  <text x="740" y="116" fill="#57606a">insertReceiptTransaction looks for the bank entry, then answers with an outcome</text>
+
+  <!-- Result A: attached -->
+  <rect x="30" y="170" width="390" height="330" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <rect x="46" y="186" width="124" height="20" rx="10" fill="#eefbf1" stroke="#2f8f4e"/>
+  <text x="108" y="200" text-anchor="middle" font-size="11" fill="#2f8f4e">outcome: attached</text>
+  <text x="46" y="234" font-size="15" font-weight="600">Added to your card transaction</text>
+  <text x="46" y="256" fill="#57606a">The bank already recorded this purchase,</text>
+  <text x="46" y="274" fill="#57606a">so nothing new was written.</text>
+  <rect x="46" y="290" width="358" height="118" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="62" y="314" font-weight="600">Nov 5 · Corner Cafe</text>
+  <text x="388" y="314" text-anchor="end" font-weight="600">21.60 USD</text>
+  <text x="62" y="336" fill="#57606a">Rewards card ••7715 → Expenses:Food</text>
+  <text x="62" y="358" fill="#57606a">Your receipt said 18.00; the bank's amount</text>
+  <text x="62" y="376" fill="#57606a">includes the tip and is kept.</text>
+  <text x="62" y="398" fill="#57606a">Receipt attached</text>
+  <rect x="46" y="424" width="110" height="28" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="101" y="442" text-anchor="middle">View entry</text>
+  <rect x="166" y="424" width="70" height="28" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="201" y="442" text-anchor="middle">Undo</text>
+  <rect x="246" y="424" width="158" height="28" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="325" y="442" text-anchor="middle">Not this one — record new</text>
+  <text x="46" y="482" fill="#57606a" font-size="11">Bank first, receipt second.</text>
+
+  <!-- Result B: inserted -->
+  <rect x="445" y="170" width="390" height="330" rx="8" fill="#f6f8fa" stroke="#8c959f" stroke-width="1.5"/>
+  <rect x="461" y="186" width="124" height="20" rx="10" fill="#eef4ff" stroke="#3b6fd8"/>
+  <text x="523" y="200" text-anchor="middle" font-size="11" fill="#3b6fd8">outcome: inserted</text>
+  <text x="461" y="234" font-size="15" font-weight="600">Recorded</text>
+  <text x="461" y="256" fill="#57606a">No bank transaction matches yet. When your</text>
+  <text x="461" y="274" fill="#57606a">card posts it, it will complete this entry.</text>
+  <rect x="461" y="290" width="358" height="118" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="477" y="314" font-weight="600">Nov 3 · Corner Cafe</text>
+  <text x="803" y="314" text-anchor="end" font-weight="600">18.00 USD</text>
+  <text x="477" y="336" fill="#57606a">Rewards card ••7715 → Expenses:Food</text>
+  <text x="477" y="358" fill="#57606a">Waiting for the bank: no bank ID yet.</text>
+  <text x="477" y="398" fill="#57606a">Receipt attached</text>
+  <rect x="461" y="424" width="110" height="28" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="516" y="442" text-anchor="middle">View entry</text>
+  <rect x="581" y="424" width="70" height="28" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="616" y="442" text-anchor="middle">Undo</text>
+  <rect x="661" y="424" width="158" height="28" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="740" y="442" text-anchor="middle">Record another</text>
+  <text x="461" y="482" fill="#57606a" font-size="11">Receipt first, or paid in cash (then it says only “Recorded”).</text>
+
+  <!-- Result C: needs review -->
+  <rect x="860" y="170" width="390" height="330" rx="8" fill="#f6f8fa" stroke="#bf8700" stroke-width="1.5"/>
+  <rect x="876" y="186" width="156" height="20" rx="10" fill="#fff8e5" stroke="#bf8700"/>
+  <text x="954" y="200" text-anchor="middle" font-size="11" fill="#9a6700">outcome: needs_review</text>
+  <text x="876" y="234" font-size="15" font-weight="600">Recorded — which purchase is it?</text>
+  <text x="876" y="256" fill="#57606a">Two card transactions could be this receipt.</text>
+  <text x="876" y="274" fill="#57606a">It is recorded and flagged until you choose.</text>
+  <rect x="876" y="290" width="358" height="34" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="892" y="311">○ Nov 5 · CORNER CAFE · 6.50 · Rewards card</text>
+  <rect x="876" y="330" width="358" height="34" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="892" y="351">○ Nov 5 · CORNER CAFE · 6.50 · Rewards card</text>
+  <rect x="876" y="370" width="358" height="34" rx="6" fill="#ffffff" stroke="#8c959f"/>
+  <text x="892" y="391">○ Neither — it is a separate purchase</text>
+  <rect x="876" y="424" width="110" height="28" rx="6" fill="#1f2328"/>
+  <text x="931" y="442" text-anchor="middle" fill="#ffffff" font-weight="600">Confirm</text>
+  <rect x="996" y="424" width="110" height="28" rx="6" fill="#ffffff" stroke="#57606a"/>
+  <text x="1051" y="442" text-anchor="middle">Decide later</text>
+  <text x="876" y="482" fill="#57606a" font-size="11">Decide later leaves it in the review list, flagged !.</text>
+
+  <!-- Notes -->
+  <rect x="30" y="520" width="390" height="76" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="46" y="542" font-weight="600">Attached · D10</text>
+  <text x="46" y="562">Exactly one bank entry matched. Undo reverts the commit;</text>
+  <text x="46" y="582">“Not this one” reverts it and records a separate entry.</text>
+
+  <rect x="445" y="520" width="390" height="76" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="461" y="542" font-weight="600">Inserted · D10</text>
+  <text x="461" y="562">No candidate. The waiting line shows only when the payment</text>
+  <text x="461" y="582">account is linked to a bank; it is never a flag.</text>
+
+  <rect x="860" y="520" width="390" height="76" rx="8" fill="#eefbf1" stroke="#2f8f4e" stroke-width="1.5"/>
+  <text x="876" y="542" font-weight="600">Needs review · D10</text>
+  <text x="876" y="562">Confirming a candidate moves the receipt onto it and removes</text>
+  <text x="876" y="582">the receipt's own entry, in one commit.</text>
+</svg>
