@@ -297,7 +297,14 @@ def _rendered_batch(data: dict[str, Any], *, file: Path, apply: bool) -> None:
         else:
             typer.echo("Preview only. Review the diff, then repeat with --apply to write.")
     elif written:
-        message = f"Updated {written} of {total} transactions in {file}."
+        # The files written, as the single-row form names its one; the root
+        # named an include's rows as if they had landed in it (w1/363).
+        into = list(
+            dict.fromkeys(
+                output.write_target(file, row["target"])["into"] for row in data["rows"] if row["status"] == "ok"
+            )
+        )
+        message = f"Updated {written} of {total} transactions in {', '.join(into)}."
         if unchanged:
             message += f" {unchanged} already up to date."
         output.success(message)

@@ -32,6 +32,9 @@ WRITES = {
         *("--account", "Assets:Cash", "--apply"),
     ),
     "format": ("format", "-i", "main.bean"),
+    # Updates resolve the entry's file through a symbolic link (w1/363); a hard link is still refused.
+    "update": ("update", "transaction", "--id", "main.bean:5", "--flag", "!", "--apply"),
+    "bulk-update": ("update", "transactions", "--from", "updates.json", "--apply"),
 }
 
 
@@ -60,6 +63,7 @@ def _books(tmp_path: Path) -> Path:
     ledger = tmp_path / "main.bean"
     ledger.write_text(LEDGER)
     (tmp_path / "rows.json").write_text(json.dumps(ROW))
+    (tmp_path / "updates.json").write_text(json.dumps([{"id": "main.bean:5", "flag": "!"}]))
     (tmp_path / "s.csv").write_text("Date,Description,Amount\n2026-01-07,Shop,-3.00\n")
     return ledger
 

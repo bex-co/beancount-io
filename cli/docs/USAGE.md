@@ -2072,6 +2072,11 @@ file's edits. A batch row outside the selected file is rejected; valid rows
 in that file retain the normal batch behavior. Without `--into`, entries keep
 their existing locations across the include graph.
 
+An update rewrites the file its entry lives in, as `add` writes: for a root or
+include reached through a symbolic link, that is the file the link points to,
+and the link stays a link. The diff, each row's `target` and the success line
+name the file written; the batch line lists every file it wrote.
+
 A longer queue goes through one mapping file, previewed and then applied in a
 single write per file; a rejected row never aborts the valid ones:
 

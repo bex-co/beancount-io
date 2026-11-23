@@ -665,6 +665,18 @@ def plan_rewrite(
     return (("\ufeff" if bom else "") + new_text), _file_diff(text, new_text, target, bom=bom)
 
 
+def _entry_file(filename: str) -> Path:
+    """The real file an entry's lines live in, as `add` writes to (`ledger_write.destination`).
+
+    The loader names an entry by the lexical path it read, through any
+    symbolic link. The rewrite is installed by renaming a validated copy over
+    its target, so renaming onto that name replaced the link with a regular
+    file: the linked ledger never got the edit, and every later write went to
+    the orphan copy (w1/363).
+    """
+    return Path(filename).resolve()
+
+
 def _planned_answer(
     changes: _Changes, target: Path, entry: Any, diff: str, *, written: int, warnings: list[str]
 ) -> dict[str, Any]:
@@ -775,7 +787,8 @@ def _plan_rows(
         except protocol.UsageError as exc:
             refuse(index, _row_reason(index, exc))
             continue
-        key = (str((entry.meta or {})["filename"]), int((entry.meta or {})["lineno"]))
+        target = _entry_file((entry.meta or {})["filename"])
+        key = (str(target), int((entry.meta or {})["lineno"]))
         if key in seen:
             refuse(
                 index,
@@ -783,7 +796,6 @@ def _plan_rows(
                 "merge them into one row.",
             )
             continue
-        target = Path(key[0])
         try:
             _require_into(target, into)
             summary = _summarize(entry, options, changes)
@@ -1027,14 +1039,16 @@ def _transactions(
         return list(entries), options
 
     def files(snapshot: ledger_write.LedgerSnapshot) -> tuple[dict[Path, str], dict[Path, list[str]], dict[Path, bool]]:
+        """Every member's text, keyed by the real file a row plans against (w1/363)."""
         texts, lines, marks = {}, {}, {}
         for path, content in snapshot.contents.items():
             if snapshot.stats[path] is None:
                 continue
             text, bom = _decode(path, content)
-            texts[path] = text
-            lines[path] = text.split("\n")
-            marks[path] = bom
+            real = _entry_file(str(path))
+            texts[real] = text
+            lines[real] = text.split("\n")
+            marks[real] = bom
         return texts, lines, marks
 
     def report(
@@ -1136,7 +1150,11 @@ def _transactions(
         valid = _validate_plans(
             plans, file_lines, snapshot, rejected, rejected_rows, reasons, allow_errors=allow_errors
         )
-        for directory in dict.fromkeys(path.parent for path in snapshot.contents):
+        # Each candidate stages beside the real file it replaces, which a
+        # symbolic link can put outside every member's directory.
+        for directory in dict.fromkeys(
+            [*(target.parent for target in valid), *(path.parent for path in snapshot.contents)]
+        ):
             ledger_write.sweep_abandoned_candidates(directory)
         # The loop below re-reads every file before each write; the answer's
         # diffs compare against the files as they were, or each earlier file's
@@ -1272,7 +1290,7 @@ def answer(
         entries, errors, options = managed_load.load_file(file)
         _gate_load_errors(errors, file, allow_errors=allow_errors)
         entry = locate_transaction(list(entries), changes.id, file)
-        target = Path((entry.meta or {})["filename"])
+        target = _entry_file((entry.meta or {})["filename"])
         _require_into(target, selected)
         snapshot = ledger_write.LedgerSnapshot.capture(file)
         original = snapshot.require_target(target)
@@ -1303,7 +1321,7 @@ def answer(
         entries, errors, options = managed_load.load_file(file, snapshot=snapshot)
         _gate_load_errors(errors, file, allow_errors=allow_errors)
         entry = locate_transaction(list(entries), changes.id, file)
-        target = Path((entry.meta or {})["filename"])
+        target = _entry_file((entry.meta or {})["filename"])
         _require_into(target, selected)
         original = snapshot.require_target(target)
         new_text, diff = plan_rewrite(list(entries), options, entry, changes, original, target)
