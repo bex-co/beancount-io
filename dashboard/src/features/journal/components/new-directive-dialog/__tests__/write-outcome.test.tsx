@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { NewDirectiveDialog } from "../index";
 
@@ -36,7 +36,9 @@ vi.mock("@apollo/client/react", () => ({
         : Promise.resolve({ data: { getLedgerErrors: state.after } }),
   }),
 }));
-vi.mock("sonner", () => ({ toast: { warning: vi.fn(), success: vi.fn() } }));
+vi.mock("sonner", () => ({
+  toast: { warning: vi.fn(), success: vi.fn(), dismiss: vi.fn() },
+}));
 
 function renderDialog(
   onSuccess: (outcome: { leftErrors: Promise<boolean> }) => void,
@@ -56,8 +58,15 @@ function renderDialog(
 describe("New Entry reports a write that broke the ledger (w3/640)", () => {
   beforeEach(() => {
     vi.mocked(toast.warning).mockClear();
+    vi.mocked(toast.dismiss).mockClear();
+    state.after = [];
     state.deferRefetch = false;
     state.resolveRefetch = null;
+  });
+
+  afterEach(() => {
+    const warning = vi.mocked(toast.warning).mock.lastCall?.[1];
+    if (warning?.id !== undefined) warning.onDismiss?.({ id: warning.id });
   });
 
   it("names the new error instead of plain success", async () => {

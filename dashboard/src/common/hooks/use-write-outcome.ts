@@ -10,6 +10,11 @@ type LedgerError = { message: string };
 /** A snapshot of the ledger's errors, or null when they could not be read. */
 export type ErrorSnapshot = readonly LedgerError[] | null;
 
+// The toaster outlives individual editors and dialogs. A fixing write can
+// therefore clear a warning posted by a different hook instance.
+const warnedErrors = new Map<string, LedgerError>();
+const pendingChecks = new Map<string, symbol>();
+
 /**
  * Errors present after a write that were not there before, compared by
  * message: an append shifts every later line number, so positions would
@@ -57,25 +62,62 @@ export function useWriteOutcome(ledgerId: string) {
 
   const report = useCallback(
     async (before: ErrorSnapshot): Promise<boolean> => {
-      if (!before || !refetch) return false;
+      const toastId = `write-left-errors:${ledgerId}`;
+      if (
+        !refetch ||
+        !ledgerId ||
+        (!before && !warnedErrors.has(toastId) && !pendingChecks.has(toastId))
+      ) {
+        return false;
+      }
+
+      // The second write can finish while the first recheck is still in
+      // flight. A late response must never recreate a stale warning.
+      const check = Symbol();
+      pendingChecks.set(toastId, check);
       let after: readonly LedgerError[] | undefined;
       try {
         after = (await refetch()).data?.getLedgerErrors;
+        if (pendingChecks.get(toastId) !== check) return false;
       } catch {
         return false;
+      } finally {
+        if (pendingChecks.get(toastId) === check) pendingChecks.delete(toastId);
       }
-      const [first] = after ? newErrors(before, after) : [];
-      if (!first) return false;
+      if (!after) return false;
+
+      const first = before ? newErrors(before, after)[0] : undefined;
+      if (!first) {
+        const warned = warnedErrors.get(toastId);
+        if (
+          warned &&
+          !after.some(({ message }) => message === warned.message)
+        ) {
+          warnedErrors.delete(toastId);
+          toast.dismiss(toastId);
+        }
+        return false;
+      }
+
+      const warning = { message: first.message };
+      warnedErrors.set(toastId, warning);
+      const forgetWarning = () => {
+        if (warnedErrors.get(toastId) === warning) warnedErrors.delete(toastId);
+      };
       const [ledgerOwner, ledgerName] = ledgerId.split("/");
       toast.warning(t("common.writeLeftErrors", { error: first.message }), {
+        id: toastId,
         duration: Infinity,
+        onDismiss: forgetWarning,
         action: {
           label: t("common.viewErrors"),
-          onClick: () =>
+          onClick: () => {
+            forgetWarning();
             void router?.navigate({
               to: "/ledger/$ledgerOwner/$ledgerName/errors",
               params: { ledgerOwner, ledgerName },
-            }),
+            });
+          },
         },
       });
       return true;
