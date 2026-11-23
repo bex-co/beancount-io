@@ -167,6 +167,7 @@ function series(dates: string[], activeMonth?: string) {
 }
 
 describe("filtered money-movement default on 2026-10-15", () => {
+  const date = { today: "2026-10-15", dataThrough: "2026-10-15" };
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(2026, 9, 15, 12));
@@ -184,6 +185,7 @@ describe("filtered money-movement default on 2026-10-15", () => {
       render(
         <Section
           {...props}
+          {...date}
           {...series(months(window[0], window[1]), "2026-08")}
         />,
       );
@@ -199,6 +201,7 @@ describe("filtered money-movement default on 2026-10-15", () => {
       render(
         <Section
           {...props}
+          {...date}
           {...series(months("2026-01", "2026-12"), "2026-08")}
         />,
       );
@@ -208,7 +211,13 @@ describe("filtered money-movement default on 2026-10-15", () => {
 
   it("opens a selection with no activity on its last month that has begun", () => {
     Object.assign(searchParams, { time: "year" });
-    render(<Section {...props} {...series(months("2026-01", "2026-12"))} />);
+    render(
+      <Section
+        {...props}
+        {...date}
+        {...series(months("2026-01", "2026-12"))}
+      />,
+    );
     expect(screen.getAllByText("October 2026")).toHaveLength(2);
     expect(
       screen.getAllByText("No money movement for this period."),
@@ -217,7 +226,13 @@ describe("filtered money-movement default on 2026-10-15", () => {
 
   it("keeps a wholly future selection's empty state", () => {
     Object.assign(searchParams, { time: "2030" });
-    render(<Section {...props} {...series(months("2030-01", "2030-12"))} />);
+    render(
+      <Section
+        {...props}
+        {...date}
+        {...series(months("2030-01", "2030-12"))}
+      />,
+    );
     expect(screen.getAllByText("December 2030")).toHaveLength(2);
     expect(
       screen.getAllByText("No money movement for this period."),

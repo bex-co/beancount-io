@@ -12,11 +12,12 @@ import {
 import { overviewQueryDefaults } from "./constants";
 import { loadPublicReadme } from "./load-public-readme";
 import { recentTransactionsVariables } from "./lib/recent-transactions";
-import { dataThroughOf, isPastMonth, openingMonth } from "./lib/overview-month";
 import {
-  resolveMovementTimeFilter,
-  toLocalISODate,
-} from "./lib/overview-utils";
+  dataThroughOf,
+  financialPositionPeriod,
+  openingMonth,
+} from "./lib/overview-month";
+import { getIntervalDates, toLocalISODate } from "./lib/overview-utils";
 import type { InitialLedgerReadme } from "@/common/lib/ledger-readme";
 
 export const overviewLoader: RouteLoader<
@@ -26,6 +27,7 @@ export const overviewLoader: RouteLoader<
 > = async ({ params, context, deps, abortController }) => {
   const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;
   const { account, filter, time, month: requestedMonth } = deps;
+  const today = toLocalISODate(new Date());
 
   // Client navigation keeps optional panels nonblocking. Initial public SSR
   // additionally settles README within a deadline so its authored explanation
@@ -82,13 +84,12 @@ export const overviewLoader: RouteLoader<
         account,
         filter,
         time,
+        today,
       }),
     })
     .catch(() => undefined);
-  // When that month is one before the data's last, Financial position shows
-  // the balances at its close, read on their own: primary content too.
-  // Without them a server render holds only the account rows' placeholders,
-  // which a reader without JavaScript, or a crawler, never sees filled.
+  // Prefetch the scoped balance through the selected month or today's close.
+  // These rows are primary content and must be present on the server render.
   const monthBalances = Promise.all([overview, journal]).then(
     async ([flows, newest]) => {
       const income = flows?.data?.getLedgerOverview?.incomeIntervalData ?? [];
@@ -103,11 +104,11 @@ export const overviewLoader: RouteLoader<
         .catch(() => undefined);
       const about = ledger?.data?.getLedger;
       const permissions = about?.permissions;
-      const today = toLocalISODate(new Date());
       const dataThrough = dataThroughOf(
         newest?.data?.getLedgerJournal?.data,
         today,
       );
+      const dates = getIntervalDates(income, expenses);
       const month = openingMonth({
         income,
         expenses,
@@ -118,11 +119,18 @@ export const overviewLoader: RouteLoader<
         hasFilters: Boolean(account || filter || time),
         dataThrough,
         today,
+        dates,
         month: requestedMonth,
       });
-      if (!isPastMonth(month, dataThrough)) return;
-      const monthTime = resolveMovementTimeFilter(month, time || undefined);
-      if (!monthTime) return;
+      const positionPeriod = financialPositionPeriod({
+        selectedDate: month,
+        latestDate: dates.at(-1),
+        dataThrough,
+        today,
+        time,
+        fiscalYearEnd: about?.favaOptions?.fiscalYearEnd,
+      });
+      if (!positionPeriod || positionPeriod.time === time) return;
       // The variables the page's own month read uses, so it is a cache hit.
       await context.client
         .query({
@@ -131,7 +139,7 @@ export const overviewLoader: RouteLoader<
             ledgerId,
             account,
             filter,
-            time: monthTime,
+            time: positionPeriod.time,
             interval: overviewQueryDefaults.interval,
           },
         })

@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { financialPositionPeriod, openingMonth } from "../overview-month";
+import { recentTransactionsVariables } from "../recent-transactions";
 import {
   formatTimeAgo,
   isLedgerDormant,
@@ -18,6 +20,45 @@ const monthEnds = (count: number) =>
   );
 
 describe("the month the Overview shows", () => {
+  const dates = ["2026-09-30", "2026-10-31", "2026-11-30", "2026-12-31"];
+  const income = dates.map((date, index) => ({
+    date,
+    balance: { USD: index === 2 ? "0" : "-100" },
+    accountBalances: {},
+  }));
+  const options = {
+    income,
+    expenses: [],
+    hasFilters: false,
+    preferActiveMonth: false,
+    today: "2026-11-18",
+    dataThrough: "2026-10-10",
+  };
+
+  it("opens on the latest begun month even with a scheduled later entry", () => {
+    expect(openingMonth(options)).toBe("2026-11-30");
+    expect(openingMonth({ ...options, month: "2026-12" })).toBe("2026-12-31");
+  });
+
+  it("looks for activity in begun months for public readers and filtered views", () => {
+    expect(openingMonth({ ...options, preferActiveMonth: true })).toBe(
+      "2026-10-31",
+    );
+    expect(openingMonth({ ...options, hasFilters: true })).toBe("2026-10-31");
+  });
+
+  it("keeps the latest future month when the entire selection is in the future", () => {
+    expect(openingMonth({ ...options, income: income.slice(-1) })).toBe(
+      "2026-12-31",
+    );
+  });
+
+  it("opens a dormant ledger on its last finished month despite later entries", () => {
+    expect(openingMonth({ ...options, dataThrough: "2026-10-02" })).toBe(
+      "2026-09-30",
+    );
+  });
+
   it("ends the data at the newest entry, never past today", () => {
     expect(resolveDataThrough("2017-09-08", "2026-11-10")).toBe("2017-09-08");
     expect(resolveDataThrough("2026-12-01", "2026-11-10")).toBe("2026-11-10");
@@ -72,6 +113,69 @@ describe("the month the Overview shows", () => {
         "2026-11-10",
       ),
     ).toBe("2017-09-30");
+  });
+});
+
+describe("Overview valuation cutoffs", () => {
+  const month = {
+    selectedDate: "2026-11-30",
+    latestDate: "2026-12-31",
+    dataThrough: "2026-10-10",
+    today: "2026-11-18",
+  };
+
+  it("uses today and preserves the start of a partial-month filter", () => {
+    expect(
+      financialPositionPeriod({ ...month, time: "2026-11-08 - 2026-11-29" }),
+    ).toEqual({ date: "2026-11-18", time: "2026-11-08 - 2026-11-18" });
+  });
+
+  it("keeps an earlier close selected within the current month", () => {
+    expect(
+      financialPositionPeriod({
+        ...month,
+        selectedDate: "2026-11-12",
+        time: "2026-11-08 - 2026-11-12",
+      }),
+    ).toEqual({ date: "2026-11-12", time: "2026-11-08 - 2026-11-12" });
+  });
+});
+
+describe("Recent activity query", () => {
+  it("intersects the user's filter and time with all dates through today", () => {
+    const filter = "payee:Rent, payee:Mortgage";
+    const { query } = recentTransactionsVariables({
+      ledgerId: "alice/books",
+      account: "Assets:Bank",
+      filter,
+      time: "fiscal_year",
+      today: "2026-11-18",
+    });
+    expect(query).toMatchObject({
+      account: "Assets:Bank",
+      time: "fiscal_year",
+      offset: 0,
+      limit: 8,
+    });
+    const [clause, pattern] = query.filter.split(' date:"');
+    expect(clause).toBe(`(${filter})`);
+    const matchesDate = new RegExp(pattern.slice(0, -1));
+    for (const date of [
+      "0001-01-01",
+      "2025-12-31",
+      "2026-10-31",
+      "2026-11-18",
+    ]) {
+      expect(matchesDate.test(date)).toBe(true);
+    }
+    for (const date of [
+      "2026-11-19",
+      "2026-12-01",
+      "2027-01-01",
+      "9999-12-31",
+    ]) {
+      expect(matchesDate.test(date)).toBe(false);
+    }
   });
 });
 

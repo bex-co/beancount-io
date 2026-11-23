@@ -69,7 +69,7 @@ import { EmptyLedgerSetup } from "./components/empty-ledger-setup";
 import { MonthSummary } from "./components/month-summary";
 import { MonthCashFlow } from "./components/month-cash-flow";
 import { useDataThrough, useOverviewMonth } from "./hooks/use-overview-month";
-import { isPastMonth } from "./lib/overview-month";
+import { financialPositionPeriod } from "./lib/overview-month";
 
 function PublicLedgerIntroduction({
   ledgerId,
@@ -245,36 +245,55 @@ export default function LedgerOverviewPage() {
     dataThrough,
     today,
   });
-  // A month before the one the data ends in is history: the balances are
-  // read again at its close, so Financial position answers for the same month
-  // as the summary above it. The running (or last) month uses the page's own
-  // read.
-  const pastMonth = isPastMonth(month.selectedDate, dataThrough);
-  const monthValuation = useQuery(GetLedgerOverviewValuationDocument, {
+  const selectedDate = month.selectedDate;
+  const latestDate = month.dates.at(-1);
+  const time = ledgerFilters.searchParams.time;
+  const fiscalYearEnd = ledgerData.favaOptions?.fiscalYearEnd;
+  const positionPeriod = useMemo(
+    () =>
+      financialPositionPeriod({
+        selectedDate,
+        latestDate,
+        dataThrough,
+        today,
+        time,
+        fiscalYearEnd,
+      }),
+    [selectedDate, latestDate, dataThrough, today, time, fiscalYearEnd],
+  );
+  const positionValuation = useQuery(GetLedgerOverviewValuationDocument, {
     variables: {
       ledgerId,
       account: ledgerFilters.searchParams.account,
       filter: ledgerFilters.searchParams.filter,
-      time: month.timeFilter,
+      time: positionPeriod?.time,
       interval: overviewQueryDefaults.interval,
     },
-    skip: !pastMonth || !month.timeFilter,
+    skip: !positionPeriod,
     fetchPolicy: "cache-first",
   });
   const market = valuationData?.market;
+  const positionData = positionValuation.loading
+    ? undefined
+    : positionValuation.data;
+  const positionMarket = positionPeriod ? positionData?.market : market;
+  const noteValuationData =
+    positionPeriod?.date.slice(0, 7) === today.slice(0, 7)
+      ? positionData
+      : valuationData;
   const costNetWorth = data?.getLedgerOverview?.netWorthData;
   const netWorthValuation = useMemo(
     () =>
       describeLatestNetWorth({
-        market: market?.netWorthData ?? [],
+        market: noteValuationData?.market?.netWorthData ?? [],
         cost: costNetWorth ?? [],
-        units: valuationData?.held?.netWorthData ?? [],
+        units: noteValuationData?.held?.netWorthData ?? [],
         currency: primaryCurrency,
         today,
-        pricePairs: valuationData?.getLedgerCommodities ?? [],
-        managedSources: valuationData?.getLedgerManagedPrices ?? [],
+        pricePairs: noteValuationData?.getLedgerCommodities ?? [],
+        managedSources: noteValuationData?.getLedgerManagedPrices ?? [],
       }),
-    [market, costNetWorth, valuationData, primaryCurrency, today],
+    [costNetWorth, noteValuationData, primaryCurrency, today],
   );
 
   // Do not keep a prior period's overview cards while a replacement read is in
@@ -365,8 +384,7 @@ export default function LedgerOverviewPage() {
     !reportState &&
     hasActivity &&
     staleSince !== null &&
-    // It is about today's prices: a past month's close is not valued at them.
-    !pastMonth &&
+    (!positionPeriod || positionPeriod.date === today) &&
     !layout.hidden.includes("financial-position");
   const staleNotice = staleNoticeShown ? (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
@@ -401,14 +419,14 @@ export default function LedgerOverviewPage() {
   const heroShown = !reportState && hasActivity && month.selectedDate !== "";
   // The day Financial position answers for: the month's close, or the
   // ledger's last day with data.
-  const positionDate = pastMonth
-    ? month.selectedDate
-    : [
-        throughCurrentMonth(market?.netWorthData ?? [], today).at(-1)?.date,
-        dataThrough,
-      ]
-        .filter((date): date is string => Boolean(date))
-        .sort()[0];
+  const positionDate =
+    positionPeriod?.date ??
+    [
+      throughCurrentMonth(market?.netWorthData ?? [], today).at(-1)?.date,
+      dataThrough,
+    ]
+      .filter((date): date is string => Boolean(date))
+      .sort()[0];
   const netWorth = (trend: boolean) => (
     <NetWorthCard
       data={market?.netWorthData ?? []}
@@ -419,42 +437,39 @@ export default function LedgerOverviewPage() {
       today={today}
       selectedDate={month.selectedDate || undefined}
       dataThrough={dataThrough}
+      positionPoint={
+        positionPeriod ? positionMarket?.netWorthData.at(-1) : undefined
+      }
       staleNoticeShown={staleNoticeShown}
       // Without a trend the page's hero chart draws the line (and lists the
       // months), and the figure heads the Accounts card.
       trend={trend}
     />
   );
-  const monthBalancesFailed = Boolean(pastMonth && monthValuation.error);
-  const monthBalancesAlert = monthValuation.error ? (
+  const monthBalancesFailed = Boolean(
+    positionPeriod && positionValuation.error,
+  );
+  const monthBalancesAlert = positionValuation.error ? (
     <Alert variant="destructive">
       <AlertDescription>
-        {t(getErrorMessageKey(monthValuation.error))}
+        {t(getErrorMessageKey(positionValuation.error))}
       </AlertDescription>
     </Alert>
   ) : null;
   const accountBalances = (summary: ReactNode | undefined) => (
     <AccountBalancesCard
       summary={summary}
-      assets={
-        pastMonth
-          ? monthValuation.data?.market?.assetsHierarchyData
-          : market?.assetsHierarchyData
-      }
-      liabilities={
-        pastMonth
-          ? monthValuation.data?.market?.liabilitiesHierarchyData
-          : market?.liabilitiesHierarchyData
-      }
+      assets={positionMarket?.assetsHierarchyData}
+      liabilities={positionMarket?.liabilitiesHierarchyData}
       primaryCurrency={primaryCurrency}
       invertLiabilities={invertIncomeLiabilitiesEquity}
       ledgerOwner={ledgerOwner}
       ledgerName={ledgerName}
-      time={pastMonth ? month.timeFilter : ledgerFilters.searchParams.time}
+      time={positionPeriod?.time ?? ledgerFilters.searchParams.time}
       fiscalYearEnd={ledgerData.favaOptions?.fiscalYearEnd}
       // The same day the Net Worth card names.
       asOf={positionDate}
-      pending={pastMonth && !monthValuation.data}
+      pending={Boolean(positionPeriod && !positionData)}
     />
   );
   const widgets: Record<DashboardWidgetId, ReactNode> = {
@@ -537,6 +552,7 @@ export default function LedgerOverviewPage() {
         account={ledgerFilters.searchParams.account}
         filter={ledgerFilters.searchParams.filter}
         time={ledgerFilters.searchParams.time}
+        today={today}
         primaryCurrency={primaryCurrency}
         incomeRoot={ledgerData.options.nameIncome}
         expensesRoot={ledgerData.options.nameExpenses}

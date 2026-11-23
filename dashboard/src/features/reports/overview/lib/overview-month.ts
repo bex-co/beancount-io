@@ -1,9 +1,14 @@
 import {
+  parseConcreteTimeFilter,
+  type FiscalYearEnd,
+} from "@/features/reports/export/reporting-period";
+import {
   type IntervalDataSeries,
-  getFilteredDefaultIntervalDate,
   getIntervalDates,
   getLatestActiveIntervalDate,
+  isLedgerDormant,
   resolveDataThrough,
+  resolveMovementTimeFilter,
   settledOpeningMonth,
 } from "./overview-utils";
 
@@ -62,22 +67,64 @@ export function openingMonth({
   const requestedDate = dateForOverviewMonth(dates, month);
   if (requestedDate) return requestedDate;
 
-  const latest = hasFilters
-    ? (getFilteredDefaultIntervalDate(income, expenses) ?? "")
-    : ((preferActiveMonth
-        ? getLatestActiveIntervalDate(income, expenses)
-        : undefined) ??
-      dates.at(-1) ??
-      "");
-  return settledOpeningMonth(dates, latest, dataThrough, today);
+  const begun = dates.filter((date) => date.slice(0, 7) <= today.slice(0, 7));
+  if (begun.length === 0) return dates.at(-1) ?? "";
+
+  // Scheduled entries can extend the series across months with no activity.
+  // For a dormant ledger, start from where the completed activity stopped.
+  const recorded = isLedgerDormant(dataThrough, today)
+    ? begun.filter((date) => date.slice(0, 7) <= dataThrough.slice(0, 7))
+    : begun;
+  const available = recorded.length > 0 ? recorded : begun;
+  const latest = available.at(-1)!;
+  const active =
+    hasFilters || preferActiveMonth
+      ? getLatestActiveIntervalDate(income, expenses, latest)
+      : undefined;
+  return settledOpeningMonth(available, active ?? latest, dataThrough, today);
 }
 
 /**
- * A month before the one the data ends in is history: Financial position
- * reads its balances again at that month's close, rather than the latest.
+ * The extra valuation needed when the selected period has its own cutoff.
+ * A current month ends today or at the filter's earlier close. Historical
+ * selections and explicitly selected future months use their own close.
  */
-export function isPastMonth(selectedDate: string, dataThrough: string) {
-  return (
-    selectedDate !== "" && selectedDate.slice(0, 7) < dataThrough.slice(0, 7)
-  );
+export function financialPositionPeriod({
+  selectedDate,
+  latestDate,
+  dataThrough,
+  today,
+  time,
+  fiscalYearEnd,
+}: {
+  selectedDate: string;
+  latestDate?: string;
+  dataThrough: string;
+  today: string;
+  time: string;
+  fiscalYearEnd?: FiscalYearEnd;
+}): { date: string; time: string } | undefined {
+  if (!selectedDate) return;
+  const month = selectedDate.slice(0, 7);
+  const current = today.slice(0, 7);
+  if (month === current) {
+    const date = selectedDate < today ? selectedDate : today;
+    const first = `${month}-01`;
+    const range = parseConcreteTimeFilter(time, fiscalYearEnd);
+    const start =
+      range && range.startDate > first && range.startDate <= date
+        ? range.startDate
+        : first;
+    return { date, time: `${start} - ${date}` };
+  }
+  if (
+    month > current ||
+    month < dataThrough.slice(0, 7) ||
+    (latestDate && month < latestDate.slice(0, 7))
+  ) {
+    return {
+      date: selectedDate,
+      time: resolveMovementTimeFilter(selectedDate, time),
+    };
+  }
 }

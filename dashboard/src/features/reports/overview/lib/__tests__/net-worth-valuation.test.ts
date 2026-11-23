@@ -376,27 +376,31 @@ describe("throughCurrentMonth", () => {
     ).toEqual(["2026-09-30", "2026-10-31"]);
   });
 
-  it("describes the current month's point, not the future one", () => {
-    const at = (date: string, usd: string) => ({
-      date,
-      balance: { USD: usd, GLD: "2" },
-    });
-    const market = [at("2026-10-31", "1200"), at("2026-11-30", "700")];
-    const cost = [at("2026-10-31", "1100"), at("2026-11-30", "900")];
-    const valuation = describeLatestNetWorth({
-      market,
-      cost,
-      units: [
-        { date: "2026-10-31", balance: { "GLD {USD}": "2" } },
-        { date: "2026-11-30", balance: { "GLD {USD}": "2" } },
-      ],
-      currency: "USD",
-      today: "2026-10-24",
-      pricePairs: [],
-      managedSources: [],
-    });
-    expect(valuation?.costBasis).toBe(1100);
-  });
+  it.each(["2026-10-31", "2026-10-24"])(
+    "uses the current month's cost and holdings for a market point on %s",
+    (date) => {
+      const at = (date: string, usd: string) => ({
+        date,
+        balance: { USD: usd, GLD: "2" },
+      });
+      const market = [at(date, "1200"), at("2026-11-30", "700")];
+      const cost = [at("2026-10-31", "1100"), at("2026-11-30", "900")];
+      const valuation = describeLatestNetWorth({
+        market,
+        cost,
+        units: [
+          { date: "2026-10-31", balance: { "GLD {USD}": "2" } },
+          { date: "2026-11-30", balance: { "GLD {USD}": "1" } },
+        ],
+        currency: "USD",
+        today: "2026-10-24",
+        pricePairs: [],
+        managedSources: [],
+      });
+      expect(valuation?.costBasis).toBe(1100);
+      expect(valuation?.holdings[0].units).toBe(2);
+    },
+  );
 });
 
 /**

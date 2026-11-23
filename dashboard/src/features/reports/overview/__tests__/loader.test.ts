@@ -9,6 +9,9 @@ import {
   GetLedgerOverviewValuationDocument,
 } from "@/graphql/definitions";
 import { overviewLoader } from "../loader";
+import { recentTransactionsVariables } from "../lib/recent-transactions";
+
+const today = "2026-11-18";
 
 type QueryOptions = { query: unknown; variables?: Record<string, unknown> };
 
@@ -52,6 +55,7 @@ describe("overviewLoader", () => {
 
   it("resolves once the primary reads are cached even while README and metadata are still loading", async () => {
     vi.stubEnv("SSR", false);
+    vi.useFakeTimers({ now: new Date(2026, 10, 18, 12), toFake: ["Date"] });
     const query = vi.fn((options: QueryOptions) =>
       PRIMARY.includes(options.query as never)
         ? Promise.resolve({ data: {} })
@@ -98,17 +102,13 @@ describe("overviewLoader", () => {
         {
           // The same variables Recent activity reads, so it is a cache hit.
           query: GetLedgerJournalDocument,
-          variables: {
+          variables: recentTransactionsVariables({
             ledgerId: "open_ledger/example",
-            query: {
-              account: "Assets:Checking",
-              filter: undefined,
-              time: "2025",
-              directiveTypes: ["Transaction"],
-              offset: 0,
-              limit: 8,
-            },
-          },
+            account: "Assets:Checking",
+            filter: "",
+            time: "2025",
+            today,
+          }),
         },
       ]),
     );
@@ -194,6 +194,7 @@ describe("overviewLoader", () => {
 
   it("uses destination loader deps rather than a global URL snapshot", async () => {
     vi.stubEnv("SSR", false);
+    vi.useFakeTimers({ now: new Date(2026, 10, 18, 12), toFake: ["Date"] });
     const query = vi.fn(() => Promise.resolve({ data: {} }));
     const input = loaderInput(query);
     input.deps = {
@@ -205,17 +206,29 @@ describe("overviewLoader", () => {
 
     await overviewLoader(input);
 
-    for (const document of PRIMARY) {
+    for (const document of [
+      GetLedgerOverviewDocument,
+      GetLedgerOverviewValuationDocument,
+    ]) {
       const call = query.mock.calls.find(
         ([options]) => options.query === document,
       );
       const variables = call?.[0].variables as Record<string, unknown>;
-      // The journal read nests its filters under `query`.
-      expect(variables.query ?? variables).toMatchObject({
+      expect(variables).toMatchObject({
         filter: "payee:Rent",
         time: "2025-10",
       });
     }
+    expect(query).toHaveBeenCalledWith({
+      query: GetLedgerJournalDocument,
+      variables: recentTransactionsVariables({
+        ledgerId: "open_ledger/example",
+        account: "",
+        filter: "payee:Rent",
+        time: "2025-10",
+        today,
+      }),
+    });
   });
 });
 
@@ -348,19 +361,20 @@ describe("overviewLoader, the opening month's balances", () => {
     expect(settled).not.toHaveBeenCalled();
   });
 
-  it("reads nothing more when the page opens on the month the data ends in", async () => {
+  it("prefetches the current month's balances through today", async () => {
     vi.stubEnv("SSR", false);
-    // Mid-October: the running month is the page's month, whose balances
-    // are the page's own read.
+    // The running month can hold scheduled entries after this day.
     vi.useFakeTimers({ now: new Date(2025, 9, 20, 12), toFake: ["Date"] });
     const query = serve(() => Promise.resolve({ data: {} }));
 
     await overviewLoader(unfiltered(query));
 
     expect(
-      query.mock.calls.filter(
-        ([options]) => options.query === GetLedgerOverviewValuationDocument,
-      ),
-    ).toHaveLength(1);
+      query.mock.calls
+        .filter(
+          ([options]) => options.query === GetLedgerOverviewValuationDocument,
+        )
+        .map(([options]) => options.variables?.time),
+    ).toEqual(["", "2025-10-01 - 2025-10-20"]);
   });
 });

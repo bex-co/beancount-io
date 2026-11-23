@@ -321,6 +321,7 @@ export function NetWorthCard({
   today = toLocalISODate(new Date()),
   selectedDate,
   dataThrough,
+  positionPoint,
   staleNoticeShown = false,
   trend = true,
 }: {
@@ -343,6 +344,8 @@ export function NetWorthCard({
    * day; the figure for a month the data stops in is as of this day instead.
    */
   dataThrough?: string;
+  /** The headline's balance from the same scoped read as the account rows. */
+  positionPoint?: DataSeries[number];
   /** The page already reports stale prices; the note need not repeat it. */
   staleNoticeShown?: boolean;
   /** Net worth at market value (`at_value`), one point per month. */
@@ -367,10 +370,14 @@ export function NetWorthCard({
     NET_WORTH_VIEWS,
     DEFAULT_NET_WORTH_VIEW,
   );
-  // The headline and its change stop at the current month (w21/995).
+  // The default headline stops at the current month (w21/995). A reader can
+  // deliberately select the close of a future month.
+  const projected =
+    selectedDate !== undefined && selectedDate.slice(0, 7) > today.slice(0, 7);
+  const headlineThrough = projected ? selectedDate : today;
   const throughNow = useMemo(
-    () => throughCurrentMonth(data, today),
-    [data, today],
+    () => throughCurrentMonth(data, headlineThrough),
+    [data, headlineThrough],
   );
   // The page's month, when it is one before the latest: the card then reads
   // that month's close, so it answers for the same month as the summary.
@@ -381,12 +388,13 @@ export function NetWorthCard({
     : -1;
   const past = shownIndex >= 0 && shownIndex < throughNow.length - 1;
   const shownAt = past ? shownIndex : throughNow.length - 1;
-  const latest = throughNow[shownAt];
+  const latest = positionPoint ?? throughNow[shownAt];
   const previous = shownAt > 0 ? throughNow[shownAt - 1] : undefined;
   const asOf =
-    latest && dataThrough && dataThrough < latest.date
+    positionPoint?.date ??
+    (latest && dataThrough && !projected && dataThrough < latest.date
       ? dataThrough
-      : latest?.date;
+      : latest?.date);
   // A year of the line, the page of twelve months holding the shown one.
   const visibleData = useMemo(() => {
     if (!past) return data.slice(-12);
@@ -431,9 +439,10 @@ export function NetWorthCard({
         }).format(Number(change) / Math.abs(previousValue))
       : null;
   const [headline, ...otherUnits] = latestAmounts;
-  const leftOutListed =
-    valuation?.holdings.some((holding) => holding.basis === "notInTotal") ??
-    false;
+  const headlineValuation = !past && !projected ? valuation : null;
+  const leftOutListed = headlineValuation?.holdings.some(
+    (holding) => holding.basis === "notInTotal",
+  );
 
   const chartOption = useMemo<EChartsOption>(() => {
     const formatTick = yAxisTickFormatter(language);
@@ -599,9 +608,9 @@ export function NetWorthCard({
   );
   // What the latest valuation discloses (its basis, cost, stale prices) is
   // about today's holdings, not a past month's.
-  const valuationNote = valuation && !past && (
+  const valuationNote = headlineValuation && (
     <NetWorthValuationNote
-      valuation={valuation}
+      valuation={headlineValuation}
       currency={primaryCurrency}
       language={language}
       ledgerOwner={ledgerOwner}

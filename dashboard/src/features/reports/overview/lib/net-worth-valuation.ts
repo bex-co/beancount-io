@@ -262,8 +262,8 @@ export function describeLatestNetWorth({
   return describeNetWorthValuation({
     ...rest,
     market: latest.balance,
-    cost: balanceOn(cost, latest.date),
-    units: balanceOn(units, latest.date),
+    cost: balanceOn(throughCurrentMonth(cost, rest.today), latest.date),
+    units: balanceOn(throughCurrentMonth(units, rest.today), latest.date),
     date: latest.date,
   });
 }

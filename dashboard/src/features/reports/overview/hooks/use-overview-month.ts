@@ -34,7 +34,13 @@ export function useDataThrough({
   today: string;
 }): string {
   const { data } = useQuery(GetLedgerJournalDocument, {
-    variables: recentTransactionsVariables({ ledgerId, account, filter, time }),
+    variables: recentTransactionsVariables({
+      ledgerId,
+      account,
+      filter,
+      time,
+      today,
+    }),
     fetchPolicy: "cache-first",
   });
   return dataThroughOf(data?.getLedgerJournal?.data, today);

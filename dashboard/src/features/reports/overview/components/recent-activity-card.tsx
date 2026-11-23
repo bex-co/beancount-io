@@ -16,6 +16,7 @@ import {
 } from "@/features/journal/components/journal-table";
 import { NEW_TRANSACTION_ACTION_SEARCH } from "@/common/lib/ledger-action-search";
 import { recentTransactionsVariables } from "../lib/recent-transactions";
+import { toLocalISODate } from "../lib/overview-utils";
 
 const EntryContextDialog = lazy(async () => {
   const module =
@@ -30,6 +31,7 @@ export function RecentActivityCard({
   account,
   filter,
   time,
+  today = toLocalISODate(new Date()),
   primaryCurrency,
   incomeRoot,
   expensesRoot,
@@ -41,6 +43,7 @@ export function RecentActivityCard({
   account: string;
   filter: string;
   time: string;
+  today?: string;
   primaryCurrency: string;
   incomeRoot: string;
   expensesRoot: string;
@@ -53,7 +56,13 @@ export function RecentActivityCard({
   const entryOpenerRef = useRef<HTMLElement | null>(null);
   const entryFallbackRef = useRef<HTMLElement | null>(null);
   const { data, loading, error, refetch } = useQuery(GetLedgerJournalDocument, {
-    variables: recentTransactionsVariables({ ledgerId, account, filter, time }),
+    variables: recentTransactionsVariables({
+      ledgerId,
+      account,
+      filter,
+      time,
+      today,
+    }),
     fetchPolicy: "cache-and-network",
   });
 
