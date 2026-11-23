@@ -290,6 +290,7 @@ export default function LedgerQueryPage() {
       <div className="overflow-clip rounded-xl border bg-card shadow-sm">
         <div className="overflow-hidden">
           <Editor
+            ariaLabel={t("bql.queryEditorLabel")}
             height="200px"
             defaultLanguage={BQL_LANGUAGE_ID}
             value={queryText}

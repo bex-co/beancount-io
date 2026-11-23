@@ -5,6 +5,16 @@ import caUploadFiles from "../upload-files/locales/ca";
 
 const caLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "Contingut del fitxer nou",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "Contingut de {path}",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "Crear fitxer",
       description: "Button label to create file",

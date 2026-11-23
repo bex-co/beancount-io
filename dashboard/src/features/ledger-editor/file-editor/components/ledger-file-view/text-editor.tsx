@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { MonacoEditor as Editor } from "@/common/components/monaco-editor";
 import type * as monaco from "monaco-editor";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
+import { useTranslations } from "@/common/hooks/use-translations";
 import { getFileLanguage } from "../../../shared/lib/utils";
 import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-language-vscode";
 import { registerEditorShortcuts } from "@/common/lib/editor/monaco-beancount-actions";
@@ -40,6 +41,7 @@ export const TextEditor = ({
   onScrollChange,
   errors = [],
 }: ContentEditorProps) => {
+  const { t } = useTranslations();
   const isDarkTheme = useIsDarkTheme();
   const decorationsRef = useRef<string[]>([]);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -249,6 +251,7 @@ export const TextEditor = ({
 
   return (
     <Editor
+      ariaLabel={t("ledgerEditor.fileContentsLabel", { path: filename })}
       className={
         readOnly ? "h-full [&_.monaco-editor_.cursor]:hidden!" : "h-full"
       }

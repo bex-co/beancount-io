@@ -5,6 +5,16 @@ import ukUploadFiles from "../upload-files/locales/uk";
 
 const ukLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "Вміст нового файлу",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "Вміст {path}",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "Створити файл",
       description: "Button label to create file",

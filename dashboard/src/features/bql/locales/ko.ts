@@ -1,6 +1,10 @@
 import type { TranslationEntry } from "@/i18n";
 
 const koBql: Record<string, TranslationEntry> = {
+  "bql.queryEditorLabel": {
+    message: "BQL 쿼리",
+    description: "Accessible name of the field for writing a BQL query",
+  },
   "bql.executeQuery": {
     message: "쿼리 실행",
     description: "Button text to execute query",

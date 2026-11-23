@@ -195,7 +195,9 @@ describe("Monaco runtime readiness", () => {
         Object.assign(Promise.resolve(runtime.monaco), { cancel: vi.fn() }),
       )
       .mockReturnValue(Object.assign(editorPending, { cancel: vi.fn() }));
-    const rendered = render(<MonacoEditor value="Persistent content" />);
+    const rendered = render(
+      <MonacoEditor ariaLabel="Ledger source" value="Persistent content" />,
+    );
     expect(screen.getByText(en["common.loadingData"])).toBeVisible();
     await waitFor(() => expect(init).toHaveBeenCalledTimes(2));
     expect(screen.getByText(en["common.loadingData"])).toBeVisible();
@@ -204,7 +206,11 @@ describe("Monaco runtime readiness", () => {
 
     for (const loading of [null, false]) {
       rendered.rerender(
-        <MonacoEditor value="Persistent content" loading={loading} />,
+        <MonacoEditor
+          ariaLabel="Ledger source"
+          value="Persistent content"
+          loading={loading}
+        />,
       );
       expect(
         screen.queryByText(en["common.loadingData"]),
@@ -213,6 +219,7 @@ describe("Monaco runtime readiness", () => {
     }
     rendered.rerender(
       <MonacoEditor
+        ariaLabel="Ledger source"
         value="Persistent content"
         loading={<p>Caller loading</p>}
       />,
@@ -232,7 +239,13 @@ describe("Monaco runtime readiness", () => {
       const initialization = controlledInitialization();
       const runtime = monacoSurface();
       const content = "# Source remains read-only and unchanged";
-      render(<MonacoEditor value={content} options={{ readOnly: true }} />);
+      render(
+        <MonacoEditor
+          ariaLabel="Ledger source"
+          value={content}
+          options={{ readOnly: true }}
+        />,
+      );
       await act(async () => initialization.resolve(runtime.monaco));
       const source = await screen.findByRole("textbox");
       const dom = runtime.editor.getDomNode();
@@ -277,7 +290,7 @@ describe("Monaco runtime readiness", () => {
   it("leaves other fields and unfocused validation alone and releases layout listeners on editor disposal", async () => {
     const initialization = controlledInitialization();
     const runtime = monacoSurface();
-    render(<MonacoEditor value="Unchanged source" />);
+    render(<MonacoEditor ariaLabel="Ledger source" value="Unchanged source" />);
     await act(async () => initialization.resolve(runtime.monaco));
     const source = await screen.findByRole("textbox");
     const dom = runtime.editor.getDomNode();
@@ -346,7 +359,9 @@ describe("Monaco runtime readiness", () => {
       loading: <p>Waiting for editor styles</p>,
       wrapperProps: { "data-testid": "editor-container" },
     };
-    const rendered = render(<MonacoEditor {...props} />);
+    const rendered = render(
+      <MonacoEditor ariaLabel="Ledger source" {...props} />,
+    );
     expect(screen.getByTestId("editor-container")).toHaveStyle({
       width: "320px",
       height: "240px",
@@ -381,7 +396,9 @@ describe("Monaco runtime readiness", () => {
     input.focus();
     input.setSelectionRange(3, 7);
 
-    rendered.rerender(<MonacoEditor {...props} width="390px" />);
+    rendered.rerender(
+      <MonacoEditor ariaLabel="Ledger source" {...props} width="390px" />,
+    );
     await waitFor(() => {
       expect(screen.getByTestId("editor-container")).toHaveStyle({
         width: "390px",
@@ -414,7 +431,13 @@ describe("Monaco runtime readiness", () => {
         Object.defineProperty(stylesheet, "sheet", { value: sheet });
       }
       const onMount = vi.fn();
-      render(<MonacoEditor value="Ready content" onMount={onMount} />);
+      render(
+        <MonacoEditor
+          ariaLabel="Ledger source"
+          value="Ready content"
+          onMount={onMount}
+        />,
+      );
       if (phase === "loaded before runtime") {
         await act(async () => stylesheet.dispatchEvent(new Event("load")));
         expect(runtime.monaco.editor.create).not.toHaveBeenCalled();
@@ -433,7 +456,13 @@ describe("Monaco runtime readiness", () => {
       const initialization = controlledInitialization();
       const runtime = monacoSurface();
       const onMount = vi.fn();
-      render(<MonacoEditor onMount={onMount} loading="Styles pending" />);
+      render(
+        <MonacoEditor
+          ariaLabel="Ledger source"
+          onMount={onMount}
+          loading="Styles pending"
+        />,
+      );
       // The AMD module appends this link while the wrapper already observes.
       const stylesheet = pendingStylesheet();
       if (phase === "after") {
@@ -469,7 +498,9 @@ describe("Monaco runtime readiness", () => {
       const addListener = vi.spyOn(document, "addEventListener");
       const removeListener = vi.spyOn(document, "removeEventListener");
       const onMount = vi.fn();
-      const first = render(<MonacoEditor onMount={onMount} />);
+      const first = render(
+        <MonacoEditor ariaLabel="Ledger source" onMount={onMount} />,
+      );
       const stylesheet = pendingStylesheet();
       const observers = addListener.mock.calls.filter(
         ([type, , capture]) =>
@@ -491,7 +522,7 @@ describe("Monaco runtime readiness", () => {
         expect(removeListener).toHaveBeenCalledWith(...observer);
       }
 
-      render(<MonacoEditor onMount={onMount} />);
+      render(<MonacoEditor ariaLabel="Ledger source" onMount={onMount} />);
       expect(await screen.findByRole("alert")).toHaveTextContent(
         en["common.editorFailedToLoad"],
       );
@@ -510,11 +541,11 @@ describe("Monaco runtime readiness", () => {
       loading: <p>Fetching editor runtime</p>,
       onMount,
     };
-    expect(renderToString(<MonacoEditor {...props} />)).toContain(
-      "Server editor placeholder",
-    );
+    expect(
+      renderToString(<MonacoEditor ariaLabel="Ledger source" {...props} />),
+    ).toContain("Server editor placeholder");
     expect(initialization.init).not.toHaveBeenCalled();
-    render(<MonacoEditor {...props} />);
+    render(<MonacoEditor ariaLabel="Ledger source" {...props} />);
     expect(screen.getByText("Fetching editor runtime")).toBeVisible();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     const upstreamError = vi
@@ -552,7 +583,9 @@ describe("Monaco runtime readiness", () => {
     const upstreamError = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
-    render(<MonacoEditor loading="Runtime pending" />);
+    render(
+      <MonacoEditor ariaLabel="Ledger source" loading="Runtime pending" />,
+    );
     await act(async () => initialization.reject({ type: "cancelation" }));
     expect(screen.getByText("Runtime pending")).toBeVisible();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -563,7 +596,9 @@ describe("Monaco runtime readiness", () => {
   it("cancels the pending loader subscription on unmount and ignores its later settlement", async () => {
     const initialization = controlledInitialization();
     const onMount = vi.fn();
-    const rendered = render(<MonacoEditor onMount={onMount} />);
+    const rendered = render(
+      <MonacoEditor ariaLabel="Ledger source" onMount={onMount} />,
+    );
     expect(initialization.cancellations.length).toBeGreaterThan(0);
     rendered.unmount();
     initialization.cancellations.forEach((cancel) =>
@@ -676,7 +711,7 @@ describe("Monaco runtime readiness", () => {
         then.mockRestore();
       }
     });
-    const first = render(<MonacoEditor />);
+    const first = render(<MonacoEditor ariaLabel="Ledger source" />);
     const script = document.querySelector<HTMLScriptElement>(
       'script[src$="/vs/loader.js"]',
     );
@@ -690,7 +725,7 @@ describe("Monaco runtime readiness", () => {
       screen.queryByText(en["common.loadingData"]),
     ).not.toBeInTheDocument();
     first.unmount();
-    render(<MonacoEditor />);
+    render(<MonacoEditor ariaLabel="Ledger source" />);
     expect(await screen.findByRole("alert")).toHaveTextContent(
       en["common.editorFailedToLoad"],
     );

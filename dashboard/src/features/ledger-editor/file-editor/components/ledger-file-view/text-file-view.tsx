@@ -393,7 +393,7 @@ export const TextFileView = ({
           <div className="min-h-0 flex-1">
             <TextEditor
               content={readOnly ? plainContent : editedContent}
-              filename={filename}
+              filename={filePath}
               setEditedContent={handleEditorContentChange}
               lineNumber={normalizedLineNumber}
               readOnly={editorReadOnly}

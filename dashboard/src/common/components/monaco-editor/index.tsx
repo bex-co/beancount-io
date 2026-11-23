@@ -93,15 +93,16 @@ function withDomReadOnly(
 
 /**
  * Wraps @monaco-editor/react in ClientOnly to prevent SSR/hydration issues.
- * Accepts all standard EditorProps. Use the `fallback` prop to customize the
+ * Requires a localized name for the editor. Use `fallback` to customize the
  * placeholder shown before the editor mounts (defaults to an empty div).
  */
 export const MonacoEditor = ({
+  ariaLabel,
   fallback = <div />,
   onMount,
   options,
   ...props
-}: EditorProps & { fallback?: React.ReactNode }) => {
+}: EditorProps & { ariaLabel: string; fallback?: React.ReactNode }) => {
   const { t } = useTranslations();
   const [failed, setFailed] = useState(false);
   const [ready, setReady] = useState(false);
@@ -177,7 +178,10 @@ export const MonacoEditor = ({
   }, []);
   // A fresh object every render would make the editor re-apply its options on
   // every render, so the default is computed only when the caller's changes.
-  const editorOptions = useMemo(() => withDomReadOnly(options), [options]);
+  const editorOptions = useMemo(
+    () => withDomReadOnly({ ...options, ariaLabel }),
+    [options, ariaLabel],
+  );
   const loading =
     props.loading === undefined ? t("common.loadingData") : props.loading;
 

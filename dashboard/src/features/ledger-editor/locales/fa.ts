@@ -5,6 +5,16 @@ import faUploadFiles from "../upload-files/locales/fa";
 
 const faLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "محتوای فایل جدید",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "محتوای {path}",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "ایجاد فایل",
       description: "Button label to create file",

@@ -5,6 +5,16 @@ import ruUploadFiles from "../upload-files/locales/ru";
 
 const ruLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "Содержимое нового файла",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "Содержимое {path}",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "Создать файл",
       description: "Button label to create file",

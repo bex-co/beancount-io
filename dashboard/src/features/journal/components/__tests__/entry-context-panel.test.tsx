@@ -96,20 +96,21 @@ vi.mock("@/common/lib/errors/error-message", () => ({
 
 vi.mock("@/common/components/monaco-editor", () => ({
   MonacoEditor: ({
+    ariaLabel,
     value,
     options,
     onChange,
   }: {
+    ariaLabel: string;
     value: string;
     options?: {
       readOnly?: boolean;
       tabFocusMode?: boolean;
-      ariaLabel?: string;
     };
     onChange?: (value: string | undefined) => void;
   }) => (
     <textarea
-      aria-label={options?.ariaLabel ?? "Editor content"}
+      aria-label={ariaLabel}
       data-tab-focus-mode={options?.tabFocusMode}
       value={value}
       readOnly={options?.readOnly}

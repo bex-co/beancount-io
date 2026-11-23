@@ -4,6 +4,10 @@ export interface TranslationEntry {
 }
 
 const ruBql: Record<string, TranslationEntry> = {
+  "bql.queryEditorLabel": {
+    message: "Запрос BQL",
+    description: "Accessible name of the field for writing a BQL query",
+  },
   "bql.executeQuery": {
     message: "Выполнить запрос",
     description: "Button text to execute query",

@@ -5,6 +5,16 @@ import jaUploadFiles from "../upload-files/locales/ja";
 
 const jaLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "新規ファイルの内容",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "{path} の内容",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "ファイルを作成",
       description: "Button label to create file",

@@ -5,6 +5,16 @@ import skUploadFiles from "../upload-files/locales/sk";
 
 const skLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "Obsah nového súboru",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "Obsah súboru {path}",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "Vytvoriť súbor",
       description: "Button label to create file",

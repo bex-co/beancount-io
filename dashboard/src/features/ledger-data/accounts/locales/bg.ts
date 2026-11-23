@@ -4,6 +4,16 @@ export interface TranslationEntry {
 }
 
 const bgAccounts: Record<string, TranslationEntry> = {
+  "page.accounts.closeDirectiveSource": {
+    message: "Изходен текст на директивата за закриване на сметка",
+    description:
+      "Accessible name of the read-only source preview for the close directive",
+  },
+  "page.accounts.openDirectiveSource": {
+    message: "Изходен текст на директивата за откриване на сметка",
+    description:
+      "Accessible name of the read-only source preview for the open directive",
+  },
   "page.accounts.actionsForAccount": {
     message: "Действия за {account}",
     description:

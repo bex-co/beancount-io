@@ -4,6 +4,16 @@ export interface TranslationEntry {
 }
 
 const zhAccounts: Record<string, TranslationEntry> = {
+  "page.accounts.closeDirectiveSource": {
+    message: "关闭账户指令的源代码",
+    description:
+      "Accessible name of the read-only source preview for the close directive",
+  },
+  "page.accounts.openDirectiveSource": {
+    message: "开立账户指令的源代码",
+    description:
+      "Accessible name of the read-only source preview for the open directive",
+  },
   "page.accounts.actionsForAccount": {
     message: "{account} 的操作",
     description:

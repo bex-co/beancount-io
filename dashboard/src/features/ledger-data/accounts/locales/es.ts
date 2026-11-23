@@ -4,6 +4,16 @@ export interface TranslationEntry {
 }
 
 const esAccounts: Record<string, TranslationEntry> = {
+  "page.accounts.closeDirectiveSource": {
+    message: "Código fuente de la directiva de cierre de cuenta",
+    description:
+      "Accessible name of the read-only source preview for the close directive",
+  },
+  "page.accounts.openDirectiveSource": {
+    message: "Código fuente de la directiva de apertura de cuenta",
+    description:
+      "Accessible name of the read-only source preview for the open directive",
+  },
   "page.accounts.actionsForAccount": {
     message: "Acciones para {account}",
     description:

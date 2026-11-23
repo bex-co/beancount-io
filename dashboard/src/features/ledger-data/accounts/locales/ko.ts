@@ -4,6 +4,16 @@ export interface TranslationEntry {
 }
 
 const koAccounts: Record<string, TranslationEntry> = {
+  "page.accounts.closeDirectiveSource": {
+    message: "계정 닫기 지시문의 소스",
+    description:
+      "Accessible name of the read-only source preview for the close directive",
+  },
+  "page.accounts.openDirectiveSource": {
+    message: "계정 열기 지시문의 소스",
+    description:
+      "Accessible name of the read-only source preview for the open directive",
+  },
   "page.accounts.actionsForAccount": {
     message: "{account} 작업",
     description:

@@ -4,6 +4,16 @@ export interface TranslationEntry {
 }
 
 const faAccounts: Record<string, TranslationEntry> = {
+  "page.accounts.closeDirectiveSource": {
+    message: "متن دستور بستن حساب",
+    description:
+      "Accessible name of the read-only source preview for the close directive",
+  },
+  "page.accounts.openDirectiveSource": {
+    message: "متن دستور باز کردن حساب",
+    description:
+      "Accessible name of the read-only source preview for the open directive",
+  },
   "page.accounts.actionsForAccount": {
     message: "عملیات برای {account}",
     description:

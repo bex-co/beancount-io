@@ -4,6 +4,10 @@ export interface TranslationEntry {
 }
 
 const esBql: Record<string, TranslationEntry> = {
+  "bql.queryEditorLabel": {
+    message: "Consulta BQL",
+    description: "Accessible name of the field for writing a BQL query",
+  },
   "bql.executeQuery": {
     message: "Ejecutar Consulta",
     description: "Button text to execute query",

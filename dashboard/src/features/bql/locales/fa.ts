@@ -4,6 +4,10 @@ export interface TranslationEntry {
 }
 
 const faBql: Record<string, TranslationEntry> = {
+  "bql.queryEditorLabel": {
+    message: "پرس‌وجوی BQL",
+    description: "Accessible name of the field for writing a BQL query",
+  },
   "bql.executeQuery": {
     message: "اجرای پرسمان",
     description: "Button text to execute query",

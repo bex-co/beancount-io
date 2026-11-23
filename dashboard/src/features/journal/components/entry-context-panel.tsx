@@ -477,6 +477,7 @@ function EntryContextMain({
               className="[&_.iPadShowKeyboard]:!hidden"
             >
               <Editor
+                ariaLabel={t("journal.entrySource")}
                 height={editorHeight}
                 // As tall as the entry, within bounds: a fixed box cut off a
                 // phone's last line and scrolled a short entry's empty space.
@@ -499,7 +500,6 @@ function EntryContextMain({
                   registerBeancountLanguage(monaco);
                 }}
                 options={{
-                  ariaLabel: t("journal.entrySource"),
                   tabFocusMode: true,
                   minimap: { enabled: false },
                   scrollBeyondLastLine: false,

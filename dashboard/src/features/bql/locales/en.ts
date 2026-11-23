@@ -4,6 +4,10 @@ export interface TranslationEntry {
 }
 
 const enBql: Record<string, TranslationEntry> = {
+  "bql.queryEditorLabel": {
+    message: "BQL query",
+    description: "Accessible name of the field for writing a BQL query",
+  },
   "bql.executeQuery": {
     message: "Execute Query",
     description: "Button text to execute query",

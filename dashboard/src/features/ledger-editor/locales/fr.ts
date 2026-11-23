@@ -5,6 +5,16 @@ import frUploadFiles from "../upload-files/locales/fr";
 
 const frLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "Contenu du nouveau fichier",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "Contenu de {path}",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "Créer un fichier",
       description: "Button label to create file",

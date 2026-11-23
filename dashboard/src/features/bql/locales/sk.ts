@@ -4,6 +4,10 @@ export interface TranslationEntry {
 }
 
 const skBql: Record<string, TranslationEntry> = {
+  "bql.queryEditorLabel": {
+    message: "Dopyt BQL",
+    description: "Accessible name of the field for writing a BQL query",
+  },
   "bql.executeQuery": {
     message: "Vykonať dotaz",
     description: "Button text to execute query",

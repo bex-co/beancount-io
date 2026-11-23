@@ -339,6 +339,11 @@ const CreateFilePage = () => {
         <CardContent className="p-0 h-full">
           <div className="h-full">
             <Editor
+              ariaLabel={
+                normalizedFilename
+                  ? t("ledgerEditor.fileContentsLabel", { path: fullPath })
+                  : t("ledgerEditor.newFileContentsLabel")
+              }
               height="100%"
               language={getFileLanguage(normalizedFilename)}
               value={content}

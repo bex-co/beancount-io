@@ -5,6 +5,16 @@ import zhUploadFiles from "../upload-files/locales/zh";
 
 const zhLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "新文件的内容",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "{path} 的内容",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "创建文件",
       description: "Button label to create file",

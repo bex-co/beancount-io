@@ -1,6 +1,10 @@
 import type { TranslationEntry } from "@/i18n";
 
 const jaBql: Record<string, TranslationEntry> = {
+  "bql.queryEditorLabel": {
+    message: "BQL クエリ",
+    description: "Accessible name of the field for writing a BQL query",
+  },
   "bql.executeQuery": {
     message: "クエリを実行",
     description: "Button text to execute query",

@@ -5,6 +5,16 @@ import koUploadFiles from "../upload-files/locales/ko";
 
 const koLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "새 파일 내용",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "{path}의 내용",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "파일 생성",
       description: "Button label to create file",

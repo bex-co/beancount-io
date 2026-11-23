@@ -4,6 +4,16 @@ export interface TranslationEntry {
 }
 
 const skAccounts: Record<string, TranslationEntry> = {
+  "page.accounts.closeDirectiveSource": {
+    message: "Zdrojový text direktívy na zatvorenie účtu",
+    description:
+      "Accessible name of the read-only source preview for the close directive",
+  },
+  "page.accounts.openDirectiveSource": {
+    message: "Zdrojový text direktívy na otvorenie účtu",
+    description:
+      "Accessible name of the read-only source preview for the open directive",
+  },
   "page.accounts.actionsForAccount": {
     message: "Akcie pre {account}",
     description:

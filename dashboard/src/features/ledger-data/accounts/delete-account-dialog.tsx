@@ -229,6 +229,7 @@ export function DeleteAccountDialog({
                 <CardContent className="p-0">
                   <div className="h-[80px]">
                     <Editor
+                      ariaLabel={t("page.accounts.openDirectiveSource")}
                       height="80px"
                       language="beancount"
                       value={openCtx.slice ?? ""}
@@ -266,6 +267,7 @@ export function DeleteAccountDialog({
                 <CardContent className="p-0">
                   <div className="h-[80px]">
                     <Editor
+                      ariaLabel={t("page.accounts.closeDirectiveSource")}
                       height="80px"
                       language="beancount"
                       value={closeCtx.slice ?? ""}

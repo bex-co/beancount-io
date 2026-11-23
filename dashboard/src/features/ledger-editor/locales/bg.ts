@@ -5,6 +5,16 @@ import bgUploadFiles from "../upload-files/locales/bg";
 
 const bgLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "Съдържание на новия файл",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "Съдържание на {path}",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "Създаване на файл",
       description: "Button label to create file",

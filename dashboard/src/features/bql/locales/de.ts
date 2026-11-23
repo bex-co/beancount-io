@@ -4,6 +4,10 @@ export interface TranslationEntry {
 }
 
 const deBql: Record<string, TranslationEntry> = {
+  "bql.queryEditorLabel": {
+    message: "BQL-Abfrage",
+    description: "Accessible name of the field for writing a BQL query",
+  },
   "bql.executeQuery": {
     message: "Abfrage ausführen",
     description: "Button text to execute query",

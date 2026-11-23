@@ -4,6 +4,10 @@ export interface TranslationEntry {
 }
 
 const zhBql: Record<string, TranslationEntry> = {
+  "bql.queryEditorLabel": {
+    message: "BQL 查询",
+    description: "Accessible name of the field for writing a BQL query",
+  },
   "bql.executeQuery": {
     message: "执行查询",
     description: "Button text to execute query",

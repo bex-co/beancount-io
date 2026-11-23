@@ -5,6 +5,16 @@ import deUploadFiles from "../upload-files/locales/de";
 
 const deLedgerEditor: Record<string, { message: string; description: string }> =
   {
+    "ledgerEditor.newFileContentsLabel": {
+      message: "Inhalt der neuen Datei",
+      description:
+        "Accessible name of the new file editor before the file has a name",
+    },
+    "ledgerEditor.fileContentsLabel": {
+      message: "Inhalt von {path}",
+      description:
+        "Accessible name of the contents editor with the ledger-relative file path",
+    },
     "ledgerEditor.createFile": {
       message: "Datei erstellen",
       description: "Button label to create file",
