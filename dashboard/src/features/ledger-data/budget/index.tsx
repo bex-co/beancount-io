@@ -200,21 +200,17 @@ export default function LedgerBudgetPage() {
     }
   }, [selectedTimeSpan, rollingRange]);
 
-  // A saved card Update refreshes this list, and QueryView replaces the
-  // cards (and the dialog's own trigger) with its skeleton meanwhile, so
-  // nobody is left to receive the dialog's focus restore (w4/1110). The
-  // page — the stable owner — remembers the submitted budget and, once
-  // the refresh settles, returns focus to its replacement Update action.
-  const pendingUpdateFocusRef = useRef<{
+  // A saved budget can replace its dialog opener when the list refreshes.
+  // Keep track of where focus belongs once the replacement is mounted.
+  const pendingBudgetFocusRef = useRef<{
     ledgerId: string;
-    account: string;
-    currency: string;
+    update?: { account: string; currency: string };
   } | null>(null);
   const rememberUpdateFocus = (submitted: {
     account: string;
     currency: string;
   }) => {
-    pendingUpdateFocusRef.current = { ledgerId, ...submitted };
+    pendingBudgetFocusRef.current = { ledgerId, update: submitted };
   };
 
   const { entries, loading, error, retry } = useBudgetEntries(ledgerId);
@@ -295,10 +291,11 @@ export default function LedgerBudgetPage() {
   );
 
   useEffect(() => {
-    const pending = pendingUpdateFocusRef.current;
+    const pending = pendingBudgetFocusRef.current;
     if (!pending || pending.ledgerId !== ledgerId || loading) return;
+    if (!pending.update && !headerAddRef.current && !error) return;
     const frame = requestAnimationFrame(() => {
-      pendingUpdateFocusRef.current = null;
+      pendingBudgetFocusRef.current = null;
       // Focus the user deliberately moved (a later opening, a new target)
       // is theirs; only a position lost to the replacement is restored. A
       // failed refresh takes the list away, so focus still in it moves too.
@@ -311,13 +308,12 @@ export default function LedgerBudgetPage() {
         !(error && inList)
       )
         return;
-      if (error) {
-        (headerAddRef.current ?? searchInputRef.current)?.focus();
-        return;
-      }
-      const replacement = document.querySelector<HTMLElement>(
-        `[data-budget-update="${CSS.escape(`${pending.account}::${pending.currency}`)}"]`,
-      );
+      const replacement =
+        pending.update && !error
+          ? document.querySelector<HTMLElement>(
+              `[data-budget-update="${CSS.escape(`${pending.update.account}::${pending.update.currency}`)}"]`,
+            )
+          : null;
       (replacement ?? headerAddRef.current ?? searchInputRef.current)?.focus();
     });
     return () => cancelAnimationFrame(frame);
@@ -549,13 +545,14 @@ export default function LedgerBudgetPage() {
 
       <AddBudgetDialog
         open={isAddOpen}
-        onOpenChange={(open) => {
-          setIsAddOpen(open);
-          if (!open) addReturnFocusRef.current = null;
-        }}
+        onOpenChange={setIsAddOpen}
         ledgerId={ledgerId}
         defaultCurrency={primaryCurrency || "USD"}
-        onSuccess={() => {}}
+        onSuccess={() => {
+          if (!budgetGroups?.length) {
+            pendingBudgetFocusRef.current = { ledgerId };
+          }
+        }}
         returnFocusRef={addReturnFocusRef}
         fallbackFocusRef={headerAddRef}
       />

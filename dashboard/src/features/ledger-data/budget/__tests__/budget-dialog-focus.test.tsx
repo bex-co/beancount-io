@@ -74,9 +74,9 @@ function entry(date: string, number: string): BudgetEntry {
   };
 }
 
-function setup({ refreshFails = false } = {}) {
+function setup({ refreshFails = false, hasBudget = true } = {}) {
   const writes: BulkEntriesMutationVariables[] = [];
-  let entries = [entry("2026-10-01", "100")];
+  let entries = hasBudget ? [entry("2026-10-01", "100")] : [];
   let reads = 0;
   let releaseRefresh: (() => void) | null = null;
   let holdRefresh = false;
@@ -169,7 +169,7 @@ function setup({ refreshFails = false } = {}) {
   };
 }
 
-async function mountPage(client: ApolloClient) {
+async function mountPage(client: ApolloClient, openerName = UPDATE_NAME) {
   const localization = createLocalization();
   await localization.changeLanguage("en");
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
@@ -205,10 +205,74 @@ async function mountPage(client: ApolloClient) {
       </LocalizationProvider>
     </ApolloProvider>,
   );
-  return screen.findByRole("button", { name: UPDATE_NAME });
+  return screen.findByRole("button", { name: openerName });
 }
 
 afterEach(cleanup);
+
+describe("Add Budget opener focus (w5/1155)", () => {
+  it.each(["Escape", "Cancel", "Close"])(
+    "returns focus to Add Your First Budget after %s",
+    async (dismissal) => {
+      const { client } = setup({ hasBudget: false });
+      const user = userEvent.setup();
+      const opener = await mountPage(client, "Add Your First Budget");
+      opener.focus();
+      await user.keyboard("{Enter}");
+      const dialog = await screen.findByRole("dialog", { name: "Add Budget" });
+
+      if (dismissal === "Escape") {
+        await user.keyboard("{Escape}");
+      } else {
+        await user.click(
+          within(dialog).getByRole("button", { name: dismissal }),
+        );
+      }
+
+      await waitFor(() => expect(opener).toHaveFocus());
+      expect(dialog).not.toBeInTheDocument();
+    },
+  );
+
+  it("returns focus to the header when opened from there", async () => {
+    const { client } = setup();
+    const user = userEvent.setup();
+    const opener = await mountPage(client, "Add Budget");
+    await user.click(opener);
+    await screen.findByRole("dialog", { name: "Add Budget" });
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => expect(opener).toHaveFocus());
+  });
+
+  it("moves focus to the header Add Budget once the first budget appears", async () => {
+    const { client, writes, releaseRefresh } = setup({ hasBudget: false });
+    const user = userEvent.setup();
+    const opener = await mountPage(client, "Add Your First Budget");
+    await user.click(opener);
+    const dialog = await screen.findByRole("dialog", { name: "Add Budget" });
+    await user.click(
+      await within(dialog).findByRole("combobox", { name: "Account" }),
+    );
+    await user.click(await screen.findByRole("option", { name: ACCOUNT }));
+    await user.type(
+      within(dialog).getByRole("spinbutton", { name: /amount/i }),
+      "150",
+    );
+    const submit = within(dialog).getByRole("button", { name: "Add Budget" });
+    await waitFor(() => expect(submit).toBeEnabled());
+    await user.click(submit);
+
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(writes).toHaveLength(1);
+    await waitFor(() => expect(opener).toHaveFocus());
+
+    releaseRefresh();
+    const headerAdd = await screen.findByRole("button", { name: "Add Budget" });
+    await waitFor(() => expect(headerAdd).toHaveFocus());
+    expect(opener).not.toBeInTheDocument();
+  });
+});
 
 describe("Budget Update focus across the list refresh (w4/1110)", () => {
   it("returns focus to the replacement Update action after a saved update", async () => {
