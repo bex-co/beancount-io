@@ -89,6 +89,21 @@ const enJournal: Record<string, TranslationEntry> = {
     description:
       "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
   },
+  "journal.balanceFailed": {
+    message: "Failed",
+    description:
+      "Status on a Journal balance assertion whose expected and actual balances differ",
+  },
+  "journal.balanceTooMuch": {
+    message: "{amount} too much",
+    description:
+      "The actual balance exceeds the assertion by {amount}, including its unit",
+  },
+  "journal.balanceTooLittle": {
+    message: "{amount} too little",
+    description:
+      "The actual balance is below the assertion by {amount}, including its unit",
+  },
   "journal.balanceOffBy": {
     message: "Off by {amount}",
     description:
@@ -515,7 +530,8 @@ const enJournal: Record<string, TranslationEntry> = {
   },
   "journal.accumulated": {
     message: "accumulated",
-    description: "Label before an accumulated balance difference",
+    description:
+      "Label before the account's actual balance on a failed assertion",
   },
   "journal.fromAccount": {
     message: "from",

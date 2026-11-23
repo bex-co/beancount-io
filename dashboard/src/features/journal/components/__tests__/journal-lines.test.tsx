@@ -137,7 +137,9 @@ describe("the Journal's compact lines", () => {
       .map((element) => element.closest("tr")!);
     expect(matching).toHaveTextContent("Matches");
     expect(matching).toHaveTextContent("2,962.67 USD");
-    expect(off).toHaveTextContent("Off by 12.00 USD");
+    expect(off).toHaveTextContent(
+      "Failed · accumulated 2,974.67 USD · 12.00 USD too much",
+    );
   });
 
   it("localizes the balance label and the cleared transaction tooltip in Persian", async () => {

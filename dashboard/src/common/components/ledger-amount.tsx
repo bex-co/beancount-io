@@ -1,12 +1,6 @@
-import { useContext } from "react";
 import { Amount } from "@/common/components/amount";
-import { useTranslations } from "@/common/hooks/use-translations";
-import {
-  isPositiveDecimalNumber,
-  parseDecimalNumber,
-} from "@/common/lib/beancount/decimal-number";
-import { formatSourceDecimal } from "@/common/lib/format/format-number";
-import { LedgerProviderContext } from "@/common/providers/ledger-provider/context";
+import { useFormatLedgerNumber } from "@/common/hooks/use-format-ledger-number";
+import { isPositiveDecimalNumber } from "@/common/lib/beancount/decimal-number";
 
 /**
  * A ledger amount as the ledger holds it, in the reader's language: `10500.00
@@ -26,29 +20,25 @@ export function LedgerAmount({
   className,
   showPositiveSign = false,
   currencyClassName,
+  tolerance,
 }: {
   number: string | number;
   currency: string;
   className?: string;
   showPositiveSign?: boolean;
   currencyClassName?: string;
+  /** The explicit tolerance on a balance assertion, in the same unit. */
+  tolerance?: string | null;
 }) {
-  const { i18n } = useTranslations();
-  const renderCommas =
-    useContext(LedgerProviderContext)?.ledgerData.options.renderCommas ?? true;
-  // A chart's double becomes its shortest decimal; a grouped string loses
-  // its commas first.
-  const source = parseDecimalNumber(
-    typeof number === "number" ? String(number) : number.replace(/,/g, ""),
-  );
+  const formatNumber = useFormatLedgerNumber();
   return (
     <Amount className={className}>
-      {showPositiveSign && source !== null && isPositiveDecimalNumber(source)
+      {showPositiveSign &&
+      isPositiveDecimalNumber(String(number).replace(/,/g, ""))
         ? "+"
         : ""}
-      {source === null
-        ? String(number)
-        : formatSourceDecimal(source, renderCommas, i18n.language)}
+      {formatNumber(number)}
+      {tolerance && ` ~ ${formatNumber(tolerance)}`}
       {currencyClassName ? (
         <span className={currencyClassName}> {currency}</span>
       ) : (

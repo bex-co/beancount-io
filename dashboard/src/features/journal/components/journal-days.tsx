@@ -15,6 +15,7 @@ import {
   summarizeTransaction,
 } from "@/common/lib/beancount/transaction-summary";
 import { Amount } from "@/common/components/amount";
+import { LedgerAmount } from "@/common/components/ledger-amount";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import {
@@ -39,7 +40,7 @@ import { JournalMetadata } from "./journal-metadata";
 import { displayableMetadataEntries } from "./journal-metadata-entries";
 import { JournalPostings } from "./journal-postings";
 import { JournalPostingToggle } from "./journal-posting-toggle";
-import { journalEntryLabel } from "./journal-entry-label";
+import { useJournalEntryLabel } from "./journal-entry-label";
 import { BalanceCheck } from "./journal-balance-check";
 import { balanceRowTone } from "./journal-balance-tone";
 import { moneyFlow, shortAccountNames } from "./journal-money-flow";
@@ -263,10 +264,9 @@ function DayEntryRows({
   register?: JournalRegister;
 }) {
   const { t } = useTranslations();
-  const formatNumber = useFormatNumber();
   const directive = item.directive;
   const transaction = isJournalTransaction(directive) ? directive : null;
-  const entryLabel = journalEntryLabel(directive);
+  const entryLabel = useJournalEntryLabel(directive);
   const postingsRegionId = useId();
   const [expanded, setExpanded] = useState(false);
   const summary = useMemo(
@@ -377,7 +377,13 @@ function DayEntryRows({
                     </Badge>
                   )}
                 </div>
-                {register && !balance ? (
+                {balance?.amount ? (
+                  <LedgerAmount
+                    {...balance.amount}
+                    tolerance={balance.tolerance}
+                    className="min-w-0 text-end text-base leading-6 font-medium tabular-nums [overflow-wrap:anywhere] sm:hidden"
+                  />
+                ) : register && !balance ? (
                   // On an account's journal: what the entry did there, and
                   // under it where the account then stood, named.
                   <div className="shrink-0 space-y-0.5 text-end sm:hidden">
@@ -478,21 +484,11 @@ function DayEntryRows({
           )}
           {balance?.amount && (
             // The balance the statement gave, as asserted.
-            <Amount className="hidden font-medium tabular-nums sm:inline">
-              {formatNumber(
-                balance.amount.number,
-                balance.amount.currency,
-                fractionDigitsOf(balance.amount.number),
-              )}
-              {/* An explicit `~` tolerance, as the ledger wrote it. */}
-              {balance.tolerance &&
-                ` ~ ${formatNumber(
-                  balance.tolerance,
-                  balance.amount.currency,
-                  fractionDigitsOf(balance.tolerance),
-                )}`}{" "}
-              {balance.amount.currency}
-            </Amount>
+            <LedgerAmount
+              {...balance.amount}
+              tolerance={balance.tolerance}
+              className="hidden font-medium tabular-nums sm:inline"
+            />
           )}
         </TableCell>
         <TableCell className="py-2 pe-1 ps-0 align-top sm:pe-2">

@@ -89,6 +89,21 @@ const bgJournal: Record<string, TranslationEntry> = {
     description:
       "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
   },
+  "journal.balanceFailed": {
+    message: "Неуспешна проверка",
+    description:
+      "Status on a Journal balance assertion whose expected and actual balances differ",
+  },
+  "journal.balanceTooMuch": {
+    message: "С {amount} повече",
+    description:
+      "The actual balance exceeds the assertion by {amount}, including its unit",
+  },
+  "journal.balanceTooLittle": {
+    message: "С {amount} по-малко",
+    description:
+      "The actual balance is below the assertion by {amount}, including its unit",
+  },
   "journal.balanceOffBy": {
     message: "Разлика {amount}",
     description:
@@ -516,7 +531,8 @@ const bgJournal: Record<string, TranslationEntry> = {
   },
   "journal.accumulated": {
     message: "натрупани",
-    description: "Label before an accumulated balance difference",
+    description:
+      "Label before the account's actual balance on a failed assertion",
   },
   "journal.fromAccount": {
     message: "от",

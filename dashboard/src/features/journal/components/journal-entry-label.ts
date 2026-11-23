@@ -1,28 +1,51 @@
 import {
   type JournalDirectiveType,
+  type JournalAmount,
   isJournalBalance,
   isJournalCustom,
   isJournalDocument,
   isJournalTransaction,
 } from "@/common/types/journal";
+import { useFormatLedgerNumber } from "@/common/hooks/use-format-ledger-number";
+import { useTranslations } from "@/common/hooks/use-translations";
+import { directiveTypeLabel } from "@/common/lib/beancount/directive-type-label";
 import { formatDateISO } from "@/common/lib/format/format-date-iso";
-import { formatAmountWithCurrency } from "./journal-description/utils";
+import { getBalanceFailure } from "./journal-balance-details";
 
 /** Bounded identity from the row's visible entry fields, never source metadata. */
-export function journalEntryLabel(directive: JournalDirectiveType): string {
+export function useJournalEntryLabel(directive: JournalDirectiveType): string {
+  const { t } = useTranslations();
+  const formatNumber = useFormatLedgerNumber();
+  const formatAmount = (amount: JournalAmount) =>
+    `${formatNumber(amount.number)} ${amount.currency}`;
   const parts = [formatDateISO(directive.date) ?? ""];
   if (isJournalTransaction(directive)) {
     parts.push(directive.payee ?? "", directive.narration ?? "");
   } else {
-    parts.push(directive.directive_type);
+    parts.push(directiveTypeLabel(directive.directive_type, t));
     if (isJournalBalance(directive)) {
       // A Balance carries `amount` too, so it must not reach the Price branch.
-      parts.push(directive.account);
-      if (directive.amount) {
-        parts.push(formatAmountWithCurrency(directive.amount));
+      const failure = getBalanceFailure(directive);
+      parts.push(failure ? t("journal.balanceFailed") : directive.account);
+      const { amount, tolerance } = directive;
+      if (amount) {
+        const assertion = formatNumber(amount.number);
+        const margin = tolerance ? ` ~ ${formatNumber(tolerance)}` : "";
+        parts.push(`${assertion}${margin} ${amount.currency}`);
       }
-      if (directive.diff_amount) {
-        parts.push(formatAmountWithCurrency(directive.diff_amount));
+      if (failure) {
+        if (failure.accumulated) {
+          parts.push(
+            t("journal.accumulated"),
+            formatAmount(failure.accumulated),
+          );
+        }
+        parts.push(
+          t(failure.differenceLabel, {
+            amount: formatAmount(failure.difference),
+          }),
+          directive.account,
+        );
       }
     } else if (isJournalDocument(directive)) {
       parts.push(directive.account, directive.filename.split("/").pop() ?? "");
@@ -40,7 +63,7 @@ export function journalEntryLabel(directive: JournalDirectiveType): string {
           typeof value.currency === "string"
         ) {
           parts.push(
-            formatAmountWithCurrency({
+            formatAmount({
               number: value.number,
               currency: value.currency,
             }),
@@ -52,9 +75,7 @@ export function journalEntryLabel(directive: JournalDirectiveType): string {
     } else if ("description" in directive) {
       parts.push(directive.type, directive.description);
     } else if ("amount" in directive) {
-      parts.push(
-        `${formatAmountWithCurrency(directive.amount)}/${directive.currency}`,
-      );
+      parts.push(`${formatAmount(directive.amount)}/${directive.currency}`);
     } else if ("currency" in directive) {
       parts.push(directive.currency);
     } else if ("account" in directive) {

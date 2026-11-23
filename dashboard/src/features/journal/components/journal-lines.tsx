@@ -10,16 +10,14 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { directiveTypeLabel } from "@/common/lib/beancount/directive-type-label";
 import { summarizeTransaction } from "@/common/lib/beancount/transaction-summary";
 import { getClickableRowProps } from "@/common/components/clickable-row";
-import { Amount } from "@/common/components/amount";
+import { LedgerAmount } from "@/common/components/ledger-amount";
 import { cn } from "@/common/lib/utils/utils";
 import { JournalDescription } from "./journal-description";
-import { useFormatNumber } from "@/common/hooks/use-format-number";
-import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { JournalMetadata } from "./journal-metadata";
 import { displayableMetadataEntries } from "./journal-metadata-entries";
 import { JournalPostings } from "./journal-postings";
 import { JournalPostingToggle } from "./journal-posting-toggle";
-import { journalEntryLabel } from "./journal-entry-label";
+import { useJournalEntryLabel } from "./journal-entry-label";
 import { type JournalMoney, TransactionAmount } from "./journal-days";
 import { moneyFlow, shortAccountPair } from "./journal-money-flow";
 import { BalanceCheck } from "./journal-balance-check";
@@ -69,12 +67,10 @@ function LineRows({
   register?: JournalRegister;
 }) {
   const { t } = useTranslations();
-  // Grouped as the transactions' amounts are (2,962.67, not 2962.67).
-  const formatNumber = useFormatNumber();
   const directive = item.directive;
   const transaction = isJournalTransaction(directive) ? directive : null;
   const balance = isJournalBalance(directive) ? directive : null;
-  const entryLabel = journalEntryLabel(directive);
+  const entryLabel = useJournalEntryLabel(directive);
   const postingsRegionId = useId();
   const [expanded, setExpanded] = useState(false);
   const summary = useMemo(
@@ -255,7 +251,7 @@ function LineRows({
                 {balanceIsOff(balance) && (
                   <BalanceCheck
                     directive={balance}
-                    className="hidden shrink-0 text-[13px] @4xl/journal:inline-flex"
+                    className="hidden text-[13px] @4xl/journal:inline-flex"
                   />
                 )}
               </>
@@ -451,30 +447,16 @@ function LineRows({
                 />
               ) : balance?.amount ? (
                 // The balance the statement gave, as asserted.
-                <Amount className="font-medium tabular-nums">
-                  {formatNumber(
-                    balance.amount.number,
-                    balance.amount.currency,
-                    fractionDigitsOf(balance.amount.number),
-                  )}
-                  {/* An explicit `~` tolerance, as the ledger wrote it. */}
-                  {balance.tolerance &&
-                    ` ~ ${formatNumber(
-                      balance.tolerance,
-                      balance.amount.currency,
-                      fractionDigitsOf(balance.tolerance),
-                    )}`}
-                  <span
-                    className={
-                      balance.amount.currency === money.primaryCurrency
-                        ? "max-sm:sr-only"
-                        : "max-sm:block max-sm:text-xs max-sm:font-normal max-sm:text-muted-foreground"
-                    }
-                  >
-                    {" "}
-                    {balance.amount.currency}
-                  </span>
-                </Amount>
+                <LedgerAmount
+                  {...balance.amount}
+                  tolerance={balance.tolerance}
+                  className="font-medium tabular-nums"
+                  currencyClassName={
+                    balance.amount.currency === money.primaryCurrency
+                      ? "max-sm:sr-only"
+                      : "max-sm:block max-sm:text-xs max-sm:font-normal max-sm:text-muted-foreground"
+                  }
+                />
               ) : null}
             </div>
             {register && (

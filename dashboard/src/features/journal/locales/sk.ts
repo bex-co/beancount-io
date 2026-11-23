@@ -129,6 +129,21 @@ const skJournal: Record<string, TranslationEntry> = {
     description:
       "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
   },
+  "journal.balanceFailed": {
+    message: "Neúspešné",
+    description:
+      "Status on a Journal balance assertion whose expected and actual balances differ",
+  },
+  "journal.balanceTooMuch": {
+    message: "O {amount} viac",
+    description:
+      "The actual balance exceeds the assertion by {amount}, including its unit",
+  },
+  "journal.balanceTooLittle": {
+    message: "O {amount} menej",
+    description:
+      "The actual balance is below the assertion by {amount}, including its unit",
+  },
   "journal.balanceOffBy": {
     message: "Rozdiel {amount}",
     description:
@@ -556,7 +571,8 @@ const skJournal: Record<string, TranslationEntry> = {
   },
   "journal.accumulated": {
     message: "nahromadených",
-    description: "Label before an accumulated balance difference",
+    description:
+      "Label before the account's actual balance on a failed assertion",
   },
   "journal.fromAccount": {
     message: "od",

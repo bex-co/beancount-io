@@ -69,6 +69,21 @@ const zhJournal: Record<string, TranslationEntry> = {
     description:
       "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
   },
+  "journal.balanceFailed": {
+    message: "未通过",
+    description:
+      "Status on a Journal balance assertion whose expected and actual balances differ",
+  },
+  "journal.balanceTooMuch": {
+    message: "多 {amount}",
+    description:
+      "The actual balance exceeds the assertion by {amount}, including its unit",
+  },
+  "journal.balanceTooLittle": {
+    message: "少 {amount}",
+    description:
+      "The actual balance is below the assertion by {amount}, including its unit",
+  },
   "journal.balanceOffBy": {
     message: "差额 {amount}",
     description:
@@ -494,7 +509,8 @@ const zhJournal: Record<string, TranslationEntry> = {
   },
   "journal.accumulated": {
     message: "累计",
-    description: "Label before an accumulated balance difference",
+    description:
+      "Label before the account's actual balance on a failed assertion",
   },
   "journal.fromAccount": {
     message: "来自",
