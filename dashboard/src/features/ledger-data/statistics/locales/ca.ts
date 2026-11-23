@@ -44,27 +44,27 @@ const caStatistics: Record<string, TranslationEntry> = {
     description: "Error message for account entries",
   },
   "page.statistics.failedToLoadEntriesStatistics": {
-    message: "Error en carregar els documents",
+    message: "No s'han pogut carregar les estadístiques d'entrades",
     description: "Error message for entries statistics",
   },
   "page.statistics.failedToLoadPostingsData": {
-    message: "Error en carregar els esdeveniments",
+    message: "No s'han pogut carregar les dades dels registres",
     description: "Error message for postings data",
   },
   "page.statistics.lastEntryDate": {
-    message: "Participacions per compte",
+    message: "Data de l'últim assentament",
     description: "Table column header for last entry date",
   },
   "page.statistics.loadingEntryStatistics": {
-    message: "Participacions per moneda",
+    message: "S'estan carregant les estadístiques d'entrades…",
     description: "Loading message for entry statistics",
   },
   "page.statistics.loadingQueryResults": {
-    message: "Carregant monedes...",
+    message: "S'estan carregant els resultats de la consulta…",
     description: "Loading message for query results",
   },
   "page.statistics.noDataAvailableForQuery": {
-    message: "Meta",
+    message: "No hi ha dades disponibles",
     description: "Message when no data available for query",
   },
   "page.statistics.noResultsFromQuery": {
@@ -72,7 +72,7 @@ const caStatistics: Record<string, TranslationEntry> = {
     description: "Message when query returns no results",
   },
   "page.statistics.percentage": {
-    message: "Cap esdeveniment coincideix amb els vostres filtres actuals.",
+    message: "Percentatge",
     description: "Table column header for percentage",
   },
   "page.statistics.percentageNotApplicable": {
@@ -86,7 +86,7 @@ const caStatistics: Record<string, TranslationEntry> = {
       "Title for postings per account section. {account} is replaced with the translated word for account.",
   },
   "page.statistics.statistics": {
-    message: "Consulta",
+    message: "Estadístiques",
     description: "Statistics about the ledger",
   },
 };

@@ -25,11 +25,11 @@ const caErrors: Record<string, TranslationEntry> = {
     description: "Table column header for line number",
   },
   "page.errors.noErrorsFound": {
-    message: "Dades no disponibles",
+    message: "No s'han trobat errors",
     description: "Empty state title when no errors exist",
   },
   "page.errors.unknownFile": {
-    message: "Cercar esdeveniments...",
+    message: "Fitxer desconegut",
     description: "Text shown when filename is unknown",
   },
 };

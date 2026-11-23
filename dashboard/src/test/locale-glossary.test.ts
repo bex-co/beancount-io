@@ -49,3 +49,40 @@ it("uses Saldenbilanz across the German trial balance surfaces", () => {
     expect(german[key], key).toContain("Saldenbilanz");
   }
 });
+
+describe("Catalan ledger pages name their own content", () => {
+  it.each([
+    ["page.holdings.holdings", /^Participacions$/],
+    ["page.holdings.holdingsByCostCurrency", /moneda de cost/i],
+    ["page.holdings.holdingsByCurrency", /per moneda$/i],
+    ["page.holdings.queryResult", /^Resultat de la consulta$/],
+    ["page.holdings.row", /^fila$/i],
+    ["page.holdings.unknownResultType", /tipus de resultat desconegut/i],
+    ["page.statistics.statistics", /^Estadístiques$/],
+    ["page.statistics.lastEntryDate", /data.*últim.*assentament/i],
+    ["page.statistics.percentage", /^Percentatge$/],
+    ["page.statistics.noDataAvailableForQuery", /dades disponibles/i],
+    [
+      "page.statistics.loadingEntryStatistics",
+      /carregant.*estadístiques d'entrades/i,
+    ],
+    [
+      "page.statistics.loadingQueryResults",
+      /carregant.*resultats de la consulta/i,
+    ],
+    [
+      "page.statistics.failedToLoadEntriesStatistics",
+      /carregar.*estadístiques d'entrades/i,
+    ],
+    ["page.statistics.failedToLoadPostingsData", /carregar.*registres/i],
+    ["page.commodities.failedToLoadCommodities", /carregar.*monedes/i],
+    ["page.documents.noDocumentsFound", /cap document/i],
+    ["page.errors.noErrorsFound", /no s'han trobat errors/i],
+    ["page.errors.unknownFile", /^Fitxer desconegut$/],
+    ["page.bql.queryResult", /^Resultat de la consulta$/],
+    ["page.bql.unknownResultType", /tipus de resultat desconegut/i],
+    ["ledgerEditor.uploadFiles", /^Pujar fitxers$/],
+  ] as const)("%s matches its English concept", (key, pattern) => {
+    expect(locales.ca[key]).toMatch(pattern);
+  });
+});

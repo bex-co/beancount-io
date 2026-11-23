@@ -25,7 +25,7 @@ const caLedgerEditor: Record<string, { message: string; description: string }> =
       description: "Ledger files management",
     },
     "ledgerEditor.uploadFiles": {
-      message: "Actualitzar fitxers",
+      message: "Pujar fitxers",
       description: "Tooltip for upload files button",
     },
     "ledgerEditor.portableFileName": {

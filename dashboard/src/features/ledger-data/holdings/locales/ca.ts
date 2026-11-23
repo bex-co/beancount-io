@@ -9,7 +9,7 @@ const caHoldings: Record<string, TranslationEntry> = {
     description: "Button text to export data as CSV",
   },
   "page.holdings.holdings": {
-    message: "Nom del fitxer",
+    message: "Participacions",
     description: "Holdings/investments view in ledger",
   },
   "page.holdings.holdingsByAccount": {
@@ -17,11 +17,11 @@ const caHoldings: Record<string, TranslationEntry> = {
     description: "Tab label for holdings grouped by account",
   },
   "page.holdings.holdingsByCostCurrency": {
-    message: "Anar al compte",
+    message: "Participacions per moneda de cost",
     description: "Tab label for holdings grouped by cost currency",
   },
   "page.holdings.holdingsByCurrency": {
-    message: "Participacions",
+    message: "Participacions per moneda",
     description: "Tab label for holdings grouped by currency",
   },
   "page.holdings.noDataReturnedFromQuery": {
@@ -33,15 +33,15 @@ const caHoldings: Record<string, TranslationEntry> = {
     description: "Message when no query results exist",
   },
   "page.holdings.queryResult": {
-    message: "Percentatge",
+    message: "Resultat de la consulta",
     description: "Section title for query result",
   },
   "page.holdings.row": {
-    message: "Apunts per compte",
+    message: "fila",
     description: "Singular form for row count",
   },
   "page.holdings.unknownResultType": {
-    message: "Estadístiques",
+    message: "Tipus de resultat desconegut",
     description: "Error message for unrecognized result type",
   },
 };

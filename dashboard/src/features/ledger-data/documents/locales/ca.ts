@@ -21,7 +21,7 @@ const caDocuments: Record<string, TranslationEntry> = {
     description: "Table column header for metadata",
   },
   "page.documents.noDocumentsFound": {
-    message: "Aquest llibre encara no té cap dada de preus de monedes.",
+    message: "No s'ha trobat cap document en aquest llibre.",
     description: "Empty state message for no documents",
   },
   "page.documents.noDocumentsFoundDescription": {

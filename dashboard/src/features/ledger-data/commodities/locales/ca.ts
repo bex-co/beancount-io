@@ -9,7 +9,7 @@ const caCommodities: Record<string, TranslationEntry> = {
     description: "Commodities/currencies view in ledger",
   },
   "page.commodities.failedToLoadCommodities": {
-    message: "Error en carregar les entrades del compte",
+    message: "No s'han pogut carregar les monedes",
     description: "Error title when commodities fail to load",
   },
   "page.commodities.noCommoditiesFound": {

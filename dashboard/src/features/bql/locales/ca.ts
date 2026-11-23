@@ -118,7 +118,7 @@ const caBql: Record<string, TranslationEntry> = {
     description: "Sidebar navigation label for the BQL query page",
   },
   "page.bql.queryResult": {
-    message: "Percentatge",
+    message: "Resultat de la consulta",
     description: "Label for a query result section header",
   },
   "page.bql.largeResultHint": {
@@ -128,7 +128,7 @@ const caBql: Record<string, TranslationEntry> = {
       "Screen-reader note on a result too long to render every row; {count} is the total row count",
   },
   "page.bql.unknownResultType": {
-    message: "Estadístiques",
+    message: "Tipus de resultat desconegut",
     description: "Message when query result type is not recognized",
   },
   "page.bql.noDataReturnedFromQuery": {
