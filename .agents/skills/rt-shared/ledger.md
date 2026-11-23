@@ -164,6 +164,7 @@ newest first.
 
 ### Skipped
 
+- 2026-11-23 dashboard expect-free sweep (6700 it/test blocks, brace-matched honoring file-local `expect*` helpers; 17 flags triaged, residual all real) — hollow `ledger-file-view` pair deleted this run (integration 8 + errors 23 tests, sabotage-proven green); `getBy`-throws bodies and `it.each`-table bodies are this sweep's blind spots.
 - 2026-11-21 ledger `src/shared/logger/index.test.ts` remaining 23 tests — doesn't-throw/level/child-behavior/async-context/allowlist pins all hold behavior (re-proved 2026-11-21: emptied `LOGGABLE_CONTEXT_KEYS` reds the same 4 allowlist tests); kept per the proof rule.
 - 2026-11-21 ledger `src/shared/lock/lock.test.ts` remaining 5 behavior tests — re-proved 2026-11-21: `acquire` stubbed to return without running the callback reds all 5, both existence tests stay green; kept per the proof rule.
 - 2026-11-20 cli 13 new test files (`test_update_self_cancel`, `test_balance_pad_omit_messages`, `test_into_unincluded_missing_directory`, +10) — AST sweep: every test function carries real asserts; subprocess-based suite, no mock/tautology shapes.
@@ -183,4 +184,3 @@ newest first.
 - 2026-11-18 duplicate neighboring `it` bodies repo-wide (dup-body sweep, ~30 files incl. star/unstar init-loading twins, ssh-keys twins, encode twins) — twins go red under sabotage, so the skill's proof rule keeps them; no vacuous twin found.
 - 2026-11-18 cli/tests assertion-less-per-function sweep (~40 hits) — every hit asserts via local `_assert_*`/`_refuse_*`/`run_doc`/`_applies`/`_replays` helpers or raising validators; sampled 8 files, all real.
 - 2026-11-18 `expect(vi.mocked(...))` with-args call assertions (reconciliation-page, write-outcome, create-file-pending) — real wiring pins, not the bare-`vi.mocked` shape; left in place.
-- 2026-11-18 mobile `toast-provider/__tests__/index.test.ts` — a prior run already pruned its tautologies; remaining asserts pin `toast-queue` behavior.
