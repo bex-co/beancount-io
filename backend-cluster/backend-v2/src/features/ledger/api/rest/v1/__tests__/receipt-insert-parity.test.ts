@@ -843,6 +843,60 @@ describe("requestId on receipt insertion", () => {
       }
     },
   );
+
+  it.each(["rest", "gql", "mcp"] as const)(
+    "refuses a whitespace-only requestId via %s without touching Redis or promoting the receipt (w31/044)",
+    async (surface) => {
+      const f = await fixture();
+      try {
+        for (const requestId of ["   ", "\t\n"]) {
+          if (surface === "rest") {
+            const response = await f.rest({
+              receiptObjectKey,
+              input,
+              requestId,
+            });
+            expect(response.status).toBe(400);
+            expect(await response.json()).toMatchObject({
+              error: {
+                code: "VALIDATION_FAILED",
+                metadata: { field: "requestId" },
+              },
+            });
+          } else if (surface === "gql") {
+            const result = await f.gql(
+              { receiptObjectKey, input, requestId },
+              "success",
+              "receiptObjectKey:$receiptObjectKey,requestId:$requestId",
+              "$receiptObjectKey:String!,$requestId:String",
+            );
+            const gqlError = result.errors![0];
+            expect(
+              formatError(gqlError.toJSON(), gqlError).extensions,
+            ).toMatchObject({
+              code: "VALIDATION_FAILED",
+              field: "requestId",
+            });
+          } else {
+            const result = await f.mcp({ receiptObjectKey, input, requestId });
+            expect(result.isError).toBe(true);
+            expect(result.structuredContent).toMatchObject({
+              ok: false,
+              error: {
+                code: "VALIDATION_FAILED",
+                message: expect.stringContaining("requestId"),
+              },
+            });
+          }
+        }
+        expect(fakeRedisIdempotencyState.records.size).toBe(0);
+        expect(f.copy).not.toHaveBeenCalled();
+        expect(f.write).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
 });
 
 /**

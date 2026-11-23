@@ -94,12 +94,12 @@ import {
 } from "@/shared/errors";
 import {
   buildLedgerFiles,
-  CREATE_REQUEST_ID_MAX,
   previewLedgerSetup,
   type LedgerSetup,
   type LedgerSetupPreview,
   type LedgerSetupValidation,
 } from "@/features/ledger/setup/build-ledger";
+import { assertRequestId } from "@/features/ledger/utils/entry-write-idempotency";
 import { CACHE_KEYS, TTL, type CacheHelper } from "@/shared/cache";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
 import { filterNullish } from "@/shared/tools";
@@ -740,16 +740,10 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         "setup and template are mutually exclusive",
       );
     }
-    if (
-      input.requestId != null &&
-      (input.requestId.length < 1 ||
-        input.requestId.length > CREATE_REQUEST_ID_MAX)
-    ) {
-      // An empty id would silently turn idempotency off below.
-      throw new ValidationError(
-        "requestId",
-        `requestId must be 1-${CREATE_REQUEST_ID_MAX} characters`,
-      );
+    if (input.requestId != null) {
+      // An empty or whitespace-only id would silently turn idempotency off
+      // below or share a blank Redis key across callers (w21/203, w31/044).
+      assertRequestId(input.requestId);
     }
     // w3/m62: `currency` only re-denominates the STARTER template. Omitted,
     // the request creates exactly what it did before the field existed, so

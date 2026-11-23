@@ -339,6 +339,30 @@ describe("a requestId the commit refuses", () => {
     },
   );
 
+  it.each(
+    Object.keys(writes).flatMap((write) =>
+      ["   ", "\t\n"].map((id) => [write, id] as const),
+    ),
+  )(
+    "%s refuses a whitespace-only requestId (%j) on a dry run and on a commit without touching Redis (w31/044)",
+    async (write, id) => {
+      const { service, writer, directiveAppend } = entryService();
+      const call = writes[write as keyof typeof writes];
+      for (const dryRun of [true, false]) {
+        const refusal = await call(service, dryRun, id).catch(
+          (error: unknown) => error,
+        );
+        expect(refusal).toBeInstanceOf(ValidationError);
+        expect(refusal).toMatchObject({
+          metadata: { field: "requestId" },
+        });
+      }
+      expect(writer.writeBulkEntries).not.toHaveBeenCalled();
+      expect(directiveAppend.appendDirectiveText).not.toHaveBeenCalled();
+      expect(fakeRedisIdempotencyState.records.size).toBe(0);
+    },
+  );
+
   it.each(Object.keys(writes))(
     "%s still records nothing for a dry run with a valid id",
     async (write) => {
@@ -422,4 +446,60 @@ describe("insertReceiptTransaction with a requestId", () => {
     expect(assetStorage.copyTempToPermanent).toHaveBeenCalledTimes(1);
     expect(authorizeOrThrow).toHaveBeenCalledTimes(2);
   });
+
+  it.each(["   ", "\t\n"])(
+    "refuses a whitespace-only requestId (%j) before touching Redis or promoting the receipt (w31/044)",
+    async (requestId) => {
+      const getAdminClient = jest.fn();
+      const getPublicApiClient = jest.fn();
+      const assetStorage = {
+        copyTempToPermanent: jest.fn(),
+        generateDownloadUrl: jest.fn(),
+        deleteTempAsset: jest.fn(),
+      };
+      const writer = { writeBulkEntries: jest.fn() };
+      const workflow = new LedgerReceiptWorkflow(
+        { getPublicApiClient, getAdminClient } as never,
+        assetStorage as never,
+        writer as never,
+        { dashboard: { url: "https://example.test" } } as never,
+        { authorizeOrThrow: jest.fn() } as never,
+      );
+
+      await expect(
+        workflow.insertReceiptTransaction({
+          ledgerId: "alice/books",
+          receiptObjectKey: "tmp/usr_1/r.pdf",
+          identity,
+          requestId,
+          input: {
+            date: "2026-11-01",
+            payee: "Shop",
+            description: "Receipt",
+            postings: [
+              {
+                account: "Expenses:Food",
+                amountNumber: "12.50",
+                amountCurrency: "USD",
+              },
+              {
+                account: "Assets:Cash",
+                amountNumber: "-12.50",
+                amountCurrency: "USD",
+              },
+            ],
+            documentAccount: "Expenses:Food",
+          },
+        }),
+      ).rejects.toMatchObject({
+        category: "VALIDATION_FAILED",
+        metadata: { field: "requestId" },
+      });
+
+      expect(fakeRedisIdempotencyState.records.size).toBe(0);
+      expect(getPublicApiClient).not.toHaveBeenCalled();
+      expect(assetStorage.copyTempToPermanent).not.toHaveBeenCalled();
+      expect(writer.writeBulkEntries).not.toHaveBeenCalled();
+    },
+  );
 });

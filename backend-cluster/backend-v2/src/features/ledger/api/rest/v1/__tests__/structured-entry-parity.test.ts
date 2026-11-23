@@ -16,6 +16,7 @@ import {
   SourceBackedRelationshipEvaluator,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { formatError } from "@/server/graphql/format-error";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
@@ -368,7 +369,9 @@ async function fixture(
         const response = await graphql({
           schema,
           source: previewing
-            ? "mutation($ledgerId:String!,$entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:$ledgerId,entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source code } valid } }"
+            ? opts.requestId !== undefined
+              ? "mutation($ledgerId:String!,$entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean,$requestId:String) { bulkEntries(ledgerId:$ledgerId,entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run,requestId:$requestId) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source code } valid } }"
+              : "mutation($ledgerId:String!,$entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$dryRun:Boolean,$dry_run:Boolean) { bulkEntries(ledgerId:$ledgerId,entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,dryRun:$dryRun,dry_run:$dry_run) { success message dryRun entryHashes preview { path text } errorsBefore errorsAfter newErrors { message source code } valid } }"
             : opts.requestId !== undefined
               ? "mutation($ledgerId:String!,$entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean,$requestId:String) { bulkEntries(ledgerId:$ledgerId,entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid,requestId:$requestId) { success message entryHashes } }"
               : "mutation($ledgerId:String!,$entries:[AddEntryInput!]!,$allowInvalid:Boolean,$allow_invalid:Boolean) { bulkEntries(ledgerId:$ledgerId,entries:$entries,allowInvalid:$allowInvalid,allow_invalid:$allow_invalid) { success message entryHashes } }",
@@ -2693,6 +2696,54 @@ describe.each(["rest", "gql", "mcp"])("requestId via %s", (surface) => {
         true,
       );
       expect(f.write).toHaveBeenCalledTimes(2);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it("refuses a whitespace-only requestId on preview and commit without touching Redis (w31/044)", async () => {
+    const f = await fixture(writer());
+    try {
+      for (const requestId of ["   ", "\t\n"]) {
+        for (const dryRun of [true, false]) {
+          const outcome = await f.call(surface, entries, {
+            ...(dryRun
+              ? surface === "mcp"
+                ? { dry_run: true }
+                : { dryRun: true }
+              : {}),
+            requestId,
+          });
+          expect(outcome.success).toBe(false);
+          if (surface === "gql") {
+            const gqlError = outcome.errors![0];
+            expect(
+              formatError(gqlError.toJSON(), gqlError).extensions,
+            ).toMatchObject({
+              code: "VALIDATION_FAILED",
+              field: "requestId",
+            });
+          } else if (surface === "rest") {
+            expect(outcome.result).toMatchObject({
+              error: {
+                code: "VALIDATION_FAILED",
+                metadata: { field: "requestId" },
+              },
+            });
+          } else {
+            expect(outcome.full).toMatchObject({
+              ok: false,
+              error: {
+                code: "VALIDATION_FAILED",
+                message: expect.stringContaining("requestId"),
+              },
+            });
+          }
+        }
+      }
+      expect(f.write).not.toHaveBeenCalled();
+      expect(f.committed).toHaveLength(0);
+      expect(fakeRedisIdempotencyState.records.size).toBe(0);
     } finally {
       await f.close();
     }

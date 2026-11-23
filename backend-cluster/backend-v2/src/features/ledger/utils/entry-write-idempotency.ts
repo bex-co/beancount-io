@@ -13,6 +13,24 @@ const idempotencyLogger = logger.child({ module: "entry-write-idempotency" });
 /** The longest accepted `requestId`, the same bound ledger creation uses. */
 export const ENTRY_REQUEST_ID_MAX = CREATE_REQUEST_ID_MAX;
 
+/**
+ * Refuse an empty, whitespace-only, or oversized `requestId` before touching
+ * Redis or executing a write (w21/203, w31/044). Kept verbatim — never
+ * silently trimmed — so an agent sending `"   "` learns its key was blank
+ * rather than silently disabling idempotency or colliding on a blank key.
+ */
+export function assertRequestId(requestId: string): void {
+  if (requestId.length < 1 || requestId.length > ENTRY_REQUEST_ID_MAX) {
+    throw new ValidationError(
+      "requestId",
+      `requestId must be 1-${ENTRY_REQUEST_ID_MAX} characters`,
+    );
+  }
+  if (requestId.trim().length < 1) {
+    throw new ValidationError("requestId", "requestId must not be blank");
+  }
+}
+
 /** What every surface says about the field, so REST, GraphQL, and MCP agree. */
 export const ENTRY_REQUEST_ID_DESCRIPTION =
   "Client-generated retry key, 1-200 characters. Send a new one per write and reuse it only to retry the same write: within 24 hours the same id and request return the first result without writing again; the same id with a different request is refused (VALIDATION_FAILED); a repeat while the first attempt is still writing is CONFLICT, so wait and retry with the same id. Omitted, the write is not deduplicated.";
@@ -79,12 +97,7 @@ export async function runIdempotentEntryWrite<T>(params: {
 }): Promise<T> {
   const { requestId, write } = params;
   if (requestId === undefined || requestId === null) return write();
-  if (requestId.length < 1 || requestId.length > ENTRY_REQUEST_ID_MAX) {
-    throw new ValidationError(
-      "requestId",
-      `requestId must be 1-${ENTRY_REQUEST_ID_MAX} characters`,
-    );
-  }
+  assertRequestId(requestId);
   if (params.preview) return write();
 
   const store = params.store ?? redisIdempotencyStore;

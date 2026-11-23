@@ -692,6 +692,23 @@ describe("LedgerWorkflow", () => {
         expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
       });
 
+      it("refuses a whitespace-only requestId before touching Redis or creating a ledger (w31/044)", async () => {
+        const { withStore, records } = workflowWithStore();
+        for (const requestId of ["   ", "\t\n"]) {
+          await expect(
+            withStore.createLedger({
+              identity: IDENTITY,
+              input: { name: "setup-ledger", requestId },
+            }),
+          ).rejects.toMatchObject({
+            category: ErrorCategory.VALIDATION_FAILED,
+            metadata: { field: "requestId" },
+          });
+        }
+        expect(records.size).toBe(0);
+        expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
+      });
+
       it("refuses the same requestId with a different request", async () => {
         const { withStore } = workflowWithStore();
         await withStore.createLedger({

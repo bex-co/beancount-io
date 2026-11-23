@@ -16,6 +16,7 @@ import {
   SourceBackedRelationshipEvaluator,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { formatError } from "@/server/graphql/format-error";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
@@ -1108,6 +1109,55 @@ describe("requestId on appended text", () => {
           ...retryWrite
         } = (retry.ok ? retry.data : {}) as Record<string, unknown>;
         expect(retryWrite).toEqual(firstWrite);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each(["rest", "gql", "mcp"] as const)(
+    "refuses a whitespace-only requestId on preview and commit via %s without touching Redis (w31/044)",
+    async (surface) => {
+      const f = await fixture({
+        ...identity,
+        userId: `usr_text_blank_request_id_${surface}`,
+      });
+      try {
+        for (const requestId of ["   ", "\t\n"]) {
+          for (const dryRun of [true, false]) {
+            const res = await f.call(surface, {
+              text: TXN,
+              dryRun,
+              requestId,
+            });
+            expect(res.ok).toBe(false);
+            if (!res.ok) {
+              if (surface === "gql") {
+                const gqlError = res.error as {
+                  toJSON: () => { message: string };
+                };
+                const formatted = formatError(gqlError.toJSON(), gqlError);
+                expect(formatted.extensions).toMatchObject({
+                  code: "VALIDATION_FAILED",
+                  field: "requestId",
+                });
+              } else if (surface === "rest") {
+                expect(res.error).toMatchObject({
+                  code: "VALIDATION_FAILED",
+                  metadata: { field: "requestId" },
+                });
+              } else {
+                expect(res.error).toMatchObject({
+                  code: "VALIDATION_FAILED",
+                  message: expect.stringContaining("requestId"),
+                });
+              }
+            }
+          }
+        }
+        expect(f.commits).toHaveLength(0);
+        expect(f.changeLedgerFiles).not.toHaveBeenCalled();
+        expect(fakeRedisIdempotencyState.records.size).toBe(0);
       } finally {
         await f.close();
       }

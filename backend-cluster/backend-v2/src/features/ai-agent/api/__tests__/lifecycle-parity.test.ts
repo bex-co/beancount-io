@@ -1367,3 +1367,32 @@ it.each(surfaces)(
     }
   },
 );
+it.each(surfaces)(
+  "refuses a whitespace-only requestId on createLedger via %s without touching Redis (w31/044)",
+  async (surface) => {
+    const f = await fixture();
+    try {
+      for (const requestId of ["   ", "\t\n"]) {
+        const result = await f.call(surface, "create", {
+          name: "blank-req",
+          requestId,
+        });
+        expect(result.failed).toBe(true);
+        expect(result.error).toMatchObject({
+          code: "VALIDATION_FAILED",
+          message: expect.stringContaining("requestId"),
+        });
+        if (surface === "rest") {
+          expect(result).toMatchObject({
+            status: 400,
+            error: { metadata: { field: "requestId" } },
+          });
+        }
+      }
+      expect(f.idempotencyRecords.size).toBe(0);
+      expect(f.create).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);

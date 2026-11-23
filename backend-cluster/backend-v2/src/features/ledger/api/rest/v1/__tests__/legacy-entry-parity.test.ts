@@ -312,6 +312,35 @@ describe.each(["rest", "gql"])("legacy entries requestId via %s", (surface) => {
       await f.close();
     }
   });
+
+  it("refuses a whitespace-only requestId without touching Redis (w31/044)", async () => {
+    const f = await fixture();
+    try {
+      for (const requestId of ["   ", "\t\n"]) {
+        const outcome = await f.call(surface, entries, requestId);
+        expect(outcome.success).toBe(false);
+        if (surface === "rest") {
+          expect(outcome.result).toMatchObject({
+            error: {
+              code: "VALIDATION_FAILED",
+              metadata: { field: "requestId" },
+            },
+          });
+        } else {
+          expect(outcome.result).toMatchObject({
+            extensions: {
+              code: "VALIDATION_FAILED",
+              field: "requestId",
+            },
+          });
+        }
+      }
+      expect(f.write).not.toHaveBeenCalled();
+      expect(fakeRedisIdempotencyState.records.size).toBe(0);
+    } finally {
+      await f.close();
+    }
+  });
 });
 
 /**
