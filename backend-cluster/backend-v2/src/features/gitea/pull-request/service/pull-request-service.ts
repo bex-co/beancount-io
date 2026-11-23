@@ -664,9 +664,10 @@ export class PullRequestService implements IPullRequestService {
         owner,
         repo,
         prNumber,
+        { format: "json" },
       );
       verdict =
-        pr.head?.sha && pr.merge_base
+        pr?.head?.sha && pr.merge_base
           ? await evaluateMergeDirectiveLimit(
               {
                 ...this.directiveLimit,

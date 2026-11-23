@@ -710,6 +710,34 @@ describe("PullRequestService", () => {
       expect(result.success).toBe(true);
       expect(result.message).toBe("PR merged successfully");
     });
+
+    it("requests a parsed PR body when checking the merge directive limit", async () => {
+      mockClient.repos.repoGetPullRequest.mockImplementation(
+        async (
+          _owner: string,
+          _repo: string,
+          _prNumber: number,
+          params?: { format?: string },
+        ) => ({
+          data:
+            params?.format === "json"
+              ? { head: { sha: "head000" }, merge_base: "base000" }
+              : null,
+        }),
+      );
+      mockClient.repos.repoMergePullRequest.mockResolvedValue({
+        data: { merged: true },
+      });
+
+      await service.mergePR(identity, owner, repo, prNumber);
+
+      expect(mockClient.repos.repoGetPullRequest).toHaveBeenCalledWith(
+        owner,
+        repo,
+        prNumber,
+        { format: "json" },
+      );
+    });
   });
 
   describe("closePR", () => {

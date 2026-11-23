@@ -1778,7 +1778,9 @@ export class LedgerWorkflow implements ILedgerWorkflow {
           ledgerName,
           encoded(path),
           { ref },
+          { format: "json" },
         );
+        if (!found.data) return null;
         const { sha: blobSha, content } = found.data;
         return blobSha
           ? { sha: blobSha, content: (content ?? "").replace(/\s/g, "") }

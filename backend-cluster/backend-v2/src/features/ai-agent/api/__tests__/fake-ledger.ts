@@ -231,8 +231,12 @@ export function createFakeLedger(history: Snapshot[]) {
           _owner: string,
           _repo: string,
           query: { sha?: string; files?: boolean },
+          params?: { format?: string },
         ) => {
           const commit = commitAt(query.sha);
+          // Match the generated swagger-typescript-api client (gitea-api.ts):
+          // response bodies are only parsed into `data` when `format` is set.
+          if (params?.format !== "json") return { data: null };
           const before =
             commits.find((c) => c.sha === commit.parent)?.files ??
             new Map<string, string>();
@@ -264,10 +268,12 @@ export function createFakeLedger(history: Snapshot[]) {
           _repo: string,
           filepath: string,
           query?: { ref?: string },
+          params?: { format?: string },
         ) => {
           const path = filepath.split("/").map(decodeURIComponent).join("/");
           const content = commitAt(query?.ref).files.get(path);
           if (content === undefined) throw notFound();
+          if (params?.format !== "json") return { data: null };
           return {
             data: {
               sha: blobSha(content),

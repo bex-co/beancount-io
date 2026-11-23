@@ -35,9 +35,21 @@ const ledgerClient = { request: jest.fn() };
 
 function setup() {
   const repos = {
-    repoGetPullRequest: jest.fn(async () => ({
-      data: { head: { sha: "head000" }, merge_base: "base000" },
-    })),
+    repoGetPullRequest: jest.fn(
+      async (
+        _owner: string,
+        _repo: string,
+        _prNumber: number,
+        params?: { format?: string },
+      ) => ({
+        // Match the generated swagger-typescript-api client (gitea-api.ts):
+        // response bodies are only parsed into `data` when `format` is set.
+        data:
+          params?.format === "json"
+            ? { head: { sha: "head000" }, merge_base: "base000" }
+            : null,
+      }),
+    ),
     repoMergePullRequest: jest.fn(async () => ({ data: null })),
   };
   const getPublicApiClient = jest.fn(async () => ledgerClient);
