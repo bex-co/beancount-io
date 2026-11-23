@@ -21,6 +21,14 @@ const deCommits: Record<string, TranslationEntry> = {
     message: "Änderungen",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Hinzugefügte Zeile",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Entfernte Zeile",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "Keine Änderungen anzuzeigen",
     description: "Empty state when a commit has no diff content",

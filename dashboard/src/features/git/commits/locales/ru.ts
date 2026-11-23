@@ -21,6 +21,14 @@ const ruCommits: Record<string, TranslationEntry> = {
     message: "Изменения",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Добавленная строка",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Удалённая строка",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "Нет изменений для отображения",
     description: "Empty state when a commit has no diff content",

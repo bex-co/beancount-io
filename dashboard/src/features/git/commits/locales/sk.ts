@@ -21,6 +21,14 @@ const skCommits: Record<string, TranslationEntry> = {
     message: "Zmeny",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Pridaný riadok",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Odstránený riadok",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "Žiadne zmeny na zobrazenie",
     description: "Empty state when a commit has no diff content",

@@ -21,6 +21,14 @@ const koCommits: Record<string, TranslationEntry> = {
     message: "변경사항",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "추가된 줄",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "삭제된 줄",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "표시할 변경사항이 없습니다",
     description: "Empty state when a commit has no diff content",

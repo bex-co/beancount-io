@@ -21,6 +21,14 @@ const esCommits: Record<string, TranslationEntry> = {
     message: "Cambios",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Línea añadida",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Línea eliminada",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "No hay cambios para mostrar",
     description: "Empty state when a commit has no diff content",

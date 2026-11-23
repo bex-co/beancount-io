@@ -21,6 +21,14 @@ const jaCommits: Record<string, TranslationEntry> = {
     message: "変更",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "追加された行",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "削除された行",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "表示する変更はありません",
     description: "Empty state when a commit has no diff content",

@@ -21,6 +21,14 @@ const bgCommits: Record<string, TranslationEntry> = {
     message: "Промени",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Добавен ред",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Премахнат ред",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "Няма промени за показване",
     description: "Empty state when a commit has no diff content",

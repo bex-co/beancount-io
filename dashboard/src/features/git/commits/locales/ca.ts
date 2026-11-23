@@ -21,6 +21,14 @@ const caCommits: Record<string, TranslationEntry> = {
     message: "Canvis",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Línia afegida",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Línia eliminada",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "No hi ha canvis per mostrar",
     description: "Empty state when a commit has no diff content",

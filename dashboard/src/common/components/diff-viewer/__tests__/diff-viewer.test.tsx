@@ -294,6 +294,36 @@ describe("DiffViewer", () => {
     ).toEqual(['"Deleted Café"', '"حذف"']);
   });
 
+  it.each([
+    ["en", "Added line", "Removed line"],
+    ["fa", "خط افزوده‌شده", "خط حذف‌شده"],
+  ] as const)(
+    "marks and names only the changed lines in a %s small diff",
+    async (language, added, removed) => {
+      const localization = createLocalization();
+      await localization.changeLanguage(language);
+      render(<DiffViewer diff={mixedSourceDiff(false)} />, localization);
+
+      for (const [label, mark, content] of [
+        [removed, "−", source.old],
+        [added, "+", source.added],
+      ]) {
+        const row = screen.getByRole("row", { name: new RegExp(label) });
+        const marker = within(row).getByText(mark, { exact: true });
+        expect(marker).toBeVisible();
+        expect(marker).toHaveAttribute("aria-hidden", "true");
+        expect(getComputedStyle(marker.parentElement!).userSelect).toBe("none");
+        expect(row.querySelector(".diff-code")?.textContent).toBe(content);
+      }
+      const context = screen.getByRole("row", {
+        name: /Comment remains first/,
+      });
+      expect(context.querySelector(".diff-line-marker")).toBeNull();
+      expect(context).not.toHaveTextContent(added);
+      expect(context).not.toHaveTextContent(removed);
+    },
+  );
+
   it.each(focusCases)(
     "reveals the canonical small-diff section for a $kind focus request",
     ({ requested, displayed, diff }) => {
@@ -474,8 +504,8 @@ describe("DiffViewer", () => {
       ).toEqual([
         ["12", "12", "source"],
         ["13", "13", "source"],
-        ["14", "", "source"],
-        ["", "14", "source"],
+        ["14", `${localization.i18n.t("commits.removedLine")}−`, "source"],
+        ["", `14${localization.i18n.t("commits.addedLine")}+`, "source"],
         ["15", "15", "source"],
       ]);
       expect(rows[2].querySelector(".diff-code-delete")).not.toBeNull();
@@ -516,11 +546,11 @@ describe("DiffViewer", () => {
           Array.from(row.children).map((span) => span.textContent),
         ),
       ).toEqual([
-        ["12", " ", source.comment],
-        ["13", " ", source.open],
-        ["14", "-", source.old],
-        ["14", "+", source.added],
-        ["15", " ", source.posting],
+        ["12", "", source.comment],
+        ["13", "", source.open],
+        ["14", `${localization.i18n.t("commits.removedLine")}−`, source.old],
+        ["14", `${localization.i18n.t("commits.addedLine")}+`, source.added],
+        ["15", "", source.posting],
       ]);
       const heading = screen.getByRole("heading", {
         name: localization.i18n.t("commits.changes"),

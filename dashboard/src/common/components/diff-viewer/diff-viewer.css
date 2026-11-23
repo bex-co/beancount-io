@@ -54,6 +54,20 @@
   min-width: 42px;
 }
 
+.diff-viewer-container .diff-gutter-col:nth-child(2) {
+  width: 9ch;
+}
+
+.diff-gutter-with-marker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2ch;
+}
+
+.diff-line-marker,
+.diff-line-number {
+  user-select: none;
+}
+
 /* Ensure proper code padding */
 .diff-code {
   padding: 0 6px !important;

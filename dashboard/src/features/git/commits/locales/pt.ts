@@ -21,6 +21,14 @@ const ptCommits: Record<string, TranslationEntry> = {
     message: "Alterações",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Linha adicionada",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Linha removida",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "Nenhuma alteração para exibir",
     description: "Empty state when a commit has no diff content",

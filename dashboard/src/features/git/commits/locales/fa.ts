@@ -21,6 +21,14 @@ const faCommits: Record<string, TranslationEntry> = {
     message: "تغییرات",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "خط افزوده‌شده",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "خط حذف‌شده",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "تغییری برای نمایش وجود ندارد",
     description: "Empty state when a commit has no diff content",

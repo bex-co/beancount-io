@@ -21,6 +21,14 @@ const frCommits: Record<string, TranslationEntry> = {
     message: "Modifications",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Ligne ajoutée",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Ligne supprimée",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "Aucune modification à afficher",
     description: "Empty state when a commit has no diff content",

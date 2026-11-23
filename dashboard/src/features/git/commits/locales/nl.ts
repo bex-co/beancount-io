@@ -21,6 +21,14 @@ const nlCommits: Record<string, TranslationEntry> = {
     message: "Wijzigingen",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Toegevoegde regel",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Verwijderde regel",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "Geen wijzigingen om weer te geven",
     description: "Empty state when a commit has no diff content",

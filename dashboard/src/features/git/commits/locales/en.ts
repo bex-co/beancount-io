@@ -21,6 +21,14 @@ const enCommits: Record<string, TranslationEntry> = {
     message: "Changes",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Added line",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Removed line",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "No changes to display",
     description: "Empty state when a commit has no diff content",

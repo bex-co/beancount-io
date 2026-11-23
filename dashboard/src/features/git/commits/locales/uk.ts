@@ -21,6 +21,14 @@ const ukCommits: Record<string, TranslationEntry> = {
     message: "Зміни",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "Доданий рядок",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "Видалений рядок",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "Немає змін для відображення",
     description: "Empty state when a commit has no diff content",

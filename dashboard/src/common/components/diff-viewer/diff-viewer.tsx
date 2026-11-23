@@ -132,6 +132,18 @@ const renderIsolatedToken: RenderToken = (token, _renderDefault, index) =>
 
 export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
   const { t } = useTranslations();
+  const addedLine = t("commits.addedLine");
+  const removedLine = t("commits.removedLine");
+  const renderLineMarker = (type: ChangeType["type"]) => {
+    if (type === "normal") return null;
+    const added = type === "insert";
+    return (
+      <span className="diff-line-marker">
+        <span className="sr-only">{added ? addedLine : removedLine}</span>
+        <span aria-hidden="true">{added ? "+" : "−"}</span>
+      </span>
+    );
+  };
   const [firstVisibleRow, setFirstVisibleRow] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const listRef = useListRef(null);
@@ -439,12 +451,6 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
 
               // Render simple line without complex Hunk component
               const change = row.data;
-              const prefix =
-                change.type === "insert"
-                  ? "+"
-                  : change.type === "delete"
-                    ? "-"
-                    : " ";
               const colorClass =
                 change.type === "insert"
                   ? "bg-green-50 dark:bg-green-950/30"
@@ -464,10 +470,12 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
                   style={style}
                   className={`flex px-2 font-mono text-xs leading-[22px] ${colorClass}`}
                 >
-                  <span className="mr-2 w-8 shrink-0 text-right text-muted-foreground">
+                  <span className="diff-line-number mr-2 w-8 shrink-0 text-right text-muted-foreground">
                     {lineNum || ""}
                   </span>
-                  <span className="w-4 shrink-0">{prefix}</span>
+                  <span className="w-4 shrink-0">
+                    {renderLineMarker(change.type)}
+                  </span>
                   <span className="flex-1 whitespace-pre">
                     {isolateRtlSource(change.content)}
                   </span>
@@ -512,6 +520,16 @@ export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
                     hunks={file.hunks}
                     tokens={tokens}
                     renderToken={renderToken}
+                    renderGutter={({ change, side, renderDefault }) => {
+                      const lineNumber = renderDefault();
+                      if (side === "old") return lineNumber;
+                      return (
+                        <span className="diff-gutter-with-marker">
+                          <span>{lineNumber}</span>
+                          {renderLineMarker(change.type)}
+                        </span>
+                      );
+                    }}
                   >
                     {(hunks: HunkData[]) =>
                       hunks.map((hunk) => (

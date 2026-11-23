@@ -21,6 +21,14 @@ const zhCommits: Record<string, TranslationEntry> = {
     message: "变更",
     description: "Heading for commit changes/diff section",
   },
+  "commits.addedLine": {
+    message: "新增行",
+    description: "Accessible label for an added line in a source diff",
+  },
+  "commits.removedLine": {
+    message: "删除行",
+    description: "Accessible label for a removed line in a source diff",
+  },
   "commits.noChanges": {
     message: "没有可显示的变更",
     description: "Empty state when a commit has no diff content",
