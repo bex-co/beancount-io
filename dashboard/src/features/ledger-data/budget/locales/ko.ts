@@ -264,7 +264,7 @@ const koBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "미달 목표, 달성 목표, 진행 중인 목표 순이며, 각 그룹에서는 목표 대비 차이 비율이 큰 것부터 표시합니다.",
+      "미달한 목표, 달성한 목표, 평가하지 않은 기간 순으로 표시합니다. 각 그룹에서는 목표 대비 차이 비율이 큰 항목부터 표시합니다.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -298,6 +298,11 @@ const koBudget: Record<string, TranslationEntry> = {
     message: "진행 중",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "아직 목표 없음 · 첫 목표일 {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "목표 미달",

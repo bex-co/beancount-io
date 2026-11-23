@@ -270,7 +270,7 @@ const faBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "ابتدا هدف‌های ازدست‌رفته، سپس هدف‌های محقق‌شده، سپس آن‌هایی که هنوز در جریان‌اند؛ در هر گروه، بیشترین درصد فاصله از هدف در ابتدا.",
+      "ابتدا هدف‌های محقق‌نشده، سپس هدف‌های محقق‌شده و در پایان دوره‌های ارزیابی‌نشده می‌آیند. در هر گروه، موارد با بیشترین درصد انحراف از هدف ابتدا نمایش داده می‌شوند.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -304,6 +304,11 @@ const faBudget: Record<string, TranslationEntry> = {
     message: "در جریان",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "هنوز هدفی تعیین نشده · اولین هدف در {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "هدف محقق نشد",

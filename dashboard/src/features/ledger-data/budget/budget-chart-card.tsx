@@ -2,6 +2,7 @@ import { useId, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { AlertCircle, ArrowUp, ChevronRight, Pencil } from "lucide-react";
 import { BudgetTargetBar } from "./budget-target-bar";
+import { BudgetNoTarget } from "./budget-no-target";
 import type {
   EChartsOption,
   TooltipComponentFormatterCallback,
@@ -130,6 +131,7 @@ export function BudgetChartCard({
     headlineStart,
     latestActual,
     comparisonBudgetValue,
+    firstTargetAfterPeriod,
     variance,
     varianceStatus,
     isFavorable,
@@ -406,7 +408,8 @@ export function BudgetChartCard({
                 {t("page.budget.budgetLatestSpending")}
               </p>
               <p className={stat}>
-                {latestActual === null || variance === null
+                {latestActual === null ||
+                (variance === null && firstTargetAfterPeriod === null)
                   ? "—"
                   : showAmount(latestActual)}
               </p>
@@ -434,27 +437,34 @@ export function BudgetChartCard({
                   </Badge>
                 )}
               </div>
-              <p
-                className={cn(
-                  stat,
-                  varianceStatus !== "on" &&
-                    isFavorable &&
-                    "text-emerald-800 dark:text-emerald-300",
-                  varianceStatus !== "on" && !isFavorable && "text-destructive",
-                )}
-              >
-                {latestActual === null || variance === null
-                  ? "—"
-                  : `${isPositiveDecimalNumber(variance) ? "+" : ""}${showAmount(variance)}`}
-              </p>
+              {firstTargetAfterPeriod !== null ? (
+                <BudgetNoTarget firstTargetDate={firstTargetAfterPeriod} />
+              ) : (
+                <p
+                  className={cn(
+                    stat,
+                    variance !== null &&
+                      varianceStatus !== "on" &&
+                      (isFavorable
+                        ? "text-emerald-800 dark:text-emerald-300"
+                        : "text-destructive"),
+                  )}
+                >
+                  {variance === null
+                    ? "—"
+                    : `${isPositiveDecimalNumber(variance) ? "+" : ""}${showAmount(variance)}`}
+                </p>
+              )}
             </div>
           </div>
-          <BudgetTargetBar
-            percent={progressPercent}
-            status={varianceStatus}
-            favorable={isFavorable}
-            className="mt-4"
-          />
+          {firstTargetAfterPeriod === null && (
+            <BudgetTargetBar
+              percent={progressPercent}
+              status={varianceStatus}
+              favorable={isFavorable}
+              className="mt-4"
+            />
+          )}
         </div>
       </CardHeader>
 

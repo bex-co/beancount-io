@@ -10,14 +10,15 @@ import type { ConversionOption } from "@/common/types/chart";
 import { budgetPeriodName } from "./budget-utils";
 import { budgetKey, useBudgetSnapshot, varianceTone } from "./budget-snapshot";
 import { BudgetTargetBar } from "./budget-target-bar";
+import { BudgetNoTarget } from "./budget-no-target";
 import type { BudgetGroup } from "./types";
 
 /**
  * How a budget stands, for ordering the summary: missed targets, then met
- * ones, then periods still running; within each, furthest from target first.
+ * ones, then periods without a verdict; within each, furthest from target first.
  */
 interface Standing {
-  /** 0 missed, 1 met, 2 still in progress. */
+  /** 0 missed, 1 met, 2 no verdict. */
   rank: number;
   /** How far actual is from target, as a share of it; -1 with no target. */
   distance: number;
@@ -36,7 +37,7 @@ type HiddenUntil = (breakpoint: "@lg" | "@2xl") => string;
 /**
  * Every budget at a glance for its period: what it was meant to be, what it
  * was, and how far off — missed targets first, then met ones, then periods
- * still running, each furthest from target first. Each row leads to its
+ * without a verdict, each furthest from target first. Each row leads to its
  * budget's card below.
  * Rows read the same query as the cards, so the two always agree.
  *
@@ -189,6 +190,7 @@ function BudgetStandingProbe({
     error,
     latestActual,
     comparisonBudgetValue,
+    firstTargetAfterPeriod,
     isFavorable,
     varianceStatus,
   } = useBudgetSnapshot({ group, ...context });
@@ -198,7 +200,12 @@ function BudgetStandingProbe({
     isPositiveDecimalNumber(comparisonBudgetValue)
       ? Math.abs(Number(latestActual) / Number(comparisonBudgetValue) - 1)
       : -1;
-  const rank = error || varianceStatus === "progress" ? 2 : isFavorable ? 1 : 0;
+  const rank =
+    error || firstTargetAfterPeriod !== null || varianceStatus === "progress"
+      ? 2
+      : isFavorable
+        ? 1
+        : 0;
   const settled = !loading;
   const key = budgetKey(group);
   useEffect(() => {
@@ -248,6 +255,7 @@ function BudgetSummaryRow({
     headlineStart,
     latestActual,
     comparisonBudgetValue,
+    firstTargetAfterPeriod,
     variance,
     varianceStatus,
     isFavorable,
@@ -333,21 +341,19 @@ function BudgetSummaryRow({
           {cadence}
           {period && ` · ${period}`}
         </span>
-        {/* Narrow, the actual and its target share a line under the name:
-            the row's figure, at reading size; the target names the
-            currency for both. */}
+        {/* Narrow, the actual and its target share a line under the name. */}
         <span className="mt-0.5 block text-base text-muted-foreground tabular-nums @2xl:hidden">
           {actual !== null && (
             <>
               <span className="font-medium text-foreground">
-                {showNumber(actual)}
-              </span>{" "}
+                {firstTargetAfterPeriod !== null
+                  ? showAmount(actual)
+                  : showNumber(actual)}
+              </span>
               {/* "of 9,500.00 USD" stays together: a line that must break
                   breaks before it, never inside it. */}
-              {t("page.budget.budgetOfTarget", { target }).replace(
-                / /g,
-                "\u00a0",
-              )}
+              {firstTargetAfterPeriod === null &&
+                ` ${t("page.budget.budgetOfTarget", { target }).replace(/ /g, "\u00a0")}`}
             </>
           )}
         </span>
@@ -371,7 +377,9 @@ function BudgetSummaryRow({
         </span>
       </td>
       <td className="py-2 pe-4 ps-2 align-top">
-        {off !== null ? (
+        {firstTargetAfterPeriod !== null ? (
+          <BudgetNoTarget firstTargetDate={firstTargetAfterPeriod} />
+        ) : off !== null ? (
           <>
             {/* One shape in every row: the words, the amount, the bar. */}
             <div className="flex flex-col items-start gap-1">

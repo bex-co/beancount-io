@@ -230,8 +230,8 @@ describe("budget period data", () => {
 });
 
 describe("the header target for a dated period (w4/184)", () => {
-  // The Dining target starts 2026-01-01, so last year had none: 0 USD. The
-  // latest configured 200 USD must not stand in while that read is unknown.
+  // The Dining target starts 2026-01-01. Last year's actuals have no target
+  // to compare against, and pending or failed reads leave the period unknown.
   const LAST_YEAR = [
     { date: "2025-11-30", balance: {}, accountBalances: {} },
     { date: "2025-12-31", balance: {}, accountBalances: {} },
@@ -252,10 +252,11 @@ describe("the header target for a dated period (w4/184)", () => {
     expect(headerTarget()).toBe("—");
   });
 
-  it("shows the period's own target once its read settles", () => {
+  it("names the first target after last year once the read settles", () => {
     mockRead({ data: { getLedgerIntervalTotals: LAST_YEAR } });
     renderDining("year-1");
-    expect(headerTarget()).toBe(money(0));
+    expect(headerTarget()).toBe("—");
+    expect(screen.getByText(/No target yet.*Jan 1, 2026/)).toBeInTheDocument();
   });
 
   it("keeps the current budget while an all-time read is pending", () => {

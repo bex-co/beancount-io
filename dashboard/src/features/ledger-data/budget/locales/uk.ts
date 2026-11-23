@@ -280,7 +280,7 @@ const ukBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Спершу невиконані цілі, потім виконані, потім ще поточні; у кожній групі спершу найбільше відхилення від цілі у відсотках.",
+      "Спочатку показано невиконані цілі, потім виконані, а далі періоди без оцінки. У кожній групі першими йдуть найбільші відсоткові відхилення.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -314,6 +314,11 @@ const ukBudget: Record<string, TranslationEntry> = {
     message: "Триває",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Цілі ще немає · Перша ціль — {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Ціль не виконано",

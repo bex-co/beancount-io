@@ -270,7 +270,7 @@ const enBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Missed targets first, then met ones, then those still in progress; within each, the largest share off target first.",
+      "Missed targets first, then met targets, then periods with no verdict. Larger percentage differences appear first within each group.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -304,6 +304,11 @@ const enBudget: Record<string, TranslationEntry> = {
     message: "In progress",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "No target yet · First target {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Missed target",

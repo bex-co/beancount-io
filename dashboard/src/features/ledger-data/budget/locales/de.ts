@@ -270,7 +270,7 @@ const deBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Zuerst verfehlte Ziele, dann erreichte, dann noch laufende; innerhalb jeder Gruppe die größte prozentuale Abweichung vom Ziel zuerst.",
+      "Zuerst kommen verfehlte Ziele, dann erreichte Ziele und zuletzt Zeiträume ohne Bewertung. Innerhalb jeder Gruppe stehen die größten prozentualen Abweichungen zuerst.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -304,6 +304,11 @@ const deBudget: Record<string, TranslationEntry> = {
     message: "Läuft",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Noch kein Ziel · Erstes Ziel am {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Ziel verfehlt",

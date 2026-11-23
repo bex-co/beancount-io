@@ -275,7 +275,7 @@ const caBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Primer els objectius no assolits, després els assolits i després els que encara estan en curs; dins de cada grup, primer la desviació més gran en percentatge de l'objectiu.",
+      "Primer es mostren els objectius no assolits, després els assolits i finalment els períodes sense valoració. Dins de cada grup, les desviacions percentuals més grans van primer.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -310,6 +310,11 @@ const caBudget: Record<string, TranslationEntry> = {
     message: "En curs",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Encara no hi ha cap objectiu · Primer objectiu el {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Objectiu no assolit",

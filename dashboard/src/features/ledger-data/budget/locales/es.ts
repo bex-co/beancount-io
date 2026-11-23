@@ -275,7 +275,7 @@ const esBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Primero los objetivos incumplidos, luego los cumplidos y después los que siguen en curso; en cada grupo, primero la mayor desviación porcentual del objetivo.",
+      "Primero se muestran los objetivos incumplidos, luego los cumplidos y por último los períodos sin evaluar. En cada grupo, las mayores desviaciones porcentuales aparecen primero.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -310,6 +310,11 @@ const esBudget: Record<string, TranslationEntry> = {
     message: "En curso",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Todavía no hay objetivo · Primer objetivo el {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Objetivo incumplido",

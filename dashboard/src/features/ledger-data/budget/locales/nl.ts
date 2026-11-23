@@ -270,7 +270,7 @@ const nlBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Eerst gemiste doelen, dan behaalde, dan nog lopende; binnen elke groep de grootste procentuele afwijking van het doel eerst.",
+      "Eerst gemiste doelen, dan behaalde doelen en ten slotte perioden zonder beoordeling. Binnen elke groep staan de grootste procentuele afwijkingen vooraan.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -305,6 +305,11 @@ const nlBudget: Record<string, TranslationEntry> = {
     message: "Loopt",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Nog geen doel · Eerste doel op {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Doel gemist",

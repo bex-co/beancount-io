@@ -270,7 +270,7 @@ const bgBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Първо пропуснатите цели, после изпълнените, после още текущите; във всяка група първо най-голямото отклонение като дял от целта.",
+      "Първо са пропуснатите цели, след тях изпълнените, а накрая периодите без оценка. Във всяка група най-големите процентни отклонения са първи.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -304,6 +304,11 @@ const bgBudget: Record<string, TranslationEntry> = {
     message: "В ход",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Все още няма цел · Първа цел на {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Пропусната цел",

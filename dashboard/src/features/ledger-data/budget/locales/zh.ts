@@ -262,7 +262,7 @@ const zhBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "先列未达成的目标，再列已达成的，最后列仍在进行中的；每组内按偏离目标的百分比从大到小排列。",
+      "先列未达成的目标，再列已达成的目标，最后列未评估的期间。每组内按偏离目标的百分比从大到小排列。",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -294,6 +294,11 @@ const zhBudget: Record<string, TranslationEntry> = {
     message: "进行中",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "尚未设定目标 · 首个目标日期为{date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "未达目标",

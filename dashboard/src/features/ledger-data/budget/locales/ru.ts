@@ -280,7 +280,7 @@ const ruBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Сначала невыполненные цели, затем выполненные, затем ещё текущие; в каждой группе сначала наибольшее отклонение от цели в процентах.",
+      "Сначала показаны невыполненные цели, затем выполненные и, наконец, периоды без оценки. В каждой группе первыми идут наибольшие отклонения в процентах.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -314,6 +314,11 @@ const ruBudget: Record<string, TranslationEntry> = {
     message: "В процессе",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Цели пока нет · Первая цель — {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Цель не выполнена",

@@ -275,7 +275,7 @@ const frBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "D'abord les objectifs manqués, puis ceux atteints, puis ceux encore en cours ; dans chaque groupe, le plus grand écart en pourcentage de l'objectif d'abord.",
+      "Les objectifs manqués apparaissent en premier, suivis des objectifs atteints puis des périodes sans évaluation. Dans chaque groupe, les plus grands écarts en pourcentage apparaissent en premier.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -310,6 +310,11 @@ const frBudget: Record<string, TranslationEntry> = {
     message: "En cours",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Pas encore d’objectif · Premier objectif le {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Objectif manqué",

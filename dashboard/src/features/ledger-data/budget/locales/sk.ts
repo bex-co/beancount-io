@@ -280,7 +280,7 @@ const skBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Najprv nesplnené ciele, potom splnené, potom ešte prebiehajúce; v každej skupine najprv najväčšia percentuálna odchýlka od cieľa.",
+      "Najprv sa zobrazia nesplnené ciele, potom splnené ciele a nakoniec obdobia bez hodnotenia. V každej skupine sú najväčšie percentuálne odchýlky na začiatku.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -314,6 +314,11 @@ const skBudget: Record<string, TranslationEntry> = {
     message: "Prebieha",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Zatiaľ bez cieľa · Prvý cieľ od {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Cieľ nesplnený",

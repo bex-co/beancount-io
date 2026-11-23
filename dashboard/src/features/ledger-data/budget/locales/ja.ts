@@ -264,7 +264,7 @@ const jaBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "未達の目標、達成した目標、進行中の目標の順。各グループ内では目標からの乖離率が大きいものから。",
+      "未達の目標、達成済みの目標、判定のない期間の順に表示します。各グループ内では目標からの乖離率が大きい順です。",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -297,6 +297,11 @@ const jaBudget: Record<string, TranslationEntry> = {
     message: "進行中",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "目標未設定 · 最初の目標は{date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "目標未達",

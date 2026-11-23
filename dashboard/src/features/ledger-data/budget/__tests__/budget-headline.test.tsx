@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import * as apolloClient from "@apollo/client/react";
 import { BudgetChartCard } from "../budget-chart-card";
+import { BudgetSummary } from "../budget-summary";
+import { budgetSummaryDay } from "../budget-snapshot";
 import {
   budgetHeadlinePeriod,
   budgetVariance,
@@ -200,11 +202,113 @@ describe("Budget card headline on 2026-10-15", () => {
     expect(valueAfter("Latest actual")).toBe("30 USD");
   });
 
-  it("Last year describes its final period", () => {
+  it("Last year describes its final period without borrowing a later target", () => {
     renderCard("year-1", monthEnds("2025-01", "2025-12"));
-    expect(valueAfter("Budget")).toBe("0 USD");
+    expect(valueAfter("Budget")).toBe("—");
     expect(valueAfter("Latest actual")).toBe("0 USD");
+    expect(screen.getByText(/No target yet.*Aug 27, 2026/)).toBeVisible();
   });
+});
+
+describe("Budget periods that ended before the first target", () => {
+  afterEach(cleanup);
+
+  it.each([
+    {
+      label: "All time on a dormant ledger",
+      time: undefined,
+      asOf: budgetSummaryDay("2026-11-20", "2026-08-28"),
+      end: "2026-07-31",
+      periodName: "July 2026",
+    },
+    {
+      label: "Last year",
+      time: "year-1",
+      asOf: "2026-11-20",
+      end: "2025-12-31",
+      periodName: "December 2025",
+    },
+  ])(
+    "shows actuals without a verdict for $label",
+    ({ time, asOf, end, periodName }) => {
+      vi.mocked(apolloClient.useQuery).mockReturnValue({
+        data: {
+          getLedgerIntervalTotals: [
+            { date: end, balance: { USD: "120.40" }, accountBalances: {} },
+          ],
+        },
+        loading: false,
+        error: undefined,
+      } as never);
+      const budget = (
+        account: string,
+        date: string,
+        number: string,
+      ): BudgetEntry => ({
+        date,
+        entry_hash: account,
+        directive_type: "custom",
+        type: "budget",
+        values: [account, "monthly", { number, currency: "USD" }],
+      });
+      const groceries = "Expenses:Food:Groceries";
+      const transit = "Expenses:Transit";
+      const rent = "Expenses:Rent";
+      const groups = groupBudgetEntries(
+        [
+          budget(groceries, "2026-11-20", "100"),
+          budget(transit, "2025-01-01", "0"),
+          budget(rent, "2025-01-01", "200"),
+        ],
+        "2026-11-20",
+      );
+      const context = {
+        ledgerId: "l1",
+        primaryCurrency: "USD",
+        conversion: "AT_COST" as const,
+        time,
+        asOf,
+      };
+      render(
+        <>
+          <BudgetSummary
+            {...context}
+            ready
+            groups={groups}
+            anchorOf={(group) => group.account}
+          />
+          <BudgetChartCard
+            {...context}
+            group={groups.find((group) => group.account === groceries)!}
+            onDelete={vi.fn()}
+          />
+        </>,
+      );
+
+      const summary = within(screen.getAllByRole("table")[0]);
+      const rows = [transit, rent, groceries].map((account) =>
+        summary.getByRole("row", { name: new RegExp(account) }),
+      );
+      expect(summary.getAllByRole("row").slice(1)).toEqual(rows);
+      const [missed, met, firstTarget] = rows;
+      expect(missed).toHaveTextContent("Above target");
+      expect(within(missed).getAllByRole("cell")[1]).toHaveTextContent(
+        /^0 USD$/,
+      );
+      expect(met).toHaveTextContent("Below target");
+      expect(firstTarget).toHaveTextContent(periodName);
+      expect(firstTarget).toHaveTextContent("120.4 USD");
+      expect(within(firstTarget).getAllByRole("cell")[1]).toHaveTextContent(
+        /^—$/,
+      );
+      expect(firstTarget).not.toHaveTextContent(/Above target|In progress/);
+      expect(screen.getAllByText(/No target yet.*Nov 20, 2026/)).toHaveLength(
+        2,
+      );
+      expect(valueAfter("Budget")).toBe("—");
+      expect(valueAfter("Latest actual")).toBe("120.4 USD");
+    },
+  );
 });
 
 /**

@@ -275,7 +275,7 @@ const ptBudget: Record<string, TranslationEntry> = {
   },
   "page.budget.budgetSummaryCaption": {
     message:
-      "Primeiro as metas não cumpridas, depois as cumpridas e depois as ainda em curso; em cada grupo, primeiro o maior desvio percentual da meta.",
+      "Primeiro aparecem as metas não cumpridas, depois as cumpridas e por fim os períodos sem avaliação. Em cada grupo, os maiores desvios percentuais aparecem primeiro.",
     description:
       "Caption of the Budget page's summary table: what it lists and how it is ordered",
   },
@@ -310,6 +310,11 @@ const ptBudget: Record<string, TranslationEntry> = {
     message: "Em curso",
     description:
       "Badge for a budget period that has not ended yet, so no verdict is given",
+  },
+  "page.budget.budgetNoTargetYet": {
+    message: "Ainda sem meta · Primeira meta em {date}",
+    description:
+      "Budget period that ended before its first target, with the first target's localised date",
   },
   "page.budget.budgetLegendMissed": {
     message: "Meta não cumprida",

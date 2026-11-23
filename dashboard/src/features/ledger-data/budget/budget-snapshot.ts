@@ -206,12 +206,18 @@ export function useBudgetSnapshot({
     );
   }, [chartData, headline, displayCurrency, displayDirection]);
 
+  const firstTargetAfterPeriod =
+    headline !== null && firstTargetDate > headline.end
+      ? firstTargetDate
+      : null;
+
   // Under "Last year" the header claims that period's target, which only the
   // period's own read can supply. While that read is pending or has failed,
   // the latest configured budget is not an answer — it showed 200 USD for a
   // year whose target was 0 — so the value stays unknown instead.
   const comparisonBudgetValue = useMemo((): string | null => {
     if (spanEnded && (loading || error)) return null;
+    if (firstTargetAfterPeriod !== null) return null;
     if (headline === null) return spanEnded ? null : displayBudgetValue;
     return absDecimalNumber(
       calculateBudgetForInterval(
@@ -223,6 +229,7 @@ export function useBudgetSnapshot({
     );
   }, [
     headline,
+    firstTargetAfterPeriod,
     displayBudgetValue,
     group.interval,
     group.budgetHistory,
@@ -294,6 +301,7 @@ export function useBudgetSnapshot({
     headline,
     headlineStart,
     latestActual,
+    firstTargetAfterPeriod,
     comparisonBudgetValue,
     variance,
     varianceStatus,
