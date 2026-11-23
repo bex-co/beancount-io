@@ -63,7 +63,9 @@ export function OptionsTableSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle id={titleId}>{title}</CardTitle>
+        <CardTitle>
+          <h2 id={titleId}>{title}</h2>
+        </CardTitle>
         <CardDescription>
           {description} <DocLink href={docUrl}>{t("common.learnMore")}</DocLink>
         </CardDescription>

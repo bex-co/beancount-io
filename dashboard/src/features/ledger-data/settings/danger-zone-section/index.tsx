@@ -99,7 +99,7 @@ export function DangerZoneSection({
     <Card className="border-destructive">
       <CardHeader>
         <CardTitle className="text-destructive">
-          {t("userSettings.dangerZone")}
+          <h2>{t("userSettings.dangerZone")}</h2>
         </CardTitle>
         <CardDescription>
           {t("page.settings.dangerZoneDescription")}

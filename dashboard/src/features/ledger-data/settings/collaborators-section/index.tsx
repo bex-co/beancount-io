@@ -150,7 +150,9 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle id={titleId}>{t("collaboration.collaborators")}</CardTitle>
+        <CardTitle>
+          <h2 id={titleId}>{t("collaboration.collaborators")}</h2>
+        </CardTitle>
         <CardDescription>
           {t("page.settings.collaboratorsDescription")}
         </CardDescription>
@@ -208,9 +210,9 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
         {collaboratorsFailure && (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-            <h2 className="text-lg font-semibold mb-2 text-destructive">
+            <h3 className="text-lg font-semibold mb-2 text-destructive">
               {t("collaboration.errorLoadingCollaborators")}
-            </h2>
+            </h3>
             <p className="text-sm text-muted-foreground">
               {t(getErrorMessageKey(collaboratorsFailure))}
             </p>
@@ -231,9 +233,9 @@ export function CollaboratorsSection({ ledgerId }: { ledgerId: string }) {
           collaborators.length === 0 && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mb-4" />
-              <h2 className="text-lg font-semibold mb-2">
+              <h3 className="text-lg font-semibold mb-2">
                 {t("collaboration.noCollaborators")}
-              </h2>
+              </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 {t("collaboration.noCollaboratorsDescription")}
               </p>

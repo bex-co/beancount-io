@@ -173,7 +173,9 @@ export function VisibilitySection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("page.settings.visibility")}</CardTitle>
+        <CardTitle>
+          <h2>{t("page.settings.visibility")}</h2>
+        </CardTitle>
         <CardDescription>
           {isAdmin
             ? t("page.settings.visibilityDescription")
@@ -261,9 +263,9 @@ export function VisibilitySection({
         {!isPrivate && (
           <div className="border-t pt-6 space-y-6">
             <div>
-              <h2 className="text-sm font-semibold mb-1">
+              <h3 className="text-sm font-semibold mb-1">
                 {t("page.settings.sharing")}
-              </h2>
+              </h3>
               <p className="text-sm text-muted-foreground">
                 {t("page.settings.sharingDescription")}
               </p>

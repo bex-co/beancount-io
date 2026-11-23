@@ -190,7 +190,9 @@ export function GeneralSettingsSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("page.settings.generalSettings")}</CardTitle>
+        <CardTitle>
+          <h2>{t("page.settings.generalSettings")}</h2>
+        </CardTitle>
         <CardDescription>
           {isAdmin
             ? t("page.settings.generalSettingsDescription")
