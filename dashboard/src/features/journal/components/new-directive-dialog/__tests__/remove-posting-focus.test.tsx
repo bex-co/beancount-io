@@ -68,9 +68,6 @@ const amounts = () =>
 async function draft(rows: [string, string][]) {
   const user = userEvent.setup();
   render(<TransactionForm ledgerId="owner/ledger" />);
-  await waitFor(() =>
-    expect(screen.getByRole("textbox", { name: "Payee" })).toHaveFocus(),
-  );
   await user.click(screen.getByRole("button", { name: "Add posting" }));
   await waitFor(() => expect(accounts()).toHaveLength(3));
   rows.forEach(([account, amount], index) => {

@@ -185,35 +185,6 @@ export function TransactionForm({
     name: "postings",
   });
 
-  // Auto-focus payee field on mount. Scope to the payee wrapper — the Status
-  // select is also role=combobox and sits earlier in the DOM, so a document-
-  // wide querySelector steals focus from whoever is typing.
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const payee = document.querySelector<HTMLElement>(
-        "[data-transaction-payee] [role='combobox'], [data-transaction-payee] input",
-      );
-      if (!payee) return;
-      // Not on a touch screen: focus there raises the keyboard over the
-      // form before the reader has chosen where to start.
-      if (window.matchMedia?.("(pointer: coarse)").matches) return;
-      // Respect a field the reader already chose in this form while the
-      // handoff was pending (w4/1075); only an untouched mount — or focus
-      // held by another form/dialog control — defaults to Payee.
-      const active = document.activeElement;
-      if (
-        active instanceof HTMLElement &&
-        active !== payee &&
-        payee.closest("form")?.contains(active) &&
-        active.matches("input, textarea, select, [role='combobox']")
-      ) {
-        return;
-      }
-      payee.focus();
-    }, 150);
-    return () => clearTimeout(timer);
-  }, []);
-
   // Auto-add empty posting when all rows are filled (Fava pattern)
   useEffect(() => {
     if (!watchedPostings) return;
@@ -501,7 +472,7 @@ export function TransactionForm({
                   </FormLabel>
                   <FormControl>
                     <PayeesCombobox
-                      // The form puts the cursor here; the suggestions wait
+                      // The dialog puts the cursor here; the suggestions wait
                       // for the reader, not cover the postings below.
                       openOnFocus={false}
                       ledgerId={ledgerId}

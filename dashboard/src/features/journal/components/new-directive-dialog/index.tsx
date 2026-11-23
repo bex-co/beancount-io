@@ -143,6 +143,22 @@ export function NewDirectiveDialog({
       <DialogContent
         busy={pending}
         className="!max-w-full sm:!max-w-[600px] lg:!max-w-[1000px] top-[2%] sm:top-[10%] translate-y-0 max-h-[96vh] sm:max-h-[85vh] flex flex-col"
+        onOpenAutoFocus={(event) => {
+          // Avoid raising a touch keyboard before the reader chooses a field.
+          if (
+            activeTab !== "transaction" ||
+            window.matchMedia?.("(pointer: coarse)").matches
+          )
+            return;
+          const dialog = event.currentTarget;
+          if (!(dialog instanceof HTMLElement)) return;
+          const payee = dialog.querySelector<HTMLInputElement>(
+            "[data-transaction-payee] input:not(:disabled)",
+          );
+          if (!payee) return;
+          event.preventDefault();
+          payee.focus();
+        }}
         onCloseAutoFocus={(event) => {
           restoreFocusOnDialogClose(event, returnFocusRef?.current);
         }}

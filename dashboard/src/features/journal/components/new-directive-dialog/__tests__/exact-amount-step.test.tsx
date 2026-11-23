@@ -56,12 +56,8 @@ beforeEach(() => {
   ] as unknown as ReturnType<typeof useMutation>);
 });
 
-async function transaction() {
+function transaction() {
   render(<TransactionForm ledgerId="owner/ledger" />);
-  // The form focuses Payee once it opens; let that land first.
-  await waitFor(() =>
-    expect(screen.getByRole("textbox", { name: "Payee" })).toHaveFocus(),
-  );
   const accounts = screen.getAllByRole("textbox", { name: "Account" });
   fireEvent.change(accounts[0]!, { target: { value: "Assets:Cash" } });
   fireEvent.change(accounts[1]!, {
@@ -80,7 +76,7 @@ const postedNumbers = () =>
 describe("exact amount stepping", () => {
   it("steps a large Transaction amount up by exactly one and posts it", async () => {
     const user = userEvent.setup();
-    const amount = await transaction();
+    const amount = transaction();
     fireEvent.change(amount, { target: { value: "9007199254740993.01" } });
     amount.focus();
     await user.keyboard("{ArrowUp}");
@@ -98,7 +94,7 @@ describe("exact amount stepping", () => {
 
   it("steps down exactly, keeps small and negative amounts, and starts a blank at one", async () => {
     const user = userEvent.setup();
-    const amount = await transaction();
+    const amount = transaction();
     const draft = async (value: string, keys: string) => {
       fireEvent.change(amount, { target: { value } });
       amount.focus();
@@ -124,7 +120,7 @@ describe("exact amount stepping", () => {
   });
 
   it("keeps the wheel from stepping a focused amount", async () => {
-    const amount = await transaction();
+    const amount = transaction();
     const unfocused = new WheelEvent("wheel", { cancelable: true });
     amount.dispatchEvent(unfocused);
     expect(unfocused.defaultPrevented).toBe(false);

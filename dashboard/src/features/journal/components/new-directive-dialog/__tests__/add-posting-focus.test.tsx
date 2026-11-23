@@ -90,11 +90,6 @@ describe("New Entry Add posting focus", () => {
         ["Expenses:Food:Coffee", "1.25", "USD"],
       ]);
       const add = screen.getByRole("button", { name: "Add posting" });
-      // The dialog focuses Payee once it opens; let that land first.
-      await waitFor(() =>
-        expect(screen.getByRole("textbox", { name: "Payee" })).toHaveFocus(),
-      );
-
       if (via === "keyboard") {
         add.focus();
         await user.keyboard("{Enter}");

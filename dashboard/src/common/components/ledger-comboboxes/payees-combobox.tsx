@@ -5,7 +5,6 @@ import {
   type ComboboxFieldProps,
   type ComboboxOption,
 } from "@/common/components/ui/combobox";
-import { Skeleton } from "@/common/components/ui/skeleton";
 import {
   GetLedgerPayeesDocument,
   type GetLedgerPayeesQuery,
@@ -68,18 +67,18 @@ export function PayeesCombobox({
     fieldProps["aria-describedby"],
   );
 
-  if (fallback.initialLoading) {
-    return <Skeleton className="h-10 w-full" />;
-  }
-
   return (
     <Combobox
-      options={fallback.failed ? [] : options}
+      options={fallback.initialLoading || fallback.failed ? [] : options}
       value={value}
       onValueChange={onValueChange}
       placeholder={defaultPlaceholder}
       allowCustom={true}
-      emptyText={t("journal.noPayeesFound")}
+      emptyText={
+        fallback.initialLoading
+          ? t("common.loading")
+          : t("journal.noPayeesFound")
+      }
       disabled={disabled}
       className={className}
       openOnFocus={openOnFocus}

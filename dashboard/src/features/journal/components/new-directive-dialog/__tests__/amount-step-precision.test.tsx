@@ -120,8 +120,6 @@ describe("directive amount precision", () => {
     const accounts = screen.getAllByRole("textbox", { name: "Account" });
     const amounts = screen.getAllByRole("spinbutton");
 
-    // Set accounts/amounts via change events so the mount payee-focus timer
-    // cannot steal characters from user-event typing under CI load.
     fireEvent.change(accounts[0]!, {
       target: { value: "Expenses:CostOfRevenue" },
     });
@@ -130,15 +128,6 @@ describe("directive amount precision", () => {
       target: { value: "Assets:Current:Cash" },
     });
     fireEvent.change(amounts[1]!, { target: { value: "-0.001" } });
-
-    // The form focuses Payee on a timer after mount. Let that land before
-    // taking focus, so it cannot fire afterwards and pull focus back out of
-    // the amount — which is what made this case flaky under full-suite load.
-    await waitFor(() => {
-      expect(
-        document.querySelector("[data-transaction-payee] input"),
-      ).toHaveFocus();
-    });
 
     await user.click(amounts[1]!);
 
@@ -178,8 +167,6 @@ describe("directive amount precision", () => {
 
       const accounts = screen.getAllByRole("textbox", { name: "Account" });
       const amounts = screen.getAllByRole("spinbutton");
-      // Prefer change events over user.type so the mount payee-focus timer
-      // cannot steal keystrokes under suite load (same pattern as 0.001 case).
       fireEvent.change(accounts[0]!, { target: { value: "Assets:Crypto" } });
       // user-event 14 re-serializes number-input typing through a double;
       // deliver the raw string a browser keeps, so the form path is tested.

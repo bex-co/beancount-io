@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { BalanceForm } from "../balance-form";
@@ -51,9 +51,7 @@ describe("New Entry field labels (w3/498)", () => {
   it("keeps the names once values are typed", async () => {
     const user = userEvent.setup();
     render(<TransactionForm ledgerId="owner/ledger" />);
-    // The form moves focus to Payee on a mount timer; let it land first.
     const payee = () => screen.getByRole("combobox", { name: "Payee" });
-    await waitFor(() => expect(payee()).toHaveFocus());
 
     await user.type(payee(), "Grocer");
     await user.type(
