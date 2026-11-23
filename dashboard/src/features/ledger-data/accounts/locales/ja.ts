@@ -199,6 +199,12 @@ const jaAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "この画面では資産口座と負債口座のみ閉鎖できます。この口座を閉鎖するには、台帳ファイルに {directive} ディレクティブを追加してください。",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message: "他の記録から参照されていない口座のみ削除できます。",
     description:

@@ -204,6 +204,12 @@ const faAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "در این صفحه فقط می‌توان حساب‌های دارایی و بدهی را بست. برای بستن این حساب، دستور {directive} را به فایل دفتر حساب اضافه کنید.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message: "حساب فقط زمانی حذف می‌شود که هیچ ثبت دیگری به آن ارجاع ندهد.",
     description:

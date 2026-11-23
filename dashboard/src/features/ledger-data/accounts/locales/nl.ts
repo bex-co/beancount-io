@@ -206,6 +206,12 @@ const nlAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "Hier kun je alleen activa- en passivarekeningen sluiten. Voeg een {directive}-instructie toe aan het grootboekbestand om deze rekening te sluiten.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message:
       "Een rekening kan alleen worden verwijderd als geen andere boeking ernaar verwijst.",

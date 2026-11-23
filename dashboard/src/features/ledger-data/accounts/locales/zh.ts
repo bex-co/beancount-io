@@ -195,6 +195,12 @@ const zhAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "此页面只能关闭资产和负债账户。要关闭此账户，请在账本文件中添加一条 {directive} 指令。",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message: "只有未被其他记录引用的账户才能删除。",
     description:

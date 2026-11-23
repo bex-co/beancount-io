@@ -205,6 +205,12 @@ const bgAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "Тук могат да се закриват само сметки за активи и пасиви. За да закриеш тази сметка, добави директива {directive} във файла на счетоводната книга.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message:
       "Сметката може да се изтрие само ако никой друг запис не я използва.",

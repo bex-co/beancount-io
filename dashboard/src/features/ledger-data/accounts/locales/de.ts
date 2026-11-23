@@ -206,6 +206,12 @@ const deAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "Hier lassen sich nur Vermögens- und Verbindlichkeitskonten schließen. Um dieses Konto zu schließen, füge eine {directive}-Direktive zur Hauptbuchdatei hinzu.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message:
       "Ein Konto kann nur gelöscht werden, wenn kein anderer Eintrag darauf verweist.",

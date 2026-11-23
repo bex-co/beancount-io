@@ -214,6 +214,12 @@ const frAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "Seuls les comptes d’actif et de passif peuvent être clôturés ici. Pour clôturer ce compte, ajoutez une directive {directive} au fichier du grand livre.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message:
       "Un compte ne peut être supprimé que si aucune autre écriture n’y fait référence.",

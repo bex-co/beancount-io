@@ -345,7 +345,11 @@ function AccountActions({
                 {t("page.accounts.closeAccount")}
                 {!canClose && (
                   <span className="text-xs text-muted-foreground">
-                    {t("page.accounts.closeNeedsZeroBalance")}
+                    {account.balance == null
+                      ? t("page.accounts.closeInLedgerFile", {
+                          directive: "close",
+                        })
+                      : t("page.accounts.closeNeedsZeroBalance")}
                   </span>
                 )}
               </span>

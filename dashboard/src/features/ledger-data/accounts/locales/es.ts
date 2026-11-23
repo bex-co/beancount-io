@@ -210,6 +210,12 @@ const esAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "Aquí solo se pueden cerrar cuentas de activo y de pasivo. Para cerrar esta cuenta, añade una directiva {directive} al archivo del libro mayor.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message:
       "Solo se puede eliminar una cuenta si ningún otro asiento hace referencia a ella.",

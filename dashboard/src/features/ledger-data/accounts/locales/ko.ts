@@ -197,6 +197,12 @@ const koAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "이 화면에서는 자산 계정과 부채 계정만 닫을 수 있습니다. 이 계정을 닫으려면 원장 파일에 {directive} 지시문을 추가하세요.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message: "다른 기록에서 참조하지 않는 계정만 삭제할 수 있습니다.",
     description:

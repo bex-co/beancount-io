@@ -131,25 +131,39 @@ describe("AccountRow balance states", () => {
     };
   }
 
-  it("does not treat an uncomputed balance as an emptied account", async () => {
-    await renderRow({ balance: null });
-    const { close, remove } = await openMenu("Income:US:Hoogle:Salary");
-    // Both stay in the menu, greyed, each with its reason.
-    expect(close).toHaveAttribute("aria-disabled", "true");
-    expect(close).toHaveTextContent(
-      "Only an account with a zero balance can be closed.",
-    );
-    expect(remove).toHaveAttribute("aria-disabled", "true");
-    expect(remove).toHaveTextContent(
-      "An account can only be deleted if no other entry refers to it.",
-    );
-  });
+  const manualCloseReason =
+    "Only asset and liability accounts can be closed here. To close this account, add a close directive to the ledger file.";
+
+  it.each([
+    "Income:Salary",
+    "Expenses:Clearing",
+    "Equity:Opening",
+    "Costs:Supplies",
+  ])(
+    "explains how to close %s when its balance is not computed",
+    async (account) => {
+      await renderRow({
+        account,
+        balance: null,
+        entryCount: 2,
+        referenceCount: 2,
+      });
+      const { close, remove } = await openMenu(account);
+      expect(close).toHaveAttribute("aria-disabled", "true");
+      expect(close).toHaveTextContent(manualCloseReason);
+      expect(remove).toHaveAttribute("aria-disabled", "true");
+      expect(remove).toHaveTextContent(
+        "An account can only be deleted if no other entry refers to it.",
+      );
+    },
+  );
 
   it("offers Delete but not Close for an unused account whose balance was not computed", async () => {
     await renderRow({ balance: null, entryCount: 0, referenceCount: 0 });
     const { close, remove } = await openMenu("Income:US:Hoogle:Salary");
     expect(remove).not.toHaveAttribute("aria-disabled");
     expect(close).toHaveAttribute("aria-disabled", "true");
+    expect(close).toHaveTextContent(manualCloseReason);
   });
 
   it("shows a computed zero balance as 0 and offers Close", async () => {
@@ -177,6 +191,9 @@ describe("AccountRow balance states", () => {
     expect(within(balanceCell).getByText("-8,123.35 USD")).toBeInTheDocument();
     const { close } = await openMenu("Liabilities:US:Chase:Slate");
     expect(close).toHaveAttribute("aria-disabled", "true");
+    expect(close).toHaveTextContent(
+      "Only an account with a zero balance can be closed.",
+    );
   });
 });
 

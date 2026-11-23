@@ -212,6 +212,12 @@ const caAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "Aquí només es poden tancar comptes d’actiu i de passiu. Per tancar aquest compte, afegeix una directiva {directive} al fitxer del llibre.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message:
       "Només es pot suprimir un compte si cap altre apunt hi fa referència.",

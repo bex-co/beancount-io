@@ -203,6 +203,12 @@ const enAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "Only asset and liability accounts can be closed here. To close this account, add a {directive} directive to the ledger file.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message: "An account can only be deleted if no other entry refers to it.",
     description:

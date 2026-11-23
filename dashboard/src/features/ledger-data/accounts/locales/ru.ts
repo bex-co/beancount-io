@@ -213,6 +213,12 @@ const ruAccounts: Record<string, TranslationEntry> = {
     description:
       "Why Close is unavailable for an account, shown under the greyed Close item in its row menu",
   },
+  "page.accounts.closeInLedgerFile": {
+    message:
+      "Здесь можно закрыть только счета активов и обязательств. Чтобы закрыть этот счёт, добавьте директиву {directive} в файл книги.",
+    description:
+      "Why the Close action is unavailable for an account with no computed balance. {directive} is the literal Beancount close keyword.",
+  },
   "page.accounts.deleteNeedsNoReferences": {
     message:
       "Счёт можно удалить, только если на него не ссылаются другие записи.",
