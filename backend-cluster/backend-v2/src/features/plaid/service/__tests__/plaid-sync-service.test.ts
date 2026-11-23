@@ -1215,6 +1215,158 @@ describe("PlaidSyncService", () => {
           txInputs,
         ),
       ).rejects.toThrow(ForbiddenError);
+      expect(
+        mockPlaidTransactionModel.getByTransactionIds,
+      ).not.toHaveBeenCalled();
+    });
+
+    // w31/052: validate targetAccount, optional sourceAccount, and optional
+    // filename upfront before authorization, Fava lookup, or Postgres reads.
+    describe("upfront submission input validation (w31/052)", () => {
+      it.each([
+        "",
+        "   ",
+        "not-an-account",
+        "Expenses:Bad Account",
+        "expenses:food",
+        "Expenses",
+      ])(
+        "refuses invalid targetAccount %j before auth, Fava, or Postgres",
+        async (targetAccount) => {
+          await expect(
+            service.submitTransactionsToLedger(
+              systemIdentity(userId),
+              ledgerOwner,
+              ledgerName,
+              [{ transactionId: "tx_1", targetAccount }],
+            ),
+          ).rejects.toMatchObject({
+            category: "BAD_USER_INPUT",
+            message: expect.stringContaining("targetAccount"),
+            metadata: {
+              field: "targetAccount",
+              hint: expect.stringContaining("Expenses:Food:Groceries"),
+            },
+          });
+
+          expect(mockAuthorization.authorizeOrThrow).not.toHaveBeenCalled();
+          expect(mockGetLedger).not.toHaveBeenCalled();
+          expect(
+            mockPlaidTransactionModel.getByTransactionIds,
+          ).not.toHaveBeenCalled();
+          expect(
+            mockFavaClientFactory.getPublicApiClient,
+          ).not.toHaveBeenCalled();
+        },
+      );
+
+      it.each(["", "   ", "bad account", "assets:checking", "Assets"])(
+        "refuses invalid sourceAccount %j before auth, Fava, or Postgres",
+        async (sourceAccount) => {
+          await expect(
+            service.submitTransactionsToLedger(
+              systemIdentity(userId),
+              ledgerOwner,
+              ledgerName,
+              [
+                {
+                  transactionId: "tx_1",
+                  targetAccount: "Expenses:Food:Groceries",
+                  sourceAccount,
+                },
+              ],
+            ),
+          ).rejects.toMatchObject({
+            category: "BAD_USER_INPUT",
+            message: expect.stringContaining("sourceAccount"),
+            metadata: {
+              field: "sourceAccount",
+              hint: expect.stringContaining("Assets:Bank:Checking"),
+            },
+          });
+
+          expect(mockAuthorization.authorizeOrThrow).not.toHaveBeenCalled();
+          expect(mockGetLedger).not.toHaveBeenCalled();
+          expect(
+            mockPlaidTransactionModel.getByTransactionIds,
+          ).not.toHaveBeenCalled();
+          expect(
+            mockFavaClientFactory.getPublicApiClient,
+          ).not.toHaveBeenCalled();
+        },
+      );
+
+      it.each([
+        ["", "File path must not be empty"],
+        ["   ", "File path must not be empty"],
+        ["../etc/passwd", "Invalid file path"],
+        [".git/config", "inside .git"],
+        ["/etc/passwd", "Invalid file path"],
+        ["dir\\file.bean", "Invalid file path"],
+        ["a\0b.bean", "Invalid file path"],
+      ])(
+        "refuses invalid filename %j before auth, Fava, or Postgres",
+        async (filename, expectedMessage) => {
+          await expect(
+            service.submitTransactionsToLedger(
+              systemIdentity(userId),
+              ledgerOwner,
+              ledgerName,
+              txInputs,
+              filename,
+            ),
+          ).rejects.toMatchObject({
+            category: "BAD_USER_INPUT",
+            message: expect.stringContaining(expectedMessage),
+            metadata: {
+              field: "filename",
+              hint: expect.stringContaining("filename"),
+            },
+          });
+
+          expect(mockAuthorization.authorizeOrThrow).not.toHaveBeenCalled();
+          expect(mockGetLedger).not.toHaveBeenCalled();
+          expect(
+            mockPlaidTransactionModel.getByTransactionIds,
+          ).not.toHaveBeenCalled();
+          expect(
+            mockFavaClientFactory.getPublicApiClient,
+          ).not.toHaveBeenCalled();
+        },
+      );
+
+      it("accepts valid non-Latin targetAccount and sourceAccount names", async () => {
+        mockPlaidTransactionModel.getByTransactionIds.mockResolvedValue(
+          mockTransactions,
+        );
+        mockPlaidAccountModel.getById.mockResolvedValue(mockAccount);
+        mockPlaidItemModel.getById.mockResolvedValue(mockItem);
+        mockFavaApiClient.entries.addBulkEntries.mockResolvedValue({
+          data: { success: true },
+        });
+        mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
+
+        const result = await service.submitTransactionsToLedger(
+          systemIdentity(userId),
+          ledgerOwner,
+          ledgerName,
+          [
+            {
+              transactionId: "tx_1",
+              targetAccount: "Expenses:Food:日本",
+              sourceAccount: "Assets:Bank:日本",
+            },
+          ],
+        );
+
+        expect(result.success).toBe(true);
+        expect(buildBeancountTransaction).toHaveBeenCalledWith(
+          mockTransactions[0],
+          "Assets:Bank:日本",
+          "Expenses:Food:日本",
+          "USD",
+        );
+      });
     });
 
     it("should chain-verify against the resolved ledgerRepoId regardless of item.userId", async () => {

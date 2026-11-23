@@ -36,6 +36,7 @@ import {
 } from "../utils/plaid-mapper";
 import { reconcileAccounts } from "../utils/reconcile-accounts";
 import { assertBankId, assertBankIds } from "../utils/assert-bank-id";
+import { assertValidBankTransactionSubmission } from "../utils/assert-bank-account";
 import { plaidImportId } from "../utils/plaid-constants";
 import type { PlaidAccount } from "../data/plaid-account-model";
 import type { PlaidTransaction } from "../data/plaid-transaction-model";
@@ -724,9 +725,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     dryRun = false,
   ): Promise<PlaidSubmitResult> {
     const { userId } = identity;
-    if (transactionInputs.length === 0) {
-      throw new BadUserInputError("No transactions provided");
-    }
+    assertValidBankTransactionSubmission(transactionInputs, filename);
 
     const transactionIds = transactionInputs.map(
       (input) => input.transactionId,
@@ -762,7 +761,7 @@ export class PlaidSyncService implements IPlaidSyncService {
       }
 
       const account = accounts.get(tx.plaidAccountId);
-      const sourceAccount = input.sourceAccount || account?.ledgerAccount;
+      const sourceAccount = input.sourceAccount ?? account?.ledgerAccount;
       if (!sourceAccount) {
         throw new BadUserInputError(
           `Account ${tx.plaidAccountId} not mapped to ledger account`,

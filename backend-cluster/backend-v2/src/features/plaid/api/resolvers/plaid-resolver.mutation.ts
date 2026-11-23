@@ -265,12 +265,20 @@ export class PlaidMutationResolver {
   ): Promise<PlaidSubmitResult> {
     const identity = ctx.getCurrentIdentity();
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const normalizedTransactions = transactions.map((transaction) =>
+      transaction.sourceAccount === null
+        ? {
+            transactionId: transaction.transactionId,
+            targetAccount: transaction.targetAccount,
+          }
+        : transaction,
+    );
     return this.plaidSyncService.submitTransactionsToLedger(
       identity,
       ledgerOwner,
       ledgerName,
-      transactions,
-      filename,
+      normalizedTransactions,
+      filename ?? undefined,
       preview({ dryRun, dry_run }),
     );
   }

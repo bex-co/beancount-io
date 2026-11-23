@@ -2,7 +2,7 @@ import { BANK_NOT_FOUND_HINT } from "@/shared/errors/lookup-hints";
 import { assertPageArgs } from "@/shared/page-info";
 import { type DbExecutor } from "@/drizzle/drizzle";
 import { assertBankId, assertBankIds } from "../utils/assert-bank-id";
-import { lexesAsAccount } from "@/features/ledger/utils/account-matcher";
+import { assertBankLedgerAccount } from "../utils/assert-bank-account";
 import { type IModels } from "@/foundation/models";
 import { type IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import {
@@ -42,16 +42,6 @@ const itemServiceLogger = logger.child({ module: "plaid-item-service" });
  * letters, digits, and `'._-`, ending in an uppercase letter or digit.
  */
 const BEANCOUNT_COMMODITY_RE = /^[A-Z](?:[A-Z0-9'._-]{0,22}[A-Z0-9])?$/;
-
-function assertBankLedgerAccount(ledgerAccount: string): void {
-  if (!lexesAsAccount(ledgerAccount)) {
-    throw new BadUserInputError(
-      `ledgerAccount ${JSON.stringify(ledgerAccount)} is not a valid Beancount account name`,
-      "ledgerAccount",
-      'Pass a colon-separated Beancount account name such as "Assets:Bank:Checking" or "Liabilities:CreditCard:Visa".',
-    );
-  }
-}
 
 function assertBankCurrency(currency: string): void {
   if (!BEANCOUNT_COMMODITY_RE.test(currency)) {

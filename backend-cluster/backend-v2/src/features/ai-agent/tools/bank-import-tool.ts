@@ -11,6 +11,7 @@ import {
   resolveBankIdAlias,
   resolveOptionalBankIdAlias,
 } from "./bank-id-alias";
+import { assertValidBankTransactionSubmission } from "@/features/plaid/utils/assert-bank-account";
 import {
   DRY_RUN_NAMES,
   resolveFlagAlias,
@@ -390,35 +391,37 @@ async function submitTransactions(
     { primary: dry_run, legacy: dryRun },
     DRY_RUN_NAMES,
   );
+  const resolvedTransactions = transactions.map((t) => ({
+    transactionId: resolveBankIdAlias(
+      { primary: t.transactionId, legacy: t.transaction_id },
+      TRANSACTION_ITEM_NAMES.id,
+    ),
+    targetAccount: resolveBankIdAlias(
+      { primary: t.targetAccount, legacy: t.target_account },
+      TRANSACTION_ITEM_NAMES.target,
+    ),
+    sourceAccount: resolveOptionalBankIdAlias(
+      { primary: t.sourceAccount, legacy: t.source_account },
+      TRANSACTION_ITEM_NAMES.source,
+    ),
+  }));
+  assertValidBankTransactionSubmission(resolvedTransactions, filename);
   const submit = () =>
     services.plaidSync.submitTransactionsToLedger(
       identity,
       owner,
       name,
-      transactions.map((t) => ({
-        transactionId: resolveBankIdAlias(
-          { primary: t.transactionId, legacy: t.transaction_id },
-          TRANSACTION_ITEM_NAMES.id,
-        ),
-        targetAccount: resolveBankIdAlias(
-          { primary: t.targetAccount, legacy: t.target_account },
-          TRANSACTION_ITEM_NAMES.target,
-        ),
-        sourceAccount: resolveOptionalBankIdAlias(
-          { primary: t.sourceAccount, legacy: t.source_account },
-          TRANSACTION_ITEM_NAMES.source,
-        ),
-      })),
+      resolvedTransactions,
       filename,
       preview,
     );
   if (preview) {
+    const submitted = await submit();
     const errorsBefore = await readBeanCheckErrors(
       services,
       identity,
       ledgerId,
     );
-    const submitted = await submit();
     return {
       ...submitted,
       summary: `Dry run: would submit ${transactions.length} bank transaction(s) — not committed.`,
