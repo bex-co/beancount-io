@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 import type { AmountValue, DirectiveJson, PostingJson } from "@rustledger/wasm";
 import { perUnitFromTotalCost } from "./total-cost";
+import { roundWithPythonDecimalContext } from "./decimal-context";
 import { utcDate } from "./utc-date";
 
 /**
@@ -87,19 +88,31 @@ function fromSource(source: string): ScaledDecimal {
   return { value: new Amount(source), scale: scaleOf(source) };
 }
 
+/**
+ * Python `Decimal.__add__`: value sum, scale = max of operand scales — then
+ * rounded to the 28-digit context, the way beancount's `Inventory.add_amount`
+ * merge (`pos.units.number + units.number`) is. Without the rounding, exact
+ * multi-term sums erase the dust beancount's intermediate rounding leaves
+ * (a repeating total cost converts at +1e-25 USD, not zero).
+ */
 function addScaled(left: ScaledDecimal, right: ScaledDecimal): ScaledDecimal {
   return {
-    value: left.value.plus(right.value),
+    value: roundWithPythonDecimalContext(left.value.plus(right.value)),
     scale: Math.max(left.scale, right.scale),
   };
 }
 
+/**
+ * Python `Decimal.__mul__`: value product, scale = sum of operand scales —
+ * then rounded to the 28-digit context, the way beancount's
+ * `convert.get_cost` (`cost.number * units.number`) is.
+ */
 function multiplyScaled(
   left: ScaledDecimal,
   right: ScaledDecimal,
 ): ScaledDecimal {
   return {
-    value: left.value.times(right.value),
+    value: roundWithPythonDecimalContext(left.value.times(right.value)),
     scale: left.scale + right.scale,
   };
 }
@@ -293,7 +306,7 @@ function costNumberPerUnit(
     case "per_unit":
       return fromSource(costNumber.value);
     case "per_unit_from_total":
-      return fromSource(costNumber.per_unit);
+      return normalizeEnginePerUnit(costNumber.per_unit);
     case "total": {
       // beancount CostSpec booking: per-unit = total / ABS(units) — see
       // `perUnitFromTotalCost` (should not occur in a booked ledger; `null`
@@ -316,6 +329,23 @@ function costNumberPerUnit(
     default:
       return null;
   }
+}
+
+/**
+ * The engine derives `per_unit` from a total with its own division precision
+ * (29 digits for a repeating quotient); beancount's
+ * `booking_full.compute_cost_number` divides under its 28-digit Decimal
+ * context, so restore that booking here. Values that already fit pass through
+ * untouched — and a user-typed `per_unit` (no division involved, kept exact by
+ * beancount) is never normalized, which is why this applies only to the
+ * engine-derived kind. The scale follows the rounded value so the synthetic
+ * postings below spell the booking the way beancount does.
+ */
+function normalizeEnginePerUnit(source: string): ScaledDecimal {
+  const parsed = fromSource(source);
+  const rounded = roundWithPythonDecimalContext(parsed.value);
+  if (rounded.eq(parsed.value)) return parsed;
+  return { value: rounded, scale: rounded.decimalPlaces() ?? 0 };
 }
 
 // ── balance_by_account ───────────────────────────────────────────────────────
@@ -667,40 +697,43 @@ function conversions(
   date: string,
   inserted?: WeakSet<DirectiveJson>,
 ): DirectiveJson[] {
-  // compute_entries_balance reduced by cost — the net cost across all postings.
-  const costBalance = new Map<string, ScaledDecimal>();
+  // `interpolate.compute_entries_balance(entries, date)` then
+  // `.reduce(convert.get_cost)`: accumulate the full cost-aware lots first and
+  // only then collapse each lot to its cost. Netting each posting's cost
+  // straight into a per-currency bucket would let opposite legs cancel exactly
+  // and erase the dust beancount's per-op 28-digit rounding leaves (a
+  // repeating total cost converts at +1e-25 USD, not zero).
+  const balance = new Inventory();
   for (const entry of directives) {
     if (entry.date >= date) break;
     if (entry.type !== "transaction") continue;
     for (const posting of entry.postings) {
       if (!posting.units) continue;
-      const pos: Position = {
-        number: fromSource(posting.units.number),
-        currency: posting.units.currency,
-        cost: resolveCost(posting),
-      };
-      const cost = positionCost(pos);
-      const existing = costBalance.get(cost.currency);
-      costBalance.set(
-        cost.currency,
-        existing ? addScaled(existing, cost.number) : cost.number,
+      balance.addPosition(
+        fromSource(posting.units.number),
+        posting.units.currency,
+        resolveCost(posting),
       );
     }
   }
+  const reduced = balance.reduceToCost();
 
   // Drop net-zero currencies (Inventory.reduce/is_empty semantics).
-  const nonZero = [...costBalance.entries()].filter(
-    ([, number]) => !number.value.isZero(),
-  );
+  const nonZero = reduced
+    .getPositions()
+    .filter((position) => !position.number.value.isZero());
   if (nonZero.length === 0) return directives;
 
   const lastDate = previousDay(date);
   // Negated residual, at a zero price in the conversion currency.
   const postings: PostingJson[] = nonZero
-    .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
-    .map(([currency, number]) => ({
+    .sort((a, b) => (a.currency < b.currency ? -1 : a.currency > b.currency ? 1 : 0))
+    .map((position) => ({
       account: conversionAccount,
-      units: { number: formatScaled(negateScaled(number)), currency },
+      units: {
+        number: formatScaled(negateScaled(position.number)),
+        currency: position.currency,
+      },
       price: { number: "0", currency: conversionCurrency },
     }));
 
@@ -724,9 +757,12 @@ function conversions(
   ];
 }
 
-function describeBalance(entries: Array<[string, ScaledDecimal]>): string {
-  return entries
-    .map(([currency, number]) => `${formatScaled(number)} ${currency}`)
+function describeBalance(positions: Position[]): string {
+  return positions
+    .map(
+      (position) =>
+        `${formatScaled(position.number)} ${position.currency}`,
+    )
     .join(", ");
 }
 
