@@ -89,7 +89,7 @@ export class PlaidQueryResolver {
   async getUnsyncedPlaidTransactions(
     @Arg("ledgerId", () => String) ledgerId: string,
     @Arg("accountId", () => String, { nullable: true })
-    accountId: string | undefined,
+    accountId: string | null | undefined,
     @Ctx() ctx: IContext,
     // Number, like the catalog lists: the service refuses a non-integer as
     // BAD_USER_INPUT, the code REST and MCP give it (w23/m36).
@@ -121,7 +121,7 @@ export class PlaidQueryResolver {
   async suggestPlaidTransactionCategories(
     @Arg("ledgerId", () => String) ledgerId: string,
     @Arg("accountId", () => String, { nullable: true })
-    accountId: string | undefined,
+    accountId: string | null | undefined,
     @Ctx() ctx: IContext,
   ): Promise<CategorySuggestion[]> {
     const identity = ctx.getCurrentIdentity();

@@ -180,14 +180,14 @@ export interface IPlaidItemService {
   ): Promise<PlaidAccountWithInstitutionResult[]>;
   getUnsyncedTransactions(
     identity: Identity,
-    accountId: string | undefined,
+    accountId: string | null | undefined,
     ledgerId: string,
     paging?: StagedPage,
   ): Promise<PlaidTransactionResult[]>;
   suggestCategories(
     identity: Identity,
     ledgerId: string,
-    accountId?: string,
+    accountId?: string | null,
   ): Promise<CategorySuggestion[]>;
   suggestAccountMapping(
     identity: Identity,
@@ -480,7 +480,7 @@ export class PlaidItemService implements IPlaidItemService {
     identity: Identity,
     ledgerId: string,
     action: AuthorizationAction,
-    accountId?: string,
+    accountId?: string | null,
   ): Promise<{
     transactions: PlaidTransaction[];
     accountsById: Map<
@@ -488,7 +488,7 @@ export class PlaidItemService implements IPlaidItemService {
       { accountName: string; institutionName: string; ledgerAccount?: string }
     >;
   }> {
-    if (accountId) {
+    if (accountId !== undefined && accountId !== null) {
       const { account, item } = await this.authorizedAccount(
         identity,
         action,
@@ -592,7 +592,7 @@ export class PlaidItemService implements IPlaidItemService {
 
   async getUnsyncedTransactions(
     identity: Identity,
-    accountId: string | undefined,
+    accountId: string | null | undefined,
     ledgerId: string,
     paging: StagedPage = {},
   ): Promise<PlaidTransactionResult[]> {
@@ -629,7 +629,7 @@ export class PlaidItemService implements IPlaidItemService {
   async suggestCategories(
     identity: Identity,
     ledgerId: string,
-    accountId?: string,
+    accountId?: string | null,
   ): Promise<CategorySuggestion[]> {
     const { userId } = identity;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);

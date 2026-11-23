@@ -468,6 +468,34 @@ describe("PlaidItemService", () => {
         }),
       ]);
     });
+
+    it.each(["", "   "])(
+      "refuses blank accountId %j before authorization or lookup",
+      async (blankAccountId) => {
+        await expect(
+          service.getUnsyncedTransactions(
+            systemIdentity("user_owner"),
+            blankAccountId,
+            "owner/ledger",
+          ),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: expect.objectContaining({ field: "accountId" }),
+        });
+
+        expect(mockAuthorization.authorizeOrThrow).not.toHaveBeenCalled();
+        expect(mockPlaidAccountModel.getById).not.toHaveBeenCalled();
+        expect(
+          mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId,
+        ).not.toHaveBeenCalled();
+        expect(
+          mockPlaidTransactionModel.getUnsyncedByAccountId,
+        ).not.toHaveBeenCalled();
+        expect(
+          mockPlaidTransactionModel.getUnsyncedByAccountIds,
+        ).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe("createLinkToken", () => {
@@ -1066,6 +1094,58 @@ describe("PlaidItemService", () => {
         ),
       ).rejects.toThrow(NotFoundError);
     });
+
+    it.each(["", "   "])(
+      "refuses blank accountId %j before authorization or lookup",
+      async (blankAccountId) => {
+        await expect(
+          service.suggestCategories(
+            systemIdentity("user_owner"),
+            "owner/ledger",
+            blankAccountId,
+          ),
+        ).rejects.toMatchObject({
+          category: "BAD_USER_INPUT",
+          metadata: expect.objectContaining({ field: "accountId" }),
+        });
+
+        expect(mockAuthorization.authorizeOrThrow).not.toHaveBeenCalled();
+        expect(mockPlaidAccountModel.getById).not.toHaveBeenCalled();
+        expect(
+          mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId,
+        ).not.toHaveBeenCalled();
+        expect(
+          mockPlaidTransactionModel.getUnsyncedByAccountId,
+        ).not.toHaveBeenCalled();
+        expect(
+          mockPlaidTransactionModel.getUnsyncedByAccountIds,
+        ).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([undefined, null])(
+      "aggregates across enabled accounts when accountId is %s",
+      async (omittedAccountId) => {
+        mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId.mockResolvedValue(
+          [],
+        );
+        mockPlaidTransactionModel.getUnsyncedByAccountIds.mockResolvedValue([]);
+
+        const result = await service.suggestCategories(
+          systemIdentity("user_owner"),
+          "owner/ledger",
+          omittedAccountId,
+        );
+
+        expect(result).toEqual([]);
+        expect(
+          mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId,
+        ).toHaveBeenCalledWith(mockDb, 42, "user_owner");
+        expect(
+          mockPlaidTransactionModel.getUnsyncedByAccountIds,
+        ).toHaveBeenCalledWith(mockDb, []);
+      },
+    );
   });
 
   describe("suggestAccountMapping", () => {
