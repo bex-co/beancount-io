@@ -463,7 +463,7 @@ const ukCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Задавайте питання про фінансові дані {ledgerName} за допомогою ШІ. Аналізуйте транзакції, досліджуйте залишки на рахунках, розумійте тенденції та отримуйте миттєві бухгалтерські інсайти.",
+      "Перевіряйте баланси й транзакції або прикріплюйте чеки та виписки (PDF, CSV, зображення), щоб оновлювати {ledgerName}.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

@@ -456,7 +456,7 @@ const nlCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Stel vragen over de financiële gegevens van {ledgerName} met AI. Analyseer transacties, verken rekeningsaldi, begrijp trends en krijg directe boekhoudkundige inzichten.",
+      "Raadpleeg saldi, controleer transacties of voeg bonnen en afschriften (PDF, CSV, afbeeldingen) toe om {ledgerName} bij te werken.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

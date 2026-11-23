@@ -6,7 +6,7 @@ const koAiAgent: Record<string, TranslationEntry> = {
     description: "Title for AI chat feature",
   },
   "aiAgent.placeholder": {
-    message: "Beancount에 대해 무엇이든 물어보세요...",
+    message: "원장에 대해 질문하거나 영수증·명세서를 첨부하세요…",
     description: "Input placeholder text",
   },
   "aiAgent.readOnlyTitle": {
@@ -236,7 +236,7 @@ const koAiAgent: Record<string, TranslationEntry> = {
     description: "Fallback error for a failed AI file edit",
   },
   "aiAgent.starterPromptExpenses": {
-    message: "지난달 가장 큰 지출은 무엇이었나요?",
+    message: "지난달 주요 지출 분석하기",
     description: "Starter prompt chip asking about top recent expenses",
   },
   "aiAgent.starterPromptNetWorth": {
@@ -248,9 +248,32 @@ const koAiAgent: Record<string, TranslationEntry> = {
     description: "Starter prompt chip asking for current asset allocation",
   },
   "aiAgent.starterPromptReview": {
-    message: "미분류되거나 특이한 거래 내역을 확인해 주세요",
+    message: "미분류 또는 이상 거래 찾기",
     description:
       "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
+  "aiAgent.attachFormatsHint": {
+    message: "PDF, CSV 또는 영수증 이미지",
+    description:
+      "Short hint beside the attach button showing supported file types",
+  },
+  "aiAgent.enterToSend": {
+    message: "Enter로 전송",
+    description: "Keyboard shortcut hint beside the send button",
+  },
+  "aiAgent.newChat": {
+    message: "새 대화",
+    description: "Button label to reset and start a new AI agent conversation",
+  },
+  "aiAgent.generating": {
+    message: "생성 중…",
+    description:
+      "Short status label beside the stop button while a response is generating",
+  },
+  "aiAgent.restorePrompt": {
+    message: "프롬프트 복원",
+    description:
+      "Button label in error banner to copy the failed message back into the composer",
   },
 };
 

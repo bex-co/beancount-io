@@ -455,7 +455,7 @@ const bgCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Задавайте въпроси за финансовите данни на {ledgerName} с помощта на ИИ. Анализирайте транзакции, разглеждайте салда по сметки, разбирайте тенденции и получавайте мигновени счетоводни прозрения.",
+      "Проверявайте салда и транзакции или прикачвайте касови бележки и извлечения (PDF, CSV, изображения), за да актуализирате {ledgerName}.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

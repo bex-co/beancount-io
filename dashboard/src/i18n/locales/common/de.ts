@@ -457,7 +457,7 @@ const deCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Stellen Sie Fragen zu den Finanzdaten von {ledgerName} mit KI. Analysieren Sie Transaktionen, erkunden Sie Kontosalden, verstehen Sie Trends und erhalten Sie sofortige Buchhaltungseinblicke.",
+      "Salden abfragen, Buchungen prüfen oder Belege und Kontoauszüge (PDF, CSV, Bilder) anhängen, um {ledgerName} zu aktualisieren.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

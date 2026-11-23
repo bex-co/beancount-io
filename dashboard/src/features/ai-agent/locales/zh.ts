@@ -9,7 +9,7 @@ const zhAiAgent: Record<string, TranslationEntry> = {
     description: "Title for AI chat feature",
   },
   "aiAgent.placeholder": {
-    message: "询问我关于 Beancount 的任何问题...",
+    message: "询问关于账本的问题，或上传收据与对账单…",
     description: "Input placeholder text",
   },
   "aiAgent.readOnlyTitle": {
@@ -238,7 +238,7 @@ const zhAiAgent: Record<string, TranslationEntry> = {
     description: "Fallback error for a failed AI file edit",
   },
   "aiAgent.starterPromptExpenses": {
-    message: "上个月我最大的支出有哪些？",
+    message: "分析上个月的主要支出",
     description: "Starter prompt chip asking about top recent expenses",
   },
   "aiAgent.starterPromptNetWorth": {
@@ -250,9 +250,32 @@ const zhAiAgent: Record<string, TranslationEntry> = {
     description: "Starter prompt chip asking for current asset allocation",
   },
   "aiAgent.starterPromptReview": {
-    message: "检查未分类或异常的账目",
+    message: "查找未分类或异常分录",
     description:
       "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
+  "aiAgent.attachFormatsHint": {
+    message: "支持 PDF、CSV 或收据图片",
+    description:
+      "Short hint beside the attach button showing supported file types",
+  },
+  "aiAgent.enterToSend": {
+    message: "按 Enter 发送",
+    description: "Keyboard shortcut hint beside the send button",
+  },
+  "aiAgent.newChat": {
+    message: "新对话",
+    description: "Button label to reset and start a new AI agent conversation",
+  },
+  "aiAgent.generating": {
+    message: "生成中…",
+    description:
+      "Short status label beside the stop button while a response is generating",
+  },
+  "aiAgent.restorePrompt": {
+    message: "恢复问题",
+    description:
+      "Button label in error banner to copy the failed message back into the composer",
   },
 };
 

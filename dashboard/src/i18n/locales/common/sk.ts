@@ -463,7 +463,7 @@ const skCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Pýtajte sa otázky o finančných údajoch {ledgerName} pomocou AI. Analyzujte transakcie, preskúmajte zostatky účtov, pochopte trendy a získajte okamžité účtovné poznatky.",
+      "Prezerajte zostatky, kontrolujte transakcie alebo priložte bločky a výpisy (PDF, CSV, obrázky) na aktualizáciu {ledgerName}.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

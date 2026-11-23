@@ -6,7 +6,7 @@ const jaAiAgent: Record<string, TranslationEntry> = {
     description: "Title for AI chat feature",
   },
   "aiAgent.placeholder": {
-    message: "Beancountについて何でも聞いてください...",
+    message: "元帳について質問するか、領収書や明細を添付してください…",
     description: "Input placeholder text",
   },
   "aiAgent.readOnlyTitle": {
@@ -236,7 +236,7 @@ const jaAiAgent: Record<string, TranslationEntry> = {
     description: "Fallback error for a failed AI file edit",
   },
   "aiAgent.starterPromptExpenses": {
-    message: "先月の主な支出は何でしたか？",
+    message: "先月の主な支出を分析して",
     description: "Starter prompt chip asking about top recent expenses",
   },
   "aiAgent.starterPromptNetWorth": {
@@ -248,9 +248,32 @@ const jaAiAgent: Record<string, TranslationEntry> = {
     description: "Starter prompt chip asking for current asset allocation",
   },
   "aiAgent.starterPromptReview": {
-    message: "未分類や不自然な仕訳がないか確認してください",
+    message: "未分類や不自然な仕訳を確認して",
     description:
       "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
+  "aiAgent.attachFormatsHint": {
+    message: "PDF・CSV・領収書画像",
+    description:
+      "Short hint beside the attach button showing supported file types",
+  },
+  "aiAgent.enterToSend": {
+    message: "Enterで送信",
+    description: "Keyboard shortcut hint beside the send button",
+  },
+  "aiAgent.newChat": {
+    message: "新しいチャット",
+    description: "Button label to reset and start a new AI agent conversation",
+  },
+  "aiAgent.generating": {
+    message: "生成中…",
+    description:
+      "Short status label beside the stop button while a response is generating",
+  },
+  "aiAgent.restorePrompt": {
+    message: "入力を復元",
+    description:
+      "Button label in error banner to copy the failed message back into the composer",
   },
 };
 

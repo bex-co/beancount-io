@@ -455,7 +455,7 @@ const faCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "با استفاده از هوش مصنوعی در مورد داده‌های مالی {ledgerName} سوال بپرسید. تراکنش‌ها را تحلیل کنید، موجودی حساب‌ها را بررسی کنید، روندها را درک کنید و بینش‌های حسابداری فوری دریافت کنید.",
+      "مانده حساب‌ها را بررسی کنید، تراکنش‌ها را ببینید یا رسید و صورت‌حساب (PDF، CSV، تصویر) پیوست کنید تا {ledgerName} به‌روز شود.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

@@ -9,7 +9,7 @@ const frAiAgent: Record<string, TranslationEntry> = {
     description: "Title for AI chat feature",
   },
   "aiAgent.placeholder": {
-    message: "Posez-moi des questions sur Beancount...",
+    message: "Interrogez votre grand livre ou joignez un reçu ou un relevé…",
     description: "Input placeholder text",
   },
   "aiAgent.readOnlyTitle": {
@@ -279,7 +279,7 @@ const frAiAgent: Record<string, TranslationEntry> = {
     description: "Fallback error for a failed AI file edit",
   },
   "aiAgent.starterPromptExpenses": {
-    message: "Quelles ont été mes principales dépenses le mois dernier ?",
+    message: "Détailler les dépenses du mois dernier",
     description: "Starter prompt chip asking about top recent expenses",
   },
   "aiAgent.starterPromptNetWorth": {
@@ -291,9 +291,32 @@ const frAiAgent: Record<string, TranslationEntry> = {
     description: "Starter prompt chip asking for current asset allocation",
   },
   "aiAgent.starterPromptReview": {
-    message: "Vérifie les écritures non catégorisées ou inhabituelles",
+    message: "Repérer les écritures non classées ou inhabituelles",
     description:
       "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
+  "aiAgent.attachFormatsHint": {
+    message: "PDF, CSV ou photo de reçu",
+    description:
+      "Short hint beside the attach button showing supported file types",
+  },
+  "aiAgent.enterToSend": {
+    message: "Entrée pour envoyer",
+    description: "Keyboard shortcut hint beside the send button",
+  },
+  "aiAgent.newChat": {
+    message: "Nouvelle discussion",
+    description: "Button label to reset and start a new AI agent conversation",
+  },
+  "aiAgent.generating": {
+    message: "Génération…",
+    description:
+      "Short status label beside the stop button while a response is generating",
+  },
+  "aiAgent.restorePrompt": {
+    message: "Restaurer le message",
+    description:
+      "Button label in error banner to copy the failed message back into the composer",
   },
 };
 

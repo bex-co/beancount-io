@@ -450,7 +450,7 @@ const jaCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "AIを使用して{ledgerName}の財務データについて質問します。取引の分析、口座残高の確認、トレンドの把握、会計インサイトの即時取得が可能です。",
+      "残高の照会や取引の確認、領収書や明細（PDF・CSV・画像）の添付で {ledgerName} を更新できます。",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

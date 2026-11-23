@@ -454,7 +454,7 @@ const enCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Ask questions about {ledgerName} financial data using AI. Analyze transactions, explore account balances, understand trends, and get instant accounting insights.",
+      "Query balances, inspect transactions, or attach receipts and statements (PDF, CSV, images) to update {ledgerName}.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

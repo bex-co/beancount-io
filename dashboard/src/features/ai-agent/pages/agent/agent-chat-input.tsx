@@ -3,7 +3,7 @@ import { Button } from "@/common/components/ui/button";
 import { Textarea } from "@/common/components/ui/textarea";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
-  CornerDownLeft,
+  ArrowUp,
   FileText,
   FileImage,
   Loader2,
@@ -23,6 +23,7 @@ interface AgentChatInputProps {
   stagedFiles?: StagedFile[];
   onFilesSelected?: (files: File[]) => void;
   onRemoveFile?: (id: string) => void;
+  inputRef?: React.RefObject<HTMLTextAreaElement | null>;
 }
 
 const INTERACTIVE_TARGET_SELECTOR = [
@@ -62,9 +63,9 @@ function StagedFileChip({
   const isImage = stagedFile.file.type.startsWith("image/");
 
   return (
-    <div className="flex max-w-45 items-center gap-1.5 rounded-lg border border-border/70 bg-muted/50 py-1 pl-2 pr-1 text-xs">
+    <div className="flex max-w-64 items-center gap-2 rounded-lg border border-border/80 bg-muted/60 py-1 pl-2 pr-1 text-xs sm:max-w-80 dark:border-white/15 dark:bg-card/80">
       {stagedFile.uploading ? (
-        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground" />
+        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-muted-foreground motion-reduce:animate-none" />
       ) : stagedFile.error ? (
         <span className="h-3.5 w-3.5 shrink-0 text-xs font-bold text-destructive">
           !
@@ -73,14 +74,14 @@ function StagedFileChip({
         <img
           src={stagedFile.previewObjectUrl}
           alt=""
-          className="h-5 w-5 shrink-0 rounded-full object-cover"
+          className="h-6 w-6 shrink-0 rounded-md border border-border/70 object-cover"
         />
       ) : isImage ? (
-        <FileImage className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <FileImage className="h-4 w-4 shrink-0 text-muted-foreground" />
       ) : (
-        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
       )}
-      <span className="truncate text-foreground/80">
+      <span className="truncate font-medium text-foreground/90">
         {stagedFile.file.name}
       </span>
       {stagedFile.error && (
@@ -91,12 +92,12 @@ function StagedFileChip({
       <button
         type="button"
         onClick={onRemove}
-        className="ml-0.5 shrink-0 cursor-pointer rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="ml-0.5 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors motion-reduce:transition-none hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:size-8"
         aria-label={t("aiAgent.removeAttachment", {
           fileName: stagedFile.file.name,
         })}
       >
-        <X className="h-3 w-3" />
+        <X className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
     </div>
   );
@@ -112,9 +113,11 @@ export function AgentChatInput({
   stagedFiles = [],
   onFilesSelected,
   onRemoveFile,
+  inputRef,
 }: AgentChatInputProps) {
   const { t } = useTranslations();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const internalTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = inputRef ?? internalTextareaRef;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Autofocus on mount — but not on touch devices, where focusing pops the
@@ -204,7 +207,10 @@ export function AgentChatInput({
     !anyUploading;
 
   return (
-    <div className="rounded-2xl border border-border/80 bg-background/95 px-3 py-2.5 shadow-lg shadow-black/5 transition-[border-color,box-shadow] focus-within:border-ring/60 focus-within:shadow-xl focus-within:shadow-black/5 dark:shadow-black/20 dark:focus-within:shadow-black/25 sm:px-3.5">
+    <div
+      data-focus-ring="composer"
+      className="rounded-2xl border border-input bg-card px-4 pt-3.5 pb-2.5 shadow-md shadow-black/5 transition-[border-color,box-shadow] motion-reduce:transition-none focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/25 dark:border-input dark:bg-secondary/65 dark:shadow-xl dark:shadow-black/40 dark:focus-within:border-primary dark:focus-within:ring-primary/30"
+    >
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -236,58 +242,80 @@ export function AgentChatInput({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
-        className="min-h-10 max-h-30 resize-none border-0 bg-transparent p-1 text-base leading-6 shadow-none placeholder:truncate placeholder:text-muted-foreground/70 focus-visible:ring-0 md:text-base dark:bg-transparent"
+        className="min-h-12 max-h-36 resize-none border-0 bg-transparent px-0 py-1 text-base leading-6 shadow-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-base dark:bg-transparent"
         rows={1}
       />
 
       {/* Bottom toolbar */}
-      <div className="mt-1 flex items-center justify-between">
-        <Button
-          type="button"
-          size="icon-sm"
-          variant="ghost"
-          disabled={disabled}
-          className="rounded-lg text-muted-foreground hover:text-foreground pointer-coarse:size-11"
-          onClick={() => fileInputRef.current?.click()}
-          aria-label={t("aiAgent.attachFile")}
-        >
-          <Paperclip className="h-4 w-4" />
-        </Button>
-
-        {disabled && onStop ? (
+      <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/80 pt-2 dark:border-white/12">
+        <div className="flex min-w-0 items-center gap-2">
           <Button
             type="button"
-            size="icon-sm"
-            className="shrink-0 rounded-full pointer-coarse:size-11"
-            aria-label={t("aiAgent.stop")}
-            onClick={() => {
-              onStop();
-              requestAnimationFrame(() => {
-                textareaRef.current?.focus();
-              });
-            }}
+            size="sm"
+            variant="ghost"
+            disabled={disabled}
+            className="-ms-2 gap-1.5 rounded-lg px-2.5 text-muted-foreground hover:text-foreground pointer-coarse:min-h-11"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label={t("aiAgent.attachFile")}
           >
-            <Square className="h-3.5 w-3.5 fill-current" />
+            <Paperclip className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="text-xs font-medium">
+              {t("aiAgent.attachFile")}
+            </span>
           </Button>
-        ) : (
-          <Button
-            type="submit"
-            size="icon-sm"
-            disabled={!canSend}
-            className="shrink-0 rounded-full disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 pointer-coarse:size-11"
-            aria-label={t("aiAgent.ask")}
-            onClick={(e) => {
-              e.preventDefault();
-              onSubmit();
-            }}
+          <span
+            className={`hidden truncate text-xs text-muted-foreground sm:inline ${disabled ? "opacity-50" : ""}`}
           >
-            {anyUploading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <CornerDownLeft className="h-4 w-4" />
-            )}
-          </Button>
-        )}
+            {t("aiAgent.attachFormatsHint")}
+          </span>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2.5">
+          {disabled && onStop ? (
+            <span className="hidden text-xs text-muted-foreground sm:inline">
+              {t("aiAgent.generating")}
+            </span>
+          ) : (
+            <span className="hidden text-xs text-muted-foreground pointer-fine:sm:inline">
+              {t("aiAgent.enterToSend")}
+            </span>
+          )}
+          {disabled && onStop ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              className="shrink-0 rounded-full bg-foreground text-background shadow-xs hover:bg-foreground/90 pointer-coarse:size-11"
+              aria-label={t("aiAgent.stop")}
+              onClick={() => {
+                onStop();
+                requestAnimationFrame(() => {
+                  textareaRef.current?.focus();
+                });
+              }}
+            >
+              <Square className="h-3.5 w-3.5 fill-current" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!canSend}
+              className="shrink-0 rounded-full shadow-xs transition-colors motion-reduce:transition-none disabled:border disabled:border-border/75 disabled:bg-muted/80 disabled:text-muted-foreground disabled:opacity-100 pointer-coarse:size-11"
+              aria-label={t("aiAgent.ask")}
+              onClick={(e) => {
+                e.preventDefault();
+                onSubmit();
+              }}
+            >
+              {anyUploading ? (
+                <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+              ) : (
+                <ArrowUp className="h-4 w-4" aria-hidden="true" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

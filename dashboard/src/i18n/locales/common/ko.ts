@@ -450,7 +450,7 @@ const koCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "AI를 사용하여 {ledgerName}의 재무 데이터에 대해 질문합니다. 거래 분석, 계좌 잔액 탐색, 트렌드 이해, 즉각적인 회계 인사이트를 얻을 수 있습니다.",
+      "잔액을 조회하고 거래를 점검하거나 영수증과 명세서(PDF, CSV, 이미지)를 첨부해 {ledgerName} 장부를 업데이트하세요.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

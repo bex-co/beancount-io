@@ -9,7 +9,8 @@ const skAiAgent: Record<string, TranslationEntry> = {
     description: "Title for AI chat feature",
   },
   "aiAgent.placeholder": {
-    message: "Opýtajte sa ma na čokoľvek o Beancount...",
+    message:
+      "Opýtajte sa na svoju účtovnú knihu alebo priložte doklad či výpis…",
     description: "Input placeholder text",
   },
   "aiAgent.readOnlyTitle": {
@@ -299,7 +300,7 @@ const skAiAgent: Record<string, TranslationEntry> = {
     description: "Fallback error for a failed AI file edit",
   },
   "aiAgent.starterPromptExpenses": {
-    message: "Aké boli moje najväčšie výdavky minulý mesiac?",
+    message: "Rozpísať výdavky za minulý mesiac",
     description: "Starter prompt chip asking about top recent expenses",
   },
   "aiAgent.starterPromptNetWorth": {
@@ -311,9 +312,32 @@ const skAiAgent: Record<string, TranslationEntry> = {
     description: "Starter prompt chip asking for current asset allocation",
   },
   "aiAgent.starterPromptReview": {
-    message: "Skontroluj nekategorizované alebo nezvyčajné položky",
+    message: "Nájsť nezaradené alebo nezvyčajné položky",
     description:
       "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
+  "aiAgent.attachFormatsHint": {
+    message: "PDF, CSV alebo fotografia dokladu",
+    description:
+      "Short hint beside the attach button showing supported file types",
+  },
+  "aiAgent.enterToSend": {
+    message: "Enter na odoslanie",
+    description: "Keyboard shortcut hint beside the send button",
+  },
+  "aiAgent.newChat": {
+    message: "Nový čet",
+    description: "Button label to reset and start a new AI agent conversation",
+  },
+  "aiAgent.generating": {
+    message: "Generuje sa…",
+    description:
+      "Short status label beside the stop button while a response is generating",
+  },
+  "aiAgent.restorePrompt": {
+    message: "Obnoviť otázku",
+    description:
+      "Button label in error banner to copy the failed message back into the composer",
   },
 };
 

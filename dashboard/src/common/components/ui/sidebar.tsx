@@ -615,7 +615,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
       onKeyDown={handleKeyDown}
       title={t("common.toggleSidebar")}
       className={cn(
-        "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] xl:flex",
+        "hover:after:bg-sidebar-border focus-visible:ring-ring focus-visible:after:bg-ring absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear focus-visible:ring-2 group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] xl:flex",
         "cursor-col-resize touch-none select-none",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",

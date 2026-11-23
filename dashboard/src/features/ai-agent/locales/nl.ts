@@ -9,7 +9,7 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     description: "Title for AI chat feature",
   },
   "aiAgent.placeholder": {
-    message: "Vraag me iets over Beancount...",
+    message: "Vraag over je grootboek of voeg een bon of afschrift toe…",
     description: "Input placeholder text",
   },
   "aiAgent.readOnlyTitle": {
@@ -259,7 +259,7 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     description: "Fallback error for a failed AI file edit",
   },
   "aiAgent.starterPromptExpenses": {
-    message: "Wat waren mijn grootste uitgaven vorige maand?",
+    message: "Uitgaven van vorige maand uitsplitsen",
     description: "Starter prompt chip asking about top recent expenses",
   },
   "aiAgent.starterPromptNetWorth": {
@@ -271,9 +271,32 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     description: "Starter prompt chip asking for current asset allocation",
   },
   "aiAgent.starterPromptReview": {
-    message: "Controleer op niet-gecategoriseerde of ongebruikelijke boekingen",
+    message: "Ongecategoriseerde of ongebruikelijke boekingen vinden",
     description:
       "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
+  "aiAgent.attachFormatsHint": {
+    message: "PDF, CSV of bonafbeelding",
+    description:
+      "Short hint beside the attach button showing supported file types",
+  },
+  "aiAgent.enterToSend": {
+    message: "Enter om te verzenden",
+    description: "Keyboard shortcut hint beside the send button",
+  },
+  "aiAgent.newChat": {
+    message: "Nieuwe chat",
+    description: "Button label to reset and start a new AI agent conversation",
+  },
+  "aiAgent.generating": {
+    message: "Genereren…",
+    description:
+      "Short status label beside the stop button while a response is generating",
+  },
+  "aiAgent.restorePrompt": {
+    message: "Vraag herstellen",
+    description:
+      "Button label in error banner to copy the failed message back into the composer",
   },
 };
 

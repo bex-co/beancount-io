@@ -460,7 +460,7 @@ const frCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Posez des questions sur les données financières de {ledgerName} en utilisant l'IA. Analysez les transactions, explorez les soldes des comptes, comprenez les tendances et obtenez des informations comptables instantanées.",
+      "Consultez vos soldes, vérifiez vos opérations ou joignez des reçus et relevés (PDF, CSV, images) pour mettre à jour {ledgerName}.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

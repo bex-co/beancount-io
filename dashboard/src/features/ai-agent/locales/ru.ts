@@ -9,7 +9,7 @@ const ruAiAgent: Record<string, TranslationEntry> = {
     description: "Title for AI chat feature",
   },
   "aiAgent.placeholder": {
-    message: "Спросите меня о Beancount...",
+    message: "Спросите о вашей книге учёта или прикрепите чек либо выписку…",
     description: "Input placeholder text",
   },
   "aiAgent.readOnlyTitle": {
@@ -299,7 +299,7 @@ const ruAiAgent: Record<string, TranslationEntry> = {
     description: "Fallback error for a failed AI file edit",
   },
   "aiAgent.starterPromptExpenses": {
-    message: "Какими были мои главные расходы в прошлом месяце?",
+    message: "Разобрать расходы за прошлый месяц",
     description: "Starter prompt chip asking about top recent expenses",
   },
   "aiAgent.starterPromptNetWorth": {
@@ -311,9 +311,32 @@ const ruAiAgent: Record<string, TranslationEntry> = {
     description: "Starter prompt chip asking for current asset allocation",
   },
   "aiAgent.starterPromptReview": {
-    message: "Проверь некатегоризированные или необычные записи",
+    message: "Найти некатегоризированные или необычные проводки",
     description:
       "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
+  "aiAgent.attachFormatsHint": {
+    message: "PDF, CSV или фото чека",
+    description:
+      "Short hint beside the attach button showing supported file types",
+  },
+  "aiAgent.enterToSend": {
+    message: "Enter для отправки",
+    description: "Keyboard shortcut hint beside the send button",
+  },
+  "aiAgent.newChat": {
+    message: "Новый чат",
+    description: "Button label to reset and start a new AI agent conversation",
+  },
+  "aiAgent.generating": {
+    message: "Генерация…",
+    description:
+      "Short status label beside the stop button while a response is generating",
+  },
+  "aiAgent.restorePrompt": {
+    message: "Восстановить запрос",
+    description:
+      "Button label in error banner to copy the failed message back into the composer",
   },
 };
 

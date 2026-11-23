@@ -441,7 +441,7 @@ const zhCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "使用AI询问关于{ledgerName}的财务数据。分析交易、查看账户余额、了解趋势并获得即时会计洞察。",
+      "查询余额、核对交易，或上传收据与对账单（PDF、CSV、图片）来更新 {ledgerName}。",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

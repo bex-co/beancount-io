@@ -458,7 +458,7 @@ const esCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Haz preguntas sobre los datos financieros de {ledgerName} usando IA. Analiza transacciones, explora saldos de cuentas, comprende tendencias y obtén información contable instantánea.",
+      "Consulta saldos, revisa movimientos o adjunta recibos y extractos (PDF, CSV, imágenes) para actualizar {ledgerName}.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

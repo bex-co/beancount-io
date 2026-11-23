@@ -459,7 +459,7 @@ const caCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Fes preguntes sobre les dades financeres de {ledgerName} utilitzant IA. Analitza transaccions, explora saldos de comptes, comprèn tendències i obtén informació comptable instantània.",
+      "Consulta saldos, revisa moviments o adjunta rebuts i extractes (PDF, CSV, imatges) per actualitzar {ledgerName}.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

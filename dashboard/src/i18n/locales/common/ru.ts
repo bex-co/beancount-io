@@ -462,7 +462,7 @@ const ruCommon: Record<string, TranslationEntry> = {
   },
   "common.pageDescription.ask": {
     message:
-      "Задавайте вопросы о финансовых данных {ledgerName} с помощью ИИ. Анализируйте транзакции, изучайте остатки на счетах, понимайте тенденции и получайте мгновенные бухгалтерские инсайты.",
+      "Проверяйте балансы и транзакции или прикрепляйте чеки и выписки (PDF, CSV, изображения), чтобы обновлять {ledgerName}.",
     description: "Description for AI ask page",
   },
   "common.pageDescription.balanceSheet": {

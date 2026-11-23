@@ -109,9 +109,53 @@
   @apply my-3 border-l-2 pl-3;
 }
 
+.agent-message-markdown div:has(> table) {
+  @apply my-3.5 max-w-full overflow-x-auto rounded-xl border border-input/75 bg-card shadow-xs;
+  background-image:
+    linear-gradient(to right, var(--card), var(--card)),
+    linear-gradient(to right, var(--card), var(--card)),
+    linear-gradient(to right, rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0)),
+    linear-gradient(to left, rgba(0, 0, 0, 0.14), rgba(0, 0, 0, 0));
+  background-position:
+    left center,
+    right center,
+    left center,
+    right center;
+  background-repeat: no-repeat;
+  background-size:
+    16px 100%,
+    16px 100%,
+    10px 100%,
+    10px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.agent-message-markdown table {
+  @apply m-0 w-full min-w-0 border-collapse;
+}
+
 .agent-message-markdown th,
 .agent-message-markdown td {
-  @apply px-3 py-2 text-base;
+  @apply border-x-0 border-t-0 border-b border-border/80 px-2 py-2 text-[13px] leading-snug sm:px-3.5 sm:py-2.5 sm:text-[15px];
+}
+
+.agent-message-markdown tr:last-child td {
+  @apply border-b-0;
+}
+
+.agent-message-markdown th {
+  @apply bg-muted/70 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs;
+}
+
+.agent-message-markdown td code {
+  @apply whitespace-nowrap px-1 py-0.5 text-[11px] sm:text-[13px];
+}
+
+.agent-message-markdown th[style*="text-align: right"],
+.agent-message-markdown td[style*="text-align: right"],
+.agent-message-markdown th[align="right"],
+.agent-message-markdown td[align="right"] {
+  @apply whitespace-nowrap tabular-nums;
 }
 
 /* Dark mode adjustments */
@@ -125,4 +169,12 @@
 
 .dark .prose blockquote {
   @apply border-muted-foreground/20 text-muted-foreground;
+}
+
+.dark .agent-message-markdown div:has(> table) {
+  @apply border-input/70 bg-card;
+}
+
+.dark .agent-message-markdown th {
+  @apply bg-secondary/75;
 }

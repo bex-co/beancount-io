@@ -9,7 +9,7 @@ const esAiAgent: Record<string, TranslationEntry> = {
     description: "Title for AI chat feature",
   },
   "aiAgent.placeholder": {
-    message: "Pregúntame cualquier cosa sobre Beancount...",
+    message: "Pregunta sobre tu libro contable o adjunta un recibo o extracto…",
     description: "Input placeholder text",
   },
   "aiAgent.readOnlyTitle": {
@@ -279,7 +279,7 @@ const esAiAgent: Record<string, TranslationEntry> = {
     description: "Fallback error for a failed AI file edit",
   },
   "aiAgent.starterPromptExpenses": {
-    message: "¿Cuáles fueron mis mayores gastos el mes pasado?",
+    message: "Desglosar los gastos del mes pasado",
     description: "Starter prompt chip asking about top recent expenses",
   },
   "aiAgent.starterPromptNetWorth": {
@@ -291,9 +291,32 @@ const esAiAgent: Record<string, TranslationEntry> = {
     description: "Starter prompt chip asking for current asset allocation",
   },
   "aiAgent.starterPromptReview": {
-    message: "Revisa si hay movimientos sin categoría o inusuales",
+    message: "Buscar asientos sin categoría o inusuales",
     description:
       "Starter prompt chip asking to review uncategorized or unusual entries",
+  },
+  "aiAgent.attachFormatsHint": {
+    message: "PDF, CSV o imagen de recibo",
+    description:
+      "Short hint beside the attach button showing supported file types",
+  },
+  "aiAgent.enterToSend": {
+    message: "Enter para enviar",
+    description: "Keyboard shortcut hint beside the send button",
+  },
+  "aiAgent.newChat": {
+    message: "Nuevo chat",
+    description: "Button label to reset and start a new AI agent conversation",
+  },
+  "aiAgent.generating": {
+    message: "Generando…",
+    description:
+      "Short status label beside the stop button while a response is generating",
+  },
+  "aiAgent.restorePrompt": {
+    message: "Restaurar consulta",
+    description:
+      "Button label in error banner to copy the failed message back into the composer",
   },
 };
 
