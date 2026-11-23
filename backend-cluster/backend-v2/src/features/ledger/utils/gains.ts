@@ -76,17 +76,26 @@ const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 function parseBound(value: string, name: "from-date" | "to-date"): string {
   const match = ISO_DATE.exec(value);
-  // The round trip rejects rollovers (`2024-13-01`, `2024-02-30`):
-  // `Date.UTC` never yields NaN for four/two/two-digit inputs.
-  const valid =
-    match !== null &&
-    new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
-      .toISOString()
-      .slice(0, 10) === value;
-  if (!valid) {
-    throw new BadUserInputError(`Invalid ${name} '${value}'. Use YYYY-MM-DD.`);
+  if (match) {
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    // `Date.UTC` maps years 0–99 to 1900–1999, which refused every valid
+    // 0001–0099 date (w31/060); `setUTCFullYear` keeps the year, while
+    // round-tripping rejects rollovers (`2024-13-01`, `2024-02-30`) and
+    // year `0000` (not a Beancount date).
+    const date = new Date(0);
+    date.setUTCFullYear(year, month - 1, day);
+    if (
+      year >= 1 &&
+      date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day
+    ) {
+      return value;
+    }
   }
-  return value;
+  throw new BadUserInputError(`Invalid ${name} '${value}'. Use YYYY-MM-DD.`);
 }
 
 /**

@@ -63,21 +63,52 @@ describe("resolveGainsBounds", () => {
     });
   });
 
-  it.each([["2024-13-01"], ["2024-02-30"], ["2024-1-1"], ["yesterday"]])(
-    "refuses a malformed bound %p",
-    (value) => {
-      expect(() => resolveGainsBounds(value, undefined)).toThrow(
-        BadUserInputError,
-      );
-      expect(() => resolveGainsBounds(undefined, value)).toThrow(
-        `Invalid to-date '${value}'. Use YYYY-MM-DD.`,
-      );
+  it.each([
+    ["0001-01-01", "0099-12-31"],
+    ["0004-02-29", "0050-12-31"],
+    ["0050-01-01", "0050-12-31"],
+  ])(
+    "accepts valid Beancount calendar dates in years 0001-0099 (%s..%s) (w31/060)",
+    (fromDate, toDate) => {
+      expect(resolveGainsBounds(fromDate, toDate)).toEqual({
+        start: fromDate,
+        end: toDate,
+      });
+      expect(resolveGainsBounds(fromDate, undefined)).toEqual({
+        start: fromDate,
+        end: null,
+      });
+      expect(resolveGainsBounds(undefined, toDate)).toEqual({
+        start: null,
+        end: toDate,
+      });
     },
   );
+
+  it.each([
+    ["0000-01-01"],
+    ["0050-02-30"],
+    ["0100-02-29"],
+    ["2024-13-01"],
+    ["2024-02-30"],
+    ["2024-1-1"],
+    [""],
+    ["yesterday"],
+  ])("refuses a malformed bound %p", (value) => {
+    expect(() => resolveGainsBounds(value, undefined)).toThrow(
+      BadUserInputError,
+    );
+    expect(() => resolveGainsBounds(undefined, value)).toThrow(
+      `Invalid to-date '${value}'. Use YYYY-MM-DD.`,
+    );
+  });
 
   it("refuses a from-date after the to-date", () => {
     expect(() => resolveGainsBounds("2024-06-01", "2024-01-01")).toThrow(
       "from-date '2024-06-01' is after to-date '2024-01-01'.",
+    );
+    expect(() => resolveGainsBounds("0099-06-01", "0050-01-01")).toThrow(
+      "from-date '0099-06-01' is after to-date '0050-01-01'.",
     );
   });
 });
@@ -262,6 +293,38 @@ describe("composeGains", () => {
       "2024-01-01",
       "2024-02-01",
     ]);
+  });
+
+  it("computes held_days and long_held for early-year lots (0050->0051) (w31/060)", () => {
+    const earlyCost = { number: "100.00", currency: "USD", date: "0050-01-10" };
+    const earlySale = txn("0051-03-15", [
+      { account: "Assets:Broker", number: "-5", cost: earlyCost, price },
+    ]);
+    const bounds = resolveGainsBounds("0050-01-01", "0051-12-31");
+    const result = composeGains({
+      ...base,
+      ...bounds,
+      transactions: [earlySale, buy("5", earlyCost)],
+    });
+    expect(result.rows).toEqual([
+      {
+        account: "Assets:Broker",
+        commodity: "HOOL",
+        acquired: "0050-01-10",
+        sold: "0051-03-15",
+        held_days: 429,
+        long_held: true,
+        quantity: { number: "5", currency: "HOOL" },
+        proceeds: { number: "750", currency: "USD" },
+        basis: { number: "500", currency: "USD" },
+        gain: { number: "250", currency: "USD" },
+      },
+    ]);
+    expect(result.totals).toEqual({
+      one_year_or_less: {},
+      more_than_one_year: { USD: "250" },
+      holding_unknown: {},
+    });
   });
 
   describe("reductions in either direction (w1/307)", () => {

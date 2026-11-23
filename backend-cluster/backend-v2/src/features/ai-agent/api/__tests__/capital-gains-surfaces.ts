@@ -4,6 +4,7 @@ import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerFinanceQueryResolver } from "@/features/ledger/api/resolvers/ledger-finance-resolver.query";
 import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
+import { formatError } from "@/server/graphql/format-error";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import {
@@ -156,8 +157,53 @@ export async function capitalGainsSurfaces(
     return { rest: viaRest, mcp: viaMcp, graphql: viaGraphql };
   };
 
+  /** Each surface's refusal for one rejected query. */
+  const gainsError = async (query: Record<string, string>) => {
+    const search = new URLSearchParams(query);
+    const suffix = search.size ? `?${search}` : "";
+    const response = await fetch(
+      `${rest.url}/api-gateway/v1/ledgers/alice/main/capital-gains${suffix}`,
+    );
+    const restResult = {
+      status: response.status,
+      body: (await response.json()) as unknown,
+    };
+
+    let mcpError: unknown;
+    try {
+      await client.readResource({
+        uri: `beancount://alice/main/capital-gains${suffix}`,
+      });
+    } catch (error) {
+      mcpError = error;
+    }
+
+    const args = Object.entries(query)
+      .map(([key, value]) => `, ${key}: ${JSON.stringify(value)}`)
+      .join("");
+    const gql = await graphql({
+      schema,
+      source: `{ getLedgerCapitalGains(ledgerId: "alice/main"${args}) { ${GAINS_SELECTION} } }`,
+      contextValue: { identity: pinnedReadToken },
+    });
+    const [firstError] = gql.errors ?? [];
+    const formatted = firstError
+      ? formatError(firstError.toJSON(), firstError)
+      : undefined;
+
+    return {
+      rest: restResult,
+      mcp: mcpError,
+      graphql: {
+        data: gql.data,
+        formatted,
+      },
+    };
+  };
+
   return {
     gains,
+    gainsError,
     close: async () => {
       await client.close();
       await server.close();
