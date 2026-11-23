@@ -25,9 +25,15 @@ import { PriceDescription } from "./price-description";
 
 interface JournalDescriptionProps {
   directive: JournalDirectiveType;
+  ledgerOwner?: string;
+  ledgerName?: string;
 }
 
-export function JournalDescription({ directive }: JournalDescriptionProps) {
+export function JournalDescription({
+  directive,
+  ledgerOwner,
+  ledgerName,
+}: JournalDescriptionProps) {
   const { t } = useTranslations();
 
   if (isJournalTransaction(directive))
@@ -35,7 +41,13 @@ export function JournalDescription({ directive }: JournalDescriptionProps) {
   if (isJournalBalance(directive))
     return <BalanceDescription directive={directive} />;
   if (isJournalDocument(directive))
-    return <DocumentDescription directive={directive} />;
+    return (
+      <DocumentDescription
+        directive={directive}
+        ledgerOwner={ledgerOwner}
+        ledgerName={ledgerName}
+      />
+    );
   if (isJournalOpen(directive))
     return <OpenDescription directive={directive} />;
   if (isJournalClose(directive))

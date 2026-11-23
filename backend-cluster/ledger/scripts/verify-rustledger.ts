@@ -32,6 +32,7 @@ import {
   queryLedgerFiles,
   queryLedgerFilesResult,
   RustledgerWorkerPool,
+  serializeDirective,
   withLedger,
 } from "@/foundation/rustledger";
 import {
@@ -705,9 +706,8 @@ async function verifyWindowedPlaintextExport(): Promise<void> {
  * inside the literal.
  */
 /**
- * w4/301: a Document's relative path names a file beside its declaring source,
- * through the production worker clone and snapshot cache. The report used to
- * hand `books/documents.bean`'s `"receipt.txt"` out as a root `receipt.txt`.
+ * w4/301 and w5/1184: the Documents report and Journal both resolve paths from
+ * the declaring file through the production worker clone and snapshot cache.
  */
 async function verifyDocumentSourcePaths(): Promise<void> {
   const files: FileMap = {
@@ -738,6 +738,15 @@ async function verifyDocumentSourcePaths(): Promise<void> {
       "2026-10-21": "books/receipt.txt",
       "2026-10-22": "other/receipt.txt",
     });
+    const journalByDate = Object.fromEntries(
+      snapshot.directives
+        .filter((directive) => directive.type === "document")
+        .map((directive) => {
+          const item = serializeDirective(directive);
+          return [item.date, "filename" in item ? item.filename : null];
+        }),
+    );
+    deepStrictEqual(journalByDate, byDate);
     assert(
       Object.values(byDate).every((path) => path in files),
       `every reported document path names a committed file (${round})`,

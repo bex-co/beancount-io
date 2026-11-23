@@ -29,6 +29,7 @@ import {
   TransactionSubtype,
 } from "@/foundation/ledger-api-types";
 import BigNumber from "bignumber.js";
+import { documentFilePath } from "./document-validation";
 import { hashEntry } from "./entry-hash";
 import { isUnbookedDirective } from "./plugins/provenance";
 import { endsInsideString, type SourceSyntax } from "./source-slice";
@@ -420,7 +421,7 @@ export function serializeDirective(
         directive_type,
         date,
         meta,
-        filename: directive.path,
+        filename: documentFilePath(directive),
         account: directive.account,
         tags: directive.tags ? [...directive.tags] : [],
         links: directive.links ? [...directive.links] : [],

@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import {
   type JournalDirectiveType,
   isJournalBalance,
+  isJournalDocument,
   isJournalTransaction,
 } from "@/common/types/journal";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -13,6 +14,7 @@ import { getClickableRowProps } from "@/common/components/clickable-row";
 import { LedgerAmount } from "@/common/components/ledger-amount";
 import { cn } from "@/common/lib/utils/utils";
 import { JournalDescription } from "./journal-description";
+import { DocumentDescription } from "./journal-description/document-description";
 import { JournalMetadata } from "./journal-metadata";
 import { displayableMetadataEntries } from "./journal-metadata-entries";
 import { JournalPostings } from "./journal-postings";
@@ -70,6 +72,7 @@ function LineRows({
   const directive = item.directive;
   const transaction = isJournalTransaction(directive) ? directive : null;
   const balance = isJournalBalance(directive) ? directive : null;
+  const document = isJournalDocument(directive) ? directive : null;
   const entryLabel = useJournalEntryLabel(directive);
   const postingsRegionId = useId();
   const [expanded, setExpanded] = useState(false);
@@ -256,13 +259,22 @@ function LineRows({
                 )}
               </>
             )}
-            {!transaction && !balance && (
-              // Notes, prices, documents: their own words, on one line.
+            {!transaction && !balance && !document && (
+              // Notes, prices and other directives on one line.
               <span className="min-w-0 truncate text-muted-foreground [&_div]:inline [&_div]:p-0">
                 <JournalDescription directive={directive} />
               </span>
             )}
           </div>
+          {document && (
+            <div className="-mx-2 mt-0.5 text-muted-foreground">
+              <DocumentDescription
+                directive={document}
+                ledgerOwner={ledgerOwner}
+                ledgerName={ledgerName}
+              />
+            </div>
+          )}
           {/* Where there is no Account column, a second line says what the
               entry was and where the money went: narration, then from → to
               by the accounts' last names, whole on hover. */}

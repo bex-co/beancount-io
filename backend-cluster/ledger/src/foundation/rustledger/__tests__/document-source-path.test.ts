@@ -10,6 +10,7 @@ import type { DirectiveJson } from "@rustledger/wasm";
 import { collectDocuments } from "../directives-report";
 import { documentFilePath } from "../document-validation";
 import { buildEntryIdMap } from "../entry-hash";
+import { serializeDirective } from "../journal-serialize";
 import {
   captureDirectiveSourceLocations,
   restoreDirectiveSourceLocations,
@@ -79,7 +80,10 @@ describe("Document paths resolve against their declaring file", () => {
 
   it("leaves absolute paths and unknown sources as written", () => {
     const [absolute] = parsed([
-      [document("2026-10-21", "/srv/scans/receipt.txt"), "books/documents.bean"],
+      [
+        document("2026-10-21", "/srv/scans/receipt.txt"),
+        "books/documents.bean",
+      ],
     ]);
     expect(documentFilePath(absolute!)).toBe("/srv/scans/receipt.txt");
     expect(documentFilePath(document("2026-10-21", "receipt.txt"))).toBe(
@@ -94,4 +98,17 @@ describe("Document paths resolve against their declaring file", () => {
       filename: "books/receipt.txt",
     });
   });
+
+  it("gives structured journal reads the same repository-relative filenames", () => {
+    const directives = ledger();
+    expect(directives.map(serializeDocument)).toEqual(
+      collectDocuments(directives).map((entry) => entry.path),
+    );
+  });
 });
+
+function serializeDocument(directive: Document): string {
+  const item = serializeDirective(directive);
+  if (!("filename" in item)) throw new Error("Expected a journal document");
+  return item.filename;
+}

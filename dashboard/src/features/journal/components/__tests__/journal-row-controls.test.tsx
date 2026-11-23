@@ -1,7 +1,11 @@
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { DirectiveType, type JournalTransaction } from "@/common/types/journal";
+import {
+  DirectiveType,
+  type JournalDocument,
+  type JournalTransaction,
+} from "@/common/types/journal";
 import { createLocalization } from "@/i18n/init";
 import { LocalizationProvider } from "@/i18n/provider";
 import {
@@ -13,6 +17,11 @@ import { JournalTable } from "../journal-table";
 vi.unmock("react-i18next");
 vi.unmock("@/common/hooks/use-translations");
 vi.unmock("@/i18n");
+
+const fileNavigate = vi.hoisted(() => vi.fn());
+vi.mock("@/common/hooks/use-file-navigate", () => ({
+  useFileNavigate: () => fileNavigate,
+}));
 
 function transaction(
   id: string,
@@ -88,6 +97,53 @@ const entries = [
     2,
   ),
 ];
+
+it.each(LAYOUTS)(
+  "opens the Document attachment from the %s journal row",
+  async (layout) => {
+    fileNavigate.mockClear();
+    const user = userEvent.setup();
+    const localization = createLocalization();
+    await localization.changeLanguage("en");
+    const onEntryClick = vi.fn();
+    const directive: JournalDocument = {
+      directive_type: DirectiveType.DOCUMENT,
+      entry_hash: "statement",
+      date: "2026-05-03",
+      account: "Assets:Qa:Fifo",
+      filename: "qa/docs/May statement #1.txt",
+      tags: ["statement"],
+      links: ["may"],
+      meta: {},
+    };
+    renderJournal(localization, layout, {
+      data: [{ directive }],
+      showMetadata: false,
+      showPostings: false,
+      ledgerOwner: "alice",
+      ledgerName: "books",
+      onEntryClick,
+    });
+
+    const opener = screen.getByRole("button", { name: /^Open entry / });
+    const attachment = screen.getByRole("button", {
+      name: "May statement #1.txt",
+    });
+    opener.focus();
+    await user.tab();
+    expect(attachment).toHaveFocus();
+    await user.keyboard("{Enter}");
+    await user.click(attachment);
+    expect(fileNavigate.mock.calls).toEqual([
+      ["alice/books", "file", directive.filename],
+      ["alice/books", "file", directive.filename],
+    ]);
+    expect(onEntryClick).not.toHaveBeenCalled();
+
+    await user.click(opener);
+    expect(onEntryClick).toHaveBeenCalledWith(directive, opener);
+  },
+);
 
 describe.each(LAYOUTS)("Journal entry control names (%s)", (layout) => {
   it.each(["en", "de"] as const)(

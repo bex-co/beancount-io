@@ -429,7 +429,11 @@ function DayEntryRows({
               ) : (
                 // Notes, prices, documents: their own words.
                 <div className="mt-0.5 -mx-1 text-base text-muted-foreground sm:-mx-2 sm:text-sm">
-                  <JournalDescription directive={directive} />
+                  <JournalDescription
+                    directive={directive}
+                    ledgerOwner={ledgerOwner}
+                    ledgerName={ledgerName}
+                  />
                 </div>
               )}
             </div>
