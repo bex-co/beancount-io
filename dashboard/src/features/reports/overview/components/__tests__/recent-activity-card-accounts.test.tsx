@@ -132,6 +132,44 @@ describe("RecentActivityCard rows", () => {
     expect(row).not.toHaveTextContent("+100.00 USD");
   });
 
+  it.each([
+    {
+      from: "Assets:Qa:Bank1:Checking",
+      to: "Assets:Qa:Bank2:Checking",
+      label: "Bank1:Checking → Bank2:Checking",
+    },
+    {
+      from: "Equity:CapTable:Options:Unvested:Carol",
+      to: "Equity:CapTable:Options:Vested:Carol",
+      label: "Unvested:Carol → Vested:Carol",
+    },
+  ])(
+    "distinguishes matching leaves in the compact $label row",
+    ({ from, to, label }) => {
+      postings = [
+        { account: to, units: { number: "100", currency: "USD" } },
+        { account: from, units: { number: "-100", currency: "USD" } },
+      ];
+      render(<RecentActivityCard {...props} />);
+      const row = rowOf("Cafe");
+
+      expect(within(row).getByText(label)).toHaveAttribute("dir", "auto");
+      expect(row).toHaveTextContent(from);
+      expect(row).toHaveTextContent(to);
+    },
+  );
+
+  it("qualifies the shown accounts when the entry has no directional flow", () => {
+    postings = [
+      { account: "Assets:Bank1:Cash", units: { number: "0", currency: "USD" } },
+      { account: "Assets:Bank2:Cash", units: { number: "0", currency: "USD" } },
+    ];
+    render(<RecentActivityCard {...props} />);
+    expect(
+      within(rowOf("Cafe")).getByText("Bank1:Cash · Bank2:Cash"),
+    ).toBeInTheDocument();
+  });
+
   describe("costed investment activity amounts", () => {
     const purchase: JournalPosting[] = [
       {

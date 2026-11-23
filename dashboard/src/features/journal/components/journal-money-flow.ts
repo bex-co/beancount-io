@@ -20,20 +20,30 @@ export function moneyFlow(
 }
 
 /**
- * The two accounts by their last names, the part that tells them apart;
- * one more segment each while those still match, so a transfer from
- * Assets:US:Hooli:Vacation to Expenses:Vacation reads "Hooli:Vacation →
- * Expenses:Vacation", not "Vacation → Vacation".
+ * The shortest suffix that distinguishes each account in this group.
+ * Compare paths at the same depth so every colliding leaf is qualified.
  */
+export function shortAccountNames(accounts: readonly string[]): string[] {
+  const paths = accounts.map((account) => account.split(":"));
+  return paths.map((path, index) => {
+    const account = accounts[index];
+    for (let count = 1; count < path.length; count++) {
+      const suffix = path.slice(-count).join(":");
+      const matchesAnother = paths.some(
+        (other, otherIndex) =>
+          accounts[otherIndex] !== account &&
+          other.slice(-count).join(":") === suffix,
+      );
+      if (!matchesAnother) return suffix;
+    }
+    return account;
+  });
+}
+
 export function shortAccountPair(
   from: string,
   to: string,
 ): { from: string; to: string } {
-  const tail = (account: string, count: number) =>
-    account.split(":").slice(-count).join(":");
-  let count = 1;
-  while (count < 4 && tail(from, count) === tail(to, count) && from !== to) {
-    count += 1;
-  }
-  return { from: tail(from, count), to: tail(to, count) };
+  const [fromLabel, toLabel] = shortAccountNames([from, to]);
+  return { from: fromLabel, to: toLabel };
 }

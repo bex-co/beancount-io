@@ -42,7 +42,7 @@ import { JournalPostingToggle } from "./journal-posting-toggle";
 import { journalEntryLabel } from "./journal-entry-label";
 import { BalanceCheck } from "./journal-balance-check";
 import { balanceRowTone } from "./journal-balance-tone";
-import { moneyFlow } from "./journal-money-flow";
+import { moneyFlow, shortAccountNames } from "./journal-money-flow";
 import {
   type JournalRegister,
   type JournalTableItem,
@@ -72,9 +72,6 @@ function formatDay(date: string, language: string): string {
     }) ?? date
   );
 }
-
-/** An account by its last segment, the part that tells two apart. */
-const leaf = (account: string) => account.split(":").pop() ?? account;
 
 /**
  * How much a split entry moved, where no account type sums it up (a payroll
@@ -559,10 +556,12 @@ function TransactionDetails({
   const parts: ReactNode[] = [];
   if (narration) parts.push(<span key="n">{narration}</span>);
   // Below the wide layout the accounts have no column of their own.
-  // From and to, as the wide column says it, by each account's last name.
+  const labels = shortAccountNames(
+    flow ? [flow.from, flow.to] : accounts.slice(0, 2),
+  );
   const moved = flow
-    ? `${leaf(flow.from)}\u00a0→ ${leaf(flow.to)}${flow.more > 0 ? `\u00a0+${flow.more}` : ""}`
-    : accounts.slice(0, 2).map(leaf).join("\u00a0· ");
+    ? `${labels[0]}\u00a0→ ${labels[1]}${flow.more > 0 ? `\u00a0+${flow.more}` : ""}`
+    : labels.join("\u00a0· ");
   const marks = [
     ...(tags ?? []).map((tag) => `#${tag}`),
     ...(links ?? []).map((link) => `^${link}`),
@@ -574,8 +573,10 @@ function TransactionDetails({
       {moved && (
         <span className="xl:hidden" title={accounts.join("\n")}>
           {parts.length > 0 && "\u00a0· "}
-          {moved}
-          {!flow && accounts.length > 2 && `\u00a0+${accounts.length - 2}`}
+          <span dir="auto">
+            {moved}
+            {!flow && accounts.length > 2 && `\u00a0+${accounts.length - 2}`}
+          </span>
         </span>
       )}
       {marks.length > 0 && (
