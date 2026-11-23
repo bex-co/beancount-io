@@ -388,6 +388,65 @@ describe("statement Markdown row set", () => {
 });
 
 describe("statement Markdown", () => {
+  it("keeps a zero revenue line in a single-unit expense-only statement", () => {
+    const document = fixture();
+    for (const section of document.sections) {
+      for (const row of section.rows) {
+        row.amounts =
+          section.key === "income"
+            ? []
+            : row.amounts.filter(({ unit }) => unit === "USD");
+      }
+    }
+    const net = document.sections.find(
+      (section) => section.key === "net_profit",
+    )!;
+    net.rows[0].amounts[0].displayAmount = "-263090.25";
+    const markdown = statementToMarkdown(document, { locale: "en-US", t });
+    const summary = markdown
+      .split("## Statement summary")[1]
+      ?.split("## Supporting Account Detail")[0];
+    expect(
+      summary?.split("\n").filter((line) => line.startsWith("| **")),
+    ).toEqual([
+      "| **Total Revenue and Other Income** | **USD** | **0.00** |",
+      "| **Total Expenses** | **USD** | **263,090.25** |",
+      "| **Net Loss** | **USD** | **(263,090.25)** |",
+    ]);
+    expect(document.sections[0].rows[0].amounts).toEqual([]);
+  });
+
+  it("fills missing statement units in each of the three summary lines", () => {
+    const document = fixture();
+    document.sections[0].rows[0].amounts =
+      document.sections[0].rows[0].amounts.filter(
+        ({ unit }) => unit !== "IRAUSD",
+      );
+    document.sections[1].rows[0].amounts =
+      document.sections[1].rows[0].amounts.filter(
+        ({ unit }) => unit !== "VACHR",
+      );
+    const markdown = statementToMarkdown(document, { locale: "en-US", t });
+    const summary = markdown
+      .split("## Statement summary")[1]
+      ?.split("## Supporting Account Detail")[0];
+    const summaries = summary
+      ?.split("\n")
+      .filter((line) => line.startsWith("| **"));
+    expect(summaries?.map((line) => line.split(" | ")[1])).toEqual(
+      Array.from({ length: 3 }, () => [
+        "**USD**",
+        "**IRAUSD**",
+        "**VACHR**",
+      ]).flat(),
+    );
+    expect(summary).toContain(
+      "| **Total Revenue and Other Income** | **IRAUSD** | **0.00** |",
+    );
+    expect(summary).toContain("| **Total Expenses** | **VACHR** | **0.00** |");
+    expect(summary).toContain("| **Net Loss** | **VACHR** | **(115.00)** |");
+  });
+
   it("rounds each currency figure after exact reconciliation and keeps exact CSV amounts", () => {
     const document = balanceSheetFixture({
       assets: "109529.33944",

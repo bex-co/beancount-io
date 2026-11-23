@@ -220,6 +220,49 @@ function balanceSheetFixture({
 }
 
 describe("PrintableStatement", () => {
+  it.each([
+    {
+      name: "expense-only USD",
+      income: [],
+      expenses: ["USD"],
+      net: ["USD"],
+      units: ["USD"],
+      zeroRows: [["reports.export.totalRevenue", "USD", "0.00"]],
+    },
+    {
+      name: "multi-unit",
+      income: ["USD"],
+      expenses: ["VACHR"],
+      net: ["USD", "VACHR"],
+      units: ["USD", "VACHR"],
+      zeroRows: [
+        ["reports.export.totalRevenue", "VACHR", "0.00"],
+        ["reports.export.totalExpenses", "USD", "0.00"],
+      ],
+    },
+  ])("keeps all three lines with every statement unit for $name", (test) => {
+    const copy = structuredClone(document);
+    [test.income, test.expenses, test.net].forEach((units, index) => {
+      for (const row of copy.sections[index].rows) {
+        row.amounts = row.amounts.filter(({ unit }) => units.includes(unit));
+      }
+    });
+    render(<PrintableStatement document={copy} />);
+    const section = screen
+      .getByRole("heading", { name: "reports.export.statementSummary" })
+      .closest("section")!;
+    const rows = within(section)
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) =>
+        [...row.querySelectorAll("th, td")].map((cell) => cell.textContent),
+      );
+    expect(rows.map((row) => row[1])).toEqual(
+      Array.from({ length: 3 }, () => test.units).flat(),
+    );
+    for (const row of test.zeroRows) expect(rows).toContainEqual(row);
+  });
+
   it("renders a semantic, statement-specific print tree with active context", () => {
     render(<PrintableStatement document={document} />);
 

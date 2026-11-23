@@ -6,7 +6,6 @@ import {
   getCustomStatementUnits,
   getStatementUnits,
   isLikelyPlaceholderStatementIdentity,
-  type StatementAmount,
   type StatementExportDocument,
   type StatementRow,
 } from "./model";
@@ -138,11 +137,11 @@ export function PrintableStatement({
           : `${t("component.conversionSelect.convertedTo")} ${document.context.conversion}`;
   const summaryLabel = (
     key: ProfitAndLossSummaryKey,
-    amount: StatementAmount,
+    displayAmount: string,
   ) => {
     if (key === "total_revenue") return t("reports.export.totalRevenue");
     if (key === "total_expenses") return t("reports.export.totalExpenses");
-    return isNegativeStatementAmount(amount.displayAmount)
+    return isNegativeStatementAmount(displayAmount)
       ? t("reports.export.netLoss")
       : t("reports.export.netIncome");
   };
@@ -263,12 +262,14 @@ export function PrintableStatement({
                 </thead>
                 <tbody>
                   {profitAndLossSummary.flatMap((item) =>
-                    item.row.amounts.map((amount, amountIndex) => (
+                    item.amounts.map((amount, amountIndex) => (
                       <tr
                         className={`statement-print-row statement-print-summary-row statement-print-summary-row-${item.key}`}
                         key={`${item.key}-${amount.unit}-${amountIndex}`}
                       >
-                        <th scope="row">{summaryLabel(item.key, amount)}</th>
+                        <th scope="row">
+                          {summaryLabel(item.key, amount.displayAmount)}
+                        </th>
                         <td>{amount.unit}</td>
                         <td className="statement-print-amount">
                           {formatStatementAmount(

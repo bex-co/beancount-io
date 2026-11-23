@@ -7,7 +7,6 @@ import {
   getStatementUnits,
   isLikelyPlaceholderStatementIdentity,
   type StatementExportDocument,
-  type StatementAmount,
   type StatementRow,
 } from "./model";
 import {
@@ -150,12 +149,12 @@ function balanceSheetSummaryLines(
 
 function summaryLabel(
   key: ProfitAndLossSummaryKey,
-  amount: StatementAmount,
+  displayAmount: string,
   t: StatementTranslator,
 ) {
   if (key === "total_revenue") return t("reports.export.totalRevenue");
   if (key === "total_expenses") return t("reports.export.totalExpenses");
-  return isNegativeStatementAmount(amount.displayAmount)
+  return isNegativeStatementAmount(displayAmount)
     ? t("reports.export.netLoss")
     : t("reports.export.netIncome");
 }
@@ -165,8 +164,10 @@ function summaryLines(
   { locale, t }: MarkdownOptions,
 ): string[] {
   return getProfitAndLossSummaryItems(document).flatMap((item) =>
-    item.row.amounts.map((amount) => {
-      const label = escapeMarkdown(summaryLabel(item.key, amount, t));
+    item.amounts.map((amount) => {
+      const label = escapeMarkdown(
+        summaryLabel(item.key, amount.displayAmount, t),
+      );
       const unit = escapeMarkdown(amount.unit);
       const value = escapeMarkdown(
         formatStatementAmount(amount.displayAmount, locale, amount.unit),

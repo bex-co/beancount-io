@@ -32,7 +32,7 @@ export type ProfitAndLossSummaryKey =
 
 export interface ProfitAndLossSummaryItem {
   key: ProfitAndLossSummaryKey;
-  row: StatementRow;
+  amounts: StatementPresentationAmount[];
 }
 
 export type CashFlowSummaryKey =
@@ -190,24 +190,25 @@ export function getProfitAndLossSummaryItems(
   document: StatementExportDocument,
 ): ProfitAndLossSummaryItem[] {
   if (document.kind !== "profit_and_loss") return [];
+  const units = orderedUnits(document);
+  if (units.length === 0) return [];
 
   const sections = new Map(
     document.sections.map((section) => [section.key, section]),
   );
-  const incomeTotal = totalRow(sections.get("income"));
-  const expensesTotal = totalRow(sections.get("expenses"));
-  const netResult = totalRow(sections.get("net_profit"));
-  const items: Array<ProfitAndLossSummaryItem | null> = [
-    incomeTotal ? { key: "total_revenue" as const, row: incomeTotal } : null,
-    expensesTotal
-      ? { key: "total_expenses" as const, row: expensesTotal }
-      : null,
-    netResult ? { key: "net_result" as const, row: netResult } : null,
-  ];
-
-  return items.filter(
-    (item): item is ProfitAndLossSummaryItem => item !== null,
-  );
+  return (
+    [
+      ["income", "total_revenue"],
+      ["expenses", "total_expenses"],
+      ["net_profit", "net_result"],
+    ] as const
+  ).map(([section, key]) => ({
+    key,
+    amounts: presentationAmounts(
+      displayAmountsByUnit(totalRow(sections.get(section))),
+      units,
+    ),
+  }));
 }
 
 /** Keep the complete account hierarchy as supporting detail, without root totals. */
