@@ -1597,7 +1597,11 @@ A staged pad still waiting for its balance refuses the write, naming it. A pad
 fills only the first later assertion in each currency, so an assertion between
 `--pad-date` and `--date` is named as the reason the pad went unused. Ordinary
 `add balance` remains a strict assertion: review missing transactions before
-choosing to create an adjustment. Advanced users can stage `add pad --allow-errors`,
+choosing to create an adjustment. A lone `add pad` is refused with the
+`add balance --pad-from` command that writes it with its balance: the pad's
+account, source and `--pad-date` filled in, with the `--file` and `--into` that
+reach the same ledger, leaving the balance `--date` and amount to supply.
+Advanced users can stage `add pad --allow-errors`,
 add the later balance, then run `bea check`. The staged pad reports `Unused Pad`
 until a matching balance consumes it; complete that pair before other writes.
 Balance amounts accept native tolerance syntax, for example

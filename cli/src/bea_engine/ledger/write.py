@@ -3254,6 +3254,8 @@ def validate_candidate(
                     filenames,
                     appended=appended,
                     staged=not appended or (allow_errors and not is_new),
+                    command=bea_command(ledger),
+                    into=None if same_file(file, ledger) else os.path.relpath(file, ledger.parent),
                 )
             )
         elif isinstance(error.entry, Balance) and "Balance failed" in error.message:
@@ -3469,6 +3471,8 @@ def _unused_pad_hint(
     *,
     appended: bool = True,
     staged: bool = False,
+    command: str = "bea",
+    into: str | None = None,
 ) -> str:
     """Why Beancount found nothing for this pad to fill, as a next step.
 
@@ -3483,13 +3487,34 @@ def _unused_pad_hint(
     balance still missing — the warning on a staged pad, or a refusal detail
     while one waits — where the atomic hint would send the user to a
     `--pad-from` the staged pad itself blocks (w5/799).
-    """
-    from beancount.core.data import Balance, Pad
 
-    atomic = (
-        " Add both directives atomically with bea add balance --pad-from ACCOUNT"
-        " --date YYYY-MM-DD --amount 'NUMBER CURRENCY' --account ACCOUNT."
-    )
+    `command` is the `bea` prefix that reaches the ledger from the working
+    directory and `into` the refused pad's file when it is not the root: the
+    atomic remedy is printed to be pasted, so it names that ledger and the
+    pad's own account, source and date. With placeholders and no `--file`,
+    the paste wrote the pair into whatever ledger cwd discovery found, and the
+    default `--pad-date` moved the pad (w1/371).
+    """
+    from beancount.core.data import Balance, Open, Pad
+
+    if pad is None:
+        atomic = (
+            f" Add both directives atomically with {command} add balance --pad-from ACCOUNT"
+            " --date YYYY-MM-DD --amount 'NUMBER CURRENCY' --account ACCOUNT."
+        )
+    else:
+        allowed = next(
+            (entry.currencies for entry in entries if isinstance(entry, Open) and entry.account == pad.account), None
+        )
+        currency = allowed[0] if allowed and len(allowed) == 1 else "CURRENCY"
+        remedy = [
+            *("add", "balance", "--account", pad.account, "--pad-from", pad.source_account),
+            *("--pad-date", pad.date.isoformat(), "--date", "YYYY-MM-DD", "--amount", f"NUMBER {currency}"),
+            *(("--into", into) if into else ()),
+        ]
+        atomic = (
+            f" Add both directives atomically, with a balance --date after {pad.date}: {command} {shlex.join(remedy)}."
+        )
     position = next((index for index, entry in enumerate(entries) if entry is pad), None)
     if pad is None or position is None:
         return atomic
