@@ -1,5 +1,5 @@
 /**
- * Models commonly spell repo-relative paths like shell paths (`.` and
+ * Models commonly spell repo-relative paths like shell paths (`.`, `./`, and
  * `./main.bean`). Canonicalize that harmless notation before the request
  * reaches the ledger service, whose strict path validator intentionally
  * rejects every dot segment.
@@ -19,6 +19,8 @@ export function normalizeAgentRepoPath(path: string): string {
 export function normalizeAgentDirPath(
   path: string | undefined,
 ): string | undefined {
-  if (path === undefined || path === ".") return undefined;
-  return normalizeAgentRepoPath(path);
+  if (path === undefined) return undefined;
+  if (path === "") return "";
+  const normalized = normalizeAgentRepoPath(path);
+  return normalized === "" || normalized === "." ? undefined : normalized;
 }

@@ -133,22 +133,25 @@ describe("executeListLedgerFiles", () => {
     });
   });
 
-  it("treats a shell-style dot as the repository root", async () => {
-    const ledgerRepo = { listDirContent: jest.fn().mockResolvedValue([]) };
-    await executeListLedgerFiles(
-      {
-        services: { ledgerRepo } as any,
-        identity: IDENTITY,
+  it.each([".", "./", "./.", "././"])(
+    "treats shell-style current-directory spelling %p as the repository root",
+    async (dir_path) => {
+      const ledgerRepo = { listDirContent: jest.fn().mockResolvedValue([]) };
+      await executeListLedgerFiles(
+        {
+          services: { ledgerRepo } as any,
+          identity: IDENTITY,
+          ledgerId: LEDGER_ID,
+        },
+        { dir_path },
+      );
+      expect(ledgerRepo.listDirContent).toHaveBeenCalledWith({
         ledgerId: LEDGER_ID,
-      },
-      { dir_path: "." },
-    );
-    expect(ledgerRepo.listDirContent).toHaveBeenCalledWith({
-      ledgerId: LEDGER_ID,
-      identity: IDENTITY,
-      dirPath: undefined,
-    });
-  });
+        identity: IDENTITY,
+        dirPath: undefined,
+      });
+    },
+  );
 });
 
 describe("executeReadLedgerFiles", () => {

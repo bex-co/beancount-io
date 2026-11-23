@@ -274,4 +274,51 @@ describe("directory listing on REST, MCP and GraphQL", () => {
       }
     },
   );
+
+  // w31/064: MCP listLedgerFiles normalizes shell-style current-directory
+  // spellings and leading `./` prefixes; REST and GraphQL stay strict behind
+  // assertSafeRepoPath.
+  describe("MCP shell-style dir_path normalization", () => {
+    it.each([".", "./", "./.", "././", "././."])(
+      "lists the repository root on MCP for %p while REST and GraphQL refuse it",
+      async (dir) => {
+        const f = await fixture();
+        try {
+          const { rest, mcp, gql } = await f.list(dir);
+          expect(mcp).toEqual(["imports", "main.bean"]);
+          expect(rest).toMatchObject({ code: "BAD_USER_INPUT" });
+          expect(gql).toMatchObject({ code: "BAD_USER_INPUT" });
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("lists a ./-prefixed subdirectory on MCP while REST and GraphQL refuse it", async () => {
+      const f = await fixture();
+      try {
+        const { rest, mcp, gql } = await f.list("./imports");
+        expect(mcp).toEqual(["imports/2026.bean"]);
+        expect(rest).toMatchObject({ code: "BAD_USER_INPUT" });
+        expect(gql).toMatchObject({ code: "BAD_USER_INPUT" });
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each(["", "/", ".//", "..", "../", "./..", ".\\"])(
+      "still refuses %p with BAD_USER_INPUT on MCP, REST and GraphQL",
+      async (dir) => {
+        const f = await fixture();
+        try {
+          const { rest, mcp, gql } = await f.list(dir);
+          expect(mcp).toMatchObject({ code: "BAD_USER_INPUT" });
+          expect(rest).toMatchObject({ code: "BAD_USER_INPUT" });
+          expect(gql).toMatchObject({ code: "BAD_USER_INPUT" });
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  });
 });
