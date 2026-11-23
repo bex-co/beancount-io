@@ -43,7 +43,11 @@ import { JournalPostingToggle } from "./journal-posting-toggle";
 import { useJournalEntryLabel } from "./journal-entry-label";
 import { BalanceCheck } from "./journal-balance-check";
 import { balanceRowTone } from "./journal-balance-tone";
-import { moneyFlow, shortAccountNames } from "./journal-money-flow";
+import {
+  type MoneyFlow,
+  moneyFlow,
+  shortAccountNames,
+} from "./journal-money-flow";
 import {
   type JournalRegister,
   type JournalTableItem,
@@ -297,9 +301,18 @@ function DayEntryRows({
       : "";
   const accounts = summary?.accounts ?? [];
   const flow = useMemo(
-    () => (transaction ? moneyFlow(transaction) : null),
-    [transaction],
+    () =>
+      transaction
+        ? moneyFlow(transaction, {
+            accountFilter: money.accountFilter,
+            change: summary?.amounts[0]?.value,
+            register,
+            registerChange: item.change,
+          })
+        : null,
+    [item.change, money.accountFilter, register, summary, transaction],
   );
+  const [firstAccount, secondAccount] = flow?.accounts ?? [];
   const balance = isJournalBalance(directive) ? directive : null;
   const rowProps = onEntryClick
     ? getClickableRowProps<HTMLTableRowElement>(
@@ -446,12 +459,20 @@ function DayEntryRows({
               className="hidden min-w-0 items-center gap-1.5 leading-5 xl:flex"
               title={accounts.join("\n")}
             >
-              <span className="min-w-0 truncate">{flow.from}</span>
-              <ArrowRight
-                aria-hidden="true"
-                className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
-              />
-              <span className="min-w-0 truncate">{flow.to}</span>
+              <span className="min-w-0 truncate">{firstAccount}</span>
+              {secondAccount && (
+                <>
+                  {flow.directed ? (
+                    <ArrowRight
+                      aria-hidden="true"
+                      className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
+                    />
+                  ) : (
+                    " · "
+                  )}
+                  <span className="min-w-0 truncate">{secondAccount}</span>
+                </>
+              )}
               {flow.more > 0 && (
                 <span className="shrink-0 whitespace-nowrap">+{flow.more}</span>
               )}
@@ -545,19 +566,18 @@ function TransactionDetails({
 }: {
   narration: string;
   accounts: string[];
-  flow: { from: string; to: string; more: number } | null;
+  flow: MoneyFlow | null;
   tags: JournalTransaction["tags"];
   links: JournalTransaction["links"];
 }) {
   const parts: ReactNode[] = [];
   if (narration) parts.push(<span key="n">{narration}</span>);
   // Below the wide layout the accounts have no column of their own.
-  const labels = shortAccountNames(
-    flow ? [flow.from, flow.to] : accounts.slice(0, 2),
-  );
   const moved = flow
-    ? `${labels[0]}\u00a0→ ${labels[1]}${flow.more > 0 ? `\u00a0+${flow.more}` : ""}`
-    : labels.join("\u00a0· ");
+    ? shortAccountNames(flow.accounts).join(
+        flow.directed ? "\u00a0→ " : "\u00a0· ",
+      )
+    : "";
   const marks = [
     ...(tags ?? []).map((tag) => `#${tag}`),
     ...(links ?? []).map((link) => `^${link}`),
@@ -571,7 +591,7 @@ function TransactionDetails({
           {parts.length > 0 && "\u00a0· "}
           <span dir="auto">
             {moved}
-            {!flow && accounts.length > 2 && `\u00a0+${accounts.length - 2}`}
+            {flow && flow.more > 0 && `\u00a0+${flow.more}`}
           </span>
         </span>
       )}

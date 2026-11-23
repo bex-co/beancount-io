@@ -21,7 +21,7 @@ import { JournalPostings } from "./journal-postings";
 import { JournalPostingToggle } from "./journal-posting-toggle";
 import { useJournalEntryLabel } from "./journal-entry-label";
 import { type JournalMoney, TransactionAmount } from "./journal-days";
-import { moneyFlow, shortAccountPair } from "./journal-money-flow";
+import { moneyFlow, shortAccountNames } from "./journal-money-flow";
 import { BalanceCheck } from "./journal-balance-check";
 import { balanceIsOff, balanceRowTone } from "./journal-balance-tone";
 import {
@@ -46,6 +46,23 @@ function flagTone(flag: string): string {
 
 const OPENER =
   "-mx-1 min-w-0 truncate rounded-sm px-1 py-0.5 text-start font-medium pointer-coarse:min-w-11 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:-my-2.5 pointer-coarse:py-2.5 forced-colors:focus-visible:[outline-style:solid] forced-colors:focus-visible:outline-2 forced-colors:focus-visible:outline-offset-2 forced-colors:focus-visible:outline-[CanvasText]";
+
+function flowSeparator(directed: boolean, className: string) {
+  return directed ? (
+    <>
+      <ArrowRight
+        aria-hidden="true"
+        className={cn(
+          "size-3 text-muted-foreground/70 rtl:-scale-x-100",
+          className,
+        )}
+      />
+      <span className="sr-only"> → </span>
+    </>
+  ) : (
+    <span> · </span>
+  );
+}
 
 function LineRows({
   item,
@@ -92,10 +109,20 @@ function LineRows({
     [money, transaction],
   );
   const flow = useMemo(
-    () => (transaction ? moneyFlow(transaction) : null),
-    [transaction],
+    () =>
+      transaction
+        ? moneyFlow(transaction, {
+            accountFilter: money.accountFilter,
+            change: summary?.amounts[0]?.value,
+            register,
+            registerChange: item.change,
+          })
+        : null,
+    [item.change, money.accountFilter, register, summary, transaction],
   );
-  const shortFlow = flow ? shortAccountPair(flow.from, flow.to) : null;
+  const flowTitle = flow?.accounts.join(flow.directed ? " → " : " · ");
+  const [shortFirst, shortSecond] = shortAccountNames(flow?.accounts ?? []);
+  const [firstAccount, secondAccount] = flow?.accounts ?? [];
   const postingsVisible = showPostings || expanded;
   const hasVisiblePostings =
     transaction !== null &&
@@ -291,11 +318,7 @@ function LineRows({
           {transaction && (narration || flow || marks.length > 0) && (
             <p
               dir="auto"
-              title={[
-                narration,
-                flow && `${flow.from} → ${flow.to}`,
-                marks.join(" "),
-              ]
+              title={[narration, flowTitle, marks.join(" ")]
                 .filter(Boolean)
                 .join(" · ")}
               className={cn(
@@ -310,20 +333,17 @@ function LineRows({
               >
                 {narration}
               </span>
-              {shortFlow && flow && (
+              {flow && (
                 <>
                   <span
-                    title={`${flow.from} → ${flow.to}`}
+                    title={flowTitle}
                     className="min-w-0 truncate max-sm:hidden"
                   >
                     {narration && "\u00a0·\u00a0"}
-                    {shortFlow.from}
-                    <ArrowRight
-                      aria-hidden="true"
-                      className="mx-1 inline size-3 align-[-1px] text-muted-foreground/70 rtl:-scale-x-100"
-                    />
-                    <span className="sr-only"> → </span>
-                    {shortFlow.to}
+                    {shortFirst}
+                    {shortSecond &&
+                      flowSeparator(flow.directed, "mx-1 inline align-[-1px]")}
+                    {shortSecond}
                   </span>
                   {/* How many more accounts, kept when the names are cut. */}
                   {flow.more > 0 && (
@@ -337,7 +357,7 @@ function LineRows({
                   className="text-primary sm:min-w-0 sm:truncate"
                 >
                   {/* Set apart from the accounts before them on one line. */}
-                  {(narration || shortFlow) && (
+                  {(narration || flow) && (
                     <span aria-hidden="true" className="hidden sm:inline">
                       {"\u00a0·"}
                     </span>
@@ -353,22 +373,18 @@ function LineRows({
               )}
             </p>
           )}
-          {transaction && shortFlow && flow && (
+          {flow && (
             // On a phone, where the money went has a line of its own and
             // wraps there rather than being cut short.
             <p
-              title={`${flow.from} → ${flow.to}`}
+              title={flowTitle}
               className="mt-0.5 text-sm leading-5 [overflow-wrap:anywhere] text-muted-foreground sm:hidden"
             >
-              {shortFlow.from}{" "}
-              {/* The arrow travels with where the money went. */}
+              {shortFirst} {/* The arrow travels with where the money went. */}
               <span className="whitespace-nowrap">
-                <ArrowRight
-                  aria-hidden="true"
-                  className="me-1 inline size-3 align-[-1px] text-muted-foreground/70 rtl:-scale-x-100"
-                />
-                <span className="sr-only">→ </span>
-                {shortFlow.to}
+                {shortSecond &&
+                  flowSeparator(flow.directed, "me-1 inline align-[-1px]")}
+                {shortSecond}
                 {flow.more > 0 && `\u00a0+${flow.more}`}
               </span>
             </p>
@@ -397,25 +413,26 @@ function LineRows({
                 className="hidden text-[13px] @4xl/journal:block"
               />
             )}
-            {flow && shortFlow && (
+            {flow && (
               // Where the list is not yet wide enough for full names: the
               // accounts by the names that tell them apart, whole on hover.
               <span
-                title={`${flow.from} → ${flow.to}`}
+                title={flowTitle}
                 className="hidden min-w-0 items-center gap-1.5 @4xl/journal:flex @5xl/journal:hidden"
               >
                 {/* Last parts only: in the foreground, as every account's
                   last part is. */}
                 <span className="min-w-0 truncate font-medium text-foreground">
-                  {shortFlow.from}
+                  {shortFirst}
                 </span>
-                <ArrowRight
-                  aria-hidden="true"
-                  className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
-                />
-                <span className="min-w-0 truncate font-medium text-foreground">
-                  {shortFlow.to}
-                </span>
+                {shortSecond && (
+                  <>
+                    {flowSeparator(flow.directed, "shrink-0")}
+                    <span className="min-w-0 truncate font-medium text-foreground">
+                      {shortSecond}
+                    </span>
+                  </>
+                )}
                 {flow.more > 0 && (
                   <span className="shrink-0 whitespace-nowrap">
                     +{flow.more}
@@ -423,22 +440,23 @@ function LineRows({
                 )}
               </span>
             )}
-            {flow && (
+            {flow && firstAccount && (
               <span className="hidden min-w-0 items-center gap-1.5 @5xl/journal:flex">
                 <AccountName
-                  account={flow.from}
-                  title={flow.from}
+                  account={firstAccount}
+                  title={firstAccount}
                   className="text-[13px]"
                 />
-                <ArrowRight
-                  aria-hidden="true"
-                  className="size-3 shrink-0 text-muted-foreground/70 rtl:-scale-x-100"
-                />
-                <AccountName
-                  account={flow.to}
-                  title={flow.to}
-                  className="text-[13px]"
-                />
+                {secondAccount && (
+                  <>
+                    {flowSeparator(flow.directed, "shrink-0")}
+                    <AccountName
+                      account={secondAccount}
+                      title={secondAccount}
+                      className="text-[13px]"
+                    />
+                  </>
+                )}
                 {flow.more > 0 && (
                   <span className="shrink-0 whitespace-nowrap">
                     +{flow.more}

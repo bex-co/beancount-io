@@ -31,6 +31,9 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** Characters that make a filter value a pattern rather than an account name. */
+const REGEX_SYNTAX = /[.*+?^${}()|[\]\\]/;
+
 /**
  * Does this account satisfy the account filter the reader typed?
  *
@@ -46,10 +49,9 @@ function escapeRegExp(value: string): string {
  * This is a deliberately small local copy of those two rules. Importing the
  * ledger package into the browser bundle would cost far more than it saves.
  */
-/** Characters that make a filter value a pattern rather than an account name. */
-const REGEX_SYNTAX = /[.*+?^${}()|[\]\\]/;
-
-function makeAccountMatcher(filter: string): (account: string) => boolean {
+export function makeAccountMatcher(
+  filter: string,
+): (account: string) => boolean {
   // A value written as a pattern keeps Fava's unanchored search; a plain
   // account name matches that account, its children, or a whole run of
   // components, case-insensitively — never a longer sibling (`Cash` must not
