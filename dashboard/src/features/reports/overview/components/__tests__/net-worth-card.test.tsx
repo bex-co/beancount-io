@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import type { EChartsOption, LineSeriesOption } from "echarts";
 import { textContrast } from "@/test/contrast";
 import { NetWorthCard } from "../net-worth-card";
+import { MonthHeroChart } from "../month-hero-chart";
 import type { DataSeries } from "../../lib/overview-utils";
 import type { NetWorthValuation } from "../../lib/net-worth-valuation";
 
@@ -121,6 +122,79 @@ const multiMonth: DataSeries = [
 ];
 
 const singleMonth: DataSeries = [{ date: "2026-01-31", balance: { USD: 100 } }];
+
+describe("scaled net-worth axes", () => {
+  it.each([
+    {
+      low: 2_500_070,
+      high: 2_500_570,
+      labels: ["2.5M", "2.5002M", "2.5004M", "2.5006M"],
+    },
+    {
+      low: 1_200_000,
+      high: 1_260_000,
+      labels: ["1.2M", "1.22M", "1.24M", "1.26M"],
+    },
+    { low: 76_000, high: 118_000, labels: ["60K", "80K", "100K", "120K"] },
+  ])(
+    "keeps distinct localized labels over $low–$high",
+    ({ low, high, labels }) => {
+      const data = Array.from({ length: 12 }, (_, index) => ({
+        date: new Date(Date.UTC(2025, index + 1, 0)).toISOString().slice(0, 10),
+        balance: { USD: low + Math.round(((high - low) * index) / 11) },
+      }));
+      const dates = data.map((point) => point.date);
+      type TickAxis = { axisLabel: { formatter: (value: number) => string } };
+      type ScaledAxis = TickAxis & {
+        min: number;
+        max: number;
+        interval: number;
+      };
+
+      for (const locale of ["en", "fa"]) {
+        language = locale;
+        const hero = render(
+          <MonthHeroChart
+            dates={dates}
+            selectedDate={dates[11]}
+            onSelectDate={vi.fn()}
+            dataThrough={dates[11]}
+            netWorth={data}
+            income={[]}
+            expenses={[]}
+            unit="USD"
+          />,
+        );
+        const [axis] = lastOption().yAxis as ScaledAxis[];
+        const ticks = Array.from(
+          { length: Math.round((axis.max - axis.min) / axis.interval) + 1 },
+          (_, index) => axis.min + index * axis.interval,
+        );
+        expect(ticks).toHaveLength(labels.length);
+        const heroLabels = ticks.map(axis.axisLabel.formatter);
+        hero.unmount();
+
+        const card = render(
+          <NetWorthCard
+            ledgerOwner="owner"
+            ledgerName="book"
+            valuation={null}
+            data={data}
+            primaryCurrency="USD"
+          />,
+        );
+        const trendAxis = lastOption().yAxis as TickAxis;
+        expect(ticks.map(trendAxis.axisLabel.formatter)).toEqual(heroLabels);
+        expect(new Set(heroLabels).size).toBe(ticks.length);
+        if (locale === "en") expect(heroLabels).toEqual(labels);
+        if (locale === "fa") {
+          expect(heroLabels.every((label) => /[۰-۹]/.test(label))).toBe(true);
+        }
+        card.unmount();
+      }
+    },
+  );
+});
 
 /**
  * The pressed view's secondary fill disappears in forced colors, so Chart and

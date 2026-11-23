@@ -422,6 +422,17 @@ export function formatPeriodMonth(date: string, language: string): string {
   );
 }
 
+/** Keep distinct net-worth ticks distinct even on a tight, high-value scale. */
+export function netWorthTickFormatter(
+  language: string,
+): (value: number) => string {
+  return new Intl.NumberFormat(language, {
+    notation: "compact",
+    // A double may need 17 significant digits to distinguish adjacent values.
+    maximumSignificantDigits: 17,
+  }).format;
+}
+
 export function isPartialMonthlyPeriod(
   date: string,
   now = new Date(),

@@ -38,6 +38,7 @@ import {
   type CurrencyAmount,
   getBalanceAmounts,
   getComparableAmount,
+  netWorthTickFormatter,
   periodPage,
   prioritizeCurrency,
   toLocalISODate,
@@ -62,18 +63,6 @@ function formatMonth(date: string, language: string): string {
     formatLedgerDate(date, language, { month: "short", year: "numeric" }) ??
     date
   );
-}
-
-/**
- * Y-axis ticks in the language's own digits and compact notation, like the
- * amounts beside them: `120K`, not `120.0k`.
- */
-function yAxisTickFormatter(language: string): (value: number) => string {
-  const compact = new Intl.NumberFormat(language, {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  });
-  return (value) => compact.format(value);
 }
 
 /** `YYYY-MM-DD` as a medium date in the app language, e.g. "Sep 8, 2017". */
@@ -445,7 +434,6 @@ export function NetWorthCard({
   );
 
   const chartOption = useMemo<EChartsOption>(() => {
-    const formatTick = yAxisTickFormatter(language);
     const currencies = Array.from(
       new Set(
         visibleData.flatMap((point) =>
@@ -486,7 +474,7 @@ export function NetWorthCard({
       yAxis: {
         type: "value",
         splitLine: defaultSplitLine,
-        axisLabel: { formatter: formatTick },
+        axisLabel: { formatter: netWorthTickFormatter(language) },
         scale: true,
       },
       series: displayedCurrencies.map((currency) => {

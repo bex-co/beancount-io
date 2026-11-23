@@ -30,6 +30,7 @@ import {
   type DataSeries,
   type IntervalDataSeries,
   isPeriodIncomplete,
+  netWorthTickFormatter,
   periodPage,
 } from "../lib/overview-utils";
 import { toExactAmount } from "../lib/unit-amounts";
@@ -282,7 +283,7 @@ export function MonthHeroChart({
         scale: true,
         ...worthScale,
         splitLine: defaultSplitLine,
-        axisLabel: { formatter: (value: number) => compact.format(value) },
+        axisLabel: { formatter: netWorthTickFormatter(language) },
       },
       {
         type: "value" as const,
