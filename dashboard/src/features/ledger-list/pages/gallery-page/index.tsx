@@ -23,7 +23,8 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { PageSEO } from "@/common/components/seo/page-seo";
-import { Button } from "@/common/components/ui/button";
+import { Button, buttonVariants } from "@/common/components/ui/button";
+import { DashboardBackLink } from "@/common/components/dashboard-back-link";
 import { ContinuationControl } from "@/common/components/continuation-control";
 import { validateGallerySearch } from "./search";
 
@@ -387,16 +388,16 @@ export default function GalleryPage() {
           {/* Header Section */}
           <header className="flex flex-col items-center justify-center py-12 sm:py-16 space-y-6">
             <div className="flex flex-col items-center space-y-4 text-center">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
+              <DashboardBackLink
                 aria-label={t("common.back")}
-                onClick={() => window.history.back()}
-                className="h-16 w-16 sm:h-20 sm:w-20 rounded-full p-0"
+                className={buttonVariants({
+                  variant: "ghost",
+                  size: "icon",
+                  className: "h-16 w-16 sm:h-20 sm:w-20 rounded-full p-0",
+                })}
               >
                 <img src="/lgasset/logo.png" alt="" className="h-full w-full" />
-              </Button>
+              </DashboardBackLink>
               <div className="space-y-2">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">
                   {t("page.gallery.ledgerGallery")}

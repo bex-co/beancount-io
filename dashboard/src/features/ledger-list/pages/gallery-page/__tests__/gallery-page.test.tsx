@@ -52,6 +52,9 @@ vi.mock("@apollo/client/react", () => ({
 vi.mock("@/common/components/seo/page-seo", () => ({
   PageSEO: () => null,
 }));
+vi.mock("@/common/components/dashboard-back-link", () => ({
+  DashboardBackLink: () => null,
+}));
 
 function mockQuery(tuple: SearchLedgersQueryTuple) {
   vi.mocked(apolloClient.useLazyQuery).mockImplementation(
@@ -82,40 +85,6 @@ describe("GalleryPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("exposes a keyboard-operable Back control before search", async () => {
-    const mockQueryTuple: SearchLedgersQueryTuple = createMockLazyQueryTuple(
-      mockSearchLedgers,
-      {
-        data: { searchLedgers: [] },
-        loading: false,
-        error: undefined,
-      },
-    );
-    mockQuery(mockQueryTuple);
-
-    const historyBack = vi
-      .spyOn(window.history, "back")
-      .mockImplementation(() => undefined);
-    const user = userEvent.setup();
-    render(<GalleryPage />);
-
-    const back = screen.getByRole("button", { name: /^back$/i });
-    const search = screen.getByRole("combobox");
-
-    await user.tab();
-    expect(back).toHaveFocus();
-    expect(search).not.toHaveFocus();
-
-    await user.keyboard("{Enter}");
-    expect(historyBack).toHaveBeenCalledTimes(1);
-
-    back.focus();
-    await user.keyboard(" ");
-    expect(historyBack).toHaveBeenCalledTimes(2);
-
-    historyBack.mockRestore();
   });
 
   it("should display ledger descriptions when available", async () => {

@@ -1,8 +1,9 @@
 import { BillingStatusBanner } from "@/common/components/billing/billing-status-banner";
 import { FailedRenewalBanner } from "@/common/components/billing/failed-renewal-banner";
-import { Outlet, Link, useLocation, useRouter } from "@tanstack/react-router";
+import { Outlet, Link, useLocation } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/common/components/ui/button";
+import { DashboardBackLink } from "@/common/components/dashboard-back-link";
+import { buttonVariants } from "@/common/components/ui/button";
 import { cn } from "@/common/lib/utils/utils";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useHidesBilling } from "@/common/hooks/use-hides-billing";
@@ -11,25 +12,23 @@ import { useHidesBilling } from "@/common/hooks/use-hides-billing";
 /**
  * Layout header component for settings
  */
-function LayoutHeader({
-  onBackToDashboard,
-}: {
-  onBackToDashboard: () => void;
-}) {
+function LayoutHeader() {
   const { t } = useTranslations();
   return (
     <header className="h-16 shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-full items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBackToDashboard}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+          <DashboardBackLink
+            className={buttonVariants({
+              variant: "ghost",
+              size: "sm",
+              className:
+                "text-muted-foreground hover:text-foreground transition-colors",
+            })}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             <span>{t("common.back")}</span>
-          </Button>
+          </DashboardBackLink>
         </div>
       </div>
     </header>
@@ -89,18 +88,11 @@ function TopBarNavigation() {
  * Provides consistent sidebar and header layout for all settings pages
  */
 export function SettingsLayout() {
-  const router = useRouter();
-  // const location = useLocation();
-
-  const handleBackToDashboard = () => {
-    router.history.back();
-  };
-
   return (
     <div className="flex h-[var(--visual-viewport-height,100vh)] w-full">
       {/* <SettingsSidebar currentPath={location.pathname} /> */}
       <main className="flex flex-1 flex-col max-w-7xl mx-auto ">
-        <LayoutHeader onBackToDashboard={handleBackToDashboard} />
+        <LayoutHeader />
         <BillingStatusBanner />
         <FailedRenewalBanner />
         <TopBarNavigation />

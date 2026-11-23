@@ -99,6 +99,11 @@ async function setup(
     path: "/ledger/$ledgerOwner/$ledgerName",
     component: () => <h1>Ledger destination</h1>,
   });
+  const dashboard = createRoute({
+    getParentRoute: () => root,
+    path: "/ledger",
+    component: () => <h1>Dashboard</h1>,
+  });
   const before = createRoute({
     getParentRoute: () => root,
     path: "/before",
@@ -111,7 +116,13 @@ async function setup(
   });
   const history = createMemoryHistory({ initialEntries });
   const router = createRouter({
-    routeTree: root.addChildren([gallery, destination, before, legacy]),
+    routeTree: root.addChildren([
+      gallery,
+      destination,
+      dashboard,
+      before,
+      legacy,
+    ]),
     history,
     isServer: false,
   });
@@ -154,6 +165,35 @@ const messages = {
 };
 
 describe("Gallery URL search and announcements", () => {
+  it.each([
+    { previous: null, heading: "Dashboard", path: "/ledger" },
+    {
+      previous: "/before?source=search",
+      heading: "Previous page",
+      path: "/before?source=search",
+    },
+  ])(
+    "returns to $path through the keyboard-accessible Back link",
+    async ({ previous, heading, path }) => {
+      const entry = "/ledger-gallery";
+      const { router } = await setup(
+        entry,
+        "en",
+        previous ? [previous, entry] : [entry],
+      );
+      const user = userEvent.setup();
+      const back = screen.getByRole("link", { name: "Back" });
+      await user.tab();
+      expect(back).toHaveFocus();
+      expect(back).toHaveAttribute("href", "/ledger");
+      await user.keyboard("{Enter}");
+      expect(
+        await screen.findByRole("heading", { name: heading }),
+      ).toBeVisible();
+      expect(router.state.location.href).toBe(path);
+    },
+  );
+
   it("accepts trimmed text and rejects empty or non-text q values", () => {
     expect(validateGallerySearch({ q: "  stock  " })).toEqual({ q: "stock" });
     for (const q of [
