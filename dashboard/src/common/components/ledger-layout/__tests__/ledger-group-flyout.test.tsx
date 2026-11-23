@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { FileSpreadsheet } from "lucide-react";
-import { LedgerGroupFlyout } from "../ledger-group-flyout";
+import { LedgerSidebarGroup } from "../ledger-sidebar-group";
 import { SidebarProvider } from "@/common/components/ui/sidebar";
 import { MOBILE_BREAKPOINT } from "@/common/hooks/use-mobile";
 
@@ -38,24 +38,27 @@ const items = [
 ];
 
 function renderFlyout(
-  props?: Partial<Parameters<typeof LedgerGroupFlyout>[0]>,
+  props?: Partial<Parameters<typeof LedgerSidebarGroup>[0]>,
 ) {
   return render(
     <SidebarProvider>
-      <LedgerGroupFlyout
+      <LedgerSidebarGroup
         label="Reports"
         icon={FileSpreadsheet}
         items={items}
         currentPath="/x/income"
         isActive={false}
         onNavigate={vi.fn()}
+        inRail
+        inlineOpen={false}
+        onInlineToggle={vi.fn()}
         {...props}
       />
     </SidebarProvider>,
   );
 }
 
-describe("LedgerGroupFlyout", () => {
+describe("LedgerSidebarGroup", () => {
   let originalMatchMedia: typeof window.matchMedia;
 
   beforeEach(() => {

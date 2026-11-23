@@ -1,15 +1,19 @@
 import {
   type ElementType,
   type PointerEvent,
+  type ReactNode,
   useEffect,
   useId,
   useRef,
   useState,
 } from "react";
 import { Link } from "@tanstack/react-router";
+import { ChevronDown } from "lucide-react";
 import {
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/common/components/ui/sidebar.tsx";
@@ -19,6 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/common/components/ui/popover.tsx";
+import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 
 interface FlyoutItem {
   id: string;
@@ -26,13 +31,19 @@ interface FlyoutItem {
   path: string;
 }
 
-interface LedgerGroupFlyoutProps {
+interface LedgerSidebarGroupProps {
   label: string;
   icon: ElementType;
   items: FlyoutItem[];
   currentPath: string;
   isActive: boolean;
   onNavigate: () => void;
+  inRail: boolean;
+  inlineOpen: boolean;
+  onInlineToggle: () => void;
+  badge?: number;
+  destructiveBadge?: boolean;
+  children?: ReactNode;
   /**
    * The group's own first page (Reports → Income Statement). With one, the
    * icon goes there, as the group's label does in the full sidebar; the
@@ -47,15 +58,12 @@ interface LedgerGroupFlyoutProps {
 const CLOSE_DELAY_MS = 120;
 
 /**
- * Collapsed-rail rendering of a sidebar group. In the icon rail the inline
- * submenu is hidden, so the group icon would otherwise be a dead click. Here it
- * opens a flyout — on hover, click, or keyboard — that lists the group's
- * destinations beside the rail, keeping every icon actionable and every section
- * reachable while collapsed. A group with a landing page (Reports) goes there
- * on click instead, as its label does in the full sidebar, and keeps the
- * flyout for hover and the arrow keys.
+ * Keep the group control across sidebar widths so it retains keyboard focus.
+ * Its destinations open inline in the full sidebar and as a flyout in the rail.
+ * A group with a landing page keeps its link and opens the flyout on hover or
+ * with the arrow keys.
  */
-export function LedgerGroupFlyout({
+export function LedgerSidebarGroup({
   label,
   icon: Icon,
   items,
@@ -63,10 +71,18 @@ export function LedgerGroupFlyout({
   isActive,
   onNavigate,
   landingPath,
-}: LedgerGroupFlyoutProps) {
+  inRail,
+  inlineOpen,
+  onInlineToggle,
+  badge,
+  destructiveBadge,
+  children,
+}: LedgerSidebarGroupProps) {
   const [open, setOpen] = useState(false);
   const titleId = useId();
+  const submenuId = useId();
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  if (!inRail && open) setOpen(false);
 
   const cancelClose = () => {
     if (closeTimer.current) {
@@ -89,27 +105,27 @@ export function LedgerGroupFlyout({
   // leave scheduled a close on top — a tap could never leave it open. Touch and
   // keyboard activation go through the popover's own toggle instead, which
   // already works.
-  const isHoverPointer = (event: PointerEvent<HTMLElement>) =>
-    event.pointerType === "mouse";
   const handlePointerEnter = (event: PointerEvent<HTMLElement>) => {
-    if (isHoverPointer(event)) openNow();
+    if (inRail && event.pointerType === "mouse") openNow();
   };
   const handlePointerLeave = (event: PointerEvent<HTMLElement>) => {
-    if (isHoverPointer(event)) scheduleClose();
+    if (inRail && event.pointerType === "mouse") scheduleClose();
   };
 
-  // Drop any pending close timer if the flyout unmounts (e.g. the sidebar
-  // expands out of the icon rail) so it can't fire on an unmounted component.
+  // Drop a pending hover timer when the group leaves the rail or unmounts.
   useEffect(
     () => () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
+      if (closeTimer.current) {
+        clearTimeout(closeTimer.current);
+        closeTimer.current = null;
+      }
     },
-    [],
+    [inRail],
   );
 
   // The flyout is a dialog; its visible group title names it, as the group
   // label names the rail icon (w4/1012).
-  const content = (
+  const flyout = inRail && (
     <PopoverContent
       aria-labelledby={titleId}
       side="right"
@@ -145,27 +161,39 @@ export function LedgerGroupFlyout({
     </PopoverContent>
   );
 
-  if (landingPath) {
-    return (
-      <SidebarMenuItem
-        onPointerEnter={handlePointerEnter}
-        onPointerLeave={handlePointerLeave}
+  const chevron = (
+    <ChevronDown
+      className={`transition-transform ${inlineOpen ? "rotate-180" : ""}`}
+    />
+  );
+  return (
+    <SidebarMenuItem
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+    >
+      <Popover
+        open={inRail && open}
+        onOpenChange={inRail ? setOpen : undefined}
       >
-        <Popover open={open} onOpenChange={setOpen}>
+        {landingPath ? (
           <PopoverAnchor asChild>
             <SidebarMenuButton asChild isActive={isActive}>
               <Link
                 to={landingPath}
-                aria-label={label}
-                aria-haspopup="dialog"
-                aria-expanded={open}
+                aria-label={inRail ? label : undefined}
+                aria-haspopup={inRail ? "dialog" : undefined}
+                aria-expanded={inRail ? open : undefined}
+                {...EXACT_PAGE_LINK}
                 onClick={() => {
                   onNavigate();
                   setOpen(false);
                 }}
                 onKeyDown={(event) => {
                   // Enter follows the link; an arrow opens the rest.
-                  if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+                  if (
+                    inRail &&
+                    (event.key === "ArrowRight" || event.key === "ArrowDown")
+                  ) {
                     event.preventDefault();
                     openNow();
                   }
@@ -176,26 +204,59 @@ export function LedgerGroupFlyout({
               </Link>
             </SidebarMenuButton>
           </PopoverAnchor>
-          {content}
-        </Popover>
-      </SidebarMenuItem>
-    );
-  }
-
-  return (
-    <SidebarMenuItem
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-    >
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <SidebarMenuButton isActive={isActive} aria-label={label}>
-            <Icon className="h-4 w-4" />
-            <span>{label}</span>
-          </SidebarMenuButton>
-        </PopoverTrigger>
-        {content}
+        ) : (
+          <PopoverTrigger
+            asChild
+            {...(!inRail && {
+              "aria-haspopup": undefined,
+              "aria-expanded": inlineOpen,
+              "aria-controls": submenuId,
+              "data-state": undefined,
+              onClick: onInlineToggle,
+            })}
+          >
+            <SidebarMenuButton
+              isActive={isActive}
+              aria-label={inRail ? label : undefined}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{label}</span>
+              {!inRail && (
+                <>
+                  {badge ? (
+                    <span
+                      className={
+                        destructiveBadge
+                          ? "ml-auto rounded-md bg-destructive px-1.5 text-xs font-medium text-white tabular-nums"
+                          : "ml-auto text-xs font-medium tabular-nums"
+                      }
+                    >
+                      {badge}
+                    </span>
+                  ) : (
+                    <span className="ml-auto" />
+                  )}
+                  {chevron}
+                </>
+              )}
+            </SidebarMenuButton>
+          </PopoverTrigger>
+        )}
+        {flyout}
       </Popover>
+      {!inRail && landingPath && (
+        <SidebarMenuAction
+          onClick={onInlineToggle}
+          aria-label={label}
+          aria-expanded={inlineOpen}
+          aria-controls={submenuId}
+        >
+          {chevron}
+        </SidebarMenuAction>
+      )}
+      {!inRail && inlineOpen && (
+        <SidebarMenuSub id={submenuId}>{children}</SidebarMenuSub>
+      )}
     </SidebarMenuItem>
   );
 }

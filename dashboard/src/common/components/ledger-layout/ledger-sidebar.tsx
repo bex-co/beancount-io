@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type RefObject, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { EXACT_PAGE_LINK } from "@/common/lib/navigation/active-options";
 import {
@@ -6,7 +6,6 @@ import {
   ArrowLeftRight,
   BarChart3,
   BookOpen,
-  ChevronDown,
   Database,
   FileSpreadsheet,
   Folder,
@@ -32,7 +31,6 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
@@ -49,7 +47,7 @@ import { Authenticated } from "../authenticated";
 import { AccountCombobox } from "./go-to-account.tsx";
 import { AddDirectiveButton } from "./add-directive-button.tsx";
 import { DirectiveUsageIndicator } from "./directive-usage-indicator.tsx";
-import { LedgerGroupFlyout } from "./ledger-group-flyout.tsx";
+import { LedgerSidebarGroup } from "./ledger-sidebar-group";
 import { LedgerOwnerPermission } from "@/common/components/ledger-permission/owner";
 import { useQuery } from "@apollo/client/react";
 import {
@@ -98,8 +96,16 @@ const NO_GROUPS: ReadonlySet<string> = new Set();
  * (only a phone's drawer needs that). On a tablet it opens the sidebar over
  * the page; Ctrl+B and, on a desktop, the sidebar's edge do the same.
  */
-function SidebarCollapseToggle() {
-  const { state, toggleSidebar } = useSidebar();
+function SidebarCollapseToggle({
+  navigationId,
+  toggleRef,
+  focusFirstLink,
+}: {
+  navigationId: string;
+  toggleRef: RefObject<HTMLButtonElement | null>;
+  focusFirstLink: () => void;
+}) {
+  const { isTablet, state, toggleSidebar } = useSidebar();
   const { t } = useTranslations();
   const expanded = state === "expanded";
   const label = expanded
@@ -110,7 +116,16 @@ function SidebarCollapseToggle() {
     <SidebarMenuItem>
       <SidebarMenuButton
         tooltip={label}
-        onClick={toggleSidebar}
+        ref={toggleRef}
+        aria-expanded={expanded}
+        aria-controls={navigationId}
+        onClick={() => {
+          toggleSidebar();
+          if (isTablet) {
+            if (expanded) toggleRef.current?.focus();
+            else focusFirstLink();
+          }
+        }}
         className="text-muted-foreground hover:text-foreground"
       >
         <Icon className="rtl:-scale-x-100" />
@@ -122,6 +137,9 @@ function SidebarCollapseToggle() {
 
 export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
   const { setOpenMobile, isMobile, state } = useSidebar();
+  const navigationId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const overviewLinkRef = useRef<HTMLAnchorElement>(null);
   const { ledgerOwner, ledgerName } = decodeLedgerId(ledgerId);
   const { ledgerData } = useLedger();
   const { t } = useTranslations();
@@ -364,7 +382,12 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
     return (
       <SidebarMenuItem key={item.id}>
         <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
-          <Link to={item.path} onClick={handleNavigate} {...EXACT_PAGE_LINK}>
+          <Link
+            ref={item.id === "overview" ? overviewLinkRef : undefined}
+            to={item.path}
+            onClick={handleNavigate}
+            {...EXACT_PAGE_LINK}
+          >
             <Icon className="h-4 w-4" />
             <span>{item.label}</span>
           </Link>
@@ -380,30 +403,24 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
       (item) => item.path === currentPath,
     );
 
-    // Collapsed to the icon rail: the inline submenu is hidden, so surface the
-    // group's destinations through a hover/click flyout instead of a dead icon.
-    if (state === "collapsed" && !isMobile) {
-      return (
-        <LedgerGroupFlyout
-          key={group.id}
-          label={group.label}
-          icon={group.icon}
-          items={visibleItems}
-          currentPath={currentPath}
-          isActive={hasActiveItem}
-          onNavigate={handleNavigate}
-          landingPath={group.landingPath}
-        />
-      );
-    }
-
     const isOpen =
       (hasActiveItem && !closedHere.has(group.id)) || openGroups.has(group.id);
-    const Icon = group.icon;
-    const submenuId = `ledger-sidebar-${group.id}`;
-
-    const submenu = isOpen && (
-      <SidebarMenuSub id={submenuId}>
+    return (
+      <LedgerSidebarGroup
+        key={group.id}
+        label={group.label}
+        icon={group.icon}
+        items={visibleItems}
+        currentPath={currentPath}
+        isActive={hasActiveItem}
+        onNavigate={handleNavigate}
+        landingPath={group.landingPath}
+        inRail={state === "collapsed" && !isMobile}
+        inlineOpen={isOpen}
+        onInlineToggle={() => toggleGroup(group.id, isOpen)}
+        badge={group.badge}
+        destructiveBadge={group.destructiveBadge}
+      >
         {visibleItems.map((item) => (
           <SidebarMenuSubItem key={item.id}>
             <SidebarMenuSubButton asChild isActive={currentPath === item.path}>
@@ -418,79 +435,13 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
             {item.rightContent}
           </SidebarMenuSubItem>
         ))}
-      </SidebarMenuSub>
-    );
-
-    // A label that navigates cannot also be the disclosure control, so the
-    // chevron becomes its own button beside the link.
-    if (group.landingPath) {
-      return (
-        <SidebarMenuItem key={group.id}>
-          <SidebarMenuButton
-            asChild
-            isActive={hasActiveItem}
-            tooltip={group.label}
-          >
-            <Link
-              to={group.landingPath}
-              onClick={handleNavigate}
-              {...EXACT_PAGE_LINK}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{group.label}</span>
-            </Link>
-          </SidebarMenuButton>
-          <SidebarMenuAction
-            onClick={() => toggleGroup(group.id, isOpen)}
-            aria-label={group.label}
-            aria-expanded={isOpen}
-            aria-controls={submenuId}
-          >
-            <ChevronDown
-              className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
-            />
-          </SidebarMenuAction>
-          {submenu}
-        </SidebarMenuItem>
-      );
-    }
-
-    return (
-      <SidebarMenuItem key={group.id}>
-        <SidebarMenuButton
-          onClick={() => toggleGroup(group.id, isOpen)}
-          isActive={hasActiveItem}
-          tooltip={group.label}
-          aria-expanded={isOpen}
-          aria-controls={submenuId}
-        >
-          <Icon className="h-4 w-4" />
-          <span>{group.label}</span>
-          {group.badge ? (
-            <span
-              className={
-                group.destructiveBadge
-                  ? "ml-auto rounded-md bg-destructive px-1.5 text-xs font-medium text-white tabular-nums"
-                  : "ml-auto text-xs font-medium tabular-nums"
-              }
-            >
-              {group.badge}
-            </span>
-          ) : (
-            <span className="ml-auto" />
-          )}
-          <ChevronDown
-            className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
-          />
-        </SidebarMenuButton>
-        {submenu}
-      </SidebarMenuItem>
+      </LedgerSidebarGroup>
     );
   };
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarNavigation label={t("common.ledgerNavigation")}>
+    <Sidebar collapsible="icon" tabletToggleRef={toggleRef}>
+      <SidebarNavigation id={navigationId} label={t("common.ledgerNavigation")}>
         <SidebarHeader className="h-12 md:h-14 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
           <LedgerSwitcher
             currentLedgerId={ledgerId}
@@ -531,7 +482,13 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
               icon: Settings,
               path: `${ledgerPath}/settings`,
             })}
-            {!isMobile && <SidebarCollapseToggle />}
+            {!isMobile && (
+              <SidebarCollapseToggle
+                navigationId={navigationId}
+                toggleRef={toggleRef}
+                focusFirstLink={() => overviewLinkRef.current?.focus()}
+              />
+            )}
           </SidebarMenu>
           {/* Usage card can't shrink to the icon rail; hide it when collapsed. */}
           <div className="rail:hidden">

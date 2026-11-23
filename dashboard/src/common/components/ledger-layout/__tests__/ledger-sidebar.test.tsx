@@ -1,12 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render as renderComponent,
+  screen,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { SidebarProvider } from "@/common/components/ui/sidebar";
 import { LedgerSidebar } from "../ledger-sidebar";
 
 const mocks = vi.hoisted(() => ({
-  setOpenMobile: vi.fn(),
-  toggleSidebar: vi.fn(),
-  sidebar: { isMobile: false, state: "expanded" },
   errorsDocument: {},
   eventsDocument: {},
   errors: [] as Array<{ message: string }>,
@@ -38,75 +41,27 @@ vi.mock("@/graphql/definitions.ts", () => ({
   GetLedgerEventsDocument: mocks.eventsDocument,
 }));
 
-vi.mock("@/common/components/ui/sidebar.tsx", () => ({
-  Sidebar: ({ children }: { children: React.ReactNode }) => (
-    <aside>{children}</aside>
-  ),
-  SidebarContent: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SidebarFooter: ({ children }: { children: React.ReactNode }) => (
-    <footer>{children}</footer>
-  ),
-  SidebarGroup: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SidebarGroupContent: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  SidebarHeader: ({ children }: { children: React.ReactNode }) => (
-    <header>{children}</header>
-  ),
-  SidebarMenu: ({ children }: { children: React.ReactNode }) => (
-    <ul>{children}</ul>
-  ),
-  SidebarMenuAction: ({
-    children,
-    ...props
-  }: React.ComponentProps<"button">) => (
-    <button type="button" {...props}>
-      {children}
-    </button>
-  ),
-  SidebarMenuBadge: ({ children }: { children: React.ReactNode }) => (
-    <span>{children}</span>
-  ),
-  SidebarMenuButton: ({
-    asChild,
-    children,
-    isActive: _isActive,
-    tooltip: _tooltip,
-    ...props
-  }: React.ComponentProps<"button"> & {
-    asChild?: boolean;
-    isActive?: boolean;
-    tooltip?: string;
-  }) =>
-    asChild ? (
-      children
-    ) : (
-      <button type="button" {...props}>
-        {children}
-      </button>
-    ),
-  SidebarMenuItem: ({ children }: { children: React.ReactNode }) => (
-    <li>{children}</li>
-  ),
-  SidebarMenuSub: ({ children, ...props }: React.ComponentProps<"ul">) => (
-    <ul {...props}>{children}</ul>
-  ),
-  SidebarMenuSubButton: ({ children }: { children: React.ReactNode }) =>
-    children,
-  SidebarMenuSubItem: ({ children }: { children: React.ReactNode }) => (
-    <li>{children}</li>
-  ),
-  SidebarRail: () => null,
-  useSidebar: () => ({
-    ...mocks.sidebar,
-    setOpenMobile: mocks.setOpenMobile,
-    toggleSidebar: mocks.toggleSidebar,
-  }),
+vi.mock("@/common/hooks/use-cookie-storage-state/cookie", () => ({
+  getCookie: () => undefined,
+  setCookie: () => {},
+  removeCookie: () => {},
 }));
+
+function render(sidebar: React.ReactElement, width = 1440) {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    value: width,
+  });
+  return renderComponent(sidebar, { wrapper: SidebarProvider });
+}
+
+const originalWidth = window.innerWidth;
+afterEach(() => {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    value: originalWidth,
+  });
+});
 
 vi.mock("@/common/lib/utils/encode.ts", () => ({
   decodeLedgerId: () => ({ ledgerOwner: "alice", ledgerName: "book" }),
@@ -362,32 +317,92 @@ describe("LedgerSidebar", () => {
 });
 
 describe("LedgerSidebar's own collapse control", () => {
-  afterEach(() => {
-    mocks.sidebar = { isMobile: false, state: "expanded" };
+  const sidebar = (
+    <LedgerSidebar ledgerId="alice/book" currentPath="/ledger/alice/book" />
+  );
+
+  it("keeps the desktop control focused through collapse and expansion", async () => {
+    const user = userEvent.setup();
+    render(sidebar);
+    const toggle = screen.getByRole("button", { name: "Collapse sidebar" });
+    toggle.focus();
+
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("button", { name: "Expand sidebar" })).toBe(toggle);
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(document.getElementById(toggle.getAttribute("aria-controls")!)).toBe(
+      screen.getByRole("navigation", { name: "Ledger" }),
+    );
+
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("button", { name: "Collapse sidebar" })).toBe(
+      toggle,
+    );
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("offers Collapse while open and Expand on the rail, from a tablet up", async () => {
-    const user = userEvent.setup();
-    const { rerender } = render(
-      <LedgerSidebar ledgerId="alice/book" currentPath="/ledger/alice/book" />,
-    );
-    await user.click(screen.getByRole("button", { name: "Collapse sidebar" }));
-    expect(mocks.toggleSidebar).toHaveBeenCalledTimes(1);
+  it.each([
+    ["link", "Journal"],
+    ["link", "Reports"],
+    ["button", "Advanced"],
+  ] as const)(
+    "keeps the %s %s focused when Ctrl+B collapses and expands",
+    async (role, name) => {
+      const user = userEvent.setup();
+      render(sidebar);
+      const item = screen.getByRole(role, { name });
+      item.focus();
 
-    mocks.sidebar = { isMobile: false, state: "collapsed" };
-    rerender(
-      <LedgerSidebar ledgerId="alice/book" currentPath="/ledger/alice/book" />,
+      await user.keyboard("{Control>}b{/Control}");
+      expect(
+        screen.getByRole("button", { name: "Expand sidebar" }),
+      ).toBeInTheDocument();
+      expect(item).toHaveFocus();
+
+      await user.keyboard("{Control>}b{/Control}");
+      expect(
+        screen.getByRole("button", { name: "Collapse sidebar" }),
+      ).toBeInTheDocument();
+      expect(item).toHaveFocus();
+    },
+  );
+
+  it("takes the tablet reader to the links and restores focus when the overlay closes", async () => {
+    const user = userEvent.setup();
+    render(sidebar, 1024);
+    const toggle = screen.getByRole("button", { name: "Expand sidebar" });
+    act(() => toggle.focus());
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByRole("button", { name: "Collapse sidebar" })).toBe(
+      toggle,
     );
-    expect(
-      screen.getByRole("button", { name: "Expand sidebar" }),
-    ).toBeInTheDocument();
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("link", { name: "Overview" })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole("link", { name: "Journal" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    await user.keyboard("{Enter}");
+    const backdrop = document.querySelector<HTMLElement>(
+      '[data-slot="sidebar"] > [aria-hidden="true"]',
+    )!;
+    fireEvent.click(backdrop);
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    await user.keyboard("{Enter}");
+    await user.click(toggle);
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 
   it("leaves a phone's drawer to the header's control", () => {
-    mocks.sidebar = { isMobile: true, state: "expanded" };
-    render(
-      <LedgerSidebar ledgerId="alice/book" currentPath="/ledger/alice/book" />,
-    );
+    render(sidebar, 390);
     expect(
       screen.queryByRole("button", { name: /sidebar/i }),
     ).not.toBeInTheDocument();

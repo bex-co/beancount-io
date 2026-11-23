@@ -286,11 +286,13 @@ function Sidebar({
   collapsible = "offcanvas",
   className,
   children,
+  tabletToggleRef,
   ...props
 }: React.ComponentProps<"div"> & {
   side?: "left" | "right";
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
+  tabletToggleRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
   const {
     isMobile,
@@ -314,14 +316,18 @@ function Sidebar({
   // Opened over the page on a tablet: Escape closes it, as a click outside
   // or on a link inside does.
   const overlayOpen = isTablet && openTablet;
+  const dismissTabletOverlay = React.useCallback(() => {
+    setOpenTablet(false);
+    tabletToggleRef?.current?.focus();
+  }, [setOpenTablet, tabletToggleRef]);
   React.useEffect(() => {
     if (!overlayOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpenTablet(false);
+      if (event.key === "Escape") dismissTabletOverlay();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [overlayOpen, setOpenTablet]);
+  }, [overlayOpen, dismissTabletOverlay]);
 
   if (collapsible === "none") {
     return (
@@ -392,7 +398,7 @@ function Sidebar({
         <div
           aria-hidden="true"
           className="fixed inset-0 z-30 bg-black/20"
-          onClick={() => setOpenTablet(false)}
+          onClick={dismissTabletOverlay}
         />
       )}
       {/* This is what handles the sidebar gap on desktop */}
@@ -834,6 +840,9 @@ function SidebarMenuButton({
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button";
   const { isMobile, state } = useSidebar();
+  const canShowTooltip = Boolean(tooltip) && state === "collapsed" && !isMobile;
+  const [tooltipOpen, setTooltipOpen] = React.useState(false);
+  if (!canShowTooltip && tooltipOpen) setTooltipOpen(false);
 
   const button = (
     <Comp
@@ -846,10 +855,7 @@ function SidebarMenuButton({
     />
   );
 
-  // Hidden tooltip content still consumes Escape before the mobile sheet.
-  if (!tooltip || state !== "collapsed" || isMobile) {
-    return button;
-  }
+  if (!tooltip) return button;
 
   if (typeof tooltip === "string") {
     tooltip = {
@@ -858,9 +864,16 @@ function SidebarMenuButton({
   }
 
   return (
-    <Tooltip>
+    // Keep the trigger mounted when resizing the sidebar. Render no tooltip
+    // content in the mobile sheet, where it can intercept Escape.
+    <Tooltip
+      open={canShowTooltip && tooltipOpen}
+      onOpenChange={canShowTooltip ? setTooltipOpen : undefined}
+    >
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent side="right" align="center" {...tooltip} />
+      {canShowTooltip && (
+        <TooltipContent side="right" align="center" {...tooltip} />
+      )}
     </Tooltip>
   );
 }

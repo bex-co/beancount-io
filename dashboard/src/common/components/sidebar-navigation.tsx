@@ -5,14 +5,20 @@
  * non-navigation Sidebar consumers do not falsely expose a landmark.
  */
 export function SidebarNavigation({
+  id,
   label,
   children,
 }: {
+  id?: string;
   label: string;
   children: React.ReactNode;
 }) {
   return (
-    <nav aria-label={label} className="flex h-full min-h-0 w-full flex-col">
+    <nav
+      id={id}
+      aria-label={label}
+      className="flex h-full min-h-0 w-full flex-col"
+    >
       {children}
     </nav>
   );
