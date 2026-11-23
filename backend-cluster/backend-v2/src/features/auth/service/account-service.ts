@@ -3,9 +3,11 @@ import type { DbExecutor } from "@/drizzle/drizzle";
 import { getTierLimits } from "@/features/stripe/service/stripe";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
 import {
+  BadUserInputError,
   NotFoundError,
   ConflictError,
   InternalServerError,
+  ValidationError,
 } from "@/shared/errors";
 import { countOwnedLedgers } from "@/features/ledger/operations/owned-ledgers";
 import type Stripe from "stripe";
@@ -17,7 +19,6 @@ import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factor
 import type { IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { decryptToken } from "@/features/plaid/utils/encryption";
 import { logger } from "@/shared/logger";
-import { ValidationError } from "@/shared/errors";
 import { isSupportedCurrency } from "@/features/ledger/setup";
 import type { Identity } from "@/server/api/identity";
 import {
@@ -132,6 +133,16 @@ export class AccountService implements IAccountService {
     identity: Identity,
     targetUserId: string,
   ): Promise<UserProfile | null> => {
+    // Empty or whitespace-only userId passes REST/MCP string schemas and
+    // GraphQL's nullable String, so guard here for all three surfaces before
+    // building a malformed `user:` resource for the PDP (w31/037).
+    if (targetUserId.trim() === "") {
+      throw new BadUserInputError(
+        "userId must not be empty",
+        "userId",
+        "Omit userId to read your own profile, or pass your own user ID.",
+      );
+    }
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.USER_PROFILE_READ,

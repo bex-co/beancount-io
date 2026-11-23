@@ -237,6 +237,26 @@ describe("AccountService", () => {
   });
 
   describe("getUserProfile", () => {
+    it.each(["", "  ", "\t", "\n"])(
+      "refuses empty or whitespace-only targetUserId=%j with BadUserInputError before authorizing",
+      async (blankUserId) => {
+        const failure = await accountService
+          .getUserProfile(identity("user-123"), blankUserId)
+          .catch((error: unknown) => error);
+
+        expect(failure).toBeInstanceOf(BadUserInputError);
+        expect(failure).toMatchObject({
+          category: ErrorCategory.BAD_USER_INPUT,
+          metadata: {
+            field: "userId",
+            hint: "Omit userId to read your own profile, or pass your own user ID.",
+          },
+        });
+        expect(mockAuthorization.authorizeOrThrow).not.toHaveBeenCalled();
+        expect(mockModels.user.getById).not.toHaveBeenCalled();
+      },
+    );
+
     it("should return user profile with OFF report status (report subscription removed)", async () => {
       const userId = "user-123";
       const mockUser = {

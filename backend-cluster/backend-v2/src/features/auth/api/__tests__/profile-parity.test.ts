@@ -10,6 +10,7 @@ import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
 } from "@/server/api/authorization";
+import { formatError } from "@/server/graphql/format-error";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
@@ -234,17 +235,92 @@ describe("profile reads through actual adapters and exact-self authorization", (
       await server.close();
     }
   });
-  it.each(["?userId=someone", "?userId="])(
-    "refuses another target before loading data: %s",
-    async (suffix) => {
+  it("refuses another user target as FORBIDDEN with an account-only hint before loading data", async () => {
+    const f = await fixture();
+    try {
+      const rest = await f.rest("?userId=someone");
+      expect(rest.status).toBe(403);
+      expect(await rest.json()).toMatchObject({
+        ok: false,
+        error: {
+          code: "FORBIDDEN",
+          metadata: {
+            reason: "relationship_denied",
+            resourceType: "user",
+            hint: "This operation reaches only the credential's own account.",
+          },
+        },
+      });
+      const gql = await f.gql('(userId:"someone")');
+      const [error] = gql.errors ?? [];
+      expect(error).toBeDefined();
+      expect(formatError(error!.toJSON(), error!).extensions).toMatchObject({
+        code: "FORBIDDEN",
+        reason: "relationship_denied",
+        resourceType: "user",
+        hint: "This operation reaches only the credential's own account.",
+      });
+      await expect(f.read("?userId=someone")).rejects.toMatchObject({
+        code: -32003,
+        data: {
+          code: "FORBIDDEN",
+          hint: "This operation reaches only the credential's own account.",
+        },
+      });
+      expect(f.getById).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+  // w31/037: empty or whitespace-only userId must be refused as BAD_USER_INPUT
+  // across REST, GraphQL, and MCP — never FORBIDDEN unknown_resource or a
+  // ledger-metadata hint.
+  it.each(["", "  ", "\t", "\n"])(
+    "refuses empty or whitespace-only userId=%j as BAD_USER_INPUT across REST, GraphQL, and MCP",
+    async (blankUserId) => {
       const f = await fixture();
+      const suffix = `?userId=${encodeURIComponent(blankUserId)}`;
+      const expectedHint =
+        "Omit userId to read your own profile, or pass your own user ID.";
       try {
-        expect((await f.rest(suffix)).ok).toBe(false);
-        expect(
-          (await f.gql(`(userId:${JSON.stringify(suffix.split("=")[1])})`))
-            .errors,
-        ).toBeDefined();
-        await expect(f.read(suffix)).rejects.toThrow();
+        const rest = await f.rest(suffix);
+        expect(rest.status).toBe(400);
+        const restBody = await rest.json();
+        expect(restBody).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            metadata: {
+              field: "userId",
+              hint: expectedHint,
+            },
+          },
+        });
+        expect(JSON.stringify(restBody)).not.toContain("/metadata");
+
+        const gql = await f.gql(`(userId:${JSON.stringify(blankUserId)})`);
+        expect(gql.data?.userProfile).toBeNull();
+        const [error] = gql.errors ?? [];
+        expect(error).toBeDefined();
+        const formatted = formatError(error!.toJSON(), error!);
+        expect(formatted.extensions).toMatchObject({
+          code: "BAD_USER_INPUT",
+          field: "userId",
+          hint: expectedHint,
+        });
+        expect(JSON.stringify(formatted)).not.toContain("/metadata");
+
+        const mcpFailure = await f.read(suffix).catch((err: unknown) => err);
+        expect(mcpFailure).toMatchObject({
+          code: -32602,
+          data: {
+            code: "BAD_USER_INPUT",
+            hint: expectedHint,
+          },
+        });
+        expect(String((mcpFailure as Error).message)).not.toContain(
+          "/metadata",
+        );
         expect(f.getById).not.toHaveBeenCalled();
       } finally {
         await f.close();
