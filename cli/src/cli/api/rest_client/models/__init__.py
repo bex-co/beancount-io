@@ -178,6 +178,12 @@ from .get_api_gateway_v1_ledgers_owner_name_options_response_200 import (
     GetApiGatewayV1LedgersOwnerNameOptionsResponse200,
 )
 from .get_api_gateway_v1_ledgers_owner_name_overview_shape import GetApiGatewayV1LedgersOwnerNameOverviewShape
+from .get_api_gateway_v1_ledgers_owner_name_pull_requests_pr_number_response_200 import (
+    GetApiGatewayV1LedgersOwnerNamePullRequestsPrNumberResponse200,
+)
+from .get_api_gateway_v1_ledgers_owner_name_pull_requests_pr_number_response_200_files_item import (
+    GetApiGatewayV1LedgersOwnerNamePullRequestsPrNumberResponse200FilesItem,
+)
 from .get_api_gateway_v1_ledgers_owner_name_statements_statement_shape import (
     GetApiGatewayV1LedgersOwnerNameStatementsStatementShape,
 )
@@ -367,6 +373,18 @@ from .post_api_gateway_v1_ledgers_owner_name_managed_prices_refresh_response_200
 from .post_api_gateway_v1_ledgers_owner_name_pull_requests_body import PostApiGatewayV1LedgersOwnerNamePullRequestsBody
 from .post_api_gateway_v1_ledgers_owner_name_pull_requests_body_changes_item import (
     PostApiGatewayV1LedgersOwnerNamePullRequestsBodyChangesItem,
+)
+from .post_api_gateway_v1_ledgers_owner_name_pull_requests_pr_number_approve_body import (
+    PostApiGatewayV1LedgersOwnerNamePullRequestsPrNumberApproveBody,
+)
+from .post_api_gateway_v1_ledgers_owner_name_pull_requests_pr_number_approve_response_200 import (
+    PostApiGatewayV1LedgersOwnerNamePullRequestsPrNumberApproveResponse200,
+)
+from .post_api_gateway_v1_ledgers_owner_name_pull_requests_pr_number_reject_body import (
+    PostApiGatewayV1LedgersOwnerNamePullRequestsPrNumberRejectBody,
+)
+from .post_api_gateway_v1_ledgers_owner_name_pull_requests_pr_number_reject_response_200 import (
+    PostApiGatewayV1LedgersOwnerNamePullRequestsPrNumberRejectResponse200,
 )
 from .post_api_gateway_v1_ledgers_owner_name_pull_requests_response_200 import (
     PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200,
@@ -628,6 +646,8 @@ __all__ = (
     "GetApiGatewayV1LedgersOwnerNameManagedPricesResponse200ItemIncludedFromItem",
     "GetApiGatewayV1LedgersOwnerNameOptionsResponse200",
     "GetApiGatewayV1LedgersOwnerNameOverviewShape",
+    "GetApiGatewayV1LedgersOwnerNamePullRequestsPrNumberResponse200",
+    "GetApiGatewayV1LedgersOwnerNamePullRequestsPrNumberResponse200FilesItem",
     "GetApiGatewayV1LedgersOwnerNameStatementsStatementShape",
     "GetApiGatewayV1LedgersOwnerNameStatementsStatementStatement",
     "GetApiGatewayV1LegacyJournalEntriesDetailed",
@@ -716,6 +736,10 @@ __all__ = (
     "PostApiGatewayV1LedgersOwnerNameManagedPricesRefreshResponse200ItemIncludedFromItem",
     "PostApiGatewayV1LedgersOwnerNamePullRequestsBody",
     "PostApiGatewayV1LedgersOwnerNamePullRequestsBodyChangesItem",
+    "PostApiGatewayV1LedgersOwnerNamePullRequestsPrNumberApproveBody",
+    "PostApiGatewayV1LedgersOwnerNamePullRequestsPrNumberApproveResponse200",
+    "PostApiGatewayV1LedgersOwnerNamePullRequestsPrNumberRejectBody",
+    "PostApiGatewayV1LedgersOwnerNamePullRequestsPrNumberRejectResponse200",
     "PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200",
     "PostApiGatewayV1LedgersOwnerNameRenameAccountBody",
     "PostApiGatewayV1LedgersOwnerNameRenameAccountResponse200",

@@ -16,7 +16,11 @@ import { mcpOutputSchema, toolOutputSchema } from "../tools/types";
 const reviewInput = z
   .object({
     ledger: ledgerSelection,
-    prNumber: z.number().int().describe("The pull request's number."),
+    prNumber: z
+      .number()
+      .int()
+      .positive()
+      .describe("The pull request's number."),
   })
   .strict();
 export const PULL_REQUEST_OPERATION_SCHEMAS = {

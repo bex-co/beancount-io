@@ -286,6 +286,7 @@ async function fixture(caller = identity, appConfig = config) {
     user,
     getUserApiClient,
     client,
+    restUrl: rest.url,
     call: async (
       surface: Surface,
       operation: "create" | "approve" | "reject",
@@ -830,6 +831,132 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       }
     });
   });
+  describe("non-positive and empty prNumber refusal on every surface (w31/035)", () => {
+    it.each([0, -1])(
+      "refuses prNumber=%i for inspection on REST, MCP, and GraphQL without calling Gitea",
+      async (badPrNumber) => {
+        const f = await fixture();
+        try {
+          const restRes = await fetch(
+            `${f.restUrl}/api-gateway/v1/ledgers/alice/main/pull-requests/${badPrNumber}`,
+          );
+          expect(restRes.status).toBe(400);
+          const restBody = await restRes.json();
+          expect(restBody).toMatchObject({
+            error: {
+              code: "VALIDATION_FAILED",
+              message: expect.stringContaining("prNumber"),
+            },
+          });
+
+          await expect(
+            f.client.readResource({
+              uri: `beancount://alice/main/pull-request?prNumber=${badPrNumber}`,
+            }),
+          ).rejects.toMatchObject({
+            code: -32602,
+            data: {
+              code: "BAD_USER_INPUT",
+              message: expect.stringContaining("prNumber"),
+            },
+          });
+
+          const gqlRes = await f.gql(
+            `{getPullRequestDetails(ledgerOwner:"alice",ledgerName:"main",prNumber:${badPrNumber}){${detailsFields}}}`,
+          );
+          expect(gqlRes.errors?.[0]).toMatchObject({
+            message: expect.stringContaining("prNumber"),
+            originalError: { category: "BAD_USER_INPUT" },
+          });
+
+          expect(f.getUserApiClient).not.toHaveBeenCalled();
+          expect(f.repos.repoGetPullRequest).not.toHaveBeenCalled();
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it("refuses empty ?prNumber= on MCP pull-request resource without calling Gitea", async () => {
+      const f = await fixture();
+      try {
+        await expect(
+          f.client.readResource({
+            uri: "beancount://alice/main/pull-request?prNumber=",
+          }),
+        ).rejects.toMatchObject({
+          code: -32602,
+          data: {
+            code: "BAD_USER_INPUT",
+            message: expect.stringContaining("prNumber"),
+          },
+        });
+        expect(f.getUserApiClient).not.toHaveBeenCalled();
+        expect(f.repos.repoGetPullRequest).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each([
+      ["approve", 0],
+      ["approve", -1],
+      ["reject", 0],
+      ["reject", -1],
+    ] as const)(
+      "refuses %s with prNumber=%i on REST, MCP, and GraphQL without calling Gitea",
+      async (operation, badPrNumber) => {
+        const f = await fixture();
+        try {
+          const restRes = await fetch(
+            `${f.restUrl}/api-gateway/v1/ledgers/alice/main/pull-requests/${badPrNumber}/${operation}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: "{}",
+            },
+          );
+          expect(restRes.status).toBe(400);
+          expect(await restRes.json()).toMatchObject({
+            error: {
+              code: "VALIDATION_FAILED",
+              message: expect.stringContaining("prNumber"),
+            },
+          });
+
+          const mcpRes = await f.client.callTool(
+            perOperation({
+              operation,
+              ledger: "alice/main",
+              prNumber: badPrNumber,
+            }),
+          );
+          expect(mcpRes.isError).toBe(true);
+          expect(mcpRes.structuredContent).toMatchObject({
+            error: {
+              code: "BAD_USER_INPUT",
+              message: expect.stringContaining("prNumber"),
+            },
+          });
+
+          const gqlRes = await f.gql(
+            `mutation{${operation}PullRequest(ledgerOwner:"alice",ledgerName:"main",prNumber:${badPrNumber}){${resultFields}}}`,
+          );
+          expect(gqlRes.errors?.[0]).toMatchObject({
+            message: expect.stringContaining("prNumber"),
+            originalError: { category: "BAD_USER_INPUT" },
+          });
+
+          expect(f.getUserApiClient).not.toHaveBeenCalled();
+          expect(f.repos.repoMergePullRequest).not.toHaveBeenCalled();
+          expect(f.repos.repoEditPullRequest).not.toHaveBeenCalled();
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  });
+
   it("marks failed MCP reviews as errors while retaining their domain result", async () => {
     const f = await fixture();
     try {

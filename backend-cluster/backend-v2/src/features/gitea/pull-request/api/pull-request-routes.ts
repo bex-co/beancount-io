@@ -30,7 +30,7 @@ export const pullRequestCreateInput = z
   })
   .strict();
 export const pullRequestNumberQuery = z
-  .object({ prNumber: z.coerce.number().int() })
+  .object({ prNumber: z.coerce.number().int().positive() })
   .strict();
 export const pullRequestResultSchema = z.object({
   success: z.boolean(),
@@ -68,7 +68,9 @@ const pullRequestDetailsSchema = z.object({
   ),
   diff: z.string().optional(),
 });
-const path = ledgerPathSchema.extend({ prNumber: z.coerce.number().int() });
+const path = ledgerPathSchema.extend({
+  prNumber: z.coerce.number().int().positive(),
+});
 export const PULL_REQUEST_ROUTES = [
   v1Route({
     method: "get",

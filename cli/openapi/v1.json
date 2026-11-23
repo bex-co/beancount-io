@@ -5052,9 +5052,10 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true
+              "minimum": 0,
+              "exclusiveMinimum": true
             },
-            "required": false,
+            "required": true,
             "name": "prNumber",
             "in": "path"
           }
@@ -5496,9 +5497,10 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true
+              "minimum": 0,
+              "exclusiveMinimum": true
             },
-            "required": false,
+            "required": true,
             "name": "prNumber",
             "in": "path"
           }
@@ -5686,9 +5688,10 @@
           {
             "schema": {
               "type": "integer",
-              "nullable": true
+              "minimum": 0,
+              "exclusiveMinimum": true
             },
-            "required": false,
+            "required": true,
             "name": "prNumber",
             "in": "path"
           }

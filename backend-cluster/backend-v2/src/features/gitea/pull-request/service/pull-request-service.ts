@@ -539,6 +539,7 @@ export class PullRequestService implements IPullRequestService {
       action: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_READ,
       resource: ledgerResource(createLedgerId(owner, repo)),
     });
+    assertPullRequestNumber(prNumber);
     const userId = identity.userId;
     const client = await this.giteaClientFactory.getUserApiClient(userId);
 
@@ -624,6 +625,7 @@ export class PullRequestService implements IPullRequestService {
       action: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE,
       resource: ledgerResource(createLedgerId(owner, repo)),
     });
+    assertPullRequestNumber(prNumber);
     const userId = identity.userId;
     const client = await this.giteaClientFactory.getUserApiClient(userId);
     await this.assertMergeWithinDirectiveLimit(
@@ -718,6 +720,7 @@ export class PullRequestService implements IPullRequestService {
       action: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_REJECT,
       resource: ledgerResource(createLedgerId(owner, repo)),
     });
+    assertPullRequestNumber(prNumber);
     const userId = identity.userId;
     const client = await this.giteaClientFactory.getUserApiClient(userId);
 
@@ -730,6 +733,15 @@ export class PullRequestService implements IPullRequestService {
     } catch (error) {
       return reviewFailure(error, prNumber);
     }
+  }
+}
+
+function assertPullRequestNumber(prNumber: number): void {
+  if (!Number.isInteger(prNumber) || prNumber < 1) {
+    throw new BadUserInputError(
+      "prNumber must be a positive integer",
+      "prNumber",
+    );
   }
 }
 

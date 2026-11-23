@@ -757,6 +757,34 @@ describe("PullRequestService", () => {
     });
   });
 
+  describe.each(["getPRDetails", "mergePR", "closePR"] as const)(
+    "%s prNumber validation (w31/035)",
+    (method) => {
+      it.each([0, -1, 1.5, Number.NaN])(
+        "refuses prNumber=%p as BAD_USER_INPUT before contacting Gitea",
+        async (invalidPrNumber) => {
+          const failure = await service[method](
+            identity,
+            "testowner",
+            "testrepo",
+            invalidPrNumber,
+          ).catch((error: unknown) => error);
+          expect(failure).toMatchObject({
+            category: "BAD_USER_INPUT",
+            message: "prNumber must be a positive integer",
+            metadata: { field: "prNumber" },
+          });
+          expect(
+            mockGiteaClientFactory.getUserApiClient,
+          ).not.toHaveBeenCalled();
+          expect(mockClient.repos.repoGetPullRequest).not.toHaveBeenCalled();
+          expect(mockClient.repos.repoMergePullRequest).not.toHaveBeenCalled();
+          expect(mockClient.repos.repoEditPullRequest).not.toHaveBeenCalled();
+        },
+      );
+    },
+  );
+
   describe.each([
     ["mergePR", "repoMergePullRequest"],
     ["closePR", "repoEditPullRequest"],
