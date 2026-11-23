@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
+import { AuthUnavailableNotice } from "@/common/components/auth-unavailable-notice";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
+import { useAuthStatus } from "@/common/hooks/use-auth-status";
 
 type WriteAccessRequiredProps = {
   ledgerOwner: string;
@@ -26,13 +27,14 @@ export function WriteAccessRequired({
   dirPath = "",
 }: WriteAccessRequiredProps) {
   const { t } = useTranslations();
-  const isAuthenticated = useIsAuthenticated();
+  const authStatus = useAuthStatus();
+  if (authStatus === "unavailable") return <AuthUnavailableNotice />;
 
   return (
     <Card>
       <CardContent className="flex flex-col items-start gap-4 pt-6">
         <p className="text-sm text-muted-foreground">
-          {isAuthenticated
+          {authStatus === "signed-in"
             ? t("common.errors.forbidden")
             : t("common.errors.unauthenticated")}
         </p>

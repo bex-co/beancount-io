@@ -6,10 +6,11 @@ import {
   AlertTitle,
 } from "@/common/components/ui/alert";
 import { buttonVariants } from "@/common/components/ui/button";
-import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
+import { useAuthStatus } from "@/common/hooks/use-auth-status";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSafeReturnPath } from "@/common/hooks/use-safe-return-path";
+import { AuthUnavailableNotice } from "./auth-unavailable-notice";
 
 type LedgerWriteAccessNoticeProps = {
   title: string;
@@ -32,11 +33,13 @@ export function LedgerWriteAccessNotice({
   unresolved,
 }: LedgerWriteAccessNoticeProps) {
   const { t } = useTranslations();
-  const isAuthenticated = useIsAuthenticated();
+  const authStatus = useAuthStatus();
   const { ledgerData } = useLedger();
   const next = useSafeReturnPath();
 
-  if (!isAuthenticated) {
+  if (authStatus === "unavailable") return <AuthUnavailableNotice />;
+
+  if (authStatus === "signed-out") {
     return (
       <Alert role="status">
         <LockKeyhole aria-hidden />

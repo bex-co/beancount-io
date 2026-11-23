@@ -16,6 +16,9 @@ vi.mock("../../../shared/lib/utils", async (importOriginal) => ({
 vi.mock("@/common/hooks/use-is-authenticated", () => ({
   useIsAuthenticated: () => true,
 }));
+vi.mock("@/common/hooks/use-auth-status", () => ({
+  useAuthStatus: () => "signed-in",
+}));
 vi.mock("@/common/providers/ledger-provider", () => ({
   useLedger: () => ({
     ledgerData: { permissions: { pull: true, push: true } },

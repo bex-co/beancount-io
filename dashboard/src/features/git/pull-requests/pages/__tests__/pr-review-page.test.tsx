@@ -43,6 +43,9 @@ vi.mock("@apollo/client/react", () => ({
 vi.mock("@/common/hooks/use-is-authenticated", () => ({
   useIsAuthenticated: () => true,
 }));
+vi.mock("@/common/hooks/use-auth-status", () => ({
+  useAuthStatus: () => "signed-in",
+}));
 vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({
     ledgerData: { permissions: { push: true, admin: false } },

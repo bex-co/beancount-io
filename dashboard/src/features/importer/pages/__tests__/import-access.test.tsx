@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   aiCategorize: vi.fn(),
   llmParse: vi.fn(),
   authenticated: true,
+  authUnavailable: false,
+  invalidate: vi.fn(async () => {}),
 }));
 
 // The failed-renewal banner reads billing state the shell under test does
@@ -36,6 +38,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
     href: "/ledger/open_ledger/example/import",
   }),
   useRouterState: () => false,
+  useRouter: () => ({ invalidate: mocks.invalidate }),
   Outlet: () => <ImportPage />,
   ClientOnly: ({ children }: { children: ReactNode }) => <>{children}</>,
   Link: ({
@@ -63,6 +66,14 @@ vi.mock("@apollo/client/react", () => ({
 
 vi.mock("@/common/hooks/use-is-authenticated", () => ({
   useIsAuthenticated: () => mocks.authenticated,
+}));
+vi.mock("@/common/hooks/use-auth-status", () => ({
+  useAuthStatus: () =>
+    mocks.authUnavailable
+      ? "unavailable"
+      : mocks.authenticated
+        ? "signed-in"
+        : "signed-out",
 }));
 
 vi.mock("@/common/hooks/use-mobile", () => ({ useIsMobile: () => false }));
@@ -199,6 +210,7 @@ describe("Smart Import ledger access", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.authenticated = true;
+    mocks.authUnavailable = false;
     mocks.useMutation.mockReturnValue([mocks.mutate, { loading: false }]);
     mocks.mutate.mockResolvedValue({
       data: { bulkEntries: { success: true } },
@@ -206,6 +218,22 @@ describe("Smart Import ledger access", () => {
     setAccess(ledger.permissions);
   });
   afterEach(cleanup);
+
+  it("offers an in-place retry when the owner's sign-in probe fails", async () => {
+    mocks.authUnavailable = true;
+    mocks.authenticated = false;
+    setAccess({ admin: true, pull: true, push: true });
+    const { container } = render(<LedgerLayout />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "The service is temporarily unavailable",
+    );
+    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+    expect(screen.queryByText(/read-only for you/)).toBeNull();
+    expectNoWriteWorkflow(container);
+    await userEvent.click(screen.getByRole("button", { name: "Try Again" }));
+    expect(mocks.invalidate).toHaveBeenCalledTimes(1);
+  });
 
   it("shows an accessible read-only explanation and preserves read navigation without mounting import hooks", () => {
     const { container } = render(<LedgerLayout />);

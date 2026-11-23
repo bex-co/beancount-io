@@ -43,6 +43,9 @@ vi.mock("@/common/providers/ledger-provider", () => ({
 vi.mock("@/common/hooks/use-is-authenticated", () => ({
   useIsAuthenticated: () => true,
 }));
+vi.mock("@/common/hooks/use-auth-status", () => ({
+  useAuthStatus: () => "signed-in",
+}));
 vi.mock("@/common/components/monaco-editor", () => ({
   MonacoEditor: (props: EditorProps) => (
     <textarea

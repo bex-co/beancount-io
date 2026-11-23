@@ -51,6 +51,9 @@ vi.mock("@/common/hooks/use-ledger", () => ({
 vi.mock("@/common/hooks/use-is-authenticated", () => ({
   useIsAuthenticated: () => true,
 }));
+vi.mock("@/common/hooks/use-auth-status", () => ({
+  useAuthStatus: () => "signed-in",
+}));
 // Mutating account dialogs are outside this read-only balance journey.
 vi.mock("../open-account-dialog", () => ({ OpenAccountDialog: () => null }));
 vi.mock("../close-account-dialog", () => ({ CloseAccountDialog: () => null }));

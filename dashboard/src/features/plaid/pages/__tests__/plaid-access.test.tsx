@@ -16,17 +16,20 @@ import {
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GraphQLError } from "graphql";
+import { ServerError } from "@apollo/client/errors";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   GetPlaidItemsQuery,
   GetUnsyncedPlaidTransactionsQuery,
 } from "@/graphql/definitions";
+import { fetchUserProfile, toAuthContext } from "@/common/server-fn/user";
 import { PlaidConnectionsPage } from "../plaid-connections";
 import { PlaidSettingsPage } from "../plaid-settings";
 
 type Permissions = { admin: boolean; pull: boolean; push: boolean } | null;
 const access = vi.hoisted(() => ({
   authenticated: true,
+  authUnavailable: false,
   permissions: { admin: true, pull: true, push: true } as Permissions,
 }));
 
@@ -38,6 +41,7 @@ vi.mock("@/common/hooks/use-ledger", () => ({
 vi.mock("@/common/hooks/use-is-authenticated", () => ({
   useIsAuthenticated: () => access.authenticated,
 }));
+vi.mock("@/common/apollo/client", () => ({ getClient: vi.fn() }));
 vi.mock("react-plaid-link", () => ({
   usePlaidLink: () => ({ open: vi.fn(), ready: false, error: null }),
 }));
@@ -97,6 +101,7 @@ const clients: ApolloClient[] = [];
 
 beforeEach(() => {
   access.authenticated = true;
+  access.authUnavailable = false;
   access.permissions = { admin: true, pull: true, push: true };
 });
 afterEach(() => {
@@ -104,7 +109,10 @@ afterEach(() => {
   clients.splice(0).forEach((client) => client.stop());
 });
 
-async function mountPage(page: "settings" | "connections") {
+async function mountPage(
+  page: "settings" | "connections",
+  { startOnJournal = false } = {},
+) {
   const requests: Request[] = [];
   const client = new ApolloClient({
     cache: new InMemoryCache(),
@@ -151,7 +159,29 @@ async function mountPage(page: "settings" | "connections") {
     ),
   });
   clients.push(client);
-  const root = createRootRoute({ component: Outlet });
+  const profileClient = {
+    query: async () => {
+      if (access.authUnavailable) {
+        throw new ServerError("Synthetic 502", {
+          response: new Response(null, { status: 502 }),
+          bodyText: "Bad gateway",
+        });
+      }
+      return {
+        data: { userProfile: access.authenticated ? { id: "owner" } : null },
+      };
+    },
+  };
+  const root = createRootRoute({
+    component: Outlet,
+    beforeLoad: async () =>
+      toAuthContext(await fetchUserProfile(profileClient as never)),
+  });
+  const journal = createRoute({
+    getParentRoute: () => root,
+    path: "/ledger/$ledgerOwner/$ledgerName/journal",
+    component: () => <h1>Journal</h1>,
+  });
   const settings = createRoute({
     getParentRoute: () => root,
     path: "/ledger/$ledgerOwner/$ledgerName/link",
@@ -162,12 +192,11 @@ async function mountPage(page: "settings" | "connections") {
     path: "/ledger/$ledgerOwner/$ledgerName/plaid-connections",
     component: PlaidConnectionsPage,
   });
+  const path = `/ledger/${ledgerId}/${page === "settings" ? "link" : "plaid-connections"}`;
   const router = createRouter({
-    routeTree: root.addChildren([settings, connections]),
+    routeTree: root.addChildren([journal, settings, connections]),
     history: createMemoryHistory({
-      initialEntries: [
-        `/ledger/${ledgerId}/${page === "settings" ? "link" : "plaid-connections"}`,
-      ],
+      initialEntries: [startOnJournal ? `/ledger/${ledgerId}/journal` : path],
     }),
   });
   await router.load();
@@ -180,6 +209,8 @@ async function mountPage(page: "settings" | "connections") {
   const itemRequests = () =>
     requests.filter(({ name }) => name === "GetPlaidItems");
   return {
+    router,
+    path,
     requests,
     itemRequests,
     completeItems: async (items: GetPlaidItemsQuery["getPlaidItems"] = []) => {
@@ -215,6 +246,32 @@ function expectAccessNotice() {
 }
 
 describe.each(["settings", "connections"] as const)("Plaid %s page", (page) => {
+  it("retries a 502 from the sign-in probe in place without requesting bank data first", async () => {
+    const user = userEvent.setup();
+    const fixture = await mountPage(page, { startOnJournal: true });
+    access.authUnavailable = true;
+    access.authenticated = false;
+    await act(async () => fixture.router.navigate({ to: fixture.path }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "The service is temporarily unavailable",
+    );
+    expect(screen.queryByText(notice)).toBeNull();
+    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+    expect(fixture.requests).toEqual([]);
+
+    access.authUnavailable = false;
+    access.authenticated = true;
+    await user.click(screen.getByRole("button", { name: "Try Again" }));
+    await fixture.completeItems();
+    expect(
+      await screen.findByRole("button", {
+        name: page === "settings" ? "Get Started" : "Connect Bank",
+      }),
+    ).toBeEnabled();
+    expect(fixture.router.state.location.pathname).toBe(fixture.path);
+    expect(fixture.itemRequests()).toHaveLength(1);
+  });
   it.each<{ name: string; permissions: Permissions; authenticated?: boolean }>([
     { name: "reader", permissions: { admin: false, pull: true, push: false } },
     {

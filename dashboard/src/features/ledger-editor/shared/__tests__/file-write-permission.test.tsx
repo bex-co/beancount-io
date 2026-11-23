@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import {
+  act,
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+} from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 /**
@@ -15,8 +21,9 @@ const permission = vi.hoisted(() => ({
   canRead: true,
   isAdmin: false,
 }));
-const authenticated = vi.hoisted(() => ({ value: false }));
+const authenticated = vi.hoisted(() => ({ value: false, unavailable: false }));
 const createFile = vi.hoisted(() => vi.fn());
+const invalidate = vi.hoisted(() => vi.fn(async () => {}));
 
 vi.mock("@tanstack/react-router", () => ({
   useHydrated: () => true,
@@ -26,6 +33,7 @@ vi.mock("@tanstack/react-router", () => ({
     _splat: "transactions",
   }),
   useNavigate: () => vi.fn(),
+  useRouter: () => ({ invalidate }),
   useBlocker: () => ({ status: "idle", reset: vi.fn(), proceed: vi.fn() }),
   Link: ({
     children,
@@ -51,6 +59,14 @@ vi.mock("@/common/hooks/use-ledger-permission", () => ({
 
 vi.mock("@/common/hooks/use-is-authenticated", () => ({
   useIsAuthenticated: () => authenticated.value,
+}));
+vi.mock("@/common/hooks/use-auth-status", () => ({
+  useAuthStatus: () =>
+    authenticated.unavailable
+      ? "unavailable"
+      : authenticated.value
+        ? "signed-in"
+        : "signed-out",
 }));
 
 vi.mock("@/common/hooks/use-translations", () => ({
@@ -117,6 +133,7 @@ function asWriter() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  authenticated.unavailable = false;
   asGuest();
 });
 
@@ -126,6 +143,29 @@ const filenameField = () =>
   screen.queryByPlaceholderText("ledgerEditor.nameYourFile");
 const saveButton = () =>
   screen.queryByRole("button", { name: /ledgerEditor.save|save/i });
+
+it.each([
+  ["Create File", CreateFilePage],
+  ["Upload Files", UploadFilesPage],
+])(
+  "offers a retry on %s while the sign-in probe is unavailable",
+  async (_name, Page) => {
+    authenticated.unavailable = true;
+    const { container } = render(<Page />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "common.errors.serviceUnavailable",
+    );
+    expect(screen.queryByText("common.errors.unauthenticated")).toBeNull();
+    expect(screen.queryByText("common.errors.forbidden")).toBeNull();
+    expect(filenameField()).toBeNull();
+    expect(container.querySelector('input[type="file"]')).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "common.tryAgain" }));
+    });
+    expect(invalidate).toHaveBeenCalledTimes(1);
+  },
+);
 
 describe("create file page", () => {
   it("offers no form to a signed-out reader", () => {

@@ -1,5 +1,6 @@
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import type { ReactNode } from "react";
+import { AuthUnavailableNotice } from "@/common/components/auth-unavailable-notice";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
 import { LedgerPage, LedgerPageHeading } from "@/common/components/ledger-page";
@@ -16,7 +17,7 @@ export function PlaidPage({
   children: ReactNode;
 }) {
   const { t } = useTranslations();
-  const { isAdmin } = useLedgerPermission();
+  const { isAdmin, authStatus } = useLedgerPermission();
 
   return (
     <LedgerPage className="space-y-5 sm:space-y-6">
@@ -24,7 +25,13 @@ export function PlaidPage({
         title={t("plaid.pageTitle")}
         description={t("plaid.management.connectionsSubtitle")}
       />
-      {isAdmin ? children : <PlaidAccessNotice ledgerId={ledgerId} />}
+      {authStatus === "unavailable" ? (
+        <AuthUnavailableNotice />
+      ) : isAdmin ? (
+        children
+      ) : (
+        <PlaidAccessNotice ledgerId={ledgerId} />
+      )}
     </LedgerPage>
   );
 }

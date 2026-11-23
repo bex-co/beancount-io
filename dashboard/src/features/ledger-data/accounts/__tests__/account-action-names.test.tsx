@@ -49,6 +49,9 @@ vi.mock("@/common/hooks/use-ledger", () => ({
 vi.mock("@/common/hooks/use-is-authenticated", () => ({
   useIsAuthenticated: () => true,
 }));
+vi.mock("@/common/hooks/use-auth-status", () => ({
+  useAuthStatus: () => "signed-in",
+}));
 vi.mock("@/common/hooks/use-theme", () => ({ useIsDarkTheme: () => false }));
 // Account creation and the Monaco runtime are outside the row-action journey.
 vi.mock("../open-account-dialog", () => ({ OpenAccountDialog: () => null }));

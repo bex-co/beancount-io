@@ -1,11 +1,12 @@
 import { useLedger } from "@/common/hooks/use-ledger";
-import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
+import { useAuthStatus } from "@/common/hooks/use-auth-status";
 
 export const useLedgerPermission = () => {
-  const isAuthenticated = useIsAuthenticated();
+  const authStatus = useAuthStatus();
   const ledger = useLedger();
-  if (!isAuthenticated) {
+  if (authStatus !== "signed-in") {
     return {
+      authStatus,
       isAdmin: false,
       canWrite: false,
       canRead: false,
@@ -18,8 +19,9 @@ export const useLedgerPermission = () => {
   const canRead = permissions?.pull === true || isAdmin;
 
   return {
-    isAdmin: isAdmin,
-    canWrite: canWrite,
-    canRead: canRead,
+    authStatus,
+    isAdmin,
+    canWrite,
+    canRead,
   };
 };

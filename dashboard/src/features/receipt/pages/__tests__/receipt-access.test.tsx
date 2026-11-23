@@ -10,6 +10,8 @@ const mocks = vi.hoisted(() => ({
   refetch: vi.fn(),
   useReceiptWorkflow: vi.fn(),
   authenticated: true,
+  authUnavailable: false,
+  invalidate: vi.fn(async () => {}),
 }));
 
 // The failed-renewal banner reads billing state the shell under test does
@@ -33,6 +35,7 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
     href: "/ledger/open_ledger/example/receipt",
   }),
   useRouterState: () => false,
+  useRouter: () => ({ invalidate: mocks.invalidate }),
   Outlet: () => <ReceiptPage />,
   Link: ({
     to,
@@ -58,6 +61,14 @@ vi.mock("@apollo/client/react", () => ({
 
 vi.mock("@/common/hooks/use-is-authenticated", () => ({
   useIsAuthenticated: () => mocks.authenticated,
+}));
+vi.mock("@/common/hooks/use-auth-status", () => ({
+  useAuthStatus: () =>
+    mocks.authUnavailable
+      ? "unavailable"
+      : mocks.authenticated
+        ? "signed-in"
+        : "signed-out",
 }));
 
 vi.mock("@/common/hooks/use-mobile", () => ({ useIsMobile: () => false }));
@@ -129,10 +140,27 @@ describe("Upload Receipt ledger access", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.authenticated = true;
+    mocks.authUnavailable = false;
     mocks.useReceiptWorkflow.mockReturnValue(workflow);
     setAccess(ledger.permissions);
   });
   afterEach(cleanup);
+
+  it("offers an in-place retry when the owner's sign-in probe fails", async () => {
+    mocks.authUnavailable = true;
+    mocks.authenticated = false;
+    setAccess({ admin: true, pull: true, push: true });
+    const { container } = render(<LedgerLayout />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "The service is temporarily unavailable",
+    );
+    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+    expect(screen.queryByText(/read-only for you/)).toBeNull();
+    expectNoUpload(container);
+    await userEvent.click(screen.getByRole("button", { name: "Try Again" }));
+    expect(mocks.invalidate).toHaveBeenCalledTimes(1);
+  });
 
   it("tells a signed-in reader the ledger is read-only and keeps read navigation", () => {
     const { container } = render(<LedgerLayout />);
