@@ -35,6 +35,16 @@ describe("LLMService authorizes as the caller", () => {
     tokenId: "key_1",
   };
 
+  const sampleTransactions = [
+    {
+      rowIndex: 0,
+      date: "2026-08-01",
+      payee: "Coffee Shop",
+      description: "Latte",
+      amount: -5.5,
+    },
+  ];
+
   const usageCheck = jest.fn();
   const getObjectMetadata = jest.fn();
 
@@ -57,7 +67,7 @@ describe("LLMService authorizes as the caller", () => {
 
   it("refuses suggestCategories on a ledger the grant is not pinned to", async () => {
     await expect(
-      makeService().suggestCategories(pinnedToA, "alice/b", []),
+      makeService().suggestCategories(pinnedToA, "alice/b", sampleTransactions),
     ).rejects.toMatchObject({ category: "FORBIDDEN" });
     expect(usageCheck).not.toHaveBeenCalled();
   });
@@ -79,7 +89,7 @@ describe("LLMService authorizes as the caller", () => {
       currentCount: 0,
     });
     await expect(
-      makeService().suggestCategories(pinnedToA, "alice/a", []),
+      makeService().suggestCategories(pinnedToA, "alice/a", sampleTransactions),
     ).rejects.not.toBeInstanceOf(ForbiddenError);
     expect(usageCheck).toHaveBeenCalledWith("usr_1");
   });

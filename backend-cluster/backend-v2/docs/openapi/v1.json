@@ -4544,7 +4544,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/import/suggest-categories": {
       "post": {
         "summary": "Suggest transaction categories from the ledger",
-        "description": "Suggest a target account for each supplied transaction using the ledger's open accounts and recent transaction history. At most 500 transactions per call; split a larger import into several calls. Requires assisted-categorization authority on the ledger and consumes AI quota. Returns suggestions without writing entries.",
+        "description": "Suggest a target account for each supplied transaction using the ledger's open accounts and recent transaction history. At least 1 and at most 500 transactions per call; split a larger import into several calls. Requires assisted-categorization authority on the ledger and consumes AI quota. Returns suggestions without writing entries.",
         "tags": [
           "Ledger v1"
         ],
@@ -4618,8 +4618,9 @@
                       ],
                       "additionalProperties": false
                     },
+                    "minItems": 1,
                     "maxItems": 500,
-                    "description": "Transactions to categorize; at most 500 per call"
+                    "description": "Transactions to categorize; at least 1 and at most 500 per call"
                   }
                 },
                 "required": [

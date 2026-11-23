@@ -14,7 +14,7 @@ import {
   getTierLimits,
   SubscriptionTier,
 } from "@/features/stripe/service/stripe";
-import { ResourceLimitReachedError } from "@/shared/errors";
+import { BadUserInputError, ResourceLimitReachedError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 
 const FREE_QUOTA = getTierLimits(SubscriptionTier.FREE).aiCfoTokensMax;
@@ -68,42 +68,59 @@ function memoryUsageModel() {
   return { model, total: () => [...rows.values()].reduce((a, b) => a + b, 0) };
 }
 
-function makeService(model: IFeatureUsageModel) {
+function makeServiceWithSpies(model: IFeatureUsageModel) {
   const envelope = (data: unknown) => ({ data: { success: true, data } });
+  const getJournal = jest.fn(async () => envelope({ items: [] }));
+  const getLedgerPlugins = jest.fn(async () => envelope([]));
+  const getLedgerAccounts = jest.fn(async () =>
+    envelope(
+      Object.fromEntries(
+        ACCOUNTS.map((account) => [account, { close_date: null }]),
+      ),
+    ),
+  );
   const fava = {
     getApiContext: async () => ({
       favaApiClient: {
-        journal: { getJournal: async () => envelope({ items: [] }) },
-        reports: { getLedgerPlugins: async () => envelope([]) },
+        journal: { getJournal },
+        reports: { getLedgerPlugins },
       },
     }),
     getPublicApiClient: async () => ({
       reports: {
-        getLedgerAccounts: async () =>
-          envelope(
-            Object.fromEntries(
-              ACCOUNTS.map((account) => [account, { close_date: null }]),
-            ),
-          ),
+        getLedgerAccounts,
       },
     }),
   };
+  const authorizeOrThrow = jest.fn(async () => ({ allowed: true }));
   const allow = {
-    authorize: async () => ({ allowed: true }),
-    authorizeOrThrow: async () => ({ allowed: true }),
+    authorize: jest.fn(async () => ({ allowed: true })),
+    authorizeOrThrow,
   };
   const usage = new AiCfoUsageService(
     new FeatureUsageService({ featureUsage: model }, {} as never),
     {} as never,
     allow as never,
   );
-  return new LLMService(
+  const service = new LLMService(
     fava as never,
     {} as never,
     usage,
     { openai: { apiKey: "", baseUrl: "" } } as never,
     allow as never,
   );
+  return {
+    service,
+    usage,
+    authorizeOrThrow,
+    getJournal,
+    getLedgerPlugins,
+    getLedgerAccounts,
+  };
+}
+
+function makeService(model: IFeatureUsageModel) {
+  return makeServiceWithSpies(model).service;
 }
 
 const batchOf = (length: number) =>
@@ -209,5 +226,41 @@ describe("concurrent category suggestions on a free plan", () => {
       service.suggestCategories(identity, "alice/main", transactions),
     ).rejects.toThrow("fixture provider unavailable");
     expect(usage.total()).toBe(37);
+  });
+
+  it("refuses an empty batch before authorization, quota, ledger, or model work", async () => {
+    const usage = memoryUsageModel();
+    const {
+      service,
+      usage: aiCfoUsage,
+      authorizeOrThrow,
+      getJournal,
+      getLedgerPlugins,
+      getLedgerAccounts,
+    } = makeServiceWithSpies(usage.model);
+    const checkSpy = jest.spyOn(aiCfoUsage, "check");
+    const reserveSpy = jest.spyOn(aiCfoUsage, "reserve");
+    const settleSpy = jest.spyOn(aiCfoUsage, "settle");
+
+    await expect(
+      service.suggestCategories(identity, "alice/main", []),
+    ).rejects.toThrow(BadUserInputError);
+    await expect(
+      service.suggestCategories(identity, "alice/main", []),
+    ).rejects.toMatchObject({
+      category: "BAD_USER_INPUT",
+      message: "transactions must contain at least one transaction",
+      metadata: { field: "transactions" },
+    });
+
+    expect(authorizeOrThrow).not.toHaveBeenCalled();
+    expect(checkSpy).not.toHaveBeenCalled();
+    expect(reserveSpy).not.toHaveBeenCalled();
+    expect(settleSpy).not.toHaveBeenCalled();
+    expect(getLedgerAccounts).not.toHaveBeenCalled();
+    expect(getJournal).not.toHaveBeenCalled();
+    expect(getLedgerPlugins).not.toHaveBeenCalled();
+    expect(categorizeTransactions).not.toHaveBeenCalled();
+    expect(usage.total()).toBe(0);
   });
 });

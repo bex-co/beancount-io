@@ -139,6 +139,14 @@ async function fixture(
       ],
     }),
   );
+  const getLedgerPlugins = jest.fn(async () => envelope(state.plugins));
+  const getLedgerAccounts = jest.fn(async () =>
+    envelope({
+      "Assets:Cash": { close_date: null },
+      "Expenses:Coffee": { close_date: null },
+      "Expenses:Closed": { close_date: "2025-01-01" },
+    }),
+  );
   const fava = {
     getAdminClient: () => ({
       ledgers: { getLedger: async () => envelope({ id: 42, private: true }) },
@@ -151,21 +159,25 @@ async function fixture(
         },
         journal: { getJournal },
         reports: {
-          getLedgerPlugins: async () => envelope(state.plugins),
+          getLedgerPlugins,
         },
       },
     }),
     getPublicApiClient: async () => ({
       reports: {
-        getLedgerAccounts: async () =>
-          envelope({
-            "Assets:Cash": { close_date: null },
-            "Expenses:Coffee": { close_date: null },
-            "Expenses:Closed": { close_date: "2025-01-01" },
-          }),
+        getLedgerAccounts,
       },
     }),
   };
+  const authorization = new AuthorizationService(
+    new SourceBackedRelationshipEvaluator(
+      {} as never,
+      models as never,
+      {} as never,
+      fava as never,
+    ),
+  );
+  const authorizeOrThrow = jest.spyOn(authorization, "authorizeOrThrow");
   const service = new LLMService(
     fava as never,
     {} as never,
@@ -173,14 +185,7 @@ async function fixture(
     {
       openai: { apiKey: accessKey, baseUrl: "https://api.openai.com/v1" },
     } as never,
-    new AuthorizationService(
-      new SourceBackedRelationshipEvaluator(
-        {} as never,
-        models as never,
-        {} as never,
-        fava as never,
-      ),
-    ),
+    authorization,
   );
   resolver = new LLMCategorizationQueryResolver(service);
   const rest = await startV1TestServer(
@@ -205,11 +210,14 @@ async function fixture(
   return {
     client,
     state,
+    authorizeOrThrow,
     check,
     charge,
     reserve,
     settle,
+    getLedgerAccounts,
     getJournal,
+    getLedgerPlugins,
     rest: (body: unknown = { transactions }) =>
       fetch(
         `${rest.url}/api-gateway/v1/ledgers/alice/main/import/suggest-categories`,
@@ -326,29 +334,48 @@ it("reports auto_accounts plugins so suggestions may leave the account list", as
   }
 });
 
-it("passes an empty batch through without inventing a minimum", async () => {
-  const f = await fixture();
-  jest.mocked(categorizeTransactions).mockResolvedValue({
-    suggestions: [],
-    tokenUsage: { inputTokens: 5, outputTokens: 1 },
-  });
-  try {
-    const r = await f.rest({ transactions: [] });
-    const g = await f.gql({ transactions: [] });
-    const m = await f.read([]);
-    expect(r.status).toBe(200);
-    expect(g.errors).toBeUndefined();
-    for (const result of [
-      await r.json(),
-      g.data!.suggestTransactionCategories,
-      m,
-    ])
-      expect(result).toEqual([]);
-    expect(f.settle).toHaveBeenCalledWith("usr_alice", expect.anything(), 6);
-  } finally {
-    await f.close();
-  }
-});
+it.each([undefined, "beancount-mobile"])(
+  "refuses an empty batch identically on every surface before authorization, quota, ledger, or model work (%s)",
+  async (appId) => {
+    const f = await fixture(identity, "fixture", appId);
+    const message = "transactions must contain at least one transaction";
+    try {
+      const r = await f.rest({ transactions: [] });
+      expect(r.status).toBe(400);
+      expect(await r.json()).toMatchObject({
+        ok: false,
+        error: {
+          code: "BAD_USER_INPUT",
+          message,
+          metadata: { field: "transactions" },
+        },
+      });
+      const g = await f.gql({ transactions: [] });
+      expect(g.errors).toHaveLength(1);
+      expect(g.errors![0].message).toBe(message);
+      expect(g.errors![0].originalError).toMatchObject({
+        category: "BAD_USER_INPUT",
+        metadata: { field: "transactions" },
+      });
+      await expect(f.read([])).rejects.toMatchObject({
+        code: -32602,
+        message: expect.stringContaining(message),
+        data: { code: "BAD_USER_INPUT" },
+      });
+      expect(f.authorizeOrThrow).not.toHaveBeenCalled();
+      expect(f.check).not.toHaveBeenCalled();
+      expect(f.reserve).not.toHaveBeenCalled();
+      expect(f.settle).not.toHaveBeenCalled();
+      expect(f.charge).not.toHaveBeenCalled();
+      expect(f.getLedgerAccounts).not.toHaveBeenCalled();
+      expect(f.getJournal).not.toHaveBeenCalled();
+      expect(f.getLedgerPlugins).not.toHaveBeenCalled();
+      expect(categorizeTransactions).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  },
+);
 
 it.each([undefined, "beancount-mobile"])(
   "refuses missing read capability before quota or ledger work (%s)",

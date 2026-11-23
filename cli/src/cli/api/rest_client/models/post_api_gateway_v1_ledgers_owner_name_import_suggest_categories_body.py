@@ -19,7 +19,7 @@ class PostApiGatewayV1LedgersOwnerNameImportSuggestCategoriesBody:
     """
     Attributes:
         transactions (list[PostApiGatewayV1LedgersOwnerNameImportSuggestCategoriesBodyTransactionsItem]): Transactions
-            to categorize; at most 500 per call
+            to categorize; at least 1 and at most 500 per call
     """
 
     transactions: list[PostApiGatewayV1LedgersOwnerNameImportSuggestCategoriesBodyTransactionsItem]

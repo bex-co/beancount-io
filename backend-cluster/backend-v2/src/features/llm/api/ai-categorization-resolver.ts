@@ -14,7 +14,7 @@ export class LLMCategorizationQueryResolver {
 
   @Authenticated()
   @Query(() => [CategorySuggestion], {
-    description: `Suggest transaction categories based on payee, description, and transaction history. At most ${MAX_SUGGEST_TRANSACTIONS} transactions per call; split a larger import into several calls.`,
+    description: `Suggest transaction categories based on payee, description, and transaction history. At least 1 and at most ${MAX_SUGGEST_TRANSACTIONS} transactions per call; split a larger import into several calls.`,
   })
   async suggestTransactionCategories(
     @Arg("ledgerId", () => String) ledgerId: string,

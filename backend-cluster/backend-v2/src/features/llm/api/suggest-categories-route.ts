@@ -39,16 +39,17 @@ export const suggestCategoriesRoute = v1Route({
   method: "post",
   path: "/api-gateway/v1/ledgers/{owner}/{name}/import/suggest-categories",
   summary: "Suggest transaction categories from the ledger",
-  description: `Suggest a target account for each supplied transaction using the ledger's open accounts and recent transaction history. At most ${MAX_SUGGEST_TRANSACTIONS} transactions per call; split a larger import into several calls. Requires assisted-categorization authority on the ledger and consumes AI quota. Returns suggestions without writing entries.`,
+  description: `Suggest a target account for each supplied transaction using the ledger's open accounts and recent transaction history. At least 1 and at most ${MAX_SUGGEST_TRANSACTIONS} transactions per call; split a larger import into several calls. Requires assisted-categorization authority on the ledger and consumes AI quota. Returns suggestions without writing entries.`,
   params: ledgerPathSchema,
   query: z.object({}).strict(),
   body: z
     .object({
-      // The cap is published here and enforced in LLMService, so REST,
-      // GraphQL and MCP refuse an over-cap batch with the same error.
+      // The bounds are published here and enforced in LLMService, so REST,
+      // GraphQL and MCP refuse an empty or over-cap batch with the same error.
       transactions: z.array(transactionToCategorizeSchema).openapi({
+        minItems: 1,
         maxItems: MAX_SUGGEST_TRANSACTIONS,
-        description: `Transactions to categorize; at most ${MAX_SUGGEST_TRANSACTIONS} per call`,
+        description: `Transactions to categorize; at least 1 and at most ${MAX_SUGGEST_TRANSACTIONS} per call`,
       }),
     })
     .strict(),

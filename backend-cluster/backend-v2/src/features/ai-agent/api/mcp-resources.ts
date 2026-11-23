@@ -428,7 +428,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
   {
     name: "transactionCategorySuggestions",
     title: "Transaction Category Suggestions",
-    description: `Suggest a target account for each supplied transaction using the ledger's open accounts and recent history. transactions is a JSON-encoded array of {rowIndex, date, payee, description, amount}, at most ${MAX_SUGGEST_TRANSACTIONS} per read; split a larger import into several reads. Requires assisted-categorization authority and consumes AI quota.`,
+    description: `Suggest a target account for each supplied transaction using the ledger's open accounts and recent history. transactions is a JSON-encoded array of {rowIndex, date, payee, description, amount}, at least 1 and at most ${MAX_SUGGEST_TRANSACTIONS} per read; split a larger import into several reads. Requires assisted-categorization authority and consumes AI quota.`,
     uriTemplate: "beancount://{owner}/{name}/import/suggest-categories",
     queryNames: Object.keys(suggestCategoriesQuery.shape),
     mimeType: "application/json",

@@ -794,7 +794,7 @@ Category suggestion now has
 `transactionCategorySuggestions` MCP resource, whose structured transaction list
 arrives as one JSON-encoded query parameter (the established journal-filter
 pattern). Both keep GraphQL's full input contract — rowIndex/date/payee/
-description/amount with no batch minimum and at most 500 transactions per call,
+description/amount with at least 1 and at most 500 transactions per call,
 refused alike with `BAD_USER_INPUT` by `LLMService` on all three surfaces — and
 its suggestion output including
 the optional reasoning field. Cross-adapter tests run the real `LLMService` and
