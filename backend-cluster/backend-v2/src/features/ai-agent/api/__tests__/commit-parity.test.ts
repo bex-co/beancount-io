@@ -336,10 +336,21 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
       }
     },
   );
-  // w31/024: the host answers a ref with a space it cannot find with a 500,
-  // which reached callers as INTERNAL_SERVER_ERROR or SERVICE_UNAVAILABLE,
-  // telling them to retry when the fix was to drop the space.
-  const spacedRefs = ["main ", " b6d69fd", "b6d69fd ", "a b", " "];
+  // w31/024, w31/061: the host answers a ref with a space it cannot find with
+  // a 500, which reached callers as INTERNAL_SERVER_ERROR or
+  // SERVICE_UNAVAILABLE, telling them to retry when the fix was to drop the
+  // space. Bare `{…}` and non-leading-`:/` colon refs must be refused too.
+  const spacedRefs = [
+    "main ",
+    " b6d69fd",
+    "b6d69fd ",
+    "a b",
+    " ",
+    "main{ }",
+    ": ",
+    "main:path with space.bean",
+    "main:/restore fixture",
+  ];
   const refReads = [
     { path: "commit-details", param: "sha", field: "getCommitDetails" },
     { path: "commits", param: "branch", field: "listCommits" },
@@ -398,6 +409,7 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
   );
   it.each([
     ["main@{1 day ago}", "main@%7B1%20day%20ago%7D"],
+    ["main^{/restore fixture}", "main%5E%7B%2Frestore%20fixture%7D"],
     [":/restore fixture", "%3A%2Frestore%20fixture"],
   ])(
     "passes %p, git revision syntax with a space, to the host on every surface",

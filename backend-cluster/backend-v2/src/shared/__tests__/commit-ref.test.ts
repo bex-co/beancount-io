@@ -14,18 +14,20 @@ describe("assertCommitRef", () => {
     "refs/heads/main",
     "feature/café",
     "x:y",
+    "main:main.bean",
+    "main:/restore",
     "..",
     "-n",
     "日本",
     "tab\there",
     "b6d69fd\n",
     "main ",
-    // A space inside a brace group or after a colon is git revision syntax.
+    // A space inside a `@{…}` / `^{…}` group or after a leading `:/` is git
+    // commit-revision syntax (w31/024, w31/061).
     "main@{1 day ago}",
     "main@{2026-11-15 10:00:00}",
     "main^{/restore fixture}",
     ":/restore fixture",
-    "main:path with space.bean",
   ])("leaves %p to the repository host", (ref) => {
     expect(() => assertCommitRef(ref, "sha")).not.toThrow();
   });
@@ -40,6 +42,16 @@ describe("assertCommitRef", () => {
     " :/restore fixture",
     "main@{1 day ago} ",
     "main@{1 day",
+    // Bare `{…}` groups and colons other than a leading `:/` are not valid
+    // commit-revision space contexts (w31/061).
+    "main{ }",
+    "{ }",
+    "foo{a b}",
+    ": ",
+    "main: ",
+    "main:path with space.bean",
+    "main:/restore fixture",
+    ":@{a}/restore fixture",
   ])("refuses %p before the host is asked", (ref) => {
     let thrown: unknown;
     try {

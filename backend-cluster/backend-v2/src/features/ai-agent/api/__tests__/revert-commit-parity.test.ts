@@ -323,9 +323,11 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
     }
   });
 
-  // w31/024, w31/056: the host answers a ref with a space it cannot find with
-  // a 500, and leading/trailing spaces must never be silently trimmed; refuse
-  // upfront with BAD_USER_INPUT before acquiring a Gitea client.
+  // w31/024, w31/056, w31/061: the host answers a ref with a space it cannot
+  // find with a 500, and leading/trailing spaces, bare `{…}` groups, and
+  // non-leading-`:/` colon refs must never bypass validation or be silently
+  // trimmed; refuse upfront with BAD_USER_INPUT before acquiring a Gitea
+  // client.
   it.each([
     ["c1 c0", false],
     [" main ", true],
@@ -335,6 +337,9 @@ describe.each(["rest", "gql", "mcp"])("revertCommit via %s", (surface) => {
     [" main", true],
     [" main", false],
     ["   ", true],
+    ["main{ }", true],
+    ["main:path with space.bean", true],
+    [": ", false],
   ])(
     "refuses sha=%j (dryRun=%s) as BAD_USER_INPUT without calling Gitea",
     async (sha, dryRun) => {
