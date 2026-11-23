@@ -12,6 +12,7 @@ import {
   type McpRequestContext,
 } from "./mcp-context";
 import { mcpOutputSchema, toolOutputSchema } from "../tools/types";
+import { normalizeAgentRepoPath } from "../tools/agent-repo-path";
 /** One MCP tool per pull-request operation (ADR 019, 2026-10-18; w1/m38). */
 const reviewInput = z
   .object({
@@ -75,7 +76,14 @@ export const PULL_REQUEST_EXECUTORS = {
       PULL_REQUEST_OPERATION_SCHEMAS.create.parse(input);
     return toToolResult(
       await context.pullRequestWorkflow.createPullRequestFromPatch(
-        { ...repository(context, ledger), ...payload },
+        {
+          ...repository(context, ledger),
+          ...payload,
+          changes: payload.changes.map((change) => ({
+            ...change,
+            path: normalizeAgentRepoPath(change.path),
+          })),
+        },
         context.identity,
       ),
     );

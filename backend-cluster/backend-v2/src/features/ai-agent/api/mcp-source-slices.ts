@@ -35,6 +35,7 @@ import {
   ledgerSelection,
   type McpRequestContext,
 } from "./mcp-context";
+import { normalizeAgentRepoPath } from "../tools/agent-repo-path";
 
 /**
  * MCP keeps its file-tool snake-case spelling for the preview flag while
@@ -307,6 +308,11 @@ export const SOURCE_SLICE_EXECUTORS = {
           identity: context.identity,
           ledgerId,
           ...params,
+          toPath: normalizeAgentRepoPath(params.toPath),
+          includeFrom:
+            params.includeFrom !== undefined
+              ? normalizeAgentRepoPath(params.includeFrom)
+              : undefined,
         }),
       (written) => written.message,
       (written) => written.movedHashes,

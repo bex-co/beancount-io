@@ -22,6 +22,7 @@ import {
   toWriteValidation,
   withPostWriteValidation,
 } from "@/features/ledger/utils/write-validation";
+import { normalizeAgentRepoPath } from "./agent-repo-path";
 
 const toolLogger = logger.child({ module: "tool:bank" });
 
@@ -405,14 +406,19 @@ async function submitTransactions(
       TRANSACTION_ITEM_NAMES.source,
     ),
   }));
-  assertValidBankTransactionSubmission(resolvedTransactions, filename);
+  const normalizedFilename =
+    filename !== undefined ? normalizeAgentRepoPath(filename) : undefined;
+  assertValidBankTransactionSubmission(
+    resolvedTransactions,
+    normalizedFilename,
+  );
   const submit = () =>
     services.plaidSync.submitTransactionsToLedger(
       identity,
       owner,
       name,
       resolvedTransactions,
-      filename,
+      normalizedFilename,
       preview,
     );
   if (preview) {
@@ -442,7 +448,7 @@ async function submitTransactions(
   return {
     ...submitted,
     summary: summarizeWrite(
-      `Submitted ${transactions.length} bank transaction(s)${filename ? ` to ${filename}` : ""}`,
+      `Submitted ${transactions.length} bank transaction(s)${normalizedFilename ? ` to ${normalizedFilename}` : ""}`,
       validation,
     ),
     wrote: targetFile ? [{ path: targetFile }] : [],

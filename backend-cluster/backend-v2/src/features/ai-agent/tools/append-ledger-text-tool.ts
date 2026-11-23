@@ -17,6 +17,7 @@ import {
 } from "@/features/ledger/utils/flag-alias";
 import { summarizeWrite } from "@/features/ledger/utils/write-validation";
 import { COMMIT_SHA_DESCRIPTION } from "@/features/ledger/utils/commit-revert";
+import { normalizeAgentRepoPath } from "./agent-repo-path";
 
 const toolLogger = logger.child({ module: "tool:append-ledger-text" });
 
@@ -88,7 +89,10 @@ export async function executeAppendLedgerText(
         ledgerName,
         {
           text: args.text,
-          path: args.path,
+          path:
+            args.path !== undefined
+              ? normalizeAgentRepoPath(args.path)
+              : undefined,
           dryRun: resolveFlagAlias(
             { primary: args.dry_run, legacy: args.dryRun },
             DRY_RUN_NAMES,

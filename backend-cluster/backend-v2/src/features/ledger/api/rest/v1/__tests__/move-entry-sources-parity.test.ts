@@ -622,3 +622,125 @@ describe("moveEntrySources description (w31/017)", () => {
     }
   });
 });
+
+// w31/067: models spell shell-style `./` paths on MCP; normalize toPath and
+// includeFrom only at the MCP adapter so REST and GraphQL stay strict behind
+// assertSafeRepoPath.
+describe("dot-prefix path normalization on moveEntrySources (w31/067)", () => {
+  it("normalizes ./toPath and ./includeFrom on MCP and emits canonical paths", async () => {
+    const env = await fixture();
+    try {
+      const preview = await env.call("mcp", {
+        entries: ENTRIES,
+        toPath: "./2026/08.bean",
+        includeFrom: "./main.bean",
+        dryRun: true,
+      });
+      expect(preview.success).toBe(true);
+      expect(preview.result).toMatchObject({
+        toPath: "2026/08.bean",
+        message: "Would move 2 entries to 2026/08.bean",
+      });
+      expect(String(preview.result?.summary)).not.toContain("./");
+
+      const commit = await env.call("mcp", {
+        entries: ENTRIES,
+        toPath: "././2026/08.bean",
+        includeFrom: "././main.bean",
+      });
+      expect(commit.success).toBe(true);
+      expect(env.commits).toEqual([
+        {
+          entries: [
+            { entry_hash: H_CAKE, sha256sum: hash(CAKE) },
+            { entry_hash: H_TEA, sha256sum: hash(TEA) },
+          ],
+          to_path: "2026/08.bean",
+          include_from: "main.bean",
+        },
+      ]);
+      expect(commit.result).toMatchObject({
+        toPath: "2026/08.bean",
+        message: "Moved 2 entries to 2026/08.bean",
+        wrote: [{ path: "main.bean" }, { path: "2026/08.bean" }],
+      });
+    } finally {
+      await env.close();
+    }
+  });
+
+  it.each([
+    "",
+    ".",
+    "./",
+    "../x.bean",
+    "./../x.bean",
+    "a/../b.bean",
+    "/abs.bean",
+    ".\\x.bean",
+  ])(
+    "still refuses unsafe path %j on MCP for toPath and includeFrom with BAD_USER_INPUT",
+    async (bad) => {
+      const env = await fixture();
+      try {
+        const badTo = await env.call("mcp", {
+          entries: ENTRIES,
+          toPath: bad,
+          includeFrom: "main.bean",
+          dryRun: true,
+        });
+        expect(badTo).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+        });
+
+        const badInclude = await env.call("mcp", {
+          entries: ENTRIES,
+          toPath: "2026/08.bean",
+          includeFrom: bad,
+          dryRun: true,
+        });
+        expect(badInclude).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+        });
+        expect(env.moveSourceSlices).not.toHaveBeenCalled();
+      } finally {
+        await env.close();
+      }
+    },
+  );
+
+  it.each(["rest", "gql"] as const)(
+    "still refuses ./ toPath and ./ includeFrom on %s with BAD_USER_INPUT",
+    async (surface) => {
+      const env = await fixture();
+      try {
+        const badTo = await env.call(surface, {
+          entries: ENTRIES,
+          toPath: "./2026/08.bean",
+          includeFrom: "main.bean",
+          dryRun: true,
+        });
+        expect(badTo).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+        });
+
+        const badInclude = await env.call(surface, {
+          entries: ENTRIES,
+          toPath: "2026/08.bean",
+          includeFrom: "./main.bean",
+          dryRun: true,
+        });
+        expect(badInclude).toMatchObject({
+          success: false,
+          code: "BAD_USER_INPUT",
+        });
+        expect(env.moveSourceSlices).not.toHaveBeenCalled();
+      } finally {
+        await env.close();
+      }
+    },
+  );
+});

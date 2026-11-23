@@ -285,7 +285,7 @@ async function fixture(caller = identity) {
       if (surface === "gql") {
         const result = await graphql({
           schema,
-          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid !== undefined ? `, allowInvalid: ${args.allowInvalid}` : ""}${args.allow_invalid !== undefined ? `, allow_invalid: ${args.allow_invalid}` : ""}${args.requestId !== undefined ? `, requestId: ${JSON.stringify(args.requestId)}` : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } valid appendedUnsorted } }`,
+          source: `mutation { appendLedgerText(ledgerId: "alice/main", text: ${JSON.stringify(args.text)}${args.path !== undefined ? `, path: ${JSON.stringify(args.path)}` : ""}${args.dryRun !== undefined ? `, dryRun: ${args.dryRun}` : ""}${args.dry_run !== undefined ? `, dry_run: ${args.dry_run}` : ""}${args.allowInvalid !== undefined ? `, allowInvalid: ${args.allowInvalid}` : ""}${args.allow_invalid !== undefined ? `, allow_invalid: ${args.allow_invalid}` : ""}${args.requestId !== undefined ? `, requestId: ${JSON.stringify(args.requestId)}` : ""}) { success message dryRun count wrote { path line } entryHashes diff { path diff } errorsBefore errorsAfter newErrors { message } valid appendedUnsorted } }`,
           contextValue: {
             identity: caller,
             getCurrentIdentity: () => caller,
@@ -303,7 +303,7 @@ async function fixture(caller = identity) {
         name: "appendLedgerText",
         arguments: {
           text: args.text,
-          ...(args.path && { path: args.path }),
+          ...(args.path !== undefined && { path: args.path }),
           ...(args.requestId && { requestId: args.requestId }),
           ...(raw
             ? {
@@ -1158,6 +1158,107 @@ describe("requestId on appended text", () => {
         expect(f.commits).toHaveLength(0);
         expect(f.changeLedgerFiles).not.toHaveBeenCalled();
         expect(fakeRedisIdempotencyState.records.size).toBe(0);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+});
+
+// w31/067: models spell shell-style `./main.bean` on MCP; normalize only at the
+// MCP adapter so REST and GraphQL stay strict behind assertSafeRepoPath.
+describe("dot-prefix path normalization on appendLedgerText (w31/067)", () => {
+  it.each([
+    ["./main.bean", "main.bean"],
+    ["././imports/2026.bean", "imports/2026.bean"],
+  ])(
+    "normalizes %j to %j on MCP for preview and commit, returning canonical paths",
+    async (inputPath, canonicalPath) => {
+      const f = await fixture();
+      if (canonicalPath !== "main.bean") {
+        f.state.files.set(canonicalPath, "");
+      }
+      try {
+        const preview = await f.call("mcp", {
+          text: TXN,
+          path: inputPath,
+          dryRun: true,
+        });
+        expect(preview.ok).toBe(true);
+        const previewData = preview.ok
+          ? (preview.data as Record<string, unknown>)
+          : {};
+        expect(previewData.diff).toEqual([
+          expect.objectContaining({ path: canonicalPath }),
+        ]);
+        expect(String(previewData.summary)).toContain(canonicalPath);
+        expect(String(previewData.summary)).not.toContain("./");
+        expect(f.commits).toHaveLength(0);
+
+        const commit = await f.call("mcp", { text: TXN, path: inputPath });
+        expect(commit.ok).toBe(true);
+        const commitData = commit.ok
+          ? (commit.data as Record<string, unknown>)
+          : {};
+        expect(commitData.wrote).toEqual([
+          expect.objectContaining({ path: canonicalPath }),
+        ]);
+        expect(String(commitData.summary)).toContain(canonicalPath);
+        expect(String(commitData.summary)).not.toContain("./");
+        expect(f.commits[0].files[0]).toMatchObject({ path: canonicalPath });
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it.each([
+    "",
+    ".",
+    "./",
+    "../x.bean",
+    "./../x.bean",
+    "a/../b.bean",
+    "/main.bean",
+    ".\\main.bean",
+  ])("still refuses unsafe path %j on MCP with BAD_USER_INPUT", async (bad) => {
+    const f = await fixture();
+    try {
+      const res = await f.call("mcp", { text: TXN, path: bad, dryRun: true });
+      expect(res.ok).toBe(false);
+      expect(res.ok === false && res.error).toMatchObject({
+        code: "BAD_USER_INPUT",
+      });
+      expect(f.commits).toHaveLength(0);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it.each(["rest", "gql"] as const)(
+    "still refuses ./main.bean on %s with BAD_USER_INPUT",
+    async (surface) => {
+      const f = await fixture();
+      try {
+        const res = await f.call(surface, {
+          text: TXN,
+          path: "./main.bean",
+          dryRun: true,
+        });
+        expect(res.ok).toBe(false);
+        if (!res.ok) {
+          if (surface === "rest") {
+            expect(res.error).toMatchObject({ code: "BAD_USER_INPUT" });
+          } else {
+            const gqlError = res.error as {
+              toJSON: () => { message: string };
+            };
+            expect(
+              formatError(gqlError.toJSON(), gqlError).extensions,
+            ).toMatchObject({ code: "BAD_USER_INPUT" });
+          }
+        }
+        expect(f.commits).toHaveLength(0);
       } finally {
         await f.close();
       }

@@ -278,6 +278,10 @@ async function fixture(identity: Identity) {
             }
           ).error
         : undefined;
+      const mcpResult = tool.isError
+        ? undefined
+        : (tool.structuredContent as { result?: Record<string, unknown> })
+            ?.result;
       const mcpCode = mcpError ? mcpError.code : "ok";
 
       const gql = await graphql({
@@ -314,6 +318,7 @@ async function fixture(identity: Identity) {
         restStatus: restResponse.status,
         restError: restBody?.error,
         mcpError,
+        mcpResult,
         gqlExtensions: gqlFormatted?.extensions,
         gqlMessage: gqlFormatted?.message,
       };
@@ -546,5 +551,103 @@ describe("bank transaction submit validation across REST, MCP, and GraphQL (w31/
     } finally {
       await f.close();
     }
+  });
+
+  // w31/067: MCP normalizes shell-style `./` filename while REST and GraphQL
+  // remain strict behind assertSafeRepoPath.
+  describe("dot-prefix filename normalization (w31/067)", () => {
+    it("accepts ./bank/2026.bean on MCP (returning canonical wrote and summary) while REST and GraphQL refuse it", async () => {
+      const f = await fixture(writeIdentity);
+      try {
+        const preview = await f.submit({
+          transactions: [
+            {
+              transactionId: "ptxn_1",
+              targetAccount: "Expenses:Food:Groceries",
+            },
+          ],
+          filename: "./bank/2026.bean",
+          dryRun: true,
+        });
+        expect(preview).toMatchObject({
+          rest: "BAD_USER_INPUT",
+          mcp: "ok",
+          gql: "BAD_USER_INPUT",
+          restStatus: 400,
+        });
+        expect(f.getLedgerFile).toHaveBeenCalledTimes(1);
+        expect(f.getLedgerFile).toHaveBeenCalledWith("alice", "main", {
+          path: "bank/2026.bean",
+        });
+
+        const commit = await f.submit({
+          transactions: [
+            {
+              transactionId: "ptxn_1",
+              targetAccount: "Expenses:Food:Groceries",
+            },
+          ],
+          filename: "././bank/2026.bean",
+          dryRun: false,
+        });
+        expect(commit).toMatchObject({
+          rest: "BAD_USER_INPUT",
+          mcp: "ok",
+          gql: "BAD_USER_INPUT",
+          restStatus: 400,
+        });
+        expect(commit.mcpResult).toMatchObject({
+          wrote: [{ path: "bank/2026.bean" }],
+          summary: expect.stringContaining("to bank/2026.bean"),
+        });
+        expect(String(commit.mcpResult?.summary)).not.toContain("./");
+        expect(f.addBulkEntries).toHaveBeenCalledTimes(1);
+        expect(f.addBulkEntries).toHaveBeenCalledWith(
+          "alice",
+          "main",
+          expect.objectContaining({ filename: "bank/2026.bean" }),
+        );
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each([
+      "",
+      ".",
+      "./",
+      "../x.bean",
+      "./../x.bean",
+      "a/../b.bean",
+      "/main.bean",
+      ".\\main.bean",
+    ])(
+      "refuses unsafe filename %j on MCP, REST, and GraphQL with BAD_USER_INPUT",
+      async (filename) => {
+        const f = await fixture(writeIdentity);
+        try {
+          const res = await f.submit({
+            transactions: [
+              {
+                transactionId: "ptxn_nonexistent",
+                targetAccount: "Expenses:Food:Groceries",
+              },
+            ],
+            filename,
+            dryRun: true,
+          });
+          expect(res).toMatchObject({
+            rest: "BAD_USER_INPUT",
+            mcp: "BAD_USER_INPUT",
+            gql: "BAD_USER_INPUT",
+            restStatus: 400,
+          });
+          expect(f.authorizeOrThrow).not.toHaveBeenCalled();
+          expect(f.getLedgerFile).not.toHaveBeenCalled();
+        } finally {
+          await f.close();
+        }
+      },
+    );
   });
 });

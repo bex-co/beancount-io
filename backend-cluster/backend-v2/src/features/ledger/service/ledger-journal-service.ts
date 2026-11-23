@@ -26,6 +26,7 @@ import {
   assertEntryHashFormat,
   assertSha256Format,
 } from "@/features/ledger/utils/entry-hash-alias";
+import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 
 /**
  * The page a journal read asks for: limit 1–1000 (default 20), offset 0 or
@@ -598,6 +599,10 @@ export class LedgerJournalService
     for (const entry of entries) {
       assertEntryHashFormat(entry.entryHash);
       assertSha256Format(entry.sha256sum);
+    }
+    assertSafeRepoPath(toPath, "toPath");
+    if (includeFrom !== undefined) {
+      assertSafeRepoPath(includeFrom, "includeFrom");
     }
 
     const data = await unwrapFavaResponse(

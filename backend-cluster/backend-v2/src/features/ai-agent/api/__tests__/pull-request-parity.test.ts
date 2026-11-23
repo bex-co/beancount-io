@@ -1159,4 +1159,117 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       await f.close();
     }
   });
+
+  // w31/067: models spell shell-style `./` paths on MCP; normalize changes[].path
+  // only at the MCP adapter so REST and GraphQL stay strict behind
+  // assertSafeRepoPath.
+  describe("dot-prefix path normalization on createPullRequest (w31/067)", () => {
+    it("normalizes ./ paths on MCP and commits canonical paths to the branch", async () => {
+      const f = await fixture();
+      try {
+        const created = await f.call("mcp", "create", {
+          title: "Dot patch",
+          ...validCreate,
+          changes: [
+            { path: "./main.bean", content: "updated" },
+            { path: "././imports/2026.bean", content: "; imported\n" },
+          ],
+        });
+        expect(created.failed).toBe(false);
+        expect(created.data).toMatchObject({ success: true, prNumber: 1 });
+        const pr = f.prs.get(1)!;
+        expect([...f.branches.get(pr.head.ref)!]).toEqual([
+          ["main.bean", "updated"],
+          ["imports/2026.bean", "; imported\n"],
+        ]);
+        expect(f.repos.repoChangeFiles).toHaveBeenCalledWith(
+          "alice",
+          "main",
+          expect.objectContaining({
+            files: [
+              expect.objectContaining({
+                operation: "update",
+                path: "main.bean",
+              }),
+              expect.objectContaining({
+                operation: "create",
+                path: "imports/2026.bean",
+              }),
+            ],
+          }),
+          { format: "json" },
+        );
+      } finally {
+        await f.close();
+      }
+    });
+
+    it.each([
+      "",
+      ".",
+      "./",
+      "../escape.bean",
+      "./../escape.bean",
+      "a/../b.bean",
+      "/main.bean",
+      ".\\main.bean",
+    ])(
+      "still refuses unsafe change path %j on MCP with BAD_USER_INPUT",
+      async (badPath) => {
+        const f = await fixture();
+        try {
+          const mcpRes = await f.client.callTool(
+            perOperation({
+              operation: "create",
+              ledger: "alice/main",
+              title: "Bad patch",
+              ...validCreate,
+              changes: [{ path: badPath, content: "bad" }],
+            }),
+          );
+          expect(mcpRes.isError).toBe(true);
+          expect(mcpRes.structuredContent).toMatchObject({
+            error: { code: "BAD_USER_INPUT" },
+          });
+          expect(f.repos.repoChangeFiles).not.toHaveBeenCalled();
+          expect(f.branches.size).toBe(2);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+
+    it.each(["rest", "gql"] as const)(
+      "still refuses ./ paths on %s with BAD_USER_INPUT",
+      async (surface) => {
+        const f = await fixture();
+        const input = {
+          title: "Dot patch",
+          ...validCreate,
+          changes: [{ path: "./main.bean", content: "updated" }],
+        };
+        try {
+          if (surface === "rest") {
+            const r = await f.call("rest", "create", input);
+            expect(r.failed).toBe(true);
+            expect(r.data).toMatchObject({
+              error: { code: "BAD_USER_INPUT" },
+            });
+          } else {
+            const gqlRes = await f.gql(
+              `mutation($input:CreatePRFromPatchInput!){createPullRequestFromPatch(input:$input){${resultFields}}}`,
+              { input: { ledgerOwner: "alice", ledgerName: "main", ...input } },
+            );
+            expect(gqlRes.errors?.[0]).toMatchObject({
+              originalError: { category: "BAD_USER_INPUT" },
+            });
+          }
+          expect(f.repos.repoChangeFiles).not.toHaveBeenCalled();
+          expect(f.branches.size).toBe(2);
+        } finally {
+          await f.close();
+        }
+      },
+    );
+  });
 });
