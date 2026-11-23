@@ -125,6 +125,14 @@ Local commands resolve their target in this order:
 
 If the resolved file does not exist, the command exits **2** and names those sources. Hosted targeting (`--ledger`) is not implemented yet.
 Passing a directory also exits **2** with a hint to select its root ledger file.
+Only `main.bean` and `main.beancount` are loaded without being named. When
+the folder holds neither, the hint names the root `bea init --existing` would
+find there instead: the one `.bean`/`.beancount` file that no other file
+there includes, such as `--file household.beancount`. With several such files
+it names them and asks for one. `bea doctor <op> DIRECTORY` gives the same
+hint. Running with no ledger in the working directory suggests
+`bea init books` only when the folder holds no ledger file at all and no
+`main.bean` one directory down.
 Paths that use home-directory expansion accept `~/…` and existing `~user/…`
 names. If that home directory cannot be determined, the command exits **2**
 naming the supplied path and its option, argument, or environment variable.

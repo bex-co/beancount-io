@@ -338,10 +338,6 @@ def _existing_root(directory: Path) -> Path:
     return candidate
 
 
-#: How many root candidates a refusal names before it counts the rest.
-_LISTED_ROOTS = 10
-
-
 def _root_in_directory(target: Path) -> Path:
     """bea's own default names, else the one ledger file there that no other file includes."""
     from cli.config import default_entry
@@ -349,24 +345,15 @@ def _root_in_directory(target: Path) -> Path:
     default = default_entry(target)
     if default is not None:
         return default
-    # Suffixes in any case (w5/865); a hidden file is never a root here.
-    found = [entry for entry in output.ledger_candidates(target) if entry.is_file() and not entry.name.startswith(".")]
-    if not found:
+    # Suffixes in any case (w5/865), read from the include lines; the other
+    # commands' directory hints name the same root (w1/361).
+    roots = output.ledger_roots(target)
+    if not roots:
         raise UsageError(f"No .bean or .beancount ledger in {target}. Name the root file: bea init --existing PATH.")
-    # A file another candidate includes is not a root; what is left is read
-    # from the include lines, not guessed.
-    included = {
-        os.path.abspath(member)
-        for entry in found
-        for member in output.ledger_closure(entry)
-        if os.path.abspath(member) != os.path.abspath(entry)
-    }
-    roots = [entry for entry in found if os.path.abspath(entry) not in included] or found
     if len(roots) > 1:
-        names = ", ".join(entry.name for entry in roots[:_LISTED_ROOTS])
-        more = f", and {len(roots) - _LISTED_ROOTS} more" if len(roots) > _LISTED_ROOTS else ""
         raise UsageError(
-            f"{target} holds several ledger files that no other file includes ({names}{more}) and no main.bean. "
+            f"{target} holds several ledger files that no other file includes ({output.listed_roots(roots)}) "
+            f"and no main.bean. "
             f"Name the root: bea init --existing {shell_path(str(target))}/{shell_path(roots[0].name)}"
         )
     return roots[0]

@@ -73,6 +73,36 @@ def _child_ledger() -> Path | None:
     return None
 
 
+_START = "To start new books, run bea init books --currency USD."
+
+
+def _way_forward() -> str:
+    """What to run when the working directory holds no main.bean or main.beancount.
+
+    Existing books whose root has its own name come first, found by the rule
+    `init --existing` uses (w1/361); then books one directory down, where
+    `init books` can only refuse (w5/219). New books only when neither is here.
+    """
+    from cli.output import ledger_roots, listed_roots
+
+    roots = ledger_roots(Path("."))
+    if len(roots) == 1:
+        root = shlex.quote(str(roots[0]))
+        return f"Found {root} here, the one ledger file nothing else includes: pass --file {root}, or set BEA_FILE."
+    if roots:
+        return (
+            f"Found several ledger files here that no other file includes ({listed_roots(roots)}): "
+            f"pass the root one with --file, for example --file {shlex.quote(str(roots[0]))}."
+        )
+    nearby = _child_ledger()
+    if nearby:
+        return (
+            f"Found {shlex.quote(str(nearby))} here: run cd {shlex.quote(str(nearby.parent))}, "
+            f"or pass --file {shlex.quote(str(nearby))}."
+        )
+    return _START
+
+
 @dataclass
 class RunContext:
     """Global options, resolved once by the root callback."""
@@ -131,7 +161,7 @@ class RunContext:
         Cwd discovery prefers `./main.bean`, then `./main.beancount` when the
         `.bean` name is absent.
         """
-        from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS, default_entry
+        from cli.config import default_entry
 
         candidate = expand_path(self.file, "--file") if self.file is not None else None
         source = "--file"
@@ -175,31 +205,18 @@ class RunContext:
                     f"Unset or fix BEA_FILE, or pass --file PATH to override it. "
                     f"Cwd discovery of main.bean/main.beancount is skipped while BEA_FILE is set."
                 )
-            # Suggesting `init books` one directory above existing books
-            # names a command that can only refuse (w5/219).
-            nearby = _child_ledger() if source == "the working directory" else None
-            start = (
-                f"Found {shlex.quote(str(nearby))} here: run cd {shlex.quote(str(nearby.parent))}, "
-                f"or pass --file {shlex.quote(str(nearby))}."
-                if nearby
-                else "To start new books, run bea init books --currency USD."
-            )
             raise UsageError(
                 f"No ledger file at '{candidate}' (from {source}). "
                 f"Name one with --file PATH, set BEA_FILE, or run from a directory containing "
-                f"main.bean or main.beancount. {start}"
+                f"main.bean or main.beancount. {_way_forward() if source == 'the working directory' else _START}"
             )
         if directory:
-            try:
-                hint = next(
-                    (candidate / name for name in DEFAULT_ENTRY_FILE_FALLBACKS if (candidate / name).is_file()),
-                    candidate / DEFAULT_ENTRY_FILE_FALLBACKS[0],
-                )
-            except PermissionError:
-                hint = candidate / DEFAULT_ENTRY_FILE_FALLBACKS[0]
+            from cli.output import directory_root_hint
+
+            hint, among = directory_root_hint(candidate)
             raise UsageError(
                 f"Ledger path '{candidate}' (from {source}) is a directory; expected a ledger file. "
-                f"Point --file to its root ledger, for example --file {shlex.quote(str(hint))}."
+                f"Point --file to its root ledger, {among}for example --file {shlex.quote(str(hint))}."
             )
         if not regular:
             raise UsageError(f"Ledger path '{candidate}' (from {source}) is not a regular file.")

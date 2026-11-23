@@ -696,6 +696,62 @@ def ledger_candidates(directory: Path) -> list[Path]:
     return [path for suffix in _LEDGER_SUFFIXES for path in entries if path.suffix.lower() == suffix]
 
 
+def ledger_roots(directory: Path) -> list[Path]:
+    """The ledger files in a directory that no other one there includes, `.bean` first.
+
+    The rule `bea init --existing` finds an existing ledger's root by when the
+    folder has no main.bean, read from the include lines rather than guessed.
+    A hidden file is never a root; when every file is included by another (a
+    cycle), all of them are. Never raises, so a refusal can name what it finds:
+    an unreadable directory or file counts as none (w1/361).
+    """
+    try:
+        found = [entry for entry in ledger_candidates(directory) if entry.is_file() and not entry.name.startswith(".")]
+    except OSError:
+        return []
+    included = {
+        os.path.abspath(member)
+        for entry in found
+        for member in ledger_closure(entry)
+        if os.path.abspath(member) != os.path.abspath(entry)
+    }
+    return [entry for entry in found if os.path.abspath(entry) not in included] or found
+
+
+#: How many root candidates a message names before it counts the rest.
+_LISTED_ROOTS = 10
+
+
+def listed_roots(roots: Sequence[Path]) -> str:
+    """Root candidates by name for a message: the first ten, then how many more."""
+    names = ", ".join(entry.name for entry in roots[:_LISTED_ROOTS])
+    more = f", and {len(roots) - _LISTED_ROOTS} more" if len(roots) > _LISTED_ROOTS else ""
+    return names + more
+
+
+def directory_root_hint(directory: Path) -> tuple[Path, str]:
+    """The root ledger to suggest for a directory given where its ledger file was expected.
+
+    `main.bean` or `main.beancount` when present, else the root `init
+    --existing` would find there. With several roots the first is the example
+    and the clause names them all; a directory with no ledger file keeps
+    `main.bean` as the example's shape (w1/361).
+    """
+    from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS
+
+    try:
+        named = next((directory / name for name in DEFAULT_ENTRY_FILE_FALLBACKS if (directory / name).is_file()), None)
+    except OSError:
+        named = None
+    if named is not None:
+        return named, ""
+    roots = ledger_roots(directory)
+    if not roots:
+        return directory / DEFAULT_ENTRY_FILE_FALLBACKS[0], ""
+    among = f"one of the ledger files there that no other file includes ({listed_roots(roots)}), " if roots[1:] else ""
+    return roots[0], among
+
+
 def _nearby_ledger_directories(source: Path) -> list[Path]:
     """The write-side search area: four ancestor levels and immediate children."""
     directories: list[Path] = []

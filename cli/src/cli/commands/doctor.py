@@ -18,7 +18,6 @@ from typer.core import TyperGroup
 
 from cli import output
 from cli.agent_guidance import claude_reads_agents
-from cli.config import DEFAULT_ENTRY_FILE_FALLBACKS
 from cli.context import refuse_expanding_ledger_path
 from cli.engine import launch
 from cli.errors import (
@@ -162,17 +161,15 @@ def _refuse_directory_ledger(op: str, args: list[str]) -> None:
             # open it, said the path "does not exist" (w5/436).
             raise UsageError(f"Ledger path {output.not_a_file(ledger)}. Save it to a file and pass that file.")
         return
-    hint = next(
-        (ledger / name for name in DEFAULT_ENTRY_FILE_FALLBACKS if (ledger / name).is_file()),
-        ledger / DEFAULT_ENTRY_FILE_FALLBACKS[0],
-    )
+    # A root with its own name, as `init --existing` finds it (w1/361).
+    hint, among = output.directory_root_hint(ledger)
     # Every other operand and option stays: `context DIR 3` suggested
     # `context DIR/main.bean`, which upstream refused for its LOCATION (w5/344).
     rebuilt = list(args)
     rebuilt[_operand_indices(args)[0]] = str(hint)
     raise UsageError(
         f"Ledger path '{ledger}' is a directory; expected a ledger file. "
-        f"Pass its root ledger instead, for example {shlex.join(['bea', 'doctor', op, *rebuilt])}."
+        f"Pass its root ledger instead, {among}for example {shlex.join(['bea', 'doctor', op, *rebuilt])}."
     )
 
 
