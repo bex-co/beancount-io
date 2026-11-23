@@ -569,7 +569,7 @@ export function NetWorthCard({
         )}{" "}
         {latestComparable.currency}
         {changeShare && (
-          <span className="font-normal opacity-80">
+          <span className="font-normal">
             {" · "}
             {changeShare}
           </span>

@@ -33,28 +33,34 @@ const decode = (v: number) =>
   v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
 const luminance = ([r, g, b]: Rgb) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-function token(theme: Theme, name: string): Rgb {
+function token(theme: Theme, name: string, compiledCss: string): Rgb {
   const stylesheet = readFileSync(resolve("src/style.css"), "utf8");
   const block = new RegExp(
     `^${theme.replace(".", "\\.")} \\{([^}]*)\\}`,
     "m",
   ).exec(stylesheet)?.[1];
-  const value = new RegExp(
-    `--${name}:\\s*oklch\\(([\\d.]+) ([\\d.]+) ([\\d.]+)\\)`,
-  ).exec(block ?? "");
+  const declaration = new RegExp(
+    `--${name}:\\s*oklch\\(([\\d.]+)(%)? ([\\d.]+) ([\\d.]+)\\)`,
+  );
+  const value = declaration.exec(block ?? "") ?? declaration.exec(compiledCss);
   if (!value) throw new Error(`${theme} has no oklch --${name}`);
   return oklchToLinearSrgb(
-    Number(value[1]),
-    Number(value[2]),
+    Number(value[1]) / (value[2] ? 100 : 1),
     Number(value[3]),
+    Number(value[4]),
   );
 }
 
-/** The token and opacity a compiled rule's `color` paints with. */
-function paint(rule: string): { token: string; alpha: number } {
+/** The token and opacity a compiled rule paints with. */
+function paint(
+  rule: string,
+  property = "color",
+): { token: string; alpha: number } {
   // The last declaration wins where `color-mix` is supported.
   const value =
-    [...rule.matchAll(/(?<![-\w])color:\s*([^;]+);/g)].at(-1)?.[1] ?? "";
+    [
+      ...rule.matchAll(new RegExp(`(?<![-\\w])${property}:\\s*([^;]+);`, "g")),
+    ].at(-1)?.[1] ?? "";
   const mix =
     /color-mix\(in \w+, var\(--([\w-]+)\) ([\d.]+)%, transparent\)/.exec(value);
   if (mix) return { token: mix[1], alpha: Number(mix[2]) / 100 };
@@ -63,29 +69,51 @@ function paint(rule: string): { token: string; alpha: number } {
   throw new Error(`unrecognized color: ${value}`);
 }
 
+function composite(foreground: Rgb, alpha: number, background: Rgb): Rgb {
+  return foreground.map((value, i) =>
+    decode(alpha * encode(value) + (1 - alpha) * encode(background[i])),
+  ) as Rgb;
+}
+
 /**
  * Contrast of the text `textClass` paints over the opaque background that
- * one of `backgroundClasses` sets, in `theme`.
+ * one of `backgroundClasses` sets, with an optional tint and text opacity.
  */
 export async function textContrast(
   textClass: string,
   backgroundClasses: string[],
   theme: Theme,
+  {
+    tintClass,
+    opacityClass,
+  }: { tintClass?: string; opacityClass?: string } = {},
 ): Promise<number> {
-  const rules = parseRules(
-    await compileAppCss([textClass, ...backgroundClasses]),
-  );
+  const css = await compileAppCss([
+    textClass,
+    ...backgroundClasses,
+    ...(tintClass ? [tintClass] : []),
+    ...(opacityClass ? [opacityClass] : []),
+  ]);
+  const rules = parseRules(css);
   const text = paint(rules.get(textClass) ?? "");
   const background = /background-color:\s*var\(--([\w-]+)\)/.exec(
     backgroundClasses.map((name) => rules.get(name) ?? "").join("\n"),
   )?.[1];
   if (!background) throw new Error("no background token");
 
-  const fg = token(theme, text.token);
-  const bg = token(theme, background);
-  const mixed = fg.map((value, i) =>
-    decode(text.alpha * encode(value) + (1 - text.alpha) * encode(bg[i])),
-  ) as Rgb;
+  const fg = token(theme, text.token, css);
+  let bg = token(theme, background, css);
+  if (tintClass) {
+    const tint = paint(rules.get(tintClass) ?? "", "background-color");
+    bg = composite(token(theme, tint.token, css), tint.alpha, bg);
+  }
+  const opacity = opacityClass
+    ? /opacity:\s*([\d.]+)(%)?;/.exec(rules.get(opacityClass) ?? "")
+    : null;
+  if (opacityClass && !opacity)
+    throw new Error(`unrecognized opacity: ${opacityClass}`);
+  const alpha = opacity ? Number(opacity[1]) / (opacity[2] ? 100 : 1) : 1;
+  const mixed = composite(fg, text.alpha * alpha, bg);
   const [high, low] = [luminance(mixed), luminance(bg)].sort((x, y) => y - x);
   return (high + 0.05) / (low + 0.05);
 }

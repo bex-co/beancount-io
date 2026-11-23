@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { EChartsOption, LineSeriesOption } from "echarts";
+import { textContrast } from "@/test/contrast";
 import { NetWorthCard } from "../net-worth-card";
 import type { DataSeries } from "../../lib/overview-utils";
 import type { NetWorthValuation } from "../../lib/net-worth-valuation";
@@ -629,6 +630,47 @@ describe("NetWorthCard monthly change", () => {
   const change = () =>
     screen.queryByText("page.overview.fromPreviousMonth")?.parentElement
       ?.textContent ?? null;
+
+  it.each([
+    { balance: "1200", shareText: "· +20%" },
+    { balance: "800", shareText: "· -20%" },
+  ])(
+    "keeps the change amount and $shareText readable on the badge",
+    async ({ balance, shareText }) => {
+      renderCard([
+        { date: "2016-01-31", balance: { USD: "1000" } },
+        { date: "2016-02-29", balance: { USD: balance } },
+      ]);
+
+      const share = screen.getByText(shareText);
+      const amount = share.parentElement!;
+      const card = amount.closest<HTMLElement>('[data-slot="card"]')!;
+      for (const theme of [":root", ".dark"] as const) {
+        const utility = (classes: DOMTokenList, prefix: string) =>
+          (theme === ".dark"
+            ? [...classes].find((name) => name.startsWith(`dark:${prefix}`))
+            : undefined) ??
+          [...classes].find((name) => name.startsWith(prefix));
+        const tintClass = utility(amount.classList, "bg-");
+        expect(tintClass).toBeDefined();
+
+        for (const text of [amount, share]) {
+          const textClass =
+            utility(text.classList, "text-") ??
+            utility(amount.classList, "text-");
+          expect(textClass).toBeDefined();
+          const opacityClass = utility(text.classList, "opacity-");
+          expect(
+            await textContrast(textClass!, [...card.classList], theme, {
+              tintClass,
+              opacityClass,
+            }),
+            `${theme} ${text.textContent}`,
+          ).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    },
+  );
 
   it("shows no change when last month held only another currency", async () => {
     renderCard([
