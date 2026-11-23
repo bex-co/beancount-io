@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { User } from "lucide-react";
@@ -38,6 +38,7 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { usernameRuleError } from "@/common/lib/auth/username-rule";
 import { isCompositionKey } from "@/common/lib/keyboard/is-composition-key";
 import { usePendingAction } from "@/common/hooks/use-pending-action";
+import { useDiscardDraftGuard } from "@/common/components/discard-draft-guard";
 
 /** The server refused the name as outside the username rule (w0/036). */
 function isUsernameRuleRefusal(error: unknown): boolean {
@@ -77,6 +78,11 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
   const formatError = useErrorMessage();
   const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
+  const [openingUsername, setOpeningUsername] = useState("");
+  const [openingName, setOpeningName] = useState({
+    firstName: "",
+    lastName: "",
+  });
   const [newUsername, setNewUsername] = useState("");
   // The rule error shows once the name is edited or submitted, not on open.
   const [usernameEdited, setUsernameEdited] = useState(false);
@@ -88,6 +94,13 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
   // completion closes the session it belongs to and no other (w4/m47).
   const usernameSave = usePendingAction();
   const nameSave = usePendingAction();
+  const usernameField = useRef<HTMLInputElement>(null);
+  const nameField = useRef<HTMLInputElement>(null);
+  const usernameDraft = useDiscardDraftGuard(newUsername !== openingUsername);
+  const nameDraft = useDiscardDraftGuard(
+    newFirstName !== openingName.firstName ||
+      newLastName !== openingName.lastName,
+  );
 
   const [updateUsername] = useMutation<
     UpdateUsernameMutation,
@@ -155,6 +168,40 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
     void nameSave.run(() => landed(updateProfile({ variables })));
   };
 
+  // A profile query can refresh while the dialog is open. Compare the draft
+  // to the values the reader started from.
+  const changeNameDialog = (open: boolean) => {
+    if (open) {
+      const firstName = userData?.userProfile?.firstName ?? "";
+      const lastName = userData?.userProfile?.lastName ?? "";
+      setOpeningName({ firstName, lastName });
+      setNewFirstName(firstName);
+      setNewLastName(lastName);
+      setIsNameDialogOpen(true);
+    } else if (!nameSave.pending) {
+      nameDraft.requestLeave(
+        () => setIsNameDialogOpen(false),
+        nameField.current,
+      );
+    }
+  };
+
+  const changeUsernameDialog = (open: boolean) => {
+    if (open) {
+      const username = userData?.userProfile?.username ?? "";
+      setOpeningUsername(username);
+      setNewUsername(username);
+      setUsernameEdited(false);
+      setUsernameRefused(false);
+      setIsUsernameDialogOpen(true);
+    } else if (!usernameSave.pending) {
+      usernameDraft.requestLeave(
+        () => setIsUsernameDialogOpen(false),
+        usernameField.current,
+      );
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -178,16 +225,9 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
                 : t("userSettings.notSet")}
             </p>
           </div>
-          <Dialog open={isNameDialogOpen} onOpenChange={setIsNameDialogOpen}>
+          <Dialog open={isNameDialogOpen} onOpenChange={changeNameDialog}>
             <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setNewFirstName(userData?.userProfile?.firstName || "");
-                  setNewLastName(userData?.userProfile?.lastName || "");
-                }}
-              >
+              <Button variant="outline" size="sm">
                 {t("common.edit")}
               </Button>
             </DialogTrigger>
@@ -198,7 +238,14 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
                   {t("userSettings.enterNewName")}
                 </DialogDescription>
               </DialogHeader>
-              <div className="py-4 space-y-4">
+              <div
+                className="py-4 space-y-4"
+                onFocus={(event) => {
+                  if (event.target instanceof HTMLInputElement) {
+                    nameField.current = event.target;
+                  }
+                }}
+              >
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label htmlFor="firstName" className="text-sm font-medium">
@@ -246,7 +293,7 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
               <DialogFooter>
                 <Button
                   variant="outline"
-                  onClick={() => setIsNameDialogOpen(false)}
+                  onClick={() => changeNameDialog(false)}
                   disabled={nameSave.pending}
                 >
                   {t("common.cancel")}
@@ -255,6 +302,7 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
                   {nameSave.pending ? t("common.updating") : t("common.save")}
                 </Button>
               </DialogFooter>
+              {nameDraft.confirmation}
             </DialogContent>
           </Dialog>
         </div>
@@ -271,18 +319,10 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
           </div>
           <Dialog
             open={isUsernameDialogOpen}
-            onOpenChange={setIsUsernameDialogOpen}
+            onOpenChange={changeUsernameDialog}
           >
             <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setNewUsername(userData?.userProfile?.username || "");
-                  setUsernameEdited(false);
-                  setUsernameRefused(false);
-                }}
-              >
+              <Button variant="outline" size="sm">
                 {t("common.edit")}
               </Button>
             </DialogTrigger>
@@ -295,6 +335,7 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
               </DialogHeader>
               <div className="space-y-2 py-4">
                 <Input
+                  ref={usernameField}
                   value={newUsername}
                   readOnly={usernameSave.pending}
                   onChange={(e) => {
@@ -337,7 +378,7 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
               <DialogFooter>
                 <Button
                   variant="outline"
-                  onClick={() => setIsUsernameDialogOpen(false)}
+                  onClick={() => changeUsernameDialog(false)}
                   disabled={usernameSave.pending}
                 >
                   {t("common.cancel")}
@@ -351,6 +392,7 @@ export function UserProfileSection({ userData }: UserProfileSectionProps) {
                     : t("common.save")}
                 </Button>
               </DialogFooter>
+              {usernameDraft.confirmation}
             </DialogContent>
           </Dialog>
         </div>

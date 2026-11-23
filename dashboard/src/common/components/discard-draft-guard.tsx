@@ -17,7 +17,8 @@ import { useTranslations } from "@/common/hooks/use-translations";
  * leaves at once. `requestLeave` takes the leave action from Close, Escape,
  * an outside click or a Cancel button; render `confirmation` inside the
  * dialog it guards. Pass `navigation` while a dialog is open to guard browser
- * exits too. Keep editing hands focus back to the field that had it.
+ * exits too. Keep editing returns focus to the specified field or to the
+ * control that had focus when leaving was requested.
  * Entry Context asks the same way (w3/565); New Entry and Add Budget closed
  * on one stray click (w2/123).
  */
@@ -30,6 +31,7 @@ export function useDiscardDraftGuard(
   const [pending, setPending] = useState<{
     leave: () => void;
     stay?: () => void;
+    returnFocusTo?: HTMLElement | null;
   } | null>(null);
   // Where focus was when leaving was asked for, for Keep editing to return to.
   const origin = useRef<HTMLElement | null>(null);
@@ -37,13 +39,16 @@ export function useDiscardDraftGuard(
   const cancelNavigation = useRef<(() => void) | null>(null);
   useEffect(() => () => cancelNavigation.current?.(), []);
 
-  const requestLeave = (leave: () => void) => {
+  const requestLeave = (
+    leave: () => void,
+    returnFocusTo?: HTMLElement | null,
+  ) => {
     if (writing || cancelNavigation.current) return;
     if (!dirty) {
       leave();
       return;
     }
-    setPending({ leave });
+    setPending({ leave, returnFocusTo });
   };
 
   const confirmNavigation = useCallback(() => {
@@ -77,7 +82,9 @@ export function useDiscardDraftGuard(
           className="sm:max-w-md"
           onOpenAutoFocus={() => {
             const active = document.activeElement;
-            origin.current = active instanceof HTMLElement ? active : null;
+            origin.current =
+              pending?.returnFocusTo ??
+              (active instanceof HTMLElement ? active : null);
           }}
           onCloseAutoFocus={(event) => {
             if (!keeping.current) return;

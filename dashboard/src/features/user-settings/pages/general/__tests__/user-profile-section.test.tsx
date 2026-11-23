@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { toast } from "sonner";
@@ -15,7 +16,12 @@ import type { GetCurrentUserQuery } from "@/graphql/definitions";
 // Mock mutations
 const mockUpdateUsername = vi.fn();
 const mockUpdateProfile = vi.fn();
-let mockUsernameOptions: { onError?: (error: unknown) => void } | undefined;
+type MutationOptions = {
+  onCompleted?: () => void;
+  onError?: (error: unknown) => void;
+};
+let mockUsernameOptions: MutationOptions | undefined;
+let mockProfileOptions: MutationOptions | undefined;
 
 // Mock Apollo Client
 vi.mock("@apollo/client/react", () => ({
@@ -23,6 +29,7 @@ vi.mock("@apollo/client/react", () => ({
     // Return different mocks based on the operation. A parsed document
     // stringifies to "[object Object]", so match its operation name.
     if (document.definitions[0]?.name?.value === "UpdateProfile") {
+      mockProfileOptions = options;
       return [mockUpdateProfile, { loading: false }];
     }
     mockUsernameOptions = options;
@@ -66,6 +73,9 @@ vi.mock("@/common/hooks/use-translations", () => ({
         "common.cancel": "Cancel",
         "common.save": "Save",
         "common.updating": "Updating...",
+        "common.discardDraftTitle": "Discard what you typed?",
+        "common.keepEditing": "Keep editing",
+        "common.discardDraft": "Discard",
       };
       return translations[key] || key;
     },
@@ -169,6 +179,141 @@ describe("UserProfileSection", () => {
       expect(screen.getByText("john@example.com")).toBeInTheDocument();
     });
   });
+
+  describe.each([
+    {
+      title: "Change Name",
+      index: 0,
+      label: "Last Name",
+      openingValue: "Doe",
+      typed: "New surname",
+      save: mockUpdateProfile,
+      complete: () => mockProfileOptions?.onCompleted?.(),
+    },
+    {
+      title: "Change Username",
+      index: 1,
+      label: "Username",
+      openingValue: "johndoe",
+      typed: "new_username",
+      save: mockUpdateUsername,
+      complete: () => mockUsernameOptions?.onCompleted?.(),
+    },
+  ])(
+    "$title dismissal",
+    ({ title, index, label, openingValue, typed, save, complete }) => {
+      const confirm = () =>
+        screen.queryByRole("dialog", { name: "Discard what you typed?" });
+      const outside = () => fireEvent.pointerDown(screen.getByText("Email"));
+
+      const openDialog = async () => {
+        const user = userEvent.setup();
+        const { rerender } = render(
+          <UserProfileSection userData={mockUserData} />,
+        );
+        const edit = screen.getAllByRole("button", { name: "Edit" })[index];
+        await user.click(edit);
+        const dialog = await screen.findByRole("dialog", { name: title });
+        const input = within(dialog).getByRole("textbox", { name: label });
+        return { user, edit, dialog, input, rerender };
+      };
+
+      it.each(["Escape", "Close", "Cancel", "outside click"])(
+        "keeps the draft and returns to its field after %s",
+        async (method) => {
+          const { user, edit, dialog, input } = await openDialog();
+          await user.clear(input);
+          await user.type(input, typed);
+
+          if (method === "Escape") await user.keyboard("{Escape}");
+          else if (method === "outside click") outside();
+          else
+            await user.click(
+              within(dialog).getByRole("button", { name: method }),
+            );
+
+          const confirmation = await screen.findByRole("dialog", {
+            name: "Discard what you typed?",
+          });
+          await user.click(
+            within(confirmation).getByRole("button", { name: "Keep editing" }),
+          );
+          expect(confirm()).toBeNull();
+          expect(input).toHaveValue(typed);
+          await waitFor(() => expect(input).toHaveFocus());
+
+          await user.keyboard("{Escape}");
+          await user.click(
+            await screen.findByRole("button", { name: "Discard" }),
+          );
+          await waitFor(() => expect(dialog).not.toBeInTheDocument());
+          await waitFor(() => expect(edit).toHaveFocus());
+          expect(save).not.toHaveBeenCalled();
+        },
+      );
+
+      it("closes a restored draft against the opening value after a profile refresh", async () => {
+        const { user, dialog, input, rerender } = await openDialog();
+        await user.clear(input);
+        await user.type(input, typed);
+        rerender(
+          <UserProfileSection
+            userData={{
+              userProfile: {
+                ...mockUserData.userProfile!,
+                lastName: "Freshname",
+                username: "freshname",
+              },
+            }}
+          />,
+        );
+        await user.clear(input);
+        await user.type(input, openingValue);
+
+        await user.click(
+          within(dialog).getByRole("button", { name: "Cancel" }),
+        );
+        await waitFor(() => expect(dialog).not.toBeInTheDocument());
+        expect(confirm()).toBeNull();
+        expect(save).not.toHaveBeenCalled();
+      });
+
+      it("holds the draft during the save and closes directly on success", async () => {
+        let finish!: () => void;
+        save.mockImplementationOnce(
+          () =>
+            new Promise<void>((resolve) => {
+              finish = resolve;
+            }),
+        );
+        const { user, edit, dialog, input } = await openDialog();
+        await user.clear(input);
+        await user.type(input, typed);
+        await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+        expect(save).toHaveBeenCalledTimes(1);
+        expect(input).toHaveAttribute("readonly");
+        expect(
+          within(dialog).getByRole("button", { name: "Close" }),
+        ).toBeDisabled();
+        expect(
+          within(dialog).getByRole("button", { name: "Cancel" }),
+        ).toBeDisabled();
+        await user.keyboard("{Escape}");
+        outside();
+        expect(dialog).toBeVisible();
+        expect(confirm()).toBeNull();
+
+        await act(async () => {
+          complete();
+          finish();
+        });
+        expect(dialog).not.toBeInTheDocument();
+        expect(confirm()).toBeNull();
+        await waitFor(() => expect(edit).toHaveFocus());
+      });
+    },
+  );
 
   describe("Name Dialog", () => {
     it("should open name dialog when edit button is clicked", async () => {
