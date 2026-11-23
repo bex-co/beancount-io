@@ -34,8 +34,8 @@ const ptCommon: Record<string, TranslationEntry> = {
     description: "Table column header for account names",
   },
   "common.actions": {
-    message: "Transações",
-    description: "Plural form of transaction",
+    message: "Ações",
+    description: "Table header for actions column",
   },
   "common.back": {
     message: "Voltar",

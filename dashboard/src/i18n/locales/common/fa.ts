@@ -30,8 +30,8 @@ const faCommon: Record<string, TranslationEntry> = {
     description: "Table column header for account names",
   },
   "common.actions": {
-    message: "تراکنش‌ها",
-    description: "Plural form of transaction",
+    message: "اقدامات",
+    description: "Table header for actions column",
   },
   "common.back": {
     message: "بازگشت",

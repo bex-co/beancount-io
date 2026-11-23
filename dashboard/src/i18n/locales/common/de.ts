@@ -30,8 +30,8 @@ const deCommon: Record<string, TranslationEntry> = {
     description: "Table column header for account names",
   },
   "common.actions": {
-    message: "Transaktionen",
-    description: "Plural form of transaction",
+    message: "Aktionen",
+    description: "Table header for actions column",
   },
   "common.back": {
     message: "Zurück",

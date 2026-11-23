@@ -30,8 +30,8 @@ const nlCommon: Record<string, TranslationEntry> = {
     description: "Table column header for account names",
   },
   "common.actions": {
-    message: "Transacties",
-    description: "Plural form of transaction",
+    message: "Acties",
+    description: "Table header for actions column",
   },
   "common.back": {
     message: "Terug",

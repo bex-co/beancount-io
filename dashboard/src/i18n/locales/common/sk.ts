@@ -38,8 +38,8 @@ const skCommon: Record<string, TranslationEntry> = {
     description: "Table column header for account names",
   },
   "common.actions": {
-    message: "Transakcie",
-    description: "Plural form of transaction",
+    message: "Akcie",
+    description: "Table header for actions column",
   },
   "common.back": {
     message: "Späť",

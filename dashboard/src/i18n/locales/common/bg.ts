@@ -30,8 +30,8 @@ const bgCommon: Record<string, TranslationEntry> = {
     description: "Table column header for account names",
   },
   "common.actions": {
-    message: "Транзакции",
-    description: "Plural form of transaction",
+    message: "Действия",
+    description: "Table header for actions column",
   },
   "common.back": {
     message: "Назад",

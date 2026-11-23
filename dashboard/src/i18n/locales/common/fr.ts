@@ -34,8 +34,8 @@ const frCommon: Record<string, TranslationEntry> = {
     description: "Table column header for account names",
   },
   "common.actions": {
-    message: "Transactions",
-    description: "Plural form of transaction",
+    message: "Actions",
+    description: "Table header for actions column",
   },
   "common.back": {
     message: "Retour",

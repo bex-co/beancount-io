@@ -50,6 +50,19 @@ it("uses Saldenbilanz across the German trial balance surfaces", () => {
   }
 });
 
+describe("actions column labels (w5/1164)", () => {
+  it.each(Object.entries(locales))(
+    "names row actions in %s",
+    (language, labels) => {
+      // Japanese already uses an appropriate synonym in non-import tables.
+      const actions =
+        language === "ja" ? "アクション" : labels["importer.preview.actions"];
+      expect(actions).toBeTruthy();
+      expect(labels["common.actions"]).toBe(actions);
+    },
+  );
+});
+
 describe.each([
   ["holdings", "ledgerHoldings"],
   ["commodities", "ledgerCommodities"],

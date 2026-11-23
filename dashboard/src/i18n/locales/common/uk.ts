@@ -38,8 +38,8 @@ const ukCommon: Record<string, TranslationEntry> = {
     description: "Table column header for account names",
   },
   "common.actions": {
-    message: "Транзакції",
-    description: "Plural form of transaction",
+    message: "Дії",
+    description: "Table header for actions column",
   },
   "common.back": {
     message: "Назад",

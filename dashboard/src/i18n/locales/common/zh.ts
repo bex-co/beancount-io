@@ -26,8 +26,8 @@ const zhCommon: Record<string, TranslationEntry> = {
     description: "Table column header for account names",
   },
   "common.actions": {
-    message: "交易记录",
-    description: "Plural form of transaction",
+    message: "操作",
+    description: "Table header for actions column",
   },
   "common.back": {
     message: "返回",
