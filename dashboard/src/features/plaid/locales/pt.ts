@@ -175,11 +175,6 @@ const ptPlaid: Record<string, TranslationEntry> = {
     description:
       "Button text linking to the dedicated bank-connection management page",
   },
-  "plaid.management.backToTransactions": {
-    message: "Voltar às transações",
-    description:
-      "Back button text on the manage-banks page, returning to the transaction review page",
-  },
   "plaid.management.toast.error": {
     message: "Erro",
     description: "Generic error toast title",

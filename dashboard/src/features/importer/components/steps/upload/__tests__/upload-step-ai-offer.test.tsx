@@ -151,9 +151,15 @@ describe("UploadStep CSV parsing and the AI choice", () => {
     expect(
       screen.queryByText("importer.error.useCsvFormat"),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByText("importer.error.downloadCsvExample"),
-    ).toBeInTheDocument();
+    const exampleLink = screen.getByRole("link", {
+      name: "importer.error.downloadCsvExample",
+    });
+    expect(exampleLink).toHaveAttribute(
+      "href",
+      "/lgasset/csv_transactions.csv",
+    );
+    expect(exampleLink).toHaveAttribute("download", "example_transactions.csv");
+    expect(exampleLink.querySelector("button")).toBeNull();
   });
 
   it.each([

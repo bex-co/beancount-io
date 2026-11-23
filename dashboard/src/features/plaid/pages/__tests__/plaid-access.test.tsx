@@ -383,10 +383,30 @@ describe.each(["settings", "connections"] as const)("Plaid %s page", (page) => {
         screen.getByRole("button", { name: "Connect Another Bank" }),
       ).toBeEnabled();
       expect(
-        screen.getByRole("link", { name: "Back to Transactions" }),
+        screen.getByRole("link", { name: "Connected Accounts" }),
       ).toHaveAttribute("href", `/ledger/${ledgerId}/link`);
     }
     expectPageHeading();
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    const link = screen.getByRole("link", {
+      name: page === "settings" ? "Manage Banks" : "Connected Accounts",
+    });
+    expect(link.querySelector("button")).toBeNull();
+    if (page === "settings") {
+      screen.getByRole("button", { name: "Sync" }).focus();
+      await user.tab();
+    } else {
+      screen.getByRole("button", { name: "Connect Another Bank" }).focus();
+      await user.tab({ shift: true });
+    }
+    expect(link).toHaveFocus();
+    await user.keyboard("{Enter}");
+    await waitFor(() =>
+      expect(f.router.state.location.pathname).toBe(
+        `/ledger/${ledgerId}/${page === "settings" ? "plaid-connections" : "link"}`,
+      ),
+    );
   });
 });

@@ -134,14 +134,14 @@ function LedgerStep({ uid, scope }: { uid: string; scope?: string }) {
               {t("auth.oauthNoLedgersMessage")}
             </AlertDescription>
           </Alert>
-          <Link
-            to="/auth/welcome"
-            search={{ oauthUid: uid, oauthScope: scope }}
-          >
-            <Button variant="outline" className="w-full">
+          <Button asChild variant="outline" className="w-full">
+            <Link
+              to="/auth/welcome"
+              search={{ oauthUid: uid, oauthScope: scope }}
+            >
               {t("page.dashboard.createLedger")}
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       ) : (
         <div className="space-y-2">

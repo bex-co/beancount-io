@@ -175,11 +175,6 @@ const skPlaid: Record<string, TranslationEntry> = {
     description:
       "Button text linking to the dedicated bank-connection management page",
   },
-  "plaid.management.backToTransactions": {
-    message: "Späť na transakcie",
-    description:
-      "Back button text on the manage-banks page, returning to the transaction review page",
-  },
   "plaid.management.toast.error": {
     message: "Chyba",
     description: "Generic error toast title",

@@ -175,11 +175,6 @@ const ruPlaid: Record<string, TranslationEntry> = {
     description:
       "Button text linking to the dedicated bank-connection management page",
   },
-  "plaid.management.backToTransactions": {
-    message: "Назад к транзакциям",
-    description:
-      "Back button text on the manage-banks page, returning to the transaction review page",
-  },
   "plaid.management.toast.error": {
     message: "Ошибка",
     description: "Generic error toast title",

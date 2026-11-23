@@ -155,16 +155,15 @@ function PremiumRequiredError({
               </p>
             </>
           )}
-          <a
-            href="/lgasset/csv_transactions.csv"
-            download="example_transactions.csv"
-            className="block"
-          >
-            <Button variant="outline" className="w-full" size="sm">
-              <Download className="w-3 h-3 mr-2" />
+          <Button asChild variant="outline" className="w-full" size="sm">
+            <a
+              href="/lgasset/csv_transactions.csv"
+              download="example_transactions.csv"
+            >
+              <Download className="me-2 h-3 w-3" aria-hidden />
               {t("importer.error.downloadCsvExample")}
-            </Button>
-          </a>
+            </a>
+          </Button>
         </div>
       </div>
     </ErrorLayout>

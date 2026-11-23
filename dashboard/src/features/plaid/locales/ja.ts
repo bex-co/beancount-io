@@ -168,11 +168,6 @@ const jaPlaid: Record<string, TranslationEntry> = {
     description:
       "Button text linking to the dedicated bank-connection management page",
   },
-  "plaid.management.backToTransactions": {
-    message: "取引に戻る",
-    description:
-      "Back button text on the manage-banks page, returning to the transaction review page",
-  },
   "plaid.management.toast.error": {
     message: "エラー",
     description: "Generic error toast title",

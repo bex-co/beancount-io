@@ -174,11 +174,6 @@ const ukPlaid: Record<string, TranslationEntry> = {
     description:
       "Button text linking to the dedicated bank-connection management page",
   },
-  "plaid.management.backToTransactions": {
-    message: "Назад до транзакцій",
-    description:
-      "Back button text on the manage-banks page, returning to the transaction review page",
-  },
   "plaid.management.toast.error": {
     message: "Помилка",
     description: "Generic error toast title",

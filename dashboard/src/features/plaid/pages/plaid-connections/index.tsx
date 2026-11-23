@@ -114,15 +114,15 @@ function PlaidConnectionsContent({ ledgerId }: { ledgerId: string }) {
   return (
     <div className="container mx-auto space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <Link
-          to="/ledger/$ledgerOwner/$ledgerName/link"
-          params={{ ledgerOwner, ledgerName }}
-        >
-          <Button variant="ghost" size="sm" className="-ml-2 mb-2">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            {t("plaid.management.backToTransactions")}
-          </Button>
-        </Link>
+        <Button asChild variant="ghost" size="sm" className="-ms-2 mb-2">
+          <Link
+            to="/ledger/$ledgerOwner/$ledgerName/link"
+            params={{ ledgerOwner, ledgerName }}
+          >
+            <ChevronLeft className="me-1 h-4 w-4 rtl:rotate-180" aria-hidden />
+            {t("plaid.pageTitle")}
+          </Link>
+        </Button>
         <ConnectBankButton
           ledgerId={ledgerId}
           hasConnections={items.length > 0}

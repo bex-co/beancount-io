@@ -91,15 +91,15 @@ export function PlaidManagementState({
             </>
           )}
         </Button>
-        <Link
-          to="/ledger/$ledgerOwner/$ledgerName/plaid-connections"
-          params={{ ledgerOwner, ledgerName }}
-        >
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4" />
+        <Button asChild variant="outline" size="sm">
+          <Link
+            to="/ledger/$ledgerOwner/$ledgerName/plaid-connections"
+            params={{ ledgerOwner, ledgerName }}
+          >
+            <Settings className="h-4 w-4" aria-hidden />
             {t("plaid.management.manageBanks")}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       <TransactionReviewTable ledgerId={ledgerId} />

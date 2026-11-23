@@ -28,11 +28,15 @@ vi.mock("@tanstack/react-router", () => ({
     children,
     to,
     search,
-  }: {
-    children: React.ReactNode;
+    ...props
+  }: React.ComponentProps<"a"> & {
     to: string;
     search: Record<string, string>;
-  }) => <a href={`${to}?${new URLSearchParams(search)}`}>{children}</a>,
+  }) => (
+    <a {...props} href={`${to}?${new URLSearchParams(search)}`}>
+      {children}
+    </a>
+  ),
 }));
 
 /** The requester summary has loaded; approval depends on it. */
@@ -95,6 +99,8 @@ describe("MCP consent", () => {
     expect(createLink.getAttribute("href")).toBe(
       "/auth/welcome?oauthUid=interaction-1&oauthScope=openid+ledger.read",
     );
+    expect(createLink).toHaveClass("w-full");
+    expect(createLink.querySelector("button")).toBeNull();
     expect(
       screen.getByRole("button", { name: "Approve access" }),
     ).toBeDisabled();
