@@ -97,11 +97,14 @@ newest first.
 
 ### Deferred
 
+- 2026-11-23 ledger `journal-running-balance.ts`/`lot-inventory.ts` ScaledDecimal add/mul — own exact-arithmetic copies of the same helpers fixed in `time-clamp.ts` this run; the same beancount-Decimal dust class may apply to at_cost/at_value running balances, needs its own fava-slim differential (out of budget).
 - 2026-11-21 dashboard declared `cash-flow-role: "cash"` under Income/Expenses roots — `isCashAccountByMembership`/rows follow the five-root gate, but `BalanceSheetData` serves no income/expense hierarchy so there is no closing snapshot (liabilities/equity added this run); engine accumulates them. Needs a server field or a scope call; still open. 2026-11-21 re-check: still blocked — the dashboard server is only a proxy and the closings need a backend API field (cross-package STOP).
 - 2026-11-20 cli `test_interrupt_contract.py` (3 tests) + `test_native_interrupt_is_silent.py::test_ctrl_c_during_a_forwarded_program_exits_130_silently` (2 params) — deterministic 10/10 FAIL in this sandbox, green in CI: sandbox python is libedit-readline, so ETX during `input()` raises KeyboardInterrupt in-process with no line-discipline `^C` echo (probe: exit by SIGINT, no `^C` on screen) while `_noise()` pins the echo; the exit-130 half of the USAGE.md carve-out holds — needs an intent call on whether the echo pin is backend-specific over-pinning (w3/388, w5/273).
 
 ### Skipped
 
+- 2026-11-23 mobile `decimal-number.ts` vs dashboard `beancount/decimal-number.ts` — shared parse/negate/sum/fraction core is textually identical modulo names; splits are per-surface (`decimalOf`/`compareDecimals`/`roundDecimal` mobile-only, `exceedsLedgerDigits`/`isPositiveDecimalNumber` dashboard-only), no divergence.
+- 2026-11-23 dashboard `transaction-summary.ts` transfer check (`abs(sum) < 1e-9`) — pins near-balanced two-posting txns as transfers; no documented intent for a different tolerance, left alone.
 - 2026-11-22 backend-cluster/ledger `directives-report` `activeYears` under FYE "00-31" — the raw month/day comparison labels every entry FY(year+1), matching the fixed `directive-filter` numbering where FY2025 covers calendar 2024; examined alongside the month-0 fix, no change.
 - 2026-11-22 mobile `account-close-dates.ts` remaining helpers (`isOpenOn` close-day inclusivity, `listedAccountsAsOf` close-day hiding, `budgetEndsOn` split-parent rule, `firstOpeningAfter`, `closedBeforeDate` trim, `isDeclared` empty-read claim) — boundaries match their docblocks and pins; the one divergence found (`closedAccountNamed` shadowing `notYetOpenAccountNamed`) shipped as its own fix.
 - 2026-11-22 dashboard `use-import-duplicates` journal window vs server `parseDateRange` — the client sends the file's first/last day (or one day) as `time`; the server resolves both endpoints inclusively (`[begin, end)`), so the booked pool covers the file's days; examined, no divergence.

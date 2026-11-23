@@ -279,6 +279,81 @@ describe("clampDirectives — beancount summarize.clamp_opt parity", () => {
     });
   });
 
+  it("matches beancount's 28-digit booking and dust conversion for a repeating total cost", () => {
+    // `{{1000.00 USD}}` over 3 units: beancount's booking divides under its
+    // 28-digit Decimal context, so the summarized opening carries per-unit
+    // `333.3333333333333333333333333` (28 digits) with a `-999.9999999999999999999999999`
+    // balancing leg — and the conversion residual is the +0.0000000000000000000000001
+    // dust its intermediate rounding leaves, not the exact zero this
+    // module's exact arithmetic saw (no conversion entry at all). The engine
+    // books the total at its own 29-digit precision (`per_unit_from_total`);
+    // the clamp restores beancount's booking, then rounds every inventory
+    // op the way `Decimal.__add__/__mul__` do.
+    const directives: DirectiveJson[] = [
+      {
+        type: "transaction",
+        date: "2024-01-20",
+        flag: "*",
+        narration: "Repeating total cost",
+        tags: [],
+        links: [],
+        postings: [
+          {
+            account: "Assets:Broker",
+            units: { number: "3", currency: "HOOL" },
+            cost: {
+              number: {
+                kind: "per_unit_from_total",
+                per_unit: "333.33333333333333333333333333",
+                total: "1000.00",
+              },
+              currency: "USD",
+            },
+          },
+          {
+            account: "Assets:Cash",
+            units: { number: "-1000.00", currency: "USD" },
+          },
+        ],
+      } as DirectiveJson,
+    ];
+    const clamped = clampDirectives(directives, "2024-02-01", "2024-03-01");
+    const opening = clamped.find(
+      (entry) =>
+        entry.type === "transaction" &&
+        (entry.narration ?? "").includes("Assets:Broker"),
+    );
+    expect(opening).toBeDefined();
+    if (opening?.type !== "transaction")
+      throw new Error("expected transaction");
+    expect(opening.postings[0]).toEqual({
+      account: "Assets:Broker",
+      units: { number: "3", currency: "HOOL" },
+      cost: {
+        number: { kind: "per_unit", value: "333.3333333333333333333333333" },
+        currency: "USD",
+      },
+    });
+    expect(opening.postings[1]).toEqual({
+      account: "Equity:Opening-Balances",
+      units: { number: "-999.9999999999999999999999999", currency: "USD" },
+    });
+    const conversion = clamped.find(
+      (entry) => entry.type === "transaction" && entry.flag === "C",
+    );
+    expect(conversion).toBeDefined();
+    if (conversion?.type !== "transaction")
+      throw new Error("expected transaction");
+    expect(conversion.date).toBe("2024-02-29");
+    expect(conversion.postings).toEqual([
+      {
+        account: "Equity:Conversions:Current",
+        units: { number: "0.0000000000000000000000001", currency: "USD" },
+        price: { number: "0", currency: "NOTHING" },
+      },
+    ]);
+  });
+
   it("does not leave phantom income balances when transferring cost lots", () => {
     const directives: DirectiveJson[] = [
       {
