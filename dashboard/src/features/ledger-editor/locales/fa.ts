@@ -69,6 +69,21 @@ export default {
   ...faCreateFile,
   ...faUploadFiles,
   ...faLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "افزودن به {main} تا ثبت‌های آن محاسبه شوند",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "هیچ فایل بارگذاری‌شده‌ای {path} را در بر نمی‌گیرد. ثبت‌های آن محاسبه و بررسی نشده‌اند.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "{path} ایجاد شد، اما افزودن آن به {main} ممکن نبود. ثبت‌هایش تا زمانی که فایل گنجانده شود محاسبه نخواهند شد.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "کلون با Git",
     description: "Button for opening Git clone options",

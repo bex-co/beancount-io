@@ -190,6 +190,35 @@ describe("Upload Files names the server cannot store (w2/127)", () => {
 });
 
 describe("Upload Files clashes, duplicates and partial batches (w3/563)", () => {
+  it("keeps each unloaded path visible after a successful batch", async () => {
+    mutate.mockResolvedValueOnce({
+      data: {
+        createLedgerFile: {
+          notLoaded: ["transactions/a.bean", "years/b.bean"],
+        },
+      },
+    });
+    render(<UploadFilesPage />);
+    choose([file("a.bean", "a"), file("bank.csv", "b")]);
+    fireEvent.click(upload());
+
+    const warning = await screen.findByRole("alert");
+    expect(warning).toHaveTextContent(
+      "ledgerEditor.fileNotLoaded transactions/a.bean",
+    );
+    expect(warning).toHaveTextContent(
+      "ledgerEditor.fileNotLoaded years/b.bean",
+    );
+    await waitFor(() => expect(upload()).toBeDisabled());
+    expect(sentPaths()).toEqual([
+      "transactions/a.bean",
+      "transactions/bank.csv",
+    ]);
+    expect(
+      screen.getByRole("button", { name: "common.relatedLinks.files" }),
+    ).toBeEnabled();
+  });
+
   it("flags a name the folder already has and keeps upload disabled", () => {
     render(<UploadFilesPage />);
     choose([file("main.bean", "synthetic"), file("new.bean", "synthetic")]);

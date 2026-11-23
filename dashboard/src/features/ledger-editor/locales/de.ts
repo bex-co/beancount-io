@@ -68,6 +68,21 @@ export default {
   ...deCreateFile,
   ...deUploadFiles,
   ...deLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Zu {main} hinzufügen, damit die Einträge berücksichtigt werden",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "{path} ist in keiner geladenen Datei eingebunden. Die Einträge werden nicht berücksichtigt und wurden nicht geprüft.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "{path} wurde erstellt, konnte aber nicht zu {main} hinzugefügt werden. Die Einträge zählen erst, wenn die Datei eingebunden ist.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Git-Klon",
     description: "Button for opening Git clone options",

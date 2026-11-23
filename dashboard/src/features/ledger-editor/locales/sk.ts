@@ -68,6 +68,21 @@ export default {
   ...skCreateFile,
   ...skUploadFiles,
   ...skLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Pridať do {main}, aby sa jeho záznamy započítali",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "Žiadny načítaný súbor nezahŕňa {path}. Jeho záznamy sa nezapočítavajú a neboli skontrolované.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "Súbor {path} bol vytvorený, ale nepodarilo sa ho pridať do {main}. Jeho záznamy sa započítajú až po zahrnutí súboru.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Klonovať cez Git",
     description: "Button for opening Git clone options",

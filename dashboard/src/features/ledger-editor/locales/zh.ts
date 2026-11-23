@@ -66,6 +66,20 @@ export default {
   ...zhCreateFile,
   ...zhUploadFiles,
   ...zhLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "加入 {main}，使其中的记录被计入",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message: "已加载的文件均未包含 {path}。其中的记录不会计入，也未经过检查。",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "已创建 {path}，但未能将其加入 {main}。包含该文件后，其中的记录才会计入。",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Git 克隆",
     description: "Button for opening Git clone options",

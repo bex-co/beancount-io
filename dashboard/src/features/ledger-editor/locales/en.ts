@@ -67,6 +67,21 @@ export default {
   ...enCreateFile,
   ...enUploadFiles,
   ...enLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Add to {main} so its entries count",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "{path} isn't included by any loaded file. Its entries don't count and were not checked.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "{path} was created, but it couldn't be added to {main}. Its entries won't count until the file is included.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Git Clone",
     description: "Button for opening Git clone options",

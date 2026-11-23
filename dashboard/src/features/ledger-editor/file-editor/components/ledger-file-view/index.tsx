@@ -36,6 +36,7 @@ import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { useWriteOutcome } from "@/common/hooks/use-write-outcome";
 import { getParentPath, getFilename } from "../../../shared/lib/utils";
 import { nearestSurvivingDirectory } from "../../../shared/lib/surviving-directory";
+import { LedgerFileLoadWarning } from "../../../shared/components/ledger-file-load-warning";
 import {
   FileLoadingView,
   FileErrorView,
@@ -119,6 +120,11 @@ export default function LedgerFileView({
   >(DeleteLedgerFileDocument);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [loadWarning, setLoadWarning] = useState<{
+    ledgerId: string;
+    filePath: string;
+    paths: string[];
+  } | null>(null);
 
   const fileContent = data?.getLedgerFile;
 
@@ -188,6 +194,17 @@ export default function LedgerFileView({
         // another round trip, so the new-error check runs behind the success
         // and warns after it (w1/m41).
         onCompleted: ({ updateLedgerFile: revision }) => {
+          if (
+            viewAliveRef.current &&
+            viewScopeRef.current.ledgerId === ledgerId &&
+            viewScopeRef.current.filePath === filePath
+          ) {
+            setLoadWarning({
+              ledgerId,
+              filePath,
+              paths: revision.notLoaded ?? [],
+            });
+          }
           track("file_edited", {});
           toast.success(t("ledgerEditor.fileSavedSuccess"));
           void writeOutcome.report(before);
@@ -343,6 +360,10 @@ export default function LedgerFileView({
 
   return (
     <>
+      {loadWarning?.ledgerId === ledgerId &&
+        loadWarning.filePath === filePath && (
+          <LedgerFileLoadWarning paths={loadWarning.paths} />
+        )}
       <FileContentView
         filePath={filePath}
         fileContent={fileContent}

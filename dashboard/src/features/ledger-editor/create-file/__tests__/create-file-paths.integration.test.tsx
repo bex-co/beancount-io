@@ -82,6 +82,9 @@ async function setup({
   failFirstSave = false,
   twinOnSave = null as string | null,
   folderOnSave = null as string | null,
+  unloaded = false,
+  failInclude = false,
+  mainText = 'include "opening.bean"\r\n\r\n; after includes\r\n',
 } = {}) {
   access.canWrite = canWrite;
   const mutations: Array<Record<string, unknown>> = [];
@@ -92,7 +95,7 @@ async function setup({
     name: path.split("/").at(-1)!,
     path,
     sha: "synthetic-sha",
-    size: 42,
+    size: content ? atob(content).length : 0,
     type: "file",
     encoding: "base64",
     content,
@@ -147,10 +150,35 @@ async function setup({
             }
             observer.next({
               data: {
-                createLedgerFile: file(
-                  String(operation.variables.path),
-                  String(operation.variables.content),
-                ),
+                createLedgerFile: {
+                  ...file(
+                    String(operation.variables.path),
+                    String(operation.variables.content),
+                  ),
+                  notLoaded: unloaded ? [operation.variables.path] : null,
+                },
+              },
+            });
+          } else if (operation.operationName === "GetLedgerSourceFiles") {
+            observer.next({
+              data: {
+                getLedgerSourceFiles: ["main.bean", mutations.at(-1)?.path],
+              },
+            });
+          } else if (operation.operationName === "GetLedgerFile") {
+            observer.next({
+              data: {
+                getLedgerFile: file("main.bean", base64Encode(mainText)),
+              },
+            });
+          } else if (operation.operationName === "UpdateLedgerFile") {
+            if (failInclude) {
+              observer.error(new Error("Root revision changed"));
+              return;
+            }
+            observer.next({
+              data: {
+                updateLedgerFile: { ...file("main.bean"), notLoaded: null },
               },
             });
           } else {
@@ -219,6 +247,109 @@ async function setup({
     refreshPermission: () => view.rerender(contents(1)),
   };
 }
+
+describe("including a new ledger file", () => {
+  const label = "Add to main.bean so its entries count";
+  const path = "years/2026.beancount";
+
+  it("adds one include by default after the last include and preserves CRLF and the BOM", async () => {
+    const mainText =
+      '\uFEFFinclude "opening.bean"\r\ninclude "2025.bean"\r\n\r\n; keep this';
+    const { filename, save, requests } = await setup({
+      unloaded: true,
+      mainText,
+    });
+    fireEvent.change(filename(), { target: { value: path } });
+    expect(screen.getByRole("switch", { name: label })).toBeChecked();
+    await userEvent.setup().click(save());
+    await screen.findByRole("heading", { name: "Files destination" });
+    expect(
+      requests.find(({ name }) => name === "UpdateLedgerFile")?.variables,
+    ).toMatchObject({
+      ledgerId: "alice/books",
+      path: "main.bean",
+      sha: "synthetic-sha",
+      content: base64Encode(
+        '\uFEFFinclude "opening.bean"\r\ninclude "2025.bean"\r\ninclude "years/2026.beancount"\r\n\r\n; keep this',
+      ),
+    });
+  });
+
+  it("leaves a lasting warning and the completed create when the switch is off", async () => {
+    const { filename, save, requests, mutations } = await setup({
+      unloaded: true,
+    });
+    fireEvent.change(filename(), { target: { value: path } });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("switch", { name: label }));
+    await user.click(save());
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "years/2026.beancount isn't included by any loaded file. Its entries don't count and were not checked.",
+    );
+    expect(requests.some(({ name }) => name === "UpdateLedgerFile")).toBe(
+      false,
+    );
+    expect(mutations).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "Files" }));
+    await screen.findByRole("heading", { name: "Files destination" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("doesn't duplicate an existing include", async () => {
+    const { filename, save, requests } = await setup({
+      unloaded: true,
+      mainText: `\uFEFFinclude "${path}"`,
+    });
+    fireEvent.change(filename(), { target: { value: path } });
+    await userEvent.setup().click(save());
+    await screen.findByRole("heading", { name: "Files destination" });
+    expect(requests.some(({ name }) => name === "UpdateLedgerFile")).toBe(
+      false,
+    );
+  });
+
+  it("keeps a file already loaded through another include", async () => {
+    const { filename, save, requests } = await setup();
+    fireEvent.change(filename(), { target: { value: path } });
+    await userEvent.setup().click(save());
+    await screen.findByRole("heading", { name: "Files destination" });
+    expect(requests.some(({ name }) => name === "GetLedgerSourceFiles")).toBe(
+      true,
+    );
+    expect(requests.some(({ name }) => name === "UpdateLedgerFile")).toBe(
+      false,
+    );
+  });
+
+  it("keeps the new file when updating main.bean fails", async () => {
+    const { filename, save, requests, mutations } = await setup({
+      unloaded: true,
+      failInclude: true,
+    });
+    fireEvent.change(filename(), { target: { value: path } });
+    await userEvent.setup().click(save());
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "years/2026.beancount was created, but it couldn't be added to main.bean. Its entries won't count until the file is included.",
+    );
+    expect(
+      requests.filter(({ name }) => name === "UpdateLedgerFile"),
+    ).toHaveLength(1);
+    expect(mutations).toHaveLength(1);
+    expect(
+      screen.queryByRole("button", { name: "Save" }),
+    ).not.toBeInTheDocument();
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it.each(["main.bean", "bank.csv"])(
+    "doesn't offer an include for %s",
+    async (name) => {
+      const { filename } = await setup();
+      fireEvent.change(filename(), { target: { value: name } });
+      expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    },
+  );
+});
 
 const messages = {
   en: {

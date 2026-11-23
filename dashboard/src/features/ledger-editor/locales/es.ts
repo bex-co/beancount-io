@@ -68,6 +68,21 @@ export default {
   ...esCreateFile,
   ...esUploadFiles,
   ...esLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Añadir a {main} para que sus asientos cuenten",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "Ningún archivo cargado incluye {path}. Sus asientos no cuentan y no se han comprobado.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "Se creó {path}, pero no se pudo añadir a {main}. Sus asientos no contarán hasta que se incluya el archivo.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Clon de Git",
     description: "Button for opening Git clone options",

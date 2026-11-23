@@ -9,11 +9,14 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { isLanguageOnlyTransition } from "@/common/lib/router/language-only-transition";
-import { useMutation } from "@apollo/client/react";
+import { useApolloClient, useMutation } from "@apollo/client/react";
+import { useLedgerWriteRefresh } from "@/common/hooks/use-apollo-cache";
 import { useRefreshDirectory } from "@/features/ledger-editor/shared/hooks/use-refresh-directory";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
+import { Label } from "@/common/components/ui/label";
+import { Switch } from "@/common/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -39,8 +42,14 @@ import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { WriteAccessRequired } from "@/features/ledger-editor/shared/components/write-access-required";
 import { FolderNamesStatus } from "@/features/ledger-editor/shared/components/folder-names-status";
+import { LedgerFileLoadWarning } from "../shared/components/ledger-file-load-warning";
 import { useFolderNames } from "@/features/ledger-editor/shared/hooks/use-folder-names";
 import { createFileNameIssue } from "./validate-create-file-name";
+import {
+  canIncludeNewFile,
+  ENTRY_POINT,
+  includeNewFile,
+} from "./include-new-file";
 import {
   existingNameFor,
   pathRefusalOf,
@@ -60,7 +69,10 @@ const CreateFilePage = () => {
   const dirPath = params._splat || "";
 
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
+  const scope = `${ledgerId}\0${dirPath}`;
   const navigate = useNavigate();
+  const client = useApolloClient();
+  const refreshAfterWrite = useLedgerWriteRefresh();
   const isDarkTheme = useIsDarkTheme();
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -71,6 +83,13 @@ const CreateFilePage = () => {
   const [filename, setFilename] = useState("");
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [addInclude, setAddInclude] = useState(true);
+  const [completedCreate, setCompletedCreate] = useState<{
+    scope: string;
+    paths: string[];
+    failedIncludePath?: string;
+  } | null>(null);
+  const warning = completedCreate?.scope === scope ? completedCreate : null;
   // Allow the post-create navigate without prompting; cleared after each leave.
   const allowNavigationRef = useRef(false);
   const savingRef = useRef(false);
@@ -102,6 +121,7 @@ const CreateFilePage = () => {
   const fullPath = dirPath
     ? `${dirPath}/${normalizedFilename}`
     : normalizedFilename;
+  const offersInclude = canIncludeNewFile(fullPath);
 
   const nameIssue = createFileNameIssue(
     normalizedFilename,
@@ -133,7 +153,8 @@ const CreateFilePage = () => {
   // check is unresolved, or saving, or if this reader cannot write at all.
   const isSaveDisabled = !canWrite || nameIssue !== null || isSaving;
 
-  const hasDraft = normalizedFilename !== "" || content.trim() !== "";
+  const hasDraft =
+    !warning && (normalizedFilename !== "" || content.trim() !== "");
 
   const blocker = useBlocker({
     shouldBlockFn: ({ current, next }) => {
@@ -173,7 +194,7 @@ const CreateFilePage = () => {
   const handleSave = async () => {
     // Fail closed: the button is already disabled, but a permission change
     // mid-draft must stop the write here too, without discarding the draft.
-    if (!canWrite || isSaveDisabled) return;
+    if (isSaveDisabled || savingRef.current || warning) return;
 
     // From here until the write and directory refetch settle, the draft is
     // read-only: the success path leaves with exactly this snapshot, so it
@@ -182,7 +203,7 @@ const CreateFilePage = () => {
     setIsSaving(true);
     const journey = journeyRef.current;
     try {
-      await createFileMutation({
+      const result = await createFileMutation({
         variables: {
           ledgerId: ledgerId,
           path: fullPath,
@@ -191,10 +212,34 @@ const CreateFilePage = () => {
         },
       });
 
+      const created = result?.data?.createLedgerFile;
+      let paths = created?.notLoaded ?? [];
+      let failedIncludePath: string | undefined;
+      if (created && offersInclude && addInclude) {
+        let wroteInclude = false;
+        try {
+          wroteInclude = await includeNewFile({
+            client,
+            ledgerId,
+            path: fullPath,
+            notLoaded: paths,
+            message: t("ledgerEditor.updateFileCommit", { path: ENTRY_POINT }),
+          });
+        } catch {
+          failedIncludePath = fullPath;
+        }
+        paths = paths.filter((path) => path !== fullPath);
+        if (wroteInclude) refreshAfterWrite();
+      }
+
       // The file is written; refreshing its folder is a separate read that
       // cannot turn this into a failed create (w4/248).
       await refreshDirectory();
       if (journey !== journeyRef.current) return;
+      if (paths.length || failedIncludePath) {
+        setCompletedCreate({ scope, paths, failedIncludePath });
+        return;
+      }
       // Navigate back to files view after successful creation
       allowNavigationRef.current = true;
       navigateToTree();
@@ -222,7 +267,7 @@ const CreateFilePage = () => {
 
   // A reader who cannot write never gets the form. Someone who loses access
   // while drafting keeps what they typed — the guards above stop the write.
-  if (!canWrite && !hasDraft) {
+  if (warning || (!canWrite && !hasDraft)) {
     return (
       <div className="h-full flex flex-col space-y-4">
         <PageHeader
@@ -231,11 +276,22 @@ const CreateFilePage = () => {
             ledgerName: ledgerDisplayName ?? ledgerName,
           })}
         />
-        <WriteAccessRequired
-          ledgerOwner={ledgerOwner}
-          ledgerName={ledgerName}
-          dirPath={dirPath}
-        />
+        {warning ? (
+          <>
+            <LedgerFileLoadWarning {...warning} />
+            <div>
+              <Button variant="outline" onClick={navigateToTree}>
+                {t("common.relatedLinks.files")}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <WriteAccessRequired
+            ledgerOwner={ledgerOwner}
+            ledgerName={ledgerName}
+            dirPath={dirPath}
+          />
+        )}
       </div>
     );
   }
@@ -333,6 +389,19 @@ const CreateFilePage = () => {
         </div>
       </div>
 
+      {offersInclude && (
+        <div className="flex items-center gap-3">
+          <Switch
+            id="create-file-include"
+            checked={addInclude}
+            onCheckedChange={setAddInclude}
+            disabled={isSaving || !canWrite}
+          />
+          <Label htmlFor="create-file-include">
+            {t("ledgerEditor.addFileInclude", { main: ENTRY_POINT })}
+          </Label>
+        </div>
+      )}
       {hasDraft && <DraftSessionNotice />}
       {/* Editor Section */}
       <Card className="flex-1 overflow-hidden">

@@ -101,6 +101,7 @@ async function setup({
                       lastCommitSha: null,
                       lastAuthorDate: null,
                       lastCommitterDate: null,
+                      notLoaded: null,
                     },
                   },
                 });
@@ -126,6 +127,7 @@ async function setup({
                   lastCommitSha: null,
                   lastAuthorDate: null,
                   lastCommitterDate: null,
+                  notLoaded: null,
                 },
               },
             });

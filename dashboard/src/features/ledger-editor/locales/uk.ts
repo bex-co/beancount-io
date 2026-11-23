@@ -67,6 +67,21 @@ export default {
   ...ukCreateFile,
   ...ukUploadFiles,
   ...ukLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Додати до {main}, щоб записи враховувалися",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "Жоден завантажений файл не включає {path}. Записи з нього не враховуються та не були перевірені.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "Файл {path} створено, але додати його до {main} не вдалося. Записи з нього враховуватимуться після підключення файлу.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Клонування Git",
     description: "Button for opening Git clone options",

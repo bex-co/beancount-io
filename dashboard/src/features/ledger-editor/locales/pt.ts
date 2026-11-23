@@ -68,6 +68,21 @@ export default {
   ...ptCreateFile,
   ...ptUploadFiles,
   ...ptLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Adicionar a {main} para que os lançamentos sejam contabilizados",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "Nenhum ficheiro carregado inclui {path}. Os seus lançamentos não são contabilizados e não foram verificados.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "{path} foi criado, mas não foi possível adicioná-lo a {main}. Os seus lançamentos só serão contabilizados quando o ficheiro for incluído.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Clonar com Git",
     description: "Button for opening Git clone options",

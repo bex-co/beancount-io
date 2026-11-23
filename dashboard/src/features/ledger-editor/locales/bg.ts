@@ -68,6 +68,21 @@ export default {
   ...bgCreateFile,
   ...bgUploadFiles,
   ...bgLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Добавяне към {main}, за да се броят записите му",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "{path} не е включен в нито един зареден файл. Записите му не се броят и не са проверени.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "{path} е създаден, но не можа да бъде добавен към {main}. Записите няма да се броят, докато файлът не бъде включен.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Клониране с Git",
     description: "Button for opening Git clone options",

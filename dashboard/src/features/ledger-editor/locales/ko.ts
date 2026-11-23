@@ -68,6 +68,21 @@ export default {
   ...koCreateFile,
   ...koUploadFiles,
   ...koLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "기록이 집계되도록 {main}에 추가",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "불러온 파일에 {path}가 포함되어 있지 않습니다. 이 파일의 기록은 집계되지 않으며 검사도 이루어지지 않았습니다.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "{path} 파일을 만들었지만 {main}에 추가할 수 없었습니다. 파일이 포함되기 전까지는 기록이 집계되지 않습니다.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Git 복제",
     description: "Button for opening Git clone options",

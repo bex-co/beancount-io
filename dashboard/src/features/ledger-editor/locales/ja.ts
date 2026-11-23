@@ -68,6 +68,21 @@ export default {
   ...jaCreateFile,
   ...jaUploadFiles,
   ...jaLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "記録が集計されるように {main} に追加する",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "読み込まれたファイルに {path} が含まれていません。このファイルの記録は集計されず、検証も行われていません。",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "{path} は作成されましたが、{main} に追加できませんでした。このファイルが含まれるまで、記録は集計されません。",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Git クローン",
     description: "Button for opening Git clone options",

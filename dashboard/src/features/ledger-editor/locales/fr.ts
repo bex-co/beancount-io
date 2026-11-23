@@ -69,6 +69,21 @@ export default {
   ...frCreateFile,
   ...frUploadFiles,
   ...frLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Ajouter à {main} pour que ses écritures soient prises en compte",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "Aucun fichier chargé n’inclut {path}. Ses écritures ne sont pas prises en compte et n’ont pas été vérifiées.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "{path} a été créé, mais n’a pas pu être ajouté à {main}. Ses écritures ne seront prises en compte qu’une fois le fichier inclus.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Cloner Git",
     description: "Button for opening Git clone options",

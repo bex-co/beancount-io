@@ -68,6 +68,21 @@ export default {
   ...ruCreateFile,
   ...ruUploadFiles,
   ...ruLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Добавить в {main}, чтобы записи учитывались",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "Ни один загруженный файл не включает {path}. Записи из него не учитываются и не были проверены.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "Файл {path} создан, но добавить его в {main} не удалось. Записи из него будут учитываться после подключения файла.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Клон Git",
     description: "Button for opening Git clone options",

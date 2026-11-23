@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { FieldNode, OperationDefinitionNode } from "graphql";
-import { UpdateLedgerFileDocument } from "@/graphql/definitions";
+import {
+  CreateLedgerFileDocument,
+  UpdateLedgerFileDocument,
+} from "@/graphql/definitions";
 
 /**
  * A save uploads the whole file, so its result must not download it back:
@@ -17,6 +20,18 @@ describe("UpdateLedgerFile", () => {
     );
 
     expect(fields).toContain("sha");
+    expect(fields).toContain("notLoaded");
     expect(fields).not.toContain("content");
   });
+});
+
+it("asks the CreateLedgerFile mutation which files aren't loaded", () => {
+  const operation = CreateLedgerFileDocument
+    .definitions[0] as OperationDefinitionNode;
+  const createLedgerFile = operation.selectionSet.selections[0] as FieldNode;
+  expect(
+    createLedgerFile.selectionSet?.selections.map(
+      (selection) => (selection as FieldNode).name.value,
+    ),
+  ).toContain("notLoaded");
 });

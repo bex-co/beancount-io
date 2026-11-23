@@ -1,4 +1,4 @@
-import { act, render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -62,7 +62,11 @@ vi.mock("../file-content-view", () => ({
   },
 }));
 
-type Revision = { sha: string; lastCommitSha: string | null };
+type Revision = {
+  sha: string;
+  lastCommitSha: string | null;
+  notLoaded?: string[];
+};
 type MutateOptions = {
   variables: { content: string };
   onCompleted?: (data: { updateLedgerFile: Revision }) => unknown;
@@ -93,6 +97,23 @@ beforeEach(() => {
 });
 
 describe("saving a file", () => {
+  it("keeps the unloaded paths visible until a successful save reports none", async () => {
+    state.mutate.mockImplementationOnce(
+      landedWrite({
+        ...NEW_REVISION,
+        notLoaded: ["draft.bean", "nested/2026.bean"],
+      }),
+    );
+    state.mutate.mockImplementation(landedWrite());
+    render(<LedgerFileView ledgerId="qa/books" filePath="draft.bean" />);
+
+    await act(async () => state.onSave!("; first edit\n", state.file));
+    expect(screen.getByRole("alert").querySelectorAll("p")).toHaveLength(2);
+
+    await act(async () => state.onSave!("; second edit\n", state.file));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("confirms the save and finishes before the new-error check answers", async () => {
     // The check never settles: a save that waited on it would never finish.
     state.report.mockReturnValue(new Promise<boolean>(() => {}));

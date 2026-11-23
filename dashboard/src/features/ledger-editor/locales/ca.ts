@@ -68,6 +68,21 @@ export default {
   ...caCreateFile,
   ...caUploadFiles,
   ...caLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Afegeix a {main} perquè els seus apunts comptin",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "Cap fitxer carregat inclou {path}. Els seus apunts no es compten i no s'han comprovat.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "S'ha creat {path}, però no s'ha pogut afegir a {main}. Els seus apunts no es comptaran fins que s'inclogui el fitxer.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Clona amb Git",
     description: "Button for opening Git clone options",

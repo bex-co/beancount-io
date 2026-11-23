@@ -27,6 +27,7 @@ import { useLedger } from "@/common/hooks/use-ledger";
 import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { WriteAccessRequired } from "@/features/ledger-editor/shared/components/write-access-required";
 import { FolderNamesStatus } from "@/features/ledger-editor/shared/components/folder-names-status";
+import { LedgerFileLoadWarning } from "../shared/components/ledger-file-load-warning";
 import { useFolderNames } from "@/features/ledger-editor/shared/hooks/use-folder-names";
 import { formatFileSize } from "../shared/lib/utils";
 import {
@@ -63,6 +64,7 @@ const UploadFilesPage = () => {
   const dirPath = params._splat || "";
 
   const ledgerId = createLedgerId(ledgerOwner, ledgerName);
+  const scope = `${ledgerId}\0${dirPath}`;
   const navigate = useNavigate();
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -106,6 +108,11 @@ const UploadFilesPage = () => {
     reason: string;
     uploaded: string[];
   } | null>(null);
+  const [uploadWarning, setUploadWarning] = useState<{
+    scope: string;
+    paths: string[];
+  } | null>(null);
+  const notLoaded = uploadWarning?.scope === scope ? uploadWarning.paths : [];
 
   // The folder's names: Gitea refuses to create a path that already exists.
   const folder = useFolderNames(ledgerId, dirPath);
@@ -157,7 +164,7 @@ const UploadFilesPage = () => {
   /**
    * Handle cancel button click - navigate back to files view
    */
-  const handleCancel = () => {
+  const navigateToTree = () => {
     void navigate({
       to: "/ledger/$ledgerOwner/$ledgerName/files/tree/$branch/$",
       params: {
@@ -192,7 +199,7 @@ const UploadFilesPage = () => {
   const handleUpload = async () => {
     // Fail closed: a permission change while files are staged must stop the
     // write here too, without discarding the selection.
-    if (!canWrite || isUploadDisabled) return;
+    if (isUploadDisabled || uploadingRef.current) return;
 
     setIsUploading(true);
     setUploadFailure(null);
@@ -200,6 +207,7 @@ const UploadFilesPage = () => {
     const batch = selectedFiles;
     const message = commitMessage.trim() || `Upload ${batch.length} file(s)`;
     const uploaded: string[] = [];
+    const warnings = new Set(notLoaded);
 
     // One commit per file, in order. Each created file leaves the staged list
     // at once, so a failure leaves exactly what a retry still has to send.
@@ -207,7 +215,7 @@ const UploadFilesPage = () => {
       const fullPath = dirPath ? `${dirPath}/${file.name}` : file.name;
       try {
         const content = await fileToBase64(file);
-        await createFileMutation({
+        const result = await createFileMutation({
           variables: {
             ledgerId: ledgerId,
             path: fullPath,
@@ -215,6 +223,11 @@ const UploadFilesPage = () => {
             message: `${message} - ${file.name}`,
           },
         });
+        const paths = result?.data?.createLedgerFile?.notLoaded;
+        if (paths?.length && journey === journeyRef.current) {
+          paths.forEach((path) => warnings.add(path));
+          setUploadWarning({ scope, paths: [...warnings] });
+        }
       } catch (error) {
         const twin = portableTwinOf(error);
         const refusal = pathRefusalOf(error);
@@ -248,16 +261,7 @@ const UploadFilesPage = () => {
     // Only after every write: a failed folder read is not a failed upload.
     await refreshDirectory();
     setIsUploading(false);
-    if (journey !== journeyRef.current) return;
-    void navigate({
-      to: "/ledger/$ledgerOwner/$ledgerName/files/tree/$branch/$",
-      params: {
-        ledgerOwner,
-        ledgerName,
-        branch: "main",
-        _splat: dirPath || "",
-      },
-    });
+    if (journey === journeyRef.current && warnings.size === 0) navigateToTree();
   };
 
   /**
@@ -329,7 +333,7 @@ const UploadFilesPage = () => {
 
   // A reader who cannot write never gets the picker. Someone who loses access
   // with files staged keeps the selection — the guards above stop the write.
-  if (!canWrite && selectedFiles.length === 0) {
+  if (!canWrite && selectedFiles.length === 0 && notLoaded.length === 0) {
     return (
       <div className="h-full flex flex-col space-y-4">
         <PageHeader
@@ -369,6 +373,7 @@ const UploadFilesPage = () => {
         </div>
       </div>
 
+      <LedgerFileLoadWarning paths={notLoaded} />
       {/* Upload Area */}
       <Card className="flex-1">
         <CardContent className="flex flex-col gap-6 h-full">
@@ -582,10 +587,12 @@ const UploadFilesPage = () => {
               </Button>
               <Button
                 variant="outline"
-                onClick={handleCancel}
+                onClick={navigateToTree}
                 disabled={isUploading}
               >
-                {t("common.cancel")}
+                {notLoaded.length
+                  ? t("common.relatedLinks.files")
+                  : t("common.cancel")}
               </Button>
             </div>
           </div>

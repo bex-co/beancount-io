@@ -68,6 +68,21 @@ export default {
   ...nlCreateFile,
   ...nlUploadFiles,
   ...nlLedgerEditor,
+  "ledgerEditor.addFileInclude": {
+    message: "Toevoegen aan {main} zodat de boekingen meetellen",
+    description: "Label for including a new file from the entry point",
+  },
+  "ledgerEditor.fileNotLoaded": {
+    message:
+      "Geen geladen bestand bevat {path}. De boekingen tellen niet mee en zijn niet gecontroleerd.",
+    description: "Warning after saving a ledger file outside the loaded files",
+  },
+  "ledgerEditor.addIncludeFailed": {
+    message:
+      "{path} is gemaakt, maar kon niet aan {main} worden toegevoegd. De boekingen tellen pas mee als het bestand is opgenomen.",
+    description:
+      "Warning after creating a file when the separate entry point update fails",
+  },
   "ledgerEditor.gitClone": {
     message: "Git-kloon",
     description: "Button for opening Git clone options",
