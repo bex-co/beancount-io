@@ -89,6 +89,11 @@ const enJournal: Record<string, TranslationEntry> = {
     description:
       "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
   },
+  "journal.balanceNotChecked": {
+    message: "Not checked because the account had not been opened",
+    description:
+      "Journal warning for a balance assertion without an account Open directive on or before its date. Links to the ledger errors.",
+  },
   "journal.balanceFailed": {
     message: "Failed",
     description:

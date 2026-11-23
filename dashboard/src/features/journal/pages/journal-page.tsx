@@ -384,6 +384,7 @@ const JournalContent = () => {
             layout={density === "compact" ? "lines" : "days"}
             money={money}
             data={journalTableData}
+            ledgerId={ledgerId}
             showMetadata={showMetadata}
             showPostings={showPostings}
             ledgerOwner={ledgerOwner}

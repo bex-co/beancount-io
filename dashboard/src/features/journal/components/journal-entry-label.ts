@@ -11,9 +11,13 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { directiveTypeLabel } from "@/common/lib/beancount/directive-type-label";
 import { formatDateISO } from "@/common/lib/format/format-date-iso";
 import { getBalanceFailure } from "./journal-balance-details";
+import type { BalanceStatus } from "./journal-balance-tone";
 
 /** Bounded identity from the row's visible entry fields, never source metadata. */
-export function useJournalEntryLabel(directive: JournalDirectiveType): string {
+export function useJournalEntryLabel(
+  directive: JournalDirectiveType,
+  balanceStatus: BalanceStatus,
+): string {
   const { t } = useTranslations();
   const formatNumber = useFormatLedgerNumber();
   const formatAmount = (amount: JournalAmount) =>
@@ -26,6 +30,8 @@ export function useJournalEntryLabel(directive: JournalDirectiveType): string {
     if (isJournalBalance(directive)) {
       // A Balance carries `amount` too, so it must not reach the Price branch.
       const failure = getBalanceFailure(directive);
+      if (balanceStatus === "unchecked")
+        parts.push(t("journal.balanceNotChecked"));
       parts.push(failure ? t("journal.balanceFailed") : directive.account);
       const { amount, tolerance } = directive;
       if (amount) {

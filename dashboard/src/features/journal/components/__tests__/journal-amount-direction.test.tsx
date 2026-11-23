@@ -28,7 +28,11 @@ async function renderTable(
   layout: "lines" | "days",
   data: JournalTableItem[],
   language: "en" | "de" | "fa",
-  options: { registerAccount?: string; accountFilter?: string } = {},
+  options: {
+    registerAccount?: string;
+    accountFilter?: string;
+    openedAccounts?: ReadonlyMap<string, string>;
+  } = {},
 ) {
   const { registerAccount, accountFilter = "" } = options;
   const localization = createLocalization();
@@ -46,6 +50,7 @@ async function renderTable(
               accountFilter,
             }}
             data={data}
+            openedAccounts={options.openedAccounts}
             showPostings={false}
             showMetadata={false}
             onEntryClick={vi.fn()}
@@ -128,6 +133,7 @@ describe.each(["lines", "days"] as const)(
           layout,
           [{ directive: balance("4000000", null, null, "COMMON") }],
           language,
+          { openedAccounts: new Map([[wallet, "2024-03-01"]]) },
         );
         const entry = screen.getByRole("button", { name: /2024-03-03/ });
         const row = entry.closest("tr")!;

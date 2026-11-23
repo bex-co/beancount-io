@@ -89,6 +89,7 @@ async function renderLines(
             accountFilter,
           }}
           data={entries.map((directive) => ({ directive }))}
+          openedAccounts={new Map([["Assets:US:BofA:Checking", "2025-01-01"]])}
           showMetadata={false}
           showPostings={false}
           onEntryClick={vi.fn()}

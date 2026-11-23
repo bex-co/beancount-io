@@ -129,6 +129,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     description:
       "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
   },
+  "journal.balanceNotChecked": {
+    message: "Перевірку не виконано, бо рахунок ще не було відкрито",
+    description:
+      "Journal warning for a balance assertion without an account Open directive on or before its date. Links to the ledger errors.",
+  },
   "journal.balanceFailed": {
     message: "Не збігається",
     description:

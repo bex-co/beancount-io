@@ -109,6 +109,11 @@ const caJournal: Record<string, TranslationEntry> = {
     description:
       "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
   },
+  "journal.balanceNotChecked": {
+    message: "No s’ha comprovat perquè el compte encara no s’havia obert",
+    description:
+      "Journal warning for a balance assertion without an account Open directive on or before its date. Links to the ledger errors.",
+  },
   "journal.balanceFailed": {
     message: "Ha fallat",
     description:

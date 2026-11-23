@@ -109,6 +109,11 @@ const ptJournal: Record<string, TranslationEntry> = {
     description:
       "Beside a balance assertion in the Journal whose asserted amount matches the ledger's balance",
   },
+  "journal.balanceNotChecked": {
+    message: "Não foi verificado porque a conta ainda não havia sido aberta",
+    description:
+      "Journal warning for a balance assertion without an account Open directive on or before its date. Links to the ledger errors.",
+  },
   "journal.balanceFailed": {
     message: "Falhou",
     description:

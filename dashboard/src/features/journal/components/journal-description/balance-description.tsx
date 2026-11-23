@@ -21,7 +21,7 @@ export function BalanceDescription({ directive }: BalanceDescriptionProps) {
         )}
       </div>
       {directive.diff_amount && (
-        <BalanceCheck directive={directive} className="text-sm" />
+        <BalanceCheck directive={directive} status="off" className="text-sm" />
       )}
     </div>
   );

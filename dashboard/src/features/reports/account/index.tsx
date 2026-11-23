@@ -349,6 +349,7 @@ export function AccountJournalTable({
             money={money}
             register={register}
             data={journalTableData}
+            ledgerId={ledgerId}
             showMetadata={showMetadata}
             showPostings={showPostings}
             ledgerOwner={ledgerOwner}

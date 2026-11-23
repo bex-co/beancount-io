@@ -31,6 +31,7 @@ export async function renderLedgerNavigation(
     component: () => content,
   });
   const destinations = [
+    "errors",
     "account/$accountName",
     "files/tree/$branch/$",
     "files/blob/$branch/$",

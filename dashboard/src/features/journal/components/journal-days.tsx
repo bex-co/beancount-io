@@ -42,7 +42,11 @@ import { JournalPostings } from "./journal-postings";
 import { JournalPostingToggle } from "./journal-posting-toggle";
 import { useJournalEntryLabel } from "./journal-entry-label";
 import { BalanceCheck } from "./journal-balance-check";
-import { balanceRowTone } from "./journal-balance-tone";
+import {
+  balanceRowTone,
+  getBalanceStatus,
+  type BalanceStatus,
+} from "./journal-balance-tone";
 import {
   type MoneyFlow,
   moneyFlow,
@@ -241,6 +245,7 @@ export function TransactionAmount({
 
 function DayEntryRows({
   item,
+  balanceStatus,
   position,
   money,
   showMetadata,
@@ -251,6 +256,7 @@ function DayEntryRows({
   register,
 }: {
   item: Item;
+  balanceStatus: BalanceStatus;
   position: number;
   money: JournalMoney;
   showMetadata: boolean;
@@ -266,7 +272,7 @@ function DayEntryRows({
   const { t } = useTranslations();
   const directive = item.directive;
   const transaction = isJournalTransaction(directive) ? directive : null;
-  const entryLabel = useJournalEntryLabel(directive);
+  const entryLabel = useJournalEntryLabel(directive, balanceStatus);
   const postingsRegionId = useId();
   const [expanded, setExpanded] = useState(false);
   const summary = useMemo(
@@ -333,7 +339,7 @@ function DayEntryRows({
           rowProps.className,
           // A balance assertion is a checkpoint: green where the ledger
           // matches the statement, red where it is off.
-          balance ? balanceRowTone(balance) : "hover:bg-muted/30",
+          balanceRowTone(balanceStatus),
         )}
       >
         <TableCell className="py-0 pe-2 ps-4 align-top whitespace-normal sm:ps-5">
@@ -433,7 +439,12 @@ function DayEntryRows({
                     account={balance.account}
                     className="text-[13px] text-muted-foreground"
                   />
-                  <BalanceCheck directive={balance} />
+                  <BalanceCheck
+                    directive={balance}
+                    status={balanceStatus}
+                    ledgerOwner={ledgerOwner}
+                    ledgerName={ledgerName}
+                  />
                 </div>
               ) : (
                 // Notes, prices, documents: their own words.
@@ -620,6 +631,7 @@ function TransactionDetails({
  */
 export function JournalDays({
   data,
+  openedAccounts,
   money,
   showMetadata,
   showPostings,
@@ -630,6 +642,7 @@ export function JournalDays({
   register,
 }: {
   data: Item[];
+  openedAccounts?: ReadonlyMap<string, string>;
   money: JournalMoney;
   showMetadata: boolean;
   showPostings: boolean;
@@ -701,6 +714,7 @@ export function JournalDays({
                   `${item.directive.directive_type}-${item.directive.date}-${item.position}`
                 }
                 item={item}
+                balanceStatus={getBalanceStatus(item.directive, openedAccounts)}
                 position={item.position}
                 money={money}
                 showMetadata={showMetadata}

@@ -23,7 +23,11 @@ import { useJournalEntryLabel } from "./journal-entry-label";
 import { type JournalMoney, TransactionAmount } from "./journal-days";
 import { moneyFlow, shortAccountNames } from "./journal-money-flow";
 import { BalanceCheck } from "./journal-balance-check";
-import { balanceIsOff, balanceRowTone } from "./journal-balance-tone";
+import {
+  balanceRowTone,
+  getBalanceStatus,
+  type BalanceStatus,
+} from "./journal-balance-tone";
 import {
   type JournalRegister,
   type JournalTableItem,
@@ -66,6 +70,7 @@ function flowSeparator(directed: boolean, className: string) {
 
 function LineRows({
   item,
+  balanceStatus,
   position,
   money,
   showMetadata,
@@ -76,6 +81,7 @@ function LineRows({
   register,
 }: {
   item: Item;
+  balanceStatus: BalanceStatus;
   position: number;
   money: JournalMoney;
   showMetadata: boolean;
@@ -92,7 +98,9 @@ function LineRows({
   const document = isJournalDocument(directive) ? directive : null;
   // Descriptive entries can use the empty columns before the register balance.
   const hasStatementColumns = transaction !== null || balance !== null;
-  const entryLabel = useJournalEntryLabel(directive);
+  const entryLabel = useJournalEntryLabel(directive, balanceStatus);
+  const showBalanceDetails =
+    balanceStatus === "off" || balanceStatus === "unchecked";
   const postingsRegionId = useId();
   const [expanded, setExpanded] = useState(false);
   const summary = useMemo(
@@ -167,7 +175,7 @@ function LineRows({
         className={cn(
           "border-b border-border/50",
           rowProps.className,
-          balance ? balanceRowTone(balance) : "hover:bg-muted/30",
+          balanceRowTone(balanceStatus),
         )}
       >
         <td className="py-2 ps-3 align-top text-xs leading-5 whitespace-nowrap text-muted-foreground tabular-nums sm:ps-5 sm:text-[13px] pointer-coarse:py-2.5 pointer-coarse:leading-6">
@@ -186,6 +194,7 @@ function LineRows({
             {balance ? (
               <BalanceCheck
                 directive={balance}
+                status={balanceStatus}
                 iconOnly
                 className="align-[-3px]"
               />
@@ -222,6 +231,7 @@ function LineRows({
               // The check, where a phone has no status column for it.
               <BalanceCheck
                 directive={balance}
+                status={balanceStatus}
                 iconOnly
                 className="self-center sm:hidden"
               />
@@ -286,15 +296,14 @@ function LineRows({
                 {marks.join(" ")}
               </span>
             )}
-            {balance && (
-              <>
-                {balanceIsOff(balance) && (
-                  <BalanceCheck
-                    directive={balance}
-                    className="hidden text-[13px] @4xl/journal:inline-flex"
-                  />
-                )}
-              </>
+            {balance && showBalanceDetails && (
+              <BalanceCheck
+                directive={balance}
+                status={balanceStatus}
+                ledgerOwner={ledgerOwner}
+                ledgerName={ledgerName}
+                className="hidden text-[13px] @4xl/journal:inline-flex"
+              />
             )}
             {!transaction && !balance && !document && (
               // Notes, prices and other directives on one line.
@@ -396,8 +405,14 @@ function LineRows({
               <p className="text-[13px] leading-5 text-muted-foreground">
                 <AccountPath account={balance.account} />
               </p>
-              {balanceIsOff(balance) && (
-                <BalanceCheck directive={balance} className="text-sm" />
+              {showBalanceDetails && (
+                <BalanceCheck
+                  directive={balance}
+                  status={balanceStatus}
+                  ledgerOwner={ledgerOwner}
+                  ledgerName={ledgerName}
+                  className="text-sm"
+                />
               )}
             </div>
           )}
@@ -568,6 +583,7 @@ function LineRows({
  */
 export function JournalLines({
   data,
+  openedAccounts,
   money,
   showMetadata,
   showPostings,
@@ -578,6 +594,7 @@ export function JournalLines({
   register,
 }: {
   data: Item[];
+  openedAccounts?: ReadonlyMap<string, string>;
   money: JournalMoney;
   showMetadata: boolean;
   showPostings: boolean;
@@ -684,6 +701,10 @@ export function JournalLines({
                 )}
                 <LineRows
                   item={item}
+                  balanceStatus={getBalanceStatus(
+                    item.directive,
+                    openedAccounts,
+                  )}
                   position={index + 1}
                   money={money}
                   showMetadata={showMetadata}
