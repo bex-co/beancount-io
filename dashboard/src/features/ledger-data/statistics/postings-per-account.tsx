@@ -19,6 +19,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { useAccountReportEligibility } from "@/common/hooks/use-account-report-eligibility";
 import { StatisticsErrorState, StatisticsSection } from "./statistics-section";
 
 /**
@@ -65,11 +66,14 @@ function PostingsPerAccountLoadingState() {
  */
 function PostingsPerAccountTable({
   data,
+  ledgerId,
 }: {
   data: GetLedgerPostingsPerAccountQuery;
+  ledgerId: string;
 }) {
   const { t } = useTranslations();
   const formatNum = useFormatNumber();
+  const hasReport = useAccountReportEligibility(ledgerId);
   const rows = data.getLedgerPostingsPerAccount;
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/statistics",
@@ -121,17 +125,21 @@ function PostingsPerAccountTable({
         {rows.map((row) => (
           <TableRow key={row.account}>
             <TableCell className="font-medium font-mono text-xs sm:text-sm break-all max-w-[200px] sm:max-w-none px-2 sm:px-3 py-1.5 sm:py-2">
-              <Link
-                to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
-                params={{
-                  ledgerOwner,
-                  ledgerName,
-                  accountName: row.account,
-                }}
-                className="text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
-              >
-                {row.account}
-              </Link>
+              {hasReport(row.account) ? (
+                <Link
+                  to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                  params={{
+                    ledgerOwner,
+                    ledgerName,
+                    accountName: row.account,
+                  }}
+                  className="text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                >
+                  {row.account}
+                </Link>
+              ) : (
+                row.account
+              )}
             </TableCell>
             <TableCell className="text-end font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
               {formatNum(row.count)}
@@ -186,5 +194,5 @@ export function PostingsPerAccount({ ledgerId }: { ledgerId: string }) {
     return null;
   }
 
-  return <PostingsPerAccountTable data={data} />;
+  return <PostingsPerAccountTable data={data} ledgerId={ledgerId} />;
 }

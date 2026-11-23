@@ -1,5 +1,6 @@
 import { notFound } from "@tanstack/react-router";
 import { rethrowEntityRouteError } from "@/common/lib/errors/entity-route-error";
+import { accountReportPredicate } from "@/common/lib/navigation/account-report";
 import type { RouteLoader } from "@/common/types/route-loader";
 import { GetLedgerAccountsDocument } from "@/graphql/definitions";
 
@@ -15,14 +16,8 @@ export const accountLoader: RouteLoader<
       variables: { ledgerId },
       fetchPolicy: "cache-first",
     });
-    // Hierarchy links also target derived ancestors, so retain those real
-    // aggregate reports without accepting partial account-component prefixes.
-    const exists = data?.getLedgerAccounts.some(
-      (name) =>
-        name === params.accountName ||
-        name.startsWith(`${params.accountName}:`),
-    );
-    if (!exists) {
+    const hasReport = accountReportPredicate(data?.getLedgerAccounts);
+    if (!hasReport(params.accountName)) {
       throw notFound();
     }
     return { accountExists: true };

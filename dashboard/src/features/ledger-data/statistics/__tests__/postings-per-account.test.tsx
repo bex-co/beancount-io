@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { PostingsPerAccount } from "../postings-per-account";
 import * as apolloClient from "@apollo/client/react";
 import {
+  GetLedgerAccountsDocument,
   GetLedgerPostingsPerAccountDocument,
   type GetLedgerPostingsPerAccountQuery,
 } from "@/graphql/definitions";
@@ -78,6 +79,18 @@ function createRowsMockData(
   });
 }
 
+function mockPostingsWithAccounts(
+  rows: Array<{ account: string; count: number }>,
+  accounts: string[],
+) {
+  vi.mocked(apolloClient.useQuery).mockImplementation(
+    (query) =>
+      (query === GetLedgerAccountsDocument
+        ? { data: { getLedgerAccounts: accounts } }
+        : createRowsMockData(rows)) as ReturnType<typeof apolloClient.useQuery>,
+  );
+}
+
 describe("PostingsPerAccount", () => {
   beforeEach(() => {
     searchParams.account = "";
@@ -136,6 +149,34 @@ describe("PostingsPerAccount", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps a generated equity label and count without an account link", () => {
+    searchParams.time = "2025";
+    mockPostingsWithAccounts(
+      [
+        { account: "Equity:Earnings:Previous", count: 2 },
+        { account: "Equity:Opening-Balances", count: 5 },
+      ],
+      ["Equity:Opening-Balances"],
+    );
+
+    render(<PostingsPerAccount ledgerId="open_ledger/crypto-example" />);
+
+    const generated = screen.getByRole("row", {
+      name: /Equity:Earnings:Previous/,
+    });
+    expect(within(generated).queryByRole("link")).toBeNull();
+    expect(within(generated).getByText("2")).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Equity:Opening-Balances" }),
+    ).toBeVisible();
+    expect(apolloClient.useQuery).toHaveBeenCalledWith(
+      GetLedgerAccountsDocument,
+      expect.objectContaining({
+        variables: { ledgerId: "open_ledger/crypto-example" },
+      }),
+    );
+  });
+
   it("renders loading state with responsive skeleton", () => {
     vi.mocked(apolloClient.useQuery).mockReturnValue(
       mockUseQueryReturn({
@@ -182,9 +223,10 @@ describe("PostingsPerAccount", () => {
     ).toBeInTheDocument();
   });
 
-  it("exposes each account destination as a keyboard-reachable link", () => {
-    vi.mocked(apolloClient.useQuery).mockReturnValue(
-      createRowsMockData([{ account: "Assets:Bank:Checking", count: 150 }]),
+  it("exposes an opened account as a keyboard-reachable link", () => {
+    mockPostingsWithAccounts(
+      [{ account: "Assets:Bank:Checking", count: 150 }],
+      ["Assets:Bank:Checking"],
     );
 
     render(<PostingsPerAccount ledgerId="open_ledger/crypto-example" />);

@@ -38,6 +38,9 @@ import LedgerCashFlowPage from "../index";
 vi.unmock("@/common/hooks/use-translations");
 vi.unmock("react-i18next");
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
+vi.mock("@/common/hooks/use-account-report-eligibility", () => ({
+  useAccountReportEligibility: () => () => false,
+}));
 const cookies = vi.hoisted(() => new Map<string, string>());
 // TanStack's isomorphic cookie adapter is compiled for the browser in Vite;
 // use memory storage here while retaining the real report-conversion hook.

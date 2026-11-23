@@ -26,6 +26,10 @@ vi.unmock("react-i18next");
 
 // Canvas is the browser boundary. Capture the actual options produced by the
 // real chart components; the disclosures, tables, tabs and localization are real.
+vi.mock("@apollo/client/react", () => ({
+  useQuery: () => ({ data: { getLedgerAccounts: [] } }),
+}));
+
 vi.mock("@/common/components/react-echarts", () => ({
   ReactECharts: ({ option }: { option: unknown }) => (
     <div data-testid="chart" data-option={JSON.stringify(option)} />

@@ -6,6 +6,10 @@ import type {
 } from "@/graphql/definitions";
 import { IncomeStatementContent } from "../income-statement-content";
 
+vi.mock("@apollo/client/react", () => ({
+  useQuery: () => ({ data: { getLedgerAccounts: ["Income:Salary"] } }),
+}));
+
 vi.mock("../../export/statement-export-menu", () => ({
   StatementExportMenu: () => <button>statement-export-menu</button>,
 }));

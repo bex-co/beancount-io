@@ -10,6 +10,10 @@ import { HierarchyList, type HierarchyListNode } from "../hierarchy-list";
 
 const ledger = vi.hoisted(() => ({ renderCommas: true }));
 
+vi.mock("@apollo/client/react", () => ({
+  useQuery: () => ({ data: { getLedgerAccounts: [] } }),
+}));
+
 vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({
     ledgerOwner: "qa",
@@ -49,7 +53,7 @@ const node = (
 
 /** [primary, other] cell text of the root row for `account` (a row header). */
 function amounts(account: string) {
-  const row = screen.getByRole("link", { name: account }).closest("tr")!;
+  const row = screen.getByRole("rowheader", { name: account }).closest("tr")!;
   return within(row)
     .getAllByRole("cell")
     .map((cell) => cell.textContent?.replace(/\s+/g, " ").trim());
@@ -126,7 +130,7 @@ describe("HierarchyList quantity precision", () => {
       />,
     );
     const basket = screen
-      .getByRole("link", { name: "Assets:Crypto:Basket" })
+      .getByRole("rowheader", { name: "Assets:Crypto:Basket" })
       .closest("tr")!;
     await user.click(within(basket).getByRole("button", { name: /Basket/ }));
     expect(within(basket).getByText("12.345678")).toBeInTheDocument();

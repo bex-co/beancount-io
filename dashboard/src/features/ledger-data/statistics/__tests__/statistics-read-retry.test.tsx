@@ -29,6 +29,7 @@ vi.mock("@/common/components/related-links", () => ({
 }));
 
 const RESULTS: Record<string, object> = {
+  GetLedgerAccounts: { getLedgerAccounts: ["Assets:Cash"] },
   GetLedgerPostingsPerAccount: {
     getLedgerPostingsPerAccount: [
       { __typename: "PostingsPerAccount", account: "Assets:Cash", count: 3 },
@@ -156,9 +157,19 @@ describe("Statistics section read failure", () => {
           account: "",
         });
       }
-      expect(reads.filter((read) => read.operation !== failing)).toHaveLength(
-        2,
+      const accounts = reads.filter(
+        (read) => read.operation === "GetLedgerAccounts",
       );
+      expect(accounts).toMatchObject([
+        { variables: { ledgerId: "open_ledger/books" } },
+      ]);
+      expect(
+        reads.filter(
+          (read) =>
+            read.operation !== failing &&
+            read.operation !== "GetLedgerAccounts",
+        ),
+      ).toHaveLength(2);
     },
   );
 });

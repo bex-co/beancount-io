@@ -7,6 +7,10 @@ import type {
 } from "@/graphql/definitions";
 import { BalanceSheetContent } from "../balance-sheet-content";
 
+vi.mock("@apollo/client/react", () => ({
+  useQuery: () => ({ data: { getLedgerAccounts: [] } }),
+}));
+
 vi.mock("@tanstack/react-router", () => ({
   ClientOnly: ({ children }: { children: React.ReactNode }) => children,
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,

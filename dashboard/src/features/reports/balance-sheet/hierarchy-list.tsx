@@ -5,8 +5,10 @@ import type { SerializableTreeNode } from "@/graphql/definitions";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { useAccountReportEligibility } from "@/common/hooks/use-account-report-eligibility";
 import { fractionDigitsOf } from "@/common/lib/format/format-number";
 import { cn } from "@/common/lib/utils/utils";
+import { createLedgerId } from "@/common/lib/utils/encode";
 import { isZeroStatementAmount } from "@/features/reports/export/presentation";
 import type {
   HierarchyListNode,
@@ -34,6 +36,7 @@ interface TreeNodeProps {
   parentAccount?: string;
   expandedNodes: Set<string>;
   onToggle: (nodePath: string) => void;
+  hasReport: (account: string) => boolean;
   primaryCurrency?: string;
 }
 
@@ -208,6 +211,7 @@ function TreeNode({
   parentAccount,
   expandedNodes,
   onToggle,
+  hasReport,
   primaryCurrency = "USD",
 }: TreeNodeProps) {
   const hasChildren = node.children && node.children.length > 0;
@@ -260,18 +264,24 @@ function TreeNode({
             )}
 
             <div className="flex-1 min-w-0 flex flex-row items-center">
-              <Link
-                to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
-                params={{
-                  ledgerOwner,
-                  ledgerName,
-                  accountName: node.account,
-                }}
-                className="inline-flex min-h-6 min-w-6 max-w-full items-center font-mono font-medium text-sm text-primary hover:text-primary/80 hover:underline underline-offset-4"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span className="truncate">{label}</span>
-              </Link>
+              {hasReport(node.account) ? (
+                <Link
+                  to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                  params={{
+                    ledgerOwner,
+                    ledgerName,
+                    accountName: node.account,
+                  }}
+                  className="inline-flex min-h-6 min-w-6 max-w-full items-center font-mono font-medium text-sm text-primary hover:text-primary/80 hover:underline underline-offset-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="truncate">{label}</span>
+                </Link>
+              ) : (
+                <span className="truncate font-mono font-medium text-sm">
+                  {label}
+                </span>
+              )}
               {node.roleSource === "declared" ? (
                 <span
                   className="ml-2 shrink-0 text-xs text-muted-foreground"
@@ -304,6 +314,7 @@ function TreeNode({
               parentAccount={node.account}
               expandedNodes={expandedNodes}
               onToggle={onToggle}
+              hasReport={hasReport}
               primaryCurrency={primaryCurrency}
             />
           ))
@@ -412,6 +423,10 @@ export function HierarchyList({
   ariaLabelledBy,
 }: HierarchyListProps) {
   const { t } = useTranslations();
+  const { ledgerOwner, ledgerName } = useLedger();
+  const hasReport = useAccountReportEligibility(
+    createLedgerId(ledgerOwner, ledgerName),
+  );
   const data = dataProp ?? NO_NODES;
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() =>
@@ -525,6 +540,7 @@ export function HierarchyList({
                   level={0}
                   expandedNodes={expandedNodes}
                   onToggle={handleToggle}
+                  hasReport={hasReport}
                   primaryCurrency={primaryCurrency}
                 />
               ))}

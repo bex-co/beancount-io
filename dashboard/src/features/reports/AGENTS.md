@@ -113,10 +113,10 @@ the shared tree table for every statement page. It renders a native
 `<table>` with Account / primary-currency / Other column headers, account
 row headers (`scope="row"`), and amount cells — so assistive technology can
 navigate by row and column. Each card/Trial Balance heading labels its table
-via `aria-labelledby`. Every tree row is a real ledger account whose label
-links to the account page — never put synthetic title or total nodes into the
-tree. Aggregates go through the `summaryRows` prop: plain unlinked rows below
-the detail rows (root total below detail rows, as in the exports). Collapsed
+via `aria-labelledby`. A ledger account or one of its ancestors links to its
+account report. Generated equity rows without an account report show plain
+labels. Put synthetic titles and totals in the `summaryRows` prop as plain
+rows below the details, in the same order as the exports. Collapsed
 descendants leave the accessibility tree entirely. The cash-flow page builds
 its real-account forests in `cash-flow/lib/statement-tree.ts` and labels its
 summary rows with the shared `cashFlowSummaryLabelKey` keys from

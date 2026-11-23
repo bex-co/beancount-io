@@ -4,6 +4,19 @@ import { describe, expect, it, vi } from "vitest";
 import { CashFlowContent } from "../cash-flow-content";
 import type { CashAccountSnapshot, CashFlowStatement } from "../lib/model";
 
+vi.mock("@apollo/client/react", () => ({
+  useQuery: () => ({
+    data: {
+      getLedgerAccounts: [
+        "Assets:Bank:Checking",
+        "Assets:Invest:Brokerage",
+        "Expenses:Rent",
+        "Income:Salary",
+      ],
+    },
+  }),
+}));
+
 vi.mock("@tanstack/react-router", () => ({
   ClientOnly: ({ children }: { children: React.ReactNode }) => children,
   Link: ({

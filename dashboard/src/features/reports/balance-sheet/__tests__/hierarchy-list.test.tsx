@@ -4,6 +4,17 @@ import userEvent from "@testing-library/user-event";
 import { HierarchyList } from "../hierarchy-list";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 
+const accountNames = [
+  "Assets:US:Checking",
+  "Assets:Bank:Checking",
+  "Equity:Opening-Balances",
+  "Expenses:Rent",
+];
+
+vi.mock("@apollo/client/react", () => ({
+  useQuery: () => ({ data: { getLedgerAccounts: accountNames } }),
+}));
+
 // Mock the ledger context hook
 vi.mock("@/common/hooks/use-ledger", () => ({
   useLedger: () => ({ ledgerOwner: "alice", ledgerName: "book" }),
@@ -71,6 +82,36 @@ describe("HierarchyList", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("links opened accounts and their ancestors and keeps generated rows readable", () => {
+    render(
+      <HierarchyList
+        data={[
+          createNode({ account: "Assets:Bank" }),
+          createNode({ account: "Equity:Opening-Balances" }),
+          createNode({
+            account: "Equity:Earnings:Current",
+            balanceChildren: { USD: 50 },
+          }),
+        ]}
+      />,
+    );
+    const generated = screen.getByRole("rowheader", {
+      name: "Equity:Earnings:Current",
+    });
+    expect(within(generated).queryByRole("link")).toBeNull();
+    expect(within(generated.closest("tr")!).getByText("50")).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Equity:Opening-Balances" }),
+    ).toHaveAttribute(
+      "href",
+      "/ledger/alice/book/account/Equity:Opening-Balances",
+    );
+    expect(screen.getByRole("link", { name: "Assets:Bank" })).toHaveAttribute(
+      "href",
+      "/ledger/alice/book/account/Assets:Bank",
+    );
   });
 
   describe("Depth indentation", () => {
