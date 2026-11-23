@@ -3,7 +3,7 @@ import type { SupportedLanguage, TranslationEntry } from "@/i18n";
 const enMessages = {
   "userSettings.apiKeys": "Personal access tokens",
   "userSettings.apiKeysDescription":
-    "Create scoped credentials for scripts and integrations that use the Beancount.io API.",
+    "Create scoped credentials for scripts and integrations that use the Beancount.io API. Use a token as your Git password over HTTPS.",
   "userSettings.apiKeyNew": "New token",
   "userSettings.apiKeysLoading": "Loading personal access tokens…",
   "userSettings.apiKeysLoadFailed": "Failed to load personal access tokens",
@@ -15,7 +15,7 @@ const enMessages = {
     "Create a token when a script or integration needs API access.",
   "userSettings.createPersonalAccessToken": "Create personal access token",
   "userSettings.createPersonalAccessTokenDescription":
-    "Choose only the access this token needs. Token creation requires a paid plan.",
+    "Choose only the access this token needs. Token creation requires a paid plan. Use this token as your Git password over HTTPS.",
   "userSettings.apiKeyCreateFailed": "Could not create token",
   "userSettings.apiKeyName": "Token name",
   "userSettings.apiKeyNamePlaceholder": "e.g. Monthly reporting script",
@@ -24,8 +24,10 @@ const enMessages = {
   "userSettings.apiKeyScopes": "Permissions",
   "userSettings.apiKeyScopesDescription":
     "Start with read access and grant more only when required.",
-  "userSettings.apiKeyReadScopeDescription": "Read ledger data.",
-  "userSettings.apiKeyWriteScopeDescription": "Create and update ledger data.",
+  "userSettings.apiKeyReadScopeDescription":
+    "Read ledger data. Clone and pull with Git over HTTPS.",
+  "userSettings.apiKeyWriteScopeDescription":
+    "Create and update ledger data. Push with Git over HTTPS.",
   "userSettings.apiKeyAdminScopeDescription":
     "Perform administrative ledger operations.",
   "userSettings.apiKeyLedgerScope": "Ledger restriction (optional)",
@@ -83,7 +85,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   bg: {
     "userSettings.apiKeys": "Лични токени за достъп",
     "userSettings.apiKeysDescription":
-      "Създавайте ограничени идентификационни данни за скриптове и интеграции с API на Beancount.io.",
+      "Създавайте ограничени идентификационни данни за скриптове и интеграции с API на Beancount.io. Използвайте токена като парола за Git през HTTPS.",
     "userSettings.apiKeyNew": "Нов токен",
     "userSettings.apiKeysLoading": "Зареждане на личните токени…",
     "userSettings.apiKeysLoadFailed": "Личните токени не могат да се заредят",
@@ -95,7 +97,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Създайте токен, когато скрипт или интеграция се нуждае от API достъп.",
     "userSettings.createPersonalAccessToken": "Създаване на личен токен",
     "userSettings.createPersonalAccessTokenDescription":
-      "Изберете само необходимия достъп. Създаването изисква платен план.",
+      "Изберете само необходимия достъп. Създаването изисква платен план. Използвайте този токен като парола за Git през HTTPS.",
     "userSettings.apiKeyCreateFailed": "Токенът не може да се създаде",
     "userSettings.apiKeyName": "Име на токена",
     "userSettings.apiKeyNamePlaceholder": "напр. Скрипт за месечни отчети",
@@ -104,9 +106,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Разрешения",
     "userSettings.apiKeyScopesDescription":
       "Започнете с достъп за четене и добавяйте само при нужда.",
-    "userSettings.apiKeyReadScopeDescription": "Четене на данни от книгата.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Четене на данни от книгата. Клониране и изтегляне на промени с Git през HTTPS.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Създаване и промяна на данни в книгата.",
+      "Създаване и промяна на данни в книгата. Изпращане на промени с Git през HTTPS.",
     "userSettings.apiKeyAdminScopeDescription":
       "Административни операции с книгата.",
     "userSettings.apiKeyLedgerScope": "Ограничение до книга (по избор)",
@@ -156,7 +159,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   ca: {
     "userSettings.apiKeys": "Tokens d'accés personal",
     "userSettings.apiKeysDescription":
-      "Crea credencials limitades per a scripts i integracions que utilitzen l'API de Beancount.io.",
+      "Crea credencials limitades per a scripts i integracions que utilitzen l'API de Beancount.io. Fes servir un token com a contrasenya de Git per HTTPS.",
     "userSettings.apiKeyNew": "Token nou",
     "userSettings.apiKeysLoading": "S'estan carregant els tokens…",
     "userSettings.apiKeysLoadFailed": "No s'han pogut carregar els tokens",
@@ -168,7 +171,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Crea un token quan un script o una integració necessiti accés a l'API.",
     "userSettings.createPersonalAccessToken": "Crea un token d'accés personal",
     "userSettings.createPersonalAccessTokenDescription":
-      "Tria només l'accés necessari. Cal un pla de pagament.",
+      "Tria només l'accés necessari. Cal un pla de pagament. Fes servir aquest token com a contrasenya de Git per HTTPS.",
     "userSettings.apiKeyCreateFailed": "No s'ha pogut crear el token",
     "userSettings.apiKeyName": "Nom del token",
     "userSettings.apiKeyNamePlaceholder": "p. ex. Script d'informes mensuals",
@@ -177,9 +180,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Permisos",
     "userSettings.apiKeyScopesDescription":
       "Comença amb lectura i concedeix més accés només quan calgui.",
-    "userSettings.apiKeyReadScopeDescription": "Llegeix les dades del llibre.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Llegeix les dades del llibre. Clona i descarrega canvis amb Git per HTTPS.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Crea i actualitza les dades del llibre.",
+      "Crea i actualitza les dades del llibre. Envia canvis amb Git per HTTPS.",
     "userSettings.apiKeyAdminScopeDescription":
       "Executa operacions administratives del llibre.",
     "userSettings.apiKeyLedgerScope": "Restricció de llibre (opcional)",
@@ -231,7 +235,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   de: {
     "userSettings.apiKeys": "Persönliche Zugriffstoken",
     "userSettings.apiKeysDescription":
-      "Erstelle eingeschränkte Zugangsdaten für Skripte und Integrationen mit der Beancount.io-API.",
+      "Erstelle eingeschränkte Zugangsdaten für Skripte und Integrationen mit der Beancount.io-API. Verwende ein Token als Git-Passwort über HTTPS.",
     "userSettings.apiKeyNew": "Neues Token",
     "userSettings.apiKeysLoading": "Zugriffstoken werden geladen…",
     "userSettings.apiKeysLoadFailed":
@@ -245,7 +249,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.createPersonalAccessToken":
       "Persönliches Zugriffstoken erstellen",
     "userSettings.createPersonalAccessTokenDescription":
-      "Wähle nur den nötigen Zugriff. Die Erstellung erfordert einen kostenpflichtigen Plan.",
+      "Wähle nur den nötigen Zugriff. Die Erstellung erfordert einen kostenpflichtigen Plan. Verwende dieses Token als Git-Passwort über HTTPS.",
     "userSettings.apiKeyCreateFailed": "Token konnte nicht erstellt werden",
     "userSettings.apiKeyName": "Tokenname",
     "userSettings.apiKeyNamePlaceholder": "z. B. Monatliches Berichtsskript",
@@ -254,9 +258,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Berechtigungen",
     "userSettings.apiKeyScopesDescription":
       "Beginne mit Lesezugriff und gewähre mehr nur bei Bedarf.",
-    "userSettings.apiKeyReadScopeDescription": "Hauptbuchdaten lesen.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Hauptbuchdaten lesen. Mit Git über HTTPS klonen und Änderungen abrufen.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Hauptbuchdaten erstellen und ändern.",
+      "Hauptbuchdaten erstellen und ändern. Mit Git über HTTPS Änderungen übertragen.",
     "userSettings.apiKeyAdminScopeDescription":
       "Administrative Hauptbuchaktionen ausführen.",
     "userSettings.apiKeyLedgerScope": "Hauptbuch-Beschränkung (optional)",
@@ -310,7 +315,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   es: {
     "userSettings.apiKeys": "Tokens de acceso personal",
     "userSettings.apiKeysDescription":
-      "Crea credenciales limitadas para scripts e integraciones que usan la API de Beancount.io.",
+      "Crea credenciales limitadas para scripts e integraciones que usan la API de Beancount.io. Usa un token como contraseña de Git por HTTPS.",
     "userSettings.apiKeyNew": "Nuevo token",
     "userSettings.apiKeysLoading": "Cargando tokens de acceso…",
     "userSettings.apiKeysLoadFailed": "No se pudieron cargar los tokens",
@@ -322,7 +327,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Crea un token cuando un script o integración necesite acceso a la API.",
     "userSettings.createPersonalAccessToken": "Crear token de acceso personal",
     "userSettings.createPersonalAccessTokenDescription":
-      "Elige solo el acceso necesario. Se requiere un plan de pago.",
+      "Elige solo el acceso necesario. Se requiere un plan de pago. Usa este token como contraseña de Git por HTTPS.",
     "userSettings.apiKeyCreateFailed": "No se pudo crear el token",
     "userSettings.apiKeyName": "Nombre del token",
     "userSettings.apiKeyNamePlaceholder":
@@ -332,9 +337,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Permisos",
     "userSettings.apiKeyScopesDescription":
       "Empieza con lectura y concede más acceso solo cuando sea necesario.",
-    "userSettings.apiKeyReadScopeDescription": "Leer datos del libro.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Leer datos del libro. Clonar y descargar cambios con Git por HTTPS.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Crear y actualizar datos del libro.",
+      "Crear y actualizar datos del libro. Enviar cambios con Git por HTTPS.",
     "userSettings.apiKeyAdminScopeDescription":
       "Realizar operaciones administrativas del libro.",
     "userSettings.apiKeyLedgerScope": "Restricción de libro (opcional)",
@@ -386,7 +392,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   fr: {
     "userSettings.apiKeys": "Jetons d’accès personnels",
     "userSettings.apiKeysDescription":
-      "Créez des identifiants limités pour les scripts et intégrations utilisant l’API Beancount.io.",
+      "Créez des identifiants limités pour les scripts et intégrations utilisant l’API Beancount.io. Utilisez un jeton comme mot de passe Git via HTTPS.",
     "userSettings.apiKeyNew": "Nouveau jeton",
     "userSettings.apiKeysLoading": "Chargement des jetons…",
     "userSettings.apiKeysLoadFailed": "Impossible de charger les jetons",
@@ -399,7 +405,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.createPersonalAccessToken":
       "Créer un jeton d’accès personnel",
     "userSettings.createPersonalAccessTokenDescription":
-      "Choisissez uniquement l’accès nécessaire. Un forfait payant est requis.",
+      "Choisissez uniquement l’accès nécessaire. Un forfait payant est requis. Utilisez ce jeton comme mot de passe Git via HTTPS.",
     "userSettings.apiKeyCreateFailed": "Impossible de créer le jeton",
     "userSettings.apiKeyName": "Nom du jeton",
     "userSettings.apiKeyNamePlaceholder": "p. ex. Script de rapport mensuel",
@@ -408,9 +414,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Autorisations",
     "userSettings.apiKeyScopesDescription":
       "Commencez par la lecture et accordez davantage uniquement si nécessaire.",
-    "userSettings.apiKeyReadScopeDescription": "Lire les données du registre.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Lire les données du registre. Cloner et récupérer les modifications avec Git via HTTPS.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Créer et modifier les données du registre.",
+      "Créer et modifier les données du registre. Envoyer les modifications avec Git via HTTPS.",
     "userSettings.apiKeyAdminScopeDescription":
       "Effectuer des opérations administratives sur le registre.",
     "userSettings.apiKeyLedgerScope": "Restriction au registre (facultatif)",
@@ -463,7 +470,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   fa: {
     "userSettings.apiKeys": "توکن‌های دسترسی شخصی",
     "userSettings.apiKeysDescription":
-      "برای اسکریپت‌ها و یکپارچه‌سازی‌های API در Beancount.io اعتبارنامه با دسترسی محدود بسازید.",
+      "برای اسکریپت‌ها و یکپارچه‌سازی‌های API در Beancount.io اعتبارنامه با دسترسی محدود بسازید. از توکن به‌عنوان گذرواژهٔ Git روی HTTPS استفاده کنید.",
     "userSettings.apiKeyNew": "توکن جدید",
     "userSettings.apiKeysLoading": "در حال بارگیری توکن‌ها…",
     "userSettings.apiKeysLoadFailed": "بارگیری توکن‌ها ناموفق بود",
@@ -475,7 +482,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "وقتی اسکریپت یا یکپارچه‌سازی به API نیاز دارد، توکن بسازید.",
     "userSettings.createPersonalAccessToken": "ساخت توکن دسترسی شخصی",
     "userSettings.createPersonalAccessTokenDescription":
-      "فقط دسترسی لازم را انتخاب کنید. ساخت توکن به طرح پولی نیاز دارد.",
+      "فقط دسترسی لازم را انتخاب کنید. ساخت توکن به طرح پولی نیاز دارد. از این توکن به‌عنوان گذرواژهٔ Git روی HTTPS استفاده کنید.",
     "userSettings.apiKeyCreateFailed": "توکن ساخته نشد",
     "userSettings.apiKeyName": "نام توکن",
     "userSettings.apiKeyNamePlaceholder": "مثلاً اسکریپت گزارش ماهانه",
@@ -484,8 +491,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "مجوزها",
     "userSettings.apiKeyScopesDescription":
       "با دسترسی خواندن شروع کنید و فقط در صورت نیاز دسترسی بیشتری بدهید.",
-    "userSettings.apiKeyReadScopeDescription": "خواندن داده‌های دفتر.",
-    "userSettings.apiKeyWriteScopeDescription": "ایجاد و ویرایش داده‌های دفتر.",
+    "userSettings.apiKeyReadScopeDescription":
+      "خواندن داده‌های دفتر. کلون کردن و دریافت تغییرات با Git روی HTTPS.",
+    "userSettings.apiKeyWriteScopeDescription":
+      "ایجاد و ویرایش داده‌های دفتر. ارسال تغییرات با Git روی HTTPS.",
     "userSettings.apiKeyAdminScopeDescription": "انجام عملیات مدیریتی دفتر.",
     "userSettings.apiKeyLedgerScope": "محدودیت دفتر (اختیاری)",
     "userSettings.apiKeyLedgerScopePlaceholder": "owner/ledger",
@@ -534,7 +543,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   ja: {
     "userSettings.apiKeys": "個人アクセストークン",
     "userSettings.apiKeysDescription":
-      "Beancount.io API を使うスクリプトや連携用に、権限を限定した認証情報を作成します。",
+      "Beancount.io API を使うスクリプトや連携用に、権限を限定した認証情報を作成します。トークンは HTTPS 経由で Git を使う際のパスワードとしても利用できます。",
     "userSettings.apiKeyNew": "新しいトークン",
     "userSettings.apiKeysLoading": "個人アクセストークンを読み込み中…",
     "userSettings.apiKeysLoadFailed": "トークンを読み込めませんでした",
@@ -546,7 +555,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "スクリプトや連携に API アクセスが必要な場合にトークンを作成します。",
     "userSettings.createPersonalAccessToken": "個人アクセストークンを作成",
     "userSettings.createPersonalAccessTokenDescription":
-      "必要な権限だけを選択してください。作成には有料プランが必要です。",
+      "必要な権限だけを選択してください。作成には有料プランが必要です。このトークンは HTTPS 経由で Git を使う際のパスワードとして利用できます。",
     "userSettings.apiKeyCreateFailed": "トークンを作成できませんでした",
     "userSettings.apiKeyName": "トークン名",
     "userSettings.apiKeyNamePlaceholder": "例：月次レポートスクリプト",
@@ -555,9 +564,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "権限",
     "userSettings.apiKeyScopesDescription":
       "読み取り権限から始め、必要な場合だけ追加してください。",
-    "userSettings.apiKeyReadScopeDescription": "台帳データを読み取ります。",
+    "userSettings.apiKeyReadScopeDescription":
+      "台帳データを読み取ります。HTTPS 経由で Git のクローンとプルができます。",
     "userSettings.apiKeyWriteScopeDescription":
-      "台帳データを作成・更新します。",
+      "台帳データを作成・更新します。HTTPS 経由で Git にプッシュできます。",
     "userSettings.apiKeyAdminScopeDescription": "台帳の管理操作を実行します。",
     "userSettings.apiKeyLedgerScope": "台帳の制限（任意）",
     "userSettings.apiKeyLedgerScopePlaceholder": "owner/ledger",
@@ -609,7 +619,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   ko: {
     "userSettings.apiKeys": "개인 액세스 토큰",
     "userSettings.apiKeysDescription":
-      "Beancount.io API를 사용하는 스크립트와 연동을 위한 제한된 자격 증명을 만듭니다.",
+      "Beancount.io API를 사용하는 스크립트와 연동을 위한 제한된 자격 증명을 만듭니다. 토큰을 HTTPS로 연결할 때 Git 비밀번호로 사용할 수 있습니다.",
     "userSettings.apiKeyNew": "새 토큰",
     "userSettings.apiKeysLoading": "개인 액세스 토큰 불러오는 중…",
     "userSettings.apiKeysLoadFailed": "토큰을 불러오지 못했습니다",
@@ -621,7 +631,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "스크립트나 연동에 API 접근이 필요할 때 토큰을 만드세요.",
     "userSettings.createPersonalAccessToken": "개인 액세스 토큰 만들기",
     "userSettings.createPersonalAccessTokenDescription":
-      "필요한 권한만 선택하세요. 유료 플랜이 필요합니다.",
+      "필요한 권한만 선택하세요. 유료 플랜이 필요합니다. 이 토큰을 HTTPS로 연결할 때 Git 비밀번호로 사용할 수 있습니다.",
     "userSettings.apiKeyCreateFailed": "토큰을 만들 수 없습니다",
     "userSettings.apiKeyName": "토큰 이름",
     "userSettings.apiKeyNamePlaceholder": "예: 월간 보고서 스크립트",
@@ -630,9 +640,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "권한",
     "userSettings.apiKeyScopesDescription":
       "읽기 권한으로 시작하고 필요한 경우에만 추가 권한을 부여하세요.",
-    "userSettings.apiKeyReadScopeDescription": "원장 데이터를 읽습니다.",
+    "userSettings.apiKeyReadScopeDescription":
+      "원장 데이터를 읽습니다. HTTPS로 Git 저장소를 복제하고 변경 사항을 가져올 수 있습니다.",
     "userSettings.apiKeyWriteScopeDescription":
-      "원장 데이터를 만들고 수정합니다.",
+      "원장 데이터를 만들고 수정합니다. HTTPS로 Git 변경 사항을 푸시할 수 있습니다.",
     "userSettings.apiKeyAdminScopeDescription": "원장 관리 작업을 수행합니다.",
     "userSettings.apiKeyLedgerScope": "원장 제한(선택 사항)",
     "userSettings.apiKeyLedgerScopePlaceholder": "owner/ledger",
@@ -681,7 +692,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   nl: {
     "userSettings.apiKeys": "Persoonlijke toegangstokens",
     "userSettings.apiKeysDescription":
-      "Maak beperkte referenties voor scripts en integraties die de Beancount.io-API gebruiken.",
+      "Maak beperkte referenties voor scripts en integraties die de Beancount.io-API gebruiken. Gebruik een token als Git-wachtwoord via HTTPS.",
     "userSettings.apiKeyNew": "Nieuw token",
     "userSettings.apiKeysLoading": "Toegangstokens laden…",
     "userSettings.apiKeysLoadFailed":
@@ -694,7 +705,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Maak een token als een script of integratie API-toegang nodig heeft.",
     "userSettings.createPersonalAccessToken": "Persoonlijk toegangstoken maken",
     "userSettings.createPersonalAccessTokenDescription":
-      "Kies alleen de benodigde toegang. Een betaald abonnement is vereist.",
+      "Kies alleen de benodigde toegang. Een betaald abonnement is vereist. Gebruik dit token als Git-wachtwoord via HTTPS.",
     "userSettings.apiKeyCreateFailed": "Token kon niet worden gemaakt",
     "userSettings.apiKeyName": "Tokennaam",
     "userSettings.apiKeyNamePlaceholder": "bijv. Script voor maandrapportage",
@@ -703,9 +714,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Machtigingen",
     "userSettings.apiKeyScopesDescription":
       "Begin met leestoegang en geef alleen meer als dat nodig is.",
-    "userSettings.apiKeyReadScopeDescription": "Grootboekgegevens lezen.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Grootboekgegevens lezen. Klonen en wijzigingen ophalen met Git via HTTPS.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Grootboekgegevens maken en bijwerken.",
+      "Grootboekgegevens maken en bijwerken. Wijzigingen pushen met Git via HTTPS.",
     "userSettings.apiKeyAdminScopeDescription":
       "Administratieve grootboekacties uitvoeren.",
     "userSettings.apiKeyLedgerScope": "Grootboekbeperking (optioneel)",
@@ -758,7 +770,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   pt: {
     "userSettings.apiKeys": "Tokens de acesso pessoal",
     "userSettings.apiKeysDescription":
-      "Crie credenciais limitadas para scripts e integrações que usam a API do Beancount.io.",
+      "Crie credenciais limitadas para scripts e integrações que usam a API do Beancount.io. Use um token como senha do Git via HTTPS.",
     "userSettings.apiKeyNew": "Novo token",
     "userSettings.apiKeysLoading": "Carregando tokens de acesso…",
     "userSettings.apiKeysLoadFailed": "Não foi possível carregar os tokens",
@@ -770,7 +782,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Crie um token quando um script ou integração precisar acessar a API.",
     "userSettings.createPersonalAccessToken": "Criar token de acesso pessoal",
     "userSettings.createPersonalAccessTokenDescription":
-      "Escolha somente o acesso necessário. É preciso ter um plano pago.",
+      "Escolha somente o acesso necessário. É preciso ter um plano pago. Use este token como senha do Git via HTTPS.",
     "userSettings.apiKeyCreateFailed": "Não foi possível criar o token",
     "userSettings.apiKeyName": "Nome do token",
     "userSettings.apiKeyNamePlaceholder": "ex.: Script de relatório mensal",
@@ -779,9 +791,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Permissões",
     "userSettings.apiKeyScopesDescription":
       "Comece com acesso de leitura e conceda mais somente quando necessário.",
-    "userSettings.apiKeyReadScopeDescription": "Ler dados do livro-razão.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Ler dados do livro-razão. Clonar e baixar alterações com o Git via HTTPS.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Criar e atualizar dados do livro-razão.",
+      "Criar e atualizar dados do livro-razão. Enviar alterações com o Git via HTTPS.",
     "userSettings.apiKeyAdminScopeDescription":
       "Realizar operações administrativas no livro-razão.",
     "userSettings.apiKeyLedgerScope": "Restrição de livro-razão (opcional)",
@@ -832,7 +845,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   ru: {
     "userSettings.apiKeys": "Персональные токены доступа",
     "userSettings.apiKeysDescription":
-      "Создавайте ограниченные учётные данные для скриптов и интеграций с API Beancount.io.",
+      "Создавайте ограниченные учётные данные для скриптов и интеграций с API Beancount.io. Используйте токен как пароль Git при подключении по HTTPS.",
     "userSettings.apiKeyNew": "Новый токен",
     "userSettings.apiKeysLoading": "Загрузка токенов…",
     "userSettings.apiKeysLoadFailed": "Не удалось загрузить токены",
@@ -844,7 +857,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Создайте токен, когда скрипту или интеграции потребуется доступ к API.",
     "userSettings.createPersonalAccessToken": "Создать персональный токен",
     "userSettings.createPersonalAccessTokenDescription":
-      "Выберите только необходимый доступ. Требуется платный тариф.",
+      "Выберите только необходимый доступ. Требуется платный тариф. Используйте этот токен как пароль Git при подключении по HTTPS.",
     "userSettings.apiKeyCreateFailed": "Не удалось создать токен",
     "userSettings.apiKeyName": "Название токена",
     "userSettings.apiKeyNamePlaceholder":
@@ -854,9 +867,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Разрешения",
     "userSettings.apiKeyScopesDescription":
       "Начните с чтения и добавляйте доступ только при необходимости.",
-    "userSettings.apiKeyReadScopeDescription": "Чтение данных книги.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Чтение данных книги. Клонирование и получение изменений через Git по HTTPS.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Создание и изменение данных книги.",
+      "Создание и изменение данных книги. Отправка изменений через Git по HTTPS.",
     "userSettings.apiKeyAdminScopeDescription":
       "Административные операции с книгой.",
     "userSettings.apiKeyLedgerScope": "Ограничение книги (необязательно)",
@@ -907,7 +921,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   sk: {
     "userSettings.apiKeys": "Osobné prístupové tokeny",
     "userSettings.apiKeysDescription":
-      "Vytvorte obmedzené poverenia pre skripty a integrácie používajúce API Beancount.io.",
+      "Vytvorte obmedzené poverenia pre skripty a integrácie používajúce API Beancount.io. Token môžete použiť ako heslo pre Git pri pripojení cez HTTPS.",
     "userSettings.apiKeyNew": "Nový token",
     "userSettings.apiKeysLoading": "Načítavajú sa prístupové tokeny…",
     "userSettings.apiKeysLoadFailed": "Tokeny sa nepodarilo načítať",
@@ -920,7 +934,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.createPersonalAccessToken":
       "Vytvoriť osobný prístupový token",
     "userSettings.createPersonalAccessTokenDescription":
-      "Vyberte len potrebný prístup. Vyžaduje sa platený program.",
+      "Vyberte len potrebný prístup. Vyžaduje sa platený program. Tento token použite ako heslo pre Git pri pripojení cez HTTPS.",
     "userSettings.apiKeyCreateFailed": "Token sa nepodarilo vytvoriť",
     "userSettings.apiKeyName": "Názov tokenu",
     "userSettings.apiKeyNamePlaceholder": "napr. Skript mesačných výkazov",
@@ -929,9 +943,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Oprávnenia",
     "userSettings.apiKeyScopesDescription":
       "Začnite čítaním a ďalší prístup udeľte iba podľa potreby.",
-    "userSettings.apiKeyReadScopeDescription": "Čítať údaje účtovnej knihy.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Čítať údaje účtovnej knihy. Klonovať a sťahovať zmeny pomocou Gitu cez HTTPS.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Vytvárať a upravovať údaje účtovnej knihy.",
+      "Vytvárať a upravovať údaje účtovnej knihy. Odosielať zmeny pomocou Gitu cez HTTPS.",
     "userSettings.apiKeyAdminScopeDescription":
       "Vykonávať administratívne operácie knihy.",
     "userSettings.apiKeyLedgerScope": "Obmedzenie knihy (voliteľné)",
@@ -981,7 +996,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   uk: {
     "userSettings.apiKeys": "Персональні токени доступу",
     "userSettings.apiKeysDescription":
-      "Створюйте обмежені облікові дані для скриптів та інтеграцій з API Beancount.io.",
+      "Створюйте обмежені облікові дані для скриптів та інтеграцій з API Beancount.io. Використовуйте токен як пароль Git для підключення через HTTPS.",
     "userSettings.apiKeyNew": "Новий токен",
     "userSettings.apiKeysLoading": "Завантаження токенів…",
     "userSettings.apiKeysLoadFailed": "Не вдалося завантажити токени",
@@ -993,7 +1008,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "Створіть токен, коли скрипту чи інтеграції потрібен доступ до API.",
     "userSettings.createPersonalAccessToken": "Створити персональний токен",
     "userSettings.createPersonalAccessTokenDescription":
-      "Виберіть лише потрібний доступ. Потрібен платний план.",
+      "Виберіть лише потрібний доступ. Потрібен платний план. Використовуйте цей токен як пароль Git для підключення через HTTPS.",
     "userSettings.apiKeyCreateFailed": "Не вдалося створити токен",
     "userSettings.apiKeyName": "Назва токена",
     "userSettings.apiKeyNamePlaceholder": "наприклад, Скрипт щомісячних звітів",
@@ -1002,9 +1017,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "Дозволи",
     "userSettings.apiKeyScopesDescription":
       "Почніть із читання й надавайте більше доступу лише за потреби.",
-    "userSettings.apiKeyReadScopeDescription": "Читати дані книги.",
+    "userSettings.apiKeyReadScopeDescription":
+      "Читати дані книги. Клонувати й отримувати зміни за допомогою Git через HTTPS.",
     "userSettings.apiKeyWriteScopeDescription":
-      "Створювати й оновлювати дані книги.",
+      "Створювати й оновлювати дані книги. Надсилати зміни за допомогою Git через HTTPS.",
     "userSettings.apiKeyAdminScopeDescription":
       "Виконувати адміністративні операції книги.",
     "userSettings.apiKeyLedgerScope": "Обмеження книги (необов’язково)",
@@ -1056,7 +1072,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
   zh: {
     "userSettings.apiKeys": "个人访问令牌",
     "userSettings.apiKeysDescription":
-      "为使用 Beancount.io API 的脚本和集成创建权限受限的凭证。",
+      "为使用 Beancount.io API 的脚本和集成创建权限受限的凭证。也可以将令牌用作通过 HTTPS 连接时的 Git 密码。",
     "userSettings.apiKeyNew": "新建令牌",
     "userSettings.apiKeysLoading": "正在加载个人访问令牌…",
     "userSettings.apiKeysLoadFailed": "无法加载个人访问令牌",
@@ -1067,7 +1083,7 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
       "当脚本或集成需要访问 API 时创建令牌。",
     "userSettings.createPersonalAccessToken": "创建个人访问令牌",
     "userSettings.createPersonalAccessTokenDescription":
-      "仅选择所需权限。创建令牌需要付费方案。",
+      "仅选择所需权限。创建令牌需要付费方案。可以将此令牌用作通过 HTTPS 连接时的 Git 密码。",
     "userSettings.apiKeyCreateFailed": "无法创建令牌",
     "userSettings.apiKeyName": "令牌名称",
     "userSettings.apiKeyNamePlaceholder": "例如：月度报告脚本",
@@ -1075,8 +1091,10 @@ const translations: Record<SupportedLanguage, ApiKeyMessages> = {
     "userSettings.apiKeyScopes": "权限",
     "userSettings.apiKeyScopesDescription":
       "从读取权限开始，仅在需要时授予更多权限。",
-    "userSettings.apiKeyReadScopeDescription": "读取账本数据。",
-    "userSettings.apiKeyWriteScopeDescription": "创建和更新账本数据。",
+    "userSettings.apiKeyReadScopeDescription":
+      "读取账本数据。可以通过 HTTPS 使用 Git 克隆和拉取。",
+    "userSettings.apiKeyWriteScopeDescription":
+      "创建和更新账本数据。可以通过 HTTPS 使用 Git 推送。",
     "userSettings.apiKeyAdminScopeDescription": "执行账本管理操作。",
     "userSettings.apiKeyLedgerScope": "账本限制（可选）",
     "userSettings.apiKeyLedgerScopePlaceholder": "owner/ledger",

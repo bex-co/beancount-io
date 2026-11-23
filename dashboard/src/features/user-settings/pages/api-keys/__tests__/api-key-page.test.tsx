@@ -60,6 +60,9 @@ describe("ApiKeysSettingsPage", () => {
 
     expect(screen.getByText("No personal access tokens")).toBeVisible();
     expect(
+      screen.getByText(/Use a token as your Git password over HTTPS/),
+    ).toBeVisible();
+    expect(
       screen.queryByLabelText("Personal access token"),
     ).not.toBeInTheDocument();
   });

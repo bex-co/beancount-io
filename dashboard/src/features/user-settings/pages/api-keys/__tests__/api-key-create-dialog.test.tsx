@@ -44,6 +44,26 @@ describe("ApiKeyCreateDialog", () => {
     });
   });
 
+  it("explains the Git HTTPS password and the permissions for reading and pushing", () => {
+    render(
+      <ApiKeyCreateDialog>
+        <button>New token</button>
+      </ApiKeyCreateDialog>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "New token" }));
+
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(
+      /as your Git password over HTTPS/,
+    );
+    expect(
+      screen.getByRole("checkbox", { name: "ledger.read" }).parentElement,
+    ).toHaveTextContent("Clone and pull with Git over HTTPS.");
+    expect(
+      screen.getByRole("checkbox", { name: "ledger.write" }).parentElement,
+    ).toHaveTextContent("Push with Git over HTTPS.");
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it("creates a least-privilege token and reveals its secret once", async () => {
     render(
       <ApiKeyCreateDialog>
