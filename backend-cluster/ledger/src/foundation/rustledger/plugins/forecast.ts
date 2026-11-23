@@ -47,8 +47,10 @@ const FORECAST_FLAG = "#";
 // Greedy narration capture selects the final compatible marker, matching
 // Python's `re.search` with `(?P<narration>^.*)`. The expression deliberately
 // is not end-anchored: text after the marker is discarded by the old plugin.
+// The `s` flag mirrors the donor's `re.DOTALL`: a multiline narration is
+// valid input and its marker still counts.
 const MARKER_RE =
-  /^(.*)\[(DAILY|WEEKLY|MONTHLY|YEARLY)(?:\s+SKIP\s+([1-9]\d*)\s+TIMES?)?(?:\s+REPEAT\s+([1-9]\d*)\s+TIMES?)?(?:\s+UNTIL\s+([\d-]+))?\]/u;
+  /^(.*)\[(DAILY|WEEKLY|MONTHLY|YEARLY)(?:\s+SKIP\s+([1-9]\d*)\s+TIMES?)?(?:\s+REPEAT\s+([1-9]\d*)\s+TIMES?)?(?:\s+UNTIL\s+([\d-]+))?\]/us;
 
 /** Absolute expansion ceiling, sized for roughly a century of daily entries. */
 export const MAX_FORECAST_OCCURRENCES = 40_000;

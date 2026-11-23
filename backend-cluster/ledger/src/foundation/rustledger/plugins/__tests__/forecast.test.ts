@@ -157,6 +157,16 @@ describe("fava.plugins.forecast — marker and field semantics", () => {
     expect(result.narration).toBe("Rent [important] pay");
   });
 
+  it("expands a marker on a multiline narration", () => {
+    const result = run([
+      transaction("2014-03-08", "Bill\nsecond line [WEEKLY REPEAT 3 TIMES]"),
+    ]);
+    expect(dates(result)).toEqual(["2014-03-08", "2014-03-15", "2014-03-22"]);
+    expect(transactions(result).map((item) => item.narration)).toEqual(
+      Array.from({ length: 3 }, () => "Bill\nsecond line"),
+    );
+  });
+
   it.each([
     "Bill",
     "Bill [monthly]",
