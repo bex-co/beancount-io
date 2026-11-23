@@ -89,7 +89,7 @@ def test_written_close_still_points_at_its_line(tmp_path: Path) -> None:
     flat = _refused(tmp_path, "", "2024-06-01 close Expenses:Food:Groceries\n", *GROCERIES)
     assert (
         f"Account opened 2024-01-01 at {ledger}:7. Account closed 2024-06-01 at {ledger}:{LAST}. "
-        "Correct the transaction date or edit that directive; for new books use bea init --date YYYY-MM-DD."
+        f"Correct the transaction date, or move the close at {ledger}:{LAST} to on or after 2024-07-01."
     ) in flat
     assert "plugin" not in flat
 

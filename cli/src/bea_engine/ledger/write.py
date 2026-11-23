@@ -2932,6 +2932,7 @@ def validate_candidate(
                 lifecycles = _lifecycles(entries, original_lines)
             # A plugin's open or close is not a line anyone can edit (w5/222).
             remedy = "edit that directive"
+            moved_close = None
             for entry in lifecycles.get(account, []):
                 word, state = ("open", "opened") if isinstance(entry, Open) else ("close", "closed")
                 if isinstance(entry, Open) and _proposed_entry(entry, filenames, original_lines):
@@ -2975,6 +2976,16 @@ def validate_candidate(
                 origin = _plugin_origin(entry, word, filenames, original_lines)
                 if origin is None:
                     message += f" Account {state} {entry.date} at {_location(entry, filenames)}."
+                    if isinstance(entry, Close) and error.entry is not None and error.entry.date > entry.date:
+                        # The written close is what makes the entry late, so it
+                        # is the line to move; `bea init --date` only sets an
+                        # opening date and cannot move a close (w1/359).
+                        if last_inactive_dates is None:
+                            first_inactive_dates, last_inactive_dates = _inactive_bounds(errors)
+                        moved_close = (
+                            f"move the close at {_location(entry, filenames)} to on or after "
+                            f"{last_inactive_dates[account]}"
+                        )
                     continue
                 message += f" Account {state} {entry.date} by {origin}, not by a line in the ledger"
                 remedy = "change the ledger lines that plugin reads"
@@ -3003,7 +3014,10 @@ def validate_candidate(
                 fix = "Move the file out of the documents folder"
             else:
                 fix = f"Correct the {noun} date"
-            message += f" {fix} or {remedy}; for new books use bea init --date YYYY-MM-DD."
+            if moved_close is not None:
+                message += f" {fix}, or {moved_close}."
+            else:
+                message += f" {fix} or {remedy}; for new books use bea init --date YYYY-MM-DD."
         if isinstance(error.entry, Close) and error.message.endswith(" is being closed"):
             # Upstream calls the account unopened whether it never was or
             # opens after the close; say which, as every other directive's
