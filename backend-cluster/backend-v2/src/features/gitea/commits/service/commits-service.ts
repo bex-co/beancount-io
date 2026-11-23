@@ -20,6 +20,7 @@ import {
   type IAuthorizationService,
 } from "@/server/api/authorization";
 import {
+  BadUserInputError,
   DomainError,
   InternalServerError,
   NotFoundError,
@@ -60,6 +61,15 @@ export async function findCommit(
   { stat }: { stat: boolean },
 ) {
   assertCommitRef(sha, "sha");
+  // Gitea treats an empty `sha` query parameter as default-branch HEAD rather
+  // than refusing it (w31/034).
+  if (sha.trim() === "") {
+    throw new BadUserInputError(
+      "sha is required",
+      "sha",
+      COMMIT_NOT_FOUND_HINT,
+    );
+  }
   let commit;
   try {
     const listed = await client.repos.repoGetAllCommits(

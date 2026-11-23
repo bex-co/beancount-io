@@ -8,6 +8,7 @@ import {
   commitFileChanges,
 } from "../commits-service";
 import {
+  BadUserInputError,
   ForbiddenError,
   InternalServerError,
   NotFoundError,
@@ -115,6 +116,29 @@ describe("CommitsService.getCommitDetails missing revisions", () => {
       service.getCommitDetails({ identity, ledgerId: "alice/main", sha }),
     ).rejects.toBeInstanceOf(InternalServerError);
   });
+
+  // w31/034: Gitea treats an empty sha query parameter as default-branch HEAD,
+  // so an empty or whitespace-only sha must be refused before any Gitea call.
+  it.each(["", "\t", "\n", "\r\n"])(
+    "refuses empty or whitespace-only sha=%j as BadUserInputError before calling Gitea",
+    async (blankSha) => {
+      const history = jest.fn().mockResolvedValue({ data: [{ sha }] });
+      const service = serviceWithHistory(history);
+      const failure = await service
+        .getCommitDetails({ identity, ledgerId: "alice/main", sha: blankSha })
+        .catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(BadUserInputError);
+      expect(failure).toMatchObject({
+        category: "BAD_USER_INPUT",
+        message: "sha is required",
+        metadata: {
+          field: "sha",
+          hint: expect.stringContaining("commits"),
+        },
+      });
+      expect(history).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("CommitsService.listCommits paging bounds", () => {

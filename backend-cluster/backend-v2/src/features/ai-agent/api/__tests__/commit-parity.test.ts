@@ -419,6 +419,52 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
       }
     },
   );
+  // w31/034: Gitea treats an empty sha query parameter as default-branch HEAD,
+  // so commit-details with an empty or whitespace-only sha must fail with
+  // BAD_USER_INPUT ("sha is required") on every surface without calling Gitea.
+  it.each(["", "\t", "\n"])(
+    "refuses commit-details with empty or whitespace-only sha=%j as BAD_USER_INPUT across REST, GraphQL, and MCP",
+    async (sha) => {
+      const f = await fixture();
+      const query = `commit-details?sha=${encodeURIComponent(sha)}`;
+      try {
+        const response = await f.rest(query);
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+          ok: false,
+          error: {
+            code: "BAD_USER_INPUT",
+            message: "sha is required",
+            metadata: {
+              field: "sha",
+              hint: expect.stringContaining("commits"),
+            },
+          },
+        });
+        await expect(f.mcp(query)).rejects.toMatchObject({
+          code: -32602,
+          data: {
+            code: "BAD_USER_INPUT",
+            message: "sha is required",
+            hint: expect.stringContaining("commits"),
+          },
+        });
+        const result = await f.gql(
+          `getCommitDetails(ledgerId: "alice/main", sha: ${JSON.stringify(sha)}) { sha }`,
+        );
+        expect(result.data).toBeNull();
+        const [graphqlError] = result.errors ?? [];
+        expect(graphqlError).toBeDefined();
+        const formatted = formatError(graphqlError.toJSON(), graphqlError);
+        expect(formatted.extensions?.code).toBe("BAD_USER_INPUT");
+        expect(formatted.message).toBe("sha is required");
+        expect(f.history).not.toHaveBeenCalled();
+        expect(f.download).not.toHaveBeenCalled();
+      } finally {
+        await f.close();
+      }
+    },
+  );
   it("maps an unknown branch on the commits list to NOT_FOUND across REST, GraphQL, and MCP", async () => {
     const f = await fixture();
     f.history.mockRejectedValue(
