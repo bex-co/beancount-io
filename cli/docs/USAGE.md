@@ -3052,6 +3052,14 @@ ledger's name, visibility, size and whether it is empty, followed by one
 `warning:` line per irreversible effect. Under `--json` the envelope's `data`
 holds `dry_run: true` and that summary under `preview`.
 
+A server built before the delete preview existed ignores the flag and would
+delete the ledger, so `--dry-run` first reads the server's own contract
+(`/api-gateway/v1/openapi.json`). When that contract cannot be read or lists no
+`dryRun` field for the delete, the command exits 1 naming the server and sends
+nothing. An answer that is not a preview (no `dryRun: true` echo, or no
+summary) exits 4: the outcome is unknown, so check with
+`bea cloud ledger show OWNER/NAME` before retrying.
+
 `clone` and `create --clone` pass git only an `ssh://`, `https://` or
 `user@host:path` remote, and clone into `./<name>` only when the server's
 ledger name is a valid ledger name. Any other clone URL or name is an

@@ -58,9 +58,13 @@ class Command:
     # A boolean request-body field that turns the call into a preview, exposed
     # as `--dry-run`. A preview destroys nothing, so it skips the confirmation
     # gate and renders the response's `preview` object; `preview_done` is the
-    # closing line that says nothing changed.
+    # closing line that says nothing changed. A server that predates the field
+    # ignores it and commits (w1/368), so `--dry-run` is refused unless the
+    # server's served contract lists the field, and an answer that is not a
+    # preview raises `preview_unconfirmed` as an unknown outcome.
     dry_run: str | None = None
     preview_done: str | None = None
+    preview_unconfirmed: str | None = None
     # Paged tables: the singular noun the notes count rows in, and what an
     # empty first page says. Under the table, a person learns what `--json`'s
     # `truncated` and an empty `data` say (w1/365).
@@ -94,6 +98,11 @@ COMMANDS: list[Command] = [
         write_action="Deleting ledger '{full_name}'",
         dry_run="dryRun",
         preview_done="Dry run: ledger '{full_name}' was not deleted.",
+        preview_unconfirmed=(
+            "The server answered --dry-run for ledger '{full_name}' without a preview: "
+            "it may not support --dry-run and may have deleted the ledger. "
+            "The outcome is unknown — check with bea cloud ledger show {full_name} before retrying."
+        ),
     ),
 ]
 
@@ -196,8 +205,11 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
                 f"operation '{cmd.operation_id}' body field '{cmd.dry_run}' has no description; "
                 "annotate it in backend-v2 before generating a command"
             )
-        if not cmd.preview_done:
-            fail(f"operation '{cmd.operation_id}' has --dry-run; add a `preview_done` template to its registry entry")
+        if not (cmd.preview_done and cmd.preview_unconfirmed):
+            fail(
+                f"operation '{cmd.operation_id}' has --dry-run; "
+                "add `preview_done` and `preview_unconfirmed` templates to its registry entry"
+            )
 
     module = snake(cmd.operation_id)
     headline = cmd.row or op["summary"]
@@ -256,17 +268,28 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
 
     if cmd.dry_run:
         body_class = f"{cmd.operation_id[0].upper()}{cmd.operation_id[1:]}Body"
-        preview_args = ", ".join([*call_args, "client=authenticated_client()"])
+        preview_args = ", ".join([*call_args, "client=client"])
         lines.append(f"    from cli.api.rest_client.models.{module}_body import {body_class}")
         lines.append("")
         lines.append("    if dry_run:")
+        lines.append("        from cli.api.client import require_body_field")
+        lines.append("        from cli.errors import ConflictError")
+        lines.append("")
+        lines.append("        client = authenticated_client()")
+        lines.append("        # A server that predates the field ignores it and commits instead (w1/368).")
+        lines.append(f'        require_body_field(client, "{cmd.operation_id}", "{cmd.dry_run}", option="--dry-run")')
         lines.append(
             "        # A preview destroys nothing: no confirmation, and a lost answer is not an unknown outcome."
         )
         lines.append(f'        preview_body = {body_class}.from_dict({{"{cmd.dry_run}": True}})')
         lines.append(f"        answer = unwrap(call({module}.sync_detailed, {preview_args}, body=preview_body))")
         lines.append("        row = snake_keys(answer.to_dict())")
-        lines.append('        summary = snake_keys(row.get("preview") or {})')
+        lines.append(
+            f'        if row.get("{snake(cmd.dry_run)}") is not True or not isinstance(row.get("preview"), dict):'
+        )
+        lines.append("            # Anything but the preview echo may be the commit itself.")
+        lines.append(f'            raise ConflictError(f"{esc(cmd.preview_unconfirmed or "")}")')
+        lines.append('        summary = snake_keys(row["preview"])')
         lines.append('        row["preview"] = summary')
         lines.append("        if context.current().json_output:")
         lines.append("            output.emit(row, target=output.server_target())")

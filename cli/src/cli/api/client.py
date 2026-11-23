@@ -215,6 +215,57 @@ def call[T](
         hooks.remove(capture)
 
 
+#: The contract every v1 server publishes about itself (ADR 0006 D8), production included.
+SERVED_SPEC_PATH = "/api-gateway/v1/openapi.json"
+
+
+def require_body_field(client: AuthenticatedClient, operation_id: str, field: str, *, option: str) -> None:
+    """Refuse `option` unless the server's own contract lists `field` on the operation.
+
+    A server built before a body field existed does not read it: one that
+    predates the ledger-delete preview takes `--dry-run`'s request as the
+    delete itself, with no confirmation (w1/368). The spec it serves says
+    which fields it reads, so ask before sending anything irreversible.
+    """
+    from cli.config import settings
+    from cli.errors import BeaError, request_id_from
+
+    server = settings().api_url
+    response = client.get_httpx_client().get(SERVED_SPEC_PATH)
+    spec: object = None
+    if response.status_code == 200:
+        try:
+            spec = response.json()
+        except ValueError:
+            spec = None
+    if not isinstance(spec, dict):
+        raise BeaError(
+            f"Could not read {server}'s API contract ({SERVED_SPEC_PATH}, HTTP {response.status_code}) "
+            f"to confirm it supports {option}, so nothing was sent.",
+            request_id=request_id_from(response.headers),
+        )
+    if field not in _served_body_fields(spec, operation_id):
+        raise BeaError(
+            f"{server} does not support {option} here: its API contract lists no '{field}' field for "
+            f"{operation_id}, so it would carry out the request instead of previewing it. "
+            "Nothing was sent; upgrade the server to use it."
+        )
+
+
+def _served_body_fields(spec: dict[str, Any], operation_id: str) -> set[str]:
+    """The JSON request-body fields a served spec declares for one operation; none when unreadable."""
+    try:
+        for methods in (spec.get("paths") or {}).values():
+            for op in methods.values() if isinstance(methods, dict) else ():
+                if isinstance(op, dict) and op.get("operationId") == operation_id:
+                    body = op.get("requestBody") or {}
+                    schema = ((body.get("content") or {}).get("application/json") or {}).get("schema") or {}
+                    return set(schema.get("properties") or {})
+    except (AttributeError, TypeError):
+        pass
+    return set()
+
+
 def unwrap[T](response: Response[T | V1Error]) -> T:
     """The success payload, or the documented error category — nothing else."""
     result = unwrap_or_none(response)

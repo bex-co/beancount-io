@@ -2,12 +2,19 @@
 
 The help used to say "Pass dryRun to preview" for a command with no such
 option, so the only way to see what a delete removes was to delete.
+
+A server that predates the preview ignores the flag and deletes (w1/368): the
+command used to print "was not deleted" and exit 0 whatever came back. It now
+sends nothing unless the server's served contract lists the field, and treats
+any answer that is not a preview as an unknown outcome.
 """
 
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pytest_httpx import HTTPXMock
@@ -16,6 +23,17 @@ from typer.testing import CliRunner
 from cli.main import app
 
 URL = "https://api.example/api-gateway/v1/ledgers/alice/books"
+SPEC_URL = "https://api.example/api-gateway/v1/openapi.json"
+PINNED_SPEC: dict[str, Any] = json.loads((Path(__file__).parent.parent / "openapi" / "v1.json").read_text())
+
+
+def pre_preview_spec() -> dict[str, Any]:
+    """The contract a server built before the delete preview serves: deleteLedger takes no body."""
+    spec = copy.deepcopy(PINNED_SPEC)
+    spec["paths"]["/api-gateway/v1/ledgers/{owner}/{name}"]["delete"].pop("requestBody")
+    return spec
+
+
 PREVIEW = {
     "ledgerId": "alice/books",
     "dryRun": True,
@@ -51,6 +69,7 @@ def test_help_names_the_dry_run_option() -> None:
 def test_dry_run_sends_the_flag_without_prompting_and_renders_the_preview(
     logged_in: None, api: None, httpx_mock: HTTPXMock, as_json: bool
 ) -> None:
+    httpx_mock.add_response(method="GET", url=SPEC_URL, json=PINNED_SPEC)
     httpx_mock.add_response(method="DELETE", url=URL, json=PREVIEW)
 
     # --no-input without --yes: a preview must not need confirmation.
@@ -58,7 +77,7 @@ def test_dry_run_sends_the_flag_without_prompting_and_renders_the_preview(
     result = CliRunner().invoke(app, args)
 
     assert result.exit_code == 0, result.stderr
-    request = httpx_mock.get_request()
+    request = httpx_mock.get_request(method="DELETE")
     assert request is not None
     assert json.loads(request.content) == {"dryRun": True}
     assert "--yes" not in result.stderr
@@ -74,6 +93,63 @@ def test_dry_run_sends_the_flag_without_prompting_and_renders_the_preview(
         assert "warning: Deleting a ledger is permanent.\n" in result.stdout
         assert "was not deleted" in result.stdout
         assert "' deleted." not in result.stdout
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        {"ledgerId": "alice/books"},  # the pre-preview route: no body read, a plain delete answer
+        {"ledgerId": "alice/books", "dryRun": False},  # a commit's echo
+        {"ledgerId": "alice/books", "dryRun": True},  # an echo with no destroy summary
+    ],
+    ids=["no-echo", "commit-echo", "no-preview"],
+)
+@pytest.mark.parametrize("as_json", [False, True])
+def test_an_answer_that_is_not_a_preview_is_an_unknown_outcome(
+    logged_in: None, api: None, httpx_mock: HTTPXMock, answer: dict[str, Any], as_json: bool
+) -> None:
+    httpx_mock.add_response(method="GET", url=SPEC_URL, json=PINNED_SPEC)
+    httpx_mock.add_response(method="DELETE", url=URL, json=answer)
+
+    args = ["--no-input", *(["--json"] if as_json else []), "cloud", "ledger", "delete", "alice/books", "--dry-run"]
+    result = CliRunner().invoke(app, args)
+
+    assert result.exit_code == 4, result.output
+    assert "not deleted" not in result.output
+    if as_json:
+        assert result.stdout == ""
+        error = json.loads(result.stderr)["error"]
+        assert error["category"] == "conflict"
+        assert "bea cloud ledger show alice/books" in error["message"]
+    else:
+        assert "may have deleted the ledger" in result.stderr
+        assert "bea cloud ledger show alice/books" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "spec_response",
+    [
+        {"json": "pre-preview"},  # served, but deleteLedger reads no dryRun
+        {"status_code": 404, "json": {"ok": False, "error": {"code": "NOT_FOUND", "message": "Not Found"}}},
+        {"status_code": 200, "text": "<html>maintenance</html>"},
+    ],
+    ids=["field-missing", "spec-404", "spec-unreadable"],
+)
+def test_a_server_whose_contract_lacks_the_preview_is_sent_no_delete(
+    logged_in: None, api: None, httpx_mock: HTTPXMock, spec_response: dict[str, Any]
+) -> None:
+    if spec_response.get("json") == "pre-preview":
+        spec_response = {"json": pre_preview_spec()}
+    httpx_mock.add_response(method="GET", url=SPEC_URL, **spec_response)
+
+    result = CliRunner().invoke(app, ["--no-input", "cloud", "ledger", "delete", "alice/books", "--dry-run"])
+
+    assert result.exit_code == 1, result.output
+    assert httpx_mock.get_requests(method="DELETE") == []
+    assert "https://api.example" in result.stderr
+    assert "--dry-run" in result.stderr
+    assert "nothing was sent" in result.stderr.lower()
+    assert "not deleted" not in result.output
 
 
 def test_plain_delete_still_confirms_and_sends_no_dry_run(logged_in: None, api: None, httpx_mock: HTTPXMock) -> None:

@@ -107,13 +107,22 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         from cli.api.rest_client.models.delete_ledger_body import DeleteLedgerBody
 
         if dry_run:
+            from cli.api.client import require_body_field
+            from cli.errors import ConflictError
+
+            client = authenticated_client()
+            # A server that predates the field ignores it and commits instead (w1/368).
+            require_body_field(client, "deleteLedger", "dryRun", option="--dry-run")
             # A preview destroys nothing: no confirmation, and a lost answer is not an unknown outcome.
             preview_body = DeleteLedgerBody.from_dict({"dryRun": True})
-            answer = unwrap(
-                call(delete_ledger.sync_detailed, owner, name, client=authenticated_client(), body=preview_body)
-            )
+            answer = unwrap(call(delete_ledger.sync_detailed, owner, name, client=client, body=preview_body))
             row = snake_keys(answer.to_dict())
-            summary = snake_keys(row.get("preview") or {})
+            if row.get("dry_run") is not True or not isinstance(row.get("preview"), dict):
+                # Anything but the preview echo may be the commit itself.
+                raise ConflictError(
+                    f"The server answered --dry-run for ledger '{full_name}' without a preview: it may not support --dry-run and may have deleted the ledger. The outcome is unknown — check with bea cloud ledger show {full_name} before retrying."
+                )
+            summary = snake_keys(row["preview"])
             row["preview"] = summary
             if context.current().json_output:
                 output.emit(row, target=output.server_target())
