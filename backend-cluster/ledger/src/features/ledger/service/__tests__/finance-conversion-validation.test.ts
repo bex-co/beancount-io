@@ -2,6 +2,7 @@ import type { DirectiveJson } from "@rustledger/wasm";
 import { BadUserInputError } from "@/shared/errors";
 import { loadCachedFileMapForRepo } from "@/foundation/clients/load-cached-ledger-file-map";
 import { parseLedgerFiles } from "@/foundation/rustledger";
+import { LedgerDataService } from "../ledger-data-service";
 import { LedgerFinanceService } from "../ledger-finance-service";
 
 /**
@@ -41,9 +42,13 @@ const units = (account: string, number: string, currency: string): Posting => ({
   units: { number, currency },
 });
 
-function configure(directives: DirectiveJson[]) {
+function configure(directives: DirectiveJson[], operatingCurrencies = ["USD"]) {
   jest.mocked(loadCachedFileMapForRepo).mockResolvedValue({
-    files: { "main.bean": 'option "operating_currency" "USD"\n' },
+    files: {
+      "main.bean": operatingCurrencies
+        .map((currency) => `option "operating_currency" "${currency}"\n`)
+        .join(""),
+    },
     entryPoint: "main.bean",
     repoPaths: ["main.bean"],
     sourceFiles: ["main.bean"],
@@ -54,13 +59,14 @@ function configure(directives: DirectiveJson[]) {
   jest.mocked(parseLedgerFiles).mockResolvedValue({
     valid: true,
     errors: [],
-    options: { operating_currencies: ["USD"], title: null },
+    options: { operating_currencies: operatingCurrencies, title: null },
     directives,
     directiveCount: directives.length,
   });
 }
 
 const finance = () => new LedgerFinanceService(factory as never, {} as never);
+const data = () => new LedgerDataService(factory as never, {} as never);
 
 const LEDGER: DirectiveJson[] = [
   ...["Assets:Usd", "Assets:Eur", "Equity:Open"].map(open),
@@ -114,5 +120,47 @@ describe("report conversion validation", () => {
         conversion: "EUR",
       }),
     ).resolves.toBeDefined();
+  });
+
+  it.each([
+    "getOverview",
+    "getIncomeStatement",
+    "getBalanceSheet",
+    "getTrialBalance",
+  ] as const)(
+    "%s accepts a second operating currency absent from directives",
+    async (method) => {
+      configure(LEDGER.slice(0, -1), ["USD", "EUR"]);
+
+      await expect(
+        finance()[method]({ ...params, conversion: "EUR" }),
+      ).resolves.toBeDefined();
+    },
+  );
+
+  it.each(["getAccountReport", "getIntervalTotals"] as const)(
+    "%s accepts a second operating currency absent from directives",
+    async (method) => {
+      configure(LEDGER.slice(0, -1), ["USD", "EUR"]);
+
+      await expect(
+        data()[method]({
+          ...params,
+          accountName: "Assets:Usd",
+          conversion: "EUR",
+        }),
+      ).resolves.toBeDefined();
+    },
+  );
+
+  it("keeps unpriced units in their held currency for a declared target", async () => {
+    configure(LEDGER.slice(0, -1), ["USD", "EUR"]);
+    const report = await finance().getBalanceSheet({
+      ...params,
+      conversion: "EUR",
+    });
+    expect(report.assets_hierarchy_data.balance_children).toEqual({
+      USD: "1000",
+    });
   });
 });

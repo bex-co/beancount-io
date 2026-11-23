@@ -1112,7 +1112,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       resolveConversion(
         query.conversion,
         snapshot.directives,
-        snapshot.options.operating_currencies?.[0] ?? "USD",
+        snapshot.options.operating_currencies ?? [],
         collectLedgerCommodities(snapshot.directives),
       );
     }

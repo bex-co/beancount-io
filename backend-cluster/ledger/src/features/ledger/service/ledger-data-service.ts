@@ -878,7 +878,7 @@ export class LedgerDataService implements ILedgerDataService {
     const { target } = resolveConversion(
       conversion,
       directives,
-      options.operating_currencies?.[0] ?? "USD",
+      options.operating_currencies ?? [],
       collectLedgerCommodities(fullDirectives),
     );
     const key = (interval ?? "month") as IntervalKey;
@@ -955,7 +955,7 @@ export class LedgerDataService implements ILedgerDataService {
     const { target } = resolveConversion(
       conversion,
       directives,
-      options.operating_currencies?.[0] ?? "USD",
+      options.operating_currencies ?? [],
       collectLedgerCommodities(fullDirectives),
     );
     const key = (interval ?? "month") as IntervalKey;

@@ -15,9 +15,9 @@ import { BadUserInputError } from "@/shared/errors";
  * - `units`    → `"units"` — raw units, no conversion.
  * - `units_by_cost` → `"units_by_cost"` — raw units keyed `VTI {EUR}` by
  *   cost currency, `EUR {}` when held without a cost (w4/m58).
- * - `undefined` / `""` → the operating currency (Fava's default report
- *   conversion is the operating currency, e.g. `"USD"`).
- * - a currency the ledger knows → that code, a `convert_position` target.
+ * - `undefined` / `""` → the first operating currency, or `"USD"` if absent.
+ * - a declared operating currency or a commodity in the ledger → that code,
+ *   a `convert_position` target.
  * - anything else → `BadUserInputError` (w23/156): an unknown code used to
  *   pass through and degrade to units figures downstream without surfacing
  *   anything, so `?conversion=BOGUS` read as an honest USD report.
@@ -40,9 +40,10 @@ export interface ReportValuation {
 export function resolveConversion(
   conversion: string | undefined,
   directives: DirectiveJson[],
-  operatingCurrency: string,
+  operatingCurrencies: readonly string[],
   knownCommodities: ReadonlySet<string>,
 ): ReportValuation {
+  const defaultCurrency = operatingCurrencies[0] ?? "USD";
   switch (conversion) {
     case "at_cost":
       return { directives, target: "at_cost" };
@@ -54,17 +55,20 @@ export function resolveConversion(
       return { directives, target: "units_by_cost" };
     case undefined:
     case "":
-      return { directives, target: operatingCurrency };
+      return { directives, target: defaultCurrency };
     default: {
-      // The operating currency always passes: it is the default target,
-      // which cannot refuse, so the explicit spelling must agree with it.
+      // A ledger can declare an operating currency without naming it in
+      // any directive. The default target also accepts its explicit spelling.
       if (
-        conversion === operatingCurrency ||
+        conversion === defaultCurrency ||
+        operatingCurrencies.includes(conversion) ||
         knownCommodities.has(conversion)
       ) {
         return { directives, target: conversion };
       }
-      const known = [...knownCommodities].sort();
+      const known = [
+        ...new Set([...operatingCurrencies, ...knownCommodities]),
+      ].sort();
       const shown =
         known.length === 0
           ? ""

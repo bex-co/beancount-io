@@ -114,4 +114,16 @@ describe("the account journal's conversion", () => {
     const result = await read("USD");
     expect(result.items.length).toBeGreaterThan(0);
   });
+
+  it("accepts a second currency declared only in operating currency options", async () => {
+    jest.mocked(parseLedgerFiles).mockResolvedValueOnce({
+      valid: true,
+      errors: [],
+      options: { operating_currencies: ["USD", "EUR"], title: null },
+      directives,
+      directiveCount: directives.length,
+    });
+    const result = await read("EUR");
+    expect(result.items[0]?.balance).toEqual({ ITOT: "4" });
+  });
 });

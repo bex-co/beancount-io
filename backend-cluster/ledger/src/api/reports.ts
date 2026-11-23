@@ -369,7 +369,7 @@ export function setReportsHandler(router: Router): void {
     const target = resolveConversion(
       conversion,
       snapshot.directives,
-      snapshot.options.operating_currencies?.[0] ?? "USD",
+      snapshot.options.operating_currencies ?? [],
       collectLedgerCommodities(snapshot.directives),
     );
     // An income or expenses tree values each posting on its own date, as the

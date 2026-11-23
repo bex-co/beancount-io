@@ -110,7 +110,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       priceMap,
       valuationDate,
       window,
-      operatingCurrency,
+      operatingCurrencies,
       allCommodities,
       roots,
     } = await this.loadReportDirectives(ledgerId, userId, {
@@ -121,7 +121,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     const { directives, target } = resolveConversion(
       conversion,
       rawDirectives,
-      operatingCurrency,
+      operatingCurrencies,
       allCommodities,
     );
     const key = (interval ?? "month") as IntervalKey;
@@ -162,7 +162,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       priceMap,
       valuationDate,
       window,
-      operatingCurrency,
+      operatingCurrencies,
       allCommodities,
       roots,
     } = await this.loadReportDirectives(ledgerId, userId, {
@@ -173,7 +173,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     const { directives, target } = resolveConversion(
       conversion,
       rawDirectives,
-      operatingCurrency,
+      operatingCurrencies,
       allCommodities,
     );
     const key = (interval ?? "month") as IntervalKey;
@@ -209,7 +209,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       priceMap,
       valuationDate,
       window,
-      operatingCurrency,
+      operatingCurrencies,
       allCommodities,
       roots,
       clamp,
@@ -222,7 +222,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     const { directives, target } = resolveConversion(
       conversion,
       rawDirectives,
-      operatingCurrency,
+      operatingCurrencies,
       allCommodities,
     );
     // Conversions and unrealized gains, as Fava's `Tree.cap` adds them, on
@@ -287,7 +287,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       directives: rawDirectives,
       priceMap,
       valuationDate,
-      operatingCurrency,
+      operatingCurrencies,
       allCommodities,
       roots,
       ledgerErrors,
@@ -302,7 +302,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     const { directives, target } = resolveConversion(
       conversion,
       rawDirectives,
-      operatingCurrency,
+      operatingCurrencies,
       allCommodities,
     );
     // Income and expenses value each posting on its own date, as the income
@@ -401,7 +401,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
   ): Promise<{
     directives: DirectiveJson[];
     priceMap: PriceMap;
-    operatingCurrency: string;
+    operatingCurrencies: readonly string[];
     /** Every commodity in the FULL snapshot (w23/156 conversion check). */
     allCommodities: Set<string>;
     roots: ReportAccounts["roots"];
@@ -424,10 +424,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
     } = await this.loadSnapshot(ledgerId, userId);
     const ledgerErrors = errors.some((error) => error.severity !== "warning");
     const { roots, clamp } = reportAccounts;
-    // Fava's `at_value`/default valuation converts to the ledger's operating
-    // currency; use the first declared one (bean-example: "USD"), defaulting to
-    // "USD" when a ledger declares none.
-    const operatingCurrency = options.operating_currencies?.[0] ?? "USD";
+    const operatingCurrencies = options.operating_currencies ?? [];
     // Fava values every report against the FULL ledger's price map
     // (`FilteredLedger.ledger.prices`), NOT the filtered/clamped stream — a
     // `time` filter that truncates future `Price` directives must not lose them
@@ -457,7 +454,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
         return {
           directives: filtered,
           priceMap,
-          operatingCurrency,
+          operatingCurrencies,
           allCommodities,
           roots,
           clamp,
@@ -481,7 +478,7 @@ export class LedgerFinanceService implements ILedgerFinanceService {
       return {
         directives: clamped,
         priceMap,
-        operatingCurrency,
+        operatingCurrencies,
         allCommodities,
         roots,
         clamp,

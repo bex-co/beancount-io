@@ -33,55 +33,79 @@ describe("resolveConversion", () => {
   it("maps each conversion keyword to a target, passing directives through unchanged", () => {
     // at_cost / at_value are now reserved keyword targets handled by the
     // lot-aware reducer (no directive rewrite); the stream is identity.
-    const atCost = resolveConversion("at_cost", [BUY], "USD", known);
+    const atCost = resolveConversion("at_cost", [BUY], ["USD"], known);
     expect(atCost.target).toBe("at_cost");
     expect(atCost.directives[0]).toBe(BUY);
 
-    const atValue = resolveConversion("at_value", [BUY], "USD", known);
+    const atValue = resolveConversion("at_value", [BUY], ["USD"], known);
     expect(atValue.target).toBe("at_value");
     expect(atValue.directives[0]).toBe(BUY);
   });
 
   it("passes `units_by_cost` through as a keyword, not a currency (w4/m58)", () => {
-    const byCost = resolveConversion("units_by_cost", [BUY], "USD", known);
+    const byCost = resolveConversion("units_by_cost", [BUY], ["USD"], known);
     expect(byCost.target).toBe("units_by_cost");
     expect(byCost.directives[0]).toBe(BUY);
   });
 
   it("defaults (undefined / empty) to the operating currency", () => {
     for (const conv of [undefined, ""]) {
-      const r = resolveConversion(conv, [BUY], "USD", known);
+      const r = resolveConversion(conv, [BUY], ["USD"], known);
       expect(r.target).toBe("USD");
       expect(r.directives[0]).toBe(BUY);
     }
   });
 
   it("passes `units` and a known currency through as the target", () => {
-    expect(resolveConversion("units", [BUY], "USD", known).target).toBe("units");
-    expect(resolveConversion("RGAGX", [BUY], "USD", known).target).toBe("RGAGX");
-    expect(resolveConversion("RGAGX", [BUY], "USD", known).directives[0]).toBe(BUY);
+    expect(resolveConversion("units", [BUY], ["USD"], known).target).toBe(
+      "units",
+    );
+    expect(resolveConversion("RGAGX", [BUY], ["USD"], known).target).toBe(
+      "RGAGX",
+    );
+    expect(
+      resolveConversion("RGAGX", [BUY], ["USD"], known).directives[0],
+    ).toBe(BUY);
   });
 
   it("passes the operating currency even when the ledger never names it", () => {
     // The explicit spelling must agree with the default, which cannot refuse.
-    expect(resolveConversion("USD", [], "USD", new Set()).target).toBe("USD");
+    expect(resolveConversion("USD", [], ["USD"], new Set()).target).toBe("USD");
+  });
+
+  it("accepts operating currencies in option order without requiring directives", () => {
+    const currencies = ["USD", "EUR"];
+    const known = new Set<string>();
+    expect(resolveConversion(undefined, [], currencies, known).target).toBe(
+      "USD",
+    );
+    expect(resolveConversion("EUR", [], currencies, known).target).toBe("EUR");
+    expect(() => resolveConversion("BOGUS", [], currencies, known)).toThrow(
+      "a currency in this ledger (EUR, USD)",
+    );
+  });
+
+  it("uses USD when the ledger has no operating currency", () => {
+    const known = new Set<string>();
+    expect(resolveConversion(undefined, [], [], known).target).toBe("USD");
+    expect(resolveConversion("USD", [], [], known).target).toBe("USD");
   });
 
   // w23/156: unknown codes used to degrade to units figures downstream.
   it.each(["BOGUS", "EUR", "usd", "USD "])(
     "refuses an unknown conversion %p",
     (conversion) => {
-      expect(() => resolveConversion(conversion, [BUY], "USD", known)).toThrow(
-        BadUserInputError,
-      );
-      expect(() => resolveConversion(conversion, [BUY], "USD", known)).toThrow(
-        `Unsupported conversion "${conversion}"`,
-      );
+      expect(() =>
+        resolveConversion(conversion, [BUY], ["USD"], known),
+      ).toThrow(BadUserInputError);
+      expect(() =>
+        resolveConversion(conversion, [BUY], ["USD"], known),
+      ).toThrow(`Unsupported conversion "${conversion}"`);
     },
   );
 
   it("names the ledger's currencies in the refusal", () => {
-    expect(() => resolveConversion("BOGUS", [BUY], "USD", known)).toThrow(
+    expect(() => resolveConversion("BOGUS", [BUY], ["USD"], known)).toThrow(
       'pass "units", "at_cost", "at_value", "units_by_cost", or a currency in this ledger (RGAGX, USD).',
     );
   });
