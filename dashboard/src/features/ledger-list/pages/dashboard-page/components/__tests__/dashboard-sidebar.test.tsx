@@ -298,13 +298,16 @@ describe("DashboardSidebar", () => {
       ).toBeInTheDocument();
     });
 
-    it("opens the create dialog from the empty-state CTA", async () => {
+    it("returns focus to the empty-state Create Ledger button", async () => {
       const user = userEvent.setup();
       setLedgerQueryResult({ data: { listLedgers: [] }, loading: false });
 
       renderSidebar();
 
-      await user.click(screen.getByTestId("empty-state-create-ledger-btn"));
+      const opener = screen.getByTestId("empty-state-create-ledger-btn");
+      screen.getByTestId("create-ledger-btn").focus();
+      // Some browsers activate a button by pointer without focusing it.
+      fireEvent.click(opener);
 
       expect(
         await screen.findByTestId("create-ledger-dialog"),
@@ -315,6 +318,8 @@ describe("DashboardSidebar", () => {
           "Create a new Beancount ledger to start managing your finances.",
         ),
       ).toBeInTheDocument();
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(opener).toHaveFocus());
     });
   });
 
@@ -505,13 +510,20 @@ describe("DashboardSidebar", () => {
       await waitFor(() => expect(ledgerName()).toHaveValue("my-book"));
     }
 
-    it("closes an untouched Create Ledger at once, suggested name and all", async () => {
-      const user = userEvent.setup();
-      await openCreate(user);
-      await user.keyboard("{Escape}");
-      await waitFor(() => expect(createDialog()).toBeNull());
-      expect(confirm()).toBeNull();
-    });
+    it.each(["Escape", "Close", "Cancel"])(
+      "returns focus to the sidebar Create Ledger button after %s",
+      async (exit) => {
+        const user = userEvent.setup();
+        await openCreate(user);
+        if (exit === "Escape") await user.keyboard("{Escape}");
+        else await user.click(screen.getByRole("button", { name: exit }));
+        await waitFor(() => expect(createDialog()).toBeNull());
+        expect(confirm()).toBeNull();
+        await waitFor(() =>
+          expect(screen.getByTestId("create-ledger-btn")).toHaveFocus(),
+        );
+      },
+    );
 
     it("closes at once when a changed name is put back to the suggestion", async () => {
       const user = userEvent.setup();
@@ -590,6 +602,9 @@ describe("DashboardSidebar", () => {
       await user.click(await screen.findByRole("button", { name: "Discard" }));
       await waitFor(() => expect(createDialog()).toBeNull());
       expect(mockCreateMutation).not.toHaveBeenCalled();
+      await waitFor(() =>
+        expect(screen.getByTestId("create-ledger-btn")).toHaveFocus(),
+      );
 
       await user.click(screen.getByTestId("create-ledger-btn"));
       await waitFor(() => expect(description()).toHaveValue(""));

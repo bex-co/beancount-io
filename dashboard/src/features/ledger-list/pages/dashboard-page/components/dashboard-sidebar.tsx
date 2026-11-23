@@ -98,7 +98,7 @@ interface LedgerListDataProps {
   onView: (ledgerId: string) => void;
   onEdit: (ledgerId: string, returnFocusTo?: HTMLElement | null) => void;
   onDelete: (ledgerId: string, returnFocusTo?: HTMLElement | null) => void;
-  onCreateLedger: () => void;
+  onCreateLedger: (opener: HTMLButtonElement) => void;
 }
 
 /**
@@ -267,7 +267,7 @@ function LedgerListData({
           description={t("page.dashboard.noLedgersDescription")}
           action={
             <Button
-              onClick={onCreateLedger}
+              onClick={(event) => onCreateLedger(event.currentTarget)}
               size="sm"
               variant="outline"
               data-testid="empty-state-create-ledger-btn"
@@ -329,12 +329,8 @@ export function DashboardSidebar() {
   const createDialog = useLedgerFormDialog(() => setIsCreateDialogOpen(false));
   const editDialog = useLedgerFormDialog(() => setEditingLedger(null));
 
-  const openCreateDialog = (opener?: HTMLElement | null) => {
-    createReturnFocusRef.current =
-      opener ??
-      (document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null);
+  const openCreateDialog = (opener: HTMLButtonElement) => {
+    createReturnFocusRef.current = opener;
     setIsCreateDialogOpen(true);
   };
 
@@ -496,7 +492,7 @@ export function DashboardSidebar() {
                     onView={handleViewLedger}
                     onEdit={handleEditLedger}
                     onDelete={handleSetDeletingLedger}
-                    onCreateLedger={() => openCreateDialog()}
+                    onCreateLedger={openCreateDialog}
                   />
                 )}
               </SidebarGroupContent>

@@ -315,10 +315,11 @@ describe("LedgerSwitcher", () => {
       screen.queryByRole("dialog", { name: "Create New Ledger" });
     const confirm = () =>
       screen.queryByRole("dialog", { name: "Discard what you typed?" });
+    const switcher = screen.getByRole("combobox", {
+      name: "ledger-1 — switch ledger",
+    });
     const openCreate = async () => {
-      await user.click(
-        screen.getByRole("combobox", { name: "ledger-1 — switch ledger" }),
-      );
+      await user.click(switcher);
       await user.click(
         await screen.findByRole("button", { name: "Create Ledger" }),
       );
@@ -332,6 +333,7 @@ describe("LedgerSwitcher", () => {
     await user.keyboard("{Escape}");
     await waitFor(() => expect(createDialog()).toBeNull());
     expect(confirm()).toBeNull();
+    await waitFor(() => expect(switcher).toHaveFocus());
 
     await openCreate();
     await user.type(
@@ -351,6 +353,49 @@ describe("LedgerSwitcher", () => {
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     await user.click(await screen.findByRole("button", { name: "Discard" }));
     await waitFor(() => expect(createDialog()).toBeNull());
+    await waitFor(() => expect(switcher).toHaveFocus());
+  });
+
+  it("does not focus the former switcher when creation navigates to the new ledger", async () => {
+    const user = userEvent.setup();
+    const create = vi.fn().mockResolvedValue({
+      data: { createLedger: { id: "open_ledger/my-book" } },
+    });
+    vi.mocked(apolloClient.useMutation).mockReturnValue([
+      create,
+      { loading: false },
+    ] as unknown as ReturnType<typeof apolloClient.useMutation>);
+    render(
+      <SidebarProvider>
+        <LedgerSwitcher
+          currentLedgerId="open_ledger/ledger-1"
+          currentLedgerName="ledger-1"
+          currentLedgerFullName="open_ledger/ledger-1"
+        />
+      </SidebarProvider>,
+    );
+    const switcher = screen.getByRole("combobox", {
+      name: "ledger-1 — switch ledger",
+    });
+    await user.click(switcher);
+    await user.click(
+      await screen.findByRole("button", { name: "Create Ledger" }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Create New Ledger",
+    });
+    await waitFor(() =>
+      expect(dialog.contains(document.activeElement)).toBe(true),
+    );
+
+    const focus = vi.spyOn(switcher, "focus");
+    await user.click(screen.getByTestId("ledger-form-submit"));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: "/ledger/open_ledger/my-book",
+    });
+    expect(focus).not.toHaveBeenCalled();
   });
 
   describe("failed ledger read", () => {

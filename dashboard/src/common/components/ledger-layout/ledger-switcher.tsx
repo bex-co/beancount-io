@@ -38,6 +38,7 @@ import { LedgerForm } from "@/features/ledger-list/components/ledger-form";
 import { LedgerVisibilityIcon } from "./ledger-visibility-icon";
 import { toast } from "sonner";
 import { cn } from "@/common/lib/utils/utils";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { decodeLedgerId, parseLedgerFullName } from "@/common/lib/utils/encode";
 import { groupLedgersByOwner } from "@/common/lib/utils/ledger-utils";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -115,6 +116,8 @@ function LedgerAuthenticatedSwitcher({
   const { isMobile, setOpenMobile } = useSidebar();
   const [open, setOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const switcherTriggerRef = React.useRef<HTMLButtonElement>(null);
+  const skipCreateFocusRestoreRef = React.useRef(false);
   const createDialog = useLedgerFormDialog(() => setIsCreateDialogOpen(false));
 
   const closeMobileDrawer = () => {
@@ -194,16 +197,16 @@ function LedgerAuthenticatedSwitcher({
   const handleCreateLedger = async (data: CreateLedgerFormValues) => {
     try {
       const result = await createLedgerMutation(data);
+      const newLedgerId = result.data?.createLedger?.id;
+      skipCreateFocusRestoreRef.current = Boolean(newLedgerId);
       setIsCreateDialogOpen(false);
       setOpen(false);
       closeMobileDrawer();
       toast.success(t("page.dashboard.ledgerCreatedSuccess"));
 
       // Navigate to the new ledger
-      if (result.data?.createLedger?.id) {
-        const { ledgerOwner, ledgerName } = decodeLedgerId(
-          result.data.createLedger.id,
-        );
+      if (newLedgerId) {
+        const { ledgerOwner, ledgerName } = decodeLedgerId(newLedgerId);
         void navigate({
           to: `/ledger/${ledgerOwner}/${ledgerName}`,
         });
@@ -250,6 +253,7 @@ function LedgerAuthenticatedSwitcher({
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
+                ref={switcherTriggerRef}
                 variant="ghost"
                 role="combobox"
                 aria-expanded={open}
@@ -412,7 +416,17 @@ function LedgerAuthenticatedSwitcher({
         open={isCreateDialogOpen}
         onOpenChange={createDialog.onOpenChange}
       >
-        <DialogContent busy={createDialog.busy}>
+        <DialogContent
+          busy={createDialog.busy}
+          onCloseAutoFocus={(event) => {
+            if (skipCreateFocusRestoreRef.current) {
+              skipCreateFocusRestoreRef.current = false;
+              event.preventDefault();
+            } else {
+              restoreFocusOnDialogClose(event, switcherTriggerRef.current);
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>{t("page.dashboard.createNewLedger")}</DialogTitle>
             <DialogDescription>
