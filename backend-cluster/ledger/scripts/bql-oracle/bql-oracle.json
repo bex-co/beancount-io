@@ -1562,6 +1562,154 @@
       ],
       "source": "w23/167"
     },
+    "print-from-month": {
+      "columns": [
+        {
+          "dtype": "object",
+          "name": "ROW(*)"
+        }
+      ],
+      "ledger": "print-from.bean",
+      "query": "PRINT FROM year = 2026 AND month = 8",
+      "rows": [
+        [
+          [
+            {
+              "__tolerances__": {
+                "USD": "0.005"
+              },
+              "filename": "print-from.bean",
+              "lineno": 11
+            },
+            "2026-08-20",
+            "*",
+            "CITY BUS",
+            "August fare",
+            [],
+            [],
+            [
+              [
+                "Expenses:Travel",
+                [
+                  "2.50",
+                  "USD"
+                ],
+                null,
+                null,
+                null,
+                {
+                  "filename": "print-from.bean",
+                  "lineno": 12
+                }
+              ],
+              [
+                "Assets:Cash",
+                [
+                  "-2.50",
+                  "USD"
+                ],
+                null,
+                null,
+                null,
+                {
+                  "filename": "print-from.bean",
+                  "lineno": 13
+                }
+              ]
+            ]
+          ]
+        ],
+        [
+          [
+            {
+              "filename": "print-from.bean",
+              "lineno": 15
+            },
+            "2026-08-29",
+            "Assets:Cash",
+            [
+              "-6.50",
+              "USD"
+            ],
+            null,
+            null
+          ]
+        ]
+      ],
+      "source": "w5/1201"
+    },
+    "print-from-no-matching-payee": {
+      "columns": [
+        {
+          "dtype": "object",
+          "name": "ROW(*)"
+        }
+      ],
+      "ledger": "print-from.bean",
+      "query": "PRINT FROM payee ~ 'no-such-payee'",
+      "rows": [],
+      "source": "w5/1201"
+    },
+    "print-from-payee": {
+      "columns": [
+        {
+          "dtype": "object",
+          "name": "ROW(*)"
+        }
+      ],
+      "ledger": "print-from.bean",
+      "query": "PRINT FROM payee ~ 'BLUE'",
+      "rows": [
+        [
+          [
+            {
+              "__tolerances__": {
+                "USD": "0.005"
+              },
+              "filename": "print-from.bean",
+              "lineno": 7
+            },
+            "2026-07-20",
+            "*",
+            "BLUE BOTTLE",
+            "July coffee",
+            [],
+            [],
+            [
+              [
+                "Expenses:Travel",
+                [
+                  "4.00",
+                  "USD"
+                ],
+                null,
+                null,
+                null,
+                {
+                  "filename": "print-from.bean",
+                  "lineno": 8
+                }
+              ],
+              [
+                "Assets:Cash",
+                [
+                  "-4.00",
+                  "USD"
+                ],
+                null,
+                null,
+                null,
+                {
+                  "filename": "print-from.bean",
+                  "lineno": 9
+                }
+              ]
+            ]
+          ]
+        ]
+      ],
+      "source": "w5/1201"
+    },
     "quoted-column": {
       "columns": [
         {
@@ -3039,5 +3187,5 @@
       "source": "w23/169"
     }
   },
-  "sourceHash": "29c5b3870778ecffafc50650b656d6097898dc13adddb8cdae60bef38da0c58e"
+  "sourceHash": "8540ed02b84507c4f72a36b5ff28e8f02067beb2059890c5bc8b8ebdfd52e763"
 }

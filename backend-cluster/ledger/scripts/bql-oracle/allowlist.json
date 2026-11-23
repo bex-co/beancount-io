@@ -1,5 +1,35 @@
 [
   {
+    "id": "print-from-payee",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      "backend-cluster/ledger/src/foundation/rustledger/print-from-guard.ts"
+    ],
+    "note": "Stock prints the matching transaction. The hosted query refuses the predicate because the pinned engine also prints every non-transaction directive."
+  },
+  {
+    "id": "print-from-month",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      "backend-cluster/ledger/src/foundation/rustledger/print-from-guard.ts"
+    ],
+    "note": "Stock prints the month's transaction and balance. The hosted query refuses the predicate because the pinned engine also prints directives from other months."
+  },
+  {
+    "id": "print-from-no-matching-payee",
+    "differences": [
+      "outcome"
+    ],
+    "references": [
+      "backend-cluster/ledger/src/foundation/rustledger/print-from-guard.ts"
+    ],
+    "note": "Stock prints no directives. The hosted query refuses the predicate because the pinned engine still prints every non-transaction directive."
+  },
+  {
     "id": "concat-literals",
     "differences": [
       "outcome"

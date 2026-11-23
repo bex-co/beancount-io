@@ -97,6 +97,7 @@ import { integerOverflowError } from "./integer-overflow-guard";
 import { windowFromError } from "./window-from-guard";
 import { atValueError } from "./at-value-guard";
 import { clearScopeError } from "./clear-scope-guard";
+import { printFromError } from "./print-from-guard";
 import { starAliasError } from "./star-alias-guard";
 import { idColumnError } from "./id-column-guard";
 import { quotedColumnError } from "./quoted-column-guard";
@@ -1118,6 +1119,7 @@ export async function queryLedgerFilesResultInProcess(
           windowFromError(query) ??
           atValueError(query) ??
           clearScopeError(query) ??
+          printFromError(query) ??
           starAliasError(query) ??
           idColumnError(query) ??
           quotedColumnError(query) ??

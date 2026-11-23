@@ -9,7 +9,9 @@
  * jest, so the fast unit tests cover only the pure mappers and this script
  * covers the end-to-end engine.
  */
-import { deepStrictEqual } from "node:assert";
+import { deepStrictEqual, rejects } from "node:assert";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { BeancountError, CellValue, FileMap } from "@rustledger/wasm";
 import {
   buildEntryIdMap,
@@ -48,7 +50,10 @@ import {
 } from "@/features/ledger/service/bql-select-aliases";
 import { stripBqlStatementTerminator } from "@/features/ledger/service/bql-terminator";
 import { unquoteBqlFromTables } from "@/features/ledger/service/bql-from-quotes";
-import { normalizeBqlQueryForEngine } from "@/features/ledger/service/ledger-shell-service";
+import {
+  LedgerShellService,
+  normalizeBqlQueryForEngine,
+} from "@/features/ledger/service/ledger-shell-service";
 import { UNDECODABLE_SOURCE } from "@/foundation/rustledger/file-map-loader";
 import { filterDirectives } from "@/foundation/rustledger/directive-filter";
 import { singleFileRepoFactory } from "./single-file-repo";
@@ -74,6 +79,7 @@ import {
 } from "./entry-move";
 import { verifyProjectedDocuments } from "./projected-documents";
 import { verifyProjectedIncludes } from "./projected-includes";
+import { BadUserInputError } from "@/shared/errors";
 import type { SerializableTreeNodePublic } from "@/foundation/ledger-api-types";
 import {
   accountBalanceSeries,
@@ -86,6 +92,61 @@ function assert(condition: boolean, message: string): asserts condition {
     throw new Error(message);
   }
   console.log(`✓ ${message}`);
+}
+
+/** The stock answers for this fixture are captured in the BQL oracle. */
+async function verifyFilteredPrint(): Promise<void> {
+  const source = readFileSync(
+    join(__dirname, "bql-oracle/fixtures/print-from.bean"),
+    "utf8",
+  );
+  const shell = new LedgerShellService(
+    singleFileRepoFactory(source) as never,
+    {} as never,
+  );
+  const params = { ledgerId: "synthetic/print-from", userId: undefined };
+  const predicateError = {
+    name: BadUserInputError.name,
+    message: /PRINT FROM predicates.*non-transaction directives.*SELECT.*WHERE/,
+  };
+  for (const query of [
+    "PRINT FROM payee ~ 'BLUE'",
+    "PRINT FROM year = 2026 AND month = 8",
+    "/* filter */ PrInT\u00a0FrOm /* missing payee */ payee ~ 'no-such-payee';",
+    "PRINT FROM OPEN ON 2026-01-01 CLOSE ON 2027-01-01 (month = 8)",
+  ]) {
+    await rejects(() => shell.queryShell({ ...params, query }), predicateError);
+    await rejects(
+      () => shell.queryShellText({ ...params, query }),
+      predicateError,
+    );
+  }
+  const files = { "main.bean": source };
+  for (const query of [
+    "PRINT",
+    "PRINT FROM OPEN ON 2026-01-01",
+    "PRINT FROM CLOSE ON 2027-01-01",
+    "PRINT FROM OPEN ON 2026-01-01 CLOSE ON 2027-01-01",
+  ]) {
+    const raw = await withLedger(files, "main.bean", (ledger) =>
+      ledger.query(query),
+    );
+    const hosted = await shell.queryShellText({ ...params, query });
+    deepStrictEqual(hosted.rowCount, raw.rows.length);
+    deepStrictEqual(raw.errors, []);
+  }
+  await rejects(
+    () => shell.queryShell({ ...params, query: "PRINT FROM CLEAR" }),
+    /FROM … CLEAR is not supported/,
+  );
+  const alternative = await shell.queryShell({
+    ...params,
+    query: "SELECT date, payee FROM entries WHERE payee ~ 'BLUE'",
+  });
+  deepStrictEqual(alternative.table?.rows, [["2026-07-20", "BLUE BOTTLE"]]);
+  console.log(
+    "✓ hosted PRINT rejects predicates and preserves plain PRINT and its scope forms",
+  );
 }
 
 /**
@@ -5682,6 +5743,7 @@ poptag #trip
   );
 
   // w23/m20: replay the stock beanquery oracle through the shell service.
+  await verifyFilteredPrint();
   await verifyBqlOracle();
 
   // w23/m41: replay the reports against the same stock answers.

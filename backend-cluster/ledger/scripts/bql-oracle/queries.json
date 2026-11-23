@@ -1,5 +1,23 @@
 [
   {
+    "id": "print-from-payee",
+    "ledger": "print-from.bean",
+    "source": "w5/1201",
+    "query": "PRINT FROM payee ~ 'BLUE'"
+  },
+  {
+    "id": "print-from-month",
+    "ledger": "print-from.bean",
+    "source": "w5/1201",
+    "query": "PRINT FROM year = 2026 AND month = 8"
+  },
+  {
+    "id": "print-from-no-matching-payee",
+    "ledger": "print-from.bean",
+    "source": "w5/1201",
+    "query": "PRINT FROM payee ~ 'no-such-payee'"
+  },
+  {
     "id": "neg-inventory",
     "ledger": "main.bean",
     "source": "w23/016",

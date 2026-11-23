@@ -1,0 +1,15 @@
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Cash USD
+2026-01-01 open Expenses:Travel USD
+2026-07-10 price CAD 0.73 USD
+
+2026-07-20 * "BLUE BOTTLE" "July coffee"
+  Expenses:Travel   4.00 USD
+  Assets:Cash      -4.00 USD
+
+2026-08-20 * "CITY BUS" "August fare"
+  Expenses:Travel   2.50 USD
+  Assets:Cash      -2.50 USD
+
+2026-08-29 balance Assets:Cash -6.50 USD
