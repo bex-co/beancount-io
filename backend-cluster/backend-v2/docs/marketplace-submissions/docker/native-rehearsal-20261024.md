@@ -28,9 +28,8 @@ The actual journey runs from 2026-10-24T01:03:57.696Z to 01:04:04.596Z:
 The target-file hash is
 `77c3a591efd311e01d03d2f3a91f2919151c0fb0708e1abe1a10ce6ec7e29915`.
 This is actual unchanged-state proof for the observed window and target file,
-not a claim about later concurrent QA or uninspected client interfaces. Raw
-native responses and the driver are retained only under ignored
-`backend-cluster/backend-v2/tmp/w6-docker-native-20261024/`.
+not a claim about later concurrent QA or uninspected client interfaces. The raw
+native responses and the driver were local scratch and are not kept in the repository.
 
 ## Native tooling limits
 

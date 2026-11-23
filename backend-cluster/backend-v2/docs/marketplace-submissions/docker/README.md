@@ -119,8 +119,8 @@ The native listener at `127.0.0.1:54321/callback` times out and exits with
 same client/scope flow and inspect its fresh consent before completing it;
 the old page cannot prove a successful callback. Native query, supported
 dry-run preview, unchanged-state checks and the separately authorized upstream
-review remain open. The prepared page and expired-listener log are retained
-under ignored `backend-cluster/backend-v2/tmp/w6-native-20261022T0818/`.
+review remain open. The prepared page and the expired-listener log
+were local scratch and are not kept in the repository.
 
 ## Primary references
 

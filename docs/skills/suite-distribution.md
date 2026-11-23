@@ -619,9 +619,8 @@ directory and the actual BQL query succeed. Both channel answers use that
 profile. The guide also shows the installed fixture path for project-scoped
 channel installs and corrects two stale generic fourteen-skill counts.
 
-Local install/refresh logs, versions, client JSONL, input/output snapshots and
-the permission-sentinel logs are under
-`scripts/skills/tmp/w2-codex-linux/m43/` and `m43-permissions/`. The tested
+The install and refresh logs, versions, client JSONL, input and output snapshots
+and the permission-sentinel logs were local scratch and are not kept in the repository. The tested
 `gh` archives are checked against the publisher's release checksums. No
 certificate verification is disabled and no credential is committed.
 

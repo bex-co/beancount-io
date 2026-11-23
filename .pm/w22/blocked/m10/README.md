@@ -50,7 +50,7 @@
 **Re-checked 2026-11-14 (later the same day), the blocker is narrower than first recorded.** The first record said the credentials were missing and no browser was installed. Neither holds:
 
 - `QA_EMAIL` and `QA_PASSWORD` are in the repo-root `./.env`, which the QA login helper reads before the ambient environment (`.agents/skills/qa-shared/contract.md`). The first check looked only at the process environment. `node .agents/skills/qa-shared/scripts/qa-login.mjs` authenticates.
-- A browser is available: the Playwright MCP server asks for the `chrome` channel, which is not installed, but a QA-owned Playwright runtime with the cached Chromium launches headless (the QA skill allows that fallback). A read-only probe ran from `.tmp/qa-20261114/`.
+- A browser is available: the Playwright MCP server asks for the `chrome` channel, which is not installed, but a QA-owned Playwright runtime with the cached Chromium launches headless (the QA skill allows that fallback). A read-only probe ran from a local scratch directory.
 - **What does block it:** the QA account's only ledger (`mcp-agent-eval`) shows "No Banks Connected" on its Connected Accounts page, so there are no staged rows to select. Connecting a bank is outside the standing write authorization in the QA contract (bank connections need the owner's yes), so the worker cannot create the fixture itself.
 - **Also unverified:** whether the production dashboard serves this milestone's control. The string `setForSelected` was not in any of the 162 scripts loaded for `/ledger` and the Connected Accounts page, but the review table's chunk loads only on the review route, so that does not show the control is missing; it shows the check has not been made.
 

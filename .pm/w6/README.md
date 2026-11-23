@@ -297,10 +297,9 @@ Its separate native accounting consent is prepared only for the synthetic ledger
 that concrete decision and the malformed crawler deployment remain under t004.
 Previously approved Cursor/Docker/Cline actions are not requested again.
 No unchanged blocked
-host test is repeated to simulate progress. The earlier63-leaf snapshot
-and dependency evidence are retained under ignored
-`backend-cluster/backend-v2/tmp/w6-next-blocked-20261024/`. The earlier64-leaf
-approval snapshot remains historical evidence in its original ignored directory.
+host test is repeated to simulate progress. The earlier 63-leaf snapshot,
+its dependency evidence and the earlier 64-leaf approval snapshot
+were local scratch and are not kept in the repository.
 
 ## Historical full workstream reconciliation — 2026-10-23 UTC
 
@@ -335,9 +334,8 @@ MCP.so `abef0cf0e`, and free-queue follow-through
 `f1b855288`/`07fe8a67c`/`05f7ed943`. All are direct main pushes; no repository
 PR, real-ledger write, forced installation or new payment is made.
 
-Private full board text/hash/dependency evidence remains under
-`backend-cluster/backend-v2/tmp/w6-final-actionability-20261023/`; primary
-release/catalog evidence under `scripts/skills/tmp/w6-readonly-audit-20261023T2018/`.
+The private full board text, hash and dependency evidence, and the primary
+release and catalog evidence, were local scratch and are not kept in the repository.
 Prepared task-local native settings and retained grants remain available for
 the exact pending decisions. Every publishable working-tree secret scan passes.
 
@@ -390,8 +388,8 @@ historical snapshots.
 Release evidence: [canonical npm metadata](https://registry.npmjs.org/@rustledger%2fwasm),
 [GitHub latest releasev0.24.0](https://github.com/rustledger/rustledger/releases/tag/v0.24.0),
 and [inspected Rustledger main2595fc09](https://github.com/rustledger/rustledger/commit/2595fc09f20ea3d39724abb2dac5d11a5787b59f).
-This is source/release triage, not a new production test. Private bounded04:13
-continuation evidence is retained under `scripts/skills/tmp/w6-resume-20261022T0413/`.
+This is source/release triage, not a new production test. The private bounded 04:13
+continuation evidence was local scratch and are not kept in the repository.
 The client release controls,
 historical publication preflight
 and [full queue reconciliation below](#full-queue-reconciliation--2026-10-22-utc)
@@ -573,11 +571,10 @@ rollup outcomes aref854162ff and1c3bc2e17; old-submission scan diagnosis isc8b7b
 Protected39708894097 and its fingerprint/credential-cleanup proof are complete.
 No PR is opened, and no original login or retained Cursor grant is revoked.
 
-Private complete60-node snapshots/acceptance/owner/dependency evidence is retained
-under `backend-cluster/backend-v2/tmp/w6-terminal-actionability-20261022/`, pinned
-to3878eb01a before the final m6 move. Late source evidence is in
-`scripts/skills/tmp/w6-late-release-recheck-20261022/`; current query/public-byte
-and scan evidence is in `scripts/skills/tmp/w6-scope-contract-20261022/`.
+The private complete 60-node snapshots and acceptance, owner and dependency
+evidence (pinned to `3878eb01a` before the final m6 move), the late source
+evidence, and the current query, public-byte and scan evidence
+were local scratch and are not kept in the repository.
 The blocked m6 record preserves exact remaining jobs and per-target resumption
 conditions. All partial implementation is already shipped; anonymous native
 workspaces remain ready. Completed checks are not repeated to simulate progress.

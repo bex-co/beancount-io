@@ -81,7 +81,7 @@ The three string-literal probes declare `str` independently of aliases. Ordinary
 
 ## Source + Goal linkage
 
-- **Source:** live functional MCP QA; sanitized artifacts in ignored `.tmp/qa-2026-10-11/mcp-loop/`: `oct14-bql-alias-{leading-zero-label,leading-zero-account,date-label,string-label,leading-zero-repeat,string-semantics}.json`, their available REST controls, and `graphql-oct14-alias-type.json`.
+- **Source:** live functional MCP QA; sanitized local captures, not kept in the repository: `oct14-bql-alias-{leading-zero-label,leading-zero-account,date-label,string-label,leading-zero-repeat,string-semantics}.json`, their available REST controls, and `graphql-oct14-alias-type.json`.
 - **Goal linkage:** A1 — Agent-native accounting. Type metadata should distinguish a zero-prefixed reference from a decimal amount without relying on its display name.
 - **Expected outcome:** tool and API consumers can interpret typed query output consistently when projections are renamed.
 - **Why now:** this is reproduced in current production on all three eligible protocols, independently of the already-fixed MCP row-count issue.
@@ -107,7 +107,7 @@ Current dashboard `features/bql/lib/chart-utils.ts` deliberately gates automatic
 
 The inspected **installed** `@rustledger/wasm`0.24.0 declaration still exposes QueryResult columns/rows/errors without expression types. No latest-release lookup, dependency upgrade or reassessment of the upstream unblock condition was performed in this dashboard supplement. The existing blocked state and type-provenance repair boundary remain unchanged; no additional finding group is counted.
 
-Ignored evidence in `dashboard/tmp/qa-20261020/dashboard-loop/`: `bql-numeric-text-dashboard-complete-controls.json` contains both native cases, actual independent API types/rows, CSV checks and readonly chart options; `bql-numeric-text-reference-390.png` is the inspected element screenshot. Both contexts closed; original owned context only remains. Zero hosted writes, mutation attempts, route errors or page exceptions. An initial generic chart reader also matched Monaco canvases; final readback scopes `canvas[data-zr-dom-id]`, without a product-state override or chart dispatchAction. Other downstream identifier coercion and repaired behavior remain unverified. This extends the existing record and creates no duplicate W4 issue.
+Local captures, not kept in the repository: `bql-numeric-text-dashboard-complete-controls.json` contains both native cases, actual independent API types/rows, CSV checks and readonly chart options; `bql-numeric-text-reference-390.png` is the inspected element screenshot. Both contexts closed; original owned context only remains. Zero hosted writes, mutation attempts, route errors or page exceptions. An initial generic chart reader also matched Monaco canvases; final readback scopes `canvas[data-zr-dom-id]`, without a product-state override or chart dispatchAction. Other downstream identifier coercion and repaired behavior remain unverified. This extends the existing record and creates no duplicate W4 issue.
 
 ## Published-contract and current mapper audit — 2026-10-30 UTC
 

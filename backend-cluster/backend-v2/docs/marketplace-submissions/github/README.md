@@ -94,9 +94,8 @@ and choosing MCP Servers again restores `@mcp`. No server installation,
 OAuth grant, accounting query or preview occurs. GitHub's inclusion request
 remains unsent; native catalog observation does not imply curation acceptance.
 
-Private accessibility snapshots, exact visible names and the sort observation
-are retained under ignored
-`backend-cluster/backend-v2/tmp/w6-cursor-client/`. This is separate evidence
+The private accessibility snapshots, exact visible names and the sort observation
+were local scratch and are not kept in the repository. This is separate evidence
 from GitHub's web search and the existing official MCP Registry record.
 
 ## Public default gallery API — 2026-10-21 UTC
@@ -135,10 +134,9 @@ documents that organizations can restrict available servers. No IDE text input,
 server install, OAuth, model call, accounting query, preview or inclusion request is added
 by these public reads.
 
-Raw public responses, exact page URLs/times/hashes and source excerpts are
-retained under ignored
-`backend-cluster/backend-v2/tmp/w6-final-actionability-audit-20261021/vscode-gallery/`
-as `evidence.json`, `complete-catalog.json` and the eight response files.
+The raw public responses, exact page URLs, times and hashes, and source excerpts
+(`evidence.json`, `complete-catalog.json` and eight response files)
+were local scratch and are not kept in the repository.
 The installed product SHA-256 is
 `684c2361d7d1339ebcbb9d1f838f2d5461e5cd92489a686447d0cd69784434b4`;
 the shipped workbench bundle is

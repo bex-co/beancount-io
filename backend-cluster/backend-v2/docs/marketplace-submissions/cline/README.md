@@ -146,8 +146,8 @@ rehearsal must use its documented `--auto-approve false` option.
 
 The prior browser-connection limitation is cleared for this observation. OAuth,
 authenticated discovery/query/preview and the actual submission/review gates
-remain open. Raw DOM and the rendered filter screenshot are retained under
-ignored `backend-cluster/backend-v2/tmp/w6-native-20261022T0818/`.
+remain open. The raw DOM and the rendered filter screenshot
+were local scratch and are not kept in the repository.
 
 ## Native OAuth wizard preparation — 2026-10-22 UTC
 
