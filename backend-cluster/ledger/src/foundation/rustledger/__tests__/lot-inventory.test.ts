@@ -169,6 +169,44 @@ describe("LotInventory valuation (fava conversion.py parity)", () => {
       });
     });
 
+    it("rounds a repeating engine per-unit to beancount's 28-digit booking", () => {
+      // Two buys of `30 HOOL {{1000.00 USD}}` (engine `per_unit_from_total`
+      // at 29 digits): beancount's `compute_cost_number` books per-unit
+      // `33.33333333333333333333333333` under its 28-digit Decimal context,
+      // and `get_cost` rounds every multiply, so the 60 units are worth
+      // `2000.000000000000000000000000` USD — not the exact product.
+      const buy = (): PostingJson =>
+        ({
+          account: "Assets:Investments",
+          units: { number: "30", currency: "HOOL" },
+          cost: {
+            number: {
+              kind: "per_unit_from_total",
+              per_unit: "33.333333333333333333333333333",
+              total: "1000.00",
+            },
+            currency: "USD",
+          },
+        }) as PostingJson;
+      const inv = new LotInventory();
+      inv.addPosting(buy());
+      inv.addPosting(buy());
+      // `reduceScaled` is the display surface: the value AND the places
+      // Python's `Decimal` keeps (`2000.000000000000000000000000`, not `2000`).
+      const out = inv.reduceScaled(
+        parseConversion("at_cost"),
+        NO_PRICES,
+        undefined,
+      );
+      expect(
+        Object.fromEntries(
+          [...out].map(([k, { value, scale }]) => [k, value.toFixed(scale)]),
+        ),
+      ).toEqual({
+        USD: "2000.000000000000000000000000",
+      });
+    });
+
     it("keeps raw units under `units`", () => {
       const inv = new LotInventory();
       inv.addPosting(heldAtCost("10", "USD"));

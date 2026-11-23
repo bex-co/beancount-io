@@ -754,6 +754,57 @@ describe("accountJournalItems — Fava parity for getAccountJournal", () => {
     expect(items[0].balance).toEqual({});
   });
 
+  it("books a repeating engine per-unit at beancount's 28 digits in at_cost change and balance", () => {
+    // Two buys of `30 HOOL {{1000.00 USD}}`: the engine derives the per-unit
+    // at its own 29-digit precision (`per_unit_from_total`), but beancount's
+    // `booking_full.compute_cost_number` divides under its 28-digit Decimal
+    // context, booking per-unit `33.33333333333333333333333333`. Every
+    // `convert.get_cost` multiply rounds to 28 digits too: one buy changes
+    // by `999.9999999999999999999999999` USD and the two together balance at
+    // `2000.000000000000000000000000` USD — not the exact 29-digit products
+    // this module's exact arithmetic spells.
+    const buy = (date: string, narration: string): DirectiveJson => ({
+      type: "transaction",
+      date,
+      flag: "*",
+      narration,
+      tags: [],
+      links: [],
+      postings: [
+        {
+          account: "Assets:Broker",
+          units: { number: "30", currency: "HOOL" },
+          cost: {
+            number: {
+              kind: "per_unit_from_total",
+              per_unit: "33.333333333333333333333333333",
+              total: "1000.00",
+            },
+            currency: "USD",
+          },
+        },
+      ],
+    });
+    const items = accountJournalItems(
+      [buy("2024-01-15", "Buy"), buy("2024-01-20", "Buy more")],
+      "Assets:Broker",
+      { conversion: "at_cost", withChildren: false },
+    );
+    expect(items).toHaveLength(2);
+    expect(items[0].change).toEqual({
+      USD: "999.9999999999999999999999999",
+    });
+    expect(items[0].balance).toEqual({
+      USD: "999.9999999999999999999999999",
+    });
+    expect(items[1].change).toEqual({
+      USD: "999.9999999999999999999999999",
+    });
+    expect(items[1].balance).toEqual({
+      USD: "2000.000000000000000000000000",
+    });
+  });
+
   it("marks pad and its source account relevant with an empty change", () => {
     const withPad: DirectiveJson[] = [
       {
