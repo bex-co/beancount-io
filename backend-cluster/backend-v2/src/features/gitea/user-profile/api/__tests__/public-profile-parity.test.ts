@@ -21,6 +21,12 @@ const identity: Identity = {
   scopes: new Set(),
   ledgerScope: "ada/personal",
 };
+const otherIdentity: Identity = {
+  userId: "usr_bob",
+  method: "oauth",
+  scopes: new Set(),
+  ledgerScope: "bob/personal",
+};
 const date = "2026-09-01T00:00:00.000Z";
 const repo = {
   name: "public",
@@ -62,7 +68,7 @@ async function fixture(
         if (failure === "profile") throw new Error("Profile unavailable");
         return {
           data: {
-            login: username,
+            login: username.toLowerCase() === "ada" ? "ada" : username,
             full_name: "Ada",
             avatar_url: avatarUrl,
             description: "Books",
@@ -85,7 +91,7 @@ async function fixture(
   const factory = {
     getAnonymousApiClient: () => publicClient,
     getUserApiClient: async (userId: string) => {
-      expect(userId).toBe("usr_ada");
+      expect(userId).toBe(caller?.userId ?? identity.userId);
       return {
         user: { userCurrentCheckFollowing: async () => ({ status: 204 }) },
         users: {
@@ -110,7 +116,13 @@ async function fixture(
   };
   const service = new UserProfileService(
     factory as never,
-    { user: { getById: async () => ({ ledger_username: "ada" }) } } as never,
+    {
+      user: {
+        getById: async (_db: unknown, userId: string) => ({
+          ledger_username: userId === "usr_ada" ? "ada" : "bob",
+        }),
+      },
+    } as never,
     {} as never,
     {} as never,
   );
@@ -264,6 +276,57 @@ describe("public profile enrichment across adapters", () => {
       }
     },
   );
+  it.each(["ADA", "Ada"])(
+    "preserves authenticated self-view private repositories and activities for mixed-case %s across REST, GraphQL, and MCP",
+    async (mixedCase) => {
+      const f = await fixture(identity);
+      try {
+        const lowerRes = await f.rest("ada");
+        expect(lowerRes.status).toBe(200);
+        const lowerProfile = await lowerRes.json();
+
+        const upperRes = await f.rest(mixedCase);
+        expect(upperRes.status).toBe(200);
+        const upperProfile = await upperRes.json();
+        expect(upperProfile).toEqual(lowerProfile);
+        expect(upperProfile.profile.username).toBe("ada");
+        expect(upperProfile.repositories).toHaveLength(2);
+        expect(upperProfile.repositories).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ name: "private", isPrivate: true }),
+          ]),
+        );
+        expect(upperProfile.activities).toHaveLength(1);
+
+        const g = await f.gql(mixedCase);
+        expect(g.errors).toBeUndefined();
+        expect(g.data?.getUserProfile).toEqual(lowerProfile);
+        expect(await f.read(mixedCase)).toEqual(lowerProfile);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+  it("keeps another authenticated caller on the public view when querying mixed-case ADA across REST, GraphQL, and MCP", async () => {
+    const f = await fixture(otherIdentity);
+    try {
+      const r = await f.rest("ADA");
+      expect(r.status).toBe(200);
+      const profile = await r.json();
+      expect(profile.profile.username).toBe("ada");
+      expect(profile.repositories).toHaveLength(1);
+      expect(profile.repositories[0].isPrivate).toBe(false);
+      expect(profile.activities).toEqual([]);
+
+      const g = await f.gql("ADA");
+      expect(g.errors).toBeUndefined();
+      expect(g.data?.getUserProfile).toEqual(profile);
+      expect(await f.read("ADA")).toEqual(profile);
+      expect(f.privateReads).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
   // A username is one URL segment on the git host: a value that could add
   // segments, a query or a fragment is refused as bad input on every surface.
   it.each(["../repos/ada/books", "ada?x=1", "ada#x", "a/b", ".."])(

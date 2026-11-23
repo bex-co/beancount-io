@@ -118,6 +118,8 @@ export class UserProfileService implements IUserProfileService {
       throw new NotFoundError("User", username, USER_NOT_FOUND_HINT);
     }
 
+    const targetUsername = user.login || username;
+
     // Check if current user is following (if authenticated)
     let isFollowing: boolean | undefined;
     if (userId) {
@@ -125,7 +127,7 @@ export class UserProfileService implements IUserProfileService {
         const authClient =
           await this.giteaClientFactory.getUserApiClient(userId);
         const followResponse = await authClient.user.userCurrentCheckFollowing(
-          username,
+          targetUsername,
           {
             format: "json",
           },
@@ -138,6 +140,11 @@ export class UserProfileService implements IUserProfileService {
       }
     }
 
+    const currentGiteaUsername = await this.getCurrentGiteaUsername(userId);
+    const isViewingOwnProfile =
+      Boolean(userId) &&
+      currentGiteaUsername?.toLowerCase() === username.toLowerCase();
+
     // Fetch activities with conditional authentication
     // If user is viewing their own profile, use authenticated client to fetch activities
     // Otherwise, use unauthenticated client which will return empty (activities remain private)
@@ -145,15 +152,12 @@ export class UserProfileService implements IUserProfileService {
     // TODO: Add pagination support if users need to see more activities.
     let activities: Activity[] = [];
     try {
-      const currentGiteaUsername = await this.getCurrentGiteaUsername(userId);
-      const isViewingOwnProfile = !!userId && currentGiteaUsername === username;
-
       if (isViewingOwnProfile && userId) {
         // User is viewing their own profile - use authenticated client
         const authClient =
           await this.giteaClientFactory.getUserApiClient(userId);
         const activitiesResponse = await authClient.users.userListActivityFeeds(
-          username,
+          targetUsername,
           {
             limit: 20,
           },
@@ -167,7 +171,7 @@ export class UserProfileService implements IUserProfileService {
         // Use unauthenticated client (will return empty - Gitea requires auth for activities)
         const activitiesResponse =
           await giteaClient.users.userListActivityFeeds(
-            username,
+            targetUsername,
             {
               limit: 20,
             },
@@ -189,15 +193,12 @@ export class UserProfileService implements IUserProfileService {
     // TODO: Add pagination support if users need to see more repositories.
     let repositories: Repository[] = [];
     try {
-      const currentGiteaUsername = await this.getCurrentGiteaUsername(userId);
-      const isViewingOwnProfile = !!userId && currentGiteaUsername === username;
-
       if (isViewingOwnProfile && userId) {
         // User is viewing their own profile - use authenticated client
         const authClient =
           await this.giteaClientFactory.getUserApiClient(userId);
         const reposResponse = await authClient.users.userListRepos(
-          username,
+          targetUsername,
           {
             limit: 50,
           },
@@ -209,7 +210,7 @@ export class UserProfileService implements IUserProfileService {
       } else {
         // User is viewing someone else's profile OR not authenticated - use public client
         const reposResponse = await giteaClient.users.userListRepos(
-          username,
+          targetUsername,
           {
             limit: 50,
           },
@@ -254,7 +255,9 @@ export class UserProfileService implements IUserProfileService {
         this.db,
         identity.userId,
       );
-      if (currentUser?.ledger_username === username) {
+      if (
+        currentUser?.ledger_username?.toLowerCase() === username.toLowerCase()
+      ) {
         return {
           success: false,
           isFollowing: false,

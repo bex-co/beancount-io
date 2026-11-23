@@ -384,6 +384,113 @@ describe("UserProfileService", () => {
 
       expect(result.repositories).toEqual([]);
     });
+
+    it("uses the authenticated client for mixed-case self-views and reads the current user once", async () => {
+      const mockUser = createMockGiteaUser({ login: "testuser" });
+      const privateRepo = createMockGiteaRepository({
+        name: "private-ledger",
+        full_name: "testuser/private-ledger",
+        private: true,
+      });
+      const mockActivity = createMockGiteaActivity({
+        id: 7,
+        op_type: "commit_repo",
+        repo: { name: "private-ledger", full_name: "testuser/private-ledger" },
+      });
+
+      mockGiteaClient.users.userGet.mockResolvedValue({ data: mockUser });
+      mockGiteaClient.users.userListActivityFeeds.mockResolvedValue({
+        data: [],
+      });
+      mockGiteaClient.users.userListRepos.mockResolvedValue({ data: [] });
+
+      mockModels.user.getById.mockResolvedValue(
+        createMockUser({ ledger_username: "testuser" }),
+      );
+
+      const mockAuthClient = createMockGiteaClient();
+      mockAuthClient.user.userCurrentCheckFollowing.mockRejectedValue(
+        new Error("404"),
+      );
+      mockAuthClient.users.userListActivityFeeds.mockResolvedValue({
+        data: [mockActivity],
+      });
+      mockAuthClient.users.userListRepos.mockResolvedValue({
+        data: [privateRepo],
+      });
+      mockGetUserApiClient.mockResolvedValue(mockAuthClient);
+
+      const result = await service.getUserProfile("TestUser", "user-123");
+
+      expect(mockModels.user.getById).toHaveBeenCalledTimes(1);
+      expect(mockAuthClient.users.userListActivityFeeds).toHaveBeenCalledWith(
+        "testuser",
+        { limit: 20 },
+        { format: "json" },
+      );
+      expect(mockAuthClient.users.userListRepos).toHaveBeenCalledWith(
+        "testuser",
+        { limit: 50 },
+        { format: "json" },
+      );
+      expect(
+        mockGiteaClient.users.userListActivityFeeds,
+      ).not.toHaveBeenCalled();
+      expect(mockGiteaClient.users.userListRepos).not.toHaveBeenCalled();
+      expect(result.profile.username).toBe("testuser");
+      expect(result.activities).toHaveLength(1);
+      expect(result.repositories).toEqual([
+        expect.objectContaining({
+          name: "private-ledger",
+          fullName: "testuser/private-ledger",
+          isPrivate: true,
+        }),
+      ]);
+    });
+
+    it("keeps another authenticated user on the public client even with mixed-case username", async () => {
+      const mockUser = createMockGiteaUser({ login: "testuser" });
+      const publicRepo = createMockGiteaRepository({
+        name: "public-ledger",
+        full_name: "testuser/public-ledger",
+        private: false,
+      });
+
+      mockGiteaClient.users.userGet.mockResolvedValue({ data: mockUser });
+      mockGiteaClient.users.userListActivityFeeds.mockResolvedValue({
+        data: [],
+      });
+      mockGiteaClient.users.userListRepos.mockResolvedValue({
+        data: [publicRepo],
+      });
+
+      mockModels.user.getById.mockResolvedValue(
+        createMockUser({ ledger_username: "otheruser" }),
+      );
+
+      const mockAuthClient = createMockGiteaClient();
+      mockAuthClient.user.userCurrentCheckFollowing.mockResolvedValue({
+        status: 204,
+      } as any);
+      mockGetUserApiClient.mockResolvedValue(mockAuthClient);
+
+      const result = await service.getUserProfile("TESTUSER", "user-456");
+
+      expect(mockAuthClient.users.userListActivityFeeds).not.toHaveBeenCalled();
+      expect(mockAuthClient.users.userListRepos).not.toHaveBeenCalled();
+      expect(mockGiteaClient.users.userListActivityFeeds).toHaveBeenCalledWith(
+        "testuser",
+        { limit: 20 },
+        { format: "json" },
+      );
+      expect(mockGiteaClient.users.userListRepos).toHaveBeenCalledWith(
+        "testuser",
+        { limit: 50 },
+        { format: "json" },
+      );
+      expect(result.activities).toEqual([]);
+      expect(result.repositories).toHaveLength(1);
+    });
   });
 
   describe("followUser", () => {
@@ -414,22 +521,28 @@ describe("UserProfileService", () => {
       });
     });
 
-    it("should prevent user from following themselves", async () => {
-      const mockUser = createMockUser({ ledger_username: "testuser" });
-      mockModels.user.getById.mockResolvedValue(mockUser);
+    it.each(["testuser", "TESTUSER", "TestUser"])(
+      "should prevent user from following themselves regardless of casing (%s)",
+      async (targetUsername) => {
+        const mockUser = createMockUser({ ledger_username: "testuser" });
+        mockModels.user.getById.mockResolvedValue(mockUser);
 
-      const result = await service.followUser(
-        "testuser",
-        mockContext.getCurrentIdentity(),
-      );
+        const result = await service.followUser(
+          targetUsername,
+          mockContext.getCurrentIdentity(),
+        );
 
-      expect(mockGiteaClient.user.userCurrentPutFollow).not.toHaveBeenCalled();
-      expect(result).toEqual({
-        success: false,
-        isFollowing: false,
-        message: "You cannot follow yourself",
-      });
-    });
+        expect(mockGetUserApiClient).not.toHaveBeenCalled();
+        expect(
+          mockGiteaClient.user.userCurrentPutFollow,
+        ).not.toHaveBeenCalled();
+        expect(result).toEqual({
+          success: false,
+          isFollowing: false,
+          message: "You cannot follow yourself",
+        });
+      },
+    );
 
     it("should return error on API failure", async () => {
       const mockUser = createMockUser({ ledger_username: "currentuser" });
