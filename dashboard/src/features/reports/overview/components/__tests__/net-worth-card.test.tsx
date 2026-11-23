@@ -162,7 +162,7 @@ describe("scaled net-worth axes", () => {
             netWorth={data}
             income={[]}
             expenses={[]}
-            unit="USD"
+            primaryCurrency="USD"
           />,
         );
         const [axis] = lastOption().yAxis as ScaledAxis[];

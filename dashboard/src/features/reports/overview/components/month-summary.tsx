@@ -6,8 +6,6 @@ import {
   type IntervalDataSeries,
   formatPeriodMonth,
   formatTimeAgo,
-  getComparableAmount,
-  getMovementSnapshot,
   isLedgerDormant,
   isPeriodIncomplete,
 } from "../lib/overview-utils";
@@ -77,21 +75,6 @@ export function MonthSummary({
       })
     : null;
 
-  // The chart draws one unit: the operating currency where the month's
-  // income (or else its spending) holds it.
-  const unitOf = (series: IntervalDataSeries, inverted: boolean) =>
-    getComparableAmount(
-      getMovementSnapshot({
-        series,
-        date: selectedDate,
-        preferredCurrency: primaryCurrency,
-        inverted,
-      }).total,
-      primaryCurrency,
-    )?.currency;
-  const unit =
-    unitOf(income, true) ?? unitOf(expenses, false) ?? primaryCurrency;
-
   const index = dates.indexOf(selectedDate);
   const canGoPrevious = index > 0;
   const canGoNext = index >= 0 && index < dates.length - 1;
@@ -157,7 +140,7 @@ export function MonthSummary({
         income={income}
         expenses={expenses}
         netWorth={netWorth}
-        unit={unit}
+        primaryCurrency={primaryCurrency}
       />
     </div>
   );

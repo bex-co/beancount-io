@@ -33,7 +33,13 @@ import {
   netWorthTickFormatter,
   periodPage,
 } from "../lib/overview-utils";
-import { toExactAmount } from "../lib/unit-amounts";
+import {
+  balanceToAmounts,
+  chooseDisplayUnit,
+  collectUnits,
+  toExactAmount,
+} from "../lib/unit-amounts";
+import { ChartUnitScope } from "./chart-unit-scope";
 
 /**
  * The page's one picture of the year: net worth as a line over each month's
@@ -54,7 +60,7 @@ export function MonthHeroChart({
   income,
   expenses,
   netWorth,
-  unit,
+  primaryCurrency,
 }: {
   /** Every month the flows cover, oldest first. */
   dates: string[];
@@ -66,8 +72,7 @@ export function MonthHeroChart({
   expenses: IntervalDataSeries;
   /** Net worth at market value, one point per month. */
   netWorth: DataSeries;
-  /** The one unit the chart draws. */
-  unit: string;
+  primaryCurrency: string;
 }) {
   const { t, i18n } = useTranslations();
   const language = i18n.language;
@@ -89,6 +94,10 @@ export function MonthHeroChart({
     return () => observer.disconnect();
   }, []);
 
+  const amounts = [...netWorth, ...income, ...expenses].map(({ balance }) =>
+    balanceToAmounts(balance),
+  );
+  const unit = chooseDisplayUnit(amounts, primaryCurrency) ?? primaryCurrency;
   const page = periodPage(dates, selectedDate);
   const selectedIndex = page.indexOf(selectedDate);
   const exactAt = (series: DataSeries, month: string) => {
@@ -437,6 +446,7 @@ export function MonthHeroChart({
           ))}
         </TableBody>
       </ChartDataTable>
+      <ChartUnitScope unit={unit} units={collectUnits(amounts)} />
     </div>
   );
 }

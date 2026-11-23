@@ -223,6 +223,65 @@ describe("the month summary", () => {
     expect(summary()).toBe("July 2026");
   });
 
+  it("keeps the operating currency and names the omitted units as the month changes", async () => {
+    const user = userEvent.setup();
+    const dates = year.slice(-3);
+    await renderSummary(
+      <Summary
+        income={[
+          { date: dates[0], balance: {}, accountBalances: {} },
+          { date: dates[1], balance: { EUR: "-12.00" }, accountBalances: {} },
+          { date: dates[2], balance: {}, accountBalances: {} },
+        ]}
+        expenses={[
+          { date: dates[2], balance: { GBP: "23.00" }, accountBalances: {} },
+        ]}
+        netWorth={[
+          { date: dates[0], balance: { USD: "31300.00", EUR: "5200.00" } },
+          { date: dates[1], balance: { USD: "61300.00", EUR: "5291.00" } },
+          { date: dates[2], balance: { USD: "61300.00", BTC: "2" } },
+        ]}
+        dataThrough="2026-09-30"
+        today="2026-10-02"
+      />,
+    );
+    await user.click(screen.getByText("Period data"));
+    const august = within(screen.getByRole("row", { name: /2026-08-31/ }));
+    const note =
+      "Amounts are shown in USD. Balances in BTC, EUR, GBP are not included.";
+    const expectUsd = () => {
+      expect(august.getByText("61,300.00 USD")).toBeVisible();
+      expect(screen.getByText(note)).toBeVisible();
+    };
+
+    await user.click(screen.getByRole("button", { name: "Previous" }));
+    expect(summary()).toBe("August 2026");
+    expectUsd();
+    await user.click(screen.getByRole("button", { name: "Previous" }));
+    expect(summary()).toBe("July 2026");
+    expectUsd();
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(summary()).toBe("September 2026");
+    expectUsd();
+  });
+
+  it("draws a single held currency without a scope note", async () => {
+    const date = year[8];
+    await renderSummary(
+      <Summary
+        income={[{ date, balance: {}, accountBalances: {} }]}
+        expenses={[]}
+        netWorth={[{ date, balance: { EUR: "5671.00" } }]}
+        dataThrough={date}
+        today="2026-10-02"
+      />,
+    );
+    await userEvent.click(screen.getByText("Period data"));
+    expect(screen.getByText("5,671.00 EUR")).toBeVisible();
+    expect(screen.queryByText(/Amounts are shown in/)).toBeNull();
+  });
+
   it("keeps keyboard focus on either arrow after reaching its limit", async () => {
     const user = userEvent.setup();
     await renderSummary(
