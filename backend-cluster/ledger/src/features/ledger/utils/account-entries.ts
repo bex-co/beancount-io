@@ -22,10 +22,8 @@ import type {
  *
  *  - {@link collectOpenEntries} / {@link collectCloseEntries} — the ledger's
  *    Open / Close directives (source order), each with its {@link hashEntry}.
- *  - {@link accountBalances} — the units balance of every Assets/Liabilities
- *    account that has a last (non-close) referencing entry, mirroring
- *    `get_ledger_account_last_entries` (`conversion.units(tree.get(acc).balance)`
- *    over each account's OWN postings).
+ *  - {@link accountBalances} — the units balance from each asset or liability
+ *    account's own postings, including closed accounts.
  *  - {@link accountEntryCounts} — the per-account posting count, mirroring the
  *    BQL `SELECT account, count(account)` the endpoint ran (that query counts
  *    posting rows, so an opened-but-never-posted account counts 0).
@@ -42,7 +40,7 @@ import type {
  */
 
 /**
- * Default root prefixes whose accounts carry a last-entry balance (beancount
+ * Default root prefixes whose accounts carry a units balance (beancount
  * `name_assets`/`name_liabilities`). Callers that have resolved a ledger's
  * actual root names (via `deriveReportAccounts`) should pass those instead, so
  * a ledger renaming its assets/liabilities roots still surfaces balances.
@@ -87,16 +85,8 @@ export function collectCloseEntries(
 }
 
 /**
- * Per-account units balance for every Assets/Liabilities account that has a
- * last (non-close) referencing entry — parity for `getLedgerAccountLastEntries`.
- *
- * fava computes `conversion.units(Tree(filtered.entries).get(acc).balance)`,
- * i.e. the account's OWN direct-posting balance reduced to units (currency +
- * number, ignoring cost). {@link accountJournalItems} with `withChildren: false`
- * and `conversion: "units"` produces exactly that running balance; the last row's
- * `balance` is the account's final units balance. Accounts with no referencing
- * entry (fava's `last_entry is None`) are omitted, matching the endpoint's
- * `if last_entry is not None` guard.
+ * Each Assets/Liabilities account's own posting balance in units, including
+ * closed accounts and accounts that have no postings.
  */
 export function accountBalances(
   directives: DirectiveJson[],
@@ -105,11 +95,8 @@ export function accountBalances(
   const accounts = collectLedgerAccounts(directives);
   const ownBalances = accountOwnUnitBalances(directives);
   const balances = new Map<string, Record<string, string>>();
-  Object.entries(accounts).forEach(([account, data]) => {
+  Object.keys(accounts).forEach((account) => {
     if (!balanceRoots.some((root) => isUnderRoot(account, root))) return;
-    // fava emits a last-entry row only when the account has a non-close last
-    // referencing entry (`last_entry is not None`).
-    if (data.last_entry === null) return;
     balances.set(account, ownBalances.get(account) ?? {});
   });
   return balances;

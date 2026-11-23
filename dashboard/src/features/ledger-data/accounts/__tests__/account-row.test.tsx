@@ -85,6 +85,28 @@ describe("AccountRow balance states", () => {
     expect(balanceCell).not.toHaveTextContent("0");
   });
 
+  it.each([
+    {
+      account: "Assets:Qa:Frozen",
+      balance: { USD: "10.00" },
+      shown: "10.00 USD",
+    },
+    { account: "Assets:Qa:Retired", balance: {}, shown: "0" },
+  ])(
+    "shows the computed balance for closed account $account",
+    ({ account, balance, shown }) => {
+      const { balanceCell } = renderRow({
+        account,
+        balance,
+        closedAt: "2024-05-01",
+        closeEntryHash: "closed",
+      });
+
+      expect(screen.getByText("Closed", { exact: true })).toBeInTheDocument();
+      expect(balanceCell.textContent).toBe(shown);
+    },
+  );
+
   async function openMenu(account: string) {
     const user = userEvent.setup();
     await user.click(

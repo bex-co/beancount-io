@@ -153,7 +153,22 @@ async function fixture(
             total: 3,
           }),
       },
-      reports: { getLedgerAccountLastEntries: async () => envelope([]) },
+      reports: {
+        getLedgerAccountLastEntries: async () => envelope([]),
+        getLedgerBalanceSheet: async () =>
+          envelope({
+            assets_hierarchy_data: {
+              account: "Assets",
+              balance: {},
+              children: [],
+            },
+            liabilities_hierarchy_data: {
+              account: "Liabilities",
+              balance: {},
+              children: [],
+            },
+          }),
+      },
       shell: { queryShellPost: async () => envelope({ result: { rows: [] } }) },
     }),
   };

@@ -143,9 +143,8 @@ export class LedgerAccountService implements ILedgerAccountService {
   /**
    * `getAccountDirectives` parity via the in-process engine (replacing the Python
    * fava_api). One parse of the ledger's `.bean` files feeds four derivations —
-   * Open/Close directives, per-account last-entry units balances (Assets/
-   * Liabilities), and per-account posting counts — combined over the Open list,
-   * exactly as the former fava path did (see `account-entries.ts`).
+   * Open/Close directives, each asset or liability account's own units balance,
+   * and per-account posting counts, combined over the Open list.
    *
    * `entryHash`/`closeEntryHash` are `hashEntry`'s `exclude_meta=True` value, NOT
    * fava's meta-inclusive hash — the same account-list ACCEPTED GAP, and the hash

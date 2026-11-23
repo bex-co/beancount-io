@@ -10,6 +10,7 @@ jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
 
 const mockGetLedgerAccounts = jest.fn();
 const mockGetLedgerAccountLastEntries = jest.fn();
+const mockGetLedgerBalanceSheet = jest.fn();
 const mockGetJournal = jest.fn();
 const mockQueryShell = jest.fn();
 
@@ -17,6 +18,7 @@ const mockFavaApiClient = {
   reports: {
     getLedgerAccounts: mockGetLedgerAccounts,
     getLedgerAccountLastEntries: mockGetLedgerAccountLastEntries,
+    getLedgerBalanceSheet: mockGetLedgerBalanceSheet,
   },
   journal: {
     getJournal: mockGetJournal,
@@ -195,6 +197,90 @@ describe("LedgerAccountService", () => {
       );
       // No metadata on the open directive -> no `meta` on the item.
       expect(result[0].meta).toBeUndefined();
+      expect(mockGetLedgerBalanceSheet).not.toHaveBeenCalled();
+    });
+
+    it("uses direct units balances for closed accounts under the configured balance roots", async () => {
+      const accounts = [
+        "Assets:Cash",
+        "Assets:Frozen",
+        "Assets:Retired",
+        "Debts:Card",
+        "Expenses:Retired",
+      ];
+      const journalResponse = (names: string[], date: string) => ({
+        data: {
+          success: true,
+          data: {
+            total: names.length,
+            items: names.map((account) => ({
+              account,
+              date,
+              entry_hash: `${account}-${date}`,
+            })),
+          },
+        },
+      });
+      mockGetJournal
+        .mockReset()
+        .mockResolvedValueOnce(journalResponse(accounts, "2020-01-01"))
+        .mockResolvedValueOnce(
+          journalResponse(accounts.slice(1), "2024-05-01"),
+        );
+      mockGetLedgerBalanceSheet.mockResolvedValue({
+        data: {
+          success: true,
+          data: {
+            assets_hierarchy_data: {
+              account: "Assets",
+              balance: {},
+              children: [
+                {
+                  account: "Assets:Cash",
+                  balance: { USD: "90" },
+                  children: [],
+                },
+                {
+                  account: "Assets:Frozen",
+                  balance: { USD: "10.00" },
+                  balance_children: { USD: "25.00" },
+                  children: [],
+                },
+                { account: "Assets:Retired", balance: {}, children: [] },
+              ],
+            },
+            liabilities_hierarchy_data: {
+              account: "Debts",
+              balance: {},
+              children: [
+                {
+                  account: "Debts:Card",
+                  balance: { USD: "-44.00" },
+                  children: [],
+                },
+              ],
+            },
+          },
+        },
+      });
+
+      const result = await service.getAccountDirectives(OWNER, LEDGER);
+
+      expect(result.map(({ account, balance }) => [account, balance])).toEqual([
+        ["Assets:Cash", { USD: "100" }],
+        ["Assets:Frozen", { USD: "10.00" }],
+        ["Assets:Retired", {}],
+        ["Debts:Card", { USD: "-44.00" }],
+        ["Expenses:Retired", undefined],
+      ]);
+      expect(result[1]).toMatchObject({
+        closedAt: "2024-05-01",
+        closeEntryHash: "Assets:Frozen-2024-05-01",
+      });
+      expect(mockGetLedgerBalanceSheet).toHaveBeenCalledTimes(1);
+      expect(mockGetLedgerBalanceSheet).toHaveBeenCalledWith(OWNER, LEDGER, {
+        conversion: "units",
+      });
     });
 
     it("passes the open directive's metadata through", async () => {

@@ -4,7 +4,10 @@ import {
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
 import { createLedgerId } from "@/shared/str";
-import { unwrapFavaResponse } from "@/foundation/fava";
+import {
+  type SerializableTreeNodePublic,
+  unwrapFavaResponse,
+} from "@/foundation/fava";
 import {
   getAllOpenEntries,
   getAllCloseEntries,
@@ -156,6 +159,25 @@ export class LedgerAccountService
         entry.balance,
       ]),
     );
+
+    // Statistics omits accounts whose last entry is a close. Read their own
+    // units from the configured asset and liability trees.
+    if (closeItems.some(({ account }) => !balanceMap.has(account))) {
+      const sheet = await unwrapFavaResponse(
+        favaApiClient.reports.getLedgerBalanceSheet(ledgerOwner, ledgerName, {
+          conversion: "units",
+        }),
+        "get closed account balances",
+      );
+      const collectClosedBalances = (node: SerializableTreeNodePublic) => {
+        if (closeMap.has(node.account) && !balanceMap.has(node.account)) {
+          balanceMap.set(node.account, node.balance);
+        }
+        node.children.forEach(collectClosedBalances);
+      };
+      collectClosedBalances(sheet.assets_hierarchy_data);
+      collectClosedBalances(sheet.liabilities_hierarchy_data);
+    }
 
     return openItems.map((item) => ({
       account: item.account,
