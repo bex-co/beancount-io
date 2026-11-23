@@ -197,6 +197,9 @@ const STALE = [
   "There is no query-length ceiling to write around",
   // w31/012: a page sent without a size reads a page of HOST_DEFAULT_LIMIT.
   "but no `limit` carry no signal",
+  // w23/244: resources/read answers every unmatched URI, whatever its scheme,
+  // as a coded NOT_FOUND (mcp-resources.test.ts).
+  "still returns the SDK's own refusal",
 ];
 
 let served: Served;

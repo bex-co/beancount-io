@@ -1826,14 +1826,15 @@ The same codes reach resource reads and prompt fetches, as the JSON-RPC error's
 `Hint: …` (and `Retry after: Ns` when present), so a host that shows only the
 message still reads what to do next; a client's SDK adds exactly one
 `MCP error <n>:` prefix. That covers the two mistakes a client makes before any
-handler runs: a `beancount://` URI matching no template answers `NOT_FOUND`
-(`-32002`) with a hint naming `resources/templates/list`, and a malformed
-`month` or `ledger` argument to a prompt answers `BAD_USER_INPUT` (`-32602`)
-naming the argument. A resource URI that matches a template but is malformed —
-an unknown or repeated query parameter, a `#` fragment, or invalid percent
-encoding — also answers `BAD_USER_INPUT` (`-32602`), with a hint naming what the
-template accepts. A URI under another scheme is not this server's to answer
-and still returns the SDK's own refusal.
+handler runs: a resource URI matching no template, under `beancount://` or any
+other scheme, answers `NOT_FOUND` (`-32002`) with a hint naming
+`resources/templates/list`, and a malformed `month` or `ledger` argument to a
+prompt answers `BAD_USER_INPUT` (`-32602`) naming the argument. A resource URI
+that matches a template but is malformed — an unknown or repeated query
+parameter, a `#` fragment, or invalid percent encoding — also answers
+`BAD_USER_INPUT` (`-32602`), with a hint naming what the template accepts, and
+so does a string that does not parse as a URI at all, with a hint giving the
+`beancount://` shape.
 
 A refusal quotes at most 120 characters of any value it echoes: a longer run
 ends in `…`. Control characters other than tab and line feed come back escaped
