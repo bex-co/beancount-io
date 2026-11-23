@@ -1,4 +1,4 @@
-"""A hosted ledger page is truncated only when another accessible row exists."""
+"""A hosted ledger page is truncated only when another accessible row exists, and the table says so."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 from typer.testing import CliRunner
 
+from cli.config import package_version
 from cli.main import app
 
 runner = CliRunner()
@@ -165,14 +166,99 @@ def test_a_non_array_first_page_is_not_an_empty_catalog(httpx_mock: HTTPXMock, b
     assert _request_pages(httpx_mock) == [(1, 50)]
 
 
-def test_human_listing_does_not_probe_beyond_the_requested_page(httpx_mock: HTTPXMock) -> None:
+def _listed(stdout: str) -> list[str]:
+    """The FULLNAME cell of every table row, below the header and its rule."""
+    return [line.split()[1] for line in stdout.splitlines()[2:]]
+
+
+@pytest.mark.parametrize(
+    ("total", "page", "limit", "shown", "note"),
+    [
+        (7, 2, 3, range(4, 7), "Showing page 2 (3 ledgers); more on --page 3 --limit 3.\n"),
+        (51, 1, 50, range(1, 51), "Showing page 1 (50 ledgers); more on --page 2.\n"),
+        (3, 2, 1, range(2, 3), "Showing page 2 (1 ledger); more on --page 3 --limit 1.\n"),
+        (7, 1, 7, range(1, 8), ""),
+        (9, 3, 3, range(7, 10), ""),
+    ],
+    ids=["middle-page", "default-limit", "one-row-page", "exact-final-page", "later-exact-final-page"],
+)
+def test_a_full_human_page_says_whether_another_page_follows(
+    httpx_mock: HTTPXMock, total: int, page: int, limit: int, shown: range, note: str
+) -> None:
+    catalog = _catalog(total)
+    httpx_mock.add_callback(lambda request: _page_response(catalog, request), method="GET", is_reusable=True)
+    args = ["--page", str(page)] + (["--limit", str(limit)] if limit != 50 else [])
+
+    result = runner.invoke(app, ["cloud", "ledger", "list", *args])
+
+    assert result.exit_code == 0, result.stderr
+    assert _listed(result.stdout) == [f"alice/books-{index:03}" for index in shown]
+    # The advice is on stderr, so stdout stays the table alone, and it names
+    # --limit whenever --page alone would page at another size (w1/365).
+    assert result.stderr == note
+    assert _request_pages(httpx_mock) == [(page, limit), (page * limit + 1, 1)]
+
+
+def test_a_short_human_page_makes_no_extra_request_and_no_note(httpx_mock: HTTPXMock) -> None:
     catalog = _catalog(7)
     httpx_mock.add_callback(lambda request: _page_response(catalog, request), method="GET", is_reusable=True)
 
-    result = runner.invoke(app, ["cloud", "ledger", "list", "--page", "2", "--limit", "3"])
+    result = runner.invoke(app, ["cloud", "ledger", "list", "--page", "2", "--limit", "5"])
 
     assert result.exit_code == 0, result.stderr
-    assert all(f"alice/books-{index:03}" in result.stdout for index in (4, 5, 6))
-    assert "alice/books-003" not in result.stdout
-    assert "alice/books-007" not in result.stdout
-    assert _request_pages(httpx_mock) == [(2, 3)]
+    assert _listed(result.stdout) == ["alice/books-006", "alice/books-007"]
+    assert result.stderr == ""
+    assert _request_pages(httpx_mock) == [(2, 5)]
+
+
+@pytest.mark.parametrize(
+    ("total", "args", "message", "requested"),
+    [
+        (0, [], "No ledgers yet; create one with bea cloud ledger create NAME.\n", (1, 50)),
+        (7, ["--page", "99"], "No ledgers on page 99.\n", (99, 50)),
+        (7, ["--page", "3", "--limit", "5"], "No ledgers on page 3.\n", (3, 5)),
+    ],
+    ids=["no-ledgers", "far-past-the-end", "just-past-the-end"],
+)
+def test_an_empty_human_page_says_so_instead_of_a_bare_header(
+    httpx_mock: HTTPXMock, total: int, args: list[str], message: str, requested: tuple[int, int]
+) -> None:
+    catalog = _catalog(total)
+    httpx_mock.add_callback(lambda request: _page_response(catalog, request), method="GET", is_reusable=True)
+
+    result = runner.invoke(app, ["cloud", "ledger", "list", *args])
+
+    assert result.exit_code == 0, result.stderr
+    assert result.stdout == ""
+    assert result.stderr == message
+    assert _request_pages(httpx_mock) == [requested]
+
+
+def _envelope_row(index: int) -> str:
+    return (
+        f'{{"id": "{index}", "name": "books-{index:03}", "full_name": "alice/books-{index:03}", '
+        f'"ssh_url": "git@example.test:alice/books-{index:03}.git", '
+        f'"http_url": "https://example.test/alice/books-{index:03}", "empty": false, "private": true, '
+        f'"created_at": "2026-01-01T00:00:00Z", "updated_at": "2026-01-02T00:00:00Z", "size": {index}}}'
+    )
+
+
+@pytest.mark.parametrize(
+    ("total", "args", "tail"),
+    [
+        (3, ["--page", "2", "--limit", "1"], f'[{_envelope_row(2)}], "truncated": true, "limit": 1, "page": 2}}'),
+        (3, ["--page", "99"], '[], "truncated": false, "limit": 50, "page": 99}'),
+        (0, [], '[], "truncated": false, "limit": 50, "page": 1}'),
+    ],
+    ids=["middle-page", "past-the-end", "no-ledgers"],
+)
+def test_json_listing_bytes_carry_no_human_notes(httpx_mock: HTTPXMock, total: int, args: list[str], tail: str) -> None:
+    catalog = _catalog(total)
+    httpx_mock.add_callback(lambda request: _page_response(catalog, request), method="GET", is_reusable=True)
+
+    result = runner.invoke(app, ["--json", "cloud", "ledger", "list", *args])
+
+    assert result.exit_code == 0, result.stderr
+    head = f'{{"bea": "{package_version()}", "target": {{"server": "https://api.example"}}, "data": '
+    assert result.stdout == head + tail + "\n"
+    assert result.stderr == ""

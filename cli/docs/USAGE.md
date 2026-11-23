@@ -3063,7 +3063,12 @@ the returned page. A full page triggers one additional request for that next
 row; a short or empty page needs no extra request. The envelope keeps the
 requested `page` and `limit`, and a full final page reports `truncated: false`.
 If the additional read fails, the command reports the error instead of guessing
-whether more rows exist. Human table output uses only the requested page.
+whether more rows exist. Human table output makes the same read and shows only
+the requested page; when another row follows, a note on stderr says where it is
+(`Showing page 1 (5 ledgers); more on --page 2 --limit 5.`). An empty page
+prints no table: stderr says `No ledgers on page 99.`, or on page 1
+`No ledgers yet; create one with bea cloud ledger create NAME.`, and the
+command still exits 0.
 
 A ledger name uses lowercase letters, digits, hyphens and underscores, at most
 100 characters — the service's own rule. `create` checks it before touching

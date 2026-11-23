@@ -61,6 +61,11 @@ class Command:
     # closing line that says nothing changed.
     dry_run: str | None = None
     preview_done: str | None = None
+    # Paged tables: the singular noun the notes count rows in, and what an
+    # empty first page says. Under the table, a person learns what `--json`'s
+    # `truncated` and an empty `data` say (w1/365).
+    noun: str | None = None
+    empty_first_page: str | None = None
 
 
 COMMANDS: list[Command] = [
@@ -76,6 +81,8 @@ COMMANDS: list[Command] = [
         ],
         defaults={"limit": 50, "page": 1},
         row="List accessible ledgers",
+        noun="ledger",
+        empty_first_page="No ledgers yet; create one with bea cloud ledger create NAME.",
     ),
     Command(operation_id="getLedger", group="ledger", name="show"),
     Command(
@@ -253,7 +260,9 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
         lines.append(f"    from cli.api.rest_client.models.{module}_body import {body_class}")
         lines.append("")
         lines.append("    if dry_run:")
-        lines.append("        # A preview destroys nothing: no confirmation, and a lost answer is not an unknown outcome.")
+        lines.append(
+            "        # A preview destroys nothing: no confirmation, and a lost answer is not an unknown outcome."
+        )
         lines.append(f'        preview_body = {body_class}.from_dict({{"{cmd.dry_run}": True}})')
         lines.append(f"        answer = unwrap(call({module}.sync_detailed, {preview_args}, body=preview_body))")
         lines.append("        row = snake_keys(answer.to_dict())")
@@ -307,21 +316,43 @@ def emit_command(cmd: Command, spec: dict[str, Any]) -> str:
         truncated = "truncated=len(rows) >= limit, limit=limit" if "limit" in names else ""
         if truncated and "page" in names:
             truncated += ", page=page"
-        lines.append("    if context.current().json_output:")
         if paged:
+            if not (cmd.noun and cmd.empty_first_page):
+                fail(f"paged operation '{cmd.operation_id}' needs a noun and an empty_first_page in the registry")
+            # The table and the envelope share one answer to "is there more?" (w1/365).
             following_args = [arg for arg in call_args if arg not in {"page=page", "limit=limit"}]
             following_args += ["page=page * limit + 1", "limit=1", "client=client"]
             following_call = f"call({module}.sync_detailed, {', '.join(following_args)})"
-            lines.append("        truncated = False")
-            lines.append("        if len(rows) == limit:")
-            lines.append("            # A full page alone cannot distinguish a final page from a middle one.")
-            lines.append(f"            truncated = bool(unwrap({following_call}))")
+            lines.append("    truncated = False")
+            lines.append("    if len(rows) == limit:")
+            lines.append("        # A full page alone cannot distinguish a final page from a middle one.")
+            lines.append(f"        truncated = bool(unwrap({following_call}))")
             truncated = "truncated=truncated, limit=limit, page=page"
+        lines.append("    if context.current().json_output:")
         lines.append(f"        output.emit(rows, target=output.server_target(){', ' + truncated if truncated else ''})")
         lines.append("        return")
+        if paged:
+            noun = esc(cmd.noun or "")
+            empty_first_page = esc(cmd.empty_first_page or "")
+            lines.append("    if not rows:")
+            lines.append(
+                "        # On stderr, like the local lists' empty lines: a bare header read as a complete answer."
+            )
+            lines.append(f'        output.note(f"No {noun}s on page {{page}}." if page > 1 else "{empty_first_page}")')
+            lines.append("        return")
         headers = [c.header for c in cmd.columns]
         cells = ", ".join(_cell_expr(c) for c in cmd.columns)
         lines.append(f"    output.table({headers!r}, [[{cells}] for row in rows])")
+        if paged:
+            default_limit = cmd.defaults["limit"]
+            lines.append("    if truncated:")
+            lines.append("        # Name the page size unless it is the default: --page alone pages at the default.")
+            lines.append(
+                f'        more = f"--page {{page + 1}}" if limit == {default_limit} '
+                f'else f"--page {{page + 1}} --limit {{limit}}"'
+            )
+            lines.append(f'        counted = f"{{len(rows)}} {noun}" if len(rows) == 1 else f"{{len(rows)}} {noun}s"')
+            lines.append('        output.note(f"Showing page {page} ({counted}); more on {more}.")')
     elif method == "get":
         lines.append("    if context.current().json_output:")
         lines.append("        output.emit(rows[0], target=output.server_target())")

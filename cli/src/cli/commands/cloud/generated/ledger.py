@@ -35,14 +35,22 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
         result = unwrap(call(accessible_ledgers.sync_detailed, page=page, limit=limit, client=client))
         data = result if isinstance(result, list) else [result]
         rows = [snake_keys(item.to_dict()) for item in data]
+        truncated = False
+        if len(rows) == limit:
+            # A full page alone cannot distinguish a final page from a middle one.
+            truncated = bool(
+                unwrap(call(accessible_ledgers.sync_detailed, page=page * limit + 1, limit=1, client=client))
+            )
         if context.current().json_output:
-            truncated = False
-            if len(rows) == limit:
-                # A full page alone cannot distinguish a final page from a middle one.
-                truncated = bool(
-                    unwrap(call(accessible_ledgers.sync_detailed, page=page * limit + 1, limit=1, client=client))
-                )
             output.emit(rows, target=output.server_target(), truncated=truncated, limit=limit, page=page)
+            return
+        if not rows:
+            # On stderr, like the local lists' empty lines: a bare header read as a complete answer.
+            output.note(
+                f"No ledgers on page {page}."
+                if page > 1
+                else "No ledgers yet; create one with bea cloud ledger create NAME."
+            )
             return
         output.table(
             ["NAME", "FULLNAME", "PRIVATE", "CREATED"],
@@ -56,6 +64,11 @@ def register_ledger_commands(ledger_app: typer.Typer) -> None:
                 for row in rows
             ],
         )
+        if truncated:
+            # Name the page size unless it is the default: --page alone pages at the default.
+            more = f"--page {page + 1}" if limit == 50 else f"--page {page + 1} --limit {limit}"
+            counted = f"{len(rows)} ledger" if len(rows) == 1 else f"{len(rows)} ledgers"
+            output.note(f"Showing page {page} ({counted}); more on {more}.")
 
     @ledger_app.command(
         "show",
