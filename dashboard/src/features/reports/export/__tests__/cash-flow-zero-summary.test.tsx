@@ -155,6 +155,28 @@ function expectUnchanged(
 }
 
 describe("sparse Cash Flow summary amounts in actual renderers", () => {
+  it.each(renderers)("rounds USD cash flow amounts for %s", (renderer) => {
+    const statement = transferStatement();
+    statement.totals = {
+      operating: { USD: "109529.34" },
+      investing: { USD: "-105919.46944" },
+      financing: {},
+    };
+    statement.opening = { USD: "-0.00056" };
+    statement.netChange = { USD: "3609.87056" };
+    statement.closing = { USD: "3609.87000" };
+    const document = buildDocument(statement);
+
+    expectUnchanged(document, renderer, [
+      [operating, "USD", "109,529.34"],
+      [investing, "USD", "(105,919.47)"],
+      [financing, "USD", "0.00"],
+      [opening, "USD", "0.00"],
+      [netChange, "USD", "3,609.87"],
+      [closing, "USD", "3,609.87"],
+    ]);
+  });
+
   it.each(renderers)(
     "keeps all six public cash-transfer summary lines in %s",
     (renderer) => {
@@ -201,11 +223,11 @@ describe("sparse Cash Flow summary amounts in actual renderers", () => {
       const document = buildDocument(statement, "EUR");
       expect(getStatementUnits(document)).toEqual(["USD"]);
       expectUnchanged(document, renderer, [
-        [operating, "USD", "10.00001"],
+        [operating, "USD", "10.00"],
         [investing, "USD", "0.00"],
         [financing, "USD", "0.00"],
-        [opening, "USD", "(10.00001)"],
-        [netChange, "USD", "10.00001"],
+        [opening, "USD", "(10.00)"],
+        [netChange, "USD", "10.00"],
         [closing, "USD", "0.00"],
       ]);
     },
@@ -233,7 +255,7 @@ describe("sparse Cash Flow summary amounts in actual renderers", () => {
   );
 
   it.each(renderers)(
-    "preserves exact populated signs and unit scope beside sparse totals in %s",
+    "preserves signs, commodity digits and unit scope beside sparse totals in %s",
     (renderer) => {
       const document = buildDocument(
         buildCashFlowStatement({
@@ -264,15 +286,15 @@ describe("sparse Cash Flow summary amounts in actual renderers", () => {
       document.context.filters.account = "Assets:Bank";
       document.context.filters.filter = "tag:scope";
       expectUnchanged(document, renderer, [
-        [operating, "USD", "(9,007,199,254,740,993.123456788)"],
+        [operating, "USD", "(9,007,199,254,740,993.12)"],
         [investing, "USD", "0.00"],
         [investing, "VACHR", "0.00"],
         [financing, "USD", "0.00"],
         [financing, "VACHR", "0.00"],
-        [opening, "USD", "9,007,199,254,740,994.123456789"],
+        [opening, "USD", "9,007,199,254,740,994.12"],
         [opening, "VACHR", "3.00000000000000000001"],
-        [netChange, "USD", "(9,007,199,254,740,993.123456788)"],
-        [closing, "USD", "1.000000001"],
+        [netChange, "USD", "(9,007,199,254,740,993.12)"],
+        [closing, "USD", "1.00"],
         [closing, "VACHR", "3.00000000000000000001"],
       ]);
       const markdown = statementToMarkdown(document, {
@@ -284,8 +306,9 @@ describe("sparse Cash Flow summary amounts in actual renderers", () => {
       expect(markdown).toContain("Assets:Bank");
       expect(markdown).toContain("tag:scope");
       expect(markdown).toContain("January 8, 2024");
-      expect(markdown).toContain("Expenses:Fees");
-      expect(markdown).toContain("(9,007,199,254,740,993.123456789)");
+      expect(markdown).toContain(
+        "| Expenses:Fees | USD | (9,007,199,254,740,993.12) |",
+      );
       if (renderer === "print") {
         expect(
           screen.getByText(en["reports.export.multiUnitScheduleNotice"]),
@@ -295,9 +318,11 @@ describe("sparse Cash Flow summary amounts in actual renderers", () => {
         ).toBeInTheDocument();
         expect(screen.getByText("Assets:Bank")).toBeInTheDocument();
         expect(screen.getByText("tag:scope")).toBeInTheDocument();
-        expect(screen.getByText("Fees")).toBeInTheDocument();
+        const fees = screen
+          .getByRole("rowheader", { name: "Fees" })
+          .closest("tr")!;
         expect(
-          screen.getByText("(9,007,199,254,740,993.123456789)"),
+          within(fees).getByText("(9,007,199,254,740,993.12)"),
         ).toBeInTheDocument();
       }
     },

@@ -131,7 +131,7 @@ describe("CashAccountStatusPanel", () => {
     );
   });
 
-  it("renders every currency of a multi-commodity balance in full", () => {
+  it("renders every currency of a balance at its minor units", () => {
     render(
       <CashAccountStatusPanel
         rows={[
@@ -157,7 +157,7 @@ describe("CashAccountStatusPanel", () => {
     expect(lines).toEqual([
       "1,234,567.89 USD",
       "98,765.43 EUR",
-      "100,000,000.00 JPY",
+      "100,000,000 JPY",
     ]);
   });
 

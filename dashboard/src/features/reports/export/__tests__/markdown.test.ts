@@ -241,7 +241,11 @@ function fixture(): StatementExportDocument {
   };
 }
 
-function balanceSheetFixture(): StatementExportDocument {
+function balanceSheetFixture({
+  assets = "425000",
+  liabilities = "121000",
+  equity = "304000",
+} = {}): StatementExportDocument {
   const base = fixture();
   const amount = (value: string, inverted = false) => ({
     unit: "USD",
@@ -274,14 +278,14 @@ function balanceSheetFixture(): StatementExportDocument {
             label: "Assets",
             depth: 0,
             rowKind: "total",
-            amounts: [amount("425000")],
+            amounts: [amount(assets)],
           },
           {
             accountPath: "Assets:Cash",
             label: "Cash",
             depth: 1,
             rowKind: "account",
-            amounts: [amount("425000")],
+            amounts: [amount(assets)],
           },
         ],
       },
@@ -294,14 +298,14 @@ function balanceSheetFixture(): StatementExportDocument {
             label: "Liabilities",
             depth: 0,
             rowKind: "total",
-            amounts: [amount("121000", true)],
+            amounts: [amount(liabilities, true)],
           },
           {
             accountPath: "Liabilities:Loans",
             label: "Loans",
             depth: 1,
             rowKind: "account",
-            amounts: [amount("121000", true)],
+            amounts: [amount(liabilities, true)],
           },
         ],
       },
@@ -314,14 +318,14 @@ function balanceSheetFixture(): StatementExportDocument {
             label: "Equity",
             depth: 0,
             rowKind: "total",
-            amounts: [amount("304000", true)],
+            amounts: [amount(equity, true)],
           },
           {
             accountPath: "Equity:Opening-Balances",
             label: "Opening-Balances",
             depth: 1,
             rowKind: "account",
-            amounts: [amount("304000", true)],
+            amounts: [amount(equity, true)],
           },
         ],
       },
@@ -384,6 +388,46 @@ describe("statement Markdown row set", () => {
 });
 
 describe("statement Markdown", () => {
+  it("rounds each currency figure after exact reconciliation and keeps exact CSV amounts", () => {
+    const document = balanceSheetFixture({
+      assets: "109529.33944",
+      liabilities: "2703.29450",
+      equity: "106826.04494",
+    });
+    const markdown = statementToMarkdown(document, { locale: "en-US", t });
+    expect(markdown).toContain(
+      "| **Total Assets** | **USD** | **109,529.34** |",
+    );
+    expect(markdown).toContain("| Assets:Cash | USD | 109,529.34 |");
+    expect(markdown).toContain(
+      "| **Total Liabilities** | **USD** | **2,703.29** |",
+    );
+    expect(markdown).toContain(
+      "| **Total Equity** | **USD** | **106,826.04** |",
+    );
+    expect(markdown).toContain(
+      "| **Total Liabilities and Equity** | **USD** | **109,529.34** |",
+    );
+    expect(markdown).toContain(
+      "| **Reconciliation Difference** | **USD** | **0.00** |",
+    );
+    expect(markdown).not.toContain(
+      "The accounting equation does not reconcile",
+    );
+    expect(statementToCSV(document)).toContain("109529.33944");
+  });
+
+  it("keeps the draft warning for an exact sub-cent reconciliation difference", () => {
+    const document = balanceSheetFixture({
+      assets: "109529.33944",
+      liabilities: "2703.29450",
+      equity: "106826.04493",
+    });
+    const markdown = statementToMarkdown(document, { locale: "en-US", t });
+    expect(markdown).toContain("Unaudited internal draft");
+    expect(markdown).toContain("The accounting equation does not reconcile");
+  });
+
   it("formats exact decimals consistently without losing extra precision", () => {
     expect(formatMarkdownAmount("55500", "en-US")).toBe("55,500.00");
     expect(formatMarkdownAmount("365", "en-US")).toBe("365.00");
@@ -391,6 +435,21 @@ describe("statement Markdown", () => {
     expect(formatMarkdownAmount("9007199254740993.2", "en-US")).toBe(
       "9,007,199,254,740,993.20",
     );
+  });
+
+  it.each([
+    ["-0.004999999999999999", "USD", "en-US", "0.00"],
+    ["-0.005", "USD", "en-US", "(0.01)"],
+    ["9007199254740993.005", "USD", "en-US", "9,007,199,254,740,993.01"],
+    ["109529.33944", "USD", "de-DE", "109.529,34"],
+    ["1234.5", "JPY", "ja-JP", "1,235"],
+    ["-1234.5675", "KWD", "en-US", "(1,234.568)"],
+    ["17", "GLD", "en-US", "17.00"],
+    ["597.748", "RGAGX", "en-US", "597.748"],
+    ["193.442", "VBMPX", "en-US", "193.442"],
+    ["-13", "VACHR", "en-US", "(13.00)"],
+  ])("displays %s %s in %s as %s", (value, unit, locale, expected) => {
+    expect(formatMarkdownAmount(value, locale, unit)).toBe(expected);
   });
 
   it("separates a multi-unit statement summary from supporting detail", () => {

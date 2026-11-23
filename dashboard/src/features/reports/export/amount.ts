@@ -1,7 +1,26 @@
-/** Format an exact decimal without passing it through IEEE-754 arithmetic. */
-export function formatStatementAmount(value: string, locale: string): string {
-  const match = /^([+-]?)(\d+)(?:\.(\d+))?$/.exec(value.trim());
-  if (!match) return value.trim();
+import {
+  currencyMinorDigits,
+  formatNumber,
+} from "@/common/lib/format/format-number";
+
+/** Write ISO currencies at minor-unit precision and retain commodity digits. */
+export function formatStatementAmount(
+  value: string,
+  locale: string,
+  unit?: string,
+): string {
+  const decimal = value.trim();
+  const match = /^([+-]?)(\d+)(?:\.(\d+))?$/.exec(decimal);
+  if (!match) return decimal;
+
+  if (unit && currencyMinorDigits(unit) !== undefined) {
+    const unsigned = decimal.slice(match[1].length);
+    const formatted = formatNumber(unsigned, true, locale, unit);
+    // A value rounded to zero has no accounting parentheses.
+    return match[1] === "-" && formatted !== formatNumber(0, true, locale, unit)
+      ? `(${formatted})`
+      : formatted;
+  }
 
   const negative =
     match[1] === "-" && !/^0+$/.test(`${match[2]}${match[3] ?? ""}`);

@@ -274,6 +274,7 @@ export function PrintableStatement({
                           {formatStatementAmount(
                             amount.displayAmount,
                             i18n.language,
+                            amount.unit,
                           )}
                         </td>
                       </tr>
@@ -319,6 +320,7 @@ export function PrintableStatement({
                                 ? formatStatementAmount(
                                     amount.displayAmount,
                                     i18n.language,
+                                    amount.unit,
                                   )
                                 : "—"}
                             </td>
@@ -360,6 +362,7 @@ export function PrintableStatement({
                               ? formatStatementAmount(
                                   amount.displayAmount,
                                   i18n.language,
+                                  amount.unit,
                                 )
                               : "—"}
                           </td>
@@ -407,6 +410,7 @@ export function PrintableStatement({
                                 ? formatStatementAmount(
                                     amount.displayAmount,
                                     i18n.language,
+                                    amount.unit,
                                   )
                                 : "—"}
                             </td>
@@ -448,6 +452,7 @@ export function PrintableStatement({
                           {formatStatementAmount(
                             amount.displayAmount,
                             i18n.language,
+                            amount.unit,
                           )}
                         </td>
                       </tr>
@@ -493,6 +498,7 @@ export function PrintableStatement({
                                 ? formatStatementAmount(
                                     amount.displayAmount,
                                     i18n.language,
+                                    amount.unit,
                                   )
                                 : "—"}
                             </td>

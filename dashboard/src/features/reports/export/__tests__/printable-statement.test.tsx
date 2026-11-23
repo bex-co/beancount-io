@@ -124,7 +124,11 @@ const document: StatementExportDocument = {
   ],
 };
 
-function balanceSheetFixture(equity = "304000"): StatementExportDocument {
+function balanceSheetFixture({
+  assets = "425000",
+  liabilities = "121000",
+  equity = "304000",
+} = {}): StatementExportDocument {
   const amount = (value: string, inverted = false) => ({
     unit: "USD",
     rawAmount: inverted ? `-${value}` : value,
@@ -160,14 +164,14 @@ function balanceSheetFixture(equity = "304000"): StatementExportDocument {
             label: "Assets",
             depth: 0,
             rowKind: "total",
-            amounts: [amount("425000")],
+            amounts: [amount(assets)],
           },
           {
             accountPath: "Assets:Cash",
             label: "Cash",
             depth: 1,
             rowKind: "account",
-            amounts: [amount("425000")],
+            amounts: [amount(assets)],
           },
         ],
       },
@@ -180,14 +184,14 @@ function balanceSheetFixture(equity = "304000"): StatementExportDocument {
             label: "Liabilities",
             depth: 0,
             rowKind: "total",
-            amounts: [amount("121000", true)],
+            amounts: [amount(liabilities, true)],
           },
           {
             accountPath: "Liabilities:Loans",
             label: "Loans",
             depth: 1,
             rowKind: "account",
-            amounts: [amount("121000", true)],
+            amounts: [amount(liabilities, true)],
           },
         ],
       },
@@ -359,7 +363,11 @@ describe("PrintableStatement", () => {
   });
 
   it("marks a balance sheet with a reconciliation difference as a draft", () => {
-    render(<PrintableStatement document={balanceSheetFixture("300000")} />);
+    render(
+      <PrintableStatement
+        document={balanceSheetFixture({ equity: "300000" })}
+      />,
+    );
 
     expect(
       screen.getByText("reports.export.unauditedInternalDraft"),
@@ -368,5 +376,32 @@ describe("PrintableStatement", () => {
       screen.getByText("reports.export.balanceSheetDoesNotReconcileNotice"),
     ).toBeInTheDocument();
     expect(screen.getByText("4,000.00")).toBeInTheDocument();
+  });
+
+  it("prints minor units after summing the exact balance sheet amounts", () => {
+    render(
+      <PrintableStatement
+        document={balanceSheetFixture({
+          assets: "109529.33944",
+          liabilities: "2703.29450",
+          equity: "106826.04494",
+        })}
+      />,
+    );
+    const summary = screen
+      .getByRole("heading", { name: "reports.export.statementSummary" })
+      .closest("section")!;
+    expect(within(summary).getAllByText("109,529.34")).toHaveLength(2);
+    expect(within(summary).getByText("2,703.29")).toBeVisible();
+    expect(within(summary).getByText("106,826.04")).toBeVisible();
+    const difference = within(summary)
+      .getByRole("rowheader", {
+        name: "reports.export.reconciliationDifference",
+      })
+      .closest("tr")!;
+    expect(within(difference).getByText("0.00")).toBeVisible();
+    expect(
+      screen.queryByText("reports.export.balanceSheetDoesNotReconcileNotice"),
+    ).toBeNull();
   });
 });

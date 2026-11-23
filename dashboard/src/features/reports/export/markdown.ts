@@ -93,7 +93,9 @@ function rowLines(
   return amounts.map((amount) => {
     const unit = amount ? escapeMarkdown(amount.unit) : "—";
     const value = amount
-      ? escapeMarkdown(formatStatementAmount(amount.displayAmount, locale))
+      ? escapeMarkdown(
+          formatStatementAmount(amount.displayAmount, locale, amount.unit),
+        )
       : "—";
     return emphasize
       ? `| **${account}** | **${unit}** | **${value}** |`
@@ -139,7 +141,7 @@ function balanceSheetSummaryLines(
       const label = escapeMarkdown(balanceSheetSummaryLabel(item.key, t));
       const unit = escapeMarkdown(amount.unit);
       const value = escapeMarkdown(
-        formatStatementAmount(amount.displayAmount, locale),
+        formatStatementAmount(amount.displayAmount, locale, amount.unit),
       );
       return `| **${label}** | **${unit}** | **${value}** |`;
     }),
@@ -167,7 +169,7 @@ function summaryLines(
       const label = escapeMarkdown(summaryLabel(item.key, amount, t));
       const unit = escapeMarkdown(amount.unit);
       const value = escapeMarkdown(
-        formatStatementAmount(amount.displayAmount, locale),
+        formatStatementAmount(amount.displayAmount, locale, amount.unit),
       );
       return `| **${label}** | **${unit}** | **${value}** |`;
     }),
@@ -187,7 +189,9 @@ function cashFlowSummaryLines(
       const label = escapeMarkdown(cashFlowSummaryLabel(item.key, t));
       const unit = amount ? escapeMarkdown(amount.unit) : "—";
       const value = amount
-        ? escapeMarkdown(formatStatementAmount(amount.displayAmount, locale))
+        ? escapeMarkdown(
+            formatStatementAmount(amount.displayAmount, locale, amount.unit),
+          )
         : "—";
       return `| **${label}** | **${unit}** | **${value}** |`;
     }),

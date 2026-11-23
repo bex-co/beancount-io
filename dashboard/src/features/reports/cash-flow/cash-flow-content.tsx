@@ -86,7 +86,7 @@ interface CashFlowContentProps {
   exportReady?: boolean;
 }
 
-/** Every currency's exact-decimal amount, primary currency first. */
+/** Every currency's statement amount, primary currency first. */
 export function StatementAmounts({
   amounts,
   primaryCurrency,
@@ -103,7 +103,8 @@ export function StatementAmounts({
     <div className={cn("text-right tabular-nums whitespace-nowrap", className)}>
       {currencies.map((currency) => (
         <div key={currency}>
-          {formatStatementAmount(amounts[currency], locale)} {currency}
+          {formatStatementAmount(amounts[currency], locale, currency)}{" "}
+          {currency}
         </div>
       ))}
     </div>
