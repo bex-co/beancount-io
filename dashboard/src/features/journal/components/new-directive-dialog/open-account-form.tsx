@@ -17,6 +17,7 @@ import {
 } from "@/common/components/ui/form";
 import { DatePicker } from "@/common/components/ui/date-picker";
 import { todayIsoDate } from "@/common/components/ui/date-picker-utils";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { track } from "@/common/analytics";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
@@ -90,7 +91,7 @@ export function OpenAccountForm({
         );
       }
     } catch (err) {
-      setError(formatError(err));
+      if (!isDraftSessionError(err)) setError(formatError(err));
     }
   };
 

@@ -29,6 +29,8 @@ import { CreateLedgerFileDocument } from "@/graphql/definitions";
 import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-language-vscode";
 import { createLedgerId, base64Encode } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { DraftSessionNotice } from "@/common/components/draft-session-notice";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { toast } from "sonner";
@@ -197,6 +199,7 @@ const CreateFilePage = () => {
       allowNavigationRef.current = true;
       navigateToTree();
     } catch (error) {
+      if (isDraftSessionError(error)) return;
       console.error("Failed to create file:", error);
       // A twin the folder listing did not show yet (a nested path, or a
       // write since): refreshing cannot fix it, so say what it collides with.
@@ -330,6 +333,7 @@ const CreateFilePage = () => {
         </div>
       </div>
 
+      {hasDraft && <DraftSessionNotice />}
       {/* Editor Section */}
       <Card className="flex-1 overflow-hidden">
         <CardContent className="p-0 h-full">

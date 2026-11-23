@@ -32,17 +32,28 @@ import {
 } from "@tanstack/react-router";
 import type { EditorProps } from "@monaco-editor/react";
 import type { SelectionNode } from "graphql";
+import { GraphQLError } from "graphql";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { base64Decode, base64Encode } from "@/common/lib/utils/encode";
-import { GetLatestLedgerCommitDocument } from "@/graphql/definitions";
+import {
+  BulkEntriesDocument,
+  GetLatestLedgerCommitDocument,
+} from "@/graphql/definitions";
+import { authErrorLink } from "@/common/apollo/links/auth-error-link";
+import { hardNavigate } from "@/common/lib/navigation/hard-navigate";
 import LedgerFileView from "@/features/ledger-editor/file-editor/components/ledger-file-view";
 import LedgerQueryPage from "@/features/bql/pages";
+import { NewDirectiveDialog } from "@/features/journal/components/new-directive-dialog";
 import { LedgerLayout } from "../index";
 
 vi.mock("sonner", () => ({
   toast: { error: vi.fn(), success: vi.fn() },
   Toaster: () => null,
+}));
+vi.mock("@/common/lib/navigation/hard-navigate", () => ({
+  hardNavigate: vi.fn(),
 }));
 vi.mock("@/common/components/billing/failed-renewal-banner", () => ({
   FailedRenewalBanner: () => null,
@@ -135,6 +146,8 @@ const OWNER = "qa";
 const NAME = "books";
 const LEDGER_ID = `${OWNER}/${NAME}`;
 const PATH = "notes.txt";
+const originalUrl = window.location.href;
+const originalState: unknown = window.history.state;
 
 /** Complete data for any operation: every selected field, nulls by default. */
 function fill(
@@ -178,6 +191,9 @@ const initialServer = () => ({
   updateReply: undefined as Error | undefined,
   queries: [] as string[],
   reads: [] as string[],
+  signedIn: true,
+  refused: [] as string[],
+  entries: [] as Array<Record<string, unknown>>,
 });
 const server = initialServer();
 
@@ -186,6 +202,8 @@ function reply(
   variables: Record<string, unknown>,
 ): Reply {
   switch (operationName) {
+    case "GetCurrentUser":
+      return { userProfile: server.signedIn ? { id: "qa-owner" } : null };
     case "GetLedger":
       return {
         getLedger: {
@@ -215,6 +233,23 @@ function reply(
     }
     case "GetLedgerErrors":
       return { getLedgerErrors: [] };
+    case "GetLedgerAccounts":
+      return { getLedgerAccounts: ["Assets:Cash", "Expenses:Food"] };
+    case "GetLedgerAccountDirectives":
+      return {
+        getLedgerAccountDirectives: ["Assets:Cash", "Expenses:Food"].map(
+          (account) => ({ account, openedAt: "2000-01-01", closedAt: null }),
+        ),
+      };
+    case "GetLedgerCurrencies":
+      return { getLedgerCurrencies: ["USD"] };
+    case "GetLedgerPayees":
+      return { getLedgerPayees: [] };
+    case "GetLedgerNarrations":
+      return { getLedgerNarrations: [] };
+    case "BulkEntries":
+      server.entries.push(variables);
+      return { bulkEntries: { success: true } };
     case "UpdateLedgerFile":
       server.updates.push(variables);
       if (server.updateReply) return server.updateReply;
@@ -243,6 +278,24 @@ const link = new ApolloLink(
       );
       const send = () => {
         if (isRead) server.reads.push(operation.operationName ?? "");
+        if (
+          !server.signedIn &&
+          operation.operationName &&
+          ["GetLatestLedgerCommit", "BulkEntries", "UpdateLedgerFile"].includes(
+            operation.operationName,
+          )
+        ) {
+          server.refused.push(operation.operationName);
+          observer.next({
+            errors: [
+              new GraphQLError("Sign in required", {
+                extensions: { code: "UNAUTHENTICATED" },
+              }),
+            ],
+          });
+          observer.complete();
+          return;
+        }
         if (
           server.fail &&
           isRead &&
@@ -281,7 +334,11 @@ function release() {
 let client: ApolloClient;
 
 function renderAt(url: string) {
-  client = new ApolloClient({ cache: new InMemoryCache(), link });
+  window.history.replaceState(null, "", url);
+  client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.from([authErrorLink, link]),
+  });
   const root = createRootRouteWithContext<{ userProfile: unknown }>()({
     component: Outlet,
   });
@@ -317,8 +374,24 @@ function renderAt(url: string) {
       );
     },
   });
+  const journal = createRoute({
+    getParentRoute: () => ledger,
+    path: "journal",
+    component: function Journal() {
+      const [open, setOpen] = useState(true);
+      return (
+        <NewDirectiveDialog
+          open={open}
+          onOpenChange={setOpen}
+          ledgerId={LEDGER_ID}
+          activeTab="transaction"
+          onActiveTabChange={() => {}}
+        />
+      );
+    },
+  });
   const router = createRouter({
-    routeTree: root.addChildren([ledger.addChildren([query, file])]),
+    routeTree: root.addChildren([ledger.addChildren([query, file, journal])]),
     history: createMemoryHistory({ initialEntries: [url] }),
     context: { userProfile: { id: "qa-owner" } },
   });
@@ -356,9 +429,156 @@ beforeEach(() => {
   Object.assign(server, initialServer());
   vi.mocked(toast.error).mockClear();
   vi.mocked(toast.success).mockClear();
+  vi.mocked(hardNavigate).mockClear();
   localStorage.clear();
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  client?.stop();
+  window.history.replaceState(originalState, "", originalUrl);
+});
+
+describe("a session ends with a draft open", () => {
+  const notice = () => screen.findByText(/signed out.*save what you typed/i);
+  const poll = () =>
+    act(async () => {
+      await client
+        .refetchQueries({ include: [GetLatestLedgerCommitDocument] })
+        .catch(() => {});
+    });
+  const journalPath = `/ledger/${LEDGER_ID}/journal?action=new-entry&directive=transaction`;
+
+  it.each(["poll", "submit"])(
+    "keeps a transaction through a refused %s and saves after sign-in",
+    async (firstFailure) => {
+      const router = renderAt(journalPath);
+      const user = userEvent.setup();
+      const payee = await screen.findByRole("combobox", { name: "Payee" });
+      await user.type(payee, "Fixture payee");
+      await user.keyboard("{Escape}");
+      for (const [index, account] of [
+        "Assets:Cash",
+        "Expenses:Food",
+      ].entries()) {
+        const input = await screen.findByRole("combobox", {
+          name: `Posting ${index + 1} account`,
+        });
+        await user.click(input);
+        await user.click(await screen.findByRole("option", { name: account }));
+        fireEvent.change(screen.getAllByRole("spinbutton")[index]!, {
+          target: { value: index === 0 ? "-4.25" : "4.25" },
+        });
+      }
+      const submit = screen.getByRole("button", {
+        name: "Create Transaction Entry",
+      });
+      if (firstFailure === "poll") payee.focus();
+      server.signedIn = false;
+      if (firstFailure === "poll") await poll();
+      else await user.click(submit);
+      expect(await notice()).toBeVisible();
+      expect(hardNavigate).not.toHaveBeenCalled();
+      const signIn = screen.getByRole("link", { name: "Sign In" });
+      expect(signIn).toHaveAttribute("href", "/auth/login");
+      expect(signIn).toHaveAttribute("target", "_blank");
+      expect(signIn).toHaveAttribute(
+        "rel",
+        expect.stringContaining("noopener"),
+      );
+      expect(payee).toHaveValue("Fixture payee");
+      expect(router.state.location.pathname).toBe(
+        `/ledger/${LEDGER_ID}/journal`,
+      );
+      expect(server.entries).toHaveLength(0);
+      expect(server.refused).toContain(
+        firstFailure === "poll" ? "GetLatestLedgerCommit" : "BulkEntries",
+      );
+
+      server.signedIn = true;
+      if (firstFailure === "poll") {
+        signIn.focus();
+        await act(async () => {
+          window.dispatchEvent(new Event("focus"));
+        });
+        await waitFor(() => expect(signIn).not.toBeInTheDocument());
+        expect(payee).toHaveFocus();
+      }
+      await user.click(submit);
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog", { name: "New Entry" })).toBeNull(),
+      );
+      expect(server.entries).toHaveLength(1);
+      expect(server.entries[0]?.entries).toEqual([
+        expect.objectContaining({
+          transaction: expect.objectContaining({ payee: "Fixture payee" }),
+        }),
+      ]);
+    },
+  );
+
+  it("keeps the file draft through both refusal paths and saves it after sign-in", async () => {
+    renderAt(`/ledger/${LEDGER_ID}/files/blob/main/${PATH}?editMode=true`);
+    const editor = await screen.findByRole("textbox", { name: "File source" });
+    const draft = "unsaved file text\n";
+    fireEvent.change(editor, { target: { value: draft } });
+    const user = userEvent.setup();
+    const save = screen.getByRole("button", { name: "Save" });
+    server.signedIn = false;
+    await poll();
+    expect(await notice()).toBeVisible();
+    await user.click(save);
+    await waitFor(() => expect(server.refused).toContain("UpdateLedgerFile"));
+    await waitFor(() => expect(save).toBeEnabled());
+    expect(await notice()).toBeVisible();
+    expect(editor).toHaveValue(draft);
+    expect(hardNavigate).not.toHaveBeenCalled();
+    expect(server.updates).toHaveLength(0);
+
+    server.signedIn = true;
+    await user.click(save);
+    await waitFor(() => expect(editor).toHaveAttribute("readonly"));
+    expect(server.updates).toHaveLength(1);
+    expect(server.file.text).toBe(draft);
+  });
+
+  it.each(["poll", "submit"])(
+    "redirects a page with no draft after a refused %s",
+    async (failure) => {
+      renderAt(journalPath);
+      await screen.findByRole("dialog", { name: "New Entry" });
+      server.signedIn = false;
+      if (failure === "poll") {
+        await poll();
+      } else {
+        await act(async () => {
+          await client
+            .mutate({
+              mutation: BulkEntriesDocument,
+              variables: { ledgerId: LEDGER_ID, entries: [] },
+            })
+            .catch(() => {});
+        });
+      }
+      await waitFor(() =>
+        expect(hardNavigate).toHaveBeenCalledWith(
+          `/auth/login?next=${encodeURIComponent(journalPath)}`,
+        ),
+      );
+      expect(screen.queryByText(/signed out.*save what you typed/i)).toBeNull();
+    },
+  );
+
+  it("can try the redirect again after the document stays open", async () => {
+    renderAt(journalPath);
+    await screen.findByRole("dialog", { name: "New Entry" });
+    server.signedIn = false;
+    await poll();
+    expect(hardNavigate).toHaveBeenCalledOnce();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    await poll();
+    expect(hardNavigate).toHaveBeenCalledTimes(2);
+  });
+});
 
 describe("Out of date → Refresh with an unsaved file", () => {
   const DRAFT = "qa-20261022 original\nLOCAL_BUFFER_m46\n";

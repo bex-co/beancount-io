@@ -863,6 +863,12 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Error",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "You've been signed out. Sign in again in a new tab, then return here to save what you typed.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Please sign in to continue.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

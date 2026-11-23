@@ -23,6 +23,7 @@ import {
   type LedgerBalanceInput,
   type LedgerAmountInput,
 } from "@/graphql/definitions";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
   exceedsLedgerDigits,
@@ -162,7 +163,7 @@ export function BalanceForm({
         );
       }
     } catch (err) {
-      setError(formatError(err));
+      if (!isDraftSessionError(err)) setError(formatError(err));
     }
   };
 

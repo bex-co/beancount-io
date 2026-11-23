@@ -861,6 +861,12 @@ const esCommon: Record<string, TranslationEntry> = {
     message: "Error",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "Se ha cerrado tu sesión. Vuelve a iniciar sesión en una pestaña nueva y regresa aquí para guardar lo que has escrito.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Inicia sesión para continuar.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

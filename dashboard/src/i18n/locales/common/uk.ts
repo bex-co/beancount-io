@@ -865,6 +865,12 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Помилка",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "Ви вийшли з облікового запису. Увійдіть знову в новій вкладці, а потім поверніться сюди, щоб зберегти введене.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Увійдіть, щоб продовжити.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

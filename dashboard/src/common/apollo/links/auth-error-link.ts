@@ -1,6 +1,11 @@
 import { ErrorLink } from "@apollo/client/link/error";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { getSafeRedirectPath } from "@/common/lib/auth/auth";
+import {
+  getDraftSignInRequired,
+  notifySignedOutDraft,
+} from "@/common/lib/auth/draft-session";
+import { hardNavigate } from "@/common/lib/navigation/hard-navigate";
 
 /**
  * These mutations return UNAUTHENTICATED as an expected outcome (e.g. an
@@ -40,6 +45,11 @@ export function isUnauthenticatedError(
       (gqlError) => gqlError.extensions?.code === "UNAUTHENTICATED",
     )
   );
+}
+
+/** The retained draft already has an inline sign-in notice for this failure. */
+export function isDraftSessionError(error: unknown): boolean {
+  return isUnauthenticatedError(error) && getDraftSignInRequired();
 }
 
 export function shouldRedirectForUnauthenticatedError(
@@ -102,12 +112,20 @@ export function locationAsNext(
 
 export const authErrorLink = new ErrorLink(({ error, operation }) => {
   if (typeof window === "undefined") return;
-  if (redirecting) return;
   if (!shouldRedirectForUnauthenticatedError(error, operation.operationName))
     return;
+  if (notifySignedOutDraft() || redirecting) return;
 
   redirecting = true;
-  window.location.assign(
-    buildUnauthenticatedLoginHref(locationAsNext(window.location)),
-  );
+  try {
+    hardNavigate(
+      buildUnauthenticatedLoginHref(locationAsNext(window.location)),
+    );
+  } finally {
+    // Coalesce errors from the same turn. A cancelled beforeunload leaves
+    // this document active, so let a later request try again.
+    setTimeout(() => {
+      redirecting = false;
+    }, 0);
+  }
 });

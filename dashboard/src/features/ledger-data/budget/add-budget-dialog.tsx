@@ -10,6 +10,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { usePendingSubmit } from "@/common/hooks/use-pending-submit";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
@@ -219,7 +220,7 @@ export function AddBudgetDialog({
         );
       }
     } catch (err) {
-      setError(formatError(err));
+      if (!isDraftSessionError(err)) setError(formatError(err));
     }
   };
 

@@ -858,6 +858,12 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Fout",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "Je bent uitgelogd. Meld je opnieuw aan in een nieuw tabblad en kom hier terug om je invoer op te slaan.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Log in om door te gaan.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

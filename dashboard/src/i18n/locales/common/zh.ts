@@ -835,6 +835,12 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "错误",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "你已退出登录。请在新标签页中重新登录，然后返回此处保存已输入的内容。",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "请登录后继续。",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

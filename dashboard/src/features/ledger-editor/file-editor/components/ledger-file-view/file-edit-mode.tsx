@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { useBlocker } from "@tanstack/react-router";
+import { DraftSessionNotice } from "@/common/components/draft-session-notice";
 import { isLanguageOnlyTransition } from "@/common/lib/router/language-only-transition";
 import type * as monaco from "monaco-editor";
 import { Button } from "@/common/components/ui/button";
@@ -198,6 +199,7 @@ export function EditModeToolbar({
           </span>
         </Button>
       </div>
+      {hasUnsavedChanges && <DraftSessionNotice />}
 
       {/* Unsaved Changes Confirmation Dialog */}
       <Dialog

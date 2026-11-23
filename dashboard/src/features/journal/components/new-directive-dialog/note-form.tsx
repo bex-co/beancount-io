@@ -22,6 +22,7 @@ import {
   type BulkEntriesMutationVariables,
   type LedgerNoteInput,
 } from "@/graphql/definitions";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 
@@ -128,7 +129,7 @@ export function NoteForm({
         );
       }
     } catch (err) {
-      setError(formatError(err));
+      if (!isDraftSessionError(err)) setError(formatError(err));
     }
   };
 

@@ -864,6 +864,12 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Ошибка",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "Вы вышли из аккаунта. Снова войдите в новой вкладке и вернитесь сюда, чтобы сохранить введённый текст.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Войдите, чтобы продолжить.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

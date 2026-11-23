@@ -859,6 +859,12 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Fehler",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "Du wurdest abgemeldet. Melde dich in einem neuen Tab erneut an und kehre hierher zurück, um deine Eingaben zu speichern.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Bitte melden Sie sich an, um fortzufahren.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

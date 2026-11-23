@@ -849,6 +849,12 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "오류",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "로그아웃되었습니다. 새 탭에서 다시 로그인한 후 여기로 돌아와 입력한 내용을 저장하세요.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "계속하려면 로그인하세요.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

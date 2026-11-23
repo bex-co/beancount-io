@@ -860,6 +860,12 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Erro",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "A sua sessão foi terminada. Inicie sessão novamente num novo separador e volte aqui para guardar o que escreveu.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Inicie sessão para continuar.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

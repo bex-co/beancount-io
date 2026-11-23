@@ -863,6 +863,12 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Erreur",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "Vous avez été déconnecté. Reconnectez-vous dans un nouvel onglet, puis revenez ici pour enregistrer votre saisie.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Veuillez vous connecter pour continuer.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

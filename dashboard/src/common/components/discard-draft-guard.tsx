@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DraftNavigationGuard } from "@/common/components/draft-navigation-guard";
+import { DraftSessionNotice } from "@/common/components/draft-session-notice";
 import { Button } from "@/common/components/ui/button";
 import {
   Dialog,
@@ -67,6 +68,7 @@ export function useDiscardDraftGuard(
 
   const confirmation = (
     <>
+      {dirty && <DraftSessionNotice />}
       {writing !== undefined && (dirty || writing) && (
         <DraftNavigationGuard writing={writing} confirm={confirmNavigation} />
       )}

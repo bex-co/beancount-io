@@ -863,6 +863,12 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Error",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "S’ha tancat la teva sessió. Torna a iniciar-la en una pestanya nova i torna aquí per desar el que has escrit.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Inicieu la sessió per continuar.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

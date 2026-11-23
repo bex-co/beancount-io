@@ -40,6 +40,7 @@ import {
   PayeesCombobox,
   NarrationsCombobox,
 } from "@/common/components/ledger-comboboxes";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
   getUnbalancedResidual,
@@ -323,6 +324,7 @@ export function TransactionForm({
         );
       }
     } catch (err) {
+      if (isDraftSessionError(err)) return;
       const residual = getUnbalancedResidual(err);
       setError(
         residual

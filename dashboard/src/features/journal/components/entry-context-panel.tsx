@@ -42,6 +42,8 @@ import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-
 import { cn } from "@/common/lib/utils/utils";
 import { toast } from "sonner";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { DraftSessionNotice } from "@/common/components/draft-session-notice";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useQueryRetry } from "@/common/hooks/use-query-retry";
 import {
   getErrorMessageKey,
@@ -530,6 +532,7 @@ function EntryContextMain({
         </Card>
       )}
 
+      {editable && hasChanges && <DraftSessionNotice />}
       {editable ? (
         <div className="flex gap-2 justify-end">
           {/* Quieter than Save: deleting asks again, and should not be the
@@ -690,6 +693,7 @@ export function EntryContextPanel({
       clearCache();
       onSuccess?.();
     } catch (saveError) {
+      if (isDraftSessionError(saveError)) throw saveError;
       console.error("Failed to update entry:", saveError);
       // The slice is addressed by the hash this panel loaded; an edit made
       // elsewhere gives the entry a new one, so this save can only miss.

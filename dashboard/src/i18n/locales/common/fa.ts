@@ -855,6 +855,12 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "خطا",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "از حساب خود خارج شده‌اید. در زبانه‌ای جدید دوباره وارد شوید، سپس به اینجا برگردید تا نوشته‌تان را ذخیره کنید.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "برای ادامه وارد شوید.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

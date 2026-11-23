@@ -1,5 +1,6 @@
 import { useEntryWrite } from "@/common/lib/entry-write/entry-write";
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
@@ -119,7 +120,7 @@ export function OpenAccountDialog({
         setError(result.data?.bulkEntries.message ?? formatError(undefined));
       }
     } catch (err) {
-      setError(formatError(err));
+      if (!isDraftSessionError(err)) setError(formatError(err));
     }
   };
 

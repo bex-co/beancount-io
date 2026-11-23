@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 
@@ -20,7 +21,7 @@ export function useRefreshFailedToast(error: unknown, retry: () => void) {
     latest.current = { retry, label: t("common.tryAgain") };
   });
   useEffect(() => {
-    if (!error) return;
+    if (!error || isDraftSessionError(error)) return;
     toast.error(formatError(error), {
       id: REFRESH_FAILED_TOAST,
       action: {

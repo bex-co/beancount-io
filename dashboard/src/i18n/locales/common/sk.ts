@@ -863,6 +863,12 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Chyba",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "Boli ste odhlásení. Znova sa prihláste na novej karte a potom sa sem vráťte, aby ste uložili zadané údaje.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Prihláste sa, aby ste mohli pokračovať.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

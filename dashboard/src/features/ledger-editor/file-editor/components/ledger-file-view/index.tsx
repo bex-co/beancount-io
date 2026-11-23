@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/common/components/ui/dialog";
+import { isDraftSessionError } from "@/common/apollo/links/auth-error-link";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
@@ -179,7 +180,9 @@ export default function LedgerFileView({
         // A conflict is the editor's to explain: it keeps the draft and
         // offers to copy it or load the latest revision (w2/110).
         onError: (error) => {
-          if (!isSaveConflict(error)) toast.error(formatError(error));
+          if (!isSaveConflict(error) && !isDraftSessionError(error)) {
+            toast.error(formatError(error));
+          }
         },
         // The write has landed, so say so now. Revalidating the ledger costs
         // another round trip, so the new-error check runs behind the success

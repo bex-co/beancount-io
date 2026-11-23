@@ -850,6 +850,12 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "エラー",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "サインアウトされました。新しいタブで再度サインインしてから、ここに戻って入力内容を保存してください。",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "続行するにはサインインしてください。",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",

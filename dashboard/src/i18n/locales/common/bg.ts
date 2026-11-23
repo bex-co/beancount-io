@@ -857,6 +857,12 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Грешка",
     description: "Generic error label",
   },
+  "common.draftSessionSignedOut": {
+    message:
+      "Излязохте от профила си. Влезте отново в нов раздел, след което се върнете тук, за да запазите въведеното.",
+    description:
+      "Notice next to an unsaved draft kept open when the user is signed out",
+  },
   "common.errors.unauthenticated": {
     message: "Влезте, за да продължите.",
     description: "Error shown when the user must sign in (UNAUTHENTICATED)",
